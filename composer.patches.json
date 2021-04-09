@@ -1,0 +1,7 @@
+{
+  "patches": {
+      "unocha/common_design" : {
+          "Compatibility with Drupal 9": "patches/common-design-drupal-9.patch"
+      }
+  }
+}
