@@ -1,0 +1,10 @@
+uuid: a5767a9c-4c77-4be5-92eb-d604571294cb
+langcode: en
+status: true
+dependencies: {  }
+id: hpc_api_content
+label: hpc_api_content
+description: ''
+source_type: null
+module: null
+shared_configuration: null

@@ -1,0 +1,6 @@
+{% if tooltip is not empty and tag_content is not empty %}
+  <{{ tag }} data-toggle="tooltip" class="tooltip {{ (class is not empty) ? class : '' }}" title="{{ tooltip }}">{{ (tag_content is not empty) ? tag_content : '' }}</{{ tag }}>
+{% endif %}
+{% if tooltip is not empty and tag_content is empty %}
+  <i data-toggle="tooltip" class="tooltip {{ (class is not empty) ? class : '' }} " title="{{ tooltip }}"><svg class="cd-icon icon cd-icon--help"><use xlink:href="#cd-icon--help"></use></svg></i>
+{% endif %}

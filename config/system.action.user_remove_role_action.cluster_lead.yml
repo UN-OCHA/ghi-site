@@ -1,0 +1,14 @@
+uuid: 1e76fe5b-b363-4f70-bfb3-0ec955097aec
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.cluster_lead
+  module:
+    - user
+id: user_remove_role_action.cluster_lead
+label: 'Remove the cluster lead role from the selected user(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: cluster_lead

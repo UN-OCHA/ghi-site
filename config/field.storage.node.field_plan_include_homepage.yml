@@ -1,0 +1,18 @@
+uuid: 9ecbd688-efe6-4f12-8266-ffeaa8b61239
+langcode: und
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_plan_include_homepage
+field_name: field_plan_include_homepage
+entity_type: node
+type: boolean
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

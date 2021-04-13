@@ -1,0 +1,32 @@
+uuid: 8d0ab2aa-d972-4509-9116-156873f00a5b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.plan_costing.field_plan_costing_code
+    - taxonomy.vocabulary.plan_costing
+  module:
+    - text
+id: taxonomy_term.plan_costing.default
+targetEntityType: taxonomy_term
+bundle: plan_costing
+mode: default
+content:
+  description:
+    label: hidden
+    type: text_default
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_plan_costing_code:
+    label: above
+    weight: 0
+    type: number_integer
+    settings:
+      prefix_suffix: true
+      thousand_separator: ''
+    third_party_settings: {  }
+    region: content
+hidden:
+  langcode: true

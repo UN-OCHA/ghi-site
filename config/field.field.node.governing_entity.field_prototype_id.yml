@@ -1,0 +1,23 @@
+uuid: 1370c0e5-73a3-43aa-a18d-85dcb657b8cb
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_prototype_id
+    - node.type.governing_entity
+id: node.governing_entity.field_prototype_id
+field_name: field_prototype_id
+entity_type: node
+bundle: governing_entity
+label: 'Prototype ID'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  max: null
+  min: null
+  prefix: ''
+  suffix: ''
+field_type: integer

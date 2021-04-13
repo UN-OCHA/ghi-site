@@ -1,0 +1,18 @@
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h2 class="panel-title" data-toggle="collapse" data-target="#data">HID Session Information</h2>
+  </div>
+  <div id="data" class="panel-collapse collapse">
+    <div class="panel-body">
+      <div class="info">{{ description }}</div>
+      <div class="hid-user-id">
+        <strong>HID User ID:</strong> {{ user_id }}
+        <p><i>{{ id_message }}</i></p>
+      </div>
+      <div class="hid-token">
+        <strong>HID Access Token:</strong> {{ token }}
+        <p><i>{{ token_message }}</i></p>
+      </div>
+    </div>
+  </div>
+</div>

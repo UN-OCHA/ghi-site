@@ -1,0 +1,19 @@
+uuid: 70e5c86c-03bd-461c-b856-ee58902f8ab3
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_plan_footnote_inneed
+    - node.type.plan
+id: node.plan.field_plan_footnote_inneed
+field_name: field_plan_footnote_inneed
+entity_type: node
+bundle: plan
+label: 'Footnote in Need'
+description: 'Enter a text that should be displayed as a tooltip icon on elements of this type. Leave empty to not display a tooltip icon.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

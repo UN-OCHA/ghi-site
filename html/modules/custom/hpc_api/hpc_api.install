@@ -1,0 +1,108 @@
+<?php
+
+/**
+ * @file
+ * Install, uninstall and update hooks for HPC API module.
+ */
+
+use Drupal\Core\File\FileSystemInterface;
+use Psr\Http\Message\ResponseInterface;
+use Drupal\hpc_api\Helpers\QueryHelper;
+use Drupal\hpc_api\Query\EndpointQuery;
+
+/**
+ * Implements hook_requirements().
+ */
+function hpc_api_requirements($phase) {
+  $requirements = [];
+  if ($phase == 'install' || $phase == 'runtime') {
+
+    // API server availability.
+    $query_handler = QueryHelper::getEndpointQueryHandler('fts/flow/custom-search', [
+      'locationid' => 1,
+      'year' => date('Y'),
+      'limit' => 1,
+    ]);
+    $api_test_url = $query_handler->getFullEndpointUrl();
+    $requirements['hpc_api_server'] = [
+      'title' => t('HPC API: Server'),
+      'severity' => REQUIREMENT_OK,
+      'value' => $api_test_url,
+      'description' => t('API endpoints can be queried and return status code 200'),
+    ];
+
+    // API server availability.
+    $query_handler = QueryHelper::getEndpointQueryHandler('fts/flow/custom-search', [
+      'locationid' => 1,
+      'year' => date('Y'),
+      'limit' => 1,
+    ]);
+    $api_test_url = $query_handler->getFullEndpointUrl();
+    $requirements['hpc_api_server'] = [
+      'title' => t('HPC API: Server'),
+      'value' => $api_test_url,
+      'description' => t('API endpoints can be queried and return status code 200'),
+    ];
+
+    $response = $query_handler->sendQuery();
+    if ($response !== NULL) {
+      $requirements['hpc_api_server']['severity'] = $response->getStatusCode() == 200 ? REQUIREMENT_OK : REQUIREMENT_ERROR;
+      $requirements['hpc_api_server']['description'] = t('Server responds with HTTP status code <em>@status_code @status_message</em>. Please check the connection and contact the HPC service maintainer.', [
+        '@status_code' => $response->getStatusCode(),
+        '@status_message' => $response->getReasonPhrase(),
+      ]);
+    }
+    else {
+      $requirements['hpc_api_server']['severity'] = REQUIREMENT_ERROR;
+      $requirements['hpc_api_server']['description'] = t('Server request failed with an unknown error. Please check the connection and contact the HPC service maintainer.');
+    }
+
+    $api_key = \Drupal::config('hpc_api.settings')->get('api_key');
+    $requirements['hpc_api_key'] = [
+      'title' => t('HPC API: API key'),
+      'severity' => !empty($api_key) ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+      'value' => !empty($api_key) ? t('API key is set and works correctly') : t('API key not set'),
+    ];
+    if (!empty($api_key) && !hpc_api_test_api_key()) {
+      $requirements['hpc_api_key']['severity'] = REQUIREMENT_ERROR;
+      $requirements['hpc_api_key']['value'] = t('API key set, but backend requests fail. Please review and correct the API key.');
+    }
+
+    // Setup the imports directory.
+    $requirements['hpc_api_import']['title'] = t('HPC API: Import directory');
+    $requirements['hpc_api_import']['value'] = t('The directory for local storage of HPC data for imports exists and is writable.');
+    $requirements['hpc_api_import']['severity'] = REQUIREMENT_OK;
+    $destination = 'public://imports';
+
+    \Drupal::service('file_system')->prepareDirectory($destination, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+    $is_writable = is_writable($destination);
+    $is_directory = is_dir($destination);
+    if (!$is_writable || !$is_directory) {
+      if (!$is_directory) {
+        $error = t('The directory %directory does not exist.', ['%directory' => $destination]);
+      }
+      else {
+        $error = t('The directory %directory is not writable.', ['%directory' => $destination]);
+      }
+      $description = t('An automated attempt to create this directory failed, possibly due to a permissions problem. To proceed with the installation, either create the directory and modify its permissions manually or ensure that the installer has the permissions to create it automatically. For more information, see INSTALL.txt or the <a href=":handbook_url">online handbook</a>.', [':handbook_url' => 'https://www.drupal.org/server-permissions']);
+      if (!empty($error)) {
+        $description = $error . ' ' . $description;
+        $requirements['hpc_api_import']['value'] = $description;
+        $requirements['hpc_api_import']['severity'] = REQUIREMENT_ERROR;
+      }
+    }
+  }
+  return $requirements;
+}
+
+/**
+ * Test if the API key is working.
+ */
+function hpc_api_test_api_key() {
+  // Just call an arbitrary endpoint that returns an empty data set, but
+  // responds with HTTP 200.
+  $query_handler = QueryHelper::getEndpointQueryHandler('participant/hidId/1', [], 'v2');
+  $query_handler->setAuthMethod(EndpointQuery::AUTH_METHOD_API_KEY);
+  $result = $query_handler->sendQuery();
+  return $result instanceof ResponseInterface && $result->getStatusCode() == 200;
+}

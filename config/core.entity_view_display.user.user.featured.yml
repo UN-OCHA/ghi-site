@@ -1,0 +1,26 @@
+uuid: bd3c33c3-c328-4caa-8db9-7db22ed0d0fb
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.user.featured
+    - field.field.user.user.field_user_about
+    - field.field.user.user.field_user_picture
+    - field.field.user.user.user_picture
+  module:
+    - user
+id: user.user.featured
+targetEntityType: user
+bundle: user
+mode: featured
+content:
+  member_for:
+    weight: 5
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  field_user_about: true
+  field_user_picture: true
+  langcode: true
+  user_picture: true

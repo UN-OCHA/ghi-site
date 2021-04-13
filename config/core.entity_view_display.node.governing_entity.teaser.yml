@@ -1,0 +1,33 @@
+uuid: cda35d39-c1bf-4cff-a082-fe6f5d91389c
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.governing_entity.field_cluster_managers
+    - field.field.node.governing_entity.field_entity_subpage
+    - field.field.node.governing_entity.field_original_id
+    - field.field.node.governing_entity.field_plan
+    - field.field.node.governing_entity.field_plan_id
+    - field.field.node.governing_entity.field_prototype_id
+    - node.type.governing_entity
+  module:
+    - user
+id: node.governing_entity.teaser
+targetEntityType: node
+bundle: governing_entity
+mode: teaser
+content:
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  field_cluster_managers: true
+  field_entity_subpage: true
+  field_original_id: true
+  field_plan: true
+  field_plan_id: true
+  field_prototype_id: true
+  langcode: true

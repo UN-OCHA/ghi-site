@@ -1,0 +1,80 @@
+<?php
+
+/**
+ * @file
+ * Global functions for the HPC API module.
+ */
+
+use Drupal\Core\Url;
+
+use Drupal\hpc_api\Helpers\QueryHelper;
+
+/**
+ * Implements hook_cache_flush().
+ *
+ * Clean up import files.
+ */
+function hpc_api_cache_flush() {
+  // Delete import files.
+  $import_files = \Drupal::service('file_system')->scanDirectory(QueryHelper::IMPORT_DIR, '/.*\.json/');
+  if (empty($import_files)) {
+    // Nothing to be done.
+    return;
+  }
+  foreach ($import_files as $import_file) {
+    \Drupal::service('file_system')->delete($import_file->uri);
+  }
+}
+
+/**
+ * Retrieve the default API version for HPC queries.
+ */
+function hpc_api_get_default_api_version() {
+  return \Drupal::config('hpc_api.settings')->get('default_api_version', 'v1');
+}
+
+/**
+ * Retrieve the complete public url for the given arguments.
+ *
+ * @return string
+ *   A fully qualified URL for the public endpoint.
+ */
+function hpc_api_get_public_api_search_url($args = []) {
+  $config = \Drupal::config('hpc_api.settings');
+  $api_url = $config->get('url');
+  $api_version = hpc_api_get_default_api_version();
+  $api_base_path = $config->get('public_base_path');
+  $endpoint = 'flow';
+  $url = $api_url . '/' . $api_version . '/' . $api_base_path . '/' . $endpoint;
+  return Url::fromUri($url, ['query' => $args])->toUriString();
+}
+
+/**
+ * Send a request to the custom search API endpoint.
+ *
+ * @param array $args
+ *   An array of query arguments send to the endpoint.
+ */
+function hpc_api_query_custom_search(array $args = []) {
+  $query_handler = \Drupal::service('hpc_api.endpoint_query');
+  $query_handler->setArguments([
+    'endpoint' => 'fts/flow/custom-search',
+    'query_args' => $args,
+  ]);
+  return $query_handler->query();
+}
+
+/**
+ * Send a request to the custom search project API endpoint.
+ *
+ * @param array $args
+ *   An array of query arguments send to the endpoint.
+ */
+function hpc_api_query_projects(array $args = []) {
+  $query_handler = \Drupal::service('hpc_api.endpoint_query');
+  $query_handler->setArguments([
+    'endpoint' => 'fts/project/plan',
+    'query_args' => $args,
+  ]);
+  return $query_handler->query();
+}

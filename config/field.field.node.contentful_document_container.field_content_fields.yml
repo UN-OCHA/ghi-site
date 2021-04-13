@@ -1,0 +1,21 @@
+uuid: bd0b4214-c1c2-4859-9ded-49ea7d8679f4
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_content_fields
+    - node.type.contentful_document_container
+id: node.contentful_document_container.field_content_fields
+field_name: field_content_fields
+entity_type: node
+bundle: contentful_document_container
+label: 'Content fields'
+description: 'List the fields that define a content item that should be retrieved on the fly for display on a page. Enter one field per line.'
+required: false
+translatable: false
+default_value:
+  -
+    value: "author\nsummary\nprimaryImage\ncontentItems"
+default_value_callback: ''
+settings: {  }
+field_type: string_long

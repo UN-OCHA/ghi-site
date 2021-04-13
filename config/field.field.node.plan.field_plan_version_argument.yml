@@ -1,0 +1,23 @@
+uuid: 2a83b64b-ecc6-45ca-b56e-25217bf00b1b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_plan_version_argument
+    - node.type.plan
+  module:
+    - options
+id: node.plan.field_plan_version_argument
+field_name: field_plan_version_argument
+entity_type: node
+bundle: plan
+label: 'Plan version argument'
+description: 'The version argument to use when fetching plan data.'
+required: true
+translatable: false
+default_value:
+  -
+    value: current
+default_value_callback: ''
+settings: {  }
+field_type: list_string

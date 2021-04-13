@@ -1,0 +1,21 @@
+uuid: 9511c974-2cf6-4f38-9e2e-785a9a24cb9d
+langcode: und
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_term.field_link_pattern
+field_name: field_link_pattern
+entity_type: taxonomy_term
+type: string
+settings:
+  max_length: 255
+  is_ascii: false
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

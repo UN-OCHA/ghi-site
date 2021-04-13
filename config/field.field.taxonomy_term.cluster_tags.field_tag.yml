@@ -1,0 +1,19 @@
+uuid: 0362d2c0-dd39-453d-aa43-3e8359e4d5e5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tag
+    - taxonomy.vocabulary.cluster_tags
+id: taxonomy_term.cluster_tags.field_tag
+field_name: field_tag
+entity_type: taxonomy_term
+bundle: cluster_tags
+label: Tag
+description: 'The tag value as it is used and assigned in the HPC API.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

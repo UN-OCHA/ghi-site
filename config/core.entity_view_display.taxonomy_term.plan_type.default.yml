@@ -1,0 +1,31 @@
+uuid: 2b0cf982-59e3-4132-acaa-a01e2e208c82
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.plan_type.field_long_name
+    - taxonomy.vocabulary.plan_type
+  module:
+    - text
+id: taxonomy_term.plan_type.default
+targetEntityType: taxonomy_term
+bundle: plan_type
+mode: default
+content:
+  description:
+    label: hidden
+    type: text_default
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_long_name:
+    label: above
+    weight: 0
+    type: string
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    region: content
+hidden:
+  langcode: true

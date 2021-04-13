@@ -1,0 +1,8 @@
+uuid: 16410487-d01b-43ca-8498-a8636a1a687e
+langcode: en
+status: true
+dependencies: {  }
+name: 'Cluster tags'
+vid: cluster_tags
+description: 'A list of valid cluster tags. This is currently handled manually, but should really be retrieved from the API.'
+weight: 0

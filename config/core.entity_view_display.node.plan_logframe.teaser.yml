@@ -1,0 +1,27 @@
+uuid: 6a7fc826-1f44-4429-9561-0d2c0f155d9b
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.plan_logframe.field_element_templates
+    - field.field.node.plan_logframe.field_plan
+    - field.field.node.plan_logframe.field_plan_id
+    - node.type.plan_logframe
+  module:
+    - user
+id: node.plan_logframe.teaser
+targetEntityType: node
+bundle: plan_logframe
+mode: teaser
+content:
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  field_element_templates: true
+  field_plan: true
+  field_plan_id: true
+  langcode: true

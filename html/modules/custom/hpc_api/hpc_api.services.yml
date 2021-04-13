@@ -1,0 +1,11 @@
+services:
+  hpc_api.endpoint_query:
+    class: Drupal\hpc_api\Query\EndpointQuery
+    arguments: ['@config.factory', '@logger.factory', '@cache.data', '@page_cache_kill_switch', '@http_client']
+  hpc_api.query_profile_subscriber:
+    class: Drupal\hpc_api\EventSubscriber\QueryProfileSubscriber
+    arguments: []
+    tags:
+      - { name: event_subscriber }
+    calls:
+      - [setDebugLogger, ['@?debug_tools.log']]

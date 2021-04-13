@@ -1,0 +1,26 @@
+uuid: 592a425f-afc7-4872-897b-528432027274
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_featured_categories
+    - node.type.panopoly_page
+    - taxonomy.vocabulary.panopoly_categories
+id: node.panopoly_page.field_featured_categories
+field_name: field_featured_categories
+entity_type: node
+bundle: panopoly_page
+label: Categories
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler_settings:
+    sort:
+      field: _none
+    target_bundles:
+      panopoly_categories: panopoly_categories
+  handler: 'default:taxonomy_term'
+field_type: entity_reference

@@ -1,5 +1,5 @@
-modal_width: 768
-modal_height: auto
+modal_width: 1200
+modal_height: '768'
 modal_autoresize: true
 theme_display: default_theme
 _core:

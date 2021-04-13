@@ -1,0 +1,29 @@
+uuid: 580d16aa-592c-430e-b9b4-491aa199e3d5
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.contentful_document_page.field_document_container
+    - field.field.node.contentful_document_page.field_document_page_depth
+    - field.field.node.contentful_document_page.field_document_page_order
+    - field.field.node.contentful_document_page.field_document_parent_page
+    - node.type.contentful_document_page
+  module:
+    - user
+id: node.contentful_document_page.teaser
+targetEntityType: node
+bundle: contentful_document_page
+mode: teaser
+content:
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  field_document_container: true
+  field_document_page_depth: true
+  field_document_page_order: true
+  field_document_parent_page: true
+  langcode: true

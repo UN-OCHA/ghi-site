@@ -1,0 +1,19 @@
+uuid: d3b7a34f-98d6-42d6-ba08-654e71013dfd
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_plan_structure_rpm
+    - node.type.plan
+id: node.plan.field_plan_structure_rpm
+field_name: field_plan_structure_rpm
+entity_type: node
+bundle: plan
+label: 'Plan structure RPM'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

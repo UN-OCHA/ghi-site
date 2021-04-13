@@ -1,0 +1,19 @@
+uuid: a9c250f0-4732-4447-9350-eb5acf780d2b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_plan_footnote_target
+    - node.type.plan
+id: node.plan.field_plan_footnote_target
+field_name: field_plan_footnote_target
+entity_type: node
+bundle: plan
+label: 'Footnote target'
+description: 'Enter a text that should be displayed as a tooltip icon on elements of this type. Leave empty to not display a tooltip icon.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

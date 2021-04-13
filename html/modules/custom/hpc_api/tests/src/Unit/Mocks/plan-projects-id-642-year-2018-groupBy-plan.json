@@ -1,0 +1,56 @@
+{
+    "status": "ok",
+    "data": {
+        "report1": {
+            "fundingTotals": {
+                "total": 715210134
+            },
+            "pledgeTotals": {
+                "total": 0
+            }
+        },
+        "report3": {
+            "fundingTotals": {
+                "total": 715210134,
+                "objects": [
+                    {
+                        "type": "Plan",
+                        "direction": "destination",
+                        "singleFundingTotal": 715210134,
+                        "singleFundingObjects": [
+                            {
+                                "type": "Plan",
+                                "direction": "destination",
+                                "id": 642,
+                                "name": "Nigeria 2018",
+                                "totalFunding": 715210134
+                            }
+                        ]
+                    }
+                ]
+            },
+            "pledgeTotals": {
+                "total": 0,
+                "objects": []
+            }
+        },
+        "report4": {
+            "fundingTotals": {
+                "total": 44761512
+            }
+        },
+        "requirements": {
+            "totalRevisedReqs": 1047768587,
+            "totalOrigReqs": 1047768587,
+            "objects": [
+                {
+                    "id": 642,
+                    "name": "Nigeria 2018",
+                    "objectType": "Plan",
+                    "revisedRequirements": 1047768587,
+                    "origRequirements": 1047768587
+                }
+            ]
+        }
+    }
+}

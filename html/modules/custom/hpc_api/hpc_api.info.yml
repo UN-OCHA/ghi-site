@@ -1,0 +1,7 @@
+name: HPC API
+description: Retrieve data from the HPC API.
+package: HPC
+configure: hpc_api.config
+
+type: module
+core_version_requirement: ^8 || ^9

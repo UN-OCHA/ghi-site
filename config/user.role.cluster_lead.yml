@@ -1,0 +1,19 @@
+uuid: c406077f-806f-4473-a6e4-fb30b18fc0b1
+langcode: en
+status: true
+dependencies: {  }
+id: cluster_lead
+label: 'cluster lead'
+weight: 5
+is_admin: null
+permissions:
+  - 'add media from remote sources'
+  - 'administer panelizer node governing_entity content'
+  - 'edit own governing_entity content'
+  - 'publish editable content'
+  - 'unpublish editable content'
+  - 'use page manager'
+  - 'use panels in place editing'
+  - 'use text format panopoly_html_text'
+  - 'use text format panopoly_wysiwyg_text'
+  - 'view own unpublished content'

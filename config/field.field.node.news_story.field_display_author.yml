@@ -1,0 +1,19 @@
+uuid: 8c0af772-8de8-4f26-9605-73ec049cbf44
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_display_author
+    - node.type.news_story
+id: node.news_story.field_display_author
+field_name: field_display_author
+entity_type: node
+bundle: news_story
+label: 'Display author'
+description: 'Author displayed in byline.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

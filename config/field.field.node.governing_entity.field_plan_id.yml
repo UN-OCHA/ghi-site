@@ -1,0 +1,23 @@
+uuid: b7276f5d-21f1-42e7-a73b-b8bba51b0e44
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_plan_id
+    - node.type.governing_entity
+id: node.governing_entity.field_plan_id
+field_name: field_plan_id
+entity_type: node
+bundle: governing_entity
+label: 'Plan ID'
+description: 'The original plan ID of the plan that this entity is attached to.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  max: null
+  min: null
+  prefix: ''
+  suffix: ''
+field_type: integer

@@ -1,0 +1,10 @@
+hpc_api.config:
+  title: HPC API
+  description: 'Configure settings for interacting with the HPC API.'
+  route_name: hpc_api.config
+  parent: system.admin_config_services
+hpc_api.import_files_report:
+  title: HPC import files
+  description: 'List the currently imported source files for data migration.'
+  route_name: hpc_api.reports.import_files
+  parent: system.admin_reports

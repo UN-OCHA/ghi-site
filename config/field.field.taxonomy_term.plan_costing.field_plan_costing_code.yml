@@ -1,0 +1,23 @@
+uuid: 725f8dfa-8072-48e0-96e8-916a89621ed4
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_plan_costing_code
+    - taxonomy.vocabulary.plan_costing
+id: taxonomy_term.plan_costing.field_plan_costing_code
+field_name: field_plan_costing_code
+entity_type: taxonomy_term
+bundle: plan_costing
+label: 'Plan costing code'
+description: 'The raw plan costing code from RPM.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  max: null
+  min: null
+  prefix: ''
+  suffix: ''
+field_type: integer

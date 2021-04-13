@@ -1,0 +1,11 @@
+name: GHI Plans
+description: Provide logic around plans and related objects.
+package: GHI
+
+type: module
+core_version_requirement: ^8 || ^9
+
+dependencies:
+  - hpc_api
+  - migrate_plus:migrate_plus
+  - migrate_tools:migrate_tools

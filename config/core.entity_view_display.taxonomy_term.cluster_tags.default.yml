@@ -1,0 +1,31 @@
+uuid: 6774e2ac-d29b-4a60-9910-40bea611c417
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.cluster_tags.field_tag
+    - taxonomy.vocabulary.cluster_tags
+  module:
+    - text
+id: taxonomy_term.cluster_tags.default
+targetEntityType: taxonomy_term
+bundle: cluster_tags
+mode: default
+content:
+  description:
+    label: hidden
+    type: text_default
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_tag:
+    label: above
+    weight: 0
+    type: string
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    region: content
+hidden:
+  langcode: true

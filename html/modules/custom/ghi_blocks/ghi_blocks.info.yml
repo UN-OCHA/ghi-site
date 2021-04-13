@@ -1,0 +1,10 @@
+name: GHI Blocks
+description: Provide blocks for GHI representing data from the HPC API.
+package: GHI
+
+type: module
+core_version_requirement: ^8 || ^9
+
+dependencies:
+  - hpc_common
+  - layout_builder_modal

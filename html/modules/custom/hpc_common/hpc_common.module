@@ -1,0 +1,135 @@
+<?php
+
+/**
+ * @file
+ * Contains hpc_common.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Component\Utility\Html;
+
+use Drupal\hpc_common\Helpers\BlockHelper;
+use Drupal\hpc_common\Helpers\UserHelper;
+use Drupal\hpc_common\Plugin\HPCBlockBase;
+
+/**
+ * Implements hook_help().
+ */
+function hpc_common_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the hpc_common module.
+    case 'help.page.hpc_common':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Common base definitions for HPC features in Drupal 8') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function hpc_common_theme($existing, $type, $theme, $path) {
+  $common = [
+    'file' => 'hpc_common.theme.inc',
+  ];
+
+  return [
+    'hpc_modal_link' => [
+      'variables' => [
+        'link' => NULL,
+      ],
+      'template' => 'hpc-modal-link',
+    ] + $common,
+    'hpc_tooltip' => [
+      'variables' => [
+        'tooltip' => NULL,
+        'class' => NULL,
+        'tag' => NULL,
+        'tag_content' => NULL,
+      ],
+      'template' => 'hpc-tooltip',
+    ] + $common,
+    'hpc_hid_session_information' => [
+      'variables' => [
+        'description' => NULL,
+        'user_id' => NULL,
+        'id_message' => NULL,
+        'token' => NULL,
+        'token_message' => NULL,
+      ],
+      'template' => 'hpc-hid-session-information',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_panels_build_alter().
+ *
+ * This is used to replace page url arguments (as defined in the path of a
+ * page manager page using panels) that are used as placeholders in page titles
+ * with their actual values from the url.
+ */
+function hpc_common_panels_build_alter(array &$build, $panels_display_variant) {
+  $title = (string) $build['#title'];
+  if (strpos($title, '{') === FALSE) {
+    return;
+  }
+  $valid_types = ['string', 'integer'];
+  foreach ($panels_display_variant->getContexts() as $context_key => $context) {
+    if (in_array($context->getContextDefinition()->getDataType(), $valid_types)) {
+      $title = str_replace('{' . $context_key . '}', Html::escape($context->getContextValue()), $title);
+    }
+  }
+  $build['#title'] = $title;
+}
+
+/**
+ * Implements hook_preprocess_block().
+ *
+ * This adds API tooltips to blocks based on HPCBlockBase.
+ */
+function hpc_common_preprocess_block(&$vars) {
+
+  if (empty($vars['configuration'])) {
+    return;
+  }
+  if (empty($vars['plugin_id']) || empty($vars['configuration']['uuid'])) {
+    return;
+  }
+
+  $vars['attributes']['class'][] = 'block-' . $vars['configuration']['uuid'];
+
+  // Add API tooltips to blocks for administrators.
+  if (UserHelper::isAdministrator()) {
+    $uri = \Drupal::request()->getRequestUri();
+    $block_instance = BlockHelper::getBlockInstance($uri, $vars['plugin_id'], $vars['configuration']['uuid']);
+    if (!$block_instance || !$block_instance instanceof HPCBlockBase) {
+      return;
+    }
+    $endpoint_urls = $block_instance->getFullEndpointUrls();
+    if (!empty($endpoint_urls)) {
+      $vars['icons'][] = [
+        '#theme' => 'hpc_tooltip',
+        '#tooltip' => implode('<br />', $endpoint_urls),
+        '#class' => 'api-url',
+      ];
+      $vars['attributes']['class'][] = 'has-api-url-tooltip';
+    }
+  }
+}
+
+/**
+ * Static storage helper function.
+ */
+function hpc_common_static_store($key, $result = NULL) {
+  $static_storage = &drupal_static(__FUNCTION__, []);
+  if ($result !== NULL) {
+    $static_storage[$key] = $result;
+  }
+  else {
+    return array_key_exists($key, $static_storage) ? $static_storage[$key] : NULL;
+  }
+}

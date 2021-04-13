@@ -1,0 +1,5 @@
+{
+    "status": "error",
+    "code": 400,
+    "message": "Error parsing query parameters - Error: Invalid groupBy value `plan48644`"
+}

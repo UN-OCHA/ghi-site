@@ -1,0 +1,8 @@
+uuid: 93e5921e-29fe-4a1e-a902-6bdde1caa963
+langcode: en
+status: true
+dependencies: {  }
+name: 'Plan costing'
+vid: plan_costing
+description: ''
+weight: 0

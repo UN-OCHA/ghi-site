@@ -1,0 +1,19 @@
+uuid: 27e2de4b-9fdb-4589-8b50-959fd36b41ed
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_entity_subpage
+    - node.type.plan_entity
+id: node.plan_entity.field_entity_subpage
+field_name: field_entity_subpage
+entity_type: node
+bundle: plan_entity
+label: 'Entity subpage'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

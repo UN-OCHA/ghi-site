@@ -1,0 +1,10 @@
+uuid: 2e0b63cb-8f32-48c1-b7d5-6f000f359196
+langcode: en
+status: true
+dependencies: {  }
+id: hpc_data
+label: 'HPC Data'
+description: 'Import data from the HPC API'
+source_type: 'HPC API'
+module: null
+shared_configuration: null

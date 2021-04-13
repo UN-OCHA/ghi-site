@@ -1,0 +1,30 @@
+uuid: 652d87c1-7d5b-4180-8f10-e9031ef7261a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_governing_entities
+    - node.type.governing_entity
+    - node.type.plan
+id: node.plan.field_governing_entities
+field_name: field_governing_entities
+entity_type: node
+bundle: plan
+label: 'Governing entities'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    behaviors:
+      views-select-list:
+        status: 0
+    sort:
+      field: _none
+      direction: ASC
+    target_bundles:
+      governing_entity: governing_entity
+field_type: entity_reference

@@ -1,0 +1,8 @@
+uuid: f7e09d61-798d-4e42-a078-e06019dc754e
+langcode: en
+status: true
+dependencies: {  }
+name: Categories
+vid: panopoly_categories
+description: 'This is a sitewide taxonomy of categories to organize the content on your site!'
+weight: 0

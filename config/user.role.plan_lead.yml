@@ -1,0 +1,24 @@
+uuid: b3c55f28-67c5-4c9e-a9cd-aac27eca6611
+langcode: en
+status: true
+dependencies: {  }
+id: plan_lead
+label: 'plan lead'
+weight: 4
+is_admin: null
+permissions:
+  - 'add media from remote sources'
+  - 'administer panelizer node governing_entity content'
+  - 'administer panelizer node plan content'
+  - 'administer panelizer node plan_entity content'
+  - 'apply hpc page templates'
+  - 'edit own governing_entity content'
+  - 'edit own plan_entity content'
+  - 'publish editable content'
+  - 'unpublish editable content'
+  - 'use page manager'
+  - 'use panels in place editing'
+  - 'use text format panopoly_html_text'
+  - 'use text format panopoly_wysiwyg_text'
+  - 'view own unpublished content'
+  - 'view the administration theme'

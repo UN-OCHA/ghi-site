@@ -1,0 +1,59 @@
+uuid: 5332c1b3-4664-4df5-9592-3286d8339fb8
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.plan_costing.field_plan_costing_code
+    - taxonomy.vocabulary.plan_costing
+  module:
+    - path
+    - text
+id: taxonomy_term.plan_costing.default
+targetEntityType: taxonomy_term
+bundle: plan_costing
+mode: default
+content:
+  description:
+    type: text_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_plan_costing_code:
+    weight: 31
+    type: number
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+    region: content
+  langcode:
+    type: language_select
+    weight: 2
+    region: content
+    settings:
+      include_locked: true
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: -5
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 30
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  status:
+    type: boolean_checkbox
+    settings:
+      display_label: true
+    weight: 100
+    region: content
+    third_party_settings: {  }
+hidden: {  }

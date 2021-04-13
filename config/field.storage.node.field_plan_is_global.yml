@@ -1,0 +1,18 @@
+uuid: da9ec05d-9cff-49b4-be82-351953129d8f
+langcode: und
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_plan_is_global
+field_name: field_plan_is_global
+entity_type: node
+type: boolean
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

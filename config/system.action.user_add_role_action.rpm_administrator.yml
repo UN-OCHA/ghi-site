@@ -1,0 +1,14 @@
+uuid: 68feafd5-286b-4dcb-b00c-0e3972dddb49
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.rpm_administrator
+  module:
+    - user
+id: user_add_role_action.rpm_administrator
+label: 'Add the rpm administrator role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: rpm_administrator

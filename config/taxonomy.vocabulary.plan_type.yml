@@ -1,0 +1,8 @@
+uuid: 6f035566-fbc8-4965-949d-193ae2d1aacb
+langcode: en
+status: true
+dependencies: {  }
+name: 'Plan type'
+vid: plan_type
+description: ''
+weight: 0

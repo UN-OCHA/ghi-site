@@ -1,0 +1,30 @@
+uuid: 8b83083a-c5a5-4d02-9e9b-a55a30f7f86f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_plan_entities
+    - node.type.plan
+    - node.type.plan_entity
+id: node.plan.field_plan_entities
+field_name: field_plan_entities
+entity_type: node
+bundle: plan
+label: 'Plan entities'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    behaviors:
+      views-select-list:
+        status: 0
+    sort:
+      field: _none
+      direction: ASC
+    target_bundles:
+      plan_entity: plan_entity
+field_type: entity_reference

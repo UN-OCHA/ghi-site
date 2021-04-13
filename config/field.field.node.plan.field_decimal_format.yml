@@ -1,0 +1,23 @@
+uuid: a90445ef-d845-4c38-a3a9-6294d535a98c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_decimal_format
+    - node.type.plan
+  module:
+    - options
+id: node.plan.field_decimal_format
+field_name: field_decimal_format
+entity_type: node
+bundle: plan
+label: 'Decimal format'
+description: ''
+required: true
+translatable: false
+default_value:
+  -
+    value: point
+default_value_callback: ''
+settings: {  }
+field_type: list_string

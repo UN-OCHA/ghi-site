@@ -1,0 +1,14 @@
+uuid: 33d2ef55-0717-4575-8793-f8de7ba9004f
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.plan_lead
+  module:
+    - user
+id: user_remove_role_action.plan_lead
+label: 'Remove the plan lead role from the selected user(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: plan_lead

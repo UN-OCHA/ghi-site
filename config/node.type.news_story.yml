@@ -1,0 +1,16 @@
+uuid: a015bc36-98ff-4886-a9a1-8fb3e9e15960
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    parent: 'main-menu:0:'
+name: 'News Story'
+type: news_story
+description: 'A content type for creating news stories.'
+help: ''
+new_revision: false
+preview_mode: 1
+display_submitted: true

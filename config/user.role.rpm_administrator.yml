@@ -1,0 +1,31 @@
+uuid: 2e5d915c-838a-498e-a98d-b03fb1eff314
+langcode: en
+status: true
+dependencies: {  }
+id: rpm_administrator
+label: 'rpm administrator'
+weight: 3
+is_admin: null
+permissions:
+  - 'access administration menu'
+  - 'access administration pages'
+  - 'add media from remote sources'
+  - 'administer panelizer node governing_entity content'
+  - 'administer panelizer node plan content'
+  - 'administer panelizer node plan_entity content'
+  - 'apply hpc page templates'
+  - 'bypass access in place editing'
+  - 'edit any governing_entity content'
+  - 'edit any plan_entity content'
+  - 'edit own governing_entity content'
+  - 'edit own plan_entity content'
+  - 'flush caches'
+  - 'publish editable content'
+  - 'unpublish editable content'
+  - 'use ipe with page manager'
+  - 'use page manager'
+  - 'use panels in place editing'
+  - 'use text format panopoly_html_text'
+  - 'use text format panopoly_wysiwyg_text'
+  - 'view own unpublished content'
+  - 'view the administration theme'

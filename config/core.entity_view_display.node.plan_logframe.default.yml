@@ -1,0 +1,32 @@
+uuid: 5cd282a4-0d33-418e-a848-a094eaaa0b20
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.plan_logframe.field_element_templates
+    - field.field.node.plan_logframe.field_plan
+    - field.field.node.plan_logframe.field_plan_id
+    - node.type.plan_logframe
+  module:
+    - user
+id: node.plan_logframe.default
+targetEntityType: node
+bundle: plan_logframe
+mode: default
+content:
+  field_element_templates:
+    label: above
+    weight: 2
+    type: basic_string
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  field_plan: true
+  field_plan_id: true
+  langcode: true

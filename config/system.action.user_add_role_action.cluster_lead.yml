@@ -1,0 +1,14 @@
+uuid: 923971f6-96b5-4c47-a325-97db9a105213
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.cluster_lead
+  module:
+    - user
+id: user_add_role_action.cluster_lead
+label: 'Add the cluster lead role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: cluster_lead

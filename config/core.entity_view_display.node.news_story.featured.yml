@@ -1,0 +1,29 @@
+uuid: 11f65f96-b23a-428c-ac5a-1c818a9a5320
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.featured
+    - field.field.node.news_story.body
+    - field.field.node.news_story.field_display_author
+    - field.field.node.news_story.field_image
+    - field.field.node.news_story.field_topics
+    - node.type.news_story
+  module:
+    - user
+id: node.news_story.featured
+targetEntityType: node
+bundle: news_story
+mode: featured
+content:
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  body: true
+  field_display_author: true
+  field_image: true
+  field_topics: true
+  langcode: true

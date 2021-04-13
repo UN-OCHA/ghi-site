@@ -1,0 +1,19 @@
+uuid: e6ad11ca-d4d4-491d-ac43-c94a56daf2a3
+langcode: und
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_enabled_subpages
+field_name: field_enabled_subpages
+entity_type: node
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

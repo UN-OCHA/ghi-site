@@ -1,0 +1,27 @@
+uuid: 038fe970-1f1a-4f79-9287-4cb6674e4921
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.featured
+    - field.field.node.plan_logframe.field_element_templates
+    - field.field.node.plan_logframe.field_plan
+    - field.field.node.plan_logframe.field_plan_id
+    - node.type.plan_logframe
+  module:
+    - user
+id: node.plan_logframe.featured
+targetEntityType: node
+bundle: plan_logframe
+mode: featured
+content:
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  field_element_templates: true
+  field_plan: true
+  field_plan_id: true
+  langcode: true

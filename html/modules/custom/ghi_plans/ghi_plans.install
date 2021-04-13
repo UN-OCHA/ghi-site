@@ -1,0 +1,15 @@
+<?php
+
+/**
+ * @file
+ * Defines install and uninstall hooks.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function ghi_plans_uninstall() {
+  \Drupal::configFactory()->getEditable('migrate_plus.migration.plan')->delete();
+  \Drupal::configFactory()->getEditable('migrate_plus.migration.plan_costing_term')->delete();
+  \Drupal::configFactory()->getEditable('migrate_plus.migration.plan_type_term')->delete();
+}

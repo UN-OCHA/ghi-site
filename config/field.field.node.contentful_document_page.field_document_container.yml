@@ -1,0 +1,30 @@
+uuid: 992e65b5-c140-4601-b6bf-b3efe2cf7196
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_document_container
+    - node.type.contentful_document_container
+    - node.type.contentful_document_page
+id: node.contentful_document_page.field_document_container
+field_name: field_document_container
+entity_type: node
+bundle: contentful_document_page
+label: 'Document container'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    behaviors:
+      views-select-list:
+        status: 0
+    sort:
+      field: _none
+      direction: ASC
+    target_bundles:
+      contentful_document_container: contentful_document_container
+field_type: entity_reference

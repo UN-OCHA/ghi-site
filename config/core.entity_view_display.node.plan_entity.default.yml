@@ -1,0 +1,68 @@
+uuid: 704feb4d-d623-4e22-add6-9a875f1fd73b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.plan_entity.field_entity_subpage
+    - field.field.node.plan_entity.field_original_id
+    - field.field.node.plan_entity.field_plan
+    - field.field.node.plan_entity.field_plan_id
+    - field.field.node.plan_entity.field_prototype_id
+    - node.type.plan_entity
+  module:
+    - user
+id: node.plan_entity.default
+targetEntityType: node
+bundle: plan_entity
+mode: default
+content:
+  field_entity_subpage:
+    label: above
+    weight: 3
+    type: string
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    region: content
+  field_original_id:
+    label: above
+    weight: 1
+    type: number_integer
+    settings:
+      prefix_suffix: true
+      thousand_separator: ''
+    third_party_settings: {  }
+    region: content
+  field_plan:
+    label: above
+    weight: 4
+    type: entity_reference_label
+    settings:
+      link: false
+    third_party_settings: {  }
+    region: content
+  field_plan_id:
+    label: above
+    weight: 2
+    type: number_integer
+    settings:
+      prefix_suffix: true
+      thousand_separator: ''
+    third_party_settings: {  }
+    region: content
+  field_prototype_id:
+    label: above
+    weight: 5
+    type: number_integer
+    settings:
+      prefix_suffix: true
+      thousand_separator: ''
+    third_party_settings: {  }
+    region: content
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  langcode: true

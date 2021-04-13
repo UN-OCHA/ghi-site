@@ -1,0 +1,16 @@
+services:
+  entity.node_from_original_id_context:
+    class: Drupal\hpc_common\ContextProvider\NodeFromOriginalIDProvider
+    arguments: ['@request_stack']
+    tags:
+      - { name: 'context_provider' }
+  page_manager.node_from_original_id_context:
+    class: Drupal\hpc_common\EventSubscriber\NodeFromOriginalIDContext
+    arguments: ['@request_stack']
+    tags:
+      - { name: 'event_subscriber' }
+  hpc_common.render_block_component_subscriber:
+    class: Drupal\hpc_common\EventSubscriber\BlockComponentRenderArray
+    arguments: []
+    tags:
+      - { name: event_subscriber }

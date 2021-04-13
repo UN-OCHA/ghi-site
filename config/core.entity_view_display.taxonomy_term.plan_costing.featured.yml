@@ -1,0 +1,25 @@
+uuid: e4f5bf3c-8196-40f5-b4fd-60e0aba3e002
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.taxonomy_term.featured
+    - field.field.taxonomy_term.plan_costing.field_plan_costing_code
+    - taxonomy.vocabulary.plan_costing
+  module:
+    - text
+id: taxonomy_term.plan_costing.featured
+targetEntityType: taxonomy_term
+bundle: plan_costing
+mode: featured
+content:
+  description:
+    label: hidden
+    type: text_default
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  field_plan_costing_code: true
+  langcode: true

@@ -1,0 +1,14 @@
+uuid: e78b896b-be48-44b1-b523-9cad4d762368
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.plan_lead
+  module:
+    - user
+id: user_add_role_action.plan_lead
+label: 'Add the plan lead role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: plan_lead

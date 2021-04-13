@@ -1,0 +1,11 @@
+.hpc-form-wrapper {
+  border: 1px solid gray;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+#layout-builder-modal input[data-drupal-selector="edit-actions-submit"].button--primary {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+}

@@ -1,0 +1,14 @@
+uuid: 897c0cb7-fee1-4a7e-bcef-93e4b03b8017
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.rpm_administrator
+  module:
+    - user
+id: user_remove_role_action.rpm_administrator
+label: 'Remove the rpm administrator role from the selected user(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: rpm_administrator
