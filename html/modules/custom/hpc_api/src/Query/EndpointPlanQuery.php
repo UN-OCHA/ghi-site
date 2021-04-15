@@ -10,7 +10,18 @@ class EndpointPlanQuery extends EndpointQuery {
   /**
    * Get plan.
    */
-  public function getPlan($plan_id) {
+  public function getPlan($plan_id, $public = TRUE, $hid = NULL) {
+    if ($public) {
+      return $this->getPlanPublic($plan_id);
+    }
+
+    return $this->getPlanPrivate($plan_id, $hid);
+  }
+
+  /**
+   * Get public info from a plan.
+   */
+  public function getPlanPublic($plan_id) {
     $this->setEndpoint('public/plan/id/' . $plan_id);
 
     $data = $this->getData();
@@ -28,14 +39,30 @@ class EndpointPlanQuery extends EndpointQuery {
     ];
 
     foreach ($data->categories as $category) {
-      $plan['categories'][] = $category->name;
+      $plan['categories'][] = (object) [
+        'id' => $category->id,
+        'name' => $category->name,
+        'code' => $category->code,
+      ];
     }
 
     foreach ($data->locations as $location) {
-      $plan['locations'][] = $location->name;
+      $plan['locations'][] = (object) [
+        'id' => $location->id,
+        'name' => $location->name,
+        'admin_level' => $location->adminLevel,
+        'iso3' => $location->iso3,
+        'pcode' => $location->pcode,
+      ];
     }
 
-    return $plan;
+    return (object) $plan;
+  }
+
+  /**
+   * Get private info from a plan.
+   */
+  public function getPlanPrivate($plan_id, $hid) {
   }
 
   /**
@@ -50,13 +77,13 @@ class EndpointPlanQuery extends EndpointQuery {
     $this->setEndpointArguments([]);
 
     // Get flow.
-    $data = $this->getFlowByPlan($plan_id);
+    $data = $this->getFlowsByPlan($plan_id);
     $funding_total = $data->incoming->fundingTotal;
 
     $unmet_requirement = ($total_requirement - $funding_total);
     $funded_average = round(($funding_total * 100) / $total_requirement, 1);
 
-    return [
+    return (object) [
       'total_requirement' => $total_requirement,
       'funding_total' => $funding_total,
       'unmet_requirement' => $unmet_requirement,
@@ -88,6 +115,7 @@ class EndpointPlanQuery extends EndpointQuery {
   public function getPlansByYear($year = '') {
     $this->setEndpoint('public/plan/year/' . $year);
 
+    // @todo filter data.
     return $this->getData();
   }
 
@@ -97,23 +125,25 @@ class EndpointPlanQuery extends EndpointQuery {
   public function getPlansByCountryIso3($iso3 = '') {
     $this->setEndpoint('public/plan/country/' . $iso3);
 
+    // @todo filter data.
     return $this->getData();
   }
 
   /**
-   * Get flow by plan.
+   * Get flows by plan.
    */
-  public function getFlowByPlan($plan_id) {
+  public function getFlowsByPlan($plan_id) {
     $this->setEndpoint('public/fts/flow');
     $this->setEndpointArgument('planId', $plan_id);
 
+    // @todo filter data.
     return $this->getData();
   }
 
   /**
-   * Get flow by plan grouped by cluster.
+   * Get flows by plan grouped by cluster.
    */
-  public function getFlowByPlanGroupByCluster($plan_id) {
+  public function getFlowsByPlanGroupByCluster($plan_id) {
     $this->setEndpoint('public/fts/flow');
     $this->setEndpointArgument('planId', $plan_id);
     $this->setEndpointArgument('groupby', 'Cluster');
@@ -127,16 +157,16 @@ class EndpointPlanQuery extends EndpointQuery {
 
     $clusters = [];
     foreach ($raw_clusters as $raw_cluster) {
-      $clusters[] = [
+      $clusters[] = (object) [
         'id' => $raw_cluster->id,
         'name' => $raw_cluster->name,
         'type' => $raw_cluster->type,
-        'direction' => $raw_cluster->direction,
-        'total_funding' => $raw_cluster->totalFunding,
-        'single_funding' => $raw_cluster->singleFunding,
-        'overlap_funding' => $raw_cluster->overlapFunding,
-        'shared_funding' => $raw_cluster->sharedFunding,
-        'on_boundary_funding' => $raw_cluster->onBoundaryFunding,
+        'direction' => $raw_cluster->direction ?? '',
+        'total_funding' => $raw_cluster->totalFunding ?? 0,
+        'single_funding' => $raw_cluster->singleFunding ?? 0,
+        'overlap_funding' => $raw_cluster->overlapFunding ?? 0,
+        'shared_funding' => $raw_cluster->sharedFunding ?? 0,
+        'on_boundary_funding' => $raw_cluster->onBoundaryFunding ?? 0,
       ];
     }
 
@@ -158,12 +188,12 @@ class EndpointPlanQuery extends EndpointQuery {
 
     $sources = [];
     foreach ($raw_sources as $raw_source) {
-      $sources[] = [
+      $sources[] = (object) [
         'id' => $raw_source->id,
         'name' => $raw_source->name,
         'type' => $raw_source->type,
-        'direction' => $raw_source->direction,
-        'total_funding' => $raw_source->total_funding,
+        'direction' => $raw_source->direction ?? '',
+        'total_funding' => $raw_source->total_funding ?? 0,
       ];
     }
 
