@@ -32,6 +32,7 @@
         "drupal/metatag": "^1.16",
         "drupal/migrate_plus": "^5.1",
         "drupal/migrate_tools": "^5.0",
+        "drupal/paragraphs_frontend_ui": "^2.0@alpha",
         "drupal/pathauto": "^1.8",
         "drupal/redirect": "^1.6",
         "drupal/redis": "^1.5",
