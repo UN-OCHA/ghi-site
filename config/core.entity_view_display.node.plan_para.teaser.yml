@@ -1,0 +1,35 @@
+uuid: 19523809-1b9d-4c5e-8a74-6194d0106a68
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.plan_para.body
+    - field.field.node.plan_para.field_content
+    - field.field.node.plan_para.field_original_id
+    - node.type.plan_para
+  module:
+    - text
+    - user
+id: node.plan_para.teaser
+targetEntityType: node
+bundle: plan_para
+mode: teaser
+content:
+  body:
+    label: hidden
+    type: text_summary_or_trimmed
+    weight: 101
+    settings:
+      trim_length: 600
+    third_party_settings: {  }
+    region: content
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  field_content: true
+  field_original_id: true
+  langcode: true

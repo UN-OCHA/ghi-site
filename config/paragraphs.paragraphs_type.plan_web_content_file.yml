@@ -1,0 +1,14 @@
+uuid: fd0e74aa-0f4f-4ad1-a34d-6929def5b79c
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_plans
+id: plan_web_content_file
+label: 'Plan: Web Content File'
+icon_uuid: null
+icon_default: null
+description: ''
+behavior_plugins:
+  plan_web_content_file:
+    enabled: true
