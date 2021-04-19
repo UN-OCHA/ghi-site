@@ -32,9 +32,11 @@ dependencies:
     - field.field.node.plan.field_related_ocha_pages
     - field.field.node.plan.field_restricted
     - field.field.node.plan.field_rpm_plan_status
+    - field.field.node.plan.layout_builder__layout
     - node.type.plan
   module:
     - layout_builder
+    - layout_discovery
     - user
 third_party_settings:
   layout_builder:
@@ -98,3 +100,4 @@ hidden:
   field_restricted: true
   field_rpm_plan_status: true
   langcode: true
+  layout_builder__layout: true

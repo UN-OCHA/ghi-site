@@ -1,0 +1,11 @@
+uuid: 4106bbe9-7daa-47d4-9910-e1631bd77b26
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.plan_para
+id: node.plan_para
+target_entity_type_id: node
+target_bundle: plan_para
+default_langcode: site_default
+language_alterable: false

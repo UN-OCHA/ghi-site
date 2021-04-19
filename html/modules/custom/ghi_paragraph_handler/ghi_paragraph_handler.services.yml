@@ -1,0 +1,4 @@
+services:
+  plugin.manager.ghi_paragraph_handler:
+    class: Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerManager
+    parent: default_plugin_manager

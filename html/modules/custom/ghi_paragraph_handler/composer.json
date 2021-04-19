@@ -1,0 +1,14 @@
+{
+  "name": "drupal/paragraph_handler",
+  "type": "drupal-module",
+  "description": "Allows paragraphs to controlled by classes.",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/paragraph_handler",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/paragraph_handler",
+    "source": "http://cgit.drupalcode.org/paragraph_handler"
+  },
+  "require": { }
+}

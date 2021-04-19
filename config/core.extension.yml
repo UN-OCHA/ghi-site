@@ -13,11 +13,14 @@ module:
   dblog: 0
   dynamic_page_cache: 0
   editor: 0
+  entity_reference_revisions: 0
+  entity_usage: 0
   field: 0
   field_ui: 0
   file: 0
   filter: 0
   ghi_blocks: 0
+  ghi_paragraph_handler: 0
   ghi_plans: 0
   help: 0
   hpc_api: 0
@@ -42,6 +45,9 @@ module:
   node: 0
   options: 0
   page_cache: 0
+  paragraphs_edit: 0
+  paragraphs_frontend_ui: 0
+  paragraphs_library: 0
   path: 0
   path_alias: 0
   settings_tray: 0
@@ -54,6 +60,7 @@ module:
   views_ui: 0
   content_translation: 10
   views: 10
+  paragraphs: 11
   minimal: 1000
 theme:
   stark: 0
