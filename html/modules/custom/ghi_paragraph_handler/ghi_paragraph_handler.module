@@ -74,6 +74,9 @@ function ghi_paragraph_handler_field_widget_paragraphs_form_alter(&$element, &$f
   if (isset($element['subform']['#process'])) {
     $plugin->dispatchWidgetAlter($paragraph, $element, $form_state, $context);
   }
+  else {
+    // @todo: add Preview/Summary handler.
+  }
 }
 
 /**
