@@ -134,22 +134,25 @@ class PlanWebContentFile extends ParagraphHandlerBase {
 
     // @see https://www.drupal.org/project/drupal/issues/2820359
     $subform['#element_submit'] = [[$this, 'submit']];
-    $subform['paragraph'] = [
-      '#type' => 'value',
-      '#value' => $this->paragraph,
-    ];
   }
 
   public static function submit(&$element, FormStateInterface $form_state) {
+    // Get field name and delta from parents.
+    $parents = $element['#parents'];
+    $field_name = array_shift($parents);
+    $delta = array_shift($parents);
+
+    // Get paragraph from widget state.
+    $widget_state = \Drupal\Core\Field\WidgetBase::getWidgetState([], $field_name, $form_state);
+
+    // Get actual values.
     $values = NestedArray::getValue($form_state->getValues(), $element['#parents']);
 
-    /** var \Drupal\paragraphs\Entity\Paragraph $paragraph */
-    $paragraph = $values['paragraph'];
-    unset($values['paragraph']);
-
-    $paragraph->setBehaviorSettings('plan_web_content_file', $values);
-    $paragraph->setNeedsSave(TRUE);
-    $paragraph->save();
+    // Set widget state.
+    if ($values && is_array($values)) {
+      $widget_state['paragraphs'][$delta]['entity']->setBehaviorSettings('plan_web_content_file', $values);
+      $widget_state['paragraphs'][$delta]['entity']->setNeedsSave(TRUE);
+    }
   }
 
   /**

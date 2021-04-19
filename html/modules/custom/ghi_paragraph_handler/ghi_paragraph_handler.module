@@ -63,7 +63,12 @@ function ghi_paragraph_handler_field_widget_paragraphs_form_alter(&$element, &$f
   }
 
   if (!empty($context['items']) && !$context['items']->isEmpty()) {
-    $paragraph = Paragraph::load($context['items']->get($context['delta'])->target_id);
+    if (isset($context['delta']) && isset($context['items']->get($context['delta'])->target_id)) {
+      $paragraph = Paragraph::load($context['items']->get($context['delta'])->target_id);
+    }
+    else {
+      return;
+    }
   }
 
   if (!$paragraph || !$plugin = ghi_paragraph_handler_get_handler($paragraph)) {
