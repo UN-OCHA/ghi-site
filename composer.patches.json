@@ -1,5 +1,8 @@
 {
   "patches": {
+      "drupal/core": {
+        "https://www.drupal.org/project/drupal/issues/2820359": "./PATCHES/2820359-element_submit-105.patch"
+      },
       "unocha/common_design" : {
           "Compatibility with Drupal 9": "patches/common-design-drupal-9.patch"
       }
