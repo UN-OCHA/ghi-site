@@ -70,7 +70,10 @@ function ghi_paragraph_handler_field_widget_paragraphs_form_alter(&$element, &$f
     return;
   }
 
-  $plugin->dispatchWidgetAlter($paragraph, $element, $form_state, $context);
+  // Detect real edit mode.
+  if (isset($element['subform']['#process'])) {
+    $plugin->dispatchWidgetAlter($paragraph, $element, $form_state, $context);
+  }
 }
 
 /**

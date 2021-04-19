@@ -65,7 +65,6 @@ class PlanWebContentFile extends ParagraphHandlerBase {
   public function widget_alter(&$element, &$form_state, $context) {
     $subform = &$element['subform'];
 
-    // @todo: hide in preview.
     if (!isset($this->parentEntity->field_original_id) || $this->parentEntity->field_original_id->isEmpty()) {
       return;
     }
