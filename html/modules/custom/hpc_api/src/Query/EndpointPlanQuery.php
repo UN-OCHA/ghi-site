@@ -98,6 +98,45 @@ class EndpointPlanQuery extends EndpointQuery {
   }
 
   /**
+   * Get plan attachments.
+   */
+  public function getPlanWebContentTextAttachments($plan_id) {
+    /*
+        $this->setEndpointVersion('v2');
+        $this->setAuthMethod(self::AUTH_METHOD_API_KEY);
+        $this->setEndpoint('plan/' . $plan_id);
+        $this->setEndpointArgument('content', 'entities');
+        $this->setEndpointArgument('version', 'current');
+    */
+
+    $this->setEndpoint('public/plan/id/' . $plan_id);
+    $this->setEndpointArgument('content', 'entities');
+    $this->setEndpointArgument('addPercentageOfTotalTarget', 'true');
+    $this->setEndpointArgument('version', 'current');
+
+    $data = $this->getData();
+
+    $attachments = [];
+    foreach ($data->attachments as $attachment) {
+      if (strtolower($attachment->type) != strtolower('textWebContent')) {
+        continue;
+      }
+
+      if (empty($attachment->attachmentVersion->value->content ?? '')) {
+        continue;
+      }
+
+      $attachments[] = (object) [
+        'id' => $attachment->id,
+        'title' => $attachment->attachmentVersion->value->name,
+        'content' => html_entity_decode($attachment->attachmentVersion->value->content ?? ''),
+      ];
+    }
+
+    return $attachments;
+  }
+
+  /**
    * Get plan key figures.
    */
   public function getPlanKeyFigures($plan_id) {

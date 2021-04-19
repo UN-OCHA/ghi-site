@@ -1,0 +1,10 @@
+uuid: 67f00601-e053-4671-9a60-271a76cb763a
+langcode: en
+status: true
+dependencies: {  }
+id: plan_web_content_text
+label: 'Plan: Web Content Text'
+icon_uuid: null
+icon_default: null
+description: ''
+behavior_plugins: {  }

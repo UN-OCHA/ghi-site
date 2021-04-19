@@ -347,7 +347,6 @@ class EndpointQuery {
    * @see Guzzle
    */
   public function sendQuery(array $headers = NULL) {
-
     if ($headers == NULL) {
       $headers = $this->getAuthHeaders();
     }
