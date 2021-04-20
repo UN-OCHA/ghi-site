@@ -13,3 +13,12 @@ function ghi_plans_uninstall() {
   \Drupal::configFactory()->getEditable('migrate_plus.migration.plan_costing_term')->delete();
   \Drupal::configFactory()->getEditable('migrate_plus.migration.plan_type_term')->delete();
 }
+
+/**
+ * Add config for plan sync source.
+ */
+function ghi_plans_update_9001(&$sandbox) {
+  $config_factory = \Drupal::configFactory();
+  $config_factory->getEditable('ghi_plans.settings')->set('sync_source', NULL)->save();
+  $config_factory->getEditable('ghi_plans.settings')->set('access_key', NULL)->save();
+}

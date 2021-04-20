@@ -2,6 +2,7 @@
 
 namespace Drupal\hpc_common\ContextProvider;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Context\ContextProviderInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -30,13 +31,23 @@ class NodeFromOriginalIDProvider implements ContextProviderInterface {
   protected $requestStack;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * Constructs a new CurrentUserContext.
    *
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The request stack.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    */
-  public function __construct(RequestStack $request_stack) {
+  public function __construct(RequestStack $request_stack, EntityTypeManagerInterface $entity_type_manager) {
     $this->requestStack = $request_stack;
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -57,6 +68,8 @@ class NodeFromOriginalIDProvider implements ContextProviderInterface {
 
     if ($request->attributes->has('node')) {
       $node = $request->attributes->get('node');
+      $entity_storage = $this->entityTypeManager->getStorage('node');
+      $node = is_object($node) ? $node : $entity_storage->load($node);
       if (in_array($node->getType(), $supported_parameters_map)) {
         $context = EntityContext::fromEntity($node, $this->t('Node from Original ID'));
         return [

@@ -6,6 +6,7 @@ use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 
 use Drupal\hpc_common\Plugin\HPCBlockBase;
+use Drupal\node\Entity\Node;
 
 /**
  * Helper functions for block handling, especially for custom extentions.
@@ -128,6 +129,7 @@ class BlockHelper {
       // So this is a node view. At the moment this can only be a plan node,
       // but let's plan ahead and support all bundles.
       $entity = $page_parameters['node'];
+      $entity = is_object($entity) ? $entity : Node::load($entity);
       $bundle = $entity->bundle();
 
       // We support 2 versions here:
