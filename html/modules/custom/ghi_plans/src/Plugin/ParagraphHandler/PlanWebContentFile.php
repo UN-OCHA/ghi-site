@@ -2,12 +2,9 @@
 
 namespace Drupal\ghi_plans\Plugin\ParagraphHandler;
 
-use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
-use Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerBase;
 
 /**
  * Class Card.
@@ -17,14 +14,18 @@ use Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerBase;
  *   label = @Translation("Plan web content file")
  * )
  */
-class PlanWebContentFile extends ParagraphHandlerBase {
+class PlanWebContentFile extends PlanBaseClass {
+
+  /**
+   * {@inheritdoc}
+   */
+  const KEY = 'plan_web_content_file';
+
   /**
    * {@inheritdoc}
    */
   public function preprocess(array &$variables, array $element) {
-    if ($this->isNested()) {
-      $variables['nested_class'] = TRUE;
-    }
+    parent::preprocess($variables, $element);
 
     if (!isset($this->parentEntity->field_original_id) || $this->parentEntity->field_original_id->isEmpty()) {
       return;
@@ -32,8 +33,7 @@ class PlanWebContentFile extends ParagraphHandlerBase {
 
     $plan_id = $this->parentEntity->field_original_id->value;
 
-    $settings = $this->paragraph->getAllBehaviorSettings();
-    $config = $settings[$this->pluginId] ?? [];
+    $config = $this->getConfig();
     $attachment_ids = $config['attachment_ids'] ?? [];
     if (!is_array($attachment_ids)) {
       $attachment_ids = [$attachment_ids];
@@ -63,7 +63,7 @@ class PlanWebContentFile extends ParagraphHandlerBase {
    * {@inheritdoc}
    */
   public function widget_alter(&$element, &$form_state, $context) {
-    $subform = &$element['subform'];
+    parent::widget_alter($element, $form_state, $context);
 
     if (!isset($this->parentEntity->field_original_id) || $this->parentEntity->field_original_id->isEmpty()) {
       return;
@@ -90,7 +90,7 @@ class PlanWebContentFile extends ParagraphHandlerBase {
       ];
       $preview_image = $renderer->render($build);
 
-      $file_options[$attachment->id] = [
+      $table_rows[$attachment->id] = [
         'id' => $attachment->id,
         'title' => $attachment->title,
         'file_name' => $attachment->file_name,
@@ -114,51 +114,22 @@ class PlanWebContentFile extends ParagraphHandlerBase {
       'preview' => $this->t('Preview'),
     ];
 
-    $settings = $this->paragraph->getAllBehaviorSettings();
-    $config = $settings[$this->pluginId] ?? [];
+    $config = $this->getConfig();
     $attachment_ids = $config['attachment_ids'] ?? [];
 
+    $subform = &$element['subform'];
     $subform['attachment_ids'] = [
       '#type' => 'tableselect',
       '#tree' => TRUE,
       '#required' => FALSE,
       '#header' => $table_header,
       '#validated' => TRUE,
-      '#options' => $file_options,
+      '#options' => $table_rows,
       '#default_value' => $attachment_ids,
       '#multiple' => FALSE,
       '#empty' => $this->t('There are no images yet.'),
       '#required' => TRUE,
-      '#element_validate' => [[$this, 'validate']],
     ];
-
-    // @see https://www.drupal.org/project/drupal/issues/2820359
-    $subform['#element_submit'] = [[$this, 'submit']];
-  }
-
-  public static function submit(&$element, FormStateInterface $form_state) {
-    // Get field name and delta from parents.
-    $parents = $element['#parents'];
-    $field_name = array_shift($parents);
-    $delta = array_shift($parents);
-
-    // Get paragraph from widget state.
-    $widget_state = \Drupal\Core\Field\WidgetBase::getWidgetState([], $field_name, $form_state);
-
-    // Get actual values.
-    $values = NestedArray::getValue($form_state->getValues(), $element['#parents']);
-
-    // Set widget state.
-    if ($values && is_array($values)) {
-      $widget_state['paragraphs'][$delta]['entity']->setBehaviorSettings('plan_web_content_file', $values);
-      $widget_state['paragraphs'][$delta]['entity']->setNeedsSave(TRUE);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function build(array &$build) {
   }
 
 }
