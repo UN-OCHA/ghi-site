@@ -151,7 +151,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     $form['#parents'] = [];
 
-    $wrapper_id = Html::getUniqueId('form-wrapper-multi-step-config');
+    $wrapper_id = Html::getId('form-wrapper-multi-step-config');
 
     // Prepare the subform.
     $form['container'] = [
@@ -218,10 +218,33 @@ abstract class GHIBlockBase extends HPCBlockBase {
       ];
     }
 
+    $preview_wrapper_id = Html::getId($wrapper_id . '-preview');
+    $form['container']['actions']['preview'] = [
+      '#type' => 'button',
+      '#name' => 'next-button',
+      '#button_type' => 'primary',
+      '#value' => $this->t('Update preview'),
+      // '#submit' => [['::submitAjax']],
+      '#element_validate' => [[$this, 'validateBlockForm']],
+      '#limit_validation_errors' => [],
+      '#ajax' => [
+        'callback' => [$this, 'updatePreview'],
+        'wrapper' => $preview_wrapper_id,
+        'effect' => 'fade',
+        'method' => 'replace',
+      ],
+    ];
+
     $form['preview_container'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Preview'),
+      '#attributes' => [
+        'id' => $preview_wrapper_id,
+        'class' => [Html::getClass('hpc-form-wrapper-preview')],
+      ],
     ];
+
+    $this->setConfigurationValue('hpc', $this->getTemporarySettings($form_state));
     $form['preview_container']['preview'] = $this->build();
 
     $form['#after_build'][] = [$this, 'blockFormAfterBuild'];
@@ -331,8 +354,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $form_state->set($form_key, $step_values);
 
     // Set the new step in the storage.
-    $step = $action == 'next' ? $step + 1 : $step - 1;
-    $form_state->set('step', $step);
+    if ($action != 'preview') {
+      $step = $action == 'next' ? $step + 1 : $step - 1;
+      $form_state->set('step', $step);
+    }
 
     // Still no effect it seems.
     $form_state->setRebuild();
@@ -358,21 +383,90 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
+   * Ajax callback to update the preview.
+   *
+   * @param array $form
+   *   Form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state interface.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   Ajax response.
+   */
+  public function updatePreview(array &$form, FormStateInterface $form_state) {
+    $triggering_element = $form_state->getTriggeringElement();
+    $parents = $triggering_element['#array_parents'];
+    array_pop($parents);
+    array_pop($parents);
+    array_pop($parents);
+    $parents[] = 'preview_container';
+    return NestedArray::getValue($form, $parents);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function blockSubmit($form, FormStateInterface $form_state) {
-
     // This get's called when the block settings are submitted.
+    $this->configuration['hpc'] = $this->getTemporarySettings($form_state);
+  }
+
+  /**
+   * Get currently available temporary settings.
+   *
+   * This first looks in the storage of the form state object, then in the
+   * submitted values and then as a last fallback in the current plugin
+   * configuration.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   *
+   * @return array
+   *   A configuration array for the plugin.
+   */
+  private function getTemporarySettings(FormStateInterface $form_state) {
     $subforms = $this->getSubforms();
     if (empty($subforms)) {
-      return;
+      return [];
     }
+
+    if ($form_state instanceof SubformStateInterface) {
+      $values = $form_state->getCompleteFormState()->getValues();
+    }
+    else {
+      $values = $form_state->getValues();
+    }
+
     // Put stored subform values into the behavior settings for this plugin.
     $settings = [];
     foreach (array_keys($subforms) as $form_key) {
-      $settings[$form_key] = $form_state->has($form_key) ? $form_state->get($form_key) : $form_state->getValue($form_key);
+      $settings[$form_key] = $form_state->has($form_key) ? $form_state->get($form_key) : $values[$form_key];
+      if (empty($settings[$form_key]) && !empty($this->configuration['hpc'][$form_key])) {
+        $settings[$form_key] = $this->configuration['hpc'][$form_key];
+      }
+      unset($settings[$form_key]['actions']);
     }
-    $this->configuration['hpc'] = $settings;
+    return $settings;
+  }
+
+  /**
+   * Get a plan id for the current page context.
+   *
+   * @return int
+   *   A plan id if it can be found.
+   */
+  public function getCurrentPlanId() {
+    $page_node = $this->getPageNode();
+    if (!$page_node) {
+      return NULL;
+    }
+    if ($page_node->bundle() == 'plan') {
+      return $page_node->field_original_id->value;
+    }
+    if ($page_node->hasField('field_plan')) {
+      $page_node->field_plan->field_original_id->value;
+    }
+    return NULL;
   }
 
 }
