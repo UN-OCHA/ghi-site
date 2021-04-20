@@ -3,6 +3,7 @@
 namespace Drupal\hpc_common\Helpers;
 
 use Drupal\Component\Plugin\Exception\ContextException;
+use Drupal\node\Entity\Node;
 
 /**
  * Helper class for context handling.
@@ -24,14 +25,15 @@ class ContextHelper {
         continue;
       }
       try {
-        return $contexts[$context_name]->hasContextValue() ? $contexts[$context_name]->getContextValue() : NULL;
+        $node_context = $contexts[$context_name]->hasContextValue() ? $contexts[$context_name]->getContextValue() : NULL;
+        return is_object($node_context) ? $node_context : Node::load($node_context);
       }
       catch (ContextException $e) {
         // Fail silently, we will handle this.
         $node_context = NULL;
       }
     }
-    return $node_context;
+    return is_object($node_context) ? $node_context : Node::load($node_context);
   }
 
 }

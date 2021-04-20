@@ -7,6 +7,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Plugin\Block\SyncableBlockInterface;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
@@ -34,7 +35,22 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
  *   }
  * )
  */
-class PlanWebcontentFile extends GHIBlockBase {
+class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function mapConfig($config) {
+    return [
+      'label' => '',
+      'label_display' => FALSE,
+      'hpc' => [
+        'basic' => [
+          'attachment_id' => $config->attachment_id,
+        ],
+      ],
+    ];
+  }
 
   /**
    * {@inheritdoc}

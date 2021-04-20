@@ -4,6 +4,7 @@ namespace Drupal\hpc_common\Plugin;
 
 use Drupal\node\Entity\Node;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Component\Plugin\PluginHelper;
@@ -99,15 +100,23 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   protected $endpointQuery;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->requestStack = $request_stack;
     $this->router = $router;
     $this->keyValueFactory = $keyValueFactory;
     $this->endpointQuery = $endpoint_query;
+    $this->entityTypeManager = $entity_type_manager;
 
     // Mostly used to support meta data in downloads.
     $this->setCurrentUri();
@@ -124,7 +133,8 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
       $container->get('request_stack'),
       $container->get('router.no_access_checks'),
       $container->get('keyvalue'),
-      $container->get('hpc_api.endpoint_query')
+      $container->get('hpc_api.endpoint_query'),
+      $container->get('entity_type.manager')
     );
   }
 
@@ -341,7 +351,9 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     }
     elseif (!empty($page_parameters['node'])) {
       // Node view context.
-      $this->page = $page_parameters['node']->bundle() . '_node';
+      $entity_storage = $this->entityTypeManager->getStorage('node');
+      $node = is_object($page_parameters['node']) ? $page_parameters['node'] : $entity_storage->load($page_parameters['node']);
+      $this->page = $node->bundle() . '_node';
     }
     elseif (!empty($page_parameters['section_storage'])) {
       // Layout builder editing context.
