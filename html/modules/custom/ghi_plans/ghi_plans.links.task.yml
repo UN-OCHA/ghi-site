@@ -1,0 +1,4 @@
+entity.node.sync_elements:
+  route_name: ghi_plans.sync_elements
+  base_route: entity.node.canonical
+  title: Sync elements
