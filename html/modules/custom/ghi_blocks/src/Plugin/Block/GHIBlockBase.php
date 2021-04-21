@@ -7,7 +7,7 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
-
+use Drupal\Core\Render\Element;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 
@@ -96,7 +96,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
 
     $form_key = $form_state->get('current_subform');
-
     if ($step_values = NestedArray::getValue($values, [$form_key, $key])) {
       return $step_values;
     }
@@ -178,10 +177,17 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $subform_state = SubformState::createForSubform($form['container'], $form, $form_state);
     $form['container'] += $this->{$form_callback}($form['container'], $subform_state);
 
+    // Set the element validate callback for all ajax enabled form elements.
+    // This is needed so that the current form values will be stored in the
+    // form and are therefor available for an immediate update of other
+    // elements that might depend on the changed data.
+    $this->setElementValidateOnAjaxElements($form['container']);
+
     $form['container']['actions'] = [
       '#type' => 'container',
     ];
 
+    // Add the step navigation.
     if ($step > 0) {
       $form['container']['actions']['back'] = [
         '#type' => 'button',
@@ -218,6 +224,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       ];
     }
 
+    // Add a preview area.
     $preview_wrapper_id = Html::getId($wrapper_id . '-preview');
     $form['container']['actions']['preview'] = [
       '#type' => 'button',
@@ -266,10 +273,11 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   The updated form array.
    */
   public function blockFormAfterBuild(array $form, FormStateInterface $form_state) {
+    $plugin_definition = $this->getPluginDefinition();
+
     $form['admin_label']['#access'] = FALSE;
     $form['admin_label']['#value'] = (string) $plugin_definition['admin_label'];
 
-    $plugin_definition = $this->getPluginDefinition();
     if (array_key_exists('title', $plugin_definition) && $plugin_definition['title'] === FALSE) {
       $form['label']['#access'] = FALSE;
       $form['label']['#value'] = (string) $plugin_definition['admin_label'];
@@ -277,6 +285,21 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $form['label_display']['#value'] = FALSE;
     }
     return $form;
+  }
+
+  /**
+   * Recursively set the element validate property on ajax form elements.
+   *
+   * @param array $element
+   *   The form element array.
+   */
+  private function setElementValidateOnAjaxElements(array &$element) {
+    if (!empty($element['#ajax']) && !array_key_exists($element['#element_validate'])) {
+      $element['#element_validate'] = [[$this, 'validateBlockForm']];
+    }
+    foreach (Element::children($element) as $element_key) {
+      $this->setElementValidateOnAjaxElements($element[$element_key]);
+    }
   }
 
   /**
@@ -323,29 +346,22 @@ abstract class GHIBlockBase extends HPCBlockBase {
       return;
     }
 
-    // Get the complete form so that we can extract the subform.
-    $form = $form_state->getCompleteForm();
-
-    // Extract the action and go up until the level of actual non-button form
-    // elements.
+    // Make sure this is about the container part of the form.
     $array_parents = $triggering_element['#array_parents'];
-    $action = array_pop($array_parents);
-    array_pop($array_parents);
-
-    // Get the subform and check that the current action is actually defined
-    // there.
-    $subform = NestedArray::getValue($form, $array_parents);
-    if (!in_array($action, array_keys($subform['actions']))) {
+    if (!in_array('container', $array_parents)) {
+      // If there is no container up the chain, we are not in the right place.
       return;
     }
 
-    // Handle the action.
-    $step = $form_state->has('step') ? $form_state->get('step') : 0;
+    // Get the action, this is only important for the navigation between the
+    // form steps.
+    $action = array_pop($array_parents);
+    $array_parents = array_slice($array_parents, 0, array_search('container', $array_parents) + 1);
 
     // Handle the submitted values and put them into the form storage.
     $values = $form_state->getValues();
-
-    $value_parents = array_slice($triggering_element['#parents'], 0, -2);
+    $value_parents = $triggering_element['#parents'];
+    $value_parents = array_slice($value_parents, 0, array_search('container', $value_parents) + 1);
 
     $step_values = NestedArray::getValue($values, $value_parents);
     unset($step_values['actions']);
@@ -354,7 +370,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $form_state->set($form_key, $step_values);
 
     // Set the new step in the storage.
-    if ($action != 'preview') {
+    if (in_array($action, ['next', 'back'])) {
+      $step = $form_state->has('step') ? $form_state->get('step') : 0;
       $step = $action == 'next' ? $step + 1 : $step - 1;
       $form_state->set('step', $step);
     }

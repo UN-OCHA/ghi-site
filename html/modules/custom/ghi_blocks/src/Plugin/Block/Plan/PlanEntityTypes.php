@@ -66,6 +66,9 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
     }
 
     $conf = $this->configuration['hpc']['basic'];
+    if (empty($conf['entity_ids'])) {
+      return;
+    }
 
     $matching_entities = $this->getPlanEntities($conf['entity_type']);
     $valid_entities = $this->getValidPlanEntities($matching_entities, $conf);
@@ -112,7 +115,7 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
         'basic' => [
           'entity_ids' => [],
           'entity_type' => NULL,
-          'id_type' => 'custom_id',
+          'id_type' => NULL,
           'sort' => FALSE,
           'sort_column' => NULL,
         ],
@@ -144,11 +147,12 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
     $entity_type_options = $this->getEntityTypeOptions();
     $entity_type_option_keys = array_keys($entity_type_options);
 
+    // Get the defaults for easier access.
     $defaults = [
       'entity_type' => $this->getDefaultFormValueFromFormState($form_state, 'entity_type') ?: reset($entity_type_option_keys),
       'id_type' => $this->getDefaultFormValueFromFormState($form_state, 'id_type') ?: NULL,
       'sort' => $this->getDefaultFormValueFromFormState($form_state, 'sort') ?: NULL,
-      'sort_column' => $this->getDefaultFormValueFromFormState($form_state, 'entity_type') ?: NULL,
+      'sort_column' => $this->getDefaultFormValueFromFormState($form_state, 'sort_column') ?: NULL,
       'entity_ids' => $this->getDefaultFormValueFromFormState($form_state, 'entity_ids') ?: NULL,
     ];
 
@@ -170,7 +174,7 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
         'custom_id_prefixed_refcode' => $this->t('Custom ID, prefixed with object type (CA, CO, SO, ...)'),
         'composed_reference' => $this->t('Composed reference'),
       ],
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'id_type'),
+      '#default_value' => $defaults['id_type'],
       '#disabled' => empty($entity_type_options),
     ];
 
@@ -185,6 +189,7 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
         'callback' => [$this, 'updateEntitiesList'],
         'wrapper' => $wrapper_id,
       ];
+
       $form['id_type']['#ajax'] = [
         'event' => 'change',
         'callback' => [$this, 'updateEntitiesList'],
@@ -234,7 +239,7 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
 
       $form['entity_ids_header'] = [
         '#type' => 'markup',
-        '#markup' => $this->t('If you do not want to show all entities of this type, select the ones that should be visible below. If no entity is selected, all entities will be shown. Please note that some rows might not available for selection because of incomplete data sets. These will also be hidden from public display.'),
+        '#markup' => $this->t('If you do not want to show all entities of this type, select the ones that should be visible below. If no entity is selected, all entities will be shown. Please note that some rows might not be available for selection because of incomplete data sets. These will also be hidden from public display.'),
         '#prefix' => '<div>',
         '#suffix' => '</div><br />',
       ];
