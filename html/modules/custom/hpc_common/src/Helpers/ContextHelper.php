@@ -26,14 +26,14 @@ class ContextHelper {
       }
       try {
         $node_context = $contexts[$context_name]->hasContextValue() ? $contexts[$context_name]->getContextValue() : NULL;
-        return is_object($node_context) ? $node_context : Node::load($node_context);
+        return is_object($node_context) ? $node_context : ($node_context ? Node::load($node_context) : NULL);
       }
       catch (ContextException $e) {
         // Fail silently, we will handle this.
         $node_context = NULL;
       }
     }
-    return is_object($node_context) ? $node_context : Node::load($node_context);
+    return is_object($node_context) ? $node_context : ($node_context ? Node::load($node_context) : NULL);
   }
 
 }
