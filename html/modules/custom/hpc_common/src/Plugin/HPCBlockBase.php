@@ -482,7 +482,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   /**
    * Get the node for the current page.
    *
-   * @return object
+   * @return \Drupal\node\NodeInterface
    *   The page node if found.
    */
   public function getPageNode() {

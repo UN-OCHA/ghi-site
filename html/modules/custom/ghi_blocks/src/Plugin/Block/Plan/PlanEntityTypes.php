@@ -2,9 +2,14 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
+use Drupal\Component\Utility\NestedArray;
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Plugin\Block\SyncableBlockInterface;
+use Drupal\hpc_api\Helpers\ApiEntityHelper;
+use Drupal\hpc_api\Query\EndpointQuery;
 
 /**
  * Provides a 'PlanEntityTypes' block.
@@ -16,7 +21,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
  *  data_sources = {
  *    "data" = {
  *      "arguments" = {
- *        "endpoint" = "public/plan/{plan_id}?content=basic&addPercentageOfTotalTarget=true&version=current",
+ *        "endpoint" = "public/plan/{plan_id}?content=entities&addPercentageOfTotalTarget=true&version=current",
  *        "api_version" = "v2",
  *      }
  *    }
@@ -30,7 +35,26 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
  *  }
  * )
  */
-class PlanEntityTypes extends GHIBlockBase {
+class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function mapConfig($config) {
+    return [
+      'label' => '',
+      'label_display' => TRUE,
+      'hpc' => [
+        'basic' => [
+          'entity_ids' => (array) $config->entity_ids,
+          'entity_type' => $config->entity_type,
+          'id_type' => $config->id_type,
+          'sort' => $config->sort,
+          'sort_column' => $config->sort_column,
+        ],
+      ],
+    ];
+  }
 
   /**
    * {@inheritdoc}
@@ -41,9 +65,41 @@ class PlanEntityTypes extends GHIBlockBase {
       return '';
     }
 
+    $conf = $this->configuration['hpc']['basic'];
+    if (empty($conf['entity_ids'])) {
+      return;
+    }
+
+    $matching_entities = $this->getPlanEntities($conf['entity_type']);
+    $valid_entities = $this->getValidPlanEntities($matching_entities, $conf);
+    if (empty($valid_entities)) {
+      // Nothing to render.
+      return;
+    }
+
+    $first_entity = reset($matching_entities);
+
+    // Assemble the list.
+    $items = $this->buildPlanEntityItemList($valid_entities, $conf);
+    if (empty($items)) {
+      return;
+    }
+
+    // Render the individual items.
+    $rendered_items = array_map(function ($item) {
+      return Markup::create('<p class="entity-type-title">' . $item['id'] . '</p>' . $item['description']);
+    }, $items);
+    $count = count($rendered_items);
+
     return [
-      '#type' => 'markup',
-      '#markup' => Markup::create('<pre>' . print_r($this->configuration['hpc'], TRUE) . '</pre>'),
+      '#theme' => 'item_list',
+      '#title' => ApiEntityHelper::getEntityPrototypeName($first_entity),
+      '#items' => $rendered_items,
+      '#attributes' => [
+        'class' => ['plan-entity-types', $count >= 5 ? 'up-5' : 'up-' . $count],
+      ],
+      '#prefix' => '<div class="entity-type-description">',
+      '#suffix' => '</div>',
     ];
   }
 
@@ -56,9 +112,13 @@ class PlanEntityTypes extends GHIBlockBase {
   protected function baseConfigurationDefaults() {
     return [
       'hpc' => [
-        'basic' => ['input_1' => NULL],
-        'sidebar_items' => ['input_2' => NULL],
-        'another_form' => ['input_3' => NULL],
+        'basic' => [
+          'entity_ids' => [],
+          'entity_type' => NULL,
+          'id_type' => NULL,
+          'sort' => FALSE,
+          'sort_column' => NULL,
+        ],
       ],
     ] + parent::baseConfigurationDefaults();
   }
@@ -69,8 +129,6 @@ class PlanEntityTypes extends GHIBlockBase {
   public function getSubforms() {
     return [
       'basic' => 'basicConfigForm',
-      'sidebar_items' => 'sidebarItemsForm',
-      'another_form' => 'anotherForm',
     ];
   }
 
@@ -86,52 +144,358 @@ class PlanEntityTypes extends GHIBlockBase {
    *   The full form array for this subform.
    */
   public function basicConfigForm(array $form, FormStateInterface $form_state) {
-    $form['input_1'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Input 1'),
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'input_1'),
+    $entity_type_options = $this->getEntityTypeOptions();
+    $entity_type_option_keys = array_keys($entity_type_options);
+
+    // Get the defaults for easier access.
+    $defaults = [
+      'entity_type' => $this->getDefaultFormValueFromFormState($form_state, 'entity_type') ?: reset($entity_type_option_keys),
+      'id_type' => $this->getDefaultFormValueFromFormState($form_state, 'id_type') ?: NULL,
+      'sort' => $this->getDefaultFormValueFromFormState($form_state, 'sort') ?: NULL,
+      'sort_column' => $this->getDefaultFormValueFromFormState($form_state, 'sort_column') ?: NULL,
+      'entity_ids' => $this->getDefaultFormValueFromFormState($form_state, 'entity_ids') ?: NULL,
     ];
+
+    $form['entity_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Entity type'),
+      '#description' => $this->t('The type of plan entity to show, e.g. <em>Cluster Objective</em> or <em>Strategic Objective</em>'),
+      '#options' => $entity_type_options,
+      '#default_value' => $defaults['entity_type'],
+      '#required' => count($entity_type_options),
+      '#disabled' => empty($entity_type_options),
+    ];
+    $form['id_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('ID type'),
+      '#description' => $this->t('Define how the ID element should be constructed. See the table below for a preview of the data.'),
+      '#options' => [
+        'custom_id' => $this->t('Custom ID'),
+        'custom_id_prefixed_refcode' => $this->t('Custom ID, prefixed with object type (CA, CO, SO, ...)'),
+        'composed_reference' => $this->t('Composed reference'),
+      ],
+      '#default_value' => $defaults['id_type'],
+      '#disabled' => empty($entity_type_options),
+    ];
+
+    // If we have a plan context, add checkboxes to select individual entities.
+    if ($this->getCurrentPlanId() && count($entity_type_options)) {
+      $wrapper_id = 'hpc-plan-entities-wrapper';
+
+      // Bind ajax callback for auto-update of available entities when the type
+      // is changed.
+      $form['entity_type']['#ajax'] = [
+        'event' => 'change',
+        'callback' => [$this, 'updateEntitiesList'],
+        'wrapper' => $wrapper_id,
+      ];
+
+      $form['id_type']['#ajax'] = [
+        'event' => 'change',
+        'callback' => [$this, 'updateEntitiesList'],
+        'wrapper' => $wrapper_id,
+      ];
+
+      $matching_entities = [];
+      $entity_options = [];
+
+      $matching_entities = $this->getPlanEntities($defaults['entity_type']);
+      if (count($matching_entities)) {
+        // Assemble the list.
+        $entity_options = $this->buildPlanEntityItemList($matching_entities, $defaults, TRUE);
+      }
+
+      $form['sort'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Sort the data'),
+        '#default_value' => $defaults['sort'],
+        '#ajax' => [
+          'event' => 'change',
+          'callback' => [$this, 'updateEntitiesList'],
+          'wrapper' => $wrapper_id,
+        ],
+      ];
+      $form['sort_column'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Sort column'),
+        '#options' => [
+          'id_' . EndpointQuery::SORT_ASC => $this->t('ID (asc)'),
+          'id_' . EndpointQuery::SORT_DESC => $this->t('ID (desc)'),
+          'description_' . EndpointQuery::SORT_ASC => $this->t('Description (asc)'),
+          'description_' . EndpointQuery::SORT_DESC => $this->t('Description (desc)'),
+        ],
+        '#default_value' => $defaults['sort_column'],
+        '#states' => [
+          'visible' => [
+            ':input[name="basic[sort]"]' => ['checked' => TRUE],
+          ],
+        ],
+        '#ajax' => [
+          'event' => 'change',
+          'callback' => [$this, 'updateEntitiesList'],
+          'wrapper' => $wrapper_id,
+        ],
+      ];
+
+      $form['entity_ids_header'] = [
+        '#type' => 'markup',
+        '#markup' => $this->t('If you do not want to show all entities of this type, select the ones that should be visible below. If no entity is selected, all entities will be shown. Please note that some rows might not be available for selection because of incomplete data sets. These will also be hidden from public display.'),
+        '#prefix' => '<div>',
+        '#suffix' => '</div><br />',
+      ];
+
+      $form['entity_ids'] = [
+        '#type' => 'tableselect',
+        '#header' => [
+          'id' => $this->t('ID'),
+          'description' => $this->t('Description'),
+        ],
+        '#options' => $entity_options,
+        '#default_value' => !empty($defaults['entity_ids']) ? array_combine($defaults['entity_ids'], $defaults['entity_ids']) : [],
+        '#prefix' => '<div id="' . $wrapper_id . '">',
+        '#suffix' => '</div>',
+        '#empty' => $this->t('No suitable plan entities found. If you save this form like this, the block will not be displayed.'),
+      ];
+
+      if (count($matching_entities)) {
+        $validation_options = $defaults;
+        $validation_options['entity_ids'] = NULL;
+        foreach ($matching_entities as $entity) {
+          if ($this->validatePlanEntity($entity, $validation_options)) {
+            continue;
+          }
+          $form['entity_ids'][$entity->id]['#disabled'] = TRUE;
+        }
+      }
+    }
+
     return $form;
   }
 
   /**
-   * Form builder for the basic config form.
+   * Ajax callback to update the entities list.
    *
    * @param array $form
-   *   An associative array containing the initial structure of the subform.
+   *   Form array.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
+   *   Form state interface.
    *
-   * @return array
-   *   The full form array for this subform.
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   Ajax response.
    */
-  public function sidebarItemsForm(array $form, FormStateInterface $form_state) {
-    $form['input_2'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Input 2'),
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'input_2'),
-    ];
-    return $form;
+  public function updateEntitiesList(array &$form, FormStateInterface $form_state) {
+    $triggering_element = $form_state->getTriggeringElement();
+    $parents = $triggering_element['#array_parents'];
+    array_pop($parents);
+    $parents[] = 'entity_ids';
+    return NestedArray::getValue($form, $parents);
   }
 
   /**
-   * Form builder for the basic config form.
-   *
-   * @param array $form
-   *   An associative array containing the initial structure of the subform.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
+   * Get options for the entity type dropdown.
    *
    * @return array
-   *   The full form array for this subform.
+   *   An array with valid options for the current context.
    */
-  public function anotherForm(array $form, FormStateInterface $form_state) {
-    $form['input_3'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Input 3'),
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'input_3'),
-    ];
-    return $form;
+  private function getEntityTypeOptions() {
+    if (!$this->getCurrentPlanId()) {
+      // Without a plan context, we show a default set of availabe plan entity
+      // types.
+      $default_options = [
+        'CA' => $this->t('Cluster Activities'),
+        'CO' => $this->t('Cluster Objectives'),
+        'CQ' => $this->t('Humanitarian Consequences'),
+        'SO' => $this->t('Strategic Objectives'),
+        'SP' => $this->t('Specific Objectives'),
+        'SSO' => $this->t('Sub Strategic Objectives'),
+        'OC' => $this->t('Outcomes'),
+        'OP' => $this->t('Outputs'),
+      ];
+      return $default_options;
+    }
+
+    $matching_entities = $this->getPlanEntities();
+
+    $options = [];
+    if (empty($matching_entities)) {
+      return $options;
+    }
+    $weight = [];
+    foreach ($matching_entities as $entity) {
+      $ref_code = $entity->entityPrototype->refCode;
+      if (empty($options[$ref_code])) {
+        $name = $entity->entityPrototype->value->name->en->plural;
+        $options[$ref_code] = $name;
+        $weight[$ref_code] = $entity->entityPrototype->orderNumber;
+      }
+    }
+    uksort($options, function ($ref_code_a, $ref_code_b) use ($weight) {
+      return $weight[$ref_code_a] > $weight[$ref_code_b];
+    });
+    return $options;
+  }
+
+  /**
+   * Get available plan entities for the current context.
+   *
+   * @param string $entity_type
+   *   The entity type to restrict the context.
+   *
+   * @return array
+   *   An array of plan entity objects for the current context.
+   */
+  private function getPlanEntities($entity_type = NULL) {
+    $page_node = $this->getPageNode();
+
+    if ($entity_type === NULL) {
+      $filter = [
+        'entityPrototype.type' => 'PE',
+      ];
+    }
+    else {
+      $filter = [
+        'entityPrototype.refCode' => $entity_type,
+      ];
+    }
+
+    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($this->getData(), $page_node->bundle() != 'plan' ? $page_node : NULL, NULL, $filter);
+    return $matching_entities;
+  }
+
+  /**
+   * Build the item list for rendering.
+   *
+   * @param array $entities
+   *   The entity objects to build.
+   * @param array $conf
+   *   The current element configuration used to apply formatting.
+   * @param bool $truncate_description
+   *   Flag indicating whether to truncate the description or not.
+   *
+   * @return array
+   *   An array of prepared entity items, keyed by the entity id, each item is
+   *   an array that has 2 keys: id and description.
+   */
+  private function buildPlanEntityItemList(array $entities, array $conf, $truncate_description = FALSE) {
+    $items = [];
+    foreach ($entities as $entity) {
+      $entity_version = ApiEntityHelper::getEntityVersion($entity);
+      $description = $entity_version->value->description;
+      $items[$entity->id] = [
+        'id' => $this->getEntityIdLabel($entity, $conf),
+        'description' => $truncate_description ? Unicode::truncate($description, 120, TRUE, TRUE) : $description,
+      ];
+    }
+    if (!empty($conf['sort'])) {
+      list($key, $sort) = explode('_', $conf['sort_column']);
+      uasort($items, function ($a, $b) use ($key, $sort) {
+        $a_value = !empty($a[$key]) ? $a[$key] : 0;
+        $b_value = !empty($b[$key]) ? $b[$key] : 0;
+        if ($sort == EndpointQuery::SORT_ASC) {
+          return strnatcmp($a_value, $b_value);
+        }
+        if ($sort == EndpointQuery::SORT_DESC) {
+          return strnatcmp($b_value, $a_value);
+        }
+      });
+    }
+    return $items;
+  }
+
+  /**
+   * Retrieve the entity id label based on the given configuration.
+   *
+   * @param object $entity
+   *   An entity object.
+   * @param array $conf
+   *   The current element configuration used to apply formatting.
+   *
+   * @return string
+   *   The formatted id label for the given entity.
+   */
+  private function getEntityIdLabel($entity, array $conf) {
+    $entity_version = ApiEntityHelper::getEntityVersion($entity);
+    $id_type = !empty($conf['id_type']) ? $conf['id_type'] : 'custom_id';
+    switch ($id_type) {
+      case 'custom_id':
+        return $entity_version->customReference;
+
+      case 'custom_id_prefixed_refcode':
+        return $entity->entityPrototype->refCode . $entity_version->customReference;
+
+      case 'composed_reference':
+        return $entity->composedReference;
+    }
+  }
+
+  /**
+   * Get entities that are valid for display.
+   *
+   * @param array $entities
+   *   The entity objects to check.
+   * @param array $conf
+   *   The current element configuration used to apply validation.
+   *
+   * @return array
+   *   An array with the entity objects that passed validation.
+   */
+  private function getValidPlanEntities(array $entities, array $conf) {
+    $valid_entities = [];
+    if (empty($entities)) {
+      return $valid_entities;
+    }
+    foreach ($entities as $entity) {
+      if (!$this->validatePlanEntity($entity, $conf)) {
+        continue;
+      }
+      $valid_entities[] = $entity;
+    }
+    return $valid_entities;
+  }
+
+  /**
+   * Validate that the given entity is valid for display.
+   *
+   * @param object $entity
+   *   An entity object.
+   * @param array $conf
+   *   The current element configuration used to apply validation.
+   *
+   * @return object
+   *   True if the entity passed validation, False otherwhise.
+   */
+  private function validatePlanEntity($entity, array $conf) {
+    $entity_version = ApiEntityHelper::getEntityVersion($entity);
+    $entity_ids = !empty($conf['entity_ids']) ? array_filter($conf['entity_ids']) : [];
+    if (!empty($entity_ids) && !in_array($entity->id, $entity_ids)) {
+      return FALSE;
+    }
+    if (empty($entity_version->value->description)) {
+      return FALSE;
+    }
+
+    $id_type = !empty($conf['id_type']) ? $conf['id_type'] : 'custom_id';
+    switch ($id_type) {
+      case 'custom_id':
+        if (empty($entity_version->customReference)) {
+          return FALSE;
+        }
+        break;
+
+      case 'custom_id_prefixed_refcode':
+        if (empty($entity_version->customReference) || empty($entity->entityPrototype->refCode)) {
+          return FALSE;
+        }
+        break;
+
+      case 'composed_reference':
+        if (empty($entity->composedReference)) {
+          return FALSE;
+        }
+        break;
+
+    }
+    return TRUE;
   }
 
 }
