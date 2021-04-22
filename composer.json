@@ -25,6 +25,7 @@
         "drupal/core-composer-scaffold": "^9.1",
         "drupal/core-project-message": "^9.1",
         "drupal/core-recommended": "^9.1",
+        "drupal/ctools": "^3.5",
         "drupal/editor_advanced_link": "^1.8",
         "drupal/gin": "^3.0@alpha",
         "drupal/imageapi_optimize_binaries": "^1.0@alpha",
