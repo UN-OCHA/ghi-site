@@ -1,0 +1,14 @@
+uuid: fff1defe-cdc3-45bb-af09-73dee6c242f1
+langcode: en
+status: true
+dependencies: {  }
+id: hpc_api_data
+label: 'HPC API Data'
+description: 'Import data from the HPC API.'
+source_type: 'HPC API'
+module: null
+shared_configuration:
+  source:
+    plugin: hpc_api_url
+    data_fetcher_plugin: hpc_api_http
+    data_parser_plugin: hpc_api_endpoint

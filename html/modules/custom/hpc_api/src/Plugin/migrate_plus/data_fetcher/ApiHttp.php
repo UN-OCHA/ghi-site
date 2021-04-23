@@ -2,11 +2,15 @@
 
 namespace Drupal\hpc_api\Plugin\migrate_plus\data_fetcher;
 
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\hpc_api\Helpers\ApiEntityHelper;
 use Drupal\migrate\MigrateException;
 use GuzzleHttp\Exception\RequestException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\migrate_plus\Plugin\migrate_plus\data_fetcher\Http;
 
 use Drupal\hpc_api\Helpers\QueryHelper;
+use Drupal\hpc_api\Query\EndpointQuery;
 
 /**
  * Retrieve data over an HTTP connection for migration.
@@ -29,7 +33,14 @@ use Drupal\hpc_api\Helpers\QueryHelper;
  *   title = @Translation("HPC API HTTP")
  * )
  */
-class ApiHttp extends Http {
+class ApiHttp extends Http implements ContainerFactoryPluginInterface {
+
+  /**
+   * The endpoint query to retrieve API data.
+   *
+   * @var \Drupal\hpc_api\Query\EndpointQuery
+   */
+  private $endpointQuery;
 
   /**
    * If the request should be paged or not.
@@ -50,12 +61,43 @@ class ApiHttp extends Http {
   private $newStructure;
 
   /**
+   * Optional filters to apply to the source data.
+   *
+   * Currently only supports a 'start_year' key.
+   *
+   * @var array
+   */
+  private $filter;
+
+  /**
+   * Optional entities process logic to apply to the source data.
+   *
+   * @var array
+   */
+  private $processEntities;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQuery $endpoint_query) {
+    $this->endpointQuery = $endpoint_query;
     $this->paged = !empty($configuration['paged']);
     $this->newStructure = !empty($configuration['new_structure']);
+    $this->filter = !empty($configuration['filter']) ? $configuration['filter'] : NULL;
+    $this->processEntities = !empty($configuration['process_entities']) ? $configuration['process_entities'] : NULL;
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('hpc_api.endpoint_query')
+    );
   }
 
   /**
@@ -167,8 +209,99 @@ class ApiHttp extends Http {
       }
     }
 
+    $this->filterSourceData($data);
+
+    if (!empty($this->processEntities)) {
+      $data = $this->processEntities($data, $this->processEntities);
+    }
+
     // Write the data to the filesystem.
     file_put_contents($import_file, json_encode(['data' => $data]));
+  }
+
+  /**
+   * Filter the source data.
+   *
+   * @param array $data
+   *   The source data array that should be filtered.
+   */
+  private function filterSourceData(array &$data) {
+
+    if (empty($data) || empty($this->filter)) {
+      // Nothing to do.
+      return;
+    }
+
+    foreach ($data as $key => $row) {
+      // Then get the year and see if we want it. Only import plans for 2018 and
+      // above.
+      foreach ($this->filter as $filter) {
+        if ($filter['type'] == 'min_year') {
+          if (empty($row['years'])) {
+            unset($data[$key]);
+            continue;
+          }
+          // There should really be only one.
+          $years = array_map(function ($item) {
+            return (int) $item['year'];
+          }, $row['years']);
+
+          if (min($years) < $filter['value']) {
+            unset($data[$key]);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Process source data for plan entities.
+   *
+   * @param array $data
+   *   The source data for all plans.
+   * @param string $type
+   *   The type of plan entity to process. Can be either "plan" or "governing".
+   *
+   * @return array
+   *   The processed plan entities.
+   */
+  private function processEntities(array $data, $type) {
+    $entities = [];
+    if (!in_array($type, ['plan', 'governing'])) {
+      return $entities;
+    }
+
+    ini_set('memory_limit', '512M');
+    foreach ($data as $item) {
+      $has_published_version = FALSE;
+      if (!empty($item['planTags'])) {
+        $published_versions = array_filter($item['planTags'], function ($version) {
+          return $version['public'] == TRUE;
+        });
+        $has_published_version = !empty($published_versions);
+      }
+
+      $this->endpointQuery->setArguments([
+        'endpoint' => 'plan/' . $item['id'],
+        'api_version' => 'v2',
+        'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
+        'query_args' => [
+          'content' => 'entities',
+        ],
+      ]);
+      if ($has_published_version) {
+        // If we have a public plan version, let's fetch it's entities.
+        $this->endpointQuery->setEndpointArgument('version', 'current');
+      }
+      $plan_data = $this->endpointQuery->getData();
+      if (!$plan_data) {
+        continue;
+      }
+      $_entities = ApiEntityHelper::getProcessedPlanEntitesByType($plan_data, $type);
+      $entities = array_merge($entities, $_entities);
+    }
+
+    return $entities;
   }
 
 }

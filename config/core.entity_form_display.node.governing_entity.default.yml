@@ -9,6 +9,7 @@ dependencies:
     - field.field.node.governing_entity.field_plan
     - field.field.node.governing_entity.field_plan_id
     - field.field.node.governing_entity.field_prototype_id
+    - field.field.node.governing_entity.layout_builder__layout
     - node.type.governing_entity
   module:
     - path
@@ -124,4 +125,5 @@ content:
       match_limit: 10
     region: content
     third_party_settings: {  }
-hidden: {  }
+hidden:
+  layout_builder__layout: true

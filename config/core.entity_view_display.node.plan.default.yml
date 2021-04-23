@@ -9,9 +9,11 @@ dependencies:
     - field.field.node.plan.field_description
     - field.field.node.plan.field_enabled_subpages
     - field.field.node.plan.field_governing_entities
+    - field.field.node.plan.field_linked_plans
     - field.field.node.plan.field_max_admin_level
     - field.field.node.plan.field_original_id
     - field.field.node.plan.field_plan_costing
+    - field.field.node.plan.field_plan_date
     - field.field.node.plan.field_plan_entities
     - field.field.node.plan.field_plan_footnote_inneed
     - field.field.node.plan.field_plan_footnote_requirements
@@ -32,9 +34,11 @@ dependencies:
     - field.field.node.plan.field_related_ocha_pages
     - field.field.node.plan.field_restricted
     - field.field.node.plan.field_rpm_plan_status
+    - field.field.node.plan.field_year
     - field.field.node.plan.layout_builder__layout
     - node.type.plan
   module:
+    - datetime_range
     - layout_builder
     - layout_discovery
     - user
@@ -58,12 +62,66 @@ third_party_settings:
               id: 'extra_field_block:node:plan:links'
             additional: {  }
             weight: 0
+          4a6b78dd-16fa-498b-a9ea-3573ecce50b6:
+            uuid: 4a6b78dd-16fa-498b-a9ea-3573ecce50b6
+            region: content
+            configuration:
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              id: 'field_block:node:plan:field_plan_date'
+              formatter:
+                label: above
+                settings:
+                  separator: '-'
+                  format_type: medium
+                  timezone_override: ''
+                third_party_settings: {  }
+                type: daterange_default
+            additional: {  }
+            weight: 1
+          c51b0318-cc59-4242-8407-fff8b6367f29:
+            uuid: c51b0318-cc59-4242-8407-fff8b6367f29
+            region: content
+            configuration:
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              id: 'field_block:node:plan:field_year'
+              formatter:
+                label: above
+                settings:
+                  thousand_separator: ''
+                  prefix_suffix: true
+                third_party_settings: {  }
+                type: number_integer
+            additional: {  }
+            weight: 2
         third_party_settings: {  }
 id: node.plan.default
 targetEntityType: node
 bundle: plan
 mode: default
 content:
+  field_plan_date:
+    weight: 101
+    label: above
+    settings:
+      separator: '-'
+      format_type: medium
+      timezone_override: ''
+    third_party_settings: {  }
+    type: daterange_default
+    region: content
+  field_year:
+    weight: 102
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    type: number_integer
+    region: content
   links:
     weight: 100
     settings: {  }
@@ -76,6 +134,7 @@ hidden:
   field_description: true
   field_enabled_subpages: true
   field_governing_entities: true
+  field_linked_plans: true
   field_max_admin_level: true
   field_original_id: true
   field_plan_costing: true

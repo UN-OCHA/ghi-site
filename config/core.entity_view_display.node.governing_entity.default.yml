@@ -11,7 +11,128 @@ dependencies:
     - field.field.node.governing_entity.field_prototype_id
     - node.type.governing_entity
   module:
+    - layout_builder
     - user
+third_party_settings:
+  layout_builder:
+    allow_custom: true
+    enabled: true
+    sections:
+      -
+        layout_id: layout_onecol
+        layout_settings:
+          label: ''
+        components:
+          364d2ef0-d8ac-4f09-8618-ebdb3d7c53c3:
+            uuid: 364d2ef0-d8ac-4f09-8618-ebdb3d7c53c3
+            region: content
+            configuration:
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              id: 'field_block:node:governing_entity:field_original_id'
+              formatter:
+                label: above
+                type: number_integer
+                settings:
+                  prefix_suffix: true
+                  thousand_separator: ''
+                third_party_settings: {  }
+            additional: {  }
+            weight: 0
+          d8665bbd-09bb-4125-a611-e1648bd57551:
+            uuid: d8665bbd-09bb-4125-a611-e1648bd57551
+            region: content
+            configuration:
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              id: 'field_block:node:governing_entity:field_plan_id'
+              formatter:
+                label: above
+                type: number_integer
+                settings:
+                  prefix_suffix: true
+                  thousand_separator: ''
+                third_party_settings: {  }
+            additional: {  }
+            weight: 1
+          0b740dd9-4243-4a64-80bc-03c83f9009dd:
+            uuid: 0b740dd9-4243-4a64-80bc-03c83f9009dd
+            region: content
+            configuration:
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              id: 'field_block:node:governing_entity:field_entity_subpage'
+              formatter:
+                label: above
+                type: string
+                settings:
+                  link_to_entity: false
+                third_party_settings: {  }
+            additional: {  }
+            weight: 2
+          9bba7c93-a52c-423e-89e8-e5c3146248ff:
+            uuid: 9bba7c93-a52c-423e-89e8-e5c3146248ff
+            region: content
+            configuration:
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              id: 'field_block:node:governing_entity:field_plan'
+              formatter:
+                label: above
+                type: entity_reference_label
+                settings:
+                  link: false
+                third_party_settings: {  }
+            additional: {  }
+            weight: 3
+          cda4a2c4-86cc-4e07-a603-2c78c96b5ff0:
+            uuid: cda4a2c4-86cc-4e07-a603-2c78c96b5ff0
+            region: content
+            configuration:
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              id: 'field_block:node:governing_entity:field_prototype_id'
+              formatter:
+                label: above
+                type: number_integer
+                settings:
+                  prefix_suffix: true
+                  thousand_separator: ''
+                third_party_settings: {  }
+            additional: {  }
+            weight: 4
+          c6c71712-c896-4b65-892b-f47569106878:
+            uuid: c6c71712-c896-4b65-892b-f47569106878
+            region: content
+            configuration:
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              id: 'field_block:node:governing_entity:field_cluster_managers'
+              formatter:
+                label: above
+                type: entity_reference_label
+                settings:
+                  link: false
+                third_party_settings: {  }
+            additional: {  }
+            weight: 5
+          b23e14e8-ee66-428e-a88f-d8573a518c89:
+            uuid: b23e14e8-ee66-428e-a88f-d8573a518c89
+            region: content
+            configuration:
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              id: 'extra_field_block:node:governing_entity:links'
+            additional: {  }
+            weight: 6
+        third_party_settings: {  }
 id: node.governing_entity.default
 targetEntityType: node
 bundle: governing_entity

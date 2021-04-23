@@ -9,9 +9,11 @@ dependencies:
     - field.field.node.plan.field_description
     - field.field.node.plan.field_enabled_subpages
     - field.field.node.plan.field_governing_entities
+    - field.field.node.plan.field_linked_plans
     - field.field.node.plan.field_max_admin_level
     - field.field.node.plan.field_original_id
     - field.field.node.plan.field_plan_costing
+    - field.field.node.plan.field_plan_date
     - field.field.node.plan.field_plan_entities
     - field.field.node.plan.field_plan_footnote_inneed
     - field.field.node.plan.field_plan_footnote_requirements
@@ -32,34 +34,172 @@ dependencies:
     - field.field.node.plan.field_related_ocha_pages
     - field.field.node.plan.field_restricted
     - field.field.node.plan.field_rpm_plan_status
+    - field.field.node.plan.field_year
     - field.field.node.plan.layout_builder__layout
     - node.type.plan
   module:
+    - datetime_range
+    - field_group
+    - ghi_plans
     - path
-    - text
+third_party_settings:
+  field_group:
+    group_plan_properties:
+      children:
+        - field_original_id
+        - field_plan_short_name
+        - field_plan_type
+        - field_plan_costing
+        - field_restricted
+        - field_plan_version_tag
+        - field_plan_version_argument
+        - field_rpm_plan_status
+      parent_name: ''
+      weight: 1
+      format_type: details
+      region: content
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        open: false
+        required_fields: true
+        weight: 0
+      label: 'Plan properties'
+    group_display_settings:
+      children:
+        - field_plan_include_homepage
+        - field_plan_level_attachment_id
+        - field_plan_hide_ple_counts
+        - field_plan_hide_gve_counts
+        - field_plan_prevent_fts_link
+        - field_related_ocha_pages
+        - field_max_admin_level
+        - field_decimal_format
+        - field_description
+      parent_name: ''
+      weight: 4
+      format_type: details
+      region: content
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        open: false
+        required_fields: true
+        weight: 0
+      label: 'Display settings'
+    group_plan_managers:
+      children:
+        - field_plan_managers
+      parent_name: ''
+      weight: 3
+      format_type: details
+      region: content
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        open: false
+        required_fields: true
+        weight: 0
+      label: 'Plan managers'
+    group_dates_and_year:
+      children:
+        - field_plan_date
+        - field_year
+      parent_name: ''
+      weight: 5
+      format_type: details_sidebar
+      region: content
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        open: false
+        required_fields: true
+        weight: 0
+      label: 'Dates and year'
+    group_entities:
+      children:
+        - field_plan_entities
+        - field_governing_entities
+      parent_name: ''
+      weight: 6
+      format_type: details
+      region: content
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        open: false
+        required_fields: true
+        weight: 0
+      label: Entities
+    group_footnotes:
+      children:
+        - field_plan_footnote_inneed
+        - field_plan_footnote_target
+        - field_plan_footnote_requirements
+      parent_name: ''
+      weight: 7
+      format_type: details
+      region: content
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        open: false
+        required_fields: true
+        weight: 0
+      label: Footnotes
+    group_debug:
+      children:
+        - field_enabled_subpages
+        - field_plan_structure_rpm
+        - field_plan_reporting_periods
+      parent_name: ''
+      weight: 9
+      format_type: details
+      region: content
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        open: false
+        required_fields: true
+        weight: 0
+      label: Debug
+    group_global_plan:
+      children:
+        - field_plan_is_global
+        - field_cluster_filter
+        - field_linked_plans
+      parent_name: ''
+      weight: 8
+      format_type: details
+      region: content
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        open: false
+        required_fields: true
+        weight: 0
+      label: 'Global plan'
 id: node.plan.default
 targetEntityType: node
 bundle: plan
 mode: default
 content:
-  body:
-    weight: 4
-    type: text_textarea_with_summary
-    settings:
-      rows: 9
-      summary_rows: 3
-      placeholder: ''
-      show_summary: false
-    third_party_settings: {  }
-    region: content
   created:
     type: datetime_timestamp
-    weight: 10
+    weight: 11
     region: content
     settings: {  }
     third_party_settings: {  }
   field_cluster_filter:
-    weight: 28
+    weight: 18
     type: string_textfield
     settings:
       size: 60
@@ -67,13 +207,13 @@ content:
     third_party_settings: {  }
     region: content
   field_decimal_format:
-    weight: 18
+    weight: 15
     type: options_select
     settings: {  }
     third_party_settings: {  }
     region: content
   field_description:
-    weight: 19
+    weight: 16
     type: string_textarea
     settings:
       rows: 5
@@ -81,7 +221,7 @@ content:
     third_party_settings: {  }
     region: content
   field_enabled_subpages:
-    weight: 18
+    weight: 14
     type: string_textarea
     settings:
       rows: 5
@@ -89,7 +229,7 @@ content:
     third_party_settings: {  }
     region: content
   field_governing_entities:
-    weight: 15
+    weight: 11
     type: entity_reference_autocomplete_tags
     settings:
       match_operator: CONTAINS
@@ -98,27 +238,39 @@ content:
       placeholder: ''
     third_party_settings: {  }
     region: content
+  field_linked_plans:
+    type: ghi_plans_linked_plans
+    weight: 19
+    region: content
+    settings: {  }
+    third_party_settings: {  }
   field_max_admin_level:
-    weight: 17
+    weight: 14
     type: options_select
     settings: {  }
     third_party_settings: {  }
     region: content
   field_original_id:
-    weight: 2
+    weight: 3
     type: number
     settings:
       placeholder: ''
     third_party_settings: {  }
     region: content
   field_plan_costing:
-    weight: 5
+    weight: 6
     type: options_select
     settings: {  }
     third_party_settings: {  }
     region: content
+  field_plan_date:
+    weight: 23
+    settings: {  }
+    third_party_settings: {  }
+    type: daterange_default
+    region: content
   field_plan_entities:
-    weight: 14
+    weight: 10
     type: entity_reference_autocomplete_tags
     settings:
       match_operator: CONTAINS
@@ -128,7 +280,7 @@ content:
     third_party_settings: {  }
     region: content
   field_plan_footnote_inneed:
-    weight: 20
+    weight: 15
     type: string_textfield
     settings:
       size: 60
@@ -136,7 +288,7 @@ content:
     third_party_settings: {  }
     region: content
   field_plan_footnote_requirements:
-    weight: 22
+    weight: 17
     type: string_textfield
     settings:
       size: 60
@@ -144,7 +296,7 @@ content:
     third_party_settings: {  }
     region: content
   field_plan_footnote_target:
-    weight: 21
+    weight: 16
     type: string_textfield
     settings:
       size: 60
@@ -152,42 +304,42 @@ content:
     third_party_settings: {  }
     region: content
   field_plan_hide_gve_counts:
-    weight: 14
-    type: boolean_checkbox
-    settings:
-      display_label: true
-    third_party_settings: {  }
-    region: content
-  field_plan_hide_ple_counts:
-    weight: 13
-    type: boolean_checkbox
-    settings:
-      display_label: true
-    third_party_settings: {  }
-    region: content
-  field_plan_include_homepage:
     weight: 11
     type: boolean_checkbox
     settings:
       display_label: true
     third_party_settings: {  }
     region: content
+  field_plan_hide_ple_counts:
+    weight: 10
+    type: boolean_checkbox
+    settings:
+      display_label: true
+    third_party_settings: {  }
+    region: content
+  field_plan_include_homepage:
+    weight: 8
+    type: boolean_checkbox
+    settings:
+      display_label: true
+    third_party_settings: {  }
+    region: content
   field_plan_is_global:
-    weight: 26
+    weight: 17
     type: boolean_checkbox
     settings:
       display_label: true
     third_party_settings: {  }
     region: content
   field_plan_level_attachment_id:
-    weight: 12
+    weight: 9
     type: number
     settings:
       placeholder: ''
     third_party_settings: {  }
     region: content
   field_plan_managers:
-    weight: 9
+    weight: 7
     type: entity_reference_autocomplete
     settings:
       match_operator: CONTAINS
@@ -197,14 +349,14 @@ content:
     third_party_settings: {  }
     region: content
   field_plan_prevent_fts_link:
-    weight: 15
+    weight: 12
     type: boolean_checkbox
     settings:
       display_label: true
     third_party_settings: {  }
     region: content
   field_plan_reporting_periods:
-    weight: 20
+    weight: 16
     type: string_textarea
     settings:
       rows: 5
@@ -212,7 +364,7 @@ content:
     third_party_settings: {  }
     region: content
   field_plan_short_name:
-    weight: 3
+    weight: 4
     type: string_textfield
     settings:
       size: 60
@@ -220,7 +372,7 @@ content:
     third_party_settings: {  }
     region: content
   field_plan_structure_rpm:
-    weight: 19
+    weight: 15
     type: string_textarea
     settings:
       rows: 5
@@ -228,19 +380,19 @@ content:
     third_party_settings: {  }
     region: content
   field_plan_type:
-    weight: 4
+    weight: 5
     type: options_select
     settings: {  }
     third_party_settings: {  }
     region: content
   field_plan_version_argument:
-    weight: 8
+    weight: 9
     type: options_select
     settings: {  }
     third_party_settings: {  }
     region: content
   field_plan_version_tag:
-    weight: 7
+    weight: 8
     type: string_textfield
     settings:
       size: 60
@@ -248,25 +400,32 @@ content:
     third_party_settings: {  }
     region: content
   field_related_ocha_pages:
-    weight: 16
+    weight: 13
     type: options_buttons
     settings: {  }
     third_party_settings: {  }
     region: content
   field_restricted:
-    weight: 6
+    weight: 7
     type: boolean_checkbox
     settings:
       display_label: true
     third_party_settings: {  }
     region: content
   field_rpm_plan_status:
-    weight: 9
+    weight: 10
     type: string_textfield
     settings:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+    region: content
+  field_year:
+    weight: 24
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+    type: number
     region: content
   langcode:
     type: language_select
@@ -277,7 +436,7 @@ content:
     third_party_settings: {  }
   path:
     type: path
-    weight: 30
+    weight: 14
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -285,26 +444,26 @@ content:
     type: boolean_checkbox
     settings:
       display_label: true
-    weight: 15
+    weight: 12
     region: content
     third_party_settings: {  }
   status:
     type: boolean_checkbox
     settings:
       display_label: true
-    weight: 120
+    weight: 15
     region: content
     third_party_settings: {  }
   sticky:
     type: boolean_checkbox
     settings:
       display_label: true
-    weight: 16
+    weight: 13
     region: content
     third_party_settings: {  }
   title:
     type: string_textfield
-    weight: -5
+    weight: 0
     region: content
     settings:
       size: 60
@@ -312,7 +471,7 @@ content:
     third_party_settings: {  }
   uid:
     type: entity_reference_autocomplete
-    weight: 5
+    weight: 10
     settings:
       match_operator: CONTAINS
       size: 60
@@ -321,4 +480,5 @@ content:
     region: content
     third_party_settings: {  }
 hidden:
+  body: true
   layout_builder__layout: true

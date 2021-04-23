@@ -1,0 +1,23 @@
+uuid: 41685bbf-6b75-4313-a79a-eac5e1556fd2
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_original_id
+    - taxonomy.vocabulary.plan_costing
+id: taxonomy_term.plan_costing.field_original_id
+field_name: field_original_id
+entity_type: taxonomy_term
+bundle: plan_costing
+label: 'Original ID'
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

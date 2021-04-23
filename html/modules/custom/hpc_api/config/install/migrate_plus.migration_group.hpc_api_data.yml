@@ -1,0 +1,23 @@
+# A "migration group" is - surprise! - a group of migrations. It is used to
+# group migrations for display by our tools, and to perform operations on a
+# specific set of migrations. It can also be used to hold any configuration
+# common to those migrations, so it doesn't have to be duplicated in each one.
+
+# The machine name of the group, by which it is referenced in individual
+# migrations.
+id: hpc_api_data
+
+# A human-friendly label for the group.
+label: HPC API Data
+
+# More information about the group.
+description: Import data from the HPC API.
+
+# Short description of the type of source, e.g. "Drupal 6" or "WordPress".
+source_type: HPC API
+
+shared_configuration:
+  source:
+    plugin: hpc_api_url
+    data_fetcher_plugin: hpc_api_http
+    data_parser_plugin: hpc_api_endpoint

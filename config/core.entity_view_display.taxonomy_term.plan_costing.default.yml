@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.taxonomy_term.plan_costing.field_original_id
     - field.field.taxonomy_term.plan_costing.field_plan_costing_code
     - taxonomy.vocabulary.plan_costing
   module:
@@ -19,6 +20,15 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
+  field_original_id:
+    weight: 1
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    type: number_integer
+    region: content
   field_plan_costing_code:
     label: above
     weight: 0

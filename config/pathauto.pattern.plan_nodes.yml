@@ -1,0 +1,22 @@
+uuid: 5fa7575f-b629-414e-8ae9-6db1cc12fe25
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: plan_nodes
+label: 'Plan nodes'
+type: 'canonical_entities:node'
+pattern: 'plan/[node:field_original_id]'
+selection_criteria:
+  63754e9c-1aa9-42fa-8413-6c057bf76956:
+    id: node_type
+    bundles:
+      plan: plan
+    negate: false
+    context_mapping:
+      node: node
+    uuid: 63754e9c-1aa9-42fa-8413-6c057bf76956
+selection_logic: and
+weight: -5
+relationships: {  }
