@@ -1,18 +1,19 @@
-uuid: d0e4cad0-e9b2-45d4-bdb3-5585232bb129
-langcode: und
+uuid: 265e67fb-3c68-4537-bcc8-d0692eaa3483
+langcode: en
 status: true
 dependencies:
   module:
     - node
-id: node.field_governing_entities
-field_name: field_governing_entities
+id: node.field_longitude
+field_name: field_longitude
 entity_type: node
-type: entity_reference
+type: decimal
 settings:
-  target_type: node
+  precision: 15
+  scale: 10
 module: core
 locked: false
-cardinality: -1
+cardinality: 1
 translatable: true
 indexes: {  }
 persist_with_no_fields: false

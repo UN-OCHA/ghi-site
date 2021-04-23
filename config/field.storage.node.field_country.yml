@@ -1,11 +1,11 @@
-uuid: 1738001b-6fc7-4e43-afcc-ac63ae6210fe
-langcode: und
+uuid: ea80d446-1984-4c7d-a2fe-fb4280e634bf
+langcode: en
 status: true
 dependencies:
   module:
     - node
-id: node.field_plan_entities
-field_name: field_plan_entities
+id: node.field_country
+field_name: field_country
 entity_type: node
 type: entity_reference
 settings:

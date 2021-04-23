@@ -67,27 +67,31 @@ process:
   field_description: comments
   field_plan_version_tag: version_tag
   field_plan_date/value:
-    -
-      plugin: hpc_api_migrate_format_date
-      source: start_date
+    plugin: hpc_api_migrate_format_date
+    source: start_date
   field_plan_date/end_value:
-    -
-      plugin: hpc_api_migrate_format_date
-      source: end_date
+    plugin: hpc_api_migrate_format_date
+    source: end_date
   field_plan_structure_rpm: prototype
   field_plan_reporting_periods: reporting_periods
+  field_country:
+    plugin: sub_process
+    source: countries
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: country
+        source: id
   field_plan_type:
-    -
-      plugin: migration_lookup
-      migration: plan_type_term
-      source: plan_type_id
-      no_stub: true
+    plugin: migration_lookup
+    migration: plan_type_term
+    source: plan_type_id
+    no_stub: true
   field_plan_costing:
-    -
-      plugin: migration_lookup
-      migration: plan_costing_term
-      source: plan_costing_id
-      no_stub: true
+    plugin: migration_lookup
+    migration: plan_costing_term
+    source: plan_costing_id
+    no_stub: true
   field_year: plan_year
   field_restricted: restricted
   field_rpm_plan_status: plan_status
@@ -115,9 +119,11 @@ destination:
     - field_plan_type
     - field_plan_costing
     - field_year
+    - field_country
     - field_restricted
     - field_rpm_plan_status
 migration_dependencies:
   required:
     - plan_type_term
     - plan_costing_term
+    - country

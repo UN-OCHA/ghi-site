@@ -1,0 +1,23 @@
+uuid: 21108570-269f-4749-88f5-ac4559941195
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_longitude
+    - node.type.country
+id: node.country.field_longitude
+field_name: field_longitude
+entity_type: node
+bundle: country
+label: Longitude
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: decimal

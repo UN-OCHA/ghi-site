@@ -114,7 +114,7 @@ function ghi_plans_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $so
     $row->setSourceProperty('reporting_periods', serialize($reporting_periods));
   }
 
-  // Parse the categories to retrieve the planType category.
+  // Parse the categories to retrieve the categories.
   if (!empty($plan_data->categories)) {
     // Plan type.
     $plan_types = array_filter($plan_data->categories, function ($item) {
@@ -135,6 +135,14 @@ function ghi_plans_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $so
       $plan_costing = reset($plan_costing);
       $row->setSourceProperty('plan_costing_id', $plan_costing->id);
     }
+  }
+
+  // Country references.
+  if (!empty($raw_data->locations)) {
+    $countries = array_filter($raw_data->locations, function ($location) {
+      return $location['adminLevel'] == 0;
+    });
+    $row->setSourceProperty('countries', !empty($countries) ? $countries : []);
   }
 
   // Then get the year.

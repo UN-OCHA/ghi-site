@@ -5,16 +5,15 @@ dependencies:
   config:
     - field.field.node.plan.body
     - field.field.node.plan.field_cluster_filter
+    - field.field.node.plan.field_country
     - field.field.node.plan.field_decimal_format
     - field.field.node.plan.field_description
     - field.field.node.plan.field_enabled_subpages
-    - field.field.node.plan.field_governing_entities
     - field.field.node.plan.field_linked_plans
     - field.field.node.plan.field_max_admin_level
     - field.field.node.plan.field_original_id
     - field.field.node.plan.field_plan_costing
     - field.field.node.plan.field_plan_date
-    - field.field.node.plan.field_plan_entities
     - field.field.node.plan.field_plan_footnote_inneed
     - field.field.node.plan.field_plan_footnote_requirements
     - field.field.node.plan.field_plan_footnote_target
@@ -120,29 +119,13 @@ third_party_settings:
         required_fields: true
         weight: 0
       label: 'Dates and year'
-    group_entities:
-      children:
-        - field_plan_entities
-        - field_governing_entities
-      parent_name: ''
-      weight: 6
-      format_type: details
-      region: content
-      format_settings:
-        id: ''
-        classes: ''
-        description: ''
-        open: false
-        required_fields: true
-        weight: 0
-      label: Entities
     group_footnotes:
       children:
         - field_plan_footnote_inneed
         - field_plan_footnote_target
         - field_plan_footnote_requirements
       parent_name: ''
-      weight: 7
+      weight: 8
       format_type: details
       region: content
       format_settings:
@@ -159,7 +142,7 @@ third_party_settings:
         - field_plan_structure_rpm
         - field_plan_reporting_periods
       parent_name: ''
-      weight: 9
+      weight: 10
       format_type: details
       region: content
       format_settings:
@@ -176,7 +159,7 @@ third_party_settings:
         - field_cluster_filter
         - field_linked_plans
       parent_name: ''
-      weight: 8
+      weight: 9
       format_type: details
       region: content
       format_settings:
@@ -187,6 +170,20 @@ third_party_settings:
         required_fields: true
         weight: 0
       label: 'Global plan'
+    group_locations:
+      children:
+        - field_country
+      parent_name: ''
+      weight: 7
+      format_type: details
+      region: content
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        open: false
+        required_fields: true
+      label: Locations
 id: node.plan.default
 targetEntityType: node
 bundle: plan
@@ -194,7 +191,7 @@ mode: default
 content:
   created:
     type: datetime_timestamp
-    weight: 11
+    weight: 12
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -205,6 +202,16 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+    region: content
+  field_country:
+    weight: 17
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
     region: content
   field_decimal_format:
     weight: 15
@@ -225,16 +232,6 @@ content:
     type: string_textarea
     settings:
       rows: 5
-      placeholder: ''
-    third_party_settings: {  }
-    region: content
-  field_governing_entities:
-    weight: 11
-    type: entity_reference_autocomplete_tags
-    settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
       placeholder: ''
     third_party_settings: {  }
     region: content
@@ -268,16 +265,6 @@ content:
     settings: {  }
     third_party_settings: {  }
     type: daterange_default
-    region: content
-  field_plan_entities:
-    weight: 10
-    type: entity_reference_autocomplete_tags
-    settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
     region: content
   field_plan_footnote_inneed:
     weight: 15
@@ -436,7 +423,7 @@ content:
     third_party_settings: {  }
   path:
     type: path
-    weight: 14
+    weight: 15
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -444,21 +431,21 @@ content:
     type: boolean_checkbox
     settings:
       display_label: true
-    weight: 12
+    weight: 13
     region: content
     third_party_settings: {  }
   status:
     type: boolean_checkbox
     settings:
       display_label: true
-    weight: 15
+    weight: 16
     region: content
     third_party_settings: {  }
   sticky:
     type: boolean_checkbox
     settings:
       display_label: true
-    weight: 13
+    weight: 14
     region: content
     third_party_settings: {  }
   title:
@@ -471,7 +458,7 @@ content:
     third_party_settings: {  }
   uid:
     type: entity_reference_autocomplete
-    weight: 10
+    weight: 11
     settings:
       match_operator: CONTAINS
       size: 60
