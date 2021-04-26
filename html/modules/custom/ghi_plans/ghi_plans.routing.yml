@@ -11,3 +11,12 @@ ghi_plans.sync_elements:
   requirements:
     _custom_access: '\Drupal\ghi_plans\Controller\SyncAccessController::accessElementSyncForm'
     _permission: 'administer site configuration'
+ghi_plans.plan_autocomplete:
+  path: '/plan/autocomplete'
+  defaults:
+    _controller: '\Drupal\ghi_plans\Controller\PlanAutocompleteController::planAutocomplete'
+    _format: json
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: 'TRUE'

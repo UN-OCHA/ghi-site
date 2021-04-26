@@ -6,5 +6,3 @@ public_base_path: public/fts
 timeout: 30
 cache_lifetime: 3600
 use_gzip_compression: false
-_core:
-  default_config_hash: SvwWxTECBJxASZikqPap3-i-9dfD1y1mDyjgHi3HTSk

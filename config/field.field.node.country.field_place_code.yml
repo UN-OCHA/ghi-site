@@ -1,0 +1,19 @@
+uuid: 6a0ce5a8-8c5b-492f-a238-39a5afecf568
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_place_code
+    - node.type.country
+id: node.country.field_place_code
+field_name: field_place_code
+entity_type: node
+bundle: country
+label: 'Place Code'
+description: 'The pcode for the country if available.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

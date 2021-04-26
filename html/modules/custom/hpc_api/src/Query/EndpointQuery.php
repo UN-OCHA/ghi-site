@@ -7,6 +7,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
+use Drupal\Core\Session\AccountProxyInterface;
 use GuzzleHttp\ClientInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -123,14 +124,22 @@ class EndpointQuery {
   protected $sortMethod;
 
   /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $user;
+
+  /**
    * Constructs a new EndpointQuery object.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, CacheBackendInterface $cache, KillSwitch $kill_switch, ClientInterface $http_client) {
+  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, CacheBackendInterface $cache, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user) {
     $this->configFactory = $config_factory;
     $this->loggerFactory = $logger_factory;
     $this->cache = $cache;
     $this->killSwitch = $kill_switch;
     $this->httpClient = $http_client;
+    $this->user = $user;
 
     $this->endpointVersion = hpc_api_get_default_api_version();
     $this->endpointUrl = NULL;
@@ -150,6 +159,9 @@ class EndpointQuery {
     // there that create difficult to debug race conditions.
     $this->endpointVersion = !empty($arguments['api_version']) ? $arguments['api_version'] : hpc_api_get_default_api_version();
     $this->endpointUrl = !empty($arguments['endpoint']) ? $arguments['endpoint'] : NULL;
+    if ($this->user->isAuthenticated() && !empty($arguments['endpoint_restricted'])) {
+      $this->endpointUrl = $arguments['endpoint_restricted'];
+    }
     $this->endpointArgs = !empty($arguments['query_args']) ? $arguments['query_args'] : [];
     $this->orderBy = !empty($arguments['order_by']) ? $arguments['order_by'] : NULL;
     $this->sort = !empty($arguments['sort']) ? $arguments['sort'] : self::SORT_ASC;

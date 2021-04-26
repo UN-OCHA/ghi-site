@@ -1,0 +1,23 @@
+uuid: e759c41c-b274-434e-92ca-b9c235250e8b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_original_id
+    - taxonomy.vocabulary.plan_type
+id: taxonomy_term.plan_type.field_original_id
+field_name: field_original_id
+entity_type: taxonomy_term
+bundle: plan_type
+label: 'Original ID'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

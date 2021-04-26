@@ -10,6 +10,7 @@ dependencies:
     - field.field.node.governing_entity.field_plan
     - field.field.node.governing_entity.field_plan_id
     - field.field.node.governing_entity.field_prototype_id
+    - field.field.node.governing_entity.layout_builder__layout
     - node.type.governing_entity
   module:
     - user
@@ -31,3 +32,4 @@ hidden:
   field_plan_id: true
   field_prototype_id: true
   langcode: true
+  layout_builder__layout: true

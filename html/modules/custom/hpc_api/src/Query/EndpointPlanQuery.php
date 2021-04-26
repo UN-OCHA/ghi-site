@@ -175,7 +175,7 @@ class EndpointPlanQuery extends EndpointQuery {
 
     $data = $this->getData();
 
-    $years = array();
+    $years = [];
     if (isset($data->years) && is_array($data->years)) {
       foreach ($data->years as $year_info) {
         $years[] = $year_info->year;
@@ -275,4 +275,5 @@ class EndpointPlanQuery extends EndpointQuery {
 
     return $sources;
   }
+
 }

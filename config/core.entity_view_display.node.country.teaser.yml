@@ -1,0 +1,31 @@
+uuid: f3a50c0e-dc24-44f4-a5b6-f4adfe9e6376
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.country.field_country_code
+    - field.field.node.country.field_latitude
+    - field.field.node.country.field_longitude
+    - field.field.node.country.field_original_id
+    - field.field.node.country.field_place_code
+    - node.type.country
+  module:
+    - user
+id: node.country.teaser
+targetEntityType: node
+bundle: country
+mode: teaser
+content:
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  field_country_code: true
+  field_latitude: true
+  field_longitude: true
+  field_original_id: true
+  field_place_code: true
+  langcode: true

@@ -2,6 +2,7 @@
 
 namespace Drupal\hpc_api\Helpers;
 
+use Drupal\Core\File\FileSystem;
 use Drupal\node\NodeInterface;
 
 /**
@@ -293,6 +294,124 @@ class ApiEntityHelper {
    */
   public static function getEntityPrototype($entity) {
     return $entity->entityPrototype;
+  }
+
+  /**
+   * Extract plan data entities (plan or governing) by type.
+   *
+   * @param object $data
+   *   The full plan data object as retrieved from the API.
+   * @param string $entity_type
+   *   Either "plan" or "governing".
+   * @param array $limit
+   *   An optional array of filter criteria to apply to the list of entities.
+   *   The keys of the array have to match one of the keys used to map the
+   *   data in this function.
+   *
+   * @return array
+   *   An array of entities of the given type. Processed for smaller footprint.
+   */
+  public static function getProcessedPlanEntitesByType($data, $entity_type, array $limit = NULL) {
+    $property = $entity_type . 'Entities';
+    if (empty($data->$property)) {
+      return [];
+    }
+    // Retrieve the entities of the specified type and map the data it something
+    // more simple.
+    $entities = [];
+    foreach ($data->$property as $entity) {
+      $entity_version = self::getEntityVersion($entity);
+      $supported_plan_entity_ids = self::getSupportPlanIds($entities, $entity, FALSE);
+      $entities[$entity->id] = [
+        'entity_type' => $entity_type,
+        'id' => $entity->id,
+        'plan_id' => $entity->planId,
+        'name' => !empty($entity_version->name) ? $entity_version->name : $entity->entityPrototype->value->name->en->singular . ' ' . $entity_version->customReference,
+        'entity_prototype_id' => $entity->entityPrototype->id,
+        'entity_prototype_name' => $entity->entityPrototype->value->name->en->plural,
+        'type' => $entity_type . '_entity',
+        'custom_reference' => $entity_version->customReference,
+        'description' => !empty($entity_version->value->description) ? $entity_version->value->description : '',
+        'icon' => !empty($entity_version->value->icon) ? self::getIconEmbedCode($entity_version->value->icon) : NULL,
+        'parents' => !empty($entity->parents) ? array_map(function ($item) {
+          return $item->parentId;
+        }, $entity->parents) : [],
+        'weight' => property_exists($entity_version->value, 'orderNumber') ? $entity_version->value->orderNumber : $entity->entityPrototype->orderNumber,
+        'parent_id' => !empty($entity->parentId) ? $entity->parentId : NULL,
+        'supported_plan_entities' => $supported_plan_entity_ids,
+      ];
+    }
+    // Filter if necessary.
+    if ($limit !== NULL && is_array($limit)) {
+      $entities = array_filter($entities, function ($entity) use ($limit) {
+        $valid = TRUE;
+        foreach ($limit as $key => $value) {
+          if (is_array($entity[$key])) {
+            $valid = $valid && in_array($value, $entity[$key]);
+          }
+          else {
+            $valid = $valid && $entity[$key] == $value;
+          }
+        }
+        return $valid;
+      });
+    }
+
+    uasort($entities, function ($a, $b) {
+      return $a['weight'] - $b['weight'];
+    });
+
+    return $entities;
+  }
+
+  /**
+   * Retrieve svg icon code.
+   *
+   * @param string $icon
+   *   The icon identifier.
+   *
+   * @return string|null
+   *   A string representation of the SVG icon, or NULL if no icon is there.
+   */
+  public static function getIconEmbedCode($icon) {
+    if (empty($icon) || $icon == 'blank_icon') {
+      return NULL;
+    }
+    $svgs = &drupal_static(__FUNCTION__, []);
+    if (empty($svgs[$icon])) {
+
+      /** @var \Drupal\hpc_api\Query\EndpointQuery $endpoint_query */
+      $endpoint_query = \Drupal::service('hpc_api.endpoint_query');
+      /** @var \Drupal\Core\File\FileSystem $file_system */
+      $file_system = \Drupal::service('file_system');
+      /** @var \Drupal\Component\Datetime\TimeInterface $time */
+      $time = \Drupal::service('datetime.time');
+
+      $svg_content = NULL;
+      // Check if we have a local copy that is not older than 1 day.
+      $icon_dir = 'public://cluster-icons';
+      $icon_path_local = $icon_dir . '/' . $icon;
+      if (file_exists($icon_path_local) && filemtime($file_system->realpath($icon_path_local)) > $time->getRequestTime() - 24 * 60 * 60) {
+        $svg_content = file_get_contents($icon_path_local);
+      }
+      if (empty($svg_content)) {
+        $endpoint_query->setArguments([
+          'endpoint' => 'icon/' . $icon,
+          'api_version' => 'v2',
+        ]);
+        $svg_data = $endpoint_query->getData();
+        $svg_content = $svg_data ? $svg_data->svg : NULL;
+        if ($svg_content && $file_system->prepareDirectory($icon_dir, FileSystem::CREATE_DIRECTORY | FileSystem::MODIFY_PERMISSIONS)) {
+          file_put_contents($icon_path_local, $svg_content);
+        }
+      }
+      if (empty($svg_content)) {
+        return NULL;
+      }
+      $svg = '<div class="cluster-icon">' . $svg_content . '</div>';
+      $svgs[$icon] = $svg;
+    }
+    return !empty($svgs[$icon]) ? $svgs[$icon] : NULL;
   }
 
 }

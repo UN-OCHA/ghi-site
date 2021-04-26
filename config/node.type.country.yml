@@ -1,0 +1,18 @@
+uuid: 416e5dd7-9df2-4d90-ab5d-2d406f79e3d6
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus:
+      - main
+    parent: 'main:'
+name: Country
+type: country
+description: ''
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false
