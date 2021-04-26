@@ -50,68 +50,7 @@ third_party_settings:
         layout_id: layout_onecol
         layout_settings:
           label: ''
-        components:
-          8a14e324-ec7e-42e2-8c79-0cfc23e6c47d:
-            uuid: 8a14e324-ec7e-42e2-8c79-0cfc23e6c47d
-            region: content
-            configuration:
-              label_display: '0'
-              context_mapping:
-                entity: layout_builder.entity
-              id: 'extra_field_block:node:plan:links'
-            additional: {  }
-            weight: 0
-          4a6b78dd-16fa-498b-a9ea-3573ecce50b6:
-            uuid: 4a6b78dd-16fa-498b-a9ea-3573ecce50b6
-            region: content
-            configuration:
-              label_display: '0'
-              context_mapping:
-                entity: layout_builder.entity
-              id: 'field_block:node:plan:field_plan_date'
-              formatter:
-                label: above
-                settings:
-                  separator: '-'
-                  format_type: medium
-                  timezone_override: ''
-                third_party_settings: {  }
-                type: daterange_default
-            additional: {  }
-            weight: 1
-          c51b0318-cc59-4242-8407-fff8b6367f29:
-            uuid: c51b0318-cc59-4242-8407-fff8b6367f29
-            region: content
-            configuration:
-              label_display: '0'
-              context_mapping:
-                entity: layout_builder.entity
-              id: 'field_block:node:plan:field_year'
-              formatter:
-                label: above
-                settings:
-                  thousand_separator: ''
-                  prefix_suffix: true
-                third_party_settings: {  }
-                type: number_integer
-            additional: {  }
-            weight: 2
-          e7753714-ad3e-44b0-8b4c-6dcfed7f1e50:
-            uuid: e7753714-ad3e-44b0-8b4c-6dcfed7f1e50
-            region: content
-            configuration:
-              label_display: '0'
-              context_mapping:
-                entity: layout_builder.entity
-              id: 'field_block:node:plan:field_country'
-              formatter:
-                label: above
-                settings:
-                  link: true
-                third_party_settings: {  }
-                type: entity_reference_label
-            additional: {  }
-            weight: 3
+        components: {  }
         third_party_settings: {  }
 id: node.plan.default
 targetEntityType: node
