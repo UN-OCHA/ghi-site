@@ -26,10 +26,6 @@ use Drupal\hpc_api\Query\EndpointQuery;
  *      }
  *    }
  *  },
- *  field_context_mapping = {
- *    "year" = "field_plan_year",
- *    "plan_id" = "field_original_id"
- *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Plan node"))
  *  }

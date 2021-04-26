@@ -4,6 +4,8 @@ namespace Drupal\ghi_blocks\Plugin\Block;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Plugin\Context\Context;
+use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
@@ -162,7 +164,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
         'class' => [Html::getClass('hpc-form-wrapper')],
       ],
       '#attached' => [
-        'library' => ['hpc_common/layout_builder_modal_admin'],
+        'library' => ['ghi_blocks/layout_builder_modal_admin'],
       ],
     ];
 
@@ -467,23 +469,74 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function injectFieldContexts() {
+    if ($this->injectedFieldContexts) {
+      return;
+    }
+    $plugin_definition = $this->getPluginDefinition();
+    $field_context_mapping = !empty($plugin_definition['field_context_mapping']) ? $plugin_definition['field_context_mapping'] : NULL;
+
+    if (empty($field_context_mapping)) {
+      parent::injectFieldContexts();
+      return;
+    }
+
+    $node = $this->getNodeFromContexts();
+    if (!$node) {
+      return;
+    }
+
+    $plan_node = $this->getCurrentPlanNode($node);
+    $plan_id = $plan_node->field_original_id->value;
+
+    if (empty($plugin_definition['context_definitions'][$context_key])) {
+      // Create a new context.
+      $context = new Context(new ContextDefinition('integer', $this->t('Plan id'), FALSE), $plan_id);
+      $this->setContext('plan_id', $context);
+    }
+    else {
+      // Overwrite the existing context value if there is any.
+      $this->setContextValue('plan_id', $plan_id);
+    }
+    $this->injectedFieldContexts = TRUE;
+  }
+
+  /**
    * Get a plan id for the current page context.
    *
    * @return int
    *   A plan id if it can be found.
    */
-  public function getCurrentPlanId() {
-    $page_node = $this->getPageNode();
+  public function getCurrentPlanNode($page_node = NULL) {
+    if ($page_node === NULL) {
+      $page_node = $this->getPageNode();
+    }
     if (!$page_node) {
       return NULL;
     }
     if ($page_node->bundle() == 'plan') {
       return $page_node->field_original_id->value;
     }
-    if ($page_node->hasField('field_plan')) {
-      $page_node->field_plan->field_original_id->value;
+    if ($page_node->hasField('field_plan') && $referenced_entities = $page_node->field_plan->referencedEntities()) {
+      return count($referenced_entities) ? reset($referenced_entities) : NULL;
     }
     return NULL;
+  }
+
+  /**
+   * Get a plan id for the current page context.
+   *
+   * @return int
+   *   A plan id if it can be found.
+   */
+  public function getCurrentPlanId($page_node = NULL) {
+    $plan_node = $this->getCurrentPlanNode($page_node);
+    if (!$plan_node) {
+      return NULL;
+    }
+    return $plan_node->field_original_id->value;
   }
 
 }
