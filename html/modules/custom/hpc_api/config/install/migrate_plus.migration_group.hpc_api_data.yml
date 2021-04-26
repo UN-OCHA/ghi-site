@@ -21,3 +21,7 @@ shared_configuration:
     plugin: hpc_api_url
     data_fetcher_plugin: hpc_api_http
     data_parser_plugin: hpc_api_endpoint
+  dependencies:
+    enforced:
+      module:
+        - hpc_api
