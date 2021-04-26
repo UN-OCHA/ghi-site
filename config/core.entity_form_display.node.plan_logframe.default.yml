@@ -6,6 +6,7 @@ dependencies:
     - field.field.node.plan_logframe.field_element_templates
     - field.field.node.plan_logframe.field_plan
     - field.field.node.plan_logframe.field_plan_id
+    - field.field.node.plan_logframe.layout_builder__layout
     - node.type.plan_logframe
   module:
     - path
@@ -97,4 +98,5 @@ content:
       match_limit: 10
     region: content
     third_party_settings: {  }
-hidden: {  }
+hidden:
+  layout_builder__layout: true
