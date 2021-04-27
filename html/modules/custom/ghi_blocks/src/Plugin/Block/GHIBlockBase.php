@@ -478,7 +478,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $plugin_definition = $this->getPluginDefinition();
     $field_context_mapping = !empty($plugin_definition['field_context_mapping']) ? $plugin_definition['field_context_mapping'] : NULL;
 
-    if (empty($field_context_mapping)) {
+    if (!empty($field_context_mapping)) {
       parent::injectFieldContexts();
       return;
     }
@@ -516,8 +516,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
     if (!$page_node) {
       return NULL;
     }
+
     if ($page_node->bundle() == 'plan') {
-      return $page_node->field_original_id->value;
+      return $page_node;
     }
     if ($page_node->hasField('field_plan') && $referenced_entities = $page_node->field_plan->referencedEntities()) {
       return count($referenced_entities) ? reset($referenced_entities) : NULL;

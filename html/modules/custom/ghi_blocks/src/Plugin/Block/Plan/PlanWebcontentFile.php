@@ -28,7 +28,7 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
  *  title = false,
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *  }
+ *   }
  * )
  */
 class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface {
@@ -42,7 +42,7 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
       'label_display' => FALSE,
       'hpc' => [
         'basic' => [
-          'attachment_id' => $config->attachment_id,
+          'attachment_id' => property_exists($config, 'attachment_id') ? $config->attachment_id : NULL,
         ],
       ],
     ];
