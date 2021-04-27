@@ -10,6 +10,9 @@
  */
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
@@ -19,6 +22,58 @@ use Drupal\migrate\Plugin\MigrateSourceInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
 use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_page_attachments().
+ */
+function ghi_plans_page_attachments(array &$page) {
+  $cache = CacheableMetadata::createFromRenderArray($page);
+  $page['#attached']['html_head_link'][] = [
+    [
+      'href' => 'https://fonts.googleapis.com/icon?family=Material+Icons',
+      'rel' => 'stylesheet',
+    ],
+  ];
+  // Apply updated caching information.
+  $cache->applyTo($page);
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function ghi_plans_form_alter(&$form, FormStateInterface &$form_state, $form_id) {
+  $valid_form_ids = [
+    'node_plan_edit_form',
+    'node_plan_entity_edit_form',
+    'node_governing_entity_edit_form',
+  ];
+  if (!in_array($form_id, $valid_form_ids)) {
+    return;
+  }
+
+  // Disable the complete form.
+  $form['#disabled'] = 'disabled';
+
+  \Drupal::messenger()->addWarning(t('Data in this form is imported automatically from the HPC API and cannot be changed here.'));
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ghi_plans_form_node_plan_edit_form_alter(&$form, FormStateInterface &$form_state) {
+  $node = $form_state->getFormObject()->getEntity();
+  $plan_structure = PlanStructureHelper::getRpmPlanStructure($node);
+  $form['field_plan_structure_rpm']['widget'][0]['preview'] = $form['field_plan_structure_rpm']['widget'][0]['value'];
+  $form['field_plan_structure_rpm']['widget'][0]['value']['#access'] = FALSE;
+  $form['field_plan_structure_rpm']['widget'][0]['preview']['#rows'] = 20;
+  $form['field_plan_structure_rpm']['widget'][0]['preview']['#default_value'] = Markup::create(print_r($plan_structure, TRUE));
+
+  $reporting_periods = unserialize($form['field_plan_reporting_periods']['widget'][0]['value']['#default_value']);
+  $form['field_plan_reporting_periods']['widget'][0]['preview'] = $form['field_plan_reporting_periods']['widget'][0]['value'];
+  $form['field_plan_reporting_periods']['widget'][0]['value']['#access'] = FALSE;
+  $form['field_plan_reporting_periods']['widget'][0]['preview']['#rows'] = 20;
+  $form['field_plan_reporting_periods']['widget'][0]['preview']['#markup'] = Markup::create(print_r($reporting_periods, TRUE));
+}
 
 /**
  * Implements hook_migrate_MIGRATE_ID_prepare_row().

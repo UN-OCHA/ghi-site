@@ -3,14 +3,19 @@
 namespace Drupal\ghi_plans\Controller;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
+use Drupal\Core\Routing\RedirectDestinationInterface;
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\hpc_common\Helpers\NodeHelper;
 use Drupal\node\NodeInterface;
+use Drupal\publishcontent\Access\PublishContentAccess;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -26,10 +31,42 @@ class PlanStructureController extends ControllerBase {
   protected $endpointQuery;
 
   /**
+   * The redirect destination service.
+   *
+   * @var \Drupal\Core\Routing\RedirectDestinationInterface
+   */
+  protected $redirectDestination;
+
+  /**
+   * The publish content access service.
+   *
+   * @var \Drupal\publishcontent\Access\PublishContentAccess
+   */
+  protected $publishContentAccess;
+
+  /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $currentUser;
+
+  /**
+   * The CSRF token generator.
+   *
+   * @var \Drupal\Core\Access\CsrfTokenGenerator
+   */
+  protected $csrfToken;
+
+  /**
    * Public constructor.
    */
-  public function __construct(EndpointQuery $endpoint_query) {
+  public function __construct(EndpointQuery $endpoint_query, RedirectDestinationInterface $redirect_destination, PublishContentAccess $publish_content_access, AccountProxyInterface $user, CsrfTokenGenerator $csrf_token) {
     $this->endpointQuery = $endpoint_query;
+    $this->redirectDestination = $redirect_destination;
+    $this->publishContentAccess = $publish_content_access;
+    $this->currentUser = $user;
+    $this->csrfToken = $csrf_token;
   }
 
   /**
@@ -38,6 +75,10 @@ class PlanStructureController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('hpc_api.endpoint_query'),
+      $container->get('redirect.destination'),
+      $container->get('publishcontent.access'),
+      $container->get('current_user'),
+      $container->get('csrf_token'),
     );
   }
 
@@ -70,12 +111,16 @@ class PlanStructureController extends ControllerBase {
     $prototype_data = $this->getPrototypeData($plan_original_id);
     $plan_structure = PlanStructureHelper::getPlanStructureFromPrototype($prototype_data, $node);
 
-    $edit_icon = '<i class="material-icons edit-icon">edit</i>';
-    $published_icon = '<i class="material-icons published">toggle_off</i>';
-    $unpublished_icon = '<i class="material-icons unpublished">toggle_on</i>';
+    $edit_icon = Markup::create('<i class="material-icons edit-icon">edit</i>');
+    $published_icon = Markup::create('<i class="material-icons published">toggle_off</i>');
+    $unpublished_icon = Markup::create('<i class="material-icons unpublished">toggle_on</i>');
+
+    $link_options = [
+      'query' => $this->redirectDestination->getAsArray(),
+      'html' => TRUE,
+    ];
 
     $items = [];
-
     foreach (array_merge($plan_structure['plan_entities'], $plan_structure['governing_entities']) as $plan_object) {
       $group_items = [
         '#theme' => 'item_list',
@@ -89,41 +134,66 @@ class PlanStructureController extends ControllerBase {
         $title = $entity->name . ' ' . $entity->custom_reference . ' (' . $entity->composed_reference . ')';
         $title_tooltip = $entity->name . ' ' . $entity->custom_reference . ' (' . $entity->composed_reference . ', ' . $entity->id . ')';
 
-        if (!empty($entity->path)) {
-          // $operations = [];
-          // $operations[] = l($edit_icon, $entity->path . '/edit', $link_options + array('attributes' => array(
-          //   'title' => t('Edit this entity'),
-          // )));
-          // if ($entity->published) {
-          //   $operations[] = l($published_icon, $entity->path . '/unpublish/' . drupal_get_token(), $link_options + array(
-          //     'attributes' => array(
-          //       'title' => t('This entity is currently published. Click to unpublish.'),
-          //     )
-          //   ));
-          // }
-          // elseif ($plan_node->status == NODE_PUBLISHED) {
-          //   $operations[] = l($unpublished_icon, $entity->path . '/publish/' . drupal_get_token(), $link_options + array(
-          //     'attributes' => array(
-          //       'title' => t('This entity is currently unpublished. Click to publish.'),
-          //     ),
-          //   ));
-          // }
+        // Get the node for url building.
+        $entity_node = NodeHelper::getNodeFromOriginalId($entity->id, $plan_object->drupal_entity_type);
 
-          $item_title = Link::fromTextAndUrl($title, Url::fromUserInput('/' . $entity->path, ['attributes' => ['title' => $title_tooltip]]))->toString();
+        if ($entity_node) {
+          // The token for the publishing links need to be generated manually
+          // here.
+          $token = $this->csrfToken->get('node/' . $entity_node->id() . '/toggleStatus');
+
+          $route_args = ['node' => $entity_node->id()];
+
+          // Add some quick action links.
+          $operations = [];
+
+          // An edit link for the entity.
+          $options = $link_options + [
+            'attributes' => [
+              'title' => $this->t('Edit this entity'),
+            ],
+          ];
+          $operations[] = Link::fromTextAndUrl($edit_icon, Url::fromRoute('entity.node.edit_form', $route_args, $options))->toString();
+
+          // And a toggle for the publishing state.
+          if ($this->publishContentAccess->access($this->currentUser, $entity_node)->isAllowed()) {
+            $link_options['query']['token'] = $token;
+            if ($entity->published) {
+              $options = $link_options + [
+                'attributes' => [
+                  'title' => $this->t('This entity is currently published. Click to unpublish.'),
+                ],
+              ];
+              $operations[] = Link::fromTextAndUrl($published_icon, Url::fromRoute('entity.node.publish', $route_args, $options))->toString();
+            }
+            elseif ($node->isPublished()) {
+              $options = $link_options + [
+                'attributes' => [
+                  'title' => $this->t('This entity is currently unpublished. Click to publish.'),
+                ],
+              ];
+              $operations[] = Link::fromTextAndUrl($unpublished_icon, Url::fromRoute('entity.node.publish', $route_args, $options))->toString();
+            }
+          }
+
+          $options = ['attributes' => ['title' => $title_tooltip]];
+          $item_title = Link::fromTextAndUrl($title, Url::fromRoute('entity.node.canonical', $route_args, $options))->toString() . implode('', $operations);
         }
         else {
           $item_title = Markup::create('<span title="' . $title_tooltip . '">' . $title . '</span>');
         }
 
-        $item = [
-          '#theme' => 'item_list',
-          '#title' => $item_title,
-          '#items' => [],
-        ];
-
-        $this->addChildren($entity, $item);
-        if (!empty($item['#items'])) {
+        if (!empty($entity->children)) {
+          $item = [
+            '#theme' => 'item_list',
+            '#title' => Markup::create($item_title),
+            '#items' => [],
+          ];
+          $this->addChildren($entity, $item);
           $group_items['#items'][] = $item;
+        }
+        else {
+          $group_items['#items'][] = Markup::create($item_title);
         }
       }
 
@@ -146,9 +216,11 @@ class PlanStructureController extends ControllerBase {
    * Add child elements to plan structure page output.
    *
    * @param object $entity
+   *   The API entity object holding the children.
    * @param array $item
+   *   The item to which the children should be added.
    */
-  private function addChildren($entity, &$item) {
+  private function addChildren($entity, array &$item) {
     if (!empty($entity->children)) {
       ArrayHelper::sortObjectsByStringProperty($entity->children, 'display_name');
       foreach ($entity->children as $child) {

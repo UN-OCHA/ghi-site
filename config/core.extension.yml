@@ -51,6 +51,7 @@ module:
   paragraphs_library: 0
   path: 0
   path_alias: 0
+  publishcontent: 0
   settings_tray: 0
   system: 0
   taxonomy: 0

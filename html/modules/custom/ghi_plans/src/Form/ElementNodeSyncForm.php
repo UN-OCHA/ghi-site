@@ -1,0 +1,67 @@
+<?php
+
+namespace Drupal\ghi_plans\Form;
+
+use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_plans\SyncElements\SyncElementsManager;
+use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * A form for syncing page elements of a specific node from a remote source.
+ */
+class ElementNodeSyncForm extends FormBase {
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\ghi_plans\SyncElements\SyncElementsManager
+   */
+  protected $syncManager;
+
+  /**
+   * Public constructor.
+   */
+  public function __construct(SyncElementsManager $sync_manager) {
+    $this->syncManager = $sync_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('ghi_plans.sync_elements'),
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId() {
+    return 'ghi_plans_element_node_sync_form';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
+    $form['#node'] = $node;
+
+    $form['sync_elements'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Sync all elements'),
+    ];
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    $node = $form['#node'];
+    $this->syncManager->syncNode($node);
+  }
+
+}

@@ -9,3 +9,4 @@ dependencies:
   - hpc_api
   - migrate_plus:migrate_plus
   - migrate_tools:migrate_tools
+  - publishcontent:publishcontent

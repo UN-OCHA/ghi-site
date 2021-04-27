@@ -1,4 +1,19 @@
-entity.node.sync_elements:
-  route_name: ghi_plans.sync_elements
+entity.node.hpc:
+  route_name: ghi_plans.node.plan_structure
   base_route: entity.node.canonical
+  title: HPC
+entity.node.hpc.plan_structure:
+  route_name: ghi_plans.node.plan_structure
+  base_route: entity.node.canonical
+  parent_id: entity.node.hpc
+  title: Plan structure
+entity.node.hpc.plan_settings:
+  route_name: ghi_plans.node.plan_settings
+  base_route: entity.node.canonical
+  parent_id: entity.node.hpc
+  title: Plan settings
+entity.node.hpc.sync_elements:
+  route_name: ghi_plans.node.sync_elements
+  base_route: entity.node.canonical
+  parent_id: entity.node.hpc
   title: Sync elements
