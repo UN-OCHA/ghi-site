@@ -2,7 +2,7 @@
 
 namespace Drupal\hpc_common\Helpers;
 
-use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\node\Entity\Node;
 
 /**
@@ -169,13 +169,13 @@ class NodeHelper extends EntityHelper {
   /**
    * Load an original ID for a node.
    *
-   * @param \Drupal\node\Entity\ContentEntityBase $node
+   * @param \Drupal\Core\Entity\ContentEntityInterface $node
    *   The node object for which to look up the original id.
    *
    * @return int
    *   The original id if found.
    */
-  public static function getOriginalIdFromNode(ContentEntityBase $node) {
+  public static function getOriginalIdFromNode(ContentEntityInterface $node) {
     return self::getOriginalIdFromEntity($node);
   }
 
