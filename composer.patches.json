@@ -3,8 +3,11 @@
       "drupal/core": {
         "https://www.drupal.org/project/drupal/issues/2820359": "./PATCHES/2820359-element_submit-105.patch"
       },
-      "unocha/common_design" : {
-          "Compatibility with Drupal 9": "patches/common-design-drupal-9.patch"
+      "unocha/common_design": {
+        "Compatibility with Drupal 9": "patches/common-design-drupal-9.patch"
+      },
+      "drupal/publishcontent": {
+        "Issue #3191249: Unpublish tab not work": "https://www.drupal.org/files/issues/2021-01-08/replace-deprecated-function-3191249.patch"
       }
   }
 }
