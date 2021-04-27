@@ -9,10 +9,7 @@ ghi_plans.node.plan_settings:
         type: entity:node
     _admin_route: TRUE
   requirements:
-    _access: 'TRUE'
-  # requirements:
-  #   _custom_access: '\Drupal\ghi_plans\Controller\SyncAccessController::accessElementSyncForm'
-  #   _permission: 'administer site configuration'
+    _permission: 'administer site configuration'
 ghi_plans.node.sync_elements:
   path: '/node/{node}/hpc/sync-elements'
   defaults:
