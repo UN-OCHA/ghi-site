@@ -1,12 +1,8 @@
 #!/bin/sh
 
-# Lint php and css code.
-
-# We only lint files from custom modules.
-# We ignore generated css files (styles*.css), sass and javascript files which
-# are linted separately, images and XSL files.
-include='^html/(modules|themes)/custom'
-exclude='(\.(js|ico|png|jpg|gif|svg|scss|xsl)$)'
+# Lint PHP files
+include='^html/(modules|themes)/custom/.*\.php$'
+exclude=' '
 
 # The linter path is relative to the root of the repository.
 relative=1
