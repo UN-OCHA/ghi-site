@@ -1,14 +1,14 @@
 #!/bin/sh
 
 # Lint PHP files
-include='^html/(modules|themes)/custom/.*\.php$'
-exclude=' '
+include='^html/(modules|themes)/custom'
+exclude='(\.(js|gif|ico|jpg|md|png|svg|scss|xsl)$)'
 
 # The linter path is relative to the root of the repository.
 relative=1
 linter="vendor/bin/phpcs"
-options='-p --report=full --standard=phpcs.xml'
-message='Linting staged PHP/CSS files...'
+options='-p --report=full --standard=html/core/phpcs.xml.dist'
+message='Linting staged PHP files...'
 
 # Load and execute the linting code.
 . "$(dirname "$0")/lint-common"
