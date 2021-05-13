@@ -2,7 +2,7 @@
 
 # Lint PHP files
 include='^html/(modules|themes)/custom'
-exclude='(\.(js|gif|ico|jpg|md|png|svg|scss|xsl)$)'
+exclude='(\.(example|gif|ico|jpg|js|md|png|svg|scss|xsl|yml)$)'
 
 # The linter path is relative to the root of the repository.
 relative=1
