@@ -1,0 +1,25 @@
+uuid: ac15bd31-d348-4ca2-9c21-c6fe2c232bf1
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.menu-ocha-service-menu
+  module:
+    - system
+  theme:
+    - common_design_subtheme
+id: ochaservicemenu
+theme: common_design_subtheme
+region: header_top
+weight: 0
+provider: null
+plugin: 'system_menu_block:menu-ocha-service-menu'
+settings:
+  id: 'system_menu_block:menu-ocha-service-menu'
+  label: 'OCHA Service Menu'
+  provider: system
+  label_display: visible
+  level: 1
+  depth: 0
+  expand_all_items: false
+visibility: {  }
