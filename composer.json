@@ -45,6 +45,7 @@
         "unocha/common_design": "^4.0"
     },
     "require-dev": {
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1",
         "drupal/devel": "^4.1",
         "drupal/stage_file_proxy": "^1.1",
         "drupal/yaml_content": "^1.0@alpha",
