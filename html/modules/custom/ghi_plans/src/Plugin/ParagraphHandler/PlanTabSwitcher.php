@@ -82,7 +82,36 @@ class PlanTabSwitcher extends ParagraphHandlerBase {
     $variables['content'][] = [
       '#theme' => 'links',
       '#links' => $tabs,
+      '#attributes' => [
+        'class' => [
+          'links--plan-overview',
+        ],
+      ],
     ];
+
+    // @todo: use cluster icons.
+    if ($config['render_all_children']) {
+      $children = [];
+      foreach ($plan_entities as $plan_entity) {
+        $children[] = [
+          'title' => t('Clusters') . $suffix,
+          'url' => $plan_entities[0]->toUrl(),
+          'attributes' => [
+            'class' => [],
+          ],
+        ];
+      }
+
+      $variables['content'][] = [
+        '#theme' => 'links',
+        '#links' => $children,
+        '#attributes' => [
+          'class' => [
+            'links--plan-entities',
+          ],
+        ],
+      ];
+    }
   }
 
   /**
@@ -92,6 +121,7 @@ class PlanTabSwitcher extends ParagraphHandlerBase {
     $settings = $this->paragraph->getAllBehaviorSettings();
     $config = $settings[static::KEY] ?? [
       'show_count' => TRUE,
+      'render_all_children' => FALSE,
     ];
 
     return $config;
