@@ -42,7 +42,7 @@
         "drupal/social_auth_hid": "^2.5",
         "drush/drush": "^10.4",
         "phpoffice/phpspreadsheet": "^1.17",
-        "unocha/common_design": "^3.0"
+        "unocha/common_design": "^4.0"
     },
     "require-dev": {
         "drupal/devel": "^4.1",
