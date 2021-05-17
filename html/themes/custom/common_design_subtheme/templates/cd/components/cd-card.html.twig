@@ -64,10 +64,6 @@
  *   is an administrator.
  *
  * @see template_preprocess_node()
- *
- * @todo Remove the id attribute (or make it a class), because if that gets
- *   rendered twice on a page this is invalid CSS for example: two lists
- *   in different view modes.
  */
 #}
 {%
@@ -87,7 +83,7 @@
 {{ attach_library('common_design/cd-card') }}
 {{ attach_library('common_design/cd-read-more') }}
 
-<article{{ attributes.addClass(classes) }}>
+<article{{ attributes.addClass(classes).removeAttribute('id') }}>
 
   {% if content.field_image|render %}
     <div class="cd-card__image">
