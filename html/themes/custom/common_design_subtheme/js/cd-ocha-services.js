@@ -3,14 +3,13 @@
 
   Drupal.behaviors.cdOchaServices = {
     attach: function (context, settings) {
-      console.log('cdOchaServices.attach');
       // Move the OCHA services section to the header.
       this.moveToHeader('#cd-ocha-services', '#cd-global-header__actions');
     },
 
     /**
      * Hide and move OCHA Services to the top of the header after the target.
-    */
+     */
     moveToHeader: function (id, target) {
       var section = document.querySelector(id);
       var sibling = document.querySelector(target);
