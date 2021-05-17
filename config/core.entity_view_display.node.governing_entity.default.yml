@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.node.governing_entity.field_cluster_managers
+    - field.field.node.governing_entity.field_content
     - field.field.node.governing_entity.field_entity_subpage
     - field.field.node.governing_entity.field_original_id
     - field.field.node.governing_entity.field_plan
@@ -12,6 +13,7 @@ dependencies:
     - field.field.node.governing_entity.layout_builder__layout
     - node.type.governing_entity
   module:
+    - entity_reference_revisions
     - layout_builder
     - layout_discovery
     - user
@@ -24,7 +26,24 @@ third_party_settings:
         layout_id: layout_onecol
         layout_settings:
           label: ''
-        components: {  }
+        components:
+          1e2937ea-36d0-4f6b-95ba-38eb57572444:
+            uuid: 1e2937ea-36d0-4f6b-95ba-38eb57572444
+            region: content
+            configuration:
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              id: 'field_block:node:governing_entity:field_content'
+              formatter:
+                label: above
+                settings:
+                  view_mode: default
+                  link: ''
+                third_party_settings: {  }
+                type: entity_reference_revisions_entity_view
+            additional: {  }
+            weight: 0
         third_party_settings: {  }
 id: node.governing_entity.default
 targetEntityType: node
@@ -38,6 +57,15 @@ content:
     settings:
       link: false
     third_party_settings: {  }
+    region: content
+  field_content:
+    weight: 101
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    type: entity_reference_revisions_entity_view
     region: content
   field_entity_subpage:
     label: above

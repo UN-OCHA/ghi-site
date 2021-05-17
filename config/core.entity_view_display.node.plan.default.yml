@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.node.plan.body
     - field.field.node.plan.field_cluster_filter
+    - field.field.node.plan.field_content
     - field.field.node.plan.field_country
     - field.field.node.plan.field_decimal_format
     - field.field.node.plan.field_description
@@ -38,6 +39,7 @@ dependencies:
     - node.type.plan
   module:
     - datetime_range
+    - entity_reference_revisions
     - layout_builder
     - layout_discovery
     - user
@@ -50,13 +52,39 @@ third_party_settings:
         layout_id: layout_onecol
         layout_settings:
           label: ''
-        components: {  }
+        components:
+          316565cf-9729-4125-b0e7-6b3b03cea113:
+            uuid: 316565cf-9729-4125-b0e7-6b3b03cea113
+            region: content
+            configuration:
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              id: 'field_block:node:plan:field_content'
+              formatter:
+                label: above
+                settings:
+                  view_mode: default
+                  link: ''
+                third_party_settings: {  }
+                type: entity_reference_revisions_entity_view
+            additional: {  }
+            weight: 0
         third_party_settings: {  }
 id: node.plan.default
 targetEntityType: node
 bundle: plan
 mode: default
 content:
+  field_content:
+    weight: 104
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    type: entity_reference_revisions_entity_view
+    region: content
   field_country:
     weight: 103
     label: above

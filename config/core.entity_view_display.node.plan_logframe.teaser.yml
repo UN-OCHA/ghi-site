@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - core.entity_view_mode.node.teaser
+    - field.field.node.plan_logframe.field_content
     - field.field.node.plan_logframe.field_element_templates
     - field.field.node.plan_logframe.field_plan
     - field.field.node.plan_logframe.field_plan_id
@@ -22,6 +23,7 @@ content:
     third_party_settings: {  }
     region: content
 hidden:
+  field_content: true
   field_element_templates: true
   field_plan: true
   field_plan_id: true

@@ -6,6 +6,7 @@ dependencies:
     - core.entity_view_mode.node.teaser
     - field.field.node.plan.body
     - field.field.node.plan.field_cluster_filter
+    - field.field.node.plan.field_content
     - field.field.node.plan.field_country
     - field.field.node.plan.field_decimal_format
     - field.field.node.plan.field_description
@@ -60,6 +61,7 @@ content:
     region: content
 hidden:
   field_cluster_filter: true
+  field_content: true
   field_country: true
   field_decimal_format: true
   field_description: true

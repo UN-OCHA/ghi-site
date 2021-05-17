@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.node.plan_entity.field_content
     - field.field.node.plan_entity.field_entity_subpage
     - field.field.node.plan_entity.field_original_id
     - field.field.node.plan_entity.field_plan
@@ -11,6 +12,7 @@ dependencies:
     - field.field.node.plan_entity.layout_builder__layout
     - node.type.plan_entity
   module:
+    - entity_reference_revisions
     - layout_builder
     - layout_discovery
     - user
@@ -23,13 +25,39 @@ third_party_settings:
         layout_id: layout_onecol
         layout_settings:
           label: 'Section 1'
-        components: {  }
+        components:
+          abd1032c-5726-4a0a-8910-41db19a4b4fb:
+            uuid: abd1032c-5726-4a0a-8910-41db19a4b4fb
+            region: content
+            configuration:
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              id: 'field_block:node:plan_entity:field_content'
+              formatter:
+                label: above
+                settings:
+                  view_mode: default
+                  link: ''
+                third_party_settings: {  }
+                type: entity_reference_revisions_entity_view
+            additional: {  }
+            weight: 0
         third_party_settings: {  }
 id: node.plan_entity.default
 targetEntityType: node
 bundle: plan_entity
 mode: default
 content:
+  field_content:
+    weight: 101
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    type: entity_reference_revisions_entity_view
+    region: content
   field_entity_subpage:
     label: above
     weight: 3
