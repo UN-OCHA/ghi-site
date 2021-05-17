@@ -31,6 +31,10 @@ class PlanEntityTypes extends PlanBaseClass {
    *   The data as returned from the endpoint.
    */
   public function getData() {
+    if (!isset($this->parentEntity->field_original_id) || $this->parentEntity->field_original_id->isEmpty()) {
+      return NULL;
+    }
+
     $plan_id = $this->parentEntity->field_original_id->value;
 
     /** @var \Drupal\hpc_api\Query\EndpointPlanQuery $q */
@@ -64,6 +68,11 @@ class PlanEntityTypes extends PlanBaseClass {
     }
 
     $matching_entities = $this->getPlanEntities($config['entity_type']);
+    if (empty($matching_entities)) {
+      // Nothing to render.
+      return;
+    }
+
     $valid_entities = $this->getValidPlanEntities($matching_entities, $config);
     if (empty($valid_entities)) {
       // Nothing to render.
@@ -313,6 +322,10 @@ class PlanEntityTypes extends PlanBaseClass {
    *   An array of plan entity objects for the current context.
    */
   private function getPlanEntities($entity_type = NULL) {
+    $data = $this->getData();
+    if (empty($data)) {
+      return NULL;
+    }
     $page_node = $this->parentEntity;
 
     if ($entity_type === NULL) {
@@ -326,7 +339,7 @@ class PlanEntityTypes extends PlanBaseClass {
       ];
     }
 
-    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($this->getData(), $page_node->bundle() != 'plan' ? $page_node : NULL, NULL, $filter);
+    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($data, $page_node->bundle() != 'plan' ? $page_node : NULL, NULL, $filter);
     return $matching_entities;
   }
 
