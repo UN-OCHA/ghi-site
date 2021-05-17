@@ -89,13 +89,22 @@ class PlanTabSwitcher extends ParagraphHandlerBase {
       ],
     ];
 
-    // @todo: use cluster icons.
     if ($config['render_all_children']) {
+      /** @var \Drupal\hpc_api\Query\EndpointPlanQuery $q */
+      $q = \Drupal::service('hpc_api.endpoint_plan_query');
       $children = [];
+
       foreach ($plan_entities as $plan_entity) {
+        if ($plan_entity->field_plan_id && !$plan_entity->field_plan_id->isEmpty()) {
+          $title = $q->getPlanIcon($plan_entity->field_plan_id->value);
+        }
+        else {
+          $title = $plan_entity->label();
+        }
+
         $children[] = [
-          'title' => t('Clusters') . $suffix,
-          'url' => $plan_entities[0]->toUrl(),
+          'title' => $title,
+          'url' => $plan_entity->toUrl(),
           'attributes' => [
             'class' => [],
           ],
