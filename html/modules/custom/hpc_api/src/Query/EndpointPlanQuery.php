@@ -34,10 +34,17 @@ class EndpointPlanQuery extends EndpointQuery {
       'end_date' => $data->planVersion->endDate ?? '',
       'orig_requirements' => $data->origRequirements ?? 0,
       'revised_requirements' => $data->revisedRequirements ?? 0,
+      'icon' => '',
       'categories' => [],
       'locations' => [],
     ];
 
+    // Add icon.
+    if (isset($data->governingEntities) && isset($data->governingEntities[0])) {
+      $plan['icon'] = $data->governingEntities[0]->governingEntityVersion->value->icon ?? '';
+    }
+
+    // Add categories.
     foreach ($data->categories as $category) {
       $plan['categories'][] = (object) [
         'id' => $category->id,
@@ -46,6 +53,7 @@ class EndpointPlanQuery extends EndpointQuery {
       ];
     }
 
+    // Add locations.
     foreach ($data->locations as $location) {
       $plan['locations'][] = (object) [
         'id' => $location->id,
@@ -280,7 +288,26 @@ class EndpointPlanQuery extends EndpointQuery {
    * Get plan icon.
    */
   public function getPlanIcon($plan_id) {
-    return '<svg></svg>';
+    $plan = $this->getPlan($plan_id);
+
+    if (!$plan_id) {
+      return;
+    }
+
+    $icon = $plan->icon;
+    if (empty($icon)) {
+      return;
+    }
+
+    $this->setEndpoint('v2/icon/' . $icon);
+    $svg_data = $this->getData();
+    $svg_content = $svg_data ? $svg_data->svg : NULL;
+
+    if (empty($svg_content)) {
+      return;
+    }
+
+    return '<div class="cluster-icon">' . $svg_content . '</div>';
   }
 
 }
