@@ -1,0 +1,40 @@
+uuid: acea000b-deff-4dc0-8a42-fd332c682669
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_content
+    - node.type.panopoly_landing_page
+    - paragraphs.paragraphs_type.from_library
+  module:
+    - entity_reference_revisions
+id: node.panopoly_landing_page.field_content
+field_name: field_content
+entity_type: node
+bundle: panopoly_landing_page
+label: Content
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    negate: 1
+    target_bundles:
+      from_library: from_library
+    target_bundles_drag_drop:
+      from_library:
+        enabled: true
+        weight: 5
+      plan_tab_switcher:
+        weight: 6
+        enabled: false
+      plan_web_content_file:
+        weight: 7
+        enabled: false
+      plan_web_content_text:
+        weight: 8
+        enabled: false
+field_type: entity_reference_revisions
