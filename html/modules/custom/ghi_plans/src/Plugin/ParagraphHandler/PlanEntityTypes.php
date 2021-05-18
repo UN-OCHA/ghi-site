@@ -14,7 +14,12 @@ use Drupal\hpc_api\Query\EndpointQuery;
  *
  * @ParagraphHandler(
  *   id = "plan_entity_types",
- *   label = @Translation("Plan entity types")
+ *   label = @Translation("Plan entity types"),
+ *   data_sources = {
+ *     "data" = {
+ *       "service" = "ghi_plans.plan_entities_query"
+ *     },
+ *   },
  * )
  */
 class PlanEntityTypes extends PlanBaseClass {
@@ -23,33 +28,6 @@ class PlanEntityTypes extends PlanBaseClass {
    * {@inheritdoc}
    */
   const KEY = 'plan_entity_types';
-
-  /**
-   * Shortcut to get the base data for this paragraph.
-   *
-   * @return array
-   *   The data as returned from the endpoint.
-   */
-  public function getData() {
-    if (!isset($this->parentEntity->field_original_id) || $this->parentEntity->field_original_id->isEmpty()) {
-      return NULL;
-    }
-
-    $plan_id = $this->parentEntity->field_original_id->value;
-
-    /** @var \Drupal\hpc_api\Query\EndpointPlanQuery $q */
-    $q = \Drupal::service('hpc_api.endpoint_plan_query');
-    $q->setArguments([
-      'endpoint' => 'public/plan/' . $plan_id,
-      'api_version' => 'v2',
-      'query_args' => [
-        'content' => 'entities',
-        'addPercentageOfTotalTarget' => TRUE,
-        'version' => 'current',
-      ],
-    ]);
-    return $q->getData();
-  }
 
   /**
    * {@inheritdoc}
@@ -68,6 +46,7 @@ class PlanEntityTypes extends PlanBaseClass {
     }
 
     $matching_entities = $this->getPlanEntities($config['entity_type']);
+
     if (empty($matching_entities)) {
       // Nothing to render.
       return;
@@ -299,11 +278,10 @@ class PlanEntityTypes extends PlanBaseClass {
     }
     $weight = [];
     foreach ($matching_entities as $entity) {
-      $ref_code = $entity->entityPrototype->refCode;
+      $ref_code = $entity->ref_code;
       if (empty($options[$ref_code])) {
-        $name = $entity->entityPrototype->value->name->en->plural;
-        $options[$ref_code] = $name;
-        $weight[$ref_code] = $entity->entityPrototype->orderNumber;
+        $options[$ref_code] = $entity->plural_name;
+        $weight[$ref_code] = $entity->order_number;
       }
     }
     uksort($options, function ($ref_code_a, $ref_code_b) use ($weight) {
@@ -322,25 +300,7 @@ class PlanEntityTypes extends PlanBaseClass {
    *   An array of plan entity objects for the current context.
    */
   private function getPlanEntities($entity_type = NULL) {
-    $data = $this->getData();
-    if (empty($data)) {
-      return NULL;
-    }
-    $page_node = $this->parentEntity;
-
-    if ($entity_type === NULL) {
-      $filter = [
-        'entityPrototype.type' => 'PE',
-      ];
-    }
-    else {
-      $filter = [
-        'entityPrototype.refCode' => $entity_type,
-      ];
-    }
-
-    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($data, $page_node->bundle() != 'plan' ? $page_node : NULL, NULL, $filter);
-    return $matching_entities;
+    return $this->getQueryHandler('data')->getPlanEntities($this->parentEntity, $entity_type);
   }
 
   /**
@@ -359,11 +319,11 @@ class PlanEntityTypes extends PlanBaseClass {
    */
   private function buildPlanEntityItemList(array $entities, array $conf, $truncate_description = FALSE) {
     $items = [];
+    $id_type = !empty($conf['id_type']) ? $conf['id_type'] : 'custom_id';
     foreach ($entities as $entity) {
-      $entity_version = ApiEntityHelper::getEntityVersion($entity);
-      $description = $entity_version->value->description;
+      $description = $entity->description;
       $items[$entity->id] = [
-        'id' => $this->getEntityIdLabel($entity, $conf),
+        'id' => $entity->$id_type,
         'description' => $truncate_description ? Unicode::truncate($description, 120, TRUE, TRUE) : $description,
       ];
     }
@@ -381,32 +341,6 @@ class PlanEntityTypes extends PlanBaseClass {
       });
     }
     return $items;
-  }
-
-  /**
-   * Retrieve the entity id label based on the given configuration.
-   *
-   * @param object $entity
-   *   An entity object.
-   * @param array $conf
-   *   The current element configuration used to apply formatting.
-   *
-   * @return string
-   *   The formatted id label for the given entity.
-   */
-  private function getEntityIdLabel($entity, array $conf) {
-    $entity_version = ApiEntityHelper::getEntityVersion($entity);
-    $id_type = !empty($conf['id_type']) ? $conf['id_type'] : 'custom_id';
-    switch ($id_type) {
-      case 'custom_id':
-        return $entity_version->customReference;
-
-      case 'custom_id_prefixed_refcode':
-        return $entity->entityPrototype->refCode . $entity_version->customReference;
-
-      case 'composed_reference':
-        return $entity->composedReference;
-    }
   }
 
   /**
@@ -446,35 +380,17 @@ class PlanEntityTypes extends PlanBaseClass {
    *   True if the entity passed validation, False otherwhise.
    */
   private function validatePlanEntity($entity, array $conf) {
-    $entity_version = ApiEntityHelper::getEntityVersion($entity);
     $entity_ids = !empty($conf['entity_ids']) ? array_filter($conf['entity_ids']) : [];
     if (!empty($entity_ids) && !in_array($entity->id, $entity_ids)) {
       return FALSE;
     }
-    if (empty($entity_version->value->description)) {
+    if (empty($entity->description)) {
       return FALSE;
     }
 
     $id_type = !empty($conf['id_type']) ? $conf['id_type'] : 'custom_id';
-    switch ($id_type) {
-      case 'custom_id':
-        if (empty($entity_version->customReference)) {
-          return FALSE;
-        }
-        break;
-
-      case 'custom_id_prefixed_refcode':
-        if (empty($entity_version->customReference) || empty($entity->entityPrototype->refCode)) {
-          return FALSE;
-        }
-        break;
-
-      case 'composed_reference':
-        if (empty($entity->composedReference)) {
-          return FALSE;
-        }
-        break;
-
+    if (empty($entity->$id_type)) {
+      return FALSE;
     }
     return TRUE;
   }

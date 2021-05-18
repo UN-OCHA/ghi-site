@@ -180,7 +180,7 @@ class EndpointQuery {
    * Replace placeholders with values in an endpoint.
    */
   public function substitutePlaceholders() {
-    $endpoint_url = $this->endpointUrl;
+    $endpoint_url = $this->getEndpoint();
     $placeholders = $this->getPlaceholders();
     if (!empty($placeholders)) {
       // Replace placeholders with actual values.
@@ -566,6 +566,13 @@ class EndpointQuery {
     $this->orderBy = $order_by;
     $this->sort = $sort;
     $this->sortMethod = $sort_method;
+  }
+
+  /**
+   * Set a single placeholder to be used to create the final endpoint url.
+   */
+  public function setPlaceholder($key, $value) {
+    $this->placeholders[$key] = $value;
   }
 
   /**

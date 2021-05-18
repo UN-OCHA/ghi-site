@@ -1,0 +1,4 @@
+services:
+  ghi_plans.plan_entities_query:
+    parent: hpc_api.endpoint_query
+    class: Drupal\ghi_plans\Query\PlanEntitiesQuery

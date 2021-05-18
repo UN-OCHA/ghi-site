@@ -36,7 +36,6 @@ dependencies:
     - field.field.node.plan.field_restricted
     - field.field.node.plan.field_rpm_plan_status
     - field.field.node.plan.field_year
-    - field.field.node.plan.layout_builder__layout
     - node.type.plan
   module:
     - text
@@ -92,4 +91,3 @@ hidden:
   field_rpm_plan_status: true
   field_year: true
   langcode: true
-  layout_builder__layout: true

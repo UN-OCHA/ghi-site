@@ -17,6 +17,52 @@ class PlanBaseClass extends ParagraphHandlerBase {
   const KEY = '';
 
   /**
+   * Get data for this paragraph.
+   *
+   * @param string $source_key
+   *   The source key that should be used to retrieve data for a paragraph.
+   *
+   * @return array|object
+   *   A data array or object.
+   */
+  protected function getData(string $source_key = 'data') {
+    $query = $this->getQueryHandler($source_key);
+    return $query ? $query->getData() : NULL;
+  }
+
+  /**
+   * Get a query handler for this paragraph.
+   *
+   * This returns either the requested named handler if it exists, or the only
+   * one defined if no source key is given.
+   *
+   * @param string $source_key
+   *   The source key that should be used to retrieve data for a paragraph.
+   *
+   * @return Drupal\hpc_api\EndpointQuery
+   *   The query handler class.
+   */
+  protected function getQueryHandler($source_key = 'data') {
+    $configuration = $this->getPluginDefinition();
+    if (empty($configuration['data_sources'])) {
+      return NULL;
+    }
+
+    $sources = $configuration['data_sources'];
+    $definition = !empty($sources[$source_key]) ? $sources[$source_key] : NULL;
+    if (!$definition || empty($definition['service'])) {
+      return NULL;
+    }
+
+    $query_handler = \Drupal::service($definition['service']);
+    if (isset($this->parentEntity->field_original_id) && !$this->parentEntity->field_original_id->isEmpty()) {
+      $plan_id = $this->parentEntity->field_original_id->value;
+      $query_handler->setPlaceholder('plan_id', $plan_id);
+    }
+    return $query_handler;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function preprocess(array &$variables, array $element) {
@@ -71,7 +117,7 @@ class PlanBaseClass extends ParagraphHandlerBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state interface.
    */
-  public function validate(array &$element, FormStateInterface $form_state) {
+  public static function validate(array &$element, FormStateInterface $form_state) {
     $triggering_element = $form_state->getTriggeringElement();
     $parents = $triggering_element['#parents'];
     array_pop($parents);
