@@ -276,4 +276,11 @@ class EndpointPlanQuery extends EndpointQuery {
     return $sources;
   }
 
+  /**
+   * Get plan icon.
+   */
+  public function getPlanIcon($plan_id) {
+    return '<svg></svg>';
+  }
+
 }
