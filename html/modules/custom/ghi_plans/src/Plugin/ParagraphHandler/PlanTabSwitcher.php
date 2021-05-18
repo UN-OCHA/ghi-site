@@ -2,8 +2,6 @@
 
 namespace Drupal\ghi_plans\Plugin\ParagraphHandler;
 
-use Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerBase;
-
 /**
  * Base class for paragraph handlers.
  *
@@ -12,7 +10,7 @@ use Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerBase;
  *   label = @Translation("Plan tab switcher")
  * )
  */
-class PlanTabSwitcher extends ParagraphHandlerBase {
+class PlanTabSwitcher extends PlanBaseClass {
 
   /**
    * Key used for storage
@@ -124,13 +122,43 @@ class PlanTabSwitcher extends ParagraphHandlerBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function widget_alter(&$element, &$form_state, $context) {
+    parent::widget_alter($element, $form_state, $context);
+
+    $config = $this->getConfig();
+    $subform = &$element['subform'];
+
+    $subform['show_count'] = [
+      '#title' => $this->t('Show count'),
+      '#type' => 'radios',
+      '#default_value' => $config['show_count'],
+      '#options' => [
+        TRUE => $this->t('Yes'),
+        0 => $this->t('No'),
+      ],
+    ];
+
+    $subform['render_all_children'] = [
+      '#title' => $this->t('Render all children'),
+      '#type' => 'radios',
+      '#default_value' => $config['render_all_children'],
+      '#options' => [
+        TRUE => $this->t('Yes'),
+        0 => $this->t('No'),
+      ],
+    ];
+  }
+
+  /**
    * Return behavior settings.
    */
   protected function getConfig() {
     $settings = $this->paragraph->getAllBehaviorSettings();
     $config = $settings[static::KEY] ?? [
       'show_count' => TRUE,
-      'render_all_children' => FALSE,
+      'render_all_children' => 0,
     ];
 
     return $config;
