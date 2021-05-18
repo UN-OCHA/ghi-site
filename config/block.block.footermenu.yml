@@ -1,0 +1,25 @@
+uuid: 436a4b79-1f28-49fb-8208-f8b659be4617
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.menu-footer-menu
+  module:
+    - system
+  theme:
+    - common_design_subtheme
+id: footermenu
+theme: common_design_subtheme
+region: footer_navigation
+weight: 0
+provider: null
+plugin: 'system_menu_block:menu-footer-menu'
+settings:
+  id: 'system_menu_block:menu-footer-menu'
+  label: 'Footer menu'
+  provider: system
+  label_display: visible
+  level: 1
+  depth: 0
+  expand_all_items: false
+visibility: {  }

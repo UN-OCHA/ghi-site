@@ -42,9 +42,10 @@
         "drupal/social_auth_hid": "^2.5",
         "drush/drush": "^10.4",
         "phpoffice/phpspreadsheet": "^1.17",
-        "unocha/common_design": "^3.0"
+        "unocha/common_design": "^4.0"
     },
     "require-dev": {
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1",
         "drupal/devel": "^4.1",
         "drupal/stage_file_proxy": "^1.1",
         "drupal/yaml_content": "^1.0@alpha",
