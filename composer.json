@@ -84,13 +84,13 @@
           "DrupalProject\\composer\\ScriptHandler::removeUnnecessaryFiles",
           "git config core.hooksPath git-hooks || true"
       ],
-      "gulp-prepare": "cd html/themes/custom/common_design_subtheme && npm install",
-      "gulp-build": "cd html/themes/custom/common_design_subtheme && ./node_modules/.bin/gulp build",
-      "gulp-cleanup": "cd html/themes/custom/common_design_subtheme && rm -rf ./node_modules",
-      "gulp": [
-          "@gulp-prepare",
-          "@gulp-build",
-          "@gulp-cleanup"
+      "subtheme-prepare": "cd html/themes/custom/common_design_subtheme && npm install",
+      "subtheme-build": "cd html/themes/custom/common_design_subtheme && npm run sass:build",
+      "subtheme-cleanup": "cd html/themes/custom/common_design_subtheme && rm -rf ./node_modules",
+      "subtheme": [
+          "@subtheme-prepare",
+          "@subtheme-build",
+          "@subtheme-cleanup"
       ]
     },
     "extra": {

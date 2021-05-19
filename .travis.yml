@@ -53,7 +53,7 @@ script:
   - test ! -d ./html/modules/custom || ./vendor/bin/phpcs -p --report=full ./html/modules/custom
 
   # Theme build.
-  - composer run sass
+  - composer run subtheme
 
   # Drupal install
   - mysql -e "CREATE DATABASE drupal;"
