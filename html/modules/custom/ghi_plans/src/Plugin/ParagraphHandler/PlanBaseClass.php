@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\Plugin\ParagraphHandler;
 
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerBase;
 
@@ -45,7 +46,7 @@ class PlanBaseClass extends ParagraphHandlerBase {
     $delta = array_shift($parents);
 
     // Get paragraph from widget state.
-    $widget_state = \Drupal\Core\Field\WidgetBase::getWidgetState([], $field_name, $form_state);
+    $widget_state = WidgetBase::getWidgetState([], $field_name, $form_state);
 
     // Get actual values.
     $values = NestedArray::getValue($form_state->getValues(), $element['#parents']);
