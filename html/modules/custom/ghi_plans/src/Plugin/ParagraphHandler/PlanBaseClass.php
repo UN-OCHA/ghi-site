@@ -12,7 +12,7 @@ use Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerBase;
 class PlanBaseClass extends ParagraphHandlerBase {
 
   /**
-   * Key used for storage
+   * Key used for storage.
    */
   const KEY = '';
 
@@ -35,6 +35,9 @@ class PlanBaseClass extends ParagraphHandlerBase {
     $subform['#element_submit'] = [[get_called_class(), 'submit']];
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public static function submit(&$element, FormStateInterface $form_state) {
     // Get field name and delta from parents.
     $parents = $element['#parents'];
