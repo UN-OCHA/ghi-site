@@ -58,8 +58,8 @@ class PlanWebContentText extends PlanBaseClass {
   /**
    * {@inheritdoc}
    */
-  public function widget_alter(&$element, &$form_state, $context) {
-    parent::widget_alter($element, $form_state, $context);
+  public function widgetAlter(&$element, &$form_state, $context) {
+    parent::widgetAlter($element, $form_state, $context);
 
     if (!isset($this->parentEntity->field_original_id) || $this->parentEntity->field_original_id->isEmpty()) {
       return;
