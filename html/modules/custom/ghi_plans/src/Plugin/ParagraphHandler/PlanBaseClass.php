@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\Plugin\ParagraphHandler;
 
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerBase;
 
@@ -12,7 +13,7 @@ use Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerBase;
 class PlanBaseClass extends ParagraphHandlerBase {
 
   /**
-   * Key used for storage
+   * Key used for storage.
    */
   const KEY = '';
 
@@ -28,13 +29,16 @@ class PlanBaseClass extends ParagraphHandlerBase {
   /**
    * {@inheritdoc}
    */
-  public function widget_alter(&$element, &$form_state, $context) {
+  public function widgetAlter(&$element, &$form_state, $context) {
     $subform = &$element['subform'];
 
     // @see https://www.drupal.org/project/drupal/issues/2820359
     $subform['#element_submit'] = [[get_called_class(), 'submit']];
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public static function submit(&$element, FormStateInterface $form_state) {
     // Get field name and delta from parents.
     $parents = $element['#parents'];
@@ -42,7 +46,7 @@ class PlanBaseClass extends ParagraphHandlerBase {
     $delta = array_shift($parents);
 
     // Get paragraph from widget state.
-    $widget_state = \Drupal\Core\Field\WidgetBase::getWidgetState([], $field_name, $form_state);
+    $widget_state = WidgetBase::getWidgetState([], $field_name, $form_state);
 
     // Get actual values.
     $values = NestedArray::getValue($form_state->getValues(), $element['#parents']);

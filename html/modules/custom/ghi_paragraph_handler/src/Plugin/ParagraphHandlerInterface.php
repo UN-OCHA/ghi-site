@@ -30,6 +30,6 @@ interface ParagraphHandlerInterface extends PluginInspectionInterface {
   /**
    * Alter the widget.
    */
-  public function widget_alter(&$element, &$form_state, $context);
+  public function widgetAlter(&$element, &$form_state, $context);
 
 }

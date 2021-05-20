@@ -39,7 +39,7 @@ abstract class ParagraphHandlerBase extends PluginBase implements ParagraphHandl
   /**
    * {@inheritdoc}
    */
-  public function widget_alter(&$element, &$form_state, $context) {}
+  public function widgetAlter(&$element, &$form_state, $context) {}
 
   /**
    * Initialize the plugin by providing a paragraph.
@@ -132,8 +132,8 @@ abstract class ParagraphHandlerBase extends PluginBase implements ParagraphHandl
   public function dispatchWidgetAlter(Paragraph $paragraph, &$element, &$form_state, $context) {
     $this->init($paragraph);
 
-    if (method_exists($this, 'widget_alter')) {
-      $this->widget_alter($element, $form_state, $context);
+    if (method_exists($this, 'widgetAlter')) {
+      $this->widgetAlter($element, $form_state, $context);
     }
   }
 
