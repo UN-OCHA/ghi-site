@@ -12,9 +12,3 @@ css-vars-ponyfill:
   js:
     https://cdn.jsdelivr.net/npm/css-vars-ponyfill@2: { type: external, minified: true, attributes: { nomodule: true } }
     js/cd-css-vars-ponyfill.js: { attributes: { nomodule: true } }
-
-# Customized to allow for non-ID selectors and also debug statements when the
-# conditions to move OCHA Services from Footer to Header are not met.
-cd-ocha-services:
-  js:
-    js/cd-ocha-services.js: {}

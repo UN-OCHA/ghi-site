@@ -55,8 +55,8 @@ class PlanWebContentText extends PlanBaseClass {
   /**
    * {@inheritdoc}
    */
-  public function widget_alter(&$element, &$form_state, $context) {
-    parent::widget_alter($element, $form_state, $context);
+  public function widgetAlter(&$element, &$form_state, $context) {
+    parent::widgetAlter($element, $form_state, $context);
 
     // Retrieve the attachments.
     $attachments = $this->getQueryHandler()->getWebContentTextAttachments($this->parentEntity);

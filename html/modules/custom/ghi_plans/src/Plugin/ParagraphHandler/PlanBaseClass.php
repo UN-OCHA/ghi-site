@@ -74,7 +74,7 @@ class PlanBaseClass extends ParagraphHandlerBase {
   /**
    * {@inheritdoc}
    */
-  public function widget_alter(&$element, &$form_state, $context) {
+  public function widgetAlter(&$element, &$form_state, $context) {
     $subform = &$element['subform'];
 
     // @see https://www.drupal.org/project/drupal/issues/2820359
