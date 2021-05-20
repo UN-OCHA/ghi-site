@@ -300,7 +300,7 @@ class PlanEntityTypes extends PlanBaseClass {
    *   An array of plan entity objects for the current context.
    */
   private function getPlanEntities($entity_type = NULL) {
-    return $this->getQueryHandler('data')->getPlanEntities($this->parentEntity, $entity_type);
+    return $this->getQueryHandler()->getPlanEntities($this->parentEntity, $entity_type);
   }
 
   /**

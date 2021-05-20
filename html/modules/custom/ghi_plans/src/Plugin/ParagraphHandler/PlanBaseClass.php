@@ -55,8 +55,15 @@ class PlanBaseClass extends ParagraphHandlerBase {
     }
 
     $query_handler = \Drupal::service($definition['service']);
-    if (isset($this->parentEntity->field_original_id) && !$this->parentEntity->field_original_id->isEmpty()) {
-      $plan_id = $this->parentEntity->field_original_id->value;
+    if ($this->parentEntity->bundle() == 'plan') {
+      if (isset($this->parentEntity->field_original_id) && !$this->parentEntity->field_original_id->isEmpty()) {
+        $plan_id = $this->parentEntity->field_original_id->value;
+        $query_handler->setPlaceholder('plan_id', $plan_id);
+      }
+    }
+    elseif ($this->parentEntity->hasField('field_plan') && count($this->parentEntity->get('field_plan')->referencedEntities()) == 1) {
+      $plan = reset($this->parentEntity->get('field_plan')->referencedEntities());
+      $plan_id = $plan->field_original_id->value;
       $query_handler->setPlaceholder('plan_id', $plan_id);
     }
     return $query_handler;
