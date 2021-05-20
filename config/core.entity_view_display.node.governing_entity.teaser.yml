@@ -5,12 +5,12 @@ dependencies:
   config:
     - core.entity_view_mode.node.teaser
     - field.field.node.governing_entity.field_cluster_managers
+    - field.field.node.governing_entity.field_content
     - field.field.node.governing_entity.field_entity_subpage
     - field.field.node.governing_entity.field_original_id
     - field.field.node.governing_entity.field_plan
     - field.field.node.governing_entity.field_plan_id
     - field.field.node.governing_entity.field_prototype_id
-    - field.field.node.governing_entity.layout_builder__layout
     - node.type.governing_entity
   module:
     - user
@@ -26,10 +26,10 @@ content:
     region: content
 hidden:
   field_cluster_managers: true
+  field_content: true
   field_entity_subpage: true
   field_original_id: true
   field_plan: true
   field_plan_id: true
   field_prototype_id: true
   langcode: true
-  layout_builder__layout: true

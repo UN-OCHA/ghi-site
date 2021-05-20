@@ -1,0 +1,38 @@
+uuid: d240b313-bea6-45ae-a154-f1c2fd6ec122
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_content
+    - node.type.plan_entity
+  module:
+    - entity_reference_revisions
+id: node.plan_entity.field_content
+field_name: field_content
+entity_type: node
+bundle: plan_entity
+label: Content
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    negate: 0
+    target_bundles: null
+    target_bundles_drag_drop:
+      from_library:
+        weight: 5
+        enabled: false
+      plan_entity_types:
+        weight: 6
+        enabled: false
+      plan_web_content_file:
+        weight: 7
+        enabled: false
+      plan_web_content_text:
+        weight: 8
+        enabled: false
+field_type: entity_reference_revisions
