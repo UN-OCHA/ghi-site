@@ -1,0 +1,40 @@
+uuid: edbce7f6-c0ef-4b67-9b9f-581aec27511b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.panopoly_landing_page.field_content
+    - field.field.node.panopoly_landing_page.field_sub_pages
+    - node.type.panopoly_landing_page
+  module:
+    - entity_reference_revisions
+    - user
+id: node.panopoly_landing_page.default
+targetEntityType: node
+bundle: panopoly_landing_page
+mode: default
+content:
+  field_content:
+    weight: 2
+    label: hidden
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    type: entity_reference_revisions_entity_view
+    region: content
+  field_sub_pages:
+    type: entity_reference_label
+    weight: 1
+    region: content
+    label: hidden
+    settings:
+      link: true
+    third_party_settings: {  }
+  links:
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  langcode: true
