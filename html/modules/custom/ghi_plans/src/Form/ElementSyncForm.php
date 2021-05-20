@@ -4,28 +4,23 @@ namespace Drupal\ghi_plans\Form;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Uuid\UuidInterface;
-use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\layout_builder\LayoutEntityHelperTrait;
-use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
-use Drupal\layout_builder\SectionComponent;
+use Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerManager;
+use Drupal\ghi_plans\Plugin\ParagraphHandler\SyncableParagraphInterface;
 use Drupal\node\NodeInterface;
+use Drupal\paragraphs\Entity\Paragraph;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
-
-use Drupal\hpc_common\Helpers\NodeHelper;
 
 /**
  * Form with examples on how to use batch api.
  */
 class ElementSyncForm extends FormBase {
-
-  use LayoutEntityHelperTrait;
 
   /**
    * The entity type manager.
@@ -35,11 +30,11 @@ class ElementSyncForm extends FormBase {
   protected $entityTypeManager;
 
   /**
-   * The block manager.
+   * The paragraph handler manager.
    *
-   * @var \Drupal\Core\Block\BlockManagerInterface
+   * @var \Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerManager
    */
-  protected $blockManager;
+  protected $paragraphHandlerManager;
 
   /**
    * The http client.
@@ -79,9 +74,9 @@ class ElementSyncForm extends FormBase {
   /**
    * Public constructor.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, BlockManagerInterface $block_manager, Client $http_client, UuidInterface $uuid, MessengerInterface $messenger, TimeInterface $time, AccountProxyInterface $user) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ParagraphHandlerManager $paragraph_handler_manager, Client $http_client, UuidInterface $uuid, MessengerInterface $messenger, TimeInterface $time, AccountProxyInterface $user) {
     $this->entityTypeManager = $entity_type_manager;
-    $this->blockManager = $block_manager;
+    $this->paragraphHandlerManager = $paragraph_handler_manager;
     $this->httpClient = $http_client;
     $this->uuidGenerator = $uuid;
     $this->messenger = $messenger;
@@ -95,7 +90,7 @@ class ElementSyncForm extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity_type.manager'),
-      $container->get('plugin.manager.block'),
+      $container->get('plugin.manager.ghi_paragraph_handler'),
       $container->get('http_client'),
       $container->get('uuid'),
       $container->get('messenger'),
@@ -131,7 +126,7 @@ class ElementSyncForm extends FormBase {
     $node = $form['#node'];
     $settings = $this->config('ghi_plans.settings');
 
-    $original_id = NodeHelper::getOriginalIdFromNode($node);
+    $original_id = $node->field_original_id->value;
     $bundle = $node->bundle();
 
     if (empty($settings->get('sync_source'))) {
@@ -168,53 +163,50 @@ class ElementSyncForm extends FormBase {
       return;
     }
 
-    $sections = $this->getNodeSections($node);
-    $delta = 0;
-
     foreach ($data->elements as $element) {
-      $definition = $this->blockManager->getDefinition($element->type, FALSE);
+
+      $definition = $this->getTargetPluginDefinition($element->type);
       if (!$definition) {
         continue;
       }
-
       $class = $definition['class'];
-      if (!in_array('Drupal\ghi_blocks\Plugin\Block\SyncableBlockInterface', class_implements($class))) {
-        continue;
-      }
 
-      $existing_component = $this->getExistingSyncedComponent($node, $element);
-      if ($existing_component) {
+      $paragraph = NULL;
+      $existing_paragraph_handler = $this->getExistingSyncedParagraphHandler($node, $element);
+      if ($existing_paragraph_handler) {
         // Update an existing component.
-        $configuration = $class::mapConfig($element->configuration) + $existing_component->get('configuration');
-        $existing_component->setConfiguration($configuration);
+        $paragraph = $existing_paragraph_handler->getParagraph();
+        $configuration = $class::mapConfig($element->configuration) + $existing_paragraph_handler->getConfig();
+        $existing_paragraph_handler->setConfig($configuration);
+        $paragraph->save();
         $this->messenger->addMessage($this->t('Updated %plugin_title', [
-          '%plugin_title' => $definition['admin_label'],
+          '%plugin_title' => $definition['label'],
         ]));
       }
       else {
         // Append a new component.
         $this->messenger->addMessage($this->t('Added %plugin_title', [
-          '%plugin_title' => $definition['admin_label'],
+          '%plugin_title' => $definition['label'],
         ]));
         $config = [
-          'id' => $definition['id'],
-          'provider' => $definition['provider'],
-          'data_sources' => $definition['data_sources'],
-          'context_mapping' => [
-            'node' => 'layout_builder.entity',
-          ],
           'sync' => [
             'source_uuid' => $element->uuid,
           ],
         ];
         $config += $class::mapConfig($element->configuration);
-        $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
-        $sections[$delta]->appendComponent($component);
+
+        // Create new paragraph entity.
+        $paragraph = Paragraph::create([
+          'type' => $definition['id'],
+        ]);
+        $paragraph->save();
+        $plugin = ghi_paragraph_handler_get_handler($paragraph);
+        $plugin->setConfig($config);
+        $node->field_content->appendItem($paragraph);
       }
 
     }
 
-    $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
     $node->setNewRevision(TRUE);
     $node->revision_log = $this->t('Synced page elements from @source_url', ['@source_url' => $source_url]);
     $node->setRevisionCreationTime($this->time->getRequestTime());
@@ -223,23 +215,28 @@ class ElementSyncForm extends FormBase {
   }
 
   /**
-   * Find a section component corresponding to the given source element.
+   * Find a paragraph handler corresponding to the given source element.
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
    * @param object $element
    *   The configuration object from the sync source.
    *
-   * @return \Drupal\layout_builder\SectionComponent|null
-   *   Either a matching component, or NULL.
+   * @return \Drupal\ghi_plans\Plugin\ParagraphHandler\PlanBaseClass|null
+   *   Either a matching paragraph handler, or NULL.
    */
-  private function getExistingSyncedComponent(NodeInterface $node, $element) {
-    $section_storage = $this->getSectionStorageForEntity($node);
-    $sections = $section_storage->getSections();
-    foreach ($sections[0]->getComponents() as $component) {
-      $configuration = $component->get('configuration');
+  private function getExistingSyncedParagraphHandler(NodeInterface $node, $element) {
+    $paragraphs = $this->getParagraphs($node);
+    foreach ($paragraphs as $paragraph) {
+      if (!$plugin = ghi_paragraph_handler_get_handler($paragraph)) {
+        continue;
+      }
+      if (!$plugin instanceof SyncableParagraphInterface) {
+        continue;
+      }
+      $configuration = $plugin->getConfig();
       if (!empty($configuration['sync']) && !empty($configuration['sync']['source_uuid']) && $configuration['sync']['source_uuid'] == $element->uuid) {
-        return $component;
+        return $plugin;
       }
     }
     return NULL;
@@ -254,13 +251,30 @@ class ElementSyncForm extends FormBase {
    * @return array
    *   An array of layout builder sections.
    */
-  private function getNodeSections(NodeInterface $node) {
-    $section_storage = $this->getSectionStorageForEntity($node);
-    if (!$section_storage) {
-      return NULL;
+  private function getParagraphs(NodeInterface $node) {
+    return $node->field_content->referencedEntities();
+  }
+
+  /**
+   * Get the plugin definition for the target paragraph handler.
+   *
+   * @param string $element_type
+   *   The element type of the source site.
+   *
+   * @return array|null
+   *   If a defintion is found, returns the definitions array, NULL otherwhise.
+   */
+  private function getTargetPluginDefinition($element_type) {
+    foreach ($this->paragraphHandlerManager->getDefinitions() as $definition) {
+      $class = $definition['class'];
+      if (!in_array('Drupal\ghi_plans\Plugin\ParagraphHandler\SyncableParagraphInterface', class_implements($class))) {
+        continue;
+      }
+      if ($class::getSourceElementKey() != $element_type) {
+        continue;
+      }
+      return $definition;
     }
-    $sections = $section_storage->getSections();
-    return $sections;
   }
 
 }

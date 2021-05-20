@@ -15,12 +15,28 @@ namespace Drupal\ghi_plans\Plugin\ParagraphHandler;
  *   },
  * )
  */
-class PlanWebContentText extends PlanBaseClass {
+class PlanWebContentText extends PlanBaseClass implements SyncableParagraphInterface {
 
   /**
    * {@inheritdoc}
    */
   const KEY = 'plan_web_content_text';
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function mapConfig($config) {
+    return [
+      'attachment_ids' => $config->attachment_id,
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getSourceElementKey() {
+    return 'plan_webcontent_file';
+  }
 
   /**
    * {@inheritdoc}

@@ -149,7 +149,7 @@ class PlanBaseClass extends ParagraphHandlerBase {
    * @return array
    *   A configuration array, specific to the type of paragraph being edited.
    */
-  protected function getConfig(FormStateInterface $form_state = NULL) {
+  public function getConfig(FormStateInterface $form_state = NULL) {
     $settings = $this->paragraph->getAllBehaviorSettings();
     $config = $settings[static::KEY] ?? [];
 
@@ -158,6 +158,20 @@ class PlanBaseClass extends ParagraphHandlerBase {
     }
 
     return $config;
+  }
+
+  /**
+   * Set the config for this paragraph handler.
+   *
+   * Internally sets the config as behavior settings under this plugins config
+   * key.
+   *
+   * @param array $config
+   *   The new config to replace the old one.
+   */
+  public function setConfig(array $config) {
+    $this->paragraph->setBehaviorSettings(static::KEY, $config);
+    $this->paragraph->save();
   }
 
 }

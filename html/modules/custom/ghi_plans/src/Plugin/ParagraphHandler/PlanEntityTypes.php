@@ -22,12 +22,32 @@ use Drupal\hpc_api\Query\EndpointQuery;
  *   },
  * )
  */
-class PlanEntityTypes extends PlanBaseClass {
+class PlanEntityTypes extends PlanBaseClass implements SyncableParagraphInterface {
 
   /**
    * {@inheritdoc}
    */
   const KEY = 'plan_entity_types';
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function mapConfig($config) {
+    return [
+      'entity_ids' => (array) $config->entity_ids,
+      'entity_type' => $config->entity_type,
+      'id_type' => $config->id_type,
+      'sort' => $config->sort,
+      'sort_column' => $config->sort_column,
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getSourceElementKey() {
+    return 'plan_entity_types';
+  }
 
   /**
    * {@inheritdoc}

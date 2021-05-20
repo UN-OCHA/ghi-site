@@ -19,12 +19,28 @@ use Drupal\Core\Url;
  *   },
  * )
  */
-class PlanWebContentFile extends PlanBaseClass {
+class PlanWebContentFile extends PlanBaseClass implements SyncableParagraphInterface {
 
   /**
    * {@inheritdoc}
    */
   const KEY = 'plan_web_content_file';
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function mapConfig($config) {
+    return [
+      'attachment_ids' => $config->attachment_id,
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getSourceElementKey() {
+    return 'plan_webcontent_file';
+  }
 
   /**
    * {@inheritdoc}

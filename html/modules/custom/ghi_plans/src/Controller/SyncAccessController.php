@@ -23,8 +23,8 @@ class SyncAccessController {
    *   The access result.
    */
   public function accessElementSyncForm(NodeInterface $node) {
-    $section_storage = $this->getSectionStorageForEntity($node);
-    return AccessResult::allowedIf(!empty($section_storage));
+    $allowed = $node->bundle() == 'plan' || ($node->hasField('field_plan') && $node->hasField('field_original_id') && !empty($node->field_original_id->isEmpty()));
+    return AccessResult::allowedIf($allowed);
   }
 
 }
