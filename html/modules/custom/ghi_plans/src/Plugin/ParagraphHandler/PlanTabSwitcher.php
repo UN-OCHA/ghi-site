@@ -2,6 +2,8 @@
 
 namespace Drupal\ghi_plans\Plugin\ParagraphHandler;
 
+use Drupal\Component\Render\FormattableMarkup;
+
 /**
  * Base class for paragraph handlers.
  *
@@ -67,7 +69,7 @@ class PlanTabSwitcher extends PlanBaseClass {
     // Get all plan entity nodes with plan as parent.
     $plan_entities = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
       'type' => 'plan_entity',
-      'field_plan_id' => $plan->id(),
+      'field_plan' => $plan->id(),
     ]);
 
     if ($plan_entities) {
@@ -76,9 +78,10 @@ class PlanTabSwitcher extends PlanBaseClass {
         $suffix = ' <span class="counter">' . count($plan_entities) . '</span>';
       }
 
+      $plan_entity = reset($plan_entities);
       $tabs[] = [
-        'title' => $this->t('Clusters') . $suffix,
-        'url' => $plan_entities[0]->toUrl(),
+        'title' => new FormattableMarkup($this->t('Clusters') . $suffix, []),
+        'url' => $plan_entity->toUrl(),
         'attributes' => [
           'class' => [],
         ],
@@ -102,7 +105,7 @@ class PlanTabSwitcher extends PlanBaseClass {
 
       foreach ($plan_entities as $plan_entity) {
         if ($plan_entity->field_plan_id && !$plan_entity->field_plan_id->isEmpty()) {
-          $title = $q->getPlanIcon($plan_entity->field_plan_id->value);
+          $title = new FormattableMarkup($q->getPlanIcon($plan_entity->field_plan_id->value), []);
         }
         else {
           $title = $plan_entity->label();
