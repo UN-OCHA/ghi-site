@@ -13,7 +13,7 @@ namespace Drupal\ghi_plans\Plugin\ParagraphHandler;
 class PlanTabSwitcher extends PlanBaseClass {
 
   /**
-   * Key used for storage
+   * Key used for storage.
    */
   const KEY = 'plan_tab_switcher';
 
@@ -36,7 +36,7 @@ class PlanTabSwitcher extends PlanBaseClass {
       $plan = $plan->field_plan->first->entity;
     }
 
-    $overview_link = t('Overview');
+    $overview_link = $this->t('Overview');
     if (!$plan->isPublished()) {
       if ($plan->access('view')) {
         $overview_link = $plan->toLink($overview_link);
@@ -48,7 +48,7 @@ class PlanTabSwitcher extends PlanBaseClass {
 
     $tabs = [
       [
-        'title' => t('Overview'),
+        'title' => $this->t('Overview'),
         'url' => $plan->toUrl(),
         'attributes' => [
           'class' => ['active'],
@@ -59,17 +59,17 @@ class PlanTabSwitcher extends PlanBaseClass {
     // Get all plan entity nodes with plan as parent.
     $plan_entities = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
       'type' => 'plan_entity',
-      'field_plan_id' => $plan->id()
+      'field_plan_id' => $plan->id(),
     ]);
 
     if ($plan_entities) {
       $suffix = '';
       if ($config['show_count']) {
-        $suffix = ' <span class="counter">' . count($plan_entities)  . '</span>';
+        $suffix = ' <span class="counter">' . count($plan_entities) . '</span>';
       }
 
       $tabs[] = [
-        'title' => t('Clusters') . $suffix,
+        'title' => $this->t('Clusters') . $suffix,
         'url' => $plan_entities[0]->toUrl(),
         'attributes' => [
           'class' => [],
@@ -124,8 +124,8 @@ class PlanTabSwitcher extends PlanBaseClass {
   /**
    * {@inheritdoc}
    */
-  public function widget_alter(&$element, &$form_state, $context) {
-    parent::widget_alter($element, $form_state, $context);
+  public function widgetAlter(&$element, &$form_state, $context) {
+    parent::widgetAlter($element, $form_state, $context);
 
     $config = $this->getConfig();
     $subform = &$element['subform'];
