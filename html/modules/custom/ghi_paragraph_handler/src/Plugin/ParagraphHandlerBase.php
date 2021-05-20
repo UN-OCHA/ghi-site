@@ -59,16 +59,22 @@ abstract class ParagraphHandlerBase extends PluginBase implements ParagraphHandl
   }
 
   /**
+   * Get the paragraph entity.
+   *
+   * @return \Drupal\paragraphs\Entity\Paragraph
+   *   The paragraph entity for this plugin.
+   */
+  public function getParagraph() {
+    return $this->paragraph;
+  }
+
+  /**
    * Prepare and dispatch the preprocess method.
    *
-   * @param Drupal\paragraphs\Entity\Paragraph $paragraph
-   *   A pragraph being preprocessed.
    * @param array $variables
    *   A set of variables from the theme layer.
    */
-  public function dispatchPreprocess(Paragraph $paragraph, array &$variables) {
-    $this->init($paragraph);
-
+  public function dispatchPreprocess(array &$variables) {
     $element = $this->getRenderable($variables);
 
     if (method_exists($this, 'preprocess')) {
@@ -113,14 +119,10 @@ abstract class ParagraphHandlerBase extends PluginBase implements ParagraphHandl
   /**
    * Prepare and dispatch the build method.
    *
-   * @param Drupal\paragraphs\Entity\Paragraph $paragraph
-   *   A paragraph being rendered.
    * @param array $build
    *   A build array for a paragraph entity.
    */
-  public function dispatchBuild(Paragraph $paragraph, array &$build) {
-    $this->init($paragraph);
-
+  public function dispatchBuild(array &$build) {
     if (method_exists($this, 'build')) {
       $this->build($build);
     }
@@ -129,9 +131,7 @@ abstract class ParagraphHandlerBase extends PluginBase implements ParagraphHandl
   /**
    * Prepare and dispatch the widget alter method.
    */
-  public function dispatchWidgetAlter(Paragraph $paragraph, &$element, &$form_state, $context) {
-    $this->init($paragraph);
-
+  public function dispatchWidgetAlter(&$element, &$form_state, $context) {
     if (method_exists($this, 'widgetAlter')) {
       $this->widgetAlter($element, $form_state, $context);
     }
