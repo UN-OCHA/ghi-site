@@ -8,6 +8,7 @@ dependencies:
     - field.field.node.panopoly_page.field_featured_image
     - field.field.node.panopoly_page.field_featured_status
     - field.field.node.panopoly_page.field_parent_page
+    - field.field.node.panopoly_page.field_sub_pages
     - image.style.thumbnail
     - node.type.panopoly_page
   module:
@@ -58,6 +59,16 @@ content:
     region: content
   field_parent_page:
     weight: 121
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
+    region: content
+  field_sub_pages:
+    weight: 122
     settings:
       match_operator: CONTAINS
       match_limit: 10

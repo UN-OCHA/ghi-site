@@ -9,6 +9,7 @@ dependencies:
     - field.field.node.panopoly_page.field_featured_image
     - field.field.node.panopoly_page.field_featured_status
     - field.field.node.panopoly_page.field_parent_page
+    - field.field.node.panopoly_page.field_sub_pages
     - node.type.panopoly_page
   module:
     - image
@@ -45,4 +46,5 @@ hidden:
   field_featured_categories: true
   field_featured_status: true
   field_parent_page: true
+  field_sub_pages: true
   langcode: true
