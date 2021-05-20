@@ -17,6 +17,11 @@ class PlanBaseClass extends ParagraphHandlerBase {
   const KEY = '';
 
   /**
+   * Default configuration.
+   */
+  const DEFAULT_CONFIG = [];
+
+  /**
    * Get data for this paragraph.
    *
    * @param string $source_key
@@ -151,7 +156,7 @@ class PlanBaseClass extends ParagraphHandlerBase {
    */
   protected function getConfig(FormStateInterface $form_state = NULL) {
     $settings = $this->paragraph->getAllBehaviorSettings();
-    $config = $settings[static::KEY] ?? [];
+    $config = $settings[static::KEY] ?? static::DEFAULT_CONFIG;
 
     if ($form_state !== NULL && $form_state->has(static::KEY)) {
       $config = $form_state->get(static::KEY);

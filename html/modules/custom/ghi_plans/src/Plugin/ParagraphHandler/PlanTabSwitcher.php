@@ -13,9 +13,17 @@ namespace Drupal\ghi_plans\Plugin\ParagraphHandler;
 class PlanTabSwitcher extends PlanBaseClass {
 
   /**
-   * Key used for storage.
+   * {@inheritdoc}
    */
   const KEY = 'plan_tab_switcher';
+
+  /**
+   * {@inheritdoc}
+   */
+  const DEFAULT_CONFIG = [
+    'show_count' => TRUE,
+    'render_all_children' => 0,
+  ];
 
   /**
    * {@inheritdoc}
@@ -149,19 +157,6 @@ class PlanTabSwitcher extends PlanBaseClass {
         0 => $this->t('No'),
       ],
     ];
-  }
-
-  /**
-   * Return behavior settings.
-   */
-  protected function getConfig() {
-    $settings = $this->paragraph->getAllBehaviorSettings();
-    $config = $settings[static::KEY] ?? [
-      'show_count' => TRUE,
-      'render_all_children' => 0,
-    ];
-
-    return $config;
   }
 
 }
