@@ -12,19 +12,6 @@ use Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerBase;
 class PlanBaseClass extends ParagraphHandlerBase {
 
   /**
-<<<<<<< HEAD
-   * Key used for storage.
-   */
-  const KEY = '';
-
-  /**
-   * Default configuration.
-   */
-  const DEFAULT_CONFIG = [];
-
-  /**
-=======
->>>>>>> develop
    * Get data for this paragraph.
    *
    * @param string $source_key

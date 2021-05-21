@@ -19,6 +19,11 @@ abstract class ParagraphHandlerBase extends PluginBase implements ParagraphHandl
   const KEY = '';
 
   /**
+   * Default configuration.
+   */
+  const DEFAULT_CONFIG = [];
+
+  /**
    * The Paragraph being handled.
    *
    * @var \Drupal\paragraphs\Entity\Paragraph
@@ -76,7 +81,7 @@ abstract class ParagraphHandlerBase extends PluginBase implements ParagraphHandl
    */
   public function getConfig(FormStateInterface $form_state = NULL) {
     $settings = $this->paragraph->getAllBehaviorSettings();
-    $config = $settings[static::KEY] ?? [];
+    $config = $settings[static::KEY] ?? static::DEFAULT_CONFIG;
 
     if ($form_state !== NULL && $form_state->has(static::KEY)) {
       $config = $form_state->get(static::KEY);
