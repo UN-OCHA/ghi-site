@@ -76,12 +76,12 @@ script:
   - ../vendor/bin/drush yaml-content-import ${TRAVIS_BUILD_DIR}/.travis/
 
   # Chrome headless
-  - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
-  - sleep 5
+  # - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
+  # - sleep 5
 
-  # Test
-  - cd $TRAVIS_BUILD_DIR
-  - DTT_BASE_URL=http://127.0.0.1:8080 DTT_API_URL=http://localhost:9222 ./vendor/bin/phpunit --debug --colors --testsuite=existing-site,existing-site-javascript
+  # Unit tests
+  # - cd $TRAVIS_BUILD_DIR
+  # - DTT_BASE_URL=http://127.0.0.1:8080 DTT_API_URL=http://localhost:9222 ./vendor/bin/phpunit --debug --colors --testsuite=existing-site,existing-site-javascript
 
 after_success:
   - echo "The tests completed without errors."
