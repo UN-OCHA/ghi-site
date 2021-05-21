@@ -1,16 +1,3 @@
-ghi_plans.sync_elements:
-  path: '/node/{node}/hpc/sync-elements'
-  defaults:
-    _form: '\Drupal\ghi_plans\Form\ElementSyncForm'
-    _title: 'Sync elements'
-  options:
-    parameters:
-      node:
-        type: entity:node
-    _admin_route: TRUE
-  requirements:
-    _custom_access: '\Drupal\ghi_plans\Controller\SyncAccessController::accessElementSyncForm'
-    _permission: 'administer site configuration'
 ghi_plans.plan_autocomplete:
   path: '/plan/autocomplete'
   defaults:

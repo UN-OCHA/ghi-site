@@ -1,0 +1,9 @@
+name: GHI Element sync
+description: Provide logic syncing elements from a source site into the current site.
+package: GHI
+
+type: module
+core_version_requirement: ^8 || ^9
+
+dependencies:
+  - ghi_paragraph_handler:ghi_paragraph_handler

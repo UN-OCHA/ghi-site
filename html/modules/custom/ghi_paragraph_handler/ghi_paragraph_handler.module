@@ -39,7 +39,7 @@ function ghi_paragraph_handler_preprocess_paragraph(&$variables) {
     return;
   }
 
-  $plugin->dispatchPreprocess($paragraph, $variables);
+  $plugin->dispatchPreprocess($variables);
 }
 
 /**
@@ -51,7 +51,7 @@ function ghi_paragraph_handler_paragraph_view_alter(array &$build, Paragraph $pa
     return;
   }
 
-  $plugin->dispatchBuild($paragraph, $build);
+  $plugin->dispatchBuild($build);
 }
 
 /**
@@ -62,12 +62,18 @@ function ghi_paragraph_handler_field_widget_paragraphs_form_alter(&$element, &$f
     return;
   }
 
-  if (!empty($context['items']) && !$context['items']->isEmpty()) {
+  if (!empty($context['items'])) {
     if (isset($context['delta']) && isset($context['items']->get($context['delta'])->target_id)) {
       $paragraph = Paragraph::load($context['items']->get($context['delta'])->target_id);
     }
     else {
-      return;
+      $field_name = reset($element['subform']['#parents']);
+      $delta = $element['#delta'];
+      $widget_state = $context['widget']::getWidgetState($element['#field_parents'], $field_name, $form_state);
+      if (isset($widget_state['paragraphs'][$delta]['entity'])) {
+        /** @var \Drupal\paragraphs\ParagraphInterface $paragraphs_entity */
+        $paragraph = $widget_state['paragraphs'][$delta]['entity'];
+      }
     }
   }
 
@@ -77,7 +83,7 @@ function ghi_paragraph_handler_field_widget_paragraphs_form_alter(&$element, &$f
 
   // Detect real edit mode.
   if (isset($element['subform']['#process'])) {
-    $plugin->dispatchWidgetAlter($paragraph, $element, $form_state, $context);
+    $plugin->dispatchWidgetAlter($element, $form_state, $context);
   }
   else {
     // @todo add Preview/Summary handler.
@@ -99,7 +105,8 @@ function ghi_paragraph_handler_get_handler(Paragraph $paragraph) {
 
   foreach ($definitions as $plugin_id => $definition) {
     if ($plugin_id == $paragraph->bundle()) {
-      return $plugin_manager->createInstance($plugin_id);
+      $plugin = $plugin_manager->createInstance($plugin_id);
+      return $plugin->init($paragraph);
     }
   }
 }
