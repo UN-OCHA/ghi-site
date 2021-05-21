@@ -2,6 +2,8 @@
 
 namespace Drupal\ghi_plans\Plugin\ParagraphHandler;
 
+use Drupal\ghi_element_sync\SyncableParagraphInterface;
+
 /**
  * Class Card.
  *

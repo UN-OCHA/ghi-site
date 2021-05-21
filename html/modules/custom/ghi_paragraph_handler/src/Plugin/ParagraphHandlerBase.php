@@ -3,6 +3,7 @@
 namespace Drupal\ghi_paragraph_handler\Plugin;
 
 use Drupal\Component\Plugin\PluginBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
@@ -11,6 +12,11 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
  */
 abstract class ParagraphHandlerBase extends PluginBase implements ParagraphHandlerInterface {
   use StringTranslationTrait;
+
+  /**
+   * Key used for config storage.
+   */
+  const KEY = '';
 
   /**
    * The Paragraph being handled.
@@ -59,13 +65,32 @@ abstract class ParagraphHandlerBase extends PluginBase implements ParagraphHandl
   }
 
   /**
-   * Get the paragraph entity.
-   *
-   * @return \Drupal\paragraphs\Entity\Paragraph
-   *   The paragraph entity for this plugin.
+   * {@inheritdoc}
    */
   public function getParagraph() {
     return $this->paragraph;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfig(FormStateInterface $form_state = NULL) {
+    $settings = $this->paragraph->getAllBehaviorSettings();
+    $config = $settings[static::KEY] ?? [];
+
+    if ($form_state !== NULL && $form_state->has(static::KEY)) {
+      $config = $form_state->get(static::KEY);
+    }
+
+    return $config;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfig(array $config) {
+    $this->paragraph->setBehaviorSettings(static::KEY, $config);
+    $this->paragraph->save();
   }
 
   /**

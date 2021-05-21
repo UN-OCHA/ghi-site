@@ -1,17 +1,14 @@
 <?php
 
-namespace Drupal\ghi_plans\Controller;
+namespace Drupal\ghi_element_sync;
 
 use Drupal\Core\Access\AccessResult;
-use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\node\NodeInterface;
 
 /**
  * Access controller for the element sync form.
  */
 class SyncAccessController {
-
-  use LayoutEntityHelperTrait;
 
   /**
    * Access callback for the element sync form.

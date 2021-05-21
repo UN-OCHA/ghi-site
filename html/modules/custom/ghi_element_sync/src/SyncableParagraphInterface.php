@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ghi_plans\Plugin\ParagraphHandler;
+namespace Drupal\ghi_element_sync;
 
 /**
  * Defines an interface for paragraph handler plugins that can be synced.

@@ -5,6 +5,7 @@ namespace Drupal\ghi_plans\Plugin\ParagraphHandler;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
+use Drupal\ghi_element_sync\SyncableParagraphInterface;
 
 /**
  * Class Card.

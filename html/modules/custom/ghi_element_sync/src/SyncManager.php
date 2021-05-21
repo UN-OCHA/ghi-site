@@ -1,33 +1,39 @@
 <?php
 
-namespace Drupal\ghi_plans\Form;
+namespace Drupal\ghi_element_sync;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Uuid\UuidInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Form\FormBase;
-use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerInterface;
 use Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerManager;
-use Drupal\ghi_plans\Plugin\ParagraphHandler\SyncableParagraphInterface;
 use Drupal\node\NodeInterface;
 use Drupal\paragraphs\Entity\Paragraph;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
+use GuzzleHttp\Client;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Form with examples on how to use batch api.
+ * Sync element service class.
  */
-class ElementSyncForm extends FormBase {
+class SyncManager implements ContainerInjectionInterface {
+
+  use MessengerTrait;
+  use StringTranslationTrait;
+  use DependencySerializationTrait;
 
   /**
-   * The entity type manager.
+   * The config factory service.
    *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
-  protected $entityTypeManager;
+  protected $config;
 
   /**
    * The paragraph handler manager.
@@ -51,13 +57,6 @@ class ElementSyncForm extends FormBase {
   protected $uuid;
 
   /**
-   * The messenger.
-   *
-   * @var \Drupal\Core\Messenger\MessengerInterface
-   */
-  protected $messenger;
-
-  /**
    * The time service.
    *
    * @var \Drupal\Component\Datetime\TimeInterface
@@ -74,12 +73,11 @@ class ElementSyncForm extends FormBase {
   /**
    * Public constructor.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ParagraphHandlerManager $paragraph_handler_manager, Client $http_client, UuidInterface $uuid, MessengerInterface $messenger, TimeInterface $time, AccountProxyInterface $user) {
-    $this->entityTypeManager = $entity_type_manager;
+  public function __construct(ConfigFactoryInterface $config_factory, ParagraphHandlerManager $paragraph_handler_manager, Client $http_client, UuidInterface $uuid, TimeInterface $time, AccountProxyInterface $user) {
+    $this->config = $config_factory;
     $this->paragraphHandlerManager = $paragraph_handler_manager;
     $this->httpClient = $http_client;
     $this->uuidGenerator = $uuid;
-    $this->messenger = $messenger;
     $this->time = $time;
     $this->currentUser = $user;
   }
@@ -89,49 +87,40 @@ class ElementSyncForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity_type.manager'),
+      $container->get('config.factory'),
       $container->get('plugin.manager.ghi_paragraph_handler'),
       $container->get('http_client'),
       $container->get('uuid'),
-      $container->get('messenger'),
       $container->get('datetime.time'),
       $container->get('current_user')
     );
   }
 
   /**
-   * {@inheritdoc}
+   * Sync a node form a remote source.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node for which elements should be synced.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   An optional messenger to use for result messages.
+   *
+   * @return bool
+   *   Indicating whether the node has been sucessfully processed or not.
+   *
+   * @throws SyncException
+   *   When an error occurs.
    */
-  public function getFormId() {
-    return 'ghi_plans_element_sync_form';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
-    $form['#node'] = $node;
-
-    $form['sync_elements'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Sync all elements'),
-    ];
-    return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
-    $node = $form['#node'];
-    $settings = $this->config('ghi_plans.settings');
+  public function syncNode(NodeInterface $node, MessengerInterface $messenger = NULL) {
+    if ($messenger === NULL) {
+      $messenger = $this->messenger();
+    }
+    $settings = $this->config->get('ghi_element_sync.settings');
 
     $original_id = $node->field_original_id->value;
     $bundle = $node->bundle();
 
     if (empty($settings->get('sync_source'))) {
-      $this->messenger->addError($this->t('Error: Source is not configured'));
-      return;
+      throw new SyncException('Error: Source is not configured');
     }
     $source_url = rtrim($settings->get('sync_source'), '/');
     $url = $source_url . '/admin/hpc/plan-elements/export/' . $original_id . '/' . $bundle . '?time=' . microtime(TRUE);
@@ -143,24 +132,21 @@ class ElementSyncForm extends FormBase {
 
     $code = $response->getStatusCode();
     if ($code != 200) {
-      $this->messenger->addError($this->t('Error: Invalid response'));
-      return;
+      throw new SyncException('Error: Invalid response');
     }
 
     $body = $response->getBody()->getContents();
     if (empty($body)) {
-      $this->messenger->addError($this->t('Error: Empty response'));
-      return;
+      throw new SyncException('Error: Empty response');
     }
 
     $data = json_decode($body);
     if (empty($data->status)) {
-      $this->messenger->addError($this->t('Error: Access key misconfigured or object not valid'));
-      return;
+      throw new SyncException('Error: Access key misconfigured or object not valid');
     }
     if (empty($data->elements)) {
-      $this->messenger->addError($this->t('Error: No elements on the remote source'));
-      return;
+      // No error, but nothing to do either.
+      return FALSE;
     }
 
     foreach ($data->elements as $element) {
@@ -179,13 +165,13 @@ class ElementSyncForm extends FormBase {
         $configuration = $class::mapConfig($element->configuration) + $existing_paragraph_handler->getConfig();
         $existing_paragraph_handler->setConfig($configuration);
         $paragraph->save();
-        $this->messenger->addMessage($this->t('Updated %plugin_title', [
+        $messenger->addMessage($this->t('Updated %plugin_title', [
           '%plugin_title' => $definition['label'],
         ]));
       }
       else {
         // Append a new component.
-        $this->messenger->addMessage($this->t('Added %plugin_title', [
+        $messenger->addMessage($this->t('Added %plugin_title', [
           '%plugin_title' => $definition['label'],
         ]));
         $config = [
@@ -210,8 +196,10 @@ class ElementSyncForm extends FormBase {
     $node->setNewRevision(TRUE);
     $node->revision_log = $this->t('Synced page elements from @source_url', ['@source_url' => $source_url]);
     $node->setRevisionCreationTime($this->time->getRequestTime());
-    $node->setRevisionUserId($this->currentUser()->id());
+    $node->setRevisionUserId($this->currentUser->id());
     $node->save();
+
+    return TRUE;
   }
 
   /**
@@ -222,7 +210,7 @@ class ElementSyncForm extends FormBase {
    * @param object $element
    *   The configuration object from the sync source.
    *
-   * @return \Drupal\ghi_plans\Plugin\ParagraphHandler\PlanBaseClass|null
+   * @return \Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerInterface|null
    *   Either a matching paragraph handler, or NULL.
    */
   private function getExistingSyncedParagraphHandler(NodeInterface $node, $element) {
@@ -231,7 +219,7 @@ class ElementSyncForm extends FormBase {
       if (!$plugin = ghi_paragraph_handler_get_handler($paragraph)) {
         continue;
       }
-      if (!$plugin instanceof SyncableParagraphInterface) {
+      if (!$plugin instanceof ParagraphHandlerInterface) {
         continue;
       }
       $configuration = $plugin->getConfig();
@@ -267,7 +255,7 @@ class ElementSyncForm extends FormBase {
   private function getTargetPluginDefinition($element_type) {
     foreach ($this->paragraphHandlerManager->getDefinitions() as $definition) {
       $class = $definition['class'];
-      if (!in_array('Drupal\ghi_plans\Plugin\ParagraphHandler\SyncableParagraphInterface', class_implements($class))) {
+      if (!in_array('Drupal\ghi_element_sync\SyncableParagraphInterface', class_implements($class))) {
         continue;
       }
       if ($class::getSourceElementKey() != $element_type) {
