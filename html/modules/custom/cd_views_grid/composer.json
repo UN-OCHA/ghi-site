@@ -1,0 +1,10 @@
+{
+  "name": "unocha/cd_views_grid",
+  "type": "drupal-module",
+  "description": "A view style plugin for responsive grids.",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://github.com/UN-OCHA/cd_views_grid",
+  "minimum-stability": "dev",
+  "require": { }
+}

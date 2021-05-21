@@ -1,0 +1,5 @@
+cd-views-views-grid:
+  version: 1.x
+  css:
+    theme:
+      css/cd-views-grid.css: {}
