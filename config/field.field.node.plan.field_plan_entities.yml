@@ -1,16 +1,16 @@
-uuid: 300500c6-fce3-4acf-a9d6-d46ab59c8b91
+uuid: 1abe6b38-3b0e-4faf-a2b2-3a211ee67de4
 langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.node.field_parent_page
-    - node.type.panopoly_landing_page
-    - node.type.panopoly_page
-id: node.panopoly_page.field_parent_page
-field_name: field_parent_page
+    - field.storage.node.field_plan_entities
+    - node.type.plan
+    - node.type.plan_entity
+id: node.plan.field_plan_entities
+field_name: field_plan_entities
 entity_type: node
-bundle: panopoly_page
-label: 'Parent page'
+bundle: plan
+label: 'Plan entities'
 description: ''
 required: false
 translatable: false
@@ -20,10 +20,10 @@ settings:
   handler: 'default:node'
   handler_settings:
     target_bundles:
-      panopoly_landing_page: panopoly_landing_page
+      plan_entity: plan_entity
     sort:
       field: _none
       direction: ASC
-    auto_create: false
+    auto_create: true
     auto_create_bundle: ''
 field_type: entity_reference

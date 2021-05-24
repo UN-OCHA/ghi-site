@@ -15,6 +15,7 @@ dependencies:
     - field.field.node.plan.field_original_id
     - field.field.node.plan.field_plan_costing
     - field.field.node.plan.field_plan_date
+    - field.field.node.plan.field_plan_entities
     - field.field.node.plan.field_plan_footnote_inneed
     - field.field.node.plan.field_plan_footnote_requirements
     - field.field.node.plan.field_plan_footnote_target
@@ -57,6 +58,14 @@ content:
       link: ''
     third_party_settings: {  }
     type: entity_reference_revisions_entity_view
+    region: content
+  field_plan_entities:
+    weight: 1
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
     region: content
 hidden:
   body: true
