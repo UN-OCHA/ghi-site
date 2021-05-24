@@ -290,13 +290,16 @@ function ghi_plans_get_top_navigation(NodeInterface $plan) {
   $plan_entities = $plan->field_plan_entities->referencedEntities();
   $hide_count = $plan->field_plan_hide_gve_counts->value ?? FALSE;
 
+  $cache_tags = [];
   if ($plan_entities) {
     $suffix = '';
     if (!$hide_count) {
       $suffix = ' <span class="counter">' . count($plan_entities) . '</span>';
     }
 
+    /** @var \Drupal\node\NodeInterface $plan_entity */
     $plan_entity = reset($plan_entities);
+    $cache_tags = array_merge($cache_tags, $plan_entity->getCacheTags());
     $tabs[] = [
       'title' => new FormattableMarkup(t('Clusters') . $suffix, []),
       'url' => $plan_entity->toUrl(),
@@ -314,6 +317,9 @@ function ghi_plans_get_top_navigation(NodeInterface $plan) {
         'links--plan-overview',
       ],
     ],
+    '#cache' => [
+      'tags' => $cache_tags,
+    ],
   ];
 
   if ($render_all_children) {
@@ -321,7 +327,9 @@ function ghi_plans_get_top_navigation(NodeInterface $plan) {
     $q = \Drupal::service('hpc_api.endpoint_plan_query');
     $children = [];
 
+    /** @var \Drupal\node\NodeInterface $plan_entity */
     foreach ($plan_entities as $plan_entity) {
+      $cache_tags = array_merge($cache_tags, $plan_entity->getCacheTags());
       $title = $plan_entity->label();
       if ($plan_entity->field_plan_id && !$plan_entity->field_plan_id->isEmpty()) {
         $icon = $q->getPlanIcon($plan_entity->field_plan_id->value);
@@ -346,6 +354,9 @@ function ghi_plans_get_top_navigation(NodeInterface $plan) {
         'class' => [
           'links--plan-entities',
         ],
+      ],
+      '#cache' => [
+        'tags' => $cache_tags,
       ],
     ];
   }
