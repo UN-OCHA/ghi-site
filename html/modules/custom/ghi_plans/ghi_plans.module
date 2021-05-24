@@ -9,6 +9,7 @@
  * @see https://www.drupal.org/docs/upgrading-drupal/customize-migrations-when-upgrading-to-drupal-8-or-later#s-migrate-plus-provides-a-prepare-row-event
  */
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
@@ -223,4 +224,132 @@ function ghi_plans_migrate_prepare_row(Row $row, MigrateSourceInterface $source,
   }
   $row->setSourceProperty('subpage', $subpage);
 
+}
+
+/**
+ * Implements hook_preprocess_node__NODE_TYPE__VIEW_MODE();
+ */
+function ghi_plans_preprocess_node__plan__full(&$variables) {
+  $top_nav = ghi_plans_get_top_navigation($variables['elements']['#node']);
+  if (!empty($top_nav)) {
+    $variables['content'] += $top_nav;
+  }
+}
+
+/**
+ * Implements hook_preprocess_node__NODE_TYPE__VIEW_MODE();
+ */
+function ghi_plans_preprocess_node__plan_entity__full(&$variables) {
+  $top_nav = ghi_plans_get_top_navigation($variables['elements']['#node']);
+  if (!empty($top_nav)) {
+    $variables['content'] += $top_nav;
+  }
+}
+
+/**
+ * Get plan top navigation;
+ *
+ * @param \Drupal\node\Entity\Node $plan
+ *   Plan.
+ */
+function ghi_plans_get_top_navigation($plan) {
+  $output = [];
+  if ($plan->getType() !== 'plan' && $plan->getType() !== 'plan_entity') {
+    return;
+  }
+
+  // Get parent if needed.
+  $render_all_children = FALSE;
+  if ($plan->getType() === 'plan_entity') {
+    /** @var \Drupal\node\Entity\Node $plan */
+    $plan = $plan->field_plan->entity;
+    $render_all_children = TRUE;
+  }
+
+  // Always output parent link.
+  $overview_link = t('Overview');
+  if (!$plan->isPublished()) {
+    if ($plan->access('view')) {
+      $overview_link = $plan->toLink($overview_link);
+    }
+  }
+  else {
+    $overview_link = $plan->toLink($overview_link);
+  }
+
+  $tabs = [
+    [
+      'title' => t('Overview'),
+      'url' => $plan->toUrl(),
+      'attributes' => [
+        'class' => ['active'],
+      ],
+    ],
+  ];
+
+  // Get all plan entities.
+  $plan_entities = $plan->field_plan_entities->referencedEntities();
+  $hide_count = $plan->field_plan_hide_gve_counts->value ?? FALSE;
+
+  if ($plan_entities) {
+    $suffix = '';
+    if (!$hide_count) {
+      $suffix = ' <span class="counter">' . count($plan_entities) . '</span>';
+    }
+
+    $plan_entity = reset($plan_entities);
+    $tabs[] = [
+      'title' => new FormattableMarkup(t('Clusters') . $suffix, []),
+      'url' => $plan_entity->toUrl(),
+      'attributes' => [
+        'class' => [],
+      ],
+    ];
+  }
+
+  $output['links_plan_overview'] = [
+    '#theme' => 'links',
+    '#links' => $tabs,
+    '#attributes' => [
+      'class' => [
+        'links--plan-overview',
+      ],
+    ],
+  ];
+
+  if ($render_all_children) {
+    /** @var \Drupal\hpc_api\Query\EndpointPlanQuery $q */
+    $q = \Drupal::service('hpc_api.endpoint_plan_query');
+    $children = [];
+
+    foreach ($plan_entities as $plan_entity) {
+      $title = $plan_entity->label();
+      if ($plan_entity->field_plan_id && !$plan_entity->field_plan_id->isEmpty()) {
+        $icon = $q->getPlanIcon($plan_entity->field_plan_id->value);
+        if ($icon) {
+          $title = new FormattableMarkup($icon, []);
+        }
+      }
+
+      $children[] = [
+        'title' => $title,
+        'url' => $plan_entity->toUrl(),
+        'attributes' => [
+          'class' => [],
+        ],
+      ];
+    }
+
+    $output['links_plan_entities'] = [
+      '#theme' => 'links',
+      '#links' => $children,
+      '#attributes' => [
+        'class' => [
+          'links--plan-entities',
+        ],
+      ],
+    ];
+  }
+
+  return $output;
 }

@@ -212,18 +212,20 @@ class EndpointPlanQuery extends EndpointQuery {
    * Get plan icon.
    */
   public function getPlanIcon($plan_id) {
-    $plan = $this->getPlan($plan_id);
-
     if (!$plan_id) {
       return;
     }
 
+    $plan = $this->getPlan($plan_id);
     $icon = $plan->icon;
     if (empty($icon)) {
       return;
     }
 
-    $this->setEndpoint('v2/icon/' . $icon);
+    $this->setArguments([
+      'endpoint' => 'icon/' . $icon . '_icon',
+      'api_version' => 'v2',
+    ]);
     $svg_data = $this->getData();
     $svg_content = $svg_data ? $svg_data->svg : NULL;
 
