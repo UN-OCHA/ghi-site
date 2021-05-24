@@ -227,7 +227,7 @@ function ghi_plans_migrate_prepare_row(Row $row, MigrateSourceInterface $source,
 }
 
 /**
- * Implements hook_preprocess_node__NODE_TYPE__VIEW_MODE();
+ * Implements hook_preprocess_node__NODE_TYPE__VIEW_MODE().
  */
 function ghi_plans_preprocess_node__plan__full(&$variables) {
   $top_nav = ghi_plans_get_top_navigation($variables['elements']['#node']);
@@ -237,7 +237,7 @@ function ghi_plans_preprocess_node__plan__full(&$variables) {
 }
 
 /**
- * Implements hook_preprocess_node__NODE_TYPE__VIEW_MODE();
+ * Implements hook_preprocess_node__NODE_TYPE__VIEW_MODE().
  */
 function ghi_plans_preprocess_node__plan_entity__full(&$variables) {
   $top_nav = ghi_plans_get_top_navigation($variables['elements']['#node']);
@@ -247,12 +247,12 @@ function ghi_plans_preprocess_node__plan_entity__full(&$variables) {
 }
 
 /**
- * Get plan top navigation;
+ * Get plan top navigation.
  *
- * @param \Drupal\node\Entity\Node $plan
+ * @param \Drupal\node\NodeInterface $plan
  *   Plan.
  */
-function ghi_plans_get_top_navigation($plan) {
+function ghi_plans_get_top_navigation(NodeInterface $plan) {
   $output = [];
   if ($plan->getType() !== 'plan' && $plan->getType() !== 'plan_entity') {
     return;
@@ -261,7 +261,6 @@ function ghi_plans_get_top_navigation($plan) {
   // Get parent if needed.
   $render_all_children = FALSE;
   if ($plan->getType() === 'plan_entity') {
-    /** @var \Drupal\node\Entity\Node $plan */
     $plan = $plan->field_plan->entity;
     $render_all_children = TRUE;
   }
