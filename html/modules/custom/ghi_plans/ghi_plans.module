@@ -9,6 +9,7 @@
  * @see https://www.drupal.org/docs/upgrading-drupal/customize-migrations-when-upgrading-to-drupal-8-or-later#s-migrate-plus-provides-a-prepare-row-event
  */
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
@@ -294,4 +295,235 @@ function ghi_plans_migrate_prepare_row(Row $row, MigrateSourceInterface $source,
   }
   $row->setSourceProperty('subpage', $subpage);
 
+}
+
+/**
+ * Implements hook_preprocess_node__NODE_TYPE__VIEW_MODE().
+ */
+function ghi_plans_preprocess_node__plan__full(&$variables) {
+  $top_nav = ghi_plans_get_top_navigation($variables['elements']['#node']);
+  if (!empty($top_nav)) {
+    $variables['content'] += $top_nav;
+  }
+}
+
+/**
+ * Implements hook_preprocess_node__NODE_TYPE__VIEW_MODE().
+ */
+function ghi_plans_preprocess_node__plan_entity__full(&$variables) {
+  $top_nav = ghi_plans_get_top_navigation($variables['elements']['#node']);
+  if (!empty($top_nav)) {
+    $variables['content'] += $top_nav;
+  }
+}
+
+/**
+ * Implements hook_preprocess_node__NODE_TYPE__VIEW_MODE().
+ */
+function ghi_plans_preprocess_node__governing_entity__full(&$variables) {
+  $top_nav = ghi_plans_get_top_navigation($variables['elements']['#node']);
+  if (!empty($top_nav)) {
+    $variables['content'] += $top_nav;
+  }
+}
+
+/**
+ * Implements hook_preprocess_node__NODE_TYPE__VIEW_MODE().
+ */
+function ghi_plans_preprocess_node__plan_logframe__full(&$variables) {
+  $top_nav = ghi_plans_get_top_navigation($variables['elements']['#node']);
+  if (!empty($top_nav)) {
+    $variables['content'] += $top_nav;
+  }
+}
+
+/**
+ * Get plan top navigation.
+ *
+ * @param \Drupal\node\NodeInterface $plan
+ *   Plan.
+ */
+function ghi_plans_get_top_navigation(NodeInterface $plan) {
+  $output = [];
+  $page_type = '';
+
+  // Get parent if needed.
+  $render_all_children = FALSE;
+  if ($plan->getType() !== 'plan') {
+    $page_type = $plan->getType();
+    $plan = $plan->field_plan->entity;
+    $render_all_children = TRUE;
+  }
+
+  // Always output parent link.
+  $overview_link = t('Overview');
+  if (!$plan->isPublished()) {
+    if ($plan->access('view')) {
+      $overview_link = $plan->toLink($overview_link);
+    }
+  }
+  else {
+    $overview_link = $plan->toLink($overview_link);
+  }
+
+  $tabs = [
+    [
+      'title' => t('Overview'),
+      'url' => $plan->toUrl(),
+      'attributes' => [
+        'class' => ['active'],
+      ],
+    ],
+  ];
+
+  // Get the plan structure as extracted from RPM, so that we can find the root
+  // level plan entities.
+  $plan_structure = PlanStructureHelper::getRpmPlanStructure($plan);
+  $first_plan_entity = is_array($plan_structure['plan_entities']) ? reset(array_filter($plan_structure['plan_entities'], function ($item) {
+    return !empty($item->subpage);
+  })) : NULL;
+
+  // Get all plan entity nodes with plan as parent.
+  $plan_entities = $first_plan_entity ? \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+    'type' => 'plan_entity',
+    'field_plan' => $plan->id(),
+    'field_prototype_id' => $first_plan_entity->entity_prototype_id,
+  ]) : NULL;
+
+  // Get all governing entity nodes with plan as parent.
+  $governing_entities = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+    'type' => 'governing_entity',
+    'field_plan' => $plan->id(),
+  ]);
+
+  // Get all governing entity nodes with plan as parent.
+  $plan_logframes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+    'type' => 'plan_logframe',
+    'field_plan' => $plan->id(),
+  ]);
+
+  $hide_count_pe = $plan->field_plan_hide_ple_counts->value ?? FALSE;
+  $hide_count_ge = $plan->field_plan_hide_gve_counts->value ?? FALSE;
+
+  // Link to sectors.
+  $cache_tags = [];
+  if ($plan_entities) {
+    $suffix = '';
+    if (!$hide_count_pe) {
+      $suffix = ' <span class="counter">' . count($plan_entities) . '</span>';
+    }
+
+    /** @var \Drupal\node\NodeInterface $plan_entity */
+    $plan_entity = reset($plan_entities);
+    $cache_tags = array_merge($cache_tags, $plan_entity->getCacheTags());
+    $tabs[] = [
+      'title' => new FormattableMarkup(t('Sectors') . $suffix, []),
+      'url' => $plan_entity->toUrl(),
+      'attributes' => [
+        'class' => [],
+      ],
+    ];
+  }
+
+  // Link to clusters.
+  $cache_tags = [];
+  if ($governing_entities) {
+    $suffix = '';
+    if (!$hide_count_ge) {
+      $suffix = ' <span class="counter">' . count($governing_entities) . '</span>';
+    }
+
+    /** @var \Drupal\node\NodeInterface $plan_entity */
+    $plan_entity = reset($governing_entities);
+    $cache_tags = array_merge($cache_tags, $plan_entity->getCacheTags());
+    $tabs[] = [
+      'title' => new FormattableMarkup(t('Clusters') . $suffix, []),
+      'url' => $plan_entity->toUrl(),
+      'attributes' => [
+        'class' => [],
+      ],
+    ];
+  }
+
+  // Link to logframes.
+  $cache_tags = [];
+  if ($plan_logframes) {
+    $suffix = '';
+    if (!$hide_count_ge) {
+      $suffix = ' <span class="counter">' . count($plan_logframes) . '</span>';
+    }
+
+    /** @var \Drupal\node\NodeInterface $plan_entity */
+    $plan_entity = reset($plan_logframes);
+    $cache_tags = array_merge($cache_tags, $plan_entity->getCacheTags());
+    $tabs[] = [
+      'title' => new FormattableMarkup(t('Log frames') . $suffix, []),
+      'url' => $plan_entity->toUrl(),
+      'attributes' => [
+        'class' => [],
+      ],
+    ];
+  }
+
+  $output['links_plan_overview'] = [
+    '#theme' => 'links',
+    '#links' => $tabs,
+    '#attributes' => [
+      'class' => [
+        'links--plan-overview',
+      ],
+    ],
+    '#cache' => [
+      'tags' => $cache_tags,
+    ],
+  ];
+
+  if ($render_all_children) {
+    $children = [];
+
+    $entities = [];
+    switch ($page_type) {
+      case 'plan_entity':
+        $entities = $plan_entities;
+        break;
+
+      case 'plan_entity':
+        $entities = $governing_entities;
+        break;
+
+      case 'plan_logframe':
+        $entities = $governing_entities;
+        break;
+
+    }
+
+    /** @var \Drupal\node\NodeInterface $entity */
+    foreach ($entities as $entity) {
+      $cache_tags = array_merge($cache_tags, $entity->getCacheTags());
+      $title = $entity->label();
+
+      $children[] = [
+        'title' => $title,
+        'url' => $entity->toUrl(),
+        'attributes' => [
+          'class' => [],
+        ],
+      ];
+    }
+
+    $output['links_plan_entities'] = [
+      '#theme' => 'links',
+      '#links' => $children,
+      '#attributes' => [
+        'class' => [
+          'links--plan-entities',
+        ],
+      ],
+      '#cache' => [
+        'tags' => $cache_tags,
+      ],
+    ];
+  }
+
+  return $output;
 }
