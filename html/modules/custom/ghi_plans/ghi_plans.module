@@ -257,6 +257,16 @@ function ghi_plans_preprocess_node__governing_entity__full(&$variables) {
 }
 
 /**
+ * Implements hook_preprocess_node__NODE_TYPE__VIEW_MODE().
+ */
+function ghi_plans_preprocess_node__plan_logframe__full(&$variables) {
+  $top_nav = ghi_plans_get_top_navigation($variables['elements']['#node']);
+  if (!empty($top_nav)) {
+    $variables['content'] += $top_nav;
+  }
+}
+
+/**
  * Get plan top navigation.
  *
  * @param \Drupal\node\NodeInterface $plan
@@ -268,7 +278,7 @@ function ghi_plans_get_top_navigation(NodeInterface $plan) {
 
   // Get parent if needed.
   $render_all_children = FALSE;
-  if ($plan->getType() === 'plan_entity' || $plan->getType() === 'governing_entity') {
+  if ($plan->getType() !== 'plan') {
     $page_type = $plan->getType();
     $plan = $plan->field_plan->entity;
     $render_all_children = TRUE;
@@ -307,9 +317,16 @@ function ghi_plans_get_top_navigation(NodeInterface $plan) {
     'field_plan' => $plan->id(),
   ]);
 
+  // Get all governing entity nodes with plan as parent.
+  $plan_logframes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+    'type' => 'plan_logframe',
+    'field_plan' => $plan->id(),
+  ]);
+
   $hide_count_pe = $plan->field_plan_hide_ple_counts->value ?? FALSE;
   $hide_count_ge = $plan->field_plan_hide_gve_counts->value ?? FALSE;
 
+  // Link to sectors.
   $cache_tags = [];
   if ($plan_entities) {
     $suffix = '';
@@ -321,7 +338,7 @@ function ghi_plans_get_top_navigation(NodeInterface $plan) {
     $plan_entity = reset($plan_entities);
     $cache_tags = array_merge($cache_tags, $plan_entity->getCacheTags());
     $tabs[] = [
-      'title' => new FormattableMarkup(t('Clusters') . $suffix, []),
+      'title' => new FormattableMarkup(t('Sectors') . $suffix, []),
       'url' => $plan_entity->toUrl(),
       'attributes' => [
         'class' => [],
@@ -329,6 +346,7 @@ function ghi_plans_get_top_navigation(NodeInterface $plan) {
     ];
   }
 
+  // Link to clusters.
   $cache_tags = [];
   if ($governing_entities) {
     $suffix = '';
@@ -341,6 +359,26 @@ function ghi_plans_get_top_navigation(NodeInterface $plan) {
     $cache_tags = array_merge($cache_tags, $plan_entity->getCacheTags());
     $tabs[] = [
       'title' => new FormattableMarkup(t('Clusters') . $suffix, []),
+      'url' => $plan_entity->toUrl(),
+      'attributes' => [
+        'class' => [],
+      ],
+    ];
+  }
+
+  // Link to logframes.
+  $cache_tags = [];
+  if ($plan_logframes) {
+    $suffix = '';
+    if (!$hide_count_ge) {
+      $suffix = ' <span class="counter">' . count($plan_logframes) . '</span>';
+    }
+
+    /** @var \Drupal\node\NodeInterface $plan_entity */
+    $plan_entity = reset($plan_logframes);
+    $cache_tags = array_merge($cache_tags, $plan_entity->getCacheTags());
+    $tabs[] = [
+      'title' => new FormattableMarkup(t('Log frames') . $suffix, []),
       'url' => $plan_entity->toUrl(),
       'attributes' => [
         'class' => [],
@@ -371,6 +409,10 @@ function ghi_plans_get_top_navigation(NodeInterface $plan) {
         break;
 
       case 'plan_entity':
+        $entities = $governing_entities;
+        break;
+
+      case 'plan_logframe':
         $entities = $governing_entities;
         break;
 
