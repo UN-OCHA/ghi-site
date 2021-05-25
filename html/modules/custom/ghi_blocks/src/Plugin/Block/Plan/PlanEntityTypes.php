@@ -26,10 +26,6 @@ use Drupal\hpc_api\Query\EndpointQuery;
  *      }
  *    }
  *  },
- *  field_context_mapping = {
- *    "year" = "field_plan_year",
- *    "plan_id" = "field_original_id"
- *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Plan node"))
  *  }
@@ -46,7 +42,7 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
       'label_display' => TRUE,
       'hpc' => [
         'basic' => [
-          'entity_ids' => (array) $config->entity_ids,
+          'entity_ids' => property_exists($config, 'entity_ids') ? (array) $config->entity_ids : [],
           'entity_type' => $config->entity_type,
           'id_type' => $config->id_type,
           'sort' => $config->sort,
@@ -66,7 +62,7 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
     }
 
     $conf = $this->configuration['hpc']['basic'];
-    if (empty($conf['entity_ids'])) {
+    if (empty($conf['entity_type'])) {
       return;
     }
 
