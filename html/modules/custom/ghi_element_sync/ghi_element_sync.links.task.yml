@@ -2,3 +2,4 @@ entity.node.sync_elements:
   route_name: ghi_element_sync.node.sync
   base_route: entity.node.canonical
   title: Sync elements
+  weight: 200
