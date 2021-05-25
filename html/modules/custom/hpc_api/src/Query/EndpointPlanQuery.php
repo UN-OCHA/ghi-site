@@ -38,6 +38,7 @@ class EndpointPlanQuery extends EndpointQuery {
       'locations' => [],
     ];
 
+    // Add categories.
     foreach ($data->categories as $category) {
       $plan['categories'][] = (object) [
         'id' => $category->id,
@@ -46,6 +47,7 @@ class EndpointPlanQuery extends EndpointQuery {
       ];
     }
 
+    // Add locations.
     foreach ($data->locations as $location) {
       $plan['locations'][] = (object) [
         'id' => $location->id,
@@ -198,6 +200,34 @@ class EndpointPlanQuery extends EndpointQuery {
     }
 
     return $sources;
+  }
+
+  /**
+   * Get plan icon.
+   */
+  public function getPlanIcon($plan_id) {
+    if (!$plan_id) {
+      return;
+    }
+
+    $plan = $this->getPlan($plan_id);
+    $icon = $plan->icon;
+    if (empty($icon)) {
+      return;
+    }
+
+    $this->setArguments([
+      'endpoint' => 'icon/' . $icon . '_icon',
+      'api_version' => 'v2',
+    ]);
+    $svg_data = $this->getData();
+    $svg_content = $svg_data ? $svg_data->svg : NULL;
+
+    if (empty($svg_content)) {
+      return;
+    }
+
+    return '<div class="cluster-icon">' . $svg_content . '</div>';
   }
 
 }

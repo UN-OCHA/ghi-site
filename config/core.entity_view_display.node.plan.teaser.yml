@@ -16,6 +16,7 @@ dependencies:
     - field.field.node.plan.field_original_id
     - field.field.node.plan.field_plan_costing
     - field.field.node.plan.field_plan_date
+    - field.field.node.plan.field_plan_entities
     - field.field.node.plan.field_plan_footnote_inneed
     - field.field.node.plan.field_plan_footnote_requirements
     - field.field.node.plan.field_plan_footnote_target
@@ -70,6 +71,7 @@ hidden:
   field_original_id: true
   field_plan_costing: true
   field_plan_date: true
+  field_plan_entities: true
   field_plan_footnote_inneed: true
   field_plan_footnote_requirements: true
   field_plan_footnote_target: true
