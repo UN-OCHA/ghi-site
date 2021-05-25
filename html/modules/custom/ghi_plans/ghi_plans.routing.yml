@@ -10,19 +10,6 @@ ghi_plans.node.plan_settings:
     _admin_route: TRUE
   requirements:
     _permission: 'administer site configuration'
-ghi_plans.node.sync_elements:
-  path: '/node/{node}/hpc/sync-elements'
-  defaults:
-    _form: '\Drupal\ghi_plans\Form\ElementNodeSyncForm'
-    _title: 'Sync elements for a node'
-  options:
-    parameters:
-      node:
-        type: entity:node
-    _admin_route: TRUE
-  requirements:
-    _custom_access: '\Drupal\ghi_plans\Controller\SyncAccessController::accessElementSyncForm'
-    _permission: 'administer site configuration'
 ghi_plans.node.plan_structure:
   path: '/node/{node}/hpc/plan-structure'
   defaults:
@@ -45,10 +32,3 @@ ghi_plans.plan_autocomplete:
     _access: 'TRUE'
   options:
     no_cache: 'TRUE'
-ghi_plans.sync_elements:
-  path: '/admin/content/sync-elements'
-  defaults:
-    _form: '\Drupal\ghi_plans\Form\ElementSyncForm'
-    _title: 'Sync elements for all plan pages'
-  requirements:
-    _permission: 'administer site configuration'

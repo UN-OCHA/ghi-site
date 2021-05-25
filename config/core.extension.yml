@@ -23,6 +23,7 @@ module:
   file: 0
   filter: 0
   ghi_blocks: 0
+  ghi_element_sync: 0
   ghi_paragraph_handler: 0
   ghi_plans: 0
   help: 0
@@ -53,6 +54,9 @@ module:
   path_alias: 0
   publishcontent: 0
   settings_tray: 0
+  social_api: 0
+  social_auth: 0
+  social_auth_hid: 0
   system: 0
   taxonomy: 0
   text: 0

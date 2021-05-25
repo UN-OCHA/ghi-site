@@ -2,15 +2,22 @@
 
 namespace Drupal\ghi_plans\Plugin\ParagraphHandler;
 
+use Drupal\ghi_element_sync\SyncableParagraphInterface;
+
 /**
  * Class Card.
  *
  * @ParagraphHandler(
  *   id = "plan_web_content_text",
- *   label = @Translation("Plan web content text")
+ *   label = @Translation("Plan web content text"),
+ *   data_sources = {
+ *     "data" = {
+ *       "service" = "ghi_plans.plan_entities_query"
+ *     },
+ *   },
  * )
  */
-class PlanWebContentText extends PlanBaseClass {
+class PlanWebContentText extends PlanBaseClass implements SyncableParagraphInterface {
 
   /**
    * {@inheritdoc}
@@ -20,27 +27,35 @@ class PlanWebContentText extends PlanBaseClass {
   /**
    * {@inheritdoc}
    */
+  public static function mapConfig($config) {
+    return [
+      'attachment_ids' => $config->attachment_id,
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getSourceElementKey() {
+    return 'plan_webcontent_file';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function preprocess(array &$variables, array $element) {
     parent::preprocess($variables, $element);
 
-    if (!isset($this->parentEntity->field_original_id) || $this->parentEntity->field_original_id->isEmpty()) {
+    // Retrieve the attachments.
+    $attachments = $this->getQueryHandler()->getWebContentTextAttachments($this->parentEntity);
+    if (empty($attachments)) {
       return;
     }
-
-    $plan_id = $this->parentEntity->field_original_id->value;
 
     $config = $this->getConfig();
     $attachment_ids = $config['attachment_ids'] ?? [];
     if (!is_array($attachment_ids)) {
       $attachment_ids = [$attachment_ids];
-    }
-
-    /** @var \Drupal\hpc_api\Query\EndpointPlanQuery $q */
-    $q = \Drupal::service('hpc_api.endpoint_plan_query');
-    $attachments = $q->getPlanWebContentTextAttachments($plan_id);
-
-    if (empty($attachments)) {
-      return;
     }
 
     foreach ($attachments as $attachment) {
@@ -58,29 +73,19 @@ class PlanWebContentText extends PlanBaseClass {
   /**
    * {@inheritdoc}
    */
-  public function widget_alter(&$element, &$form_state, $context) {
-    parent::widget_alter($element, $form_state, $context);
+  public function widgetAlter(&$element, &$form_state, $context) {
+    parent::widgetAlter($element, $form_state, $context);
 
-    if (!isset($this->parentEntity->field_original_id) || $this->parentEntity->field_original_id->isEmpty()) {
-      return;
-    }
-
-    $plan_id = $this->parentEntity->field_original_id->value;
-
-    /** @var \Drupal\hpc_api\Query\EndpointPlanQuery $q */
-    $q = \Drupal::service('hpc_api.endpoint_plan_query');
-    $attachments = $q->getPlanWebContentTextAttachments($plan_id);
-
-    if (empty($attachments)) {
-      return;
-    }
-
-    foreach ($attachments as $attachment) {
-      $table_rows[$attachment->id] = [
-        'id' => $attachment->id,
-        'title' => $attachment->title,
-        'content' => $attachment->content,
-      ];
+    // Retrieve the attachments.
+    $attachments = $this->getQueryHandler()->getWebContentTextAttachments($this->parentEntity);
+    if (!empty($attachments)) {
+      foreach ($attachments as $attachment) {
+        $table_rows[$attachment->id] = [
+          'id' => $attachment->id,
+          'title' => $attachment->title,
+          'content' => $attachment->content,
+        ];
+      }
     }
 
     $table_header = [

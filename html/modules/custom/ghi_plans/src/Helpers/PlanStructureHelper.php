@@ -250,6 +250,9 @@ class PlanStructureHelper {
   public static function getRpmPlanStructure(NodeInterface $plan_node) {
     $plan_structures = &drupal_static(__FUNCTION__);
     if (empty($plan_structures[$plan_node->id()])) {
+      if (empty($plan_node->field_plan_structure_rpm->value)) {
+        return;
+      }
       $prototype = unserialize($plan_node->field_plan_structure_rpm->value);
       if (!$prototype) {
         return;

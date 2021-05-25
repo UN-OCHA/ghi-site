@@ -16,7 +16,7 @@ use Drupal\hpc_api\Helpers\QueryHelper;
  */
 function hpc_api_cache_flush() {
   // Delete import files.
-  $import_files = \Drupal::service('file_system')->scanDirectory(QueryHelper::IMPORT_DIR, '/.*\.json/');
+  $import_files = file_exists(QueryHelper::IMPORT_DIR) ? \Drupal::service('file_system')->scanDirectory(QueryHelper::IMPORT_DIR, '/.*\.json/') : [];
   if (empty($import_files)) {
     // Nothing to be done.
     return;

@@ -3,8 +3,12 @@ global-styling:
     theme:
       css/styles.css: {}
 
-# Custom components
-# cd-article-teaser:
-#   css:
-#     theme:
-#       components/cd-article-teaser/cd-article-teaser.css: {}
+# CSS custom properties polyfill for IE11.
+# https://jhildenbiddle.github.io/css-vars-ponyfill
+#
+# This is copied from common_design@4.0.5 and has additional attributes to
+# ensure that none of the libraries load in modern browsers.
+css-vars-ponyfill:
+  js:
+    https://cdn.jsdelivr.net/npm/css-vars-ponyfill@2: { type: external, minified: true, attributes: { nomodule: true } }
+    js/cd-css-vars-ponyfill.js: { attributes: { nomodule: true } }

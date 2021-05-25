@@ -6,7 +6,7 @@
     fill: $implementation-highlight;
   }
 
-  &[aria-expanded='true']  {
+  &[aria-expanded="true"] {
     &::before {
       background: $implementation-highlight;
     }
@@ -56,7 +56,6 @@
           background: $implementation-highlight;
         }
       }
-
     }
   }
 
@@ -72,7 +71,6 @@
         button {
           &.is-active,
           &:focus {
-            // sass-lint:disable nesting-depth
             &::before {
               background: $implementation-highlight;
             }

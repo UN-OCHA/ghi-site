@@ -1,4 +1,4 @@
 services:
-  ghi_plans.sync_elements:
-    class: Drupal\ghi_plans\SyncElements\SyncElementsManager
-    arguments: ['@config.factory', '@plugin.manager.block', '@http_client', '@uuid', '@datetime.time', '@current_user']
+  ghi_plans.plan_entities_query:
+    parent: hpc_api.endpoint_query
+    class: Drupal\ghi_plans\Query\PlanEntitiesQuery

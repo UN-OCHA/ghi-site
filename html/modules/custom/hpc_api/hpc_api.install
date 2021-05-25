@@ -11,25 +11,27 @@ use Drupal\hpc_api\Helpers\QueryHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 
 /**
+ * Implements hook_install().
+ */
+function hpc_api_install($is_syncing) {
+  // Create import directory.
+  \Drupal::service('file_system')->mkdir(QueryHelper::IMPORT_DIR);
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function hpc_api_uninstall($is_syncing) {
+  // Delete import directory.
+  \Drupal::service('file_system')->rmdir(QueryHelper::IMPORT_DIR);
+}
+
+/**
  * Implements hook_requirements().
  */
 function hpc_api_requirements($phase) {
   $requirements = [];
-  if ($phase == 'install' || $phase == 'runtime') {
-
-    // API server availability.
-    $query_handler = QueryHelper::getEndpointQueryHandler('fts/flow/custom-search', [
-      'locationid' => 1,
-      'year' => date('Y'),
-      'limit' => 1,
-    ]);
-    $api_test_url = $query_handler->getFullEndpointUrl();
-    $requirements['hpc_api_server'] = [
-      'title' => t('HPC API: Server'),
-      'severity' => REQUIREMENT_OK,
-      'value' => $api_test_url,
-      'description' => t('API endpoints can be queried and return status code 200'),
-    ];
+  if ($phase == 'runtime') {
 
     // API server availability.
     $query_handler = QueryHelper::getEndpointQueryHandler('fts/flow/custom-search', [
@@ -47,9 +49,9 @@ function hpc_api_requirements($phase) {
     $response = $query_handler->sendQuery();
     if ($response !== NULL) {
       $requirements['hpc_api_server']['severity'] = $response->getStatusCode() == 200 ? REQUIREMENT_OK : REQUIREMENT_ERROR;
-      $requirements['hpc_api_server']['description'] = t('Server responds with HTTP status code <em>@status_code @status_message</em>. Please check the connection and contact the HPC service maintainer.', [
-        '@status_code' => $response->getStatusCode(),
-        '@status_message' => $response->getReasonPhrase(),
+      $requirements['hpc_api_server']['description'] = t('Server responds with HTTP status code %status_code %status_message.', [
+        '%status_code' => $response->getStatusCode(),
+        '%status_message' => $response->getReasonPhrase(),
       ]);
     }
     else {
@@ -72,7 +74,7 @@ function hpc_api_requirements($phase) {
     $requirements['hpc_api_import']['title'] = t('HPC API: Import directory');
     $requirements['hpc_api_import']['value'] = t('The directory for local storage of HPC data for imports exists and is writable.');
     $requirements['hpc_api_import']['severity'] = REQUIREMENT_OK;
-    $destination = 'public://imports';
+    $destination = QueryHelper::IMPORT_DIR;
 
     \Drupal::service('file_system')->prepareDirectory($destination, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
     $is_writable = is_writable($destination);
