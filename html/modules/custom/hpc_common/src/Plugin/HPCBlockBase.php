@@ -617,28 +617,6 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    * Get the endpoints used for the block.
    *
    * @return array
-   *   A list of endpoints for a block.
-   */
-  public function getEndpoints() {
-    $endpoints = [];
-    $source_keys = $this->getSourceKeys();
-    if (!empty($source_keys)) {
-      foreach ($source_keys as $source_key) {
-        $query_handler = $this->getQueryHandler($source_key);
-        $query_handler->setPlaceholders($this->getPageArguments());
-        if (method_exists($this, 'alterEndpointQuery')) {
-          $this->alterEndpointQuery($source_key, $query_handler);
-        }
-        $endpoints[] = $query_handler->getEndpointUrl();
-      }
-    }
-    return $endpoints;
-  }
-
-  /**
-   * Get the endpoints used for the block.
-   *
-   * @return array
    *   A list of full endpoint urls for a block.
    */
   public function getFullEndpointUrls() {

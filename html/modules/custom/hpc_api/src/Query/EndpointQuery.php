@@ -179,8 +179,7 @@ class EndpointQuery {
   /**
    * Replace placeholders with values in an endpoint.
    */
-  public function substitutePlaceholders() {
-    $endpoint_url = $this->getEndpoint();
+  public function substitutePlaceholders($string) {
     $placeholders = $this->getPlaceholders();
     if (!empty($placeholders)) {
       // Replace placeholders with actual values.
@@ -188,10 +187,10 @@ class EndpointQuery {
         if (!is_string($value) && !is_int($value)) {
           continue;
         }
-        $endpoint_url = str_replace('{' . $placeholder . '}', $value, $endpoint_url);
+        $string = str_replace('{' . $placeholder . '}', $value, $string);
       }
     }
-    return $endpoint_url;
+    return $string;
   }
 
   /**
@@ -413,7 +412,7 @@ class EndpointQuery {
     $args = $this->getEndpointArguments();
     unset($args['fts_public_backend']);
     $auth_method = $this->getAuthMethod() == self::AUTH_METHOD_NONE ? 'public' : $this->getAuthMethod();
-    $cache_key = 'hpc_api_request_' . $auth_method . '_' . urlencode($this->getEndpointUrl());
+    $cache_key = 'hpc_api_request_' . $auth_method . '_' . urlencode($this->getFullEndpointUrl());
     if (!empty($args)) {
       ksort($args);
       $cache_key .= '__' . urlencode(print_r($args, TRUE));
@@ -469,14 +468,19 @@ class EndpointQuery {
    * Retrieve the endpoint URL used for the query.
    */
   public function getEndpointUrl() {
-    return $this->getApiVersion() . '/' . $this->substitutePlaceholders();
+    return $this->getApiVersion() . '/' . $this->substitutePlaceholders($this->getEndpoint());
   }
 
   /**
    * Get the full qualified URL for the query.
    */
   public function getFullEndpointUrl() {
-    return Url::fromUri($this->getBaseUrl() . '/' . $this->getEndpointUrl(), ['query' => $this->getEndpointArguments()])->toUriString();
+    $endpoint_url = $this->getBaseUrl() . '/' . $this->substitutePlaceholders($this->getEndpointUrl());
+    $query = array_map(function ($item) {
+      return $this->substitutePlaceholders($item);
+    }, $this->getEndpointArguments());
+    $url = Url::fromUri($endpoint_url, ['query' => $query])->toUriString();
+    return $url;
   }
 
   /**

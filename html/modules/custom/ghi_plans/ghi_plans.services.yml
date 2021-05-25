@@ -2,3 +2,12 @@ services:
   ghi_plans.plan_entities_query:
     parent: hpc_api.endpoint_query
     class: Drupal\ghi_plans\Query\PlanEntitiesQuery
+  ghi_plans.plan_project_search_query:
+    parent: hpc_api.endpoint_query
+    class: Drupal\ghi_plans\Query\PlanProjectSearchQuery
+  ghi_plans.plan_funding_summary_query:
+    parent: hpc_api.endpoint_query
+    class: Drupal\ghi_plans\Query\PlanFundingSummaryQuery
+  ghi_plans.plan_cluster_summary_query:
+    parent: hpc_api.endpoint_query
+    class: Drupal\ghi_plans\Query\PlanClusterSummaryQuery
