@@ -6,7 +6,7 @@ post_login: /
 redirect_user_form: false
 disable_admin_login: true
 disabled_roles:
-  administrator: administrator
+  administrator: '0'
   rpm_administrator: '0'
   plan_lead: '0'
   cluster_lead: '0'
