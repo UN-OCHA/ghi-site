@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1647ff192f5467e17fd3396f588516f8",
+    "content-hash": "ca1f20e85fedb9ca194f29d73a04a5ad",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -1568,70 +1568,6 @@
             "homepage": "https://www.drupal.org/project/bigint",
             "support": {
                 "source": "https://git.drupalcode.org/project/bigint"
-            }
-        },
-        {
-            "name": "drupal/cer",
-            "version": "4.0.0-alpha3",
-            "source": {
-                "type": "git",
-                "url": "https://git.drupalcode.org/project/cer.git",
-                "reference": "8.x-4.0-alpha3"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/cer-8.x-4.0-alpha3.zip",
-                "reference": "8.x-4.0-alpha3",
-                "shasum": "3c508e842a2c17235e4c9909ab64ef1aeb9d3ebe"
-            },
-            "require": {
-                "drupal/core": "^8 || ^9"
-            },
-            "type": "drupal-module",
-            "extra": {
-                "drupal": {
-                    "version": "8.x-4.0-alpha3",
-                    "datestamp": "1620240213",
-                    "security-coverage": {
-                        "status": "not-covered",
-                        "message": "Project has not opted into security advisory coverage!"
-                    }
-                }
-            },
-            "notification-url": "https://packages.drupal.org/8/downloads",
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "bmcclure",
-                    "homepage": "https://www.drupal.org/user/278485"
-                },
-                {
-                    "name": "chertzog",
-                    "homepage": "https://www.drupal.org/user/806366"
-                },
-                {
-                    "name": "gcb",
-                    "homepage": "https://www.drupal.org/user/1682976"
-                },
-                {
-                    "name": "gregcube",
-                    "homepage": "https://www.drupal.org/user/336930"
-                },
-                {
-                    "name": "jrglasgow",
-                    "homepage": "https://www.drupal.org/user/36590"
-                },
-                {
-                    "name": "phenaproxima",
-                    "homepage": "https://www.drupal.org/user/205645"
-                }
-            ],
-            "description": "Allows user to create two-way references between entities.",
-            "homepage": "https://www.drupal.org/project/cer",
-            "support": {
-                "source": "https://git.drupalcode.org/project/cer"
             }
         },
         {
@@ -12709,7 +12645,6 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "drupal/cer": 15,
         "drupal/gin": 15,
         "drupal/imageapi_optimize_binaries": 15,
         "drupal/paragraphs_frontend_ui": 15,
