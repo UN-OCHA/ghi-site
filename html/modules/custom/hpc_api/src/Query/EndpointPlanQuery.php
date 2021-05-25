@@ -34,15 +34,9 @@ class EndpointPlanQuery extends EndpointQuery {
       'end_date' => $data->planVersion->endDate ?? '',
       'orig_requirements' => $data->origRequirements ?? 0,
       'revised_requirements' => $data->revisedRequirements ?? 0,
-      'icon' => '',
       'categories' => [],
       'locations' => [],
     ];
-
-    // Add icon.
-    if (isset($data->governingEntities) && isset($data->governingEntities[0])) {
-      $plan['icon'] = $data->governingEntities[0]->governingEntityVersion->value->icon ?? '';
-    }
 
     // Add categories.
     foreach ($data->categories as $category) {

@@ -247,6 +247,16 @@ function ghi_plans_preprocess_node__plan_entity__full(&$variables) {
 }
 
 /**
+ * Implements hook_preprocess_node__NODE_TYPE__VIEW_MODE().
+ */
+function ghi_plans_preprocess_node__governing_entity__full(&$variables) {
+  $top_nav = ghi_plans_get_top_navigation($variables['elements']['#node']);
+  if (!empty($top_nav)) {
+    $variables['content'] += $top_nav;
+  }
+}
+
+/**
  * Get plan top navigation.
  *
  * @param \Drupal\node\NodeInterface $plan
@@ -254,13 +264,12 @@ function ghi_plans_preprocess_node__plan_entity__full(&$variables) {
  */
 function ghi_plans_get_top_navigation(NodeInterface $plan) {
   $output = [];
-  if ($plan->getType() !== 'plan' && $plan->getType() !== 'plan_entity') {
-    return;
-  }
+  $page_type = '';
 
   // Get parent if needed.
   $render_all_children = FALSE;
-  if ($plan->getType() === 'plan_entity') {
+  if ($plan->getType() === 'plan_entity' || $plan->getType() === 'governing_entity') {
+    $page_type = $plan->getType();
     $plan = $plan->field_plan->entity;
     $render_all_children = TRUE;
   }
@@ -286,19 +295,49 @@ function ghi_plans_get_top_navigation(NodeInterface $plan) {
     ],
   ];
 
-  // Get all plan entities.
-  $plan_entities = $plan->field_plan_entities->referencedEntities();
-  $hide_count = $plan->field_plan_hide_gve_counts->value ?? FALSE;
+  // Get all plan entity nodes with plan as parent.
+  $plan_entities = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+    'type' => 'plan_entity',
+    'field_plan' => $plan->id(),
+  ]);
+
+  // Get all governing entity nodes with plan as parent.
+  $governing_entities = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+    'type' => 'governing_entity',
+    'field_plan' => $plan->id(),
+  ]);
+
+  $hide_count_pe = $plan->field_plan_hide_ple_counts->value ?? FALSE;
+  $hide_count_ge = $plan->field_plan_hide_gve_counts->value ?? FALSE;
 
   $cache_tags = [];
   if ($plan_entities) {
     $suffix = '';
-    if (!$hide_count) {
+    if (!$hide_count_pe) {
       $suffix = ' <span class="counter">' . count($plan_entities) . '</span>';
     }
 
     /** @var \Drupal\node\NodeInterface $plan_entity */
     $plan_entity = reset($plan_entities);
+    $cache_tags = array_merge($cache_tags, $plan_entity->getCacheTags());
+    $tabs[] = [
+      'title' => new FormattableMarkup(t('Clusters') . $suffix, []),
+      'url' => $plan_entity->toUrl(),
+      'attributes' => [
+        'class' => [],
+      ],
+    ];
+  }
+
+  $cache_tags = [];
+  if ($governing_entities) {
+    $suffix = '';
+    if (!$hide_count_ge) {
+      $suffix = ' <span class="counter">' . count($governing_entities) . '</span>';
+    }
+
+    /** @var \Drupal\node\NodeInterface $plan_entity */
+    $plan_entity = reset($governing_entities);
     $cache_tags = array_merge($cache_tags, $plan_entity->getCacheTags());
     $tabs[] = [
       'title' => new FormattableMarkup(t('Clusters') . $suffix, []),
@@ -323,24 +362,28 @@ function ghi_plans_get_top_navigation(NodeInterface $plan) {
   ];
 
   if ($render_all_children) {
-    /** @var \Drupal\hpc_api\Query\EndpointPlanQuery $q */
-    $q = \Drupal::service('hpc_api.endpoint_plan_query');
     $children = [];
 
-    /** @var \Drupal\node\NodeInterface $plan_entity */
-    foreach ($plan_entities as $plan_entity) {
-      $cache_tags = array_merge($cache_tags, $plan_entity->getCacheTags());
-      $title = $plan_entity->label();
-      if ($plan_entity->field_plan_id && !$plan_entity->field_plan_id->isEmpty()) {
-        $icon = $q->getPlanIcon($plan_entity->field_plan_id->value);
-        if ($icon) {
-          $title = new FormattableMarkup($icon, []);
-        }
-      }
+    $entities = [];
+    switch ($page_type) {
+      case 'plan_entity':
+        $entities = $plan_entities;
+        break;
+
+      case 'plan_entity':
+        $entities = $governing_entities;
+        break;
+
+    }
+
+    /** @var \Drupal\node\NodeInterface $entity */
+    foreach ($entities as $entity) {
+      $cache_tags = array_merge($cache_tags, $entity->getCacheTags());
+      $title = $entity->label();
 
       $children[] = [
         'title' => $title,
-        'url' => $plan_entity->toUrl(),
+        'url' => $entity->toUrl(),
         'attributes' => [
           'class' => [],
         ],
