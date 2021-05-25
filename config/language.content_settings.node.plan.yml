@@ -1,0 +1,11 @@
+uuid: 061b2ee4-403f-4f28-bfa0-73671fc03828
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.plan
+id: node.plan
+target_entity_type_id: node
+target_bundle: plan
+default_langcode: site_default
+language_alterable: false

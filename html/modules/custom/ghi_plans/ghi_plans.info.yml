@@ -11,3 +11,4 @@ dependencies:
   - ghi_element_sync:ghi_element_sync
   - migrate_plus:migrate_plus
   - migrate_tools:migrate_tools
+  - publishcontent:publishcontent
