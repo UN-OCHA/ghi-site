@@ -1,16 +1,16 @@
-uuid: 9b0da493-9b37-4649-914f-258f6835a496
+uuid: f15f823a-5bde-4cda-b35e-7835bf226bd3
 langcode: en
 status: true
 dependencies:
   module:
+    - link
     - node
-id: node.field_plan_entities
-field_name: field_plan_entities
+id: node.field_external_links
+field_name: field_external_links
 entity_type: node
-type: entity_reference
-settings:
-  target_type: node
-module: core
+type: link
+settings: {  }
+module: link
 locked: false
 cardinality: -1
 translatable: true

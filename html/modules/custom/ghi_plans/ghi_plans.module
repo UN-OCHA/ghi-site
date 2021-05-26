@@ -379,9 +379,14 @@ function ghi_plans_get_top_navigation(NodeInterface $plan) {
   // Get the plan structure as extracted from RPM, so that we can find the root
   // level plan entities.
   $plan_structure = PlanStructureHelper::getRpmPlanStructure($plan);
-  $first_plan_entity = is_array($plan_structure['plan_entities']) ? reset(array_filter($plan_structure['plan_entities'], function ($item) {
-    return !empty($item->subpage);
-  })) : NULL;
+  $plan_structure_entities = [];
+  $first_plan_entity = NULL;
+  if (is_array($plan_structure['plan_entities'])) {
+    $plan_structure_entities = array_filter($plan_structure['plan_entities'], function ($item) {
+      return !empty($item->subpage);
+    });
+    $first_plan_entity = reset($plan_structure_entities);
+  }
 
   // Get all plan entity nodes with plan as parent.
   $plan_entities = $first_plan_entity ? \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
@@ -487,12 +492,12 @@ function ghi_plans_get_top_navigation(NodeInterface $plan) {
         $entities = $plan_entities;
         break;
 
-      case 'plan_entity':
+      case 'governing_entity':
         $entities = $governing_entities;
         break;
 
       case 'plan_logframe':
-        $entities = $governing_entities;
+        $entities = $plan_logframes;
         break;
 
     }

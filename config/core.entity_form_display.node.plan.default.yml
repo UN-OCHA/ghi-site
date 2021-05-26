@@ -10,12 +10,12 @@ dependencies:
     - field.field.node.plan.field_decimal_format
     - field.field.node.plan.field_description
     - field.field.node.plan.field_enabled_subpages
+    - field.field.node.plan.field_external_links
     - field.field.node.plan.field_linked_plans
     - field.field.node.plan.field_max_admin_level
     - field.field.node.plan.field_original_id
     - field.field.node.plan.field_plan_costing
     - field.field.node.plan.field_plan_date
-    - field.field.node.plan.field_plan_entities
     - field.field.node.plan.field_plan_footnote_inneed
     - field.field.node.plan.field_plan_footnote_requirements
     - field.field.node.plan.field_plan_footnote_target
@@ -25,6 +25,7 @@ dependencies:
     - field.field.node.plan.field_plan_is_global
     - field.field.node.plan.field_plan_level_attachment_id
     - field.field.node.plan.field_plan_managers
+    - field.field.node.plan.field_plan_pages
     - field.field.node.plan.field_plan_prevent_fts_link
     - field.field.node.plan.field_plan_reporting_periods
     - field.field.node.plan.field_plan_short_name
@@ -41,6 +42,7 @@ dependencies:
     - datetime_range
     - field_group
     - ghi_plans
+    - link
     - paragraphs
     - path
 third_party_settings:
@@ -256,6 +258,14 @@ content:
       placeholder: ''
     third_party_settings: {  }
     region: content
+  field_external_links:
+    weight: 28
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
+    third_party_settings: {  }
+    type: link_default
+    region: content
   field_linked_plans:
     type: ghi_plans_linked_plans
     weight: 19
@@ -286,16 +296,6 @@ content:
     settings: {  }
     third_party_settings: {  }
     type: daterange_default
-    region: content
-  field_plan_entities:
-    weight: 26
-    settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
-    type: entity_reference_autocomplete
     region: content
   field_plan_footnote_inneed:
     weight: 15
@@ -365,6 +365,16 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+    region: content
+  field_plan_pages:
+    weight: 27
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
     region: content
   field_plan_prevent_fts_link:
     weight: 12
