@@ -62,6 +62,7 @@ function ghi_paragraph_handler_field_widget_paragraphs_form_alter(&$element, &$f
     return;
   }
 
+  $paragraph = NULL;
   if (!empty($context['items'])) {
     if (isset($context['delta']) && isset($context['items']->get($context['delta'])->target_id)) {
       $paragraph = Paragraph::load($context['items']->get($context['delta'])->target_id);
