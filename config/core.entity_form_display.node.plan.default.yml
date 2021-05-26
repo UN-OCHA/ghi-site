@@ -15,7 +15,6 @@ dependencies:
     - field.field.node.plan.field_original_id
     - field.field.node.plan.field_plan_costing
     - field.field.node.plan.field_plan_date
-    - field.field.node.plan.field_plan_entities
     - field.field.node.plan.field_plan_footnote_inneed
     - field.field.node.plan.field_plan_footnote_requirements
     - field.field.node.plan.field_plan_footnote_target
@@ -25,6 +24,7 @@ dependencies:
     - field.field.node.plan.field_plan_is_global
     - field.field.node.plan.field_plan_level_attachment_id
     - field.field.node.plan.field_plan_managers
+    - field.field.node.plan.field_plan_pages
     - field.field.node.plan.field_plan_prevent_fts_link
     - field.field.node.plan.field_plan_reporting_periods
     - field.field.node.plan.field_plan_short_name
@@ -287,16 +287,6 @@ content:
     third_party_settings: {  }
     type: daterange_default
     region: content
-  field_plan_entities:
-    weight: 26
-    settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
-    type: entity_reference_autocomplete
-    region: content
   field_plan_footnote_inneed:
     weight: 15
     type: string_textfield
@@ -365,6 +355,16 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+    region: content
+  field_plan_pages:
+    weight: 27
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
     region: content
   field_plan_prevent_fts_link:
     weight: 12

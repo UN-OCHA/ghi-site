@@ -1,29 +1,29 @@
-uuid: 1abe6b38-3b0e-4faf-a2b2-3a211ee67de4
+uuid: 1b9cb8ea-528a-4545-a262-3f79fc996d57
 langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.node.field_plan_entities
+    - field.storage.node.field_plan
     - node.type.plan
-    - node.type.plan_entity
-id: node.plan.field_plan_entities
-field_name: field_plan_entities
+    - node.type.plan_page
+id: node.plan_page.field_plan
+field_name: field_plan
 entity_type: node
-bundle: plan
-label: 'Plan entities'
+bundle: plan_page
+label: Plan
 description: ''
-required: false
-translatable: false
+required: true
+translatable: true
 default_value: {  }
 default_value_callback: ''
 settings:
   handler: 'default:node'
   handler_settings:
     target_bundles:
-      plan_entity: plan_entity
+      plan: plan
     sort:
       field: _none
       direction: ASC
-    auto_create: true
+    auto_create: false
     auto_create_bundle: ''
 field_type: entity_reference
