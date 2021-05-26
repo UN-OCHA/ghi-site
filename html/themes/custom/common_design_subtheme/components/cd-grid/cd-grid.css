@@ -80,7 +80,7 @@
     flex: 0 0 24%;
   }
 }
-
+/*
 @supports (display: grid) {
   .cd-grid--2-col > *,
   .cd-grid--3-col > *,
@@ -147,6 +147,7 @@
     }
   }
 }
+*/
 
 /* IE 11 fix for clearing floated items */
 @media screen and (-ms-high-contrast: none) {
