@@ -3,10 +3,10 @@ global-styling:
     theme:
       css/styles.css: {}
 
-cd-grid:
+ghi-grid:
   css:
     theme:
-      components/cd-grid/cd-grid.css: {}
+      components/ghi-grid/ghi-grid.css: {}
 
 # CSS custom properties polyfill for IE11.
 # https://jhildenbiddle.github.io/css-vars-ponyfill

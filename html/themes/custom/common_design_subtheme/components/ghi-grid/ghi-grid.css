@@ -1,0 +1,34 @@
+/**
+ * GHI Grid
+ *
+ * This component provides a Flexbox-based layout mechanism to present lists of
+ * content in a grid-like manner. This component CANNOT arbitrarily place items
+ * within a coordinate system.
+ */
+.ghi-grid {
+  --ghi-grid-gap: 1rem;
+
+  display: flex;
+  flex-flow: row wrap;
+  gap: var(--ghi-grid-gap);
+}
+
+.ghi-grid > * {
+  flex: 0 0 calc(100% / var(--cols) - (var(--ghi-grid-gap) * var(--cols) - var(--ghi-grid-gap)));
+}
+
+.ghi-grid.cols-2 {
+  --cols: 2;
+}
+
+.ghi-grid.cols-3 {
+  --cols: 3;
+}
+
+.ghi-grid.cols-4 {
+  --cols: 4;
+}
+
+.ghi-grid.cols-5 {
+  --cols: 5;
+}
