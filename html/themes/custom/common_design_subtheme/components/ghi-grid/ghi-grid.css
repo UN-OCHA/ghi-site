@@ -32,3 +32,8 @@
 .ghi-grid.cols-5 {
   --cols: 5;
 }
+
+.ghi-grid.debug > * {
+  box-shadow: 0 0 0 3px #62c;
+  border-radius: 1px;
+}
