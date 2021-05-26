@@ -7,6 +7,7 @@
  */
 .ghi-grid {
   --ghi-grid-gap: 1rem;
+  --ghi-grid-item-size: 1;
 
   display: flex;
   flex-flow: row wrap;
@@ -14,7 +15,7 @@
 }
 
 .ghi-grid > * {
-  flex: 0 0 calc(100% / var(--cols) - (var(--ghi-grid-gap) * var(--cols) - var(--ghi-grid-gap)));
+  flex: 0 0 calc(100% * var(--ghi-grid-item-size) / var(--cols) - var(--ghi-grid-gap));
 }
 
 .ghi-grid.cols-2 {
@@ -31,6 +32,10 @@
 
 .ghi-grid.cols-5 {
   --cols: 5;
+}
+
+.ghi-grid.has-sticky > *:first-child {
+  --ghi-grid-item-size: 2;
 }
 
 .ghi-grid.debug > * {
