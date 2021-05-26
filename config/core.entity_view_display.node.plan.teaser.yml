@@ -11,6 +11,7 @@ dependencies:
     - field.field.node.plan.field_decimal_format
     - field.field.node.plan.field_description
     - field.field.node.plan.field_enabled_subpages
+    - field.field.node.plan.field_external_links
     - field.field.node.plan.field_linked_plans
     - field.field.node.plan.field_max_admin_level
     - field.field.node.plan.field_original_id
@@ -66,6 +67,7 @@ hidden:
   field_decimal_format: true
   field_description: true
   field_enabled_subpages: true
+  field_external_links: true
   field_linked_plans: true
   field_max_admin_level: true
   field_original_id: true

@@ -10,6 +10,7 @@ dependencies:
     - field.field.node.plan.field_decimal_format
     - field.field.node.plan.field_description
     - field.field.node.plan.field_enabled_subpages
+    - field.field.node.plan.field_external_links
     - field.field.node.plan.field_linked_plans
     - field.field.node.plan.field_max_admin_level
     - field.field.node.plan.field_original_id
@@ -41,6 +42,7 @@ dependencies:
     - datetime_range
     - field_group
     - ghi_plans
+    - link
     - paragraphs
     - path
 third_party_settings:
@@ -255,6 +257,14 @@ content:
       rows: 5
       placeholder: ''
     third_party_settings: {  }
+    region: content
+  field_external_links:
+    weight: 28
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
+    third_party_settings: {  }
+    type: link_default
     region: content
   field_linked_plans:
     type: ghi_plans_linked_plans

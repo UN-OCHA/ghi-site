@@ -10,6 +10,7 @@ dependencies:
     - field.field.node.plan.field_decimal_format
     - field.field.node.plan.field_description
     - field.field.node.plan.field_enabled_subpages
+    - field.field.node.plan.field_external_links
     - field.field.node.plan.field_linked_plans
     - field.field.node.plan.field_max_admin_level
     - field.field.node.plan.field_original_id
@@ -40,6 +41,7 @@ dependencies:
   module:
     - entity_reference_revisions
     - layout_builder
+    - link
     - user
 third_party_settings:
   layout_builder:
@@ -58,6 +60,18 @@ content:
       link: ''
     third_party_settings: {  }
     type: entity_reference_revisions_entity_view
+    region: content
+  field_external_links:
+    weight: 3
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    type: link
     region: content
   field_plan_pages:
     weight: 2
