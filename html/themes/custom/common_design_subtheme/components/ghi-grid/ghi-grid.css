@@ -2,8 +2,9 @@
  * GHI Grid
  *
  * This component provides a Flexbox-based layout mechanism to present lists of
- * content in a grid-like manner. This component CANNOT arbitrarily place items
- * within a coordinate system.
+ * content in a grid-like manner. Wherever possible, it uses the default classes
+ * output by the Views Grid style, so by choosing that Style and altering some
+ * of its settings, you can make many changes just by updating Drupal config.
  */
 .ghi-grid {
   --ghi-grid-gap: 1rem;
