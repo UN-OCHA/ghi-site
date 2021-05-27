@@ -1,0 +1,30 @@
+uuid: 382f9e7f-e6d4-4ef0-8e57-ff3e1ec1afa7
+langcode: en
+status: true
+dependencies:
+  config:
+    - image.style.16x9_double_wide_240
+    - image.style.16x9_double_wide_480
+    - image.style.16x9_double_wide_720
+  theme:
+    - common_design
+id: card_hero_wide
+label: 'Card Hero wide'
+image_style_mappings:
+  -
+    breakpoint_id: common_design.xl
+    multiplier: 1x
+    image_mapping_type: image_style
+    image_mapping: 16x9_double_wide_720
+  -
+    breakpoint_id: common_design.sm
+    multiplier: 1x
+    image_mapping_type: image_style
+    image_mapping: 16x9_double_wide_480
+  -
+    breakpoint_id: common_design.xs
+    multiplier: 2x
+    image_mapping_type: image_style
+    image_mapping: 16x9_double_wide_480
+breakpoint_group: common_design
+fallback_image_style: 16x9_double_wide_240

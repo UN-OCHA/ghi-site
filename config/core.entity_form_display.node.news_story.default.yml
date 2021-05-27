@@ -6,7 +6,7 @@ dependencies:
     - field.field.node.news_story.body
     - field.field.node.news_story.field_display_author
     - field.field.node.news_story.field_image
-    - field.field.node.news_story.field_topics
+    - field.field.node.news_story.field_news_story_tags
     - node.type.news_story
   module:
     - file
@@ -48,15 +48,15 @@ content:
       progress_indicator: throbber
     third_party_settings: {  }
     region: content
-  field_topics:
-    weight: 10
-    type: entity_reference_autocomplete
+  field_news_story_tags:
+    weight: 121
     settings:
       match_operator: CONTAINS
       match_limit: 10
       size: 60
       placeholder: ''
     third_party_settings: {  }
+    type: entity_reference_autocomplete
     region: content
   langcode:
     type: language_select
