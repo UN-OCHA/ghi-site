@@ -15,27 +15,33 @@
 }
 
 .ghi-grid > * {
-  flex: 0 0 calc(100% * var(--ghi-grid-item-size) / var(--cols) - var(--ghi-grid-gap));
-}
-
-.ghi-grid.cols-2 {
-  --cols: 2;
-}
-
-.ghi-grid.cols-3 {
-  --cols: 3;
-}
-
-.ghi-grid.cols-4 {
-  --cols: 4;
-}
-
-.ghi-grid.cols-5 {
-  --cols: 5;
+  flex: 1 0 100%;
 }
 
 .ghi-grid.has-sticky > *:first-child {
   --ghi-grid-item-size: 2;
+}
+
+@media screen and (min-width: 576px) {
+  .ghi-grid > * {
+    flex: 0 0 calc(100% * var(--ghi-grid-item-size) / var(--cols) - var(--ghi-grid-gap));
+  }
+
+  .ghi-grid.cols-2 { --cols: 2; }
+  .ghi-grid.cols-3 { --cols: 2; }
+  .ghi-grid.cols-4 { --cols: 2; }
+  .ghi-grid.cols-5 { --cols: 2; }
+}
+
+@media screen and (min-width: 1024px) {
+  .ghi-grid.cols-3 { --cols: 3; }
+  .ghi-grid.cols-4 { --cols: 3; }
+  .ghi-grid.cols-5 { --cols: 3; }
+}
+
+@media screen and (min-width: 1200px) {
+  .ghi-grid.cols-4 { --cols: 4; }
+  .ghi-grid.cols-5 { --cols: 5; }
 }
 
 .ghi-grid.debug > * {
