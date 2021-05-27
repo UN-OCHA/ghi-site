@@ -12,11 +12,6 @@ use Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerBase;
 class PlanBaseClass extends ParagraphHandlerBase {
 
   /**
-   * Key used for storage.
-   */
-  const KEY = '';
-
-  /**
    * Get data for this paragraph.
    *
    * @param string $source_key
@@ -137,27 +132,6 @@ class PlanBaseClass extends ParagraphHandlerBase {
    * {@inheritdoc}
    */
   public function build(array &$build) {
-  }
-
-  /**
-   * Return behavior settings.
-   *
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   An optional form state interface if temporary values should be retrieved
-   *   from the current configuration form.
-   *
-   * @return array
-   *   A configuration array, specific to the type of paragraph being edited.
-   */
-  protected function getConfig(FormStateInterface $form_state = NULL) {
-    $settings = $this->paragraph->getAllBehaviorSettings();
-    $config = $settings[static::KEY] ?? [];
-
-    if ($form_state !== NULL && $form_state->has(static::KEY)) {
-      $config = $form_state->get(static::KEY);
-    }
-
-    return $config;
   }
 
 }

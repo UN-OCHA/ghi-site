@@ -1,0 +1,20 @@
+ghi_element_sync.node.sync:
+  path: '/node/{node}/hpc/sync'
+  defaults:
+    _form: '\Drupal\ghi_element_sync\Form\SyncNodeForm'
+    _title: 'Sync elements for a node'
+  options:
+    parameters:
+      node:
+        type: entity:node
+    _admin_route: TRUE
+  requirements:
+    _custom_access: '\Drupal\ghi_element_sync\SyncAccessController::accessElementSyncForm'
+    _permission: 'administer site configuration'
+ghi_element_sync.sync:
+  path: '/admin/content/sync-elements'
+  defaults:
+    _form: '\Drupal\ghi_element_sync\Form\SyncForm'
+    _title: 'Sync elements for all nodes'
+  requirements:
+    _permission: 'administer site configuration'
