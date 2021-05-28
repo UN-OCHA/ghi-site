@@ -1,0 +1,29 @@
+uuid: 88c9e798-32b6-44dc-aee3-996bc85abf7c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_plans
+    - node.type.plan
+    - paragraphs.paragraphs_type.operation_parts
+id: paragraph.operation_parts.field_plans
+field_name: field_plans
+entity_type: paragraph
+bundle: operation_parts
+label: Plans
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      plan: plan
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference
