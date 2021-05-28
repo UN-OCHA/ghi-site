@@ -8,6 +8,11 @@ ghi-grid:
     theme:
       components/ghi-grid/ghi-grid.css: {}
 
+ghi-publication:
+  css:
+    theme:
+      components/ghi-publication/ghi-publication.css: {}
+
 # CSS custom properties polyfill for IE11.
 # https://jhildenbiddle.github.io/css-vars-ponyfill
 #
