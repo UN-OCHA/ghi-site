@@ -24,6 +24,7 @@ module:
   file: 0
   filter: 0
   ghi_blocks: 0
+  ghi_configuration_container: 0
   ghi_element_sync: 0
   ghi_paragraph_handler: 0
   ghi_plans: 0
