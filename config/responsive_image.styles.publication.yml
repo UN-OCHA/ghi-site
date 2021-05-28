@@ -1,0 +1,25 @@
+uuid: 62154f90-26ff-4b65-bc72-5be793520918
+langcode: en
+status: true
+dependencies:
+  config:
+    - image.style.publication_1x
+    - image.style.publication_2x
+    - image.style.publication_3x
+  theme:
+    - common_design
+id: publication
+label: Publication
+image_style_mappings:
+  -
+    breakpoint_id: common_design.xl
+    multiplier: 2x
+    image_mapping_type: image_style
+    image_mapping: publication_3x
+  -
+    breakpoint_id: common_design.md
+    multiplier: 2x
+    image_mapping_type: image_style
+    image_mapping: publication_2x
+breakpoint_group: common_design
+fallback_image_style: publication_1x
