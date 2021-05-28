@@ -8,6 +8,11 @@ ghi-grid:
     theme:
       components/ghi-grid/ghi-grid.css: {}
 
+ghi-plan-teaser:
+  css:
+    theme:
+      components/ghi-plan-teaser/ghi-plan-teaser.css: {}
+
 ghi-publication:
   css:
     theme:

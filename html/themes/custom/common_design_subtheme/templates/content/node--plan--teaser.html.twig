@@ -64,10 +64,6 @@
  *   is an administrator.
  *
  * @see template_preprocess_node()
- *
- * @todo Remove the id attribute (or make it a class), because if that gets
- *   rendered twice on a page this is invalid CSS for example: two lists
- *   in different view modes.
  */
 #}
 {%
@@ -78,50 +74,26 @@
     node.isSticky() ? 'node--sticky',
     not node.isPublished() ? 'node--unpublished',
     view_mode ? 'node--view-mode-' ~ view_mode|clean_class,
-    'cd-teaser [ cd-flow cd-bumper ]'
+    'ghi-plan-teaser',
   ]
 %}
 
-{{ attach_library('common_design/cd-flow') }}
-{{ attach_library('common_design/cd-utilities') }}
-{{ attach_library('common_design/cd-typography') }}
-{{ attach_library('common_design/cd-button') }}
-{{ attach_library('common_design/cd-read-more') }}
-{{ attach_library('common_design/cd-teaser') }}
+{{ attach_library('common_design_subtheme/ghi-plan-teaser') }}
 
-<article{{ attributes.addClass(classes) }}>
-
-  {% if content.field_image|render %}
-    <div class="cd-teaser__image">
-      {{ content.field_image }}
+<article{{ attributes.addClass(classes).removeAttribute('id') }}>
+  {% if true or content.field_image|render %}
+    <div class="ghi-plan-teaser__image">
+      {# content.field_image #}
     </div>
   {% endif %}
 
-  <div class="cd-teaser__container [ cd-flow ]">
+  <div class="ghi-plan-teaser__container">
     {{ title_prefix }}
     {% if label and not page %}
-      <h2{{ title_attributes.addClass('cd-teaser__title cd-max-width') }}>
+      <h2{{ title_attributes.addClass('ghi-plan-teaser__title') }}>
         <a href="{{ url }}" rel="bookmark">{{ label }}</a>
       </h2>
     {% endif %}
     {{ title_suffix }}
-
-    <div class="cd-teaser__description cd-max-width">
-      {{ content|without('field_image', 'body') }}
-
-      {% set contentBody %}
-        {{ content.body }}
-      {% endset %}
-
-      {{ contentBody|striptags }}
-
-    </div>
-      <a href="{{ url }}" class="cd-teaser__link cd-read-more">
-        {% trans %}Learn more{% endtrans %}
-        <svg class="cd-icon cd-icon--arrow-right" aria-hidden="true" focusable="false" width="16" height="16">
-          <use xlink:href="#cd-icon--arrow-right"></use>
-        </svg>
-      </a>
   </div>
-
 </article>

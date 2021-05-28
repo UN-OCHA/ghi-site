@@ -44,6 +44,8 @@
     'field--type-' ~ field_type|clean_class,
     'field--label-' ~ label_display,
     label_display == 'inline' ? 'clearfix',
+    'ghi-grid',
+    'cols-3',
   ]
 %}
 {%
@@ -52,6 +54,8 @@
     label_display == 'visually_hidden' ? 'visually-hidden',
   ]
 %}
+
+{{ attach_library('common_design_subtheme/ghi-grid') }}
 
 {% if label_hidden %}
   {% if multiple %}
