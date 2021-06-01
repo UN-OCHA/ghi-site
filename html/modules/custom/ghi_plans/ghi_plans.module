@@ -298,42 +298,20 @@ function ghi_plans_migrate_prepare_row(Row $row, MigrateSourceInterface $source,
 }
 
 /**
- * Implements hook_preprocess_node__NODE_TYPE__VIEW_MODE().
+ * Implements hook_preprocess_node__VIEW_MODE().
  */
-function ghi_plans_preprocess_node__plan__full(&$variables) {
-  $top_nav = ghi_plans_get_top_navigation($variables['elements']['#node']);
-  if (!empty($top_nav)) {
-    $variables['content'] += $top_nav;
-  }
-}
-
-/**
- * Implements hook_preprocess_node__NODE_TYPE__VIEW_MODE().
- */
-function ghi_plans_preprocess_node__plan_entity__full(&$variables) {
-  $top_nav = ghi_plans_get_top_navigation($variables['elements']['#node']);
-  if (!empty($top_nav)) {
-    $variables['content'] += $top_nav;
-  }
-}
-
-/**
- * Implements hook_preprocess_node__NODE_TYPE__VIEW_MODE().
- */
-function ghi_plans_preprocess_node__governing_entity__full(&$variables) {
-  $top_nav = ghi_plans_get_top_navigation($variables['elements']['#node']);
-  if (!empty($top_nav)) {
-    $variables['content'] += $top_nav;
-  }
-}
-
-/**
- * Implements hook_preprocess_node__NODE_TYPE__VIEW_MODE().
- */
-function ghi_plans_preprocess_node__plan_logframe__full(&$variables) {
-  $top_nav = ghi_plans_get_top_navigation($variables['elements']['#node']);
-  if (!empty($top_nav)) {
-    $variables['content'] += $top_nav;
+function ghi_plans_preprocess_node__full(&$variables) {
+  $allowed_node_types = [
+    'plan',
+    'plan_entity',
+    'governing_entity',
+    'plan_logframe',
+  ];
+  if (in_array($variables['elements']['#node']->bundle(), $allowed_node_types)) {
+    $top_nav = ghi_plans_get_top_navigation($variables['elements']['#node']);
+    if (!empty($top_nav)) {
+      $variables['content'] += $top_nav;
+    }
   }
 }
 
