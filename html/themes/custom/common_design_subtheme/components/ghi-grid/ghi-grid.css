@@ -19,7 +19,7 @@
   flex: 1 0 100%;
 }
 
-.ghi-grid.has-sticky > *:first-child {
+.ghi-grid.has-sticky > *:not(.contextual):first-of-type {
   --ghi-grid-item-size: 2;
 }
 
