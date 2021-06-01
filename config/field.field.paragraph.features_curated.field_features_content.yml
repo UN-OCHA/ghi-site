@@ -1,0 +1,29 @@
+uuid: dd60fcf4-3d82-46db-b817-142065ddd744
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_features_content
+    - node.type.news_story
+    - paragraphs.paragraphs_type.features_curated
+id: paragraph.features_curated.field_features_content
+field_name: field_features_content
+entity_type: paragraph
+bundle: features_curated
+label: Content
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      news_story: news_story
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

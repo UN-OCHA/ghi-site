@@ -1,0 +1,33 @@
+uuid: 5b26e3b5-48ba-48e4-99c7-d375e683a66a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.features_curated.field_features_content
+    - field.field.paragraph.features_curated.field_highlight
+    - paragraphs.paragraphs_type.features_curated
+id: paragraph.features_curated.default
+targetEntityType: paragraph
+bundle: features_curated
+mode: default
+content:
+  field_features_content:
+    weight: 1
+    label: hidden
+    settings:
+      view_mode: teaser
+      link: false
+    third_party_settings: {  }
+    type: entity_reference_entity_view
+    region: content
+  field_highlight:
+    weight: 0
+    label: hidden
+    settings:
+      format: default
+      format_custom_true: ''
+      format_custom_false: ''
+    third_party_settings: {  }
+    type: boolean
+    region: content
+hidden: {  }

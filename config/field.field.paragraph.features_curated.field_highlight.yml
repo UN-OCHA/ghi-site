@@ -1,0 +1,23 @@
+uuid: fd2a19d4-cc50-469e-a16a-8efd4efc0168
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_highlight
+    - paragraphs.paragraphs_type.features_curated
+id: paragraph.features_curated.field_highlight
+field_name: field_highlight
+entity_type: paragraph
+bundle: features_curated
+label: 'Highlight first Item'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'true'
+  off_label: 'false'
+field_type: boolean
