@@ -4,7 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.paragraph.features_curated.field_features_content
-    - field.field.paragraph.features_curated.field_highlight
+    - field.field.paragraph.features_curated.field_has_sticky
     - paragraphs.paragraphs_type.features_curated
 id: paragraph.features_curated.default
 targetEntityType: paragraph
@@ -21,7 +21,7 @@ content:
     third_party_settings: {  }
     type: entity_reference_autocomplete
     region: content
-  field_highlight:
+  field_has_sticky:
     weight: 0
     settings:
       display_label: true

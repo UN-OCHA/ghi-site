@@ -1,0 +1,34 @@
+uuid: 354fe9b4-6067-4cad-903b-6406d8296cf1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.features_list.field_stickied_feature
+    - field.field.paragraph.features_list.field_views_display
+    - paragraphs.paragraphs_type.features_list
+  module:
+    - viewsreference
+id: paragraph.features_list.default
+targetEntityType: paragraph
+bundle: features_list
+mode: default
+content:
+  field_stickied_feature:
+    weight: 0
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
+    region: content
+  field_views_display:
+    weight: 1
+    settings: {  }
+    third_party_settings: {  }
+    type: viewsreference_select
+    region: content
+hidden:
+  created: true
+  status: true

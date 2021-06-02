@@ -1,15 +1,15 @@
-uuid: fd2a19d4-cc50-469e-a16a-8efd4efc0168
+uuid: 6ee279dc-91d9-4342-ab56-5fa732e42293
 langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.paragraph.field_highlight
+    - field.storage.paragraph.field_has_sticky
     - paragraphs.paragraphs_type.features_curated
-id: paragraph.features_curated.field_highlight
-field_name: field_highlight
+id: paragraph.features_curated.field_has_sticky
+field_name: field_has_sticky
 entity_type: paragraph
 bundle: features_curated
-label: 'Highlight first Item'
+label: 'Has sticky item'
 description: ''
 required: false
 translatable: false
