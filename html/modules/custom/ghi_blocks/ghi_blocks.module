@@ -70,3 +70,26 @@ function ghi_blocks_layout_builder_cancel_callback(array $form, FormStateInterfa
   $response->addCommand(new CloseDialogCommand('#layout-builder-modal'));
   return $response;
 }
+
+/**
+ * Implements hook_page_attachments().
+ */
+function ghi_blocks_page_attachments(array &$attachments) {
+  if (ghi_blocks_is_layout_builder_route()) {
+    $attachments['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
+  }
+}
+
+/**
+ * Returns true if the current route is a layout builder route.
+ *
+ * @return bool
+ *   Returns true for layout builder routes.
+ */
+function ghi_blocks_is_layout_builder_route() {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if (preg_match('/^(layout_builder\.([^.]+\.)?)/', $route_name)) {
+    return TRUE;
+  }
+  return FALSE;
+}
