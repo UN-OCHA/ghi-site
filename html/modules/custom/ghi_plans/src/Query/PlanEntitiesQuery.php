@@ -7,7 +7,9 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
+use Drupal\hpc_api\Helpers\ArrayHelper;
 use GuzzleHttp\ClientInterface;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\node\NodeInterface;
@@ -147,44 +149,75 @@ class PlanEntitiesQuery extends EndpointQuery {
    *   The current context node.
    * @param string $entity_type
    *   The entity type to restrict the context.
+   * @param array $filters
+   *   The optional aray with filter key value pairs.
    *
    * @return array
    *   An array of plan entity objects for the given context.
    */
-  public function getPlanEntities(NodeInterface $context_node, $entity_type = NULL) {
+  public function getPlanEntities(NodeInterface $context_node, $entity_type = NULL, array $filters = NULL) {
     $data = $this->getData();
     if (empty($data)) {
       return NULL;
     }
-
-    if ($entity_type === NULL) {
-      $filter = [
-        'entityPrototype.type' => 'PE',
-      ];
-    }
-    else {
-      $filter = [
-        'entityPrototype.refCode' => $entity_type,
-      ];
-    }
-
-    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($this->getData(), $context_node->bundle() != 'plan' ? $context_node : NULL, NULL, $filter);
+    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($this->getData(), $context_node->bundle() != 'plan' ? $context_node : NULL, $entity_type);
     if (empty($matching_entities)) {
       return NULL;
     }
-    return array_map(function ($entity) {
+    $plan_entities = array_map(function ($entity) {
       $entity_version = ApiEntityHelper::getEntityVersion($entity);
       return (object) [
         'id' => $entity->id,
         'plural_name' => $entity->entityPrototype->value->name->en->plural,
         'order_number' => $entity->entityPrototype->orderNumber,
         'ref_code' => $entity->entityPrototype->refCode,
+        'prototype_id' => $entity->entityPrototype->id,
         'custom_id' => $entity_version->customReference,
         'custom_id_prefixed_refcode' => $entity->entityPrototype->refCode . $entity_version->customReference,
         'composed_reference' => $entity->composedReference,
-        'description' => $entity_version->value->description,
+        'description' => property_exists($entity_version->value, 'description') ? $entity_version->value->description : NULL,
       ];
     }, $matching_entities);
+
+    if (is_array($filters) && !empty($filters)) {
+      $plan_entities = ArrayHelper::filterArray($plan_entities, $filters);
+    }
+    return $plan_entities;
+  }
+
+  /**
+   * Extract cluster IDs for the given context from the given plan.
+   *
+   * @param int $plan_entity_id
+   *   A plan entity ID (original id from HPC).
+   *
+   * @return array
+   *   An array of cluster IDs.
+   */
+  public function getGoverningEntityIdsForPlanEntityId($plan_entity_id) {
+    // Get the plan structure.
+    $ple_structure = PlanStructureHelper::getPlanEntityStructure($this->getData());
+    $cluster_ids = [];
+    foreach ($ple_structure as $plan_item) {
+      if (in_array($plan_item->id, $cluster_ids)) {
+        continue;
+      }
+      if (empty($plan_item->children)) {
+        continue;
+      }
+      foreach ($plan_item->children as $child) {
+        if (in_array($plan_item->id, $cluster_ids)) {
+          continue;
+        }
+        if (empty($child->support[0]->planEntityIds)) {
+          continue;
+        }
+        if (in_array($plan_entity_id, $child->support[0]->planEntityIds)) {
+          $cluster_ids[] = $plan_item->id;
+        }
+      }
+    }
+    return $cluster_ids;
   }
 
 }

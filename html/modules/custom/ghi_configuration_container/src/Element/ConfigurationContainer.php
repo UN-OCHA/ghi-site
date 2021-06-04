@@ -2,48 +2,21 @@
 
 namespace Drupal\ghi_configuration_container\Element;
 
-use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Render\Element\FormElement;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\ghi_configuration_container\ConfigurationContainerItemManager;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Render\Markup;
+use Drupal\ghi_configuration_container\Traits\AjaxElementTrait;
 
 /**
  * Provides a configuration container element.
  *
  * @FormElement("configuration_container")
  */
-class ConfigurationContainer extends FormElement implements ContainerFactoryPluginInterface {
+class ConfigurationContainer extends FormElement {
 
-  /**
-   * The plugin manager.
-   *
-   * @var \Drupal\ghi_configuration_container\ConfigurationContainerItemManager
-   */
-  protected $configurationContainerItemManager;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ConfigurationContainerItemManager $configuration_container_item_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->configurationContainerItemManager = $configuration_container_item_manager;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('plugin.manager.configuration_container_item_manager')
-    );
-  }
+  use AjaxElementTrait;
 
   /**
    * {@inheritdoc}
@@ -63,6 +36,9 @@ class ConfigurationContainer extends FormElement implements ContainerFactoryPlug
         [$class, 'preRenderConfigurationContainer'],
         [$class, 'preRenderGroup'],
       ],
+      '#element_submit' => [
+        [$class, 'elementSubmit'],
+      ],
       '#theme_wrappers' => ['form_element'],
       '#max_items' => NULL,
       '#preview' => NULL,
@@ -71,25 +47,131 @@ class ConfigurationContainer extends FormElement implements ContainerFactoryPlug
   }
 
   /**
+   * Element submit callback.
+   *
+   * @param array $element
+   *   The base element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param array $form
+   *   The full form.
+   */
+  public static function elementSubmit(array &$element, FormStateInterface $form_state, array $form) {
+    $items = (array) $form_state->get('items');
+    $triggering_element = $form_state->getTriggeringElement();
+    $parents = $triggering_element['#parents'];
+    $action = array_pop($parents);
+
+    $new_mode = NULL;
+
+    switch ($action) {
+      case 'add_new_item':
+        $new_mode = 'add_item';
+        break;
+
+      case 'edit':
+        array_pop($parents);
+        $index = array_pop($parents);
+
+        // Set the index of the editable item.
+        $form_state->set('edit_item', $index);
+
+        // Switch to edit mode.
+        $new_mode = 'edit_item';
+        break;
+
+      case 'submit_item':
+        $mode = $form_state->get('mode');
+        $values = $form_state->getValue($parents);
+
+        if ($mode == 'add_item') {
+          $items[] = [
+            'item_type' => $values['item_type'],
+            'config' => $values['plugin_config'],
+          ];
+        }
+        elseif ($mode == 'edit_item') {
+          $index = $form_state->get('edit_item');
+          $items[$index]['config'] = $values['plugin_config'];
+        }
+
+        // Switch to list mode.
+        $new_mode = 'list';
+        break;
+
+      case 'save_order':
+        $sorted_rows = $form_state->getValue(array_merge($parents, ['summary_table']));
+        uksort($items, function ($a, $b) use ($sorted_rows) {
+          return $sorted_rows[$a]['weight'] > $sorted_rows[$b]['weight'];
+        });
+        break;
+
+      case 'remove':
+        array_pop($parents);
+        $index = array_pop($parents);
+
+        // Remove the requested index from the items.
+        unset($items[$index]);
+
+        // Switch to list mode.
+        $new_mode = 'list';
+        break;
+
+      case 'cancel':
+        // Switch to list mode.
+        $new_mode = 'list';
+        break;
+    }
+
+    // Update stored items.
+    $form_state->set('items', array_values($items));
+    $form_state->setTemporaryValue($element['#parents'], array_values($items));
+
+    if ($new_mode) {
+      // Update the mode.
+      $form_state->set('mode', $new_mode);
+    }
+
+    // Rebuild the form.
+    $form_state->setRebuild(TRUE);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
     if ($input && !empty($input['item_config'])) {
       // Make sure input is returned as normal during item configuration.
-      return $input;
+      $triggering_element = $form_state->getTriggeringElement();
+      if (!$triggering_element || array_intersect($triggering_element['#parents'], $element['#parents'])) {
+        return $input;
+      }
+      else {
+        return $form_state->get('items');
+      }
     }
     elseif (empty($form_state->getTriggeringElement()['#parents']) && $form_state->has('items')) {
-      // This is the case on the final submissions of this form element. We
-      // want to retain only the configured items, nothing more.
-      $items = $form_state->get('items');
-      $form_state->setValue($element['#parents'], $items);
-      $form_state->addCleanValueKey(array_merge($element['#parents'], ['summary_table']));
       return $form_state->get('items');
     }
     if ($input) {
       return $input;
     }
     return NULL;
+  }
+
+  /**
+   * Make sure that the given values array has only numeric indexes.
+   *
+   * @param array $values
+   *   The input array.
+   *
+   * @return array
+   *   The cleaned output array.
+   */
+  private static function cleanItemValues(array $values) {
+    return array_filter($values, function ($item_key) {
+      return is_int($item_key);
+    }, ARRAY_FILTER_USE_KEY);
   }
 
   /**
@@ -112,18 +194,24 @@ class ConfigurationContainer extends FormElement implements ContainerFactoryPlug
    * any arbitrary data inside the form_state object.
    */
   public static function processConfigurationContainer(array &$element, FormStateInterface $form_state) {
-    $wrapper_id = self::getWrapperId($element);
+    $element['#attached']['library'][] = 'ghi_configuration_container/configuration_container';
 
-    // Put the root path to this element into the form storage, to have it
-    // easily available to update the full element after an ajax action.
-    $form_state->set('element_parents', $element['#array_parents']);
+    $wrapper_id = self::getWrapperId($element);
+    $exclude_form_keys = ['summary_table', 'add_new_item', 'save_order'];
+    foreach ($exclude_form_keys as $exclude_form_key) {
+      $form_state->addCleanValueKey(array_merge($element['#parents'], [$exclude_form_key]));
+    }
+
+    // Get the current mode.
     $mode = $form_state->has('mode') ? $form_state->get('mode') : 'list';
 
     $element['#prefix'] = '<div id="' . $wrapper_id . '">';
     $element['#suffix'] = '</div>';
 
     if (!$form_state->has('items')) {
-      $form_state->set('items', $element['#default_value']);
+      $items = self::cleanItemValues($element['#default_value']);
+      $form_state->set('items', $items);
+      $form_state->setValue($element['#parents'], $items);
     }
 
     if ($mode == 'list') {
@@ -157,14 +245,22 @@ class ConfigurationContainer extends FormElement implements ContainerFactoryPlug
       ],
       $element['#preview']['columns'],
       [
-        // 'weight' => t('Weight'),
-        'operations' => t('Operations'),
+        'weight' => t('Weight'),
+        'operations' => '',
       ]
     );
     $element['summary_table'] = [
       '#type' => 'table',
       '#header' => $table_header,
       '#empty' => t('No rows have been added yet'),
+      '#tabledrag' => [
+        [
+          'action' => 'order',
+          'relationship' => 'sibling',
+          'group' => 'table-sort-weight',
+        ],
+      ],
+      '#attributes' => ['class' => ['summary-table']],
     ];
     $element['summary_table'] += self::buildTableRows($element, $form_state);
 
@@ -176,9 +272,25 @@ class ConfigurationContainer extends FormElement implements ContainerFactoryPlug
         'callback' => [static::class, 'updateAjax'],
         'wrapper' => $wrapper_id,
       ],
-      '#submit' => [
-        [static::class, 'submitAddNewItem'],
+    ];
+
+    $item_count = count(Element::children($element['summary_table']));
+    if (!empty($element['#max_items']) && $element['#max_items'] <= $item_count) {
+      $element['add_new_item']['#disabled'] = TRUE;
+      $element['add_new_item']['#attributes']['title'] = t('The maximum number of %max_items has been reached.', [
+        '%max_itmes' => $element['#max_items'],
+      ]);
+    }
+
+    $element['save_order'] = [
+      '#type' => 'submit',
+      '#value' => t('Save order'),
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
       ],
+      '#access' => $item_count > 1,
     ];
   }
 
@@ -199,20 +311,31 @@ class ConfigurationContainer extends FormElement implements ContainerFactoryPlug
     $items = $form_state->has('items') ? $form_state->get('items') : [];
     if (!empty($items)) {
       foreach ($items as $key => $item) {
-        $item_type = self::getItemTypeInstance($item['item_type'], $element, $item['config']);
+        $item_type = self::getItemTypeInstance($item, $element);
         $row = [
-          // '#attributes' => ['class' => ['draggable']],
+          '#attributes' => ['class' => ['draggable']],
+          '#weight' => $key,
         ];
         $row['item_type'] = [
-          '#type' => 'item',
           '#markup' => $item_type->getPluginLabel(),
         ];
         foreach (array_keys($element['#preview']['columns']) as $column_key) {
           $row[$column_key] = [
-            '#type' => 'item',
             '#markup' => $item_type->get($column_key),
           ];
         }
+        $row['weight'] = [
+          '#type' => 'weight',
+          '#title' => t('Weight'),
+          '#title_display' => 'invisible',
+          '#default_value' => $key,
+          // Classify the weight element for #tabledrag.
+          '#attributes' => [
+            'class' => [
+              'table-sort-weight',
+            ],
+          ],
+        ];
         $row['operations'] = [
           '#type' => 'container',
           'edit' => [
@@ -224,9 +347,6 @@ class ConfigurationContainer extends FormElement implements ContainerFactoryPlug
               'callback' => [static::class, 'updateAjax'],
               'wrapper' => $wrapper_id,
             ],
-            '#submit' => [
-              [static::class, 'submitEditItem'],
-            ],
           ],
           'remove' => [
             '#type' => 'submit',
@@ -237,12 +357,9 @@ class ConfigurationContainer extends FormElement implements ContainerFactoryPlug
               'callback' => [static::class, 'updateAjax'],
               'wrapper' => $wrapper_id,
             ],
-            '#submit' => [
-              [static::class, 'submitRemoveItem'],
-            ],
           ],
         ];
-        $rows[] = $row;
+        $rows[$key] = $row;
       }
     }
     return $rows;
@@ -268,13 +385,22 @@ class ConfigurationContainer extends FormElement implements ContainerFactoryPlug
 
     if ($index === NULL) {
       $values = $form_state->getValue($element['#parents']);
-      $item_config = !empty($values) && array_key_exists('item_config', $values) ? array_filter($values['item_config'], function ($key) {
-        return in_array($key, ['item_type', 'plugin_config']);
-      }, ARRAY_FILTER_USE_KEY) : NULL;
+      if (!empty($values) && array_key_exists('item_config', $values)) {
+        $item = array_filter($values['item_config'], function ($key) {
+          return in_array($key, ['item_type', 'plugin_config']);
+        }, ARRAY_FILTER_USE_KEY);
+      }
+      else {
+        $item = [
+          'item_type' => array_key_first($item_type_options),
+        ];
+      }
+
       $element['item_config']['item_type'] = [
         '#type' => 'select',
-        '#title' => t('Add new item'),
-        '#options' => array_merge([0 => 1], $item_type_options),
+        '#title' => t('Item type'),
+        '#options' => $item_type_options,
+        '#description' => t('Select the item type that you want to add.'),
         '#ajax' => [
           'event' => 'change',
           'callback' => [static::class, 'updateAjax'],
@@ -284,45 +410,51 @@ class ConfigurationContainer extends FormElement implements ContainerFactoryPlug
     }
     else {
       $items = $form_state->get('items');
-      $item_config = $items[$index];
+      $item = $items[$index];
     }
 
-    if (!empty($item_config['item_type']) && array_key_exists($item_config['item_type'], $item_type_options)) {
-      $item_type = self::getItemTypeInstance($item_config['item_type'], $element, array_key_exists('config', $item_config) ? $item_config['config'] : []);
+    $item_type = self::getItemTypeInstance($item, $element);
+    if ($item_type) {
+
+      $element['title'] = [
+        '#markup' => Markup::create('<h3>' . $item_type->getPluginLabel() . '</h3>'),
+        '#weight' => -1,
+      ];
+
       $element['item_config']['plugin_config'] = [
         '#type' => 'container',
         '#parents' => array_merge($element['#parents'], [
           'item_config',
           'plugin_config',
         ]),
+        '#array_parents' => array_merge($element['#array_parents'], [
+          'item_config',
+          'plugin_config',
+        ]),
       ];
       $subform_state = SubformState::createForSubform($element['item_config']['plugin_config'], $element, $form_state);
       $element['item_config']['plugin_config'] += $item_type->buildForm($element['item_config']['plugin_config'], $subform_state);
-
-      $element['item_config']['submit'] = [
-        '#type' => 'submit',
-        '#value' => t('Submit'),
-        '#name' => 'item_config_submit',
-        '#ajax' => [
-          'event' => 'click',
-          'callback' => [static::class, 'updateAjax'],
-          'wrapper' => $wrapper_id,
-        ],
-        '#submit' => [
-          [static::class, 'submitItem'],
-        ],
-      ];
     }
-    $element['item_config']['cancel'] = [
+
+    $element['item_config']['submit_item'] = [
       '#type' => 'submit',
-      '#value' => t('Cancel'),
+      '#value' => t('Submit'),
+      '#name' => 'item-config-submit',
       '#ajax' => [
         'event' => 'click',
         'callback' => [static::class, 'updateAjax'],
         'wrapper' => $wrapper_id,
       ],
-      '#submit' => [
-        [static::class, 'cancelItem'],
+      '#disabled' => empty($item_type),
+    ];
+    $element['item_config']['cancel'] = [
+      '#type' => 'submit',
+      '#value' => t('Cancel'),
+      '#name' => 'item-config-cancel',
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
       ],
     ];
   }
@@ -341,142 +473,28 @@ class ConfigurationContainer extends FormElement implements ContainerFactoryPlug
   }
 
   /**
-   * Generic ajax callback.
-   *
-   * @param array $form
-   *   The form element.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state interface.
-   *
-   * @return array
-   *   The part of the form structure that should be replaced.
-   */
-  public static function updateAjax(array &$form, FormStateInterface $form_state) {
-    // Just update the full element.
-    return NestedArray::getValue($form, $form_state->get('element_parents'));
-  }
-
-  /**
-   * Submit handler for the add button.
-   */
-  public static function submitAddNewItem(array &$form, FormStateInterface $form_state) {
-    $triggering_element = $form_state->getTriggeringElement();
-    $parents = $triggering_element['#parents'];
-    array_pop($parents);
-    $parents[] = 'element_select';
-
-    // $selected_element = $form_state->getValue($parents);
-    $form_state->set('mode', 'add_item');
-
-    // Rebuild. Needed for processing to be called again.
-    $form_state->setRebuild(TRUE);
-  }
-
-  /**
-   * Submit handler for the submit button of an item config.
-   */
-  public static function submitItem(array &$form, FormStateInterface $form_state) {
-    $triggering_element = $form_state->getTriggeringElement();
-    $parents = $triggering_element['#parents'];
-    array_pop($parents);
-    $values = $form_state->getValue($parents);
-    $mode = $form_state->get('mode');
-    $items = (array) $form_state->get('items');
-
-    // Handle new item vs edit item.
-    if ($mode == 'add_item') {
-      $items[] = [
-        'item_type' => $values['item_type'],
-        'config' => $values['plugin_config'],
-      ];
-    }
-    elseif ($mode == 'edit_item') {
-      $index = $form_state->get('edit_item');
-      $items[$index]['config'] = $values['plugin_config'];
-    }
-
-    // Update the stored items.
-    $form_state->set('items', $items);
-
-    // Go back to list mode.
-    $form_state->set('mode', 'list');
-
-    // Rebuild. Needed for processing to be called again.
-    $form_state->setRebuild(TRUE);
-  }
-
-  /**
-   * Submit handler for the cancel button of an item config.
-   */
-  public static function submitEditItem(array &$form, FormStateInterface $form_state) {
-    $triggering_element = $form_state->getTriggeringElement();
-    $parents = $triggering_element['#parents'];
-    array_pop($parents);
-    array_pop($parents);
-    $index = array_pop($parents);
-
-    // Set the index of the editable item.
-    $form_state->set('edit_item', $index);
-
-    // Switch to edit mode.
-    $form_state->set('mode', 'edit_item');
-
-    // Rebuild. Needed for processing to be called again.
-    $form_state->setRebuild(TRUE);
-  }
-
-  /**
-   * Submit handler for the cancel button of an item config.
-   */
-  public static function submitRemoveItem(array &$form, FormStateInterface $form_state) {
-    $triggering_element = $form_state->getTriggeringElement();
-    $parents = $triggering_element['#parents'];
-    array_pop($parents);
-    array_pop($parents);
-    $index = array_pop($parents);
-    $items = (array) $form_state->get('items');
-    unset($items[$index]);
-    $form_state->set('items', array_values($items));
-
-    // Just go back to the list mode.
-    $form_state->set('mode', 'list');
-
-    // Rebuild. Needed for processing to be called again.
-    $form_state->setRebuild(TRUE);
-  }
-
-  /**
-   * Submit handler for the cancel button of an item config.
-   */
-  public static function cancelItem(array &$form, FormStateInterface $form_state) {
-    // Just go back to the list mode.
-    $form_state->set('mode', 'list');
-
-    // Rebuild. Needed for processing to be called again.
-    $form_state->setRebuild(TRUE);
-  }
-
-  /**
    * Get an instance for the given item type plugin.
    *
-   * @param string $item_type
-   *   The type of the plugin to instantiate.
+   * @param array $item
+   *   The array describing the plugin to instantiate.
    * @param array $element
    *   The form element.
-   * @param array $instance_config
-   *   Optional instance configuration.
    *
    * @return \Drupal\ghi_configuration_container\ConfigurationContainerItemPluginInterface
    *   An instantiated item plugin.
    */
-  private static function getItemTypeInstance($item_type, array $element, array $instance_config = []) {
+  private static function getItemTypeInstance(array $item, array $element) {
+    $item_type = !empty($item['item_type']) ? $item['item_type'] : NULL;
     if (empty($item_type) || !array_key_exists($item_type, $element['#allowed_item_types'])) {
       return NULL;
     }
     $configuration = $element['#allowed_item_types'][$item_type];
     $item_type = \Drupal::service('plugin.manager.configuration_container_item_manager')->createInstance($item_type, $configuration);
-    if (!empty($instance_config)) {
-      $item_type->setConfig($instance_config);
+    if (!empty($item['config'])) {
+      $item_type->setConfig((array) $item['config']);
+    }
+    if (!empty($element['#element_context'])) {
+      $item_type->setContext($element['#element_context']);
     }
     return $item_type;
   }
@@ -493,13 +511,20 @@ class ConfigurationContainer extends FormElement implements ContainerFactoryPlug
    */
   private static function getAvailablePluginTypes(array $element) {
     $available_types = [];
-    $requested_item_types = array_keys($element['#allowed_item_types']);
     $definitions = \Drupal::service('plugin.manager.configuration_container_item_manager')->getDefinitions();
-    foreach ($requested_item_types as $type_id) {
+    foreach ($element['#allowed_item_types'] as $type_id => $configuration) {
       if (!array_key_exists($type_id, $definitions)) {
         continue;
       }
-      $available_types[$type_id] = $definitions[$type_id]['label'];
+      $definition = $definitions[$type_id];
+      $instance = self::getItemTypeInstance(['item_type' => $type_id], $element);
+      $callable = [$instance, 'access'];
+      if (!empty($configuration['access'] && method_exists($instance, 'access') && is_callable($callable))) {
+        if (!$instance->access($element['#element_context'], $configuration['access'])) {
+          continue;
+        }
+      }
+      $available_types[$type_id] = !empty($configuration['label']) ? $configuration['label'] : $definition['label'];
     }
     return $available_types;
   }

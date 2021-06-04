@@ -6,5 +6,7 @@ type: module
 core_version_requirement: ^8 || ^9
 
 dependencies:
-  - hpc_common
-  - layout_builder_modal
+  - hpc_common:hpc_common
+  - ghi_plans:ghi_plans
+  - ghi_element_sync:ghi_element_sync
+  # - layout_builder_modal:layout_builder_modal

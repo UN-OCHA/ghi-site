@@ -6,40 +6,27 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_configuration_container\ConfigurationContainerItemPluginBase;
 
 /**
- * Provides a configuration container element.
+ * Provides an entity counter item for configuration containers.
  *
  * @ConfigurationContainerItem(
- *   id = "plan_entities_counter",
- *   label = @Translation("Plan entities counter"),
+ *   id = "label_value",
+ *   label = @Translation("Label/value"),
  * )
  */
-class PlanEntitiesCounter extends ConfigurationContainerItemPluginBase {
+class LabelValue extends ConfigurationContainerItemPluginBase {
 
   /**
    * {@inheritdoc}
    */
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
+
     $element['value'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Value'),
-      '#default_value' => $this->getValue(),
+      '#default_value' => $this->config['value'],
     ];
     return $element;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getLabel() {
-    return $this->config['label'];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getValue() {
-    return $this->config['value'];
   }
 
 }

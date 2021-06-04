@@ -7,8 +7,8 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\ghi_blocks\Plugin\Block\SyncableBlockInterface;
-use Drupal\hpc_api\Helpers\ApiEntityHelper;
+use Drupal\ghi_element_sync\SyncableBlockInterface;
+use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\hpc_api\Query\EndpointQuery;
 
 /**
@@ -16,22 +16,19 @@ use Drupal\hpc_api\Query\EndpointQuery;
  *
  * @Block(
  *  id = "plan_entity_types",
- *  admin_label = @Translation("Plan: Entity types"),
+ *  admin_label = @Translation("Plan: Entity Types"),
  *  category = @Translation("Plans"),
  *  data_sources = {
  *    "data" = {
- *      "arguments" = {
- *        "endpoint" = "public/plan/{plan_id}?content=entities&addPercentageOfTotalTarget=true&version=current",
- *        "api_version" = "v2",
- *      }
- *    }
+ *      "service" = "ghi_plans.plan_entities_query"
+ *    },
  *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Plan node"))
  *  }
  * )
  */
-class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
+class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterface, SyncableBlockInterface {
 
   /**
    * {@inheritdoc}
@@ -41,13 +38,11 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
       'label' => '',
       'label_display' => TRUE,
       'hpc' => [
-        'basic' => [
-          'entity_ids' => property_exists($config, 'entity_ids') ? (array) $config->entity_ids : [],
-          'entity_type' => $config->entity_type,
-          'id_type' => $config->id_type,
-          'sort' => $config->sort,
-          'sort_column' => $config->sort_column,
-        ],
+        'entity_ids' => property_exists($config, 'entity_ids') ? (array) $config->entity_ids : [],
+        'entity_ref_code' => $config->entity_type,
+        'id_type' => $config->id_type,
+        'sort' => $config->sort,
+        'sort_column' => $config->sort_column,
       ],
     ];
   }
@@ -55,28 +50,50 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
   /**
    * {@inheritdoc}
    */
-  public function buildContent() {
-    $data = $this->getData();
-    if (empty($data)) {
-      return '';
+  public function getAutomaticBlockTitle() {
+    // Get the entities to render.
+    $entities = $this->getRenderableEntities();
+    $first_entity = !empty($entities) ? reset($entities) : NULL;
+    return $first_entity ? $first_entity->plural_name : NULL;
+  }
+
+  /**
+   * Retrieve the renderable entities for this instance.
+   *
+   * @return array
+   *   An array of preprocessed HPC entities.
+   */
+  private function getRenderableEntities() {
+    $conf = $this->getBlockConfig();
+    if (empty($conf['entity_ref_code'])) {
+      return NULL;
     }
 
-    $conf = $this->configuration['hpc']['basic'];
-    if (empty($conf['entity_type'])) {
-      return;
-    }
-
-    $matching_entities = $this->getPlanEntities($conf['entity_type']);
+    $matching_entities = $this->getPlanEntities($conf['entity_ref_code']);
     $valid_entities = $this->getValidPlanEntities($matching_entities, $conf);
     if (empty($valid_entities)) {
       // Nothing to render.
+      return NULL;
+    }
+    return $valid_entities;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildContent() {
+
+    // Get the entities to render.
+    $entities = $this->getRenderableEntities();
+    if (empty($entities)) {
       return;
     }
 
-    $first_entity = reset($matching_entities);
+    // Get the config.
+    $conf = $this->getBlockConfig();
 
     // Assemble the list.
-    $items = $this->buildPlanEntityItemList($valid_entities, $conf);
+    $items = $this->buildPlanEntityItemList($entities, $conf);
     if (empty($items)) {
       return;
     }
@@ -89,7 +106,6 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
 
     return [
       '#theme' => 'item_list',
-      '#title' => ApiEntityHelper::getEntityPrototypeName($first_entity),
       '#items' => $rendered_items,
       '#attributes' => [
         'class' => ['plan-entity-types', $count >= 5 ? 'up-5' : 'up-' . $count],
@@ -105,31 +121,18 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
    * @return array
    *   An associative array with the default configuration.
    */
-  protected function baseConfigurationDefaults() {
+  protected function getConfigurationDefaults() {
     return [
-      'hpc' => [
-        'basic' => [
-          'entity_ids' => [],
-          'entity_type' => NULL,
-          'id_type' => NULL,
-          'sort' => FALSE,
-          'sort_column' => NULL,
-        ],
-      ],
-    ] + parent::baseConfigurationDefaults();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSubforms() {
-    return [
-      'basic' => 'basicConfigForm',
+      'entity_ids' => [],
+      'entity_ref_code' => NULL,
+      'id_type' => NULL,
+      'sort' => FALSE,
+      'sort_column' => NULL,
     ];
   }
 
   /**
-   * Form builder for the basic config form.
+   * Form builder for the config form.
    *
    * @param array $form
    *   An associative array containing the initial structure of the subform.
@@ -139,27 +142,26 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
    * @return array
    *   The full form array for this subform.
    */
-  public function basicConfigForm(array $form, FormStateInterface $form_state) {
-    $entity_type_options = $this->getEntityTypeOptions();
-    $entity_type_option_keys = array_keys($entity_type_options);
+  public function getConfigForm(array $form, FormStateInterface $form_state) {
+    $entity_ref_code_options = $this->getEntityRefCodeOptions();
 
     // Get the defaults for easier access.
     $defaults = [
-      'entity_type' => $this->getDefaultFormValueFromFormState($form_state, 'entity_type') ?: reset($entity_type_option_keys),
+      'entity_ref_code' => $this->getDefaultFormValueFromFormState($form_state, 'entity_ref_code') ?: array_key_first($entity_ref_code_options),
       'id_type' => $this->getDefaultFormValueFromFormState($form_state, 'id_type') ?: NULL,
       'sort' => $this->getDefaultFormValueFromFormState($form_state, 'sort') ?: NULL,
       'sort_column' => $this->getDefaultFormValueFromFormState($form_state, 'sort_column') ?: NULL,
       'entity_ids' => $this->getDefaultFormValueFromFormState($form_state, 'entity_ids') ?: NULL,
     ];
 
-    $form['entity_type'] = [
+    $form['entity_ref_code'] = [
       '#type' => 'select',
       '#title' => $this->t('Entity type'),
       '#description' => $this->t('The type of plan entity to show, e.g. <em>Cluster Objective</em> or <em>Strategic Objective</em>'),
-      '#options' => $entity_type_options,
-      '#default_value' => $defaults['entity_type'],
-      '#required' => count($entity_type_options),
-      '#disabled' => empty($entity_type_options),
+      '#options' => $entity_ref_code_options,
+      '#default_value' => $defaults['entity_ref_code'],
+      '#required' => count($entity_ref_code_options),
+      '#disabled' => empty($entity_ref_code_options),
     ];
     $form['id_type'] = [
       '#type' => 'select',
@@ -171,16 +173,16 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
         'composed_reference' => $this->t('Composed reference'),
       ],
       '#default_value' => $defaults['id_type'],
-      '#disabled' => empty($entity_type_options),
+      '#disabled' => empty($entity_ref_code_options),
     ];
 
     // If we have a plan context, add checkboxes to select individual entities.
-    if ($this->getCurrentPlanId() && count($entity_type_options)) {
+    if ($this->getCurrentPlanId() && count($entity_ref_code_options)) {
       $wrapper_id = 'hpc-plan-entities-wrapper';
 
       // Bind ajax callback for auto-update of available entities when the type
       // is changed.
-      $form['entity_type']['#ajax'] = [
+      $form['entity_ref_code']['#ajax'] = [
         'event' => 'change',
         'callback' => [$this, 'updateEntitiesList'],
         'wrapper' => $wrapper_id,
@@ -195,7 +197,7 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
       $matching_entities = [];
       $entity_options = [];
 
-      $matching_entities = $this->getPlanEntities($defaults['entity_type']);
+      $matching_entities = $this->getPlanEntities($defaults['entity_ref_code']);
       if (count($matching_entities)) {
         // Assemble the list.
         $entity_options = $this->buildPlanEntityItemList($matching_entities, $defaults, TRUE);
@@ -293,7 +295,7 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
    * @return array
    *   An array with valid options for the current context.
    */
-  private function getEntityTypeOptions() {
+  private function getEntityRefCodeOptions() {
     if (!$this->getCurrentPlanId()) {
       // Without a plan context, we show a default set of availabe plan entity
       // types.
@@ -311,18 +313,17 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
     }
 
     $matching_entities = $this->getPlanEntities();
-
     $options = [];
     if (empty($matching_entities)) {
       return $options;
     }
     $weight = [];
     foreach ($matching_entities as $entity) {
-      $ref_code = $entity->entityPrototype->refCode;
+      $ref_code = $entity->ref_code;
       if (empty($options[$ref_code])) {
-        $name = $entity->entityPrototype->value->name->en->plural;
+        $name = $entity->plural_name;
         $options[$ref_code] = $name;
-        $weight[$ref_code] = $entity->entityPrototype->orderNumber;
+        $weight[$ref_code] = $entity->order_number;
       }
     }
     uksort($options, function ($ref_code_a, $ref_code_b) use ($weight) {
@@ -334,28 +335,19 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
   /**
    * Get available plan entities for the current context.
    *
-   * @param string $entity_type
+   * @param string $entity_ref_code
    *   The entity type to restrict the context.
    *
    * @return array
    *   An array of plan entity objects for the current context.
    */
-  private function getPlanEntities($entity_type = NULL) {
+  private function getPlanEntities($entity_ref_code = NULL) {
     $page_node = $this->getPageNode();
-
-    if ($entity_type === NULL) {
-      $filter = [
-        'entityPrototype.type' => 'PE',
-      ];
+    $filter = NULL;
+    if ($entity_ref_code) {
+      $filter = ['ref_code' => $entity_ref_code];
     }
-    else {
-      $filter = [
-        'entityPrototype.refCode' => $entity_type,
-      ];
-    }
-
-    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($this->getData(), $page_node->bundle() != 'plan' ? $page_node : NULL, NULL, $filter);
-    return $matching_entities;
+    return $this->getQueryHandler()->getPlanEntities($page_node, 'plan', $filter);
   }
 
   /**
@@ -374,11 +366,11 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
    */
   private function buildPlanEntityItemList(array $entities, array $conf, $truncate_description = FALSE) {
     $items = [];
+    $id_type = !empty($conf['id_type']) ? $conf['id_type'] : 'custom_id';
     foreach ($entities as $entity) {
-      $entity_version = ApiEntityHelper::getEntityVersion($entity);
-      $description = $entity_version->value->description;
+      $description = $entity->description;
       $items[$entity->id] = [
-        'id' => $this->getEntityIdLabel($entity, $conf),
+        'id' => $entity->$id_type,
         'description' => $truncate_description ? Unicode::truncate($description, 120, TRUE, TRUE) : $description,
       ];
     }
@@ -396,32 +388,6 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
       });
     }
     return $items;
-  }
-
-  /**
-   * Retrieve the entity id label based on the given configuration.
-   *
-   * @param object $entity
-   *   An entity object.
-   * @param array $conf
-   *   The current element configuration used to apply formatting.
-   *
-   * @return string
-   *   The formatted id label for the given entity.
-   */
-  private function getEntityIdLabel($entity, array $conf) {
-    $entity_version = ApiEntityHelper::getEntityVersion($entity);
-    $id_type = !empty($conf['id_type']) ? $conf['id_type'] : 'custom_id';
-    switch ($id_type) {
-      case 'custom_id':
-        return $entity_version->customReference;
-
-      case 'custom_id_prefixed_refcode':
-        return $entity->entityPrototype->refCode . $entity_version->customReference;
-
-      case 'composed_reference':
-        return $entity->composedReference;
-    }
   }
 
   /**
@@ -461,35 +427,17 @@ class PlanEntityTypes extends GHIBlockBase implements SyncableBlockInterface {
    *   True if the entity passed validation, False otherwhise.
    */
   private function validatePlanEntity($entity, array $conf) {
-    $entity_version = ApiEntityHelper::getEntityVersion($entity);
     $entity_ids = !empty($conf['entity_ids']) ? array_filter($conf['entity_ids']) : [];
     if (!empty($entity_ids) && !in_array($entity->id, $entity_ids)) {
       return FALSE;
     }
-    if (empty($entity_version->value->description)) {
+    if (empty($entity->description)) {
       return FALSE;
     }
 
     $id_type = !empty($conf['id_type']) ? $conf['id_type'] : 'custom_id';
-    switch ($id_type) {
-      case 'custom_id':
-        if (empty($entity_version->customReference)) {
-          return FALSE;
-        }
-        break;
-
-      case 'custom_id_prefixed_refcode':
-        if (empty($entity_version->customReference) || empty($entity->entityPrototype->refCode)) {
-          return FALSE;
-        }
-        break;
-
-      case 'composed_reference':
-        if (empty($entity->composedReference)) {
-          return FALSE;
-        }
-        break;
-
+    if (empty($entity->$id_type)) {
+      return FALSE;
     }
     return TRUE;
   }

@@ -4,35 +4,68 @@ status: true
 dependencies:
   config:
     - field.field.node.governing_entity.field_cluster_managers
-    - field.field.node.governing_entity.field_content
     - field.field.node.governing_entity.field_entity_subpage
     - field.field.node.governing_entity.field_original_id
     - field.field.node.governing_entity.field_plan
     - field.field.node.governing_entity.field_plan_id
     - field.field.node.governing_entity.field_prototype_id
+    - field.field.node.governing_entity.layout_builder__layout
     - node.type.governing_entity
   module:
-    - entity_reference_revisions
     - layout_builder
+    - layout_builder_restrictions
+    - layout_discovery
     - user
 third_party_settings:
   layout_builder:
-    allow_custom: false
-    enabled: false
+    allow_custom: true
+    enabled: true
+    sections:
+      -
+        layout_id: layout_onecol
+        layout_settings:
+          label: Content
+        components: {  }
+        third_party_settings: {  }
+  layout_builder_restrictions:
+    allowed_block_categories:
+      - 'Chaos Tools'
+      - 'Content fields'
+      - 'Custom block types'
+      - Forms
+      - HID
+      - Help
+      - 'Inline blocks'
+      - 'Lists (Views)'
+      - Menus
+      - Plans
+      - 'Social Auth'
+      - System
+      - User
+      - core
+    entity_view_mode_restriction:
+      whitelisted_blocks:
+        'Chaos Tools': {  }
+        'Content fields': {  }
+        'Custom block types': {  }
+        Forms: {  }
+        HID: {  }
+        Help: {  }
+        'Inline blocks': {  }
+        'Lists (Views)': {  }
+        Menus: {  }
+        'Social Auth': {  }
+        System: {  }
+        User: {  }
+        core: {  }
+      blacklisted_blocks: {  }
+      allowed_layouts:
+        - layout_onecol
 id: node.governing_entity.default
 targetEntityType: node
 bundle: governing_entity
 mode: default
-content:
-  field_content:
-    weight: 0
-    label: hidden
-    settings:
-      view_mode: default
-      link: ''
-    third_party_settings: {  }
-    type: entity_reference_revisions_entity_view
-    region: content
+content: {  }
 hidden:
   field_cluster_managers: true
   field_entity_subpage: true
@@ -41,4 +74,5 @@ hidden:
   field_plan_id: true
   field_prototype_id: true
   langcode: true
+  layout_builder__layout: true
   links: true

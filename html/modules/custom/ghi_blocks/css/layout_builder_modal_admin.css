@@ -4,8 +4,8 @@
   margin-bottom: 1rem;
 }
 
-#layout-builder-modal input[data-drupal-selector="edit-actions-submit"].button--primary {
+/* #layout-builder-modal input[data-drupal-selector="edit-actions-submit"].button--primary {
   position: absolute;
   bottom: 1rem;
   right: 1rem;
-}
+} */

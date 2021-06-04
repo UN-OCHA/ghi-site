@@ -7,8 +7,6 @@ core_version_requirement: ^8 || ^9
 
 dependencies:
   - hpc_api:hpc_api
-  - ghi_paragraph_handler:ghi_paragraph_handler
-  - ghi_element_sync:ghi_element_sync
   - migrate_plus:migrate_plus
   - migrate_tools:migrate_tools
   - publishcontent:publishcontent

@@ -4,6 +4,7 @@ namespace Drupal\ghi_element_sync;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Uuid\UuidInterface;
+use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -11,10 +12,10 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerInterface;
-use Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerManager;
+use Drupal\layout_builder\LayoutEntityHelperTrait;
+use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\layout_builder\SectionComponent;
 use Drupal\node\NodeInterface;
-use Drupal\paragraphs\Entity\Paragraph;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Client;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -27,6 +28,7 @@ class SyncManager implements ContainerInjectionInterface {
   use MessengerTrait;
   use StringTranslationTrait;
   use DependencySerializationTrait;
+  use LayoutEntityHelperTrait;
 
   /**
    * The config factory service.
@@ -36,11 +38,11 @@ class SyncManager implements ContainerInjectionInterface {
   protected $config;
 
   /**
-   * The paragraph handler manager.
+   * The block manager.
    *
-   * @var \Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerManager
+   * @var \Drupal\Core\Block\BlockManagerInterface
    */
-  protected $paragraphHandlerManager;
+  protected $blockManager;
 
   /**
    * The http client.
@@ -73,9 +75,9 @@ class SyncManager implements ContainerInjectionInterface {
   /**
    * Public constructor.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ParagraphHandlerManager $paragraph_handler_manager, Client $http_client, UuidInterface $uuid, TimeInterface $time, AccountProxyInterface $user) {
+  public function __construct(ConfigFactoryInterface $config_factory, BlockManagerInterface $block_manager, Client $http_client, UuidInterface $uuid, TimeInterface $time, AccountProxyInterface $user) {
     $this->config = $config_factory;
-    $this->paragraphHandlerManager = $paragraph_handler_manager;
+    $this->blockManager = $block_manager;
     $this->httpClient = $http_client;
     $this->uuidGenerator = $uuid;
     $this->time = $time;
@@ -88,7 +90,7 @@ class SyncManager implements ContainerInjectionInterface {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
-      $container->get('plugin.manager.ghi_paragraph_handler'),
+      $container->get('plugin.manager.block'),
       $container->get('http_client'),
       $container->get('uuid'),
       $container->get('datetime.time'),
@@ -103,6 +105,8 @@ class SyncManager implements ContainerInjectionInterface {
    *   The node for which elements should be synced.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
+   * @param bool $revisions
+   *   Whether new revisions should be created.
    *
    * @return bool
    *   Indicating whether the node has been sucessfully processed or not.
@@ -110,7 +114,7 @@ class SyncManager implements ContainerInjectionInterface {
    * @throws SyncException
    *   When an error occurs.
    */
-  public function syncNode(NodeInterface $node, MessengerInterface $messenger = NULL) {
+  public function syncNode(NodeInterface $node, MessengerInterface $messenger = NULL, $revisions = FALSE) {
     if ($messenger === NULL) {
       $messenger = $this->messenger();
     }
@@ -149,82 +153,82 @@ class SyncManager implements ContainerInjectionInterface {
       return FALSE;
     }
 
-    foreach ($data->elements as $element) {
+    $sections = $this->getNodeSections($node);
+    $delta = 0;
 
-      $definition = $this->getTargetPluginDefinition($element->type);
+    foreach ($data->elements as $element) {
+      $definition = $this->blockManager->getDefinition($element->type, FALSE);
       if (!$definition) {
         continue;
       }
       $class = $definition['class'];
+      if (!in_array('Drupal\ghi_element_sync\SyncableBlockInterface', class_implements($class))) {
+        continue;
+      }
 
-      $paragraph = NULL;
-      $existing_paragraph_handler = $this->getExistingSyncedParagraphHandler($node, $element);
-      if ($existing_paragraph_handler) {
+      $existing_component = $this->getExistingSyncedComponent($node, $element);
+      if ($existing_component) {
         // Update an existing component.
-        $paragraph = $existing_paragraph_handler->getParagraph();
-        $configuration = $class::mapConfig($element->configuration) + $existing_paragraph_handler->getConfig();
-        $existing_paragraph_handler->setConfig($configuration);
-        $paragraph->save();
+        $configuration = $class::mapConfig($element->configuration) + $existing_component->get('configuration');
+        $existing_component->setConfiguration($configuration);
         $messenger->addMessage($this->t('Updated %plugin_title', [
-          '%plugin_title' => $definition['label'],
+          '%plugin_title' => $definition['admin_label'],
         ]));
       }
       else {
         // Append a new component.
         $messenger->addMessage($this->t('Added %plugin_title', [
-          '%plugin_title' => $definition['label'],
+          '%plugin_title' => $definition['admin_label'],
         ]));
         $config = [
+          'id' => $definition['id'],
+          'provider' => $definition['provider'],
+          'data_sources' => $definition['data_sources'],
+          'context_mapping' => [
+            'node' => 'layout_builder.entity',
+          ],
           'sync' => [
             'source_uuid' => $element->uuid,
           ],
         ];
         $config += $class::mapConfig($element->configuration);
 
-        // Create new paragraph entity.
-        $paragraph = Paragraph::create([
-          'type' => $definition['id'],
-        ]);
-        $paragraph->save();
-        $plugin = ghi_paragraph_handler_get_handler($paragraph);
-        $plugin->setConfig($config);
-        $node->field_content->appendItem($paragraph);
+        $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
+        $sections[$delta]->appendComponent($component);
       }
 
     }
 
-    $node->setNewRevision(TRUE);
-    $node->revision_log = $this->t('Synced page elements from @source_url', ['@source_url' => $source_url]);
-    $node->setRevisionCreationTime($this->time->getRequestTime());
-    $node->setRevisionUserId($this->currentUser->id());
+    $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+    if ($revisions) {
+      $node->setNewRevision(TRUE);
+      $node->revision_log = $this->t('Synced page elements from @source_url', ['@source_url' => $source_url]);
+      $node->setRevisionCreationTime($this->time->getRequestTime());
+      $node->setRevisionUserId($this->currentUser->id());
+    }
     $node->save();
 
     return TRUE;
   }
 
   /**
-   * Find a paragraph handler corresponding to the given source element.
+   * Find a section component corresponding to the given source element.
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
    * @param object $element
    *   The configuration object from the sync source.
    *
-   * @return \Drupal\ghi_paragraph_handler\Plugin\ParagraphHandlerInterface|null
-   *   Either a matching paragraph handler, or NULL.
+   * @return \Drupal\layout_builder\SectionComponent|null
+   *   Either a matching component, or NULL.
    */
-  private function getExistingSyncedParagraphHandler(NodeInterface $node, $element) {
-    $paragraphs = $this->getParagraphs($node);
-    foreach ($paragraphs as $paragraph) {
-      if (!$plugin = ghi_paragraph_handler_get_handler($paragraph)) {
-        continue;
-      }
-      if (!$plugin instanceof ParagraphHandlerInterface) {
-        continue;
-      }
-      $configuration = $plugin->getConfig();
+  private function getExistingSyncedComponent(NodeInterface $node, $element) {
+    $section_storage = $this->getSectionStorageForEntity($node);
+    $sections = $section_storage->getSections();
+    foreach ($sections[0]->getComponents() as $component) {
+      $configuration = $component->get('configuration');
       if (!empty($configuration['sync']) && !empty($configuration['sync']['source_uuid']) && $configuration['sync']['source_uuid'] == $element->uuid) {
-        return $plugin;
+        return $component;
       }
     }
     return NULL;
@@ -239,30 +243,13 @@ class SyncManager implements ContainerInjectionInterface {
    * @return array
    *   An array of layout builder sections.
    */
-  private function getParagraphs(NodeInterface $node) {
-    return $node->field_content->referencedEntities();
-  }
-
-  /**
-   * Get the plugin definition for the target paragraph handler.
-   *
-   * @param string $element_type
-   *   The element type of the source site.
-   *
-   * @return array|null
-   *   If a defintion is found, returns the definitions array, NULL otherwhise.
-   */
-  private function getTargetPluginDefinition($element_type) {
-    foreach ($this->paragraphHandlerManager->getDefinitions() as $definition) {
-      $class = $definition['class'];
-      if (!in_array('Drupal\ghi_element_sync\SyncableParagraphInterface', class_implements($class))) {
-        continue;
-      }
-      if ($class::getSourceElementKey() != $element_type) {
-        continue;
-      }
-      return $definition;
+  private function getNodeSections(NodeInterface $node) {
+    $section_storage = $this->getSectionStorageForEntity($node);
+    if (!$section_storage) {
+      return NULL;
     }
+    $sections = $section_storage->getSections();
+    return $sections;
   }
 
 }

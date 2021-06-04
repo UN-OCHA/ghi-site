@@ -5,7 +5,6 @@ dependencies:
   config:
     - field.field.node.plan.body
     - field.field.node.plan.field_cluster_filter
-    - field.field.node.plan.field_content
     - field.field.node.plan.field_country
     - field.field.node.plan.field_decimal_format
     - field.field.node.plan.field_description
@@ -37,13 +36,13 @@ dependencies:
     - field.field.node.plan.field_restricted
     - field.field.node.plan.field_rpm_plan_status
     - field.field.node.plan.field_year
+    - field.field.node.plan.layout_builder__layout
     - node.type.plan
   module:
     - datetime_range
     - field_group
     - ghi_plans
     - link
-    - paragraphs
     - path
 third_party_settings:
   field_group:
@@ -206,25 +205,6 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
-    region: content
-  field_content:
-    weight: 1
-    settings:
-      title: Paragraph
-      title_plural: Paragraphs
-      edit_mode: closed
-      closed_mode: preview
-      autocollapse: none
-      closed_mode_threshold: 0
-      add_mode: button
-      form_display_mode: default
-      default_paragraph_type: _none
-      features:
-        add_above: '0'
-        collapse_edit_all: collapse_edit_all
-        duplicate: duplicate
-    third_party_settings: {  }
-    type: paragraphs
     region: content
   field_country:
     weight: 17
@@ -509,3 +489,4 @@ content:
     third_party_settings: {  }
 hidden:
   body: true
+  layout_builder__layout: true

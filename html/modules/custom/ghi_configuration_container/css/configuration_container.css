@@ -1,0 +1,52 @@
+.ui-dialog .hpc-form-wrapper .form-type--configuration_container.glb-form-item {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+.ui-dialog .hpc-form-wrapper input.ajax-enabled:active {
+  opacity: 0.2;
+}
+.ui-dialog .hpc-form-wrapper .ajax-progress-throbber {
+  border: none;
+  background: none;
+  box-shadow: none;
+  position: relative;
+  padding: 0;
+}
+.ui-dialog .hpc-form-wrapper .ajax-progress-throbber:before {
+  top: -0.85rem;
+  left: -3.6rem;
+}
+.ui-dialog .hpc-form-wrapper .ajax-progress-throbber .throbber,
+.ui-dialog .hpc-form-wrapper .ajax-progress-throbber .message {
+  display: none;
+}
+
+.js-form-type-configuration-container > h3 {
+  margin-block-start: 0;
+}
+
+.js-form-type-configuration-container .tabledrag-toggle-weight-wrapper {
+  display: none;
+}
+
+.js-form-type-configuration-container table.summary-table {
+  width: 100%;
+}
+
+.js-form-type-configuration-container table.summary-table thead th,
+.js-form-type-configuration-container table.summary-table tbody tr td {
+  text-align: left;
+}
+.js-form-type-configuration-container table.summary-table thead th:first-child {
+  padding-left: 1.2rem;
+}
+
+.js-form-type-configuration-container table.summary-table thead th:last-child,
+.js-form-type-configuration-container table.summary-table tbody tr td:last-child {
+  text-align: right;
+}
+
+.js-form-type-configuration-container table.summary-table a.tabledrag-handle .handle {
+  width: auto;
+  height: auto;
+}

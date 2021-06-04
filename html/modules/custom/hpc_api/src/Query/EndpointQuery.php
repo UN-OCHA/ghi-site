@@ -6,6 +6,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
 use GuzzleHttp\ClientInterface;
@@ -19,6 +20,8 @@ use Drupal\hpc_api\Helpers\QueryHelper;
  * Includes data retrieval and error handling.
  */
 class EndpointQuery {
+
+  use DependencySerializationTrait;
 
   const SORT_ASC = 'ASC';
   const SORT_DESC = 'DESC';
@@ -459,6 +462,9 @@ class EndpointQuery {
 
   /**
    * Retrieve data from the API.
+   *
+   * @return object|array
+   *   The result from the endpoint query.
    */
   public function getData() {
     return $this->query();

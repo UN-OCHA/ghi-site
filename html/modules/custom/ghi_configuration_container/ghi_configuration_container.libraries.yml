@@ -1,0 +1,5 @@
+configuration_container:
+  version: VERSION
+  css:
+    component:
+      css/configuration_container.css: {}

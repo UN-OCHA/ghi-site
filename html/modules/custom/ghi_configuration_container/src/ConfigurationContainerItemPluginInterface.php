@@ -64,4 +64,20 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
    */
   public function setConfig(array $config);
 
+  /**
+   * Set the context for an instance.
+   *
+   * @param array $context
+   *   Arbitrary context array, depending on the type of item.
+   */
+  public function setContext(array $context);
+
+  /**
+   * Get the context for an instance.
+   *
+   * @return array
+   *   Arbitrary context array, depending on the type of item.
+   */
+  public function getContext();
+
 }

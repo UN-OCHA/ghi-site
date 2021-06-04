@@ -25,4 +25,35 @@ class PlanFundingSummaryQuery extends EndpointQuery {
     $this->endpointVersion = 'v1';
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getData() {
+    $data = (array) parent::getData();
+    return [
+      'total_funding' => $data['total_funding'],
+      'outside_funding' => $data['overall_funding'] - $data['total_funding'],
+      'funding_coverage' => $data['funding_progress'],
+      'funding_gap' => array_key_exists('unmet_requirements', $data) ? $data['unmet_requirements'] : $data['total_requirements'] - $data['total_funding'],
+      'original_requirements' => $data['original_requirements'],
+      'current_requirements' => $data['total_requirements'],
+    ];
+  }
+
+  /**
+   * Get a specific property from the current result set.
+   *
+   * @param string $property
+   *   The property to retrieve.
+   * @param mixed $default
+   *   A default value.
+   *
+   * @return mixed
+   *   The retrieved property or a default value.
+   */
+  public function get($property, $default) {
+    $data = $this->getData();
+    return !empty($data[$property]) ? $data[$property] : $default;
+  }
+
 }

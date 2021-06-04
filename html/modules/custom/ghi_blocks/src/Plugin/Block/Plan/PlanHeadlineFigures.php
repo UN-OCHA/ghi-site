@@ -1,0 +1,299 @@
+<?php
+
+namespace Drupal\ghi_blocks\Plugin\Block\Plan;
+
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\KeyValueStore\KeyValueFactory;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Routing\Router;
+use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_element_sync\SyncableBlockInterface;
+use Drupal\ghi_configuration_container\ConfigurationContainerItemManager;
+use Drupal\hpc_api\Query\EndpointQuery;
+use Symfony\Component\HttpFoundation\RequestStack;
+
+/**
+ * Provides a 'PlanHeadlineFigures' block.
+ *
+ * @Block(
+ *  id = "plan_headline_figures",
+ *  admin_label = @Translation("Plan: Headline Figures"),
+ *  category = @Translation("Plans"),
+ *  title = FALSE,
+ *  data_sources = {
+ *    "entities" = {
+ *      "service" = "ghi_plans.plan_entities_query"
+ *    },
+ *    "funding_summary" = {
+ *      "service" = "ghi_plans.plan_funding_summary_query"
+ *    },
+ *    "project_search" = {
+ *      "service" = "ghi_plans.plan_project_search_query"
+ *    },
+ *  },
+ *  context_definitions = {
+ *    "node" = @ContextDefinition("entity:node", label = @Translation("Plan node"))
+ *  }
+ * )
+ */
+class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface, ContainerFactoryPluginInterface {
+
+  const MAX_ITEMS = 6;
+
+  /**
+   * The manager class for configuration container items.
+   *
+   * @var \Drupal\ghi_configuration_container\ConfigurationContainerItemManager
+   */
+  protected $configurationContainerItemManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, ConfigurationContainerItemManager $configuration_container_item_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $request_stack, $router, $keyValueFactory, $endpoint_query, $entity_type_manager);
+
+    $this->configurationContainerItemManager = $configuration_container_item_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('request_stack'),
+      $container->get('router.no_access_checks'),
+      $container->get('keyvalue'),
+      $container->get('hpc_api.endpoint_query'),
+      $container->get('entity_type.manager'),
+      $container->get('plugin.manager.configuration_container_item_manager')
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function mapConfig($config) {
+    $items = [];
+    // Define a transition map.
+    $transition_map = [
+      'plan_entities_counter' => [
+        'target' => 'entity_counter',
+        'config' => ['entity_type' => 'plan'],
+      ],
+      'governing_entities_counter' => [
+        'target' => 'entity_counter',
+        'config' => ['entity_type' => 'governing'],
+      ],
+      'partners_counter' => [
+        'target' => 'project_data',
+        'config' => ['data_type' => 'organizations_count'],
+      ],
+      'projects_counter' => [
+        'target' => 'project_data',
+        'config' => ['data_type' => 'projects_count'],
+      ],
+      // 'attachment_value' => 'attachment_value',
+      'original_requirements' => [
+        'target' => 'funding_data',
+        'config' => ['data_type' => 'original_requirements'],
+      ],
+      'funding_requirements' => [
+        'target' => 'funding_data',
+        'config' => ['data_type' => 'current_requirements'],
+      ],
+      'total_funding' => [
+        'target' => 'funding_data',
+        'config' => ['data_type' => 'funding_totals'],
+      ],
+      'outside_funding' => [
+        'target' => 'funding_data',
+        'config' => ['data_type' => 'outside_funding'],
+      ],
+      'funding_coverage' => [
+        'target' => 'funding_data',
+        'config' => ['data_type' => 'funding_coverage'],
+      ],
+      'funding_gap' => [
+        'target' => 'funding_data',
+        'config' => ['data_type' => 'funding_gap'],
+      ],
+      'label_value' => [
+        'target' => 'label_value',
+      ],
+    ];
+    foreach ($config->items as $incoming_item) {
+      $source_type = !empty($incoming_item->element) ? $incoming_item->element : NULL;
+      if (!$source_type || !array_key_exists($source_type, $transition_map)) {
+        continue;
+      }
+      // Apply generic config based on the transition map.
+      $transition_definition = $transition_map[$source_type];
+      $item = [
+        'item_type' => $transition_definition['target'],
+        'config' => [
+          'label' => $incoming_item->label,
+        ],
+      ];
+      if (array_key_exists('config', $transition_definition)) {
+        $item['config'] += $transition_definition['config'];
+      }
+
+      // Do special processing for individual item types.
+      $value = $incoming_item->value;
+      if (is_array($value) && array_key_exists('cluster_restrict', $value) && array_key_exists('cluster_tag', $value)) {
+        $item['config']['cluster_filter'] = [
+          'op' => $value['cluster_restrict'],
+          'tag' => $value['cluster_tag'],
+        ];
+      }
+      switch ($transition_definition['target']) {
+        case 'entity_counter':
+          $item['config']['entity_prototype'] = $value;
+          break;
+
+        case 'label_value':
+          $item['config']['value'] = $value;
+          break;
+
+        case 'original_requirements':
+        case 'funding_requirements':
+          $item['config']['scale'] = array_key_exists('formatting', $value) ? $value['formatting'] : 'auto';
+          break;
+
+        case 'project_data':
+          if ($value === NULL && empty($incoming_item->label)) {
+            // Skip this item entirely.
+            continue(2);
+          }
+          break;
+
+        default:
+          break;
+      }
+      $items[] = $item;
+    }
+    return [
+      'label' => '',
+      'label_display' => FALSE,
+      'hpc' => [
+        'items' => $items,
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildContent() {
+    $conf = $this->getBlockConfig();
+    if (empty($conf['items'])) {
+      return;
+    }
+
+    $allowed_items = $this->getAllowedItemTypes();
+
+    $rendered = [];
+    foreach ($conf['items'] as $item) {
+      if (!array_key_exists($item['item_type'], $allowed_items)) {
+        continue;
+      }
+      $item_type = $this->configurationContainerItemManager->createInstance($item['item_type'], $allowed_items[$item['item_type']]);
+      $item_type->setConfig($item['config']);
+      $item_type->setContext($this->getBlockContext());
+      $rendered[] = $item_type->getLabel() . ': ' . $item_type->getValue();
+    }
+    return [
+      '#theme' => 'item_list',
+      '#items' => $rendered,
+      '#attributes' => [
+        'class' => ['plan-headline-figures'],
+      ],
+    ];
+  }
+
+  /**
+   * Returns generic default configuration for block plugins.
+   *
+   * @return array
+   *   An associative array with the default configuration.
+   */
+  protected function getConfigurationDefaults() {
+    return [
+      'items' => [],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigForm(array $form, FormStateInterface $form_state) {
+
+    $form['items'] = [
+      '#type' => 'configuration_container',
+      '#title' => $this->t('Configured headline figures'),
+      '#title_display' => 'invisble',
+      '#plan_context' => $this->getPageNode(),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'items'),
+      '#allowed_item_types' => $this->getAllowedItemTypes(),
+      '#preview' => [
+        'columns' => [
+          'label' => $this->t('Label'),
+          'value' => $this->t('Value'),
+        ],
+      ],
+      '#element_context' => $this->getBlockContext(),
+      '#max_items' => self::MAX_ITEMS,
+    ];
+    return $form;
+  }
+
+  /**
+   * Get the custom context for this block.
+   *
+   * @return array
+   *   An array with context data or query handlers.
+   */
+  public function getBlockContext() {
+    return [
+      'entity_query' => $this->getQueryHandler('entities'),
+      'funding_summary_query' => $this->getQueryHandler('funding_summary'),
+      'project_search_query' => $this->getQueryHandler('project_search'),
+      'page_node' => $this->getPageNode(),
+      'plan_node' => $this->getCurrentPlanNode(),
+    ];
+  }
+
+  /**
+   * Get the allowed item types for this element.
+   *
+   * @return array
+   *   An array with the allowed item types, keyed by the plugin id, with the
+   *   value being an optional configuration array for the plugin.
+   */
+  public function getAllowedItemTypes() {
+    $item_types = [
+      'funding_data' => [],
+      'entity_counter' => [],
+      'project_data' => [
+        'access' => [
+          'plan_costing' => [0, 1, 3],
+        ],
+      ],
+      'attachment_data' => [
+        'label' => $this->t('Caseload/indicator value'),
+        'access' => [
+          'node_type' => ['plan', 'governing_entity'],
+        ],
+      ],
+      'label_value' => [],
+    ];
+    return $item_types;
+  }
+
+}

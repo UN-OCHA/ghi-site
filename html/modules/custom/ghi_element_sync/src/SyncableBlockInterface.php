@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ghi_blocks\Plugin\Block;
+namespace Drupal\ghi_element_sync;
 
 /**
  * Defines an interface for block plugins that can be synced.

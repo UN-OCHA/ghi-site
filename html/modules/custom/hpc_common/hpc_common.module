@@ -34,9 +34,55 @@ function hpc_common_help($route_name, RouteMatchInterface $route_match) {
 function hpc_common_theme($existing, $type, $theme, $path) {
   $common = [
     'file' => 'hpc_common.theme.inc',
+    'template' => 'hpc-markup-wrapper',
   ];
 
   return [
+    'hpc_currency' => [
+      'variables' => [
+        'value'  => NULL,
+        'scale' => '',
+        'currency' => 'USD',
+        'markup_element' => NULL,
+        'export' => FALSE,
+        'use_abbreviation' => TRUE,
+        'decimals' => NULL,
+        'formatting_decimals' => NULL,
+      ],
+    ] + $common,
+    'hpc_amount' => [
+      'variables' => [
+        'amount' => NULL,
+        'scale' => '',
+        'suffix' => '',
+        'include_suffix' => TRUE,
+        'markup_element' => NULL,
+        'export' => FALSE,
+        'use_abbreviation' => TRUE,
+        'decimals' => 0,
+        'formatting_decimals' => NULL,
+      ],
+    ] + $common,
+    'hpc_percent' => [
+      'variables' => [
+        'percent' => NULL,
+        'ratio' => NULL,
+        'markup_element' => NULL,
+        'export' => FALSE,
+        'precision' => NULL,
+        'formatting_decimals' => NULL,
+      ],
+    ] + $common,
+    'hpc_autoformat_value' => [
+      'variables' => [
+        'value' => NULL,
+        'unit_type' => NULL,
+        'unit_defaults' => NULL,
+        'markup_element' => NULL,
+        'formatting_decimals' => NULL,
+        'export' => FALSE,
+      ],
+    ] + $common,
     'hpc_modal_link' => [
       'variables' => [
         'link' => NULL,
@@ -110,6 +156,7 @@ function hpc_common_preprocess_block(&$vars) {
       return;
     }
     $endpoint_urls = $block_instance->getFullEndpointUrls();
+
     if (!empty($endpoint_urls)) {
       $vars['icons'][] = [
         '#theme' => 'hpc_tooltip',
