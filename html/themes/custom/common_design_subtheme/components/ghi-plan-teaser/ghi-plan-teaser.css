@@ -6,10 +6,6 @@
  * libraries for each one. If that becomes problematic in the future, feel free
  * to combine them.
  */
-.ghi-plan-teaser {
-
-}
-
 .ghi-plan-teaser__image {
   /*
    * 2021-05-28: the Plan image comes from the API and we didn't yet have a
@@ -22,6 +18,6 @@
 }
 
 .ghi-plan-teaser__title {
-  font-size: 1rem;
   padding-bottom: 1rem;
+  font-size: 1rem;
 }
