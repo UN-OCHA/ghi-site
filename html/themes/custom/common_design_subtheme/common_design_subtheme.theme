@@ -15,5 +15,6 @@
  * @see https://api.drupal.org/api/drupal/core%21lib%21Drupal%21Core%21Render%21theme.api.php/function/hook_theme_suggestions_HOOK_alter/8.4.x
  */
 function common_design_subtheme_theme_suggestions_views_view_alter(&$suggestions, $variables) {
-  $suggestions[] = 'something-custom-should-go-here-after-reading-views-variables';
+  $suggestions[] = sprintf('views_view__%s', $variables['view']->id());
+  $suggestions[] = sprintf('views_view__%s__%s', $variables['view']->id(), $variables['view']->current_display);
 }
