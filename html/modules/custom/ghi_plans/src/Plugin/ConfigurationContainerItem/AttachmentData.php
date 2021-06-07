@@ -3,8 +3,10 @@
 namespace Drupal\ghi_plans\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\ghi_configuration_container\ConfigurationContainerItemPluginBase;
-use Drupal\node\NodeInterface;
+use Drupal\ghi_plans\Helpers\DataPointHelper;
+use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
  * Provides an entity counter item for configuration containers.
@@ -23,7 +25,74 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
    */
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
-    $element['label']['#description'] = $this->t('Leave empty to use a default label');
+
+    $context = $this->getContext();
+    $attachment_select = $this->getSubmittedValue($element, $form_state, 'attachment', $form_state->get('attachment_select'));
+    $data_point = $this->getSubmittedValue($element, $form_state, 'data_point');
+
+    $element['attachment'] = [
+      '#type' => 'attachment_select',
+      '#title' => $this->t('Select attachment'),
+      '#default_value' => $attachment_select,
+      '#element_context' => $this->getContext(),
+    ];
+
+    $element['submit_attachment'] = [
+      '#type' => 'button',
+      '#value' => $this->t('Use selected attachment'),
+      '#name' => 'submit-attachment',
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $this->wrapperId,
+      ],
+    ];
+
+    $trigger = $form_state->getTriggeringElement() ? end($form_state->getTriggeringElement()['#parents']) : NULL;
+    $triggered_by_change_request = $trigger == 'change_attachment';
+
+    $attachment = NULL;
+    if (!empty($attachment_select['attachment_id'])) {
+      $attachment = $context['attachment_query']->getAttachment($attachment_select['attachment_id']);
+    }
+
+    $element['label']['#access'] = !empty($attachment);
+    if ($attachment) {
+      $form_state->set('attachment_select', $attachment_select);
+      $element['attachment']['#summary_only'] = TRUE;
+
+      $element['attachment_summary'] = [
+        '#markup' => Markup::create('<h3>' . $this->t('Selected attachment: %attachment', ['%attachment' => $attachment->composed_reference]) . '</h3>'),
+        '#weight' => -1,
+      ];
+
+      if (!$triggered_by_change_request) {
+        $element['submit_attachment']['#attributes']['class'][] = 'visually-hidden';
+      }
+
+      $element['change_attachment'] = [
+        '#type' => 'button',
+        '#value' => $this->t('Change attachment'),
+        '#name' => 'change-attachment',
+        '#ajax' => [
+          'event' => 'click',
+          'callback' => [static::class, 'updateAjax'],
+          'wrapper' => $this->wrapperId,
+        ],
+      ];
+      if ($triggered_by_change_request) {
+        $element['change_attachment']['#disabled'] = TRUE;
+        $element['change_attachment']['#attributes']['class'][] = 'visually-hidden';
+      }
+
+      $element['data_point'] = [
+        '#type' => 'data_point',
+        '#title' => $this->t('Value'),
+        '#element_context' => $this->getContext(),
+        '#attachment' => $attachment,
+        '#default_value' => $data_point,
+      ];
+    }
 
     return $element;
   }
@@ -32,45 +101,12 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getValue() {
-
-    return NULL;
-  }
-
-  /**
-   * Access callback.
-   *
-   * @param array $context
-   *   A context array.
-   * @param array $access_requirements
-   *   An array with access requirements.
-   *
-   * @return bool
-   *   The access status.
-   */
-  public function access(array $context, array $access_requirements) {
-    $allowed = TRUE;
-    if (empty($context['page_node'])) {
-      return FALSE;
-    }
-    if (!empty($access_requirements['node_type'])) {
-      $allowed = $allowed && $this->accessByNodeType($context['page_node'], $access_requirements['node_type']);
-    }
-    return $allowed;
-  }
-
-  /**
-   * Check access by node type.
-   *
-   * @param \Drupal\node\NodeInterface $page_node
-   *   A node object.
-   * @param array $valid_node_types
-   *   An array with the valid node types.
-   *
-   * @return bool
-   *   The access status.
-   */
-  public function accessByNodeType(NodeInterface $page_node, array $valid_node_types) {
-    return in_array($page_node->bundle(), $valid_node_types);
+    $attachment_id = $this->get(['attachment', 'attachment_id']);
+    $data_point_conf = $this->get(['data_point']);
+    $context = $this->getContext();
+    $attachment = $context['attachment_query']->getAttachment($attachment_id);
+    $build = DataPointHelper::formatValue($attachment, $data_point_conf);
+    return ThemeHelper::render($build);
   }
 
 }

@@ -135,7 +135,7 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
    */
   public function accessByPlanCosting(NodeInterface $plan_node, array $valid_type_codes) {
     $term = TaxonomyHelper::getTermById($plan_node->field_plan_costing->target_id, 'plan_costing');
-    return in_array($term->field_plan_costing_code->value, $valid_type_codes);
+    return $term ? in_array($term->field_plan_costing_code->value, $valid_type_codes) : FALSE;
   }
 
 }

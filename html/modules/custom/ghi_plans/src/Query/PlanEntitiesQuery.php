@@ -7,6 +7,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
 use Drupal\hpc_api\Helpers\ArrayHelper;
@@ -42,17 +43,55 @@ class PlanEntitiesQuery extends EndpointQuery {
   }
 
   /**
+   * Map attachment types to their tring representation in the API.
+   *
+   * @param string $type
+   *   The type used in GHI.
+   *
+   * @return string
+   *   The type used in the API.
+   */
+  private function mapAttachmentType($type) {
+    $type_map = [
+      'caseload' => 'caseLoad',
+    ];
+    return !empty($type_map[$type]) ? $type_map[$type] : $type;
+  }
+
+  /**
+   * Preare attachment filters.
+   *
+   * @param array $filter
+   *   The passed in filter array.
+   *
+   * @return array
+   *   A prepared filter array.
+   */
+  private function prepareAttachmentFilter(array $filter) {
+    if (empty($filter)) {
+      return $filter;
+    }
+    $filter = array_filter($filter, function ($item) {
+      return $item !== NULL;
+    });
+    if (!empty($filter['type'])) {
+      $filter['type'] = array_map([$this, 'mapAttachmentType'], (array) $filter['type']);
+    }
+    return $filter;
+  }
+
+  /**
    * Get all attachments.
    *
    * @param \Drupal\node\NodeInterface $context_node
    *   The current context node.
-   * @param string $type
-   *   Optional type for filtering the attachments.
+   * @param array $filter
+   *   Optional array for filtering the attachments.
    *
    * @return array
    *   An array of attachment objects for the given context.
    */
-  public function getAttachments(NodeInterface $context_node = NULL, $type = NULL) {
+  private function getAttachments(NodeInterface $context_node = NULL, array $filter = []) {
     $data = $this->getData();
     if (empty($data)) {
       return NULL;
@@ -80,17 +119,39 @@ class PlanEntitiesQuery extends EndpointQuery {
       }
     }
 
-    if ($type === NULL) {
-      return $attachments;
+    if (!empty($filter)) {
+      $attachments = ArrayHelper::filterArray($attachments, $this->prepareAttachmentFilter($filter));
     }
-    $filtered_attachments = [];
-    foreach ($attachments as $attachment) {
-      if (strtolower($attachment->type) != strtolower($type)) {
-        continue;
-      }
-      $filtered_attachments[] = $attachment;
+    return $attachments;
+  }
+
+  /**
+   * Get data attachments.
+   *
+   * @param \Drupal\node\NodeInterface $context_node
+   *   The current context node.
+   * @param array $filter
+   *   Optional array for filtering the attachments.
+   *
+   * @return array
+   *   An array of attachment objects for the given context.
+   */
+  public function getDataAttachments(NodeInterface $context_node, array $filter = NULL) {
+    $allowed_types = [
+      'caseload',
+      'indicator',
+    ];
+
+    if (empty($filter['type'])) {
+      $filter['type'] = $allowed_types;
     }
-    return $filtered_attachments;
+    else {
+      $filter['type'] = array_filter((array) $filter['type'], function ($item) use ($allowed_types) {
+        return in_array($item, $allowed_types);
+      });
+    }
+
+    return AttachmentHelper::processAttachments($this->getAttachments($context_node, $filter));
   }
 
   /**
@@ -104,16 +165,11 @@ class PlanEntitiesQuery extends EndpointQuery {
    */
   public function getWebContentFileAttachments(NodeInterface $context_node) {
     $attachments = [];
-    foreach ($this->getAttachments($context_node, 'fileWebContent') as $attachment) {
+    foreach ($this->getAttachments($context_node, ['type' => 'fileWebContent']) as $attachment) {
       if (empty($attachment->attachmentVersion->value->file->url)) {
         continue;
       }
-      $attachments[] = (object) [
-        'id' => $attachment->id,
-        'url' => $attachment->attachmentVersion->value->file->url,
-        'title' => $attachment->attachmentVersion->value->file->title ?? '',
-        'file_name' => $attachment->attachmentVersion->value->name ?? '',
-      ];
+      $attachments[] = AttachmentHelper::processAttachment($attachment);
     }
     return $attachments;
   }
@@ -129,15 +185,11 @@ class PlanEntitiesQuery extends EndpointQuery {
    */
   public function getWebContentTextAttachments(NodeInterface $context_node) {
     $attachments = [];
-    foreach ($this->getAttachments($context_node, 'textWebContent') as $attachment) {
+    foreach ($this->getAttachments($context_node, ['type' => 'textWebContent']) as $attachment) {
       if (empty($attachment->attachmentVersion->value->content ?? '')) {
         continue;
       }
-      $attachments[] = (object) [
-        'id' => $attachment->id,
-        'title' => $attachment->attachmentVersion->value->name,
-        'content' => html_entity_decode($attachment->attachmentVersion->value->content ?? ''),
-      ];
+      $attachments[] = AttachmentHelper::processAttachment($attachment);
     }
     return $attachments;
   }

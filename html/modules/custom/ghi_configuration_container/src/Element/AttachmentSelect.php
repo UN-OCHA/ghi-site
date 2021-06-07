@@ -5,6 +5,7 @@ namespace Drupal\ghi_configuration_container\Element;
 use Drupal\Core\Render\Element\FormElement;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Render\Markup;
 use Drupal\ghi_configuration_container\Traits\AjaxElementTrait;
 
 /**
@@ -38,18 +39,14 @@ class AttachmentSelect extends FormElement {
         [$class, 'elementSubmit'],
       ],
       '#theme_wrappers' => ['form_element'],
-      '#max_items' => NULL,
-      '#preview' => NULL,
-      '#plan_context' => NULL,
 
-      '#tree' => TRUE,
       '#multiple' => FALSE,
       '#disabled' => FALSE,
-      '#preview_only' => FALSE,
-      '#show_filter' => FALSE,
-      '#group_by_entity' => FALSE,
-      '#include_available_map_metrics' => FALSE,
-      '#disable_empty_locations' => FALSE,
+      '#summary_only' => FALSE,
+      // '#show_filter' => FALSE,
+      // '#group_by_entity' => FALSE,
+      // '#include_available_map_metrics' => FALSE,
+      // '#disable_empty_locations' => FALSE,
       '#disabled' => FALSE,
 
       '#entity_types' => [],
@@ -65,8 +62,22 @@ class AttachmentSelect extends FormElement {
    *   The form state.
    * @param array $form
    *   The full form.
+   *
+   * @todo Check if this is actually needed.
    */
   public static function elementSubmit(array &$element, FormStateInterface $form_state, array $form) {
+    $form_state->setRebuild(TRUE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
+    if ($input !== NULL) {
+      // Make sure input is returned as normal during item configuration.
+      return $input;
+    }
+    return NULL;
   }
 
   /**
@@ -75,41 +86,148 @@ class AttachmentSelect extends FormElement {
    * This is called during form build. Note that it is not possible to store
    * any arbitrary data inside the form_state object.
    */
-  public static function processConfigurationContainer(array &$element, FormStateInterface $form_state) {
-
-    if (!empty($element['#available_options']['entities'])) {
-      $entity_type_options = $element['#available_options']['entities'];
-      if (empty($plan_context)) {
-        $entity_type_options = array_merge(['overview' => t('Plan')], $entity_type_options);
-      }
-      // Either show a select with the available options for the entity type, or
-      // set a preset value that should come from $element['#entity_type'].
-      $element['entity_type'] = [
-        '#type' => 'select',
-        '#title' => t('Entity type'),
-        '#options' => $entity_type_options,
-        '#default_value' => $defaults['entity_type'],
-        '#required' => TRUE,
-        '#ajax' => [
-          'event' => 'change',
-          'callback' => [static::class, 'updateAjax'],
-          'wrapper' => $table_wrapper_id,
-        ],
-      ];
-
-      if (!empty($element['#entity_type'])) {
-        $defaults['entity_type'] = $element['#entity_type'];
-        $element['entity_type']['#type'] = 'hidden';
-        $element['entity_type']['#value'] = $defaults['entity_type'];
-      }
+  public static function processAttachmentSelect(array &$element, FormStateInterface $form_state) {
+    $context = $element['#element_context'];
+    if (empty($context['entity_query'])) {
+      return $element;
     }
 
+    $wrapper_id = self::getWrapperId($element);
+    $element['#prefix'] = '<div id="' . $wrapper_id . '">';
+    $element['#suffix'] = '</div>';
+
+    $entity_type_options = !empty($element['#entity_types']) ? $element['#entity_types'] : [
+      'plan' => t('Plan entities'),
+      'governing' => t('Governing entities'),
+    ];
+
+    $attachment_type_options = !empty($element['#attachment_types']) ? $element['#attachment_types'] : [
+      'caseload' => t('Caseload'),
+      'indicator' => t('Indicator'),
+    ];
+
+    // Set the defaults.
+    $values = (array) $form_state->getValue($element['#parents']) + (array) $element['#default_value'];
+    $defaults = [
+      'entity_type' => !empty($values['entity_type']) ? $values['entity_type'] : NULL,
+      'attachment_type' => !empty($values['attachment_type']) ? $values['attachment_type'] : NULL,
+      'attachment_id' => !empty($values['attachment_id']) ? $values['attachment_id'] : NULL,
+    ];
+
+    $trigger = $form_state->getTriggeringElement() ? end($form_state->getTriggeringElement()['#parents']) : NULL;
+
+    $triggered_by_select = $trigger ? in_array($trigger, [
+      'entity_type',
+      'attachment_type',
+    ]) : FALSE;
+    $triggered_by_change_request = $trigger ? $trigger == 'change_attachment' : FALSE;
+
+    if ($element['#summary_only'] && !$triggered_by_select && !$triggered_by_change_request) {
+      $attachment = $context['attachment_query']->getAttachment($defaults['attachment_id']);
+      $element['entity_type'] = [
+        '#type' => 'value',
+        '#value' => $defaults['entity_type'],
+      ];
+      $element['attachment_type'] = [
+        '#type' => 'value',
+        '#value' => $defaults['attachment_type'],
+      ];
+      $element['attachment_id'] = [
+        '#type' => 'value',
+        '#value' => $defaults['attachment_id'],
+      ];
+      $element['summary'] = [
+        '#markup' => $attachment ? Markup::create($attachment->composed_reference) : t('No attachment selected.'),
+      ];
+      return $element;
+    }
+
+    if (!empty($context['page_node']) && $context['page_node']->bundle() == 'plan') {
+      $entity_type_options = array_merge(['overview' => t('Plan')], $entity_type_options);
+    }
+    // Either show a select with the available options for the entity type, or
+    // set a preset value that should come from $element['#entity_type'].
+    $element['entity_type'] = [
+      '#type' => 'select',
+      '#title' => t('Entity type'),
+      '#options' => $entity_type_options,
+      '#default_value' => $defaults['entity_type'],
+      '#ajax' => [
+        'event' => 'change',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+      '#disabled' => $element['#disabled'],
+    ];
+
+    if (!empty($element['#entity_type'])) {
+      $defaults['entity_type'] = $element['#entity_type'];
+      $element['entity_type']['#type'] = 'hidden';
+      $element['entity_type']['#value'] = $defaults['entity_type'];
+    }
+
+    // Either show a select with the available options for the attachment type,
+    // or set a preset value that should come from $element['#attachment_type'].
+    $element['attachment_type'] = [
+      '#type' => 'select',
+      '#title' => t('Attachment type'),
+      '#options' => $attachment_type_options,
+      '#default_value' => $defaults['attachment_type'],
+      '#ajax' => [
+        'event' => 'change',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+      '#disabled' => $element['#disabled'],
+    ];
+    if (!empty($element['#attachment_type'])) {
+      $defaults['attachment_type'] = $element['#attachment_type'];
+      $element['attachment_type']['#type'] = 'hidden';
+      $element['attachment_type']['#value'] = $defaults['attachment_type'];
+      unset($element['attachment_type']['#options']);
+    }
+
+    $attachments = $context['entity_query']->getDataAttachments($context['page_node'], [
+      'type' => $defaults['attachment_type'],
+    ]);
+    $attachment_options = [];
+    foreach ($attachments as $attachment) {
+      $attachment_options[$attachment->id] = [
+        'id' => $attachment->id,
+        'composed_reference' => $attachment->composed_reference,
+        'type' => $attachment->type,
+        'prototype' => $attachment->prototype->name,
+        'description' => $attachment->description,
+      ];
+    }
+
+    $columns = [
+      'id' => t('ID'),
+      'composed_reference' => t('Reference'),
+      'type' => t('Type'),
+      'prototype' => t('Prototype'),
+      'description' => t('Description'),
+    ];
+
+    $element['attachment_id'] = [
+      '#type' => 'tableselect',
+      '#tree' => TRUE,
+      '#required' => TRUE,
+      '#header' => $columns,
+      '#validated' => TRUE,
+      '#options' => $attachment_options,
+      '#default_value' => array_key_exists($defaults['attachment_id'], $attachment_options) ? $defaults['attachment_id'] : NULL,
+      '#multiple' => $element['#multiple'],
+      '#disabled' => $element['#disabled'],
+      '#empty' => t('No suitable attachments found. Please review your selection criteria above.'),
+    ];
+    return $element;
   }
 
   /**
    * Prerender callback.
    */
-  public static function preRenderConfigurationContainer(array $element) {
+  public static function preRenderAttachmentSelect(array $element) {
     $element['#attributes']['type'] = 'attachment_select';
     Element::setAttributes($element, ['id', 'name', 'value']);
     // Sets the necessary attributes, such as the error class for validation.

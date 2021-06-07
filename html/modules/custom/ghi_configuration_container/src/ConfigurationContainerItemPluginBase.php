@@ -5,6 +5,7 @@ namespace Drupal\ghi_configuration_container;
 use Drupal\ghi_configuration_container\Traits\AjaxElementTrait;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -23,7 +24,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    *
    * @var array
    */
-  protected $config;
+  protected $config = [];
 
   /**
    * Context for an instance of the item.
@@ -66,7 +67,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
     $element['label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Label'),
-      '#default_value' => $this->config['label'],
+      '#default_value' => array_key_exists('label', $this->config) ? $this->config['label'] : NULL,
     ];
     return $element;
   }
@@ -82,7 +83,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    * {@inheritdoc}
    */
   public function getLabel() {
-    if (!empty($this->config['label'])) {
+    if (array_key_exists('label', $this->config) && !empty($this->config['label'])) {
       return $this->config['label'];
     }
   }
@@ -91,7 +92,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    * {@inheritdoc}
    */
   public function getValue() {
-    if (!empty($this->config['value'])) {
+    if (array_key_exists('value', $this->config) && !empty($this->config['value'])) {
       return $this->config['value'];
     }
   }
@@ -100,6 +101,13 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    * {@inheritdoc}
    */
   public function get($key) {
+    if ($this->config === NULL) {
+      return NULL;
+    }
+    if (is_array($key)) {
+      return NestedArray::getValue($this->config, $key);
+    }
+
     $method = 'get' . ucfirst($key);
     if (method_exists($this, $method)) {
       return $this->{$method}();
@@ -150,7 +158,6 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
     $value_parents = array_merge($element['#parents'], (array) $value_key);
     $_form_state = $form_state instanceof SubformStateInterface ? $form_state->getCompleteFormState() : $form_state;
     $submitted = $_form_state->hasValue($value_parents) ? $_form_state->getValue($value_parents) : NULL;
-
     $value = $submitted ?: $this->get($value_key);
     return $value ?: $default_value;
   }

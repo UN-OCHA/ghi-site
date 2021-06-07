@@ -88,7 +88,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
       }
     }
     elseif ($page_node->hasField('field_plan') && count($page_node->get('field_plan')->referencedEntities()) == 1) {
-      $plan = reset($page_node->get('field_plan')->referencedEntities());
+      $entities = $page_node->get('field_plan')->referencedEntities();
+      $plan = reset($entities);
       $plan_id = $plan->field_original_id->value;
       $query_handler->setPlaceholder('plan_id', $plan_id);
     }
@@ -390,7 +391,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       '#theme' => 'block',
       '#attributes' => [],
       '#configuration' => [
-        'label' => $build['#title'] ?: NULL,
+        'label' => array_key_exists('#title', $build) ? $build['#title'] : NULL,
         'label_display' => $this->configuration['label_display'],
         'hpc' => $this->getTemporarySettings($form_state),
       ] + $this->configuration,

@@ -22,6 +22,19 @@ trait AjaxElementTrait {
   protected static $elementParentsFormKey;
 
   /**
+   * Get a wrapper ID for an element.
+   *
+   * @param array $element
+   *   The form element.
+   *
+   * @return string
+   *   The wrapper id.
+   */
+  public static function getWrapperId(array $element) {
+    return implode('-', $element['#array_parents']) . '-wrapper';
+  }
+
+  /**
    * Set the elements parents of the given element.
    *
    * @param array $element
@@ -101,8 +114,12 @@ trait AjaxElementTrait {
    */
   private static function setClassOnAjaxElements(array &$element) {
     $class_name = Html::getClass('ajax-enabled');
-    if (array_key_exists('#ajax', $element) && !in_array($class_name, $element['#attributes']['class'])) {
-      $element['#attributes']['class'][] = $class_name;
+
+    $class_parents = ['#attributes', 'class'];
+    $classes = NestedArray::keyExists($element, $class_parents) ? NestedArray::getValue($element, $class_parents) : [];
+    if (array_key_exists('#ajax', $element) && !in_array($class_name, $classes)) {
+      $classes[] = $class_name;
+      NestedArray::setValue($element, $class_parents, $classes);
     }
     foreach (Element::children($element) as $element_key) {
       self::setClassOnAjaxElements($element[$element_key]);

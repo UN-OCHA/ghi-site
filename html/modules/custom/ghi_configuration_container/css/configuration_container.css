@@ -23,6 +23,7 @@
 
 .js-form-type-configuration-container > h3 {
   margin-block-start: 0;
+  margin-block-end: 0;
 }
 
 .js-form-type-configuration-container .tabledrag-toggle-weight-wrapper {

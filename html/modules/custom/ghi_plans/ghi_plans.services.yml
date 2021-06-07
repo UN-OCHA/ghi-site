@@ -11,3 +11,6 @@ services:
   ghi_plans.plan_cluster_summary_query:
     parent: hpc_api.endpoint_query
     class: Drupal\ghi_plans\Query\PlanClusterSummaryQuery
+  ghi_plans.attachment_query:
+    parent: hpc_api.endpoint_query
+    class: Drupal\ghi_plans\Query\AttachmentQuery

@@ -21,6 +21,9 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
  *    "data" = {
  *      "service" = "ghi_plans.plan_entities_query"
  *    },
+ *    "attachment" = {
+ *      "service" = "ghi_plans.attachment_query"
+ *    },
  *  },
  *  title = false,
  *  context_definitions = {
@@ -48,23 +51,12 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
    */
   public function buildContent() {
     // Retrieve the attachments.
-    $attachments = $this->getQueryHandler()->getWebContentFileAttachments($this->getPageNode());
-
     $conf = $this->getBlockConfig();
     if (empty($conf['attachment_id'])) {
       return;
     }
 
-    $attachment_id = $conf['attachment_id'];
-    $attachments = array_filter($attachments, function ($object) use ($attachment_id) {
-      return $object->id == $attachment_id;
-    });
-
-    if (empty($attachments)) {
-      return;
-    }
-    $attachment = reset($attachments);
-
+    $attachment = $this->getQueryHandler('attachment')->getAttachment($conf['attachment_id']);
     return [
       '#theme' => 'image',
       '#uri' => $attachment->url,

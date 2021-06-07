@@ -119,6 +119,9 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     if ($page_node->bundle() == 'plan') {
       $value = $context['funding_summary_query']->get($data_type['property'], 0);
     }
+    elseif ($page_node->bundle() == 'governing_entity') {
+      $value = $context['cluster_summary_query']->getClusterProperty($page_node->field_original_id->value, $data_type['property'], 0);
+    }
 
     $theme_function = !empty($data_type['theme']) ? $data_type['theme'] : 'hpc_currency';
     return ThemeHelper::theme($theme_function, ThemeHelper::getThemeOptions($theme_function, $value, [

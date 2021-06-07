@@ -3,3 +3,4 @@ configuration_container:
   css:
     component:
       css/configuration_container.css: {}
+      css/attachment_select.css: {}
