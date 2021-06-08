@@ -104,7 +104,9 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
         'target' => 'project_data',
         'config' => ['data_type' => 'projects_count'],
       ],
-      // 'attachment_value' => 'attachment_value',
+      'attachment_value' => [
+        'target' => 'attachment_data',
+      ],
       'original_requirements' => [
         'target' => 'funding_data',
         'config' => ['data_type' => 'original_requirements'],
@@ -177,6 +179,24 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
             // Skip this item entirely.
             continue(2);
           }
+          break;
+
+        case 'attachment_data':
+          $item['config']['attachment'] = [
+            'entity_type' => $incoming_item->value->attachment_select->entity_type,
+            'attachment_type' => $incoming_item->value->attachment_select->attachment_type,
+            'attachment_id' => $incoming_item->value->attachment_select->attachment_id,
+          ];
+          $item['config']['data_point'] = [
+            'processing' => $incoming_item->value->data_point->processing,
+            'calculation' => $incoming_item->value->data_point->calculation,
+            'data_points' => [
+              0 => $incoming_item->value->data_point->data_point_1,
+              1 => $incoming_item->value->data_point->data_point_2,
+            ],
+            'formatting' => $incoming_item->value->data_point->formatting,
+            'widget' => $incoming_item->value->data_point->mini_widget,
+          ];
           break;
 
         default:

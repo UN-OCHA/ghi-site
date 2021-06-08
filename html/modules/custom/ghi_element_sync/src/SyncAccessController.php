@@ -20,7 +20,7 @@ class SyncAccessController {
    *   The access result.
    */
   public function accessElementSyncForm(NodeInterface $node) {
-    $allowed = $node->bundle() == 'plan' || ($node->hasField('field_plan') && $node->hasField('field_original_id') && !empty($node->field_original_id->isEmpty()));
+    $allowed = $node->bundle() == 'plan' || ($node->hasField('field_plan') && $node->hasField('field_original_id') && !$node->field_original_id->isEmpty());
     return AccessResult::allowedIf($allowed);
   }
 
