@@ -1,11 +1,13 @@
 <?php
 
-namespace Drupal\ghi_configuration_container\Element;
+namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Core\Render\Element\FormElement;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\ghi_configuration_container\Traits\AjaxElementTrait;
+use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
+use Drupal\ghi_plans\Helpers\DataPointHelper;
+use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
  * Provides a configuration container element.
@@ -39,6 +41,7 @@ class DataPoint extends FormElement {
       ],
       '#theme_wrappers' => ['form_element'],
       '#attachment' => NULL,
+      '#widget' => TRUE,
     ];
   }
 
@@ -76,42 +79,55 @@ class DataPoint extends FormElement {
    * any arbitrary data inside the form_state object.
    */
   public static function processDataPoint(array &$element, FormStateInterface $form_state) {
-    $context = $element['#element_context'];
     $attachment = $element['#attachment'];
-    if (empty($context['attachment_query'])) {
+    if (empty($attachment)) {
       return $element;
     }
+
+    $wrapper_id = self::getWrapperId($element);
+    $element['#prefix'] = '<div id="' . $wrapper_id . '">';
+    $element['#suffix'] = '</div>';
 
     // Set the defaults.
     $values = (array) $form_state->getValue($element['#parents']) + (array) $element['#default_value'];
     $defaults = [
-      'processing' => !empty($values['processing']) ? $values['processing'] : NULL,
+      'processing' => !empty($values['processing']) ? $values['processing'] : array_key_first(DataPointHelper::getProcessingOptions()),
       'calculation' => !empty($values['calculation']) ? $values['calculation'] : NULL,
       'data_points' => [
-        0 => !empty($values['data_points'][0]) ? $values['data_points'][0] : NULL,
-        1 => !empty($values['data_points'][1]) ? $values['data_points'][1] : NULL,
+        0 => array_key_exists(0, $values['data_points']) ? $values['data_points'][0] : array_key_first($attachment->prototype->fields),
+        1 => array_key_exists(1, $values['data_points']) ? $values['data_points'][1] : NULL,
       ],
-      'formatting' => !empty($values['formatting']) ? $values['formatting'] : NULL,
+      'formatting' => !empty($values['formatting']) ? $values['formatting'] : array_key_first(DataPointHelper::getFormattingOptions()),
       'widget' => !empty($values['widget']) ? $values['widget'] : NULL,
     ];
 
     $element['processing'] = [
       '#type' => 'select',
       '#title' => t('Processing'),
-      '#options' => self::getProcessingOptions(),
+      '#options' => DataPointHelper::getProcessingOptions(),
       '#default_value' => $defaults['processing'],
+      '#ajax' => [
+        'event' => 'change',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
     ];
 
     $processing_selector = reset($element['#parents']) . '[' . implode('][', array_merge(array_slice($element['#parents'], 1), ['processing'])) . ']';
     $element['calculation'] = [
       '#type' => 'select',
       '#title' => t('Calculation'),
-      '#options' => self::getCalculationOptions(),
+      '#options' => DataPointHelper::getCalculationOptions(),
       '#default_value' => $defaults['calculation'],
       '#states' => [
         'visible' => [
           'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
         ],
+      ],
+      '#ajax' => [
+        'event' => 'change',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
       ],
     ];
 
@@ -121,6 +137,11 @@ class DataPoint extends FormElement {
       '#title' => t('Data point'),
       '#options' => $attachment->prototype->fields,
       '#default_value' => $defaults['data_points'][0],
+      '#ajax' => [
+        'event' => 'change',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
     ];
     $element['data_points'][1] = [
       '#type' => 'select',
@@ -132,19 +153,44 @@ class DataPoint extends FormElement {
           'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
         ],
       ],
+      '#ajax' => [
+        'event' => 'change',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
     ];
 
     $element['formatting'] = [
       '#type' => 'select',
       '#title' => t('Formatting'),
-      '#options' => self::getFormattingOptions(),
+      '#options' => DataPointHelper::getFormattingOptions(),
       '#default_value' => $defaults['formatting'],
+      '#ajax' => [
+        'event' => 'change',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
     ];
+
     $element['widget'] = [
       '#type' => 'select',
       '#title' => t('Mini widget'),
-      '#options' => self::getWidgetOptions(),
+      '#options' => DataPointHelper::getWidgetOptions(),
       '#default_value' => $defaults['widget'],
+      '#ajax' => [
+        'event' => 'change',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+      '#access' => !empty($element['#widget']),
+    ];
+
+    // Add a preview.
+    $build = DataPointHelper::formatValue($attachment, $defaults);
+    $element['value_preview'] = [
+      '#type' => 'item',
+      '#title' => t('Value preview'),
+      '#markup' => ThemeHelper::render($build),
     ];
 
     return $element;
@@ -161,66 +207,6 @@ class DataPoint extends FormElement {
     // occurred.
     static::setAttributes($element, ['form-data-point']);
     return $element;
-  }
-
-  /**
-   * Get an array of processing options.
-   *
-   * @return array
-   *   The options array.
-   */
-  private static function getProcessingOptions() {
-    return [
-      'single' => t('Single data point'),
-      'calculated' => t('Calculated from 2 data points'),
-    ];
-  }
-
-  /**
-   * Get an array of calculation options.
-   *
-   * @return array
-   *   The options array.
-   */
-  private static function getCalculationOptions() {
-    return [
-      'addition' => t('Sum (data point 1 + data point 2)'),
-      'substraction' => t('Substraction (data point 1 - data point 2)'),
-      'division' => t('Division (data point 1 / data point 2)'),
-      'percentage' => t('Percentage (data point 1 * (100 / data point 2))'),
-    ];
-  }
-
-  /**
-   * Get an array of formatting options.
-   *
-   * @return array
-   *   The options array.
-   */
-  private static function getFormattingOptions() {
-    return [
-      'raw' => t('Raw data (no formatting)'),
-      'auto' => t('Automatic based on the unit (uses percentage for percentages, amount for all others)'),
-      'currency' => t('Currency value'),
-      'amount' => t('Amount value'),
-      'amount_rounded' => t('Amount value (rounded, 1 decimal)'),
-      'percent' => t('Percentage value'),
-    ];
-  }
-
-  /**
-   * Get an array of widget options.
-   *
-   * @return array
-   *   The options array.
-   */
-  private static function getWidgetOptions() {
-    return [
-      'none' => t('None'),
-      'progressbar' => t('Progress bar'),
-      'pie_chart' => t('Pie chart'),
-      'spark_line' => t('Spark line'),
-    ];
   }
 
 }

@@ -1,13 +1,13 @@
 <?php
 
-namespace Drupal\ghi_configuration_container\Element;
+namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Core\Render\Element\FormElement;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
-use Drupal\ghi_configuration_container\Traits\AjaxElementTrait;
+use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 
 /**
  * Provides a configuration container element.
@@ -69,6 +69,15 @@ class ConfigurationContainer extends FormElement {
       case 'add_new_item':
       case 'change_item_type':
         $new_mode = 'select_item_type';
+        break;
+
+      case 'cancel_item_type':
+        if ($form_state->get('current_item_type')) {
+          $new_mode = 'edit_item';
+        }
+        else {
+          $new_mode = 'list';
+        }
         break;
 
       case 'edit':
@@ -183,7 +192,7 @@ class ConfigurationContainer extends FormElement {
    * any arbitrary data inside the form_state object.
    */
   public static function processConfigurationContainer(array &$element, FormStateInterface $form_state) {
-    $element['#attached']['library'][] = 'ghi_configuration_container/configuration_container';
+    $element['#attached']['library'][] = 'ghi_form_elements/configuration_container';
 
     $wrapper_id = self::getWrapperId($element);
     $exclude_form_keys = [
@@ -272,7 +281,7 @@ class ConfigurationContainer extends FormElement {
     if (!empty($element['#max_items']) && $element['#max_items'] <= $item_count) {
       $element['add_new_item']['#disabled'] = TRUE;
       $element['add_new_item']['#attributes']['title'] = t('The maximum number of %max_items has been reached.', [
-        '%max_itmes' => $element['#max_items'],
+        '%max_items' => $element['#max_items'],
       ]);
     }
 
@@ -397,7 +406,7 @@ class ConfigurationContainer extends FormElement {
         '#type' => 'select',
         '#title' => t('Item type'),
         '#options' => $item_type_options,
-        '#required' => TRUE,
+        '#required' => empty($item['item_type']),
         '#default_value' => !empty($item['item_type']) ? $item['item_type'] : NULL,
         '#description' => t('Select the item type that you want to add.'),
         '#ajax' => [
@@ -406,10 +415,25 @@ class ConfigurationContainer extends FormElement {
           'wrapper' => $wrapper_id,
         ],
       ];
+      if ($form_state->get('mode') == 'select_item_type') {
+        $element['item_config']['cancel_item_type'] = [
+          '#type' => 'submit',
+          '#value' => t('Cancel'),
+          '#ajax' => [
+            'event' => 'click',
+            'callback' => [static::class, 'updateAjax'],
+            'wrapper' => $wrapper_id,
+          ],
+        ];
+      }
     }
     else {
       $items = $form_state->get('items');
       $item = $items[$index];
+    }
+
+    if ($item['item_type'] !== NULL) {
+      $form_state->set('current_item_type', $item['item_type']);
     }
 
     if ($item['item_type'] !== NULL && empty($trigger_parents)) {
@@ -418,25 +442,26 @@ class ConfigurationContainer extends FormElement {
 
     $item_type = self::getItemTypeInstance($item, $element);
     if ($item_type && $form_state->get('mode') != 'select_item_type') {
+      if ($index === NULL) {
+        $element['item_config']['item_type']['#type'] = 'hidden';
+        $element['item_config']['item_type']['#value'] = $item_type->getPluginId();
+        $element['item_config']['item_type']['#default_value'] = $item_type->getPluginId();
 
-      $element['item_config']['item_type']['#type'] = 'hidden';
-      $element['item_config']['item_type']['#value'] = $item_type->getPluginId();
-      $element['item_config']['item_type']['#default_value'] = $item_type->getPluginId();
+        $element['item_config']['change_item_type'] = [
+          '#type' => 'submit',
+          '#value' => t('Change item type'),
+          '#ajax' => [
+            'event' => 'click',
+            'callback' => [static::class, 'updateAjax'],
+            'wrapper' => $wrapper_id,
+          ],
+        ];
 
-      $element['item_config']['change_item_type'] = [
-        '#type' => 'submit',
-        '#value' => t('Change item type'),
-        '#ajax' => [
-          'event' => 'click',
-          'callback' => [static::class, 'updateAjax'],
-          'wrapper' => $wrapper_id,
-        ],
-      ];
-
-      $element['title'] = [
-        '#markup' => Markup::create('<h3>' . t('Selected type: %type', ['%type' => $item_type->getPluginLabel()]) . '</h3>'),
-        '#weight' => -1,
-      ];
+        $element['title'] = [
+          '#markup' => Markup::create('<h3>' . t('Selected type: %type', ['%type' => $item_type->getPluginLabel()]) . '</h3>'),
+          '#weight' => -1,
+        ];
+      }
 
       $element['item_config']['plugin_config'] = [
         '#type' => 'container',
@@ -453,32 +478,34 @@ class ConfigurationContainer extends FormElement {
       $element['item_config']['plugin_config'] += $item_type->buildForm($element['item_config']['plugin_config'], $subform_state);
     }
 
-    $element['item_config']['submit_item'] = [
-      '#type' => 'submit',
-      '#value' => t('Submit'),
-      '#name' => 'item-config-submit',
-      '#ajax' => [
-        'event' => 'click',
-        'callback' => [static::class, 'updateAjax'],
-        'wrapper' => $wrapper_id,
-      ],
-      '#disabled' => $form_state->get('mode') == 'select_item_type',
-    ];
+    if ($item_type && $form_state->get('mode') != 'select_item_type') {
+      $element['item_config']['submit_item'] = [
+        '#type' => 'submit',
+        '#value' => t('Submit'),
+        '#name' => 'item-config-submit',
+        '#ajax' => [
+          'event' => 'click',
+          'callback' => [static::class, 'updateAjax'],
+          'wrapper' => $wrapper_id,
+        ],
+        '#disabled' => $form_state->get('mode') == 'select_item_type',
+      ];
 
-    $element['item_config']['cancel'] = [
-      '#type' => 'submit',
-      '#value' => t('Cancel'),
-      '#name' => 'item-config-cancel',
-      '#limit_validation_errors' => [],
-      // This is important to prevent form errors. Note that elementSubmit() is
-      // still run for this button.
-      '#submit' => [],
-      '#ajax' => [
-        'event' => 'click',
-        'callback' => [static::class, 'updateAjax'],
-        'wrapper' => $wrapper_id,
-      ],
-    ];
+      $element['item_config']['cancel'] = [
+        '#type' => 'submit',
+        '#value' => t('Cancel'),
+        '#name' => 'item-config-cancel',
+        '#limit_validation_errors' => [],
+        // This is important to prevent form errors. Note that elementSubmit()
+        // is still run for this button.
+        '#submit' => [],
+        '#ajax' => [
+          'event' => 'click',
+          'callback' => [static::class, 'updateAjax'],
+          'wrapper' => $wrapper_id,
+        ],
+      ];
+    }
   }
 
   /**
@@ -502,7 +529,7 @@ class ConfigurationContainer extends FormElement {
    * @param array $element
    *   The form element.
    *
-   * @return \Drupal\ghi_configuration_container\ConfigurationContainerItemPluginInterface
+   * @return \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface
    *   An instantiated item plugin.
    */
   private static function getItemTypeInstance(array $item, array $element) {
@@ -541,7 +568,7 @@ class ConfigurationContainer extends FormElement {
       $definition = $definitions[$type_id];
       $instance = self::getItemTypeInstance(['item_type' => $type_id], $element);
       $callable = [$instance, 'access'];
-      if (array_key_exists('access', $configuration) && !empty($configuration['access'] && method_exists($instance, 'access') && is_callable($callable))) {
+      if (array_key_exists('access', $configuration) && !empty($configuration['access'] && is_callable($callable))) {
         if (!$instance->access($element['#element_context'], $configuration['access'])) {
           continue;
         }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ghi_configuration_container\Annotation;
+namespace Drupal\ghi_form_elements\Annotation;
 
 use Drupal\Component\Annotation\Plugin;
 

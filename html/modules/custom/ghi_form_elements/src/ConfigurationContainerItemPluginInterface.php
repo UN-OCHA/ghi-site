@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ghi_configuration_container;
+namespace Drupal\ghi_form_elements;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
@@ -25,7 +25,7 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
    *   The current state of the form.
    *
    * @return array
-   *   Render array of form that implements \Drupal\ghi_configuration_container\ConfigurationContainerItemPluginInterface
+   *   Form array
    */
   public function buildForm(array $element, FormStateInterface $form_state);
 
@@ -79,5 +79,13 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
    *   Arbitrary context array, depending on the type of item.
    */
   public function getContext();
+
+  /**
+   * Get the plugin configuration for an instance.
+   *
+   * @return array
+   *   Plugin configuration array.
+   */
+  public function getPluginConfiguration();
 
 }

@@ -1,10 +1,10 @@
 <?php
 
-namespace Drupal\ghi_plans\Plugin\ConfigurationContainerItem;
+namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\ghi_configuration_container\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\DataPointHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
@@ -26,15 +26,17 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
 
+    $configuration = $this->getPluginConfiguration();
     $context = $this->getContext();
     $attachment_select = $this->getSubmittedValue($element, $form_state, 'attachment', $form_state->get('attachment_select'));
     $data_point = $this->getSubmittedValue($element, $form_state, 'data_point');
 
     $element['attachment'] = [
       '#type' => 'attachment_select',
-      '#title' => $this->t('Select attachment'),
+      // '#title' => $this->t('Select attachment'),
       '#default_value' => $attachment_select,
       '#element_context' => $this->getContext(),
+      '#weight' => 1,
     ];
 
     $element['submit_attachment'] = [
@@ -46,6 +48,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
         'callback' => [static::class, 'updateAjax'],
         'wrapper' => $this->wrapperId,
       ],
+      '#weight' => 2,
     ];
 
     $trigger = $form_state->getTriggeringElement() ? end($form_state->getTriggeringElement()['#parents']) : NULL;
@@ -59,7 +62,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     $element['label']['#access'] = !empty($attachment);
     if ($attachment) {
       $form_state->set('attachment_select', $attachment_select);
-      $element['attachment']['#summary_only'] = TRUE;
+      $element['attachment']['#hidden'] = TRUE;
 
       $element['attachment_summary'] = [
         '#markup' => Markup::create('<h3>' . $this->t('Selected attachment: %attachment', ['%attachment' => $attachment->composed_reference]) . '</h3>'),
@@ -79,19 +82,27 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
           'callback' => [static::class, 'updateAjax'],
           'wrapper' => $this->wrapperId,
         ],
+        '#weight' => 3,
       ];
       if ($triggered_by_change_request) {
         $element['change_attachment']['#disabled'] = TRUE;
         $element['change_attachment']['#attributes']['class'][] = 'visually-hidden';
       }
 
+      $element['label']['#weight'] = 4;
+
       $element['data_point'] = [
         '#type' => 'data_point',
-        '#title' => $this->t('Value'),
         '#element_context' => $this->getContext(),
         '#attachment' => $attachment,
         '#default_value' => $data_point,
+        '#weight' => 5,
       ];
+      if (array_key_exists('data_point', $configuration) && is_array($configuration['data_point'])) {
+        foreach ($configuration['data_point'] as $config_key => $config_value) {
+          $element['data_point']['#' . $config_key] = $config_value;
+        }
+      }
     }
 
     return $element;
@@ -104,6 +115,9 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     $attachment_id = $this->get(['attachment', 'attachment_id']);
     $data_point_conf = $this->get(['data_point']);
     $context = $this->getContext();
+    if (empty($this->config)) {
+      return;
+    }
     $attachment = $context['attachment_query']->getAttachment($attachment_id);
     $build = DataPointHelper::formatValue($attachment, $data_point_conf);
     return ThemeHelper::render($build);

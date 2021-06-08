@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ghi_configuration_container\Traits;
+namespace Drupal\ghi_form_elements\Traits;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;

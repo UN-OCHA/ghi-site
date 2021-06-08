@@ -1,8 +1,8 @@
 <?php
 
-namespace Drupal\ghi_configuration_container;
+namespace Drupal\ghi_form_elements;
 
-use Drupal\ghi_configuration_container\Traits\AjaxElementTrait;
+use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
@@ -70,6 +70,13 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
       '#default_value' => array_key_exists('label', $this->config) ? $this->config['label'] : NULL,
     ];
     return $element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginConfiguration() {
+    return $this->configuration;
   }
 
   /**

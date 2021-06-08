@@ -1,12 +1,12 @@
 <?php
 
-namespace Drupal\ghi_configuration_container\Element;
+namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Core\Render\Element\FormElement;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
-use Drupal\ghi_configuration_container\Traits\AjaxElementTrait;
+use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 
 /**
  * Provides a configuration container element.
@@ -92,8 +92,21 @@ class AttachmentSelect extends FormElement {
       return $element;
     }
 
+    $trigger = $form_state->getTriggeringElement() ? end($form_state->getTriggeringElement()['#parents']) : NULL;
+    $triggered_by_select = $trigger ? in_array($trigger, [
+      'entity_type',
+      'attachment_type',
+    ]) : FALSE;
+    $triggered_by_change_request = $trigger ? $trigger == 'change_attachment' : FALSE;
+    $is_hidden = $element['#hidden'] && !$triggered_by_select && !$triggered_by_change_request;
+    $class = NULL;
+
+    if ($is_hidden) {
+      $class = 'visually-hidden';
+    }
+
     $wrapper_id = self::getWrapperId($element);
-    $element['#prefix'] = '<div id="' . $wrapper_id . '">';
+    $element['#prefix'] = '<div id="' . $wrapper_id . '" class="' . $class . '">';
     $element['#suffix'] = '</div>';
 
     $entity_type_options = !empty($element['#entity_types']) ? $element['#entity_types'] : [
@@ -114,14 +127,6 @@ class AttachmentSelect extends FormElement {
       'attachment_id' => !empty($values['attachment_id']) ? $values['attachment_id'] : NULL,
     ];
 
-    $trigger = $form_state->getTriggeringElement() ? end($form_state->getTriggeringElement()['#parents']) : NULL;
-
-    $triggered_by_select = $trigger ? in_array($trigger, [
-      'entity_type',
-      'attachment_type',
-    ]) : FALSE;
-    $triggered_by_change_request = $trigger ? $trigger == 'change_attachment' : FALSE;
-
     if ($element['#summary_only'] && !$triggered_by_select && !$triggered_by_change_request) {
       $attachment = $context['attachment_query']->getAttachment($defaults['attachment_id']);
       $element['entity_type'] = [
@@ -138,6 +143,21 @@ class AttachmentSelect extends FormElement {
       ];
       $element['summary'] = [
         '#markup' => $attachment ? Markup::create($attachment->composed_reference) : t('No attachment selected.'),
+      ];
+      return $element;
+    }
+    if ($is_hidden) {
+      $element['entity_type'] = [
+        '#type' => 'value',
+        '#value' => $defaults['entity_type'],
+      ];
+      $element['attachment_type'] = [
+        '#type' => 'value',
+        '#value' => $defaults['attachment_type'],
+      ];
+      $element['attachment_id'] = [
+        '#type' => 'value',
+        '#value' => $defaults['attachment_id'],
       ];
       return $element;
     }

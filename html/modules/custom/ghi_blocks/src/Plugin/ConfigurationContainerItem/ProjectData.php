@@ -1,9 +1,9 @@
 <?php
 
-namespace Drupal\ghi_plans\Plugin\ConfigurationContainerItem;
+namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ghi_configuration_container\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\node\NodeInterface;

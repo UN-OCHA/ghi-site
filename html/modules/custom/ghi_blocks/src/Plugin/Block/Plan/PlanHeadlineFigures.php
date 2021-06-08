@@ -10,7 +10,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Routing\Router;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
-use Drupal\ghi_configuration_container\ConfigurationContainerItemManager;
+use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -51,7 +51,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
   /**
    * The manager class for configuration container items.
    *
-   * @var \Drupal\ghi_configuration_container\ConfigurationContainerItemManager
+   * @var \Drupal\ghi_form_elements\ConfigurationContainerItemManager
    */
   protected $configurationContainerItemManager;
 
@@ -317,6 +317,9 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
         'label' => $this->t('Caseload/indicator value'),
         'access' => [
           'node_type' => ['plan', 'governing_entity'],
+        ],
+        'data_point' => [
+          'widget' => FALSE,
         ],
       ],
       'label_value' => [],

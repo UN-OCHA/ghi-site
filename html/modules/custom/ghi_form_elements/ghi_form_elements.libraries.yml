@@ -4,3 +4,4 @@ configuration_container:
     component:
       css/configuration_container.css: {}
       css/attachment_select.css: {}
+      css/data_point.css: {}

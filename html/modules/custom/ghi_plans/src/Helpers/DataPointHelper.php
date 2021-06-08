@@ -54,9 +54,18 @@ class DataPointHelper {
     $value = self::getValue($attachment, $data_point_conf);
     switch ($data_point_conf['formatting']) {
       case 'raw':
-        return $value;
+        return [
+          '#markup' => $value,
+        ];
 
       case 'auto':
+        if ($data_point_conf['processing'] == 'calculated' && $data_point_conf['calculation'] == 'percentage') {
+          return [
+            '#theme' => 'hpc_percent',
+            '#ratio' => $value,
+            '#decimals' => 1,
+          ];
+        }
         return [
           '#theme' => 'hpc_autoformat_value',
           '#value' => $value,
@@ -141,7 +150,7 @@ class DataPointHelper {
         break;
 
       case 'percentage':
-        $final_value = $value_2 != 0 ? 100 / $value_2 * $value_1 : NULL;
+        $final_value = $value_2 != 0 ? 1 / $value_2 * $value_1 : NULL;
         break;
 
       default:
@@ -149,6 +158,66 @@ class DataPointHelper {
     }
 
     return $final_value;
+  }
+
+  /**
+   * Get an array of processing options.
+   *
+   * @return array
+   *   The options array.
+   */
+  public static function getProcessingOptions() {
+    return [
+      'single' => t('Single data point'),
+      'calculated' => t('Calculated from 2 data points'),
+    ];
+  }
+
+  /**
+   * Get an array of calculation options.
+   *
+   * @return array
+   *   The options array.
+   */
+  public static function getCalculationOptions() {
+    return [
+      'addition' => t('Sum (data point 1 + data point 2)'),
+      'substraction' => t('Substraction (data point 1 - data point 2)'),
+      'division' => t('Division (data point 1 / data point 2)'),
+      'percentage' => t('Percentage (data point 1 * (100 / data point 2))'),
+    ];
+  }
+
+  /**
+   * Get an array of formatting options.
+   *
+   * @return array
+   *   The options array.
+   */
+  public static function getFormattingOptions() {
+    return [
+      'raw' => t('Raw data (no formatting)'),
+      'auto' => t('Automatic based on the unit (uses percentage for percentages, amount for all others)'),
+      'currency' => t('Currency value'),
+      'amount' => t('Amount value'),
+      'amount_rounded' => t('Amount value (rounded, 1 decimal)'),
+      'percent' => t('Percentage value'),
+    ];
+  }
+
+  /**
+   * Get an array of widget options.
+   *
+   * @return array
+   *   The options array.
+   */
+  public static function getWidgetOptions() {
+    return [
+      'none' => t('None'),
+      'progressbar' => t('Progress bar'),
+      'pie_chart' => t('Pie chart'),
+      'spark_line' => t('Spark line'),
+    ];
   }
 
 }
