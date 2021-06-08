@@ -26,6 +26,7 @@ module:
   ghi_blocks: 0
   ghi_configuration_container: 0
   ghi_element_sync: 0
+  ghi_form_elements: 0
   ghi_plans: 0
   gin_lb: 0
   gin_toolbar: 0
