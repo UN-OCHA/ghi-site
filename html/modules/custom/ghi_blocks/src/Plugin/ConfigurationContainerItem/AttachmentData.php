@@ -28,12 +28,11 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
 
     $configuration = $this->getPluginConfiguration();
     $context = $this->getContext();
-    $attachment_select = $this->getSubmittedValue($element, $form_state, 'attachment', $form_state->get('attachment_select'));
+    $attachment_select = $this->getSubmittedValue($element, $form_state, 'attachment', $form_state->get('attachment'));
     $data_point = $this->getSubmittedValue($element, $form_state, 'data_point');
 
     $element['attachment'] = [
       '#type' => 'attachment_select',
-      // '#title' => $this->t('Select attachment'),
       '#default_value' => $attachment_select,
       '#element_context' => $this->getContext(),
       '#weight' => 1,
@@ -59,9 +58,9 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
       $attachment = $context['attachment_query']->getAttachment($attachment_select['attachment_id']);
     }
 
-    $element['label']['#access'] = !empty($attachment);
+    $element['label']['#access'] = !empty($attachment) && !$triggered_by_change_request;
     if ($attachment) {
-      $form_state->set('attachment_select', $attachment_select);
+      $form_state->set('attachment', $attachment_select);
       $element['attachment']['#hidden'] = TRUE;
 
       $element['attachment_summary'] = [
@@ -102,6 +101,9 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
         foreach ($configuration['data_point'] as $config_key => $config_value) {
           $element['data_point']['#' . $config_key] = $config_value;
         }
+      }
+      if ($triggered_by_change_request) {
+        $element['data_point']['#hidden'] = TRUE;
       }
     }
 

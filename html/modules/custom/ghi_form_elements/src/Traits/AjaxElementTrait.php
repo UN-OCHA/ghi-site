@@ -126,4 +126,28 @@ trait AjaxElementTrait {
     }
   }
 
+  /**
+   * Recursively hide the elements and all elements contained.
+   *
+   * @param array $element
+   *   The root element array.
+   */
+  private static function hideAllElements(array &$element) {
+    $class_name = Html::getClass('visually-hidden');
+
+    // Hide the title.
+    $element['#title_display'] = 'invisible';
+
+    // Visually hide the element itself.
+    $class_parents = ['#attributes', 'class'];
+    $classes = NestedArray::keyExists($element, $class_parents) ? NestedArray::getValue($element, $class_parents) : [];
+    if (!in_array($class_name, $classes)) {
+      $classes[] = $class_name;
+      NestedArray::setValue($element, $class_parents, $classes, TRUE);
+    }
+    foreach (Element::children($element) as $element_key) {
+      self::hideAllElements($element[$element_key]);
+    }
+  }
+
 }

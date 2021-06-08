@@ -5,6 +5,7 @@ namespace Drupal\ghi_form_elements\Element;
 use Drupal\Core\Render\Element\FormElement;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_plans\Helpers\DataPointHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
@@ -42,6 +43,8 @@ class DataPoint extends FormElement {
       '#theme_wrappers' => ['form_element'],
       '#attachment' => NULL,
       '#widget' => TRUE,
+      '#hidden' => FALSE,
+      '#disabled_empty_fields' => TRUE,
     ];
   }
 
@@ -113,7 +116,7 @@ class DataPoint extends FormElement {
       ],
     ];
 
-    $processing_selector = reset($element['#parents']) . '[' . implode('][', array_merge(array_slice($element['#parents'], 1), ['processing'])) . ']';
+    $processing_selector = FormElementHelper::getStateSelector($element, ['processing']);
     $element['calculation'] = [
       '#type' => 'select',
       '#title' => t('Calculation'),
@@ -131,11 +134,13 @@ class DataPoint extends FormElement {
       ],
     ];
 
+    $data_point_options = self::getDataPointOptions($element);
+
     $element['data_points'] = [];
     $element['data_points'][0] = [
       '#type' => 'select',
       '#title' => t('Data point'),
-      '#options' => $attachment->prototype->fields,
+      '#options' => $data_point_options,
       '#default_value' => $defaults['data_points'][0],
       '#ajax' => [
         'event' => 'change',
@@ -146,7 +151,7 @@ class DataPoint extends FormElement {
     $element['data_points'][1] = [
       '#type' => 'select',
       '#title' => t('Data point (2)'),
-      '#options' => $attachment->prototype->fields,
+      '#options' => $data_point_options,
       '#default_value' => $defaults['data_points'][1],
       '#states' => [
         'visible' => [
@@ -191,7 +196,12 @@ class DataPoint extends FormElement {
       '#type' => 'item',
       '#title' => t('Value preview'),
       '#markup' => ThemeHelper::render($build),
+      '#access' => empty($element['#hidden']),
     ];
+
+    if (!empty($element['#hidden'])) {
+      self::hideAllElements($element);
+    }
 
     return $element;
   }
@@ -207,6 +217,26 @@ class DataPoint extends FormElement {
     // occurred.
     static::setAttributes($element, ['form-data-point']);
     return $element;
+  }
+
+  /**
+   * Assemble the options array for a datapoint.
+   */
+  public static function getDataPointOptions($element) {
+    $attachment = $element['#attachment'];
+    if (empty($element['#disable_empty_fields'])) {
+      return $attachment->prototype->fields;
+    }
+    $options = [];
+    foreach ($attachment->prototype->fields as $key => $field) {
+      if ($attachment->values[$key] === NULL) {
+        $options[$field] = [];
+      }
+      else {
+        $options[$key] = $field;
+      }
+    }
+    return $options;
   }
 
 }

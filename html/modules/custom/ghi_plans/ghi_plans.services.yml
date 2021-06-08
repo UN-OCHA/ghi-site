@@ -14,3 +14,9 @@ services:
   ghi_plans.attachment_query:
     parent: hpc_api.endpoint_query
     class: Drupal\ghi_plans\Query\AttachmentQuery
+  ghi_plans.flow_search_query:
+    parent: hpc_api.endpoint_query
+    class: Drupal\ghi_plans\Query\FlowSearchQuery
+  ghi_plans.cluster_query:
+    parent: hpc_api.endpoint_query
+    class: Drupal\ghi_plans\Query\ClusterQuery

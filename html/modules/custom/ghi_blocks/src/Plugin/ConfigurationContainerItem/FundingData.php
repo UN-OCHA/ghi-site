@@ -28,6 +28,10 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $data_type_options = $this->getDataTypeOptions();
     $data_type_key = $this->getSubmittedOptionsValue($element, $form_state, 'data_type', $data_type_options);
     $scale = $this->getSubmittedValue($element, $form_state, 'scale', 'auto');
+    $cluster_restrict = $this->getSubmittedValue($element, $form_state, 'cluster_restrict', [
+      'type' => NULL,
+      'tag' => NULL,
+    ]);
 
     $element['data_type'] = [
       '#type' => 'select',
@@ -52,6 +56,14 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     }
     else {
       $element['label']['#required'] = TRUE;
+    }
+
+    if ($data_type['cluster_restrict']) {
+      $element['cluster_restrict'] = [
+        '#type' => 'cluster_restrict',
+        '#title' => $this->t('Restrict by cluster'),
+        '#default_value' => $cluster_restrict,
+      ];
     }
 
     $element['scale'] = [
@@ -80,7 +92,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $element['value_preview'] = [
       '#type' => 'item',
       '#title' => $this->t('Value preview'),
-      '#markup' => $this->getValue($data_type_key, $scale),
+      '#markup' => $this->getValue($data_type_key, $scale, $cluster_restrict),
       '#weight' => 3,
     ];
 
@@ -102,7 +114,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getValue($data_type_key = NULL, $scale = NULL) {
+  public function getValue($data_type_key = NULL, $scale = NULL, $cluster_restrict = NULL) {
     $context = $this->getContext();
     $page_node = $context['page_node'];
 
@@ -115,8 +127,17 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       $scale = $this->get('scale');
     }
     $scale = $scale ?: (!empty($data_type['scale']) ? $data_type['scale'] : 'auto');
+
+    if ($cluster_restrict === NULL) {
+      $cluster_restrict = $this->get('cluster_restrict');
+    }
+    $cluster_restrict = $cluster_restrict ?: NULL;
+
     $value = NULL;
     if ($page_node->bundle() == 'plan') {
+      if (!empty($cluster_restrict) && !empty($cluster_restrict['type']) && $cluster_restrict['type'] != 'none') {
+        $value = $this->getValueWithClusterRestrict($data_type, $scale, $cluster_restrict);
+      }
       $value = $context['funding_summary_query']->get($data_type['property'], 0);
     }
     elseif ($page_node->bundle() == 'governing_entity') {
@@ -128,6 +149,56 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       'scale' => $scale,
       'formatting_decimals' => $context['plan_node']->field_decimal_format->value,
     ]));
+  }
+
+  /**
+   * Get a value using the configured cluster restrict.
+   *
+   * @param array $data_type
+   *   A data type definition.
+   * @param string $scale
+   *   A scale to apply.
+   * @param array $cluster_restrict
+   *   A cluster restriction to apply.
+   *
+   * @return mixed|null
+   *   The retrieved value.
+   */
+  public function getValueWithClusterRestrict(array $data_type, $scale, array $cluster_restrict) {
+    // @codingStandardsIgnoreStart
+    $context = $this->getContext();
+    $plan_node = $context['plan_node'];
+    $plan_id = $plan_node->field_original_id->value;
+    return NULL;
+    // $plan_funding_data = $context['flow_search_query']->search([
+    //   'planid' => $plan_id,
+    //   'groupby' => 'cluster',
+    // ]);
+    // $cluster_ids = $context['cluster_query']->getTaggedClustersForPlan($plan_id, $cluster_restrict['tag']);
+
+    // if ($cluster_restrict['type'] == 'tag_exclude') {
+    //   $cluster_ids_all = hpc_plan_global_get_cluster_ids_from_plan_data($plan_funding_data);
+    //   $cluster_ids = array_diff($cluster_ids_all, $cluster_ids);
+    // }
+
+    // // Filter requirements objects and mock up the expected structure from
+    // // the original FTS specific endpoint. Supports clusters with repeating
+    // // values for group property, e.g. if grouping on name instead of id.
+    // $requirement_objects = hpc_api_data_filter_objects_by_property_matching($plan_funding_data->requirements->objects, 'id', $cluster_ids);
+    // $summary_data->total_requirements = $requirement_objects ? hpc_api_data_sum_objects_by_property($requirement_objects, 'revisedRequirements') : 0;
+    // $summary_data->original_requirements = $requirement_objects ? hpc_api_data_sum_objects_by_property($requirement_objects, 'origRequirements') : 0;
+
+    // // Filter funding objects and mock up the expected structure from the
+    // // original FTS specific endpoint, merging into the potentially already
+    // // existing requirements objects and also supporting clusters with
+    // // repeating values for group property, e.g. if grouping on name instead of
+    // // id.
+    // $funding_objects = hpc_api_data_filter_objects_by_property_matching($plan_funding_data->report3->fundingTotals->objects[0]->objectsBreakdown, 'id', $cluster_ids);
+    // $summary_data->total_funding = $funding_objects ? hpc_api_data_sum_objects_by_property($funding_objects, 'totalFunding') : 0;
+
+    // // Calculate the coverage.
+    // $summary_data->funding_progress = $summary_data->total_requirements ? 100 / $summary_data->total_requirements * $summary_data->total_funding : 0;
+    // @codingStandardsIgnoreEnd
   }
 
   /**

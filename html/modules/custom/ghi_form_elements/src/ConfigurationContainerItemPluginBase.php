@@ -159,13 +159,15 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    *   The default value to use.
    *
    * @return string
-   *   The value key, either submitted or the first valid one from the options.
+   *   The value key, either submitted, stored, taken from original config or
+   *   the given default.
    */
   public function getSubmittedValue(array $element, FormStateInterface $form_state, $value_key, $default_value = NULL) {
     $value_parents = array_merge($element['#parents'], (array) $value_key);
     $_form_state = $form_state instanceof SubformStateInterface ? $form_state->getCompleteFormState() : $form_state;
     $submitted = $_form_state->hasValue($value_parents) ? $_form_state->getValue($value_parents) : NULL;
-    $value = $submitted ?: $this->get($value_key);
+    $stored = $_form_state->get($value_key) ?: NULL;
+    $value = $submitted ?: ($stored ?: $this->get($value_key));
     return $value ?: $default_value;
   }
 

@@ -21,33 +21,45 @@
   display: none;
 }
 
-.js-form-type-configuration-container h3 {
+.form-type--configuration_container select {
+  width: auto;
+}
+
+.form-type--configuration_container h3 {
   margin-block-start: 0;
   margin-block-end: 0;
 }
 
-.js-form-type-configuration-container .tabledrag-toggle-weight-wrapper {
+.form-type--configuration_container .tabledrag-toggle-weight-wrapper {
   display: none;
 }
 
-.js-form-type-configuration-container table.summary-table {
+.form-type--configuration_container table.summary-table {
   width: 100%;
 }
 
-.js-form-type-configuration-container table.summary-table thead th,
-.js-form-type-configuration-container table.summary-table tbody tr td {
+.form-type--configuration_container table.summary-table thead th,
+.form-type--configuration_container table.summary-table tbody tr td {
   text-align: left;
 }
-.js-form-type-configuration-container table.summary-table thead th:first-child {
+.form-type--configuration_container table.summary-table thead th:first-child {
   padding-left: 1.2rem;
 }
 
-.js-form-type-configuration-container table.summary-table thead th:last-child,
-.js-form-type-configuration-container table.summary-table tbody tr td:last-child {
+.form-type--configuration_container table.summary-table thead th:last-child,
+.form-type--configuration_container table.summary-table tbody tr td:last-child {
   text-align: right;
 }
 
-.js-form-type-configuration-container table.summary-table a.tabledrag-handle .handle {
+.form-type--configuration_container table.summary-table a.tabledrag-handle .handle {
   width: auto;
   height: auto;
+}
+
+.form-type--configuration_container input[type="radio"]:checked,
+.form-type--configuration_container input[type="radio"]:checked:hover,
+.form-type--configuration_container input[type="radio"]:checked:active,
+.form-type--configuration_container input[type="radio"]:checked:focus,
+.form-type--configuration_container input[type="radio"]:checked:hover:focus {
+  box-shadow: none !important;
 }

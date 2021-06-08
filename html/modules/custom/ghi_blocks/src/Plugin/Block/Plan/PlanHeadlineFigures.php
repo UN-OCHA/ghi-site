@@ -37,6 +37,12 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *    },
  *    "cluster_summary" = {
  *      "service" = "ghi_plans.plan_cluster_summary_query"
+ *    },
+ *    "flow_search" = {
+ *      "service" = "ghi_plans.flow_search_query"
+ *    },
+ *    "cluster" = {
+ *      "service" = "ghi_plans.cluster_query"
  *    }
  *  },
  *  context_definitions = {
@@ -292,6 +298,8 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
       'project_search_query' => $this->getQueryHandler('project_search'),
       'attachment_query'  => $this->getQueryHandler('attachment'),
       'cluster_summary_query' => $this->getQueryHandler('cluster_summary'),
+      'flow_search_query' => $this->getQueryHandler('flow_search'),
+      'cluster_query' => $this->getQueryHandler('cluster'),
       'page_node' => $this->getPageNode(),
       'plan_node' => $this->getCurrentPlanNode(),
     ];

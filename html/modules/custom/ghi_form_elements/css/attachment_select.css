@@ -23,10 +23,3 @@
   margin-top: 0 !important;
   margin-bottom: 0 !important;
 }
-.form-type--attachment_select > table tbody tr td input[type="radio"]:checked,
-.form-type--attachment_select > table tbody tr td input[type="radio"]:checked:hover,
-.form-type--attachment_select > table tbody tr td input[type="radio"]:checked:active,
-.form-type--attachment_select > table tbody tr td input[type="radio"]:checked:focus,
-.form-type--attachment_select > table tbody tr td input[type="radio"]:checked:hover:focus {
-  box-shadow: none !important;
-}
