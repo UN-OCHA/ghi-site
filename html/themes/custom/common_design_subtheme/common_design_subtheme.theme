@@ -5,6 +5,8 @@
  * Template overrides, preprocess, and hooks for the GHI subtheme.
  */
 
+use Drupal\Core\Access\AccessResultForbidden;
+
 /**
  * Implements hook_theme_suggestions_HOOK_alter().
  *
@@ -17,4 +19,80 @@
 function common_design_subtheme_theme_suggestions_views_view_alter(&$suggestions, $variables) {
   $suggestions[] = sprintf('views_view__%s', $variables['view']->id());
   $suggestions[] = sprintf('views_view__%s__%s', $variables['view']->id(), $variables['view']->current_display);
+}
+
+/**
+ * Implements hook_preprocess_page().
+ *
+ * Reinstate the title and local task blocks on layout builder pages.
+ *
+ * Background: The common design theme hides the page title and local task
+ * blocks under certain circumstances. Unfortunately this also affects the
+ * layout builder page, which is missing both the page title and the local task
+ * bar.
+ *
+ * @see common_design_preprocess_page()
+ */
+function common_design_subtheme_preprocess_page(&$variables) {
+  // If the node variable is defined then we assume we are on a node page.
+  if (isset($variables['node']) && is_a($variables['node'], '\Drupal\node\NodeInterface')) {
+    // Check if we are on a layout builder page.
+    $route = \Drupal::routeMatch()->getRouteName();
+    if ($route == 'layout_builder.overrides.node.view') {
+      // If so, reinstate the blocks.
+      common_design_subtheme_show_hidden_blocks_from_page($variables, [
+        'page_title_block',
+        'local_tasks_block',
+      ]);
+    }
+  }
+}
+
+/**
+ * Show previously hidden blocks on the page.
+ *
+ * @param array $variables
+ *   Page variables as passed to hook_preprocess_page().
+ * @param array $block_ids
+ *   Ids of the blocks to show.
+ *
+ * @see common_design_hide_rendered_blocks_from_page()
+ */
+function common_design_subtheme_show_hidden_blocks_from_page(array &$variables, array $block_ids) {
+  $blocks = common_design_load_theme_blocks($block_ids);
+  if (!empty($blocks)) {
+    foreach ($blocks as $block) {
+      $id = $block->id();
+      $region = $block->getRegion();
+
+      $build = &$variables['page'][$region][$id] ?? NULL;
+      if (!$build) {
+        continue;
+      }
+      if (!array_key_exists('#original_access', $build) || !array_key_exists('#access', $build)) {
+        continue;
+      }
+      $access = $build['#access'] ?? NULL;
+      if (!$access instanceof AccessResultForbidden || $access->getReason() != 'common_design_hide_rendered_blocks_from_page') {
+        continue;
+      }
+      if (!array_key_exists('#lazy_builder', $build)) {
+        // This is just the usual block, so simply update the access property
+        // with it's original value.
+        $build['#access'] = $build['#original_access'];
+        unset($build['#original_access']);
+      }
+      else {
+        // Lazy builder blocks require more attention.
+        $lazy_builder = $build['#lazy_builder'];
+        // We first need to render the block.
+        $rendered_block = call_user_func_array($lazy_builder[0], $lazy_builder[1]);
+        // Then update the access information.
+        $rendered_block['#access'] = $build['#original_access'];
+        // And then replace the original lazy builder block render array with
+        // the one we just built.
+        $build = $rendered_block;
+      }
+    }
+  }
 }
