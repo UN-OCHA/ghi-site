@@ -40,27 +40,22 @@ dependencies:
     - field.field.node.plan.field_year
     - node.type.plan
   module:
-    - text
     - user
 id: node.plan.teaser
 targetEntityType: node
 bundle: plan
 mode: teaser
 content:
-  body:
-    label: hidden
+  field_plan_short_name:
+    type: string
     weight: 0
-    type: text_summary_or_trimmed
+    region: content
+    label: hidden
     settings:
-      trim_length: 600
+      link_to_entity: false
     third_party_settings: {  }
-    region: content
-  links:
-    weight: 100
-    settings: {  }
-    third_party_settings: {  }
-    region: content
 hidden:
+  body: true
   field_cluster_filter: true
   field_content: true
   field_country: true
@@ -85,7 +80,6 @@ hidden:
   field_plan_pages: true
   field_plan_prevent_fts_link: true
   field_plan_reporting_periods: true
-  field_plan_short_name: true
   field_plan_structure_rpm: true
   field_plan_type: true
   field_plan_version_argument: true
@@ -95,3 +89,4 @@ hidden:
   field_rpm_plan_status: true
   field_year: true
   langcode: true
+  links: true

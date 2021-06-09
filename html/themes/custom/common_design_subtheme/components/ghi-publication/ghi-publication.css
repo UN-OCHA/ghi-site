@@ -1,0 +1,13 @@
+/**
+ * GHI Publication
+ *
+ * Links to external archives of periodical GHO content.
+ */
+.ghi-publication {
+  width: 100%;
+}
+
+.ghi-publication img {
+  width: 100%;
+  max-width: 100%;
+}

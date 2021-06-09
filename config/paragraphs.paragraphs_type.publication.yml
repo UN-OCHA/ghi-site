@@ -1,0 +1,10 @@
+uuid: e1437b89-5ce3-43cd-a2ad-0a50e4bd0cc5
+langcode: en
+status: true
+dependencies: {  }
+id: publication
+label: Publication
+icon_uuid: null
+icon_default: null
+description: 'A link to RW with an image thumbnail.'
+behavior_plugins: {  }

@@ -1,0 +1,15 @@
+uuid: d772c626-36af-4b89-be9a-53531cb7a0da
+langcode: en
+status: true
+dependencies: {  }
+name: 16x9_240
+label: '16x9 @ 240'
+effects:
+  d6d85c4a-8078-4e74-8d2d-9ddf249123ad:
+    uuid: d6d85c4a-8078-4e74-8d2d-9ddf249123ad
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 240
+      height: 135
+      anchor: center-center

@@ -3,6 +3,21 @@ global-styling:
     theme:
       css/styles.css: {}
 
+ghi-grid:
+  css:
+    theme:
+      components/ghi-grid/ghi-grid.css: {}
+
+ghi-plan-teaser:
+  css:
+    theme:
+      components/ghi-plan-teaser/ghi-plan-teaser.css: {}
+
+ghi-publication:
+  css:
+    theme:
+      components/ghi-publication/ghi-publication.css: {}
+
 # CSS custom properties polyfill for IE11.
 # https://jhildenbiddle.github.io/css-vars-ponyfill
 #

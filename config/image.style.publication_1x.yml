@@ -1,0 +1,15 @@
+uuid: e07b282b-4693-4635-a392-b5af28d794b9
+langcode: en
+status: true
+dependencies: {  }
+name: publication_1x
+label: 'Publication 1x'
+effects:
+  8b957d78-962c-46fc-82ef-81a8315a37eb:
+    uuid: 8b957d78-962c-46fc-82ef-81a8315a37eb
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 398
+      height: 73
+      anchor: center-center
