@@ -7,4 +7,5 @@ layout_builder_gin:
   version: VERSION
   css:
     component:
-      css/layout_builder_gin.css: {}
+      css/layout_builder_gin.css:
+        weight: 1001
