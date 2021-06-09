@@ -13,6 +13,7 @@ use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
+use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\node\NodeInterface;
@@ -73,15 +74,23 @@ class SyncManager implements ContainerInjectionInterface {
   protected $currentUser;
 
   /**
+   * Layout tempstore repository.
+   *
+   * @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface
+   */
+  protected $layoutTempstoreRepository;
+
+  /**
    * Public constructor.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, BlockManagerInterface $block_manager, Client $http_client, UuidInterface $uuid, TimeInterface $time, AccountProxyInterface $user) {
+  public function __construct(ConfigFactoryInterface $config_factory, BlockManagerInterface $block_manager, Client $http_client, UuidInterface $uuid, TimeInterface $time, AccountProxyInterface $user, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
     $this->config = $config_factory;
     $this->blockManager = $block_manager;
     $this->httpClient = $http_client;
     $this->uuidGenerator = $uuid;
     $this->time = $time;
     $this->currentUser = $user;
+    $this->layoutTempstoreRepository = $layout_tempstore_repository;
   }
 
   /**
@@ -94,7 +103,8 @@ class SyncManager implements ContainerInjectionInterface {
       $container->get('http_client'),
       $container->get('uuid'),
       $container->get('datetime.time'),
-      $container->get('current_user')
+      $container->get('current_user'),
+      $container->get('layout_builder.tempstore_repository')
     );
   }
 
@@ -199,6 +209,8 @@ class SyncManager implements ContainerInjectionInterface {
 
     }
 
+    $this->layoutManagerDiscardChanges($node, $messenger);
+
     $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
     if ($revisions) {
       $node->setNewRevision(TRUE);
@@ -250,6 +262,22 @@ class SyncManager implements ContainerInjectionInterface {
     }
     $sections = $section_storage->getSections();
     return $sections;
+  }
+
+  /**
+   * Clear layout builders shared temp store.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node for which elements should be synced.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   An optional messenger to use for result messages.
+   */
+  private function layoutManagerDiscardChanges(NodeInterface $node, MessengerInterface $messenger) {
+    $section_storage = $this->getSectionStorageForEntity($node);
+    // @todo See if the view mode can be retrieved somehow.
+    $section_storage->setContextValue('view_mode', 'default');
+    $this->layoutTempstoreRepository->delete($section_storage);
+    $messenger->addMessage($this->t('Cleared layout builder temporary storage'));
   }
 
 }
