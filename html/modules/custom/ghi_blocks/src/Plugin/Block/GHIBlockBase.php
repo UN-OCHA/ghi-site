@@ -13,6 +13,7 @@ use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Traits\AjaxBlockFormTrait;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 
@@ -23,6 +24,8 @@ use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
  * logic for block panes and also most of the context gathering logic.
  */
 abstract class GHIBlockBase extends HPCBlockBase {
+
+  use AjaxBlockFormTrait;
 
   /**
    * Current form state object if in a configuration context.
@@ -291,14 +294,20 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $form_state->set('block', $this);
 
     $form['#parents'] = [];
+    $form['#array_parents'] = [];
 
     $wrapper_id = Html::getId('form-wrapper-ghi-block-config');
 
     // Prepare the subform.
     $form['container'] = [
       '#type' => 'container',
+      // This is important for form processing and value submission.
       '#parents' => array_merge($form['#parents'], [$form_key]),
       // Provide an anchor for AJAX, so that we know what to replace.
+      '#array_parents' => array_merge($form['#array_parents'], [
+        'settings',
+        'container',
+      ]),
       '#attributes' => [
         'id' => $wrapper_id,
         'class' => [Html::getClass('hpc-form-wrapper')],
@@ -382,7 +391,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
         'method' => 'replace',
       ],
       '#attributes' => [
-        'class' => ['visually-hidden'],
+        'class' => !array_key_exists('#preview_button_hidden', $form['container']) || $form['container']['#preview_button_hidden'] ? ['visually-hidden'] : [],
       ],
     ];
 
@@ -483,16 +492,17 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $form_key = $form_state->get('current_subform');
 
     $action = end($triggering_element['#parents']);
-
     if (in_array($action, ['submit', 'update_preview'])) {
       // This is the general submit action of the block form.
       // Massage the value parents so that we can extract the submitted values
       // relating to our subform.
-      $value_parents = array_slice($triggering_element['#parents'], 0, array_search($form_key, $triggering_element['#parents']) + 1);
-
+      $parents = array_slice($triggering_element['#parents'], 0, array_search('preview_container', $triggering_element['#parents']));
+      $value_parents = array_slice($parents, 0, array_search($form_key, $parents) + 1);
+      if (empty($value_parents)) {
+        $value_parents[] = $form_key;
+      }
       // Get the values for that subform and .
       $step_values = $form_state->cleanValues()->getValue($value_parents);
-
       if ($action == 'submit') {
         // For the final submit of the form, put the values into the form
         // storage fo the current form, so that we have them available later.
@@ -584,6 +594,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * {@inheritdoc}
    */
   public function blockSubmit($form, FormStateInterface $form_state) {
+
     // This get's called when a submit button is clicked.
     if ($form_state->getTriggeringElement()['#parents'] != $form['actions']['submit']['#parents']) {
       // We only want to act on the real submit action for the full form.

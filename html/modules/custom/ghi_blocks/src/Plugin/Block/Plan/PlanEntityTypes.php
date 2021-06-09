@@ -2,7 +2,6 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
-use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
@@ -184,14 +183,16 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
       // is changed.
       $form['entity_ref_code']['#ajax'] = [
         'event' => 'change',
-        'callback' => [$this, 'updateEntitiesList'],
+        'callback' => [$this, 'updateAjax'],
         'wrapper' => $wrapper_id,
+        'array_parents' => array_merge($form['#array_parents'], ['entity_ids']),
       ];
 
       $form['id_type']['#ajax'] = [
         'event' => 'change',
-        'callback' => [$this, 'updateEntitiesList'],
+        'callback' => [$this, 'updateAjax'],
         'wrapper' => $wrapper_id,
+        'array_parents' => array_merge($form['#array_parents'], ['entity_ids']),
       ];
 
       $matching_entities = [];
@@ -209,8 +210,9 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
         '#default_value' => $defaults['sort'],
         '#ajax' => [
           'event' => 'change',
-          'callback' => [$this, 'updateEntitiesList'],
+          'callback' => [$this, 'updateAjax'],
           'wrapper' => $wrapper_id,
+          'array_parents' => array_merge($form['#array_parents'], ['entity_ids']),
         ],
       ];
       $form['sort_column'] = [
@@ -230,8 +232,9 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
         ],
         '#ajax' => [
           'event' => 'change',
-          'callback' => [$this, 'updateEntitiesList'],
+          'callback' => [$this, 'updateAjax'],
           'wrapper' => $wrapper_id,
+          'array_parents' => array_merge($form['#array_parents'], ['entity_ids']),
         ],
       ];
 
@@ -266,27 +269,9 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
         }
       }
     }
+    $form['#preview_button_hidden'] = FALSE;
 
     return $form;
-  }
-
-  /**
-   * Ajax callback to update the entities list.
-   *
-   * @param array $form
-   *   Form array.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   Form state interface.
-   *
-   * @return \Drupal\Core\Ajax\AjaxResponse
-   *   Ajax response.
-   */
-  public function updateEntitiesList(array &$form, FormStateInterface $form_state) {
-    $triggering_element = $form_state->getTriggeringElement();
-    $parents = $triggering_element['#array_parents'];
-    array_pop($parents);
-    $parents[] = 'entity_ids';
-    return NestedArray::getValue($form, $parents);
   }
 
   /**
