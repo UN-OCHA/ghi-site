@@ -303,7 +303,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
       '#type' => 'container',
       // This is important for form processing and value submission.
       '#parents' => array_merge($form['#parents'], [$form_key]),
-      // Provide an anchor for AJAX, so that we know what to replace.
+      // Provide an anchor for AJAX, so that we know what to replace. See
+      // Drupal\block\BlockForm::form for where that comes from.
       '#array_parents' => array_merge($form['#array_parents'], [
         'settings',
         'container',
