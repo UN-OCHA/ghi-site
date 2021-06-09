@@ -21,7 +21,7 @@ index f3260e2fad..9b5086d0a7 100644
 +++ b/core/lib/Drupal/Core/Form/FormSubmitter.php
 @@ -3,6 +3,7 @@
  namespace Drupal\Core\Form;
- 
+
  use Drupal\Core\Url;
 +use Drupal\Core\Render\Element;
  use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -29,18 +29,18 @@ index f3260e2fad..9b5086d0a7 100644
  use Symfony\Component\HttpFoundation\Response;
 @@ -48,6 +49,9 @@ public function doSubmitForm(&$form, FormStateInterface &$form_state) {
      }
- 
+
      // Execute form submit handlers.
 +    $triggering_element = $form_state->getTriggeringElement();
 +    $limit_element_submit = isset($triggering_element['#limit_element_submit']) && $triggering_element['#limit_element_submit'] !== FALSE ? $triggering_element['#limit_element_submit'] : [];
 +    $this->submitFormElement($form, $form_state, $limit_element_submit);
      $this->executeSubmitHandlers($form, $form_state);
- 
+
      // If batches were set in the submit handlers, we process them now,
 @@ -86,6 +90,55 @@ public function doSubmitForm(&$form, FormStateInterface &$form_state) {
      }
    }
- 
+
 +  /**
 +   * Performs submission on form elements.
 +   *
@@ -153,7 +153,7 @@ index f58c11cd28..afd8215342 100644
 @@ -116,6 +116,14 @@ form_test.validate_with_error_suppression:
    requirements:
      _access: 'TRUE'
- 
+
 +form_test.element_submit_form:
 +  path: '/form-test/element-submit'
 +  defaults:
@@ -172,7 +172,7 @@ index 4af6f2e704..040bc65acb 100644
 @@ -45,4 +45,11 @@ public function validateName(&$element, FormStateInterface $form_state) {
      }
    }
- 
+
 +  /**
 +   * Form element submit handler for 'group_1' in form_test_element_submit_form.
 +   */
@@ -374,18 +374,18 @@ index 807b1b9109..c2683b5c5d 100644
 @@ -37,6 +37,8 @@ public function testValidate() {
      $this->submitForm($edit, 'Save');
      $this->assertSession()->fieldValueEquals('name', '#value changed by #element_validate');
-     $this->assertText('Name value: value changed by setValueForElement() in #element_validate');
-+    $this->assertNoText('element_submit triggered');
-+    $this->assertNoText('Executed Drupal\form_test\Form\FormTestValidateForm::submitForm.');
- 
+     $this->assertSession()->pageTextContains('Name value: value changed by setValueForElement() in #element_validate');
++    $this->assertSession()->assertNoText('element_submit triggered');
++    $this->assertSession()->assertNoText('Executed Drupal\form_test\Form\FormTestValidateForm::submitForm.');
+
      // Verify that #validate handlers can alter the form and submitted
      // form values.
 @@ -46,6 +48,7 @@ public function testValidate() {
      $this->submitForm($edit, 'Save');
      $this->assertSession()->fieldValueEquals('name', '#value changed by #validate');
-     $this->assertText('Name value: value changed by setValueForElement() in #validate');
+     $this->assertSession()->pageTextContains('Name value: value changed by setValueForElement() in #validate');
 +    $this->assertNoText('Executed Drupal\form_test\Form\FormTestValidateForm::submitForm.');
- 
+
      // Verify that #element_validate handlers can make form elements
      // inaccessible, but values persist.
 diff --git a/core/tests/Drupal/Tests/Core/Form/FormSubmitterTest.php b/core/tests/Drupal/Tests/Core/Form/FormSubmitterTest.php
@@ -393,7 +393,7 @@ index 60a7c04127..032c324a02 100644
 --- a/core/tests/Drupal/Tests/Core/Form/FormSubmitterTest.php
 +++ b/core/tests/Drupal/Tests/Core/Form/FormSubmitterTest.php
 @@ -4,6 +4,7 @@
- 
+
  use Drupal\Core\DependencyInjection\ContainerBuilder;
  use Drupal\Core\Form\FormState;
 +use Drupal\Core\Form\FormStateInterface;
@@ -403,7 +403,7 @@ index 60a7c04127..032c324a02 100644
 @@ -41,6 +42,43 @@ protected function setUp(): void {
      $this->unroutedUrlAssembler = $this->createMock(UnroutedUrlAssemblerInterface::class);
    }
- 
+
 +  /**
 +   * @covers ::doSubmitForm
 +   */
