@@ -1,0 +1,23 @@
+/**
+ * GHI Plan - teaser
+ *
+ * Plan details and teasers are so dramatically different that it seemed
+ * sensible at the beginning of the project to split them and maintain two CSS
+ * libraries for each one. If that becomes problematic in the future, feel free
+ * to combine them.
+ */
+.ghi-plan-teaser__image {
+  /*
+   * 2021-05-28: the Plan image comes from the API and we didn't yet have a
+   * mechanism for pulling the image within Drupal. Using a background-color
+   * with arbitrary dimensions as fallback for now.
+   */
+  width: 100%;
+  padding-bottom: 56.25%;
+  background-color: #999;
+}
+
+.ghi-plan-teaser__title {
+  padding-bottom: 1rem;
+  font-size: 1rem;
+}

@@ -1,62 +1,35 @@
-uuid: 27f6acb7-df1c-4097-8271-32390e2cf2c1
+uuid: a70706a0-c7ea-4849-997e-c6102cd95275
 langcode: en
 status: true
 dependencies:
   config:
-    - field.field.node.news_story.body
-    - field.field.node.news_story.field_display_author
-    - field.field.node.news_story.field_image
-    - field.field.node.news_story.field_news_story_tags
-    - node.type.news_story
+    - field.field.node.page.field_page_content
+    - node.type.page
   module:
-    - file
+    - paragraphs
     - path
-    - text
-id: node.news_story.default
+id: node.page.default
 targetEntityType: node
-bundle: news_story
+bundle: page
 mode: default
 content:
-  body:
-    weight: 2
-    type: text_textarea_with_summary
-    settings:
-      rows: 9
-      summary_rows: 3
-      placeholder: ''
-      show_summary: false
-    third_party_settings: {  }
-    region: content
   created:
     type: datetime_timestamp
     weight: 10
     region: content
     settings: {  }
     third_party_settings: {  }
-  field_display_author:
-    weight: 3
-    type: string_textfield
-    settings:
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
-    region: content
-  field_image:
-    weight: 4
-    type: file_generic
-    settings:
-      progress_indicator: throbber
-    third_party_settings: {  }
-    region: content
-  field_news_story_tags:
+  field_page_content:
+    type: entity_reference_paragraphs
     weight: 121
     settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
+      title: Paragraph
+      title_plural: Paragraphs
+      edit_mode: open
+      add_mode: dropdown
+      form_display_mode: default
+      default_paragraph_type: ''
     third_party_settings: {  }
-    type: entity_reference_autocomplete
     region: content
   langcode:
     type: language_select

@@ -1,0 +1,51 @@
+/**
+ * GHI Grid
+ *
+ * This component provides a Flexbox-based layout mechanism to present lists of
+ * content in a grid-like manner. Wherever possible, it uses the default classes
+ * output by the Views Grid style, so by choosing that Style and altering some
+ * of its settings, you can make many changes just by updating Drupal config.
+ */
+.ghi-grid {
+  --ghi-grid-gap: 1rem;
+  --ghi-grid-item-size: 1;
+
+  display: flex;
+  flex-flow: row wrap;
+  gap: var(--ghi-grid-gap);
+}
+
+.ghi-grid > * {
+  flex: 1 0 100%;
+}
+
+.ghi-grid.has-sticky > *:not(.contextual):first-of-type {
+  --ghi-grid-item-size: 2;
+}
+
+@media screen and (min-width: 576px) {
+  .ghi-grid > * {
+    flex: 0 0 calc(100% * var(--ghi-grid-item-size) / var(--cols) - var(--ghi-grid-gap));
+  }
+
+  .ghi-grid.cols-2 { --cols: 2; }
+  .ghi-grid.cols-3 { --cols: 2; }
+  .ghi-grid.cols-4 { --cols: 2; }
+  .ghi-grid.cols-5 { --cols: 2; }
+}
+
+@media screen and (min-width: 1024px) {
+  .ghi-grid.cols-3 { --cols: 3; }
+  .ghi-grid.cols-4 { --cols: 3; }
+  .ghi-grid.cols-5 { --cols: 3; }
+}
+
+@media screen and (min-width: 1200px) {
+  .ghi-grid.cols-4 { --cols: 4; }
+  .ghi-grid.cols-5 { --cols: 5; }
+}
+
+.ghi-grid.debug > * {
+  border-radius: 1px;
+  box-shadow: 0 0 0 3px #62c;
+}

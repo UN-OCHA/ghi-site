@@ -1,12 +1,12 @@
-uuid: eb5ba5e9-5341-406b-9c1e-3ad5b752ca54
-langcode: und
+uuid: 931e4655-96b0-4d10-a411-a9ffa2607cce
+langcode: en
 status: true
 dependencies:
   module:
     - node
     - taxonomy
-id: node.field_topics
-field_name: field_topics
+id: node.field_news_story_tags
+field_name: field_news_story_tags
 entity_type: node
 type: entity_reference
 settings:

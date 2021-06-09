@@ -1,0 +1,23 @@
+uuid: 0abe7521-37d2-4409-a343-5a21538af34d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_publication_url
+    - paragraphs.paragraphs_type.publication
+  module:
+    - link
+id: paragraph.publication.field_publication_url
+field_name: field_publication_url
+entity_type: paragraph
+bundle: publication
+label: 'Publication URL'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  link_type: 16
+  title: 1
+field_type: link

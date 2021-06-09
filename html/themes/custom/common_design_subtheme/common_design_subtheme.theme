@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @file
+ * Template overrides, preprocess, and hooks for the GHI subtheme.
+ */
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter().
+ *
+ * We need more granularity when Views displays are getting rendered, because
+ * they might be inside a Paragraph type (by way of viewsreference module) and
+ * thus need special treatment which can happen in Twig.
+ *
+ * @see https://api.drupal.org/api/drupal/core%21lib%21Drupal%21Core%21Render%21theme.api.php/function/hook_theme_suggestions_HOOK_alter/8.4.x
+ */
+function common_design_subtheme_theme_suggestions_views_view_alter(&$suggestions, $variables) {
+  $suggestions[] = sprintf('views_view__%s', $variables['view']->id());
+  $suggestions[] = sprintf('views_view__%s__%s', $variables['view']->id(), $variables['view']->current_display);
+}

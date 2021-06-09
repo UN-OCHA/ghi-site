@@ -7,10 +7,11 @@ dependencies:
     - field.field.node.news_story.body
     - field.field.node.news_story.field_display_author
     - field.field.node.news_story.field_image
-    - field.field.node.news_story.field_topics
+    - field.field.node.news_story.field_news_story_tags
     - node.type.news_story
+    - responsive_image.styles.card_hero
   module:
-    - image
+    - responsive_image
     - text
     - user
 id: node.news_story.teaser
@@ -28,18 +29,21 @@ content:
   field_image:
     label: hidden
     weight: 0
-    type: image
+    type: responsive_image
     settings:
+      responsive_image_style: card_hero
       image_link: content
-      image_style: hpc_feature_image
     third_party_settings: {  }
     region: content
-  links:
-    weight: 100
-    settings: {  }
-    third_party_settings: {  }
+  field_news_story_tags:
+    type: entity_reference_label
+    weight: 2
     region: content
+    label: visually_hidden
+    settings:
+      link: false
+    third_party_settings: {  }
 hidden:
   field_display_author: true
-  field_topics: true
   langcode: true
+  links: true

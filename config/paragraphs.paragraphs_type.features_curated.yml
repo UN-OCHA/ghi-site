@@ -1,0 +1,10 @@
+uuid: 5f156bb5-6ca4-4525-88e6-1f66c832a299
+langcode: en
+status: true
+dependencies: {  }
+id: features_curated
+label: 'Features (curated)'
+icon_uuid: null
+icon_default: null
+description: ''
+behavior_plugins: {  }

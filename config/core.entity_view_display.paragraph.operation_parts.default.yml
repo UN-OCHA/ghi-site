@@ -1,0 +1,22 @@
+uuid: b8531d9c-3dcb-4924-ae50-69549d2e0d52
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.operation_parts.field_plans
+    - paragraphs.paragraphs_type.operation_parts
+id: paragraph.operation_parts.default
+targetEntityType: paragraph
+bundle: operation_parts
+mode: default
+content:
+  field_plans:
+    weight: 0
+    label: hidden
+    settings:
+      view_mode: teaser
+      link: false
+    third_party_settings: {  }
+    type: entity_reference_entity_view
+    region: content
+hidden: {  }
