@@ -108,7 +108,10 @@ class ArrayHelper {
         if (empty($item[$key])) {
           return FALSE;
         }
-        if ($item[$key] != $value) {
+        if (is_array($value) && !in_array($item[$key], $value)) {
+          return FALSE;
+        }
+        elseif ($item[$key] != $value) {
           return FALSE;
         }
       }

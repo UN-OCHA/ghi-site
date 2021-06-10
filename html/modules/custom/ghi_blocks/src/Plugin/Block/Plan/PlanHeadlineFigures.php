@@ -22,29 +22,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *  admin_label = @Translation("Plan: Headline Figures"),
  *  category = @Translation("Plans"),
  *  title = FALSE,
- *  data_sources = {
- *    "entities" = {
- *      "service" = "ghi_plans.plan_entities_query"
- *    },
- *    "funding_summary" = {
- *      "service" = "ghi_plans.plan_funding_summary_query"
- *    },
- *    "project_search" = {
- *      "service" = "ghi_plans.plan_project_search_query"
- *    },
- *    "attachment" = {
- *      "service" = "ghi_plans.attachment_query"
- *    },
- *    "cluster_summary" = {
- *      "service" = "ghi_plans.plan_cluster_summary_query"
- *    },
- *    "flow_search" = {
- *      "service" = "ghi_plans.flow_search_query"
- *    },
- *    "cluster" = {
- *      "service" = "ghi_plans.cluster_query"
- *    }
- *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Plan node"))
  *  }
@@ -160,10 +137,10 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
 
       // Do special processing for individual item types.
       $value = $incoming_item->value;
-      if (is_array($value) && array_key_exists('cluster_restrict', $value) && array_key_exists('cluster_tag', $value)) {
-        $item['config']['cluster_filter'] = [
-          'op' => $value['cluster_restrict'],
-          'tag' => $value['cluster_tag'],
+      if (is_object($value) && property_exists($value, 'cluster_restrict') && property_exists($value, 'cluster_tag')) {
+        $item['config']['cluster_restrict'] = [
+          'type' => $value->cluster_restrict,
+          'tag' => $value->cluster_tag,
         ];
       }
       switch ($transition_definition['target']) {
@@ -177,7 +154,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
 
         case 'original_requirements':
         case 'funding_requirements':
-          $item['config']['scale'] = array_key_exists('formatting', $value) ? $value['formatting'] : 'auto';
+          $item['config']['scale'] = property_exists($value, 'formatting') ? $value->formatting : 'auto';
           break;
 
         case 'project_data':
@@ -189,19 +166,19 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
 
         case 'attachment_data':
           $item['config']['attachment'] = [
-            'entity_type' => $incoming_item->value->attachment_select->entity_type,
-            'attachment_type' => $incoming_item->value->attachment_select->attachment_type,
-            'attachment_id' => $incoming_item->value->attachment_select->attachment_id,
+            'entity_type' => $value->attachment_select->entity_type,
+            'attachment_type' => $value->attachment_select->attachment_type,
+            'attachment_id' => $value->attachment_select->attachment_id,
           ];
           $item['config']['data_point'] = [
-            'processing' => $incoming_item->value->data_point->processing,
-            'calculation' => $incoming_item->value->data_point->calculation,
+            'processing' => $value->data_point->processing,
+            'calculation' => $value->data_point->calculation,
             'data_points' => [
-              0 => $incoming_item->value->data_point->data_point_1,
-              1 => $incoming_item->value->data_point->data_point_2,
+              0 => $value->data_point->data_point_1,
+              1 => $value->data_point->data_point_2,
             ],
-            'formatting' => $incoming_item->value->data_point->formatting,
-            'widget' => $incoming_item->value->data_point->mini_widget,
+            'formatting' => $value->data_point->formatting,
+            'widget' => $value->data_point->mini_widget,
           ];
           break;
 
@@ -293,13 +270,6 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
    */
   public function getBlockContext() {
     return [
-      'entity_query' => $this->getQueryHandler('entities'),
-      'funding_summary_query' => $this->getQueryHandler('funding_summary'),
-      'project_search_query' => $this->getQueryHandler('project_search'),
-      'attachment_query'  => $this->getQueryHandler('attachment'),
-      'cluster_summary_query' => $this->getQueryHandler('cluster_summary'),
-      'flow_search_query' => $this->getQueryHandler('flow_search'),
-      'cluster_query' => $this->getQueryHandler('cluster'),
       'page_node' => $this->getPageNode(),
       'plan_node' => $this->getCurrentPlanNode(),
     ];

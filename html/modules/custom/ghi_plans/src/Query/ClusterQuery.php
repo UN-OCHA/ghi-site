@@ -39,8 +39,8 @@ class ClusterQuery extends EndpointQuery {
    * @param string $cluster_tag
    *   The cluster tag.
    *
-   * @return object
-   *   The processed attachment object.
+   * @return array
+   *   An array of cluster objects, keyed by the cluster id.
    */
   public function getTaggedClustersForPlan($plan_id, $cluster_tag) {
     $this->setEndpointArguments([
@@ -48,6 +48,7 @@ class ClusterQuery extends EndpointQuery {
       'scopes' => 'governingEntityVersion',
     ]);
     $clusters = $this->getData();
+
     if (empty($clusters)) {
       return NULL;
     }

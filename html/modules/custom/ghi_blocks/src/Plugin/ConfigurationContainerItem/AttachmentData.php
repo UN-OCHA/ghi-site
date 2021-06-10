@@ -4,8 +4,10 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\DataPointHelper;
+use Drupal\ghi_plans\Query\AttachmentQuery;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
@@ -21,13 +23,40 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
 class AttachmentData extends ConfigurationContainerItemPluginBase {
 
   /**
+   * The attachment query.
+   *
+   * @var \Drupal\ghi_plans\Query\AttachmentQuery
+   */
+  public $attachmentQuery;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, AttachmentQuery $attachment_query) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->attachmentQuery = $attachment_query;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('ghi_plans.attachment_query'),
+    );
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
 
     $configuration = $this->getPluginConfiguration();
-    $context = $this->getContext();
+
     $attachment_select = $this->getSubmittedValue($element, $form_state, 'attachment', $form_state->get('attachment'));
     $data_point = $this->getSubmittedValue($element, $form_state, 'data_point');
 
@@ -55,7 +84,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
 
     $attachment = NULL;
     if (!empty($attachment_select['attachment_id'])) {
-      $attachment = $context['attachment_query']->getAttachment($attachment_select['attachment_id']);
+      $attachment = $this->attachmentQuery->getAttachment($attachment_select['attachment_id']);
     }
 
     $element['label']['#access'] = !empty($attachment) && !$triggered_by_change_request;
@@ -116,11 +145,10 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   public function getValue() {
     $attachment_id = $this->get(['attachment', 'attachment_id']);
     $data_point_conf = $this->get(['data_point']);
-    $context = $this->getContext();
-    if (empty($this->config)) {
+    if (!$attachment_id || !$data_point_conf) {
       return;
     }
-    $attachment = $context['attachment_query']->getAttachment($attachment_id);
+    $attachment = $this->attachmentQuery->getAttachment($attachment_id);
     $build = DataPointHelper::formatValue($attachment, $data_point_conf);
     return ThemeHelper::render($build);
   }

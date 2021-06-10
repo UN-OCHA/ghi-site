@@ -173,13 +173,6 @@ class EndpointQuery {
   }
 
   /**
-   * Set a specific argument.
-   */
-  public function setEndpointArgument($key, $value) {
-    $this->endpointArgs[$key] = $value;
-  }
-
-  /**
    * Replace placeholders with values in an endpoint.
    */
   public function substitutePlaceholders($string) {
@@ -505,6 +498,20 @@ class EndpointQuery {
    */
   public function getEndpoint() {
     return $this->endpointUrl;
+  }
+
+  /**
+   * Set a specific argument.
+   */
+  public function setEndpointArgument($key, $value) {
+    $this->endpointArgs[$key] = $value;
+  }
+
+  /**
+   * Get a specific argument.
+   */
+  public function getEndpointArgument($key) {
+    return array_key_exists($key, $this->endpointArgs) ? $this->endpointArgs[$key] : NULL;
   }
 
   /**

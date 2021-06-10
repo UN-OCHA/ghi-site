@@ -9,6 +9,7 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\hpc_api\Query\EndpointQuery;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -137,6 +138,37 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    */
   public function setContext($context) {
     $this->context = $context;
+
+    $plan_node = $context['plan_node'] ?? NULL;
+    if ($plan_node && $plan_node->bundle() == 'plan') {
+      $query_handlers = $this->getQueryHandlers();
+      foreach ($query_handlers as $query) {
+        $query->setPlaceholder('plan_id', $plan_node->field_original_id->value);
+      }
+    }
+  }
+
+  /**
+   * Retrieve the query handlers defined for a configuration item plugin.
+   *
+   * @return \Drupal\hpc_api\Query\EndpointQuery[]
+   *   An array of EndpointQuery objects used by a plugin.
+   */
+  protected function getQueryHandlers() {
+    $query_handlers = [];
+    $reflect = new \ReflectionClass($this);
+    $properties = $reflect->getProperties();
+    foreach ($properties as $property) {
+      if (!$property->isPublic()) {
+        continue;
+      }
+      $value = $property->getValue($this);
+      if (!is_object($value) || !$value instanceof EndpointQuery) {
+        continue;
+      }
+      $query_handlers[] = $value;
+    }
+    return $query_handlers;
   }
 
   /**

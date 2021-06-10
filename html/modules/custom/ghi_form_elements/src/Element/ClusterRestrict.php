@@ -109,6 +109,11 @@ class ClusterRestrict extends FormElement {
       '#weight' => 1,
     ];
 
+    if (!empty($element['#ajax'])) {
+      $element['type']['#ajax'] = $element['#ajax'];
+      $element['tag']['#ajax'] = $element['#ajax'];
+    }
+
     return $element;
   }
 

@@ -3,8 +3,11 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
+use Drupal\ghi_plans\Query\PlanEntitiesQuery;
+use Drupal\ghi_plans\Query\PlanProjectSearchQuery;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\node\NodeInterface;
 
@@ -19,6 +22,42 @@ use Drupal\node\NodeInterface;
  * )
  */
 class ProjectData extends ConfigurationContainerItemPluginBase {
+
+  /**
+   * The plan entities query.
+   *
+   * @var \Drupal\ghi_plans\Query\PlanEntitiesQuery
+   */
+  public $planEntitiesQuery;
+
+  /**
+   * The project search query.
+   *
+   * @var \Drupal\ghi_plans\Query\PlanProjectSearchQuery
+   */
+  public $projectSearchQuery;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, PlanEntitiesQuery $plan_entities_query, PlanProjectSearchQuery $project_search_query) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->planEntitiesQuery = $plan_entities_query;
+    $this->projectSearchQuery = $project_search_query;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('ghi_plans.plan_entities_query'),
+      $container->get('ghi_plans.plan_project_search_query'),
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -47,6 +86,14 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
     ];
     $element['label']['#weight'] = 1;
     $element['label']['#placeholder'] = $this->getDefaultLabel($data_type);
+
+    // Add a preview.
+    $element['value_preview'] = [
+      '#type' => 'item',
+      '#title' => $this->t('Value preview'),
+      '#markup' => $this->getValue($data_type),
+      '#weight' => 3,
+    ];
 
     return $element;
   }
@@ -77,27 +124,46 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getValue() {
+  public function getValue($data_type = NULL) {
     $context = $this->getContext();
-    if (empty($context['page_node']) || empty($context['project_search_query'])) {
+    if (empty($context['page_node']) || empty($context['plan_node'])) {
       return NULL;
     }
-    $query = $context['project_search_query'];
-    $page_node = $context['page_node'];
-    if ($page_node->bundle() == 'plan_entity' && !empty($context['entity_query'])) {
-      $cluster_ids = PlanStructureHelper::getPlanEntityStructure($context['entity_query']->getData());
-      $query->setFilterByClusterIds($cluster_ids);
-    }
 
-    switch ($this->get('data_type')) {
+    $project_query = $this->projectSearchQuery;
+    $page_node = $context['page_node'];
+
+    $data_type = $data_type ?? $this->get('data_type');
+
+    switch ($data_type) {
       case 'projects_count':
-        return $query->getProjectCount($page_node);
+        return $project_query->getProjectCount($page_node);
 
       case 'organizations_count':
-        return $query->getOrganizationCount($page_node);
+        return $project_query->getOrganizationCount($page_node);
     }
 
     return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setContext($context) {
+    parent::setContext($context);
+
+    // Also set cluster context if the current page is a plan entity.
+    $page_node = $context['page_node'] ?? NULL;
+    if ($page_node && $page_node->bundle() == 'plan_entity') {
+      $query_handlers = $this->getQueryHandlers();
+      foreach ($query_handlers as $query) {
+        if (!$query instanceof PlanProjectSearchQuery) {
+          continue;
+        }
+        $cluster_ids = PlanStructureHelper::getPlanEntityStructure($this->planEntitiesQuery->getData());
+        $query->setFilterByClusterIds($cluster_ids);
+      }
+    }
   }
 
   /**
