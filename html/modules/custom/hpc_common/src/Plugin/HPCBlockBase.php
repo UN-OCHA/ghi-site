@@ -532,6 +532,13 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   /**
    * {@inheritdoc}
    */
+  public function getPreviewFallbackString() {
+    return $this->t('"@block" block', ['@block' => parent::label()]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   abstract public function build();
 
   /**
