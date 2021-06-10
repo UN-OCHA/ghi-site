@@ -42,7 +42,6 @@ class ConfigurationContainer extends FormElement {
       '#theme_wrappers' => ['form_element'],
       '#max_items' => NULL,
       '#preview' => NULL,
-      '#plan_context' => NULL,
     ];
   }
 

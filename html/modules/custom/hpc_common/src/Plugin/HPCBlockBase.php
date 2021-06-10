@@ -632,6 +632,9 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     if (!empty($source_keys)) {
       foreach ($source_keys as $source_key) {
         $query_handler = $this->getQueryHandler($source_key);
+        if (!$query_handler) {
+          continue;
+        }
         $query_handler->setPlaceholders($this->getPageArguments());
         if (method_exists($this, 'alterEndpointQuery')) {
           $this->alterEndpointQuery($source_key, $query_handler);

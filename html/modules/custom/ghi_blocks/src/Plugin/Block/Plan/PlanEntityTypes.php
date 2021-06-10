@@ -23,7 +23,7 @@ use Drupal\hpc_api\Query\EndpointQuery;
  *    },
  *  },
  *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Plan node"))
+ *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"))
  *  }
  * )
  */

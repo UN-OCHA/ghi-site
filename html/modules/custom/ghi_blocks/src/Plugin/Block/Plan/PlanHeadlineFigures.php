@@ -23,7 +23,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *  category = @Translation("Plans"),
  *  title = FALSE,
  *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Plan node"))
+ *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"))
  *  }
  * )
  */
@@ -247,7 +247,6 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
       '#type' => 'configuration_container',
       '#title' => $this->t('Configured headline figures'),
       '#title_display' => 'invisble',
-      '#plan_context' => $this->getPageNode(),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'items'),
       '#allowed_item_types' => $this->getAllowedItemTypes(),
       '#preview' => [
