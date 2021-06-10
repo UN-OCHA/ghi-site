@@ -1,5 +1,4 @@
 .hpc-form-wrapper {
-  border: 1px solid gray;
   padding: 1rem;
   margin-bottom: 1rem;
 }
@@ -9,3 +8,52 @@
   bottom: 1rem;
   right: 1rem;
 } */
+
+.hpc-form-wrapper table {
+  width: 100%;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  border-collapse: collapse;
+}
+.hpc-form-wrapper table thead {
+  border-radius: 6px;
+  -webkit-box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+}
+.hpc-form-wrapper table th {
+  color: var(--colorGinText);
+  background: var(--colorGinTableHeader);
+  position: relative;
+  box-sizing: border-box;
+  height: 3rem;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  color: #222330;
+  background: #f3f4f9;
+  line-height: 1.25rem;
+  white-space: nowrap;
+}
+.hpc-form-wrapper table th:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+.hpc-form-wrapper table th:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+.hpc-form-wrapper table tbody tr {
+  border-bottom: 1px solid var(--colorGinTableBorder);
+  color: var(--colorGinText);
+  background-color: transparent;
+}
+.hpc-form-wrapper table tbody tr:hover,
+.hpc-form-wrapper table tbody tr:focus {
+  color: #222330;
+  background: #f0f5fd;
+}
+.hpc-form-wrapper table tbody tr td {
+  box-sizing: border-box;
+  height: 4rem;
+  padding: 0.5rem 1rem;
+  text-align: left;
+}
