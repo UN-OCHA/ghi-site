@@ -131,6 +131,7 @@ class ConfigurationContainer extends FormElement {
       case 'cancel':
         // Switch to list mode.
         $new_mode = 'list';
+        $form_state->set('current_item_type', NULL);
         break;
     }
 
@@ -419,6 +420,11 @@ class ConfigurationContainer extends FormElement {
         $element['item_config']['cancel_item_type'] = [
           '#type' => 'submit',
           '#value' => t('Cancel'),
+          '#name' => 'cancel-item-type',
+          '#limit_validation_errors' => [],
+          // This is important to prevent form errors. Note that elementSubmit()
+          // is still run for this button.
+          '#submit' => [],
           '#ajax' => [
             'event' => 'click',
             'callback' => [static::class, 'updateAjax'],
@@ -432,11 +438,11 @@ class ConfigurationContainer extends FormElement {
       $item = $items[$index];
     }
 
-    if ($item['item_type'] !== NULL) {
+    if (!empty($item['item_type'])) {
       $form_state->set('current_item_type', $item['item_type']);
     }
 
-    if ($item['item_type'] !== NULL && empty($trigger_parents)) {
+    if (!empty($item['item_type']) && empty($trigger_parents)) {
       $form_state->set('mode', $index ? 'edit_item' : 'add_item');
     }
 
