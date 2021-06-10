@@ -201,14 +201,15 @@ class PlanProjectSearchQuery extends EndpointQuery {
         return in_array($context_original_id, $item->cluster_ids);
       });
     }
-    elseif (!empty($context_node) && $context_node->bundle() == 'plan_entity') {
+    else {
+      $projects = $data;
+    }
+
+    if (!empty($this->filterByClusterIds)) {
       $cluster_ids = $this->filterByClusterIds;
       $projects = array_filter($data, function ($item) use ($cluster_ids) {
         return count(array_intersect($cluster_ids, $item->cluster_ids));
       });
-    }
-    else {
-      $projects = $data;
     }
 
     // Filter out unpublished projects.

@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_blocks\Traits\ClusterRestrictConfigurationItemTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Query\ClusterQuery;
@@ -23,6 +24,8 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
  * )
  */
 class FundingData extends ConfigurationContainerItemPluginBase {
+
+  use ClusterRestrictConfigurationItemTrait;
 
   /**
    * The funding query.
@@ -120,16 +123,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     }
 
     if ($context['page_node']->bundle() == 'plan' && $data_type['cluster_restrict']) {
-      $element['cluster_restrict'] = [
-        '#type' => 'cluster_restrict',
-        '#title' => $this->t('Restrict by cluster'),
-        '#default_value' => $cluster_restrict,
-        '#ajax' => [
-          'event' => 'change',
-          'callback' => [static::class, 'updateAjax'],
-          'wrapper' => $this->wrapperId,
-        ],
-      ];
+      $element['cluster_restrict'] = $this->buildClusterRestrictFormElement($cluster_restrict);
     }
 
     $element['scale'] = [
@@ -222,7 +216,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    *   The retrieved value.
    */
   public function getValueWithClusterRestrict(array $data_type, $scale, array $cluster_restrict) {
-    // @codingStandardsIgnoreStart
+
     $context = $this->getContext();
     $plan_node = $context['plan_node'];
     $plan_id = $plan_node->field_original_id->value;
@@ -233,22 +227,8 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       'groupby' => 'cluster',
     ]);
 
-    // First extract the cluster ids for the given cluster tag, as used for
-    // the specific plan.
-    $cluster_ids = [];
-    $tagged_clusters = $this->clusterQuery->getTaggedClustersForPlan($plan_id, $cluster_restrict['tag']);
-    if (!empty($tagged_clusters)) {
-      // Get the cluster ids that are actually part of the result set.
-      $cluster_ids = $this->flowSearchQuery->getClusterIds($search_results, array_keys($tagged_clusters));
-    }
-
-    if ($cluster_restrict['type'] == 'tag_exclude') {
-      $cluster_ids_all = $this->flowSearchQuery->getClusterIds($search_results);
-      $cluster_ids = array_diff($cluster_ids_all, $cluster_ids);
-    }
-
-    $requirements_data = $this->flowSearchQuery->getFundingDataByClusterIds($search_results, $cluster_ids);
-    $data = $requirements_data;
+    $cluster_ids = $this->getClusterIdsByClusterRestrict($cluster_restrict, $search_results, $this->clusterQuery);
+    $data = $this->flowSearchQuery->getFundingDataByClusterIds($search_results, $cluster_ids);
     return array_key_exists($data_type['property'], $data) ? $data[$data_type['property']] : NULL;
   }
 

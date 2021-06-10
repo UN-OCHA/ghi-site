@@ -3,9 +3,12 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_blocks\Traits\ClusterRestrictConfigurationItemTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
+use Drupal\ghi_plans\Query\ClusterQuery;
+use Drupal\ghi_plans\Query\FlowSearchQuery;
 use Drupal\ghi_plans\Query\PlanEntitiesQuery;
 use Drupal\ghi_plans\Query\PlanProjectSearchQuery;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
@@ -23,6 +26,8 @@ use Drupal\node\NodeInterface;
  */
 class ProjectData extends ConfigurationContainerItemPluginBase {
 
+  use ClusterRestrictConfigurationItemTrait;
+
   /**
    * The plan entities query.
    *
@@ -38,12 +43,28 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
   public $projectSearchQuery;
 
   /**
+   * The funding query.
+   *
+   * @var \Drupal\ghi_plans\Query\FlowSearchQuery
+   */
+  public $flowSearchQuery;
+
+  /**
+   * The funding query.
+   *
+   * @var \Drupal\ghi_plans\Query\ClusterQuery
+   */
+  public $clusterQuery;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, PlanEntitiesQuery $plan_entities_query, PlanProjectSearchQuery $project_search_query) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, PlanEntitiesQuery $plan_entities_query, PlanProjectSearchQuery $project_search_query, FlowSearchQuery $flow_search_query, ClusterQuery $cluster_query) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->planEntitiesQuery = $plan_entities_query;
     $this->projectSearchQuery = $project_search_query;
+    $this->flowSearchQuery = $flow_search_query;
+    $this->clusterQuery = $cluster_query;
   }
 
   /**
@@ -56,6 +77,8 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
       $plugin_definition,
       $container->get('ghi_plans.plan_entities_query'),
       $container->get('ghi_plans.plan_project_search_query'),
+      $container->get('ghi_plans.flow_search_query'),
+      $container->get('ghi_plans.cluster_query'),
     );
   }
 
@@ -66,11 +89,17 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
     $element = parent::buildForm($element, $form_state);
     $element['label']['#description'] = $this->t('Leave empty to use a default label');
 
+    $context = $this->getContext();
+
     $data_type_options = [
       'projects_count' => $this->t('Projects count'),
       'organizations_count' => $this->t('Partners count'),
     ];
     $data_type = $this->getSubmittedOptionsValue($element, $form_state, 'data_type', $data_type_options);
+    $cluster_restrict = $this->getSubmittedValue($element, $form_state, 'cluster_restrict', [
+      'type' => NULL,
+      'tag' => NULL,
+    ]);
 
     $element['data_type'] = [
       '#type' => 'select',
@@ -87,11 +116,15 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
     $element['label']['#weight'] = 1;
     $element['label']['#placeholder'] = $this->getDefaultLabel($data_type);
 
+    if (in_array($context['page_node']->bundle(), ['plan', 'plan_entity'])) {
+      $element['cluster_restrict'] = $this->buildClusterRestrictFormElement($cluster_restrict);
+    }
+
     // Add a preview.
     $element['value_preview'] = [
       '#type' => 'item',
       '#title' => $this->t('Value preview'),
-      '#markup' => $this->getValue($data_type),
+      '#markup' => $this->getValue($data_type, $cluster_restrict),
       '#weight' => 3,
     ];
 
@@ -124,9 +157,9 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getValue($data_type = NULL) {
+  public function getValue($data_type = NULL, $cluster_restrict = NULL) {
     $context = $this->getContext();
-    if (empty($context['page_node']) || empty($context['plan_node'])) {
+    if (empty($context['page_node'])) {
       return NULL;
     }
 
@@ -134,6 +167,10 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
     $page_node = $context['page_node'];
 
     $data_type = $data_type ?? $this->get('data_type');
+    $cluster_restrict = $cluster_restrict ?? $this->get('cluster_restrict');
+    if (!empty($cluster_restrict) && $cluster_ids = $this->getClusterIdsForConfig($cluster_restrict)) {
+      $project_query->setFilterByClusterIds($cluster_ids);
+    }
 
     switch ($data_type) {
       case 'projects_count':
@@ -164,6 +201,29 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
         $query->setFilterByClusterIds($cluster_ids);
       }
     }
+  }
+
+  /**
+   * Get the cluster ids for the current item configuration.
+   *
+   * @param array $cluster_restrict
+   *   The cluster restrict configuration.
+   *
+   * @return int[]
+   *   An array of cluster ids.
+   */
+  private function getClusterIdsForConfig(array $cluster_restrict) {
+    $context = $this->getContext();
+    $plan_node = $context['plan_node'];
+    $plan_id = $plan_node->field_original_id->value;
+
+    // Extract the actually used cluster from the funding and requirements data.
+    $search_results = $this->flowSearchQuery->search([
+      'planid' => $plan_id,
+      'groupby' => 'cluster',
+    ]);
+
+    return $this->getClusterIdsByClusterRestrict($cluster_restrict, $search_results, $this->clusterQuery);
   }
 
   /**
@@ -200,6 +260,13 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
    *   The access status.
    */
   public function accessByPlanCosting(NodeInterface $plan_node, array $valid_type_codes) {
+    if ($plan_node->field_plan_costing->isEmpty()) {
+      // If no plan costing is set for this plan, we only need to check if
+      // costing code "0" is valid.
+      return in_array(0, $valid_type_codes);
+    }
+    // Otherwhise we load the plan costing term, get the code and check if it's
+    // one of the valid ones.
     $term = TaxonomyHelper::getTermById($plan_node->field_plan_costing->target_id, 'plan_costing');
     return $term ? in_array($term->field_plan_costing_code->value, $valid_type_codes) : FALSE;
   }
