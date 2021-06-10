@@ -303,6 +303,8 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'current_requirements',
+        // @todo Add support for inclusion of original requirements as a
+        // tooltip.
       ],
     ];
   }
