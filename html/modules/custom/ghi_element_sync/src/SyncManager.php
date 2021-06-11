@@ -175,7 +175,6 @@ class SyncManager implements ContainerInjectionInterface {
       if (!in_array('Drupal\ghi_element_sync\SyncableBlockInterface', class_implements($class))) {
         continue;
       }
-
       $existing_component = $this->getExistingSyncedComponent($node, $element);
       if ($existing_component) {
         // Update an existing component.
@@ -190,17 +189,17 @@ class SyncManager implements ContainerInjectionInterface {
         $messenger->addMessage($this->t('Added %plugin_title', [
           '%plugin_title' => $definition['admin_label'],
         ]));
-        $config = [
+        $config = array_filter([
           'id' => $definition['id'],
           'provider' => $definition['provider'],
-          'data_sources' => $definition['data_sources'],
+          'data_sources' => $definition['data_sources'] ?? NULL,
           'context_mapping' => [
             'node' => 'layout_builder.entity',
           ],
           'sync' => [
             'source_uuid' => $element->uuid,
           ],
-        ];
+        ]);
         $config += $class::mapConfig($element->configuration);
 
         $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);

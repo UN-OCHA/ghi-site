@@ -128,6 +128,10 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
       '#multiple' => FALSE,
       '#empty' => $this->t('There are no images yet.'),
       '#required' => TRUE,
+      '#ajax' => [
+        'event' => 'change',
+        'callback' => [$this, 'updateAjax'],
+      ],
     ];
     return $form;
   }

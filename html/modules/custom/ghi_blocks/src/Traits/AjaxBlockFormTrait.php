@@ -44,23 +44,21 @@ trait AjaxBlockFormTrait {
    *   The part of the form structure that should be replaced.
    */
   public static function updateAjax(array &$form, FormStateInterface $form_state) {
+    $response = new AjaxResponse();
 
     $triggering_element = $form_state->getTriggeringElement();
     $ajax = $triggering_element['#ajax'];
 
-    if (empty($ajax['wrapper']) || empty($ajax['array_parents'])) {
-      throw new \InvalidArgumentException(sprintf('Form element %s needs to specify the properties wrapper and array_parents', $triggering_element['#name']));
+    if (!empty($ajax['wrapper']) && !empty($ajax['array_parents'])) {
+      $wrapper_id = $ajax['wrapper'];
+      $parents = $ajax['array_parents'];
+      // Just update the full element.
+      $response->addCommand(new ReplaceCommand('#' . $wrapper_id, NestedArray::getValue($form, $parents)));
     }
-    $wrapper_id = $ajax['wrapper'];
-    $parents = $ajax['array_parents'];
-    $block_preview_update = !array_key_exists('block_preview_update', $ajax) || $ajax['block_preview_update'];
-
-    // Just update the full element.
-    $response = new AjaxResponse();
-    $response->addCommand(new ReplaceCommand('#' . $wrapper_id, NestedArray::getValue($form, $parents)));
 
     // If a submit button has been triggered and we have a preview container,
     // update that too.
+    $block_preview_update = !array_key_exists('block_preview_update', $ajax) || $ajax['block_preview_update'];
     if ($block_preview_update && $preview_container = self::findPreviewContainer($form)) {
       $response->addCommand(new ReplaceCommand('#' . $preview_container['update_preview']['#ajax']['wrapper'], $preview_container));
     }
