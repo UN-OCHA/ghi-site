@@ -115,6 +115,13 @@ class SyncForm extends FormBase {
       ],
     ];
 
+    $form['revisions'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Create new revisions'),
+      '#description' => $this->t('Check this if new revisions should be created.'),
+      '#default_value' => FALSE,
+    ];
+
     $form['sync_elements'] = [
       '#type' => 'submit',
       '#value' => $this->t('Sync all elements'),
@@ -137,6 +144,7 @@ class SyncForm extends FormBase {
     $limit = $form_state->getValue('limit');
     $bundle = $this->bundles;
     $id = NULL;
+    $revisions = $form_state->getValue('revisions');
 
     if ($limit == 'bundle') {
       $bundle = array_keys(array_filter($form_state->getValue('bundle')));
@@ -154,6 +162,7 @@ class SyncForm extends FormBase {
       $this->syncManager,
       $bundle,
       (array) $id,
+      $revisions,
     ]);
     batch_set($batch_builder->toArray());
 

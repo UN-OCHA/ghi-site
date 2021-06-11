@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block;
 
+use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Plugin\Context\Context;
@@ -10,6 +11,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
+use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Traits\AjaxBlockFormTrait;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 
@@ -21,10 +25,125 @@ use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
  */
 abstract class GHIBlockBase extends HPCBlockBase {
 
+  use AjaxBlockFormTrait;
+
+  /**
+   * Current form state object if in a configuration context.
+   *
+   * @var \Drupal\Core\Form\FormStateInterface
+   */
+  protected $formState;
+
   /**
    * {@inheritdoc}
    */
   abstract public function buildContent();
+
+  /**
+   * Provide block specific default configuration.
+   */
+  abstract protected function getConfigurationDefaults();
+
+  /**
+   * Get data for this paragraph.
+   *
+   * @param string $source_key
+   *   The source key that should be used to retrieve data for a paragraph.
+   *
+   * @return array|object
+   *   A data array or object.
+   */
+  public function getData(string $source_key = 'data') {
+    $query = $this->getQueryHandler($source_key);
+    return $query ? $query->getData() : NULL;
+  }
+
+  /**
+   * Get a query handler for this paragraph.
+   *
+   * This returns either the requested named handler if it exists, or the only
+   * one defined if no source key is given.
+   *
+   * @param string $source_key
+   *   The source key that should be used to retrieve data for a paragraph.
+   *
+   * @return Drupal\hpc_api\EndpointQuery
+   *   The query handler class.
+   */
+  protected function getQueryHandler($source_key = 'data') {
+    $configuration = $this->getPluginDefinition();
+    if (empty($configuration['data_sources'])) {
+      return NULL;
+    }
+
+    $sources = $configuration['data_sources'];
+    $definition = !empty($sources[$source_key]) ? $sources[$source_key] : NULL;
+    if (!$definition || empty($definition['service'])) {
+      return NULL;
+    }
+
+    $query_handler = \Drupal::service($definition['service']);
+    $page_node = $this->getPageNode();
+    if ($page_node->bundle() == 'plan') {
+      if (isset($page_node->field_original_id) && !$page_node->field_original_id->isEmpty()) {
+        $plan_id = $page_node->field_original_id->value;
+        $query_handler->setPlaceholder('plan_id', $plan_id);
+      }
+    }
+    elseif ($page_node->hasField('field_plan') && count($page_node->get('field_plan')->referencedEntities()) == 1) {
+      $entities = $page_node->get('field_plan')->referencedEntities();
+      $plan = reset($entities);
+      $plan_id = $plan->field_original_id->value;
+      $query_handler->setPlaceholder('plan_id', $plan_id);
+    }
+    return $query_handler;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function baseConfigurationDefaults() {
+    return [
+      'hpc' => $this->getConfigurationDefaults(),
+    ] + parent::baseConfigurationDefaults();
+  }
+
+  /**
+   * Get the configuration for a block instance.
+   *
+   * This returns only the configuration for a block plugin that is HPC
+   * specific and additional to the default plugin configuration.
+   *
+   * @return array
+   *   An array with configuration options specific to a block plugin instance.
+   */
+  protected function getBlockConfig() {
+    if ($this->formState) {
+      return $this->getTemporarySettings($this->formState);
+    }
+    return $this->configuration['hpc'];
+  }
+
+  /**
+   * Set the HPC specific config for a block.
+   *
+   * @param array $config
+   *   A config array.
+   */
+  protected function setBlockConfig(array $config) {
+    $this->configuration['hpc'] = $config;
+  }
+
+  /**
+   * Check if the block should display it's title.
+   *
+   * @return bool
+   *   TRUE if a title can be shown, FALSE otherwise.
+   */
+  public function shouldDisplayTitle() {
+    $plugin_definition = $this->getPluginDefinition();
+    return !array_key_exists('title', $plugin_definition) || $plugin_definition['title'] !== FALSE;
+  }
 
   /**
    * {@inheritdoc}
@@ -42,15 +161,20 @@ abstract class GHIBlockBase extends HPCBlockBase {
       '#type' => 'container',
     ];
 
-    if (!empty($build_content['#title'])) {
-      $build['#title'] = $build_content['#title'];
-      unset($build_content['#title']);
-    }
+    if ($this->shouldDisplayTitle()) {
+      if ($this instanceof AutomaticTitleBlockInterface) {
+        $build['#title'] = $this->getAutomaticBlockTitle();
+      }
+      elseif (!empty($build_content['#title'])) {
+        $build['#title'] = $build_content['#title'];
+        unset($build_content['#title']);
+      }
 
-    if ($plugin_configuration['label_display'] == 'visible' && !array_key_exists('#title', $build)) {
-      $build += [
-        '#title' => $this->label(),
-      ];
+      if ($plugin_configuration['label_display'] == 'visible' && !array_key_exists('#title', $build)) {
+        $build += [
+          '#title' => $this->label(),
+        ];
+      }
     }
 
     // Add the build content as a child.
@@ -70,18 +194,22 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
-   * Define subforms for the block configuration.
+   * Form builder for the config form of simple block types.
    *
-   * This allows implementing block plugins to define more complex config
-   * forms, using AJAX based multi-step forms. The main logic is handled in
-   * this base class. All that implementing classes need to do is to return an
-   * associative array, where the keys are the "machine name" of the form,
-   * used to store values in the block configuration array, and the value is
-   * the name of a callable method on the class that provides the form array
-   * for each step.
+   * If a block is implementing the MultiStepFormBlockInterface, this method
+   * does not need to be implemented. All other block plugins inheriting from
+   * this base class need to implement the method.
+   *
+   * @param array $form
+   *   An associative array containing the initial structure of the subform.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
-  public function getSubforms() {
-    return [];
+  public function getConfigForm(array $form, FormStateInterface $form_state) {
+    $missing_class_message = sprintf('The plugin (%s) did not implement the getConfigForm() method.', $this->getPluginId());
+    throw new PluginException($missing_class_message);
   }
 
   /**
@@ -90,21 +218,27 @@ abstract class GHIBlockBase extends HPCBlockBase {
   public function getDefaultFormValueFromFormState(FormStateInterface $form_state, $key) {
     // Extract the form values.
     // https://www.drupal.org/project/drupal/issues/2798261#comment-12735075
+    $form_key = $form_state->get('current_subform');
+    $step_values = NULL;
+    $value_parents = [$form_key, $key];
     if ($form_state instanceof SubformStateInterface) {
-      $values = $form_state->getCompleteFormState()->getValues();
+      $step_values = $form_state->getCompleteFormState()->cleanValues()->getValue($value_parents);
     }
     else {
-      $values = $form_state->getValues();
+      $step_values = $form_state->cleanValues()->getValue($value_parents);
     }
-
-    $form_key = $form_state->get('current_subform');
-    if ($step_values = NestedArray::getValue($values, [$form_key, $key])) {
+    if ($step_values) {
       return $step_values;
     }
 
     $block = $form_state->get('block');
-    $settings_key = ['hpc', $form_key, $key];
-    return NestedArray::getValue($block->configuration, $settings_key);
+    $config = $block->getBlockConfig();
+
+    $settings_key = [$key];
+    if ($block instanceof MultiStepFormBlockInterface) {
+      $settings_key = [$form_key, $key];
+    }
+    return NestedArray::getValue($config, $settings_key);
   }
 
   /**
@@ -113,9 +247,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
   public function blockForm($form, FormStateInterface $form_state) {
     parent::blockForm($form, $form_state);
 
-    if (!method_exists($this, 'getSubforms')) {
-      return $form;
-    }
+    $this->formState = $form_state;
+    $form_state->addCleanValueKey('actions');
 
     // Provide context so that data can be retrieved.
     $build_info = $form_state->getBuildInfo();
@@ -126,39 +259,56 @@ abstract class GHIBlockBase extends HPCBlockBase {
       }
     }
 
-    $forms = $this->getSubforms();
-    if (empty($forms)) {
-      return $form;
+    // Default is a simple form with a single configuration callback.
+    $has_step_navigation = FALSE;
+    $form_key = 'basic';
+    $form_callback = 'getConfigForm';
+    $step = NULL;
+
+    if ($this instanceof MultiStepFormBlockInterface) {
+      $forms = $this->getSubforms();
+      if (empty($forms)) {
+        return $form;
+      }
+
+      $step = $form_state->has('step') ? $form_state->get('step') : 0;
+      if ($step > count($forms)) {
+        $step = count($forms);
+      }
+      $has_step_navigation = count($forms) > 1;
+
+      $form_keys = array_keys($forms);
+      $form_key = $form_keys[$step];
+
+      $form_callback = array_values($forms)[$step];
+
+      if (!method_exists($this, $form_callback)) {
+        return $form;
+      }
+
+      // Set state.
+      $form_state->set('step', $step);
     }
 
-    $step = $form_state->has('step') ? $form_state->get('step') : 0;
-    if ($step > count($forms)) {
-      $step = count($forms);
-    }
-
-    $form_keys = array_keys($forms);
-    $form_key = $form_keys[$step];
-
-    $form_callback = array_values($forms)[$step];
-
-    if (!method_exists($this, $form_callback)) {
-      return $form;
-    }
-
-    // Set state.
-    $form_state->set('step', $step);
     $form_state->set('current_subform', $form_key);
     $form_state->set('block', $this);
 
     $form['#parents'] = [];
+    $form['#array_parents'] = [];
 
-    $wrapper_id = Html::getId('form-wrapper-multi-step-config');
+    $wrapper_id = Html::getId('form-wrapper-ghi-block-config');
 
     // Prepare the subform.
     $form['container'] = [
       '#type' => 'container',
+      // This is important for form processing and value submission.
       '#parents' => array_merge($form['#parents'], [$form_key]),
-      // Provide an anchor for AJAX, so that we know what to replace.
+      // Provide an anchor for AJAX, so that we know what to replace. See
+      // Drupal\block\BlockForm::form for where that comes from.
+      '#array_parents' => array_merge($form['#array_parents'], [
+        'settings',
+        'container',
+      ]),
       '#attributes' => [
         'id' => $wrapper_id,
         'class' => [Html::getClass('hpc-form-wrapper')],
@@ -179,62 +329,61 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $subform_state = SubformState::createForSubform($form['container'], $form, $form_state);
     $form['container'] += $this->{$form_callback}($form['container'], $subform_state);
 
-    // Set the element validate callback for all ajax enabled form elements.
-    // This is needed so that the current form values will be stored in the
-    // form and are therefor available for an immediate update of other
-    // elements that might depend on the changed data.
-    $this->setElementValidateOnAjaxElements($form['container']);
-
     $form['container']['actions'] = [
       '#type' => 'container',
     ];
 
     // Add the step navigation.
-    if ($step > 0) {
-      $form['container']['actions']['back'] = [
-        '#type' => 'button',
-        '#name' => 'back-button',
-        '#button_type' => 'primary',
-        '#value' => $this->t('Back'),
-        // '#submit' => [['::submitAjax']],
-        '#element_validate' => [[$this, 'validateBlockForm']],
-        '#limit_validation_errors' => [],
-        '#ajax' => [
-          'callback' => [$this, 'navigateFormStep'],
-          'wrapper' => $wrapper_id,
-          'effect' => 'fade',
-          'method' => 'replace',
-        ],
-      ];
-    }
+    if ($has_step_navigation) {
+      if ($step > 0) {
+        $form['container']['actions']['back'] = [
+          '#type' => 'button',
+          '#name' => 'back-button',
+          '#button_type' => 'primary',
+          '#value' => $this->t('Back'),
+          '#limit_validation_errors' => [],
+          '#ajax' => [
+            'callback' => [$this, 'navigateFormStep'],
+            'wrapper' => $wrapper_id,
+            'effect' => 'fade',
+            'method' => 'replace',
+          ],
+        ];
+      }
 
-    if ($step < count($forms) - 1) {
-      $form['container']['actions']['next'] = [
-        '#type' => 'button',
-        '#name' => 'next-button',
-        '#button_type' => 'primary',
-        '#value' => $this->t('Next'),
-        // '#submit' => [['::submitAjax']],
-        '#element_validate' => [[$this, 'validateBlockForm']],
-        '#limit_validation_errors' => [],
-        '#ajax' => [
-          'callback' => [$this, 'navigateFormStep'],
-          'wrapper' => $wrapper_id,
-          'effect' => 'fade',
-          'method' => 'replace',
-        ],
-      ];
+      if ($step < count($forms) - 1) {
+        $form['container']['actions']['next'] = [
+          '#type' => 'button',
+          '#name' => 'next-button',
+          '#button_type' => 'primary',
+          '#value' => $this->t('Next'),
+          '#limit_validation_errors' => [],
+          '#ajax' => [
+            'callback' => [$this, 'navigateFormStep'],
+            'wrapper' => $wrapper_id,
+            'effect' => 'fade',
+            'method' => 'replace',
+          ],
+        ];
+      }
     }
 
     // Add a preview area.
     $preview_wrapper_id = Html::getId($wrapper_id . '-preview');
-    $form['container']['actions']['preview'] = [
+
+    $form['preview_container'] = [
+      '#type' => 'container',
+      '#title' => $this->t('Preview'),
+      '#attributes' => [
+        'id' => $preview_wrapper_id,
+        'class' => [Html::getClass('hpc-form-wrapper-preview')],
+      ],
+    ];
+    $form['preview_container']['update_preview'] = [
       '#type' => 'button',
-      '#name' => 'next-button',
+      '#name' => 'preview-button',
       '#button_type' => 'primary',
       '#value' => $this->t('Update preview'),
-      // '#submit' => [['::submitAjax']],
-      '#element_validate' => [[$this, 'validateBlockForm']],
       '#limit_validation_errors' => [],
       '#ajax' => [
         'callback' => [$this, 'updatePreview'],
@@ -242,19 +391,32 @@ abstract class GHIBlockBase extends HPCBlockBase {
         'effect' => 'fade',
         'method' => 'replace',
       ],
-    ];
-
-    $form['preview_container'] = [
-      '#type' => 'fieldset',
-      '#title' => $this->t('Preview'),
       '#attributes' => [
-        'id' => $preview_wrapper_id,
-        'class' => [Html::getClass('hpc-form-wrapper-preview')],
+        'class' => !array_key_exists('#preview_button_hidden', $form['container']) || $form['container']['#preview_button_hidden'] ? ['visually-hidden'] : [],
       ],
     ];
 
-    $this->setConfigurationValue('hpc', $this->getTemporarySettings($form_state));
-    $form['preview_container']['preview'] = $this->build();
+    $build = $this->build();
+    $form['preview_container']['preview'] = [
+      '#theme' => 'block',
+      '#attributes' => [],
+      '#configuration' => [
+        'label' => array_key_exists('#title', $build) ? $build['#title'] : NULL,
+        'label_display' => $this->configuration['label_display'],
+        'hpc' => $this->getTemporarySettings($form_state),
+      ] + $this->configuration,
+      '#base_plugin_id' => $this->getBaseId(),
+      '#plugin_id' => $this->getPluginId(),
+      '#derivative_plugin_id' => $this->getDerivativeId(),
+      '#id' => $this->getPluginId(),
+      'content' => $build,
+    ];
+
+    // Set the element validate callback for all ajax enabled form elements.
+    // This is needed so that the current form values will be stored in the
+    // form and are therefor available for an immediate update of other
+    // elements that might depend on the changed data.
+    $this->setElementValidateOnAjaxElements($form['container']);
 
     $form['#after_build'][] = [$this, 'blockFormAfterBuild'];
     return $form;
@@ -280,7 +442,14 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $form['admin_label']['#access'] = FALSE;
     $form['admin_label']['#value'] = (string) $plugin_definition['admin_label'];
 
-    if (array_key_exists('title', $plugin_definition) && $plugin_definition['title'] === FALSE) {
+    if ($this instanceof AutomaticTitleBlockInterface) {
+      $form['label']['#access'] = FALSE;
+      $form['label']['#required'] = FALSE;
+      $form['label_display']['#access'] = FALSE;
+      $form['label_display']['#value'] = TRUE;
+    }
+
+    if (!$this->shouldDisplayTitle()) {
       $form['label']['#access'] = FALSE;
       $form['label']['#value'] = (string) $plugin_definition['admin_label'];
       $form['label_display']['#access'] = FALSE;
@@ -296,7 +465,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   The form element array.
    */
   private function setElementValidateOnAjaxElements(array &$element) {
-    if (!empty($element['#ajax']) && !array_key_exists($element['#element_validate'])) {
+    if (!empty($element['#ajax']) && !array_key_exists('#element_validate', $element)) {
       $element['#element_validate'] = [[$this, 'validateBlockForm']];
     }
     foreach (Element::children($element) as $element_key) {
@@ -320,31 +489,38 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Every button get's validated, but we only need to handle this once.
     $triggering_element = $form_state->getTriggeringElement();
 
-    if (end($triggering_element['#parents']) == 'submit') {
+    // Get the subform key we have been on when the save button was clicked.
+    $form_key = $form_state->get('current_subform');
+
+    $action = end($triggering_element['#parents']);
+    if (in_array($action, ['submit', 'update_preview'])) {
       // This is the general submit action of the block form.
-      // First get the values and the subform key we have been on when the save
-      // button was clicked.
-      $values = $form_state->getValues();
-
-      $form_key = $form_state->get('current_subform');
-
       // Massage the value parents so that we can extract the submitted values
       // relating to our subform.
-      $value_parents = array_slice($triggering_element['#parents'], 0, -2);
-      $value_parents = array_merge($value_parents, [
-        $form_key,
-      ]);
-
-      // Get the values for that subform and put it into the form storage, so
-      // that we have them available in submitBlockForm().
-      $step_values = NestedArray::getValue($values, $value_parents);
-      unset($step_values['actions']);
-      $form_state->set($form_key, $step_values);
+      $parents = array_slice($triggering_element['#parents'], 0, array_search('preview_container', $triggering_element['#parents']));
+      $value_parents = array_slice($parents, 0, array_search($form_key, $parents) + 1);
+      if (empty($value_parents)) {
+        $value_parents[] = $form_key;
+      }
+      // Get the values for that subform and .
+      $step_values = $form_state->cleanValues()->getValue($value_parents);
+      if ($action == 'submit') {
+        // For the final submit of the form, put the values into the form
+        // storage fo the current form, so that we have them available later.
+        $form_state->set($form_key, $step_values);
+      }
+      else {
+        // For the preview, set the current step values.
+        $form_state->setValue($form_key, $step_values);
+        $form_state->setTemporaryValue($form_key, $step_values);
+        // Important to rebuild, otherwhise the preview won't update.
+        $form_state->setRebuild();
+      }
       return;
     }
 
     // Now handle the actual next/back buttons.
-    if (end($triggering_element['#parents']) != end($element['#parents'])) {
+    if ($action != end($element['#parents'])) {
       return;
     }
 
@@ -358,17 +534,12 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Get the action, this is only important for the navigation between the
     // form steps.
     $action = array_pop($array_parents);
-    $array_parents = array_slice($array_parents, 0, array_search('container', $array_parents) + 1);
 
     // Handle the submitted values and put them into the form storage.
-    $values = $form_state->getValues();
     $value_parents = $triggering_element['#parents'];
-    $value_parents = array_slice($value_parents, 0, array_search('container', $value_parents) + 1);
+    $value_parents = array_slice($value_parents, 0, array_search($form_key, $value_parents) + 1);
 
-    $step_values = NestedArray::getValue($values, $value_parents);
-    unset($step_values['actions']);
-
-    $form_key = $form_state->get('current_subform');
+    $step_values = $form_state->cleanValues()->getValue($value_parents);
     $form_state->set($form_key, $step_values);
 
     // Set the new step in the storage.
@@ -378,7 +549,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $form_state->set('step', $step);
     }
 
-    // Still no effect it seems.
+    // And rebuild.
     $form_state->setRebuild();
   }
 
@@ -416,9 +587,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $triggering_element = $form_state->getTriggeringElement();
     $parents = $triggering_element['#array_parents'];
     array_pop($parents);
-    array_pop($parents);
-    array_pop($parents);
-    $parents[] = 'preview_container';
+    $this->messenger()->deleteAll();
     return NestedArray::getValue($form, $parents);
   }
 
@@ -426,8 +595,21 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * {@inheritdoc}
    */
   public function blockSubmit($form, FormStateInterface $form_state) {
-    // This get's called when the block settings are submitted.
-    $this->configuration['hpc'] = $this->getTemporarySettings($form_state);
+
+    // This get's called when a submit button is clicked.
+    if ($form_state->getTriggeringElement()['#parents'] != $form['actions']['submit']['#parents']) {
+      // We only want to act on the real submit action for the full form.
+      return;
+    }
+
+    // Set the HPC specific block config.
+    $this->setBlockConfig($this->getTemporarySettings($form_state));
+
+    if ($this instanceof AutomaticTitleBlockInterface) {
+      // This is important to set, otherwise template_preprocess_block() will
+      // hide the block title.
+      $this->configuration['label_display'] = TRUE;
+    }
   }
 
   /**
@@ -444,26 +626,41 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   A configuration array for the plugin.
    */
   private function getTemporarySettings(FormStateInterface $form_state) {
-    $subforms = $this->getSubforms();
-    if (empty($subforms)) {
-      return [];
-    }
-
     if ($form_state instanceof SubformStateInterface) {
-      $values = $form_state->getCompleteFormState()->getValues();
+      $values = $form_state->getCompleteFormState()->cleanValues()->getValues();
     }
     else {
-      $values = $form_state->getValues();
+      $values = $form_state->cleanValues()->getValues();
     }
 
-    // Put stored subform values into the behavior settings for this plugin.
-    $settings = [];
-    foreach (array_keys($subforms) as $form_key) {
-      $settings[$form_key] = $form_state->has($form_key) ? $form_state->get($form_key) : $values[$form_key];
-      if (empty($settings[$form_key]) && !empty($this->configuration['hpc'][$form_key])) {
-        $settings[$form_key] = $this->configuration['hpc'][$form_key];
+    if ($this instanceof MultiStepFormBlockInterface) {
+      $subforms = $this->getSubforms();
+      if (empty($subforms)) {
+        return [];
       }
-      unset($settings[$form_key]['actions']);
+      // Put stored subform values into the behavior settings for this plugin.
+      $settings = [];
+      foreach (array_keys($subforms) as $form_key) {
+        $settings[$form_key] = $form_state->has($form_key) ? $form_state->get($form_key) : $values[$form_key];
+        if (empty($settings[$form_key]) && !empty($this->configuration['hpc'][$form_key])) {
+          $settings[$form_key] = $this->configuration['hpc'][$form_key];
+        }
+      }
+    }
+    else {
+      $form_key = 'basic';
+      // Put stored subform values into the behavior settings for this plugin.
+      // There are multiple places where these can be stored, so we look at
+      // each of them in order.
+      $temporary_values = $form_state->hasTemporaryValue($form_key) ? $form_state->getTemporaryValue($form_key) : NULL;
+      $storage_values = $form_state->has($form_key) ? $form_state->get($form_key) : NULL;
+      $submitted_values = !empty($values[$form_key]) ? $values[$form_key] : NULL;
+      $settings = !empty($temporary_values) ? $temporary_values : (!empty($storage_values) ? $storage_values : $submitted_values);
+
+      // If we still have nothing, we fall back to the existing configuration.
+      if (empty($settings)) {
+        $settings = $this->configuration['hpc'];
+      }
     }
     return $settings;
   }
@@ -491,7 +688,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $plan_node = $this->getCurrentPlanNode($node);
     $plan_id = $plan_node->field_original_id->value;
 
-    if (empty($plugin_definition['context_definitions'][$context_key])) {
+    if (empty($plugin_definition['context_definitions']['plan_id'])) {
       // Create a new context.
       $context = new Context(new ContextDefinition('integer', $this->t('Plan id'), FALSE), $plan_id);
       $this->setContext('plan_id', $context);
@@ -506,8 +703,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * Get a plan id for the current page context.
    *
-   * @return int
-   *   A plan id if it can be found.
+   * @return \Drupal\node\NodeInterface
+   *   A plan node if it can be found.
    */
   public function getCurrentPlanNode($page_node = NULL) {
     if ($page_node === NULL) {

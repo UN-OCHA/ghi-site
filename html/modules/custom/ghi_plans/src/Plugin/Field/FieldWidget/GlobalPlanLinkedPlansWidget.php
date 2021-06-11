@@ -75,7 +75,7 @@ class GlobalPlanLinkedPlansWidget extends WidgetBase {
     $elements = parent::formMultipleElements($items, $form, $form_state);
 
     foreach (Element::children($elements) as $key => $element_key) {
-      if (!is_int($element_key)) {
+      if (!is_int($element_key) || !is_array($elements[$element_key]) || !array_key_exists('_weight', $elements[$element_key])) {
         continue;
       }
       $elements[$element_key]['_weight']['#default_value'] = $key - $elements[$element_key]['_weight']['#delta'];

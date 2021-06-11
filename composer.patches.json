@@ -1,7 +1,11 @@
 {
   "patches": {
       "drupal/core": {
-        "https://www.drupal.org/project/drupal/issues/2820359": "./PATCHES/2820359-element_submit-105.patch"
+        "https://www.drupal.org/project/drupal/issues/2820359": "./PATCHES/2820359-element_submit-108.patch",
+        "Issue 3092181: Nested Paragraphs create multiple drag handles": "https://www.drupal.org/files/issues/2020-12-08/3092181-142-9X_0.patch"
+      },
+      "drupal/gin_lb": {
+        "Issue 3217379: Form no label too greedy": "https://www.drupal.org/files/issues/2021-06-04/3217379-make-label-hiding-less-greedy-full-patch-2.patch"
       }
   }
 }

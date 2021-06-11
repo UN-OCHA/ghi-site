@@ -102,8 +102,7 @@ class PlanBaseClass extends ParagraphHandlerBase {
     $widget_state = WidgetBase::getWidgetState([], $field_name, $form_state);
 
     // Get actual values.
-    $values = $form_state->getValue($element['#parents']);
-
+    $values = $form_state->cleanValues()->getValue($element['#parents']);
     // Set widget state.
     if ($values && is_array($values)) {
       $widget_state['paragraphs'][$delta]['entity']->setBehaviorSettings(static::KEY, $values);

@@ -1,0 +1,4 @@
+services:
+  plugin.manager.configuration_container_item_manager:
+    class: Drupal\ghi_form_elements\ConfigurationContainerItemManager
+    parent: default_plugin_manager

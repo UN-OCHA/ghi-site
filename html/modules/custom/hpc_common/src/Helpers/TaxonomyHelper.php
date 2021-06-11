@@ -129,6 +129,27 @@ class TaxonomyHelper extends EntityHelper {
   }
 
   /**
+   * Get term options by vocabulary.
+   *
+   * @param string $vid
+   *   The vocabulary that the terms belong to.
+   *
+   * @return array
+   *   An array of term options if found.
+   */
+  public static function getTermOptionsForVocabulary($vid) {
+    $terms = self::loadMultipleTermsByVocabulary($vid);
+    if (empty($terms)) {
+      return $terms;
+    }
+    $term_options = [];
+    foreach ($terms as $term) {
+      $term_options[$term->field_tag->value] = $term->getName();
+    }
+    return $term_options;
+  }
+
+  /**
    * Retrieve the parent term for a given term name of a child term.
    *
    * @return \Drupal\taxonomy\Entity\Term

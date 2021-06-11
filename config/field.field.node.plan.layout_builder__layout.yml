@@ -1,0 +1,21 @@
+uuid: dbf1ed72-8ca5-4708-a069-f24f1939c618
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.layout_builder__layout
+    - node.type.plan
+  module:
+    - layout_builder
+id: node.plan.layout_builder__layout
+field_name: layout_builder__layout
+entity_type: node
+bundle: plan
+label: Layout
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: layout_section

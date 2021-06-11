@@ -1,0 +1,18 @@
+.glb-toolbar {
+  z-index: 200 !important;
+}
+
+.contextual-region.layout-builder-block,
+.contextual-region.layout-builder-block.focus {
+  padding: 1rem;
+  margin: 2rem 0;
+  outline: blue !important;
+  outline-width: 2px !important;
+  outline-style: auto !important;
+  outline-color: var(--colorGinPrimary);
+  outline-offset: 0;
+}
+
+.layout-builder__section:hover:after {
+  border: 0 !important;
+}

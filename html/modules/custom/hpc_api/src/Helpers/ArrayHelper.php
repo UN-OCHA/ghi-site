@@ -108,7 +108,10 @@ class ArrayHelper {
         if (empty($item[$key])) {
           return FALSE;
         }
-        if ($item[$key] != $value) {
+        if (is_array($value) && !in_array($item[$key], $value)) {
+          return FALSE;
+        }
+        elseif ($item[$key] != $value) {
           return FALSE;
         }
       }
@@ -349,8 +352,8 @@ class ArrayHelper {
    * @param array $properties
    *   The name of the properties to match for.
    *
-   * @return array
-   *   The filtered array.
+   * @return array|object
+   *   The first array or object matching the properties.
    */
   public static function findFirstItemByProperties(array $array, array $properties) {
     $candidates = array_filter($array, function ($item) use ($properties) {

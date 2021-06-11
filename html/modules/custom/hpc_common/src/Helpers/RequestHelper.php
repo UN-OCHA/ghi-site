@@ -145,6 +145,7 @@ class RequestHelper {
    *   The extracted contexts.
    */
   public static function getContextsFromFormState(FormStateInterface $form_state) {
+
     $request_stack = \Drupal::service('request_stack');
     $current_path = $request_stack->getCurrentRequest()->request->get('currentPath');
     // Get the build information and setup required variables supporting

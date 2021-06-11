@@ -1,4 +1,4 @@
 services:
   ghi_element_sync.sync_elements:
     class: Drupal\ghi_element_sync\SyncManager
-    arguments: ['@config.factory', '@plugin.manager.ghi_paragraph_handler', '@http_client', '@uuid', '@datetime.time', '@current_user']
+    arguments: ['@config.factory', '@plugin.manager.block', '@http_client', '@uuid', '@datetime.time', '@current_user', '@layout_builder.tempstore_repository']

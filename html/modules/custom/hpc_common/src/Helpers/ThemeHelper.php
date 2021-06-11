@@ -10,6 +10,20 @@ use Drupal\Component\Utility\Xss;
 class ThemeHelper {
 
   /**
+   * Define scales for number formatting.
+   */
+  const SCALE_THOUSAND = 'thousand';
+  const SCALE_MILLION = 'million';
+  const SCALE_BILLION = 'billion';
+  const SCALE_DEFAULT = self::SCALE_MILLION;
+
+  /**
+   * Define constants relating to number formating.
+   */
+  const DECIMALS_POINT = 'point';
+  const DECIMALS_COMMA = 'comma';
+
+  /**
    * Simple wrapper around the render layer.
    */
   public static function theme($theme_key, $options, $cast_to_string = TRUE, $xss_filter = TRUE) {
@@ -27,6 +41,71 @@ class ThemeHelper {
     $has_render_context = $renderer->hasRenderContext();
     $render_value = $has_render_context ? $renderer->render($build) : $renderer->renderPlain($build);
     return $xss_filter ? trim(Xss::filter($render_value)) : trim($render_value);
+  }
+
+  /**
+   * Get theme options for a selected list of theme functions.
+   *
+   * @param string $theme_function
+   *   The theme function.
+   * @param mixed $value
+   *   A value that is passed as the primary renderable value to the function.
+   * @param array $options
+   *   An array of options.
+   *
+   * @return array
+   *   An array of final theme options.
+   */
+  public static function getThemeOptions($theme_function, $value, array $options) {
+    switch ($theme_function) {
+      case 'hpc_amount':
+        return [
+          '#amount' => $value,
+          '#scale' => !empty($options['scale']) ? $options['scale'] : 'auto',
+          '#formatting_decimals' => !empty($options['formatting_decimals']) ? $options['formatting_decimals'] : self::DECIMALS_POINT,
+        ];
+
+      case 'hpc_currency':
+        return [
+          '#value' => $value,
+          '#scale' => !empty($options['scale']) ? $options['scale'] : 'auto',
+          '#formatting_decimals' => !empty($options['formatting_decimals']) ? $options['formatting_decimals'] : self::DECIMALS_POINT,
+        ];
+
+      case 'hpc_percent':
+        return [
+          '#percent' => $value,
+          '#formatting_decimals' => !empty($options['formatting_decimals']) ? $options['formatting_decimals'] : self::DECIMALS_POINT,
+        ];
+
+      default:
+        throw new \InvalidArgumentException(sprintf('Unknown theme function "%s"', $theme_function));
+    }
+  }
+
+  /**
+   * Get a suffix for numeric data based on the scale of the figure.
+   */
+  public static function getNumberSuffix($scale, $abbreviation = TRUE) {
+    switch ($scale) {
+      case self::SCALE_THOUSAND:
+        $suffix = $abbreviation ? 'k' : ' ' . t('thousand');
+        break;
+
+      case self::SCALE_MILLION:
+        $suffix = $abbreviation ? 'm' : ' ' . t('million');
+        break;
+
+      case self::SCALE_BILLION:
+        $suffix = $abbreviation ? 'bn' : ' ' . t('billion');
+        break;
+
+      default:
+        $suffix = '';
+        break;
+    }
+
+    return $suffix;
   }
 
 }

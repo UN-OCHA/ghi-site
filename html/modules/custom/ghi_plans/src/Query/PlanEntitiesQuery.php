@@ -7,7 +7,10 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\ghi_plans\Helpers\AttachmentHelper;
+use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
+use Drupal\hpc_api\Helpers\ArrayHelper;
 use GuzzleHttp\ClientInterface;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\node\NodeInterface;
@@ -40,17 +43,55 @@ class PlanEntitiesQuery extends EndpointQuery {
   }
 
   /**
+   * Map attachment types to their tring representation in the API.
+   *
+   * @param string $type
+   *   The type used in GHI.
+   *
+   * @return string
+   *   The type used in the API.
+   */
+  private function mapAttachmentType($type) {
+    $type_map = [
+      'caseload' => 'caseLoad',
+    ];
+    return !empty($type_map[$type]) ? $type_map[$type] : $type;
+  }
+
+  /**
+   * Preare attachment filters.
+   *
+   * @param array $filter
+   *   The passed in filter array.
+   *
+   * @return array
+   *   A prepared filter array.
+   */
+  private function prepareAttachmentFilter(array $filter) {
+    if (empty($filter)) {
+      return $filter;
+    }
+    $filter = array_filter($filter, function ($item) {
+      return $item !== NULL;
+    });
+    if (!empty($filter['type'])) {
+      $filter['type'] = array_map([$this, 'mapAttachmentType'], (array) $filter['type']);
+    }
+    return $filter;
+  }
+
+  /**
    * Get all attachments.
    *
    * @param \Drupal\node\NodeInterface $context_node
    *   The current context node.
-   * @param string $type
-   *   Optional type for filtering the attachments.
+   * @param array $filter
+   *   Optional array for filtering the attachments.
    *
    * @return array
    *   An array of attachment objects for the given context.
    */
-  public function getAttachments(NodeInterface $context_node = NULL, $type = NULL) {
+  private function getAttachments(NodeInterface $context_node = NULL, array $filter = []) {
     $data = $this->getData();
     if (empty($data)) {
       return NULL;
@@ -78,17 +119,39 @@ class PlanEntitiesQuery extends EndpointQuery {
       }
     }
 
-    if ($type === NULL) {
-      return $attachments;
+    if (!empty($filter)) {
+      $attachments = ArrayHelper::filterArray($attachments, $this->prepareAttachmentFilter($filter));
     }
-    $filtered_attachments = [];
-    foreach ($attachments as $attachment) {
-      if (strtolower($attachment->type) != strtolower($type)) {
-        continue;
-      }
-      $filtered_attachments[] = $attachment;
+    return $attachments;
+  }
+
+  /**
+   * Get data attachments.
+   *
+   * @param \Drupal\node\NodeInterface $context_node
+   *   The current context node.
+   * @param array $filter
+   *   Optional array for filtering the attachments.
+   *
+   * @return array
+   *   An array of attachment objects for the given context.
+   */
+  public function getDataAttachments(NodeInterface $context_node, array $filter = NULL) {
+    $allowed_types = [
+      'caseload',
+      'indicator',
+    ];
+
+    if (empty($filter['type'])) {
+      $filter['type'] = $allowed_types;
     }
-    return $filtered_attachments;
+    else {
+      $filter['type'] = array_filter((array) $filter['type'], function ($item) use ($allowed_types) {
+        return in_array($item, $allowed_types);
+      });
+    }
+
+    return AttachmentHelper::processAttachments($this->getAttachments($context_node, $filter));
   }
 
   /**
@@ -102,16 +165,11 @@ class PlanEntitiesQuery extends EndpointQuery {
    */
   public function getWebContentFileAttachments(NodeInterface $context_node) {
     $attachments = [];
-    foreach ($this->getAttachments($context_node, 'fileWebContent') as $attachment) {
+    foreach ($this->getAttachments($context_node, ['type' => 'fileWebContent']) as $attachment) {
       if (empty($attachment->attachmentVersion->value->file->url)) {
         continue;
       }
-      $attachments[] = (object) [
-        'id' => $attachment->id,
-        'url' => $attachment->attachmentVersion->value->file->url,
-        'title' => $attachment->attachmentVersion->value->file->title ?? '',
-        'file_name' => $attachment->attachmentVersion->value->name ?? '',
-      ];
+      $attachments[] = AttachmentHelper::processAttachment($attachment);
     }
     return $attachments;
   }
@@ -127,15 +185,11 @@ class PlanEntitiesQuery extends EndpointQuery {
    */
   public function getWebContentTextAttachments(NodeInterface $context_node) {
     $attachments = [];
-    foreach ($this->getAttachments($context_node, 'textWebContent') as $attachment) {
+    foreach ($this->getAttachments($context_node, ['type' => 'textWebContent']) as $attachment) {
       if (empty($attachment->attachmentVersion->value->content ?? '')) {
         continue;
       }
-      $attachments[] = (object) [
-        'id' => $attachment->id,
-        'title' => $attachment->attachmentVersion->value->name,
-        'content' => html_entity_decode($attachment->attachmentVersion->value->content ?? ''),
-      ];
+      $attachments[] = AttachmentHelper::processAttachment($attachment);
     }
     return $attachments;
   }
@@ -147,44 +201,75 @@ class PlanEntitiesQuery extends EndpointQuery {
    *   The current context node.
    * @param string $entity_type
    *   The entity type to restrict the context.
+   * @param array $filters
+   *   The optional aray with filter key value pairs.
    *
    * @return array
    *   An array of plan entity objects for the given context.
    */
-  public function getPlanEntities(NodeInterface $context_node, $entity_type = NULL) {
+  public function getPlanEntities(NodeInterface $context_node, $entity_type = NULL, array $filters = NULL) {
     $data = $this->getData();
     if (empty($data)) {
       return NULL;
     }
-
-    if ($entity_type === NULL) {
-      $filter = [
-        'entityPrototype.type' => 'PE',
-      ];
-    }
-    else {
-      $filter = [
-        'entityPrototype.refCode' => $entity_type,
-      ];
-    }
-
-    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($this->getData(), $context_node->bundle() != 'plan' ? $context_node : NULL, NULL, $filter);
+    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($this->getData(), $context_node->bundle() != 'plan' ? $context_node : NULL, $entity_type);
     if (empty($matching_entities)) {
       return NULL;
     }
-    return array_map(function ($entity) {
+    $plan_entities = array_map(function ($entity) {
       $entity_version = ApiEntityHelper::getEntityVersion($entity);
       return (object) [
         'id' => $entity->id,
         'plural_name' => $entity->entityPrototype->value->name->en->plural,
         'order_number' => $entity->entityPrototype->orderNumber,
         'ref_code' => $entity->entityPrototype->refCode,
+        'prototype_id' => $entity->entityPrototype->id,
         'custom_id' => $entity_version->customReference,
         'custom_id_prefixed_refcode' => $entity->entityPrototype->refCode . $entity_version->customReference,
         'composed_reference' => $entity->composedReference,
-        'description' => $entity_version->value->description,
+        'description' => property_exists($entity_version->value, 'description') ? $entity_version->value->description : NULL,
       ];
     }, $matching_entities);
+
+    if (is_array($filters) && !empty($filters)) {
+      $plan_entities = ArrayHelper::filterArray($plan_entities, $filters);
+    }
+    return $plan_entities;
+  }
+
+  /**
+   * Extract cluster IDs for the given context from the given plan.
+   *
+   * @param int $plan_entity_id
+   *   A plan entity ID (original id from HPC).
+   *
+   * @return array
+   *   An array of cluster IDs.
+   */
+  public function getGoverningEntityIdsForPlanEntityId($plan_entity_id) {
+    // Get the plan structure.
+    $ple_structure = PlanStructureHelper::getPlanEntityStructure($this->getData());
+    $cluster_ids = [];
+    foreach ($ple_structure as $plan_item) {
+      if (in_array($plan_item->id, $cluster_ids)) {
+        continue;
+      }
+      if (empty($plan_item->children)) {
+        continue;
+      }
+      foreach ($plan_item->children as $child) {
+        if (in_array($plan_item->id, $cluster_ids)) {
+          continue;
+        }
+        if (empty($child->support[0]->planEntityIds)) {
+          continue;
+        }
+        if (in_array($plan_entity_id, $child->support[0]->planEntityIds)) {
+          $cluster_ids[] = $plan_item->id;
+        }
+      }
+    }
+    return $cluster_ids;
   }
 
 }

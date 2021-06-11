@@ -1,0 +1,25 @@
+.form-type--attachment_select {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+.form-type--attachment_select > label,
+.form-type--attachment_select > table {
+  width: 100%
+}
+.form-type--attachment_select > .js-form-type-select {
+  width: auto;
+  margin-right: 1rem;
+}
+
+.form-type--attachment_select > table thead th {
+  text-align: left;
+}
+.form-type--attachment_select > table tbody tr td {
+  padding: 1rem 0;
+}
+.form-type--attachment_select > table tbody tr td .form_item {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}

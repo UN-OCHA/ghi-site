@@ -6,6 +6,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
 use GuzzleHttp\ClientInterface;
@@ -19,6 +20,8 @@ use Drupal\hpc_api\Helpers\QueryHelper;
  * Includes data retrieval and error handling.
  */
 class EndpointQuery {
+
+  use DependencySerializationTrait;
 
   const SORT_ASC = 'ASC';
   const SORT_DESC = 'DESC';
@@ -170,17 +173,9 @@ class EndpointQuery {
   }
 
   /**
-   * Set a specific argument.
-   */
-  public function setEndpointArgument($key, $value) {
-    $this->endpointArgs[$key] = $value;
-  }
-
-  /**
    * Replace placeholders with values in an endpoint.
    */
-  public function substitutePlaceholders() {
-    $endpoint_url = $this->getEndpoint();
+  public function substitutePlaceholders($string) {
     $placeholders = $this->getPlaceholders();
     if (!empty($placeholders)) {
       // Replace placeholders with actual values.
@@ -188,10 +183,10 @@ class EndpointQuery {
         if (!is_string($value) && !is_int($value)) {
           continue;
         }
-        $endpoint_url = str_replace('{' . $placeholder . '}', $value, $endpoint_url);
+        $string = str_replace('{' . $placeholder . '}', $value, $string);
       }
     }
-    return $endpoint_url;
+    return $string;
   }
 
   /**
@@ -413,7 +408,7 @@ class EndpointQuery {
     $args = $this->getEndpointArguments();
     unset($args['fts_public_backend']);
     $auth_method = $this->getAuthMethod() == self::AUTH_METHOD_NONE ? 'public' : $this->getAuthMethod();
-    $cache_key = 'hpc_api_request_' . $auth_method . '_' . urlencode($this->getEndpointUrl());
+    $cache_key = 'hpc_api_request_' . $auth_method . '_' . urlencode($this->getFullEndpointUrl());
     if (!empty($args)) {
       ksort($args);
       $cache_key .= '__' . urlencode(print_r($args, TRUE));
@@ -460,6 +455,9 @@ class EndpointQuery {
 
   /**
    * Retrieve data from the API.
+   *
+   * @return object|array
+   *   The result from the endpoint query.
    */
   public function getData() {
     return $this->query();
@@ -469,14 +467,19 @@ class EndpointQuery {
    * Retrieve the endpoint URL used for the query.
    */
   public function getEndpointUrl() {
-    return $this->getApiVersion() . '/' . $this->substitutePlaceholders();
+    return $this->getApiVersion() . '/' . $this->substitutePlaceholders($this->getEndpoint());
   }
 
   /**
    * Get the full qualified URL for the query.
    */
   public function getFullEndpointUrl() {
-    return Url::fromUri($this->getBaseUrl() . '/' . $this->getEndpointUrl(), ['query' => $this->getEndpointArguments()])->toUriString();
+    $endpoint_url = $this->getBaseUrl() . '/' . $this->substitutePlaceholders($this->getEndpointUrl());
+    $query = array_map(function ($item) {
+      return $this->substitutePlaceholders($item);
+    }, $this->getEndpointArguments());
+    $url = Url::fromUri($endpoint_url, ['query' => $query])->toUriString();
+    return $url;
   }
 
   /**
@@ -495,6 +498,20 @@ class EndpointQuery {
    */
   public function getEndpoint() {
     return $this->endpointUrl;
+  }
+
+  /**
+   * Set a specific argument.
+   */
+  public function setEndpointArgument($key, $value) {
+    $this->endpointArgs[$key] = $value;
+  }
+
+  /**
+   * Get a specific argument.
+   */
+  public function getEndpointArgument($key) {
+    return array_key_exists($key, $this->endpointArgs) ? $this->endpointArgs[$key] : NULL;
   }
 
   /**

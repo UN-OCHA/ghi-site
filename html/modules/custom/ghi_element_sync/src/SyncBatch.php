@@ -20,10 +20,12 @@ class SyncBatch {
    *   The bundles to process.
    * @param array $ids
    *   Optional: The ids to process.
+   * @param bool $revisions
+   *   Wether new revisions should be created.
    * @param array $context
    *   The batch context.
    */
-  public static function process(SyncManager $sync_manager, array $bundle, array $ids, array &$context) {
+  public static function process(SyncManager $sync_manager, array $bundle, array $ids, $revisions, array &$context) {
     if (!isset($context['sandbox']['sync_manager'])) {
       $context['sandbox']['sync_manager'] = $sync_manager;
 
@@ -52,7 +54,7 @@ class SyncBatch {
     $messenger = \Drupal::messenger();
 
     try {
-      if ($sync_manager->syncNode($node, $messenger)) {
+      if ($sync_manager->syncNode($node, $messenger, $revisions)) {
         $context['results']['processed']++;
       }
       else {

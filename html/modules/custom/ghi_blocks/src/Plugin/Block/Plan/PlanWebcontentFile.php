@@ -7,7 +7,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\ghi_blocks\Plugin\Block\SyncableBlockInterface;
+use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
@@ -19,11 +19,11 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
  *  category = @Translation("Plans"),
  *  data_sources = {
  *    "data" = {
- *      "arguments" = {
- *        "endpoint" = "public/plan/{plan_id}?content=entities&addPercentageOfTotalTarget=true&version=current",
- *        "api_version" = "v2",
- *      }
- *    }
+ *      "service" = "ghi_plans.plan_entities_query"
+ *    },
+ *    "attachment" = {
+ *      "service" = "ghi_plans.attachment_query"
+ *    },
  *  },
  *  title = false,
  *  context_definitions = {
@@ -41,9 +41,7 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
       'label' => '',
       'label_display' => FALSE,
       'hpc' => [
-        'basic' => [
-          'attachment_id' => property_exists($config, 'attachment_id') ? $config->attachment_id : NULL,
-        ],
+        'attachment_id' => property_exists($config, 'attachment_id') ? $config->attachment_id : NULL,
       ],
     ];
   }
@@ -52,29 +50,16 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
    * {@inheritdoc}
    */
   public function buildContent() {
-    $data = $this->getData();
-    if (empty($data) || empty($data->attachments)) {
+    // Retrieve the attachments.
+    $conf = $this->getBlockConfig();
+    if (empty($conf['attachment_id'])) {
       return;
     }
 
-    $conf = $this->getConfiguration();
-    if (empty($conf['hpc']['basic']['attachment_id'])) {
-      return;
-    }
-
-    $attachment_id = $conf['hpc']['basic']['attachment_id'];
-    $attachments = array_filter($data->attachments, function ($object) use ($attachment_id) {
-      return $object->id == $attachment_id;
-    });
-
-    if (empty($attachments)) {
-      return;
-    }
-    $attachment = reset($attachments);
-
+    $attachment = $this->getQueryHandler('attachment')->getAttachment($conf['attachment_id']);
     return [
       '#theme' => 'image',
-      '#uri' => $attachment->attachmentVersion->value->file->url,
+      '#uri' => $attachment->url,
     ];
   }
 
@@ -84,57 +69,25 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
    * @return array
    *   An associative array with the default configuration.
    */
-  protected function baseConfigurationDefaults() {
+  protected function getConfigurationDefaults() {
     return [
-      'hpc' => [
-        'basic' => ['attachment_id' => NULL],
-      ],
-      'label_display' => FALSE,
-    ] + parent::baseConfigurationDefaults();
+      'attachment_id' => NULL,
+    ];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getSubforms() {
-    return [
-      'basic' => 'basicConfigForm',
-    ];
-  }
-
-  /**
-   * Form builder for the basic config form.
-   *
-   * @param array $form
-   *   An associative array containing the initial structure of the subform.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
-   *
-   * @return array
-   *   The full form array for this subform.
-   */
-  public function basicConfigForm(array $form, FormStateInterface $form_state) {
+  public function getConfigForm(array $form, FormStateInterface $form_state) {
     $file_options = [];
 
-    $plan_data = $this->getData();
-    $attachments = [];
-    if (empty($plan_data->attachments)) {
-      return $attachments;
-    }
-    foreach ($plan_data->attachments as $item) {
-      if (strtolower($item->type) != strtolower('fileWebContent')) {
-        continue;
-      }
-      $attachments[] = $item;
-    }
+    // Retrieve the attachments.
+    $attachments = $this->getQueryHandler()->getWebContentFileAttachments($this->getCurrentPlanNode());
 
     if (!empty($attachments)) {
       foreach ($attachments as $attachment) {
-        if (empty($attachment->attachmentVersion->value->file->url)) {
-          continue;
-        }
         $preview_image = ThemeHelper::theme('image', [
-          '#uri' => $attachment->attachmentVersion->value->file->url,
+          '#uri' => $attachment->url,
           '#attributes' => [
             'style' => 'height: 100px',
           ],
@@ -142,9 +95,9 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
 
         $file_options[$attachment->id] = [
           'id' => $attachment->id,
-          'title' => $attachment->attachmentVersion->value->file->title,
-          'file_name' => $attachment->attachmentVersion->value->name,
-          'file_url' => Link::fromTextAndUrl($attachment->attachmentVersion->value->file->url, Url::fromUri($attachment->attachmentVersion->value->file->url, [
+          'title' => $attachment->title,
+          'file_name' => $attachment->file_name,
+          'file_url' => Link::fromTextAndUrl($attachment->url, Url::fromUri($attachment->url, [
             'external' => TRUE,
             'attributes' => [
               'target' => '_blank',
@@ -168,7 +121,6 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
     $form['attachment_id'] = [
       '#type' => 'tableselect',
       '#tree' => TRUE,
-      '#required' => FALSE,
       '#header' => $table_header,
       '#validated' => TRUE,
       '#options' => $file_options,
@@ -176,6 +128,10 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
       '#multiple' => FALSE,
       '#empty' => $this->t('There are no images yet.'),
       '#required' => TRUE,
+      '#ajax' => [
+        'event' => 'change',
+        'callback' => [$this, 'updateAjax'],
+      ],
     ];
     return $form;
   }

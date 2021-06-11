@@ -6,7 +6,6 @@ dependencies:
     - core.entity_view_mode.node.teaser
     - field.field.node.plan.body
     - field.field.node.plan.field_cluster_filter
-    - field.field.node.plan.field_content
     - field.field.node.plan.field_country
     - field.field.node.plan.field_decimal_format
     - field.field.node.plan.field_description
@@ -38,6 +37,7 @@ dependencies:
     - field.field.node.plan.field_restricted
     - field.field.node.plan.field_rpm_plan_status
     - field.field.node.plan.field_year
+    - field.field.node.plan.layout_builder__layout
     - node.type.plan
   module:
     - user
@@ -57,7 +57,6 @@ content:
 hidden:
   body: true
   field_cluster_filter: true
-  field_content: true
   field_country: true
   field_decimal_format: true
   field_description: true
