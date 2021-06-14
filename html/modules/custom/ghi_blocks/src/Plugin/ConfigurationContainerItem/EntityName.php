@@ -51,6 +51,16 @@ class EntityName extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * Get a default label.
+   *
+   * @return string|null
+   *   A default label or NULL.
+   */
+  public function getDefaultLabel() {
+    return $this->t('Cluster');
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getValue() {

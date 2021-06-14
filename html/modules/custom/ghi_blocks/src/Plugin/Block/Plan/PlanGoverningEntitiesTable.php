@@ -74,10 +74,91 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
    * {@inheritdoc}
    */
   public static function mapConfig($config) {
+    $columns = [];
+    // Define a transition map.
+    $transition_map = [
+      'governing_entity_name' => [
+        'target' => 'entity_name',
+      ],
+      'plan_entities_counter' => [
+        'target' => 'entity_counter',
+        'config' => ['entity_type' => 'plan'],
+      ],
+      'partners_counter' => [
+        'target' => 'project_data',
+        'config' => ['data_type' => 'organizations_count'],
+      ],
+      'projects_counter' => [
+        'target' => 'project_data',
+        'config' => ['data_type' => 'projects_count'],
+      ],
+      'original_requirements' => [
+        'target' => 'funding_data',
+        'config' => ['data_type' => 'original_requirements'],
+      ],
+      'funding_requirements' => [
+        'target' => 'funding_data',
+        'config' => ['data_type' => 'current_requirements'],
+      ],
+      'total_funding' => [
+        'target' => 'funding_data',
+        'config' => ['data_type' => 'funding_totals'],
+      ],
+      'funding_coverage' => [
+        'target' => 'funding_data',
+        'config' => ['data_type' => 'funding_coverage'],
+      ],
+      'funding_gap' => [
+        'target' => 'funding_data',
+        'config' => ['data_type' => 'funding_gap'],
+      ],
+    ];
+    foreach ($config->table_columns as $incoming_item) {
+      $source_type = !empty($incoming_item->element) ? $incoming_item->element : NULL;
+      if (!$source_type || !array_key_exists($source_type, $transition_map)) {
+        continue;
+      }
+      // Apply generic config based on the transition map.
+      $transition_definition = $transition_map[$source_type];
+      $item = [
+        'item_type' => $transition_definition['target'],
+        'config' => [
+          'label' => $incoming_item->label,
+        ],
+      ];
+      if (array_key_exists('config', $transition_definition)) {
+        $item['config'] += $transition_definition['config'];
+      }
+
+      // Do special processing for individual item types.
+      $value = $incoming_item->value;
+      if (is_object($value) && property_exists($value, 'cluster_restrict') && property_exists($value, 'cluster_tag')) {
+        $item['config']['cluster_restrict'] = [
+          'type' => $value->cluster_restrict,
+          'tag' => $value->cluster_tag,
+        ];
+      }
+      switch ($transition_definition['target']) {
+        case 'entity_counter':
+          $item['config']['entity_prototype'] = $value;
+          break;
+
+        case 'original_requirements':
+        case 'funding_requirements':
+          $item['config']['scale'] = property_exists($value, 'formatting') ? $value->formatting : 'auto';
+          break;
+
+        default:
+          break;
+      }
+      $columns[] = $item;
+    }
     return [
-      'label' => '',
+      'label' => $config->widget_title,
       'label_display' => TRUE,
-      'hpc' => [],
+      'hpc' => [
+        'columns' => $columns,
+      ],
     ];
   }
 
