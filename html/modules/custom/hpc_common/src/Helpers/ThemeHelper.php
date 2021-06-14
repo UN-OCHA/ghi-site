@@ -78,6 +78,12 @@ class ThemeHelper {
           '#formatting_decimals' => !empty($options['formatting_decimals']) ? $options['formatting_decimals'] : self::DECIMALS_POINT,
         ];
 
+      case 'hpc_progress_bar':
+        return [
+          '#percent' => $value,
+          '#hide_value' => !empty($options['hide_value']) ? $options['hide_value'] : FALSE,
+        ];
+
       default:
         throw new \InvalidArgumentException(sprintf('Unknown theme function "%s"', $theme_function));
     }

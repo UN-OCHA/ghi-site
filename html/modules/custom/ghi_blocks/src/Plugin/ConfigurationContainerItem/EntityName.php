@@ -53,8 +53,8 @@ class EntityName extends ConfigurationContainerItemPluginBase {
   /**
    * Get a default label.
    *
-   * @return string|null
-   *   A default label or NULL.
+   * @return string
+   *   A default label.
    */
   public function getDefaultLabel() {
     return $this->t('Cluster');
@@ -78,6 +78,32 @@ class EntityName extends ConfigurationContainerItemPluginBase {
     $markup = Markup::create($icon_embed . '<span class="name">' . $entity->name . '</span>');
     if ($context_node->access('view')) {
       return Link::fromTextAndUrl($markup, $context_node->toUrl())->toString();
+    }
+    else {
+      return $markup;
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRenderArray() {
+    /** @var \Drupal\node\NodeInterface $context_node */
+    $context_node = $this->getContextValue('context_node');
+    $entity = $this->getContextValue('entity');
+    if (!$entity) {
+      return NULL;
+    }
+    if (empty($entity->icon)) {
+      return $entity->name;
+    }
+
+    $icon_embed = $this->iconQuery->getIconEmbedCode($entity->icon);
+    $markup = [
+      '#markup' => Markup::create($icon_embed . '<span class="name">' . $entity->name . '</span>'),
+    ];
+    if ($context_node->access('view')) {
+      return Link::fromTextAndUrl($markup, $context_node->toUrl())->toRenderable();
     }
     else {
       return $markup;

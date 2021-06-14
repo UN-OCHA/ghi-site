@@ -8,7 +8,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\DataPointHelper;
 use Drupal\ghi_plans\Query\AttachmentQuery;
-use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
  * Provides an entity counter item for configuration containers.
@@ -143,14 +142,33 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getValue() {
+    $attachment = $this->getAttachmentObject();
+    return $attachment ? DataPointHelper::getValue($attachment, $attachment->data_point_conf) : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRenderArray() {
+    $attachment = $this->getAttachmentObject();
+    return $attachment ? DataPointHelper::formatValue($attachment, $attachment->data_point_conf) : NULL;
+  }
+
+  /**
+   * Get the attachment object for this item.
+   */
+  private function getAttachmentObject() {
     $attachment_id = $this->get(['attachment', 'attachment_id']);
     $data_point_conf = $this->get(['data_point']);
     if (!$attachment_id || !$data_point_conf) {
-      return;
+      return NULL;
     }
     $attachment = $this->attachmentQuery->getAttachment($attachment_id);
-    $build = DataPointHelper::formatValue($attachment, $data_point_conf);
-    return ThemeHelper::render($build);
+    if (!$attachment) {
+      return NULL;
+    }
+    $attachment->data_point_conf = $data_point_conf;
+    return $attachment;
   }
 
 }

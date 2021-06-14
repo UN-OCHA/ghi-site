@@ -215,7 +215,12 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
       $item_type = $this->configurationContainerItemManager->createInstance($item['item_type'], $allowed_items[$item['item_type']]);
       $item_type->setConfig($item['config']);
       $item_type->setContext($this->getBlockContext());
-      $rendered[] = $item_type->getLabel() . ': ' . $item_type->getValue();
+
+      $rendered[] = [
+        '#type' => 'item',
+        '#title' => $item_type->getLabel(),
+        0 => $item_type->getRenderArray(),
+      ];
     }
     return [
       '#theme' => 'item_list',
@@ -252,7 +257,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
       '#preview' => [
         'columns' => [
           'label' => $this->t('Label'),
-          'value' => $this->t('Value'),
+          'render_array' => $this->t('Value'),
         ],
       ],
       '#element_context' => $this->getBlockContext(),
@@ -284,7 +289,16 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
    */
   public function getAllowedItemTypes() {
     $item_types = [
-      'funding_data' => [],
+      'funding_data' => [
+        'item_types' => [
+          'funding_totals',
+          'outside_funding',
+          'funding_coverage',
+          'funding_gap',
+          'original_requirements',
+          'current_requirements',
+        ],
+      ],
       'entity_counter' => [],
       'project_data' => [
         'access' => [

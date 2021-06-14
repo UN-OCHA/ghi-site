@@ -132,8 +132,34 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
+  public function getRenderArray() {
+    return [
+      '#markup' => $this->getValue(),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getSortableValue() {
     return $this->getValue();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  final public function preview($key) {
+    // Turn key into camelcase and prefix with 'get' to build a potential
+    // method name. This is primarily used for convenience functions in the
+    // implementing plugins to define methods `getLabel`, `getValue` and
+    // `getRenderArray`.
+    $method = 'get' . implode('', array_map(function ($item) {
+      return ucfirst($item);
+    }, explode('_', $key)));
+    if (method_exists($this, $method)) {
+      return $this->{$method}();
+    }
+    return $this->get($key);
   }
 
   /**
@@ -146,12 +172,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
     if (is_array($key)) {
       return NestedArray::getValue($this->config, $key);
     }
-
-    $method = 'get' . ucfirst($key);
-    if (method_exists($this, $method)) {
-      return $this->{$method}();
-    }
-    elseif (array_key_exists($key, $this->config)) {
+    if (array_key_exists($key, $this->config)) {
       return $this->config[$key];
     }
     return NULL;
@@ -254,7 +275,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    * @param mixed $default_value
    *   The default value to use.
    *
-   * @return string
+   * @return mixed
    *   The value key, either submitted, stored, taken from original config or
    *   the given default.
    */

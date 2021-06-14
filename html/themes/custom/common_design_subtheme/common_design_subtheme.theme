@@ -96,3 +96,10 @@ function common_design_subtheme_show_hidden_blocks_from_page(array &$variables, 
     }
   }
 }
+
+/**
+ * Preprocess an hpc progress bar to attach our library.
+ */
+function common_design_subtheme_preprocess_hpc_progress_bar(array &$variables) {
+  $variables['#attached']['library'][] = 'common_design_subtheme/ghi-progress-bar';
+}

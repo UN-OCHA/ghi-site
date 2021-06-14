@@ -10,19 +10,26 @@ trait ValuePreviewConfigurationItemTrait {
   /**
    * Build the cluster restrict form element.
    *
-   * @param array $default_value
-   *   The default value for the element.
+   * @param mixed $default_value
+   *   The default value for the element. Either a render array or a plain
+   *   value.
    *
    * @return array
    *   A form element array.
    */
-  public function buildValuePreviewFormElement(array $default_value) {
-    return [
+  public function buildValuePreviewFormElement($default_value) {
+    $build = [
       '#type' => 'item',
       '#title' => $this->t('Value preview'),
-      '#markup' => $value,
       '#weight' => 50,
     ];
+    if (is_array($default_value)) {
+      $build[] = $default_value;
+    }
+    else {
+      $build['#markup'] = $default_value;
+    }
+    return $build;
   }
 
   /**

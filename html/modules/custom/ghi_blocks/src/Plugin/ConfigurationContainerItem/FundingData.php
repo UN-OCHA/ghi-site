@@ -159,7 +159,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
 
     // Add a preview.
     if ($this->shouldDisplayPreview()) {
-      $preview_value = $this->getValue($data_type_key, $scale, $cluster_restrict);
+      $preview_value = $this->getRenderArray($data_type_key, $scale, $cluster_restrict);
       $element['value_preview'] = $this->buildValuePreviewFormElement($preview_value);
     }
 
@@ -173,9 +173,8 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     if (!empty($this->config['label'])) {
       return $this->config['label'];
     }
-    $data_type_key = $this->get('data_type');
-    $data_type = $this->getDataType($data_type_key);
-    return $data_type['default_label'];
+    $data_type = $this->getDataType();
+    return $data_type['default_label'] ?? NULL;
   }
 
   /**
@@ -192,7 +191,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $value = NULL;
     if ($context_node->bundle() == 'plan') {
       if (!empty($cluster_restrict) && !empty($cluster_restrict['type']) && $cluster_restrict['type'] != 'none') {
-        $value = $this->getValueWithClusterRestrict($data_type, $scale, $cluster_restrict);
+        $value = $this->getValueWithClusterRestrict($data_type, $cluster_restrict);
       }
       else {
         $value = $this->fundingSummaryQuery->get($data_type['property'], 0);
@@ -202,11 +201,27 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       $value = $this->planClusterSummaryQuery->getClusterProperty($context_node->field_original_id->value, $data_type['property'], 0);
     }
 
+    return $value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRenderArray($data_type_key = NULL, $scale = NULL, $cluster_restrict = NULL) {
+    $context = $this->getContext();
+
+    $data_type = $this->getDataType($data_type_key ?: $this->get('data_type'));
+    $scale = ($scale ?: $this->get('scale')) ?: (!empty($data_type['scale']) ? $data_type['scale'] : 'auto');
+    $cluster_restrict = $cluster_restrict ?: ($this->get('cluster_restrict') ?: NULL);
+
     $theme_function = !empty($data_type['theme']) ? $data_type['theme'] : 'hpc_currency';
-    return ThemeHelper::theme($theme_function, ThemeHelper::getThemeOptions($theme_function, $value, [
+    $theme_options = !empty($data_type['theme_options']) ? $data_type['theme_options'] : [];
+    return [
+      '#theme' => $theme_function,
+    ] + ThemeHelper::getThemeOptions($theme_function, $this->getValue($data_type_key, $scale, $cluster_restrict), [
       'scale' => $scale,
       'formatting_decimals' => $context['plan_node']->field_decimal_format->value,
-    ]));
+    ] + $theme_options);
   }
 
   /**
@@ -214,15 +229,13 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    *
    * @param array $data_type
    *   A data type definition.
-   * @param string $scale
-   *   A scale to apply.
    * @param array $cluster_restrict
    *   A cluster restriction to apply.
    *
    * @return mixed|null
    *   The retrieved value.
    */
-  public function getValueWithClusterRestrict(array $data_type, $scale, array $cluster_restrict) {
+  public function getValueWithClusterRestrict(array $data_type, array $cluster_restrict) {
 
     $context = $this->getContext();
     $plan_node = $context['plan_node'];
@@ -281,13 +294,23 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         'scale' => 'auto',
       ],
       'funding_coverage' => [
-        'title' => $this->t('Funding coverage'),
-        'default_label' => $this->t('Coverage (%)'),
+        'title' => $this->t('Coverage (%)'),
+        'default_label' => $this->t('Coverage'),
         'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'funding_coverage',
-        'scale' => 'auto',
         'theme' => 'hpc_percent',
+      ],
+      'funding_progress_bar' => [
+        'title' => $this->t('Funding coverage progress bar'),
+        'default_label' => $this->t('Funding coverage'),
+        'valid_context' => ['plan', 'governing_entity'],
+        'cluster_restrict' => TRUE,
+        'property' => 'funding_coverage',
+        'theme' => 'hpc_progress_bar',
+        'theme_options' => [
+          'hide_value' => TRUE,
+        ],
       ],
       'funding_gap' => [
         'title' => $this->t('Funding gap'),
@@ -330,7 +353,10 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    * @return array|null
    *   A definition array if the data type is found.
    */
-  private function getDataType($data_type) {
+  private function getDataType($data_type = NULL) {
+    if ($data_type === NULL) {
+      $data_type = $this->config['data_type'] ?? $this->config['data_type'];
+    }
     $data_types = $this->getDataTypes();
     return array_key_exists($data_type, $data_types) ? $data_types[$data_type] : NULL;
   }

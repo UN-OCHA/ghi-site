@@ -48,7 +48,6 @@ class AttachmentSelect extends FormElement {
       // '#include_available_map_metrics' => FALSE,
       // '#disable_empty_locations' => FALSE,
       '#disabled' => FALSE,
-
       '#entity_types' => [],
     ];
   }
@@ -88,9 +87,6 @@ class AttachmentSelect extends FormElement {
    */
   public static function processAttachmentSelect(array &$element, FormStateInterface $form_state) {
     $context = $element['#element_context'];
-    if (empty($context['entity_query'])) {
-      return $element;
-    }
 
     $trigger = $form_state->getTriggeringElement() ? end($form_state->getTriggeringElement()['#parents']) : NULL;
     $triggered_by_select = $trigger ? in_array($trigger, [
@@ -128,7 +124,7 @@ class AttachmentSelect extends FormElement {
     ];
 
     if ($element['#summary_only'] && !$triggered_by_select && !$triggered_by_change_request) {
-      $attachment = $context['attachment_query']->getAttachment($defaults['attachment_id']);
+      $attachment = self::getAttachmentQuery()->getAttachment($defaults['attachment_id']);
       $element['entity_type'] = [
         '#type' => 'value',
         '#value' => $defaults['entity_type'],
@@ -207,7 +203,7 @@ class AttachmentSelect extends FormElement {
       unset($element['attachment_type']['#options']);
     }
 
-    $attachments = $context['entity_query']->getDataAttachments($context['page_node'], [
+    $attachments = self::getPlanEntitiesQuery()->getDataAttachments($context['page_node'], [
       'type' => $defaults['attachment_type'],
     ]);
     $attachment_options = [];
@@ -255,6 +251,26 @@ class AttachmentSelect extends FormElement {
     // occurred.
     static::setAttributes($element, ['form-attachment-select']);
     return $element;
+  }
+
+  /**
+   * Get the attachment query service.
+   *
+   * @return \Drupal\ghi_plans\Query\AttachmentQuery
+   *   The attachment query service.
+   */
+  public static function getAttachmentQuery() {
+    return \Drupal::service('ghi_plans.attachment_query');
+  }
+
+  /**
+   * Get the plan entities query service.
+   *
+   * @return \Drupal\ghi_plans\Query\PlanEntitiesQuery
+   *   The plan entities query service.
+   */
+  public static function getPlanEntitiesQuery() {
+    return \Drupal::service('ghi_plans.plan_entities_query');
   }
 
 }

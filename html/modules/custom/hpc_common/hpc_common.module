@@ -73,6 +73,17 @@ function hpc_common_theme($existing, $type, $theme, $path) {
         'formatting_decimals' => NULL,
       ],
     ] + $common,
+    'hpc_progress_bar' => [
+      'variables' => [
+        'percent' => NULL,
+        'ratio' => NULL,
+        'base_ratio' => NULL,
+        'export' => FALSE,
+        'hide_value' => FALSE,
+        'tooltip' => NULL,
+      ],
+      'template' => 'hpc-progress-bar',
+    ] + $common,
     'hpc_autoformat_value' => [
       'variables' => [
         'value' => NULL,

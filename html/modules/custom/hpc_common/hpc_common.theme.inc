@@ -8,35 +8,8 @@
  */
 
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Template\Attribute;
 use Drupal\hpc_common\Helpers\ThemeHelper;
-
-/**
- * Helper function to wrap the given output into HTML markup.
- *
- * @param string $output
- *   The output string.
- * @param array $vars
- *   The variables array as given to a theme function.
- * @param array|string $classes
- *   An optional array or string of class names for the markup.
- * @param array $attributes
- *   An optional array of attributes for the markup.
- *
- * @return string
- *   Either the pure output or the output string wrapped in markup.
- */
-function hpc_common_markup_wrapper($output, array $vars, $classes = NULL, array $attributes = NULL) {
-  $markup_element = !empty($vars['markup_element']) ? $vars['markup_element'] : 'span';
-  if ($vars['export']) {
-    return $output;
-  }
-  $class = '';
-  if (!empty($classes)) {
-    $class = 'class="' . (is_array($classes) ? implode(' ', $classes) : $classes) . '"';
-  }
-  $attr = !empty($attributes) && is_array($attributes) ? drupal_attributes($attributes) : '';
-  return '<' . $markup_element . ' ' . $class . ' ' . $attr . '>' . $output . '</' . $markup_element . '>';
-}
 
 /**
  * Theme a value using automatic formatting based on the unit.
@@ -225,4 +198,23 @@ function hpc_common_preprocess_hpc_percent(array &$vars) {
   $vars['output'] = Markup::create($formatted . $suffix);
   $vars['class'] = implode(' ', ['number', 'percent']);
   $vars['attributes'] = ['data-value' => $percent];
+}
+
+/**
+ * Theme a progress bar.
+ */
+function hpc_common_preprocess_hpc_progress_bar(array &$vars) {
+  $export = $vars['export'];
+  $base_ratio = (float) $vars['base_ratio'];
+  $vars['percent'] = ((float) ($vars['percent'] ?? ($vars['ratio'] * 100)));
+  $vars['precision'] = 1;
+  $vars['formatted_value'] = $vars['percent'] !== NULL && !$export ? ThemeHelper::theme('hpc_percent', ThemeHelper::getThemeOptions('hpc_percent', $vars['percent'], $vars)) : t('N/A');
+
+  $wrapper_attributes = new Attribute();
+  $wrapper_attributes->addClass('hpc-progress-bar-wrapper');
+
+  if (!empty($base_ratio)) {
+    $wrapper_attributes->setAttribute('style', 'width: ' . $base_ratio . '%');
+  }
+  $vars['wrapper_attributes'] = $wrapper_attributes;
 }

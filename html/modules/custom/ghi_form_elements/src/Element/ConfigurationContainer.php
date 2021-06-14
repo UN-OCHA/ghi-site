@@ -327,8 +327,9 @@ class ConfigurationContainer extends FormElement {
           '#markup' => $item_type->getPluginLabel(),
         ];
         foreach (array_keys($element['#preview']['columns']) as $column_key) {
-          $row[$column_key] = [
-            '#markup' => $item_type->get($column_key),
+          $preview = $item_type->preview($column_key);
+          $row[$column_key] = is_array($preview) ? $preview : [
+            '#markup' => $preview,
           ];
         }
         $row['weight'] = [
@@ -455,6 +456,7 @@ class ConfigurationContainer extends FormElement {
       // Add a description if available.
       if ($plugin_description = $item_type->getPluginDescription()) {
         $element['item_config']['description'] = [
+          '#type' => 'item',
           '#markup' => $plugin_description,
         ];
       }

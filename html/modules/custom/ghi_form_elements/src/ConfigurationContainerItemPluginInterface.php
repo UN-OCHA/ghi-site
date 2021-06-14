@@ -67,9 +67,24 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
   public function getValue();
 
   /**
+   * Get a render array for an item.
+   *
+   * @return array
+   *   Return the value as a render array.
+   */
+  public function getRenderArray();
+
+  /**
    * Get a representation fo the value that can be used for sorting.
    */
   public function getSortableValue();
+
+  /**
+   * Preview a key from the configuration.
+   *
+   * This should be used only during configuration steps.
+   */
+  public function preview($key);
 
   /**
    * Get an item from config by key if it exists.

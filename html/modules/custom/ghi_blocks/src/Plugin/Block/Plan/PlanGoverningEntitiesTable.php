@@ -106,7 +106,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
       ],
       'funding_coverage' => [
         'target' => 'funding_data',
-        'config' => ['data_type' => 'funding_coverage'],
+        'config' => ['data_type' => 'funding_progress_bar'],
       ],
       'funding_gap' => [
         'target' => 'funding_data',
@@ -221,9 +221,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
 
         // Then add the value to the row.
         $row[] = [
-          'data' => [
-            '#markup' => $item_type->getValue(),
-          ],
+          'data' => $item_type->getRenderArray(),
           'data-sort-value' => $item_type->getSortableValue(),
           'data-column-type' => $item_type::ITEM_TYPE,
         ];
