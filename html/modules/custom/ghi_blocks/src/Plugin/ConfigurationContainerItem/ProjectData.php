@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Traits\ClusterRestrictConfigurationItemTrait;
+use Drupal\ghi_blocks\Traits\ValuePreviewConfigurationItemTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
@@ -27,6 +28,7 @@ use Drupal\node\NodeInterface;
 class ProjectData extends ConfigurationContainerItemPluginBase {
 
   use ClusterRestrictConfigurationItemTrait;
+  use ValuePreviewConfigurationItemTrait;
 
   /**
    * The plan entities query.
@@ -116,17 +118,16 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
     $element['label']['#weight'] = 1;
     $element['label']['#placeholder'] = $this->getDefaultLabel($data_type);
 
-    if (in_array($context['page_node']->bundle(), ['plan', 'plan_entity'])) {
+    $cluster_restrict_disabled = array_key_exists('cluster_restrict', $plugin_configuration) && $plugin_configuration['cluster_restrict'] === FALSE;
+    if (in_array($context['context_node']->bundle(), ['plan', 'plan_entity']) && !$cluster_restrict_disabled) {
       $element['cluster_restrict'] = $this->buildClusterRestrictFormElement($cluster_restrict);
     }
 
     // Add a preview.
-    $element['value_preview'] = [
-      '#type' => 'item',
-      '#title' => $this->t('Value preview'),
-      '#markup' => $this->getValue($data_type, $cluster_restrict),
-      '#weight' => 3,
-    ];
+    if ($this->shouldDisplayPreview()) {
+      $preview_value = $this->getValue($data_type, $cluster_restrict);
+      $element['value_preview'] = $this->buildValuePreviewFormElement($preview_value);
+    }
 
     return $element;
   }
@@ -159,12 +160,12 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
    */
   public function getValue($data_type = NULL, $cluster_restrict = NULL) {
     $context = $this->getContext();
-    if (empty($context['page_node'])) {
+    if (empty($context['context_node'])) {
       return NULL;
     }
 
     $project_query = $this->projectSearchQuery;
-    $page_node = $context['page_node'];
+    $context_node = $context['context_node'];
 
     $data_type = $data_type ?? $this->get('data_type');
     $cluster_restrict = $cluster_restrict ?? $this->get('cluster_restrict');
@@ -174,10 +175,10 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
 
     switch ($data_type) {
       case 'projects_count':
-        return $project_query->getProjectCount($page_node);
+        return $project_query->getProjectCount($context_node);
 
       case 'organizations_count':
-        return $project_query->getOrganizationCount($page_node);
+        return $project_query->getOrganizationCount($context_node);
     }
 
     return NULL;
@@ -190,13 +191,11 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
     parent::setContext($context);
 
     // Also set cluster context if the current page is a plan entity.
-    $page_node = $context['page_node'] ?? NULL;
-    if ($page_node && $page_node->bundle() == 'plan_entity') {
-      $query_handlers = $this->getQueryHandlers();
-      foreach ($query_handlers as $query) {
-        if (!$query instanceof PlanProjectSearchQuery) {
-          continue;
-        }
+    $context_node = $context['context_node'] ?? NULL;
+    if ($context_node && $context_node->bundle() == 'plan_entity') {
+      /** @var \Drupal\ghi_plans\Query\PlanProjectSearchQuery $query */
+      $query = $this->getQueryHandler(PlanProjectSearchQuery::class);
+      if ($query) {
         $cluster_ids = PlanStructureHelper::getPlanEntityStructure($this->planEntitiesQuery->getData());
         $query->setFilterByClusterIds($cluster_ids);
       }

@@ -19,8 +19,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *
  * @Block(
  *  id = "plan_headline_figures",
- *  admin_label = @Translation("Plan: Headline Figures"),
- *  category = @Translation("Plans"),
+ *  admin_label = @Translation("Headline Figures"),
+ *  category = @Translation("Plan elements"),
  *  title = FALSE,
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"))
@@ -271,6 +271,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
     return [
       'page_node' => $this->getPageNode(),
       'plan_node' => $this->getCurrentPlanNode(),
+      'context_node' => $this->getPageNode(),
     ];
   }
 

@@ -3,12 +3,20 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_blocks\Traits\ValuePreviewConfigurationItemTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Query\PlanEntitiesQuery;
+use Drupal\node\NodeInterface;
 
 /**
  * Provides an entity counter item for configuration containers.
+ *
+ * This item type allows the following options when using as part of a
+ * configuration container:
+ * - entity_type: Sets a preselected entity type and hides the entity type
+ *   select element.
+ * - value_preview: If set and set to FALSE, will hide the value preview.
  *
  * @ConfigurationContainerItem(
  *   id = "entity_counter",
@@ -16,6 +24,8 @@ use Drupal\ghi_plans\Query\PlanEntitiesQuery;
  * )
  */
 class EntityCounter extends ConfigurationContainerItemPluginBase {
+
+  use ValuePreviewConfigurationItemTrait;
 
   /**
    * The plan entities query.
@@ -52,7 +62,9 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     $element['label']['#description'] = $this->t('Leave empty to use a default label');
 
     $entity_type_options = $this->getEntityTypeOptions();
-    $entity_type = $this->getSubmittedOptionsValue($element, $form_state, 'entity_type', $entity_type_options);
+
+    $preset_entity_type = $this->getEntityTypePreset();
+    $entity_type = !$preset_entity_type ? $this->getSubmittedOptionsValue($element, $form_state, 'entity_type', $entity_type_options) : $preset_entity_type;
 
     $entity_prototype_options = $this->getEntityPrototypeOptions($entity_type);
     $entity_prototype = $this->getSubmittedOptionsValue($element, $form_state, 'entity_prototype', $entity_prototype_options);
@@ -69,6 +81,11 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
       ],
       '#weight' => 0,
     ];
+    if ($preset_entity_type) {
+      $element['entity_type']['#type'] = 'hidden';
+      $element['entity_type']['#value'] = $entity_type;
+      $element['entity_type']['#default_value'] = $entity_type;
+    }
 
     $element['entity_prototype'] = [
       '#type' => 'select',
@@ -88,12 +105,10 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     $element['label']['#placeholder'] = $this->getDefaultLabel($entity_type, $entity_prototype);
 
     // Add a preview.
-    $element['value_preview'] = [
-      '#type' => 'item',
-      '#title' => $this->t('Value preview'),
-      '#markup' => $this->getValue($entity_type, $entity_prototype),
-      '#weight' => 3,
-    ];
+    if ($this->shouldDisplayPreview()) {
+      $preview_value = $this->getValue($entity_type, $entity_prototype);
+      $element['value_preview'] = $this->buildValuePreviewFormElement($preview_value);
+    }
 
     return $element;
   }
@@ -105,7 +120,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     if (!empty($this->config['label'])) {
       return $this->config['label'];
     }
-    $entity_type = $this->get['entity_type'];
+    $entity_type = $this->get('entity_type');
     $entity_prototype = $this->get('entity_prototype');
     return $this->getDefaultLabel($entity_type, $entity_prototype);
   }
@@ -146,7 +161,10 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
    */
   private function getEntities($entity_type) {
     $context = $this->getContext();
-    return $this->planEntitiesQuery->getPlanEntities($context['page_node'], $entity_type, NULL);
+    if (empty($context['context_node']) || !$context['context_node'] instanceof NodeInterface) {
+      return [];
+    }
+    return $this->planEntitiesQuery->getPlanEntities($context['context_node'], $entity_type, NULL);
   }
 
   /**
@@ -187,6 +205,21 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
       return $weight[$prototype_id_a] > $weight[$prototype_id_b];
     });
     return $entity_prototype_options;
+  }
+
+  /**
+   * Get the preset entity type if one is set.
+   *
+   * @return string|null
+   *   The preset entity type or NULL.
+   */
+  private function getEntityTypePreset() {
+    $plugin_configuration = $this->getPluginConfiguration();
+    $entity_type_options = $this->getEntityTypeOptions();
+    if (!array_key_exists('entity_type', $plugin_configuration) || !array_key_exists($plugin_configuration['entity_type'], $entity_type_options)) {
+      return NULL;
+    }
+    return $plugin_configuration['entity_type'];
   }
 
 }

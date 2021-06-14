@@ -20,6 +20,9 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   use StringTranslationTrait;
   use AjaxElementTrait;
 
+  const SORT_TYPE = 'numeric';
+  const ITEM_TYPE = 'amount';
+
   /**
    * Config for an instance of the item.
    *
@@ -68,7 +71,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
     $element['label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Label'),
-      '#default_value' => array_key_exists('label', $this->config) ? $this->config['label'] : NULL,
+      '#default_value' => $this->getSubmittedValue($element, $form_state, 'label'),
     ];
     return $element;
   }
@@ -78,6 +81,24 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    */
   public function getPluginConfiguration() {
     return $this->configuration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginLabel() {
+    return $this->pluginDefinition['label'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginDescription() {
+    $plugin_definition = $this->getPluginDefinition();
+    if (empty($plugin_definition['description'])) {
+      return NULL;
+    }
+    return $plugin_definition['description'];
   }
 
   /**
@@ -108,6 +129,13 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
+  public function getSortableValue() {
+    return $this->getValue();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function get($key) {
     if ($this->config === NULL) {
       return NULL;
@@ -129,13 +157,6 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
-  public function getPluginLabel() {
-    return $this->pluginDefinition['label'];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function setContext($context) {
     $this->context = $context;
 
@@ -146,6 +167,27 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
         $query->setPlaceholder('plan_id', $plan_node->field_original_id->value);
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContext() {
+    return $this->context;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setContextValue($key, $context) {
+    $this->context[$key] = $context;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContextValue($key) {
+    return array_key_exists($key, $this->context) ? $this->context[$key] : NULL;
   }
 
   /**
@@ -172,10 +214,29 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   }
 
   /**
-   * {@inheritdoc}
+   * Retrieve the query handlers defined for a configuration item plugin.
+   *
+   * @param string $class
+   *   A class name to look for.
+   *
+   * @return \Drupal\hpc_api\Query\EndpointQuery[]
+   *   An array of EndpointQuery objects used by a plugin.
    */
-  public function getContext() {
-    return $this->context;
+  protected function getQueryHandler($class) {
+    $query_handlers = [];
+    $reflect = new \ReflectionClass($this);
+    $properties = $reflect->getProperties();
+    foreach ($properties as $property) {
+      if (!$property->isPublic()) {
+        continue;
+      }
+      $value = $property->getValue($this);
+      if (!is_object($value) || !$value instanceof $class) {
+        continue;
+      }
+      $query_handlers[] = $value;
+    }
+    return $query_handlers;
   }
 
   /**

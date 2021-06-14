@@ -42,6 +42,7 @@ class ConfigurationContainer extends FormElement {
       '#theme_wrappers' => ['form_element'],
       '#max_items' => NULL,
       '#preview' => NULL,
+      '#element_context' => [],
     ];
   }
 
@@ -315,6 +316,9 @@ class ConfigurationContainer extends FormElement {
     if (!empty($items)) {
       foreach ($items as $key => $item) {
         $item_type = self::getItemTypeInstance($item, $element);
+        if (!$item_type) {
+          continue;
+        }
         $row = [
           '#attributes' => ['class' => ['draggable']],
           '#weight' => $key,
@@ -447,6 +451,14 @@ class ConfigurationContainer extends FormElement {
 
     $item_type = self::getItemTypeInstance($item, $element);
     if ($item_type && $form_state->get('mode') != 'select_item_type') {
+
+      // Add a description if available.
+      if ($plugin_description = $item_type->getPluginDescription()) {
+        $element['item_config']['description'] = [
+          '#markup' => $plugin_description,
+        ];
+      }
+
       if ($index === NULL) {
         $element['item_config']['item_type']['#type'] = 'hidden';
         $element['item_config']['item_type']['#value'] = $item_type->getPluginId();

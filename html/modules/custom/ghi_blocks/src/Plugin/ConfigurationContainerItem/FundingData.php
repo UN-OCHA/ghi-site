@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Traits\ClusterRestrictConfigurationItemTrait;
+use Drupal\ghi_blocks\Traits\ValuePreviewConfigurationItemTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Query\ClusterQuery;
@@ -11,21 +12,28 @@ use Drupal\ghi_plans\Query\FlowSearchQuery;
 use Drupal\ghi_plans\Query\PlanClusterSummaryQuery;
 use Drupal\ghi_plans\Query\PlanFundingSummaryQuery;
 use Drupal\hpc_common\Helpers\ThemeHelper;
+use Drupal\node\NodeInterface;
 
 /**
  * Provides an funding data item for configuration containers.
  *
+ * This item type allows the following options when using as part of a
+ * configuration container:
+ * - cluster_restrict: When set and set to FALSE, this disables the additional
+ *   cluster restriction form element in configuration.
+ *
  * @todo This is still missing support for special requirements logic.
- * @todo This is still missing support for cluster filters.
  *
  * @ConfigurationContainerItem(
  *   id = "funding_data",
  *   label = @Translation("Financial data"),
+ *   description = @Translation("Using the Financial data item, you can add funding and requirements data to this block. You can choose between different ways of displaying the data and do calculations. You can also override the default label."),
  * )
  */
 class FundingData extends ConfigurationContainerItemPluginBase {
 
   use ClusterRestrictConfigurationItemTrait;
+  use ValuePreviewConfigurationItemTrait;
 
   /**
    * The funding query.
@@ -89,6 +97,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $element = parent::buildForm($element, $form_state);
 
     $context = $this->getContext();
+
     $data_type_options = $this->getDataTypeOptions();
     $data_type_key = $this->getSubmittedOptionsValue($element, $form_state, 'data_type', $data_type_options);
     $scale = $this->getSubmittedValue($element, $form_state, 'scale', 'auto');
@@ -122,7 +131,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       $element['label']['#required'] = TRUE;
     }
 
-    if ($context['page_node']->bundle() == 'plan' && $data_type['cluster_restrict']) {
+    if ($context['context_node']->bundle() == 'plan' && $data_type['cluster_restrict'] && !$this->clusterRestrictDisabled()) {
       $element['cluster_restrict'] = $this->buildClusterRestrictFormElement($cluster_restrict);
     }
 
@@ -149,12 +158,10 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     }
 
     // Add a preview.
-    $element['value_preview'] = [
-      '#type' => 'item',
-      '#title' => $this->t('Value preview'),
-      '#markup' => $this->getValue($data_type_key, $scale, $cluster_restrict),
-      '#weight' => 3,
-    ];
+    if ($this->shouldDisplayPreview()) {
+      $preview_value = $this->getValue($data_type_key, $scale, $cluster_restrict);
+      $element['value_preview'] = $this->buildValuePreviewFormElement($preview_value);
+    }
 
     return $element;
   }
@@ -176,14 +183,14 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    */
   public function getValue($data_type_key = NULL, $scale = NULL, $cluster_restrict = NULL) {
     $context = $this->getContext();
-    $page_node = $context['page_node'];
+    $context_node = $context['context_node'];
 
     $data_type = $this->getDataType($data_type_key ?: $this->get('data_type'));
     $scale = ($scale ?: $this->get('scale')) ?: (!empty($data_type['scale']) ? $data_type['scale'] : 'auto');
     $cluster_restrict = $cluster_restrict ?: ($this->get('cluster_restrict') ?: NULL);
 
     $value = NULL;
-    if ($page_node->bundle() == 'plan') {
+    if ($context_node->bundle() == 'plan') {
       if (!empty($cluster_restrict) && !empty($cluster_restrict['type']) && $cluster_restrict['type'] != 'none') {
         $value = $this->getValueWithClusterRestrict($data_type, $scale, $cluster_restrict);
       }
@@ -191,8 +198,8 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         $value = $this->fundingSummaryQuery->get($data_type['property'], 0);
       }
     }
-    elseif ($page_node->bundle() == 'governing_entity') {
-      $value = $this->planClusterSummaryQuery->getClusterProperty($page_node->field_original_id->value, $data_type['property'], 0);
+    elseif ($context_node->bundle() == 'governing_entity') {
+      $value = $this->planClusterSummaryQuery->getClusterProperty($context_node->field_original_id->value, $data_type['property'], 0);
     }
 
     $theme_function = !empty($data_type['theme']) ? $data_type['theme'] : 'hpc_currency';
@@ -240,9 +247,9 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    */
   private function getDataTypeOptions() {
     $context = $this->getContext();
-    $page_node = $context['page_node'];
-    $data_types = array_filter($this->getDataTypes(), function ($type) use ($page_node) {
-      return !array_key_exists('valid_context', $type) || in_array($page_node->bundle(), $type['valid_context']);
+    $context_node = $context['context_node'];
+    $data_types = array_filter($this->getDataTypes(), function ($type) use ($context_node) {
+      return !array_key_exists('valid_context', $type) || ($context_node instanceof NodeInterface && in_array($context_node->bundle(), $type['valid_context']));
     });
     return array_map(function ($type) {
       return $type['title'];
@@ -256,7 +263,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    *   An array of defined data types.
    */
   private function getDataTypes() {
-    return [
+    $available_types = [
       'funding_totals' => [
         'title' => $this->t('Funding totals'),
         'default_label' => $this->t('Current funding ($)'),
@@ -307,6 +314,11 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         // tooltip.
       ],
     ];
+    $configuration = $this->getPluginConfiguration();
+    if (array_key_exists('item_types', $configuration)) {
+      $available_types = array_intersect_key($available_types, array_flip($configuration['item_types']));
+    }
+    return $available_types;
   }
 
   /**
@@ -321,6 +333,17 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   private function getDataType($data_type) {
     $data_types = $this->getDataTypes();
     return array_key_exists($data_type, $data_types) ? $data_types[$data_type] : NULL;
+  }
+
+  /**
+   * Whether cluster restriction is disabled.
+   *
+   * @return bool
+   *   TRUE if cluster restriction is disabled, FALSE otherwhise.
+   */
+  private function clusterRestrictDisabled() {
+    $plugin_configuration = $this->getPluginConfiguration();
+    return array_key_exists('cluster_restrict', $plugin_configuration) && $plugin_configuration['cluster_restrict'] === FALSE;
   }
 
 }

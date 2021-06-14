@@ -12,9 +12,22 @@ use Drupal\Core\Form\FormStateInterface;
 interface ConfigurationContainerItemPluginInterface extends PluginInspectionInterface, ContainerFactoryPluginInterface {
 
   /**
+   * Get the plugin configuration for an instance.
+   *
+   * @return array
+   *   Plugin configuration array.
+   */
+  public function getPluginConfiguration();
+
+  /**
    * Get the label for the plugin.
    */
   public function getPluginLabel();
+
+  /**
+   * Get the plugin description if available.
+   */
+  public function getPluginDescription();
 
   /**
    * Builds the associated form.
@@ -28,6 +41,14 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
    *   Form array
    */
   public function buildForm(array $element, FormStateInterface $form_state);
+
+  /**
+   * Set the configuration for an instance.
+   *
+   * @param array $config
+   *   Arbitrary config array, depending on the type of item.
+   */
+  public function setConfig(array $config);
 
   /**
    * Get the label of an item.
@@ -46,6 +67,11 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
   public function getValue();
 
   /**
+   * Get a representation fo the value that can be used for sorting.
+   */
+  public function getSortableValue();
+
+  /**
    * Get an item from config by key if it exists.
    *
    * @param string $key
@@ -55,14 +81,6 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
    *   A value for the given key if it exists.
    */
   public function get($key);
-
-  /**
-   * Set the configuration for an instance.
-   *
-   * @param array $config
-   *   Arbitrary config array, depending on the type of item.
-   */
-  public function setConfig(array $config);
 
   /**
    * Set the context for an instance.
@@ -81,11 +99,24 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
   public function getContext();
 
   /**
-   * Get the plugin configuration for an instance.
+   * Set the context value for a specific context key.
    *
-   * @return array
-   *   Plugin configuration array.
+   * @param string $key
+   *   The key for the context value.
+   * @param mixed $context
+   *   Arbitrary context value.
    */
-  public function getPluginConfiguration();
+  public function setContextValue($key, $context);
+
+  /**
+   * Get the context value for a specific context key.
+   *
+   * @param string $key
+   *   The key for the context value.
+   *
+   * @return mixed
+   *   The value for the context key.
+   */
+  public function getContextValue($key);
 
 }
