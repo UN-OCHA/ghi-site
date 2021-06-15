@@ -134,4 +134,41 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
    */
   public function getContextValue($key);
 
+  /**
+   * Whether an instance of a plugin has a filter configured.
+   *
+   * @return bool
+   *   TRUE if no filter is configured, FALSE otherwhise.
+   */
+  public function hasAppliccableFilter();
+
+  /**
+   * Build a filter form.
+   *
+   * @param array $element
+   *   An associative array containing the initial structure of the subform.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   *
+   * @return array
+   *   A form structure array.
+   */
+  public function buildFilterForm(array $element, FormStateInterface $form_state);
+
+  /**
+   * Get a summary for the configured filter.
+   *
+   * @return string
+   *   A summary string.
+   */
+  public function getFilterSummary();
+
+  /**
+   * Check the configured filter settings against this instance.
+   *
+   * @return bool
+   *   TRUE if no filter is configured or if it passes, FALSE otherwhise.
+   */
+  public function checkFilter();
+
 }

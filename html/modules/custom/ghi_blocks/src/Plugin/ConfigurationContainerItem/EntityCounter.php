@@ -21,6 +21,7 @@ use Drupal\node\NodeInterface;
  * @ConfigurationContainerItem(
  *   id = "entity_counter",
  *   label = @Translation("Entity counter"),
+ *   description = @Translation("This item displays the number of entities of a specific type."),
  * )
  */
 class EntityCounter extends ConfigurationContainerItemPluginBase {
@@ -59,7 +60,6 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
    */
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
-    $element['label']['#description'] = $this->t('Leave empty to use a default label');
 
     $entity_type_options = $this->getEntityTypeOptions();
 

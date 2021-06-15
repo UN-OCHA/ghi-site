@@ -23,6 +23,7 @@ use Drupal\node\NodeInterface;
  * @ConfigurationContainerItem(
  *   id = "project_data",
  *   label = @Translation("Project data"),
+ *   description = @Translation("This item displays project related information. For the moment the only supported options are number of projects and number of partners."),
  * )
  */
 class ProjectData extends ConfigurationContainerItemPluginBase {
@@ -89,7 +90,6 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
    */
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
-    $element['label']['#description'] = $this->t('Leave empty to use a default label');
 
     $context = $this->getContext();
 

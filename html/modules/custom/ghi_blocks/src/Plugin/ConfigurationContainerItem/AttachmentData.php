@@ -17,6 +17,7 @@ use Drupal\ghi_plans\Query\AttachmentQuery;
  * @ConfigurationContainerItem(
  *   id = "attachment_data",
  *   label = @Translation("Attachment data"),
+ *   description = @Translation("This item displays a single metric or measurement item from a selected attachment."),
  * )
  */
 class AttachmentData extends ConfigurationContainerItemPluginBase {

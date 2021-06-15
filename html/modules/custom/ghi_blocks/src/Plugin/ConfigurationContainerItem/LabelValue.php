@@ -11,9 +11,14 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
  * @ConfigurationContainerItem(
  *   id = "label_value",
  *   label = @Translation("Label/value"),
+ *   description = @Translation("This item displays an arbitrary label/value pair."),
  * )
  */
 class LabelValue extends ConfigurationContainerItemPluginBase {
+
+  const SORT_TYPE = 'alfa';
+  const DATA_TYPE = 'string';
+  const ITEM_TYPE = 'mixed';
 
   /**
    * {@inheritdoc}

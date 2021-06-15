@@ -20,6 +20,7 @@ use Drupal\ghi_plans\Query\IconQuery;
 class EntityName extends ConfigurationContainerItemPluginBase {
 
   const SORT_TYPE = 'alfa';
+  const DATA_TYPE = 'string';
   const ITEM_TYPE = 'name';
 
   /**
@@ -64,24 +65,8 @@ class EntityName extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getValue() {
-    /** @var \Drupal\node\NodeInterface $context_node */
-    $context_node = $this->getContextValue('context_node');
     $entity = $this->getContextValue('entity');
-    if (!$entity) {
-      return NULL;
-    }
-    if (empty($entity->icon)) {
-      return $entity->name;
-    }
-
-    $icon_embed = $this->iconQuery->getIconEmbedCode($entity->icon);
-    $markup = Markup::create($icon_embed . '<span class="name">' . $entity->name . '</span>');
-    if ($context_node->access('view')) {
-      return Link::fromTextAndUrl($markup, $context_node->toUrl())->toString();
-    }
-    else {
-      return $markup;
-    }
+    return $entity && property_exists($entity, 'name') ? $entity->name : NULL;
   }
 
   /**

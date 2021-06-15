@@ -9,6 +9,7 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -21,6 +22,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   use AjaxElementTrait;
 
   const SORT_TYPE = 'numeric';
+  const DATA_TYPE = 'numeric';
   const ITEM_TYPE = 'amount';
 
   /**
@@ -73,6 +75,12 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
       '#title' => $this->t('Label'),
       '#default_value' => $this->getSubmittedValue($element, $form_state, 'label'),
     ];
+
+    if (method_exists($this, 'getDefaultLabel')) {
+      $element['label']['#description'] = $this->t('Leave empty to use a default label');
+      $element['label']['#placeholder'] = $this->getDefaultLabel();
+    }
+
     return $element;
   }
 
@@ -312,6 +320,134 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
       $_form_state->setValue($value_parents, $value);
     }
     return $value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasAppliccableFilter() {
+    $filter = $this->get('filter');
+    return $filter && !empty($filter['op']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildFilterForm($element, FormStateInterface $form_state) {
+    $filter_config = $this->get('filter');
+
+    $element['op'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Operation'),
+      '#options' => $this->getFilterOptions(),
+      '#default_value' => !empty($filter_config['op']) ? $filter_config['op'] : NULL,
+    ];
+
+    $element['value'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Value'),
+      '#default_value' => array_key_exists('value', $filter_config) ? $filter_config['value'] : NULL,
+      '#states' => [
+        'invisible' => [
+          ':input[name="' . FormElementHelper::getStateSelector($element, ['op']) . '"]' => [
+            ['value' => 'empty'],
+            ['value' => 'not_empty'],
+          ],
+        ],
+      ],
+    ];
+    return $element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFilterSummary() {
+    $filter = $this->get('filter');
+    $options = $this->getFilterOptions();
+    if (empty($filter) || !array_key_exists('op', $filter) || !array_key_exists($filter['op'], $options)) {
+      return '-';
+    }
+    if ($this::DATA_TYPE == 'string') {
+      return strpos($filter['op'], 'empty') === FALSE ? $options[$filter['op']] . ' "' . $filter['value'] . '"' : $options[$filter['op']];
+    }
+    return strpos($filter['op'], 'empty') === FALSE ? $options[$filter['op']] . ' ' . $filter['value'] : $options[$filter['op']];
+  }
+
+  /**
+   * Get the filter options.
+   *
+   * @return array
+   *   An array of filter options.
+   */
+  private function getFilterOptions() {
+    $ops_common = [
+      'equal' => $this->t('Equal'),
+      'not_equal' => $this->t('Not equal'),
+      'empty' => $this->t('Empty'),
+      'not_empty' => $this->t('Not Empty'),
+    ];
+    $ops_numeric = $ops_common + [
+      'greater_than' => $this->t('Greater than'),
+      'less_than' => $this->t('Less than'),
+    ];
+    $ops_string = $ops_common + [
+      'contains' => $this->t('Contains'),
+    ];
+
+    switch (get_called_class()::DATA_TYPE) {
+      case 'numeric':
+        return $ops_numeric;
+
+      case 'string':
+        return $ops_string;
+
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function checkFilter() {
+    if (!$this->hasAppliccableFilter()) {
+      // When no filter is set, this passes.
+      return TRUE;
+    }
+
+    $filter = $this->get('filter');
+    $value = $this->getValue();
+    $result = FALSE;
+    switch ($filter['op']) {
+      case 'equal':
+        $result = $value == $filter['value'];
+        break;
+
+      case 'not_equal':
+        $result = $value != $filter['value'];
+        break;
+
+      case 'greater_than':
+        $result = $value > $filter['value'];
+        break;
+
+      case 'less_than':
+        $result = $value < $filter['value'];
+        break;
+
+      case 'empty':
+        $result = empty($value);
+        break;
+
+      case 'not_empty':
+        $result = !empty($value);
+        break;
+
+      case 'contains':
+        $result = strpos($value, $filter['value']) !== FALSE;
+        break;
+    }
+
+    return $result;
   }
 
 }

@@ -208,6 +208,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
       $context['entity'] = $entity;
 
       $row = [];
+      $skip_row = FALSE;
       foreach ($columns as $column) {
         if (!array_key_exists($column['item_type'], $allowed_items)) {
           continue;
@@ -222,10 +223,21 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
         // Then add the value to the row.
         $row[] = [
           'data' => $item_type->getRenderArray(),
+          'data-value' => $item_type->getValue(),
           'data-sort-value' => $item_type->getSortableValue(),
           'data-column-type' => $item_type::ITEM_TYPE,
         ];
+
+        // Update the skip row flag. Make it lazy, only check the item type if
+        // it still makes a difference.
+        $skip_row = $skip_row ? $skip_row : ($skip_row || $item_type->checkFilter() === FALSE);
       }
+
+      // See if filtering needs to be applied.
+      if ($skip_row) {
+        continue;
+      }
+
       $rows[] = $row;
     }
 
@@ -283,6 +295,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
         ],
       ],
       '#element_context' => $this->getBlockContext(),
+      '#row_filter' => TRUE,
     ];
     return $form;
   }
@@ -372,9 +385,6 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
         'options' => [
           'link' => TRUE,
           'include_popup' => TRUE,
-          'allow_filter' => [
-            'filter_type' => 'numeric',
-          ],
         ],
       ],
       'attachment_data' => [
