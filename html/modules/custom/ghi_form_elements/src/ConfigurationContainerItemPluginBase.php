@@ -156,6 +156,15 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
+  public function getClasses() {
+    return [
+      Html::getClass($this->getPluginId()),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   final public function preview($key) {
     // Turn key into camelcase and prefix with 'get' to build a potential
     // method name. This is primarily used for convenience functions in the

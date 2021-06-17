@@ -80,6 +80,14 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
   public function getSortableValue();
 
   /**
+   * Get the classes of an item.
+   *
+   * @return string[]
+   *   Return the classes for an item.
+   */
+  public function getClasses();
+
+  /**
    * Preview a key from the configuration.
    *
    * This should be used only during configuration steps.

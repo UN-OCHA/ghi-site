@@ -120,9 +120,14 @@ function common_design_subtheme_preprocess_table(&$vars) {
   $vars['attributes'] = array_key_exists('attributes', $vars) ? NestedArray::mergeDeep($vars['attributes'], $attributes) : $attributes;
   $vars['#attached'] = array_key_exists('#attached', $vars) ? NestedArray::mergeDeep($vars['#attached'], $attached) : $attached;
   foreach ($vars['rows'] as &$row) {
-    foreach ($row as &$column) {
-      if (is_array($column) && array_key_exists('data-column-type', $column)) {
-        $column['class'][] = 'cd-table--' . $column['data-column-type'];
+    foreach ($row as &$columns) {
+      foreach ($columns as &$column) {
+        /** @var \Drupal\Core\Template\Attribute $attribute */
+        $attribute = is_array($column) && array_key_exists('attributes', $column) ? $column['attributes'] : NULL;
+        if ($attribute && $attribute->hasAttribute('data-column-type')) {
+          $attributes = $attribute->toArray();
+          $attribute->addClass('cd-table--' . $attributes['data-column-type']);
+        }
       }
     }
   }

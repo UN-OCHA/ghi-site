@@ -260,7 +260,9 @@ function hpc_common_preprocess_hpc_popover(array &$vars) {
     $trigger_attributes->addClass($vars['class']);
     $content_attributes->addClass($vars['class']);
   }
-
+  if (!empty($vars['disabled'])) {
+    $trigger_attributes->setAttribute('disabled', 'disabled');
+  }
   // Custom markup.
   if (!empty($vars['tag'])) {
     $trigger_attributes->addClass('popover-custom-tag');

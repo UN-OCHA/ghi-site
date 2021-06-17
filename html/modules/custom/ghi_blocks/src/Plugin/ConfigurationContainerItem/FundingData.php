@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Traits\ClusterRestrictConfigurationItemTrait;
 use Drupal\ghi_blocks\Traits\ValuePreviewConfigurationItemTrait;
@@ -222,6 +223,15 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       'scale' => $scale,
       'formatting_decimals' => $context['plan_node']->field_decimal_format->value,
     ] + $theme_options);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getClasses() {
+    $classes = parent::getClasses();
+    $classes[] = Html::getClass($this->getPluginId() . '--' . $this->get('data_type'));
+    return $classes;
   }
 
   /**

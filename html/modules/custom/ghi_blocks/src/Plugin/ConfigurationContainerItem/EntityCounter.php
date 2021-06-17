@@ -2,10 +2,13 @@
 
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Traits\ValuePreviewConfigurationItemTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\Query\IconQuery;
 use Drupal\ghi_plans\Query\PlanEntitiesQuery;
 use Drupal\node\NodeInterface;
 
@@ -36,11 +39,19 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
   public $planEntitiesQuery;
 
   /**
+   * The icon query.
+   *
+   * @var \Drupal\ghi_plans\Query\IconQuery
+   */
+  public $iconQuery;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, PlanEntitiesQuery $plan_entities_query) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, PlanEntitiesQuery $plan_entities_query, IconQuery $icon_query) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->planEntitiesQuery = $plan_entities_query;
+    $this->iconQuery = $icon_query;
   }
 
   /**
@@ -52,6 +63,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
       $plugin_id,
       $plugin_definition,
       $container->get('ghi_plans.plan_entities_query'),
+      $container->get('ghi_plans.icon_query'),
     );
   }
 
@@ -144,10 +156,93 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
   public function getValue($entity_type = NULL, $entity_prototype = NULL) {
     $entity_type = $entity_type ?? $this->get('entity_type');
     $entity_prototype = $entity_prototype ?? $this->get('entity_prototype');
-    $matching_entities = array_filter($this->getEntities($entity_type), function ($entity) use ($entity_prototype) {
+    $matching_entities = $this->getMatchingEntities($entity_type, $entity_prototype);
+    return count($matching_entities);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRenderArray() {
+    $popover = $this->getPopover();
+    if (!$popover) {
+      return parent::getRenderArray();
+    }
+    return [
+      0 => parent::getRenderArray(),
+      1 => $popover,
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getClasses() {
+    $classes = parent::getClasses();
+    $classes[] = Html::getClass($this->getPluginId() . '--' . $this->get('entity_type'));
+    if (empty($this->getValue())) {
+      $classes[] = 'empty';
+    }
+    return $classes;
+  }
+
+  /**
+   * Get a popover trigger.
+   */
+  private function getPopover() {
+
+    $entity = $this->getContextValue('entity');
+
+    // Get the icon if there is any.
+    $icon = NULL;
+    if ($entity && !empty($entity->icon)) {
+      $icon = $this->iconQuery->getIconEmbedCode($entity->icon);
+    }
+
+    $popover_content = NULL;
+    $entities = $this->getMatchingEntities();
+    if (!empty($entities)) {
+      usort($entities, function ($a, $b) {
+        return strnatcmp($a->name, $b->name);
+      });
+      $items = array_map(function ($item) {
+        return Markup::create($item->name . '<br /> ' . $item->description);
+      }, $entities);
+
+      $popover_content = [
+        '#theme' => 'item_list',
+        '#items' => $items,
+        '#list_type' => 'ol',
+      ];
+    }
+
+    return [
+      '#theme' => 'hpc_popover',
+      '#title' => Markup::create($icon . '<span class="name">' . $this->getLabel() . '</span>'),
+      '#content' => $popover_content,
+      '#class' => 'entity-counter entity-counter-popover',
+      '#material_icon' => 'table_view',
+      '#disabled' => empty($popover_content),
+    ];
+  }
+
+  /**
+   * Get the matching entities for this item.
+   *
+   * @param string $entity_type
+   *   The entity type.
+   * @param int $entity_prototype
+   *   The entity prototype.
+   *
+   * @return array
+   *   An array of entity objects.
+   */
+  private function getMatchingEntities($entity_type = NULL, $entity_prototype = NULL) {
+    $entity_type = $entity_type ?? $this->get('entity_type');
+    $entity_prototype = $entity_prototype ?? $this->get('entity_prototype');
+    return array_filter($this->getEntities($entity_type), function ($entity) use ($entity_prototype) {
       return $entity->prototype_id == $entity_prototype;
     });
-    return count($matching_entities);
   }
 
   /**

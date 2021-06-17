@@ -120,6 +120,7 @@ function hpc_common_theme($existing, $type, $theme, $path) {
         'tag_content' => NULL,
         // Or a material icon.
         'material_icon' => NULL,
+        'disabled' => NULL,
       ],
       'template' => 'hpc-popover',
     ] + $common,

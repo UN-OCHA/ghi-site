@@ -227,6 +227,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
           'data-sort-value' => $item_type->getSortableValue(),
           'data-sort-type' => $item_type::SORT_TYPE,
           'data-column-type' => $item_type::ITEM_TYPE,
+          'class' => $item_type->getClasses(),
         ];
 
         // Update the skip row flag. Make it lazy, only check the item type if

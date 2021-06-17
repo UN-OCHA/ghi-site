@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
@@ -205,6 +206,18 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getClasses() {
+    $classes = parent::getClasses();
+    $classes[] = Html::getClass($this->getPluginId() . '--' . $this->get('data_type'));
+    if (empty($this->getValue())) {
+      $classes[] = 'empty';
+    }
+    return $classes;
+  }
+
+  /**
    * Get the value for the given data type.
    *
    * @param string $data_type
@@ -260,27 +273,24 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
         break;
     }
 
-    if (!empty($popover_content)) {
-      $entity = $this->getContextValue('entity');
-      // Get the icon if there is any.
-      $icon = NULL;
-      if ($entity && !empty($entity->icon)) {
-        $icon = $this->iconQuery->getIconEmbedCode($entity->icon);
-      }
-
-      return [
-        '#theme' => 'hpc_popover',
-        '#title' => Markup::create($icon . '<span class="name">' . $this->getLabel() . '</span>'),
-        '#content' => [
-          $fts_link,
-          $popover_content,
-        ],
-        '#class' => 'project-data project-data-popover',
-        '#material_icon' => 'table_view',
-      ];
+    $entity = $this->getContextValue('entity');
+    // Get the icon if there is any.
+    $icon = NULL;
+    if ($entity && !empty($entity->icon)) {
+      $icon = $this->iconQuery->getIconEmbedCode($entity->icon);
     }
 
-    return NULL;
+    return [
+      '#theme' => 'hpc_popover',
+      '#title' => Markup::create($icon . '<span class="name">' . $this->getLabel() . '</span>'),
+      '#content' => [
+        $fts_link,
+        $popover_content,
+      ],
+      '#class' => 'project-data project-data-popover',
+      '#material_icon' => 'table_view',
+      '#disabled' => empty($popover_content),
+    ];
   }
 
   /**
