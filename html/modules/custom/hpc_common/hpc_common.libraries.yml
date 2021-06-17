@@ -1,3 +1,7 @@
+icon:
+  css:
+    theme:
+      css/icon.css: {}
 popover:
   css:
     theme:

@@ -5,6 +5,7 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Traits\ClusterRestrictConfigurationItemTrait;
+use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_blocks\Traits\ValuePreviewConfigurationItemTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
@@ -35,6 +36,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
 
   use ClusterRestrictConfigurationItemTrait;
   use ValuePreviewConfigurationItemTrait;
+  use FtsLinkTrait;
 
   /**
    * The funding query.
@@ -209,20 +211,45 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getRenderArray($data_type_key = NULL, $scale = NULL, $cluster_restrict = NULL) {
-    $context = $this->getContext();
-
     $data_type = $this->getDataType($data_type_key ?: $this->get('data_type'));
     $scale = ($scale ?: $this->get('scale')) ?: (!empty($data_type['scale']) ? $data_type['scale'] : 'auto');
     $cluster_restrict = $cluster_restrict ?: ($this->get('cluster_restrict') ?: NULL);
 
     $theme_function = !empty($data_type['theme']) ? $data_type['theme'] : 'hpc_currency';
     $theme_options = !empty($data_type['theme_options']) ? $data_type['theme_options'] : [];
-    return [
+
+    $rendered = [
       '#theme' => $theme_function,
     ] + ThemeHelper::getThemeOptions($theme_function, $this->getValue($data_type_key, $scale, $cluster_restrict), [
       'scale' => $scale,
-      'formatting_decimals' => $context['plan_node']->field_decimal_format->value,
+      'formatting_decimals' => $this->getContextValue('plan_node')->field_decimal_format->value,
     ] + $theme_options);
+
+    if (!$this->needsFtsLink()) {
+      return $rendered;
+    }
+
+    // If this needs an FTS link, lets build and add that.
+    $link_icon = ThemeHelper::themeFtsIcon();
+    $fts_link = $this->needsFtsLink() ? self::buildFtsLink($link_icon, $this->getContextValue('plan_node'), 'flows', $this->getContextValue('context_node')) : NULL;
+
+    return [$rendered, $fts_link];
+  }
+
+  /**
+   * Check if this item needs an FTS link.
+   *
+   * @return bool
+   *   TRUE if a link is needed, FALSE otherwhise.
+   */
+  private function needsFtsLink() {
+    $plugin_configuration = $this->getPluginConfiguration();
+    if (array_key_exists('fts_link', $plugin_configuration) && $plugin_configuration['fts_link'] !== TRUE) {
+      // Explicitely requested to skip the link.
+      return FALSE;
+    }
+    // All items except the progress bar can have links to FTS.
+    return $this->get('data_type') != 'funding_progress_bar';
   }
 
   /**

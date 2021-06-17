@@ -269,7 +269,8 @@ function hpc_common_preprocess_hpc_popover(array &$vars) {
   }
   if (!empty($vars['material_icon'])) {
     // Material icons.
-    $trigger_attributes->addClass('material-icons');
+    $vars['#attached']['library'][] = 'hpc_common/icon';
+    $trigger_attributes->addClass('material-icon');
     $trigger_attributes->addClass('cd-button');
     $trigger_attributes->addClass('cd-button--icon');
     $vars['tag'] = 'button';
@@ -278,4 +279,25 @@ function hpc_common_preprocess_hpc_popover(array &$vars) {
 
   $vars['trigger_attributes'] = $trigger_attributes;
   $vars['content_attributes'] = $content_attributes;
+}
+
+/**
+ * Preprocess an icon.
+ *
+ * This is implicitely using material icons.
+ */
+function hpc_common_preprocess_hpc_icon(array &$vars) {
+  $vars['#attached']['library'][] = 'hpc_common/icon';
+  if (empty($vars['tag'])) {
+    $vars['tag'] = 'button';
+  }
+  $vars['tag_content'] = $vars['icon'];
+
+  $attributes = new Attribute();
+  $attributes->addClass('material-icon');
+  if ($vars['tag'] == 'button') {
+    $attributes->addClass('cd-button');
+    $attributes->addClass('cd-button--icon');
+  }
+  $vars['attributes'] = $attributes;
 }

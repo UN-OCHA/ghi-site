@@ -134,6 +134,13 @@ function hpc_common_theme($existing, $type, $theme, $path) {
       ],
       'template' => 'hpc-hid-session-information',
     ],
+    'hpc_icon' => [
+      'variables' => [
+        'icon' => NULL,
+        'tag' => NULL,
+      ],
+      'template' => 'hpc-icon',
+    ] + $common,
   ];
 }
 

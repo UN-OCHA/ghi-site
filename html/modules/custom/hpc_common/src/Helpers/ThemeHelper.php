@@ -114,4 +114,26 @@ class ThemeHelper {
     return $suffix;
   }
 
+  /**
+   * Get the URI to the FTS icon.
+   */
+  public static function getUriToFtsIcon() {
+    return '/' . drupal_get_path('module', 'hpc_common') . '/assets/fts-logo-mobile.png';
+  }
+
+  /**
+   * Get a render array for the FTS icon.
+   */
+  public static function themeFtsIcon() {
+    return [
+      '#theme' => 'image',
+      '#uri' => self::getUriToFtsIcon(),
+      '#attributes' => [
+        'class' => 'fts-icon',
+        'title' => t('View this data in FTS'),
+      ],
+      '#alt' => t('View this data in FTS'),
+    ];
+  }
+
 }

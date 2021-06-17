@@ -19,6 +19,7 @@ use Drupal\ghi_plans\Query\IconQuery;
 use Drupal\ghi_plans\Query\PlanEntitiesQuery;
 use Drupal\ghi_plans\Query\PlanProjectSearchQuery;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
+use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\node\NodeInterface;
 
 /**
@@ -254,7 +255,7 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
 
     $fts_link = NULL;
     $link_title = $this->t('For more details, view on <img src="@logo_url" />', [
-      '@logo_url' => '/' . drupal_get_path('module', 'ghi_blocks') . '/assets/fts-logo-mobile.png',
+      '@logo_url' => ThemeHelper::getUriToFtsIcon(),
     ]);
     $needs_fts_link = $context_node->bundle() == 'governing_entity';
 

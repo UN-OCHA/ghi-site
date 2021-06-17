@@ -12,7 +12,7 @@ trait FtsLinkTrait {
   /**
    * Build a link to FTS Public.
    *
-   * @param string $label
+   * @param string|array $label
    *   The label for the link.
    * @param object $plan_node
    *   A plan node object.
