@@ -216,6 +216,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
 
         // Get an instance of the item type plugin for this column, set it's
         // config and the context.
+        /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
         $item_type = $this->configurationContainerItemManager->createInstance($column['item_type'], $allowed_items[$column['item_type']]);
         $item_type->setConfig($column['config']);
         $item_type->setContext($context);

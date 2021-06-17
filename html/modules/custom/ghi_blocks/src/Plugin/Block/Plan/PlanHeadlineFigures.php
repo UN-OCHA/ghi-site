@@ -212,6 +212,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
       if (!array_key_exists($item['item_type'], $allowed_items)) {
         continue;
       }
+      /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
       $item_type = $this->configurationContainerItemManager->createInstance($item['item_type'], $allowed_items[$item['item_type']]);
       $item_type->setConfig($item['config']);
       $item_type->setContext($this->getBlockContext());
@@ -222,11 +223,15 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
         0 => $item_type->getRenderArray(),
       ];
     }
+
     return [
       '#theme' => 'item_list',
       '#items' => $rendered,
       '#attributes' => [
         'class' => ['plan-headline-figures'],
+      ],
+      '#context' => [
+        'plugin_id' => $this->getPluginId(),
       ],
     ];
   }

@@ -27,6 +27,7 @@
   fill: var(--cd-grey--dark);
 }
 .tippy-box .tippy-content > .content {
+  font-weight: normal;
   text-align: left;
   padding: 1rem;
 }

@@ -201,6 +201,7 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
       return parent::getRenderArray();
     }
     return [
+      '#type' => 'container',
       0 => parent::getRenderArray(),
       1 => $popover,
     ];

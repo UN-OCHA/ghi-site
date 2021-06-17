@@ -139,3 +139,18 @@ function common_design_subtheme_preprocess_table(&$vars) {
 function common_design_subtheme_preprocess_hpc_progress_bar(array &$variables) {
   $variables['#attached']['library'][] = 'common_design_subtheme/ghi-progress-bar';
 }
+
+/**
+ * Preprocess a plan headline figures list.
+ */
+function common_design_subtheme_preprocess_item_list__plan_headline_figures(&$variables) {
+  $items = &$variables['items'];
+  $figures = [];
+  foreach ($items as &$item) {
+    $figures[] = [
+      'label' => $item['value']['#title'],
+      'value' => $item['value'][0],
+    ];
+  }
+  $variables['figures'] = $figures;
+}
