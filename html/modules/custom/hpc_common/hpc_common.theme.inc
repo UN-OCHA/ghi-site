@@ -2,9 +2,7 @@
 
 /**
  * @file
- * Theme hooks and general purpose theme related functions for HPC Common.
- *
- * Currently empty, but should stay here to enforce code separation.
+ * Preprocess hooks and general purpose theme related functions for HPC Common.
  */
 
 use Drupal\Core\Render\Markup;
@@ -12,7 +10,7 @@ use Drupal\Core\Template\Attribute;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
- * Theme a value using automatic formatting based on the unit.
+ * Preprocess a value using automatic formatting based on the unit.
  */
 function hpc_common_preprocess_hpc_autoformat_value(array &$vars) {
   $value = $vars['value'];
@@ -172,7 +170,7 @@ function hpc_common_preprocess_hpc_amount(array &$vars) {
 }
 
 /**
- * Theme a percent value.
+ * Preprocess a percent value.
  */
 function hpc_common_preprocess_hpc_percent(array &$vars) {
   $export = $vars['export'];
@@ -201,7 +199,7 @@ function hpc_common_preprocess_hpc_percent(array &$vars) {
 }
 
 /**
- * Theme a progress bar.
+ * Preprocess a progress bar.
  */
 function hpc_common_preprocess_hpc_progress_bar(array &$vars) {
   $export = $vars['export'];
@@ -217,4 +215,65 @@ function hpc_common_preprocess_hpc_progress_bar(array &$vars) {
     $wrapper_attributes->setAttribute('style', 'width: ' . $base_ratio . '%');
   }
   $vars['wrapper_attributes'] = $wrapper_attributes;
+}
+
+/**
+ * Preprocess a tooltip.
+ */
+function hpc_common_preprocess_hpc_tooltip(array &$vars) {
+  $attributes = new Attribute();
+  $attributes->setAttribute('data-toggle', 'tooltip');
+
+  $attributes->addClass('tooltip');
+  if (!empty($vars['class'])) {
+    $attributes->addClass($vars['class']);
+  }
+
+  if (empty($vars['tag'])) {
+    $vars['tag'] = 'i';
+  }
+
+  if (empty($vars['tag_content'])) {
+    $vars['tag_content'] = '<svg class="cd-icon icon cd-icon--help"><use xlink:href="#cd-icon--help"></use></svg>';
+  }
+
+  $vars['attributes'] = $attributes;
+}
+
+/**
+ * Preprocess a popover.
+ */
+function hpc_common_preprocess_hpc_popover(array &$vars) {
+  $vars['#attached']['library'][] = 'hpc_common/popover';
+
+  $trigger_attributes = new Attribute();
+  $content_attributes = new Attribute();
+
+  $trigger_attributes->setAttribute('data-toggle', 'popover');
+  $trigger_attributes->setAttribute('data-trigger', !empty($vars['trigger']) ? $vars['trigger'] : 'manual');
+  if (!empty($vars['placement'])) {
+    $trigger_attributes->setAttribute('data-placement', $vars['placement']);
+  }
+
+  $trigger_attributes->addClass('trigger');
+  if (!empty($vars['class'])) {
+    $trigger_attributes->addClass($vars['class']);
+    $content_attributes->addClass($vars['class']);
+  }
+
+  // Custom markup.
+  if (!empty($vars['tag'])) {
+    $trigger_attributes->addClass('popover-custom-tag');
+  }
+  if (!empty($vars['material_icon'])) {
+    // Material icons.
+    $trigger_attributes->addClass('material-icons');
+    $trigger_attributes->addClass('cd-button');
+    $trigger_attributes->addClass('cd-button--icon');
+    $vars['tag'] = 'button';
+    $vars['tag_content'] = $vars['material_icon'];
+  }
+
+  $vars['trigger_attributes'] = $trigger_attributes;
+  $vars['content_attributes'] = $content_attributes;
 }

@@ -177,8 +177,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
       }
     }
 
-    $this->assureCommonStyling($build_content);
-
     // Add the build content as a child.
     $build[] = $build_content;
 
@@ -193,44 +191,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
 
     return $build;
-  }
-
-  /**
-   * Assure common styling for block elements.
-   *
-   * This is done by leveraging as much of the common design as possible.
-   *
-   * @param array $build
-   *   The render array as returned from self::buildContent().
-   *
-   * @todo Decide if this is a good place for this, or if this should be moved
-   *   to the subtheme instead.
-   */
-  private function assureCommonStyling(array &$build) {
-    if (is_array($build) && array_key_exists('#theme', $build) && $build['#theme'] == 'table') {
-      $attributes = [
-        'class' => [
-          'ghi-table',
-          'cd-table',
-          'cd-table--responsive',
-          'cd-table--striped',
-        ],
-      ];
-      $attached = [
-        'library' => [
-          'common_design/cd-table',
-        ],
-      ];
-      $build['#attributes'] = array_key_exists('#attributes', $build) ? NestedArray::mergeDeep($build['#attributes'], $attributes) : $attributes;
-      $build['#attached'] = array_key_exists('#attached', $build) ? NestedArray::mergeDeep($build['#attached'], $attached) : $attached;
-      foreach ($build['#rows'] as &$row) {
-        foreach ($row as &$column) {
-          if (is_array($column) && array_key_exists('data-column-type', $column)) {
-            $column['class'][] = 'cd-table--' . $column['data-column-type'];
-          }
-        }
-      }
-    }
   }
 
   /**

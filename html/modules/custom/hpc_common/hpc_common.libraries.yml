@@ -1,0 +1,6 @@
+popover:
+  css:
+    theme:
+      css/popover.css: {}
+  js:
+    js/popover.js: {}

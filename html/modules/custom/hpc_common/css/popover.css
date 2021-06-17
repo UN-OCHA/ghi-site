@@ -1,0 +1,32 @@
+*[data-toggle="popover"] {
+  cursor: pointer;
+}
+.cd-button.popover {
+  background-color: transparent;
+  color: inherit;
+  padding: 0.1rem;
+}
+.tippy-box {
+  background-color: white;
+  border: 1px solid lightgray;
+  border-radius: 5px;
+}
+.tippy-box .tippy-content {
+  max-height: 50vh;
+  overflow: auto;
+  color: black;
+  padding: 0;
+  color: var(--cd-grey--dark);
+}
+.tippy-box .tippy-content > .title {
+  text-align: left;
+  padding: 1rem;
+  font-weight: bold;
+}
+.tippy-box .tippy-content > .title svg path {
+  fill: var(--cd-grey--dark);
+}
+.tippy-box .tippy-content > .content {
+  text-align: left;
+  padding: 1rem;
+}

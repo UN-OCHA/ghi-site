@@ -506,9 +506,6 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    * {@inheritdoc}
    */
   public function label() {
-    if ($this->configuration['label_display'] !== static::BLOCK_LABEL_VISIBLE) {
-      return;
-    }
     $label = parent::label();
 
     if (empty($this->getPageArguments())) {

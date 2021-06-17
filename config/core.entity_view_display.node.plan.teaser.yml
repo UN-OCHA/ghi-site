@@ -88,4 +88,5 @@ hidden:
   field_rpm_plan_status: true
   field_year: true
   langcode: true
+  layout_builder__layout: true
   links: true

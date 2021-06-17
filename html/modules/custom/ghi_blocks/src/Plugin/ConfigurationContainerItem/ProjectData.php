@@ -3,13 +3,18 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Render\Markup;
+use Drupal\Core\Url;
 use Drupal\ghi_blocks\Traits\ClusterRestrictConfigurationItemTrait;
+use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_blocks\Traits\ValuePreviewConfigurationItemTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\ghi_plans\Query\ClusterQuery;
 use Drupal\ghi_plans\Query\FlowSearchQuery;
+use Drupal\ghi_plans\Query\IconQuery;
 use Drupal\ghi_plans\Query\PlanEntitiesQuery;
 use Drupal\ghi_plans\Query\PlanProjectSearchQuery;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
@@ -30,6 +35,7 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
 
   use ClusterRestrictConfigurationItemTrait;
   use ValuePreviewConfigurationItemTrait;
+  use FtsLinkTrait;
 
   /**
    * The plan entities query.
@@ -60,14 +66,22 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
   public $clusterQuery;
 
   /**
+   * The icon query.
+   *
+   * @var \Drupal\ghi_plans\Query\IconQuery
+   */
+  public $iconQuery;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, PlanEntitiesQuery $plan_entities_query, PlanProjectSearchQuery $project_search_query, FlowSearchQuery $flow_search_query, ClusterQuery $cluster_query) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, PlanEntitiesQuery $plan_entities_query, PlanProjectSearchQuery $project_search_query, FlowSearchQuery $flow_search_query, ClusterQuery $cluster_query, IconQuery $icon_query) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->planEntitiesQuery = $plan_entities_query;
     $this->projectSearchQuery = $project_search_query;
     $this->flowSearchQuery = $flow_search_query;
     $this->clusterQuery = $cluster_query;
+    $this->iconQuery = $icon_query;
   }
 
   /**
@@ -82,6 +96,7 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
       $container->get('ghi_plans.plan_project_search_query'),
       $container->get('ghi_plans.flow_search_query'),
       $container->get('ghi_plans.cluster_query'),
+      $container->get('ghi_plans.icon_query'),
     );
   }
 
@@ -92,6 +107,7 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
     $element = parent::buildForm($element, $form_state);
 
     $context = $this->getContext();
+    $plugin_configuration = $this->getPluginConfiguration();
 
     $data_type_options = [
       'projects_count' => $this->t('Projects count'),
@@ -159,20 +175,48 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getValue($data_type = NULL, $cluster_restrict = NULL) {
-    $context = $this->getContext();
-    if (empty($context['context_node'])) {
+    $data_type = $data_type ?? $this->get('data_type');
+    $cluster_restrict = $cluster_restrict ?? $this->get('cluster_restrict');
+
+    $project_query = $this->initializeQuery($data_type, $cluster_restrict);
+    if (!$project_query) {
+      return NULL;
+    }
+    return $this->getValueForDataType($data_type, $project_query);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRenderArray() {
+    $project_query = $this->initializeQuery();
+    if (!$project_query) {
       return NULL;
     }
 
-    $project_query = $this->projectSearchQuery;
-    $context_node = $context['context_node'];
-
-    $data_type = $data_type ?? $this->get('data_type');
-    $cluster_restrict = $cluster_restrict ?? $this->get('cluster_restrict');
-    if (!empty($cluster_restrict) && $cluster_ids = $this->getClusterIdsForConfig($cluster_restrict)) {
-      $project_query->setFilterByClusterIds($cluster_ids);
+    $popover = $this->getPopover();
+    if (!$popover) {
+      return parent::getRenderArray();
     }
+    return [
+      0 => parent::getRenderArray(),
+      1 => $popover,
+    ];
+  }
 
+  /**
+   * Get the value for the given data type.
+   *
+   * @param string $data_type
+   *   The data type.
+   * @param \Drupal\ghi_plans\Query\PlanProjectSearchQuery $project_query
+   *   A project query instance, with cluster filters applied if appropriate.
+   *
+   * @return int
+   *   The number of project related items of the given type.
+   */
+  private function getValueForDataType($data_type, PlanProjectSearchQuery $project_query) {
+    $context_node = $this->getContextValue('context_node');
     switch ($data_type) {
       case 'projects_count':
         return $project_query->getProjectCount($context_node);
@@ -180,8 +224,179 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
       case 'organizations_count':
         return $project_query->getOrganizationCount($context_node);
     }
+  }
+
+  /**
+   * Get a popover for the current value.
+   *
+   * Those are either projects or organizations.
+   *
+   * @return array|null
+   *   An render array for the popover.
+   */
+  private function getPopover() {
+    $project_query = $this->initializeQuery();
+    $data_type = $data_type ?? $this->get('data_type');
+    $context_node = $this->getContextValue('context_node');
+
+    $fts_link = NULL;
+    $link_title = $this->t('For more details, view on <img src="@logo_url" />', [
+      '@logo_url' => '/' . drupal_get_path('module', 'ghi_blocks') . '/assets/fts-logo-mobile.png',
+    ]);
+    $needs_fts_link = $context_node->bundle() == 'governing_entity';
+
+    $popover_content = NULL;
+    switch ($data_type) {
+      case 'projects_count':
+        $objects = $project_query->getProjects($context_node);
+        $popover_content = $this->getProjectPopoverContent($objects);
+        $fts_link = $needs_fts_link ? self::buildFtsLink($link_title, $this->getContextValue('plan_node'), 'projects', $context_node) : NULL;
+        break;
+
+      case 'organizations_count':
+        $objects = $project_query->getOrganizations($context_node);
+        $popover_content = $this->getOrganizationPopoverContent($objects);
+        $fts_link = $needs_fts_link ? self::buildFtsLink($link_title, $this->getContextValue('plan_node'), 'recipients', $context_node) : NULL;
+        break;
+    }
+
+    if (!empty($popover_content)) {
+      $entity = $this->getContextValue('entity');
+      // Get the icon if there is any.
+      $icon = NULL;
+      if ($entity && !empty($entity->icon)) {
+        $icon = $this->iconQuery->getIconEmbedCode($entity->icon);
+      }
+
+      return [
+        '#theme' => 'hpc_popover',
+        '#title' => Markup::create($icon . '<span class="name">' . $this->getLabel() . '</span>'),
+        '#content' => [
+          $fts_link,
+          $popover_content,
+        ],
+        '#class' => 'project-data project-data-popover',
+        '#material_icon' => 'table_view',
+      ];
+    }
 
     return NULL;
+  }
+
+  /**
+   * Get the popover content for project items.
+   *
+   * @param array $projects
+   *   The projects to include in the table.
+   *
+   * @return array
+   *   A render array.
+   */
+  private function getProjectPopoverContent(array $projects) {
+    $header = [
+      $this->t('Project code'),
+      $this->t('Project name'),
+      $this->t('Organizations'),
+      $this->t('Project Target'),
+      $this->t('Requirements'),
+    ];
+
+    $rows = [];
+    foreach ($projects as $project) {
+      $row = [];
+      $row[] = [
+        'data' => [
+          '#type' => 'link',
+          '#title' => $project->version_code,
+          '#url' => Url::fromUri('https://projects.hpc.tools/project/' . $project->id . '/view'),
+        ],
+      ];
+      $row[] = $project->name;
+      $row[] = [
+        'data' => [
+          '#theme' => 'item_list',
+          '#items' => $this->getOrganizationLinks($project->organizations),
+        ],
+      ];
+      $row[] = [
+        'data' => [
+          '#theme' => 'hpc_amount',
+          '#amount' => $project->target,
+          '#scale' => 'full',
+        ],
+      ];
+      $row[] = [
+        'data' => [
+          '#theme' => 'hpc_currency',
+          '#value' => $project->requirements,
+        ],
+      ];
+      $rows[] = $row;
+    }
+
+    return [
+      '#theme' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+    ];
+  }
+
+  /**
+   * Get the popover content for oragnization items.
+   *
+   * @param array $organizations
+   *   The organizations to include in the table.
+   *
+   * @return array
+   *   A table render array.
+   */
+  private function getOrganizationPopoverContent(array $organizations) {
+    $links = $this->getOrganizationLinks($organizations);
+    $popover_content = [
+      '#theme' => 'item_list',
+      '#items' => $links,
+      '#list_type' => 'ol',
+    ];
+    return $popover_content;
+  }
+
+  /**
+   * Get organization links when available.
+   *
+   * @param array $objects
+   *   The organization objects.
+   *
+   * @return array
+   *   An array of organization links, or their names if no url is set.
+   */
+  private function getOrganizationLinks(array $objects) {
+    return array_values(array_map(function ($object) {
+      return $object->url ? Link::fromTextAndUrl($object->name, Url::fromUri($object->url)) : $object->name;
+    }, $objects));
+  }
+
+  /**
+   * Initialize the project query.
+   *
+   * @return \Drupal\ghi_plans\Query\PlanProjectSearchQuery
+   *   A project query instance, with cluster filters applied if appropriate.
+   */
+  private function initializeQuery($data_type = NULL, $cluster_restrict = NULL) {
+    $context_node = $this->getContextValue('context_node');
+    if (!$context_node) {
+      return NULL;
+    }
+
+    $project_query = $this->projectSearchQuery;
+
+    $data_type = $data_type ?? $this->get('data_type');
+    $cluster_restrict = $cluster_restrict ?? $this->get('cluster_restrict');
+
+    if (!empty($cluster_restrict)) {
+      $cluster_ids = $this->getClusterIdsForConfig($cluster_restrict);
+      $project_query->setFilterByClusterIds($cluster_ids);
+    }
+    return $project_query;
   }
 
   /**

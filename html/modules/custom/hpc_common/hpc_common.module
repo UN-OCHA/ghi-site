@@ -109,6 +109,20 @@ function hpc_common_theme($existing, $type, $theme, $path) {
       ],
       'template' => 'hpc-tooltip',
     ] + $common,
+    'hpc_popover' => [
+      'variables' => [
+        'title' => NULL,
+        'content' => NULL,
+        'class' => NULL,
+        'trigger' => NULL,
+        // Either a custom tag with optional HTML content.
+        'tag' => NULL,
+        'tag_content' => NULL,
+        // Or a material icon.
+        'material_icon' => NULL,
+      ],
+      'template' => 'hpc-popover',
+    ] + $common,
     'hpc_hid_session_information' => [
       'variables' => [
         'description' => NULL,

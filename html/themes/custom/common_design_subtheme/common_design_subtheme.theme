@@ -5,6 +5,7 @@
  * Template overrides, preprocess, and hooks for the GHI subtheme.
  */
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResultForbidden;
 
 /**
@@ -92,6 +93,36 @@ function common_design_subtheme_show_hidden_blocks_from_page(array &$variables, 
         // And then replace the original lazy builder block render array with
         // the one we just built.
         $build = $rendered_block;
+      }
+    }
+  }
+}
+
+/**
+ * Assure common styling for tables.
+ *
+ * Do this by leveraging as much of the common design as possible.
+ */
+function common_design_subtheme_preprocess_table(&$vars) {
+  $attributes = [
+    'class' => [
+      'ghi-table',
+      'cd-table',
+      'cd-table--responsive',
+      'cd-table--striped',
+    ],
+  ];
+  $attached = [
+    'library' => [
+      'common_design/cd-table',
+    ],
+  ];
+  $vars['attributes'] = array_key_exists('attributes', $vars) ? NestedArray::mergeDeep($vars['attributes'], $attributes) : $attributes;
+  $vars['#attached'] = array_key_exists('#attached', $vars) ? NestedArray::mergeDeep($vars['#attached'], $attached) : $attached;
+  foreach ($vars['rows'] as &$row) {
+    foreach ($row as &$column) {
+      if (is_array($column) && array_key_exists('data-column-type', $column)) {
+        $column['class'][] = 'cd-table--' . $column['data-column-type'];
       }
     }
   }

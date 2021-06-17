@@ -29,7 +29,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *      "service" = "ghi_plans.attachment_query"
  *    },
  *  },
- *  title = false,
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
  *   }
@@ -191,6 +190,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
         'data' => $item_type->getLabel(),
         'data-sort-type' => $item_type::SORT_TYPE,
         'data-sort-order' => count($header) == 0 ? 'ASC' : '',
+        'data-column-type' => $item_type::ITEM_TYPE,
       ];
     }
 
@@ -225,6 +225,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
           'data' => $item_type->getRenderArray(),
           'data-value' => $item_type->getValue(),
           'data-sort-value' => $item_type->getSortableValue(),
+          'data-sort-type' => $item_type::SORT_TYPE,
           'data-column-type' => $item_type::ITEM_TYPE,
         ];
 

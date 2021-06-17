@@ -1,0 +1,19 @@
+.project-data-popover table {
+
+  th {
+    text-align: center;
+  }
+
+  tr td {
+    text-align: center;
+
+    &:first-child {
+      white-space: nowrap;
+    }
+
+    ul {
+      padding-inline-start: unset;
+      list-style-type: none;
+    }
+  }
+}
