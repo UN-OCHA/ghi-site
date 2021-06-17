@@ -230,9 +230,6 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
       '#attributes' => [
         'class' => ['plan-headline-figures'],
       ],
-      '#context' => [
-        'plugin_id' => $this->getPluginId(),
-      ],
     ];
   }
 
