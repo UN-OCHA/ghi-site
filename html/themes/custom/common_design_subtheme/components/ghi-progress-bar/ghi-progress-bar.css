@@ -1,9 +1,9 @@
 .hpc-progress-bar-wrapper {
   display: inline-block;
-  border: 1px solid var(--hpc-orange);
   overflow: hidden;
   width: 100%;
   height: 14px;
+  border: 1px solid var(--hpc-orange);
   background-color: lighten(var(--hpc-orange), 40%);
 }
 
