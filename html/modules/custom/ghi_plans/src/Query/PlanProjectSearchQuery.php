@@ -9,6 +9,7 @@ use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
 use GuzzleHttp\ClientInterface;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\node\NodeInterface;
 
 /**
@@ -114,7 +115,7 @@ class PlanProjectSearchQuery extends EndpointQuery {
       $processed_organizations[$organization->id] = (object) [
         'id' => $organization->id,
         'name' => $organization->name,
-        'url' => $organization->url,
+        'url' => CommonHelper::assureWellFormedUri($organization->url),
       ];
     }
     return $processed_organizations;

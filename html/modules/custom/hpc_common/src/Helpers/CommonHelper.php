@@ -169,4 +169,29 @@ class CommonHelper {
     ];
   }
 
+  /**
+   * Make sure a given url can be safely handled by Url::fromUri().
+   *
+   * @param string $url
+   *   The URL to process.
+   *
+   * @return string|null
+   *   The final URL or NULL if it's not processable.
+   */
+  public static function assureWellFormedUri($url) {
+    if (empty($url)) {
+      return NULL;
+    }
+    if (strpos($url, 'http') !== 0) {
+      $url = 'http://' . $url;
+    }
+    try {
+      Url::fromUri($url);
+    }
+    catch (\InvalidArgumentException $e) {
+      return NULL;
+    }
+    return $url;
+  }
+
 }
