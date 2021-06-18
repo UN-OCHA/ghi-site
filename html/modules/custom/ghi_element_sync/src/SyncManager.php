@@ -117,6 +117,8 @@ class SyncManager implements ContainerInjectionInterface {
    *   An optional messenger to use for result messages.
    * @param bool $revisions
    *   Whether new revisions should be created.
+   * @param bool $cleanup
+   *   Whether existing elements should be cleaned up first.
    *
    * @return bool
    *   Indicating whether the node has been sucessfully processed or not.
@@ -124,13 +126,19 @@ class SyncManager implements ContainerInjectionInterface {
    * @throws SyncException
    *   When an error occurs.
    */
-  public function syncNode(NodeInterface $node, MessengerInterface $messenger = NULL, $revisions = FALSE) {
+  public function syncNode(NodeInterface $node, MessengerInterface $messenger = NULL, $revisions = FALSE, $cleanup = FALSE) {
     if ($messenger === NULL) {
       $messenger = $this->messenger();
     }
 
     $sections = $this->getNodeSections($node);
     $delta = 0;
+
+    if ($cleanup && $sections[$delta]->getComponents()) {
+      foreach ($sections[$delta]->getComponents() as $component) {
+        $sections[$delta]->removeComponent($component->getUuid());
+      }
+    }
 
     foreach ($this->getRemoteConfigurations($node) as $element) {
       if (!$this->isSyncable($element)) {
@@ -230,7 +238,7 @@ class SyncManager implements ContainerInjectionInterface {
     }
     if (empty($data->elements)) {
       // No error, but nothing to do either.
-      return FALSE;
+      return [];
     }
     return $data->elements;
   }
