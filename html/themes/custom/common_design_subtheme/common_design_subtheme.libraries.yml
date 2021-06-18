@@ -18,6 +18,11 @@ ghi-publication:
     theme:
       components/ghi-publication/ghi-publication.css: {}
 
+ghi-progress-bar:
+  css:
+    theme:
+      components/ghi-progress-bar/ghi-progress-bar.css: {}
+
 # CSS custom properties polyfill for IE11.
 # https://jhildenbiddle.github.io/css-vars-ponyfill
 #

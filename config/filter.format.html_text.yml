@@ -1,9 +1,11 @@
 uuid: 30c65606-e572-47d6-af0e-830deb003d5e
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - media
 name: HTML
-format: panopoly_html_text
+format: html_text
 weight: -9
 filters:
   filter_autop:
@@ -25,9 +27,12 @@ filters:
     weight: -44
     settings:
       filter_url_length: 72
-  filter_null:
-    id: filter_null
-    provider: filter
-    status: true
-    weight: -49
-    settings: {  }
+  media_embed:
+    id: media_embed
+    provider: media
+    status: false
+    weight: 100
+    settings:
+      default_view_mode: default
+      allowed_media_types: {  }
+      allowed_view_modes: {  }

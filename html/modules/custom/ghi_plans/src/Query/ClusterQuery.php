@@ -32,6 +32,63 @@ class ClusterQuery extends EndpointQuery {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getData() {
+    $data = parent::getData();
+    if (empty($data)) {
+      return $data;
+    }
+
+    // Key by ID.
+    $clusters = [];
+    foreach ($data as $cluster) {
+      $clusters[$cluster->id] = $this->processClusterObject($cluster);
+    }
+    return $clusters;
+  }
+
+  /**
+   * Process and simplify the cluster objects returned by the API.
+   *
+   * @param object $cluster
+   *   Cluster object from the API.
+   *
+   * @return object
+   *   Processed cluster object.
+   */
+  private function processClusterObject($cluster) {
+    return (object) [
+      'id' => $cluster->id,
+      'name' => $cluster->governingEntityVersion->name,
+      'tags' => $cluster->governingEntityVersion->tags ? array_map('strtolower', $cluster->governingEntityVersion->tags) : NULL,
+    ];
+  }
+
+  /**
+   * Get tagged clusters for the given plan id.
+   *
+   * @param int $plan_id
+   *   The plan id to query.
+   * @param int $cluster_id
+   *   The cluster id to get.
+   *
+   * @return array
+   *   An array of cluster ids.
+   */
+  public function getCluster($plan_id, $cluster_id) {
+    $this->setEndpointArguments([
+      'planId' => $plan_id,
+      'scopes' => 'governingEntityVersion',
+    ]);
+    $clusters = $this->getData();
+    if (empty($clusters) || !array_key_exists($cluster_id, $clusters)) {
+      return NULL;
+    }
+    return $clusters[$cluster_id];
+  }
+
+  /**
    * Get tagged clusters for the given plan id.
    *
    * @param int $plan_id
@@ -48,24 +105,18 @@ class ClusterQuery extends EndpointQuery {
       'scopes' => 'governingEntityVersion',
     ]);
     $clusters = $this->getData();
-
     if (empty($clusters)) {
       return NULL;
     }
-    $tagged_clusters = !empty($clusters) ? array_filter($clusters, function ($cluster) use ($cluster_tag) {
-      if (empty($cluster->governingEntityVersion) || empty($cluster->governingEntityVersion->tags)) {
+    $tagged_clusters = array_filter($clusters, function ($cluster) use ($cluster_tag) {
+      if (empty($cluster->tags)) {
         return FALSE;
       }
-      $cluster_tags = array_map('strtolower', $cluster->governingEntityVersion->tags);
-      return in_array(strtolower($cluster_tag), $cluster_tags);
-    }) : [];
+      return in_array(strtolower($cluster_tag), $cluster->tags);
+    });
 
     // Now key them by their cluster id for easier reference later.
-    $clusters = [];
-    foreach ($tagged_clusters as $cluster) {
-      $clusters[$cluster->id] = $cluster;
-    }
-    return $clusters;
+    return $tagged_clusters;
   }
 
 }

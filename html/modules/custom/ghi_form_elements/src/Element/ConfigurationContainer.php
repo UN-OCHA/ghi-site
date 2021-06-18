@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
+use Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 
 /**
@@ -42,6 +43,8 @@ class ConfigurationContainer extends FormElement {
       '#theme_wrappers' => ['form_element'],
       '#max_items' => NULL,
       '#preview' => NULL,
+      '#element_context' => [],
+      '#row_filter' => FALSE,
     ];
   }
 
@@ -102,11 +105,36 @@ class ConfigurationContainer extends FormElement {
         }
         elseif ($mode == 'edit_item') {
           $index = $form_state->get('edit_item');
-          $items[$index]['config'] = $values['plugin_config'];
+          $items[$index]['config'] = $values['plugin_config'] + $items[$index]['config'];
+        }
+        elseif ($mode == 'edit_item_filter') {
+          $index = $form_state->get('edit_item');
+          $items[$index]['config']['filter'] = $values['filter_config'];
         }
 
         // Switch to list mode.
         $new_mode = 'list';
+        break;
+
+      case 'remove_filter':
+        $mode = $form_state->get('mode');
+        if ($mode == 'edit_item_filter') {
+          $index = $form_state->get('edit_item');
+          $items[$index]['config']['filter'] = NULL;
+        }
+        // Switch to list mode.
+        $new_mode = 'list';
+        break;
+
+      case 'edit_filter':
+        array_pop($parents);
+        $index = array_pop($parents);
+
+        // Set the index of the editable item.
+        $form_state->set('edit_item', $index);
+
+        // Switch to edit mode.
+        $new_mode = 'edit_item_filter';
         break;
 
       case 'save_order':
@@ -130,7 +158,6 @@ class ConfigurationContainer extends FormElement {
       case 'cancel':
         // Switch to list mode.
         $new_mode = 'list';
-        $form_state->set('current_item_type', NULL);
         break;
     }
 
@@ -141,6 +168,11 @@ class ConfigurationContainer extends FormElement {
     if ($new_mode) {
       // Update the mode.
       $form_state->set('mode', $new_mode);
+    }
+    if ($new_mode == 'list') {
+      // Cleanup state.
+      $form_state->set('current_item_type', NULL);
+      $form_state->set('edit_item', NULL);
     }
 
     // Rebuild the form.
@@ -229,6 +261,10 @@ class ConfigurationContainer extends FormElement {
       self::buildItemConfig($element, $form_state, $form_state->get('edit_item'));
     }
 
+    if ($mode == 'edit_item_filter') {
+      self::buildItemFilterConfig($element, $form_state, $form_state->get('edit_item'));
+    }
+
     return $element;
   }
 
@@ -242,11 +278,15 @@ class ConfigurationContainer extends FormElement {
    */
   public static function buildSummaryTable(array &$element, FormStateInterface $form_state) {
     $wrapper_id = self::getWrapperId($element);
+    $columns = $element['#preview']['columns'];
+    if (self::elementSupportsFiltering($element)) {
+      $columns['filter'] = t('Filter');
+    }
     $table_header = array_merge(
       [
         'item_type' => t('Item type'),
       ],
-      $element['#preview']['columns'],
+      $columns,
       [
         'weight' => t('Weight'),
         'operations' => '',
@@ -309,12 +349,14 @@ class ConfigurationContainer extends FormElement {
    *   An array with one item per table row.
    */
   public static function buildTableRows(array $element, FormStateInterface $form_state) {
-    $wrapper_id = self::getWrapperId($element);
     $rows = [];
     $items = $form_state->has('items') ? $form_state->get('items') : [];
     if (!empty($items)) {
       foreach ($items as $key => $item) {
         $item_type = self::getItemTypeInstance($item, $element);
+        if (!$item_type) {
+          continue;
+        }
         $row = [
           '#attributes' => ['class' => ['draggable']],
           '#weight' => $key,
@@ -323,8 +365,14 @@ class ConfigurationContainer extends FormElement {
           '#markup' => $item_type->getPluginLabel(),
         ];
         foreach (array_keys($element['#preview']['columns']) as $column_key) {
-          $row[$column_key] = [
-            '#markup' => $item_type->get($column_key),
+          $preview = $item_type->preview($column_key);
+          $row[$column_key] = is_array($preview) ? $preview : [
+            '#markup' => $preview,
+          ];
+        }
+        if (self::elementSupportsFiltering($element)) {
+          $row['filter'] = [
+            '#markup' => $item_type->getFilterSummary(),
           ];
         }
         $row['weight'] = [
@@ -341,31 +389,62 @@ class ConfigurationContainer extends FormElement {
         ];
         $row['operations'] = [
           '#type' => 'container',
-          'edit' => [
-            '#type' => 'submit',
-            '#value' => t('Edit'),
-            '#name' => 'edit-' . $key,
-            '#ajax' => [
-              'event' => 'click',
-              'callback' => [static::class, 'updateAjax'],
-              'wrapper' => $wrapper_id,
-            ],
-          ],
-          'remove' => [
-            '#type' => 'submit',
-            '#value' => t('Remove'),
-            '#name' => 'remove-' . $key,
-            '#ajax' => [
-              'event' => 'click',
-              'callback' => [static::class, 'updateAjax'],
-              'wrapper' => $wrapper_id,
-            ],
-          ],
-        ];
+        ] + self::buildRowOperations($element, $key, $item_type);
         $rows[$key] = $row;
       }
     }
     return $rows;
+  }
+
+  /**
+   * Build the operation buttons for a row.
+   *
+   * @param array $element
+   *   The form element.
+   * @param int $key
+   *   The numerical row key.
+   * @param \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type
+   *   The item type for a column.
+   *
+   * @return array
+   *   An array of submit button form element arrays.
+   */
+  private static function buildRowOperations(array $element, $key, ConfigurationContainerItemPluginInterface $item_type) {
+    $wrapper_id = self::getWrapperId($element);
+    $operations = [];
+    $operations['edit'] = [
+      '#type' => 'submit',
+      '#value' => t('Edit'),
+      '#name' => 'edit-' . $key,
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+    ];
+    if (self::elementSupportsFiltering($element)) {
+      $operations['edit_filter'] = [
+        '#type' => 'submit',
+        '#value' => t('Filter'),
+        '#name' => 'filter-' . $key,
+        '#ajax' => [
+          'event' => 'click',
+          'callback' => [static::class, 'updateAjax'],
+          'wrapper' => $wrapper_id,
+        ],
+      ];
+    }
+    $operations['remove'] = [
+      '#type' => 'submit',
+      '#value' => t('Remove'),
+      '#name' => 'remove-' . $key,
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+    ];
+    return $operations;
   }
 
   /**
@@ -447,6 +526,16 @@ class ConfigurationContainer extends FormElement {
 
     $item_type = self::getItemTypeInstance($item, $element);
     if ($item_type && $form_state->get('mode') != 'select_item_type') {
+
+      // Add a description if available.
+      if ($plugin_description = $item_type->getPluginDescription()) {
+        $element['item_config']['description'] = [
+          '#type' => 'item',
+          '#title' => $item_type->getPluginLabel(),
+          '#markup' => $plugin_description,
+        ];
+      }
+
       if ($index === NULL) {
         $element['item_config']['item_type']['#type'] = 'hidden';
         $element['item_config']['item_type']['#value'] = $item_type->getPluginId();
@@ -511,6 +600,84 @@ class ConfigurationContainer extends FormElement {
         ],
       ];
     }
+  }
+
+  /**
+   * Build the filter form part for item configuration.
+   *
+   * @param array $element
+   *   The form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state interface.
+   * @param int $index
+   *   Index to specifiy the item for which the filter is to be configured.
+   */
+  public static function buildItemFilterConfig(array &$element, FormStateInterface $form_state, $index) {
+    $wrapper_id = self::getWrapperId($element);
+
+    $items = $form_state->get('items');
+    $item = $items[$index];
+    $item_type = self::getItemTypeInstance($item, $element);
+
+    $element['filter_config'] = [
+      '#type' => 'container',
+    ];
+    $element['filter_config']['element_description'] = [
+      '#type' => 'item',
+      '#title' => $item_type->getPluginLabel(),
+      '#markup' => $item_type->getPluginDescription(),
+    ];
+    $element['filter_config']['filter_config'] = [
+      '#type' => 'container',
+      '#parents' => array_merge($element['#parents'], [
+        'filter_config',
+        'filter_config',
+      ]),
+      '#array_parents' => array_merge($element['#array_parents'], [
+        'filter_config',
+        'filter_config',
+      ]),
+    ];
+    $subform_state = SubformState::createForSubform($element['filter_config']['filter_config'], $element, $form_state);
+    $element['filter_config']['filter_config'] += $item_type->buildFilterForm($element['filter_config']['filter_config'], $subform_state);
+
+    $element['filter_config']['submit_item'] = [
+      '#type' => 'submit',
+      '#value' => t('Save filter'),
+      '#name' => 'filter-config-submit',
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+    ];
+
+    $element['filter_config']['remove_filter'] = [
+      '#type' => 'submit',
+      '#value' => t('Delete filter'),
+      '#name' => 'filter-config-submit',
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+      '#disabled' => !$item_type->hasAppliccableFilter(),
+    ];
+
+    $element['filter_config']['cancel'] = [
+      '#type' => 'submit',
+      '#value' => t('Cancel'),
+      '#name' => 'filter-config-cancel',
+      '#limit_validation_errors' => [],
+      // This is important to prevent form errors. Note that elementSubmit()
+      // is still run for this button.
+      '#submit' => [],
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+    ];
   }
 
   /**
@@ -581,6 +748,16 @@ class ConfigurationContainer extends FormElement {
       $available_types[$type_id] = !empty($configuration['label']) ? $configuration['label'] : $definition['label'];
     }
     return $available_types;
+  }
+
+  /**
+   * Whether this element supports filtering.
+   *
+   * @return bool
+   *   TRUE if filtering is supported, FALSE otherwhise.
+   */
+  private static function elementSupportsFiltering($element) {
+    return !empty($element['#row_filter']);
   }
 
 }

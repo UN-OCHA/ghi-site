@@ -1,0 +1,27 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a tooltip.
+ *
+ * Available variables:
+ * - tag: The tag to be used for the tooltip element.
+ * - tooltip: The raw value of the tooltip to be displayed.
+ * - tag_content: The content of the tooltip element, e.g. an svg to display an
+ *   icon, or a simple text.
+ * - trigger_attributes: HTML attributes for the trigger element, including:
+ *   - class: HTML classes that can be used to style contextually through CSS.
+ *
+ * @see template_preprocess_region()
+ *
+ * @ingroup themeable
+ */
+#}
+ <{{ tag }} role="popover" {{ trigger_attributes.addClass('popover') }}>{{ tag_content }}</{{ tag }}>
+<div hidden>
+  {% if title %}
+    <div class="title">{{ title }}</div>
+  {% endif %}
+  <div {{ content_attributes.addClass('content') }}>
+    {{ content }}
+  </div>
+</div>

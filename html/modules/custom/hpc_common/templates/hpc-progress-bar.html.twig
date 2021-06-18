@@ -1,0 +1,13 @@
+{%
+  set wrapper_classes = [
+    'hpc-progress-bar',
+  ]
+%}
+
+{% if hide_value == false %}
+  {{ formatted_value }}
+{% endif %}
+<div {{ wrapper_attributes.addClass(classes) }}>
+  <div class="hpc-progress-bar-inner" style="width: {{ percent }}%">&nbsp;</div>
+  {{ tooltip }}
+</div>

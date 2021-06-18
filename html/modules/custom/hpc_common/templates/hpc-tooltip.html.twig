@@ -1,6 +1,19 @@
-{% if tooltip is not empty and tag_content is not empty %}
-  <{{ tag }} data-toggle="tooltip" class="tooltip {{ (class is not empty) ? class : '' }}" title="{{ tooltip }}">{{ (tag_content is not empty) ? tag_content : '' }}</{{ tag }}>
-{% endif %}
-{% if tooltip is not empty and tag_content is empty %}
-  <i data-toggle="tooltip" class="tooltip {{ (class is not empty) ? class : '' }} " title="{{ tooltip }}"><svg class="cd-icon icon cd-icon--help"><use xlink:href="#cd-icon--help"></use></svg></i>
-{% endif %}
+{#
+/**
+ * @file
+ * Default theme implementation for a tooltip.
+ *
+ * Available variables:
+ * - tag: The tag to be used for the tooltip element.
+ * - tooltip: The raw value of the tooltip to be displayed.
+ * - tag_content: The content of the tooltip element, e.g. an svg to display an
+ *   icon, or a simple text.
+ * - attributes: Remaining HTML attributes for the element, including:
+ *   - class: HTML classes that can be used to style contextually through CSS.
+ *
+ * @see template_preprocess_region()
+ *
+ * @ingroup themeable
+ */
+#}
+<{{ tag }} data-tippy-content="{{ tooltip }}" {{ attributes }} title="{{ tooltip }}">{{ tag_content }}</{{ tag }}>

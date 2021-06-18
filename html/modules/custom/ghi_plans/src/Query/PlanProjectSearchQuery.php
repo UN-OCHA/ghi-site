@@ -9,6 +9,7 @@ use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
 use GuzzleHttp\ClientInterface;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\node\NodeInterface;
 
 /**
@@ -21,7 +22,7 @@ class PlanProjectSearchQuery extends EndpointQuery {
    *
    * @var array
    */
-  protected $filterByClusterIds;
+  protected $filterByClusterIds = NULL;
 
   /**
    * Constructs a new PlanProjectSearchQuery object.
@@ -76,6 +77,10 @@ class PlanProjectSearchQuery extends EndpointQuery {
         'cluster_ids' => $cluster_ids,
         'organizations' => $this->processProjectOrganizations($project),
         'published' => $project->currentPublishedVersionId,
+        'requirements' => $project->currentRequestedFunds,
+        'target' => !empty($project->targets) ? array_sum(array_map(function ($item) {
+          return $item->total;
+        }, $project->targets)) : 0,
       ];
     }
     return $projects;
@@ -110,7 +115,7 @@ class PlanProjectSearchQuery extends EndpointQuery {
       $processed_organizations[$organization->id] = (object) [
         'id' => $organization->id,
         'name' => $organization->name,
-        'url' => $organization->url,
+        'url' => CommonHelper::assureWellFormedUri($organization->url),
       ];
     }
     return $processed_organizations;
@@ -205,7 +210,7 @@ class PlanProjectSearchQuery extends EndpointQuery {
       $projects = $data;
     }
 
-    if (!empty($this->filterByClusterIds)) {
+    if ($this->filterByClusterIds !== NULL) {
       $cluster_ids = $this->filterByClusterIds;
       $projects = array_filter($data, function ($item) use ($cluster_ids) {
         return count(array_intersect($cluster_ids, $item->cluster_ids));

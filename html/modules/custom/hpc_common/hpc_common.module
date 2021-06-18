@@ -73,6 +73,17 @@ function hpc_common_theme($existing, $type, $theme, $path) {
         'formatting_decimals' => NULL,
       ],
     ] + $common,
+    'hpc_progress_bar' => [
+      'variables' => [
+        'percent' => NULL,
+        'ratio' => NULL,
+        'base_ratio' => NULL,
+        'export' => FALSE,
+        'hide_value' => FALSE,
+        'tooltip' => NULL,
+      ],
+      'template' => 'hpc-progress-bar',
+    ] + $common,
     'hpc_autoformat_value' => [
       'variables' => [
         'value' => NULL,
@@ -98,6 +109,21 @@ function hpc_common_theme($existing, $type, $theme, $path) {
       ],
       'template' => 'hpc-tooltip',
     ] + $common,
+    'hpc_popover' => [
+      'variables' => [
+        'title' => NULL,
+        'content' => NULL,
+        'class' => NULL,
+        'trigger' => NULL,
+        // Either a custom tag with optional HTML content.
+        'tag' => NULL,
+        'tag_content' => NULL,
+        // Or a material icon.
+        'material_icon' => NULL,
+        'disabled' => NULL,
+      ],
+      'template' => 'hpc-popover',
+    ] + $common,
     'hpc_hid_session_information' => [
       'variables' => [
         'description' => NULL,
@@ -108,6 +134,13 @@ function hpc_common_theme($existing, $type, $theme, $path) {
       ],
       'template' => 'hpc-hid-session-information',
     ],
+    'hpc_icon' => [
+      'variables' => [
+        'icon' => NULL,
+        'tag' => NULL,
+      ],
+      'template' => 'hpc-icon',
+    ] + $common,
   ];
 }
 

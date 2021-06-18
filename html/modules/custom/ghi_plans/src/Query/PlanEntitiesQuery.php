@@ -220,6 +220,7 @@ class PlanEntitiesQuery extends EndpointQuery {
       $entity_version = ApiEntityHelper::getEntityVersion($entity);
       return (object) [
         'id' => $entity->id,
+        'name' => $this->getEntityName($entity),
         'plural_name' => $entity->entityPrototype->value->name->en->plural,
         'order_number' => $entity->entityPrototype->orderNumber,
         'ref_code' => $entity->entityPrototype->refCode,
@@ -228,6 +229,7 @@ class PlanEntitiesQuery extends EndpointQuery {
         'custom_id_prefixed_refcode' => $entity->entityPrototype->refCode . $entity_version->customReference,
         'composed_reference' => $entity->composedReference,
         'description' => property_exists($entity_version->value, 'description') ? $entity_version->value->description : NULL,
+        'icon' => !empty($entity_version->value->icon) ? $entity_version->value->icon : NULL,
       ];
     }, $matching_entities);
 
@@ -235,6 +237,25 @@ class PlanEntitiesQuery extends EndpointQuery {
       $plan_entities = ArrayHelper::filterArray($plan_entities, $filters);
     }
     return $plan_entities;
+  }
+
+  /**
+   * Get the name of an entity.
+   *
+   * @param object $entity
+   *   The entity object.
+   *
+   * @return string
+   *   The name of the given entity.
+   */
+  private function getEntityName($entity) {
+    $entity_version = ApiEntityHelper::getEntityVersion($entity);
+    if (property_exists($entity_version, 'name')) {
+      // Governing entity.
+      return $entity_version->name;
+    }
+    // Plan entity.
+    return $entity->entityPrototype->value->name->en->singular . ' ' . $entity_version->customReference;
   }
 
   /**

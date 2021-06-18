@@ -1,0 +1,13 @@
+.hpc-progress-bar-wrapper {
+  display: inline-block;
+  overflow: hidden;
+  width: 100%;
+  height: 14px;
+  border: 1px solid var(--hpc-orange);
+  background-color: lighten(var(--hpc-orange), 40%);
+}
+
+.hpc-progress-bar-wrapper .hpc-progress-bar-inner {
+  height: 100%;
+  background-color: var(--hpc-orange);
+}

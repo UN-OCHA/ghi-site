@@ -1,9 +1,11 @@
 uuid: 58c25324-5bd2-4592-b2b4-d74b1fcc9489
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - media
 name: WYSIWYG
-format: panopoly_wysiwyg_text
+format: wysiwyg_text
 weight: -10
 filters:
   filter_htmlcorrector:
@@ -19,9 +21,12 @@ filters:
     weight: -44
     settings:
       filter_url_length: 72
-  filter_null:
-    id: filter_null
-    provider: filter
-    status: true
-    weight: -49
-    settings: {  }
+  media_embed:
+    id: media_embed
+    provider: media
+    status: false
+    weight: 100
+    settings:
+      default_view_mode: default
+      allowed_media_types: {  }
+      allowed_view_modes: {  }

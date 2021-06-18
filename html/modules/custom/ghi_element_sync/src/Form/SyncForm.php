@@ -122,6 +122,13 @@ class SyncForm extends FormBase {
       '#default_value' => FALSE,
     ];
 
+    $form['cleanup'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Cleanup any existing elements'),
+      '#description' => $this->t('Check this if existing elements should be removed before synching from remote.'),
+      '#default_value' => FALSE,
+    ];
+
     $form['sync_elements'] = [
       '#type' => 'submit',
       '#value' => $this->t('Sync all elements'),
@@ -145,6 +152,7 @@ class SyncForm extends FormBase {
     $bundle = $this->bundles;
     $id = NULL;
     $revisions = $form_state->getValue('revisions');
+    $cleanup = $form_state->getValue('cleanup');
 
     if ($limit == 'bundle') {
       $bundle = array_keys(array_filter($form_state->getValue('bundle')));
@@ -163,6 +171,7 @@ class SyncForm extends FormBase {
       $bundle,
       (array) $id,
       $revisions,
+      $cleanup,
     ]);
     batch_set($batch_builder->toArray());
 

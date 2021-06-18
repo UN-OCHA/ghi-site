@@ -332,7 +332,7 @@ class ApiEntityHelper {
         'type' => $entity_type . '_entity',
         'custom_reference' => $entity_version->customReference,
         'description' => !empty($entity_version->value->description) ? $entity_version->value->description : '',
-        'icon' => !empty($entity_version->value->icon) ? self::getIconEmbedCode($entity_version->value->icon) : NULL,
+        'icon' => !empty($entity_version->value->icon) ? $entity_version->value->icon : NULL,
         'parents' => !empty($entity->parents) ? array_map(function ($item) {
           return $item->parentId;
         }, $entity->parents) : [],

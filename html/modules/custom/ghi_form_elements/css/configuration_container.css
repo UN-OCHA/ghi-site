@@ -34,6 +34,11 @@
   display: none;
 }
 
+.form-type--configuration_container table .glb-button {
+  font-size: 0.8rem !important;
+  margin: 0 !important;
+}
+
 .form-type--configuration_container table.summary-table {
   width: 100%;
 }

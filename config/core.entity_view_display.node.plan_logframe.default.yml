@@ -35,7 +35,7 @@ third_party_settings:
       - 'Inline blocks'
       - 'Lists (Views)'
       - Menus
-      - Plans
+      - 'Plan elements'
       - 'Social Auth'
       - System
       - User
@@ -55,11 +55,7 @@ third_party_settings:
         System: {  }
         User: {  }
         core: {  }
-      blacklisted_blocks:
-        Plans:
-          - plan_entity_types
-          - plan_headline_figures
-          - plan_webcontent_file
+      blacklisted_blocks: {  }
       allowed_layouts:
         - layout_onecol
 id: node.plan_logframe.default

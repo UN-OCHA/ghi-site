@@ -34,23 +34,27 @@ class PlanClusterSummaryQuery extends EndpointQuery {
     if (empty($data) || empty($data->objects)) {
       return NULL;
     }
+
+    $totals = property_exists($data, 'totals') ? $data->totals : $data;
+
     return (object) [
       'clusters' => array_map(function ($cluster) {
         return (object) [
-          'id' => $cluster->id,
+          // Id is not set for "Not specified clusters".
+          'id' => property_exists($cluster, 'id') ? $cluster->id : NULL,
           'name' => $cluster->name,
-          'current_requirements' => $cluster->totalRequirements,
-          'original_requirements' => $cluster->originalRequirements,
+          'current_requirements' => property_exists($cluster, 'totalRequirements') ? $cluster->totalRequirements : NULL,
+          'original_requirements' => property_exists($cluster, 'originalRequirements') ? $cluster->originalRequirements : NULL,
           'total_funding' => $cluster->totalFunding,
-          'funding_gap' => $cluster->unmetRequirements,
-          'funding_coverage' => $cluster->fundingProgress,
+          'funding_gap' => property_exists($cluster, 'unmetRequirements') ? $cluster->unmetRequirements : NULL,
+          'funding_coverage' => property_exists($cluster, 'fundingProgress') ? $cluster->fundingProgress : NULL,
         ];
       }, $data->objects),
-      'totals' => [
-        'sum' => $data->objectsSum,
-        'overlap' => $data->overlapCorrection,
-        'shared' => $data->sharedFunding,
-        'total_funding' => $data->totalFunding,
+      'totals' => (object) [
+        'sum' => $totals->objectsSum,
+        'overlap' => $totals->overlapCorrection,
+        'shared' => $totals->sharedFunding,
+        'total_funding' => $totals->totalFunding,
       ],
     ];
   }

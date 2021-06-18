@@ -117,6 +117,8 @@ class SyncManager implements ContainerInjectionInterface {
    *   An optional messenger to use for result messages.
    * @param bool $revisions
    *   Whether new revisions should be created.
+   * @param bool $cleanup
+   *   Whether existing elements should be cleaned up first.
    *
    * @return bool
    *   Indicating whether the node has been sucessfully processed or not.
@@ -124,10 +126,86 @@ class SyncManager implements ContainerInjectionInterface {
    * @throws SyncException
    *   When an error occurs.
    */
-  public function syncNode(NodeInterface $node, MessengerInterface $messenger = NULL, $revisions = FALSE) {
+  public function syncNode(NodeInterface $node, MessengerInterface $messenger = NULL, $revisions = FALSE, $cleanup = FALSE) {
     if ($messenger === NULL) {
       $messenger = $this->messenger();
     }
+
+    $sections = $this->getNodeSections($node);
+    $delta = 0;
+
+    if ($cleanup && $sections[$delta]->getComponents()) {
+      foreach ($sections[$delta]->getComponents() as $component) {
+        $sections[$delta]->removeComponent($component->getUuid());
+      }
+    }
+
+    foreach ($this->getRemoteConfigurations($node) as $element) {
+      if (!$this->isSyncable($element)) {
+        continue;
+      }
+      $definition = $this->getCorrespondingPluginDefintionForElement($element);
+      $class = $definition['class'];
+      $context_mapping = [
+        'context_mapping' => [
+          'node' => 'layout_builder.entity',
+        ],
+      ];
+
+      $existing_component = $this->getExistingSyncedComponent($node, $element);
+      if ($existing_component) {
+        // Update an existing component.
+        $configuration = $class::mapConfig($element->configuration) + $context_mapping + $existing_component->get('configuration');
+        $existing_component->setConfiguration($configuration);
+        $messenger->addMessage($this->t('Updated %plugin_title', [
+          '%plugin_title' => $definition['admin_label'],
+        ]));
+      }
+      else {
+        // Append a new component.
+        $messenger->addMessage($this->t('Added %plugin_title', [
+          '%plugin_title' => $definition['admin_label'],
+        ]));
+        $config = array_filter([
+          'id' => $definition['id'],
+          'provider' => $definition['provider'],
+          'data_sources' => $definition['data_sources'] ?? NULL,
+          'sync' => [
+            'source_uuid' => $element->uuid,
+          ],
+        ]) + $context_mapping;
+        $config += $class::mapConfig($element->configuration);
+
+        $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
+        $sections[$delta]->appendComponent($component);
+      }
+
+    }
+
+    $this->layoutManagerDiscardChanges($node, $messenger);
+
+    $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+    if ($revisions) {
+      $node->setNewRevision(TRUE);
+      $node->revision_log = $this->t('Synced page elements from @source_url', ['@source_url' => $source_url]);
+      $node->setRevisionCreationTime($this->time->getRequestTime());
+      $node->setRevisionUserId($this->currentUser->id());
+    }
+    $node->save();
+
+    return TRUE;
+  }
+
+  /**
+   * Get all element configurations from the remote.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   *
+   * @return object[]
+   *   An array of element configuration objects from the remote.
+   */
+  public function getRemoteConfigurations(NodeInterface $node) {
     $settings = $this->config->get('ghi_element_sync.settings');
 
     $original_id = $node->field_original_id->value;
@@ -160,66 +238,66 @@ class SyncManager implements ContainerInjectionInterface {
     }
     if (empty($data->elements)) {
       // No error, but nothing to do either.
+      return [];
+    }
+    return $data->elements;
+  }
+
+  /**
+   * Get the plugin that corresponds to the element from the remote system.
+   *
+   * @param object $element
+   *   The element object from the remote.
+   *
+   * @return mixed
+   *   A plugin definition, or NULL if the element type is invalid.
+   */
+  public function getCorrespondingPluginDefintionForElement($element) {
+    return $this->blockManager->getDefinition($element->type, FALSE);
+  }
+
+  /**
+   * Checks if the given element is syncable.
+   *
+   * @param object $element
+   *   The element object from the remote.
+   *
+   * @return bool
+   *   Whether the element is syncable.
+   */
+  public function isSyncable($element) {
+    $definition = $this->getCorrespondingPluginDefintionForElement($element);
+    if (!$definition) {
       return FALSE;
     }
+    $class = $definition['class'];
+    return in_array('Drupal\ghi_element_sync\SyncableBlockInterface', class_implements($class));
+  }
 
-    $sections = $this->getNodeSections($node);
-    $delta = 0;
-
-    foreach ($data->elements as $element) {
-      $definition = $this->blockManager->getDefinition($element->type, FALSE);
-      if (!$definition) {
-        continue;
-      }
-      $class = $definition['class'];
-      if (!in_array('Drupal\ghi_element_sync\SyncableBlockInterface', class_implements($class))) {
-        continue;
-      }
-      $existing_component = $this->getExistingSyncedComponent($node, $element);
-      if ($existing_component) {
-        // Update an existing component.
-        $configuration = $class::mapConfig($element->configuration) + $existing_component->get('configuration');
-        $existing_component->setConfiguration($configuration);
-        $messenger->addMessage($this->t('Updated %plugin_title', [
-          '%plugin_title' => $definition['admin_label'],
-        ]));
-      }
-      else {
-        // Append a new component.
-        $messenger->addMessage($this->t('Added %plugin_title', [
-          '%plugin_title' => $definition['admin_label'],
-        ]));
-        $config = array_filter([
-          'id' => $definition['id'],
-          'provider' => $definition['provider'],
-          'data_sources' => $definition['data_sources'] ?? NULL,
-          'context_mapping' => [
-            'node' => 'layout_builder.entity',
-          ],
-          'sync' => [
-            'source_uuid' => $element->uuid,
-          ],
-        ]);
-        $config += $class::mapConfig($element->configuration);
-
-        $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
-        $sections[$delta]->appendComponent($component);
-      }
-
+  /**
+   * Get the current sync status.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   * @param object $element
+   *   The element object from the remote.
+   *
+   * @return string
+   *   A string representing the sync status.
+   */
+  public function getSyncStatus(NodeInterface $node, $element) {
+    if (!$this->isSyncable($element)) {
+      return '';
     }
-
-    $this->layoutManagerDiscardChanges($node, $messenger);
-
-    $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
-    if ($revisions) {
-      $node->setNewRevision(TRUE);
-      $node->revision_log = $this->t('Synced page elements from @source_url', ['@source_url' => $source_url]);
-      $node->setRevisionCreationTime($this->time->getRequestTime());
-      $node->setRevisionUserId($this->currentUser->id());
+    $definition = $this->getCorrespondingPluginDefintionForElement($element);
+    $class = $definition['class'];
+    $existing_component = $this->getExistingSyncedComponent($node, $element);
+    if (!$existing_component) {
+      return $this->t('Not synced');
     }
-    $node->save();
-
-    return TRUE;
+    $remote_hash = md5(serialize($class::mapConfig($element->configuration)['hpc']));
+    $local_hash = md5(serialize($existing_component->get('configuration')['hpc']));
+    return $remote_hash == $local_hash ? $this->t('In sync') : $this->t('Changed');
   }
 
   /**

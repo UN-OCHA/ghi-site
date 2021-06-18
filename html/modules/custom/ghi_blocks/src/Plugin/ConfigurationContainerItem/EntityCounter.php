@@ -2,20 +2,34 @@
 
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
+use Drupal\ghi_blocks\Traits\ValuePreviewConfigurationItemTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\Query\IconQuery;
 use Drupal\ghi_plans\Query\PlanEntitiesQuery;
+use Drupal\node\NodeInterface;
 
 /**
  * Provides an entity counter item for configuration containers.
  *
+ * This item type allows the following options when using as part of a
+ * configuration container:
+ * - entity_type: Sets a preselected entity type and hides the entity type
+ *   select element.
+ * - value_preview: If set and set to FALSE, will hide the value preview.
+ *
  * @ConfigurationContainerItem(
  *   id = "entity_counter",
  *   label = @Translation("Entity counter"),
+ *   description = @Translation("This item displays the number of entities of a specific type."),
  * )
  */
 class EntityCounter extends ConfigurationContainerItemPluginBase {
+
+  use ValuePreviewConfigurationItemTrait;
 
   /**
    * The plan entities query.
@@ -25,11 +39,19 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
   public $planEntitiesQuery;
 
   /**
+   * The icon query.
+   *
+   * @var \Drupal\ghi_plans\Query\IconQuery
+   */
+  public $iconQuery;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, PlanEntitiesQuery $plan_entities_query) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, PlanEntitiesQuery $plan_entities_query, IconQuery $icon_query) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->planEntitiesQuery = $plan_entities_query;
+    $this->iconQuery = $icon_query;
   }
 
   /**
@@ -41,6 +63,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
       $plugin_id,
       $plugin_definition,
       $container->get('ghi_plans.plan_entities_query'),
+      $container->get('ghi_plans.icon_query'),
     );
   }
 
@@ -49,10 +72,11 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
    */
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
-    $element['label']['#description'] = $this->t('Leave empty to use a default label');
 
     $entity_type_options = $this->getEntityTypeOptions();
-    $entity_type = $this->getSubmittedOptionsValue($element, $form_state, 'entity_type', $entity_type_options);
+
+    $preset_entity_type = $this->getEntityTypePreset();
+    $entity_type = !$preset_entity_type ? $this->getSubmittedOptionsValue($element, $form_state, 'entity_type', $entity_type_options) : $preset_entity_type;
 
     $entity_prototype_options = $this->getEntityPrototypeOptions($entity_type);
     $entity_prototype = $this->getSubmittedOptionsValue($element, $form_state, 'entity_prototype', $entity_prototype_options);
@@ -69,6 +93,11 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
       ],
       '#weight' => 0,
     ];
+    if ($preset_entity_type) {
+      $element['entity_type']['#type'] = 'hidden';
+      $element['entity_type']['#value'] = $entity_type;
+      $element['entity_type']['#default_value'] = $entity_type;
+    }
 
     $element['entity_prototype'] = [
       '#type' => 'select',
@@ -88,12 +117,10 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     $element['label']['#placeholder'] = $this->getDefaultLabel($entity_type, $entity_prototype);
 
     // Add a preview.
-    $element['value_preview'] = [
-      '#type' => 'item',
-      '#title' => $this->t('Value preview'),
-      '#markup' => $this->getValue($entity_type, $entity_prototype),
-      '#weight' => 3,
-    ];
+    if ($this->shouldDisplayPreview()) {
+      $preview_value = $this->getValue($entity_type, $entity_prototype);
+      $element['value_preview'] = $this->buildValuePreviewFormElement($preview_value);
+    }
 
     return $element;
   }
@@ -105,7 +132,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     if (!empty($this->config['label'])) {
       return $this->config['label'];
     }
-    $entity_type = $this->get['entity_type'];
+    $entity_type = $this->get('entity_type');
     $entity_prototype = $this->get('entity_prototype');
     return $this->getDefaultLabel($entity_type, $entity_prototype);
   }
@@ -129,10 +156,94 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
   public function getValue($entity_type = NULL, $entity_prototype = NULL) {
     $entity_type = $entity_type ?? $this->get('entity_type');
     $entity_prototype = $entity_prototype ?? $this->get('entity_prototype');
-    $matching_entities = array_filter($this->getEntities($entity_type), function ($entity) use ($entity_prototype) {
+    $matching_entities = $this->getMatchingEntities($entity_type, $entity_prototype);
+    return count($matching_entities);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRenderArray() {
+    $popover = $this->getPopover();
+    if (!$popover) {
+      return parent::getRenderArray();
+    }
+    return [
+      '#type' => 'container',
+      0 => parent::getRenderArray(),
+      1 => $popover,
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getClasses() {
+    $classes = parent::getClasses();
+    $classes[] = Html::getClass($this->getPluginId() . '--' . $this->get('entity_type'));
+    if (empty($this->getValue())) {
+      $classes[] = 'empty';
+    }
+    return $classes;
+  }
+
+  /**
+   * Get a popover trigger.
+   */
+  private function getPopover() {
+
+    $entity = $this->getContextValue('entity');
+
+    // Get the icon if there is any.
+    $icon = NULL;
+    if ($entity && !empty($entity->icon)) {
+      $icon = $this->iconQuery->getIconEmbedCode($entity->icon);
+    }
+
+    $popover_content = NULL;
+    $entities = $this->getMatchingEntities();
+    if (!empty($entities)) {
+      usort($entities, function ($a, $b) {
+        return strnatcmp($a->name, $b->name);
+      });
+      $items = array_map(function ($item) {
+        return Markup::create($item->name . '<br /> ' . $item->description);
+      }, $entities);
+
+      $popover_content = [
+        '#theme' => 'item_list',
+        '#items' => $items,
+        '#list_type' => 'ol',
+      ];
+    }
+
+    return [
+      '#theme' => 'hpc_popover',
+      '#title' => Markup::create($icon . '<span class="name">' . $this->getLabel() . '</span>'),
+      '#content' => $popover_content,
+      '#class' => 'entity-counter entity-counter-popover',
+      '#material_icon' => 'table_view',
+      '#disabled' => empty($popover_content),
+    ];
+  }
+
+  /**
+   * Get the matching entities for this item.
+   *
+   * @param string $entity_type
+   *   The entity type.
+   * @param int $entity_prototype
+   *   The entity prototype.
+   *
+   * @return array
+   *   An array of entity objects.
+   */
+  private function getMatchingEntities($entity_type = NULL, $entity_prototype = NULL) {
+    $entity_type = $entity_type ?? $this->get('entity_type');
+    $entity_prototype = $entity_prototype ?? $this->get('entity_prototype');
+    return array_filter($this->getEntities($entity_type), function ($entity) use ($entity_prototype) {
       return $entity->prototype_id == $entity_prototype;
     });
-    return count($matching_entities);
   }
 
   /**
@@ -146,7 +257,10 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
    */
   private function getEntities($entity_type) {
     $context = $this->getContext();
-    return $this->planEntitiesQuery->getPlanEntities($context['page_node'], $entity_type, NULL);
+    if (empty($context['context_node']) || !$context['context_node'] instanceof NodeInterface) {
+      return [];
+    }
+    return $this->planEntitiesQuery->getPlanEntities($context['context_node'], $entity_type, NULL);
   }
 
   /**
@@ -187,6 +301,21 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
       return $weight[$prototype_id_a] > $weight[$prototype_id_b];
     });
     return $entity_prototype_options;
+  }
+
+  /**
+   * Get the preset entity type if one is set.
+   *
+   * @return string|null
+   *   The preset entity type or NULL.
+   */
+  private function getEntityTypePreset() {
+    $plugin_configuration = $this->getPluginConfiguration();
+    $entity_type_options = $this->getEntityTypeOptions();
+    if (!array_key_exists('entity_type', $plugin_configuration) || !array_key_exists($plugin_configuration['entity_type'], $entity_type_options)) {
+      return NULL;
+    }
+    return $plugin_configuration['entity_type'];
   }
 
 }

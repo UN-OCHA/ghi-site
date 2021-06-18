@@ -37,7 +37,7 @@ third_party_settings:
       - 'Inline blocks'
       - 'Lists (Views)'
       - Menus
-      - Plans
+      - 'Plan elements'
       - 'Social Auth'
       - System
       - User

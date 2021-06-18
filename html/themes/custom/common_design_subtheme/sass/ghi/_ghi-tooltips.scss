@@ -1,0 +1,16 @@
+.tippy-box .tippy-content {
+
+  & > .content {
+    padding: 0 1rem;
+  }
+
+  a.fts-link {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+
+    img {
+      height: 20px;
+      vertical-align: middle;
+    }
+  }
+}

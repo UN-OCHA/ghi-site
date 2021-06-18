@@ -20,3 +20,6 @@ services:
   ghi_plans.cluster_query:
     parent: hpc_api.endpoint_query
     class: Drupal\ghi_plans\Query\ClusterQuery
+  ghi_plans.icon_query:
+    parent: hpc_api.endpoint_query
+    class: Drupal\ghi_plans\Query\IconQuery

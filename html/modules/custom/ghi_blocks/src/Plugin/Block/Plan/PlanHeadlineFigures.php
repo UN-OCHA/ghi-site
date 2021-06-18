@@ -19,8 +19,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *
  * @Block(
  *  id = "plan_headline_figures",
- *  admin_label = @Translation("Plan: Headline Figures"),
- *  category = @Translation("Plans"),
+ *  admin_label = @Translation("Headline Figures"),
+ *  category = @Translation("Plan elements"),
  *  title = FALSE,
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"))
@@ -212,11 +212,18 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
       if (!array_key_exists($item['item_type'], $allowed_items)) {
         continue;
       }
+      /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
       $item_type = $this->configurationContainerItemManager->createInstance($item['item_type'], $allowed_items[$item['item_type']]);
       $item_type->setConfig($item['config']);
       $item_type->setContext($this->getBlockContext());
-      $rendered[] = $item_type->getLabel() . ': ' . $item_type->getValue();
+
+      $rendered[] = [
+        '#type' => 'item',
+        '#title' => $item_type->getLabel(),
+        0 => $item_type->getRenderArray(),
+      ];
     }
+
     return [
       '#theme' => 'item_list',
       '#items' => $rendered,
@@ -252,7 +259,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
       '#preview' => [
         'columns' => [
           'label' => $this->t('Label'),
-          'value' => $this->t('Value'),
+          'render_array' => $this->t('Value'),
         ],
       ],
       '#element_context' => $this->getBlockContext(),
@@ -271,6 +278,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
     return [
       'page_node' => $this->getPageNode(),
       'plan_node' => $this->getCurrentPlanNode(),
+      'context_node' => $this->getPageNode(),
     ];
   }
 
@@ -283,7 +291,16 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
    */
   public function getAllowedItemTypes() {
     $item_types = [
-      'funding_data' => [],
+      'funding_data' => [
+        'item_types' => [
+          'funding_totals',
+          'outside_funding',
+          'funding_coverage',
+          'funding_gap',
+          'original_requirements',
+          'current_requirements',
+        ],
+      ],
       'entity_counter' => [],
       'project_data' => [
         'access' => [

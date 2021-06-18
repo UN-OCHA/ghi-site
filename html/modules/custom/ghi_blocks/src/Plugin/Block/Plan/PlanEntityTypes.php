@@ -15,10 +15,10 @@ use Drupal\hpc_api\Query\EndpointQuery;
  *
  * @Block(
  *  id = "plan_entity_types",
- *  admin_label = @Translation("Plan: Entity Types"),
- *  category = @Translation("Plans"),
+ *  admin_label = @Translation("Entity Types"),
+ *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "data" = {
+ *    "entities" = {
  *      "service" = "ghi_plans.plan_entities_query"
  *    },
  *  },
@@ -332,7 +332,9 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
     if ($entity_ref_code) {
       $filter = ['ref_code' => $entity_ref_code];
     }
-    return $this->getQueryHandler()->getPlanEntities($page_node, 'plan', $filter);
+    /** @var \Drupal\ghi_plans\Query\PlanEntitiesQuery $query */
+    $query = $this->getQueryHandler('entities');
+    return $query->getPlanEntities($page_node, 'plan', $filter);
   }
 
   /**

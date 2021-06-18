@@ -103,6 +103,7 @@ class AttachmentHelper {
    */
   private static function processDataAttachment($attachment) {
     $unit = property_exists($attachment->attachmentVersion->value->metrics, 'unit') ? $attachment->attachmentVersion->value->metrics->unit : NULL;
+    $measure_fields = $attachment->attachmentVersion->value->metrics->measureFields ?? NULL;
     $processed = (object) [
       'id' => $attachment->id,
       'type' => strtolower($attachment->type),
@@ -112,9 +113,9 @@ class AttachmentHelper {
         array_map(function ($item) {
           return $item->value;
         }, $attachment->attachmentVersion->value->metrics->values->totals),
-        array_map(function ($item) {
+        $measure_fields ? array_map(function ($item) {
           return $item->value ?? NULL;
-        }, $attachment->attachmentVersion->value->metrics->measureFields)
+        }, $measure_fields) : []
       ),
       'prototype' => (object) [
         'id' => $attachment->attachmentPrototype->id,

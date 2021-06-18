@@ -1,0 +1,10 @@
+icon:
+  css:
+    theme:
+      css/icon.css: {}
+popover:
+  css:
+    theme:
+      css/popover.css: {}
+  js:
+    js/popover.js: {}

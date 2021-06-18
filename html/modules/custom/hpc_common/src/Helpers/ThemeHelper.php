@@ -78,6 +78,12 @@ class ThemeHelper {
           '#formatting_decimals' => !empty($options['formatting_decimals']) ? $options['formatting_decimals'] : self::DECIMALS_POINT,
         ];
 
+      case 'hpc_progress_bar':
+        return [
+          '#percent' => $value,
+          '#hide_value' => !empty($options['hide_value']) ? $options['hide_value'] : FALSE,
+        ];
+
       default:
         throw new \InvalidArgumentException(sprintf('Unknown theme function "%s"', $theme_function));
     }
@@ -106,6 +112,28 @@ class ThemeHelper {
     }
 
     return $suffix;
+  }
+
+  /**
+   * Get the URI to the FTS icon.
+   */
+  public static function getUriToFtsIcon() {
+    return '/' . drupal_get_path('module', 'hpc_common') . '/assets/fts-logo-mobile.png';
+  }
+
+  /**
+   * Get a render array for the FTS icon.
+   */
+  public static function themeFtsIcon() {
+    return [
+      '#theme' => 'image',
+      '#uri' => self::getUriToFtsIcon(),
+      '#attributes' => [
+        'class' => 'fts-icon',
+        'title' => t('View this data in FTS'),
+      ],
+      '#alt' => t('View this data in FTS'),
+    ];
   }
 
 }

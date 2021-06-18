@@ -12,7 +12,24 @@
         {
             "type": "composer",
             "url": "https://packages.drupal.org/8"
-        }
+        },
+        {
+          "type": "composer",
+          "url": "https://asset-packagist.org"
+        },
+        {
+          "type": "package",
+          "package": {
+              "name": "drupal/tippy",
+              "version": "1.0",
+              "type":"drupal-module",
+              "source": {
+                  "url": "https://github.com/rpc5102/tippy.js-drupal",
+                  "type": "git",
+                  "reference": "master"
+              }
+          }
+      }
     ],
     "require": {
         "composer/installers": "^1.9",
@@ -46,8 +63,10 @@
         "drupal/redirect": "^1.6",
         "drupal/redis": "^1.5",
         "drupal/social_auth_hid": "^2.5",
+        "drupal/tippy": "^1.0",
         "drupal/viewsreference": "^1.7",
         "drush/drush": "^10.4",
+        "oomphinc/composer-installers-extender": "^2.0",
         "phpoffice/phpspreadsheet": "^1.17",
         "unocha/common_design": "^4.0"
     },
@@ -112,12 +131,15 @@
                 "web-root": "html/"
             }
         },
+        "installer-types": ["bower-asset", "npm-asset"],
         "installer-paths": {
             "html/core": [
                 "type:drupal-core"
             ],
             "html/libraries/{$name}": [
-                "type:drupal-library"
+                "type:drupal-library",
+                "type:bower-asset",
+                "type:npm-asset"
             ],
             "html/modules/contrib/{$name}": [
                 "type:drupal-module"

@@ -177,6 +177,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
       }
     }
 
+    if (!empty($build_content['#theme']) && $build_content['#theme'] == 'item_list') {
+      $build_content['#context']['plugin_id'] = $this->getPluginId();
+    }
+
     // Add the build content as a child.
     $build[] = $build_content;
 

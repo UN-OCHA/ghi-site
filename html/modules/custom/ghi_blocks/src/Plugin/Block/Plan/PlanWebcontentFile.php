@@ -15,10 +15,10 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
  *
  * @Block(
  *  id = "plan_webcontent_file",
- *  admin_label = @Translation("Plan: Web Content File"),
- *  category = @Translation("Plans"),
+ *  admin_label = @Translation("Web Content File"),
+ *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "data" = {
+ *    "entities" = {
  *      "service" = "ghi_plans.plan_entities_query"
  *    },
  *    "attachment" = {
@@ -56,7 +56,9 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
       return;
     }
 
-    $attachment = $this->getQueryHandler('attachment')->getAttachment($conf['attachment_id']);
+    /** @var \Drupal\ghi_plans\Query\AttachmentQuery $query */
+    $query = $this->getQueryHandler('attachment');
+    $attachment = $query->getAttachment($conf['attachment_id']);
     return [
       '#theme' => 'image',
       '#uri' => $attachment->url,
@@ -82,7 +84,9 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
     $file_options = [];
 
     // Retrieve the attachments.
-    $attachments = $this->getQueryHandler()->getWebContentFileAttachments($this->getCurrentPlanNode());
+    /** @var \Drupal\ghi_plans\Query\PlanEntitiesQuery $query */
+    $query = $this->getQueryHandler('entities');
+    $attachments = $query->getWebContentFileAttachments($this->getCurrentPlanNode());
 
     if (!empty($attachments)) {
       foreach ($attachments as $attachment) {

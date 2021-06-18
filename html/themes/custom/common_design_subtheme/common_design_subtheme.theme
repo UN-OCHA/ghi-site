@@ -5,6 +5,7 @@
  * Template overrides, preprocess, and hooks for the GHI subtheme.
  */
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResultForbidden;
 
 /**
@@ -95,4 +96,61 @@ function common_design_subtheme_show_hidden_blocks_from_page(array &$variables, 
       }
     }
   }
+}
+
+/**
+ * Assure common styling for tables.
+ *
+ * Do this by leveraging as much of the common design as possible.
+ */
+function common_design_subtheme_preprocess_table(&$vars) {
+  $attributes = [
+    'class' => [
+      'ghi-table',
+      'cd-table',
+      'cd-table--responsive',
+      'cd-table--striped',
+    ],
+  ];
+  $attached = [
+    'library' => [
+      'common_design/cd-table',
+    ],
+  ];
+  $vars['attributes'] = array_key_exists('attributes', $vars) ? NestedArray::mergeDeep($vars['attributes'], $attributes) : $attributes;
+  $vars['#attached'] = array_key_exists('#attached', $vars) ? NestedArray::mergeDeep($vars['#attached'], $attached) : $attached;
+  foreach ($vars['rows'] as &$row) {
+    foreach ($row as &$columns) {
+      foreach ($columns as &$column) {
+        /** @var \Drupal\Core\Template\Attribute $attribute */
+        $attribute = is_array($column) && array_key_exists('attributes', $column) ? $column['attributes'] : NULL;
+        if ($attribute && $attribute->hasAttribute('data-column-type')) {
+          $attributes = $attribute->toArray();
+          $attribute->addClass('cd-table--' . $attributes['data-column-type']);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Preprocess an hpc progress bar to attach our library.
+ */
+function common_design_subtheme_preprocess_hpc_progress_bar(array &$variables) {
+  $variables['#attached']['library'][] = 'common_design_subtheme/ghi-progress-bar';
+}
+
+/**
+ * Preprocess a plan headline figures list.
+ */
+function common_design_subtheme_preprocess_item_list__plan_headline_figures(&$variables) {
+  $items = &$variables['items'];
+  $figures = [];
+  foreach ($items as &$item) {
+    $figures[] = [
+      'label' => $item['value']['#title'],
+      'value' => $item['value'][0],
+    ];
+  }
+  $variables['figures'] = $figures;
 }

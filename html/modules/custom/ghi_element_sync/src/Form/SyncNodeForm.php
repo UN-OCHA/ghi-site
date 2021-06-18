@@ -53,6 +53,29 @@ class SyncNodeForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Sync all elements'),
     ];
+
+    $header = [
+      $this->t('Source type'),
+      $this->t('Plugin'),
+      $this->t('Syncable'),
+      $this->t('Status'),
+    ];
+
+    foreach ($this->syncManager->getRemoteConfigurations($node) as $element) {
+      $row = [];
+      $row[] = $element->type;
+      $definition = $this->syncManager->getCorrespondingPluginDefintionForElement($element);
+      $row[] = $definition ? $definition['admin_label'] : $this->t('Unknown');
+      $row[] = $this->syncManager->isSyncable($element) ? $this->t('Syncable') : $this->t('Not syncable');
+      $row[] = $this->syncManager->getSyncStatus($node, $element);
+      $rows[] = $row;
+    }
+
+    $form['sync_status'] = [
+      '#type' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+    ];
     return $form;
   }
 

@@ -111,9 +111,9 @@ class PlanStructureController extends ControllerBase {
     $prototype_data = $this->getPrototypeData($plan_original_id);
     $plan_structure = PlanStructureHelper::getPlanStructureFromPrototype($prototype_data, $node);
 
-    $edit_icon = Markup::create('<i class="material-icons edit-icon">edit</i>');
-    $published_icon = Markup::create('<i class="material-icons published">toggle_off</i>');
-    $unpublished_icon = Markup::create('<i class="material-icons unpublished">toggle_on</i>');
+    $edit_icon = Markup::create('<i class="material-icon edit-icon">edit</i>');
+    $published_icon = Markup::create('<i class="material-icon published">toggle_off</i>');
+    $unpublished_icon = Markup::create('<i class="material-icon unpublished">toggle_on</i>');
 
     $link_options = [
       'query' => $this->redirectDestination->getAsArray(),
