@@ -14,6 +14,6 @@ permissions:
   - 'unpublish editable content'
   - 'use page manager'
   - 'use panels in place editing'
-  - 'use text format panopoly_html_text'
-  - 'use text format panopoly_wysiwyg_text'
+  - 'use text format html_text'
+  - 'use text format wysiwyg_text'
   - 'view own unpublished content'

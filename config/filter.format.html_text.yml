@@ -1,13 +1,19 @@
-uuid: 58c25324-5bd2-4592-b2b4-d74b1fcc9489
+uuid: 30c65606-e572-47d6-af0e-830deb003d5e
 langcode: en
 status: true
 dependencies:
   module:
     - media
-name: WYSIWYG
-format: panopoly_wysiwyg_text
-weight: -10
+name: HTML
+format: html_text
+weight: -9
 filters:
+  filter_autop:
+    id: filter_autop
+    provider: filter
+    status: true
+    weight: -45
+    settings: {  }
   filter_htmlcorrector:
     id: filter_htmlcorrector
     provider: filter
