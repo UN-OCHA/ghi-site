@@ -1,0 +1,16 @@
+// In headline figures.
+.cd-figure-list--large .fts-icon {
+  height: 1rem;
+}
+
+// In tables.
+tbody td {
+  &[data-sort-type="numeric"] {
+    text-align: right;
+  }
+
+  .fts-icon {
+    height: 1rem;
+    vertical-align: middle;
+  }
+}

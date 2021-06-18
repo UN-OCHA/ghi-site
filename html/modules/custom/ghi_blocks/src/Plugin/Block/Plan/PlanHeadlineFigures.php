@@ -300,7 +300,6 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
           'original_requirements',
           'current_requirements',
         ],
-        'fts_link' => FALSE,
       ],
       'entity_counter' => [],
       'project_data' => [

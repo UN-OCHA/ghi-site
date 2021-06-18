@@ -233,7 +233,11 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $link_icon = ThemeHelper::themeFtsIcon();
     $fts_link = $this->needsFtsLink() ? self::buildFtsLink($link_icon, $this->getContextValue('plan_node'), 'flows', $this->getContextValue('context_node')) : NULL;
 
-    return [$rendered, $fts_link];
+    return [
+      '#type' => 'container',
+      0 => $rendered,
+      1 => $fts_link,
+    ];
   }
 
   /**

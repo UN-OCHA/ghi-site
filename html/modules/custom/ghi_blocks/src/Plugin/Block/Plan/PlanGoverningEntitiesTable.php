@@ -122,7 +122,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
       $item = [
         'item_type' => $transition_definition['target'],
         'config' => [
-          'label' => $incoming_item->label,
+          'label' => property_exists($incoming_item, 'label') ? $incoming_item->label : NULL,
         ],
       ];
       if (array_key_exists('config', $transition_definition)) {
@@ -130,7 +130,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
       }
 
       // Do special processing for individual item types.
-      $value = $incoming_item->value;
+      $value = property_exists($incoming_item, 'value') ? $incoming_item->value : NULL;
       if (is_object($value) && property_exists($value, 'cluster_restrict') && property_exists($value, 'cluster_tag')) {
         $item['config']['cluster_restrict'] = [
           'type' => $value->cluster_restrict,
@@ -144,7 +144,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
 
         case 'original_requirements':
         case 'funding_requirements':
-          $item['config']['scale'] = property_exists($value, 'formatting') ? $value->formatting : 'auto';
+          $item['config']['scale'] = is_object($value) && property_exists($value, 'formatting') ? $value->formatting : 'auto';
           break;
 
         default:
@@ -153,7 +153,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
       $columns[] = $item;
     }
     return [
-      'label' => $config->widget_title,
+      'label' => property_exists($config, 'widget_title') ? $config->widget_title : NULL,
       'label_display' => TRUE,
       'hpc' => [
         'columns' => $columns,

@@ -12,15 +12,4 @@
       height: 1.2rem;
     }
   }
-
-  tbody td {
-    &[data-sort-type="numeric"] {
-      text-align: right;
-    }
-
-    .fts-icon {
-      height: 1rem;
-      vertical-align: middle;
-    }
-  }
 }
