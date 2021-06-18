@@ -19,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @Block(
  *  id = "plan_governing_entities_table",
- *  admin_label = @Translation("Governing Entities Table"),
+ *  admin_label = @Translation("Governing Entities Overview Table"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
  *    "entities" = {
@@ -388,15 +388,6 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
         'options' => [
           'link' => TRUE,
           'include_popup' => TRUE,
-        ],
-      ],
-      'attachment_data' => [
-        'label' => $this->t('Caseload/indicator value'),
-        'access' => [
-          'node_type' => ['plan', 'governing_entity'],
-        ],
-        'data_point' => [
-          'widget' => FALSE,
         ],
       ],
       'label_value' => [],
