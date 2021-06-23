@@ -404,8 +404,7 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
     $data_type = $data_type ?? $this->get('data_type');
     $cluster_restrict = $cluster_restrict ?? $this->get('cluster_restrict');
 
-    if (!empty($cluster_restrict)) {
-      $cluster_ids = $this->getClusterIdsForConfig($cluster_restrict);
+    if (!empty($cluster_restrict) && $cluster_ids = $this->getClusterIdsForConfig($cluster_restrict)) {
       $project_query->setFilterByClusterIds($cluster_ids);
     }
     return $project_query;

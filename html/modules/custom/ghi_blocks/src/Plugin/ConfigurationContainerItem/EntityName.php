@@ -87,7 +87,7 @@ class EntityName extends ConfigurationContainerItemPluginBase {
     $markup = [
       '#markup' => Markup::create($icon_embed . '<span class="name">' . $entity->name . '</span>'),
     ];
-    if ($context_node->access('view')) {
+    if ($context_node && $context_node->access('view')) {
       return Link::fromTextAndUrl($markup, $context_node->toUrl())->toRenderable();
     }
     else {

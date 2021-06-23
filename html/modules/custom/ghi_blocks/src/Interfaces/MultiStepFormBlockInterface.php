@@ -15,9 +15,22 @@ interface MultiStepFormBlockInterface {
    * this base class. All that implementing classes need to do is to return an
    * associative array, where the keys are the "machine name" of the form,
    * used to store values in the block configuration array, and the value is
-   * the name of a callable method on the class that provides the form array
-   * for each step.
+   * an array describing how it should be used.
+   *
+   * @return array
+   *   An array with the form keys as key and the vaue being an array
+   *   containing these keys:
+   *   - title: The title to be displayed on the button that activates a form.
+   *   - callback: A callable method on the implementing plugin class.
    */
   public function getSubforms();
+
+  /**
+   * Return the machine name of the form to be used as default.
+   *
+   * @return string
+   *   The default form key.
+   */
+  public function getDefaultSubform();
 
 }

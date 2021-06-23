@@ -154,3 +154,12 @@ function common_design_subtheme_preprocess_item_list__plan_headline_figures(&$va
   }
   $variables['figures'] = $figures;
 }
+
+/**
+ * Preprocess a plan headline figures list.
+ */
+function common_design_subtheme_preprocess_item_list__plan_entity_types(&$variables) {
+  // Limit to 3 items in a row.
+  $count = count($variables['items']);
+  $variables['cols'] = $count == 4 ? 2 : 3;
+}

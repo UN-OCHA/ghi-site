@@ -241,7 +241,11 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
   private function getMatchingEntities($entity_type = NULL, $entity_prototype = NULL) {
     $entity_type = $entity_type ?? $this->get('entity_type');
     $entity_prototype = $entity_prototype ?? $this->get('entity_prototype');
-    return array_filter($this->getEntities($entity_type), function ($entity) use ($entity_prototype) {
+    $entities = $this->getEntities($entity_type);
+    if (empty($entities)) {
+      return [];
+    }
+    return array_filter($entities, function ($entity) use ($entity_prototype) {
       return $entity->prototype_id == $entity_prototype;
     });
   }

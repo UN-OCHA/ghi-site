@@ -100,7 +100,7 @@ function hpc_common_preprocess_hpc_amount(array &$vars) {
 
   $formatting_decimals = !empty($vars['formatting_decimals']) ? $vars['formatting_decimals'] : ThemeHelper::DECIMALS_POINT;
 
-  if (!is_numeric($amount)) {
+  if ($amount !== NULL && !is_numeric($amount)) {
     $vars['output'] = $amount;
     return;
   }

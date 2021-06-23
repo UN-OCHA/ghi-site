@@ -13,4 +13,18 @@ tbody td {
     height: 1rem;
     vertical-align: middle;
   }
+
+  .cluster-icon {
+    float: left;
+    width: 2rem;
+    height: 1rem;
+
+    svg {
+      position: relative;
+      top: 10%;
+      left: 0;
+      width: 1.2rem;
+      height: 1.2rem;
+    }
+  }
 }

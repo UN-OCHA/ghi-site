@@ -47,7 +47,6 @@ class AttachmentSelect extends FormElement {
       // '#group_by_entity' => FALSE,
       // '#include_available_map_metrics' => FALSE,
       // '#disable_empty_locations' => FALSE,
-      '#disabled' => FALSE,
       '#entity_types' => [],
     ];
   }

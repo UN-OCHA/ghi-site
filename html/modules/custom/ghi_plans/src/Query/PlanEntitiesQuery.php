@@ -230,6 +230,7 @@ class PlanEntitiesQuery extends EndpointQuery {
         'composed_reference' => $entity->composedReference,
         'description' => property_exists($entity_version->value, 'description') ? $entity_version->value->description : NULL,
         'icon' => !empty($entity_version->value->icon) ? $entity_version->value->icon : NULL,
+        'tags' => property_exists($entity_version, 'tags') ? $entity_version->tags : [],
       ];
     }, $matching_entities);
 

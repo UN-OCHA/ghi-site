@@ -10,7 +10,7 @@ use Drupal\ghi_plans\Helpers\DataPointHelper;
 use Drupal\ghi_plans\Query\AttachmentQuery;
 
 /**
- * Provides an entity counter item for configuration containers.
+ * Provides an attachment data item for configuration containers.
  *
  * @todo This needs implementation.
  *

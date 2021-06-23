@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
@@ -69,6 +70,10 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
     }
 
     $matching_entities = $this->getPlanEntities($conf['entity_ref_code']);
+    if (empty($matching_entities)) {
+      // Nothing to render.
+      return NULL;
+    }
     $valid_entities = $this->getValidPlanEntities($matching_entities, $conf);
     if (empty($valid_entities)) {
       // Nothing to render.
@@ -177,7 +182,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
 
     // If we have a plan context, add checkboxes to select individual entities.
     if ($this->getCurrentPlanId() && count($entity_ref_code_options)) {
-      $wrapper_id = 'hpc-plan-entities-wrapper';
+      $wrapper_id = Html::getId('hpc-plan-entities-wrapper');
 
       // Bind ajax callback for auto-update of available entities when the type
       // is changed.
@@ -269,7 +274,6 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
         }
       }
     }
-    $form['#preview_button_hidden'] = FALSE;
 
     return $form;
   }

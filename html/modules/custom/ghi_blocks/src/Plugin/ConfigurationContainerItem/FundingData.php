@@ -67,6 +67,13 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   public $clusterQuery;
 
   /**
+   * Flag fro disabling the FTS link for an instance.
+   *
+   * @var bool
+   */
+  private $ftsLinkDisabled = FALSE;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, PlanFundingSummaryQuery $funding_summary_query, PlanClusterSummaryQuery $plan_cluster_summary_query, FlowSearchQuery $flow_search_query, ClusterQuery $cluster_query) {
@@ -100,6 +107,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $element = parent::buildForm($element, $form_state);
 
     $context = $this->getContext();
+    $context_node = $context['context_node'];
 
     $data_type_options = $this->getDataTypeOptions();
     $data_type_key = $this->getSubmittedOptionsValue($element, $form_state, 'data_type', $data_type_options);
@@ -134,7 +142,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       $element['label']['#required'] = TRUE;
     }
 
-    if ($context['context_node']->bundle() == 'plan' && $data_type['cluster_restrict'] && !$this->clusterRestrictDisabled()) {
+    if ($context_node && $context_node->bundle() == 'plan' && $data_type['cluster_restrict'] && !$this->clusterRestrictDisabled()) {
       $element['cluster_restrict'] = $this->buildClusterRestrictFormElement($cluster_restrict);
     }
 
@@ -188,20 +196,27 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $context_node = $context['context_node'];
 
     $data_type = $this->getDataType($data_type_key ?: $this->get('data_type'));
-    $scale = ($scale ?: $this->get('scale')) ?: (!empty($data_type['scale']) ? $data_type['scale'] : 'auto');
+    $property = $data_type['property'];
     $cluster_restrict = $cluster_restrict ?: ($this->get('cluster_restrict') ?: NULL);
 
     $value = NULL;
+    if (empty($context['context_node']) && !empty($context['entity'])) {
+      return $this->planClusterSummaryQuery->getClusterProperty($context['entity'], $property, 0);
+    }
+    if (!$context_node) {
+      return $value;
+    }
     if ($context_node->bundle() == 'plan') {
       if (!empty($cluster_restrict) && !empty($cluster_restrict['type']) && $cluster_restrict['type'] != 'none') {
         $value = $this->getValueWithClusterRestrict($data_type, $cluster_restrict);
       }
       else {
-        $value = $this->fundingSummaryQuery->get($data_type['property'], 0);
+        $value = $this->fundingSummaryQuery->get($property, 0);
       }
     }
     elseif ($context_node->bundle() == 'governing_entity') {
-      $value = $this->planClusterSummaryQuery->getClusterProperty($context_node->field_original_id->value, $data_type['property'], 0);
+      $cluster_id = $context_node->field_original_id->value;
+      $value = $this->planClusterSummaryQuery->getClusterPropertyById($cluster_id, $property, 0);
     }
 
     return $value;
@@ -250,6 +265,9 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $plugin_configuration = $this->getPluginConfiguration();
     if (array_key_exists('fts_link', $plugin_configuration) && $plugin_configuration['fts_link'] !== TRUE) {
       // Explicitely requested to skip the link.
+      return FALSE;
+    }
+    if ($this->ftsLinkDisabled) {
       return FALSE;
     }
     // All items except the progress bar can have links to FTS.
@@ -411,6 +429,13 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   private function clusterRestrictDisabled() {
     $plugin_configuration = $this->getPluginConfiguration();
     return array_key_exists('cluster_restrict', $plugin_configuration) && $plugin_configuration['cluster_restrict'] === FALSE;
+  }
+
+  /**
+   * Explicitely disable the FTS link for an instance of this plugin.
+   */
+  public function disableFtsLink() {
+    $this->ftsLinkDisabled = TRUE;
   }
 
 }

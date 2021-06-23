@@ -72,38 +72,11 @@ trait AjaxElementTrait {
     // Just update the full element.
     $triggering_element = $form_state->getTriggeringElement();
     $wrapper_id = $triggering_element['#ajax']['wrapper'];
+
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand('#' . $wrapper_id, NestedArray::getValue($form, self::$elementParentsFormKey)));
 
-    // If a submit button has been triggered and we have a preview container,
-    // update that too.
-    if ($triggering_element['#type'] == 'submit' && $preview_container = self::findPreviewContainer($form)) {
-      $response->addCommand(new ReplaceCommand('#' . $preview_container['update_preview']['#ajax']['wrapper'], $preview_container));
-    }
-
     return $response;
-  }
-
-  /**
-   * Find a preview container.
-   *
-   * @param array $form
-   *   The form or element array.
-   *
-   * @return array|null
-   *   The preview container element or NULL.
-   */
-  private static function findPreviewContainer(array $form) {
-    if (array_key_exists('preview_container', $form)) {
-      return $form['preview_container'];
-    }
-    foreach (Element::children($form) as $element_key) {
-      $preview_container = self::findPreviewContainer($form[$element_key]);
-      if ($preview_container) {
-        return $preview_container;
-      }
-    }
-    return NULL;
   }
 
   /**

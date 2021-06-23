@@ -44,6 +44,7 @@ class ConfigurationContainer extends FormElement {
       '#max_items' => NULL,
       '#preview' => NULL,
       '#element_context' => [],
+      '#item_type_label' => $this->t('Item'),
       '#row_filter' => FALSE,
     ];
   }
@@ -284,7 +285,9 @@ class ConfigurationContainer extends FormElement {
     }
     $table_header = array_merge(
       [
-        'item_type' => t('Item type'),
+        'item_type' => t('@item_type_label type', [
+          '@item_type_label' => $element['#item_type_label'],
+        ]),
       ],
       $columns,
       [
@@ -309,7 +312,9 @@ class ConfigurationContainer extends FormElement {
 
     $element['add_new_item'] = [
       '#type' => 'submit',
-      '#value' => t('Add new item'),
+      '#value' => t('Add new @item_type_label', [
+        '@item_type_label' => strtolower($element['#item_type_label']),
+      ]),
       '#ajax' => [
         'event' => 'click',
         'callback' => [static::class, 'updateAjax'],
@@ -483,11 +488,15 @@ class ConfigurationContainer extends FormElement {
 
       $element['item_config']['item_type'] = [
         '#type' => 'select',
-        '#title' => t('Item type'),
+        '#title' => t('@item_type_label type', [
+          '@item_type_label' => $element['#item_type_label'],
+        ]),
         '#options' => $item_type_options,
         '#required' => empty($item['item_type']),
         '#default_value' => !empty($item['item_type']) ? $item['item_type'] : NULL,
-        '#description' => t('Select the item type that you want to add.'),
+        '#description' => t('Select the @item_type_label type that you want to add.', [
+          '@item_type_label' => strtolower($element['#item_type_label']),
+        ]),
         '#ajax' => [
           'event' => 'change',
           'callback' => [static::class, 'updateAjax'],
@@ -521,7 +530,7 @@ class ConfigurationContainer extends FormElement {
     }
 
     if (!empty($item['item_type']) && empty($trigger_parents)) {
-      $form_state->set('mode', $index ? 'edit_item' : 'add_item');
+      $form_state->set('mode', $index !== NULL ? 'edit_item' : 'add_item');
     }
 
     $item_type = self::getItemTypeInstance($item, $element);
@@ -543,7 +552,9 @@ class ConfigurationContainer extends FormElement {
 
         $element['item_config']['change_item_type'] = [
           '#type' => 'submit',
-          '#value' => t('Change item type'),
+          '#value' => t('Change @item_type_label type', [
+            '@item_type_label' => strtolower($element['#item_type_label']),
+          ]),
           '#ajax' => [
             'event' => 'click',
             'callback' => [static::class, 'updateAjax'],
