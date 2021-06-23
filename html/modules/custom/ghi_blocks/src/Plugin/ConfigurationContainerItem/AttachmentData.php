@@ -12,8 +12,6 @@ use Drupal\ghi_plans\Query\AttachmentQuery;
 /**
  * Provides an attachment data item for configuration containers.
  *
- * @todo This needs implementation.
- *
  * @ConfigurationContainerItem(
  *   id = "attachment_data",
  *   label = @Translation("Attachment data"),

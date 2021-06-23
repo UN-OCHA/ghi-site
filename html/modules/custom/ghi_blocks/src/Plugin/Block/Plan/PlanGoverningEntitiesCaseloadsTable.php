@@ -6,7 +6,10 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueFactory;
 use Drupal\Core\Routing\Router;
+use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
+use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
 use Drupal\hpc_api\Query\EndpointQuery;
@@ -35,7 +38,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   }
  * )
  */
-class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements SyncableBlockInterface {
+class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface {
+
+  use ConfigurationContainerTrait;
 
   /**
    * The manager class for configuration container items.
@@ -122,7 +127,13 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Syncab
       'label' => property_exists($config, 'widget_title') ? $config->widget_title : NULL,
       'label_display' => TRUE,
       'hpc' => [
-        'columns' => $columns,
+        'base' => [
+          'include_non_caseloads' => property_exists($config, 'include_non_caseloads') ? $config->include_non_caseloads : FALSE,
+          'include_unpublished_clusters' => property_exists($config, 'include_unpublished_clusters') ? $config->include_unpublished_clusters : FALSE,
+        ],
+        'table' => [
+          'columns' => $columns,
+        ],
       ],
     ];
   }
@@ -133,13 +144,13 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Syncab
   public function buildContent() {
     $conf = $this->getBlockConfig();
 
-    if (empty($conf['columns'])) {
+    if (empty($conf['table']['columns'])) {
       return NULL;
     }
 
     $allowed_items = $this->getAllowedItemTypes();
-    $columns = array_filter($conf['columns'], function ($column) use ($allowed_items) {
-      return array_key_exists($column['item_type'], $allowed_items);
+    $columns = array_filter($conf['table']['columns'], function ($column) use ($allowed_items) {
+      return !is_array($column) || array_key_exists($column['item_type'], $allowed_items);
     });
     if (empty($columns)) {
       return;
@@ -149,9 +160,8 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Syncab
 
     $header = [];
     foreach ($columns as $column) {
-      $item_type = $this->configurationContainerItemManager->createInstance($column['item_type'], $allowed_items[$column['item_type']]);
-      $item_type->setContext($context);
-      $item_type->setConfig($column['config']);
+      /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
+      $item_type = $this->getItemTypePluginForColumn($column);
       $header[] = [
         'data' => $item_type->getLabel(),
         'data-sort-type' => $item_type::SORT_TYPE,
@@ -180,12 +190,8 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Syncab
           continue;
         }
 
-        // Get an instance of the item type plugin for this column, set it's
-        // config and the context.
         /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
-        $item_type = $this->configurationContainerItemManager->createInstance($column['item_type'], $allowed_items[$column['item_type']]);
-        $item_type->setConfig($column['config']);
-        $item_type->setContext($context);
+        $item_type = $this->getItemTypePluginForColumn($column, $context);
 
         // Then add the value to the row.
         $row[] = [
@@ -231,15 +237,72 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Syncab
    */
   protected function getConfigurationDefaults() {
     return [
-      'columns' => [],
-
+      'base' => [
+        'include_cluster_not_reported' => FALSE,
+        'include_shared_funding' => FALSE,
+        'hide_target_values_for_projects' => FALSE,
+        'cluster_restrict' => [],
+      ],
+      'table' => [
+        'columns' => [],
+      ],
     ];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getConfigForm(array $form, FormStateInterface $form_state) {
+  public function getSubforms() {
+    return [
+      'base' => [
+        'title' => $this->t('Base settings'),
+        'callback' => 'baseForm',
+        'base_form' => TRUE,
+      ],
+      'table' => [
+        'title' => $this->t('Table columns'),
+        'callback' => 'tableForm',
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultSubform() {
+    $conf = $this->getBlockConfig();
+    if (!empty($conf['table']) && !empty($conf['table'])) {
+      return 'table';
+    }
+    return 'base';
+  }
+
+  /**
+   * Form callback for the base settings form.
+   */
+  public function baseForm(array $form, FormStateInterface $form_state) {
+
+    $form['include_non_caseloads'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Include clusters without caseloads'),
+      '#description' => $this->t('Check this if you want that clusters without caseload attachments are to be included in the table.'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'include_non_caseloads'),
+    ];
+
+    $form['include_unpublished_clusters'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Include unpublished clusters'),
+      '#description' => $this->t('Check this if you want that unpublished clusters are to be included in the table.'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'include_unpublished_clusters'),
+    ];
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function tableForm(array $form, FormStateInterface $form_state) {
     $default_value = $this->getDefaultFormValueFromFormState($form_state, 'columns');
     if (empty($default_value)) {
       $default_value = [
@@ -260,7 +323,6 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Syncab
       '#preview' => [
         'columns' => [
           'label' => $this->t('Label'),
-          // 'value' => $this->t('Value'),
         ],
       ],
       '#element_context' => $this->getBlockContext(),
@@ -338,16 +400,9 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Syncab
   public function getAllowedItemTypes() {
     $item_types = [
       'entity_name' => [],
-      'attachment_data' => [
-        'label' => $this->t('Caseload/indicator value'),
-        'access' => [
-          'node_type' => ['plan', 'governing_entity'],
-        ],
-        'data_point' => [
-          'widget' => FALSE,
-        ],
+      'data_point' => [
+        'label' => $this->t('Data point'),
       ],
-      'label_value' => [],
     ];
     return $item_types;
   }

@@ -8,9 +8,11 @@ use Drupal\Core\KeyValueStore\KeyValueFactory;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Routing\Router;
+use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
+use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -27,7 +29,9 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *  }
  * )
  */
-class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface, ContainerFactoryPluginInterface {
+class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlockInterface, SyncableBlockInterface, ContainerFactoryPluginInterface {
+
+  use ConfigurationContainerTrait;
 
   const MAX_ITEMS = 6;
 
@@ -213,9 +217,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
         continue;
       }
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
-      $item_type = $this->configurationContainerItemManager->createInstance($item['item_type'], $allowed_items[$item['item_type']]);
-      $item_type->setConfig($item['config']);
-      $item_type->setContext($this->getBlockContext());
+      $item_type = $this->getItemTypePluginForColumn($item);
 
       $rendered[] = [
         '#type' => 'item',

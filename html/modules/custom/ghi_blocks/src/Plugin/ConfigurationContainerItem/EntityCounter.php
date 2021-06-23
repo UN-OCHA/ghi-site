@@ -5,7 +5,7 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\ghi_blocks\Traits\ValuePreviewConfigurationItemTrait;
+use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Query\IconQuery;
@@ -29,7 +29,7 @@ use Drupal\node\NodeInterface;
  */
 class EntityCounter extends ConfigurationContainerItemPluginBase {
 
-  use ValuePreviewConfigurationItemTrait;
+  use ConfigurationItemValuePreviewTrait;
 
   /**
    * The plan entities query.

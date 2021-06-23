@@ -7,9 +7,11 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueFactory;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Routing\Router;
+use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\ghi_blocks\Traits\ClusterRestrictConfigurationItemTrait;
+use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
@@ -39,9 +41,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   }
  * )
  */
-class PlanGoverningEntitiesTable extends GHIBlockBase implements MultiStepFormBlockInterface, SyncableBlockInterface {
+class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface {
 
-  use ClusterRestrictConfigurationItemTrait;
+  use ConfigurationContainerTrait;
+  use ConfigurationItemClusterRestrictTrait;
 
   /**
    * The manager class for configuration container items.
@@ -397,31 +400,6 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements MultiStepFormBl
   }
 
   /**
-   * Get the item type plugin responsible for the given column.
-   *
-   * @param array $column
-   *   A column array.
-   * @param array $context
-   *   An array of context objects.
-   *
-   * @return \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface
-   *   The item type plugin.
-   */
-  private function getItemTypePluginForColumn(array $column, array $context = NULL) {
-    // Get an instance of the item type plugin for this column, set it's
-    // config and the context.
-    $allowed_items = $this->getAllowedItemTypes();
-    if ($context === NULL) {
-      $context = $this->getBlockContext();
-    }
-    /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
-    $item_type = $this->configurationContainerItemManager->createInstance($column['item_type'], $allowed_items[$column['item_type']]);
-    $item_type->setConfig($column['config']);
-    $item_type->setContext($context);
-    return $item_type;
-  }
-
-  /**
    * Returns generic default configuration for block plugins.
    *
    * @return array
@@ -593,10 +571,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements MultiStepFormBl
   }
 
   /**
-   * Get the custom context for this block.
-   *
-   * @return array
-   *   An array with context data or query handlers.
+   * {@inheritdoc}
    */
   public function getBlockContext() {
     return [
@@ -607,11 +582,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements MultiStepFormBl
   }
 
   /**
-   * Get the allowed item types for this element.
-   *
-   * @return array
-   *   An array with the allowed item types, keyed by the plugin id, with the
-   *   value being an optional configuration array for the plugin.
+   * {@inheritdoc}
    */
   public function getAllowedItemTypes() {
     $item_types = [

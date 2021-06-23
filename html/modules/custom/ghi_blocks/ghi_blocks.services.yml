@@ -1,0 +1,5 @@
+services:
+  ghi_blocks.layout_builder.route_subscriber:
+    class: Drupal\ghi_blocks\EventSubscriber\LayoutBuilderRouteSubscriber
+    tags:
+      - { name: event_subscriber }

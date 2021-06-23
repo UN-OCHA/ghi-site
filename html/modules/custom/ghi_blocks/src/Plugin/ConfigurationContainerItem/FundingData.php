@@ -4,9 +4,9 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ghi_blocks\Traits\ClusterRestrictConfigurationItemTrait;
+use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\FtsLinkTrait;
-use Drupal\ghi_blocks\Traits\ValuePreviewConfigurationItemTrait;
+use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Query\ClusterQuery;
@@ -34,8 +34,8 @@ use Drupal\node\NodeInterface;
  */
 class FundingData extends ConfigurationContainerItemPluginBase {
 
-  use ClusterRestrictConfigurationItemTrait;
-  use ValuePreviewConfigurationItemTrait;
+  use ConfigurationItemClusterRestrictTrait;
+  use ConfigurationItemValuePreviewTrait;
   use FtsLinkTrait;
 
   /**

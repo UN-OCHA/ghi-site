@@ -5,7 +5,7 @@ namespace Drupal\ghi_blocks\Traits;
 /**
  * Helper trait for cluster restriction on configurtion item plugins.
  */
-trait ValuePreviewConfigurationItemTrait {
+trait ConfigurationItemValuePreviewTrait {
 
   /**
    * Build the cluster restrict form element.

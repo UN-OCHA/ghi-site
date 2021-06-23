@@ -7,7 +7,7 @@ use Drupal\ghi_plans\Query\ClusterQuery;
 /**
  * Helper trait for cluster restriction on configurtion item plugins.
  */
-trait ClusterRestrictConfigurationItemTrait {
+trait ConfigurationItemClusterRestrictTrait {
 
   /**
    * Build the cluster restrict form element.
