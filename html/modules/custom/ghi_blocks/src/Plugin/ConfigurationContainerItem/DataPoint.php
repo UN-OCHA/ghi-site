@@ -61,14 +61,10 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
       '#type' => 'data_point',
       '#element_context' => $this->getContext(),
       '#attachment' => $attachment,
+      '#attachment_prototype' => $configuration['attachment_prototype'],
       '#default_value' => $data_point,
       '#weight' => 5,
     ];
-    if (array_key_exists('data_point', $configuration) && is_array($configuration['data_point'])) {
-      foreach ($configuration['data_point'] as $config_key => $config_value) {
-        $element['data_point']['#' . $config_key] = $config_value;
-      }
-    }
 
     return $element;
   }

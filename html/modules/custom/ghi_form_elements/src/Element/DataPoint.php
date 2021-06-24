@@ -83,7 +83,8 @@ class DataPoint extends FormElement {
    */
   public static function processDataPoint(array &$element, FormStateInterface $form_state) {
     $attachment = $element['#attachment'];
-    if (empty($attachment)) {
+    $attachment_prototype = $attachment ? $attachment->prototype : $element['#attachment_prototype'];
+    if (empty($attachment) && empty($attachment_prototype)) {
       return $element;
     }
 
@@ -97,7 +98,7 @@ class DataPoint extends FormElement {
       'processing' => !empty($values['processing']) ? $values['processing'] : array_key_first(DataPointHelper::getProcessingOptions()),
       'calculation' => !empty($values['calculation']) ? $values['calculation'] : NULL,
       'data_points' => [
-        0 => array_key_exists(0, $values['data_points']) ? $values['data_points'][0] : array_key_first($attachment->prototype->fields),
+        0 => array_key_exists(0, $values['data_points']) ? $values['data_points'][0] : array_key_first($attachment_prototype->fields),
         1 => array_key_exists(1, $values['data_points']) ? $values['data_points'][1] : NULL,
       ],
       'formatting' => !empty($values['formatting']) ? $values['formatting'] : array_key_first(DataPointHelper::getFormattingOptions()),
@@ -136,11 +137,14 @@ class DataPoint extends FormElement {
 
     $data_point_options = self::getDataPointOptions($element);
 
-    $element['data_points'] = [];
+    $element['data_points'] = [
+      '#type' => 'container',
+    ];
     $element['data_points'][0] = [
       '#type' => 'select',
       '#title' => t('Data point'),
       '#options' => $data_point_options,
+      // '#name' => 'data-point-0',
       '#default_value' => $defaults['data_points'][0],
       '#ajax' => [
         'event' => 'change',
@@ -152,6 +156,7 @@ class DataPoint extends FormElement {
       '#type' => 'select',
       '#title' => t('Data point (2)'),
       '#options' => $data_point_options,
+      // '#name' => 'data-point-1',
       '#default_value' => $defaults['data_points'][1],
       '#states' => [
         'visible' => [
@@ -190,14 +195,16 @@ class DataPoint extends FormElement {
       '#access' => !empty($element['#widget']),
     ];
 
-    // Add a preview.
-    $build = DataPointHelper::formatValue($attachment, $defaults);
-    $element['value_preview'] = [
-      '#type' => 'item',
-      '#title' => t('Value preview'),
-      '#markup' => ThemeHelper::render($build),
-      '#access' => empty($element['#hidden']),
-    ];
+    // Add a preview if we have an attachment.
+    if (!empty($attachment)) {
+      $build = DataPointHelper::formatValue($attachment, $defaults);
+      $element['value_preview'] = [
+        '#type' => 'item',
+        '#title' => t('Value preview'),
+        '#markup' => ThemeHelper::render($build),
+        '#access' => empty($element['#hidden']),
+      ];
+    }
 
     if (!empty($element['#hidden'])) {
       self::hideAllElements($element);
@@ -224,11 +231,12 @@ class DataPoint extends FormElement {
    */
   public static function getDataPointOptions($element) {
     $attachment = $element['#attachment'];
-    if (empty($element['#disable_empty_fields'])) {
-      return $attachment->prototype->fields;
+    $attachment_prototype = $attachment ? $attachment->prototype : $element['#attachment_prototype'];
+    if (empty($element['#disable_empty_fields']) || empty($attachment)) {
+      return $attachment_prototype->fields;
     }
     $options = [];
-    foreach ($attachment->prototype->fields as $key => $field) {
+    foreach ($attachment_prototype->fields as $key => $field) {
       if ($attachment->values[$key] === NULL) {
         $options[$field] = [];
       }

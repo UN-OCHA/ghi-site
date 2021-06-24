@@ -9,6 +9,7 @@ use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
+use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use GuzzleHttp\ClientInterface;
@@ -19,6 +20,8 @@ use Drupal\node\NodeInterface;
  * Query class for fetching plan data with a focus on plan entities.
  */
 class PlanEntitiesQuery extends EndpointQuery {
+
+  use AttachmentFilterTrait;
 
   /**
    * Constructs a new PlanEntitiesQuery object.
@@ -40,44 +43,6 @@ class PlanEntitiesQuery extends EndpointQuery {
       'version' => 'current',
       'disaggregation' => 'false',
     ];
-  }
-
-  /**
-   * Map attachment types to their tring representation in the API.
-   *
-   * @param string $type
-   *   The type used in GHI.
-   *
-   * @return string
-   *   The type used in the API.
-   */
-  private function mapAttachmentType($type) {
-    $type_map = [
-      'caseload' => 'caseLoad',
-    ];
-    return !empty($type_map[$type]) ? $type_map[$type] : $type;
-  }
-
-  /**
-   * Preare attachment filters.
-   *
-   * @param array $filter
-   *   The passed in filter array.
-   *
-   * @return array
-   *   A prepared filter array.
-   */
-  private function prepareAttachmentFilter(array $filter) {
-    if (empty($filter)) {
-      return $filter;
-    }
-    $filter = array_filter($filter, function ($item) {
-      return $item !== NULL;
-    });
-    if (!empty($filter['type'])) {
-      $filter['type'] = array_map([$this, 'mapAttachmentType'], (array) $filter['type']);
-    }
-    return $filter;
   }
 
   /**
@@ -120,7 +85,7 @@ class PlanEntitiesQuery extends EndpointQuery {
     }
 
     if (!empty($filter)) {
-      $attachments = ArrayHelper::filterArray($attachments, $this->prepareAttachmentFilter($filter));
+      $attachments = $this->filterAttachments($attachments, $filter);
     }
     return $attachments;
   }

@@ -11,7 +11,7 @@ use GuzzleHttp\ClientInterface;
 use Drupal\hpc_api\Query\EndpointQuery;
 
 /**
- * Query class for fetching plan data with a focus on plan entities.
+ * Query class for fetching funding data for a plan.
  */
 class PlanFundingSummaryQuery extends EndpointQuery {
 

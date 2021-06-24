@@ -14,6 +14,12 @@ services:
   ghi_plans.attachment_query:
     parent: hpc_api.endpoint_query
     class: Drupal\ghi_plans\Query\AttachmentQuery
+  ghi_plans.attachment_search_query:
+    parent: hpc_api.endpoint_query
+    class: Drupal\ghi_plans\Query\AttachmentSearchQuery
+  ghi_plans.attachment_prototype_query:
+    parent: hpc_api.endpoint_query
+    class: Drupal\ghi_plans\Query\AttachmentPrototypeQuery
   ghi_plans.flow_search_query:
     parent: hpc_api.endpoint_query
     class: Drupal\ghi_plans\Query\FlowSearchQuery

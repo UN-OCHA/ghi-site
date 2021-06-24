@@ -205,17 +205,16 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
    */
   public function buildContent() {
     $conf = $this->getBlockConfig();
-    if (empty($conf['items'])) {
+
+    $items = $this->getConfiguredItems($conf['items']);
+
+    if (empty($items)) {
       return;
     }
 
-    $allowed_items = $this->getAllowedItemTypes();
-
     $rendered = [];
     foreach ($conf['items'] as $item) {
-      if (!array_key_exists($item['item_type'], $allowed_items)) {
-        continue;
-      }
+
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
       $item_type = $this->getItemTypePluginForColumn($item);
 

@@ -69,7 +69,7 @@ class DataPointHelper {
         return [
           '#theme' => 'hpc_autoformat_value',
           '#value' => $value,
-          '#unit_type' => $attachment->unit->type,
+          '#unit_type' => $attachment->unit ? $attachment->unit->type : 'amount',
         ];
 
       case 'currency':

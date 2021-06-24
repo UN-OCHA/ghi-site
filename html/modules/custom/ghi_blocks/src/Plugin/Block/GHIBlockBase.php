@@ -283,9 +283,12 @@ abstract class GHIBlockBase extends HPCBlockBase {
   public function blockForm($form, FormStateInterface $form_state) {
     parent::blockForm($form, $form_state);
 
+    // Not sure why, but the preview toggles vallue is not available in the
+    // blockElementSubmit callback, so we have to catch this here.
     if ($form_state->getTriggeringElement()) {
-      $action = end($form_state->getTriggeringElement()['#parents']);
+      $action = (string) end($form_state->getTriggeringElement()['#parents']);
       if ($action == 'preview') {
+        // If the preview checkbox has been used, toggle the preview state.
         $preview = $form_state->get('preview');
         $form_state->set('preview', !$preview);
       }
@@ -426,22 +429,15 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $plugin_definition = $this->getPluginDefinition();
     $plugin_configuration = $this->getConfiguration();
 
-    $settings_form = [];
-
     // Disable all of the default settings elements. We will handle them.
-    if ($this->getBaseSubFormKey()) {
-      $form['admin_label']['#access'] = FALSE;
-      $form['admin_label']['#value'] = (string) $plugin_definition['admin_label'];
-      $form['label']['#access'] = FALSE;
-      $form['label']['#required'] = FALSE;
-      $form['label']['#value'] = (string) $plugin_configuration['label'];
-      $form['label_display']['#access'] = FALSE;
-      $form['label_display']['#value'] = (string) $plugin_configuration['label_display'];
-      $settings_form = &$form['container'];
-    }
-    else {
-      $settings_form = &$form;
-    }
+    $form['admin_label']['#access'] = FALSE;
+    $form['admin_label']['#value'] = (string) $plugin_definition['admin_label'];
+    $form['label']['#access'] = FALSE;
+    $form['label']['#required'] = FALSE;
+    $form['label']['#value'] = (string) $plugin_configuration['label'];
+    $form['label_display']['#access'] = FALSE;
+    $form['label_display']['#value'] = (string) $plugin_configuration['label_display'];
+    $settings_form = &$form['container'];
 
     // Now manipulate the default settings elements according to our needs.
     if (array_key_exists('label', $settings_form)) {
@@ -475,12 +471,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
       }
     }
 
-    // Set the element validate callback for all ajax enabled form elements.
-    // This is needed so that the current form values will be stored in the
-    // form and are therefor available for an immediate update of other
-    // elements that might depend on the changed data.
-    $this->setElementValidateOnAjaxElements($form['container']);
-
     return $form;
   }
 
@@ -497,15 +487,14 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $triggering_element = $form_state->getTriggeringElement();
 
     // Get the subform key we have been on when the action was triggered.
-    $current_subform = $form_state->get('current_subform') ?? [];
+    $current_subform = $form_state->get('current_subform');
     $action = end($triggering_element['#parents']);
     if (!in_array($action, ['submit', 'preview'])) {
       return;
     }
 
     // Get the values for that subform and.
-    $step_values = $form_state->cleanValues()->getValue($current_subform);
-
+    $step_values = $form_state->cleanValues()->getValue($current_subform ?? []);
     if ($step_values === NULL) {
       $form_state->setRebuild($action == 'preview');
       return;
@@ -518,7 +507,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       return;
     }
     else {
-      // For the preview, set the current step values.
+      // Set the current step values for preview.
       $form_state->setValue($current_subform, $step_values);
       $form_state->set(['storage', $current_subform], $step_values);
       $form_state->setTemporaryValue($current_subform, $step_values);
@@ -617,6 +606,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       '#name' => 'preview-toggle',
       // Note: This doesn't work. We manually add the checked attribute later.
       '#default_value' => (bool) $is_preview,
+      // '#element_validate' => [get_class($this) . '::previewValidate'],
       '#ajax' => [
         'event' => 'change',
         'callback' => [$this, 'navigateFormStep'],
@@ -640,12 +630,19 @@ abstract class GHIBlockBase extends HPCBlockBase {
       ],
     ];
     $form['actions']['#weight'] = 99;
+
+    // Set the element validate callback for all ajax enabled form elements.
+    // This is needed so that the current form values will be stored in the
+    // form and are therefor available for an immediate update of other
+    // elements that might depend on the changed data.
+    $this->setElementValidateOnAjaxElements($form['settings']['container']);
+    $this->setElementValidateOnAjaxElements($form['actions']['subforms']['preview']);
   }
 
   /**
    * Get the base form key if this is a multi step form.
    *
-   * @return string|null
+   * @return string
    *   Get the subform key for the base form.
    */
   private function getBaseSubFormKey() {
@@ -658,7 +655,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
         return $subform_key;
       }
     }
-    return NULL;
+    // Fallback is the first defined subform.
+    return array_key_first($subforms);
   }
 
   /**
@@ -799,6 +797,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $temporary_values = $form_state->hasTemporaryValue($form_key) ? (array) $form_state->getTemporaryValue($form_key) : [];
         $storage_values = $form_state->has($storage_key) ? (array) $form_state->get($storage_key) : [];
         $submitted_values = !empty($values[$form_key]) ? $values[$form_key] : [];
+
         $settings[$form_key] = $temporary_values + $storage_values + $submitted_values;
 
         if (empty($settings[$form_key]) && !empty($this->configuration['hpc'][$form_key])) {

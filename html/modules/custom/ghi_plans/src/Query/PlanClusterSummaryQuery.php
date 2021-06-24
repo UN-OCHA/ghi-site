@@ -12,7 +12,7 @@ use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
- * Query class for fetching plan data with a focus on plan entities.
+ * Query class for fetching clusters for a plan.
  */
 class PlanClusterSummaryQuery extends EndpointQuery {
 

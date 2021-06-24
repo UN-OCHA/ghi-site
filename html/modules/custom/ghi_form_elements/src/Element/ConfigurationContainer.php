@@ -64,7 +64,7 @@ class ConfigurationContainer extends FormElement {
     $items = (array) $form_state->get('items');
     $triggering_element = $form_state->getTriggeringElement();
     $parents = $triggering_element['#parents'];
-    $action = array_pop($parents);
+    $action = (string) array_pop($parents);
 
     $new_mode = NULL;
 

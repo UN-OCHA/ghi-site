@@ -79,13 +79,14 @@ class EntityName extends ConfigurationContainerItemPluginBase {
     if (!$entity) {
       return NULL;
     }
+    $entity_name = $this->getValue();
     if (empty($entity->icon)) {
-      return $entity->name;
+      return $entity_name;
     }
 
     $icon_embed = $this->iconQuery->getIconEmbedCode($entity->icon);
     $markup = [
-      '#markup' => Markup::create($icon_embed . '<span class="name">' . $entity->name . '</span>'),
+      '#markup' => Markup::create($icon_embed . '<span class="name">' . $entity_name . '</span>'),
     ];
     if ($context_node && $context_node->access('view')) {
       return Link::fromTextAndUrl($markup, $context_node->toUrl())->toRenderable();
@@ -93,14 +94,6 @@ class EntityName extends ConfigurationContainerItemPluginBase {
     else {
       return $markup;
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSortableValue() {
-    $entity = $this->getContextValue('entity');
-    return $entity ? $entity->name : NULL;
   }
 
 }

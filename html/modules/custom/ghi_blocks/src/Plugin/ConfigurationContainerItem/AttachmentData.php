@@ -77,7 +77,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
       '#weight' => 2,
     ];
 
-    $trigger = $form_state->getTriggeringElement() ? end($form_state->getTriggeringElement()['#parents']) : NULL;
+    $trigger = $form_state->getTriggeringElement() ? (string) end($form_state->getTriggeringElement()['#parents']) : NULL;
     $triggered_by_change_request = $trigger == 'change_attachment';
 
     $attachment = NULL;

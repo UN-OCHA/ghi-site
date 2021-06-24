@@ -39,6 +39,28 @@ trait ConfigurationContainerTrait {
   }
 
   /**
+   * Retrieve the valid configured items from an item store.
+   *
+   * @param array $item_store
+   *   The storage for configured items. This should be in most cases a part of
+   *   the block configuration array.
+   *
+   * @return array
+   *   An array of valid item configurations.
+   */
+  public function getConfiguredItems(array $item_store = NULL) {
+    if (empty($item_store)) {
+      return NULL;
+    }
+
+    $allowed_items = $this->getAllowedItemTypes();
+    $items = array_filter($item_store, function ($item) use ($allowed_items) {
+      return is_array($item) && array_key_exists('item_type', $item) && array_key_exists($item['item_type'], $allowed_items);
+    });
+    return $items;
+  }
+
+  /**
    * Get the item type plugin responsible for the given column.
    *
    * @param array $column

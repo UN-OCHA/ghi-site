@@ -183,24 +183,10 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   public function buildContent() {
     $conf = $this->getBlockConfig();
 
-    if (empty($conf['table']['columns'])) {
-      return NULL;
-    }
-
-    $allowed_items = $this->getAllowedItemTypes();
-    $columns = array_filter($conf['table']['columns'], function ($column) use ($allowed_items) {
-      if (!is_array($column) || !array_key_exists('item_type', $column)) {
-        return FALSE;
-      }
-      return array_key_exists($column['item_type'], $allowed_items);
-    });
-
-    if (empty($columns)) {
-      return NULL;
-    }
-
+    $columns = $this->getConfiguredItems($conf['table']['columns']);
     $entities = $this->getEntityObjects();
-    if (empty($entities)) {
+
+    if (empty($columns) | empty($entities)) {
       return NULL;
     }
 
@@ -249,9 +235,6 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       $row = [];
       $skip_row = FALSE;
       foreach ($columns as $column) {
-        if (!array_key_exists($column['item_type'], $allowed_items)) {
-          continue;
-        }
 
         /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
         $item_type = $this->getItemTypePluginForColumn($column, $context);
