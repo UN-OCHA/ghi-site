@@ -141,6 +141,13 @@ function common_design_subtheme_preprocess_hpc_progress_bar(array &$variables) {
 }
 
 /**
+ * Preprocess an hpc pic chart to attach our library.
+ */
+function common_design_subtheme_preprocess_hpc_pie_chart(array &$variables) {
+  $variables['#attached']['library'][] = 'common_design_subtheme/ghi-pie-chart';
+}
+
+/**
  * Preprocess a plan headline figures list.
  */
 function common_design_subtheme_preprocess_item_list__plan_headline_figures(&$variables) {

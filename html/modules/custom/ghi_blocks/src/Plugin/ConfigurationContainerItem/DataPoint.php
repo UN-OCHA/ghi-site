@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Component\Utility\Html;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\DataPointHelper;
@@ -86,11 +87,28 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getClasses() {
+    $classes = parent::getClasses();
+
+    $data_point_conf = $this->get('data_point');
+    if ($data_point_conf['widget'] != 'none') {
+      $classes[] = Html::getClass($this->getPluginId() . '--widget');
+      $classes[] = Html::getClass($this->getPluginId() . '--widget-' . $data_point_conf['widget']);
+    }
+    else {
+      $classes[] = Html::getClass($this->getPluginId() . '--formatting-' . $data_point_conf['formatting']);
+    }
+    return $classes;
+  }
+
+  /**
    * Get the attachment object for this item.
    */
   private function getAttachmentObject() {
     $attachment = $this->getContextValue('attachment');
-    $data_point_conf = $this->get(['data_point']);
+    $data_point_conf = $this->get('data_point');
     if (!$attachment || !$data_point_conf) {
       return NULL;
     }

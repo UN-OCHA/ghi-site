@@ -86,7 +86,18 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       'governing_entity_name' => [
         'target' => 'entity_name',
       ],
-      // @todo Add mapping for data points.
+      'data_point' => [
+        'target' => 'data_point',
+      ],
+      'data_point_single' => [
+        'target' => 'data_point',
+      ],
+      'data_point_calculated_progressbar' => [
+        'target' => 'data_point',
+      ],
+      'data_point_calculated_pie_chart' => [
+        'target' => 'data_point',
+      ],
     ];
     foreach ($config->table_columns as $incoming_item) {
       $source_type = !empty($incoming_item->element) ? $incoming_item->element : NULL;
@@ -115,8 +126,14 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       }
       switch ($transition_definition['target']) {
 
-        case 'entity_name':
-          // Just a placeholder.
+        case 'data_point':
+          $value->data_points[0] = $value->data_point_1;
+          $value->data_points[1] = $value->data_point_2;
+          $value->widget = $value->mini_widget;
+          unset($value->data_point_1);
+          unset($value->data_point_2);
+          unset($value->mini_widget);
+          $item['config']['data_point'] = (array) $value;
           break;
 
         default:
@@ -193,7 +210,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
 
       // Clusters are displayed if they are either published, or the element is
       // configured to also display unpublished clusters.
-      if (!$entity_node->isPublished() && empty($conf['base']['include_unpublished_clusters'])) {
+      if (!$entity_node->access('view') && empty($conf['base']['include_unpublished_clusters'])) {
         continue;
       }
 

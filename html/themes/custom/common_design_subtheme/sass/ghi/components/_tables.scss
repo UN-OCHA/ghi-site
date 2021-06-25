@@ -1,0 +1,17 @@
+table.ghi-table {
+  tbody {
+    td.data-point--widget-pie-chart {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+
+      .hpc-pie-chart-wrapper {
+        display: inline-flex;
+        width: auto;
+        height: 100%;
+        margin-left: 5px;
+        aspect-ratio: 1 / 1;
+      }
+    }
+  }
+}

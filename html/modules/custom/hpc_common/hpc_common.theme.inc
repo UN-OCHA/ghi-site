@@ -218,6 +218,24 @@ function hpc_common_preprocess_hpc_progress_bar(array &$vars) {
 }
 
 /**
+ * Preprocess a progress bar.
+ */
+function hpc_common_preprocess_hpc_pie_chart(array &$vars) {
+  $export = $vars['export'];
+  $vars['percent'] = ((float) ($vars['percent'] ?? ($vars['ratio'] * 100)));
+  $vars['precision'] = 1;
+  $vars['formatted_value'] = $vars['percent'] !== NULL && !$export ? ThemeHelper::theme('hpc_percent', ThemeHelper::getThemeOptions('hpc_percent', $vars['percent'], $vars)) : t('N/A');
+
+  $pie_value = round($vars['percent'], 2);
+  $pie_value = $pie_value == 0 ? 0.01 : $pie_value;
+  $vars['pie_value'] = $pie_value;
+
+  $wrapper_attributes = new Attribute();
+  $wrapper_attributes->addClass('hpc-pie-chart-wrapper');
+  $vars['wrapper_attributes'] = $wrapper_attributes;
+}
+
+/**
  * Preprocess a tooltip.
  */
 function hpc_common_preprocess_hpc_tooltip(array &$vars) {

@@ -52,6 +52,12 @@ class DataPointHelper {
    */
   public static function formatValue($attachment, array $data_point_conf) {
     $value = self::getValue($attachment, $data_point_conf);
+    if ($value === NULL) {
+      return [
+        '#markup' => t('Pending'),
+      ];
+    }
+    $rendered_value = NULL;
     switch ($data_point_conf['formatting']) {
       case 'raw':
         return [
@@ -60,47 +66,78 @@ class DataPointHelper {
 
       case 'auto':
         if ($data_point_conf['processing'] == 'calculated' && $data_point_conf['calculation'] == 'percentage') {
-          return [
+          $rendered_value = [
             '#theme' => 'hpc_percent',
             '#ratio' => $value,
             '#decimals' => 1,
           ];
         }
-        return [
+        $rendered_value = [
           '#theme' => 'hpc_autoformat_value',
           '#value' => $value,
           '#unit_type' => $attachment->unit ? $attachment->unit->type : 'amount',
         ];
+        break;
 
       case 'currency':
-        return [
+        $rendered_value = [
           '#theme' => 'hpc_currency',
           '#value' => $value,
         ];
+        break;
 
       case 'amount':
-        return [
+        $rendered_value = [
           '#theme' => 'hpc_amount',
           '#amount' => $value,
         ];
+        break;
 
       case 'amount_rounded':
-        return [
+        $rendered_value = [
           '#theme' => 'hpc_amount',
           '#amount' => $value,
           '#decimals' => 1,
         ];
+        break;
 
       case 'percent':
-        return [
+        $rendered_value = [
           '#theme' => 'hpc_percent',
           '#ratio' => $value,
           '#decimals' => 1,
         ];
+        break;
 
       default:
         throw new InvalidTypeException(sprintf('Unknown formatting type: %s', $data_point_conf['formatting']));
     }
+
+    $widget = NULL;
+    switch ($data_point_conf['widget']) {
+      case 'progressbar':
+        $widget = [
+          '#theme' => 'hpc_progress_bar',
+          '#ratio' => $value,
+        ];
+        break;
+
+      case 'pie_chart':
+        $widget = [
+          '#theme' => 'hpc_pie_chart',
+          '#ratio' => $value,
+          '#hide_value' => TRUE,
+        ];
+        break;
+
+      default:
+        // Nothing.
+    }
+
+    return $widget ? [
+      $rendered_value,
+      $widget,
+    ] : $rendered_value;
   }
 
   /**

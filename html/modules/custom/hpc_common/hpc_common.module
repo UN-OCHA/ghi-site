@@ -84,6 +84,16 @@ function hpc_common_theme($existing, $type, $theme, $path) {
       ],
       'template' => 'hpc-progress-bar',
     ] + $common,
+    'hpc_pie_chart' => [
+      'variables' => [
+        'ratio' => NULL,
+        'label' => NULL,
+        'export' => FALSE,
+        'hide_value' => FALSE,
+        'formatting_decimals' => NULL,
+      ],
+      'template' => 'hpc-pie-chart',
+    ] + $common,
     'hpc_autoformat_value' => [
       'variables' => [
         'value' => NULL,
