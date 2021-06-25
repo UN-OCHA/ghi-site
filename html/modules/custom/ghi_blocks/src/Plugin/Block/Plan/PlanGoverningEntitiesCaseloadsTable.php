@@ -15,6 +15,7 @@ use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\NodeHelper;
+use Drupal\node\NodeInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -79,7 +80,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   /**
    * {@inheritdoc}
    */
-  public static function mapConfig($config) {
+  public static function mapConfig($config, NodeInterface $node) {
     $columns = [];
     // Define a transition map.
     $transition_map = [
@@ -174,7 +175,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     $header = [];
     foreach ($columns as $column) {
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
-      $item_type = $this->getItemTypePluginForColumn($column);
+      $item_type = $this->getItemTypePluginForColumn($column, $context);
       $header[] = [
         'data' => $item_type->getLabel(),
         'data-sort-type' => $item_type::SORT_TYPE,
@@ -650,6 +651,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
         'label' => $this->t('Data point'),
         'attachment_prototype' => $this->getAttachmentPrototype(),
       ],
+      'monitoring_period' => [],
     ];
     return $item_types;
   }

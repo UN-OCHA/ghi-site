@@ -14,6 +14,7 @@ use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\node\NodeInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -71,7 +72,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
   /**
    * {@inheritdoc}
    */
-  public static function mapConfig($config) {
+  public static function mapConfig($config, NodeInterface $node) {
     $items = [];
     // Define a transition map.
     $transition_map = [

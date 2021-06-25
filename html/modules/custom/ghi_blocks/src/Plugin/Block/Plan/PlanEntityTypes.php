@@ -10,6 +10,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\node\NodeInterface;
 
 /**
  * Provides a 'PlanEntityTypes' block.
@@ -33,7 +34,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
   /**
    * {@inheritdoc}
    */
-  public static function mapConfig($config) {
+  public static function mapConfig($config, NodeInterface $node) {
     return [
       'label' => '',
       'label_display' => TRUE,

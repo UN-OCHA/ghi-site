@@ -17,6 +17,7 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\NodeHelper;
+use Drupal\node\NodeInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -82,7 +83,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   /**
    * {@inheritdoc}
    */
-  public static function mapConfig($config) {
+  public static function mapConfig($config, NodeInterface $node) {
     $columns = [];
     // Define a transition map.
     $transition_map = [

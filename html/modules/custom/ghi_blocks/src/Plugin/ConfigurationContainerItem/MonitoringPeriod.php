@@ -13,12 +13,12 @@ use Drupal\ghi_plans\Query\AttachmentQuery;
  * Provides an attachment data item for configuration containers.
  *
  * @ConfigurationContainerItem(
- *   id = "data_point",
- *   label = @Translation("Data point"),
- *   description = @Translation("This item displays a single metric or measurement item."),
+ *   id = "monitoring_period",
+ *   label = @Translation("Monitoring period"),
+ *   description = @Translation("This item displays the monitoring period for an attachment."),
  * )
  */
-class DataPoint extends ConfigurationContainerItemPluginBase {
+class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
 
   /**
    * The attachment query.
@@ -53,29 +53,17 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
 
-    $attachment = $this->getContextValue('attachment');
-    $configuration = $this->getPluginConfiguration();
-
-    $data_point = $this->getSubmittedValue($element, $form_state, 'data_point');
-
-    $element['data_point'] = [
-      '#type' => 'data_point',
-      '#element_context' => $this->getContext(),
-      '#attachment' => $attachment,
-      '#attachment_prototype' => $configuration['attachment_prototype'],
-      '#default_value' => $data_point,
-      '#weight' => 5,
+    $element['display_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Display type'),
+      '#default_value' => $this->getSubmittedValue($element, $form_state, 'display_type', 'text'),
+      '#options' => [
+        'text' => $this->t('Display as text'),
+        'icon' => $this->t('Display as icon with tooltip'),
+      ],
     ];
 
     return $element;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getDefaultLabel() {
-    $attachment_prototype = $this->getContextValue('attachment_prototype');
-    return $attachment_prototype->fields[$this->get('data_point')['data_points'][0]];
   }
 
   /**
@@ -99,15 +87,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   public function getClasses() {
     $classes = parent::getClasses();
-
-    $data_point_conf = $this->get('data_point');
-    if ($data_point_conf['widget'] != 'none') {
-      $classes[] = Html::getClass($this->getPluginId() . '--widget');
-      $classes[] = Html::getClass($this->getPluginId() . '--widget-' . $data_point_conf['widget']);
-    }
-    else {
-      $classes[] = Html::getClass($this->getPluginId() . '--formatting-' . $data_point_conf['formatting']);
-    }
+    $classes[] = Html::getClass($this->getPluginId() . '--' . $this->get('display_type'));
     return $classes;
   }
 
@@ -116,11 +96,6 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   private function getAttachmentObject() {
     $attachment = $this->getContextValue('attachment');
-    $data_point_conf = $this->get('data_point');
-    if (!$attachment || !$data_point_conf) {
-      return NULL;
-    }
-    $attachment->data_point_conf = $data_point_conf;
     return $attachment;
   }
 
