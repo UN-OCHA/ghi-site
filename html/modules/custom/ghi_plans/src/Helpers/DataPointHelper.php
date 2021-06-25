@@ -51,8 +51,31 @@ class DataPointHelper {
    * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
    */
   public static function formatValue($attachment, array $data_point_conf) {
+    if ($data_point_conf['widget'] == 'none') {
+      return self::formatAsText($attachment, $data_point_conf);
+    }
+    else {
+      return self::formatAsWidget($attachment, $data_point_conf);
+    }
+  }
+
+  /**
+   * Get a formatted text value for a data point.
+   *
+   * @param object $attachment
+   *   The attachment object.
+   * @param array $data_point_conf
+   *   The data point configuration.
+   *
+   * @return mixed
+   *   The data point value, extracted and formatted from the attachment
+   *   according to the given configuration.
+   *
+   * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
+   */
+  private static function formatAsText($attachment, array $data_point_conf) {
     $value = self::getValue($attachment, $data_point_conf);
-    if ($value === NULL && $data_point_conf['formatting'] != 'percent' && $data_point_conf['widget'] == 'none') {
+    if ($value === NULL && $data_point_conf['formatting'] != 'percent') {
       return [
         '#markup' => t('Pending'),
       ];
@@ -113,7 +136,25 @@ class DataPointHelper {
         throw new InvalidTypeException(sprintf('Unknown formatting type: %s', $data_point_conf['formatting']));
     }
 
-    $widget = NULL;
+    return $rendered_value;
+  }
+
+  /**
+   * Get a formatted widget for a data point.
+   *
+   * @param object $attachment
+   *   The attachment object.
+   * @param array $data_point_conf
+   *   The data point configuration.
+   *
+   * @return mixed
+   *   The data point value, extracted and formatted from the attachment
+   *   according to the given configuration.
+   *
+   * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
+   */
+  private static function formatAsWidget($attachment, array $data_point_conf) {
+    $value = self::getValue($attachment, $data_point_conf);
     switch ($data_point_conf['widget']) {
       case 'progressbar':
         $widget = [
@@ -126,18 +167,14 @@ class DataPointHelper {
         $widget = [
           '#theme' => 'hpc_pie_chart',
           '#ratio' => $value,
-          '#hide_value' => TRUE,
         ];
         break;
 
       default:
-        // Nothing.
+        throw new InvalidTypeException(sprintf('Unknown widget type: %s', $data_point_conf['widget']));
     }
 
-    return $widget ? [
-      $rendered_value,
-      $widget,
-    ] : $rendered_value;
+    return $widget;
   }
 
   /**

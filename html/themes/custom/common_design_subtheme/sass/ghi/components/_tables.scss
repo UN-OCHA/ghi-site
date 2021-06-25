@@ -13,5 +13,15 @@ table.ghi-table {
         aspect-ratio: 1 / 1;
       }
     }
+
+    td.data-point--widget-progressbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+
+      .hpc-progress-bar-wrapper {
+        margin-left: 5px;
+      }
+    }
   }
 }
