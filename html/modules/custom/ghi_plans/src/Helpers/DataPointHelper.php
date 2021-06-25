@@ -52,7 +52,7 @@ class DataPointHelper {
    */
   public static function formatValue($attachment, array $data_point_conf) {
     $value = self::getValue($attachment, $data_point_conf);
-    if ($value === NULL) {
+    if ($value === NULL && $data_point_conf['formatting'] != 'percent' && $data_point_conf['widget'] == 'none') {
       return [
         '#markup' => t('Pending'),
       ];
@@ -65,7 +65,7 @@ class DataPointHelper {
         ];
 
       case 'auto':
-        if ($data_point_conf['processing'] == 'calculated' && $data_point_conf['calculation'] == 'percentage') {
+        if ($data_point_conf['processing'] == 'calculated' && $data_point_conf['formatting'] == 'percent') {
           $rendered_value = [
             '#theme' => 'hpc_percent',
             '#ratio' => $value,
