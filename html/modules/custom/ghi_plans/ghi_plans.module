@@ -89,7 +89,7 @@ function ghi_plans_form_node_plan_edit_form_alter(&$form, FormStateInterface &$f
   $form['field_plan_reporting_periods']['widget'][0]['preview'] = $form['field_plan_reporting_periods']['widget'][0]['value'];
   $form['field_plan_reporting_periods']['widget'][0]['value']['#access'] = FALSE;
   $form['field_plan_reporting_periods']['widget'][0]['preview']['#rows'] = 20;
-  $form['field_plan_reporting_periods']['widget'][0]['preview']['#markup'] = Markup::create(print_r($reporting_periods, TRUE));
+  $form['field_plan_reporting_periods']['widget'][0]['preview']['#default_value'] = Markup::create(print_r($reporting_periods, TRUE));
 }
 
 /**

@@ -5,8 +5,11 @@
  * Preprocess hooks and general purpose theme related functions for HPC Common.
  */
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Template\Attribute;
+use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
@@ -239,8 +242,11 @@ function hpc_common_preprocess_hpc_pie_chart(array &$vars) {
  * Preprocess a tooltip.
  */
 function hpc_common_preprocess_hpc_tooltip(array &$vars) {
+  $vars['#attached']['library'][] = 'hpc_common/tooltip';
+
   $attributes = new Attribute();
   $attributes->setAttribute('data-toggle', 'tooltip');
+  $attributes->setAttribute('tabindex', 0);
 
   $attributes->addClass('tooltip');
   if (!empty($vars['class'])) {
@@ -318,4 +324,39 @@ function hpc_common_preprocess_hpc_icon(array &$vars) {
     $attributes->addClass('cd-button--icon');
   }
   $vars['attributes'] = $attributes;
+}
+
+/**
+ * Preprocess a reporting period as text.
+ */
+function hpc_common_preprocess_hpc_reporting_period(array &$vars) {
+  $reporting_period = $vars['reporting_period'];
+  if (is_array($reporting_period)) {
+    ArrayHelper::sortArrayByNumericKey($reporting_period, 'periodNumber', EndpointQuery::SORT_ASC);
+    $first = reset($reporting_period);
+    $last = end($reporting_period);
+    $start_date = strtotime($first->startDate);
+    $end_date = strtotime($last->endDate);
+    $period_number = $first != $last ? $first->periodNumber . ' - ' . $last->periodNumber : $first->periodNumber;
+  }
+  else {
+    $start_date = strtotime($reporting_period->startDate);
+    $end_date = strtotime($reporting_period->endDate);
+    $period_number = $reporting_period->periodNumber;
+  }
+  $format_string = $vars['format_string'];
+  $format_date = 'j M Y';
+  $format_date_short = 'j M';
+
+  $start_date_formatted = gmdate($format_date, $start_date);
+  $end_date_formatted = gmdate($format_date, $end_date);
+
+  if (gmdate('Y', $start_date) == gmdate('Y', $end_date)) {
+    // Same year and month for both start and end date.
+    $start_date_formatted = gmdate($format_date_short, $start_date);
+  }
+  $vars['output'] = new FormattableMarkup($format_string, [
+    '@period_number' => $period_number,
+    '@date_range' => $start_date_formatted . ' - ' . $end_date_formatted,
+  ]);
 }

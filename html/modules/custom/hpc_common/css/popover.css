@@ -6,27 +6,27 @@
   color: inherit;
   padding: 0.1rem;
 }
-.tippy-box {
+.tippy-box[role="popover"] {
   background-color: white;
   border: 1px solid lightgray;
   border-radius: 5px;
 }
-.tippy-box .tippy-content {
+.tippy-box[role="popover"] .tippy-content {
   max-height: 50vh;
   overflow: auto;
   color: black;
   padding: 0;
   color: var(--cd-grey--dark);
 }
-.tippy-box .tippy-content > .title {
+.tippy-box[role="popover"] .tippy-content > .title {
   text-align: left;
   padding: 1rem;
   font-weight: bold;
 }
-.tippy-box .tippy-content > .title svg path {
+.tippy-box[role="popover"] .tippy-content > .title svg path {
   fill: var(--cd-grey--dark);
 }
-.tippy-box .tippy-content > .content {
+.tippy-box[role="popover"] .tippy-content > .content {
   font-weight: normal;
   text-align: left;
   padding: 1rem;

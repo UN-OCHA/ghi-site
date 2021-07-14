@@ -151,6 +151,12 @@ function hpc_common_theme($existing, $type, $theme, $path) {
       ],
       'template' => 'hpc-icon',
     ] + $common,
+    'hpc_reporting_period' => [
+      'variables' => [
+        'reporting_period' => NULL,
+        'format_string' => '#@period_number: @date_range',
+      ],
+    ] + $common,
   ];
 }
 

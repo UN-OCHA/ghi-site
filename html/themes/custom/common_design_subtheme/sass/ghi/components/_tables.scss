@@ -1,9 +1,7 @@
 table.ghi-table {
   tbody {
     td.data-point--widget-pie-chart {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
+      white-space: nowrap;
 
       .hpc-pie-chart-wrapper {
         display: inline-flex;
@@ -11,13 +9,12 @@ table.ghi-table {
         height: 100%;
         margin-left: 5px;
         aspect-ratio: 1 / 1;
+        vertical-align: middle;
       }
     }
 
     td.data-point--widget-progressbar {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
+      white-space: nowrap;
 
       .hpc-progress-bar-wrapper {
         margin-left: 5px;

@@ -99,6 +99,9 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       'data_point_calculated_pie_chart' => [
         'target' => 'data_point',
       ],
+      'data_point_monitoring_period' => [
+        'target' => 'monitoring_period',
+      ],
     ];
     foreach ($config->table_columns as $incoming_item) {
       $source_type = !empty($incoming_item->element) ? $incoming_item->element : NULL;
@@ -135,6 +138,10 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
           unset($value->data_point_2);
           unset($value->mini_widget);
           $item['config']['data_point'] = (array) $value;
+          break;
+
+        case 'monitoring_period':
+          $item['config']['display_type'] = $value->display_type;
           break;
 
         default:
