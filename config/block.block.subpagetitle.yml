@@ -1,0 +1,35 @@
+uuid: a065ec10-03fc-4a59-ad49-8765efe80a49
+langcode: en
+status: true
+dependencies:
+  module:
+    - ctools
+    - ghi_subpages
+  theme:
+    - common_design_subtheme
+id: subpagetitle
+theme: common_design_subtheme
+region: content
+weight: 0
+provider: null
+plugin: subpage_title
+settings:
+  id: subpage_title
+  label: 'Subpage title'
+  provider: ghi_subpages
+  label_display: '0'
+  context_mapping:
+    node: '@node.node_route_context:node'
+visibility:
+  'entity_bundle:node':
+    id: 'entity_bundle:node'
+    bundles:
+      country: country
+      financials: financials
+      plan: plan
+      population: population
+      profile: profile
+      risk_index: risk_index
+    negate: false
+    context_mapping:
+      node: '@node.node_route_context:node'

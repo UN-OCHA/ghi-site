@@ -1,0 +1,231 @@
+<?php
+
+/**
+ * @file
+ * Contains hook implementations for the GHI Subpages module.
+ */
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\ghi_subpages\Helpers\SubpageHelper;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_entity_update().
+ */
+function ghi_subpages_entity_update(EntityInterface $entity) {
+  if (!$entity instanceof NodeInterface) {
+    return;
+  }
+
+  $node = $entity;
+  $supported_base_types = SubpageHelper::SUPPORTED_BASE_TYPES;
+
+  if (!in_array($node->getType(), $supported_base_types)) {
+    return;
+  }
+
+  SubpageHelper::assureSubpagesForBaseNode($node);
+
+  if (!$node->isPublished()) {
+    // Load all subpages and make sure that those are unpublished too.
+    /** @var \Drupal\node\NodeInterface[] $subpages */
+    $subpages = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+      'field_entity_reference' => $node->id(),
+    ]);
+
+    if (!empty($subpages)) {
+      foreach ($subpages as $subpage) {
+        if (!$subpage->isPublished()) {
+          continue;
+        }
+        $node_type = \Drupal::entityTypeManager()->getStorage('node_type')->load($subpage->getType());
+        $subpage->setUnpublished();
+        $subpage->save();
+
+        \Drupal::messenger()->addStatus(t('Subpage @subpage has been unpublished.', [
+          '@subpage' => $node_type->get('name'),
+        ]));
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_access().
+ *
+ * Check access for full page node views of subpages of the base entities.
+ * Allow access only if the base entity is allowed to be viewed.
+ */
+function ghi_subpages_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  if (!$entity instanceof NodeInterface) {
+    return AccessResult::neutral();
+  }
+  $node_types = SubpageHelper::SUPPORTED_SUBPAGE_TYPES + [
+    'plan_entity',
+    'governing_entity',
+  ];
+  $node = $entity;
+  if (!in_array($node->getType(), $node_types) || $operation != 'view') {
+    // No opinion.
+    return AccessResult::neutral();
+  }
+  $base_entity = NULL;
+  if ($node->hasField('field_entity_reference')) {
+    /** @var \Drupal\node\NodeInterface $base_entity */
+    $base_entity = $node->field_entity_reference->entity;
+  }
+  elseif ($node->hasField('field_plan')) {
+    /** @var \Drupal\node\NodeInterface $base_entity */
+    $base_entity = $node->field_plan->entity;
+  }
+  if (!$base_entity) {
+    // No opinion.
+    return AccessResult::neutral();
+  }
+  $access_result = $base_entity->access($operation, $account) !== TRUE ? AccessResult::forbidden() : AccessResult::allowed();
+  return $access_result->addCacheableDependency($entity);
+}
+
+/**
+ * Get plan top navigation.
+ *
+ * @param \Drupal\node\NodeInterface $node
+ *   The node object of the page.
+ */
+function ghi_subpages_get_top_navigation(NodeInterface $node) {
+  $output = [];
+  $cache_tags = [];
+
+  // Get parent if needed.
+  /** @var \Drupal\node\NodeInterface $base_entity */
+  $base_entity = $node;
+  if ($node->hasField('field_entity_reference')) {
+    /** @var \Drupal\node\NodeInterface $base_entity */
+    $base_entity = $node->field_entity_reference->entity;
+  }
+  elseif ($node->hasField('field_plan')) {
+    /** @var \Drupal\node\NodeInterface $base_entity */
+    $base_entity = $node->field_plan->entity;
+  }
+
+  // Always output parent link.
+  $overview_link = $base_entity->toLink(t('Overview'))->toRenderable();
+  if ($node->id() == $base_entity->id()) {
+    $overview_link['#attributes']['class'][] = 'active';
+  }
+
+  $tabs = [
+    0 => $overview_link + [
+      'children' => [],
+    ],
+  ];
+
+  foreach (SubpageHelper::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
+    $matching_subpages = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+      'type' => $subpage_type,
+      'field_entity_reference' => $base_entity->id(),
+    ]);
+    if (empty($matching_subpages)) {
+      continue;
+    }
+
+    /** @var \Drupal\node\NodeInterface $subpage */
+    $subpage = reset($matching_subpages);
+    if (!$subpage->access('view')) {
+      continue;
+    }
+    $cache_tags = array_merge($cache_tags, $subpage->getCacheTags());
+    $node_type = \Drupal::entityTypeManager()->getStorage('node_type')->load($subpage_type);
+    $link = $subpage->toLink($node_type->get('name'))->toRenderable();
+    if ($node->id() == $subpage->id()) {
+      $link['#attributes']['class'][] = 'active';
+    }
+    $tabs[0]['children'][] = $link;
+  }
+
+  // Get the plan structure as extracted from RPM, so that we can find the root
+  // level plan entities.
+  if ($base_entity->getType() == 'plan') {
+
+    // Get all governing entity nodes with plan as parent.
+    $governing_entities = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+      'type' => 'governing_entity',
+      'field_plan' => $base_entity->id(),
+    ]);
+
+    $hide_count_ge = $base_entity->field_plan_hide_gve_counts->value ?? FALSE;
+
+    // Link to clusters.
+    if ($governing_entities) {
+      $suffix = '';
+      if (!$hide_count_ge) {
+        $suffix = ' <span class="counter">' . count($governing_entities) . '</span>';
+      }
+
+      $gve_tabs = [
+        '#type' => 'item',
+        '#markup' => t('Clusters') . $suffix,
+        'children' => [],
+      ];
+      foreach ($governing_entities as $governing_entity) {
+        if (!$governing_entity->access('view')) {
+          continue;
+        }
+        /** @var \Drupal\node\NodeInterface $governing_entity */
+        $cache_tags = array_merge($cache_tags, $governing_entity->getCacheTags());
+        $link = $governing_entity->toLink()->toRenderable();
+        if ($node->id() == $governing_entity->id()) {
+          $link['#attributes']['class'][] = 'active';
+        }
+        $gve_tabs['children'][] = $link;
+      }
+      $tabs[] = $gve_tabs;
+    }
+  }
+
+  $output['entity_navigation'] = [
+    '#theme' => 'item_list',
+    '#items' => $tabs,
+    '#attributes' => [
+      'class' => [
+        'links--entity-navigation',
+      ],
+    ],
+    '#cache' => [
+      'tags' => $cache_tags,
+    ],
+  ];
+
+  return $output;
+}
+
+/**
+ * Implements hook_local_tasks_alter().
+ *
+ * This is used to remove the publish local task coming from the
+ * publishcontent module, if it's configured to not display them. This is
+ * needed because we alter the route requirements and remove a custom
+ * access check which would normally govern the display of the task, in order
+ * to be able to use the direct publish/unpublish link from other parts of the
+ * site.
+ */
+function ghi_subpages_local_tasks_alter(&$local_tasks) {
+  if (!empty($local_tasks['entity.node.publish'])) {
+    $config = \Drupal::configFactory()->get('publishcontent.settings');
+    if (empty($config->get('ui_localtask'))) {
+      unset($local_tasks['entity.node.publish']);
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_page_title().
+ */
+function ghi_subpages_preprocess_page_title(&$variables) {
+  $node = \Drupal::routeMatch()->getParameter('node');
+  if ($node && $node->hasField('field_entity_reference') && $node->field_entity_reference->entity) {
+    $variables['title'] = $node->field_entity_reference->entity->getTitle();
+  }
+}

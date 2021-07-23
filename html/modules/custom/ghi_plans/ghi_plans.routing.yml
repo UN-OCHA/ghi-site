@@ -2,26 +2,27 @@ ghi_plans.node.plan_settings:
   path: '/node/{node}/hpc/plan-settings'
   defaults:
     _form: '\Drupal\ghi_plans\Form\PlanSettingsForm'
-    _title: 'Plan settings'
+    _title_callback: '\Drupal\ghi_plans\Controller\PlanAdminController::planSettingsTitle'
   options:
     parameters:
       node:
         type: entity:node
     _admin_route: TRUE
   requirements:
+    _custom_access: '\Drupal\ghi_plans\Controller\PlanAdminController::access'
     _permission: 'administer site configuration'
 ghi_plans.node.plan_structure:
   path: '/node/{node}/hpc/plan-structure'
   defaults:
     _controller: '\Drupal\ghi_plans\Controller\PlanStructureController::showPage'
-    _title: 'Plan structure'
+    _title_callback: '\Drupal\ghi_plans\Controller\PlanAdminController::planStructureTitle'
   options:
     parameters:
       node:
         type: entity:node
     _admin_route: TRUE
   requirements:
-    _custom_access: '\Drupal\ghi_plans\Controller\PlanStructureController::access'
+    _custom_access: '\Drupal\ghi_plans\Controller\PlanAdminController::access'
     _permission: 'administer site configuration'
 ghi_plans.plan_autocomplete:
   path: '/plan/autocomplete'

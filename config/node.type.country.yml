@@ -11,7 +11,7 @@ third_party_settings:
     parent: 'main:'
 name: Country
 type: country
-description: ''
+description: 'Base page for countries.'
 help: ''
 new_revision: false
 preview_mode: 0

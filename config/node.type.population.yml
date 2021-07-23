@@ -1,0 +1,17 @@
+uuid: 58df07b1-4484-4ec7-8a55-90242106ae90
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: Population
+type: population
+description: 'A population page for any of the base entities of this site, e.g. for plans, countries, regions, ...'
+help: ''
+new_revision: true
+preview_mode: 0
+display_submitted: false

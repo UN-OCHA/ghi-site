@@ -1,0 +1,21 @@
+uuid: 44f714f7-0a6b-4cfe-af49-3d72db570f3b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.layout_builder__layout
+    - node.type.risk_index
+  module:
+    - layout_builder
+id: node.risk_index.layout_builder__layout
+field_name: layout_builder__layout
+entity_type: node
+bundle: risk_index
+label: Layout
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: layout_section

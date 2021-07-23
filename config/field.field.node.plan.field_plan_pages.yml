@@ -5,7 +5,6 @@ dependencies:
   config:
     - field.storage.node.field_plan_pages
     - node.type.plan
-    - node.type.plan_page
 id: node.plan.field_plan_pages
 field_name: field_plan_pages
 entity_type: node
@@ -19,8 +18,7 @@ default_value_callback: ''
 settings:
   handler: 'default:node'
   handler_settings:
-    target_bundles:
-      plan_page: plan_page
+    target_bundles: {  }
     sort:
       field: _none
       direction: ASC

@@ -1,0 +1,22 @@
+uuid: 64b4bcff-d1d0-4852-8f70-b21f9d81d951
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.financials
+id: node.financials.status
+field_name: status
+entity_type: node
+bundle: financials
+label: Published
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean
