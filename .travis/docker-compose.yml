@@ -29,7 +29,9 @@ services:
       - "ghi-site-public:/srv/www/html/sites/default/files:rw"
       - "ghi-site-private:/srv/www/html/sites/default/private:rw"
       # Mount the folders needed for the tests.
+      - "../.git:/srv/www/.git"
       - "../.travis:/srv/www/shared/travis:ro"
+      - "../scripts:/srv/www/scripts:ro"
       - "../phpcs.xml:/srv/www/phpcs.xml:ro"
     environment:
       - TERM=xterm
