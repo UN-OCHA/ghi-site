@@ -1,0 +1,48 @@
+version: "2.2"
+
+networks:
+  default:
+
+volumes:
+  ghi-site-public:
+  ghi-site-private:
+
+services:
+  mysql:
+    image: unocha/alpine-mysql:10.4.13-r0-202006-01
+    hostname: ghi-travis-mysql
+    container_name: ghi-travis-mysql
+    environment:
+      - MYSQL_DB=ghi
+      - MYSQL_USER=ghi
+      - MYSQL_PASS=ghi
+    networks:
+      - default
+
+  drupal:
+    image: unocha/ghi-site:local
+    hostname: ghi-travis-site
+    container_name: ghi-travis-site
+    volumes:
+      - "./settings:/srv/www/shared/settings:ro"
+      # Mount volumes for the private and public files.
+      - "ghi-site-public:/srv/www/html/sites/default/files:rw"
+      - "ghi-site-private:/srv/www/html/sites/default/private:rw"
+      # Mount the folders needed for the tests.
+      - "../.travis:/srv/www/shared/travis:ro"
+      - "../phpcs.xml:/srv/www/phpcs.xml:ro"
+    environment:
+      - TERM=xterm
+      - ENVIRONMENT=dev
+      - NGINX_SERVERNAME=ghi-travis-site,localhost,127.0.0.1
+      - NGINX_OVERRIDE_PROTOCOL=HTTP,ghi-travis-site,localhost,127.0.0.1
+      - DRUSH_OPTIONS_URI=http://ghi-travis-site
+      - DRUPAL_DB_DATABASE=ghi
+      - DRUPAL_DB_USERNAME=ghi
+      - DRUPAL_DB_PASSWORD=ghi
+      - DRUPAL_DB_HOST=mysql
+      - DRUPAL_DB_DRIVER=mysql
+    networks:
+      - default
+    depends_on:
+      - mysql
