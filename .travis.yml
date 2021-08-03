@@ -39,7 +39,7 @@ script:
   - make
 
   # Create the site and mysql containers.
-  - docker-compose -f .travis/docker-compose.yml up -d
+  - docker-compose -f .travis/docker-compose.yml up -d --force-recreate
 
   # Dump some information about the created containers.
   - docker ps -a
