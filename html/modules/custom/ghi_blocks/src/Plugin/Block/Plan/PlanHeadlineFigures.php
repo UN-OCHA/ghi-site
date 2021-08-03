@@ -8,10 +8,13 @@ use Drupal\Core\KeyValueStore\KeyValueFactory;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Routing\Router;
+use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
+use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\node\NodeInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -27,7 +30,9 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *  }
  * )
  */
-class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface, ContainerFactoryPluginInterface {
+class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlockInterface, SyncableBlockInterface, ContainerFactoryPluginInterface {
+
+  use ConfigurationContainerTrait;
 
   const MAX_ITEMS = 6;
 
@@ -67,7 +72,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
   /**
    * {@inheritdoc}
    */
-  public static function mapConfig($config) {
+  public static function mapConfig($config, NodeInterface $node) {
     $items = [];
     // Define a transition map.
     $transition_map = [
@@ -201,21 +206,18 @@ class PlanHeadlineFigures extends GHIBlockBase implements SyncableBlockInterface
    */
   public function buildContent() {
     $conf = $this->getBlockConfig();
-    if (empty($conf['items'])) {
+
+    $items = $this->getConfiguredItems($conf['items']);
+
+    if (empty($items)) {
       return;
     }
 
-    $allowed_items = $this->getAllowedItemTypes();
-
     $rendered = [];
     foreach ($conf['items'] as $item) {
-      if (!array_key_exists($item['item_type'], $allowed_items)) {
-        continue;
-      }
+
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
-      $item_type = $this->configurationContainerItemManager->createInstance($item['item_type'], $allowed_items[$item['item_type']]);
-      $item_type->setConfig($item['config']);
-      $item_type->setContext($this->getBlockContext());
+      $item_type = $this->getItemTypePluginForColumn($item);
 
       $rendered[] = [
         '#type' => 'item',

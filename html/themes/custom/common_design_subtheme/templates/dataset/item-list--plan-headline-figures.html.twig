@@ -33,8 +33,8 @@
     <{{ list_type }}{{ attributes.addClass('cd-figure-list--large', 'cd-align--center') }}>
       {%- for item in figures -%}
         <li class="cd-figure-list__item">
-          <div class="cd-figure-list__label">{{ item.label }}</div>
           <div class="cd-figure-list__value">{{ item.value }}</div>
+          <div class="cd-figure-list__label">{{ item.label }}</div>
         </li>
       {%- endfor -%}
     </{{ list_type }}>

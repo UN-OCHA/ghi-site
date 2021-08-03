@@ -11,12 +11,12 @@ use GuzzleHttp\ClientInterface;
 use Drupal\hpc_api\Query\EndpointQuery;
 
 /**
- * Query class for fetching plan data with a focus on plan entities.
+ * Query class for fetching clusters.
  */
 class ClusterQuery extends EndpointQuery {
 
   /**
-   * Constructs a new PlanEntitiesQuery object.
+   * Constructs a new ClusterQuery object.
    */
   public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, CacheBackendInterface $cache, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user) {
     parent::__construct($config_factory, $logger_factory, $cache, $kill_switch, $http_client, $user);

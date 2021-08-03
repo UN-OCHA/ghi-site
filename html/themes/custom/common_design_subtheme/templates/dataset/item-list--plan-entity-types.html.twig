@@ -22,7 +22,7 @@
 {{ attach_library('common_design/cd-grid') }}
 
 {%- if items -%}
-  <div class="cd-grid cd-grid--{{ items|length }}-col cd-grid--background">
+  <div class="cd-grid cd-grid--{{ cols }}-col cd-grid--background">
     {%- for item in items -%}
       <div>{{ item.value }}</div>
     {%- endfor -%}

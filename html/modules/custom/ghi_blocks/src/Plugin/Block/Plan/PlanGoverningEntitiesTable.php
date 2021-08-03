@@ -5,12 +5,19 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueFactory;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Routing\Router;
+use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
+use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
+use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\NodeHelper;
+use Drupal\node\NodeInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -19,22 +26,26 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @Block(
  *  id = "plan_governing_entities_table",
- *  admin_label = @Translation("Governing Entities Table"),
+ *  admin_label = @Translation("Governing Entities Overview Table"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
  *    "entities" = {
  *      "service" = "ghi_plans.plan_entities_query"
  *    },
- *    "attachment" = {
- *      "service" = "ghi_plans.attachment_query"
+ *    "cluster_summary" = {
+ *      "service" = "ghi_plans.plan_cluster_summary_query"
  *    },
  *  },
+ *  default_title = @Translation("Cluster overview"),
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
  *   }
  * )
  */
-class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockInterface {
+class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface {
+
+  use ConfigurationContainerTrait;
+  use ConfigurationItemClusterRestrictTrait;
 
   /**
    * The manager class for configuration container items.
@@ -72,7 +83,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
   /**
    * {@inheritdoc}
    */
-  public static function mapConfig($config) {
+  public static function mapConfig($config, NodeInterface $node) {
     $columns = [];
     // Define a transition map.
     $transition_map = [
@@ -131,12 +142,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
 
       // Do special processing for individual item types.
       $value = property_exists($incoming_item, 'value') ? $incoming_item->value : NULL;
-      if (is_object($value) && property_exists($value, 'cluster_restrict') && property_exists($value, 'cluster_tag')) {
-        $item['config']['cluster_restrict'] = [
-          'type' => $value->cluster_restrict,
-          'tag' => $value->cluster_tag,
-        ];
-      }
+
       switch ($transition_definition['target']) {
         case 'entity_counter':
           $item['config']['entity_prototype'] = $value;
@@ -156,7 +162,18 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
       'label' => property_exists($config, 'widget_title') ? $config->widget_title : NULL,
       'label_display' => TRUE,
       'hpc' => [
-        'columns' => $columns,
+        'base' => [
+          'include_cluster_not_reported' => property_exists($config, 'include_cluster_not_reported') ? $config->include_cluster_not_reported : FALSE,
+          'include_shared_funding' => property_exists($config, 'include_shared_funding') ? $config->include_shared_funding : FALSE,
+          'hide_target_values_for_projects' => property_exists($config, 'hide_target_values_for_projects') ? $config->hide_target_values_for_projects : FALSE,
+          'cluster_restrict' => property_exists($config, 'cluster_restrict') ? [
+            'type' => $config->cluster_restrict,
+            'tag' => $config->cluster_tag,
+          ] : NULL,
+        ],
+        'table' => [
+          'columns' => $columns,
+        ],
       ],
     ];
   }
@@ -167,25 +184,32 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
   public function buildContent() {
     $conf = $this->getBlockConfig();
 
-    if (empty($conf['columns'])) {
+    $columns = $this->getConfiguredItems($conf['table']['columns']);
+    $entities = $this->getEntityObjects();
+
+    if (empty($columns) | empty($entities)) {
       return NULL;
     }
 
-    $allowed_items = $this->getAllowedItemTypes();
-    $columns = array_filter($conf['columns'], function ($column) use ($allowed_items) {
-      return array_key_exists($column['item_type'], $allowed_items);
-    });
-    if (empty($columns)) {
-      return;
+    if (!empty($conf['base']['cluster_restrict'])) {
+      // Filter the entities according to the configuration.
+      $entities = $this->applyClusterRestrictFilterToEntities($entities, $conf['base']['cluster_restrict']);
+    }
+    if (empty($entities)) {
+      return NULL;
+    }
+
+    $nodes = $this->loadNodesForEntities($entities);
+    if (empty($nodes)) {
+      return NULL;
     }
 
     $context = $this->getBlockContext();
 
     $header = [];
     foreach ($columns as $column) {
-      $item_type = $this->configurationContainerItemManager->createInstance($column['item_type'], $allowed_items[$column['item_type']]);
-      $item_type->setContext($context);
-      $item_type->setConfig($column['config']);
+      /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
+      $item_type = $this->getItemTypePluginForColumn($column);
       $header[] = [
         'data' => $item_type->getLabel(),
         'data-sort-type' => $item_type::SORT_TYPE,
@@ -194,8 +218,10 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
       ];
     }
 
-    $entities = $this->getEntityObjects();
-    $nodes = $this->loadNodesForEntities($entities);
+    // Sort the entites by name.
+    usort($entities, function ($a, $b) {
+      return strnatcasecmp($a->name, $b->name);
+    });
 
     $rows = [];
     foreach ($entities as $entity) {
@@ -210,16 +236,9 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
       $row = [];
       $skip_row = FALSE;
       foreach ($columns as $column) {
-        if (!array_key_exists($column['item_type'], $allowed_items)) {
-          continue;
-        }
 
-        // Get an instance of the item type plugin for this column, set it's
-        // config and the context.
         /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
-        $item_type = $this->configurationContainerItemManager->createInstance($column['item_type'], $allowed_items[$column['item_type']]);
-        $item_type->setConfig($column['config']);
-        $item_type->setContext($context);
+        $item_type = $this->getItemTypePluginForColumn($column, $context);
 
         // Then add the value to the row.
         $row[] = [
@@ -244,11 +263,118 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
       $rows[] = $row;
     }
 
-    // @todo Make this work with an arbitrary setup. Currently it only works
-    // for the entity name as first column.
-    usort($rows, function ($a, $b) {
-      return strnatcasecmp($a[0]['data-sort-value'], $b[0]['data-sort-value']);
-    });
+    // If configured accordingly, add a "Cluster not specified row".
+    if (!empty($conf['base']['include_cluster_not_reported']) && $conf['base']['include_cluster_not_reported']) {
+      /** @var \Drupal\ghi_plans\Query\PlanClusterSummaryQuery $query */
+      $query = $this->getQueryHandler('cluster_summary');
+      $not_specified_entity = $query->getNotSpecifiedCluster();
+
+      if ($not_specified_entity && !empty($not_specified_entity->total_funding)) {
+        $context['context_node'] = FALSE;
+        $context['entity'] = $not_specified_entity;
+
+        $row = [];
+        foreach ($columns as $column) {
+          /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
+          $item_type = $this->getItemTypePluginForColumn($column, $context);
+
+          if ($item_type->getPluginId() == 'entity_name') {
+            $not_reported_label = Markup::create('<i>' . $this->t('Funding to @title not reported', [
+              '@title' => strtolower($this->getGenericEntityName()),
+            ]) . '</i>');
+            $row[] = [
+              'data' => $not_reported_label,
+              'class' => array_merge($item_type->getClasses(), [
+                'not-reported',
+              ]),
+              'data-sort-value' => $not_reported_label,
+              'data-sort-type' => $item_type::SORT_TYPE,
+              'data-column-type' => $item_type::ITEM_TYPE,
+            ];
+          }
+          elseif ($item_type->getPluginId() == 'funding_data' && $item_type->get('data_type') == 'funding_totals') {
+            // Add the funding.
+            $row[] = [
+              'data' => $item_type->getRenderArray(),
+              'data-value' => $item_type->getValue(),
+              'data-sort-value' => $item_type->getSortableValue(),
+              'data-sort-type' => $item_type::SORT_TYPE,
+              'data-column-type' => $item_type::ITEM_TYPE,
+              'class' => $item_type->getClasses(),
+            ];
+          }
+          else {
+            $row[] = [
+              'data' => $this->t('N/A'),
+              'data-value' => 0,
+              'data-sort-value' => 0,
+              'data-sort-type' => $item_type::SORT_TYPE,
+              'data-column-type' => $item_type::ITEM_TYPE,
+              'class' => array_merge($item_type->getClasses(), [
+                'not-reported',
+                'empty',
+              ]),
+            ];
+          }
+        }
+        $rows[] = $row;
+      }
+    }
+
+    if (!empty($conf['base']['include_shared_funding']) && $conf['base']['include_shared_funding'] && $this->getQueryHandler('cluster_summary')->hasSharedFunding()) {
+      $context['context_node'] = FALSE;
+      $context['entity'] = (object) [
+        'total_funding' => $this->getQueryHandler('cluster_summary')->getSharedFunding(),
+      ];
+
+      $row = [];
+      foreach ($columns as $column) {
+        /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
+        $item_type = $this->getItemTypePluginForColumn($column, $context);
+
+        if ($item_type->getPluginId() == 'entity_name') {
+          $not_reported_label = Markup::create('<i>' . $this->t('Funding to multiple @title (shared)', [
+            '@title' => strtolower($this->getGenericEntityName()),
+          ]) . '</i>');
+          $row[] = [
+            'data' => $not_reported_label,
+            'class' => array_merge($item_type->getClasses(), [
+              'shared-funding',
+            ]),
+            'data-sort-value' => $not_reported_label,
+            'data-sort-type' => $item_type::SORT_TYPE,
+            'data-column-type' => $item_type::ITEM_TYPE,
+          ];
+        }
+        elseif ($item_type->getPluginId() == 'funding_data' && $item_type->get('data_type') == 'funding_totals') {
+          /** @var \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\FundingData $item_type */
+          $item_type->disableFtsLink();
+          // Add the funding.
+          $row[] = [
+            'data' => $item_type->getRenderArray(),
+            'data-value' => $item_type->getValue(),
+            'data-sort-value' => $item_type->getSortableValue(),
+            'data-sort-type' => $item_type::SORT_TYPE,
+            'data-column-type' => $item_type::ITEM_TYPE,
+            'class' => $item_type->getClasses(),
+          ];
+        }
+        else {
+          $row[] = [
+            'data' => $this->t('N/A'),
+            'data-value' => 0,
+            'data-sort-value' => 0,
+            'data-sort-type' => $item_type::SORT_TYPE,
+            'data-column-type' => $item_type::ITEM_TYPE,
+            'class' => array_merge($item_type->getClasses(), [
+              'shared-funding',
+              'empty',
+            ]),
+          ];
+        }
+      }
+      $rows[] = $row;
+    }
 
     return [
       '#theme' => 'table',
@@ -265,22 +391,88 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
    */
   protected function getConfigurationDefaults() {
     return [
-      'columns' => [],
-
+      'base' => [
+        'include_cluster_not_reported' => FALSE,
+        'include_shared_funding' => FALSE,
+        'hide_target_values_for_projects' => FALSE,
+        'cluster_restrict' => [],
+      ],
+      'table' => [
+        'columns' => [],
+      ],
     ];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getConfigForm(array $form, FormStateInterface $form_state) {
+  public function getSubforms() {
+    return [
+      'base' => [
+        'title' => $this->t('Base settings'),
+        'callback' => 'baseForm',
+        'base_form' => TRUE,
+      ],
+      'table' => [
+        'title' => $this->t('Table columns'),
+        'callback' => 'tableForm',
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultSubform() {
+    $conf = $this->getBlockConfig();
+    if (!empty($conf['table']) && !empty($conf['table'])) {
+      return 'table';
+    }
+    return 'base';
+  }
+
+  /**
+   * Form callback for the base settings form.
+   */
+  public function baseForm(array $form, FormStateInterface $form_state) {
+
+    $form['include_cluster_not_reported'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Include a line with funding not reported to a cluster'),
+      '#description' => $this->t('Check this if you want an additional line added that only shows the plan funding that has not been reported to a specific cluster.'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'include_cluster_not_reported'),
+    ];
+
+    $form['include_shared_funding'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Include a line with funding shared across multiple clusters'),
+      '#description' => $this->t('Check this if you want an additional line added that only shows the plan funding that is shared across multiple clusters.'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'include_shared_funding'),
+    ];
+
+    $form['hide_target_values_for_projects'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Hide target values for projects'),
+      '#description' => $this->t('Check this if you want to hide the target values from the project details popover.'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'hide_target_values_for_projects'),
+    ];
+
+    $form['cluster_restrict'] = $this->buildClusterRestrictFormElement($this->getDefaultFormValueFromFormState($form_state, 'cluster_restrict'));
+
+    return $form;
+  }
+
+  /**
+   * Form callback for the table configuration form.
+   */
+  public function tableForm(array $form, FormStateInterface $form_state) {
     $default_value = $this->getDefaultFormValueFromFormState($form_state, 'columns');
     if (empty($default_value)) {
       $default_value = [
         [
           'item_type' => 'entity_name',
           'config' => [
-            'label' => $this->t('Cluster'),
+            'label' => $this->getGenericEntityName(),
           ],
         ],
       ];
@@ -289,6 +481,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
       '#type' => 'configuration_container',
       '#title' => $this->t('Configured headline figures'),
       '#title_display' => 'invisble',
+      '#item_type_label' => $this->t('Column'),
       '#default_value' => $default_value,
       '#allowed_item_types' => $this->getAllowedItemTypes(),
       '#preview' => [
@@ -349,10 +542,20 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
   }
 
   /**
-   * Get the custom context for this block.
+   * Get a generic name for entities in this element.
    *
-   * @return array
-   *   An array with context data or query handlers.
+   * @return string|\Drupal\Core\StringTranslation\TranslatableMarkup
+   *   The generic entity name.
+   */
+  private function getGenericEntityName() {
+    $context = $this->getBlockContext();
+    $plan_structure = PlanStructureHelper::getRpmPlanStructure($context['plan_node']);
+    $first_gve = reset($plan_structure['governing_entities']);
+    return $first_gve ? $first_gve->label_singular : $this->t('Cluster');
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function getBlockContext() {
     return [
@@ -363,11 +566,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
   }
 
   /**
-   * Get the allowed item types for this element.
-   *
-   * @return array
-   *   An array with the allowed item types, keyed by the plugin id, with the
-   *   value being an optional configuration array for the plugin.
+   * {@inheritdoc}
    */
   public function getAllowedItemTypes() {
     $item_types = [
@@ -390,16 +589,6 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements SyncableBlockIn
           'include_popup' => TRUE,
         ],
       ],
-      'attachment_data' => [
-        'label' => $this->t('Caseload/indicator value'),
-        'access' => [
-          'node_type' => ['plan', 'governing_entity'],
-        ],
-        'data_point' => [
-          'widget' => FALSE,
-        ],
-      ],
-      'label_value' => [],
     ];
     return $item_types;
   }

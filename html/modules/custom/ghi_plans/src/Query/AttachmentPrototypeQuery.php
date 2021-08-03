@@ -7,22 +7,21 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use GuzzleHttp\ClientInterface;
 use Drupal\hpc_api\Query\EndpointQuery;
 
 /**
- * Query class for fetching attachments.
+ * Query class for fetching an attachment prototype.
  */
-class AttachmentQuery extends EndpointQuery {
+class AttachmentPrototypeQuery extends EndpointQuery {
 
   /**
-   * Constructs a new AttachmentQuery object.
+   * Constructs a new AttachmentPrototypeQuery object.
    */
   public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, CacheBackendInterface $cache, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user) {
     parent::__construct($config_factory, $logger_factory, $cache, $kill_switch, $http_client, $user);
 
-    $this->endpointUrl = 'public/attachment/{attachment_id}';
+    $this->endpointUrl = 'public/plan/{plan_id}/attachment-prototype';
     // @codingStandardsIgnoreStart
     // @todo Implement this once HID login has been added.
     // if ($this->user->isAuthenticated()) {
@@ -30,29 +29,32 @@ class AttachmentQuery extends EndpointQuery {
     // }
     // @codingStandardsIgnoreEnd
     $this->endpointVersion = 'v2';
-    $this->endpointArgs = [
-      'disaggregation' => 'false',
-      'version' => 'current',
-    ];
   }
 
   /**
-   * Get an attachment by id.
+   * Get an attachment prototype by plan and prototype ID.
    *
-   * @param int $attachment_id
-   *   The attachment id to query.
+   * @param int $plan_id
+   *   The id of the plan to which a prototype belongs.
+   * @param int $prototype_id
+   *   The id of the prototype.
    *
    * @return object
    *   The processed attachment object.
    */
-  public function getAttachment($attachment_id) {
-    $this->setPlaceholder('attachment_id', $attachment_id);
+  public function getPrototypeByPlanAndId($plan_id, $prototype_id) {
+    $this->setPlaceholder('plan_id', $plan_id);
     $data = $this->getData();
     if (empty($data)) {
       return NULL;
     }
 
-    return AttachmentHelper::processAttachment($data);
+    foreach ($data as $prototype) {
+      if ($prototype->id == $prototype_id) {
+        return $prototype;
+      }
+    }
+    return NULL;
   }
 
 }

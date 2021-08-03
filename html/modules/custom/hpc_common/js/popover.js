@@ -44,8 +44,10 @@
           interactive: true,
           theme: 'light',
           hideOnEsc: true,
+          role: 'popover',
         });
       }
     });
   });
+
 })();

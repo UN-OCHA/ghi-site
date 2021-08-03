@@ -9,6 +9,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\hpc_common\Helpers\ThemeHelper;
+use Drupal\node\NodeInterface;
 
 /**
  * Provides a 'PlanWebcontentFile' block.
@@ -36,7 +37,7 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
   /**
    * {@inheritdoc}
    */
-  public static function mapConfig($config) {
+  public static function mapConfig($config, NodeInterface $node) {
     return [
       'label' => '',
       'label_display' => FALSE,

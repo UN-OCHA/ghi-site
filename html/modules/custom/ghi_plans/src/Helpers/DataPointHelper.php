@@ -51,7 +51,36 @@ class DataPointHelper {
    * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
    */
   public static function formatValue($attachment, array $data_point_conf) {
+    if ($data_point_conf['widget'] == 'none') {
+      return self::formatAsText($attachment, $data_point_conf);
+    }
+    else {
+      return self::formatAsWidget($attachment, $data_point_conf);
+    }
+  }
+
+  /**
+   * Get a formatted text value for a data point.
+   *
+   * @param object $attachment
+   *   The attachment object.
+   * @param array $data_point_conf
+   *   The data point configuration.
+   *
+   * @return mixed
+   *   The data point value, extracted and formatted from the attachment
+   *   according to the given configuration.
+   *
+   * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
+   */
+  private static function formatAsText($attachment, array $data_point_conf) {
     $value = self::getValue($attachment, $data_point_conf);
+    if ($value === NULL && $data_point_conf['formatting'] != 'percent') {
+      return [
+        '#markup' => t('Pending'),
+      ];
+    }
+    $rendered_value = NULL;
     switch ($data_point_conf['formatting']) {
       case 'raw':
         return [
@@ -59,48 +88,93 @@ class DataPointHelper {
         ];
 
       case 'auto':
-        if ($data_point_conf['processing'] == 'calculated' && $data_point_conf['calculation'] == 'percentage') {
-          return [
+        if ($data_point_conf['processing'] == 'calculated' && $data_point_conf['formatting'] == 'percent') {
+          $rendered_value = [
             '#theme' => 'hpc_percent',
             '#ratio' => $value,
             '#decimals' => 1,
           ];
         }
-        return [
+        $rendered_value = [
           '#theme' => 'hpc_autoformat_value',
           '#value' => $value,
-          '#unit_type' => $attachment->unit->type,
+          '#unit_type' => $attachment->unit ? $attachment->unit->type : 'amount',
         ];
+        break;
 
       case 'currency':
-        return [
+        $rendered_value = [
           '#theme' => 'hpc_currency',
           '#value' => $value,
         ];
+        break;
 
       case 'amount':
-        return [
+        $rendered_value = [
           '#theme' => 'hpc_amount',
           '#amount' => $value,
         ];
+        break;
 
       case 'amount_rounded':
-        return [
+        $rendered_value = [
           '#theme' => 'hpc_amount',
           '#amount' => $value,
           '#decimals' => 1,
         ];
+        break;
 
       case 'percent':
-        return [
+        $rendered_value = [
           '#theme' => 'hpc_percent',
           '#ratio' => $value,
           '#decimals' => 1,
         ];
+        break;
 
       default:
         throw new InvalidTypeException(sprintf('Unknown formatting type: %s', $data_point_conf['formatting']));
     }
+
+    return $rendered_value;
+  }
+
+  /**
+   * Get a formatted widget for a data point.
+   *
+   * @param object $attachment
+   *   The attachment object.
+   * @param array $data_point_conf
+   *   The data point configuration.
+   *
+   * @return mixed
+   *   The data point value, extracted and formatted from the attachment
+   *   according to the given configuration.
+   *
+   * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
+   */
+  private static function formatAsWidget($attachment, array $data_point_conf) {
+    $value = self::getValue($attachment, $data_point_conf);
+    switch ($data_point_conf['widget']) {
+      case 'progressbar':
+        $widget = [
+          '#theme' => 'hpc_progress_bar',
+          '#ratio' => $value,
+        ];
+        break;
+
+      case 'pie_chart':
+        $widget = [
+          '#theme' => 'hpc_pie_chart',
+          '#ratio' => $value,
+        ];
+        break;
+
+      default:
+        throw new InvalidTypeException(sprintf('Unknown widget type: %s', $data_point_conf['widget']));
+    }
+
+    return $widget;
   }
 
   /**

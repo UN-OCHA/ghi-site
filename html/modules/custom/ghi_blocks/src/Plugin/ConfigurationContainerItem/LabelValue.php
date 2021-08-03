@@ -29,7 +29,7 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
     $element['value'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Value'),
-      '#default_value' => $this->config['value'],
+      '#default_value' => array_key_exists('value', $this->config) ? $this->config['value'] : NULL,
     ];
     return $element;
   }

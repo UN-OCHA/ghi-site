@@ -10,9 +10,7 @@ use Drupal\ghi_plans\Helpers\DataPointHelper;
 use Drupal\ghi_plans\Query\AttachmentQuery;
 
 /**
- * Provides an entity counter item for configuration containers.
- *
- * @todo This needs implementation.
+ * Provides an attachment data item for configuration containers.
  *
  * @ConfigurationContainerItem(
  *   id = "attachment_data",
@@ -79,7 +77,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
       '#weight' => 2,
     ];
 
-    $trigger = $form_state->getTriggeringElement() ? end($form_state->getTriggeringElement()['#parents']) : NULL;
+    $trigger = $form_state->getTriggeringElement() ? (string) end($form_state->getTriggeringElement()['#parents']) : NULL;
     $triggered_by_change_request = $trigger == 'change_attachment';
 
     $attachment = NULL;

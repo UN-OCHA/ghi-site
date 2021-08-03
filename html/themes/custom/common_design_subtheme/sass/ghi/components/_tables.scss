@@ -1,0 +1,24 @@
+table.ghi-table {
+  tbody {
+    td.data-point--widget-pie-chart {
+      white-space: nowrap;
+
+      .hpc-pie-chart-wrapper {
+        display: inline-flex;
+        width: auto;
+        height: 100%;
+        margin-left: 5px;
+        aspect-ratio: 1 / 1;
+        vertical-align: middle;
+      }
+    }
+
+    td.data-point--widget-progressbar {
+      white-space: nowrap;
+
+      .hpc-progress-bar-wrapper {
+        margin-left: 5px;
+      }
+    }
+  }
+}

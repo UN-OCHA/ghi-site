@@ -155,7 +155,7 @@ class SyncManager implements ContainerInjectionInterface {
       $existing_component = $this->getExistingSyncedComponent($node, $element);
       if ($existing_component) {
         // Update an existing component.
-        $configuration = $class::mapConfig($element->configuration) + $context_mapping + $existing_component->get('configuration');
+        $configuration = $class::mapConfig($element->configuration, $node) + $context_mapping + $existing_component->get('configuration');
         $existing_component->setConfiguration($configuration);
         $messenger->addMessage($this->t('Updated %plugin_title', [
           '%plugin_title' => $definition['admin_label'],
@@ -174,7 +174,7 @@ class SyncManager implements ContainerInjectionInterface {
             'source_uuid' => $element->uuid,
           ],
         ]) + $context_mapping;
-        $config += $class::mapConfig($element->configuration);
+        $config += $class::mapConfig($element->configuration, $node);
 
         $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
         $sections[$delta]->appendComponent($component);
@@ -295,7 +295,7 @@ class SyncManager implements ContainerInjectionInterface {
     if (!$existing_component) {
       return $this->t('Not synced');
     }
-    $remote_hash = md5(serialize($class::mapConfig($element->configuration)['hpc']));
+    $remote_hash = md5(serialize($class::mapConfig($element->configuration, $node)['hpc']));
     $local_hash = md5(serialize($existing_component->get('configuration')['hpc']));
     return $remote_hash == $local_hash ? $this->t('In sync') : $this->t('Changed');
   }

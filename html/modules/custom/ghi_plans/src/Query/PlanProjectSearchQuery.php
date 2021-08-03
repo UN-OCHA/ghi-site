@@ -13,7 +13,7 @@ use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\node\NodeInterface;
 
 /**
- * Query class for fetching plan data with a focus on plan entities.
+ * Query class for using the project search API.
  */
 class PlanProjectSearchQuery extends EndpointQuery {
 

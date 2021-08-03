@@ -27,6 +27,7 @@ function ghi_blocks_theme_suggestions_item_list_alter(array &$suggestions, array
  */
 function ghi_blocks_preprocess_block(&$variables) {
   $block_manager = \Drupal::service('plugin.manager.block');
+  /** @var \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $block */
   $block = $block_manager->createInstance($variables['plugin_id'], $variables['configuration']);
   if (!$block instanceof GHIBlockBase) {
     return;
@@ -40,16 +41,26 @@ function ghi_blocks_preprocess_block(&$variables) {
 /**
  * Implements hook_FORM_ID_alter().
  */
-function ghi_blocks_form_layout_builder_update_block_alter(array &$form, FormStateInterface $form_state) {
-  $form['actions']['cancel'] = [
-    '#type' => 'submit',
-    '#value' => t('Cancel'),
-    '#name' => 'layout-builder-cancel',
-    "#button_type" => 'primary',
-    "#ajax" => [
-      "callback" => 'ghi_blocks_layout_builder_cancel_callback',
-    ],
-  ];
+function ghi_blocks_form_layout_builder_add_block_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $component = $form_state->get('layout_builder__component');
+  $plugin = $component->getPlugin();
+  if (!$plugin instanceof GHIBlockBase) {
+    return;
+  }
+  $plugin->blockFormAlter($form, $form_state);
+}
+
+/**
+ * Implements hook_FORM_ID_alter().
+ */
+function ghi_blocks_form_layout_builder_update_block_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  list($section_storage, $delta, , $uuid) = $form_state->getBuildInfo()['args'];
+  $component = $section_storage->getSection($delta)->getComponent($uuid);
+  $plugin = $component->getPlugin();
+  if (!$plugin instanceof GHIBlockBase) {
+    return;
+  }
+  $plugin->blockFormAlter($form, $form_state);
 }
 
 /**

@@ -23,6 +23,11 @@ ghi-progress-bar:
     theme:
       components/ghi-progress-bar/ghi-progress-bar.css: {}
 
+ghi-pie-chart:
+  css:
+    theme:
+      components/ghi-pie-chart/ghi-pie-chart.css: {}
+
 # CSS custom properties polyfill for IE11.
 # https://jhildenbiddle.github.io/css-vars-ponyfill
 #
