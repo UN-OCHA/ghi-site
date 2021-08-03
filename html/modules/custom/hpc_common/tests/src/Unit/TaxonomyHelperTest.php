@@ -285,43 +285,43 @@ class TaxonomyHelperTest extends UnitTestCase {
    * Get mock response for loadTree.
    */
   public function getMockTaxonomyTree($tid = NULL) {
-    $term_1 = (object) [
+    $terms[1] = (object) [
       'tid' => 1,
       'name' => 'Term 1',
       'parents' => [],
     ];
 
-    $term_2 = (object) [
+    $terms[2] = (object) [
       'tid' => 2,
       'name' => 'Term 2',
       'parents' => [1],
     ];
 
-    $term_3 = (object) [
+    $terms[3] = (object) [
       'tid' => 3,
       'name' => 'Term 3',
       'parents' => [],
     ];
 
-    $term_4 = (object) [
+    $terms[4] = (object) [
       'tid' => 4,
       'name' => 'Term 4',
       'parents' => [],
     ];
 
-    $term_5 = (object) [
+    $terms[5] = (object) [
       'tid' => 5,
       'name' => 'Term 5',
       'parents' => [4],
     ];
 
-    $term_6 = (object) [
+    $terms[6] = (object) [
       'tid' => 6,
       'name' => 'Term 6',
       'parents' => [4],
     ];
 
-    return !$tid ? [$term_1, $term_2, $term_3, $term_4, $term_5, $term_6] : $term_{$tid};
+    return !$tid ? $terms : $terms[$tid];
   }
 
 }
