@@ -67,7 +67,7 @@
         "drupal/social_auth_hid": "^2.6",
         "drupal/tippy": "^1.0",
         "drupal/viewsreference": "^1.7",
-        "drush/drush": "^10.4",
+        "drush/drush": "^10.5",
         "oomphinc/composer-installers-extender": "^2.0",
         "phpoffice/phpspreadsheet": "^1.17",
         "unocha/common_design": "^4.0"
