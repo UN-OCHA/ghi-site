@@ -1,0 +1,22 @@
+uuid: 7743e9db-edaf-4ba7-b29f-e593df3a278c
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: population
+label: Population
+type: 'canonical_entities:node'
+pattern: '[node:field_entity_reference:entity:url:path]/population'
+selection_criteria:
+  8e0c0cdc-468b-4259-86fa-51820473d5b1:
+    id: node_type
+    bundles:
+      population: population
+    negate: false
+    context_mapping:
+      node: node
+    uuid: 8e0c0cdc-468b-4259-86fa-51820473d5b1
+selection_logic: and
+weight: -5
+relationships: {  }

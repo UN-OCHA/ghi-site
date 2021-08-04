@@ -1,0 +1,22 @@
+uuid: 67e5255e-a460-4846-91ef-cdfdffeb2acf
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: financials
+label: Financials
+type: 'canonical_entities:node'
+pattern: '[node:field_entity_reference:entity:url:path]/financials'
+selection_criteria:
+  22edb89c-c8d5-42e1-b697-3cd30c5be658:
+    id: node_type
+    bundles:
+      financials: financials
+    negate: false
+    context_mapping:
+      node: node
+    uuid: 22edb89c-c8d5-42e1-b697-3cd30c5be658
+selection_logic: and
+weight: -5
+relationships: {  }

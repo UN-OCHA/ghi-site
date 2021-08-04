@@ -1,0 +1,31 @@
+uuid: dbdddfc9-0a30-4ee6-bd0a-686801234fc6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_entity_reference
+    - node.type.country
+    - node.type.plan
+    - node.type.profile
+id: node.profile.field_entity_reference
+field_name: field_entity_reference
+entity_type: node
+bundle: profile
+label: 'Entity Reference'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      country: country
+      plan: plan
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: country
+field_type: entity_reference

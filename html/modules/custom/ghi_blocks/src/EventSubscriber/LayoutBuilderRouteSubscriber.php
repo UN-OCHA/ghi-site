@@ -12,6 +12,8 @@ use Symfony\Component\Routing\RouteCollection;
  * This is used to replace the generic "Configure block" title in layout
  * builder modal windows with the admin label of the plugin that is
  * added/updated.
+ *
+ * @package Drupal\ghi_blocks
  */
 class LayoutBuilderRouteSubscriber extends RouteSubscriberBase {
 

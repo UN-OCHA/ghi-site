@@ -1,7 +1,0 @@
-name: 'Paragraph Handler'
-type: module
-description: 'Allows paragraphs to be controlled by classes.'
-core_version_requirement: ^9
-package: 'Custom'
-dependencies:
-  - drupal:paragraphs

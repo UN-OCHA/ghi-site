@@ -1,0 +1,16 @@
+uuid: 632446e5-7fc5-4155-a7cd-23b4a2fde6e6
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.population
+  module:
+    - content_translation
+third_party_settings:
+  content_translation:
+    enabled: true
+id: node.population
+target_entity_type_id: node
+target_bundle: population
+default_langcode: site_default
+language_alterable: true

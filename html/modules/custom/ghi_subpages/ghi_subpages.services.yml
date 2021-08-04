@@ -1,0 +1,5 @@
+services:
+  ghi_subpages.route_subscriber:
+    class: Drupal\ghi_subpages\EventSubscriber\RouteSubscriber
+    tags:
+      - { name: event_subscriber }

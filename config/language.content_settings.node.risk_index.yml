@@ -1,0 +1,16 @@
+uuid: 89e1eb1d-7b04-4e4a-b0e6-239bc7cd6119
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.risk_index
+  module:
+    - content_translation
+third_party_settings:
+  content_translation:
+    enabled: true
+id: node.risk_index
+target_entity_type_id: node
+target_bundle: risk_index
+default_langcode: site_default
+language_alterable: true

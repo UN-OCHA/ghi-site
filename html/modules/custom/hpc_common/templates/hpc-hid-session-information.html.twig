@@ -1,18 +1,15 @@
-<div class="panel panel-default">
-  <div class="panel-heading">
-    <h2 class="panel-title" data-toggle="collapse" data-target="#data">HID Session Information</h2>
-  </div>
-  <div id="data" class="panel-collapse collapse">
-    <div class="panel-body">
-      <div class="info">{{ description }}</div>
-      <div class="hid-user-id">
-        <strong>HID User ID:</strong> {{ user_id }}
-        <p><i>{{ id_message }}</i></p>
-      </div>
-      <div class="hid-token">
-        <strong>HID Access Token:</strong> {{ token }}
-        <p><i>{{ token_message }}</i></p>
-      </div>
+{{ attach_library('common_design/cd-dropdown') }}
+
+<div class="hid-session-information">
+  <div data-cd-component="cd-dropdown" data-cd-icon="arrow-down" id="cd-dropdown" class="cd-dropdown" aria-labelledby="dropdown-title" data-cd-toggable="HID Session Information">
+    <div class="info">{{ description }}</div>
+    <div class="hid-user-id">
+      <strong>HID User ID:</strong><br />{{ user_id }}
+      <p><i>{{ id_message }}</i></p>
+    </div>
+    <div class="hid-token">
+      <strong>HID Access Token:</strong><br />{{ token }}
+      <p><i>{{ token_message }}</i></p>
     </div>
   </div>
 </div>

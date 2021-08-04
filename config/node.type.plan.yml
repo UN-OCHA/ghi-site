@@ -10,7 +10,7 @@ third_party_settings:
     parent: ''
 name: Plan
 type: plan
-description: ''
+description: 'Base page for plans.'
 help: ''
 new_revision: false
 preview_mode: 1

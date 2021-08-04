@@ -1,0 +1,45 @@
+uuid: 7aee70c3-027b-4158-a83d-a5e902ad6c0a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.risk_index.field_entity_reference
+    - field.field.node.risk_index.layout_builder__layout
+    - node.type.risk_index
+  module:
+    - layout_builder
+    - layout_discovery
+    - user
+third_party_settings:
+  layout_builder:
+    allow_custom: true
+    enabled: true
+    sections:
+      -
+        layout_id: layout_onecol
+        layout_settings:
+          label: Content
+          context_mapping: {  }
+        components: {  }
+        third_party_settings: {  }
+id: node.risk_index.default
+targetEntityType: node
+bundle: risk_index
+mode: default
+content:
+  field_entity_reference:
+    weight: 102
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  langcode: true
+  layout_builder__layout: true

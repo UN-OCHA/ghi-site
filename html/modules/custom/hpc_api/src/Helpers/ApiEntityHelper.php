@@ -16,6 +16,17 @@ class ApiEntityHelper {
   const MAIN_LEVEL_PLE_REF_CODES = ['CQ', 'SO', 'SP'];
 
   /**
+   * Supported context entity types for plans.
+   *
+   * A list of node bundles that are supported for further context handling of
+   * plan entities.
+   */
+  const SUPPORTED_CONTEXT_ENTITY_TYPES = [
+    'governing_entity',
+    'plan_entity',
+  ];
+
+  /**
    * Retrieve the version property of an entity.
    *
    * @param object $entity
@@ -66,7 +77,7 @@ class ApiEntityHelper {
     // context.
     $matching_entities = [];
 
-    if (empty($context_node)) {
+    if (empty($context_node) || !in_array($context_node->getType(), self::SUPPORTED_CONTEXT_ENTITY_TYPES)) {
       // Easy, no additional plan context, just get all of them.
       $matching_entities = $entities;
     }

@@ -9,6 +9,7 @@ is_admin: null
 permissions:
   - 'add media from remote sources'
   - 'administer panelizer node governing_entity content'
+  - 'delete own news_story content'
   - 'edit own governing_entity content'
   - 'publish editable content'
   - 'unpublish editable content'

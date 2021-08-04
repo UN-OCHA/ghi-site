@@ -1,0 +1,33 @@
+uuid: ad87652a-70e6-45ef-8ee7-618851dbbff7
+langcode: en
+status: true
+dependencies:
+  module:
+    - hpc_common
+    - system
+    - user
+  theme:
+    - common_design_subtheme
+id: hidsessioninformation
+theme: common_design_subtheme
+region: sidebar_second
+weight: 0
+provider: null
+plugin: hid_session_information
+settings:
+  id: hid_session_information
+  label: 'HID Session Information'
+  provider: hpc_common
+  label_display: visible
+visibility:
+  user_role:
+    id: user_role
+    roles:
+      administrator: administrator
+    negate: false
+    context_mapping:
+      user: '@user.current_user_context:current_user'
+  request_path:
+    id: request_path
+    pages: '/user/*'
+    negate: false

@@ -1,0 +1,18 @@
+features:
+  node_user_picture: 0
+  comment_user_picture: true
+  comment_user_verification: true
+  favicon: 1
+logo:
+  use_default: 1
+favicon:
+  use_default: 1
+common_design_node_title:
+  featured: 0
+  full: 0
+  grid: 0
+  rss: 0
+  search_index: 0
+  search_result: 0
+  teaser: 0
+  token: 0

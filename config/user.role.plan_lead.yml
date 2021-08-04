@@ -12,6 +12,7 @@ permissions:
   - 'administer panelizer node plan content'
   - 'administer panelizer node plan_entity content'
   - 'apply hpc page templates'
+  - 'delete own news_story content'
   - 'edit own governing_entity content'
   - 'edit own plan_entity content'
   - 'publish editable content'

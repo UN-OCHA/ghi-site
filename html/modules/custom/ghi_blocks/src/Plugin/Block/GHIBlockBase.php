@@ -46,10 +46,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
   abstract protected function getConfigurationDefaults();
 
   /**
-   * Get data for this paragraph.
+   * Get data for this block.
    *
    * @param string $source_key
-   *   The source key that should be used to retrieve data for a paragraph.
+   *   The source key that should be used to retrieve data for a block.
    *
    * @return array|object
    *   A data array or object.
@@ -60,13 +60,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
-   * Get a query handler for this paragraph.
+   * Get a query handler for this block.
    *
    * This returns either the requested named handler if it exists, or the only
    * one defined if no source key is given.
    *
    * @param string $source_key
-   *   The source key that should be used to retrieve data for a paragraph.
+   *   The source key that should be used to retrieve data for a block.
    *
    * @return Drupal\hpc_api\EndpointQuery
    *   The query handler class.
@@ -97,6 +97,15 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $plan_id = $plan->field_original_id->value;
       $query_handler->setPlaceholder('plan_id', $plan_id);
     }
+    elseif ($page_node->hasField('field_entity_reference') && count($page_node->get('field_entity_reference')->referencedEntities()) == 1) {
+      $entities = $page_node->get('field_entity_reference')->referencedEntities();
+      $base_entity = reset($entities);
+      $plan_id = $base_entity->getType() == 'plan' ? $base_entity->field_original_id->value : NULL;
+      if ($plan_id) {
+        $query_handler->setPlaceholder('plan_id', $plan_id);
+      }
+    }
+
     return $query_handler;
   }
 
@@ -886,6 +895,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
     if ($page_node->hasField('field_plan') && $referenced_entities = $page_node->field_plan->referencedEntities()) {
       return count($referenced_entities) ? reset($referenced_entities) : NULL;
+    }
+    if ($page_node->hasField('field_entity_reference') && $referenced_entities = $page_node->field_entity_reference->referencedEntities()) {
+      return count($referenced_entities) && reset($referenced_entities)->getType() == 'plan' ? reset($referenced_entities) : NULL;
     }
     return NULL;
   }

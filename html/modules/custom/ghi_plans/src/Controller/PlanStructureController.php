@@ -2,7 +2,6 @@
 
 namespace Drupal\ghi_plans\Controller;
 
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Link;
@@ -80,19 +79,6 @@ class PlanStructureController extends ControllerBase {
       $container->get('current_user'),
       $container->get('csrf_token'),
     );
-  }
-
-  /**
-   * Access callback for the plan structure page.
-   *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node object.
-   *
-   * @return \Drupal\Core\Access\AccessResultInterface
-   *   The access result.
-   */
-  public function access(NodeInterface $node) {
-    return AccessResult::allowedIf($node->bundle() == 'plan');
   }
 
   /**

@@ -177,6 +177,7 @@ class PlanEntitiesQuery extends EndpointQuery {
     if (empty($data)) {
       return NULL;
     }
+
     $matching_entities = ApiEntityHelper::getMatchingPlanEntities($this->getData(), $context_node->bundle() != 'plan' ? $context_node : NULL, $entity_type);
     if (empty($matching_entities)) {
       return NULL;
