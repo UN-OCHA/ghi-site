@@ -1,0 +1,50 @@
+uuid: b0717b66-5926-49cc-8aa4-e7ac56c8f42d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.base_object.plan_entity.field_original_id
+    - field.field.base_object.plan_entity.field_plan
+    - field.field.base_object.plan_entity.field_prototype_id
+    - ghi_base_objects.base_object_type.plan_entity
+id: base_object.plan_entity.default
+targetEntityType: base_object
+bundle: plan_entity
+mode: default
+content:
+  field_original_id:
+    weight: -3
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    type: number_integer
+    region: content
+  field_plan:
+    weight: -1
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  field_prototype_id:
+    weight: -2
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    type: number_integer
+    region: content
+  name:
+    label: above
+    type: string
+    weight: -4
+    region: content
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+hidden:
+  langcode: true

@@ -1,0 +1,23 @@
+uuid: 9f9a8721-9432-4f63-8f92-df647d580891
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_original_id
+    - ghi_base_objects.base_object_type.organization
+id: base_object.organization.field_original_id
+field_name: field_original_id
+entity_type: base_object
+bundle: organization
+label: 'Original ID'
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

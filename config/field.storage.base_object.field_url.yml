@@ -1,0 +1,19 @@
+uuid: 7750606e-f55e-4c22-83d8-ebf852b8c12e
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+    - link
+id: base_object.field_url
+field_name: field_url
+entity_type: base_object
+type: link
+settings: {  }
+module: link
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

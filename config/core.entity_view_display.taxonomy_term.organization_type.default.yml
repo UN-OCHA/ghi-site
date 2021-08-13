@@ -1,0 +1,32 @@
+uuid: 9c6c79a2-9cf0-4d4e-aa35-736bc1e24384
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.organization_type.field_original_id
+    - taxonomy.vocabulary.organization_type
+  module:
+    - text
+id: taxonomy_term.organization_type.default
+targetEntityType: taxonomy_term
+bundle: organization_type
+mode: default
+content:
+  description:
+    label: hidden
+    type: text_default
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_original_id:
+    weight: 1
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    type: number_integer
+    region: content
+hidden:
+  langcode: true

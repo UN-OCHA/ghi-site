@@ -14,12 +14,7 @@ class SubpageHelper {
    * A list of node bundles that are supported as base types.
    */
   const SUPPORTED_BASE_TYPES = [
-    'plan',
-    'country',
-    'region',
-    'cluster',
-    'organization',
-    'project',
+    'section',
   ];
 
   /**
@@ -64,6 +59,29 @@ class SubpageHelper {
       $subpage->save();
       \Drupal::messenger()->addStatus(t('Created @type subpage for @title', [
         '@type' => $subpage_name,
+        '@title' => $node->getTitle(),
+      ]));
+    }
+  }
+
+  /**
+   * Delete all subpages for a base node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The base node.
+   */
+  public static function deleteSubpagesForBaseNode(NodeInterface $node) {
+    if (!in_array($node->getType(), self::SUPPORTED_BASE_TYPES)) {
+      return;
+    }
+    foreach (self::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
+      $subpage_node = self::getSubpageForBaseNode($node, $subpage_type);
+      if (!$subpage_node) {
+        continue;
+      }
+      $subpage_node->delete();
+      \Drupal::messenger()->addStatus(t('Deleted @type subpage for @title', [
+        '@type' => $subpage_node->getTitle(),
         '@title' => $node->getTitle(),
       ]));
     }

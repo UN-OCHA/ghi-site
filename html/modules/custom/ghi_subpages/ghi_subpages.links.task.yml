@@ -1,5 +1,5 @@
-entity.node.hpc.pages:
+entity.node.pages:
   route_name: ghi_subpages.node.pages
   base_route: entity.node.canonical
-  parent_id: entity.node.hpc
   title: Pages
+  weight: 1

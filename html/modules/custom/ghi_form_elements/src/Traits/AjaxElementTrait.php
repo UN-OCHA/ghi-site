@@ -31,7 +31,17 @@ trait AjaxElementTrait {
    *   The wrapper id.
    */
   public static function getWrapperId(array $element) {
-    return implode('-', $element['#array_parents']) . '-wrapper';
+    $prefix = '';
+    if (array_key_exists('#array_parents', $element)) {
+      $prefix = implode('-', $element['#array_parents']);
+    }
+    elseif (array_key_exists('#attributes', $element) && array_key_exists('class', $element['#attributes'])) {
+      $prefix = reset($element['#attributes']['class']);
+    }
+    elseif (method_exists(self::class, 'getFormId')) {
+      $prefix = Html::getClass(self::getFormId());
+    }
+    return $prefix . '-wrapper';
   }
 
   /**
@@ -43,7 +53,7 @@ trait AjaxElementTrait {
   protected static function setElementParents(array $element) {
     // Put the root path to this element into the form storage, to have it
     // easily available to update the full element after an ajax action.
-    self::$elementParentsFormKey = $element['#array_parents'];
+    self::$elementParentsFormKey = array_key_exists('#array_parents', $element) ? $element['#array_parents'] : [];
   }
 
   /**
@@ -72,7 +82,7 @@ trait AjaxElementTrait {
     // Just update the full element.
     $triggering_element = $form_state->getTriggeringElement();
     $wrapper_id = $triggering_element['#ajax']['wrapper'];
-
+    self::setElementParents($form);
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand('#' . $wrapper_id, NestedArray::getValue($form, self::$elementParentsFormKey)));
 
@@ -121,6 +131,17 @@ trait AjaxElementTrait {
     foreach (Element::children($element) as $element_key) {
       self::hideAllElements($element[$element_key]);
     }
+  }
+
+  /**
+   * Provide an "action" by looking at the triggering element array parents.
+   */
+  public static function getActionFromFormState(FormStateInterface $form_state) {
+    $triggering_element = $form_state->getTriggeringElement();
+    if (!$triggering_element || empty($triggering_element['#array_parents'])) {
+      return NULL;
+    }
+    return end($triggering_element['#array_parents']);
   }
 
 }

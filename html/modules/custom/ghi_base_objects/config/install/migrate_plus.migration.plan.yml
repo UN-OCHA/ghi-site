@@ -1,0 +1,94 @@
+id: plan
+label: Plans from the HPC API
+migration_group: hpc_api_data
+source:
+  filter:
+    -
+      type: 'min_year'
+      value: '2018'
+  include_raw_data: true
+  track_changes: true
+  endpoints:
+    -
+      endpoint: 'plan?scopes=tags,locations&activities=false'
+      api_version: 'v2'
+      auth_method: 'api_key'
+  item_selector: data
+  fields:
+    -
+      name: original_id
+      label: 'Unique plan ID'
+      selector: id
+    -
+      name: created
+      label: 'Created datetime'
+      selector: createdAt
+    -
+      name: updated
+      label: 'Updated datetime'
+      selector: updatedAt
+    -
+      name: restricted
+      label: 'The restricted flag'
+      selector: restricted
+  ids:
+    original_id:
+      type: integer
+process:
+  type:
+    plugin: default_value
+    default_value: plan
+  name: name
+  created:
+    plugin: callback
+    callable: strtotime
+    source: created
+  changed:
+    plugin: callback
+    callable: strtotime
+    source: updated
+  field_original_id: original_id
+  field_description: comments
+  field_plan_version_tag: version_tag
+  field_country:
+    plugin: sub_process
+    source: countries
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration: country
+        source: id
+  field_plan_type:
+    plugin: migration_lookup
+    migration: plan_type
+    source: plan_type_id
+    no_stub: true
+  field_plan_costing:
+    plugin: migration_lookup
+    migration: plan_costing
+    source: plan_costing_id
+    no_stub: true
+  field_year: plan_year
+  field_restricted: restricted
+destination:
+  plugin: 'entity:base_object'
+  overwrite_properties:
+    - name
+    - created
+    - changed
+    - field_description
+    - field_plan_version_tag
+    - field_plan_type
+    - field_plan_costing
+    - field_year
+    - field_country
+    - field_restricted
+migration_dependencies:
+  required:
+    - plan_type
+    - plan_costing
+    - country
+dependencies:
+  enforced:
+    module:
+      - hpc_api

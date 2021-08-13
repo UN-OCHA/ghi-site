@@ -1,0 +1,5 @@
+services:
+  ghi_sections.route_subscriber:
+    class: Drupal\ghi_sections\EventSubscriber\RouteSubscriber
+    tags:
+      - { name: event_subscriber }

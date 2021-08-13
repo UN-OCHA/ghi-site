@@ -1,0 +1,4 @@
+administer base object entities:
+  title: 'Administer Base object entities'
+  description: 'Allow to access the administration form to configure Base object entities.'
+  restrict access: true

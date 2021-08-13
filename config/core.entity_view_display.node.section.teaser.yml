@@ -1,0 +1,27 @@
+uuid: 6eefe3f5-6699-49b2-916d-093c839327aa
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.section.field_base_object
+    - field.field.node.section.field_year
+    - field.field.node.section.layout_builder__layout
+    - node.type.section
+  module:
+    - user
+id: node.section.teaser
+targetEntityType: node
+bundle: section
+mode: teaser
+content:
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  field_base_object: true
+  field_year: true
+  langcode: true
+  layout_builder__layout: true

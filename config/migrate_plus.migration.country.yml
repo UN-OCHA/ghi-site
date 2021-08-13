@@ -27,7 +27,7 @@ source:
       selector: id
     -
       name: name
-      label: 'Name of the plan entity'
+      label: 'Name of the country'
       selector: name
     -
       name: latitude
@@ -52,29 +52,16 @@ process:
   type:
     plugin: default_value
     default_value: country
-  title: name
-  status:
-    plugin: default_value
-    default_value: 0
+  name: name
   field_original_id: original_id
   field_latitude: latitude
   field_longitude: longitude
   field_country_code: iso3
   field_place_code: pcode
-  promote:
-    plugin: default_value
-    default_value: 0
-  sticky:
-    plugin: default_value
-    default_value: 0
-  uid:
-    plugin: default_value
-    default_value: 0
 destination:
-  plugin: 'entity:node'
+  plugin: 'entity:base_object'
   overwrite_properties:
-    - title
-    - status
+    - name
     - field_latitude
     - field_longitude
     - field_country_code

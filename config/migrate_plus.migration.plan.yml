@@ -42,10 +42,6 @@ source:
       name: restricted
       label: 'The restricted flag'
       selector: restricted
-    -
-      name: plan_status
-      label: 'The plan status in RPM'
-      selector: planStatus
   ids:
     original_id:
       type: integer
@@ -53,8 +49,7 @@ process:
   type:
     plugin: default_value
     default_value: plan
-  title: name
-  status: status
+  name: name
   created:
     plugin: callback
     callable: strtotime
@@ -66,14 +61,6 @@ process:
   field_original_id: original_id
   field_description: comments
   field_plan_version_tag: version_tag
-  field_plan_date/value:
-    plugin: hpc_api_migrate_format_date
-    source: start_date
-  field_plan_date/end_value:
-    plugin: hpc_api_migrate_format_date
-    source: end_date
-  field_plan_structure_rpm: prototype
-  field_plan_reporting_periods: reporting_periods
   field_country:
     plugin: sub_process
     source: countries
@@ -84,46 +71,31 @@ process:
         source: id
   field_plan_type:
     plugin: migration_lookup
-    migration: plan_type_term
+    migration: plan_type
     source: plan_type_id
     no_stub: true
   field_plan_costing:
     plugin: migration_lookup
-    migration: plan_costing_term
+    migration: plan_costing
     source: plan_costing_id
     no_stub: true
   field_year: plan_year
   field_restricted: restricted
-  field_rpm_plan_status: plan_status
-  promote:
-    plugin: default_value
-    default_value: 0
-  sticky:
-    plugin: default_value
-    default_value: 0
-  uid:
-    plugin: default_value
-    default_value: 0
 destination:
-  plugin: 'entity:node'
+  plugin: 'entity:base_object'
   overwrite_properties:
-    - title
-    - status
+    - name
     - created
     - changed
     - field_description
     - field_plan_version_tag
-    - field_plan_date
-    - field_plan_structure_rpm
-    - field_plan_reporting_periods
     - field_plan_type
     - field_plan_costing
     - field_year
     - field_country
     - field_restricted
-    - field_rpm_plan_status
 migration_dependencies:
   required:
-    - plan_type_term
-    - plan_costing_term
+    - plan_type
+    - plan_costing
     - country

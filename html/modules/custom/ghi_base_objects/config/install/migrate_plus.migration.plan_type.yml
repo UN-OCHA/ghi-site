@@ -1,0 +1,46 @@
+id: plan_type
+label: 'Plan type categories from the HPC API'
+migration_group: hpc_api_data
+source:
+  plugin: hpc_api_url
+  data_fetcher_plugin: hpc_api_http
+  data_parser_plugin: hpc_api_endpoint
+  endpoints:
+    -
+      endpoint: fts/category/planType
+  item_selector: data
+  fields:
+    -
+      name: original_id
+      label: 'Unique term ID'
+      selector: id
+    -
+      name: name
+      label: Name
+      selector: name
+    -
+      name: included_in_totals
+      label: 'Included in totals'
+      selector: 'includeTotals'
+  ids:
+    original_id:
+      type: integer
+process:
+  name: name
+  field_original_id: original_id
+  field_included_in_totals:
+    plugin: skip_on_empty
+    source: included_in_totals
+    method: process
+    value: true
+destination:
+  plugin: 'entity:taxonomy_term'
+  default_bundle: plan_type
+  overwrite_properties:
+    - name
+    - field_included_in_totals
+migration_dependencies: {  }
+dependencies:
+  enforced:
+    module:
+      - hpc_api

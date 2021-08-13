@@ -1,0 +1,22 @@
+uuid: 42701f9d-8868-4d3f-8216-d05da70a9448
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: sections
+label: Sections
+type: 'canonical_entities:node'
+pattern: '[node:field_base_object:entity:type]/[node:field_base_object:entity:field_original_id]'
+selection_criteria:
+  cbfec64b-dfd3-4e8d-928c-0e5954d4836b:
+    id: node_type
+    bundles:
+      section: section
+    negate: false
+    context_mapping:
+      node: node
+    uuid: cbfec64b-dfd3-4e8d-928c-0e5954d4836b
+selection_logic: and
+weight: -10
+relationships: {  }

@@ -85,25 +85,32 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     $query_handler = \Drupal::service($definition['service']);
     $page_node = $this->getPageNode();
-    if ($page_node->bundle() == 'plan') {
-      if (isset($page_node->field_original_id) && !$page_node->field_original_id->isEmpty()) {
-        $plan_id = $page_node->field_original_id->value;
-        $query_handler->setPlaceholder('plan_id', $plan_id);
-      }
-    }
-    elseif ($page_node->hasField('field_plan') && count($page_node->get('field_plan')->referencedEntities()) == 1) {
-      $entities = $page_node->get('field_plan')->referencedEntities();
-      $plan = reset($entities);
-      $plan_id = $plan->field_original_id->value;
-      $query_handler->setPlaceholder('plan_id', $plan_id);
-    }
-    elseif ($page_node->hasField('field_entity_reference') && count($page_node->get('field_entity_reference')->referencedEntities()) == 1) {
+
+    $base_entity = NULL;
+
+    // Get the section for the current page node.
+    if ($page_node->hasField('field_entity_reference') && count($page_node->get('field_entity_reference')->referencedEntities()) == 1) {
+      // The page node is a subpage of a section and references a section,
+      // which references a base object.
       $entities = $page_node->get('field_entity_reference')->referencedEntities();
       $base_entity = reset($entities);
-      $plan_id = $base_entity->getType() == 'plan' ? $base_entity->field_original_id->value : NULL;
-      if ($plan_id) {
-        $query_handler->setPlaceholder('plan_id', $plan_id);
-      }
+    }
+    elseif ($page_node->hasField('field_base_object')) {
+      // The page node is already a section node.
+      $base_entity = $page_node;
+    }
+
+    // Get the object for the current page node.
+    $base_object = NULL;
+    if ($base_entity && $base_entity->hasField('field_base_object') && count($base_entity->get('field_base_object')->referencedEntities()) == 1) {
+      // The page node is a section node which references a base object.
+      $entities = $base_entity->get('field_base_object')->referencedEntities();
+      $base_object = reset($entities);
+    }
+
+    if ($base_object) {
+      $original_id = $base_object->field_original_id->value;
+      $query_handler->setPlaceholder($base_object->bundle() . '_id', $original_id);
     }
 
     return $query_handler;
@@ -861,19 +868,64 @@ abstract class GHIBlockBase extends HPCBlockBase {
       return;
     }
 
-    $plan_node = $this->getCurrentPlanNode($node);
-    $plan_id = $plan_node->field_original_id->value;
+    $base_object = $this->getCurrentBaseObject($node);
+    if (!$base_object || !$base_object->hasField('field_original_id')) {
+      return;
+    }
+    $base_object_id = $base_object->field_original_id->value;
+    $base_object_bundle = $base_object->bundle();
+    $context_key = $base_object_bundle . '_id';
+    $context_label = $this->t('@bundle id', [
+      '@bundle' => $base_object->type->entity->label(),
+    ]);
 
-    if (empty($plugin_definition['context_definitions']['plan_id'])) {
+    if (empty($plugin_definition['context_definitions'][$context_key])) {
       // Create a new context.
-      $context = new Context(new ContextDefinition('integer', $this->t('Plan id'), FALSE), $plan_id);
-      $this->setContext('plan_id', $context);
+      $context = new Context(new ContextDefinition('integer', $context_label, FALSE), $base_object_id);
+      $this->setContext($context_key, $context);
     }
     else {
       // Overwrite the existing context value if there is any.
-      $this->setContextValue('plan_id', $plan_id);
+      $this->setContextValue($context_key, $base_object_id);
     }
     $this->injectedFieldContexts = TRUE;
+  }
+
+  /**
+   * Get the base object for the current page context.
+   *
+   * @return \Drupal\node\NodeInterface
+   *   A node reprexenting an API base object if it can be found.
+   */
+  public function getCurrentBaseObject($page_node = NULL) {
+    if ($page_node === NULL) {
+      $page_node = $this->getPageNode();
+    }
+    if (!$page_node) {
+      return NULL;
+    }
+
+    if ($page_node->hasField('field_base_object') && $base_objects = $page_node->field_base_object->referencedEntities()) {
+      return count($base_objects) ? reset($base_objects) : NULL;
+    }
+    if ($page_node->hasField('field_entity_reference') && $referenced_entities = $page_node->field_entity_reference->referencedEntities()) {
+      return count($referenced_entities) ? $this->getCurrentBaseObject(reset($referenced_entities)) : NULL;
+    }
+    return NULL;
+  }
+
+  /**
+   * Get a plan id for the current page context.
+   *
+   * @return int
+   *   A plan id if it can be found.
+   */
+  public function getCurrentBaseObjectId($page_node = NULL) {
+    $base_object = $this->getCurrentBaseObject($page_node);
+    if (!$base_object) {
+      return NULL;
+    }
+    return $base_object->field_original_id->value;
   }
 
   /**
@@ -882,7 +934,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * @return \Drupal\node\NodeInterface
    *   A plan node if it can be found.
    */
-  public function getCurrentPlanNode($page_node = NULL) {
+  public function getCurrentPlanObject($page_node = NULL) {
     if ($page_node === NULL) {
       $page_node = $this->getPageNode();
     }
@@ -890,14 +942,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
       return NULL;
     }
 
-    if ($page_node->bundle() == 'plan') {
-      return $page_node;
-    }
-    if ($page_node->hasField('field_plan') && $referenced_entities = $page_node->field_plan->referencedEntities()) {
-      return count($referenced_entities) ? reset($referenced_entities) : NULL;
-    }
-    if ($page_node->hasField('field_entity_reference') && $referenced_entities = $page_node->field_entity_reference->referencedEntities()) {
-      return count($referenced_entities) && reset($referenced_entities)->getType() == 'plan' ? reset($referenced_entities) : NULL;
+    $base_object = $this->getCurrentBaseObject($page_node);
+    if ($base_object->bundle() == 'plan') {
+      return $base_object;
     }
     return NULL;
   }
@@ -909,11 +956,11 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   A plan id if it can be found.
    */
   public function getCurrentPlanId($page_node = NULL) {
-    $plan_node = $this->getCurrentPlanNode($page_node);
-    if (!$plan_node) {
+    $plan_object = $this->getCurrentPlanObject($page_node);
+    if (!$plan_object) {
       return NULL;
     }
-    return $plan_node->field_original_id->value;
+    return $plan_object->field_original_id->value;
   }
 
 }

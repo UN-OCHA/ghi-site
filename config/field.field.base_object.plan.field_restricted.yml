@@ -1,0 +1,23 @@
+uuid: 9a63fb4e-f2a6-4b83-af6e-4ea0b9329c69
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_restricted
+    - ghi_base_objects.base_object_type.plan
+id: base_object.plan.field_restricted
+field_name: field_restricted
+entity_type: base_object
+bundle: plan
+label: Restricted
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'Yes'
+  off_label: 'No'
+field_type: boolean

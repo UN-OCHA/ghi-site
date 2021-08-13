@@ -1,0 +1,6 @@
+uuid: b6c04dc3-ec49-40ac-a724-98618d1e1fdc
+langcode: en
+status: true
+dependencies: {  }
+id: plan_entity
+label: 'Plan entity'

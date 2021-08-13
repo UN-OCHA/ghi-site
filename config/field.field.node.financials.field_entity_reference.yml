@@ -4,9 +4,7 @@ status: true
 dependencies:
   config:
     - field.storage.node.field_entity_reference
-    - node.type.country
     - node.type.financials
-    - node.type.plan
 id: node.financials.field_entity_reference
 field_name: field_entity_reference
 entity_type: node
@@ -20,12 +18,10 @@ default_value_callback: ''
 settings:
   handler: 'default:node'
   handler_settings:
-    target_bundles:
-      country: country
-      plan: plan
+    target_bundles: {  }
     sort:
       field: _none
       direction: ASC
     auto_create: false
-    auto_create_bundle: country
+    auto_create_bundle: null
 field_type: entity_reference
