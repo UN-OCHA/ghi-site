@@ -136,6 +136,10 @@ class SectionWizard extends FormBase {
       $form['actions']['back'] = [
         '#type' => 'button',
         '#value' => $this->t('Back'),
+        '#limit_validation_errors' => array_filter([
+          $form_state->hasValue('type') ? ['type'] : NULL,
+          $form_state->hasValue('base_object') ? ['base_object'] : NULL,
+        ]),
         '#ajax' => [
           'event' => 'click',
           'callback' => [static::class, 'updateAjax'],
