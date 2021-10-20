@@ -4,6 +4,7 @@ namespace Drupal\ghi_sections\Form;
 
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -35,6 +36,13 @@ class SectionWizard extends FormBase {
   /**
    * The current user.
    *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
+   * The current user.
+   *
    * @var \Drupal\Core\Session\AccountProxyInterface
    */
   protected $currentUser;
@@ -42,9 +50,10 @@ class SectionWizard extends FormBase {
   /**
    * Constructs a SubpagesPages form.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, AccountProxyInterface $user) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ModuleHandlerInterface $module_handler, AccountProxyInterface $user) {
     $this->entityTypeManager = $entity_type_manager;
     $this->entityFieldManager = $entity_field_manager;
+    $this->moduleHandler = $module_handler;
     $this->currentUser = $user;
   }
 
@@ -55,6 +64,7 @@ class SectionWizard extends FormBase {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
+      $container->get('module_handler'),
       $container->get('current_user'),
     );
   }
@@ -141,7 +151,7 @@ class SectionWizard extends FormBase {
       '#default_value' => $base_object,
       '#tags' => TRUE,
       '#selection_settings' => [
-        'target_bundles' => [$base_object_type->id()],
+        'target_bundles' => $base_object_type ? [$base_object_type->id()] : NULL,
       ],
       '#disabled' => $step > 1,
       '#required' => TRUE,
@@ -222,8 +232,10 @@ class SectionWizard extends FormBase {
       'year',
     ]));
 
+    $action = self::getActionFromFormState($form_state);
     $base_object = $this->getSubmittedBaseObject($form_state);
-    if ($form_state->get('step') > 2 && $this->baseObjectComplete($form_state)) {
+
+    if ($action != 'back' && $form_state->get('step') > 0 && $this->baseObjectComplete($form_state)) {
       $properties = [
         'type' => 'section',
         'field_base_object' => $base_object->id(),
@@ -263,6 +275,7 @@ class SectionWizard extends FormBase {
     $base_object_type = $this->getSubmittedBaseObjectType($form_state);
     $base_object = $this->getSubmittedBaseObject($form_state);
 
+    // Create and save the section.
     $section = $this->entityTypeManager->getStorage('node')->create([
       'type' => 'section',
       'title' => $values['title'],
@@ -274,6 +287,14 @@ class SectionWizard extends FormBase {
       $section->field_year = $values['year'];
     }
     $section->save();
+
+    // Due to the way that the pathauto module works, the alias generation for
+    // the subpages is not finished at this point. This is because at the time
+    // when each subpage gets created and it's alias build, the section alias
+    // itself has not been build, so that token replacements are not fully
+    // available. To fix this, we invoke a custom hook that lets the
+    // GHI Subpages module react just after a section has been fully build.
+    $this->moduleHandler->invokeAll('section_post_create', [$section]);
 
     $form_state->setRedirectUrl($section->toUrl());
   }
@@ -290,7 +311,7 @@ class SectionWizard extends FormBase {
   private function baseObjectComplete(FormStateInterface $form_state) {
     $base_object_type = $this->getSubmittedBaseObjectType($form_state);
     $base_object = $this->getSubmittedBaseObject($form_state);
-    return $base_object && $base_object_type && (!$base_object_type->needsYearForDataRetrieval() || $form_state->hasValue('year'));
+    return $base_object && $base_object_type && (!$base_object_type->needsYearForDataRetrieval() || $form_state->getValue('year'));
   }
 
   /**

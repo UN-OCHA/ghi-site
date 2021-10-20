@@ -32,6 +32,26 @@ function ghi_subpages_entity_insert(EntityInterface $entity) {
 }
 
 /**
+ * Implements hook_section_post_create().
+ *
+ * Go over all created subpages for a node and save it again, to fix an issue
+ * with the generation of url alias for subpages, if these their patterns uses
+ * the section's url alias as one of their tokens.
+ */
+function ghi_subpages_section_post_create(NodeInterface $section_node) {
+  $supported_base_types = SubpageHelper::SUPPORTED_BASE_TYPES;
+  if (!in_array($section_node->getType(), $supported_base_types)) {
+    return;
+  }
+
+  // Load all subpages and save them again to make sure they have proper paths.
+  $subpages = SubpageHelper::getSubpagesForBaseNode($section_node);
+  foreach ($subpages as $subpage) {
+    $subpage->save();
+  }
+}
+
+/**
  * Implements hook_entity_update().
  */
 function ghi_subpages_entity_update(EntityInterface $entity) {
@@ -50,16 +70,14 @@ function ghi_subpages_entity_update(EntityInterface $entity) {
 
   if (!$node->isPublished()) {
     // Load all subpages and make sure that those are unpublished too.
-    /** @var \Drupal\node\NodeInterface[] $subpages */
-    $subpages = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
-      'field_entity_reference' => $node->id(),
-    ]);
+    $subpages = SubpageHelper::getSubpagesForBaseNode($node);
 
     if (!empty($subpages)) {
       foreach ($subpages as $subpage) {
         if (!$subpage->isPublished()) {
           continue;
         }
+        /** @var \Drupal\node\Entity\NodeInterface $node_type */
         $node_type = \Drupal::entityTypeManager()->getStorage('node_type')->load($subpage->getType());
         $subpage->setUnpublished();
         $subpage->save();
