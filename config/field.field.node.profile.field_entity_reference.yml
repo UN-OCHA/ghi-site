@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.storage.node.field_entity_reference
     - node.type.profile
+    - node.type.section
 id: node.profile.field_entity_reference
 field_name: field_entity_reference
 entity_type: node
@@ -18,10 +19,11 @@ default_value_callback: ''
 settings:
   handler: 'default:node'
   handler_settings:
-    target_bundles: {  }
+    target_bundles:
+      section: section
     sort:
       field: _none
       direction: ASC
     auto_create: false
-    auto_create_bundle: null
+    auto_create_bundle: ''
 field_type: entity_reference

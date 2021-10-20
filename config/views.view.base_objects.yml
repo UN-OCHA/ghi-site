@@ -795,9 +795,9 @@ display:
         - user.permissions
       tags:
         - 'config:field.storage.base_object.field_original_id'
-  page_1:
+  organisations:
     display_plugin: page
-    id: page_1
+    id: organisations
     display_title: Organizations
     position: 2
     display_options:
@@ -1004,6 +1004,7 @@ display:
         title: 'Imported objects'
         description: 'Find and manage base objects'
         weight: 0
+      enabled: true
     cache_metadata:
       max-age: -1
       contexts:

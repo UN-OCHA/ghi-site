@@ -36,6 +36,14 @@ interface BaseObjectInterface extends ContentEntityInterface, EntityChangedInter
   public function setName($name);
 
   /**
+   * Check if this base object needs a year for data display.
+   *
+   * @return bool
+   *   Whether this base object needs a year to function.
+   */
+  public function needsYear();
+
+  /**
    * Gets the Base object creation timestamp.
    *
    * @return int

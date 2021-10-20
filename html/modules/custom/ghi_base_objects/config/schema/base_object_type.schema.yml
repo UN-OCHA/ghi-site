@@ -8,5 +8,8 @@ ghi_base_objects.base_object_type.*:
     label:
       type: label
       label: 'Label'
+    hasYear:
+      type: boolean
+      label: 'Has year'
     uuid:
       type: string

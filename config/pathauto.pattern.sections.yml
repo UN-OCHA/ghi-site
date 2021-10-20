@@ -7,16 +7,16 @@ dependencies:
 id: sections
 label: Sections
 type: 'canonical_entities:node'
-pattern: '[node:field_base_object:entity:type]/[node:field_base_object:entity:field_original_id]'
+pattern: '[node:field_base_object:entity:type]/[node:field_base_object:entity:field_original_id]/[node:field_year]'
 selection_criteria:
-  cbfec64b-dfd3-4e8d-928c-0e5954d4836b:
+  92328ccb-ae93-4279-a035-09244e0a3e18:
     id: node_type
     bundles:
       section: section
     negate: false
     context_mapping:
       node: node
-    uuid: cbfec64b-dfd3-4e8d-928c-0e5954d4836b
+    uuid: 92328ccb-ae93-4279-a035-09244e0a3e18
 selection_logic: and
 weight: -10
 relationships: {  }

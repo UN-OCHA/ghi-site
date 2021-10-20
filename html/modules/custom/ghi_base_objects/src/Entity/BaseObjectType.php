@@ -33,6 +33,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
  *   config_export = {
  *     "id",
  *     "label",
+ *     "hasYear",
  *   },
  *   links = {
  *     "canonical" = "/admin/structure/base-objects/types/{base_object_type}",
@@ -58,5 +59,26 @@ class BaseObjectType extends ConfigEntityBundleBase implements BaseObjectTypeInt
    * @var string
    */
   protected $label;
+
+  /**
+   * Flag to indicate if the Base object type has a year.
+   *
+   * @var bool
+   */
+  protected $hasYear;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasYear() {
+    return $this->hasYear;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function needsYearForDataRetrieval() {
+    return !$this->hasYear();
+  }
 
 }

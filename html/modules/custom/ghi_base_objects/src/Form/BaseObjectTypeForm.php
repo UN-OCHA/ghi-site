@@ -16,14 +16,22 @@ class BaseObjectTypeForm extends EntityForm {
   public function form(array $form, FormStateInterface $form_state) {
     $form = parent::form($form, $form_state);
 
+    /** @var \Drupal\ghi_base_objects\Entity\BaseObjectTypeInterface $base_object_type */
     $base_object_type = $this->entity;
     $form['label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Label'),
       '#maxlength' => 255,
       '#default_value' => $base_object_type->label(),
-      '#description' => $this->t("Label for the Base object type."),
+      '#description' => $this->t('Label for the Base object type.'),
       '#required' => TRUE,
+    ];
+
+    $form['hasYear'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Has year'),
+      '#default_value' => $base_object_type->hasYear(),
+      '#description' => $this->t('Check this if the base object type internally supports years (e.g. HPC plans).'),
     ];
 
     $form['id'] = [

@@ -4,7 +4,7 @@ sql_signature: false
 ui:
   show:
     additional_queries: false
-    advanced_column: false
+    advanced_column: true
     performance_statistics: false
     preview_information: true
     sql_query:
@@ -13,7 +13,7 @@ ui:
     display_embed: false
     default_display: false
   always_live_preview: true
-  exposed_filter_any_label: old_any
+  exposed_filter_any_label: new_any
 field_rewrite_elements:
   div: DIV
   span: SPAN

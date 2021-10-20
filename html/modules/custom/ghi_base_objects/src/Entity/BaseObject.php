@@ -76,6 +76,13 @@ class BaseObject extends ContentEntityBase implements BaseObjectInterface {
   /**
    * {@inheritdoc}
    */
+  public function needsYear() {
+    return $this->type->entity->needsYearForDataRetrieval();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCreatedTime() {
     return $this->get('created')->value;
   }
