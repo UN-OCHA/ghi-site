@@ -296,10 +296,17 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * {@inheritdoc}
    */
+  public function canShowSubform($form, FormStateInterface $form_state, $subform_key) {
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function blockForm($form, FormStateInterface $form_state) {
     parent::blockForm($form, $form_state);
 
-    // Not sure why, but the preview toggles vallue is not available in the
+    // Not sure why, but the preview toggles value is not available in the
     // blockElementSubmit callback, so we have to catch this here.
     if ($form_state->getTriggeringElement()) {
       $action = (string) end($form_state->getTriggeringElement()['#parents']);
@@ -313,6 +320,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $this->formState = $form_state;
     $form_state->addCleanValueKey('actions');
     $form_state->addCleanValueKey(['actions', 'subforms']);
+    $form_state->addCleanValueKey(['actions', 'submit']);
 
     // Provide context so that data can be retrieved.
     $build_info = $form_state->getBuildInfo();
@@ -400,6 +408,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       // And build the subform structure.
       $subform_state = SubformState::createForSubform($form['container'], $form, $form_state);
       $form['container'] += $this->{$form_callback}($form['container'], $subform_state);
+      $this->addButtonsToCleanValueKeys($form['container'], $form_state, $form['container']['#parents']);
 
       // Add after build callback for label handling.
       $form['#after_build'][] = [$this, 'blockFormAfterBuild'];
@@ -424,6 +433,31 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
 
     return $form;
+  }
+
+  /**
+   * Add all buttons recursively to the form state's clean value keys.
+   *
+   * This keeps the values array smaller and easier to debug.
+   *
+   * @param array $form
+   *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param array $parents
+   *   An array of parent elements.
+   */
+  protected function addButtonsToCleanValueKeys(array $form, FormStateInterface $form_state, array $parents = []) {
+    $buttons = ['submit', 'button'];
+    foreach (Element::children($form) as $element_key) {
+      $element = $form[$element_key];
+      if (array_key_exists('#type', $element) && in_array($element['#type'], $buttons)) {
+        $form_state->addCleanValueKey(array_merge($parents, [$element_key]));
+      }
+      if (count(Element::children($element)) > 0) {
+        $this->addButtonsToCleanValueKeys($element, $form_state, array_merge($parents, [$element_key]));
+      }
+    }
   }
 
   /**
@@ -611,7 +645,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
           '#attributes' => [
             'class' => [$active_subform == $form_key ? 'active' : 'inactive'],
           ],
-          '#disabled' => $is_preview,
+          '#disabled' => $is_preview || !$this->canShowSubform($form, $form_state, $form_key),
         ];
       }
     }
@@ -706,14 +740,14 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $current_subform = $form_state->get('current_subform');
 
     // Get the submitted values.
-    $values = $form_state->getValue($current_subform);
+    $values = $form_state->cleanValues()->getValue($current_subform);
     // Put them into our form storage.
     if ($values !== NULL) {
       $form_state->set(['storage', $current_subform], $values);
     }
 
     $subforms = $form_state->get('block')->getSubforms();
-    $requested_subform = end($parents);
+    $requested_subform = array_key_exists('#next_step', $triggering_element) ? $triggering_element['#next_step'] : end($parents);
     if (array_key_exists($requested_subform, $subforms)) {
       // Update the current subform.
       $form_state->set('current_subform', $requested_subform);
@@ -770,6 +804,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Update the requested section of the form.
     $parents = $triggering_element['#ajax']['parents'];
     $wrapper = $triggering_element['#ajax']['wrapper'];
+
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand('#' . $wrapper, NestedArray::getValue($form, $parents)));
 
@@ -813,7 +848,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $temporary_values = $form_state->hasTemporaryValue($form_key) ? (array) $form_state->getTemporaryValue($form_key) : [];
         $storage_values = $form_state->has($storage_key) ? (array) $form_state->get($storage_key) : [];
         $submitted_values = !empty($values[$form_key]) ? $values[$form_key] : [];
-
         $settings[$form_key] = $temporary_values + $storage_values + $submitted_values;
 
         if (empty($settings[$form_key]) && !empty($this->configuration['hpc'][$form_key])) {

@@ -1,0 +1,6 @@
+ghi_content.admin.remote_sources:
+  title: 'Remote sources'
+  parent: system.admin_config_services
+  route_name: ghi_content.remote.plugin_list
+  description: 'List and configure remote sources.'
+  weight: 20

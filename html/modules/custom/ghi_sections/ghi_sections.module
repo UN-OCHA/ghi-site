@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 
 /**
  * Implements hook_form_FORM_ID_alter().
@@ -19,7 +20,7 @@ function ghi_sections_form_node_section_edit_form_alter(&$form, FormStateInterfa
   $object = $entity->field_base_object->entity;
 
   // Hide the year field if the object doesn't need it.
-  if (!$object->needsYear()) {
+  if ($object instanceof BaseObjectInterface && !$object->needsYear()) {
     $form['field_year']['#access'] = FALSE;
   }
 

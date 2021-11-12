@@ -1,0 +1,31 @@
+ghi_content.remote.autocomplete_article:
+  path: '/content/remote/{remote_source}/search-article'
+  defaults:
+    _controller: '\Drupal\ghi_content\Controller\RemoteController::autocompleteArticle'
+    _title: 'Search remote article content'
+  requirements:
+    _permission: 'access remote content'
+  options:
+    parameters:
+      remote_source:
+        type: 'remote_source'
+
+ghi_content.remote.plugin_list:
+  path: '/admin/config/services/remote-sources'
+  defaults:
+    _controller: '\Drupal\ghi_content\Controller\RemoteController::listRemoteSources'
+    _title: 'List remote sources'
+  requirements:
+    _permission: 'administer remote services'
+
+ghi_content.remote.settings:
+  path: '/admin/config/services/remote-sources/{remote_source}'
+  defaults:
+    _form: '\Drupal\ghi_content\Form\RemoteSourceEditForm'
+    _title: 'Edit remote source'
+  requirements:
+    _permission: 'administer remote services'
+  options:
+    parameters:
+      remote_source:
+        type: 'remote_source'

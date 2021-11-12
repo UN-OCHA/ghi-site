@@ -1,0 +1,332 @@
+<?php
+
+/**
+ * @file
+ * GHO Footnotes module file.
+ */
+
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\gho_footnotes\GhoFootnotes;
+
+/**
+ * Implements hook_theme().
+ */
+function gho_footnotes_theme() {
+  return [
+    'gho_footnote_list' => [
+      'variables' => [
+        'id' => '',
+        'footnotes' => NULL,
+      ],
+    ],
+    'gho_footnote_list__accumulated' => [
+      'base hook' => 'gho_footnote_list',
+    ],
+    'gho_footnote' => [
+      'variables' => [
+        'id' => '',
+        'content' => '',
+        'backlinks' => [],
+      ],
+    ],
+    'gho_footnote_backlink' => [
+      'variables' => [
+        'target' => '',
+        'index' => '',
+      ],
+    ],
+    'gho_footnote_reference' => [
+      'variables' => [
+        'id' => '',
+        'target' => '',
+        'index' => '',
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_node_view_alter().
+ */
+function gho_footnotes_node_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  dk($build);
+  gho_footnotes_prepare_build($build, $entity);
+}
+
+/**
+ * Implements hook_paragraph_view_alter().
+ */
+function gho_footnotes_paragraph_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  if ($entity->bundle() === 'text') {
+    gho_footnotes_prepare_build($build, $entity);
+  }
+}
+
+/**
+ * Prepare an entity build to replace the footnotes.
+ *
+ * Note: we use custom tags (ex: <gho-footnotes-text>) because it's easier and
+ * faster to access in the post render callback.
+ *
+ * @param array $build
+ *   Entity build array.
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Entity.
+ */
+function gho_footnotes_prepare_build(array &$build, EntityInterface $entity) {
+  $id = $entity->id() ?: \Drupal::service('uuid')->generate();
+  $id = $entity->getEntityTypeId() . '-' . $id;
+
+  // This module requires a field_footnotes and a field_text to work with.
+  // If there is none then skip the process entirely.
+  if (isset($build['field_footnotes'], $build['field_text'])) {
+    $renderer = \Drupal::service('renderer');
+
+    // We render the text to ensure all the text filters are applied (like
+    // the one ensuring the HTML is correct) instead of using the raw text
+    // because we will replace the references and add the footnotes that may not
+    // have a markup compatible with some of the text filters (like removing
+    // some classes).
+    if (isset($build['field_text'][0])) {
+      $markup = $renderer->renderPlain($build['field_text'][0]);
+      $build['field_text'][0] = [
+        '#type' => 'inline_template',
+        '#template' => '<gho-footnotes-text data-id="' . $id . '">' . $markup . '</gho-footnotes-text>',
+      ];
+    }
+
+    // We render the footnotes to ensure all the text filters are applied (like
+    // the one ensuring the HTML is correct) instead of using the raw text
+    // so that we can more easily update the footnotes. Notably the "footnotes"
+    // text format strips the `<p>` tag which makes it easier to extract the
+    // content.
+    if (isset($build['field_footnotes'][0])) {
+      $markup = $renderer->renderPlain($build['field_footnotes'][0]);
+      $build['field_footnotes'] = [
+        '#type' => 'inline_template',
+        '#template' => '<gho-footnotes-list id="gho-footnotes-list-' . $id . '">' . $markup . '</gho-footnotes-list>',
+      ];
+    }
+  }
+
+  if ($build['#view_mode'] === 'preview' || $build['#view_mode'] === 'full') {
+    // Create a footnote list placeholder.
+    $build['footnotes'] = [
+      '#type' => 'inline_template',
+      '#template' => '<gho-footnotes-placeholder id="gho-footnotes-placeholder-' . $id . '"></gho-footnotes-placeholder>',
+      '#id' => $id,
+      // Put the footnotes relatively at the bottom of the page.
+      '#weight' => 500,
+    ];
+    $build['#post_render'][] = [GhoFootnotes::class, 'updateFootnotes'];
+  }
+}
+
+/**
+ * Get the inner HTML of a DOM node.
+ *
+ * @param \DOMNode $node
+ *   Node from which to get the innerHTML.
+ *
+ * @return string
+ *   Inner HTML.
+ */
+function gho_footnotes_get_inner_html(\DOMNode $node) {
+  // PHP DOMElement don't have a innerHTML property so this is the current way
+  // of getting it.
+  // @see https://bugs.php.net/bug.php?id=44762
+  return implode('', array_map(function ($child) {
+    return $child->ownerDocument->saveXML($child);
+  }, iterator_to_array($node->childNodes)));
+}
+
+/**
+ * Replace a footnote list placeholder with actual list.
+ *
+ * @param \DOMNode $node
+ *   Node to replace.
+ * @param string $content
+ *   HTML content used to replace the node.
+ * @param string $id
+ *   Base id used to retrieve the footnote list inside the HTML content.
+ */
+function gho_footnotes_replace_footnote_list(\DOMNode $node, $content, $id) {
+  if (!empty($content)) {
+    $dom = Html::load($content);
+    $list = $dom->getElementById('footnote-list-' . $id);
+  }
+  if (empty($list)) {
+    $node->parentNode->removeChild($node);
+  }
+  else {
+    $list = $node->ownerDocument->importNode($list, TRUE);
+    $node->parentNode->replaceChild($list, $node);
+  }
+}
+
+/**
+ * Extract the references to footnotes from a text.
+ *
+ * @param string $text
+ *   Text with footnote references.
+ *
+ * @return array
+ *   Associative array with the footnote reference (ex: [1]) as keys and
+ *   arrays of raw value + position of the references in the text, as values.
+ */
+function gho_footnotes_extract_references($text) {
+  $references = [];
+  if (preg_match_all('/ ?\[\d+\] ?/', $text, $matches, PREG_OFFSET_CAPTURE) !== FALSE) {
+    foreach ($matches[0] as $match) {
+      // Store the raw value and the position of the reference so we can easily
+      // replace them.
+      $references[trim($match[0])][] = [$match[0], $match[1]];
+    }
+  }
+  return $references;
+}
+
+/**
+ * Generate footnotes from a raw footnotes text.
+ *
+ * @param string $base_id
+ *   Base id (ex: paragraph id).
+ * @param string $text
+ *   Footnotes HTML content where each paragraph (<p>) is a footnote.
+ * @param array $references
+ *   List of references to the footnotes.
+ * @param int $accumulated
+ *   Number of accumulated footnotes so far.
+ *
+ * @return array
+ *   List of footnotes keyed by their reference index (ex: [1]) and with an
+ *   associative array containing the footnote id, its content and backlinks for
+ *   each footnote.
+ */
+function gho_footnotes_generate_footnotes($base_id, $text, array $references, $accumulated = 0) {
+  $footnotes = [];
+  // Once rendered the footnotes are separated by line breaks, so we can easily
+  // split them.
+  foreach (preg_split("/\n+/", $text) as $index => $content) {
+    $reference = '[' . ($index + 1) . ']';
+    $content = trim($content);
+    if (!empty($content) && !empty($references[$reference])) {
+      $footnote_id = 'footnote-' . $base_id . '-' . ($index + 1);
+      $footnotes[$reference] = [
+        '#theme' => 'gho_footnote',
+        '#id' => $footnote_id,
+        // The content of the footnote is already rendered HTML. This ensures
+        // the markup is preserved and not encoded.
+        '#content' => ['#markup' => $content],
+        '#backlinks' => gho_footnotes_get_backlinks($footnote_id, $references[$reference]),
+        '#index' => $accumulated + $index + 1,
+      ];
+    }
+  }
+  return $footnotes;
+}
+
+/**
+ * Get a render array for the footnotes.
+ *
+ * Note: the footnotes are empty and populated in the hook_preprocess.
+ *
+ * @param string $base_id
+ *   Base id for the footnote list.
+ * @param array $footnotes
+ *   List of footnotes.
+ * @param bool $accumulated
+ *   Whether the footnotes were accumulated or not.
+ *
+ * @return array
+ *   Render array for the footnote list.
+ */
+function gho_footnotes_build_footnotes($base_id, array $footnotes, $accumulated = FALSE) {
+  $theme = 'gho_footnote_list' . ($accumulated ? '__accumulated' : '');
+
+  return [
+    '#theme' => $theme,
+    '#id' => 'footnote-list-' . $base_id,
+    '#footnotes' => $footnotes,
+  ];
+}
+
+/**
+ * Get the reference backlinks for the footnote.
+ *
+ * @param string $footnote_id
+ *   Footnote id.
+ * @param array $references
+ *   List of references to the footnote.
+ *
+ * @return array
+ *   List of backlinks which are arrays with a target (id of the reference in
+ *   the text) and a label.
+ */
+function gho_footnotes_get_backlinks($footnote_id, array $references) {
+  $backlinks = [];
+  foreach ($references as $index => $reference) {
+    $backlinks[] = [
+      '#theme' => 'gho_footnote_backlink',
+      '#target' => $footnote_id . '-reference-' . ($index + 1),
+      '#index' => $index + 1,
+    ];
+  }
+  return $backlinks;
+}
+
+/**
+ * Update the footnote references of a text.
+ *
+ * @param string $base_id
+ *   Base id (ex: paragraph id).
+ * @param string $text
+ *   HTML text to update.
+ * @param array $references
+ *   List of references to footnotes.
+ * @param array $footnotes
+ *   List of footnotes keyed by reference.
+ *
+ * @return string
+ *   Text with references to footnotes replaced with links.
+ */
+function gho_footnotes_update_text($base_id, $text, array $references, array $footnotes) {
+  $renderer = \Drupal::service('renderer');
+  // Start updating the references from the end to be able to use the extracted
+  // positions otherwise they would not be correct after updating the first one.
+  foreach (array_reverse($references) as $reference => $info) {
+    // Get the footnote id for the reference. If not present, we will remove the
+    // reference.
+    $footnote_id = isset($footnotes[$reference]) ? $footnotes[$reference]['#id'] : NULL;
+
+    // Start from the further reference in the text but preserve the index
+    // as it's needed to generate the reference id for the backlinks.
+    foreach (array_reverse($info, TRUE) as $index => list($value, $position)) {
+      // Remove the reference and ensure we don't have double spaces left.
+      if ($footnote_id === NULL) {
+        $replacement = str_replace([$reference, '  '], ['', ' '], $value);
+      }
+      // Or generate the reference link.
+      else {
+        $element = [
+          '#theme' => 'gho_footnote_reference',
+          '#id' => $footnote_id . '-reference-' . ($index + 1),
+          '#target' => $footnote_id,
+          '#index' => $footnotes[$reference]['#index'],
+        ];
+        // The str_replace here ensures the spaces surrounding the reference are
+        // preserved. We cannot blindly trim the spaces because they may be of
+        // significant value depending of the language. So this is left to the
+        // editors to put appropriate spaces if necessary.
+        $replacement = str_replace($reference, trim($renderer->renderPlain($element)), $value);
+      }
+      // Note that we don't use the mb_* functions to work with "bytes" so that
+      // it's compatible with the PREG_OFFSET_CAPTURE flag used to extract the
+      // references which returns the positions in the string in "bytes".
+      $text = substr($text, 0, $position) . $replacement . substr($text, $position + strlen($value));
+    }
+  }
+  return $text;
+}

@@ -112,7 +112,7 @@ class SectionWizard extends FormBase {
       'title',
     ];
     // Find out in which step we currently are.
-    $step = $form_state->get('step') ?: reset(array_keys($steps));
+    $step = $form_state->get('step') ?: array_key_first($steps);
     $action = self::getActionFromFormState($form_state);
 
     // Do the step navigation.
@@ -275,6 +275,9 @@ class SectionWizard extends FormBase {
     $base_object_type = $this->getSubmittedBaseObjectType($form_state);
     $base_object = $this->getSubmittedBaseObject($form_state);
 
+    // Clear the error messages.
+    $this->messenger()->deleteAll();
+
     // Create and save the section.
     $section = $this->entityTypeManager->getStorage('node')->create([
       'type' => 'section',
@@ -286,7 +289,13 @@ class SectionWizard extends FormBase {
     if ($base_object_type->needsYearForDataRetrieval()) {
       $section->field_year = $values['year'];
     }
-    $section->save();
+    $status = $section->save();
+    if ($status) {
+      $this->messenger()->addStatus($this->t('Created @type for @title', [
+        '@type' => $section->type->entity->label(),
+        '@title' => $section->label(),
+      ]));
+    }
 
     // Due to the way that the pathauto module works, the alias generation for
     // the subpages is not finished at this point. This is because at the time

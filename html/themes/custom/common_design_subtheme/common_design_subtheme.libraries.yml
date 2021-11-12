@@ -37,3 +37,43 @@ css-vars-ponyfill:
   js:
     https://cdn.jsdelivr.net/npm/css-vars-ponyfill@2: { type: external, minified: true, attributes: { nomodule: true } }
     js/cd-css-vars-ponyfill.js: { attributes: { nomodule: true } }
+
+# Copy libraries from GHO
+gho-achievement:
+  css:
+    theme:
+      components/gho-achievement/gho-achievement.css: {}
+gho-bottom-figure-row:
+  css:
+    theme:
+      components/gho-bottom-figure-row/gho-bottom-figure-row.css: {}
+gho-facts-and-figures:
+  css:
+    theme:
+      components/gho-facts-and-figures/gho-facts-and-figures.css: {}
+gho-footnotes:
+  js:
+    components/gho-footnotes/gho-footnotes.js: {}
+  css:
+    theme:
+      components/gho-footnotes/gho-footnotes.css: {}
+gho-further-reading:
+  css:
+    theme:
+      components/gho-further-reading/gho-further-reading.css: {}
+gho-interactive-content:
+  css:
+    theme:
+      components/gho-interactive-content/gho-interactive-content.css: {}
+gho-needs-and-requirements:
+  css:
+    theme:
+      components/gho-needs-and-requirements/gho-needs-and-requirements.css: {}
+gho-photo-gallery:
+  css:
+    theme:
+      components/gho-photo-gallery/gho-photo-gallery.css: {}
+gho-text:
+  css:
+    theme:
+      components/gho-text/gho-text.css: {}

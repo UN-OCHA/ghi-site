@@ -2,6 +2,8 @@
 
 namespace Drupal\ghi_blocks\Interfaces;
 
+use Drupal\Core\Form\FormStateInterface;
+
 /**
  * Interface for blocks having automatic titles.
  */
@@ -32,5 +34,20 @@ interface MultiStepFormBlockInterface {
    *   The default form key.
    */
   public function getDefaultSubform();
+
+  /**
+   * Decide if the given subform can show.
+   *
+   * @param array $form
+   *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param string $subform_key
+   *   The subform key.
+   *
+   * @return bool
+   *   Whether the form can display the given subform.
+   */
+  public function canShowSubform(array $form, FormStateInterface $form_state, $subform_key);
 
 }

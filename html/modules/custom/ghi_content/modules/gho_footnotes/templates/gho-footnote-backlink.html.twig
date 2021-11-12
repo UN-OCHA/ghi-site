@@ -1,0 +1,27 @@
+{#
+  Template implementation for a footnote backlink.
+
+  Available variables are:
+  - target: ID of the reference in the text
+  - index: Index of the reference for this footnote. If there are 3 references
+    to the footnote this backlink is associated with, then the index will be 1,
+    2 or 3.
+#}
+{% set label = 'Jump to reference @index'|t({'@index': index}) %}
+{% spaceless %}
+{#
+  The following markup has the following purpose:
+  - allow the display of `title` tooltip without having the text repeated
+   twice by screenreaders
+  - have a simple letter/number link to go back to the reference similar
+   to what wikipedia does. This is handled via a `CSS counter` (see
+   `common_design_subtheme/componenents/gho-footnotes`)
+  - have a more understandable text (than a letter/number) when consuming
+   the page in something other than a standard browser
+  - have this text pronounced by screen readers without the letter/number
+#}
+<a class="gho-footnote-backlink" href="#{{ target }}">
+  <span class="visually-hidden">{{ label }}</span>
+  <span title="{{ label }}" aria-hidden="true"></span>
+</a>
+{% endspaceless %}

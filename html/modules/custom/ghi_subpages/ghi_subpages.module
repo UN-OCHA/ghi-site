@@ -174,7 +174,7 @@ function ghi_subpages_local_tasks_alter(&$local_tasks) {
  */
 function ghi_subpages_preprocess_page_title(&$variables) {
   $node = \Drupal::routeMatch()->getParameter('node');
-  if ($node && !in_array($node->bundle(), SubpageHelper::SUPPORTED_BASE_TYPES) && $node->hasField('field_entity_reference') && $node->field_entity_reference->entity) {
+  if ($node instanceof NodeInterface && !in_array($node->bundle(), SubpageHelper::SUPPORTED_BASE_TYPES) && $node->hasField('field_entity_reference') && $node->field_entity_reference->entity) {
     $variables['title'] = $node->field_entity_reference->entity->getTitle();
   }
 }

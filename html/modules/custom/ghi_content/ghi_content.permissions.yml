@@ -1,0 +1,8 @@
+access remote content:
+  title: 'Access remote content'
+  description: 'Allow read access for remote content.'
+  restrict access: true
+administer remote services:
+  title: 'Administer remote services'
+  description: 'Allow administration of remote services.'
+  restrict access: true
