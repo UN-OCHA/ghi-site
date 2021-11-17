@@ -17,12 +17,10 @@ use Drupal\Core\Render\Element;
  * @param array $variables
  *   An associative array containing:
  *   - elements: An associative array containing the user information and any
- *   - attributes: HTML attributes for the containing element.
+ *   - attributes: HTML attributes for the containing element
+ *   The base object can be accessed as $variables['elements']['#base_object'].
  */
 function template_preprocess_base_object(array &$variables) {
-  // Fetch BaseObject Entity Object.
-  $base_object = $variables['elements']['#base_object'];
-
   // Helpful $content variable for templates.
   foreach (Element::children($variables['elements']) as $key) {
     $variables['content'][$key] = $variables['elements'][$key];

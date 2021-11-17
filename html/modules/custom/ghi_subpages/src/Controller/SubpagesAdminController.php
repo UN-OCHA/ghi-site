@@ -5,7 +5,6 @@ namespace Drupal\ghi_subpages\Controller;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
-use Drupal\node\NodeAccessControlHandler;
 use Drupal\node\NodeInterface;
 use Drupal\node\NodeTypeInterface;
 
