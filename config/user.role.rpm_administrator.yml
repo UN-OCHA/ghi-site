@@ -10,6 +10,7 @@ permissions:
   - 'access administration menu'
   - 'access administration pages'
   - 'access content overview'
+  - 'access remote content'
   - 'add media from remote sources'
   - 'administer nodes'
   - 'administer panelizer node governing_entity content'

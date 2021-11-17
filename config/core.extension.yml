@@ -27,11 +27,13 @@ module:
   filter: 0
   ghi_base_objects: 0
   ghi_blocks: 0
+  ghi_content: 0
   ghi_element_sync: 0
   ghi_form_elements: 0
   ghi_plans: 0
   ghi_sections: 0
   ghi_subpages: 0
+  gho_footnotes: 0
   gin_lb: 0
   gin_toolbar: 0
   help: 0
@@ -56,6 +58,8 @@ module:
   node: 0
   options: 0
   page_cache: 0
+  page_manager: 0
+  page_manager_ui: 0
   path: 0
   path_alias: 0
   publishcontent: 0

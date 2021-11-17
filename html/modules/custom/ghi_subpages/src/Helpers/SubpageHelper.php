@@ -15,6 +15,7 @@ class SubpageHelper {
    */
   const SUPPORTED_BASE_TYPES = [
     'section',
+    'global_section',
   ];
 
   /**

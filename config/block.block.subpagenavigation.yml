@@ -25,7 +25,7 @@ visibility:
     id: 'entity_bundle:node'
     bundles:
       financials: financials
-      governing_entity: governing_entity
+      global_section: global_section
       population: population
       profile: profile
       risk_index: risk_index

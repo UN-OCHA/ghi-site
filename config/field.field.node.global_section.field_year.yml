@@ -1,0 +1,23 @@
+uuid: adf8ca4f-9615-4faa-ad49-836287d62d48
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_year
+    - node.type.global_section
+id: node.global_section.field_year
+field_name: field_year
+entity_type: node
+bundle: global_section
+label: Year
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer
