@@ -51,34 +51,19 @@ process:
     plugin: default_value
     default_value: governing_entity
   title: name
-  status: status
   field_original_id: original_id
   field_plan:
     plugin: migration_lookup
     migration: plan
     source: plan_id
     no_stub: true
-  field_plan_id: plan_id
   field_prototype_id: prototype_id
-  field_entity_subpage: subpage
-  promote:
-    plugin: default_value
-    default_value: 0
-  sticky:
-    plugin: default_value
-    default_value: 0
-  uid:
-    plugin: default_value
-    default_value: 0
 destination:
-  plugin: 'entity:node'
+  plugin: 'entity:base_object'
   overwrite_properties:
     - title
-    - status
     - field_plan
-    - field_plan_id
     - field_prototype_id
-    - field_entity_subpage
 migration_dependencies:
   required:
     - plan

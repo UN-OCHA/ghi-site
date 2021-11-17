@@ -1,0 +1,54 @@
+uuid: 9d20d3af-948c-43d1-966b-27b285e91a20
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.base_object.governing_entity.field_original_id
+    - field.field.base_object.governing_entity.field_plan
+    - field.field.base_object.governing_entity.field_prototype_id
+    - ghi_base_objects.base_object_type.governing_entity
+id: base_object.governing_entity.default
+targetEntityType: base_object
+bundle: governing_entity
+mode: default
+content:
+  field_original_id:
+    weight: 3
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+    type: number
+    region: content
+  field_plan:
+    weight: 4
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
+    region: content
+  field_prototype_id:
+    weight: 5
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+    type: number
+    region: content
+  langcode:
+    type: language_select
+    weight: 2
+    region: content
+    settings:
+      include_locked: true
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: -4
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden: {  }

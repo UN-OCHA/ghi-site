@@ -7,7 +7,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\node\NodeInterface;
 
 /**
- * Controller for autocomplete plan loading.
+ * Controller for admin features on plans.
  */
 class PlanAdminController extends ControllerBase {
 

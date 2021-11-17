@@ -1,0 +1,23 @@
+uuid: c76b1f38-9470-4b41-9e6c-52b482e0e2d2
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_url
+    - ghi_base_objects.base_object_type.organization
+  module:
+    - link
+id: base_object.organization.field_url
+field_name: field_url
+entity_type: base_object
+bundle: organization
+label: URL
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  link_type: 17
+  title: 1
+field_type: link

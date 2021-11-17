@@ -1,0 +1,29 @@
+uuid: 12f8f502-a845-42ea-b74b-dacc22a753a7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_organization_type
+    - ghi_base_objects.base_object_type.organization
+    - taxonomy.vocabulary.organization_type
+id: base_object.organization.field_organization_type
+field_name: field_organization_type
+entity_type: base_object
+bundle: organization
+label: 'Organization type'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      organization_type: organization_type
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

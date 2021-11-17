@@ -1,0 +1,14 @@
+entity.base_object:
+  path: '/admin/structure/base-objects'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'Base objects'
+  requirements:
+    _permission: 'administer base object entities'
+# entity.base_object.imported:
+#   path: '/admin/structure/base-objects/imported'
+#   defaults:
+#     _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+#     _title: 'Imported objects'
+#   requirements:
+#     _permission: 'administer base object entities'

@@ -1,0 +1,10 @@
+services:
+  plugin.manager.remote_source:
+    class: Drupal\ghi_content\RemoteSource\RemoteSourceManager
+    parent: default_plugin_manager
+  remote_source_converter:
+    class: Drupal\ghi_content\RemoteSource\RemoteSourceConverter
+    arguments: ['@plugin.manager.remote_source']
+    tags:
+      - { name: paramconverter }
+    lazy: true

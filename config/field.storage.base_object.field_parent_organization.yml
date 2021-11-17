@@ -1,0 +1,19 @@
+uuid: 224b3e41-4efc-4ee9-915e-34dbf7829202
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+id: base_object.field_parent_organization
+field_name: field_parent_organization
+entity_type: base_object
+type: entity_reference
+settings:
+  target_type: base_object
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

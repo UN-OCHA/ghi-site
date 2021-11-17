@@ -1,0 +1,73 @@
+uuid: aa478383-08a9-4790-936a-ab370c10cfda
+langcode: en
+status: true
+dependencies:
+  config:
+    - page_manager.page.homepage
+  module:
+    - hpc_common
+id: homepage-layout_builder-1
+label: '2022'
+variant: layout_builder
+variant_settings:
+  id: layout_builder
+  uuid: dfe3b1b7-2945-488c-a398-b35137a5c966
+  label: null
+  weight: 0
+  sections:
+    -
+      layout_id: layout_twocol_section
+      layout_settings:
+        label: Header
+        column_widths: 75-25
+        context_mapping: {  }
+      components:
+        255e18f5-e5a6-4659-a567-3d9b1e82e105:
+          uuid: 255e18f5-e5a6-4659-a567-3d9b1e82e105
+          region: first
+          configuration:
+            hpc:
+              label: 'Visual explorer'
+              label_display: 0
+            id: home_visual_explorer
+            label: 'Visual explorer'
+            provider: ghi_blocks
+            label_display: '0'
+            context_mapping:
+              year: year
+          additional: {  }
+          weight: 0
+        7fcd9a85-5fb3-413f-b045-9d7ac796e063:
+          uuid: 7fcd9a85-5fb3-413f-b045-9d7ac796e063
+          region: second
+          configuration:
+            hpc:
+              label: 'ID Sheet'
+              label_display: 0
+            id: home_id_sheet
+            label: 'ID Sheet'
+            provider: ghi_blocks
+            label_display: '0'
+            context_mapping:
+              year: year
+          additional: {  }
+          weight: 0
+      third_party_settings: {  }
+    -
+      layout_id: layout_onecol
+      layout_settings:
+        label: Content
+        context_mapping: {  }
+      components: {  }
+      third_party_settings: {  }
+page: homepage
+weight: 0
+selection_criteria:
+  -
+    id: page_parameter_condition
+    parameter: year
+    value: '2022'
+    negate: false
+    context_mapping: {  }
+selection_logic: and
+static_context: {  }

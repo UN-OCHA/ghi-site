@@ -85,25 +85,32 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     $query_handler = \Drupal::service($definition['service']);
     $page_node = $this->getPageNode();
-    if ($page_node->bundle() == 'plan') {
-      if (isset($page_node->field_original_id) && !$page_node->field_original_id->isEmpty()) {
-        $plan_id = $page_node->field_original_id->value;
-        $query_handler->setPlaceholder('plan_id', $plan_id);
-      }
-    }
-    elseif ($page_node->hasField('field_plan') && count($page_node->get('field_plan')->referencedEntities()) == 1) {
-      $entities = $page_node->get('field_plan')->referencedEntities();
-      $plan = reset($entities);
-      $plan_id = $plan->field_original_id->value;
-      $query_handler->setPlaceholder('plan_id', $plan_id);
-    }
-    elseif ($page_node->hasField('field_entity_reference') && count($page_node->get('field_entity_reference')->referencedEntities()) == 1) {
+
+    $base_entity = NULL;
+
+    // Get the section for the current page node.
+    if ($page_node->hasField('field_entity_reference') && count($page_node->get('field_entity_reference')->referencedEntities()) == 1) {
+      // The page node is a subpage of a section and references a section,
+      // which references a base object.
       $entities = $page_node->get('field_entity_reference')->referencedEntities();
       $base_entity = reset($entities);
-      $plan_id = $base_entity->getType() == 'plan' ? $base_entity->field_original_id->value : NULL;
-      if ($plan_id) {
-        $query_handler->setPlaceholder('plan_id', $plan_id);
-      }
+    }
+    elseif ($page_node->hasField('field_base_object')) {
+      // The page node is already a section node.
+      $base_entity = $page_node;
+    }
+
+    // Get the object for the current page node.
+    $base_object = NULL;
+    if ($base_entity && $base_entity->hasField('field_base_object') && count($base_entity->get('field_base_object')->referencedEntities()) == 1) {
+      // The page node is a section node which references a base object.
+      $entities = $base_entity->get('field_base_object')->referencedEntities();
+      $base_object = reset($entities);
+    }
+
+    if ($base_object) {
+      $original_id = $base_object->field_original_id->value;
+      $query_handler->setPlaceholder($base_object->bundle() . '_id', $original_id);
     }
 
     return $query_handler;
@@ -289,10 +296,17 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * {@inheritdoc}
    */
+  public function canShowSubform($form, FormStateInterface $form_state, $subform_key) {
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function blockForm($form, FormStateInterface $form_state) {
     parent::blockForm($form, $form_state);
 
-    // Not sure why, but the preview toggles vallue is not available in the
+    // Not sure why, but the preview toggles value is not available in the
     // blockElementSubmit callback, so we have to catch this here.
     if ($form_state->getTriggeringElement()) {
       $action = (string) end($form_state->getTriggeringElement()['#parents']);
@@ -306,6 +320,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $this->formState = $form_state;
     $form_state->addCleanValueKey('actions');
     $form_state->addCleanValueKey(['actions', 'subforms']);
+    $form_state->addCleanValueKey(['actions', 'submit']);
 
     // Provide context so that data can be retrieved.
     $build_info = $form_state->getBuildInfo();
@@ -393,6 +408,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       // And build the subform structure.
       $subform_state = SubformState::createForSubform($form['container'], $form, $form_state);
       $form['container'] += $this->{$form_callback}($form['container'], $subform_state);
+      $this->addButtonsToCleanValueKeys($form['container'], $form_state, $form['container']['#parents']);
 
       // Add after build callback for label handling.
       $form['#after_build'][] = [$this, 'blockFormAfterBuild'];
@@ -417,6 +433,31 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
 
     return $form;
+  }
+
+  /**
+   * Add all buttons recursively to the form state's clean value keys.
+   *
+   * This keeps the values array smaller and easier to debug.
+   *
+   * @param array $form
+   *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param array $parents
+   *   An array of parent elements.
+   */
+  protected function addButtonsToCleanValueKeys(array $form, FormStateInterface $form_state, array $parents = []) {
+    $buttons = ['submit', 'button'];
+    foreach (Element::children($form) as $element_key) {
+      $element = $form[$element_key];
+      if (array_key_exists('#type', $element) && in_array($element['#type'], $buttons)) {
+        $form_state->addCleanValueKey(array_merge($parents, [$element_key]));
+      }
+      if (count(Element::children($element)) > 0) {
+        $this->addButtonsToCleanValueKeys($element, $form_state, array_merge($parents, [$element_key]));
+      }
+    }
   }
 
   /**
@@ -604,7 +645,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
           '#attributes' => [
             'class' => [$active_subform == $form_key ? 'active' : 'inactive'],
           ],
-          '#disabled' => $is_preview,
+          '#disabled' => $is_preview || !$this->canShowSubform($form, $form_state, $form_key),
         ];
       }
     }
@@ -699,14 +740,14 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $current_subform = $form_state->get('current_subform');
 
     // Get the submitted values.
-    $values = $form_state->getValue($current_subform);
+    $values = $form_state->cleanValues()->getValue($current_subform);
     // Put them into our form storage.
     if ($values !== NULL) {
       $form_state->set(['storage', $current_subform], $values);
     }
 
     $subforms = $form_state->get('block')->getSubforms();
-    $requested_subform = end($parents);
+    $requested_subform = array_key_exists('#next_step', $triggering_element) ? $triggering_element['#next_step'] : end($parents);
     if (array_key_exists($requested_subform, $subforms)) {
       // Update the current subform.
       $form_state->set('current_subform', $requested_subform);
@@ -763,6 +804,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Update the requested section of the form.
     $parents = $triggering_element['#ajax']['parents'];
     $wrapper = $triggering_element['#ajax']['wrapper'];
+
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand('#' . $wrapper, NestedArray::getValue($form, $parents)));
 
@@ -806,7 +848,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $temporary_values = $form_state->hasTemporaryValue($form_key) ? (array) $form_state->getTemporaryValue($form_key) : [];
         $storage_values = $form_state->has($storage_key) ? (array) $form_state->get($storage_key) : [];
         $submitted_values = !empty($values[$form_key]) ? $values[$form_key] : [];
-
         $settings[$form_key] = $temporary_values + $storage_values + $submitted_values;
 
         if (empty($settings[$form_key]) && !empty($this->configuration['hpc'][$form_key])) {
@@ -861,19 +902,64 @@ abstract class GHIBlockBase extends HPCBlockBase {
       return;
     }
 
-    $plan_node = $this->getCurrentPlanNode($node);
-    $plan_id = $plan_node->field_original_id->value;
+    $base_object = $this->getCurrentBaseObject($node);
+    if (!$base_object || !$base_object->hasField('field_original_id')) {
+      return;
+    }
+    $base_object_id = $base_object->field_original_id->value;
+    $base_object_bundle = $base_object->bundle();
+    $context_key = $base_object_bundle . '_id';
+    $context_label = $this->t('@bundle id', [
+      '@bundle' => $base_object->type->entity->label(),
+    ]);
 
-    if (empty($plugin_definition['context_definitions']['plan_id'])) {
+    if (empty($plugin_definition['context_definitions'][$context_key])) {
       // Create a new context.
-      $context = new Context(new ContextDefinition('integer', $this->t('Plan id'), FALSE), $plan_id);
-      $this->setContext('plan_id', $context);
+      $context = new Context(new ContextDefinition('integer', $context_label, FALSE), $base_object_id);
+      $this->setContext($context_key, $context);
     }
     else {
       // Overwrite the existing context value if there is any.
-      $this->setContextValue('plan_id', $plan_id);
+      $this->setContextValue($context_key, $base_object_id);
     }
     $this->injectedFieldContexts = TRUE;
+  }
+
+  /**
+   * Get the base object for the current page context.
+   *
+   * @return \Drupal\node\NodeInterface
+   *   A node reprexenting an API base object if it can be found.
+   */
+  public function getCurrentBaseObject($page_node = NULL) {
+    if ($page_node === NULL) {
+      $page_node = $this->getPageNode();
+    }
+    if (!$page_node) {
+      return NULL;
+    }
+
+    if ($page_node->hasField('field_base_object') && $base_objects = $page_node->field_base_object->referencedEntities()) {
+      return count($base_objects) ? reset($base_objects) : NULL;
+    }
+    if ($page_node->hasField('field_entity_reference') && $referenced_entities = $page_node->field_entity_reference->referencedEntities()) {
+      return count($referenced_entities) ? $this->getCurrentBaseObject(reset($referenced_entities)) : NULL;
+    }
+    return NULL;
+  }
+
+  /**
+   * Get a plan id for the current page context.
+   *
+   * @return int
+   *   A plan id if it can be found.
+   */
+  public function getCurrentBaseObjectId($page_node = NULL) {
+    $base_object = $this->getCurrentBaseObject($page_node);
+    if (!$base_object) {
+      return NULL;
+    }
+    return $base_object->field_original_id->value;
   }
 
   /**
@@ -882,7 +968,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * @return \Drupal\node\NodeInterface
    *   A plan node if it can be found.
    */
-  public function getCurrentPlanNode($page_node = NULL) {
+  public function getCurrentPlanObject($page_node = NULL) {
     if ($page_node === NULL) {
       $page_node = $this->getPageNode();
     }
@@ -890,14 +976,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
       return NULL;
     }
 
-    if ($page_node->bundle() == 'plan') {
-      return $page_node;
-    }
-    if ($page_node->hasField('field_plan') && $referenced_entities = $page_node->field_plan->referencedEntities()) {
-      return count($referenced_entities) ? reset($referenced_entities) : NULL;
-    }
-    if ($page_node->hasField('field_entity_reference') && $referenced_entities = $page_node->field_entity_reference->referencedEntities()) {
-      return count($referenced_entities) && reset($referenced_entities)->getType() == 'plan' ? reset($referenced_entities) : NULL;
+    $base_object = $this->getCurrentBaseObject($page_node);
+    if ($base_object->bundle() == 'plan') {
+      return $base_object;
     }
     return NULL;
   }
@@ -909,11 +990,11 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   A plan id if it can be found.
    */
   public function getCurrentPlanId($page_node = NULL) {
-    $plan_node = $this->getCurrentPlanNode($page_node);
-    if (!$plan_node) {
+    $plan_object = $this->getCurrentPlanObject($page_node);
+    if (!$plan_object) {
       return NULL;
     }
-    return $plan_node->field_original_id->value;
+    return $plan_object->field_original_id->value;
   }
 
 }

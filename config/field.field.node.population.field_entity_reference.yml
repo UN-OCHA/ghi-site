@@ -4,9 +4,8 @@ status: true
 dependencies:
   config:
     - field.storage.node.field_entity_reference
-    - node.type.country
-    - node.type.plan
     - node.type.population
+    - node.type.section
 id: node.population.field_entity_reference
 field_name: field_entity_reference
 entity_type: node
@@ -21,8 +20,7 @@ settings:
   handler: 'default:node'
   handler_settings:
     target_bundles:
-      country: country
-      plan: plan
+      section: section
     sort:
       field: _none
       direction: ASC

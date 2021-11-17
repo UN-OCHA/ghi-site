@@ -3,9 +3,9 @@ name: 'Humanitarian InSight'
 mail: admin@example.com
 slogan: ''
 page:
-  403: /
-  404: /
-  front: /overview/2021
+  403: ''
+  404: ''
+  front: /home/2021
 admin_compact_mode: false
 weight_select_max: 100
 langcode: en

@@ -1,0 +1,22 @@
+uuid: 42701f9d-8868-4d3f-8216-d05da70a9448
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: sections
+label: Sections
+type: 'canonical_entities:node'
+pattern: '[node:field_base_object:entity:type]/[node:field_base_object:entity:field_original_id]/[node:field_year]'
+selection_criteria:
+  92328ccb-ae93-4279-a035-09244e0a3e18:
+    id: node_type
+    bundles:
+      section: section
+    negate: false
+    context_mapping:
+      node: node
+    uuid: 92328ccb-ae93-4279-a035-09244e0a3e18
+selection_logic: and
+weight: -10
+relationships: {  }

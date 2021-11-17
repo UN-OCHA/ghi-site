@@ -1,0 +1,111 @@
+<?php
+
+namespace Drupal\ghi_content\RemoteSource;
+
+use Drupal\Component\Plugin\ConfigurableInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Interface class for remote sources.
+ */
+interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFactoryPluginInterface, ConfigurableInterface {
+
+  /**
+   * Get the label for the plugin.
+   */
+  public function getPluginLabel();
+
+  /**
+   * Get the plugin description if available.
+   */
+  public function getPluginDescription();
+
+  /**
+   * Get an article by id.
+   *
+   * @param int $id
+   *   The id of the article on the remote.
+   *
+   * @return object
+   *   The result object.
+   */
+  public function getArticle($id);
+
+  /**
+   * Get a title for an article.
+   *
+   * @param int $id
+   *   The id of the article on the remote.
+   *
+   * @return object
+   *   The result object.
+   */
+  public function getArticleTitle($id);
+
+  /**
+   * Search articles by title.
+   *
+   * @param string $title
+   *   The title to search.
+   *
+   * @return object
+   *   The result object.
+   */
+  public function searchArticlesByTitle($title);
+
+  /**
+   * Get a paragraph by id.
+   *
+   * @param int $id
+   *   The id of the paragraph on the remote.
+   *
+   * @return object
+   *   The result object.
+   */
+  public function getParagraph($id);
+
+  /**
+   * Issue a query against a remote source.
+   *
+   * @param string $payload
+   *   The payload for the query.
+   *
+   * @return object
+   *   A result object.
+   */
+  public function query($payload);
+
+  /**
+   * Change the links to public ressources.
+   *
+   * @param string $string
+   *   The input string.
+   *
+   * @return string
+   *   The final string.
+   *
+   * @toto Bad idea. Find a different solution!
+   */
+  public function changeRessourceLinks($string);
+
+  /**
+   * Build a configuration form for this remote source.
+   *
+   * @param array $form
+   *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return array
+   *   The form array.
+   */
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state);
+
+  /**
+   * Save the plugin configuration.
+   */
+  public function saveConfiguration();
+
+}

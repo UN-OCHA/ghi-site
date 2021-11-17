@@ -1,3 +1,45 @@
-definitions: {  }
+definitions:
+  'admin_toolbar_tools__extra_links:node__add__financials':
+    enabled: true
+    menu_name: admin
+    parent: 'admin_toolbar_tools.extra_links:node.add'
+    expanded: false
+    weight: 0
+  'admin_toolbar_tools__extra_links:node__add__population':
+    enabled: true
+    menu_name: admin
+    parent: 'admin_toolbar_tools.extra_links:node.add'
+    weight: 0
+    expanded: false
+  'admin_toolbar_tools__extra_links:node__add__profile':
+    enabled: true
+    menu_name: admin
+    parent: 'admin_toolbar_tools.extra_links:node.add'
+    weight: 0
+    expanded: false
+  'admin_toolbar_tools__extra_links:node__add__risk_index':
+    enabled: true
+    menu_name: admin
+    parent: 'admin_toolbar_tools.extra_links:node.add'
+    weight: 0
+    expanded: false
+  'admin_toolbar_tools__extra_links:node__add__overview':
+    enabled: true
+    menu_name: admin
+    parent: 'admin_toolbar_tools.extra_links:node.add'
+    weight: 0
+    expanded: false
+  entity__base_object__collection:
+    menu_name: admin
+    parent: entity.base_object
+    weight: 100
+    expanded: false
+    enabled: true
+  entity__base_object_type__collection:
+    weight: 101
+    menu_name: admin
+    parent: entity.base_object
+    enabled: true
+    expanded: false
 _core:
   default_config_hash: jdY7AU0tU-QsjmiOw3W8vwpYMb-By--_MSFgbqKUTYM

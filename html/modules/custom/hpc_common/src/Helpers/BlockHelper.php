@@ -108,11 +108,11 @@ class BlockHelper {
       if (empty($plugin_collection)) {
         return NULL;
       }
-      $panels_variant = $plugin_collection['variant_settings']->get('panels_variant');
-      if (!$panels_variant) {
+      $layout_builder_variant = $plugin_collection['variant_settings']->get('layout_builder');
+      if (!$layout_builder_variant) {
         return NULL;
       }
-      $plugin_configuration = $panels_variant->getConfiguration();
+      $plugin_configuration = $layout_builder_variant->getConfiguration();
       if (empty($plugin_configuration['blocks'])) {
         return NULL;
       }

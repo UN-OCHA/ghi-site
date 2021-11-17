@@ -1,0 +1,52 @@
+/**
+ * Base photo gallery.
+ */
+.gho-photo-gallery__photos {
+  /* Compensate for the padding of the photos */
+  margin: -0.75rem -0.625rem;
+}
+.gho-photo-gallery__photo {
+  padding: 0.75rem 0.625rem;
+}
+
+/**
+ * Single column gallery.
+ *
+ * In this mode, the images (responsive) span the entire width of the pages's
+ * content region.
+ */
+.gho-photo-gallery--single-column .gho-photo-gallery__photos {
+  max-width: var(--reading-width);
+}
+
+/**
+ * Two columns gallery.
+ *
+ * In this mode, the images (responsive) span the half of the width the pages's
+ * content region on desktop and the entire width like the single column, on
+ * smaller screens.
+ */
+@media screen and (min-width: 768px) {
+  .gho-photo-gallery--two-columns .gho-photo-gallery__photos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+  .gho-photo-gallery--two-columns .gho-photo-gallery__photo {
+    /* Not using flex-basis to determine the width because it doesn't work well
+     * in IE11 wih the padding and negative margins on the parent. Using the
+     * width works everywhere. */
+    flex-basis: auto;
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 50%;
+  }
+}
+
+/**
+ * Caption below images.
+ */
+.gho-photo-gallery__caption {
+  max-width: var(--reading-width);
+  margin-top: 1.25rem;
+}

@@ -1,0 +1,11 @@
+.gho-interactive-content {
+  margin: 3rem 0 0 0;
+}
+.gho-interactive-content .field--name-field-image {
+  margin-bottom: 1.5rem;
+}
+.gho-interactive-content .gho-dataset-link {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}

@@ -32,9 +32,9 @@ function ghi_blocks_preprocess_block(&$variables) {
   if (!$block instanceof GHIBlockBase) {
     return;
   }
-  if (!$block->shouldDisplayTitle()) {
-    // Hide the title.
-    unset($variables['label']);
+  // Set the title if needed.
+  if ($block->shouldDisplayTitle()) {
+    $variables['label'] = $variables['content']['#title'];
   }
 }
 

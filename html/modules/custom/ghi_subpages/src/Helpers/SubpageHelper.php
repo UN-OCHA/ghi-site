@@ -14,12 +14,8 @@ class SubpageHelper {
    * A list of node bundles that are supported as base types.
    */
   const SUPPORTED_BASE_TYPES = [
-    'plan',
-    'country',
-    'region',
-    'cluster',
-    'organization',
-    'project',
+    'section',
+    'global_section',
   ];
 
   /**
@@ -45,28 +41,71 @@ class SubpageHelper {
       return;
     }
 
+    $parent_node = Node::load($node->id());
+
     foreach (self::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
       if (self::getSubpageForBaseNode($node, $subpage_type)) {
         continue;
       }
 
-      $subpage_name = \Drupal::entityTypeManager()->getStorage('node_type')->load($subpage_type)->get('name');
+      /** @var \Drupal\node\Entity\NodeTypeInterface $node_type */
+      $node_type = \Drupal::entityTypeManager()->getStorage('node_type')->load($subpage_type);
+      $subpage_name = $node_type->get('name');
       /** @var \Drupal\node\NodeInterface $subpage */
       $subpage = Node::create([
         'type' => $subpage_type,
         'title' => $subpage_name,
-        'uid' => $node->uid,
+        'uid' => $parent_node->uid,
         'status' => NodeInterface::NOT_PUBLISHED,
         'field_entity_reference' => [
-          'target_id' => $node->id(),
+          'target_id' => $parent_node->id(),
         ],
       ]);
+
       $subpage->save();
       \Drupal::messenger()->addStatus(t('Created @type subpage for @title', [
         '@type' => $subpage_name,
+        '@title' => $parent_node->getTitle(),
+      ]));
+    }
+  }
+
+  /**
+   * Delete all subpages for a base node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The base node.
+   */
+  public static function deleteSubpagesForBaseNode(NodeInterface $node) {
+    if (!in_array($node->getType(), self::SUPPORTED_BASE_TYPES)) {
+      return;
+    }
+    foreach (self::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
+      $subpage_node = self::getSubpageForBaseNode($node, $subpage_type);
+      if (!$subpage_node) {
+        continue;
+      }
+      $subpage_node->delete();
+      \Drupal::messenger()->addStatus(t('Deleted @type subpage for @title', [
+        '@type' => $subpage_node->getTitle(),
         '@title' => $node->getTitle(),
       ]));
     }
+  }
+
+  /**
+   * Get all subpage nodes for a base node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The base node.
+   *
+   * @return \Drupal\node\NodeInterface[]|null
+   *   An array of subpage nodes if found, NULL otherwhise.
+   */
+  public static function getSubpagesForBaseNode(NodeInterface $node) {
+    return \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+      'field_entity_reference' => $node->id(),
+    ]);
   }
 
   /**

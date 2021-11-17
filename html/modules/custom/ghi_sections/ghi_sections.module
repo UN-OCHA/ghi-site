@@ -1,0 +1,36 @@
+<?php
+
+/**
+ * @file
+ * Contains hook implementations for the GHI Sections module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ghi_sections_form_node_section_edit_form_alter(&$form, FormStateInterface &$form_state) {
+  /** @var \Drupal\node\NodeForm $form_object */
+  $form_object = $form_state->getFormObject();
+  $entity = $form_object->buildEntity($form, $form_state);
+
+  /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $object */
+  $object = $entity->field_base_object->entity;
+
+  // Hide the year field if the object doesn't need it.
+  if ($object instanceof BaseObjectInterface && !$object->needsYear()) {
+    $form['field_year']['#access'] = FALSE;
+  }
+
+  // Always disable the base object field. It's currently not allowed to
+  // change it.
+  $form['field_base_object']['#disabled'] = TRUE;
+  $form['field_base_object']['widget'][0]['target_id']['#description'] = t('The base object cannot be changed after the initial creation of a section.');
+
+  // Also disable the year field. Beeing able to change it would at least need
+  // another validation for duplication of base object - year combinations, as
+  // we do them during section creation.
+  $form['field_year']['#disabled'] = TRUE;
+}

@@ -1,0 +1,7 @@
+uuid: f12cfc23-b1d0-4223-b4e0-9614933a96c0
+langcode: en
+status: true
+dependencies: {  }
+id: governing_entity
+label: 'Governing entity'
+hasYear: null

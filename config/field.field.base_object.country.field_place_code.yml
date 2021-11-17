@@ -1,0 +1,19 @@
+uuid: 304a6af7-f28a-4b5b-b712-04784f91c0b0
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_place_code
+    - ghi_base_objects.base_object_type.country
+id: base_object.country.field_place_code
+field_name: field_place_code
+entity_type: base_object
+bundle: country
+label: 'Place Code'
+description: 'The pcode for the country if available.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

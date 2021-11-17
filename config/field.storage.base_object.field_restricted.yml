@@ -1,0 +1,18 @@
+uuid: cba8064d-67ec-4406-a4ad-10168542709c
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+id: base_object.field_restricted
+field_name: field_restricted
+entity_type: base_object
+type: boolean
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

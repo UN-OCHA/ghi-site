@@ -1,0 +1,108 @@
+uuid: 9c900373-2c4e-4e2e-b923-78313160e599
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - hpc_api
+id: organization
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags:
+  - 'HPC API'
+migration_group: hpc_api_data
+label: 'Organizations from the HPC API'
+source:
+  plugin: hpc_api_url
+  data_fetcher_plugin: hpc_api_http
+  data_parser_plugin: hpc_api_endpoint
+  track_changes: true
+  include_raw_data: true
+  new_structure: true
+  endpoints:
+    -
+      endpoint: 'fts/organization?organizationTypeName[]=Government&organizationTypeName[]=Inter-governmental&organizationTypeName[]=Pooled%20fund&limit=500'
+      api_version: v2
+  item_selector: data
+  fields:
+    -
+      name: original_id
+      label: 'Unique organization ID'
+      selector: id
+    -
+      name: name
+      label: 'Organization Name'
+      selector: name
+    -
+      name: parent_id
+      label: 'Parent Original ID'
+      selector: parentID
+    -
+      name: abbreviation
+      label: 'Organization Abbreviation'
+      selector: abbreviation
+    -
+      name: url
+      label: URL
+      selector: url
+    -
+      name: locations
+      label: 'Organization Location'
+      selector: locations
+    -
+      name: organization_type
+      label: 'Organization Type'
+      selector: categories
+  ids:
+    original_id:
+      type: integer
+process:
+  type:
+    plugin: default_value
+    default_value: organization
+  name: name
+  field_original_id: original_id
+  field_parent_original_id: parent_id
+  field_abbreviation: abbreviation
+  field_url: url
+  field_organization_locations:
+    -
+      plugin: sub_process
+      source: locations
+      process:
+        target_id:
+          plugin: migration_lookup
+          migration: country
+          source: id
+          no_stub: true
+  field_organization_type:
+    -
+      plugin: sub_process
+      source: organization_type
+      process:
+        target_id:
+          plugin: migration_lookup
+          migration: organization_type
+          source: id
+          no_stub: true
+  field_parent_organization:
+    -
+      plugin: migration_lookup
+      migration: organization
+      no_stub: true
+      source: parent_id
+    -
+      plugin: default_value
+      default_value: null
+destination:
+  plugin: 'entity:base_object'
+  overwrite_properties:
+    - title
+    - field_original_id
+    - field_parent_organization
+    - field_abbreviation
+    - field_url
+    - field_organization_locations
+    - field_organization_type
+migration_dependencies: {  }

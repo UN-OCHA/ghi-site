@@ -1,0 +1,19 @@
+uuid: a2f29dd9-4aa3-4b30-922e-f935189088b9
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_country_code
+    - ghi_base_objects.base_object_type.country
+id: base_object.country.field_country_code
+field_name: field_country_code
+entity_type: base_object
+bundle: country
+label: 'Country code'
+description: 'ISO 3 country code'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

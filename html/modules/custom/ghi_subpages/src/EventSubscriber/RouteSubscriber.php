@@ -13,7 +13,11 @@ use Symfony\Component\Routing\RouteCollection;
  * modules publish route, so that it can be used even if the module is
  * configured to not show local tasks.
  *
+ * It is also used for customized access checks on node creation to prevent the
+ * manual creation of subpages.
+ *
  * @see ghi_subpages_local_tasks_alter()
+ * @see ghi_subpages_preprocess_node_add_list()
  *
  * @package Drupal\ghi_subpages
  */
@@ -30,6 +34,14 @@ class RouteSubscriber extends RouteSubscriberBase {
     if ($route = $collection->get('entity.node.publish')) {
       $requirements = $route->getRequirements();
       unset($requirements['_custom_access']);
+      $route->setRequirements($requirements);
+    }
+
+    // Add a custom access check for node creation.
+    // @see ghi_subpages_preprocess_node_add_list().
+    if ($route = $collection->get('node.add')) {
+      $requirements = $route->getRequirements();
+      $requirements['_custom_access'] = '\Drupal\ghi_subpages\Controller\SubpagesAdminController::nodeCreateAccess';
       $route->setRequirements($requirements);
     }
   }

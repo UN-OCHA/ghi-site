@@ -1,0 +1,20 @@
+uuid: feb65d8a-6c3a-4e60-8055-1cddc1aeb819
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+    - taxonomy
+id: base_object.field_plan_type
+field_name: field_plan_type
+entity_type: base_object
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

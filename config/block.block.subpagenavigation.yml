@@ -24,13 +24,12 @@ visibility:
   'entity_bundle:node':
     id: 'entity_bundle:node'
     bundles:
-      country: country
       financials: financials
-      governing_entity: governing_entity
-      plan: plan
+      global_section: global_section
       population: population
       profile: profile
       risk_index: risk_index
+      section: section
     negate: false
     context_mapping:
       node: '@node.node_route_context:node'

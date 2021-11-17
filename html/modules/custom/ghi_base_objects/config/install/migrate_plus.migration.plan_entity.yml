@@ -1,0 +1,62 @@
+id: plan_entity
+label: Plan entities from the HPC API
+migration_group: hpc_api_data
+source:
+  process_entities: plan
+  filter:
+    -
+      type: 'min_year'
+      value: '2018'
+  include_raw_data: true
+  track_changes: true
+  endpoints:
+    -
+      endpoint: 'plan?scopes=tags,locations&activities=false&filterBy=havingPlanEntities'
+      api_version: 'v2'
+      auth_method: 'api_key'
+  item_selector: data
+  fields:
+    -
+      name: original_id
+      label: 'Unique plan ID'
+      selector: id
+    -
+      name: name
+      label: 'Name of the plan entity'
+      selector: name
+    -
+      name: plan_id
+      label: 'The plan id that an entity belongs to'
+      selector: plan_id
+    -
+      name: prototype_id
+      label: 'The prototype id of this entity'
+      selector: entity_prototype_id
+  ids:
+    original_id:
+      type: integer
+process:
+  type:
+    plugin: default_value
+    default_value: plan_entity
+  name: name
+  field_original_id: original_id
+  field_plan:
+    plugin: migration_lookup
+    migration: plan
+    source: plan_id
+    no_stub: true
+  field_prototype_id: prototype_id
+destination:
+  plugin: 'entity:base_object'
+  overwrite_properties:
+    - name
+    - field_plan
+    - field_prototype_id
+migration_dependencies:
+  required:
+    - plan
+dependencies:
+  enforced:
+    module:
+      - hpc_api

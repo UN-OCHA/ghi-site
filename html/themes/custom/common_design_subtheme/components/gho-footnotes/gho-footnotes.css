@@ -1,0 +1,101 @@
+.gho-footnote-list {
+  margin: 6.75rem 0 0 0;
+}
+.gho-footnote-list__title {
+  max-width: var(--reading-width);
+  margin: 0 0 1.5rem 0;
+  padding: 0 0 1.5rem 0;
+  color: #1f1f1f;
+  border-bottom: 1px solid #d8d8d8;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.875rem;
+}
+
+@media (min-width: 1024px) {
+  .gho-footnote-list__title {
+    font-size: 1.5rem;
+  }
+}
+.gho-footnote-list__list {
+  max-width: var(--reading-width);
+  margin: 0;
+  padding: 0 1.5rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+/* @todo check if it's also fine to decorate the number like that in Arabic. */
+.gho-footnote-reference span:before {
+  content: "[";
+}
+.gho-footnote-reference span:after {
+  content: "]";
+}
+.gho-footnote {
+  word-wrap: break-word;
+}
+.gho-footnote:target {
+  background-color: #eee;
+}
+.gho-footnote + .gho-footnote {
+  margin-top: 0.375rem;
+}
+.gho-footnote__backlinks {
+  display: inline;
+  counter-reset: gho-footnotes-backlinks;
+  vertical-align: super;
+}
+.gho-footnote-backlink {
+  counter-increment: gho-footnotes-backlinks;
+}
+.gho-footnote-backlink [title]::after {
+  content: counter(gho-footnotes-backlinks, lower-alpha);
+  font-style: italic;
+}
+
+.gho-footnote-list__wrapper[data-visible] {
+  position: fixed;
+  z-index: 100;
+  bottom: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /**
+   * Ok,so we don't specify a left property so that the list stays at its
+   * current position aligned to the left of the content area. Then we translate
+   * it to the maximum margin of the body (1400px - 904px) / 2 and limiting its
+   * width to 1400px. We add a padding left of 248px to compensate and to ensure
+   * it always spans to the right border of the body we add 248px to the width
+   * and now we have a list going from left to right of the body, aligned with
+   * the content and fixed to the bottom.
+   * Oh yeah! Nothing better than some magical css soup.
+   */
+  width: calc(100% + 248px);
+  max-width: 1400px;
+  max-height: 50%;
+  margin: 0;
+  padding: 1rem 0 1rem 248px;
+  transform: translateX(-248px);
+  border-top: 1px solid #d8d8d8;
+  background: #fff;
+}
+[dir="rtl"] .gho-footnote-list__wrapper[data-visible] {
+  padding: 1rem 248px 1rem 0;
+  transform: translateX(248px);
+}
+/* Visually hidden to perserve the numbering and keep the footnotes and their
+ * backlinks in the accessiblity tree. */
+.gho-footnote-list__wrapper[data-visible] .gho-footnote:not([data-visible]),
+.gho-footnote-list__wrapper[data-visible] .gho-footnote__backlinks {
+  position: absolute !important;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  width: 1px;
+  height: 1px;
+  word-wrap: normal;
+}
+.gho-footnote-list__wrapper[data-visible] .gho-footnote[data-visible] {
+  margin-top: 0;
+}
+.gho-footnote-list__wrapper[data-visible] .gho-footnote[data-visible] + .gho-footnote[data-visible] {
+  margin-top: 0.375rem;
+}

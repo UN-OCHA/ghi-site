@@ -1,0 +1,23 @@
+uuid: f31c8bb8-ea7e-4c82-9878-76c030580b9d
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.global_section.field_year
+    - node.type.global_section
+  module:
+    - user
+id: node.global_section.teaser
+targetEntityType: node
+bundle: global_section
+mode: teaser
+content:
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  field_year: true
+  langcode: true

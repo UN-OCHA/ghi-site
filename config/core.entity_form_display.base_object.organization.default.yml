@@ -1,0 +1,88 @@
+uuid: 1818e6b8-6d9b-4846-9e87-300329d08328
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.base_object.organization.field_abbreviation
+    - field.field.base_object.organization.field_locations
+    - field.field.base_object.organization.field_organization_type
+    - field.field.base_object.organization.field_original_id
+    - field.field.base_object.organization.field_parent_organization
+    - field.field.base_object.organization.field_url
+    - ghi_base_objects.base_object_type.organization
+  module:
+    - link
+id: base_object.organization.default
+targetEntityType: base_object
+bundle: organization
+mode: default
+content:
+  field_abbreviation:
+    weight: 4
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
+    region: content
+  field_locations:
+    weight: 6
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
+    region: content
+  field_organization_type:
+    weight: 7
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
+    region: content
+  field_original_id:
+    weight: 3
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+    type: number
+    region: content
+  field_parent_organization:
+    weight: 8
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
+    region: content
+  field_url:
+    weight: 5
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
+    third_party_settings: {  }
+    type: link_default
+    region: content
+  langcode:
+    type: language_select
+    weight: 2
+    region: content
+    settings:
+      include_locked: true
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: -4
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden: {  }
