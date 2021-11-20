@@ -48,6 +48,7 @@
         "drupal/ctools": "^3.7",
         "drupal/editor_advanced_link": "^1.8",
         "drupal/field_group": "^3.1",
+        "drupal/fpa": "^3.0",
         "drupal/gin": "^3.0",
         "drupal/gin_lb": "^1.0@beta",
         "drupal/gin_toolbar": "^1.0",
