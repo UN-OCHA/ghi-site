@@ -1,0 +1,4 @@
+administer teams:
+  title: 'Administer teams'
+  description: 'Allow to manage teams.'
+  restrict access: true

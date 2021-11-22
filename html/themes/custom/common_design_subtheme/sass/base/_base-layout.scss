@@ -18,3 +18,80 @@
     padding-right: 1rem;
   }
 }
+
+.material-icons {
+  display: inline-block;
+  white-space: nowrap;
+  letter-spacing: normal;
+  text-transform: none;
+  word-wrap: normal;
+  direction: ltr;
+  font-family: "Material Icons", sans-serif;
+  font-size: 24px;
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+}
+
+#main-content {
+  position: relative;
+
+  .block-local-tasks-block {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    right: 0;
+    padding: inherit;
+    padding-bottom: 1rem;
+    text-align: right;
+
+    &:before {
+      @extend .material-icons;
+
+      content: "settings";
+    }
+
+    ul.tabs {
+      visibility: hidden;
+      margin: 0;
+      margin-block-start: 0;
+      margin-block-end: 0;
+      transition: visibility 0s, opacity 1s ease;
+      opacity: 0;
+      border-bottom: 0;
+
+      li {
+        float: none;
+        min-width: 7rem;
+        margin: 0;
+        padding: 0.5rem 0;
+        background-color: $cd-white;
+
+        a {
+          display: inline-block;
+          min-width: auto;
+          padding: 0 0.25rem;
+          text-align: right;
+          color: black;
+          border-bottom: 0 !important;
+          background-color: $cd-white;
+          font-size: 14px;
+          font-weight: normal;
+
+          &.is-active,
+          &:hover {
+            border-bottom: 1px solid gray !important;
+            background-color: $cd-white;
+          }
+        }
+      }
+    }
+
+    &:hover ul.tabs {
+      visibility: visible;
+      opacity: 1;
+    }
+  }
+}

@@ -9,6 +9,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ghi_subpages\Controller\SubpagesAdminController;
+use Drupal\ghi_subpages\Element\LayoutBuilderSectionLock;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
@@ -142,7 +143,9 @@ function ghi_subpages_entity_access(EntityInterface $entity, $operation, Account
       // No opinion.
       return AccessResult::neutral();
     }
-    $access_result = $base_entity->access($operation, $account) !== TRUE ? AccessResult::forbidden() : AccessResult::allowed();
+    // If no access to the base entity, explicitely deny access to the subpage,
+    // otherwhise follow what ever the node grants permit (neutral).
+    $access_result = $base_entity->access($operation, $account) !== TRUE ? AccessResult::forbidden() : AccessResult::neutral();
     return $access_result->addCacheableDependency($entity);
   }
 
@@ -210,4 +213,14 @@ function ghi_subpages_preprocess_node_add_list(&$variables) {
       }
     }
   }
+}
+
+/**
+ * Implements hook_lement_info_alter().
+ */
+function ghi_subpages_element_info_alter(array &$types) {
+  $types['layout_builder']['#pre_render'][] = [
+    LayoutBuilderSectionLock::class,
+    'preRenderRestrictSectionConfiguration',
+  ];
 }

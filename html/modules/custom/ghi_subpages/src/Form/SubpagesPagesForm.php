@@ -7,6 +7,7 @@ use Drupal\Core\Datetime\DateFormatter;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
@@ -93,6 +94,7 @@ class SubpagesPagesForm extends FormBase {
     $header = [
       $this->t('Page'),
       $this->t('Status'),
+      $this->t('Team'),
       $this->t('Created'),
       $this->t('Updated'),
       $this->t('Operations'),
@@ -106,6 +108,8 @@ class SubpagesPagesForm extends FormBase {
       ]));
     }
 
+    $section_team = $node->field_team->entity->getName();
+
     foreach (SubpageHelper::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
       $subpages = $this->entityTypeManager->getStorage('node')->loadByProperties([
         'type' => $subpage_type,
@@ -113,21 +117,31 @@ class SubpagesPagesForm extends FormBase {
       ]);
 
       $row = [];
-      $row[] = $this->entityTypeManager->getStorage('node_type')->load($subpage_type)->get('name');
+      $subpage_type_label = $this->entityTypeManager->getStorage('node_type')->load($subpage_type)->get('name');
 
       if (count($subpages) && count($subpages) == 1) {
         /** @var \Drupal\node\NodeInterface $subpage */
         $subpage = reset($subpages);
+
+        /** @var \Drupal\taxonomy\Entity\Term $subpage_team */
+        $subpage_team = !$subpage->field_team->isEmpty() ? $subpage->field_team->entity : NULL;
+
+        $row[] = Link::createFromRoute($subpage_type_label, 'entity.node.canonical', ['node' => $subpage->id()]);
 
         // The token for the publishing links need to be generated manually
         // here.
         $token = $this->csrfToken->get('node/' . $subpage->id() . '/toggleStatus');
 
         $row[] = $subpage->isPublished() ? $this->t('Published') : $this->t('Unpublished');
+        $row[] = $subpage_team ? $subpage_team->getName() : $section_team . ' (' . $this->t('Inherit from section') . ')';
         $row[] = $this->dateFormatter->format($subpage->getCreatedTime(), 'custom', 'F j, Y h:ia');
         $row[] = $this->dateFormatter->format($subpage->getChangedTime(), 'custom', 'F j, Y h:ia');
 
         $links = [];
+        $links['view'] = [
+          'title' => $this->t('View'),
+          'url' => $subpage->toUrl(),
+        ];
         $links['edit'] = [
           'title' => $this->t('Edit'),
           'url' => $subpage->toUrl('edit-form'),
@@ -150,10 +164,16 @@ class SubpagesPagesForm extends FormBase {
           'data' => [
             '#type' => 'dropbutton',
             '#links' => $links,
+            '#attributes' => [
+              'class' => [
+                'dropbutton--extrasmall',
+              ],
+            ],
           ],
         ];
       }
       elseif (empty($subpages)) {
+        $row[] = $subpage_type_label;
         $row[] = $this->t('Missing');
         $row[] = '';
         $row[] = '';

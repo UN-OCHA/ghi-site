@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.node.population.field_entity_reference
+    - field.field.node.population.field_team
     - field.field.node.population.layout_builder__layout
     - node.type.population
   module:
@@ -15,6 +16,16 @@ mode: default
 content:
   field_entity_reference:
     weight: 6
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
+    region: content
+  field_team:
+    weight: 26
     settings:
       match_operator: CONTAINS
       match_limit: 10

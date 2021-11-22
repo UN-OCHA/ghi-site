@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - core.entity_view_mode.node.teaser
+    - field.field.node.global_section.field_team
     - field.field.node.global_section.field_year
     - node.type.global_section
   module:
@@ -19,5 +20,6 @@ content:
     third_party_settings: {  }
     region: content
 hidden:
+  field_team: true
   field_year: true
   langcode: true

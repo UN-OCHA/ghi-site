@@ -25,6 +25,7 @@ module:
   field_ui: 0
   file: 0
   filter: 0
+  fpa: 0
   ghi_base_objects: 0
   ghi_blocks: 0
   ghi_content: 0
@@ -33,6 +34,7 @@ module:
   ghi_plans: 0
   ghi_sections: 0
   ghi_subpages: 0
+  ghi_teams: 0
   gho_footnotes: 0
   gin_lb: 0
   gin_toolbar: 0

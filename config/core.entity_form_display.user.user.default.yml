@@ -3,13 +3,9 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.user.user.field_user_about
-    - field.field.user.user.field_user_picture
-    - field.field.user.user.user_picture
-    - image.style.thumbnail
+    - field.field.user.user.field_team
   module:
-    - image
-    - text
+    - path
     - user
 id: user.user.default
 targetEntityType: user
@@ -17,51 +13,35 @@ bundle: user
 mode: default
 content:
   account:
-    weight: -10
+    weight: 0
+    region: content
     settings: {  }
     third_party_settings: {  }
-    region: content
-  field_user_about:
-    weight: 2
-    type: text_textarea_with_summary
+  field_team:
+    weight: 1
     settings:
-      rows: 9
-      summary_rows: 3
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
       placeholder: ''
-      show_summary: false
     third_party_settings: {  }
-    region: content
-  field_user_picture:
-    weight: 3
-    type: image_image
-    settings:
-      progress_indicator: throbber
-      preview_image_style: thumbnail
-    third_party_settings: {  }
+    type: entity_reference_autocomplete
     region: content
   language:
-    weight: 0
+    weight: 2
+    region: content
     settings: {  }
     third_party_settings: {  }
-    region: content
   path:
     type: path
-    weight: 30
+    weight: 4
     region: content
     settings: {  }
     third_party_settings: {  }
   timezone:
-    weight: 6
+    weight: 3
+    region: content
     settings: {  }
     third_party_settings: {  }
-    region: content
-  user_picture:
-    settings:
-      progress_indicator: throbber
-      preview_image_style: thumbnail
-    type: image_image
-    weight: 7
-    third_party_settings: {  }
-    region: content
 hidden:
   langcode: true
