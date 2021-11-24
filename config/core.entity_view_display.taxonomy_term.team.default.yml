@@ -1,0 +1,34 @@
+uuid: e488a250-4159-4302-8c0a-62db40177fa1
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.team
+  module:
+    - layout_builder
+    - text
+third_party_settings:
+  layout_builder:
+    allow_custom: false
+    enabled: true
+    sections:
+      -
+        layout_id: layout_builder_blank
+        layout_settings:
+          label: ''
+        components: {  }
+        third_party_settings: {  }
+id: taxonomy_term.team.default
+targetEntityType: taxonomy_term
+bundle: team
+mode: default
+content:
+  description:
+    label: hidden
+    type: text_default
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  langcode: true

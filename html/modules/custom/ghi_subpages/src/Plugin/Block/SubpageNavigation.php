@@ -79,7 +79,7 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       $base_entity = $node->field_entity_reference->entity;
     }
 
-    if (!in_array($base_entity->bundle(), SubpageHelper::SUPPORTED_BASE_TYPES)) {
+    if (!SubpageHelper::isBaseTypeNode($base_entity)) {
       return;
     }
 
@@ -106,10 +106,12 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
 
       /** @var \Drupal\node\NodeInterface $subpage */
       $subpage = reset($matching_subpages);
+      $cache_tags = array_merge($cache_tags, $subpage->getCacheTags());
+
       if (!$subpage->access('view')) {
+        $tabs[0]['children'][] = $subpage->getTitle();
         continue;
       }
-      $cache_tags = array_merge($cache_tags, $subpage->getCacheTags());
       $link = $subpage->toLink(NULL)->toRenderable();
       if ($node->id() == $subpage->id()) {
         $link['#attributes']['class'][] = 'active';

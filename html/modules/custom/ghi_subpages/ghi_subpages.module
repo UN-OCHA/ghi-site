@@ -8,7 +8,9 @@
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
 use Drupal\ghi_subpages\Controller\SubpagesAdminController;
+use Drupal\ghi_subpages\Element\LayoutBuilderSectionLock;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
@@ -17,18 +19,10 @@ use Drupal\node\NodeInterface;
  * Implements hook_entity_insert().
  */
 function ghi_subpages_entity_insert(EntityInterface $entity) {
-  if (!$entity instanceof NodeInterface) {
+  if (!$entity instanceof NodeInterface || !SubpageHelper::isBaseTypeNode($entity)) {
     return;
   }
-
-  $node = $entity;
-  $supported_base_types = SubpageHelper::SUPPORTED_BASE_TYPES;
-
-  if (!in_array($node->getType(), $supported_base_types)) {
-    return;
-  }
-
-  SubpageHelper::assureSubpagesForBaseNode($node);
+  SubpageHelper::assureSubpagesForBaseNode($entity);
 }
 
 /**
@@ -39,8 +33,7 @@ function ghi_subpages_entity_insert(EntityInterface $entity) {
  * the section's url alias as one of their tokens.
  */
 function ghi_subpages_section_post_create(NodeInterface $section_node) {
-  $supported_base_types = SubpageHelper::SUPPORTED_BASE_TYPES;
-  if (!in_array($section_node->getType(), $supported_base_types)) {
+  if (!SubpageHelper::isBaseTypeNode($section_node)) {
     return;
   }
 
@@ -55,22 +48,14 @@ function ghi_subpages_section_post_create(NodeInterface $section_node) {
  * Implements hook_entity_update().
  */
 function ghi_subpages_entity_update(EntityInterface $entity) {
-  if (!$entity instanceof NodeInterface) {
+  if (!$entity instanceof NodeInterface || !SubpageHelper::isBaseTypeNode($entity)) {
     return;
   }
+  SubpageHelper::assureSubpagesForBaseNode($entity);
 
-  $node = $entity;
-  $supported_base_types = SubpageHelper::SUPPORTED_BASE_TYPES;
-
-  if (!in_array($node->getType(), $supported_base_types)) {
-    return;
-  }
-
-  SubpageHelper::assureSubpagesForBaseNode($node);
-
-  if (!$node->isPublished()) {
+  if (!$entity->isPublished()) {
     // Load all subpages and make sure that those are unpublished too.
-    $subpages = SubpageHelper::getSubpagesForBaseNode($node);
+    $subpages = SubpageHelper::getSubpagesForBaseNode($entity);
 
     if (!empty($subpages)) {
       foreach ($subpages as $subpage) {
@@ -94,18 +79,10 @@ function ghi_subpages_entity_update(EntityInterface $entity) {
  * Implements hook_entity_delete().
  */
 function ghi_subpages_entity_delete(EntityInterface $entity) {
-  if (!$entity instanceof NodeInterface) {
+  if (!$entity instanceof NodeInterface || !SubpageHelper::isBaseTypeNode($entity)) {
     return;
   }
-
-  $node = $entity;
-  $supported_base_types = SubpageHelper::SUPPORTED_BASE_TYPES;
-
-  if (!in_array($node->getType(), $supported_base_types)) {
-    return;
-  }
-
-  SubpageHelper::deleteSubpagesForBaseNode($node);
+  SubpageHelper::deleteSubpagesForBaseNode($entity);
 }
 
 /**
@@ -142,7 +119,9 @@ function ghi_subpages_entity_access(EntityInterface $entity, $operation, Account
       // No opinion.
       return AccessResult::neutral();
     }
-    $access_result = $base_entity->access($operation, $account) !== TRUE ? AccessResult::forbidden() : AccessResult::allowed();
+    // If no access to the base entity, explicitely deny access to the subpage,
+    // otherwhise follow whatever the node grants permit (neutral).
+    $access_result = $base_entity->access($operation, $account) !== TRUE ? AccessResult::forbidden() : AccessResult::neutral();
     return $access_result->addCacheableDependency($entity);
   }
 
@@ -170,11 +149,46 @@ function ghi_subpages_local_tasks_alter(&$local_tasks) {
 }
 
 /**
+ * Implements hook_entity_operation().
+ */
+function ghi_subpages_entity_operation(EntityInterface $entity) {
+  $account = \Drupal::currentUser();
+  if (!$entity instanceof NodeInterface || !SubpageHelper::isBaseTypeNode($entity)) {
+    return;
+  }
+
+  $route_name = "ghi_subpages.node.pages";
+  $route_parameters = [
+    'node' => $entity->id(),
+  ];
+
+  // If current user has access to route, then add the operation link. The
+  // access check will only return TRUE if the bundle is Layout Builder-
+  // enabled, overrides are allowed, and user has necessary permissions.
+  /** @var \Drupal\Core\Access\AccessManagerInterface $access_manager */
+  $access_manager = \Drupal::service('access_manager');
+  if (!$access_manager->checkNamedRoute($route_name, $route_parameters, $account)) {
+    return;
+  }
+
+  return [
+    'subpages' => [
+      'title' => t('Subpages'),
+      'weight' => 50,
+      'url' => Url::fromRoute($route_name, $route_parameters),
+    ],
+  ];
+}
+
+/**
  * Implements hook_preprocess_page_title().
  */
 function ghi_subpages_preprocess_page_title(&$variables) {
   $node = \Drupal::routeMatch()->getParameter('node');
-  if ($node instanceof NodeInterface && !in_array($node->bundle(), SubpageHelper::SUPPORTED_BASE_TYPES) && $node->hasField('field_entity_reference') && $node->field_entity_reference->entity) {
+  if (!$node instanceof NodeInterface || !SubpageHelper::isBaseTypeNode($node)) {
+    return;
+  }
+  if ($node->hasField('field_entity_reference') && $node->field_entity_reference->entity instanceof NodeInterface) {
     $variables['title'] = $node->field_entity_reference->entity->getTitle();
   }
 }
@@ -210,4 +224,14 @@ function ghi_subpages_preprocess_node_add_list(&$variables) {
       }
     }
   }
+}
+
+/**
+ * Implements hook_lement_info_alter().
+ */
+function ghi_subpages_element_info_alter(array &$types) {
+  $types['layout_builder']['#pre_render'][] = [
+    LayoutBuilderSectionLock::class,
+    'preRenderRestrictSectionConfiguration',
+  ];
 }

@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.node.global_section.field_team
     - field.field.node.global_section.field_year
     - node.type.global_section
   module:
@@ -18,6 +19,16 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
+  field_team:
+    weight: 123
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
+    region: content
   field_year:
     weight: 122
     settings:

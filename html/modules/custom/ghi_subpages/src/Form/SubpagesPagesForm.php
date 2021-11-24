@@ -5,8 +5,10 @@ namespace Drupal\ghi_subpages\Form;
 use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Datetime\DateFormatter;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
@@ -55,14 +57,22 @@ class SubpagesPagesForm extends FormBase {
   protected $csrfToken;
 
   /**
+   * The module handler to invoke hooks on.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
    * Constructs a SubpagesPages form.
    */
-  public function __construct(DateFormatter $date_formatter, EntityTypeManagerInterface $entity_type_manager, PublishContentAccess $publish_content_access, AccountProxyInterface $user, CsrfTokenGenerator $csrf_token) {
+  public function __construct(DateFormatter $date_formatter, EntityTypeManagerInterface $entity_type_manager, PublishContentAccess $publish_content_access, AccountProxyInterface $user, CsrfTokenGenerator $csrf_token, ModuleHandlerInterface $module_handler) {
     $this->dateFormatter = $date_formatter;
     $this->entityTypeManager = $entity_type_manager;
     $this->publishContentAccess = $publish_content_access;
     $this->currentUser = $user;
     $this->csrfToken = $csrf_token;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -75,6 +85,7 @@ class SubpagesPagesForm extends FormBase {
       $container->get('publishcontent.access'),
       $container->get('current_user'),
       $container->get('csrf_token'),
+      $container->get('module_handler'),
     );
   }
 
@@ -93,6 +104,7 @@ class SubpagesPagesForm extends FormBase {
     $header = [
       $this->t('Page'),
       $this->t('Status'),
+      $this->t('Team'),
       $this->t('Created'),
       $this->t('Updated'),
       $this->t('Operations'),
@@ -106,6 +118,8 @@ class SubpagesPagesForm extends FormBase {
       ]));
     }
 
+    $section_team = $node->field_team->entity->getName();
+
     foreach (SubpageHelper::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
       $subpages = $this->entityTypeManager->getStorage('node')->loadByProperties([
         'type' => $subpage_type,
@@ -113,25 +127,42 @@ class SubpagesPagesForm extends FormBase {
       ]);
 
       $row = [];
-      $row[] = $this->entityTypeManager->getStorage('node_type')->load($subpage_type)->get('name');
+      $subpage_type_label = $this->entityTypeManager->getStorage('node_type')->load($subpage_type)->get('name');
 
       if (count($subpages) && count($subpages) == 1) {
         /** @var \Drupal\node\NodeInterface $subpage */
         $subpage = reset($subpages);
+
+        /** @var \Drupal\taxonomy\Entity\Term $subpage_team */
+        $subpage_team = !$subpage->field_team->isEmpty() ? $subpage->field_team->entity : NULL;
+
+        $row[] = Link::createFromRoute($subpage_type_label, 'entity.node.canonical', ['node' => $subpage->id()]);
 
         // The token for the publishing links need to be generated manually
         // here.
         $token = $this->csrfToken->get('node/' . $subpage->id() . '/toggleStatus');
 
         $row[] = $subpage->isPublished() ? $this->t('Published') : $this->t('Unpublished');
+        $row[] = $subpage_team ? $subpage_team->getName() : $section_team . ' (' . $this->t('Inherit from section') . ')';
         $row[] = $this->dateFormatter->format($subpage->getCreatedTime(), 'custom', 'F j, Y h:ia');
         $row[] = $this->dateFormatter->format($subpage->getChangedTime(), 'custom', 'F j, Y h:ia');
 
         $links = [];
-        $links['edit'] = [
-          'title' => $this->t('Edit'),
-          'url' => $subpage->toUrl('edit-form'),
-        ];
+        if ($subpage->access('view')) {
+          $links['view'] = [
+            'title' => $this->t('View'),
+            'url' => $subpage->toUrl(),
+          ];
+        }
+        if ($subpage->access('update')) {
+          $links['edit'] = [
+            'title' => $this->t('Edit'),
+            'url' => $subpage->toUrl('edit-form'),
+          ];
+          if ($this->moduleHandler->moduleExists('layout_builder_operation_link')) {
+            $links += layout_builder_operation_link_entity_operation($subpage);
+          }
+        }
 
         if ($this->publishContentAccess->access($this->currentUser, $subpage)->isAllowed() && $node->isPublished()) {
           $route_args = ['node' => $subpage->id()];
@@ -150,10 +181,16 @@ class SubpagesPagesForm extends FormBase {
           'data' => [
             '#type' => 'dropbutton',
             '#links' => $links,
+            '#attributes' => [
+              'class' => [
+                'dropbutton--extrasmall',
+              ],
+            ],
           ],
         ];
       }
       elseif (empty($subpages)) {
+        $row[] = $subpage_type_label;
         $row[] = $this->t('Missing');
         $row[] = '';
         $row[] = '';

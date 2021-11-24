@@ -37,7 +37,7 @@ class SubpageHelper {
    *   The base node.
    */
   public static function assureSubpagesForBaseNode(NodeInterface $node) {
-    if (!in_array($node->getType(), self::SUPPORTED_BASE_TYPES)) {
+    if (!self::isBaseTypeNode($node)) {
       return;
     }
 
@@ -77,7 +77,7 @@ class SubpageHelper {
    *   The base node.
    */
   public static function deleteSubpagesForBaseNode(NodeInterface $node) {
-    if (!in_array($node->getType(), self::SUPPORTED_BASE_TYPES)) {
+    if (!self::isBaseTypeNode($node)) {
       return;
     }
     foreach (self::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
@@ -125,6 +125,32 @@ class SubpageHelper {
       'field_entity_reference' => $node->id(),
     ]);
     return !empty($matching_subpages) ? reset($matching_subpages) : NULL;
+  }
+
+  /**
+   * Check if the given node is a base type.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to check.
+   *
+   * @return bool
+   *   TRUE if it is a base type, FALSE otherwhise.
+   */
+  public static function isBaseTypeNode(NodeInterface $node) {
+    return in_array($node->bundle(), SubpageHelper::SUPPORTED_BASE_TYPES);
+  }
+
+  /**
+   * Check if the given node is a subpage type.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to check.
+   *
+   * @return bool
+   *   TRUE if it is a subpage type, FALSE otherwhise.
+   */
+  public static function isSubpageTypeNode(NodeInterface $node) {
+    return in_array($node->bundle(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES);
   }
 
 }

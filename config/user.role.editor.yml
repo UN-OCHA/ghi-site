@@ -1,0 +1,34 @@
+uuid: 0bb4d302-e6d1-4821-b5b7-65470d396528
+langcode: en
+status: true
+dependencies: {  }
+id: editor
+label: editor
+weight: -6
+is_admin: null
+permissions:
+  - 'access administration pages'
+  - 'access content overview'
+  - 'access remote content'
+  - 'access toolbar'
+  - 'configure editable financials node layout overrides'
+  - 'configure editable population node layout overrides'
+  - 'configure editable profile node layout overrides'
+  - 'configure editable risk_index node layout overrides'
+  - 'configure editable section node layout overrides'
+  - 'publish editable content'
+  - 'publish editable node type financials'
+  - 'publish editable node type global_section'
+  - 'publish editable node type population'
+  - 'publish editable node type profile'
+  - 'publish editable node type risk_index'
+  - 'publish editable node type section'
+  - 'unpublish editable content'
+  - 'unpublish editable node type financials'
+  - 'unpublish editable node type global_section'
+  - 'unpublish editable node type population'
+  - 'unpublish editable node type profile'
+  - 'unpublish editable node type risk_index'
+  - 'unpublish editable node type section'
+  - 'view own unpublished content'
+  - 'view the administration theme'

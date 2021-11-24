@@ -5,6 +5,7 @@ dependencies:
   config:
     - core.entity_view_mode.node.teaser
     - field.field.node.risk_index.field_entity_reference
+    - field.field.node.risk_index.field_team
     - field.field.node.risk_index.layout_builder__layout
     - node.type.risk_index
   module:
@@ -21,5 +22,6 @@ content:
     region: content
 hidden:
   field_entity_reference: true
+  field_team: true
   langcode: true
   layout_builder__layout: true

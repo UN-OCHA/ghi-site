@@ -1,0 +1,14 @@
+uuid: 705d8357-7b55-405e-a7b8-b2f127905bc8
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.ocha_services
+id: taxonomy_vocabulary_ocha_services
+entity_type_id: taxonomy_vocabulary
+entity_id: ocha_services
+action: access_denied
+allow_override: 0
+redirect: ''
+redirect_code: 301
+redirect_fallback_action: access_denied

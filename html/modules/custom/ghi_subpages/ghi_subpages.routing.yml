@@ -10,4 +10,3 @@ ghi_subpages.node.pages:
     _admin_route: TRUE
   requirements:
     _custom_access: '\Drupal\ghi_subpages\Controller\SubpagesAdminController::access'
-    _permission: 'administer site configuration'

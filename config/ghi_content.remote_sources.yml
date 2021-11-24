@@ -1,0 +1,6 @@
+gho_2021:
+  base_url: 'http://gho-site.docksal'
+  endpoint: ncms
+gho_2022:
+  base_url: 'http://gho-2022-site.docksal'
+  endpoint: ncms

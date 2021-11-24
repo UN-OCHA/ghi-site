@@ -1,0 +1,11 @@
+uuid: 538803dd-dbfb-461e-bc51-18af6bbdcbdc
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.ocha_services
+id: taxonomy_term.ocha_services
+target_entity_type_id: taxonomy_term
+target_bundle: ocha_services
+default_langcode: site_default
+language_alterable: false

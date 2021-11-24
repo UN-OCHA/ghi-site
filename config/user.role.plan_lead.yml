@@ -4,7 +4,7 @@ status: true
 dependencies: {  }
 id: plan_lead
 label: 'plan lead'
-weight: 4
+weight: -4
 is_admin: null
 permissions:
   - 'access remote content'
@@ -20,7 +20,5 @@ permissions:
   - 'unpublish editable content'
   - 'use page manager'
   - 'use panels in place editing'
-  - 'use text format html_text'
-  - 'use text format wysiwyg_text'
   - 'view own unpublished content'
   - 'view the administration theme'

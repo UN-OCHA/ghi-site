@@ -48,7 +48,7 @@ class SectionWizard extends FormBase {
   protected $currentUser;
 
   /**
-   * Constructs a SubpagesPages form.
+   * Constructs a section create form.
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ModuleHandlerInterface $module_handler, AccountProxyInterface $user) {
     $this->entityTypeManager = $entity_type_manager;
@@ -109,6 +109,7 @@ class SectionWizard extends FormBase {
       'type',
       'base_object',
       'year',
+      'team',
       'title',
     ];
     // Find out in which step we currently are.
@@ -167,6 +168,17 @@ class SectionWizard extends FormBase {
       '#required' => TRUE,
       '#disabled' => $step > 2,
       '#access' => $step > 1 && $base_object && $needs_year,
+    ];
+
+    $form['team'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Team'),
+      '#options' => $this->getTeamOptions($form_state),
+      '#description' => $this->t('Select the team that will be responsible for this section'),
+      '#default_value' => $form_state->getValue('team'),
+      '#required' => TRUE,
+      '#disabled' => $step > 3,
+      '#access' => $step > 2 && $base_object && $needs_year,
     ];
 
     if ($step == array_flip($steps)['title']) {
@@ -270,6 +282,7 @@ class SectionWizard extends FormBase {
     $values = array_intersect_key($form_state->getValues(), array_flip([
       'title',
       'year',
+      'team',
     ]));
 
     $base_object_type = $this->getSubmittedBaseObjectType($form_state);
@@ -289,6 +302,7 @@ class SectionWizard extends FormBase {
     if ($base_object_type->needsYearForDataRetrieval()) {
       $section->field_year = $values['year'];
     }
+    $section->field_team = $values['team'];
     $status = $section->save();
     if ($status) {
       $this->messenger()->addStatus($this->t('Created @type for @title', [
@@ -374,6 +388,29 @@ class SectionWizard extends FormBase {
       $base_object = $this->entityTypeManager->getStorage('base_object')->load($form_state->getValue('base_object')[0]['target_id']);
     }
     return $base_object;
+  }
+
+  /**
+   * Retrieve the team options for the team select field.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   *
+   * @return array
+   *   An array of team names, keyed by tid.
+   */
+  private function getTeamOptions(FormStateInterface $form_state) {
+    // Ideally, this should fetch teams that have access to the base object.
+    // But for now we fetch all teams.
+    $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree('team');
+    if (empty($terms)) {
+      return [];
+    }
+    $options = [];
+    foreach ($terms as $term) {
+      $options[$term->tid] = $term->name;
+    }
+    return $options;
   }
 
 }
