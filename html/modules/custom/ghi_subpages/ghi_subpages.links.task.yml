@@ -1,5 +1,5 @@
 entity.node.pages:
   route_name: ghi_subpages.node.pages
   base_route: entity.node.canonical
-  title: Pages
+  title: Subpages
   weight: 1

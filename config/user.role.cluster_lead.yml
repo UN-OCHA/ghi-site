@@ -4,7 +4,7 @@ status: true
 dependencies: {  }
 id: cluster_lead
 label: 'cluster lead'
-weight: 5
+weight: -3
 is_admin: null
 permissions:
   - 'access remote content'
@@ -16,6 +16,4 @@ permissions:
   - 'unpublish editable content'
   - 'use page manager'
   - 'use panels in place editing'
-  - 'use text format html_text'
-  - 'use text format wysiwyg_text'
   - 'view own unpublished content'

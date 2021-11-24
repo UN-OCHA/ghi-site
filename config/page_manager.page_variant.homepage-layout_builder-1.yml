@@ -60,6 +60,9 @@ variant_settings:
         context_mapping: {  }
       components: {  }
       third_party_settings: {  }
+  title_type: manual
+  manual_title: 'Global Humanitarian Overview 2022'
+  title_from_block: ''
 page: homepage
 weight: 0
 selection_criteria:

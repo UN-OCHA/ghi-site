@@ -33,4 +33,10 @@ function ghi_sections_form_node_section_edit_form_alter(&$form, FormStateInterfa
   // another validation for duplication of base object - year combinations, as
   // we do them during section creation.
   $form['field_year']['#disabled'] = TRUE;
+
+  // Restrict access to the team field.
+  if (!\Drupal::currentUser()->hasPermission('administer teams')) {
+    $form['field_team']['#disabled'] = TRUE;
+    $form['field_team']['widget']['#description'] = t('You do not have permission to change the team for this section.');
+  }
 }

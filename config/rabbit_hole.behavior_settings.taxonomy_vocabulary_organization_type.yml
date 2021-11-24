@@ -1,0 +1,14 @@
+uuid: af467629-9164-450f-9b9f-d2ca9ef8284d
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.organization_type
+id: taxonomy_vocabulary_organization_type
+entity_type_id: taxonomy_vocabulary
+entity_id: organization_type
+action: access_denied
+allow_override: 0
+redirect: ''
+redirect_code: 301
+redirect_fallback_action: access_denied

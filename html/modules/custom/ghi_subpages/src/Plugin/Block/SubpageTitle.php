@@ -29,14 +29,14 @@ class SubpageTitle extends BlockBase {
       return NULL;
     }
     $node = $contexts['node']->getContextValue();
-    if (in_array($node->getType(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES)) {
+    if (SubpageHelper::isSubpageTypeNode($node)) {
       return [
         '#markup' => new FormattableMarkup('<h2>@title</h2>', [
           '@title' => $node->getTitle(),
         ]),
       ];
     }
-    elseif (in_array($node->getType(), SubpageHelper::SUPPORTED_BASE_TYPES)) {
+    elseif (SubpageHelper::isBaseTypeNode($node)) {
       return [
         '#markup' => new FormattableMarkup('<h2>@title</h2>', [
           '@title' => $this->t('Overview'),

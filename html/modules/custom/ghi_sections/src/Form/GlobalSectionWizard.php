@@ -48,7 +48,7 @@ class GlobalSectionWizard extends FormBase {
   protected $currentUser;
 
   /**
-   * Constructs a SubpagesPages form.
+   * Constructs a global section create form.
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ModuleHandlerInterface $module_handler, AccountProxyInterface $user) {
     $this->entityTypeManager = $entity_type_manager;

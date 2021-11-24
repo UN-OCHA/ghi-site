@@ -5,6 +5,7 @@ namespace Drupal\ghi_subpages\Form;
 use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Datetime\DateFormatter;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
@@ -56,14 +57,22 @@ class SubpagesPagesForm extends FormBase {
   protected $csrfToken;
 
   /**
+   * The module handler to invoke hooks on.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
    * Constructs a SubpagesPages form.
    */
-  public function __construct(DateFormatter $date_formatter, EntityTypeManagerInterface $entity_type_manager, PublishContentAccess $publish_content_access, AccountProxyInterface $user, CsrfTokenGenerator $csrf_token) {
+  public function __construct(DateFormatter $date_formatter, EntityTypeManagerInterface $entity_type_manager, PublishContentAccess $publish_content_access, AccountProxyInterface $user, CsrfTokenGenerator $csrf_token, ModuleHandlerInterface $module_handler) {
     $this->dateFormatter = $date_formatter;
     $this->entityTypeManager = $entity_type_manager;
     $this->publishContentAccess = $publish_content_access;
     $this->currentUser = $user;
     $this->csrfToken = $csrf_token;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -76,6 +85,7 @@ class SubpagesPagesForm extends FormBase {
       $container->get('publishcontent.access'),
       $container->get('current_user'),
       $container->get('csrf_token'),
+      $container->get('module_handler'),
     );
   }
 
@@ -138,14 +148,21 @@ class SubpagesPagesForm extends FormBase {
         $row[] = $this->dateFormatter->format($subpage->getChangedTime(), 'custom', 'F j, Y h:ia');
 
         $links = [];
-        $links['view'] = [
-          'title' => $this->t('View'),
-          'url' => $subpage->toUrl(),
-        ];
-        $links['edit'] = [
-          'title' => $this->t('Edit'),
-          'url' => $subpage->toUrl('edit-form'),
-        ];
+        if ($subpage->access('view')) {
+          $links['view'] = [
+            'title' => $this->t('View'),
+            'url' => $subpage->toUrl(),
+          ];
+        }
+        if ($subpage->access('update')) {
+          $links['edit'] = [
+            'title' => $this->t('Edit'),
+            'url' => $subpage->toUrl('edit-form'),
+          ];
+          if ($this->moduleHandler->moduleExists('layout_builder_operation_link')) {
+            $links += layout_builder_operation_link_entity_operation($subpage);
+          }
+        }
 
         if ($this->publishContentAccess->access($this->currentUser, $subpage)->isAllowed() && $node->isPublished()) {
           $route_args = ['node' => $subpage->id()];

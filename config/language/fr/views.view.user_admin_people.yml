@@ -57,9 +57,6 @@ display:
         roles_target_id:
           expose:
             label: Rôle
-        permission:
-          expose:
-            label: Droit
       title: Personnes
       empty:
         area_text_custom:

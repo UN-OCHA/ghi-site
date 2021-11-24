@@ -7,6 +7,7 @@
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
 
@@ -29,14 +30,16 @@ function ghi_teams_node_access_records(NodeInterface $node) {
     'priority' => 0,
   ];
 
-  $parent_entity = NULL;
-  if ($node->hasField('field_entity_reference') && $node->field_entity_reference->entity->hasField('field_team')) {
-    $parent_entity = $node->field_entity_reference->entity;
-  }
+  // Try to get the team from the referenced entity.
+  if (!$team_id) {
+    $parent_entity = NULL;
+    if ($node->hasField('field_entity_reference') && $node->field_entity_reference->entity->hasField('field_team')) {
+      $parent_entity = $node->field_entity_reference->entity;
+    }
 
-  if (!$team_id && $parent_entity && !$parent_entity->field_team->isEmpty()) {
-    // Try to get the team from the referenced entity.
-    $team_id = $parent_entity->field_team->entity->tid->value;
+    if (!$team_id && $parent_entity && !$parent_entity->field_team->isEmpty()) {
+      $team_id = $parent_entity->field_team->entity->tid->value;
+    }
   }
 
   if (!$team_id) {
@@ -58,15 +61,20 @@ function ghi_teams_node_access_records(NodeInterface $node) {
  * Implements hook_node_grants().
  */
 function ghi_teams_node_grants(AccountInterface $account, $op) {
-  $user = User::load($account->id());
-  if (!$user->hasField('field_team')) {
-    return [];
-  }
-
   $grants = [];
   $grants['ghi_teams_node_access'] = [0];
 
-  if (!$user->field_team->isEmpty()) {
+  $user = User::load($account->id());
+  if (!$user->hasField('field_team')) {
+    return $grants;
+  }
+
+  if ($user->hasPermission('administer teams')) {
+    $grants['ghi_teams_node_access'] = array_merge($grants['ghi_teams_node_access'], array_values(array_map(function ($term) {
+      return $term->id();
+    }, TaxonomyHelper::loadMultipleTermsByVocabulary('team'))));
+  }
+  elseif (!$user->field_team->isEmpty()) {
     $grants['ghi_teams_node_access'][] = $user->field_team->entity->tid->value;
   }
   return $grants;

@@ -1,5 +1,5 @@
 name: GHI Subpages
-description: Provide logic around subpages for base objects.
+description: Provide logic around subpages for sections and global sections.
 package: GHI
 
 type: module

@@ -1,5 +1,5 @@
 name: GHI Sections
-description: Provide logic around page sections.
+description: Provide logic around page sections based on API base objects.
 package: GHI
 
 type: module

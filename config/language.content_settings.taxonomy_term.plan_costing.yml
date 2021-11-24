@@ -1,0 +1,11 @@
+uuid: 6acd1a82-46df-48c7-9c38-341007358f0d
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.plan_costing
+id: taxonomy_term.plan_costing
+target_entity_type_id: taxonomy_term
+target_bundle: plan_costing
+default_langcode: site_default
+language_alterable: false

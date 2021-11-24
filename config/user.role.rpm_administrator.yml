@@ -4,7 +4,7 @@ status: true
 dependencies: {  }
 id: rpm_administrator
 label: 'rpm administrator'
-weight: 3
+weight: -5
 is_admin: null
 permissions:
   - 'access administration menu'
@@ -30,6 +30,7 @@ permissions:
   - 'delete section revisions'
   - 'edit any country content'
   - 'edit any financials content'
+  - 'edit any global_section content'
   - 'edit any governing_entity content'
   - 'edit any plan content'
   - 'edit any plan_entity content'
@@ -39,6 +40,7 @@ permissions:
   - 'edit any section content'
   - 'edit own country content'
   - 'edit own financials content'
+  - 'edit own global_section content'
   - 'edit own governing_entity content'
   - 'edit own news_story content'
   - 'edit own page content'
@@ -88,6 +90,7 @@ permissions:
   - 'publish own node type section'
   - 'revert country revisions'
   - 'revert financials revisions'
+  - 'revert global_section revisions'
   - 'revert governing_entity revisions'
   - 'revert news_story revisions'
   - 'revert page revisions'
@@ -137,10 +140,9 @@ permissions:
   - 'use ipe with page manager'
   - 'use page manager'
   - 'use panels in place editing'
-  - 'use text format html_text'
-  - 'use text format wysiwyg_text'
   - 'view country revisions'
   - 'view financials revisions'
+  - 'view global_section revisions'
   - 'view governing_entity revisions'
   - 'view news_story revisions'
   - 'view own unpublished content'

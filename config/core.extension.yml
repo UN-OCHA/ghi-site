@@ -1,6 +1,7 @@
 module:
   admin_denied: 0
   admin_toolbar: 0
+  admin_toolbar_links_access_filter: 0
   admin_toolbar_tools: 0
   auto_entitylabel: 0
   big_pipe: 0
@@ -38,7 +39,6 @@ module:
   gho_footnotes: 0
   gin_lb: 0
   gin_toolbar: 0
-  help: 0
   hpc_api: 0
   hpc_common: 0
   image: 0
@@ -46,6 +46,7 @@ module:
   language: 0
   layout_builder: 0
   layout_builder_modal: 0
+  layout_builder_operation_link: 0
   layout_builder_restrictions: 0
   layout_discovery: 0
   link: 0
@@ -65,7 +66,9 @@ module:
   path: 0
   path_alias: 0
   publishcontent: 0
+  rabbit_hole: 0
   responsive_image: 0
+  rh_taxonomy: 0
   settings_tray: 0
   social_api: 0
   social_auth: 0

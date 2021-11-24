@@ -5,6 +5,9 @@ dependencies:
   config:
     - field.storage.node.field_entity_reference
     - field.storage.node.field_team
+    - ghi_base_objects.base_object_type.country
+    - ghi_base_objects.base_object_type.organization
+    - ghi_base_objects.base_object_type.plan
     - node.type.financials
     - node.type.news_story
     - node.type.page
@@ -33,7 +36,7 @@ display:
       access:
         type: perm
         options:
-          perm: 'administer nodes'
+          perm: 'access content overview'
       cache:
         type: tag
       query:
@@ -942,6 +945,106 @@ display:
           plugin_id: string
           entity_type: node
           entity_field: title
+        type:
+          id: type
+          table: base_object
+          field: type
+          relationship: field_base_object
+          group_type: group
+          admin_label: ''
+          operator: in
+          value:
+            country: country
+            organization: organization
+            plan: plan
+          group: 1
+          exposed: true
+          expose:
+            operator_id: type_op
+            label: 'Section type'
+            description: ''
+            use_operator: false
+            operator: type_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: type
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              editor: '0'
+              administrator: '0'
+              rpm_administrator: '0'
+              plan_lead: '0'
+              cluster_lead: '0'
+            reduce: true
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+          entity_type: base_object
+          entity_field: type
+          plugin_id: bundle
+        field_team_target_id:
+          id: field_team_target_id
+          table: node__field_team
+          field: field_team_target_id
+          relationship: none
+          group_type: group
+          admin_label: ''
+          operator: or
+          value: {  }
+          group: 1
+          exposed: true
+          expose:
+            operator_id: field_team_target_id_op
+            label: Team
+            description: ''
+            use_operator: false
+            operator: field_team_target_id_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: field_team_target_id
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              administrator: '0'
+              rpm_administrator: '0'
+              plan_lead: '0'
+              cluster_lead: '0'
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+          reduce_duplicates: false
+          type: select
+          limit: true
+          vid: team
+          hierarchy: false
+          error_message: true
+          plugin_id: taxonomy_index_tid
         status:
           id: status
           table: node_field_data
@@ -1087,56 +1190,6 @@ display:
           entity_type: node
           entity_field: type
           plugin_id: bundle
-        field_team_target_id:
-          id: field_team_target_id
-          table: node__field_team
-          field: field_team_target_id
-          relationship: none
-          group_type: group
-          admin_label: ''
-          operator: or
-          value: {  }
-          group: 1
-          exposed: true
-          expose:
-            operator_id: field_team_target_id_op
-            label: Team
-            description: ''
-            use_operator: false
-            operator: field_team_target_id_op
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: field_team_target_id
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-              rpm_administrator: '0'
-              plan_lead: '0'
-              cluster_lead: '0'
-            reduce: false
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-          reduce_duplicates: false
-          type: select
-          limit: true
-          vid: team
-          hierarchy: false
-          error_message: true
-          plugin_id: taxonomy_index_tid
       defaults:
         filters: false
         filter_groups: false
@@ -1153,16 +1206,57 @@ display:
           id: node_bulk_form
           table: node
           field: node_bulk_form
+          relationship: none
+          group_type: group
+          admin_label: ''
           label: ''
           exclude: false
           alter:
             alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
           element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
           element_default_classes: true
           empty: ''
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
+          action_title: Action
+          include_exclude: include
+          selected_actions:
+            - node_promote_action
+            - node_publish_action
+            - node_unpromote_action
+            - node_unpublish_action
           plugin_id: node_bulk_form
           entity_type: node
         title:
@@ -1422,7 +1516,7 @@ display:
           relationship: none
           group_type: group
           admin_label: 'field_base_object: Base object'
-          required: false
+          required: true
           plugin_id: standard
     display_plugin: page
     display_title: Sections

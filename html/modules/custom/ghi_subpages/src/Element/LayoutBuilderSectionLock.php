@@ -24,7 +24,7 @@ class LayoutBuilderSectionLock implements TrustedCallbackInterface {
     if (!$entity || $entity->getEntityTypeId() != 'node') {
       return $element;
     }
-    if (!in_array($entity->bundle(), SubpageHelper::SUPPORTED_BASE_TYPES) && !in_array($entity->bundle(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES)) {
+    if (!SubpageHelper::isBaseTypeNode($entity) && !SubpageHelper::isSubpageTypeNode($entity)) {
       return $element;
     }
 

@@ -21,6 +21,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
  *     "route_provider" = {
  *       "html" = "Drupal\ghi_base_objects\BaseObjectTypeHtmlRouteProvider",
  *     },
+ *     "access" = "Drupal\ghi_base_objects\BaseObjectTypeAccessControlHandler",
  *   },
  *   config_prefix = "base_object_type",
  *   admin_permission = "administer base object entities",

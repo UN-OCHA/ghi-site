@@ -79,7 +79,7 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       $base_entity = $node->field_entity_reference->entity;
     }
 
-    if (!in_array($base_entity->bundle(), SubpageHelper::SUPPORTED_BASE_TYPES)) {
+    if (!SubpageHelper::isBaseTypeNode($base_entity)) {
       return;
     }
 
