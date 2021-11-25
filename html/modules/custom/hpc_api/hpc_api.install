@@ -103,7 +103,7 @@ function hpc_api_requirements($phase) {
 function hpc_api_test_api_key() {
   // Just call an arbitrary endpoint that returns an empty data set, but
   // responds with HTTP 200.
-  $query_handler = QueryHelper::getEndpointQueryHandler('participant/hidId/1', [], 'v2');
+  $query_handler = QueryHelper::getEndpointQueryHandler('participant/1', [], 'v2');
   $query_handler->setAuthMethod(EndpointQuery::AUTH_METHOD_API_KEY);
   $result = $query_handler->sendQuery();
   return $result instanceof ResponseInterface && $result->getStatusCode() == 200;
