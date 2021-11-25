@@ -287,6 +287,7 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
         'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
         'query_args' => [
           'content' => 'entities',
+          'disaggregation' => 'false',
         ],
       ]);
       if ($has_published_version) {
