@@ -4,6 +4,7 @@
       "Issue #2820359: Add #element_submit and #limit_element_submit just like #element_validate and #limit_validation_errors": "./patches/2820359-element_submit-108.patch",
       "Issue #3008924: Callers of LayoutEntityHelperTrait::getEntitySections() do not account for the view mode": "https://www.drupal.org/files/issues/2020-08-27/3008924-rerolled-17.patch",
       "Issue #2902481: Add GROUP_CONCAT aggregate function to views": "https://www.drupal.org/files/issues/2021-07-26/add_group_concat_aggregate-2902481-33.patch",
+      "Issue #151311: More granular and intuitive permissions for the user module": "https://www.drupal.org/files/issues/2021-02-03/split_administer_permissions_151311-61.patch",
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch"
     },
     "drupal/page_manager": {
