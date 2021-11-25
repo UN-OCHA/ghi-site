@@ -7,7 +7,7 @@ addons:
   chrome: stable
 
 php:
-  - 8.0
+  - 7.4
 
 # Disabled as it causes errors and doesn't seem necessary - 2020/10/14
 # install:
