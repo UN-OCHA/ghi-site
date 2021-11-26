@@ -1296,6 +1296,7 @@ display:
         relationships: false
         fields: false
         query: false
+        empty: false
       fields:
         name:
           id: name
@@ -1596,6 +1597,20 @@ display:
           replica: false
           query_comment: ''
           query_tags: {  }
+      empty:
+        area:
+          id: area
+          table: views
+          field: area
+          relationship: none
+          group_type: group
+          admin_label: ''
+          empty: true
+          tokenize: false
+          content:
+            value: 'There are no teams yet.'
+            format: wysiwyg_text
+          plugin_id: text
     cache_metadata:
       max-age: -1
       contexts:
