@@ -5,13 +5,38 @@ namespace Drupal\ghi_subpages\Controller;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
+use Drupal\node\Access\NodeAddAccessCheck;
 use Drupal\node\NodeInterface;
 use Drupal\node\NodeTypeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Controller for autocomplete plan loading.
  */
 class SubpagesAdminController extends ControllerBase {
+
+  /**
+   * The node add access check service.
+   *
+   * @var \Drupal\node\Access\NodeAddAccessCheck
+   */
+  private $nodeAddAccessCheck;
+
+  /**
+   * Public constructor.
+   */
+  public function __construct(NodeAddAccessCheck $node_add_access_check) {
+    $this->nodeAddAccessCheck = $node_add_access_check;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('access_check.node.add')
+    );
+  }
 
   /**
    * Access callback for the plan structure page.
@@ -47,7 +72,7 @@ class SubpagesAdminController extends ControllerBase {
       return AccessResult::forbidden();
     }
     // Fall back to node type access check.
-    return $node_type->access('create', NULL, TRUE);
+    return $this->nodeAddAccessCheck->access($this->currentUser(), $node_type);
   }
 
   /**

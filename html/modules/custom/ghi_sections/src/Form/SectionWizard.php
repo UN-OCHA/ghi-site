@@ -104,14 +104,23 @@ class SectionWizard extends FormBase {
     // See if this needs a year.
     $needs_year = $this->needsYear($form_state);
 
+    // Get the team options.
+    $team_options = $this->getTeamOptions($form_state);
+    if (empty($team_options)) {
+      // Bail out if there are no teams.
+      $this->messenger()->addError($this->t('No teams found. You must import teams before sections can be created.'));
+      return $form;
+    }
+
     // Define our steps.
-    $steps = [
+    $steps = array_values(array_filter([
       'type',
       'base_object',
-      'year',
+      $needs_year ? 'year' : NULL,
       'team',
       'title',
-    ];
+    ]));
+
     // Find out in which step we currently are.
     $step = $form_state->get('step') ?: array_key_first($steps);
     $action = self::getActionFromFormState($form_state);
@@ -119,15 +128,9 @@ class SectionWizard extends FormBase {
     // Do the step navigation.
     if ($action === 'back' && $step > 0) {
       $step--;
-      if (!$needs_year && $step > 1 && $step < 3) {
-        $step--;
-      }
     }
     elseif ($action == 'next' && $step < count($steps)) {
       $step++;
-      if (!$needs_year && $step > 1) {
-        $step++;
-      }
     }
     $form_state->set('step', $step);
 
@@ -166,33 +169,33 @@ class SectionWizard extends FormBase {
       '#description' => $this->t('Enter a year for this section'),
       '#default_value' => $form_state->getValue('year'),
       '#required' => TRUE,
-      '#disabled' => $step > 2,
-      '#access' => $step > 1 && $base_object && $needs_year,
+      '#disabled' => $needs_year && $step > array_flip($steps)['year'],
+      '#access' => $needs_year && $step >= array_flip($steps)['year'],
     ];
 
+    // Add the team selector.
     $form['team'] = [
       '#type' => 'select',
       '#title' => $this->t('Team'),
-      '#options' => $this->getTeamOptions($form_state),
+      '#options' => $team_options,
       '#description' => $this->t('Select the team that will be responsible for this section'),
       '#default_value' => $form_state->getValue('team'),
       '#required' => TRUE,
-      '#disabled' => $step > 3,
-      '#access' => $step > 2 && $base_object && $needs_year,
+      '#disabled' => $step > array_flip($steps)['team'],
+      '#access' => $step >= array_flip($steps)['team'],
     ];
 
-    if ($step == array_flip($steps)['title']) {
-      // Set a title.
-      $form['title'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('Title'),
-        '#description' => $this->t('Optional: Change the title for this section'),
-        '#default_value' => $base_object->label(),
-        '#required' => TRUE,
-      ];
-      if ($needs_year) {
-        $form['title']['#default_value'] .= ' ' . $form_state->getValue('year');
-      }
+    // Set a title.
+    $form['title'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Title'),
+      '#description' => $this->t('Optional: Change the title for this section'),
+      '#default_value' => $base_object ? $base_object->label() : NULL,
+      '#required' => TRUE,
+      '#access' => $step >= array_flip($steps)['title'],
+    ];
+    if ($needs_year) {
+      $form['title']['#default_value'] .= ' ' . $form_state->getValue('year');
     }
 
     if ($step > 0) {
@@ -200,9 +203,10 @@ class SectionWizard extends FormBase {
         '#type' => 'button',
         '#value' => $this->t('Back'),
         '#limit_validation_errors' => array_filter([
-          $step > 0 ? ['type'] : NULL,
-          $step > 1 ? ['base_object'] : NULL,
-          $step > 2 ? ['year'] : NULL,
+          $step > array_flip($steps)['type'] ? ['type'] : NULL,
+          $step > array_flip($steps)['base_object'] ? ['base_object'] : NULL,
+          $needs_year && $step > array_flip($steps)['year'] ? ['year'] : NULL,
+          $step > array_flip($steps)['team'] ? ['team'] : NULL,
         ]),
         '#ajax' => [
           'event' => 'click',
@@ -240,8 +244,9 @@ class SectionWizard extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $values = array_intersect_key($form_state->getValues(), array_flip([
-      'title',
       'year',
+      'team',
+      'title',
     ]));
 
     $action = self::getActionFromFormState($form_state);
@@ -280,9 +285,9 @@ class SectionWizard extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = array_intersect_key($form_state->getValues(), array_flip([
-      'title',
       'year',
       'team',
+      'title',
     ]));
 
     $base_object_type = $this->getSubmittedBaseObjectType($form_state);
@@ -400,8 +405,8 @@ class SectionWizard extends FormBase {
    *   An array of team names, keyed by tid.
    */
   private function getTeamOptions(FormStateInterface $form_state) {
-    // Ideally, this should fetch teams that have access to the base object.
-    // But for now we fetch all teams.
+    // @todo Ideally, this should fetch teams that have access to the base
+    // object, but for now we fetch all teams.
     $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree('team');
     if (empty($terms)) {
       return [];

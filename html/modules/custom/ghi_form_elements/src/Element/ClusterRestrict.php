@@ -94,7 +94,7 @@ class ClusterRestrict extends FormElement {
     $element['tag'] = [
       '#type' => 'select',
       '#title' => t('Restrict by cluster'),
-      '#options' => TaxonomyHelper::getTermOptionsForVocabulary('cluster_tags'),
+      '#options' => TaxonomyHelper::getTermOptionsForVocabularyKeyedByField('cluster_tags', 'field_tag'),
       '#default_value' => !empty($element['#default_value']['tag']) ? $element['#default_value']['tag'] : NULL,
       '#states' => [
         'visible' => [

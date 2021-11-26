@@ -133,18 +133,21 @@ class TaxonomyHelper extends EntityHelper {
    *
    * @param string $vid
    *   The vocabulary that the terms belong to.
+   * @param string $field_name
+   *   The field name of which the values are used as key.
    *
    * @return array
-   *   An array of term options if found.
+   *   An array of term options if found. Keyed by the value of $field_name,
+   *   value is the term name.
    */
-  public static function getTermOptionsForVocabulary($vid) {
+  public static function getTermOptionsForVocabularyKeyedByField($vid, $field_name) {
     $terms = self::loadMultipleTermsByVocabulary($vid);
     if (empty($terms)) {
       return $terms;
     }
     $term_options = [];
     foreach ($terms as $term) {
-      $term_options[$term->field_tag->value] = $term->getName();
+      $term_options[$term->get($field_name)->value] = $term->getName();
     }
     return $term_options;
   }
