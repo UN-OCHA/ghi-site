@@ -69,10 +69,12 @@ function ghi_teams_node_grants(AccountInterface $account, $op) {
     return $grants;
   }
 
-  if ($user->hasPermission('administer teams')) {
+  $teams = TaxonomyHelper::loadMultipleTermsByVocabulary('team');
+  if ($user->hasPermission('administer teams') && !empty($teams)) {
     $grants['ghi_teams_node_access'] = array_merge($grants['ghi_teams_node_access'], array_values(array_map(function ($term) {
+      /** @var \Drupal\taxonomy\Entity\Term $term */
       return $term->id();
-    }, TaxonomyHelper::loadMultipleTermsByVocabulary('team'))));
+    }, $teams)));
   }
   elseif (!$user->field_team->isEmpty()) {
     $grants['ghi_teams_node_access'][] = $user->field_team->entity->tid->value;

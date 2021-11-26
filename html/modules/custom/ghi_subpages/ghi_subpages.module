@@ -12,7 +12,6 @@ use Drupal\Core\Url;
 use Drupal\ghi_subpages\Controller\SubpagesAdminController;
 use Drupal\ghi_subpages\Element\LayoutBuilderSectionLock;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
-use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
 
 /**
@@ -194,30 +193,19 @@ function ghi_subpages_preprocess_page_title(&$variables) {
 }
 
 /**
- * Implements hook_menu_links_discovered_alter().
- *
- * Hide links for manual creation of subpage nodes from the admin menu.
- */
-function ghi_subpages_menu_links_discovered_alter(&$links) {
-  $subpages_admin_controller = new SubpagesAdminController();
-  foreach (SubpageHelper::SUPPORTED_SUBPAGE_TYPES as $type) {
-    $node_type = NodeType::load($type);
-    if ($subpages_admin_controller->nodeCreateAccess($node_type)->isForbidden()) {
-      unset($links['admin_toolbar_tools.extra_links:node.add.' . $type]);
-    }
-  }
-}
-
-/**
  * Implements hook_preprocess_node_add_list().
  *
  * Filter the list of content types that are available for manual creation, so
  * that subpages can not be created individually.
+ * Access is actually already denied via
+ * Drupal\ghi_subpages\EventSubscriber\RouteSubscriber::alterRoutes, which
+ * controls access on the node.add route. For the super admin, this doesn't
+ * filter the list on the node add page itself though.
  */
 function ghi_subpages_preprocess_node_add_list(&$variables) {
   $variables['types'] = [];
   if (!empty($variables['content'])) {
-    $subpages_admin_controller = new SubpagesAdminController();
+    $subpages_admin_controller = SubpagesAdminController::create(\Drupal::getContainer());
     foreach ($variables['content'] as $key => $type) {
       if ($subpages_admin_controller->nodeCreateAccess($type)->isForbidden()) {
         unset($variables['content'][$key]);

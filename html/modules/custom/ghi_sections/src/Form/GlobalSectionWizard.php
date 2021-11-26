@@ -102,7 +102,7 @@ class GlobalSectionWizard extends FormBase {
     }
     $form_state->set('step', $step);
 
-    // Add the year if appropriate.
+    // Add the year.
     $form['year'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Year'),
