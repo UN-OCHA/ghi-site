@@ -6,7 +6,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Link;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
-
+use GuzzleHttp\Exception\ClientException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -50,7 +50,12 @@ class RemoteController extends ControllerBase {
       return new JsonResponse($matches);
     }
 
-    $result = $remote_source->searchArticlesByTitle($string);
+    try {
+      $result = $remote_source->searchArticlesByTitle($string);
+    }
+    catch (ClientException $e) {
+      // Just catch it for the moment.
+    }
     if (!empty($result->items)) {
       $matches = array_map(function ($article) {
         return [

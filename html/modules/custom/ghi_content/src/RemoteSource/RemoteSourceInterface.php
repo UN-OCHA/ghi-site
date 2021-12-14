@@ -72,8 +72,8 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    * @param string $payload
    *   The payload for the query.
    *
-   * @return object
-   *   A result object.
+   * @return \Drupal\ghi_content\RemoteResponse\RemoteResponseInterface
+   *   A response object.
    */
   public function query($payload);
 

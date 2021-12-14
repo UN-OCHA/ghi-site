@@ -11,16 +11,16 @@ use Drupal\Core\Render\Markup;
  * Provides a 'ArticleGho' block.
  *
  * @Block(
- *  id = "gho_2021_article",
- *  admin_label = @Translation("Article: GHO 2021"),
+ *  id = "gho_article",
+ *  admin_label = @Translation("Article: GHO NCMS"),
  *  category = @Translation("Narrative Content"),
- *  remote_source = "gho_2021",
+ *  remote_source = "gho_ncms",
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
  *   }
  * )
  */
-class ArticleGho2021 extends GhiContentBlockBase {
+class GhoArticle extends GhiContentBlockBase {
 
   /**
    * {@inheritdoc}
