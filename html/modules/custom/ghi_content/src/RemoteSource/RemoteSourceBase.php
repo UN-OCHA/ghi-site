@@ -59,7 +59,7 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
     $this->hidUserData = $hid_user_data;
 
     // Init the configuration based on stored values.
-    $config = $this->configFactory->get('ghi_content.remote_sources')->get($this->getPluginId());
+    $config = $this->configFactory->getEditable('ghi_content.remote_sources')->get($this->getPluginId());
     $this->setConfiguration($config ? $config : []);
   }
 

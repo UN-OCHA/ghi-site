@@ -8,7 +8,7 @@ use Drupal\Core\Url;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 
 /**
- * Provides an edit form for image optimize processors.
+ * Provides an edit form for remote sources processors.
  */
 class RemoteSourceEditForm extends FormBase {
 
@@ -50,7 +50,6 @@ class RemoteSourceEditForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $form_state->cleanValues();
-
     $this->remoteSource->setConfiguration($form_state->getValue('settings'));
     $this->remoteSource->saveConfiguration();
 
