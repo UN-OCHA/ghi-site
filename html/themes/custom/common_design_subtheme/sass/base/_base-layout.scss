@@ -42,10 +42,10 @@
     position: absolute;
     z-index: 1;
     top: 0;
-    right: 0;
+    right: -9rem;
     padding: inherit;
     padding-bottom: 1rem;
-    text-align: right;
+    text-align: left;
 
     &:before {
       @extend .material-icons;
@@ -55,10 +55,12 @@
 
     ul.tabs {
       visibility: hidden;
+      width: 8rem;
+      height: 0;
       margin: 0;
       margin-block-start: 0;
       margin-block-end: 0;
-      transition: visibility 0s, opacity 1s ease;
+      transition: visibility 0s, height 0s, opacity 1s ease;
       opacity: 0;
       border-bottom: 0;
 
@@ -91,6 +93,7 @@
 
     &:hover ul.tabs {
       visibility: visible;
+      height: 100%;
       opacity: 1;
     }
   }

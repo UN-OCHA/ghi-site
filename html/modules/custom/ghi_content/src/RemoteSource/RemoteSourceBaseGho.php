@@ -1,21 +1,17 @@
 <?php
 
-namespace Drupal\ghi_content\Plugin\RemoteSource;
+namespace Drupal\ghi_content\RemoteSource;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ghi_content\RemoteSource\RemoteSourceBase;
-use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
+use Drupal\ghi_content\RemoteResponse\RemoteResponse;
+use GuzzleHttp\Cookie\CookieJar;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ServerException;
 
 /**
- * Provides an attachment data item for configuration containers.
- *
- * @RemoteSource(
- *   id = "gho_2022",
- *   label = @Translation("GHO 2022"),
- *   description = @Translation("Import data directly from the GHO 2022 website."),
- * )
+ * GHO specific remote source base class.
  */
-class Gho2022 extends RemoteSourceBase implements RemoteSourceInterface {
+abstract class RemoteSourceBaseGho extends RemoteSourceBase {
 
   /**
    * {@inheritdoc}
@@ -51,11 +47,11 @@ class Gho2022 extends RemoteSourceBase implements RemoteSourceInterface {
       article(id:' . $id . ') {' . $this->getFieldString($fields) . '}
     }';
 
-    $result = $this->query($query);
-    if (!property_exists($result, 'article') || empty($result->article)) {
+    $response = $this->query($query);
+    if (!$response->has('article')) {
       return NULL;
     }
-    return $result->article;
+    return $response->get('article');
   }
 
   /**
@@ -79,11 +75,11 @@ class Gho2022 extends RemoteSourceBase implements RemoteSourceInterface {
       paragraph(id:' . $id . ') {' . $this->getFieldString($fields) . '}
     }';
 
-    $result = $this->query($query);
-    if (!property_exists($result, 'paragraph') || empty($result->paragraph)) {
+    $response = $this->query($query);
+    if (!$response->has('paragraph')) {
       return NULL;
     }
-    return $result->paragraph;
+    return $response->get('paragraph');
   }
 
   /**
@@ -99,11 +95,11 @@ class Gho2022 extends RemoteSourceBase implements RemoteSourceInterface {
         }
       }
     }';
-    $result = $this->query($query);
-    if (!property_exists($result, 'articleSearch') || empty($result->articleSearch)) {
+    $response = $this->query($query);
+    if (!$response->has('articleSearch')) {
       return NULL;
     }
-    return $result->articleSearch;
+    return $response->get('articleSearch');
   }
 
   /**
@@ -114,27 +110,42 @@ class Gho2022 extends RemoteSourceBase implements RemoteSourceInterface {
     $headers = [
       'Content-type: application/json',
     ];
-    if ($hid_token = $this->getHidAccessToken()) {
-      $headers[] = 'Authorization: Bearer ' . $hid_token;
+    if ($hid_user_id = $this->hidUserData->getId()) {
+      $headers['hid-user'] = $hid_user_id;
     }
 
-    $result = $this->httpClient->post($this->getRemoteEndpointUrl(), [
-      'body' => $body,
-      'headers' => $headers,
-    ]);
-    if ($result->getStatusCode() !== 200) {
-      return NULL;
+    $cookies = ['gho_access' => $this->getRemoteAccessKey()];
+    $jar = CookieJar::fromArray($cookies, parse_url($this->getRemoteBaseUrl(), PHP_URL_HOST));
+
+    $response = new RemoteResponse();
+    try {
+      $result = $this->httpClient->post($this->getRemoteEndpointUrl(), [
+        'body' => $body,
+        'headers' => $headers,
+        'cookies' => $jar,
+      ]);
+    }
+    catch (ClientException $e) {
+      $response->setCode($e->getCode());
+      return $response;
+    }
+    catch (ServerException $e) {
+      $response->setCode($e->getCode());
+      return $response;
+    }
+
+    if (!$result || $result->getStatusCode() !== 200) {
+      $response->setCode($result ? $result->getStatusCode() : 500);
+      return $response;
     }
     try {
-      $response = json_decode((string) $result->getBody());
+      $body_data = json_decode((string) $result->getBody());
+      $response->setData(is_object($body_data) && property_exists($body_data, 'data') ? $body_data->data : NULL);
     }
     catch (\Exception $e) {
       // Just catch it for the moment.
     }
-    if (!$response) {
-      return NULL;
-    }
-    return property_exists($response, 'data') ? $response->data : NULL;
+    return $response;
   }
 
   /**
@@ -171,14 +182,6 @@ class Gho2022 extends RemoteSourceBase implements RemoteSourceInterface {
   }
 
   /**
-   * Get HID access token.
-   */
-  private function getHidAccessToken() {
-    $session = $this->request->getCurrentRequest()->getSession();
-    return !empty($session->get('social_auth_hid_access_token')) ? $session->get('social_auth_hid_access_token')->getToken() : NULL;
-  }
-
-  /**
    * Get the base url of the remote source.
    */
   private function getRemoteBaseUrl() {
@@ -202,13 +205,11 @@ class Gho2022 extends RemoteSourceBase implements RemoteSourceInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Get the base url of the remote source.
    */
-  public function defaultConfiguration() {
-    return [
-      'base_url' => 'https://gho.unocha.org',
-      'endpoint' => 'ncms',
-    ];
+  private function getRemoteAccessKey() {
+    $config = $this->getConfiguration();
+    return $config['access_key'];
   }
 
   /**

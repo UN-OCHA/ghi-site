@@ -54,7 +54,7 @@ class RemoteSourceEditForm extends FormBase {
     $this->remoteSource->setConfiguration($form_state->getValue('settings'));
     $this->remoteSource->saveConfiguration();
 
-    $this->messenger()->addMessage($this->t('The settings for <em>@remote_source</em>have been saved.', [
+    $this->messenger()->addMessage($this->t('The settings for <em>@remote_source</em> have been saved.', [
       '@remote_source' => $this->remoteSource->getPluginLabel(),
     ]));
     $form_state->setRedirectUrl(Url::fromRoute('ghi_content.remote.plugin_list'));

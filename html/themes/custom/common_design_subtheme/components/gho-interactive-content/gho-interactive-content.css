@@ -1,6 +1,17 @@
 .gho-interactive-content {
   margin: 3rem 0 0 0;
 }
+
+.gho-interactive-content--full-width {
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: calc(-50vw + (var(--scrollbar-width, 15px) / 2));
+  margin-right: calc(-50vw + (var(--scrollbar-width, 15px) / 2));
+  max-width: calc(100vw - var(--scrollbar-width, 15px));
+  width: calc(100vw - var(--scrollbar-width, 15px));
+}
+
 .gho-interactive-content .field--name-field-image {
   margin-bottom: 1.5rem;
 }

@@ -13,16 +13,16 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
  * Provides a 'ParagraphGho' block.
  *
  * @Block(
- *  id = "gho_2021_paragraph",
- *  admin_label = @Translation("Paragraph: GHO 2021"),
+ *  id = "gho_paragraph",
+ *  admin_label = @Translation("Paragraph: GHO NCMS"),
  *  category = @Translation("Narrative Content"),
- *  remote_source = "gho_2021",
+ *  remote_source = "gho_ncms",
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
  *   }
  * )
  */
-class ParagraphGho2021 extends GhiContentBlockBase implements MultiStepFormBlockInterface {
+class GhoParagraph extends GhiContentBlockBase implements MultiStepFormBlockInterface {
 
   /**
    * {@inheritdoc}
@@ -58,6 +58,10 @@ class ParagraphGho2021 extends GhiContentBlockBase implements MultiStepFormBlock
       return;
     }
     $paragraph = $remote_source->getParagraph($conf['paragraph']['paragraph_id']);
+    if (!$paragraph) {
+      // No paragraph found. Technically, this block is broken now.
+      return;
+    }
     $paragraph->rendered = $remote_source->changeRessourceLinks($paragraph->rendered);
     return $paragraph;
   }
@@ -80,6 +84,9 @@ class ParagraphGho2021 extends GhiContentBlockBase implements MultiStepFormBlock
     $build = [
       '#type' => 'container',
       '#title' => $conf['paragraph']['title'],
+      '#attributes' => [
+        'data-paragraph-id' => $paragraph->id,
+      ],
       'content' => [
         '#type' => 'markup',
         '#markup' => Markup::create($paragraph->rendered),

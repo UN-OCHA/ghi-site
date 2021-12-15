@@ -3,31 +3,6 @@ global-styling:
     theme:
       css/styles.css: {}
 
-ghi-grid:
-  css:
-    theme:
-      components/ghi-grid/ghi-grid.css: {}
-
-ghi-plan-teaser:
-  css:
-    theme:
-      components/ghi-plan-teaser/ghi-plan-teaser.css: {}
-
-ghi-publication:
-  css:
-    theme:
-      components/ghi-publication/ghi-publication.css: {}
-
-ghi-progress-bar:
-  css:
-    theme:
-      components/ghi-progress-bar/ghi-progress-bar.css: {}
-
-ghi-pie-chart:
-  css:
-    theme:
-      components/ghi-pie-chart/ghi-pie-chart.css: {}
-
 # CSS custom properties polyfill for IE11.
 # https://jhildenbiddle.github.io/css-vars-ponyfill
 #
