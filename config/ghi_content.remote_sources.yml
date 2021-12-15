@@ -1,4 +1,4 @@
 gho_ncms:
-  base_url: 'https://gho.unocha.org'
-  endpoint: hello
+  base_url: 'http://gho.unocha.org'
+  endpoint: ncms
   access_key: ''
