@@ -84,6 +84,9 @@ class GhoParagraph extends GhiContentBlockBase implements MultiStepFormBlockInte
     $build = [
       '#type' => 'container',
       '#title' => $conf['paragraph']['title'],
+      '#attributes' => [
+        'data-paragraph-id' => $paragraph->id,
+      ],
       'content' => [
         '#type' => 'markup',
         '#markup' => Markup::create($paragraph->rendered),

@@ -244,7 +244,6 @@ function gho_footnotes_generate_footnotes($base_id, $text, array $references, $a
  */
 function gho_footnotes_build_footnotes($base_id, array $footnotes, $accumulated = FALSE) {
   $theme = 'gho_footnote_list' . ($accumulated ? '__accumulated' : '');
-
   return [
     '#theme' => $theme,
     '#id' => 'footnote-list-' . $base_id,

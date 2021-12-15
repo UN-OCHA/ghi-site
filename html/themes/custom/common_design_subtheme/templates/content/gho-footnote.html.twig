@@ -1,0 +1,17 @@
+{#
+  Template implementation for a footnote.
+
+  Available variables are:
+  - id: ID of the footnote
+  - content: content of the footnote
+  - backlinks: list of links to the references to the footnote (see
+    `gho-footnote-backlink.html.twig` for details)
+#}
+<li class="gho-footnote" id="{{ id }}">
+  <span class="gho-footnote__content">{{ content }}</span>
+  <footer class="gho-footnote__backlinks">
+  {% for backlink in backlinks %}
+    {{ backlink }}
+  {% endfor %}
+  </footer>
+</li>

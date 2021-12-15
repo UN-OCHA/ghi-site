@@ -1,54 +1,42 @@
-.gho-achievement-paragraph {
-  margin-top: 6rem;
-  padding-top: 3rem;
-  border-top: 1px solid #d8d8d8;
-}
-.gho-achievement__header {
+.gho-achievement {
+  background: #eee;
   display: flex;
-  flex-flow: row;
-  flex-wrap: nowrap;
-  align-items: flex-start;
-  max-width: var(--reading-width);
-}
-.gho-achievement__icon {
-  flex: 0 0 auto;
-  order: 2;
-  width: 60px;
-  height: 60px;
-}
-.gho-achievement__icon img {
-  width: 100%;
+  flex-flow: column nowrap;
+  padding: 1.5rem 2rem;
   height: 100%;
-}
-.gho-achievement__icon + .gho-achievement__heading {
-  flex: 1 1 auto;
-}
-.gho-achievement__title {
-  margin: 0;
-  padding: 0;
-  color: #1f1f1f;
-  font-size: 1.625rem;
-  font-weight: 700;
-  line-height: 1.75rem;
-}
-[dir="ltr"] .gho-achievement__icon + .gho-achievement__heading .gho-achievement__title {
-  padding-right: 2rem;
-  padding-left: 0;
-}
-[dir="rtl"] .gho-achievement__icon + .gho-achievement__heading .gho-achievement__title {
-  padding-right: 0;
-  padding-left: 2rem;
+  position: relative;
 }
 
-@media (min-width: 768px) {
-  .gho-achievement__title {
-    font-size: 2.25rem;
-    line-height: 2.5rem;
-  }
+.gho-achievement__icon {
+  order: -1;
+  height: 3rem;
 }
-.gho-achievement__sources {
-  margin-top: 0.5rem;
+
+.gho-achievement__icon img {
+  width: auto;
+  height: 100%;
 }
-.gho-achievement__content > * {
-  margin-top: 3rem;
+
+.gho-achievement__title {
+  font-size: var(--cd-font-size--base);
+  color: black;
+}
+
+.gho-achievement__summary {
+  font-size: var(--cd-font-size--small);
+
+  /* Since we changed the flex order, margin collapse doesn't occur between this
+  element and the previous Title element. Remove margin manually */
+  margin-top: 0;
+
+  /* Since we absolutely position the sources to line them up, apply some extra
+  padding to the summaries so that the longest summary still has a nice-looking
+  gap between the summary and the source. */
+  margin-bottom: 2.5rem;
+}
+
+.gho-achievement__source {
+  font-size: var(--cd-font-size--tiny);
+  position: absolute;
+  bottom: 2rem;
 }
