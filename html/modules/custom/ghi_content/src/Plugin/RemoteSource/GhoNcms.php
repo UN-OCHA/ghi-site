@@ -22,6 +22,7 @@ class GhoNcms extends RemoteSourceBaseGho implements RemoteSourceInterface {
   public function defaultConfiguration() {
     return [
       'base_url' => 'https://gho.unocha.org',
+      'basic_auth' => NULL,
       'endpoint' => 'ncms',
       'access_key' => NULL,
     ];
