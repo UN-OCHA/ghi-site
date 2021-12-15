@@ -209,7 +209,7 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
    */
   private function getRemoteAccessKey() {
     $config = $this->getConfiguration();
-    return $config['access_key'];
+    return $config['access_key'] ?? NULL;
   }
 
   /**
@@ -233,6 +233,17 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
       '#default_value' => $this->getRemoteEndpoint(),
       '#required' => TRUE,
     ];
+    $form['access_key'] = [
+      '#type' => 'password',
+      '#title' => $this->t('Access key'),
+      '#description' => $this->t('Enter the access key for this remote source'),
+      '#size' => 30,
+      '#default_value' => $this->getRemoteAccessKey(),
+    ];
+
+    if (!empty($this->getRemoteAccessKey())) {
+      $form['access_key']['#description'] .= '<br />' . $this->t('<em>Note:</em> An access key is already set. You can set a new one, or leave this field empty to keep the current one.');
+    }
 
     return $form;
   }
