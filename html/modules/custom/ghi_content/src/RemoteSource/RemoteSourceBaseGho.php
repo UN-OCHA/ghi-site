@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_content\RemoteResponse\RemoteResponse;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ServerException;
 
 /**
  * GHO specific remote source base class.
@@ -128,6 +129,10 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
       $response->setCode($e->getCode());
       return $response;
     }
+    catch (ServerException $e) {
+      $response->setCode($e->getCode());
+      return $response;
+    }
 
     if (!$result || $result->getStatusCode() !== 200) {
       $response->setCode($result ? $result->getStatusCode() : 500);
@@ -135,7 +140,7 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
     }
     try {
       $body_data = json_decode((string) $result->getBody());
-      $response->setData(property_exists($body_data, 'data') ? $body_data->data : NULL);
+      $response->setData(is_object($body_data) && property_exists($body_data, 'data') ? $body_data->data : NULL);
     }
     catch (\Exception $e) {
       // Just catch it for the moment.
