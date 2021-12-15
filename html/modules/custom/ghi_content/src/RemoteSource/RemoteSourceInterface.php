@@ -104,6 +104,14 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
   public function buildConfigurationForm(array $form, FormStateInterface $form_state);
 
   /**
+   * Check the connection.
+   *
+   * @return bool
+   *   TRUE if a connection can be established, FALSE otherwhise.
+   */
+  public function checkConnection();
+
+  /**
    * Save the plugin configuration.
    */
   public function saveConfiguration();

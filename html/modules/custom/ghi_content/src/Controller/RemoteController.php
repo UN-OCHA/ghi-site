@@ -56,6 +56,7 @@ class RemoteController extends ControllerBase {
     catch (ClientException $e) {
       // Just catch it for the moment.
     }
+
     if (!empty($result->items)) {
       $matches = array_map(function ($article) {
         return [

@@ -110,6 +110,9 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
     $headers = [
       'Content-type: application/json',
     ];
+    if ($basic_auth = $this->getRemoteBasicAuth()) {
+      $headers['Authorization'] = 'Basic ' . base64_encode($basic_auth['user'] . ':' . $basic_auth['pass']);
+    }
     if ($hid_user_id = $this->hidUserData->getId()) {
       $headers['hid-user'] = $hid_user_id;
     }
@@ -140,6 +143,7 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
     }
     try {
       $body_data = json_decode((string) $result->getBody());
+      $response->setCode($result ? $result->getStatusCode() : 500);
       $response->setData(is_object($body_data) && property_exists($body_data, 'data') ? $body_data->data : NULL);
     }
     catch (\Exception $e) {
@@ -213,6 +217,22 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
   }
 
   /**
+   * Get the basic auth settings for the remote source.
+   */
+  private function getRemoteBasicAuth() {
+    $config = $this->getConfiguration();
+    return $config['basic_auth'] ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function checkConnection() {
+    $response = $this->query('{connection}');
+    return $response && $response->getStatus() && $response->has('connection') && $response->get('connection') == 'connected';
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
@@ -244,6 +264,28 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
     if (!empty($this->getRemoteAccessKey())) {
       $form['access_key']['#description'] .= '<br />' . $this->t('<em>Note:</em> An access key is already set. You can set a new one, or leave this field empty to keep the current one.');
     }
+
+    $basic_auth = $this->getRemoteBasicAuth();
+    $form['basic_auth'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Basic auth'),
+      // '#open' => !empty($basic_auth),
+      '#tree' => TRUE,
+    ];
+    $form['basic_auth']['user'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Username'),
+      '#description' => $this->t('Enter the basic auth username'),
+      '#size' => 30,
+      '#default_value' => $basic_auth['pass'] ?? NULL,
+    ];
+    $form['basic_auth']['pass'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Password'),
+      '#description' => $this->t('Enter the basic auth password'),
+      '#size' => 30,
+      '#default_value' => $basic_auth['pass'] ?? NULL,
+    ];
 
     return $form;
   }
