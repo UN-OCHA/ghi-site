@@ -207,14 +207,17 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     $grouped_attachments = $this->filterEmptyDescriptionInGroupedAttachments($grouped_attachments);
 
     // Load the node objects.
-    $nodes = $this->loadBaseObjectsForEntities($entities);
+    $objects = $this->loadBaseObjectsForEntities($entities);
+    if (empty($objects)) {
+      return NULL;
+    }
 
     $rows = [];
     foreach ($entities as $entity) {
-      if (!array_key_exists($entity->id, $nodes)) {
+      if (!array_key_exists($entity->id, $objects)) {
         continue;
       }
-      $entity_node = $nodes[$entity->id];
+      $entity_node = $objects[$entity->id];
 
       // Clusters are displayed if they are either published, or the element is
       // configured to also display unpublished clusters.
@@ -602,8 +605,8 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    * @param array $entities
    *   The entity objects.
    *
-   * @return \Drupal\node\NodeInterface[]
-   *   An array of node objects.
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface[]
+   *   An array of base objects.
    */
   private function loadBaseObjectsForEntities(array $entities) {
     $entity_ids = array_map(function ($entity) {
@@ -616,8 +619,8 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   /**
    * Get the first entity node for column configuration.
    *
-   * @return \Drupal\node\NodeInterface
-   *   The first entity node available.
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface
+   *   The first entity object available.
    */
   private function getFirstEntityObject() {
     $entities = $this->getEntityObjects();
@@ -625,8 +628,8 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       return NULL;
     }
     $entity = reset($entities);
-    $entity_nodes = $this->loadBaseObjectsForEntities([$entity]);
-    return !empty($entity_nodes) ? reset($entity_nodes) : NULL;
+    $entity_objects = $this->loadBaseObjectsForEntities([$entity]);
+    return !empty($entity_objects) ? reset($entity_objects) : NULL;
   }
 
   /**

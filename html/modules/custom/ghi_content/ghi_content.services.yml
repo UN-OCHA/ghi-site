@@ -8,3 +8,6 @@ services:
     tags:
       - { name: paramconverter }
     lazy: true
+  ghi_content.import:
+    class: Drupal\ghi_content\Import\ImportManager
+    arguments: ['@config.factory', '@plugin.manager.block', '@http_client', '@uuid', '@datetime.time', '@current_user', '@layout_builder.tempstore_repository']

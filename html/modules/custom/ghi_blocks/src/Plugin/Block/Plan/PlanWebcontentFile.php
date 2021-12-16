@@ -87,7 +87,7 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
     // Retrieve the attachments.
     /** @var \Drupal\ghi_plans\Query\PlanEntitiesQuery $query */
     $query = $this->getQueryHandler('entities');
-    $attachments = $query->getWebContentFileAttachments($this->getCurrentPlanObject());
+    $attachments = $this->getCurrentPlanObject() ? $query->getWebContentFileAttachments($this->getCurrentPlanObject()) : NULL;
 
     if (!empty($attachments)) {
       foreach ($attachments as $attachment) {

@@ -33,7 +33,7 @@ function ghi_blocks_preprocess_block(&$variables) {
     return;
   }
   // Set the title if needed.
-  if ($block->shouldDisplayTitle()) {
+  if ($block->shouldDisplayTitle() && array_key_exists('#title', $variables['content'])) {
     $variables['label'] = $variables['content']['#title'];
   }
 }

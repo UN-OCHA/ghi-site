@@ -199,8 +199,8 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       return NULL;
     }
 
-    $nodes = $this->loadBaseObjectsForEntities($entities);
-    if (empty($nodes)) {
+    $objects = $this->loadBaseObjectsForEntities($entities);
+    if (empty($objects)) {
       return NULL;
     }
 
@@ -225,12 +225,12 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
 
     $rows = [];
     foreach ($entities as $entity) {
-      if (!array_key_exists($entity->id, $nodes)) {
+      if (!array_key_exists($entity->id, $objects)) {
         continue;
       }
 
       // Add the entity and the node object to the context array.
-      $context['context_node'] = $nodes[$entity->id];
+      $context['context_node'] = $objects[$entity->id];
       $context['entity'] = $entity;
 
       $row = [];
