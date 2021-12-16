@@ -93,7 +93,7 @@ class AttachmentSelect extends FormElement {
       'attachment_type',
     ]) : FALSE;
     $triggered_by_change_request = $trigger ? $trigger == 'change_attachment' : FALSE;
-    $is_hidden = $element['#hidden'] && !$triggered_by_select && !$triggered_by_change_request;
+    $is_hidden = array_key_exists('#hidden', $element) && $element['#hidden'] && !$triggered_by_select && !$triggered_by_change_request;
     $class = NULL;
 
     if ($is_hidden) {
@@ -157,7 +157,7 @@ class AttachmentSelect extends FormElement {
       return $element;
     }
 
-    if (!empty($context['page_node']) && $context['page_node']->bundle() == 'plan') {
+    if (!empty($context['plan_object'])) {
       $entity_type_options = array_merge(['overview' => t('Plan')], $entity_type_options);
     }
     // Either show a select with the available options for the entity type, or
@@ -202,7 +202,7 @@ class AttachmentSelect extends FormElement {
       unset($element['attachment_type']['#options']);
     }
 
-    $attachments = self::getPlanEntitiesQuery()->getDataAttachments($context['page_node'], [
+    $attachments = self::getPlanEntitiesQuery()->getDataAttachments($context['base_object'] ?? NULL, $defaults['entity_type'], [
       'type' => $defaults['attachment_type'],
     ]);
     $attachment_options = [];

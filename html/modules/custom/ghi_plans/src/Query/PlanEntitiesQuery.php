@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\Query;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -14,7 +15,6 @@ use Drupal\hpc_api\Helpers\ApiEntityHelper;
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use GuzzleHttp\ClientInterface;
 use Drupal\hpc_api\Query\EndpointQuery;
-use Drupal\node\NodeInterface;
 
 /**
  * Query class for fetching plan data with a focus on plan entities.
@@ -48,21 +48,20 @@ class PlanEntitiesQuery extends EndpointQuery {
   /**
    * Get all attachments.
    *
-   * @param \Drupal\node\NodeInterface $context_node
-   *   The current context node.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_object
+   *   The current context object.
    * @param array $filter
    *   Optional array for filtering the attachments.
    *
    * @return array
    *   An array of attachment objects for the given context.
    */
-  private function getAttachments(NodeInterface $context_node = NULL, array $filter = []) {
+  private function getAttachments(ContentEntityInterface $context_object = NULL, array $filter = []) {
     $data = $this->getData();
     if (empty($data)) {
       return NULL;
     }
 
-    $attachments = [];
     $attachments = $data->attachments;
 
     $supported_contexts = [
@@ -70,9 +69,9 @@ class PlanEntitiesQuery extends EndpointQuery {
       'governing_entity' => 'governingEntities',
     ];
 
-    if ($context_node && array_key_exists($context_node->bundle(), $supported_contexts)) {
-      $context_original_id = $context_node->field_original_id->value;
-      $property = $supported_contexts[$context_node->bundle()];
+    if ($context_object && array_key_exists($context_object->bundle(), $supported_contexts)) {
+      $context_original_id = $context_object->field_original_id->value;
+      $property = $supported_contexts[$context_object->bundle()];
       foreach ($data->$property as $entity) {
         if ($entity->id != $context_original_id) {
           continue;
@@ -93,15 +92,15 @@ class PlanEntitiesQuery extends EndpointQuery {
   /**
    * Get data attachments.
    *
-   * @param \Drupal\node\NodeInterface $context_node
-   *   The current context node.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_object
+   *   The current context object.
    * @param array $filter
    *   Optional array for filtering the attachments.
    *
    * @return array
    *   An array of attachment objects for the given context.
    */
-  public function getDataAttachments(NodeInterface $context_node, array $filter = NULL) {
+  public function getDataAttachments(ContentEntityInterface $context_object = NULL, array $filter = NULL) {
     $allowed_types = [
       'caseload',
       'indicator',
@@ -116,21 +115,21 @@ class PlanEntitiesQuery extends EndpointQuery {
       });
     }
 
-    return AttachmentHelper::processAttachments($this->getAttachments($context_node, $filter));
+    return AttachmentHelper::processAttachments($this->getAttachments($context_object, $filter));
   }
 
   /**
    * Get webcontent file attachments.
    *
-   * @param \Drupal\node\NodeInterface $context_node
-   *   The current context node.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_object
+   *   The current context object.
    *
    * @return array
    *   An array of attachment objects for the given context.
    */
-  public function getWebContentFileAttachments(NodeInterface $context_node) {
+  public function getWebContentFileAttachments(ContentEntityInterface $context_object) {
     $attachments = [];
-    foreach ($this->getAttachments($context_node, ['type' => 'fileWebContent']) as $attachment) {
+    foreach ($this->getAttachments($context_object, ['type' => 'fileWebContent']) as $attachment) {
       if (empty($attachment->attachmentVersion->value->file->url)) {
         continue;
       }
@@ -142,15 +141,15 @@ class PlanEntitiesQuery extends EndpointQuery {
   /**
    * Get webcontent text attachments.
    *
-   * @param \Drupal\node\NodeInterface $context_node
-   *   The current context node.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_object
+   *   The current context object.
    *
    * @return array
    *   An array of attachment objects for the given context.
    */
-  public function getWebContentTextAttachments(NodeInterface $context_node) {
+  public function getWebContentTextAttachments(ContentEntityInterface $context_object) {
     $attachments = [];
-    foreach ($this->getAttachments($context_node, ['type' => 'textWebContent']) as $attachment) {
+    foreach ($this->getAttachments($context_object, ['type' => 'textWebContent']) as $attachment) {
       if (empty($attachment->attachmentVersion->value->content ?? '')) {
         continue;
       }
@@ -162,8 +161,8 @@ class PlanEntitiesQuery extends EndpointQuery {
   /**
    * Get available plan entities for the given context.
    *
-   * @param \Drupal\node\NodeInterface $context_node
-   *   The current context node.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_object
+   *   The current context object.
    * @param string $entity_type
    *   The entity type to restrict the context.
    * @param array $filters
@@ -172,13 +171,13 @@ class PlanEntitiesQuery extends EndpointQuery {
    * @return array
    *   An array of plan entity objects for the given context.
    */
-  public function getPlanEntities(NodeInterface $context_node, $entity_type = NULL, array $filters = NULL) {
+  public function getPlanEntities(ContentEntityInterface $context_object, $entity_type = NULL, array $filters = NULL) {
     $data = $this->getData();
     if (empty($data)) {
       return NULL;
     }
 
-    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($this->getData(), $context_node->bundle() != 'plan' ? $context_node : NULL, $entity_type);
+    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($this->getData(), $context_object->bundle() != 'plan' ? $context_object : NULL, $entity_type);
     if (empty($matching_entities)) {
       return NULL;
     }

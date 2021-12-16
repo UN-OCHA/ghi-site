@@ -52,7 +52,7 @@
 }
 
 .form-type--configuration_container table.summary-table thead th:last-child,
-.form-type--configuration_container table.summary-table tbody tr td:last-child {
+.form-type--configuration_container table.summary-table:not(.empty-table) tbody tr td:last-child {
   text-align: right;
 }
 

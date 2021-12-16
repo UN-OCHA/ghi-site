@@ -50,7 +50,7 @@ trait ConfigurationItemClusterRestrictTrait {
     }
 
     $context = $this->getContext();
-    $plan_node = $context['plan_node'];
+    $plan_node = $context['plan_object'];
     $plan_id = $plan_node->field_original_id->value;
 
     // First extract the cluster ids for the given cluster tag, as used for

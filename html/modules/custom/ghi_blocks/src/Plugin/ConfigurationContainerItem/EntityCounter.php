@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
@@ -10,7 +11,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Query\IconQuery;
 use Drupal\ghi_plans\Query\PlanEntitiesQuery;
-use Drupal\node\NodeInterface;
 
 /**
  * Provides an entity counter item for configuration containers.
@@ -261,10 +261,10 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
    */
   private function getEntities($entity_type) {
     $context = $this->getContext();
-    if (empty($context['context_node']) || !$context['context_node'] instanceof NodeInterface) {
+    if (empty($context['base_object']) || !$context['base_object'] instanceof ContentEntityInterface) {
       return [];
     }
-    return $this->planEntitiesQuery->getPlanEntities($context['context_node'], $entity_type, NULL);
+    return $this->planEntitiesQuery->getPlanEntities($context['base_object'], $entity_type, NULL);
   }
 
   /**

@@ -1,10 +1,10 @@
 .gho-achievement {
-  background: #eee;
+  position: relative;
   display: flex;
   flex-flow: column nowrap;
-  padding: 1.5rem 2rem;
   height: 100%;
-  position: relative;
+  padding: 1.5rem 2rem;
+  background: #eee;
 }
 
 .gho-achievement__icon {
@@ -18,12 +18,11 @@
 }
 
 .gho-achievement__title {
-  font-size: var(--cd-font-size--base);
   color: black;
+  font-size: var(--cd-font-size--base);
 }
 
 .gho-achievement__summary {
-  font-size: var(--cd-font-size--small);
 
   /* Since we changed the flex order, margin collapse doesn't occur between this
   element and the previous Title element. Remove margin manually */
@@ -33,10 +32,11 @@
   padding to the summaries so that the longest summary still has a nice-looking
   gap between the summary and the source. */
   margin-bottom: 2.5rem;
+  font-size: var(--cd-font-size--small);
 }
 
 .gho-achievement__source {
-  font-size: var(--cd-font-size--tiny);
   position: absolute;
   bottom: 2rem;
+  font-size: var(--cd-font-size--tiny);
 }

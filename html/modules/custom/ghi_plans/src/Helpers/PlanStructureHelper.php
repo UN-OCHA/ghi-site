@@ -2,12 +2,12 @@
 
 namespace Drupal\ghi_plans\Helpers;
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Url;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\NodeHelper;
-use Drupal\node\NodeInterface;
 
 /**
  * Helper class for handling plan structure logic.
@@ -160,13 +160,13 @@ class PlanStructureHelper {
    *
    * @param array $prototype
    *   An array of prototypes retrieved from the API.
-   * @param \Drupal\node\NodeInterface $plan_node
-   *   The node object that the prototype belongs too.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $plan_object
+   *   The plan object that the prototype belongs too.
    *
    * @return array
    *   An array describing the plan structure.
    */
-  public static function getPlanStructureFromPrototype(array $prototype, NodeInterface $plan_node) {
+  public static function getPlanStructureFromPrototype(array $prototype, ContentEntityInterface $plan_object) {
     ArrayHelper::sortObjectsByProperty($prototype, 'orderNumber');
 
     // List of possible PLE types above the first GVE.
@@ -238,29 +238,29 @@ class PlanStructureHelper {
   }
 
   /**
-   * Build a plan structure for use in HPC Viewer.
+   * Build a plan structure for use in GHI.
    *
    * The plan structure can be customized in RPM and is retrieved via the plan
    * prototype endpoint. We need to parse the data and abstract it for easier
    * use.
    *
-   * @param \Drupal\node\NodeInterface $plan_node
-   *   The plan node object.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $plan_object
+   *   The plan object.
    */
-  public static function getRpmPlanStructure(NodeInterface $plan_node) {
+  public static function getRpmPlanStructure(ContentEntityInterface $plan_object) {
     $plan_structures = &drupal_static(__FUNCTION__);
-    if (empty($plan_structures[$plan_node->id()])) {
-      if (empty($plan_node->field_plan_structure_rpm->value)) {
+    if (empty($plan_structures[$plan_object->id()])) {
+      if (empty($plan_object->field_plan_structure_rpm->value)) {
         return;
       }
-      $prototype = unserialize($plan_node->field_plan_structure_rpm->value);
+      $prototype = unserialize($plan_object->field_plan_structure_rpm->value);
       if (!$prototype) {
         return;
       }
-      $plan_structures[$plan_node->id()] = self::getPlanStructureFromPrototype($prototype, $plan_node);
+      $plan_structures[$plan_object->id()] = self::getPlanStructureFromPrototype($prototype, $plan_object);
     }
 
-    return $plan_structures[$plan_node->id()];
+    return $plan_structures[$plan_object->id()];
   }
 
 }

@@ -2,8 +2,8 @@
 
 namespace Drupal\hpc_api\Helpers;
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\File\FileSystem;
-use Drupal\node\NodeInterface;
 
 /**
  * Helper class to handle entity objects from the HPC API.
@@ -45,10 +45,10 @@ class ApiEntityHelper {
    *
    * @param object $data
    *   A plan data object as retrieved from the API.
-   * @param \Drupal\node\NodeInterface $context_node
-   *   An optional node object that defines the current context. Should be NULL
-   *   when on a plan overview page, but one of plan_entity or governing_entity
-   *   on subpages.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_entity
+   *   An optional entity object that defines the current context. Should be
+   *   NULL when on a plan overview page, but one of plan_entity or
+   *   governing_entity on subpages.
    * @param string $entity_type
    *   The optional type of API entity we are looking for, either plan or
    *   governing.
@@ -58,7 +58,7 @@ class ApiEntityHelper {
    * @return array
    *   An array of entity objects.
    */
-  public static function getMatchingPlanEntities($data, NodeInterface $context_node = NULL, $entity_type = NULL, array $filters = NULL) {
+  public static function getMatchingPlanEntities($data, ContentEntityInterface $context_entity = NULL, $entity_type = NULL, array $filters = NULL) {
 
     if (empty($data->planEntities) && empty($data->governingEntities)) {
       return FALSE;
@@ -77,14 +77,14 @@ class ApiEntityHelper {
     // context.
     $matching_entities = [];
 
-    if (empty($context_node) || !in_array($context_node->getType(), self::SUPPORTED_CONTEXT_ENTITY_TYPES)) {
+    if (empty($context_entity) || !in_array($context_entity->bundle(), self::SUPPORTED_CONTEXT_ENTITY_TYPES)) {
       // Easy, no additional plan context, just get all of them.
       $matching_entities = $entities;
     }
-    elseif ($context_node->bundle() == 'governing_entity') {
+    elseif ($context_entity->bundle() == 'governing_entity') {
       // Context is a governing entity, e.g. a cluster. Lets get the parent to
       // drill down into the hierarchy.
-      $parent_id = $context_node->field_original_id->value;
+      $parent_id = $context_entity->field_original_id->value;
       foreach ($entities as $entity) {
         if ($parent_id !== NULL && (empty($entity->parentId) || $entity->parentId != $parent_id)) {
           continue;
@@ -92,10 +92,10 @@ class ApiEntityHelper {
         $matching_entities[] = $entity;
       }
     }
-    elseif ($context_node->bundle() == 'plan_entity') {
+    elseif ($context_entity->bundle() == 'plan_entity') {
       // Context is a plan entity, e.g. a strategic objective.
-      $entity_prototype_id = $context_node->field_prototype_id->value;
-      $original_id = $context_node->field_original_id->value;
+      $entity_prototype_id = $context_entity->field_prototype_id->value;
+      $original_id = $context_entity->field_original_id->value;
 
       // First extract matching high level entities.
       foreach ($entities as $entity) {
@@ -145,8 +145,8 @@ class ApiEntityHelper {
     }
 
     // Also add the context entity itself to the list of matching entities.
-    if (!empty($context_node) && (empty($entity_type) || $context_node->bundle() == $entity_type . '_entity')) {
-      $original_id = $context_node->field_original_id->value;
+    if (!empty($context_entity) && (empty($entity_type) || $context_entity->bundle() == $entity_type . '_entity')) {
+      $original_id = $context_entity->field_original_id->value;
       $plan_context_entities = self::getPlanEntitiesById($data, [$original_id]);
       $plan_context_entity = !empty($plan_context_entities) ? reset($plan_context_entities) : NULL;
       if ($plan_context_entity && !in_array($plan_context_entity, $matching_entities)) {

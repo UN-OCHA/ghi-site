@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
@@ -14,7 +15,6 @@ use Drupal\ghi_plans\Query\FlowSearchQuery;
 use Drupal\ghi_plans\Query\PlanClusterSummaryQuery;
 use Drupal\ghi_plans\Query\PlanFundingSummaryQuery;
 use Drupal\hpc_common\Helpers\ThemeHelper;
-use Drupal\node\NodeInterface;
 
 /**
  * Provides an funding data item for configuration containers.
@@ -106,8 +106,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
 
-    $context = $this->getContext();
-    $context_node = $context['context_node'];
+    $plan_object = $this->getContextValue('plan_object');
 
     $data_type_options = $this->getDataTypeOptions();
     $data_type_key = $this->getSubmittedOptionsValue($element, $form_state, 'data_type', $data_type_options);
@@ -142,7 +141,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       $element['label']['#required'] = TRUE;
     }
 
-    if ($context_node && $context_node->bundle() == 'plan' && $data_type['cluster_restrict'] && !$this->clusterRestrictDisabled()) {
+    if ($plan_object && $data_type['cluster_restrict'] && !$this->clusterRestrictDisabled()) {
       $element['cluster_restrict'] = $this->buildClusterRestrictFormElement($cluster_restrict);
     }
 
@@ -203,10 +202,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     if (empty($context['context_node']) && !empty($context['entity'])) {
       return $this->planClusterSummaryQuery->getClusterProperty($context['entity'], $property, 0);
     }
-    if (!$context_node) {
-      return $value;
-    }
-    if ($context_node->bundle() == 'plan') {
+    if (!$context_node && $this->getContextValue('plan_object')) {
       if (!empty($cluster_restrict) && !empty($cluster_restrict['type']) && $cluster_restrict['type'] != 'none') {
         $value = $this->getValueWithClusterRestrict($data_type, $cluster_restrict);
       }
@@ -214,7 +210,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         $value = $this->fundingSummaryQuery->get($property, 0);
       }
     }
-    elseif ($context_node->bundle() == 'governing_entity') {
+    elseif ($context_node && $context_node->bundle() == 'governing_entity') {
       $cluster_id = $context_node->field_original_id->value;
       $value = $this->planClusterSummaryQuery->getClusterPropertyById($cluster_id, $property, 0);
     }
@@ -237,7 +233,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       '#theme' => $theme_function,
     ] + ThemeHelper::getThemeOptions($theme_function, $this->getValue($data_type_key, $scale, $cluster_restrict), [
       'scale' => $scale,
-      'formatting_decimals' => $this->getContextValue('plan_node')->field_decimal_format->value,
+      'formatting_decimals' => $this->getContextValue('plan_object')->field_decimal_format->value,
     ] + $theme_options);
 
     if (!$this->needsFtsLink()) {
@@ -246,7 +242,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
 
     // If this needs an FTS link, lets build and add that.
     $link_icon = ThemeHelper::themeFtsIcon();
-    $fts_link = $this->needsFtsLink() ? self::buildFtsLink($link_icon, $this->getContextValue('plan_node'), 'flows', $this->getContextValue('context_node')) : NULL;
+    $fts_link = $this->needsFtsLink() ? self::buildFtsLink($link_icon, $this->getContextValue('plan_object'), 'flows', $this->getContextValue('context_node')) : NULL;
 
     return [
       '#type' => 'container',
@@ -297,8 +293,8 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   public function getValueWithClusterRestrict(array $data_type, array $cluster_restrict) {
 
     $context = $this->getContext();
-    $plan_node = $context['plan_node'];
-    $plan_id = $plan_node->field_original_id->value;
+    $plan_object = $context['plan_object'];
+    $plan_id = $plan_object->field_original_id->value;
 
     // Extract the actually used cluster from the funding and requirements data.
     $search_results = $this->flowSearchQuery->search([
@@ -321,7 +317,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $context = $this->getContext();
     $context_node = $context['context_node'];
     $data_types = array_filter($this->getDataTypes(), function ($type) use ($context_node) {
-      return !array_key_exists('valid_context', $type) || ($context_node instanceof NodeInterface && in_array($context_node->bundle(), $type['valid_context']));
+      return !array_key_exists('valid_context', $type) || ($context_node instanceof BaseObjectInterface && in_array($context_node->bundle(), $type['valid_context']));
     });
     return array_map(function ($type) {
       return $type['title'];

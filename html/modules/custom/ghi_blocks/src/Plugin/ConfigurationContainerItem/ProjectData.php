@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
@@ -20,7 +21,6 @@ use Drupal\ghi_plans\Query\PlanEntitiesQuery;
 use Drupal\ghi_plans\Query\PlanProjectSearchQuery;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
-use Drupal\node\NodeInterface;
 
 /**
  * Provides an entity counter item for configuration containers.
@@ -265,13 +265,13 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
       case 'projects_count':
         $objects = $project_query->getProjects($context_node);
         $popover_content = $this->getProjectPopoverContent($objects);
-        $fts_link = $needs_fts_link ? self::buildFtsLink($link_title, $this->getContextValue('plan_node'), 'projects', $context_node) : NULL;
+        $fts_link = $needs_fts_link ? self::buildFtsLink($link_title, $this->getContextValue('plan_object'), 'projects', $context_node) : NULL;
         break;
 
       case 'organizations_count':
         $objects = $project_query->getOrganizations($context_node);
         $popover_content = $this->getOrganizationPopoverContent($objects);
-        $fts_link = $needs_fts_link ? self::buildFtsLink($link_title, $this->getContextValue('plan_node'), 'recipients', $context_node) : NULL;
+        $fts_link = $needs_fts_link ? self::buildFtsLink($link_title, $this->getContextValue('plan_object'), 'recipients', $context_node) : NULL;
         break;
     }
 
@@ -439,7 +439,7 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
    */
   private function getClusterIdsForConfig(array $cluster_restrict) {
     $context = $this->getContext();
-    $plan_node = $context['plan_node'];
+    $plan_node = $context['plan_object'];
     $plan_id = $plan_node->field_original_id->value;
 
     // Extract the actually used cluster from the funding and requirements data.
@@ -464,11 +464,11 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
    */
   public function access(array $context, array $access_requirements) {
     $allowed = TRUE;
-    if (empty($context['plan_node']) || $context['plan_node']->bundle() != 'plan') {
+    if (empty($context['plan_object']) || $context['plan_object']->bundle() != 'plan') {
       return FALSE;
     }
     if (!empty($access_requirements['plan_costing'])) {
-      $allowed = $allowed && $this->accessByPlanCosting($context['plan_node'], $access_requirements['plan_costing']);
+      $allowed = $allowed && $this->accessByPlanCosting($context['plan_object'], $access_requirements['plan_costing']);
     }
     return $allowed;
   }
@@ -476,7 +476,7 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
   /**
    * Check access by plan costing type.
    *
-   * @param \Drupal\node\NodeInterface $plan_node
+   * @param \Drupal\Core\Entity\ContentEntityInterface $plan_object
    *   A plan node object.
    * @param array $valid_type_codes
    *   An array with the valid type codes.
@@ -484,15 +484,15 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
    * @return bool
    *   The access status.
    */
-  public function accessByPlanCosting(NodeInterface $plan_node, array $valid_type_codes) {
-    if ($plan_node->field_plan_costing->isEmpty()) {
+  public function accessByPlanCosting(ContentEntityInterface $plan_object, array $valid_type_codes) {
+    if ($plan_object->field_plan_costing->isEmpty()) {
       // If no plan costing is set for this plan, we only need to check if
       // costing code "0" is valid.
       return in_array(0, $valid_type_codes);
     }
     // Otherwhise we load the plan costing term, get the code and check if it's
     // one of the valid ones.
-    $term = TaxonomyHelper::getTermById($plan_node->field_plan_costing->target_id, 'plan_costing');
+    $term = TaxonomyHelper::getTermById($plan_object->field_plan_costing->target_id, 'plan_costing');
     return $term ? in_array($term->field_plan_costing_code->value, $valid_type_codes) : FALSE;
   }
 

@@ -625,6 +625,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     $is_preview = $form_state->get('preview');
 
+    $this->setElementValidateOnAjaxElements($form['settings']['container']);
+
     if ($this->isMultistepForm()) {
       $forms = $this->getSubforms();
       $active_subform = $form_state->get('current_subform');
@@ -864,7 +866,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $temporary_values = $form_state->hasTemporaryValue($form_key) ? (array) $form_state->getTemporaryValue($form_key) : [];
       $storage_values = $form_state->has($storage_key) ? (array) $form_state->get($storage_key) : [];
       $submitted_values = !empty($values[$form_key]) ? $values[$form_key] : [];
-      $settings = $temporary_values + $storage_values + $submitted_values;
+      $settings = array_merge($temporary_values, $storage_values, $submitted_values);
 
       // If we still have nothing, we fall back to the existing configuration.
       if (empty($settings)) {
