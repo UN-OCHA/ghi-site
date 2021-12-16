@@ -295,6 +295,7 @@ class ConfigurationContainer extends FormElement {
         'operations' => '',
       ]
     );
+    $table_rows = self::buildTableRows($element, $form_state);
     $element['summary_table'] = [
       '#type' => 'table',
       '#header' => $table_header,
@@ -306,9 +307,14 @@ class ConfigurationContainer extends FormElement {
           'group' => 'table-sort-weight',
         ],
       ],
-      '#attributes' => ['class' => ['summary-table']],
+      '#attributes' => [
+        'class' => array_filter([
+          'summary-table',
+          empty($table_rows) ? 'empty-table' : NULL,
+        ]),
+      ],
     ];
-    $element['summary_table'] += self::buildTableRows($element, $form_state);
+    $element['summary_table'] += $table_rows;
 
     $element['add_new_item'] = [
       '#type' => 'submit',
