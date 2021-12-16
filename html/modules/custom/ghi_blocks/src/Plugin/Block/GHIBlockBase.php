@@ -89,15 +89,17 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $base_entity = NULL;
 
     // Get the section for the current page node.
-    if ($page_node->hasField('field_entity_reference') && count($page_node->get('field_entity_reference')->referencedEntities()) == 1) {
-      // The page node is a subpage of a section and references a section,
-      // which references a base object.
-      $entities = $page_node->get('field_entity_reference')->referencedEntities();
-      $base_entity = reset($entities);
-    }
-    elseif ($page_node->hasField('field_base_object')) {
-      // The page node is already a section node.
-      $base_entity = $page_node;
+    if ($page_node) {
+      if ($page_node->hasField('field_entity_reference') && count($page_node->get('field_entity_reference')->referencedEntities()) == 1) {
+        // The page node is a subpage of a section and references a section,
+        // which references a base object.
+        $entities = $page_node->get('field_entity_reference')->referencedEntities();
+        $base_entity = reset($entities);
+      }
+      elseif ($page_node->hasField('field_base_object')) {
+        // The page node is already a section node.
+        $base_entity = $page_node;
+      }
     }
 
     // Get the object for the current page node.

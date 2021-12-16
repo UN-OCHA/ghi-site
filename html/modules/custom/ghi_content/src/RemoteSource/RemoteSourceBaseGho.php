@@ -23,6 +23,7 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
     ];
     $fields['content'] = [
       'id',
+      'uuid',
       'type',
       'typeLabel',
       'rendered',
@@ -60,6 +61,7 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
   public function getParagraph($id) {
     $fields = [
       'id',
+      'uuid',
       'type',
       'typeLabel',
       'rendered',

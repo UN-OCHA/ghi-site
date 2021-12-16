@@ -50,11 +50,11 @@ class BaseObjectHelper extends EntityHelper {
     if (empty($original_ids) || empty($bundle)) {
       return NULL;
     }
-    $nodes = &drupal_static(__FUNCTION__, []);
-    if (empty($nodes[$bundle])) {
-      $nodes[$bundle] = [];
+    $objects = &drupal_static(__FUNCTION__, []);
+    if (empty($objects[$bundle])) {
+      $objects[$bundle] = [];
     }
-    $requested_nodes = array_intersect_key($nodes[$bundle], array_flip($original_ids));
+    $requested_nodes = array_intersect_key($objects[$bundle], array_flip($original_ids));
     if (count($requested_nodes) == count($original_ids)) {
       return $requested_nodes;
     }
@@ -69,11 +69,11 @@ class BaseObjectHelper extends EntityHelper {
         return $result;
       }
       foreach ($result as $entity) {
-        $nodes[$bundle][self::getFieldData($entity, 'field_original_id', 0, 'value')] = $entity;
+        $objects[$bundle][self::getFieldData($entity, 'field_original_id', 0, 'value')] = $entity;
       }
 
     }
-    return array_intersect_key($nodes[$bundle], array_flip($original_ids));
+    return array_intersect_key($objects[$bundle], array_flip($original_ids));
   }
 
 }
