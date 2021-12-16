@@ -80,6 +80,7 @@ class SectionWizard extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
+    self::prepareAjaxForm($form, $form_state);
     $wrapper_id = self::getWrapperId($form);
     $form['#prefix'] = '<div id="' . $wrapper_id . '">';
     $form['#suffix'] = '</div>';

@@ -57,6 +57,14 @@ trait AjaxElementTrait {
   }
 
   /**
+   * Prepare a form based on FormBase.
+   */
+  public static function prepareAjaxForm(&$form, FormStateInterface $form_state) {
+    self::setElementParents($form);
+    self::setClassOnAjaxElements($form);
+  }
+
+  /**
    * Assuming inheritance from Drupal\Core\Render\Element\RenderElement.
    *
    * @see RenderElement::processAjaxForm
@@ -82,7 +90,6 @@ trait AjaxElementTrait {
     // Just update the full element.
     $triggering_element = $form_state->getTriggeringElement();
     $wrapper_id = $triggering_element['#ajax']['wrapper'];
-    self::setElementParents($form);
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand('#' . $wrapper_id, NestedArray::getValue($form, self::$elementParentsFormKey)));
 
