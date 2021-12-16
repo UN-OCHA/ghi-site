@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueFactory;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Routing\Router;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
@@ -16,7 +17,6 @@ use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
-use Drupal\hpc_common\Helpers\NodeHelper;
 use Drupal\node\NodeInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -199,7 +199,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       return NULL;
     }
 
-    $nodes = $this->loadNodesForEntities($entities);
+    $nodes = $this->loadBaseObjectsForEntities($entities);
     if (empty($nodes)) {
       return NULL;
     }
@@ -514,30 +514,30 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
    * @param array $entities
    *   The entity objects.
    *
-   * @return \Drupal\node\NodeInterface[]
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface[]
    *   An array of node objects.
    */
-  private function loadNodesForEntities(array $entities) {
+  private function loadBaseObjectsForEntities(array $entities) {
     $entity_ids = array_map(function ($entity) {
       return $entity->id;
     }, $entities);
 
-    return NodeHelper::getNodesFromOriginalIds($entity_ids, 'governing_entity');
+    return BaseObjectHelper::getBaseObjectsFromOriginalIds($entity_ids, 'governing_entity');
   }
 
   /**
    * Get the first entity node for column configuration.
    *
-   * @return \Drupal\node\NodeInterface
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface
    *   The first entity node available.
    */
-  private function getFirstEntityNode() {
+  private function getFirstEntityObject() {
     $entities = $this->getEntityObjects();
     if (empty($entities)) {
       return NULL;
     }
     $entity = reset($entities);
-    $entity_nodes = $this->loadNodesForEntities([$entity]);
+    $entity_nodes = $this->loadBaseObjectsForEntities([$entity]);
     return !empty($entity_nodes) ? reset($entity_nodes) : NULL;
   }
 
@@ -561,7 +561,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
     return [
       'page_node' => $this->getPageNode(),
       'plan_object' => $this->getCurrentPlanObject(),
-      'context_node' => $this->getFirstEntityNode(),
+      'context_node' => $this->getFirstEntityObject(),
     ];
   }
 

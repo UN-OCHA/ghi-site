@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
@@ -14,7 +15,6 @@ use Drupal\ghi_plans\Query\FlowSearchQuery;
 use Drupal\ghi_plans\Query\PlanClusterSummaryQuery;
 use Drupal\ghi_plans\Query\PlanFundingSummaryQuery;
 use Drupal\hpc_common\Helpers\ThemeHelper;
-use Drupal\node\NodeInterface;
 
 /**
  * Provides an funding data item for configuration containers.
@@ -202,7 +202,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     if (empty($context['context_node']) && !empty($context['entity'])) {
       return $this->planClusterSummaryQuery->getClusterProperty($context['entity'], $property, 0);
     }
-    if ($this->getContextValue('plan_object')) {
+    if (!$context_node && $this->getContextValue('plan_object')) {
       if (!empty($cluster_restrict) && !empty($cluster_restrict['type']) && $cluster_restrict['type'] != 'none') {
         $value = $this->getValueWithClusterRestrict($data_type, $cluster_restrict);
       }
@@ -317,7 +317,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $context = $this->getContext();
     $context_node = $context['context_node'];
     $data_types = array_filter($this->getDataTypes(), function ($type) use ($context_node) {
-      return !array_key_exists('valid_context', $type) || ($context_node instanceof NodeInterface && in_array($context_node->bundle(), $type['valid_context']));
+      return !array_key_exists('valid_context', $type) || ($context_node instanceof BaseObjectInterface && in_array($context_node->bundle(), $type['valid_context']));
     });
     return array_map(function ($type) {
       return $type['title'];
@@ -335,7 +335,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       'funding_totals' => [
         'title' => $this->t('Funding totals'),
         'default_label' => $this->t('Current funding ($)'),
-        'valid_context' => ['section', 'financials'],
+        'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'total_funding',
         'scale' => 'auto',
@@ -343,7 +343,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       'outside_funding' => [
         'title' => $this->t('Funded outside HRP'),
         'default_label' => $this->t('Funded outside HRP ($)'),
-        'valid_context' => ['section', 'financials'],
+        'valid_context' => ['plan'],
         'cluster_restrict' => FALSE,
         'property' => 'outside_funding',
         'scale' => 'auto',
@@ -351,7 +351,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       'funding_coverage' => [
         'title' => $this->t('Coverage (%)'),
         'default_label' => $this->t('Coverage'),
-        'valid_context' => ['section', 'financials'],
+        'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'funding_coverage',
         'theme' => 'hpc_percent',
@@ -359,7 +359,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       'funding_progress_bar' => [
         'title' => $this->t('Funding coverage progress bar'),
         'default_label' => $this->t('Funding coverage'),
-        'valid_context' => ['section', 'financials'],
+        'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'funding_coverage',
         'theme' => 'hpc_progress_bar',
@@ -370,7 +370,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       'funding_gap' => [
         'title' => $this->t('Funding gap'),
         'default_label' => $this->t('Unmet ($)'),
-        'valid_context' => ['section', 'financials'],
+        'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'funding_gap',
         'scale' => 'auto',
@@ -378,14 +378,14 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       'original_requirements' => [
         'title' => $this->t('Original requirements'),
         'default_label' => $this->t('Original ($)'),
-        'valid_context' => ['section', 'financials'],
+        'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'original_requirements',
       ],
       'current_requirements' => [
         'title' => $this->t('Current requirements'),
         'default_label' => $this->t('Requirements ($)'),
-        'valid_context' => ['section', 'financials'],
+        'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'current_requirements',
         // @todo Add support for inclusion of original requirements as a

@@ -15,7 +15,6 @@ use Drupal\hpc_api\Helpers\ApiEntityHelper;
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use GuzzleHttp\ClientInterface;
 use Drupal\hpc_api\Query\EndpointQuery;
-use Drupal\node\NodeInterface;
 
 /**
  * Query class for fetching plan data with a focus on plan entities.
@@ -142,15 +141,15 @@ class PlanEntitiesQuery extends EndpointQuery {
   /**
    * Get webcontent text attachments.
    *
-   * @param \Drupal\node\NodeInterface $context_node
-   *   The current context node.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_object
+   *   The current context object.
    *
    * @return array
    *   An array of attachment objects for the given context.
    */
-  public function getWebContentTextAttachments(NodeInterface $context_node) {
+  public function getWebContentTextAttachments(ContentEntityInterface $context_object) {
     $attachments = [];
-    foreach ($this->getAttachments($context_node, ['type' => 'textWebContent']) as $attachment) {
+    foreach ($this->getAttachments($context_object, ['type' => 'textWebContent']) as $attachment) {
       if (empty($attachment->attachmentVersion->value->content ?? '')) {
         continue;
       }
@@ -162,8 +161,8 @@ class PlanEntitiesQuery extends EndpointQuery {
   /**
    * Get available plan entities for the given context.
    *
-   * @param \Drupal\node\NodeInterface $context_node
-   *   The current context node.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_object
+   *   The current context object.
    * @param string $entity_type
    *   The entity type to restrict the context.
    * @param array $filters
@@ -172,13 +171,13 @@ class PlanEntitiesQuery extends EndpointQuery {
    * @return array
    *   An array of plan entity objects for the given context.
    */
-  public function getPlanEntities(NodeInterface $context_node, $entity_type = NULL, array $filters = NULL) {
+  public function getPlanEntities(ContentEntityInterface $context_object, $entity_type = NULL, array $filters = NULL) {
     $data = $this->getData();
     if (empty($data)) {
       return NULL;
     }
 
-    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($this->getData(), $context_node->bundle() != 'plan' ? $context_node : NULL, $entity_type);
+    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($this->getData(), $context_object->bundle() != 'plan' ? $context_object : NULL, $entity_type);
     if (empty($matching_entities)) {
       return NULL;
     }
