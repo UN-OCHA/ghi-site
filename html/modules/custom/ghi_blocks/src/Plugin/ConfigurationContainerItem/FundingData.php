@@ -316,7 +316,6 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   private function getDataTypeOptions() {
     $context = $this->getContext();
     $base_object = $context['base_object'];
-    d($base_object->bundle());
     $data_types = array_filter($this->getDataTypes(), function ($type) use ($base_object) {
       return !array_key_exists('valid_context', $type) || ($base_object instanceof BaseObjectInterface && in_array($base_object->bundle(), $type['valid_context']));
     });
