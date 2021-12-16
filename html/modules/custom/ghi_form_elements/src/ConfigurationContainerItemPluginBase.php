@@ -201,11 +201,11 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   public function setContext($context) {
     $this->context = $context;
 
-    $plan_node = $context['plan_node'] ?? NULL;
-    if ($plan_node && $plan_node->bundle() == 'plan') {
+    $plan_object = $context['plan_object'] ?? NULL;
+    if ($plan_object) {
       $query_handlers = $this->getQueryHandlers();
       foreach ($query_handlers as $query) {
-        $query->setPlaceholder('plan_id', $plan_node->field_original_id->value);
+        $query->setPlaceholder('plan_id', $plan_object->field_original_id->value);
       }
     }
   }

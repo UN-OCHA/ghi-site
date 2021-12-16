@@ -549,7 +549,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
    */
   private function getGenericEntityName() {
     $context = $this->getBlockContext();
-    $plan_structure = PlanStructureHelper::getRpmPlanStructure($context['plan_node']);
+    $plan_structure = PlanStructureHelper::getRpmPlanStructure($context['plan_object']);
     $first_gve = reset($plan_structure['governing_entities']);
     return $first_gve ? $first_gve->label_singular : $this->t('Cluster');
   }
@@ -560,7 +560,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   public function getBlockContext() {
     return [
       'page_node' => $this->getPageNode(),
-      'plan_node' => $this->getCurrentPlanObject(),
+      'plan_object' => $this->getCurrentPlanObject(),
       'context_node' => $this->getFirstEntityNode(),
     ];
   }

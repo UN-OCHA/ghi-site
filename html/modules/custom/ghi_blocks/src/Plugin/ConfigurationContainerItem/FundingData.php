@@ -237,7 +237,6 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       '#theme' => $theme_function,
     ] + ThemeHelper::getThemeOptions($theme_function, $this->getValue($data_type_key, $scale, $cluster_restrict), [
       'scale' => $scale,
-      'formatting_decimals' => $this->getContextValue('plan_node')->field_decimal_format->value,
     ] + $theme_options);
 
     if (!$this->needsFtsLink()) {
@@ -246,7 +245,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
 
     // If this needs an FTS link, lets build and add that.
     $link_icon = ThemeHelper::themeFtsIcon();
-    $fts_link = $this->needsFtsLink() ? self::buildFtsLink($link_icon, $this->getContextValue('plan_node'), 'flows', $this->getContextValue('context_node')) : NULL;
+    $fts_link = $this->needsFtsLink() ? self::buildFtsLink($link_icon, $this->getContextValue('plan_object'), 'flows', $this->getContextValue('context_node')) : NULL;
 
     return [
       '#type' => 'container',
@@ -297,7 +296,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   public function getValueWithClusterRestrict(array $data_type, array $cluster_restrict) {
 
     $context = $this->getContext();
-    $plan_node = $context['plan_node'];
+    $plan_node = $context['plan_object'];
     $plan_id = $plan_node->field_original_id->value;
 
     // Extract the actually used cluster from the funding and requirements data.
@@ -339,7 +338,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       'funding_totals' => [
         'title' => $this->t('Funding totals'),
         'default_label' => $this->t('Current funding ($)'),
-        'valid_context' => ['plan', 'governing_entity'],
+        'valid_context' => ['section', 'financials'],
         'cluster_restrict' => TRUE,
         'property' => 'total_funding',
         'scale' => 'auto',
@@ -347,7 +346,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       'outside_funding' => [
         'title' => $this->t('Funded outside HRP'),
         'default_label' => $this->t('Funded outside HRP ($)'),
-        'valid_context' => ['plan'],
+        'valid_context' => ['section', 'financials'],
         'cluster_restrict' => FALSE,
         'property' => 'outside_funding',
         'scale' => 'auto',
@@ -355,7 +354,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       'funding_coverage' => [
         'title' => $this->t('Coverage (%)'),
         'default_label' => $this->t('Coverage'),
-        'valid_context' => ['plan', 'governing_entity'],
+        'valid_context' => ['section', 'financials'],
         'cluster_restrict' => TRUE,
         'property' => 'funding_coverage',
         'theme' => 'hpc_percent',
@@ -363,7 +362,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       'funding_progress_bar' => [
         'title' => $this->t('Funding coverage progress bar'),
         'default_label' => $this->t('Funding coverage'),
-        'valid_context' => ['plan', 'governing_entity'],
+        'valid_context' => ['section', 'financials'],
         'cluster_restrict' => TRUE,
         'property' => 'funding_coverage',
         'theme' => 'hpc_progress_bar',
@@ -374,7 +373,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       'funding_gap' => [
         'title' => $this->t('Funding gap'),
         'default_label' => $this->t('Unmet ($)'),
-        'valid_context' => ['plan', 'governing_entity'],
+        'valid_context' => ['section', 'financials'],
         'cluster_restrict' => TRUE,
         'property' => 'funding_gap',
         'scale' => 'auto',
@@ -382,14 +381,14 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       'original_requirements' => [
         'title' => $this->t('Original requirements'),
         'default_label' => $this->t('Original ($)'),
-        'valid_context' => ['plan', 'governing_entity'],
+        'valid_context' => ['section', 'financials'],
         'cluster_restrict' => TRUE,
         'property' => 'original_requirements',
       ],
       'current_requirements' => [
         'title' => $this->t('Current requirements'),
         'default_label' => $this->t('Requirements ($)'),
-        'valid_context' => ['plan', 'governing_entity'],
+        'valid_context' => ['section', 'financials'],
         'cluster_restrict' => TRUE,
         'property' => 'current_requirements',
         // @todo Add support for inclusion of original requirements as a

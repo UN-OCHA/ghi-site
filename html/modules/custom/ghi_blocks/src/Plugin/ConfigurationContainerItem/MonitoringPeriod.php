@@ -119,7 +119,7 @@ class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
    * attachment in the current context and extract it from there.
    */
   private function getMonitoringPeriod() {
-    $plan_node = $this->getContextValue('plan_node');
+    $plan_node = $this->getContextValue('plan_object');
     $reporting_periods = unserialize($plan_node->field_plan_reporting_periods->value);
     if (empty($reporting_periods)) {
       return NULL;

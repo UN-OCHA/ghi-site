@@ -638,7 +638,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   public function getBlockContext() {
     return [
       'page_node' => $this->getPageNode(),
-      'plan_node' => $this->getCurrentPlanObject(),
+      'plan_object' => $this->getCurrentPlanObject(),
       'context_node' => $this->getFirstEntityNode(),
       'attachment_prototype' => $this->getAttachmentPrototype(),
     ];
