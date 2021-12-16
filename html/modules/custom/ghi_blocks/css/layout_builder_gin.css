@@ -16,3 +16,11 @@
 .layout-builder__section:hover:after {
   border: 0 !important;
 }
+
+#drupal-off-canvas .glb-layout-builder-browser .glb-claro-details__wrapper {
+  margin-left: 0;
+  margin-right: 0;
+}
+#drupal-off-canvas .glb-layout-builder-browser .glb-list {
+  width: 100%
+}
