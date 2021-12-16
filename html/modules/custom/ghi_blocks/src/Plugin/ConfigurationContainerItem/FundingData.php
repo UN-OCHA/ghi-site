@@ -199,7 +199,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $cluster_restrict = $cluster_restrict ?: ($this->get('cluster_restrict') ?: NULL);
 
     $value = NULL;
-    if (empty($context['context_node']) && !empty($context['entity'])) {
+    if (empty($context_node) && !empty($context['entity'])) {
       return $this->planClusterSummaryQuery->getClusterProperty($context['entity'], $property, 0);
     }
     if (!$context_node && $this->getContextValue('plan_object')) {
@@ -242,7 +242,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
 
     // If this needs an FTS link, lets build and add that.
     $link_icon = ThemeHelper::themeFtsIcon();
-    $fts_link = $this->needsFtsLink() ? self::buildFtsLink($link_icon, $this->getContextValue('plan_object'), 'flows', $this->getContextValue('context_node')) : NULL;
+    $fts_link = $this->needsFtsLink() ? self::buildFtsLink($link_icon, $this->getContextValue('plan_object'), 'flows', $this->getContextValue('base_object')) : NULL;
 
     return [
       '#type' => 'container',
@@ -315,9 +315,10 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    */
   private function getDataTypeOptions() {
     $context = $this->getContext();
-    $context_node = $context['context_node'];
-    $data_types = array_filter($this->getDataTypes(), function ($type) use ($context_node) {
-      return !array_key_exists('valid_context', $type) || ($context_node instanceof BaseObjectInterface && in_array($context_node->bundle(), $type['valid_context']));
+    $base_object = $context['base_object'];
+    d($base_object->bundle());
+    $data_types = array_filter($this->getDataTypes(), function ($type) use ($base_object) {
+      return !array_key_exists('valid_context', $type) || ($base_object instanceof BaseObjectInterface && in_array($base_object->bundle(), $type['valid_context']));
     });
     return array_map(function ($type) {
       return $type['title'];

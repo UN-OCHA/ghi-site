@@ -277,10 +277,12 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
    *   An array with context data or query handlers.
    */
   public function getBlockContext() {
+    $base_object = $this->getCurrentBaseObject();
     return [
       'page_node' => $this->getPageNode(),
       'plan_object' => $this->getCurrentPlanObject(),
-      'base_object' => $this->getCurrentBaseObject(),
+      'base_object' => $base_object,
+      'context_node' => $base_object && $base_object->bundle() != 'plan' ? $base_object : NULL,
     ];
   }
 

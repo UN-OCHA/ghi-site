@@ -217,11 +217,11 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       if (!array_key_exists($entity->id, $objects)) {
         continue;
       }
-      $entity_node = $objects[$entity->id];
+      $base_object = $objects[$entity->id];
 
       // Clusters are displayed if they are either published, or the element is
       // configured to also display unpublished clusters.
-      if (!$entity_node->access('view') && empty($conf['base']['include_unpublished_clusters'])) {
+      if (!$base_object->access('view') && empty($conf['base']['include_unpublished_clusters'])) {
         continue;
       }
 
@@ -235,7 +235,8 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       $attachments = $grouped_attachments[$entity->id];
 
       // Add the entity and the node object to the context array.
-      $context['context_node'] = $entity_node;
+      $context['base_object'] = $base_object;
+      $context['context_node'] = $base_object && $base_object->bundle() != 'plan' ? $base_object : NULL;
       $context['entity'] = $entity;
 
       // Add another row as a group header for clusters with multiple plan
@@ -426,8 +427,8 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     }
     $form['columns'] = [
       '#type' => 'configuration_container',
-      '#title' => $this->t('Configured headline figures'),
-      '#title_display' => 'invisble',
+      '#title' => $this->t('Configured table columns'),
+      '#title_display' => 'invisible',
       '#default_value' => $default_value,
       '#allowed_item_types' => $this->getAllowedItemTypes(),
       '#preview' => [
@@ -642,6 +643,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     return [
       'page_node' => $this->getPageNode(),
       'plan_object' => $this->getCurrentPlanObject(),
+      'base_object' => $this->getFirstEntityObject(),
       'context_node' => $this->getFirstEntityObject(),
       'attachment_prototype' => $this->getAttachmentPrototype(),
     ];
