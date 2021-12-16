@@ -1,0 +1,27 @@
+uuid: 52916dc3-1beb-4010-a40c-7c09bb1a1479
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+    - options
+id: base_object.field_decimal_format
+field_name: field_decimal_format
+entity_type: base_object
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: point
+      label: 'Point as decimal separator, comma as thousands separator (e.g. 1,000.00)'
+    -
+      value: comma
+      label: 'Comma as decimal separator, space as thousands separator (e.g. 1 000,00)'
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
