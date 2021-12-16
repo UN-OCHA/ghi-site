@@ -230,7 +230,9 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       }
 
       // Add the entity and the node object to the context array.
-      $context['context_node'] = $objects[$entity->id];
+      $base_object = $objects[$entity->id];
+      $context['base_object'] = $base_object;
+      $context['context_node'] = $base_object && $base_object->bundle() != 'plan' ? $base_object : NULL;
       $context['entity'] = $entity;
 
       $row = [];
@@ -270,7 +272,8 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       $not_specified_entity = $query->getNotSpecifiedCluster();
 
       if ($not_specified_entity && !empty($not_specified_entity->total_funding)) {
-        $context['context_node'] = FALSE;
+        $context['base_object'] = NULL;
+        $context['context_node'] = NULL;
         $context['entity'] = $not_specified_entity;
 
         $row = [];
@@ -322,7 +325,8 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
     }
 
     if (!empty($conf['base']['include_shared_funding']) && $conf['base']['include_shared_funding'] && $this->getQueryHandler('cluster_summary')->hasSharedFunding()) {
-      $context['context_node'] = FALSE;
+      $context['base_object'] = NULL;
+      $context['context_node'] = NULL;
       $context['entity'] = (object) [
         'total_funding' => $this->getQueryHandler('cluster_summary')->getSharedFunding(),
       ];
@@ -479,15 +483,14 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
     }
     $form['columns'] = [
       '#type' => 'configuration_container',
-      '#title' => $this->t('Configured headline figures'),
-      '#title_display' => 'invisble',
+      '#title' => $this->t('Configured table columns'),
+      '#title_display' => 'invisible',
       '#item_type_label' => $this->t('Column'),
       '#default_value' => $default_value,
       '#allowed_item_types' => $this->getAllowedItemTypes(),
       '#preview' => [
         'columns' => [
           'label' => $this->t('Label'),
-          // 'value' => $this->t('Value'),
         ],
       ],
       '#element_context' => $this->getBlockContext(),
@@ -561,6 +564,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
     return [
       'page_node' => $this->getPageNode(),
       'plan_object' => $this->getCurrentPlanObject(),
+      'base_object' => $this->getFirstEntityObject(),
       'context_node' => $this->getFirstEntityObject(),
     ];
   }
