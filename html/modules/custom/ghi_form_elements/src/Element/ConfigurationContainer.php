@@ -2,6 +2,8 @@
 
 namespace Drupal\ghi_form_elements\Element;
 
+use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Render\Element\FormElement;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
@@ -17,7 +19,9 @@ use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
  */
 class ConfigurationContainer extends FormElement {
 
-  use AjaxElementTrait;
+  use AjaxElementTrait {
+    updateAjax as traitUpdateAjax;
+  }
 
   /**
    * {@inheritdoc}
@@ -775,6 +779,42 @@ class ConfigurationContainer extends FormElement {
    */
   private static function elementSupportsFiltering($element) {
     return !empty($element['#row_filter']);
+  }
+
+  /**
+   * Generic ajax callback.
+   *
+   * This is just a wrapper around AjaxElementTrait::updateAjax(), to be able
+   * to deactivate the main submit button if a specific config item is
+   * currently edited.
+   *
+   * @param array $form
+   *   The form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state interface.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   An ajax response with commands to update the relevant part of the form.
+   */
+  public static function updateAjax(array &$form, FormStateInterface $form_state) {
+    $response = self::traitUpdateAjax($form, $form_state);
+    $form_subset = NestedArray::getValue($form, self::$elementParentsFormKey);
+    $submit_button_selector = '[data-drupal-selector="edit-actions-submit"]';
+    $preview_selector = '[data-drupal-selector="edit-actions-subforms-preview"]';
+    if (array_key_exists('item_config', $form_subset)) {
+      // Disable the main submit button on the block config form.
+      $method = 'attr';
+      $args = ['disabled', 'disabled'];
+
+    }
+    else {
+      // Remove the disabled attribute again.
+      $method = 'removeAttr';
+      $args = ['disabled'];
+    }
+    $response->addCommand(new InvokeCommand($submit_button_selector, $method, $args));
+    $response->addCommand(new InvokeCommand($preview_selector, $method, $args));
+    return $response;
   }
 
 }

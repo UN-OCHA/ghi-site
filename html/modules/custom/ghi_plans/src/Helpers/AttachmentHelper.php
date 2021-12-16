@@ -111,9 +111,9 @@ class AttachmentHelper {
       'id' => $attachment->id,
       'type' => strtolower($attachment->type),
       'source' => (object) [
-        'entity_type' => $attachment->objectType,
-        'entity_id' => $attachment->objectId,
-        'plan_id' => $attachment->planId,
+        'entity_type' => $attachment->objectType ?? NULL,
+        'entity_id' => $attachment->objectId ?? NULL,
+        'plan_id' => $attachment->planId ?? NULL,
       ],
       'composed_reference' => $attachment->composedReference,
       'description' => $attachment->attachmentVersion->value->description,

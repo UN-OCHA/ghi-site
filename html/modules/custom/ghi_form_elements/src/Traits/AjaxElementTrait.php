@@ -83,16 +83,16 @@ trait AjaxElementTrait {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state interface.
    *
-   * @return array
-   *   The part of the form structure that should be replaced.
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   An ajax response with commands to update the relevant part of the form.
    */
   public static function updateAjax(array &$form, FormStateInterface $form_state) {
     // Just update the full element.
     $triggering_element = $form_state->getTriggeringElement();
     $wrapper_id = $triggering_element['#ajax']['wrapper'];
+    $form_subset = NestedArray::getValue($form, self::$elementParentsFormKey);
     $response = new AjaxResponse();
-    $response->addCommand(new ReplaceCommand('#' . $wrapper_id, NestedArray::getValue($form, self::$elementParentsFormKey)));
-
+    $response->addCommand(new ReplaceCommand('#' . $wrapper_id, $form_subset));
     return $response;
   }
 
