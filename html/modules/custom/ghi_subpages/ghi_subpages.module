@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
@@ -184,11 +185,21 @@ function ghi_subpages_entity_operation(EntityInterface $entity) {
  */
 function ghi_subpages_preprocess_page_title(&$variables) {
   $node = \Drupal::routeMatch()->getParameter('node');
-  if (!$node instanceof NodeInterface || !SubpageHelper::isBaseTypeNode($node)) {
+  if (!$node instanceof NodeInterface) {
     return;
   }
-  if ($node->hasField('field_entity_reference') && $node->field_entity_reference->entity instanceof NodeInterface) {
-    $variables['title'] = $node->field_entity_reference->entity->getTitle();
+  if (SubpageHelper::isBaseTypeNode($node)) {
+    if ($node->hasField('field_entity_reference') && $node->field_entity_reference->entity instanceof ContentEntityInterface) {
+      $variables['title'] = $node->field_entity_reference->entity->getTitle();
+    }
+  }
+  if (SubpageHelper::isSubpageTypeNode($node)) {
+    $section = $node->hasField('field_entity_reference') ? $node->field_entity_reference->entity : NULL;
+    if ($section && $section->hasField('field_base_object') && $section->field_base_object->entity instanceof ContentEntityInterface) {
+      /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
+      $base_object = $section->field_base_object->entity;
+      $variables['title'] = $base_object->label();
+    }
   }
 }
 

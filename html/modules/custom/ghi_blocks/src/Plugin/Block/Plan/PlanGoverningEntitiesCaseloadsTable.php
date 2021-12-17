@@ -14,6 +14,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
+use Drupal\ghi_sections\SectionManager;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\node\NodeInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -52,12 +53,20 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   protected $configurationContainerItemManager;
 
   /**
+   * The section manager.
+   *
+   * @var \Drupal\ghi_sections\SectionManager
+   */
+  protected $sectionManager;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, ConfigurationContainerItemManager $configuration_container_item_manager) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, ConfigurationContainerItemManager $configuration_container_item_manager, SectionManager $section_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $request_stack, $router, $keyValueFactory, $endpoint_query, $entity_type_manager);
 
     $this->configurationContainerItemManager = $configuration_container_item_manager;
+    $this->sectionManager = $section_manager;
   }
 
   /**
@@ -73,7 +82,8 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       $container->get('keyvalue'),
       $container->get('hpc_api.endpoint_query'),
       $container->get('entity_type.manager'),
-      $container->get('plugin.manager.configuration_container_item_manager')
+      $container->get('plugin.manager.configuration_container_item_manager'),
+      $container->get('ghi_sections.manager'),
     );
   }
 
@@ -218,10 +228,11 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
         continue;
       }
       $base_object = $objects[$entity->id];
+      $section = !$base_object->needsYear() ? $this->sectionManager->loadSectionForBaseObject($base_object) : NULL;
 
       // Clusters are displayed if they are either published, or the element is
       // configured to also display unpublished clusters.
-      if (!$base_object->access('view') && empty($conf['base']['include_unpublished_clusters'])) {
+      if ($section && !$section->access('view') && empty($conf['base']['include_unpublished_clusters'])) {
         continue;
       }
 
@@ -232,11 +243,12 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       }
 
       // Get the attachment.
-      $attachments = $grouped_attachments[$entity->id];
+      $attachments = $grouped_attachments[$entity->id] ?? [];
 
       // Add the entity and the node object to the context array.
       $context['base_object'] = $base_object;
       $context['context_node'] = $base_object && $base_object->bundle() != 'plan' ? $base_object : NULL;
+      $context['section_node'] = $section;
       $context['entity'] = $entity;
 
       // Add another row as a group header for clusters with multiple plan

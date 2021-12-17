@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
+use Drupal\ghi_sections\Import\SectionManager;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -48,13 +49,21 @@ class SectionWizard extends FormBase {
   protected $currentUser;
 
   /**
+   * The section manager.
+   *
+   * @var \Drupal\ghi_sections\Import\SectionManager
+   */
+  protected $sectionManager;
+
+  /**
    * Constructs a section create form.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ModuleHandlerInterface $module_handler, AccountProxyInterface $user) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ModuleHandlerInterface $module_handler, AccountProxyInterface $user, SectionManager $section_manager) {
     $this->entityTypeManager = $entity_type_manager;
     $this->entityFieldManager = $entity_field_manager;
     $this->moduleHandler = $module_handler;
     $this->currentUser = $user;
+    $this->sectionManager = $section_manager;
   }
 
   /**
@@ -66,6 +75,7 @@ class SectionWizard extends FormBase {
       $container->get('entity_field.manager'),
       $container->get('module_handler'),
       $container->get('current_user'),
+      $container->get('ghi_sections.manager'),
     );
   }
 
@@ -254,16 +264,8 @@ class SectionWizard extends FormBase {
     $base_object = $this->getSubmittedBaseObject($form_state);
 
     if ($action != 'back' && $form_state->get('step') > 0 && $this->baseObjectComplete($form_state)) {
-      $properties = [
-        'type' => 'section',
-        'field_base_object' => $base_object->id(),
-      ];
-      if ($this->needsYear($form_state) && !empty($values['year'])) {
-        $properties['field_year'] = $values['year'];
-      }
-      $sections = $this->entityTypeManager->getStorage('node')->loadByProperties($properties);
-      if (count($sections)) {
-        $section = reset($sections);
+      $section = $this->sectionManager->loadSectionForBaseObject($base_object, $base_object->needsYear() ? $values['year'] : NULL);
+      if ($section) {
         if ($this->needsYear($form_state)) {
           $form_state->setErrorByName('year', $this->t('A section based on @type <em>@label</em> and year <em>@year</em> already exists.', [
             '@type' => strtolower($section->field_base_object->entity->type->entity->label()),
