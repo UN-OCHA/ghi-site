@@ -1,0 +1,23 @@
+uuid: 16127375-bd17-4ead-a12a-3f93c2def7b4
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_decimal_format
+    - ghi_base_objects.base_object_type.plan
+  module:
+    - options
+id: base_object.plan.field_decimal_format
+field_name: field_decimal_format
+entity_type: base_object
+bundle: plan
+label: 'Decimal format'
+description: ''
+required: true
+translatable: false
+default_value:
+  -
+    value: point
+default_value_callback: ''
+settings: {  }
+field_type: list_string
