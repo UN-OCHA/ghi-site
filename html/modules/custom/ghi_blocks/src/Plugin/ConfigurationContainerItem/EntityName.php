@@ -75,6 +75,8 @@ class EntityName extends ConfigurationContainerItemPluginBase {
   public function getRenderArray() {
     /** @var \Drupal\node\NodeInterface $context_node */
     $context_node = $this->getContextValue('context_node');
+    /** @var \Drupal\node\NodeInterface $section_node */
+    $section_node = $this->getContextValue('section_node');
     $entity = $this->getContextValue('entity');
     if (!$entity) {
       return NULL;
@@ -88,7 +90,10 @@ class EntityName extends ConfigurationContainerItemPluginBase {
     $markup = [
       '#markup' => Markup::create($icon_embed . '<span class="name">' . $entity_name . '</span>'),
     ];
-    if ($context_node && $context_node->access('view')) {
+    if ($section_node && $section_node->access('view')) {
+      return Link::fromTextAndUrl($markup, $section_node->toUrl())->toRenderable();
+    }
+    elseif ($context_node && $context_node->access('view')) {
       return Link::fromTextAndUrl($markup, $context_node->toUrl())->toRenderable();
     }
     else {
