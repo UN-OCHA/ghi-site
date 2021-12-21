@@ -9,7 +9,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
-use Drupal\ghi_sections\Import\SectionManager;
+use Drupal\ghi_sections\SectionManager;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 

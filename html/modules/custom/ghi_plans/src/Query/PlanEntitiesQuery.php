@@ -127,7 +127,7 @@ class PlanEntitiesQuery extends EndpointQuery {
    * @return array
    *   An array of attachment objects for the given context.
    */
-  public function getWebContentFileAttachments(ContentEntityInterface $context_object) {
+  public function getWebContentFileAttachments(ContentEntityInterface $context_object = NULL) {
     $attachments = [];
     foreach ($this->getAttachments($context_object, ['type' => 'fileWebContent']) as $attachment) {
       if (empty($attachment->attachmentVersion->value->file->url)) {

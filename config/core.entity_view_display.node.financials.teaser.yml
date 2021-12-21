@@ -5,6 +5,7 @@ dependencies:
   config:
     - core.entity_view_mode.node.teaser
     - field.field.node.financials.field_entity_reference
+    - field.field.node.financials.field_hero_image
     - field.field.node.financials.field_team
     - field.field.node.financials.layout_builder__layout
     - node.type.financials
@@ -22,6 +23,7 @@ content:
     region: content
 hidden:
   field_entity_reference: true
+  field_hero_image: true
   field_team: true
   langcode: true
   layout_builder__layout: true

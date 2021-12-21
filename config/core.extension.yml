@@ -31,6 +31,7 @@ module:
   ghi_content: 0
   ghi_element_sync: 0
   ghi_form_elements: 0
+  ghi_hero_image: 0
   ghi_plans: 0
   ghi_sections: 0
   ghi_subpages: 0

@@ -4,11 +4,13 @@ status: true
 dependencies:
   config:
     - field.field.node.section.field_base_object
+    - field.field.node.section.field_hero_image
     - field.field.node.section.field_team
     - field.field.node.section.field_year
     - field.field.node.section.layout_builder__layout
     - node.type.section
   module:
+    - ghi_hero_image
     - layout_builder
     - layout_builder_restrictions
     - layout_discovery
@@ -75,6 +77,13 @@ content:
       link: true
     third_party_settings: {  }
     type: entity_reference_label
+    region: content
+  field_hero_image:
+    weight: 106
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: ghi_hero_image
     region: content
   field_team:
     weight: 105
