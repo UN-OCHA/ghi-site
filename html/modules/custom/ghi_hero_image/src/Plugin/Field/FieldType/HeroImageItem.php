@@ -28,16 +28,16 @@ class HeroImageItem extends FieldItemBase {
     return [
       'columns' => [
         'source' => [
+          'description' => 'The source identifier for the image storage',
           'type' => 'varchar',
           'length' => 128,
           'not null' => TRUE,
-          'description' => 'The source identifier for the image storage',
         ],
         'settings' => [
+          'description' => 'The settings for the image storage.',
           'type' => 'blob',
           'size' => 'big',
-          'not null' => TRUE,
-          'description' => 'The settings for the image storage.',
+          'serialize' => TRUE,
         ],
       ],
     ];
