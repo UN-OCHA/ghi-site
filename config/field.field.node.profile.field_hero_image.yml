@@ -1,0 +1,24 @@
+uuid: 68d76ba7-dcbf-4d19-bcc9-624d0c28bdd8
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_hero_image
+    - node.type.profile
+  module:
+    - ghi_hero_image
+id: node.profile.field_hero_image
+field_name: field_hero_image
+entity_type: node
+bundle: profile
+label: 'Hero image'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    source: hpc_webcontent_file_attachment
+    settings: {  }
+default_value_callback: ''
+settings: {  }
+field_type: ghi_hero_image
