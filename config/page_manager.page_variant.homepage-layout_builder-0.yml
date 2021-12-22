@@ -52,11 +52,26 @@ variant_settings:
           weight: 0
       third_party_settings: {  }
     -
-      layout_id: layout_onecol
+      layout_id: layout_twocol_section
       layout_settings:
         label: Content
+        column_widths: 25-75
         context_mapping: {  }
-      components: {  }
+      components:
+        6dafa99b-f069-4572-a8fd-38ac7b99f050:
+          uuid: 6dafa99b-f069-4572-a8fd-38ac7b99f050
+          region: second
+          configuration:
+            id: 'views_block:featured_sections-block_sections_featured'
+            label: ''
+            provider: views
+            label_display: visible
+            views_label: ''
+            items_per_page: none
+            context_mapping:
+              field_year_value: year
+          additional: {  }
+          weight: 0
       third_party_settings: {  }
   title_type: manual
   manual_title: 'Global Humanitarian Overview 2021'

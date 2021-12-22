@@ -13,6 +13,16 @@ css-vars-ponyfill:
     https://cdn.jsdelivr.net/npm/css-vars-ponyfill@2: { type: external, minified: true, attributes: { nomodule: true } }
     js/cd-css-vars-ponyfill.js: { attributes: { nomodule: true } }
 
+# Libraries specific to GHI.
+ghi-grid:
+  css:
+    theme:
+      components/ghi-grid/ghi-grid.css: {}
+ghi-section-teaser:
+  css:
+    theme:
+      components/ghi-section-teaser/ghi-section-teaser.css: {}
+
 # Copy libraries from GHO
 gho-achievement:
   css:
