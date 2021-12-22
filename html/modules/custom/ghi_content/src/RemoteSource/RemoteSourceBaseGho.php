@@ -243,7 +243,6 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
       '#type' => 'url',
       '#title' => $this->t('Base URL'),
       '#description' => $this->t('Enter the base url for this remote source'),
-      '#size' => 30,
       '#default_value' => $this->getRemoteBaseUrl(),
       '#required' => TRUE,
     ];
@@ -251,7 +250,6 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
       '#type' => 'textfield',
       '#title' => $this->t('Endpoint'),
       '#description' => $this->t('Enter the endpoint for this remote source'),
-      '#size' => 30,
       '#default_value' => $this->getRemoteEndpoint(),
       '#required' => TRUE,
     ];
@@ -259,7 +257,6 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
       '#type' => 'password',
       '#title' => $this->t('Access key'),
       '#description' => $this->t('Enter the access key for this remote source'),
-      '#size' => 30,
       '#default_value' => $this->getRemoteAccessKey(),
     ];
 
@@ -271,21 +268,19 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
     $form['basic_auth'] = [
       '#type' => 'details',
       '#title' => $this->t('Basic auth'),
-      // '#open' => !empty($basic_auth),
+      '#open' => !empty($basic_auth),
       '#tree' => TRUE,
     ];
     $form['basic_auth']['user'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Username'),
       '#description' => $this->t('Enter the basic auth username'),
-      '#size' => 30,
-      '#default_value' => $basic_auth['pass'] ?? NULL,
+      '#default_value' => $basic_auth['user'] ?? NULL,
     ];
     $form['basic_auth']['pass'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Password'),
       '#description' => $this->t('Enter the basic auth password'),
-      '#size' => 30,
       '#default_value' => $basic_auth['pass'] ?? NULL,
     ];
 

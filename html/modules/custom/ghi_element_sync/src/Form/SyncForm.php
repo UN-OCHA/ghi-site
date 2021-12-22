@@ -46,8 +46,6 @@ class SyncForm extends FormBase {
 
     $this->bundles = [
       'plan',
-      'plan_entity',
-      'governing_entity',
     ];
   }
 

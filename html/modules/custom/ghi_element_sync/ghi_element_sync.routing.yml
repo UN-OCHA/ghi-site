@@ -18,3 +18,12 @@ ghi_element_sync.sync:
     _title: 'Sync elements for all nodes'
   requirements:
     _permission: 'administer site configuration'
+ghi_element_sync.config:
+  path: '/admin/config/services/element-sync'
+  defaults:
+    _form: '\Drupal\ghi_element_sync\Form\ConfigForm'
+    _title: 'Plan element sync'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer site configuration'

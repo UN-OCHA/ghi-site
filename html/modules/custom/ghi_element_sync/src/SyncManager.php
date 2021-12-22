@@ -12,6 +12,7 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -113,6 +114,8 @@ class SyncManager implements ContainerInjectionInterface {
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node for which elements should be synced.
+   * @param array $source_uuids
+   *   Optionally limit to specific source uuids.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    * @param bool $revisions
@@ -126,7 +129,7 @@ class SyncManager implements ContainerInjectionInterface {
    * @throws SyncException
    *   When an error occurs.
    */
-  public function syncNode(NodeInterface $node, MessengerInterface $messenger = NULL, $revisions = FALSE, $cleanup = FALSE) {
+  public function syncNode(NodeInterface $node, array $source_uuids = NULL, MessengerInterface $messenger = NULL, $revisions = FALSE, $cleanup = FALSE) {
     if ($messenger === NULL) {
       $messenger = $this->messenger();
     }
@@ -142,6 +145,9 @@ class SyncManager implements ContainerInjectionInterface {
 
     foreach ($this->getRemoteConfigurations($node) as $element) {
       if (!$this->isSyncable($element)) {
+        continue;
+      }
+      if ($source_uuids !== NULL && !in_array($element->uuid, $source_uuids)) {
         continue;
       }
       $definition = $this->getCorrespondingPluginDefintionForElement($element);
@@ -208,8 +214,10 @@ class SyncManager implements ContainerInjectionInterface {
   public function getRemoteConfigurations(NodeInterface $node) {
     $settings = $this->config->get('ghi_element_sync.settings');
 
-    $original_id = $node->field_original_id->value;
-    $bundle = $node->bundle();
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
+
+    $original_id = $base_object->field_original_id->value;
+    $bundle = $base_object->bundle();
 
     if (empty($settings->get('sync_source'))) {
       throw new SyncException('Error: Source is not configured');
@@ -220,7 +228,13 @@ class SyncManager implements ContainerInjectionInterface {
       'ghi_access' => $settings->get('access_key'),
     ];
     $jar = CookieJar::fromArray($cookies, parse_url($settings->get('sync_source'), PHP_URL_HOST));
-    $response = $this->httpClient->request('GET', $url, ['cookies' => $jar]);
+
+    try {
+      $response = $this->httpClient->request('GET', $url, ['cookies' => $jar]);
+    }
+    catch (\Exception $e) {
+      throw new SyncException($e->getMessage());
+    }
 
     $code = $response->getStatusCode();
     if ($code != 200) {
