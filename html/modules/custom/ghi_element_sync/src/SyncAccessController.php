@@ -6,11 +6,35 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Access controller for the element sync form.
  */
 class SyncAccessController extends ControllerBase {
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\ghi_element_sync\SyncManager
+   */
+  protected $syncManager;
+
+  /**
+   * Public constructor.
+   */
+  public function __construct(SyncManager $sync_manager) {
+    $this->syncManager = $sync_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('ghi_element_sync.sync_elements'),
+    );
+  }
 
   /**
    * Access callback for the element sync form.
@@ -22,11 +46,10 @@ class SyncAccessController extends ControllerBase {
    *   The access result.
    */
   public function accessElementSyncForm(NodeInterface $node) {
-    $config = $this->config('ghi_element_sync.settings');
-    if (empty($config->get('sync_source'))) {
+    if (empty($this->syncManager->getSyncSourceUrl())) {
       return AccessResult::forbidden();
     }
-    if (!in_array($node->bundle(), $config->get('node_types') ?? [])) {
+    if (!in_array($node->bundle(), $this->syncManager->getAvailableNodeTypes())) {
       return AccessResult::forbidden();
     }
     $base_object = BaseObjectHelper::getBaseObjectFromNode($node);

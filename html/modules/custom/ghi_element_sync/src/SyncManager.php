@@ -134,6 +134,11 @@ class SyncManager implements ContainerInjectionInterface {
       $messenger = $this->messenger();
     }
 
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
+    if ($base_object->bundle() != 'plan') {
+      return FALSE;
+    }
+
     $sections = $this->getNodeSections($node);
     $delta = 0;
 
@@ -193,7 +198,7 @@ class SyncManager implements ContainerInjectionInterface {
     $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
     if ($revisions) {
       $node->setNewRevision(TRUE);
-      $node->revision_log = $this->t('Synced page elements from @source_url', ['@source_url' => $source_url]);
+      $node->revision_log = $this->t('Synced page elements from @source_url', ['@source_url' => $this->getSyncSourceUrl()]);
       $node->setRevisionCreationTime($this->time->getRequestTime());
       $node->setRevisionUserId($this->currentUser->id());
     }
@@ -212,7 +217,7 @@ class SyncManager implements ContainerInjectionInterface {
    *   An array of element configuration objects from the remote.
    */
   public function getRemoteConfigurations(NodeInterface $node) {
-    $settings = $this->config->get('ghi_element_sync.settings');
+    $settings = $this->getSettings();
 
     $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
 
@@ -369,6 +374,36 @@ class SyncManager implements ContainerInjectionInterface {
     $section_storage->setContextValue('view_mode', 'default');
     $this->layoutTempstoreRepository->delete($section_storage);
     $messenger->addMessage($this->t('Cleared layout builder temporary storage'));
+  }
+
+  /**
+   * Get the sync settings.
+   *
+   * @return \Drupal\Core\Config\ImmutableConfig
+   *   A settings object.
+   */
+  private function getSettings() {
+    return $this->config->get('ghi_element_sync.settings');
+  }
+
+  /**
+   * Get the sync source URL.
+   *
+   * @return string
+   *   The sync source url.
+   */
+  public function getSyncSourceUrl() {
+    return $this->getSettings()->get('sync_source');
+  }
+
+  /**
+   * Get the available node types for syncing.
+   *
+   * @return array
+   *   An array of node type names.
+   */
+  public function getAvailableNodeTypes() {
+    return $this->getSettings()->get('node_types') ?? [];
   }
 
 }

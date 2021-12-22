@@ -44,9 +44,7 @@ class SyncForm extends FormBase {
     $this->syncManager = $sync_manager;
     $this->entityTypeManager = $entity_type_manager;
 
-    $this->bundles = [
-      'plan',
-    ];
+    $this->bundles = $this->syncManager->getAvailableNodeTypes();
   }
 
   /**
