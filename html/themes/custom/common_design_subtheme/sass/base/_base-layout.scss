@@ -17,6 +17,12 @@
   .layout__region--first {
     padding-right: 1rem;
   }
+
+  &.has-second-region:not(.has-both-regions) {
+    .layout__region--second {
+      margin-left: 25%;
+    }
+  }
 }
 
 .material-icons {
