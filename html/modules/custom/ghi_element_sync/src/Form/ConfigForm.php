@@ -97,7 +97,7 @@ class ConfigForm extends ConfigFormBase {
       '#options' => array_map(function ($item) {
         return $this->entityTypeManager->getStorage('node_type')->load($item)->get('name');
       }, array_combine($available_node_types, $available_node_types)),
-      '#default_value' => $config->get('node_types') ?? NULL,
+      '#default_value' => $config->get('node_types') ?? [],
     ];
 
     return $form;

@@ -229,13 +229,23 @@ class SyncManager implements ContainerInjectionInterface {
     }
     $source_url = rtrim($settings->get('sync_source'), '/');
     $url = $source_url . '/admin/hpc/plan-elements/export/' . $original_id . '/' . $bundle . '?time=' . microtime(TRUE);
+
+    $headers = [];
+    $basic_auth = $settings->get('basic_auth');
+    if ($basic_auth && !empty($basic_auth['user']) && !empty($basic_auth['pass'])) {
+      $headers['Authorization'] = 'Basic ' . base64_encode($basic_auth['user'] . ':' . $basic_auth['pass']);
+    }
+
     $cookies = [
       'ghi_access' => $settings->get('access_key'),
     ];
     $jar = CookieJar::fromArray($cookies, parse_url($settings->get('sync_source'), PHP_URL_HOST));
 
     try {
-      $response = $this->httpClient->request('GET', $url, ['cookies' => $jar]);
+      $response = $this->httpClient->request('GET', $url, [
+        'headers' => $headers,
+        'cookies' => $jar,
+      ]);
     }
     catch (\Exception $e) {
       throw new SyncException($e->getMessage());
