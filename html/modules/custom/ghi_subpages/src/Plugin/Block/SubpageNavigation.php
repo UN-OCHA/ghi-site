@@ -7,6 +7,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
+use Drupal\layout_builder\LayoutEntityHelperTrait;
+use Drupal\node\NodeInterface;
 
 /**
  * Provides a 'SubpageNavigation' block.
@@ -21,6 +23,8 @@ use Drupal\ghi_subpages\Helpers\SubpageHelper;
  * )
  */
 class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInterface {
+
+  use LayoutEntityHelperTrait;
 
   /**
    * The entity type manager.
@@ -108,8 +112,13 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       $subpage = reset($matching_subpages);
       $cache_tags = array_merge($cache_tags, $subpage->getCacheTags());
 
-      if (!$subpage->access('view')) {
-        $tabs[0]['children'][] = $subpage->getTitle();
+      if (!$subpage->access('view') || (!$this->subpageHasContent($subpage) && !$subpage->access('update'))) {
+        $tabs[0]['children'][] = [
+          '#markup' => $subpage->getTitle(),
+          '#wrapper_attributes' => [
+            'class' => ['disabled'],
+          ],
+        ];
         continue;
       }
       $link = $subpage->toLink(NULL)->toRenderable();
@@ -133,6 +142,24 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
     ];
 
     return $output;
+  }
+
+  /**
+   * Check if the given subpage has configured content already.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The subpage node to check.
+   *
+   * @return bool
+   *   TRUE if there is content, FALSE otherwhise.
+   */
+  private function subpageHasContent(NodeInterface $node) {
+    $section_storage = $this->getSectionStorageForEntity($node);
+    if (!$section_storage) {
+      return FALSE;
+    }
+    $sections = $section_storage->getSections();
+    return !empty($sections[0]->getComponents());
   }
 
 }

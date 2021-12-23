@@ -3,16 +3,39 @@
 //——————————————————————————————————————————————————————————————————————————————
 
 .block-subpage-navigation {
-  ul {
+  ul.links--entity-navigation {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
     padding-inline-start: 0;
+    border-top: 1px solid var(--hpc-border-color);
+    border-bottom: 1px solid var(--hpc-border-color);
 
     li {
       list-style-type: none;
 
       ul {
-        padding-inline-start: 1rem;
+        padding-inline-start: 0;
+
+        li.disabled {
+          opacity: 0.5;
+        }
+      }
+
+      a {
+        text-decoration: none;
+        color: var(--hpc-dark-brown);
+
+        &.active {
+          font-weight: bold;
+        }
       }
     }
+  }
+}
+
+.block-subpage-title {
+  h2 {
+    margin-top: 0.5rem;
   }
 }
 
