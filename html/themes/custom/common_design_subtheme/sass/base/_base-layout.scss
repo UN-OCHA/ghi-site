@@ -44,6 +44,12 @@
 #main-content {
   position: relative;
 
+  .cd-page-title {
+    margin: 1rem 0;
+    padding: 0;
+    border-bottom: 0;
+  }
+
   .block-local-tasks-block {
     position: absolute;
     z-index: 1;

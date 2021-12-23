@@ -113,6 +113,7 @@ class DataPointHelper {
         $rendered_value = [
           '#theme' => 'hpc_amount',
           '#amount' => $value,
+          '#scale' => 'full',
         ];
         break;
 
