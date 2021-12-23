@@ -4,13 +4,13 @@ namespace Drupal\ghi_plans\Query;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
 use GuzzleHttp\ClientInterface;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\CommonHelper;
-use Drupal\node\NodeInterface;
 
 /**
  * Query class for using the project search API.
@@ -124,13 +124,13 @@ class PlanProjectSearchQuery extends EndpointQuery {
   /**
    * Get the number of projects in the context of the given node.
    *
-   * @param \Drupal\node\NodeInterface $context_node
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_node
    *   The context node.
    *
    * @return int
    *   The number of projects.
    */
-  public function getProjectCount(NodeInterface $context_node = NULL) {
+  public function getProjectCount(ContentEntityInterface $context_node = NULL) {
     $projects = $this->getProjects($context_node);
     return count($projects);
   }
@@ -138,13 +138,13 @@ class PlanProjectSearchQuery extends EndpointQuery {
   /**
    * Get the number of organizations in the context of the given node.
    *
-   * @param \Drupal\node\NodeInterface $context_node
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_node
    *   The context node.
    *
    * @return int
    *   The number of organizations.
    */
-  public function getOrganizationCount(NodeInterface $context_node = NULL) {
+  public function getOrganizationCount(ContentEntityInterface $context_node = NULL) {
     $organizations = $this->getOrganizations($context_node);
     return count($organizations);
   }
@@ -152,7 +152,7 @@ class PlanProjectSearchQuery extends EndpointQuery {
   /**
    * Get the organizations in the context of the given node.
    *
-   * @param \Drupal\node\NodeInterface $context_node
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_node
    *   The context node.
    * @param array $projects
    *   An optonal array of projects from which the organizations should be
@@ -161,7 +161,7 @@ class PlanProjectSearchQuery extends EndpointQuery {
    * @return array
    *   An array of organizations.
    */
-  public function getOrganizations(NodeInterface $context_node = NULL, array $projects = NULL) {
+  public function getOrganizations(ContentEntityInterface $context_node = NULL, array $projects = NULL) {
     if (empty($projects)) {
       $projects = $this->getProjects($context_node);
     }
@@ -186,7 +186,7 @@ class PlanProjectSearchQuery extends EndpointQuery {
   /**
    * Get the projects in the context of the given node.
    *
-   * @param \Drupal\node\NodeInterface $context_node
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_node
    *   The context node.
    * @param bool $filter_unpublished
    *   Whether unpublished projects should be filtered.
@@ -194,7 +194,7 @@ class PlanProjectSearchQuery extends EndpointQuery {
    * @return array
    *   An array of projects.
    */
-  public function getProjects(NodeInterface $context_node = NULL, $filter_unpublished = FALSE) {
+  public function getProjects(ContentEntityInterface $context_node = NULL, $filter_unpublished = FALSE) {
     $data = $this->getData();
     if (empty($data) || !is_array($data)) {
       return [];

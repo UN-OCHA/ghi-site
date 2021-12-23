@@ -7,6 +7,7 @@ use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\ghi_plans\Query\PlanEntitiesQuery;
@@ -63,13 +64,7 @@ class HeroImageFormatter extends FormatterBase implements ContainerFactoryPlugin
     // only works for plan sections.
     $element = [];
     $entity = $items->getEntity();
-
-    /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
-    $base_object = $entity->hasField('field_base_object') ? $entity->field_base_object->entity : NULL;
-    if (!$base_object) {
-      $parent_node = $entity->hasField('field_entity_reference') ? $entity->field_entity_reference->entity : NULL;
-      $base_object = $parent_node && $parent_node->hasField('field_base_object') ? $parent_node->field_base_object->entity : NULL;
-    }
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($entity);
 
     $plan_object = $base_object && $base_object->bundle() == 'plan' ? $base_object : NULL;
     $this->entitiesQuery->setPlaceholder('plan_id', $base_object->field_original_id->value);

@@ -56,7 +56,7 @@ class SyncBatch {
     $messenger = \Drupal::messenger();
 
     try {
-      if ($sync_manager->syncNode($node, $messenger, $revisions, $cleanup)) {
+      if ($sync_manager->syncNode($node, NULL, $messenger, $revisions, $cleanup)) {
         $context['results']['processed']++;
       }
       else {

@@ -12,6 +12,7 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -113,6 +114,8 @@ class SyncManager implements ContainerInjectionInterface {
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node for which elements should be synced.
+   * @param array $source_uuids
+   *   Optionally limit to specific source uuids.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    * @param bool $revisions
@@ -126,9 +129,14 @@ class SyncManager implements ContainerInjectionInterface {
    * @throws SyncException
    *   When an error occurs.
    */
-  public function syncNode(NodeInterface $node, MessengerInterface $messenger = NULL, $revisions = FALSE, $cleanup = FALSE) {
+  public function syncNode(NodeInterface $node, array $source_uuids = NULL, MessengerInterface $messenger = NULL, $revisions = FALSE, $cleanup = FALSE) {
     if ($messenger === NULL) {
       $messenger = $this->messenger();
+    }
+
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
+    if ($base_object->bundle() != 'plan') {
+      return FALSE;
     }
 
     $sections = $this->getNodeSections($node);
@@ -142,6 +150,9 @@ class SyncManager implements ContainerInjectionInterface {
 
     foreach ($this->getRemoteConfigurations($node) as $element) {
       if (!$this->isSyncable($element)) {
+        continue;
+      }
+      if ($source_uuids !== NULL && !in_array($element->uuid, $source_uuids)) {
         continue;
       }
       $definition = $this->getCorrespondingPluginDefintionForElement($element);
@@ -187,7 +198,7 @@ class SyncManager implements ContainerInjectionInterface {
     $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
     if ($revisions) {
       $node->setNewRevision(TRUE);
-      $node->revision_log = $this->t('Synced page elements from @source_url', ['@source_url' => $source_url]);
+      $node->revision_log = $this->t('Synced page elements from @source_url', ['@source_url' => $this->getSyncSourceUrl()]);
       $node->setRevisionCreationTime($this->time->getRequestTime());
       $node->setRevisionUserId($this->currentUser->id());
     }
@@ -206,10 +217,12 @@ class SyncManager implements ContainerInjectionInterface {
    *   An array of element configuration objects from the remote.
    */
   public function getRemoteConfigurations(NodeInterface $node) {
-    $settings = $this->config->get('ghi_element_sync.settings');
+    $settings = $this->getSettings();
 
-    $original_id = $node->field_original_id->value;
-    $bundle = $node->bundle();
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
+
+    $original_id = $base_object->field_original_id->value;
+    $bundle = $base_object->bundle();
 
     if (empty($settings->get('sync_source'))) {
       throw new SyncException('Error: Source is not configured');
@@ -220,7 +233,13 @@ class SyncManager implements ContainerInjectionInterface {
       'ghi_access' => $settings->get('access_key'),
     ];
     $jar = CookieJar::fromArray($cookies, parse_url($settings->get('sync_source'), PHP_URL_HOST));
-    $response = $this->httpClient->request('GET', $url, ['cookies' => $jar]);
+
+    try {
+      $response = $this->httpClient->request('GET', $url, ['cookies' => $jar]);
+    }
+    catch (\Exception $e) {
+      throw new SyncException($e->getMessage());
+    }
 
     $code = $response->getStatusCode();
     if ($code != 200) {
@@ -355,6 +374,36 @@ class SyncManager implements ContainerInjectionInterface {
     $section_storage->setContextValue('view_mode', 'default');
     $this->layoutTempstoreRepository->delete($section_storage);
     $messenger->addMessage($this->t('Cleared layout builder temporary storage'));
+  }
+
+  /**
+   * Get the sync settings.
+   *
+   * @return \Drupal\Core\Config\ImmutableConfig
+   *   A settings object.
+   */
+  private function getSettings() {
+    return $this->config->get('ghi_element_sync.settings');
+  }
+
+  /**
+   * Get the sync source URL.
+   *
+   * @return string
+   *   The sync source url.
+   */
+  public function getSyncSourceUrl() {
+    return $this->getSettings()->get('sync_source');
+  }
+
+  /**
+   * Get the available node types for syncing.
+   *
+   * @return array
+   *   An array of node type names.
+   */
+  public function getAvailableNodeTypes() {
+    return $this->getSettings()->get('node_types') ?? [];
   }
 
 }

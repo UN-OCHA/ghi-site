@@ -3,12 +3,38 @@
 namespace Drupal\ghi_element_sync;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Controller\ControllerBase;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Access controller for the element sync form.
  */
-class SyncAccessController {
+class SyncAccessController extends ControllerBase {
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\ghi_element_sync\SyncManager
+   */
+  protected $syncManager;
+
+  /**
+   * Public constructor.
+   */
+  public function __construct(SyncManager $sync_manager) {
+    $this->syncManager = $sync_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('ghi_element_sync.sync_elements'),
+    );
+  }
 
   /**
    * Access callback for the element sync form.
@@ -20,8 +46,14 @@ class SyncAccessController {
    *   The access result.
    */
   public function accessElementSyncForm(NodeInterface $node) {
-    $allowed = $node->bundle() == 'plan' || ($node->hasField('field_plan') && $node->hasField('field_original_id') && !$node->field_original_id->isEmpty());
-    return AccessResult::allowedIf($allowed);
+    if (empty($this->syncManager->getSyncSourceUrl())) {
+      return AccessResult::forbidden();
+    }
+    if (!in_array($node->bundle(), $this->syncManager->getAvailableNodeTypes())) {
+      return AccessResult::forbidden();
+    }
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
+    return AccessResult::allowedIf($base_object && $base_object->bundle() == 'plan');
   }
 
 }

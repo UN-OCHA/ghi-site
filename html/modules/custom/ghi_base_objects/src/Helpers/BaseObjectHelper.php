@@ -3,11 +3,34 @@
 namespace Drupal\ghi_base_objects\Helpers;
 
 use Drupal\hpc_common\Helpers\EntityHelper;
+use Drupal\Core\Entity\FieldableEntityInterface;
 
 /**
  * Helper class for base objects.
  */
 class BaseObjectHelper extends EntityHelper {
+
+  /**
+   * Get a base object from an entity.
+   *
+   * This first checks if the entity has field 'field_base_object'. If not, it
+   * also checks if the entity has a field 'field_entity_reference' and bubbles
+   * up that reference.
+   *
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   *   The entity to check.
+   *
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
+   *   A base object if onw is found, NULL otherwhise.
+   */
+  public static function getBaseObjectFromNode(FieldableEntityInterface $entity) {
+    $base_object = $entity->hasField('field_base_object') ? $entity->field_base_object->entity : NULL;
+    if (!$base_object) {
+      $parent_node = $entity->hasField('field_entity_reference') ? $entity->field_entity_reference->entity : NULL;
+      $base_object = $parent_node ? self::getBaseObjectFromNode($parent_node) : NULL;
+    }
+    return $base_object;
+  }
 
   /**
    * Load a base object from it's original ID.
