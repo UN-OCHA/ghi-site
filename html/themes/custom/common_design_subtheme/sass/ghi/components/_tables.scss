@@ -1,5 +1,10 @@
 table.ghi-table {
   tbody {
+
+    td:first-child.subrow {
+      padding-left: 2.5rem;
+    }
+
     td.data-point--widget-pie-chart {
       white-space: nowrap;
 

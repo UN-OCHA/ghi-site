@@ -227,6 +227,11 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       return NULL;
     }
 
+    // Sort the entities by name.
+    usort($entities, function ($a, $b) {
+      return strnatcasecmp($a->name, $b->name);
+    });
+
     $rows = [];
     foreach ($entities as $entity) {
       if (!array_key_exists($entity->id, $objects)) {
@@ -272,12 +277,6 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     if (empty($rows)) {
       return;
     }
-
-    // @todo Make this work with an arbitrary setup. Currently it only works
-    // for the entity name as first column.
-    usort($rows, function ($a, $b) {
-      return strnatcasecmp($a[0]['data-sort-value'], $b[0]['data-sort-value']);
-    });
 
     return [
       '#theme' => 'table',
