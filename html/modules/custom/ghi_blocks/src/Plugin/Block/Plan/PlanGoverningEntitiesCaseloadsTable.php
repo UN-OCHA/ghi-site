@@ -180,10 +180,18 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   public function buildContent() {
     $conf = $this->getBlockConfig();
 
+    // Get the entities and configured columns.
     $entities = $this->getEntityObjects();
     $columns = $this->getConfiguredItems($conf['table']['columns']);
 
     if (empty($columns) || empty($entities)) {
+      return;
+    }
+
+    $attachments = $this->getAttachmentsForEntities($entities) ?? [];
+    if (empty($attachments) && !$conf['base']['include_non_caseloads']) {
+      // No attachments found and the table is not configured to show entities
+      // without attachments.
       return;
     }
 
@@ -203,9 +211,6 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
 
     // Get the prototype.
     $prototype = $this->getAttachmentPrototype();
-
-    // Get all attachments.
-    $attachments = $this->getAttachmentsForEntities($entities);
 
     // Filter for the configured attachment prototype id.
     $attachments = $this->filterAttachmentsByPrototype($attachments, $prototype->id);
@@ -263,6 +268,10 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       }
     }
     $rows = array_filter($rows);
+
+    if (empty($rows)) {
+      return;
+    }
 
     // @todo Make this work with an arbitrary setup. Currently it only works
     // for the entity name as first column.
@@ -500,7 +509,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    *   An array of prototype names, keyed by the prototype id.
    */
   private function getUniquePrototypes() {
-    $attachments = $this->getAttachments();
+    $attachments = $this->getAttachments() ?? [];
     $prototype_opions = [];
     foreach ($attachments as $attachment) {
       $prototype = $attachment->prototype;
