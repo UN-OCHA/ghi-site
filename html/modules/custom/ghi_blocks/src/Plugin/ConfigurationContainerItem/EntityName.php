@@ -7,6 +7,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Query\IconQuery;
+use Drupal\node\NodeInterface;
 
 /**
  * Provides an entity counter item for configuration containers.
@@ -93,7 +94,7 @@ class EntityName extends ConfigurationContainerItemPluginBase {
     if ($section_node && $section_node->access('view')) {
       return Link::fromTextAndUrl($markup, $section_node->toUrl())->toRenderable();
     }
-    elseif ($context_node && $context_node->access('view')) {
+    elseif ($context_node && $context_node instanceof NodeInterface && $context_node->access('view')) {
       return Link::fromTextAndUrl($markup, $context_node->toUrl())->toRenderable();
     }
     else {
