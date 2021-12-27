@@ -3,6 +3,10 @@
   margin-bottom: 1rem;
 }
 
+.hpc-form-wrapper .glb-form-item--error-message {
+  padding: 0.5rem 0;
+}
+
 /* #layout-builder-modal input[data-drupal-selector="edit-actions-submit"].button--primary {
   position: absolute;
   bottom: 1rem;

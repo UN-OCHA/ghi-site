@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block;
 
+use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
@@ -329,7 +330,12 @@ abstract class GHIBlockBase extends HPCBlockBase {
     if (!empty($build_info['args']) && $build_info['args'][0] instanceof OverridesSectionStorage) {
       $section_storage = $build_info['args'][0];
       if ($section_storage->getContext('entity')) {
-        $this->setContextValue('node', $build_info['args'][0]->getContextValue('entity'));
+        try {
+          $this->setContextValue('node', $build_info['args'][0]->getContextValue('entity'));
+        }
+        catch (ContextException $e) {
+          // Fail silently.
+        }
       }
     }
 

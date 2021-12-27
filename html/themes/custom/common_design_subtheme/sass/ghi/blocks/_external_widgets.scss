@@ -1,0 +1,20 @@
+.ghi-block-generic-external-widget {
+  .external-widget {
+    &.up-2 {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      .iframe-wrapper {
+        width: 100% !important;
+      }
+
+      @include tablet() {
+        display: flex;
+        justify-content: space-between;
+        .iframe-wrapper {
+          width: 49% !important;
+        }
+      }
+    }
+  }
+}
