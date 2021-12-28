@@ -6,7 +6,9 @@ use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
+use Drupal\node\NodeInterface;
 
 /**
  * Provides an 'External Widget' block.
@@ -15,12 +17,50 @@ use Drupal\ghi_form_elements\Helpers\FormElementHelper;
  *  id = "generic_external_widget",
  *  admin_label = @Translation("External Widget"),
  *  category = @Translation("Generic elements"),
- *  title = false
+ *  title = false,
+ *  valid_source_elements = {
+ *    "generic_external_widgets",
+ *    "plan_external_widget"
+ *  },
+ *  context_definitions = {
+ *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE)
+ *  }
  * )
  */
-class ExternalWidget extends GHIBlockBase {
+class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
 
   const MAX_ITEMS = 2;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function mapConfig($config, NodeInterface $node, $element_type) {
+    $mapped_config = [];
+    if ($element_type == 'generic_external_widgets') {
+      $mapped_config = [
+        'select_number' => $config->select_number,
+        'widgets' => array_map(function ($item) {
+          return (array) $item;
+        }, (array) $config->widgets),
+      ];
+    }
+    else {
+      // This was a single widget element.
+      $mapped_config['select_number'] = 1;
+      $mapped_config['widgets'] = [
+        [
+          'widget_url' => $config->widget_url,
+          'widget_url_skip_validation' => $config->widget_url_skip_validation,
+          'widget_height' => $config->height,
+        ],
+      ];
+    }
+    return [
+      'label' => '',
+      'label_display' => TRUE,
+      'hpc' => $mapped_config,
+    ];
+  }
 
   /**
    * {@inheritdoc}

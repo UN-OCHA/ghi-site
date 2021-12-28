@@ -72,7 +72,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
   /**
    * {@inheritdoc}
    */
-  public static function mapConfig($config, NodeInterface $node) {
+  public static function mapConfig($config, NodeInterface $node, $element_type) {
     $items = [];
     // Define a transition map.
     $transition_map = [
