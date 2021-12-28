@@ -166,17 +166,17 @@ class SyncManager implements ContainerInjectionInterface {
       $existing_component = $this->getExistingSyncedComponent($node, $element);
       if ($existing_component) {
         // Update an existing component.
-        $configuration = $class::mapConfig($element->configuration, $node) + $context_mapping + $existing_component->get('configuration');
+        $configuration = $class::mapConfig($element->configuration, $node, $element->type) + $context_mapping + $existing_component->get('configuration');
         $existing_component->setConfiguration($configuration);
         $messenger->addMessage($this->t('Updated %plugin_title', [
           '%plugin_title' => $definition['admin_label'],
-        ]));
+        ]), $messenger::TYPE_STATUS, TRUE);
       }
       else {
         // Append a new component.
         $messenger->addMessage($this->t('Added %plugin_title', [
           '%plugin_title' => $definition['admin_label'],
-        ]));
+        ]), $messenger::TYPE_STATUS, TRUE);
         $config = array_filter([
           'id' => $definition['id'],
           'provider' => $definition['provider'],
@@ -185,7 +185,7 @@ class SyncManager implements ContainerInjectionInterface {
             'source_uuid' => $element->uuid,
           ],
         ]) + $context_mapping;
-        $config += $class::mapConfig($element->configuration, $node);
+        $config += $class::mapConfig($element->configuration, $node, $element->type);
 
         $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
         $sections[$delta]->appendComponent($component);
@@ -202,6 +202,49 @@ class SyncManager implements ContainerInjectionInterface {
       $node->setRevisionCreationTime($this->time->getRequestTime());
       $node->setRevisionUserId($this->currentUser->id());
     }
+    $node->save();
+
+    return TRUE;
+  }
+
+  /**
+   * Remove previously synched elements from a node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node for which elements should be synced.
+   *
+   * @return bool
+   *   Indicating whether the node has been sucessfully reset or not.
+   *
+   * @throws SyncException
+   *   When an error occurs.
+   */
+  public function resetNode(NodeInterface $node) {
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
+    if ($base_object->bundle() != 'plan') {
+      return FALSE;
+    }
+
+    $sections = $this->getNodeSections($node);
+    $delta = 0;
+
+    foreach ($this->getRemoteConfigurations($node) as $element) {
+      if (!$this->isSyncable($element)) {
+        continue;
+      }
+      $existing_component = $this->getExistingSyncedComponent($node, $element);
+      if ($existing_component) {
+        $sections[$delta]->removeComponent($existing_component->getUuid());
+      }
+    }
+
+    $this->layoutManagerDiscardChanges($node, $this->messenger());
+
+    $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+    $node->setNewRevision(TRUE);
+    $node->revision_log = $this->t('Removed previously synced page elements from @source_url', ['@source_url' => $this->getSyncSourceUrl()]);
+    $node->setRevisionCreationTime($this->time->getRequestTime());
+    $node->setRevisionUserId($this->currentUser->id());
     $node->save();
 
     return TRUE;
@@ -282,7 +325,16 @@ class SyncManager implements ContainerInjectionInterface {
    *   A plugin definition, or NULL if the element type is invalid.
    */
   public function getCorrespondingPluginDefintionForElement($element) {
-    return $this->blockManager->getDefinition($element->type, FALSE);
+    $definitions = $this->blockManager->getDefinitions();
+    if (isset($definitions[$element->type])) {
+      return $definitions[$element->type];
+    }
+    // If there is no direct match, see if we can find a plugin that wants to
+    // handle this element type.
+    $definitions = array_filter($definitions, function ($definition) use ($element) {
+      return array_key_exists('valid_source_elements', $definition) && in_array($element->type, $definition['valid_source_elements']);
+    });
+    return !empty($definitions) && count($definitions) == 1 ? reset($definitions) : NULL;
   }
 
   /**
@@ -324,7 +376,7 @@ class SyncManager implements ContainerInjectionInterface {
     if (!$existing_component) {
       return $this->t('Not synced');
     }
-    $remote_hash = md5(serialize($class::mapConfig($element->configuration, $node)['hpc']));
+    $remote_hash = md5(serialize($class::mapConfig($element->configuration, $node, $element->type)['hpc']));
     $local_hash = md5(serialize($existing_component->get('configuration')['hpc']));
     return $remote_hash == $local_hash ? $this->t('In sync') : $this->t('Changed');
   }
@@ -376,7 +428,7 @@ class SyncManager implements ContainerInjectionInterface {
    * @param \Drupal\node\NodeInterface $node
    *   The node for which elements should be synced.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   An optional messenger to use for result messages.
+   *   A messenger to use for result messages.
    */
   private function layoutManagerDiscardChanges(NodeInterface $node, MessengerInterface $messenger) {
     $section_storage = $this->getSectionStorageForEntity($node);

@@ -60,6 +60,11 @@ class SyncNodeForm extends FormBase {
       '#value' => $this->t('Sync selected elements'),
     ];
 
+    $form['remove_synced'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Remove all sync elements'),
+    ];
+
     $header = [
       'source_type' => $this->t('Source type'),
       'plugin' => $this->t('Plugin'),
@@ -104,7 +109,12 @@ class SyncNodeForm extends FormBase {
     $node = $form['#node'];
     $selected_source_uuids = array_filter($form_state->getValue('sync_element_select'));
     $action = end($form_state->getTriggeringElement()['#parents']);
-    $this->syncManager->syncNode($node, $action == 'sync_selected' ? $selected_source_uuids : NULL);
+    if ($action == 'remove_synced') {
+      $this->syncManager->resetNode($node);
+    }
+    else {
+      $this->syncManager->syncNode($node, $action == 'sync_selected' ? $selected_source_uuids : NULL);
+    }
   }
 
 }

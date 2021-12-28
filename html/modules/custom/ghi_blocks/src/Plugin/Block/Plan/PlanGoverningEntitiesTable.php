@@ -83,7 +83,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   /**
    * {@inheritdoc}
    */
-  public static function mapConfig($config, NodeInterface $node) {
+  public static function mapConfig($config, NodeInterface $node, $element_type) {
     $columns = [];
     // Define a transition map.
     $transition_map = [

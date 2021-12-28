@@ -16,10 +16,12 @@ interface SyncableBlockInterface {
    *   The source configuration object.
    * @param \Drupal\node\NodeInterface $node
    *   The node to be synced.
+   * @param string $element_type
+   *   The element type as identified in the remote system.
    *
    * @return array
    *   The mapped configuration array.
    */
-  public static function mapConfig($config, NodeInterface $node);
+  public static function mapConfig($config, NodeInterface $node, $element_type);
 
 }

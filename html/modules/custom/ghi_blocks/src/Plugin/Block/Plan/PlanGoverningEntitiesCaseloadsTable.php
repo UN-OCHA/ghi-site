@@ -90,7 +90,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   /**
    * {@inheritdoc}
    */
-  public static function mapConfig($config, NodeInterface $node) {
+  public static function mapConfig($config, NodeInterface $node, $element_type) {
     $columns = [];
     // Define a transition map.
     $transition_map = [
