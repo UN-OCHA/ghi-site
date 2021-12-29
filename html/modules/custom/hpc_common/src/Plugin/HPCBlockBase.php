@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Component\Plugin\PluginHelper;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\KeyValueStore\KeyValueFactory;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -107,9 +108,16 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   protected $entityTypeManager;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\File\FileSystemInterface
+   */
+  protected $fileSystem;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->requestStack = $request_stack;
@@ -117,6 +125,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     $this->keyValueFactory = $keyValueFactory;
     $this->endpointQuery = $endpoint_query;
     $this->entityTypeManager = $entity_type_manager;
+    $this->fileSystem = $file_system;
 
     // Mostly used to support meta data in downloads.
     $this->setCurrentUri();
@@ -134,7 +143,8 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
       $container->get('router.no_access_checks'),
       $container->get('keyvalue'),
       $container->get('hpc_api.endpoint_query'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('file_system')
     );
   }
 

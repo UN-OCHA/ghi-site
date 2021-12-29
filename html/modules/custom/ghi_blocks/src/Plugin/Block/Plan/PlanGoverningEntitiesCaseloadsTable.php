@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueFactory;
 use Drupal\Core\Render\Markup;
@@ -62,8 +63,8 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, ConfigurationContainerItemManager $configuration_container_item_manager, SectionManager $section_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $request_stack, $router, $keyValueFactory, $endpoint_query, $entity_type_manager);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system, ConfigurationContainerItemManager $configuration_container_item_manager, SectionManager $section_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $request_stack, $router, $keyValueFactory, $endpoint_query, $entity_type_manager, $file_system);
 
     $this->configurationContainerItemManager = $configuration_container_item_manager;
     $this->sectionManager = $section_manager;
@@ -82,6 +83,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       $container->get('keyvalue'),
       $container->get('hpc_api.endpoint_query'),
       $container->get('entity_type.manager'),
+      $container->get('file_system'),
       $container->get('plugin.manager.configuration_container_item_manager'),
       $container->get('ghi_sections.manager'),
     );
@@ -90,7 +92,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   /**
    * {@inheritdoc}
    */
-  public static function mapConfig($config, NodeInterface $node, $element_type) {
+  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
     $columns = [];
     // Define a transition map.
     $transition_map = [
