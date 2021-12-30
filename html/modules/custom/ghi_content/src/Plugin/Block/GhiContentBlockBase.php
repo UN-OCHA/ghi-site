@@ -4,6 +4,7 @@ namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\KeyValueStore\KeyValueFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -35,8 +36,8 @@ abstract class GhiContentBlockBase extends GHIBlockBase implements AutomaticTitl
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, RemoteSourceInterface $remote_source) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $request_stack, $router, $keyValueFactory, $endpoint_query, $entity_type_manager);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system, ModuleHandlerInterface $module_handler, RemoteSourceInterface $remote_source) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $request_stack, $router, $keyValueFactory, $endpoint_query, $entity_type_manager, $file_system);
 
     $this->moduleHandler = $module_handler;
     $this->remoteSource = $remote_source;
@@ -57,6 +58,7 @@ abstract class GhiContentBlockBase extends GHIBlockBase implements AutomaticTitl
       $container->get('keyvalue'),
       $container->get('hpc_api.endpoint_query'),
       $container->get('entity_type.manager'),
+      $container->get('file_system'),
       $container->get('module_handler'),
       $remote_source_manager->createInstance($plugin_definition['remote_source']),
     );
