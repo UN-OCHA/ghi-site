@@ -10,8 +10,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\Core\Routing\Router;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
+use Drupal\ghi_blocks\LayoutBuilder\SelectionCriteriaArgument;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
+use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
+use Drupal\ghi_sections\SectionManager;
 use Drupal\hpc_api\Query\EndpointQuery;
 
 /**
@@ -36,8 +39,8 @@ abstract class GhiContentBlockBase extends GHIBlockBase implements AutomaticTitl
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system, ModuleHandlerInterface $module_handler, RemoteSourceInterface $remote_source) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $request_stack, $router, $keyValueFactory, $endpoint_query, $entity_type_manager, $file_system);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system, ConfigurationContainerItemManager $configuration_container_item_manager, SectionManager $section_manager, SelectionCriteriaArgument $selection_criteria_argument, ModuleHandlerInterface $module_handler, RemoteSourceInterface $remote_source) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $request_stack, $router, $keyValueFactory, $endpoint_query, $entity_type_manager, $file_system, $configuration_container_item_manager, $section_manager, $selection_criteria_argument);
 
     $this->moduleHandler = $module_handler;
     $this->remoteSource = $remote_source;
@@ -59,6 +62,9 @@ abstract class GhiContentBlockBase extends GHIBlockBase implements AutomaticTitl
       $container->get('hpc_api.endpoint_query'),
       $container->get('entity_type.manager'),
       $container->get('file_system'),
+      $container->get('plugin.manager.configuration_container_item_manager'),
+      $container->get('ghi_sections.manager'),
+      $container->get('ghi_blocks.layout_builder_edit_page.selection_criteria_argument'),
       $container->get('module_handler'),
       $remote_source_manager->createInstance($plugin_definition['remote_source']),
     );

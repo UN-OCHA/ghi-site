@@ -8,16 +8,26 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
+use Drupal\Core\KeyValueStore\KeyValueFactory;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Routing\Router;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\LayoutBuilder\SelectionCriteriaArgument;
+use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
+use Drupal\ghi_sections\SectionManager;
+use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base class for GHI blocks.
@@ -35,6 +45,57 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * @var \Drupal\Core\Form\FormStateInterface
    */
   protected $formState;
+
+  /**
+   * The manager class for configuration container items.
+   *
+   * @var \Drupal\ghi_form_elements\ConfigurationContainerItemManager
+   */
+  protected $configurationContainerItemManager;
+
+  /**
+   * The section manager.
+   *
+   * @var \Drupal\ghi_sections\SectionManager
+   */
+  protected $sectionManager;
+
+  /**
+   * The selection criteria argument service.
+   *
+   * @var \Drupal\ghi_blocks\LayoutBuilder\SelectionCriteriaArgument
+   */
+  protected $selectionCriteriaArgument;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system, ConfigurationContainerItemManager $configuration_container_item_manager, SectionManager $section_manager, SelectionCriteriaArgument $selection_criteria_argument) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $request_stack, $router, $keyValueFactory, $endpoint_query, $entity_type_manager, $file_system);
+    $this->configurationContainerItemManager = $configuration_container_item_manager;
+    $this->sectionManager = $section_manager;
+    $this->selectionCriteriaArgument = $selection_criteria_argument;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('request_stack'),
+      $container->get('router.no_access_checks'),
+      $container->get('keyvalue'),
+      $container->get('hpc_api.endpoint_query'),
+      $container->get('entity_type.manager'),
+      $container->get('file_system'),
+      $container->get('plugin.manager.configuration_container_item_manager'),
+      $container->get('ghi_sections.manager'),
+      $container->get('ghi_blocks.layout_builder_edit_page.selection_criteria_argument')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -1005,6 +1066,36 @@ abstract class GHIBlockBase extends HPCBlockBase {
       return NULL;
     }
     return $plan_object->field_original_id->value;
+  }
+
+  /**
+   * Get the specified named argument for the current page.
+   *
+   * This also checks whether the retrieved argument is a default value, in
+   * which case it also checks woth the selectin criteria argument service to
+   * see if a page argument can be extracted from the current request. This
+   * would be the case when a page manager page, that is using layout builder,
+   * is being edited.
+   */
+  protected function getPageArgument($key) {
+    $context_value = parent::getPageArgument($key);
+
+    $context = $this->hasContext($key) ? $this->getContext($key) : NULL;
+    if (!$context) {
+      return $context_value;
+    }
+
+    $definition = $context->getContextDefinition();
+    if ($context_value !== NULL && $definition->getDefaultValue() == $context_value) {
+      // This is a default value. So let's check if we can get an argument from
+      // the selection criteria.
+      $value_from_selection_criteria = $this->selectionCriteriaArgument->getArgumentFromSelectionCriteria($key);
+      if ($value_from_selection_criteria) {
+        return $value_from_selection_criteria;
+      }
+    }
+
+    return $context_value;
   }
 
 }

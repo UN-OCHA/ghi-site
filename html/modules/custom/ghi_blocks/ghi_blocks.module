@@ -126,5 +126,18 @@ function ghi_blocks_is_layout_builder_route() {
   if (preg_match('/^(layout_builder\.([^.]+\.)?)/', $route_name)) {
     return TRUE;
   }
+  $page_parameters = \Drupal::routeMatch()->getRawParameters()->all();
+  if (array_key_exists('machine_name', $page_parameters) && array_key_exists('step', $page_parameters)) {
+    return $route_name == 'entity.page.edit_form' && strpos($page_parameters['step'], 'layout_builder');
+  }
   return FALSE;
+}
+
+/**
+ * Implements hook_gin_lb_is_layout_builder_route_alter().
+ *
+ * Define a page manager edit form to be a layout builder route.
+ */
+function ghi_blocks_gin_lb_is_layout_builder_route_alter(&$gin_lb_is_layout_builder_route, $context) {
+  $gin_lb_is_layout_builder_route = ghi_blocks_is_layout_builder_route();
 }
