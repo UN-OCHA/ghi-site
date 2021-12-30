@@ -13,6 +13,19 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 
 /**
+ * Implements hook_theme().
+ */
+function ghi_blocks_theme($existing, $type, $theme, $path) {
+  return [
+    'document_link_box' => [
+      'render element' => 'document',
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'document-link-box',
+    ],
+  ];
+}
+
+/**
  * Implements hook_theme_suggestions_item_list_alter() for form templates.
  */
 function ghi_blocks_theme_suggestions_item_list_alter(array &$suggestions, array $variables, $hook) {

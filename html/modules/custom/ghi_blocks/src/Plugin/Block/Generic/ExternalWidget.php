@@ -34,7 +34,7 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
   /**
    * {@inheritdoc}
    */
-  public static function mapConfig($config, NodeInterface $node, $element_type) {
+  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
     $mapped_config = [];
     if ($element_type == 'generic_external_widgets') {
       $mapped_config = [

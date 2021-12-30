@@ -116,7 +116,7 @@ class AttachmentHelper {
         'plan_id' => $attachment->planId ?? NULL,
       ],
       'composed_reference' => $attachment->composedReference,
-      'description' => $attachment->attachmentVersion->value->description,
+      'description' => $attachment->attachmentVersion->value->description ?? NULL,
       'values' => array_pad(array_merge(
         array_map(function ($item) {
           return $item->value;

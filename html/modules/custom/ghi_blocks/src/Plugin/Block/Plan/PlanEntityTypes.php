@@ -34,7 +34,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
   /**
    * {@inheritdoc}
    */
-  public static function mapConfig($config, NodeInterface $node, $element_type) {
+  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
     return [
       'label' => '',
       'label_display' => TRUE,

@@ -376,7 +376,7 @@ class SyncManager implements ContainerInjectionInterface {
     if (!$existing_component) {
       return $this->t('Not synced');
     }
-    $remote_hash = md5(serialize($class::mapConfig($element->configuration, $node, $element->type)['hpc']));
+    $remote_hash = md5(serialize($class::mapConfig($element->configuration, $node, $element->type, TRUE)['hpc']));
     $local_hash = md5(serialize($existing_component->get('configuration')['hpc']));
     return $remote_hash == $local_hash ? $this->t('In sync') : $this->t('Changed');
   }

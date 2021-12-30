@@ -33,8 +33,8 @@ third_party_settings:
       - 'Content fields'
       - 'Custom block types'
       - Forms
+      - 'Generic elements'
       - HID
-      - Help
       - 'Inline blocks'
       - 'Lists (Views)'
       - Menus
@@ -43,7 +43,6 @@ third_party_settings:
       - 'Social Auth'
       - Subpage
       - System
-      - User
       - core
     entity_view_mode_restriction:
       whitelisted_blocks: {  }
@@ -54,14 +53,12 @@ third_party_settings:
         - 'Custom block types'
         - Forms
         - HID
-        - Help
         - 'Inline blocks'
         - 'Lists (Views)'
         - Menus
         - 'Social Auth'
         - Subpage
         - System
-        - User
         - core
       allowed_layouts:
         - layout_onecol
