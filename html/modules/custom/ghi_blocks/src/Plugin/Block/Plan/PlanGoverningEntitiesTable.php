@@ -2,12 +2,8 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\KeyValueStore\KeyValueFactory;
 use Drupal\Core\Render\Markup;
-use Drupal\Core\Routing\Router;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
@@ -15,12 +11,8 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
-use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\node\NodeInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanGoverningEntitiesTable' block.
@@ -47,40 +39,6 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
 
   use ConfigurationContainerTrait;
   use ConfigurationItemClusterRestrictTrait;
-
-  /**
-   * The manager class for configuration container items.
-   *
-   * @var \Drupal\ghi_form_elements\ConfigurationContainerItemManager
-   */
-  protected $configurationContainerItemManager;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system, ConfigurationContainerItemManager $configuration_container_item_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $request_stack, $router, $keyValueFactory, $endpoint_query, $entity_type_manager, $file_system);
-
-    $this->configurationContainerItemManager = $configuration_container_item_manager;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('request_stack'),
-      $container->get('router.no_access_checks'),
-      $container->get('keyvalue'),
-      $container->get('hpc_api.endpoint_query'),
-      $container->get('entity_type.manager'),
-      $container->get('file_system'),
-      $container->get('plugin.manager.configuration_container_item_manager')
-    );
-  }
 
   /**
    * {@inheritdoc}

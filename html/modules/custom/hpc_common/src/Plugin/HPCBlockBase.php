@@ -157,6 +157,14 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function hasContext($key) {
+    $contexts = $this->getContexts();
+    return array_key_exists($key, $contexts);
+  }
+
+  /**
    * Returns a key/value storage collection.
    *
    * @param string $collection
@@ -206,6 +214,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     if ($this->injectedFieldContexts) {
       return;
     }
+
     $plugin_definition = $this->getPluginDefinition();
     $field_context_mapping = !empty($plugin_definition['field_context_mapping']) ? $plugin_definition['field_context_mapping'] : NULL;
 
@@ -401,7 +410,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     }
     elseif (!empty($page_parameters['tempstore_id']) && $page_parameters['tempstore_id'] == 'page_manager.page') {
       // Used when configuring using the Panels UI.
-      $this->pageVariant = explode('-', $page_parameters['machine_name'], 2);
+      $this->pageVariant = explode('-', $page_parameters['machine_name'], 2)[0];
     }
     elseif (!empty($page_parameters['node'])) {
       $this->pageVariant = 'node:' . $page_parameters['node']->bundle();
@@ -465,12 +474,8 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    */
   protected function getPageArgument($key) {
     $this->injectFieldContexts();
-    $contexts = $this->getContexts();
-    if (empty($contexts[$key])) {
-      return NULL;
-    }
-    $context = $contexts[$key];
-    return $context->hasContextValue() ? $context->getContextValue() : NULL;
+    $context = $this->hasContext($key) ? $this->getContext($key) : NULL;
+    return $context && $context->hasContextValue() ? $context->getContextValue() : NULL;
   }
 
   /**

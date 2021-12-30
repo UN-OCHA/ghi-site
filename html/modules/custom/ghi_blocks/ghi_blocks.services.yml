@@ -1,5 +1,9 @@
 services:
+  ghi_blocks.layout_builder_edit_page.selection_criteria_argument:
+    class: Drupal\ghi_blocks\LayoutBuilder\SelectionCriteriaArgument
+    arguments: ['@current_route_match']
   ghi_blocks.layout_builder.route_subscriber:
     class: Drupal\ghi_blocks\EventSubscriber\LayoutBuilderRouteSubscriber
+    arguments: ['@ghi_blocks.layout_builder_edit_page.selection_criteria_argument']
     tags:
       - { name: event_subscriber }
