@@ -7,7 +7,6 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
-use Drupal\Component\Plugin\PluginHelper;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\KeyValueStore\KeyValueFactory;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -152,8 +151,21 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    * {@inheritdoc}
    */
   public function getContextMapping() {
-    $configuration = PluginHelper::isConfigurable($this) ? $this->getConfiguration() : $this->configuration;
-    return isset($configuration['context_mapping']) ? $configuration['context_mapping'] : [];
+    // Get the context mapping that the block has, based on it's stored
+    // configuration.
+    $context_mapping = parent::getContextMapping();
+
+    // And match that with the context definitions that the block plugin
+    // actually declares. This allows for block plugins to remove previously
+    // used context definitions without running into
+    // Drupal\Component\Plugin\Exception\ContextException which results in a
+    // WSOD and is not fixable via the UI.
+    // We do not explicitely check whether new context definitions have been,
+    // which are not yet stored in the blocks storage, as this should "only"
+    // result in a broken block display, but not in a fatal error.
+    $plugin_definition = $this->getPluginDefinition();
+    $context_definitions = $plugin_definition['context_definitions'] ?? [];
+    return array_intersect_key($context_mapping, $context_definitions);
   }
 
   /**

@@ -15,10 +15,7 @@ use Drupal\node\NodeInterface;
  *  id = "generic_document_links",
  *  admin_label = @Translation("Document links"),
  *  category = @Translation("Generic elements"),
- *  title = false,
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE)
- *  }
+ *  title = false
  * )
  */
 class DocumentLinks extends GHIBlockBase implements SyncableBlockInterface {

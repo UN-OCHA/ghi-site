@@ -3,10 +3,17 @@
   margin-bottom: 1rem;
 }
 
+#form-wrapper-ghi-block-config.hpc-form-wrapper {
+  padding: 0;
+}
+
 .hpc-form-wrapper .glb-form-item--error-message {
   padding: 0.5rem 0;
 }
 
+.hpc-form-wrapper .glb-claro-details {
+  background-color: var(--colorGinAppBackground) !important;
+}
 /* #layout-builder-modal input[data-drupal-selector="edit-actions-submit"].button--primary {
   position: absolute;
   bottom: 1rem;
@@ -68,6 +75,13 @@
 }
 form.layout-builder-configure-block.glb-canvas-form {
   position: inherit;
+}
+form.layout-builder-configure-block.glb-canvas-form .glb-messages-list {
+  margin: 0 !important;
+  display: none !important;
+}
+form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper > .glb-form-item:first-child {
+  margin-top: 0 !important;
 }
 form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions {
   position: absolute !important;

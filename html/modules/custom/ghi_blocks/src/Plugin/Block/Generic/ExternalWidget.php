@@ -21,9 +21,6 @@ use Drupal\node\NodeInterface;
  *  valid_source_elements = {
  *    "generic_external_widgets",
  *    "plan_external_widget"
- *  },
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE)
  *  }
  * )
  */
@@ -182,9 +179,9 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
    */
   private function getAllowedHosts() {
     return [
+      'humdata.org' => $this->t('HDX Quick Charts'),
       'powerbi.com' => $this->t('PowerBI'),
       'tableau.com' => $this->t('Tableau'),
-      'humdata.org' => $this->t('HDX Quick Charts'),
     ];
   }
 
@@ -210,7 +207,7 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
 
     $default_widgets = $this->getDefaultFormValueFromFormState($form_state, 'widgets');
     for ($i = 1; $i <= self::MAX_ITEMS; $i++) {
-      $default = $default_widgets[$i];
+      $default = $default_widgets[$i - 1];
       $state_conditions = [];
       for ($j = $i; $j <= self::MAX_ITEMS; $j++) {
         $state_conditions[] = [
@@ -269,6 +266,10 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
    * Validate handler for portlet configuration form.
    */
   public function blockValidate($form, FormStateInterface $form_state) {
+    if ($this->isPreviewSubmit($form_state)) {
+      return;
+    }
+
     $allowed_hosts = $this->getAllowedHosts();
     $values = $form_state->getValue($form_state->get('current_subform'));
     $subform = $form['container'];
