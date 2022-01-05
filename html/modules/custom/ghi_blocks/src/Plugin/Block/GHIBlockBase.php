@@ -1018,7 +1018,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * Get the base object for the current page context.
    *
    * @return \Drupal\node\NodeInterface
-   *   A node reprexenting an API base object if it can be found.
+   *   A node representing an API base object if it can be found.
    */
   public function getCurrentBaseObject($page_node = NULL) {
     if ($page_node === NULL) {

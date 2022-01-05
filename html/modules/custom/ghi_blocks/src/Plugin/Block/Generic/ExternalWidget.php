@@ -21,9 +21,6 @@ use Drupal\node\NodeInterface;
  *  valid_source_elements = {
  *    "generic_external_widgets",
  *    "plan_external_widget"
- *  },
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE)
  *  }
  * )
  */

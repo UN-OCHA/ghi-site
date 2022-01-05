@@ -15,10 +15,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
  *  id = "generic_datawrapper",
  *  admin_label = @Translation("Datawrapper"),
  *  category = @Translation("Generic elements"),
- *  title = false,
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE)
- *  }
+ *  title = false
  * )
  */
 class Datawrapper extends GHIBlockBase {
