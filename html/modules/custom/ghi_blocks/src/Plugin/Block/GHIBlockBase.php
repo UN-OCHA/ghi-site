@@ -594,6 +594,24 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
+   * Check if the given form state originates in a preview submit action.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state interface.
+   *
+   * @return bool
+   *   TRUE if the form state has been created by a preview action, FALSE
+   *   otherwise.
+   */
+  public function isPreviewSubmit(FormStateInterface $form_state) {
+    $current_subform = $form_state->get('current_subform');
+    $triggering_element = $form_state->getTriggeringElement();
+    $action = end($triggering_element['#parents']);
+    $values = $form_state->getValues();
+    return $action == 'preview' && !array_key_exists($current_subform, $values);
+  }
+
+  /**
    * Element validate callback.
    *
    * @param array $element

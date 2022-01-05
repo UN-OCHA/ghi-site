@@ -24,3 +24,7 @@
 #drupal-off-canvas .glb-layout-builder-browser .glb-list {
   width: 100%;
 }
+
+.glb-form-item--error-message {
+  color: #d72222;
+}
