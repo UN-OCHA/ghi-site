@@ -11,6 +11,9 @@
   padding: 0.5rem 0;
 }
 
+.hpc-form-wrapper .glb-claro-details {
+  background-color: var(--colorGinAppBackground) !important;
+}
 /* #layout-builder-modal input[data-drupal-selector="edit-actions-submit"].button--primary {
   position: absolute;
   bottom: 1rem;
