@@ -83,6 +83,9 @@ form.layout-builder-configure-block.glb-canvas-form .glb-messages-list {
 form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper > .glb-form-item:first-child {
   margin-top: 0 !important;
 }
+form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .glb-form-item__description {
+  max-width: 100% !important;
+}
 form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions {
   position: absolute !important;
   display: flex;
