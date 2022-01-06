@@ -5,3 +5,6 @@ configuration_container:
       css/configuration_container.css: {}
       css/attachment_select.css: {}
       css/data_point.css: {}
+states_regex:
+  js:
+    js/states.regex.js: {}

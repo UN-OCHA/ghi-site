@@ -27,6 +27,9 @@ use Drupal\node\NodeInterface;
 class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
 
   const MAX_ITEMS = 2;
+  const MIN_YEAR_HISTORICAL_HPC_DATA = 2011;
+  const MAX_YEAR_RANGE = 10;
+  const GOOGLE_SHEET = '1MArQSVdbLXLaQ8ixUKo9jIjifTCVDDxTJYbGoRuw3Vw';
 
   /**
    * {@inheritdoc}
@@ -78,38 +81,7 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
       $url = parse_url($widget_url);
       if (strpos($url['host'], 'humdata.org') !== FALSE) {
         // Special handling of HDX quick charts.
-        $widget_url_parts = explode(';', $widget_url);
-        $base_url = array_shift($widget_url_parts);
-        $params = [];
-        foreach ($widget_url_parts as $url_part) {
-          list($key, $value) = explode('=', $url_part, 2);
-          $params[$key] = $value;
-        }
-
-        // We add an additional CSS reference.
-        $css_url = Url::fromUserInput('/' . drupal_get_path('module', 'ghi_blocks') . '/css/quickcharts.css', [
-          'absolute' => TRUE,
-        ])->toString();
-        if (strpos($css_url, 'docksal') || strpos($css_url, 'ahconu.org')) {
-          // On local and dev domains, fallback to the CSS file in current
-          // Hum Insight production.
-          $css_url = 'https://hum-insight.info/sites/all/modules/custom/hpc_content_panes/css/quickcharts.css';
-        }
-        $params['externalCss'] = str_replace('/', '%2F', $css_url);
-
-        // And we deactivate some controls.
-        $params['chartSettings'] = 'false';
-        $params['chartShare'] = 'false';
-        $params['allowBiteSwitch'] = 'false';
-
-        $widget_url = $base_url;
-        foreach ($params as $key => $value) {
-          $widget_url .= ';' . $key . '=' . $value;
-        }
-      }
-
-      if (empty($widget_url)) {
-        continue;
+        $widget = $this->processWidget($widget);
       }
 
       $iframe = [
@@ -126,7 +98,7 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
           '#type' => 'html_tag',
           '#tag' => 'iframe',
           '#attributes' => [
-            'src' => $widget_url,
+            'src' => $widget['widget_url'],
             'width' => '100%',
             'height' => '100%',
             'style' => 'height: 100%; width: 100%',
@@ -203,15 +175,15 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
       '#tree' => TRUE,
     ];
 
-    $select_name_selector = FormElementHelper::getStateSelector($form, ['select_number']);
+    $select_number_selector = FormElementHelper::getStateSelector($form, ['select_number']);
 
-    $default_widgets = $this->getDefaultFormValueFromFormState($form_state, 'widgets');
+    $default_widgets = array_values($this->getDefaultFormValueFromFormState($form_state, 'widgets'));
     for ($i = 1; $i <= self::MAX_ITEMS; $i++) {
       $default = $default_widgets[$i - 1];
       $state_conditions = [];
       for ($j = $i; $j <= self::MAX_ITEMS; $j++) {
         $state_conditions[] = [
-          ':input[name="' . $select_name_selector . '"]' => [
+          ':input[name="' . $select_number_selector . '"]' => [
             'value' => (string) $j,
           ],
         ];
@@ -243,6 +215,36 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
           'required' => $state_conditions,
         ],
       ];
+
+      $widget_url_selector = FormElementHelper::getStateSelector($form, [
+        'widgets',
+        $i,
+        'widget_url',
+      ]);
+      $form['widgets'][$i]['process_widget_url'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Process widget URL'),
+        '#description' => $this->t('<em>For HDX quickcharts using the <a href="https://docs.google.com/spreadsheets/d/@google_docs_id">GHO Historical Data Google Spreadsheet</a> only:</em> Process the widget URL to correct some common misconfigurations and to automatically apply year filtering on the data to only show data points up to the year that is relevant for the current page and never more than @max_year_range years in the past. It also overrides the chart titles to assure consistent naming and correct labeling based on the years for which data is shown.', [
+          '@google_docs_id' => self::GOOGLE_SHEET,
+          '@max_year_range' => self::MAX_YEAR_RANGE,
+        ]),
+        '#default_value' => array_key_exists('process_widget_url', $default) ? $default['process_widget_url'] : TRUE,
+        '#states' => [
+          'visible' => [
+            ':input[name="' . $widget_url_selector . '"]' => [
+              // Matching by regular expression only works due to
+              // Drupal.hpc_content_panes_states_extension defined in
+              // ghi_form_elements/states_regex.
+              // See https://evolvingweb.ca/blog/extending-form-api-states-regular-expressions
+              // for details.
+              'value' => ['regex' => 'humdata\.org.*' . self::GOOGLE_SHEET],
+            ],
+          ],
+        ],
+        '#attached' => [
+          'library' => ['ghi_form_elements/states_regex'],
+        ],
+      ];
       $form['widgets'][$i]['widget_url_skip_validation'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Skip URL validation'),
@@ -251,7 +253,7 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
       $form['widgets'][$i]['widget_height'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Height'),
-        '#description' => $this->t('Enter the height auf the iframe including the unit if necessary. E.g.: <em>400px</em>, <em>50%</em> or <em>auto</em>'),
+        '#description' => $this->t('Enter the height of the iframe including the unit if necessary. E.g.: <em>400px</em>, <em>50%</em> or <em>auto</em>'),
         '#default_value' => $default['widget_height'] ?? NULL,
         '#states' => [
           'required' => $state_conditions,
@@ -320,6 +322,272 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
         }
       }
     }
+  }
+
+  /**
+   * Process a quickcharts widget from generic_external_widgets.inc.
+   *
+   * @param array $widget_conf
+   *   The widget configuration, see generic_external_widgets.inc or
+   *   plan_external_widget.inc.
+   *
+   * @return array
+   *   The processed widget configuration.
+   */
+  private function processWidget(array $widget_conf) {
+
+    // Special handling of HDX quick charts.
+    $widget_url_parts = explode(';', $widget_conf['widget_url']);
+    $base_url = array_shift($widget_url_parts);
+    $params = [];
+    foreach ($widget_url_parts as $url_part) {
+      list($key, $value) = explode('=', $url_part, 2);
+      $params[$key] = $value;
+    }
+
+    $this->processParams($params, !array_key_exists('process_widget_url', $widget_conf) || $widget_conf['process_widget_url']);
+
+    $widget_url = $base_url;
+    foreach ($params as $key => $value) {
+      $widget_url .= ';' . $key . '=' . $value;
+    }
+
+    $widget_conf['widget_url'] = $widget_url;
+
+    return $widget_conf;
+  }
+
+  /**
+   * Process quickchart params.
+   *
+   * @param array $params
+   *   The parameters for the quickchart iframe url.
+   * @param bool $process_url
+   *   Whether the url should be processed.
+   */
+  private function processParams(array &$params, $process_url = TRUE) {
+    $base_url = $this->requestStack->getMasterRequest()->getBaseUrl();
+
+    // First we deactivate some controls and set the widget into single mode,
+    // which removes the embed title.
+    $params['chartSettings'] = 'false';
+    $params['chartShare'] = 'false';
+    $params['allowBiteSwitch'] = 'false';
+    $params['singleWidgetMode'] = 'true';
+
+    // Then we add an additional CSS reference, which will be included by HDX,
+    // so that we have some control over the styling.
+    $css_url = Url::fromUserInput('/' . drupal_get_path('module', 'ghi_blocks') . '/css/quickcharts.css', [
+      'absolute' => TRUE,
+    ])->toString();
+    if (strpos($css_url, 'docksal') || strpos($css_url, 'ahconu.org')) {
+      // On local and dev domains, fallback to the CSS file in current
+      // Hum Insight production.
+      $css_url = 'https://hum-insight.info/sites/all/modules/custom/hpc_content_panes/css/quickcharts.css';
+    }
+    $is_dev_environment = strpos($base_url, 'hum-insight-info.ahconu.org') || strpos($base_url, 'hpcviewer.docksal');
+    if ($is_dev_environment) {
+      $css_url = url('https://hum-insight.info/sites/all/modules/custom/hpc_content_panes/css/quickcharts.css');
+    }
+    $params['externalCss'] = $css_url ? str_replace('/', '%2F', $css_url) : NULL;
+
+    if (!$process_url) {
+      return;
+    }
+
+    // Now the complicated stuff. We extract a couple of params and process
+    // them seperately. First we look at the url to the HDX data proxy, which
+    // takes in a data source url and processes it, based on a "recipe" and a
+    // couple of arguments, to be usable by their chart app.
+    // We are only interested in the query arguments passed to that proxy url.
+    // Those arguments contain the data url (data source) and additional
+    // arguments that instruct the proxy how to process the data, e.g. filtering
+    // or sorting.
+    $proxy_url = urldecode($params['url']);
+    $proxy_url_parts = parse_url($proxy_url);
+    $query_args = explode('&', $proxy_url_parts['query']);
+
+    // The data url is the url to the data source used by HDX, most likely a
+    // google spreadsheet.
+    $data_url = '';
+
+    $query_args = array_filter($query_args, function ($query_arg) use (&$data_url) {
+      // We use this to extract the data url and remove an obsolete argument.
+      if (strpos($query_arg, 'url=') === 0) {
+        $data_url = urldecode(str_replace('url=', '', $query_arg));
+        return NULL;
+      }
+      if ($query_arg == 'force=on') {
+        return NULL;
+      }
+      return $query_arg;
+    });
+
+    // Make sure we only apply the following to the google spreadsheet we know.
+    if (!strpos($data_url, 'docs.google.com') || !strpos($data_url, self::GOOGLE_SHEET)) {
+      return;
+    }
+
+    // Clean the arguments.
+    $filter_numbers_to_remove = [];
+    foreach ($query_args as $key => $query_arg) {
+      // Remove a filter for "year=X".
+      if (strpos($query_arg, '%23date%2Byear%3D')) {
+        list($filter_key) = explode('=', $query_args[$key - 1]);
+        $filter_number = str_replace('filter', '', $filter_key);
+        $filter_numbers_to_remove[] = $filter_number;
+        unset($query_args[$key]);
+        continue;
+      }
+    }
+    foreach ($filter_numbers_to_remove as $filter_number) {
+      foreach ($query_args as $key => $query_arg) {
+        if (strpos($query_arg, $filter_number . '=')) {
+          unset($query_args[$key]);
+          continue;
+        }
+      }
+    }
+
+    // There have been some configuration errors for the quickcharts elements,
+    // so we try to correct them if possible. First we check if the current
+    // page can give us a location code, in which case we use that to basically
+    // rebuild the filter processing.
+    $location_code = $this->getCountryCode();
+    if ($location_code) {
+      // If we have a location code, just overwrite the query args completely.
+      $query_args = [
+        'filter01=select',
+        'select-query01-01=%23country%2Bcode=' . $location_code,
+      ];
+    }
+
+    // Make sure we only apply this if we are sufficiently sure that we know
+    // what we have.
+    $last_filter_index = $this->getLastHdxQuickchartsFilterIndex($query_args);
+    $page_year = $this->getPageYear();
+    if ($last_filter_index != 1 || !$page_year) {
+      return;
+    }
+
+    $query_args = array_merge($query_args, [
+      // Filter for year, minimum should not be older than 10 years before
+      // the current page year.
+      'filter' . sprintf('%1$02d', $last_filter_index + 1) . '=select',
+      'select-query' . sprintf('%1$02d', $last_filter_index + 1) . '-01=%23date%2Byear+%3E+%7B%7B+' . $page_year . '+-+' . self::MAX_YEAR_RANGE . '+%7D%7D',
+      // Filter for year, maximum should be the current page year.
+      'filter' . sprintf('%1$02d', $last_filter_index + 2) . '=select',
+      'select-query' . sprintf('%1$02d', $last_filter_index + 2) . '-01=%23date%2Byear+%3C=+' . $page_year,
+      // Sorting by year.
+      'filter' . sprintf('%1$02d', $last_filter_index + 2) . '=sort',
+      'sort-tags' . sprintf('%1$02d', $last_filter_index + 2) . '=%23date%2Byear',
+    ]);
+
+    // Set a title programatically. The titles are part of the embedded config.
+    $embed_config = json_decode(urldecode($params['embeddedConfig']));
+    if ($embed_config && property_exists($embed_config, 'bites') && !empty($embed_config->bites)) {
+      $bite = &$embed_config->bites[0];
+      $data_title = $bite->uiProperties->dataTitle ?? $bite->computedProperties->dataTitle;
+      switch ($data_title) {
+        case 'Response plan funding':
+          // This one is shared between the global and plan-specific widgets.
+          $bite->uiProperties->title = $location_code == 'G' ? $this->t('Requirements and funding @start_year - @year (USD)', [
+            '@start_year' => max($page_year - self::MAX_YEAR_RANGE + 1, self::MIN_YEAR_HISTORICAL_HPC_DATA),
+            '@year' => $page_year,
+          ]) : $this->t('Requirements and funding until @year (USD)', [
+            '@year' => $page_year,
+          ]);
+          break;
+
+        case 'People targeted':
+          $bite->uiProperties->title = $this->t('People in need and people targeted until @year', [
+            '@year' => $page_year,
+          ]);
+          break;
+
+        case 'People targeted for assistance':
+          $bite->uiProperties->title = $this->t('People targeted for assistance @start_year - @year', [
+            '@start_year' => max($page_year - self::MAX_YEAR_RANGE + 1, self::MIN_YEAR_HISTORICAL_HPC_DATA),
+            '@year' => $page_year,
+          ]);
+          break;
+      }
+
+    }
+
+    $params['embeddedConfig'] = str_replace('+', '%20', urlencode(json_encode($embed_config)));
+    $new_url = $proxy_url_parts['scheme'] . '://' . $proxy_url_parts['host'] . $proxy_url_parts['path'] . '?' . implode('&', array_merge($query_args, ['url=' . urlencode($data_url)]));
+    $params['url'] = urlencode($new_url);
+  }
+
+  /**
+   * Get the page year that is valid for the current page.
+   *
+   * @return int|null
+   *   The page year or NULL.
+   */
+  private function getPageYear() {
+    $path = ltrim($this->getCurrentUri(), '/');
+    $args = explode('/', $path);
+    if ($args[0] == 'overview') {
+      return (int) $args[1];
+    }
+    elseif ($plan_object = $this->getCurrentPlanObject()) {
+      return $plan_object->hasField('field_year') ? (int) $plan_object->get('field_year')->value : NULL;
+    }
+    return NULL;
+  }
+
+  /**
+   * Get location code for the current page if any.
+   *
+   * This tries to get a location code from the current plan page.
+   *
+   * @return string|null
+   *   Country code or NULL.
+   */
+  private function getCountryCode() {
+    $path = $this->getCurrentUri();
+    if (strpos($path, 'overview') === 0) {
+      return 'G';
+    }
+    $plan_object = $this->getCurrentPlanObject();
+    if (!$plan_object) {
+      return NULL;
+    }
+    $linked_location_count = $plan_object->hasField('field_country') ? $plan_object->get('field_country')->count() : 0;
+    if (!$linked_location_count || $linked_location_count > 1) {
+      // None or too many locations.
+      return NULL;
+    }
+    $country = $plan_object->get('field_country')->getEntity();
+    if (!$country) {
+      return NULL;
+    }
+    return $country->hasField('field_country_code') ? $country->get('field_country_code') : NULL;
+  }
+
+  /**
+   * Get the last index of HDX quickcharts filter arguments.
+   *
+   * @param array $query_args
+   *   The query arguments to process.
+   *
+   * @return int
+   *   The integer value of the last existing filter.
+   */
+  private function getLastHdxQuickchartsFilterIndex(array $query_args) {
+    if (empty($query_args)) {
+      return 0;
+    }
+    $last_filter = max(array_map(function ($query_arg) {
+      if (strpos($query_arg, 'filter') !== 0) {
+        return 0;
+      }
+      list($key) = explode('=', $query_arg);
+      return (int) str_replace('filter', '', $key);
+    }, $query_args));
+    return (int) $last_filter;
   }
 
 }
