@@ -1,4 +1,9 @@
 table.ghi-table {
+
+  .ghi-block & {
+    margin-bottom: 0;
+  }
+
   tbody {
 
     td:first-child.subrow {
