@@ -51,7 +51,7 @@ class DataPointHelper {
    * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
    */
   public static function formatValue($attachment, array $data_point_conf) {
-    if ($data_point_conf['widget'] == 'none') {
+    if (empty($data_point_conf['widget']) || $data_point_conf['widget'] == 'none') {
       return self::formatAsText($attachment, $data_point_conf);
     }
     else {

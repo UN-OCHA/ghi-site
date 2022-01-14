@@ -14,7 +14,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
  *  category = @Translation("Homepage"),
  *  title = false,
  *  context_definitions = {
- *    "year" = @ContextDefinition("integer", label = @Translation("Year"), default_value = "2021")
+ *    "year" = @ContextDefinition("integer", label = @Translation("Year"))
  *  }
  * )
  */
@@ -25,6 +25,7 @@ class VisualExplorer extends GHIBlockBase {
    */
   public function buildContent() {
     $year = $this->getPageArgument('year');
+
     return [
       '#type' => 'html_tag',
       '#tag' => 'div',
@@ -43,10 +44,7 @@ class VisualExplorer extends GHIBlockBase {
   }
 
   /**
-   * Returns generic default configuration for block plugins.
-   *
-   * @return array
-   *   An associative array with the default configuration.
+   * {@inheritdoc}
    */
   protected function getConfigurationDefaults() {
     return [];

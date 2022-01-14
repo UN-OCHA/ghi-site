@@ -71,7 +71,7 @@ function ghi_base_objects_theme_suggestions_base_object(array $variables) {
 function ghi_base_objects_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
   $raw_data = (object) $row->getSource()['raw'];
 
-  /** @var \Drupal\hpc_api\Query\EndpointPlanQuery $query */
+  /** @var \Drupal\hpc_api\Query\EndpointQuery $query */
   $query = \Drupal::service('hpc_api.endpoint_query');
 
   $has_published_version = FALSE;

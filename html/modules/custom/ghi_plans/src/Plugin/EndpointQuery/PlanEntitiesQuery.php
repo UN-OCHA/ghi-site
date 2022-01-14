@@ -1,49 +1,37 @@
 <?php
 
-namespace Drupal\ghi_plans\Query;
+namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
-use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
 use Drupal\hpc_api\Helpers\ArrayHelper;
-use GuzzleHttp\ClientInterface;
-use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_api\Query\EndpointQueryBase;
 
 /**
- * Query class for fetching plan data with a focus on plan entities.
+ * Provides a query plugin for plan entities.
+ *
+ * @EndpointQuery(
+ *   id = "plan_entities_query",
+ *   label = @Translation("Plan entities query"),
+ *   endpoint = {
+ *     "public" = "public/plan/{plan_id}",
+ *     "authenticated" = "plan/{plan_id}",
+ *     "version" = "v2",
+ *     "query" = {
+ *       "content" = "entities",
+ *       "addPercentageOfTotalTarget" = "true",
+ *       "version" = "current",
+ *       "disaggregation" = "false",
+ *     }
+ *   }
+ * )
  */
-class PlanEntitiesQuery extends EndpointQuery {
+class PlanEntitiesQuery extends EndpointQueryBase {
 
   use AttachmentFilterTrait;
-
-  /**
-   * Constructs a new PlanEntitiesQuery object.
-   */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, CacheBackendInterface $cache, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user) {
-    parent::__construct($config_factory, $logger_factory, $cache, $kill_switch, $http_client, $user);
-
-    $this->endpointUrl = 'public/plan/{plan_id}';
-    // @codingStandardsIgnoreStart
-    // @todo Implement this once HID login has been added.
-    // if ($this->user->isAuthenticated()) {
-    //   $this->endpointUrl = 'plan/{plan_id}';
-    // }
-    // @codingStandardsIgnoreEnd
-    $this->endpointVersion = 'v2';
-    $this->endpointArgs = [
-      'content' => 'entities',
-      'addPercentageOfTotalTarget' => TRUE,
-      'version' => 'current',
-      'disaggregation' => 'false',
-    ];
-  }
 
   /**
    * Get all attachments.
@@ -51,25 +39,46 @@ class PlanEntitiesQuery extends EndpointQuery {
    * @param \Drupal\Core\Entity\ContentEntityInterface $context_object
    *   The current context object.
    * @param array $filter
-   *   Optional array for filtering the attachments.
+   *   Optional array for filtering the attachments. This supports specifically
+   *   to filter for "entity_type", the allowed values for that are: "plan"
+   *   (looking only at plan attachments), "plan_entity" and "governing_entity"
+   *   (to look only at attachments on the specific entity type).
+   *   Note: Filtering by entity type in this way has a lower priority for the
+   *   selection of entities than the passed in context object. So if the
+   *   context object is of type "plan_entity" and a $filter['entity_type'] is
+   *   set, then it will be ignored.
    *
    * @return array
    *   An array of attachment objects for the given context.
    */
   private function getAttachments(ContentEntityInterface $context_object = NULL, array $filter = []) {
     $data = $this->getData();
+
     if (empty($data)) {
       return NULL;
     }
+    $attachments = [];
 
-    $attachments = $data->attachments;
-
+    // Supported types of context objects.
     $supported_contexts = [
       'plan_entity' => 'planEntities',
       'governing_entity' => 'governingEntities',
     ];
 
+    // Note that this will be ignored if a context object of a supported type
+    // has been given.
+    $restrict_entity_type = !empty($filter['entity_type']) ? $filter['entity_type'] : NULL;
+    unset($filter['entity_type']);
+
+    if (!$restrict_entity_type || $restrict_entity_type == 'plan') {
+      // No restriction or plan level.
+      $attachments = $data->attachments;
+    }
+
     if ($context_object && array_key_exists($context_object->bundle(), $supported_contexts)) {
+      // A supported context object has been given. Go over all the entities of
+      // the given type and find the one object that corresponds to the given
+      // context object. Then use it's attachments.
       $context_original_id = $context_object->field_original_id->value;
       $property = $supported_contexts[$context_object->bundle()];
       foreach ($data->$property as $entity) {
@@ -80,6 +89,22 @@ class PlanEntitiesQuery extends EndpointQuery {
           continue;
         }
         $attachments = array_merge($attachments, $entity->attachments);
+      }
+    }
+    else {
+      // No context object has been given. So we either collect all attachments
+      // for all plan/governing entities, or only the ones requested by
+      // $restrict_entity_type.
+      foreach ($supported_contexts as $entity_type => $property) {
+        if ($restrict_entity_type && $entity_type !== $restrict_entity_type) {
+          continue;
+        }
+        foreach ($data->$property as $entity) {
+          if (!isset($entity->attachments)) {
+            continue;
+          }
+          $attachments = array_merge($attachments, $entity->attachments);
+        }
       }
     }
 

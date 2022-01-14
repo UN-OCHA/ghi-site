@@ -2,6 +2,45 @@
   z-index: 200 !important;
 }
 
+body.path-node #layout-builder .layout-builder__add-section {
+  margin-top: 2rem;
+}
+body.path-node #layout-builder .layout-builder__add-section:first-child {
+  margin-top: 0;
+}
+
+body.path-node #layout-builder:hover .layout-builder__section > .layout-builder__layout > .layout-builder__region {
+  outline-offset: 1.5rem;
+  outline-color: var(--colorGinPrimary);
+  outline-style: dotted;
+  outline-width: 1px;
+}
+body.path-node #layout-builder .layout-builder__section:not(.gin-lb--disable-section-focus):hover:after {
+  content: none !important;
+}
+
+body.path-node #layout-builder .layout-builder__section .layout-builder__link {
+  top: -3rem !important;
+  display: none;
+  color: var(--colorGinFormElementBorder);
+}
+body.path-node #layout-builder .layout-builder__section .layout-builder__link--remove {
+  background-color: var(--colorGinFormElementBorder);
+}
+body.path-node #layout-builder:hover .layout-builder__section .layout-builder__link {
+  display: block;
+}
+body.path-node #layout-builder:hover .layout-builder__section:hover .layout-builder__link--configure:after {
+  background-color: var(--colorGinFormElementBorder);
+}
+
+body.path-node #layout-builder .layout-builder__section .contextual,
+body.path-node #layout-builder .layout-builder__section .contextual .trigger,
+body.path-node #layout-builder .layout-builder__section .contextual-region .contextual .contextual-links {
+  right: 0 !important;
+  top: 0px !important;
+}
+
 .contextual-region.layout-builder-block,
 .contextual-region.layout-builder-block.focus {
   padding: 1rem;

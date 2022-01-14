@@ -1,36 +1,23 @@
 <?php
 
-namespace Drupal\ghi_plans\Query;
+namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
-use Drupal\Core\Session\AccountProxyInterface;
-use GuzzleHttp\ClientInterface;
-use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_api\Query\EndpointQueryBase;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
- * Query class for querying the flow search API.
+ * Provides a query plugin for flow search.
+ *
+ * @EndpointQuery(
+ *   id = "flow_search_query",
+ *   label = @Translation("Flow search query"),
+ *   endpoint = {
+ *     "public" = "fts/flow/custom-search",
+ *     "version" = "v2"
+ *   }
+ * )
  */
-class FlowSearchQuery extends EndpointQuery {
-
-  /**
-   * Constructs a new FlowSearchQuery object.
-   */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, CacheBackendInterface $cache, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user) {
-    parent::__construct($config_factory, $logger_factory, $cache, $kill_switch, $http_client, $user);
-
-    $this->endpointUrl = 'fts/flow/custom-search';
-    // @codingStandardsIgnoreStart
-    // @todo Implement this once HID login has been added.
-    // if ($this->user->isAuthenticated()) {
-    //   $this->endpointUrl = 'attachment/{attachment_id}';
-    // }
-    // @codingStandardsIgnoreEnd
-    $this->endpointVersion = 'v1';
-  }
+class FlowSearchQuery extends EndpointQueryBase {
 
   /**
    * Search with arguments.

@@ -28,6 +28,7 @@ class SubpageTitle extends BlockBase {
     if (empty($contexts['node']) || !$contexts['node']->getContextValue()) {
       return NULL;
     }
+    /** @var \Drupal\node\NodeInterface $node */
     $node = $contexts['node']->getContextValue();
     if (SubpageHelper::isSubpageTypeNode($node)) {
       return [

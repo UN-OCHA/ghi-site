@@ -7,10 +7,8 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_plans\Query\IconQuery;
-use Drupal\ghi_plans\Query\PlanEntitiesQuery;
+use Drupal\hpc_api\Query\EndpointQueryManager;
 
 /**
  * Provides an entity counter item for configuration containers.
@@ -34,37 +32,25 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
   /**
    * The plan entities query.
    *
-   * @var \Drupal\ghi_plans\Query\PlanEntitiesQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
    */
   public $planEntitiesQuery;
 
   /**
    * The icon query.
    *
-   * @var \Drupal\ghi_plans\Query\IconQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\IconQuery
    */
   public $iconQuery;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, PlanEntitiesQuery $plan_entities_query, IconQuery $icon_query) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->planEntitiesQuery = $plan_entities_query;
-    $this->iconQuery = $icon_query;
-  }
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $endpoint_query_manager);
 
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('ghi_plans.plan_entities_query'),
-      $container->get('ghi_plans.icon_query'),
-    );
+    $this->iconQuery = $this->endpointQueryManager->createInstance('icon_query');
+    $this->planEntitiesQuery = $this->endpointQueryManager->createInstance('plan_entities_query');
   }
 
   /**

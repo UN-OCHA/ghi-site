@@ -17,16 +17,13 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
  *  admin_label = @Translation("Web Content File"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = {
- *      "service" = "ghi_plans.plan_entities_query"
- *    },
- *    "attachment" = {
- *      "service" = "ghi_plans.attachment_query"
- *    },
+ *    "entities" = "plan_entities_query",
+ *    "attachment" = "attachment_query",
  *  },
  *  title = false,
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
+ *    "plan" = @ContextDefinition("entity:base_object:plan", label = @Translation("Plan"))
  *   }
  * )
  */
@@ -42,7 +39,7 @@ class PlanWebcontentFile extends GHIBlockBase {
       return;
     }
 
-    /** @var \Drupal\ghi_plans\Query\AttachmentQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
     $query = $this->getQueryHandler('attachment');
     $attachment = $query->getAttachment($conf['attachment_id']);
     return [
@@ -70,7 +67,7 @@ class PlanWebcontentFile extends GHIBlockBase {
     $file_options = [];
 
     // Retrieve the attachments.
-    /** @var \Drupal\ghi_plans\Query\PlanEntitiesQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
     $query = $this->getQueryHandler('entities');
     $attachments = $this->getCurrentPlanObject() ? $query->getWebContentFileAttachments($this->getCurrentPlanObject()) : NULL;
 

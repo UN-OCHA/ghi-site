@@ -75,6 +75,9 @@ class HidUserData {
 
   /**
    * Get HID access token.
+   *
+   * @return string|null
+   *   The access token if available.
    */
   public function getAccessToken(AccountInterface $user = NULL) {
     if ($user === NULL) {
@@ -82,7 +85,7 @@ class HidUserData {
     }
     elseif ($user->id() != $this->currentUser->id()) {
       // The access token should only be availabe to the user itself.
-      return FALSE;
+      return NULL;
     }
     $session = $this->request->getCurrentRequest()->getSession();
     return !empty($session->get('social_auth_hid_access_token')) ? $session->get('social_auth_hid_access_token')->getToken() : NULL;

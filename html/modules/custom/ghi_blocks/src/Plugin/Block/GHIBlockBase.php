@@ -8,22 +8,26 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\Core\Plugin\Context\Context;
-use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueFactory;
+use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\Router;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\LayoutBuilder\SelectionCriteriaArgument;
 use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
+use Drupal\ghi_plans\ContextProvider\PlanProvider;
+use Drupal\ghi_sections\ContextProvider\YearProvider;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -45,6 +49,20 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * @var \Drupal\Core\Form\FormStateInterface
    */
   protected $formState;
+
+  /**
+   * The context repository manager.
+   *
+   * @var \Drupal\Core\Plugin\Context\ContextRepositoryInterface
+   */
+  protected $contextRepository;
+
+  /**
+   * The manager class for endpoint query plugins.
+   *
+   * @var \Drupal\hpc_api\Query\EndpointQueryManager
+   */
+  protected $endpointQueryManager;
 
   /**
    * The manager class for configuration container items.
@@ -70,11 +88,16 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system, ConfigurationContainerItemManager $configuration_container_item_manager, SectionManager $section_manager, SelectionCriteriaArgument $selection_criteria_argument) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system, ContextRepositoryInterface $context_repository, EndpointQueryManager $endpoint_query_manager, ConfigurationContainerItemManager $configuration_container_item_manager, SectionManager $section_manager, SelectionCriteriaArgument $selection_criteria_argument) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $request_stack, $router, $keyValueFactory, $endpoint_query, $entity_type_manager, $file_system);
+
+    $this->contextRepository = $context_repository;
+    $this->endpointQueryManager = $endpoint_query_manager;
     $this->configurationContainerItemManager = $configuration_container_item_manager;
     $this->sectionManager = $section_manager;
     $this->selectionCriteriaArgument = $selection_criteria_argument;
+
+    $this->injectDefaultContextValues();
   }
 
   /**
@@ -91,10 +114,48 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $container->get('hpc_api.endpoint_query'),
       $container->get('entity_type.manager'),
       $container->get('file_system'),
+      $container->get('context.repository'),
+      $container->get('plugin.manager.endpoint_query_manager'),
       $container->get('plugin.manager.configuration_container_item_manager'),
       $container->get('ghi_sections.manager'),
       $container->get('ghi_blocks.layout_builder_edit_page.selection_criteria_argument')
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContextMapping() {
+    // Get the context mapping that the block has, based on it's stored
+    // configuration.
+    $context_mapping = parent::getContextMapping();
+
+    // Get the context definition from the plugin definition.
+    $plugin_definition = $this->getPluginDefinition();
+    $context_definitions = $plugin_definition['context_definitions'] ?? [];
+
+    // If there are no unmapped context definitions, there is nothing more to
+    // do here.
+    if (empty($context_definitions) || empty(array_diff_key($context_definitions, $context_mapping))) {
+      return $context_mapping;
+    }
+
+    // Create a map with known context providers.
+    $mapping_map = [
+      'plan' => PlanProvider::SERVICE_KEY,
+      'year' => YearProvider::SERVICE_KEY,
+    ];
+
+    // Go over context definitions that are not yet mapped and see if we can
+    // add one of the known services to the mapping to fulfill the contexts.
+    foreach (array_keys(array_diff_key($context_definitions, $context_mapping)) as $key) {
+      if (!$this->hasContext($key) || !array_key_exists($key, $mapping_map) || array_key_exists($key, $context_mapping)) {
+        continue;
+      }
+      // The context exists and we have a mapping, so we add it.
+      $context_mapping[$key] = $mapping_map[$key];
+    }
+    return $context_mapping;
   }
 
   /**
@@ -126,6 +187,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *
    * This returns either the requested named handler if it exists, or the only
    * one defined if no source key is given.
+   * The handler will be initialized with placeholders reflecting the current
+   * contexts.
    *
    * @param string $source_key
    *   The source key that should be used to retrieve data for a block.
@@ -134,6 +197,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   The query handler class.
    */
   protected function getQueryHandler($source_key = 'data') {
+
     $configuration = $this->getPluginDefinition();
     if (empty($configuration['data_sources'])) {
       return NULL;
@@ -141,40 +205,41 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     $sources = $configuration['data_sources'];
     $definition = !empty($sources[$source_key]) ? $sources[$source_key] : NULL;
-    if (!$definition || empty($definition['service'])) {
+    if (!$definition) {
       return NULL;
     }
 
-    $query_handler = \Drupal::service($definition['service']);
-    $page_node = $this->getPageNode();
-
-    $base_entity = NULL;
-
-    // Get the section for the current page node.
-    if ($page_node) {
-      if ($page_node->hasField('field_entity_reference') && count($page_node->get('field_entity_reference')->referencedEntities()) == 1) {
-        // The page node is a subpage of a section and references a section,
-        // which references a base object.
-        $entities = $page_node->get('field_entity_reference')->referencedEntities();
-        $base_entity = reset($entities);
-      }
-      elseif ($page_node->hasField('field_base_object')) {
-        // The page node is already a section node.
-        $base_entity = $page_node;
-      }
+    if (!empty($definition['service'])) {
+      // Get an instance of the service.
+      // @todo Find a different approach to discover endpoint services.
+      /** @var \Drupal\hpc_api\Query\EndpointQuery $query_handler */
+      $query_handler = \Drupal::service($definition['service']);
+    }
+    elseif (is_scalar($definition) && $this->endpointQueryManager->hasDefinition($definition)) {
+      $query_handler = $this->endpointQueryManager->createInstance($definition);
     }
 
-    // Get the object for the current page node.
-    $base_object = NULL;
-    if ($base_entity && $base_entity->hasField('field_base_object') && count($base_entity->get('field_base_object')->referencedEntities()) == 1) {
-      // The page node is a section node which references a base object.
-      $entities = $base_entity->get('field_base_object')->referencedEntities();
-      $base_object = reset($entities);
-    }
+    // Get the available context values and use them as placeholder values for
+    // the query.
+    foreach ($this->getContexts() as $context_key => $context) {
+      /** @var \Drupal\Core\Plugin\Context\Context $context */
+      if ($context_key == 'node' || !$context->hasContextValue()) {
+        continue;
+      }
+      $context_value = $context->getContextValue();
 
-    if ($base_object) {
-      $original_id = $base_object->field_original_id->value;
-      $query_handler->setPlaceholder($base_object->bundle() . '_id', $original_id);
+      if (is_scalar($context_value)) {
+        // Arguments like "year".
+        $query_handler->setPlaceholder($context_key, $context->getContextValue());
+        continue;
+      }
+      elseif ($context_value instanceof ContentEntityInterface && $context_value->hasField('field_original_id')) {
+        // Arguments like "plan_id".
+        $original_id = $context_value->get('field_original_id')->value;
+        if ($original_id && is_scalar($original_id)) {
+          $query_handler->setPlaceholder($context_key . '_id', $original_id);
+        }
+      }
     }
 
     return $query_handler;
@@ -292,6 +357,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $build['#region'] = $this->getRegion();
     }
 
+    // Add the block instance to the render array, so that we have it available
+    // in hooks.
+    $build['#block_instance'] = $this;
+
     return $build;
   }
 
@@ -386,19 +455,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $form_state->addCleanValueKey(['actions', 'subforms']);
     $form_state->addCleanValueKey(['actions', 'submit']);
 
-    // Provide context so that data can be retrieved.
-    $build_info = $form_state->getBuildInfo();
-    if (!empty($build_info['args']) && $build_info['args'][0] instanceof OverridesSectionStorage) {
-      $section_storage = $build_info['args'][0];
-      if ($section_storage->getContext('entity')) {
-        try {
-          $this->setContextValue('node', $build_info['args'][0]->getContextValue('entity'));
-        }
-        catch (ContextException $e) {
-          // Fail silently.
-        }
-      }
-    }
+    // Set contexts during the form building so that data can be retrieved.
+    $this->setFormContexts($form_state);
 
     // Default is a simple form with a single configuration callback.
     $current_subform = self::DEFAULT_FORM_KEY;
@@ -502,6 +560,40 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
 
     return $form;
+  }
+
+  /**
+   * Set the plugin contexts during form processing.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   */
+  private function setFormContexts(FormStateInterface $form_state) {
+    // Provide context so that data can be retrieved.
+    $build_info = $form_state->getBuildInfo();
+    if (!empty($build_info['args']) && $build_info['args'][0] instanceof OverridesSectionStorage) {
+      $section_storage = $build_info['args'][0];
+      if ($section_storage->getContext('entity')) {
+        try {
+          $this->setContext('layout_builder.entity', $build_info['args'][0]->getContext('entity'));
+        }
+        catch (ContextException $e) {
+          // Fail silently.
+        }
+      }
+    }
+
+    // Also Make sure we have all the runtime contexts necessary to configure
+    // this plugin.
+    $runtime_contexts = $this->contextRepository->getRuntimeContexts(array_filter($this->getContextMapping(), function ($context_mapping_id) {
+      // Limit this to contexts that depend on services.
+      return $context_mapping_id[0] == '@' && strpos($context_mapping_id, ':') !== FALSE;
+    }));
+    $context_mapping = array_flip($this->getContextMapping());
+    foreach ($runtime_contexts as $context_key => $runtime_context) {
+      $this->setContext($context_mapping[$context_key], $runtime_context);
+      $this->setContextValue($context_mapping[$context_key], $runtime_context->getContextValue());
+    }
   }
 
   /**
@@ -972,67 +1064,46 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Get the current base entity.
+   *
+   * @return \Drupal\node\NodeInterface|null
+   *   The section node or NULL.
    */
-  public function injectFieldContexts() {
-    if ($this->injectedFieldContexts) {
-      return;
+  public function getCurrentBaseEntity() {
+    // Get the section for the current page node.
+    $page_node = $this->getPageNode();
+    if (!$page_node) {
+      return NULL;
     }
-    $plugin_definition = $this->getPluginDefinition();
-    $field_context_mapping = !empty($plugin_definition['field_context_mapping']) ? $plugin_definition['field_context_mapping'] : NULL;
-
-    if (!empty($field_context_mapping)) {
-      parent::injectFieldContexts();
-      return;
+    $base_entity = NULL;
+    if ($page_node->hasField('field_entity_reference') && count($page_node->get('field_entity_reference')->referencedEntities()) == 1) {
+      // The page node is a subpage of a section and references a section,
+      // which references a base object.
+      $entities = $page_node->get('field_entity_reference')->referencedEntities();
+      $base_entity = reset($entities);
     }
-
-    $node = $this->getNodeFromContexts();
-    if (!$node) {
-      return;
+    elseif ($page_node->hasField('field_base_object')) {
+      // The page node is already a section node.
+      $base_entity = $page_node;
     }
-
-    $base_object = $this->getCurrentBaseObject($node);
-    if (!$base_object || !$base_object->hasField('field_original_id')) {
-      return;
-    }
-    $base_object_id = $base_object->field_original_id->value;
-    $base_object_bundle = $base_object->bundle();
-    $context_key = $base_object_bundle . '_id';
-    $context_label = $this->t('@bundle id', [
-      '@bundle' => $base_object->type->entity->label(),
-    ]);
-
-    if (empty($plugin_definition['context_definitions'][$context_key])) {
-      // Create a new context.
-      $context = new Context(new ContextDefinition('integer', $context_label, FALSE), $base_object_id);
-      $this->setContext($context_key, $context);
-    }
-    else {
-      // Overwrite the existing context value if there is any.
-      $this->setContextValue($context_key, $base_object_id);
-    }
-    $this->injectedFieldContexts = TRUE;
+    return $base_entity;
   }
 
   /**
    * Get the base object for the current page context.
    *
-   * @return \Drupal\node\NodeInterface
-   *   A node representing an API base object if it can be found.
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
+   *   A base object if it can be found.
    */
-  public function getCurrentBaseObject($page_node = NULL) {
-    if ($page_node === NULL) {
-      $page_node = $this->getPageNode();
-    }
-    if (!$page_node) {
-      return NULL;
-    }
-
-    if ($page_node->hasField('field_base_object') && $base_objects = $page_node->field_base_object->referencedEntities()) {
-      return count($base_objects) ? reset($base_objects) : NULL;
-    }
-    if ($page_node->hasField('field_entity_reference') && $referenced_entities = $page_node->field_entity_reference->referencedEntities()) {
-      return count($referenced_entities) ? $this->getCurrentBaseObject(reset($referenced_entities)) : NULL;
+  public function getCurrentBaseObject() {
+    foreach ($this->getContexts() as $context) {
+      $context_definition = $context->getContextDefinition();
+      if (!$context_definition instanceof EntityContextDefinition) {
+        continue;
+      }
+      if (substr($context_definition->getDataType(), 7) == 'base_object') {
+        return $context->getContextValue();
+      }
     }
     return NULL;
   }
@@ -1040,11 +1111,11 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * Get a plan id for the current page context.
    *
-   * @return int
+   * @return int|null
    *   A plan id if it can be found.
    */
-  public function getCurrentBaseObjectId($page_node = NULL) {
-    $base_object = $this->getCurrentBaseObject($page_node);
+  public function getCurrentBaseObjectId() {
+    $base_object = $this->getCurrentBaseObject();
     if (!$base_object) {
       return NULL;
     }
@@ -1054,20 +1125,12 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * Get a plan id for the current page context.
    *
-   * @return \Drupal\node\NodeInterface
-   *   A plan node if it can be found.
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
+   *   A plan object if it can be found.
    */
-  public function getCurrentPlanObject($page_node = NULL) {
-    if ($page_node === NULL) {
-      $page_node = $this->getPageNode();
-    }
-    if (!$page_node) {
-      return NULL;
-    }
-
-    $base_object = $this->getCurrentBaseObject($page_node);
-    if ($base_object->bundle() == 'plan') {
-      return $base_object;
+  public function getCurrentPlanObject() {
+    if ($this->hasContext('plan')) {
+      return $this->getContext('plan')->getContextValue();
     }
     return NULL;
   }
@@ -1075,11 +1138,11 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * Get a plan id for the current page context.
    *
-   * @return int
+   * @return int|null
    *   A plan id if it can be found.
    */
-  public function getCurrentPlanId($page_node = NULL) {
-    $plan_object = $this->getCurrentPlanObject($page_node);
+  public function getCurrentPlanId() {
+    $plan_object = $this->getCurrentPlanObject();
     if (!$plan_object) {
       return NULL;
     }
@@ -1090,30 +1153,46 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * Get the specified named argument for the current page.
    *
    * This also checks whether the retrieved argument is a default value, in
-   * which case it also checks woth the selectin criteria argument service to
+   * which case it also checks with the selection criteria argument service to
    * see if a page argument can be extracted from the current request. This
    * would be the case when a page manager page, that is using layout builder,
    * is being edited.
    */
   protected function getPageArgument($key) {
-    $context_value = parent::getPageArgument($key);
-
     $context = $this->hasContext($key) ? $this->getContext($key) : NULL;
-    if (!$context) {
-      return $context_value;
-    }
+    return $context ? $context->getContextValue() : parent::getPageArgument($key);
+  }
 
-    $definition = $context->getContextDefinition();
-    if ($context_value !== NULL && $definition->getDefaultValue() == $context_value) {
-      // This is a default value. So let's check if we can get an argument from
-      // the selection criteria.
-      $value_from_selection_criteria = $this->selectionCriteriaArgument->getArgumentFromSelectionCriteria($key);
-      if ($value_from_selection_criteria) {
-        return $value_from_selection_criteria;
+  /**
+   * Inject default values into the available contexts.
+   *
+   * This checks the selection criteria argument service to see if a value
+   * can be extracted from the current request. This would be the case when a
+   * page manager page, that is using layout builder, is being edited.
+   */
+  protected function injectDefaultContextValues() {
+    $contexts = $this->getContexts();
+
+    if (empty($contexts)) {
+      return;
+    }
+    foreach (array_keys($contexts) as $context_key) {
+      if (!$this->hasContext($context_key)) {
+        continue;
+      }
+      /** @var \Drupal\Core\Plugin\Context\ContextInterface $context */
+      $context = $this->getContext($context_key);
+      $context_value = $context->hasContextValue() ? $context->getContextValue() : NULL;
+
+      if (empty($context_value)) {
+        // Empty context value. Let's check if we can get an argument from the
+        // selection criteria.
+        $value_from_selection_criteria = $this->selectionCriteriaArgument->getArgumentFromSelectionCriteria($context_key);
+        if ($value_from_selection_criteria) {
+          $this->setContextValue($context_key, $value_from_selection_criteria);
+        }
       }
     }
-
-    return $context_value;
   }
 
 }

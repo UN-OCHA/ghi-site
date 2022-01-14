@@ -20,16 +20,13 @@ use Drupal\node\NodeInterface;
  *  admin_label = @Translation("Governing Entities Caseloads Table"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = {
- *      "service" = "ghi_plans.plan_entities_query"
- *    },
- *    "attachment_search" = {
- *      "service" = "ghi_plans.attachment_search_query"
- *    },
+ *    "entities" = "plan_entities_query",
+ *    "attachment_search" = "attachment_search_query",
  *  },
  *  default_title = @Translation("Cluster caseloads"),
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
+ *    "plan" = @ContextDefinition("entity:base_object:plan", label = @Translation("Plan"))
  *   }
  * )
  */
@@ -432,7 +429,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    *   An array of entity objects, aka clusters.
    */
   private function getEntityObjects() {
-    /** @var \Drupal\ghi_plans\Query\PlanEntitiesQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
     $query = $this->getQueryHandler('entities');
     return $query->getPlanEntities($this->getPageNode(), 'governing');
   }
@@ -501,7 +498,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       'type' => 'caseload',
     ]);
 
-    /** @var \Drupal\ghi_plans\Query\AttachmentSearchQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
     $query = $this->getQueryHandler('attachment_search');
     return $query->getAttachmentsByObject('governingEntity', implode(',', $entity_ids), $filter);
   }

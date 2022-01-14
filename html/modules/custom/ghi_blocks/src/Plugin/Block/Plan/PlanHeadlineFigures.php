@@ -19,7 +19,8 @@ use Drupal\node\NodeInterface;
  *  category = @Translation("Plan elements"),
  *  title = FALSE,
  *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"))
+ *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
+ *    "plan" = @ContextDefinition("entity:base_object:plan", label = @Translation("Plan"))
  *  }
  * )
  */
@@ -173,11 +174,13 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
       return;
     }
 
+    $context = $this->getBlockContext();
+
     $rendered = [];
     foreach ($conf['items'] as $item) {
 
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
-      $item_type = $this->getItemTypePluginForColumn($item);
+      $item_type = $this->getItemTypePluginForColumn($item, $context);
 
       $rendered[] = [
         '#type' => 'item',

@@ -3,10 +3,9 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Link;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_plans\Query\IconQuery;
+use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\node\NodeInterface;
 
 /**
@@ -27,29 +26,17 @@ class EntityName extends ConfigurationContainerItemPluginBase {
   /**
    * The icon query.
    *
-   * @var \Drupal\ghi_plans\Query\IconQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\IconQuery
    */
   public $iconQuery;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, IconQuery $icon_query) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $endpoint_query_manager);
 
-    $this->iconQuery = $icon_query;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('ghi_plans.icon_query'),
-    );
+    $this->iconQuery = $this->endpointQueryManager->createInstance('icon_query');
   }
 
   /**

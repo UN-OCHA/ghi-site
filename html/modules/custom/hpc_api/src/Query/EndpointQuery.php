@@ -89,21 +89,28 @@ class EndpointQuery {
    *
    * @var array
    */
-  protected $endpointArgs;
+  protected $endpointArgs = [];
 
   /**
    * The authentication method to be used.
    *
-   * @var array
+   * @var string
    */
   protected $authMethod;
+
+  /**
+   * An auth header value.
+   *
+   * @var string
+   */
+  protected $authHeader;
 
   /**
    * An array of placeholder substitutions.
    *
    * @var array
    */
-  protected $placeholders;
+  protected $placeholders = [];
 
   /**
    * Order key if any.
@@ -212,11 +219,21 @@ class EndpointQuery {
   }
 
   /**
+   * Set an authentication header for this query.
+   */
+  public function setAuthHeader($value) {
+    $this->authHeader = $value;
+  }
+
+  /**
    * Get the authentication headers for this query.
    */
   public function getAuthHeaders() {
     $headers = [];
-    if ($this->authMethod == self::AUTH_METHOD_BASIC) {
+    if ($this->authHeader) {
+      $headers['Authorization'] = $this->authHeader;
+    }
+    elseif ($this->authMethod == self::AUTH_METHOD_BASIC) {
       $config = $this->configFactory->get('hpc_api.settings');
       $username = $config->get('auth_username');
       if ($username) {
@@ -472,6 +489,9 @@ class EndpointQuery {
 
   /**
    * Get the full qualified URL for the query.
+   *
+   * @return string
+   *   A string representing the full url, including protocol and query string.
    */
   public function getFullEndpointUrl() {
     $endpoint_url = $this->getBaseUrl() . '/' . $this->substitutePlaceholders($this->getEndpointUrl());
@@ -520,7 +540,7 @@ class EndpointQuery {
    * @codeCoverageIgnore
    */
   public function setEndpointArguments($endpoint_arguments) {
-    $this->endpointArgs = $endpoint_arguments;
+    $this->endpointArgs = $endpoint_arguments + $this->endpointArgs;
   }
 
   /**
@@ -596,7 +616,7 @@ class EndpointQuery {
    * Set the placeholders to be used to create the final endpoint url.
    */
   public function setPlaceholders($placeholders) {
-    $this->placeholders = $placeholders;
+    $this->placeholders = $placeholders + $this->placeholders;
   }
 
   /**

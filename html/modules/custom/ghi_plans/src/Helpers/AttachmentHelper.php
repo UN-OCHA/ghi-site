@@ -197,8 +197,8 @@ class AttachmentHelper {
    *   An attachment prototype object.
    */
   private static function fetchPrototypeForAttachment($attachment) {
-    /** @var \Drupal\ghi_plans\Query\AttachmentPrototypeQuery $query */
-    $query_handler = \Drupal::service('ghi_plans.attachment_prototype_query');
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
+    $query_handler = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('attachment_prototype_query');
     return $query_handler->getPrototypeByPlanAndId($attachment->planId, $attachment->attachmentPrototypeId);
   }
 

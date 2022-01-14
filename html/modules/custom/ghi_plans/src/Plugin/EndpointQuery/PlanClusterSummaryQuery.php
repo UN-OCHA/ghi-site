@@ -1,36 +1,29 @@
 <?php
 
-namespace Drupal\ghi_plans\Query;
+namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
-use Drupal\Core\Session\AccountProxyInterface;
-use GuzzleHttp\ClientInterface;
-use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_api\Query\EndpointQueryBase;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
- * Query class for fetching clusters for a plan.
+ * Provides a query plugin for plan cluster summary.
+ *
+ * @EndpointQuery(
+ *   id = "plan_funding_cluster_query",
+ *   label = @Translation("Plan funding cluster query"),
+ *   endpoint = {
+ *     "public" = "plan/{plan_id}/summary/governingEntities",
+ *     "version" = "v2"
+ *   }
+ * )
  */
-class PlanClusterSummaryQuery extends EndpointQuery {
-
-  /**
-   * Constructs a new PlanClusterSummaryQuery object.
-   */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, CacheBackendInterface $cache, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user) {
-    parent::__construct($config_factory, $logger_factory, $cache, $kill_switch, $http_client, $user);
-
-    $this->endpointUrl = 'plan/{plan_id}/summary/governingEntities';
-    $this->endpointVersion = 'v2';
-  }
+class PlanClusterSummaryQuery extends EndpointQueryBase {
 
   /**
    * {@inheritdoc}
    */
-  public function getData() {
-    $data = parent::getData();
+  public function getData(array $placeholders = [], array $query_args = []) {
+    $data = parent::getData($placeholders);
     if (empty($data) || empty($data->objects)) {
       return NULL;
     }

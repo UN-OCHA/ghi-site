@@ -68,7 +68,7 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
   public function build() {
     $contexts = $this->getContexts();
     if (empty($contexts['node']) || !$contexts['node']->getContextValue()) {
-      return NULL;
+      return [];
     }
     $node = $contexts['node']->getContextValue();
 
@@ -83,8 +83,8 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       $base_entity = $node->field_entity_reference->entity;
     }
 
-    if (!SubpageHelper::isBaseTypeNode($base_entity)) {
-      return;
+    if (!SubpageHelper::isBaseTypeNode($base_entity) || !$base_entity->id()) {
+      return [];
     }
 
     // Always output parent link.

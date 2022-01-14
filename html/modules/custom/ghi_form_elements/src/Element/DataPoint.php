@@ -102,7 +102,7 @@ class DataPoint extends FormElement {
         1 => array_key_exists(1, $values['data_points']) ? $values['data_points'][1] : NULL,
       ],
       'formatting' => !empty($values['formatting']) ? $values['formatting'] : array_key_first(DataPointHelper::getFormattingOptions()),
-      'widget' => !empty($values['widget']) ? $values['widget'] : NULL,
+      'widget' => !empty($values['widget']) ? $values['widget'] : 'none',
     ];
 
     $element['processing'] = [

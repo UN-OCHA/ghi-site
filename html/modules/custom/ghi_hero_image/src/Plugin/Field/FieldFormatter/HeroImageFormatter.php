@@ -10,7 +10,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\hpc_common\Helpers\ThemeHelper;
-use Drupal\ghi_plans\Query\PlanEntitiesQuery;
+use Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery;
 
 /**
  * Plugin implementation of the 'ghi_hero_image' formatter.
@@ -26,7 +26,7 @@ class HeroImageFormatter extends FormatterBase implements ContainerFactoryPlugin
   /**
    * The attachment query.
    *
-   * @var \Drupal\ghi_plans\Query\PlanEntitiesQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
    */
   public $entitiesQuery;
 
@@ -51,7 +51,7 @@ class HeroImageFormatter extends FormatterBase implements ContainerFactoryPlugin
       $configuration['label'],
       $configuration['view_mode'],
       $configuration['third_party_settings'],
-      $container->get('ghi_plans.plan_entities_query'),
+      $container->get('plugin.manager.endpoint_query_manager')->createInstance('plan_entities_query')
     );
   }
 
@@ -67,7 +67,10 @@ class HeroImageFormatter extends FormatterBase implements ContainerFactoryPlugin
     $base_object = BaseObjectHelper::getBaseObjectFromNode($entity);
 
     $plan_object = $base_object && $base_object->bundle() == 'plan' ? $base_object : NULL;
-    $this->entitiesQuery->setPlaceholder('plan_id', $base_object->field_original_id->value);
+    if (!$plan_object) {
+      return $element;
+    }
+    $this->entitiesQuery->setPlaceholder('plan_id', $plan_object->field_original_id->value);
     $attachments = $plan_object ? $this->entitiesQuery->getWebContentFileAttachments() : NULL;
     if (empty($attachments)) {
       return $element;

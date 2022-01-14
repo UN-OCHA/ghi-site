@@ -44,7 +44,6 @@ class Datawrapper extends GHIBlockBase {
         'style' => $height ? 'height: ' . $height : NULL,
       ],
       [
-        '#theme' => 'markup',
         '#markup' => Markup::create($conf['embed']),
       ],
     ];

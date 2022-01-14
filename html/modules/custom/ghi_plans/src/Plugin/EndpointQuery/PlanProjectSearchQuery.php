@@ -1,21 +1,31 @@
 <?php
 
-namespace Drupal\ghi_plans\Query;
+namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
-use Drupal\Core\Session\AccountProxyInterface;
-use GuzzleHttp\ClientInterface;
-use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_api\Query\EndpointQueryBase;
 use Drupal\hpc_common\Helpers\CommonHelper;
 
 /**
- * Query class for using the project search API.
+ * Provides a query plugin for project search.
+ *
+ * @EndpointQuery(
+ *   id = "plan_project_search_query",
+ *   label = @Translation("Plan entities query"),
+ *   endpoint = {
+ *     "public" = "public/project/search",
+ *     "version" = "v2",
+ *     "query" = {
+ *       "planIds" = "{plan_id}",
+ *       "latest" = "true",
+ *       "excludeFields" = "plans,workflowStatusOptions,locations",
+ *       "includeFields" = "locationIds,planEntityIds",
+ *       "limit" = "1000",
+ *     }
+ *   }
+ * )
  */
-class PlanProjectSearchQuery extends EndpointQuery {
+class PlanProjectSearchQuery extends EndpointQueryBase {
 
   /**
    * A list of cluster ids to be used as filters.
@@ -23,23 +33,6 @@ class PlanProjectSearchQuery extends EndpointQuery {
    * @var array
    */
   protected $filterByClusterIds = NULL;
-
-  /**
-   * Constructs a new PlanProjectSearchQuery object.
-   */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, CacheBackendInterface $cache, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user) {
-    parent::__construct($config_factory, $logger_factory, $cache, $kill_switch, $http_client, $user);
-
-    $this->endpointUrl = 'public/project/search';
-    $this->endpointVersion = 'v2';
-    $this->endpointArgs = [
-      'planIds' => '{plan_id}',
-      'latest' => 'true',
-      'excludeFields' => 'plans,workflowStatusOptions,locations',
-      'includeFields' => 'locationIds,planEntityIds',
-      'limit' => 1000,
-    ];
-  }
 
   /**
    * Set an array of cluster ids to apply as a filter or data retrieval.
@@ -54,8 +47,8 @@ class PlanProjectSearchQuery extends EndpointQuery {
   /**
    * {@inheritdoc}
    */
-  public function getData() {
-    $data = parent::getData();
+  public function getData(array $placeholders = [], array $query_args = []) {
+    $data = parent::getData($placeholders, $query_args);
 
     if (empty($data) || !is_object($data) || !property_exists($data, 'results')) {
       return [];
