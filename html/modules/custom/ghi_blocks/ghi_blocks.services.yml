@@ -1,7 +1,7 @@
 services:
   ghi_blocks.layout_builder_edit_page.selection_criteria_argument:
     class: Drupal\ghi_blocks\LayoutBuilder\SelectionCriteriaArgument
-    arguments: ['@current_route_match']
+    arguments: ['@current_route_match', '@request_stack']
   ghi_blocks.layout_builder.route_subscriber:
     class: Drupal\ghi_blocks\EventSubscriber\LayoutBuilderRouteSubscriber
     arguments: ['@ghi_blocks.layout_builder_edit_page.selection_criteria_argument']

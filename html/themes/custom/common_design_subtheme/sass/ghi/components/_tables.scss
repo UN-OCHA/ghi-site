@@ -1,4 +1,15 @@
 table.ghi-table {
+
+  .ghi-block & {
+    margin-bottom: 0;
+  }
+
+  thead {
+    th {
+      white-space: nowrap;
+    }
+  }
+
   tbody {
 
     td:first-child.subrow {

@@ -1,0 +1,17 @@
+system.admin_config_ghi:
+  path: '/admin/config/ghi'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'GHI'
+  requirements:
+    _permission: 'access administration pages'
+
+ghi_blocks.global_config:
+  path: '/admin/config/ghi/global-settings'
+  defaults:
+    _form: '\Drupal\ghi_blocks\Form\GlobalSettingsForm'
+    _title: 'Global settings'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer site configuration'

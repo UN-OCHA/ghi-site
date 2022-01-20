@@ -4,9 +4,8 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\Html;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_plans\Query\AttachmentQuery;
+use Drupal\hpc_api\Query\EndpointQueryManager;
 
 /**
  * Provides an attachment data item for configuration containers.
@@ -22,28 +21,17 @@ class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
   /**
    * The attachment query.
    *
-   * @var \Drupal\ghi_plans\Query\AttachmentQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery
    */
   public $attachmentQuery;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, AttachmentQuery $attachment_query) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->attachmentQuery = $attachment_query;
-  }
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $endpoint_query_manager);
 
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('ghi_plans.attachment_query'),
-    );
+    $this->attachmentQuery = $endpoint_query_manager->createInstance('attachment_query');
   }
 
   /**

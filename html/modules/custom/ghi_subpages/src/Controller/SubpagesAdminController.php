@@ -39,7 +39,7 @@ class SubpagesAdminController extends ControllerBase {
   }
 
   /**
-   * Access callback for the plan structure page.
+   * Access callback for the subpages page.
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node object.

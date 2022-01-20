@@ -37,11 +37,10 @@ use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
  *     "hasYear",
  *   },
  *   links = {
- *     "canonical" = "/admin/structure/base-objects/types/{base_object_type}",
- *     "add-form" = "/admin/structure/base-objects/types/add",
- *     "edit-form" = "/admin/structure/base-objects/types/{base_object_type}/edit",
- *     "delete-form" = "/admin/structure/base-objects/types/{base_object_type}/delete",
- *     "collection" = "/admin/structure/base-objects/types"
+ *     "add-form" = "/admin/structure/base-objects/manage/add",
+ *     "edit-form" = "/admin/structure/base-objects/manage/{base_object_type}",
+ *     "delete-form" = "/admin/structure/base-objects/manage/{base_object_type}/delete",
+ *     "collection" = "/admin/structure/base-objects/manage"
  *   }
  * )
  */

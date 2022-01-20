@@ -1,0 +1,11 @@
+system.admin_config_ghi:
+  title: 'GHI'
+  route_name: system.admin_config_ghi
+  parent: system.admin_config
+  description: 'Configure GHI settings.'
+
+ghi_blocks.config.global:
+  title: 'Global settings'
+  route_name: ghi_blocks.global_config
+  description: 'Configure global settings per year'
+  parent: system.admin_config_ghi

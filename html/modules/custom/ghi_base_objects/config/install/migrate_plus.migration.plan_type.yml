@@ -19,6 +19,10 @@ source:
       label: Name
       selector: name
     -
+      name: description
+      label: Description
+      selector: description
+    -
       name: included_in_totals
       label: 'Included in totals'
       selector: 'includeTotals'
@@ -27,6 +31,7 @@ source:
       type: integer
 process:
   name: name
+  description: description
   field_original_id: original_id
   field_included_in_totals:
     plugin: skip_on_empty
@@ -38,6 +43,7 @@ destination:
   default_bundle: plan_type
   overwrite_properties:
     - name
+    - description
     - field_included_in_totals
 migration_dependencies: {  }
 dependencies:

@@ -421,12 +421,37 @@ class ArrayHelper {
   }
 
   /**
+   * Sort an array of objects by the given callback function.
+   *
+   * @param array $array
+   *   An array of objects.
+   * @param callable $callback
+   *   The object property that should be sorted by.
+   * @param string $sort
+   *   The sort direction.
+   * @param int $sort_type
+   *   The sort direction, either SORT_NUMERIC or SORT_STRING.
+   */
+  public static function sortObjectsByCallback(array &$array, callable $callback, $sort = EndpointQuery::SORT_ASC, $sort_type = SORT_NUMERIC) {
+    uasort($array, function ($a, $b) use ($callback, $sort, $sort_type) {
+      $a_value = $callback($a) ?? NULL;
+      $b_value = $callback($b) ?? NULL;
+      if ($sort == EndpointQuery::SORT_ASC) {
+        return $sort_type == SORT_NUMERIC ? $a_value > $b_value : strcasecmp($a_value, $b_value);
+      }
+      if ($sort == EndpointQuery::SORT_DESC) {
+        return $sort_type == SORT_NUMERIC ? $a_value < $b_value : strcasecmp($b_value, $a_value);
+      }
+    });
+  }
+
+  /**
    * Sort an array of objects by the given property.
    *
    * @param array $array
    *   An array of objects.
-   * @param string $property
-   *   The object property that should be sorted by.
+   * @param string|callable $property
+   *   The object property or method that should be sorted by.
    * @param string $sort
    *   The sort direction.
    * @param int $sort_type
@@ -452,15 +477,15 @@ class ArrayHelper {
    *
    * @param array $array
    *   An array of objects.
-   * @param string $property
+   * @param string|callable $property
    *   The object property that should be sorted by.
    * @param string $sort
    *   The sort direction.
    */
   public static function sortObjectsByNumericProperty(array &$array, $property, $sort = EndpointQuery::SORT_ASC) {
     uasort($array, function ($a, $b) use ($property, $sort) {
-      $a_value = !empty($a->$property) ? $a->$property : 0;
-      $b_value = !empty($b->$property) ? $b->$property : 0;
+      $a_value = method_exists($a, $property) ? ($a->$property() ?? 0) : (!empty($a->$property) ? $a->$property : 0);
+      $b_value = method_exists($b, $property) ? ($b->$property() ?? 0) : (!empty($b->$property) ? $b->$property : 0);
       if ($sort == EndpointQuery::SORT_ASC) {
         return $a_value > $b_value;
       }
@@ -475,15 +500,15 @@ class ArrayHelper {
    *
    * @param array $array
    *   An array of objects.
-   * @param string $property
+   * @param string|callable $property
    *   The object property that should be sorted by.
    * @param string $sort
    *   The sort direction.
    */
   public static function sortObjectsByStringProperty(array &$array, $property, $sort = EndpointQuery::SORT_ASC) {
     uasort($array, function ($a, $b) use ($property, $sort) {
-      $a_value = !empty($a->$property) ? $a->$property : 0;
-      $b_value = !empty($b->$property) ? $b->$property : 0;
+      $a_value = method_exists($a, $property) ? ($a->$property() ?? '') : (!empty($a->$property) ? $a->$property : '');
+      $b_value = method_exists($b, $property) ? ($b->$property() ?? '') : (!empty($b->$property) ? $b->$property : '');
       if ($sort == EndpointQuery::SORT_ASC) {
         return strcasecmp($a_value, $b_value);
       }

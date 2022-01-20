@@ -2,9 +2,6 @@
 
 namespace Drupal\hpc_common\Helpers;
 
-use Drupal\Core\Plugin\Context\Context;
-use Drupal\Core\Plugin\Context\ContextDefinition;
-
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\node\Entity\Node;
 
@@ -91,6 +88,8 @@ class BlockHelper {
     $page_parameters = $router->match($uri);
 
     $block = NULL;
+
+    /** @var \Drupal\Core\Block\BlockManager $block_manager */
     $block_manager = \Drupal::service('plugin.manager.block');
 
     // We have 2 cases where we support to our blocks:
@@ -197,25 +196,7 @@ class BlockHelper {
     }
 
     // Now see if there are field contexts to setup too.
-    $plugin_definition = $block->getPluginDefinition();
-    if (!empty($plugin_definition['field_context_mapping'])) {
-      foreach ($plugin_definition['field_context_mapping'] as $context_key => $context_definition) {
-        $context_type = is_string($context_definition) ? 'integer' : $context_definition['type'];
-        if (empty($page_parameters[$context_key])) {
-          continue;
-        }
-        if (empty($plugin_definition['context_definitions'][$context_key])) {
-          // Create a new context.
-          $context_definition = new ContextDefinition($context_type, 'test', FALSE);
-          $context = new Context($context_definition, $page_parameters[$context_key]);
-          $block->setContext($context_key, $context);
-        }
-        else {
-          // Overwrite the existing context value if there is any.
-          $block->setContextValue($context_key, $page_parameters[$context_key]);
-        }
-      }
-    }
+    $block->injectFieldContexts();
 
     // Set the page (node or page manager identifier) from the current page
     // parameters, so that the block knows more about it's context.

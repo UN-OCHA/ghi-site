@@ -32,7 +32,7 @@ trait FtsLinkTrait {
     if (!empty($base_object) && is_object($base_object) && $base_object->bundle() == 'governing_entity') {
       // Cluster context.
       $cluster_id = $base_object->field_original_id->value;
-      $cluster_query = \Drupal::service('ghi_plans.cluster_query');
+      $cluster_query = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('cluster_query');
       $cluster = $cluster_query->getCluster($plan_id, $cluster_id);
       if ($cluster && !empty($cluster->id) && !empty($cluster->name)) {
         $query_args['f'] = ['destinationClusterIdName:' . $cluster->id . ':' . $cluster->name . ''];

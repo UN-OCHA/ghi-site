@@ -1,0 +1,13 @@
+{%
+  set classes = [
+    'hpc-download-dialog-wrapper',
+  ]
+%}
+<div {{ attributes.addClass(classes) }}>
+  <div class="hpc-download-dialog-content">
+    {{ content }}
+  </div>
+  <div class="hpc-download-dialog-footer {% if not footer %}hidden{% endif %}">
+    {{ footer }}
+  </div>
+</div>

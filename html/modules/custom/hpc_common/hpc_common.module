@@ -7,8 +7,6 @@
 
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Component\Utility\Html;
-
-use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_common\Helpers\UserHelper;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 
@@ -198,9 +196,8 @@ function hpc_common_preprocess_block(&$vars) {
   $vars['attributes']['class'][] = 'block-' . $vars['configuration']['uuid'];
 
   // Add API tooltips to blocks for administrators.
-  if (UserHelper::isAdministrator()) {
-    $uri = \Drupal::request()->getRequestUri();
-    $block_instance = BlockHelper::getBlockInstance($uri, $vars['plugin_id'], $vars['configuration']['uuid']);
+  if (UserHelper::isAdministrator() && array_key_exists('#block_instance', $vars['elements']['content'])) {
+    $block_instance = $vars['elements']['content']['#block_instance'];
     if (!$block_instance || !$block_instance instanceof HPCBlockBase) {
       return;
     }

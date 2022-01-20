@@ -1,0 +1,6 @@
+services:
+  ghi_base_objects.base_object_context:
+    class: Drupal\ghi_base_objects\ContextProvider\BaseObjectProvider
+    arguments: ['@node.node_route_context', '@current_route_match', '@layout_builder.tempstore_repository']
+    tags:
+      - { name: 'context_provider' }

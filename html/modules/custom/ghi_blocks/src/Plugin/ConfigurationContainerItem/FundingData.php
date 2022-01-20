@@ -8,12 +8,8 @@ use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_plans\Query\ClusterQuery;
-use Drupal\ghi_plans\Query\FlowSearchQuery;
-use Drupal\ghi_plans\Query\PlanClusterSummaryQuery;
-use Drupal\ghi_plans\Query\PlanFundingSummaryQuery;
+use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
@@ -41,28 +37,28 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   /**
    * The funding query.
    *
-   * @var \Drupal\ghi_plans\Query\PlanFundingSummaryQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery
    */
   public $fundingSummaryQuery;
 
   /**
    * The funding query.
    *
-   * @var \Drupal\ghi_plans\Query\PlanClusterSummaryQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanClusterSummaryQuery
    */
   public $planClusterSummaryQuery;
 
   /**
    * The funding query.
    *
-   * @var \Drupal\ghi_plans\Query\FlowSearchQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery
    */
   public $flowSearchQuery;
 
   /**
    * The funding query.
    *
-   * @var \Drupal\ghi_plans\Query\ClusterQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery
    */
   public $clusterQuery;
 
@@ -76,28 +72,13 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, PlanFundingSummaryQuery $funding_summary_query, PlanClusterSummaryQuery $plan_cluster_summary_query, FlowSearchQuery $flow_search_query, ClusterQuery $cluster_query) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $endpoint_query_manager);
 
-    $this->fundingSummaryQuery = $funding_summary_query;
-    $this->planClusterSummaryQuery = $plan_cluster_summary_query;
-    $this->flowSearchQuery = $flow_search_query;
-    $this->clusterQuery = $cluster_query;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('ghi_plans.plan_funding_summary_query'),
-      $container->get('ghi_plans.plan_cluster_summary_query'),
-      $container->get('ghi_plans.flow_search_query'),
-      $container->get('ghi_plans.cluster_query'),
-    );
+    $this->fundingSummaryQuery = $this->endpointQueryManager->createInstance('plan_funding_summary_query');
+    $this->planClusterSummaryQuery = $this->endpointQueryManager->createInstance('plan_funding_cluster_query');
+    $this->flowSearchQuery = $this->endpointQueryManager->createInstance('flow_search_query');
+    $this->clusterQuery = $this->endpointQueryManager->createInstance('cluster_query');
   }
 
   /**

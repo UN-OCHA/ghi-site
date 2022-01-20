@@ -21,6 +21,10 @@ use Drupal\node\NodeInterface;
  *  valid_source_elements = {
  *    "generic_external_widgets",
  *    "plan_external_widget"
+ *  },
+ *  context_definitions = {
+ *    "plan" = @ContextDefinition("entity:base_object:plan", label = @Translation("Plan"), required = FALSE),
+ *    "year" = @ContextDefinition("integer", label = @Translation("Year"), required = FALSE)
  *  }
  * )
  */
@@ -431,8 +435,8 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
     // Clean the arguments.
     $filter_numbers_to_remove = [];
     foreach ($query_args as $key => $query_arg) {
-      // Remove a filter for "year=X".
-      if (strpos($query_arg, '%23date%2Byear%3D')) {
+      // Remove filters for "year=X".
+      if (strpos($query_arg, '%23date%2Byear')) {
         list($filter_key) = explode('=', $query_args[$key - 1]);
         $filter_number = str_replace('filter', '', $filter_key);
         $filter_numbers_to_remove[] = $filter_number;
@@ -465,7 +469,7 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
     // Make sure we only apply this if we are sufficiently sure that we know
     // what we have.
     $last_filter_index = $this->getLastHdxQuickchartsFilterIndex($query_args);
-    $page_year = $this->getPageYear();
+    $page_year = $this->hasContext('year') ? $this->getContextValue('year') : NULL;
     if ($last_filter_index != 1 || !$page_year) {
       return;
     }
@@ -518,24 +522,6 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
     $params['embeddedConfig'] = str_replace('+', '%20', urlencode(json_encode($embed_config)));
     $new_url = $proxy_url_parts['scheme'] . '://' . $proxy_url_parts['host'] . $proxy_url_parts['path'] . '?' . implode('&', array_merge($query_args, ['url=' . urlencode($data_url)]));
     $params['url'] = urlencode($new_url);
-  }
-
-  /**
-   * Get the page year that is valid for the current page.
-   *
-   * @return int|null
-   *   The page year or NULL.
-   */
-  private function getPageYear() {
-    $path = ltrim($this->getCurrentUri(), '/');
-    $args = explode('/', $path);
-    if ($args[0] == 'overview') {
-      return (int) $args[1];
-    }
-    elseif ($plan_object = $this->getCurrentPlanObject()) {
-      return $plan_object->hasField('field_year') ? (int) $plan_object->get('field_year')->value : NULL;
-    }
-    return NULL;
   }
 
   /**

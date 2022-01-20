@@ -107,7 +107,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   protected $entityTypeManager;
 
   /**
-   * The entity type manager.
+   * The file system service.
    *
    * @var \Drupal\Core\File\FileSystemInterface
    */
@@ -128,6 +128,9 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
 
     // Mostly used to support meta data in downloads.
     $this->setCurrentUri();
+
+    // Inject context based on node fields.
+    $this->injectFieldContexts();
   }
 
   /**
@@ -160,11 +163,12 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     // used context definitions without running into
     // Drupal\Component\Plugin\Exception\ContextException which results in a
     // WSOD and is not fixable via the UI.
-    // We do not explicitely check whether new context definitions have been,
-    // which are not yet stored in the blocks storage, as this should "only"
-    // result in a broken block display, but not in a fatal error.
+    // We do not explicitely check whether new context definitions have been
+    // added, which are not yet stored in the blocks storage, as this should
+    // "only" result in a broken block display, but not in a fatal error.
     $plugin_definition = $this->getPluginDefinition();
     $context_definitions = $plugin_definition['context_definitions'] ?? [];
+
     return array_intersect_key($context_mapping, $context_definitions);
   }
 
@@ -237,6 +241,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
 
     $node = $this->getNodeFromContexts();
     if (!$node) {
+      $this->injectedFieldContexts = TRUE;
       return;
     }
 
@@ -485,7 +490,6 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    * Get the specified named argument for the current page.
    */
   protected function getPageArgument($key) {
-    $this->injectFieldContexts();
     $context = $this->hasContext($key) ? $this->getContext($key) : NULL;
     return $context && $context->hasContextValue() ? $context->getContextValue() : NULL;
   }
@@ -494,14 +498,17 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    * Get all named arguments for the current page.
    */
   public function getPageArguments() {
-    $this->injectFieldContexts();
     $context_values = [];
 
     foreach ($this->getContexts() as $key => $context) {
       if (!$context->hasContextValue()) {
         continue;
       }
-      $context_values[$key] = $context->getContextValue();
+      $context_value = $context->getContextValue();
+      if (!$context_value || !is_scalar($context_value)) {
+        continue;
+      }
+      $context_values[$key] = $context_value;
     }
     return $context_values;
   }
@@ -626,7 +633,6 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     if (!$query_handler) {
       return FALSE;
     }
-    $query_handler->setPlaceholders($this->getPageArguments());
     if (method_exists($this, 'alterEndpointQuery')) {
       $this->alterEndpointQuery($source_key, $query_handler);
     }
@@ -659,7 +665,6 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
         if (!$query_handler) {
           continue;
         }
-        $query_handler->setPlaceholders($this->getPageArguments());
         if (method_exists($this, 'alterEndpointQuery')) {
           $this->alterEndpointQuery($source_key, $query_handler);
         }

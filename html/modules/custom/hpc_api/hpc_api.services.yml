@@ -2,9 +2,9 @@ services:
   hpc_api.endpoint_query:
     class: Drupal\hpc_api\Query\EndpointQuery
     arguments: ['@config.factory', '@logger.factory', '@cache.data', '@page_cache_kill_switch', '@http_client', '@current_user']
-  hpc_api.endpoint_plan_query:
-    class: Drupal\hpc_api\Query\EndpointPlanQuery
-    arguments: ['@config.factory', '@logger.factory', '@cache.data', '@page_cache_kill_switch', '@http_client', '@current_user']
+  plugin.manager.endpoint_query_manager:
+    class: Drupal\hpc_api\Query\EndpointQueryManager
+    parent: default_plugin_manager
   hpc_api.query_profile_subscriber:
     class: Drupal\hpc_api\EventSubscriber\QueryProfileSubscriber
     arguments: []

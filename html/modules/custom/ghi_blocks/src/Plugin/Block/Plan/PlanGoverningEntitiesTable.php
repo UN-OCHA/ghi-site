@@ -22,16 +22,13 @@ use Drupal\node\NodeInterface;
  *  admin_label = @Translation("Governing Entities Overview Table"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = {
- *      "service" = "ghi_plans.plan_entities_query"
- *    },
- *    "cluster_summary" = {
- *      "service" = "ghi_plans.plan_cluster_summary_query"
- *    },
+ *    "entities" = "plan_entities_query",
+ *    "cluster_summary" = "plan_funding_cluster_query",
  *  },
  *  default_title = @Translation("Cluster overview"),
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
+ *    "plan" = @ContextDefinition("entity:base_object:plan", label = @Translation("Plan"))
  *   }
  * )
  */
@@ -227,7 +224,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
 
     // If configured accordingly, add a "Cluster not specified row".
     if (!empty($conf['base']['include_cluster_not_reported']) && $conf['base']['include_cluster_not_reported']) {
-      /** @var \Drupal\ghi_plans\Query\PlanClusterSummaryQuery $query */
+      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanClusterSummaryQuery $query */
       $query = $this->getQueryHandler('cluster_summary');
       $not_specified_entity = $query->getNotSpecifiedCluster();
 
@@ -466,7 +463,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
    *   An array of entity objects, aka clusters.
    */
   private function getEntityObjects() {
-    /** @var \Drupal\ghi_plans\Query\PlanEntitiesQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
     $query = $this->getQueryHandler('entities');
     return $query->getPlanEntities($this->getPageNode(), 'governing');
   }

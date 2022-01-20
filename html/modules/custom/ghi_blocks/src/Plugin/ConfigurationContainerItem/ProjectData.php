@@ -11,14 +11,10 @@ use Drupal\Core\Url;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
-use Drupal\ghi_plans\Query\ClusterQuery;
-use Drupal\ghi_plans\Query\FlowSearchQuery;
-use Drupal\ghi_plans\Query\IconQuery;
-use Drupal\ghi_plans\Query\PlanEntitiesQuery;
-use Drupal\ghi_plans\Query\PlanProjectSearchQuery;
+use Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery;
+use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
@@ -42,64 +38,49 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
   /**
    * The plan entities query.
    *
-   * @var \Drupal\ghi_plans\Query\PlanEntitiesQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
    */
   public $planEntitiesQuery;
 
   /**
    * The project search query.
    *
-   * @var \Drupal\ghi_plans\Query\PlanProjectSearchQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery
    */
   public $projectSearchQuery;
 
   /**
    * The funding query.
    *
-   * @var \Drupal\ghi_plans\Query\FlowSearchQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery
    */
   public $flowSearchQuery;
 
   /**
    * The funding query.
    *
-   * @var \Drupal\ghi_plans\Query\ClusterQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery
    */
   public $clusterQuery;
 
   /**
    * The icon query.
    *
-   * @var \Drupal\ghi_plans\Query\IconQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\IconQuery
    */
   public $iconQuery;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, PlanEntitiesQuery $plan_entities_query, PlanProjectSearchQuery $project_search_query, FlowSearchQuery $flow_search_query, ClusterQuery $cluster_query, IconQuery $icon_query) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->planEntitiesQuery = $plan_entities_query;
-    $this->projectSearchQuery = $project_search_query;
-    $this->flowSearchQuery = $flow_search_query;
-    $this->clusterQuery = $cluster_query;
-    $this->iconQuery = $icon_query;
-  }
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $endpoint_query_manager);
 
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('ghi_plans.plan_entities_query'),
-      $container->get('ghi_plans.plan_project_search_query'),
-      $container->get('ghi_plans.flow_search_query'),
-      $container->get('ghi_plans.cluster_query'),
-      $container->get('ghi_plans.icon_query'),
-    );
+    $this->planEntitiesQuery = $this->endpointQueryManager->createInstance('plan_entities_query');
+    $this->projectSearchQuery = $this->endpointQueryManager->createInstance('plan_project_search_query');
+    $this->flowSearchQuery = $this->endpointQueryManager->createInstance('flow_search_query');
+    $this->clusterQuery = $this->endpointQueryManager->createInstance('cluster_query');
+    $this->iconQuery = $this->endpointQueryManager->createInstance('icon_query');
   }
 
   /**
@@ -224,7 +205,7 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
    *
    * @param string $data_type
    *   The data type.
-   * @param \Drupal\ghi_plans\Query\PlanProjectSearchQuery $project_query
+   * @param \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery $project_query
    *   A project query instance, with cluster filters applied if appropriate.
    *
    * @return int
@@ -390,16 +371,21 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
   /**
    * Initialize the project query.
    *
-   * @return \Drupal\ghi_plans\Query\PlanProjectSearchQuery
+   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery
    *   A project query instance, with cluster filters applied if appropriate.
    */
   private function initializeQuery($data_type = NULL, $cluster_restrict = NULL) {
+    $project_query = $this->projectSearchQuery;
+    $plan_object = $this->getContextValue('plan_object');
+    if (!$plan_object) {
+      return NULL;
+    }
+    $project_query->setPlaceholder('plan_id', $plan_object->get('field_original_id')->value);
+
     $context_node = $this->getContextValue('context_node');
     if (!$context_node) {
       return NULL;
     }
-
-    $project_query = $this->projectSearchQuery;
 
     $data_type = $data_type ?? $this->get('data_type');
     $cluster_restrict = $cluster_restrict ?? $this->get('cluster_restrict');
@@ -418,13 +404,9 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
 
     // Also set cluster context if the current page is a plan entity.
     $context_node = $context['context_node'] ?? NULL;
-    if ($context_node && $context_node->bundle() == 'plan_entity') {
-      /** @var \Drupal\ghi_plans\Query\PlanProjectSearchQuery $query */
-      $query = $this->getQueryHandler(PlanProjectSearchQuery::class);
-      if ($query) {
-        $cluster_ids = PlanStructureHelper::getPlanEntityStructure($this->planEntitiesQuery->getData());
-        $query->setFilterByClusterIds($cluster_ids);
-      }
+    if ($context_node && $context_node->bundle() == 'plan_entity' && $this->projectSearchQuery) {
+      $cluster_ids = PlanStructureHelper::getPlanEntityStructure($this->planEntitiesQuery->getData());
+      $this->projectSearchQuery->setFilterByClusterIds($cluster_ids);
     }
   }
 

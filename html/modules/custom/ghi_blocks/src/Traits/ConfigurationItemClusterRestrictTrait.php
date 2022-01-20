@@ -2,7 +2,7 @@
 
 namespace Drupal\ghi_blocks\Traits;
 
-use Drupal\ghi_plans\Query\ClusterQuery;
+use Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery;
 
 /**
  * Helper trait for cluster restriction on configurtion item plugins.
@@ -38,7 +38,7 @@ trait ConfigurationItemClusterRestrictTrait {
    *   A cluster restriction to apply.
    * @param object $search_results
    *   A result object from the custom search endpoint.
-   * @param \Drupal\ghi_plans\Query\ClusterQuery $clusterQuery
+   * @param \Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery $clusterQuery
    *   A query object for the cluster endpoint.
    *
    * @return mixed|null

@@ -20,12 +20,11 @@ use Drupal\node\NodeInterface;
  *  admin_label = @Translation("Entity Types"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = {
- *      "service" = "ghi_plans.plan_entities_query"
- *    },
+ *    "entities" = "plan_entities_query"
  *  },
  *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"))
+ *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
+ *    "plan" = @ContextDefinition("entity:base_object:plan", label = @Translation("Plan"))
  *  }
  * )
  */
@@ -332,14 +331,14 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
    *   An array of plan entity objects for the current context.
    */
   private function getPlanEntities($entity_ref_code = NULL) {
-    $page_node = $this->getPageNode();
+    $context_object = $this->getCurrentBaseObject();
     $filter = NULL;
     if ($entity_ref_code) {
       $filter = ['ref_code' => $entity_ref_code];
     }
-    /** @var \Drupal\ghi_plans\Query\PlanEntitiesQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
     $query = $this->getQueryHandler('entities');
-    return $query->getPlanEntities($page_node, 'plan', $filter);
+    return $query->getPlanEntities($context_object, 'plan', $filter);
   }
 
   /**

@@ -86,8 +86,10 @@ class AttachmentSelect extends FormElement {
    */
   public static function processAttachmentSelect(array &$element, FormStateInterface $form_state) {
     $context = $element['#element_context'];
+    $plan_id = $context['plan_object']->get('field_original_id')->value;
 
     $trigger = $form_state->getTriggeringElement() ? end($form_state->getTriggeringElement()['#parents']) : NULL;
+
     $triggered_by_select = $trigger ? in_array($trigger, [
       'entity_type',
       'attachment_type',
@@ -141,6 +143,7 @@ class AttachmentSelect extends FormElement {
       ];
       return $element;
     }
+
     if ($is_hidden) {
       $element['entity_type'] = [
         '#type' => 'value',
@@ -202,7 +205,8 @@ class AttachmentSelect extends FormElement {
       unset($element['attachment_type']['#options']);
     }
 
-    $attachments = self::getPlanEntitiesQuery()->getDataAttachments($context['base_object'] ?? NULL, $defaults['entity_type'], [
+    $attachments = self::getPlanEntitiesQuery($plan_id)->getDataAttachments($context['base_object'] ?? NULL, [
+      'entity_type' => $defaults['entity_type'] !== 'overview' ? $defaults['entity_type'] . '_entity' : 'plan',
       'type' => $defaults['attachment_type'],
     ]);
     $attachment_options = [];
@@ -253,23 +257,38 @@ class AttachmentSelect extends FormElement {
   }
 
   /**
+   * Get the endpoint query manager service.
+   *
+   * @return \Drupal\hpc_api\Query\EndpointQueryManager
+   *   The endpoint query manager service.
+   */
+  private static function getEndpointQueryManager() {
+    return \Drupal::service('plugin.manager.endpoint_query_manager');
+  }
+
+  /**
    * Get the attachment query service.
    *
-   * @return \Drupal\ghi_plans\Query\AttachmentQuery
-   *   The attachment query service.
+   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery
+   *   The attachment query plugin.
    */
   public static function getAttachmentQuery() {
-    return \Drupal::service('ghi_plans.attachment_query');
+    return self::getEndpointQueryManager()->createInstance('attachment_query');
   }
 
   /**
    * Get the plan entities query service.
    *
-   * @return \Drupal\ghi_plans\Query\PlanEntitiesQuery
-   *   The plan entities query service.
+   * @param int $plan_id
+   *   The plan id for which a query should be build.
+   *
+   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
+   *   The plan entities query plugin.
    */
-  public static function getPlanEntitiesQuery() {
-    return \Drupal::service('ghi_plans.plan_entities_query');
+  public static function getPlanEntitiesQuery($plan_id) {
+    $query_handler = self::getEndpointQueryManager()->createInstance('plan_entities_query');
+    $query_handler->setPlaceholder('plan_id', $plan_id);
+    return $query_handler;
   }
 
 }
