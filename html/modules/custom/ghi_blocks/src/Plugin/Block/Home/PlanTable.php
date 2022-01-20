@@ -3,7 +3,12 @@
 namespace Drupal\ghi_blocks\Plugin\Block\Home;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
+use Drupal\ghi_plans\Traits\PlanTypeTrait;
+use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\hpc_downloads\Helpers\DownloadHelper;
 
 /**
  * Provides a 'PlanTable' block.
@@ -22,34 +27,172 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
  */
 class PlanTable extends GHIBlockBase {
 
+  use GlobalSettingsTrait;
+  use PlanTypeTrait;
+
   /**
    * {@inheritdoc}
    */
   public function buildContent() {
     $plans = $this->getPlans();
+    if (empty($plans)) {
+      return NULL;
+    }
+    return $this->buildTable($plans);
+  }
+
+  /**
+   * Build a table representation of the plan data.
+   *
+   * @param \Drupal\ghi_base_objects\ApiObjects\Plan[] $plans
+   *   The plans to include in the table.
+   *
+   * @return array
+   *   A render array for a table.
+   */
+  public function buildTable(array $plans) {
+    $year = $this->getContextValue('year');
 
     $header = [
-      $this->t('Interagency Response Plans'),
+      'name' => $this->t('Interagency Response Plans'),
+      'inneed' => $this->t('In need'),
+      'targeted' => $this->t('Targeted'),
+      'expected_reach' => $this->t('Expected reach'),
+      'reached' => $this->t('Reached'),
+      'funding' => $this->t('Funding'),
+      'coverage' => $this->t('Funding coverage'),
+      'requirements' => $this->t('Requirements'),
+      'document' => '',
     ];
 
     foreach ($plans as $plan) {
-      $rows[] = [
-        'name' => $plan['name'],
+      $plan_entity = $plan->getEntity();
+      $document_uri = $plan_entity->get('field_plan_document_link')->uri;
+      $rows[$plan->getId()] = [
+        'name' => $plan->getName(),
+        'inneed' => [
+          'data' => [
+            '#theme' => 'hpc_amount',
+            '#amount' => $plan->getCaseloadValue('inNeed'),
+          ],
+        ],
+        'targeted' => [
+          'data' => [
+            '#theme' => 'hpc_amount',
+            '#amount' => $plan->getCaseloadValue('target'),
+          ],
+        ],
+        'expected_reach' => [
+          'data' => [
+            '#theme' => 'hpc_amount',
+            '#amount' => $plan->getCaseloadValue('expectedReach', 'Expected Reach'),
+          ],
+        ],
+        'reached' => [
+          'data' => [
+            '#theme' => 'hpc_amount',
+            '#amount' => $plan->getCaseloadValue('reached', 'Reached'),
+          ],
+        ],
+        'funding' => [
+          'data' => [
+            '#theme' => 'hpc_currency',
+            '#value' => $plan->getFunding($plan),
+          ],
+        ],
+        'coverage' => [
+          'data' => [
+            '#theme' => 'hpc_progress_bar',
+            '#ratio' => $plan->getCoverage($plan) / 100,
+          ],
+        ],
+        'requirements' => [
+          'data' => [
+            '#theme' => 'hpc_currency',
+            '#value' => $plan->getRequirements($plan),
+          ],
+        ],
+        'document' => [
+          'data' => $document_uri ? DownloadHelper::getDownloadIcon($document_uri) : NULL,
+        ],
       ];
     }
+
+    $this->applyTableConfiguration($header, $rows);
+    $this->applyGlobalConfigurationTable($header, $rows, $year, $plans);
 
     return [
       '#theme' => 'table',
       '#header' => $header,
       '#rows' => $rows,
+      '#wrapper_attributes' => [
+        'class' => ['plan-table'],
+      ],
     ];
+  }
+
+  /**
+   * Apply the table configuration.
+   *
+   * @param array $header
+   *   The build header array.
+   * @param array $rows
+   *   The build table rows.
+   */
+  private function applyTableConfiguration(array &$header, array &$rows) {
+    $config = $this->getBlockConfig();
+    $table_config = $config['table'] ?? [];
+
+    if (empty($table_config['total_funding'])) {
+      // If the funding column should not be shown, the desired order for the
+      // plan table financial columns becomes (Requirements | Coverage) instead
+      // of the default (Funding | Coverage | Requirements).
+      // So we must swap the columns in the header and in each row.
+      unset($header['funding']);
+      ArrayHelper::swap($header, 'coverage', 'requirements');
+
+      $rows = array_map(function ($row) {
+        unset($row['funding']);
+        ArrayHelper::swap($row, 'coverage', 'requirements', TRUE);
+        return $row;
+      }, $rows);
+    }
+
+    if (empty($table_config['funding_progress'])) {
+      // Hide the coverage column.
+      unset($header['coverage']);
+      $rows = array_map(function ($row) {
+        unset($row['coverage']);
+        return $row;
+      }, $rows);
+    }
+
+    if (empty($table_config['fts_icon'])) {
+      $rows = array_map(function ($row) {
+
+        return $row;
+      }, $rows);
+    }
   }
 
   /**
    * {@inheritdoc}
    */
   protected function getConfigurationDefaults() {
-    return [];
+    return [
+      'plans' => [
+        'include' => 'hrp_status',
+        'hrp_status' => 'hrp',
+        'plan_types' => [],
+        'hide_unpublished' => FALSE,
+        'hide_empty_requirements' => FALSE,
+      ],
+      'table' => [
+        'funding_progress' => TRUE,
+        'total_funding' => FALSE,
+        'fts_icon' => TRUE,
+      ],
+    ];
   }
 
   /**
@@ -57,19 +200,272 @@ class PlanTable extends GHIBlockBase {
    */
   public function getConfigForm(array $form, FormStateInterface $form_state) {
 
+    $form['tabs'] = [
+      '#type' => 'vertical_tabs',
+    ];
+
+    $form['plans'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Plans'),
+      '#tree' => TRUE,
+      '#group' => 'tabs',
+    ];
+    $form['plans']['include'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Include plans based on'),
+      '#options' => [
+        'plan_type' => $this->t('Plan type'),
+        'hrp_status' => $this->t('HRP status'),
+      ],
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+        'plans',
+        'include',
+      ]),
+    ];
+    $form['plans']['hrp_status'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Plan category'),
+      '#options' => [
+        'hrp' => $this->t('Plans with HRPs'),
+        'nohrp' => $this->t('Plans without HRPs'),
+        'rrp' => $this->t('Regional response plans'),
+      ],
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+        'plans',
+        'hrp_status',
+      ]),
+      '#states' => [
+        'visible' => [
+          ':input[name="basic[plans][include]"]' => ['value' => 'hrp_status'],
+        ],
+      ],
+    ];
+    $form['plans']['plan_types'] = [
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Plan types'),
+      '#options' => $this->getAvailablePlanTypes(TRUE),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+        'plans',
+        'plan_types',
+      ]),
+      '#states' => [
+        'visible' => [
+          ':input[name="basic[plans][include]"]' => ['value' => 'plan_type'],
+        ],
+      ],
+    ];
+
+    $form['plans']['hide_unpublished'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Hide plans that have not been made publicly available in this site yet'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+        'plans',
+        'hide_unpublished',
+      ]),
+      '#description' => $this->t('Check this if plans that have not been imported into HPC Viewer, or that have not been published, should be hidden from the table output.'),
+    ];
+    $form['plans']['hide_empty_requirements'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Hide plans that have no requirements yet'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+        'plans',
+        'hide_empty_requirements',
+      ]),
+      '#description' => $this->t('Check this if plans that have no requirements yet should be hidden from the table output.'),
+    ];
+    $form['table'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Table'),
+      '#description' => $this->t('The following settings allow you to toggle some features for <em>this single table instance</em>. More <em>global settings</em>, that apply to various page elements across a year, can be controlled on the <a href="@url" target="_blank">GHI Global settings page</a>.', [
+        '@url' => Url::fromRoute('ghi_blocks.global_config', [], ['query' => ['year' => $this->getContextValue('year')]])->toString(),
+      ]),
+      '#tree' => TRUE,
+      '#group' => 'tabs',
+    ];
+    $form['table']['funding_progress'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Show funding progress column'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+        'table',
+        'funding_progress',
+      ]),
+      '#description' => $this->t('Check this to show the funding progress column.'),
+    ];
+    $form['table']['total_funding'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Show total funding column'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+        'table',
+        'total_funding',
+      ]),
+      '#description' => $this->t('Check this to show the total funding column.'),
+    ];
+    $form['table']['fts_icon'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Include tooltip icons for FTS'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+        'table',
+        'fts_icon',
+      ]),
+      '#description' => $this->t('Check this to show icons for "Tracked on FTS".'),
+      '#disabled' => TRUE,
+    ];
+
+    // @codingStandardsIgnoreStart
+    // $global_plan_options = hpc_entities_get_available_global_plan_options();
+    // $include_global_plan_default = $this->getDefaultFormValueFromFormState($form_state, ['global_plan', 'global_plan']) ?: FALSE;
+    // $form['global_plan'] = [
+    //   '#type' => 'details',
+    //   '#title' => $this->t('Global plan'),
+    //   '#tree' => TRUE,
+    //   '#group' => 'tabs',
+    // ];
+    // $form['global_plan']['include_global_plan_columns'] = [
+    //   '#type' => 'checkbox',
+    //   '#title' => $this->t('Include columns for requirements against a global plan'),
+    //   '#default_value' => !empty($global_plan_options) && $include_global_plan_default,
+    //   '#disabled' => empty($global_plan_options),
+    //   '#description' => $this->t('Check this to add additional columns that show requirements for each plan against a global plan.'),
+    // ];
+    // if (empty($global_plan_options)) {
+    //   $form['global_plan']['include_global_plan_columns']['#description'] .= ' ' . $this->t('<em>Disabled because no global plan has been found.</em>');
+    // }
+    // $form['global_plan']['global_plan_select'] = [
+    //   '#type' => 'select',
+    //   '#title' => $this->t('Global plan'),
+    //   '#options' => $global_plan_options,
+    //   '#default_value' => array_key_exists('global_plan_columns', $conf) && !empty($conf['global_plan_columns']['global_plan_select']) ? $conf['global_plan_columns']['global_plan_select'] : '',
+    //   '#description' => $this->t('Select the global plan.'),
+    //   '#states' => [
+    //     'visible' => [
+    //       ':input[name="global_plan_columns[include_global_plan_columns]"]' => ['checked' => TRUE],
+    //     ],
+    //   ],
+    // ];
+    // $form['global_plan']['columns_select'] = [
+    //   '#type' => 'checkboxes',
+    //   '#title' => $this->t('Columns to be included'),
+    //   '#options' => [
+    //     'inside_global' => $this->t('Total requirements of each plan inside the global plan'),
+    //     'cluster_total' => $this->t('Total requirements of each plan against the global plan for a specific global cluster'),
+    //     'cluster_total_exclude' => $this->t('Total requirements of each plan against the global plan excluding a specific global cluster'),
+    //     'outside_global' => $this->t('Total requirements of each plan outside the global plan'),
+    //   ],
+    //   '#default_value' => array_key_exists('global_plan_columns', $conf) && !empty($conf['global_plan_columns']['columns_select']) ? $conf['global_plan_columns']['columns_select'] : '',
+    //   '#states' => [
+    //     'visible' => [
+    //       ':input[name="global_plan_columns[include_global_plan_columns]"]' => ['checked' => TRUE],
+    //     ],
+    //   ],
+    // ];
+    // $global_clusters = hpc_api_data_get_global_clusters();
+    // $form['global_plan']['cluster_select'] = [
+    //   '#type' => 'select',
+    //   '#title' => $this->t('Global cluster'),
+    //   '#options' => array_map(function ($item) {
+    //     return $item->name;
+    //   }, $global_clusters),
+    //   '#default_value' => array_key_exists('global_plan_columns', $conf) && !empty($conf['global_plan_columns']['cluster_select']) ? $conf['global_plan_columns']['cluster_select'] : '',
+    //   '#description' => $this->t('Select the global cluster.'),
+    //   '#states' => [
+    //     'visible' => [
+    //       [
+    //         [
+    //           ':input[name="global_plan_columns[include_global_plan_columns]"]' => ['checked' => TRUE],
+    //           ':input[name="global_plan_columns[columns_select][cluster_total]"]' => ['checked' => TRUE],
+    //         ],
+    //         [
+    //           ':input[name="global_plan_columns[include_global_plan_columns]"]' => ['checked' => TRUE],
+    //           ':input[name="global_plan_columns[columns_select][cluster_total_exclude]"]' => ['checked' => TRUE],
+    //         ],
+    //       ],
+    //     ],
+    //   ],
+    // ];
+    // @codingStandardsIgnoreEnd
+
     return $form;
   }
 
   /**
    * Retrieve the plans to display in this block.
    *
-   * @return array
-   *   Array of plan items.
+   * @return \Drupal\ghi_base_objects\ApiObjects\Plan[]
+   *   Array of plan objects.
    */
   private function getPlans() {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanOverviewQuery $query */
-    $query = $this->getQueryHandler('plans');
-    return $query->getPlans();
+    $plans = $this->getPlanQuery()->getPlans();
+    if (empty($plans)) {
+      return $plans;
+    }
+    $config = $this->getBlockConfig();
+    $plans_config = $config['plans'] ?? [];
+
+    if (empty($plans_config['include']) || $plans_config['include'] == 'hrp_status') {
+      if (!empty($plans_config['hrp_status']) && $plans_config['hrp_status'] == 'rrp') {
+        // Filter for regional response plans.
+        $plans = array_filter($plans, function ($plan) {
+          return $plan->isRrp();
+        });
+      }
+      elseif (!empty($plans_config['hrp_status']) && $plans_config['hrp_status'] == 'nohrp') {
+        // Filter for other plans.
+        $plans = array_filter($plans, function ($plan) {
+          return $plan->isOther();
+        });
+      }
+      else {
+        // Filter for HRPs and Flash appeals.
+        $plans = array_filter($plans, function ($plan) {
+          return $plan->isHrp() || $plan->isFlashAppeal();
+        });
+      }
+    }
+    elseif (!empty($plans_config['plan_types'])) {
+      // Filter based on selected plan types.
+      $selected_plan_type_tids = array_filter($plans_config['plan_types']);
+      $plans = array_filter($plans, function ($plan) use ($selected_plan_type_tids) {
+        $term = $this->getTermObjectByName($plan->getTypeName(), $plan->isTypeIncluded());
+        return $term && in_array($term->id(), $selected_plan_type_tids);
+      });
+    }
+
+    // Filter out plans without requirements.
+    if (array_key_exists('hide_empty_requirements', $plans_config) && $plans_config['hide_empty_requirements']) {
+      // Get information about published plans.
+      foreach ($plans as $key => $plan) {
+        if (empty($plan->getRequirements())) {
+          unset($plans[$key]);
+        }
+      }
+    }
+
+    // Filter out plans without published sections.
+    if (array_key_exists('hide_unpublished', $plans_config) && $plans_config['hide_unpublished']) {
+      // Get information about published plans.
+      foreach ($plans as $key => $plan) {
+        $plan_base_object = $plan->getEntity();
+        $section = $plan_base_object ? $this->sectionManager->loadSectionForBaseObject($plan_base_object) : NULL;
+        if (!$section || !$section->isPublished()) {
+          unset($plans[$key]);
+        }
+      }
+    }
+
+    // Apply the global configuration to limit the source data.
+    $this->applyGlobalConfigurationPlans($plans, $this->getContextValue('year'));
+
+    return $plans;
+  }
+
+  /**
+   * Get the plan query.
+   *
+   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanOverviewQuery
+   *   The plan query plugin.
+   */
+  private function getPlanQuery() {
+    return $this->getQueryHandler('plans');
   }
 
 }

@@ -4,7 +4,8 @@ namespace Drupal\ghi_blocks\LayoutBuilder;
 
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\hpc_common\Plugin\Condition\PageParameterCondition;
-use Drupal\page_manager\Entity\PageVariant;
+use Drupal\hpc_common\Traits\PageManagerTrait;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Service class for extracting values from selection criteria conditions.
@@ -21,6 +22,8 @@ use Drupal\page_manager\Entity\PageVariant;
  */
 class SelectionCriteriaArgument {
 
+  use PageManagerTrait;
+
   /**
    * The route match.
    *
@@ -29,13 +32,23 @@ class SelectionCriteriaArgument {
   protected $routeMatch;
 
   /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
    * Constructs a new RouteCacheContext class.
    *
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The route match.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
    */
-  public function __construct(RouteMatchInterface $route_match) {
+  public function __construct(RouteMatchInterface $route_match, RequestStack $request_stack) {
     $this->routeMatch = $route_match;
+    $this->requestStack = $request_stack;
   }
 
   /**
@@ -45,24 +58,8 @@ class SelectionCriteriaArgument {
    *   A value or NULL if no year can be found.
    */
   public function getArgumentFromSelectionCriteria($name) {
-    $page_parameters = $this->routeMatch->getRawParameters()->all();
+    $page_variant = $this->getCurrentPageVariant($this->requestStack->getCurrentRequest(), $this->routeMatch);
 
-    $variant_id = NULL;
-    if (array_key_exists('machine_name', $page_parameters) && array_key_exists('step', $page_parameters)) {
-      // The step parameter looks like this and holds the variant id:
-      // page_variant__homepage-layout_builder-0__layout_builder
-      // The variant id in this case is "homepage-layout_builder-0".
-      $variant_id = explode('__', $page_parameters['step'])[1];
-    }
-    elseif (array_key_exists('section_storage_type', $page_parameters) && $page_parameters['section_storage_type'] == 'page_manager') {
-      $variant_id = $page_parameters['section_storage'];
-    }
-
-    if (!$variant_id) {
-      return NULL;
-    }
-
-    $page_variant = PageVariant::load($variant_id);
     if (empty($page_variant)) {
       // Strange, but better check and bail out.
       return NULL;

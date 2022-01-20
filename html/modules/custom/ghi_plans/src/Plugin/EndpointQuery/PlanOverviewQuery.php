@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
+use Drupal\ghi_base_objects\ApiObjects\Plan;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 
 /**
@@ -22,7 +23,7 @@ class PlanOverviewQuery extends EndpointQueryBase {
   /**
    * The fetched and processed plans.
    *
-   * @var array
+   * @var \Drupal\ghi_base_objects\ApiObjects\Plan[]
    */
   private $plans = NULL;
 
@@ -39,31 +40,20 @@ class PlanOverviewQuery extends EndpointQueryBase {
 
     $plan_objects = $data->plans;
     foreach ($plan_objects as $plan_object) {
-      $this->plans[$plan_object->id] = [
-        'id' => $plan_object->id,
-        'name' => $plan_object->name,
-        'plan_type' => (object) [
-          'id' => $plan_object->planType->id,
-          'name' => $plan_object->planType->name,
-          'include_totals' => $plan_object->planType->includeTotals,
-        ],
-        'total_funding' => $plan_object->funding->totalFunding ?? 0,
-        'total_requirements' => $plan_object->requirements->requirements ?? 0,
-        'funding_progress' => $plan_object->funding->progress ?? 0,
-        'caseloads' => $plan_object->caseLoads[0]->totals ?? [],
-      ];
+      $plan = new Plan($plan_object);
+      $this->plans[$plan->getId()] = $plan;
     }
 
     uasort($this->plans, function ($a, $b) {
-      return strnatcmp($a['name'], $b['name']);
+      return strnatcmp($a->getName(), $b->getName());
     });
   }
 
   /**
    * Get plans.
    *
-   * @return array
-   *   An array of plan items.
+   * @return \Drupal\ghi_base_objects\ApiObjects\Plan[]
+   *   An array of plan objects.
    */
   public function getPlans() {
     if ($this->plans === NULL) {

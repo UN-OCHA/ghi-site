@@ -8,6 +8,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
@@ -22,6 +23,7 @@ use Drupal\Core\Routing\Router;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\LayoutBuilder\SelectionCriteriaArgument;
+use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
 use Drupal\ghi_plans\ContextProvider\PlanProvider;
 use Drupal\ghi_sections\ContextProvider\YearProvider;
@@ -41,6 +43,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 abstract class GHIBlockBase extends HPCBlockBase {
 
+  use VerticalTabsTrait;
+
   const DEFAULT_FORM_KEY = 'basic';
 
   /**
@@ -49,6 +53,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * @var \Drupal\Core\Form\FormStateInterface
    */
   protected $formState;
+
+  /**
+   * The config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
 
   /**
    * The context repository manager.
@@ -88,9 +99,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system, ContextRepositoryInterface $context_repository, EndpointQueryManager $endpoint_query_manager, ConfigurationContainerItemManager $configuration_container_item_manager, SectionManager $section_manager, SelectionCriteriaArgument $selection_criteria_argument) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system, ConfigFactoryInterface $config_factory, ContextRepositoryInterface $context_repository, EndpointQueryManager $endpoint_query_manager, ConfigurationContainerItemManager $configuration_container_item_manager, SectionManager $section_manager, SelectionCriteriaArgument $selection_criteria_argument) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $request_stack, $router, $keyValueFactory, $endpoint_query, $entity_type_manager, $file_system);
 
+    $this->configFactory = $config_factory;
     $this->contextRepository = $context_repository;
     $this->endpointQueryManager = $endpoint_query_manager;
     $this->configurationContainerItemManager = $configuration_container_item_manager;
@@ -98,6 +110,19 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $this->selectionCriteriaArgument = $selection_criteria_argument;
 
     $this->injectDefaultContextValues();
+  }
+
+  /**
+   * Retrieves a configuration object.
+   *
+   * @param string $name
+   *   The name of the configuration object to retrieve.
+   *
+   * @return \Drupal\Core\Config\Config
+   *   A configuration object.
+   */
+  protected function config($name) {
+    return $this->configFactory->get($name);
   }
 
   /**
@@ -114,6 +139,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $container->get('hpc_api.endpoint_query'),
       $container->get('entity_type.manager'),
       $container->get('file_system'),
+      $container->get('config.factory'),
       $container->get('context.repository'),
       $container->get('plugin.manager.endpoint_query_manager'),
       $container->get('plugin.manager.configuration_container_item_manager'),
@@ -155,6 +181,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       // The context exists and we have a mapping, so we add it.
       $context_mapping[$key] = $mapping_map[$key];
     }
+
     return $context_mapping;
   }
 
@@ -333,10 +360,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $build['#title'] = $plugin_definition['default_title'];
       }
 
-      if ($plugin_configuration['label_display'] == 'visible' && !array_key_exists('#title', $build)) {
+      if (!empty($plugin_configuration['label_display']) && !array_key_exists('#title', $build)) {
         $build += [
           '#title' => $this->label(),
         ];
+      }
+      elseif (empty($plugin_configuration['label_display']) && array_key_exists('#title', $build)) {
+        unset($build['#title']);
       }
     }
 
@@ -351,6 +381,11 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $build['#attributes']['class'][] = Html::getClass('ghi-block-' . $this->getPluginId());
     $build['#attributes']['class'][] = 'ghi-block';
     $build['#attributes']['class'][] = 'ghi-block-' . $this->getUuid();
+
+    // Allow the plugin to define attributes for it's wrapper.
+    if (array_key_exists('#wrapper_attributes', $build_content)) {
+      $build['#attributes'] = NestedArray::mergeDeep($build['#attributes'], $build_content['#wrapper_attributes']);
+    }
 
     $build['#title_attributes']['class'][] = 'block-title';
     if (empty($build['#region'])) {
@@ -391,8 +426,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // https://www.drupal.org/project/drupal/issues/2798261#comment-12735075
     $current_subform = $form_state->get('current_subform');
 
+    $key = (array) $key;
+
     $step_values = NULL;
-    $value_parents = [$current_subform, $key];
+    $value_parents = array_merge([$current_subform], $key);
 
     if ($form_state instanceof SubformStateInterface) {
       $step_values = $form_state->getCompleteFormState()->cleanValues()->getValue($value_parents);
@@ -409,9 +446,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $block = $form_state->get('block');
     $config = $block->getBlockConfig();
 
-    $settings_key = [$key];
+    $settings_key = $key;
     if ($block->isMultistepForm()) {
-      $settings_key = [$current_subform, $key];
+      $settings_key = array_merge([$current_subform], $settings_key);
     }
     return NestedArray::getValue($config, $settings_key);
   }
@@ -464,6 +501,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $is_base_form = TRUE;
 
     if ($this->isMultistepForm()) {
+      /** @var \Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface $this */
       $forms = $this->getSubforms();
       if (empty($forms)) {
         return $form;
@@ -514,9 +552,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
         'id' => $wrapper_id,
         'class' => [Html::getClass('hpc-form-wrapper')],
       ],
-      '#attached' => [
-        'library' => ['ghi_blocks/layout_builder_modal_admin'],
-      ],
     ];
 
     if (!$form_state->get('preview')) {
@@ -524,6 +559,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
         // Add the label widget to the base form.
         $form['container']['label'] = $form['label'];
         $form['container']['label_display'] = $form['label_display'];
+
+        $temporary_settings = $this->getTemporarySettings($form_state);
+        $form['container']['label']['#default_value'] = $temporary_settings['label'];
+        $form['container']['label_display']['#default_value'] = $temporary_settings['label_display'];
 
         // Set the default values.
         $plugin_definition = $this->getPluginDefinition();
@@ -535,6 +574,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
       // And build the subform structure.
       $subform_state = SubformState::createForSubform($form['container'], $form, $form_state);
       $form['container'] += $this->{$form_callback}($form['container'], $subform_state);
+
+      $this->processVerticalTabs($form['container'], $form_state);
+
+      // Exclude buttons from submission values.
       $this->addButtonsToCleanValueKeys($form['container'], $form_state, $form['container']['#parents']);
 
       // Add after build callback for label handling.
@@ -542,14 +585,18 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
     else {
       // Show a preview area.
+      $temporary_settings = $this->getTemporarySettings($form_state);
+      $this->configuration['hpc'] = $temporary_settings;
+      $this->configuration['label'] = $temporary_settings['label'];
+      $this->configuration['label_display'] = $temporary_settings['label_display'];
       $build = $this->build();
       $form['container']['preview'] = [
         '#theme' => 'block',
         '#attributes' => [],
         '#configuration' => [
-          'label' => array_key_exists('#title', $build) ? $build['#title'] : NULL,
+          'label' => $this->configuration['label'],
           'label_display' => $this->configuration['label_display'],
-          'hpc' => $this->getTemporarySettings($form_state),
+          'hpc' => $this->configuration,
         ] + $this->configuration,
         '#base_plugin_id' => $this->getBaseId(),
         '#plugin_id' => $this->getPluginId(),
@@ -638,16 +685,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
   public function blockFormAfterBuild(array $form, FormStateInterface $form_state) {
 
     $plugin_definition = $this->getPluginDefinition();
-    $plugin_configuration = $this->getConfiguration();
 
     // Disable all of the default settings elements. We will handle them.
     $form['admin_label']['#access'] = FALSE;
     $form['admin_label']['#value'] = (string) $plugin_definition['admin_label'];
     $form['label']['#access'] = FALSE;
     $form['label']['#required'] = FALSE;
-    $form['label']['#value'] = (string) $plugin_configuration['label'];
     $form['label_display']['#access'] = FALSE;
-    $form['label_display']['#value'] = (string) $plugin_configuration['label_display'];
     $settings_form = &$form['container'];
 
     // Now manipulate the default settings elements according to our needs.
@@ -681,6 +725,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $settings_form['label_display']['#value'] = FALSE;
       }
     }
+
+    $form['context_mapping']['year']['#access'] = FALSE;
+    $form['context_mapping']['year']['#value'] = array_key_first($form['context_mapping']['year']['#options']);
 
     return $form;
   }
@@ -740,6 +787,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $form_state->setValue($current_subform, $step_values);
       $form_state->set(['storage', $current_subform], $step_values);
       $form_state->setTemporaryValue($current_subform, $step_values);
+
+      // Store the current tab, so that we can get back to it later.
+      $this->processVerticalTabsSubmit($form_state->getCompleteForm()['settings']['container'], $form_state);
     }
 
     // Important to rebuild, otherwhise the preview won't update.
@@ -793,6 +843,16 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   The form state object.
    */
   public function blockFormAlter(array &$form, FormStateInterface $form_state) {
+
+    // Make sure the actions element is a container. GIN Layout Builder does
+    // that already in the frontend, but when editing page manager pages in the
+    // GIN backend theme, this is not done automatically.
+    $form['actions']['#type'] = 'container';
+    $form['actions']['#attributes']['class'][] = 'canvas-form__actions';
+
+    // Also load our library to improve the UI.
+    $form['#attached']['library'] = ['ghi_blocks/layout_builder_modal_admin'];
+
     $form['actions']['subforms'] = [
       '#type' => 'container',
       '#weight' => -1,
@@ -1018,6 +1078,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
 
     if ($this->isMultistepForm()) {
+      /** @var \Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface $this */
       $subforms = $this->getSubforms();
       if (empty($subforms)) {
         return [];

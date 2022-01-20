@@ -28,3 +28,16 @@ tbody td {
     }
   }
 }
+
+// SVG sprite placed before end of body in html.tpl.php
+svg.ghi-icons-sprite {
+  display: none;
+  overflow: hidden;
+}
+
+svg.icon {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  pointer-events: none;
+}

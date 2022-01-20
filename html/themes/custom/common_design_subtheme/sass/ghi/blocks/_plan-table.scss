@@ -1,0 +1,54 @@
+.ghi-block-home-plan-table {
+  table {
+    tbody {
+      td[data-column="name"] {
+        .tooltip.plan-type-icon[data-toggle] {
+          position: relative;
+          top: 0.5rem;
+          right: 1rem;
+          float: right;
+          width: auto !important;
+          min-width: 4rem;
+          height: auto !important;
+          text-align: center;
+          color: $cd-white;
+          // The default background color for plan type other and unknown
+          background-color: rgb(135, 207, 173);
+          font-size: var(--cd-font-size--small);
+          font-weight: normal;
+
+          &.plan-type-hrp {
+            background-color: rgb(80, 144, 205);
+          }
+          &.plan-type-fa {
+            background-color: rgb(136, 105, 174);
+          }
+          &.plan-type-rrp {
+            background-color: rgb(230, 103, 81);
+          }
+          &.plan-type-non-hrp {
+            padding: 0 5px;
+            background-color: rgb(119, 119, 119);
+          }
+        }
+
+        .plan-status {
+          color: var(--cd-orange);
+          font-size: var(--cd-font-size--tiny);
+        }
+      }
+      td[data-column="inneed"],
+      td[data-column="funding"],
+      td[data-column="requirements"] {
+        text-align: right;
+      }
+      td[data-column="coverage"] {
+        text-align: right;
+
+        .hpc-progress-bar-wrapper {
+          width: 60px;
+        }
+      }
+    }
+  }
+}

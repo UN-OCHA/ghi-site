@@ -1,0 +1,5 @@
+services:
+  hpc_downloads.download_dialog_plugin:
+    class: Drupal\hpc_downloads\DownloadDialog\DownloadDialogPlugin
+  hpc_downloads.download_dialog_views:
+    class: Drupal\hpc_downloads\DownloadDialog\DownloadDialogViews

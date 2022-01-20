@@ -1,7 +1,0 @@
-gho_ncms:
-  base_url: 'https://dev.gho-unocha-org.ahconu.org'
-  endpoint: ncms
-  access_key: '12345'
-  basic_auth:
-    user:
-    pass:

@@ -6,10 +6,11 @@ use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Plugin\Context\ContextProviderInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\hpc_common\Plugin\Condition\PageParameterCondition;
+use Drupal\hpc_common\Traits\PageManagerTrait;
 use Drupal\node\NodeInterface;
-use Drupal\page_manager\Entity\PageVariant;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -18,8 +19,16 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class YearProvider implements ContextProviderInterface {
 
   use StringTranslationTrait;
+  use PageManagerTrait;
 
   const SERVICE_KEY = '@ghi_sections.year_context:year';
+
+  /**
+   * The route match.
+   *
+   * @var \Drupal\Core\Routing\RouteMatchInterface
+   */
+  protected $routeMatch;
 
   /**
    * The request stack.
@@ -31,10 +40,13 @@ class YearProvider implements ContextProviderInterface {
   /**
    * Constructs a new YearProvider.
    *
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   The route match.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The request stack.
    */
-  public function __construct(RequestStack $request_stack) {
+  public function __construct(RouteMatchInterface $route_match, RequestStack $request_stack) {
+    $this->routeMatch = $route_match;
     $this->requestStack = $request_stack;
   }
 
@@ -135,7 +147,7 @@ class YearProvider implements ContextProviderInterface {
    *   The year if one can be found.
    */
   private function getSelectionYearFromPageVariant() {
-    $page_variant = $this->getPageVariant();
+    $page_variant = $this->getCurrentPageVariant($this->requestStack->getCurrentRequest(), $this->routeMatch);
     if (!$page_variant) {
       return NULL;
     }
@@ -152,27 +164,6 @@ class YearProvider implements ContextProviderInterface {
       }
     }
     return NULL;
-  }
-
-  /**
-   * Get a page variane from the current request.
-   *
-   * @return \Drupal\page_manager\Entity\PageVariant|null
-   *   A page variant object if one can be found.
-   */
-  private function getPageVariant() {
-    $request_attributes = $this->requestStack->getCurrentRequest()->attributes->all();
-    $variant_id = NULL;
-    if (array_key_exists('machine_name', $request_attributes) && array_key_exists('step', $request_attributes)) {
-      // The step parameter looks like this and holds the variant id:
-      // page_variant__homepage-layout_builder-0__layout_builder
-      // The variant id in this case is "homepage-layout_builder-0".
-      $variant_id = strpos($request_attributes['step'], '__') ? explode('__', $request_attributes['step'])[1] : NULL;
-    }
-    elseif (array_key_exists('section_storage_type', $request_attributes) && $request_attributes['section_storage_type'] == 'page_manager') {
-      $variant_id = $request_attributes['section_storage'];
-    }
-    return $variant_id !== NULL ? PageVariant::load($variant_id) : NULL;
   }
 
 }

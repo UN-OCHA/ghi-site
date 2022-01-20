@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_base_objects\ContextProvider;
 
+use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Plugin\Context\ContextProviderInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
@@ -64,15 +65,15 @@ class BaseObjectProvider implements ContextProviderInterface {
 
     $node = $this->getCurrentNode();
 
-    if (!$node) {
-      // If we don't have node, try to get one from the route match, maybe this
-      // is a layout builder route?
-      if ($this->routeMatch->getParameters()->has('section_storage')) {
-        $section_storage = $this->routeMatch->getParameters()->get('section_storage');
-        $tempstore_section_storage = $this->layoutTempstoreRepository->get($section_storage);
-        if ($tempstore_section_storage->getContext('entity')) {
-          $node = $tempstore_section_storage->getContextValue('entity');
-        }
+    // If we don't have a node, try to get one from the route match, maybe this
+    // is a layout builder route?
+    if (!$node && $section_storage = $this->routeMatch->getParameters()->get('section_storage')) {
+      $tempstore_section_storage = $this->layoutTempstoreRepository->get($section_storage);
+      try {
+        $node = $tempstore_section_storage->getContextValue('entity');
+      }
+      catch (ContextException $e) {
+        // Just catch it silently.
       }
     }
 

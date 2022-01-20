@@ -8,11 +8,16 @@ dependencies:
     - field.field.base_object.plan.field_description
     - field.field.base_object.plan.field_original_id
     - field.field.base_object.plan.field_plan_costing
+    - field.field.base_object.plan.field_plan_document_link
+    - field.field.base_object.plan.field_plan_status_string
     - field.field.base_object.plan.field_plan_type
     - field.field.base_object.plan.field_plan_version_tag
     - field.field.base_object.plan.field_restricted
+    - field.field.base_object.plan.field_short_name
     - field.field.base_object.plan.field_year
     - ghi_base_objects.base_object_type.plan
+  module:
+    - link
 id: base_object.plan.default
 targetEntityType: base_object
 bundle: plan
@@ -59,6 +64,22 @@ content:
     third_party_settings: {  }
     type: entity_reference_autocomplete
     region: content
+  field_plan_document_link:
+    weight: 14
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
+    third_party_settings: {  }
+    type: link_default
+    region: content
+  field_plan_status_string:
+    weight: 13
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
+    region: content
   field_plan_type:
     weight: 3
     settings:
@@ -83,6 +104,14 @@ content:
       display_label: true
     third_party_settings: {  }
     type: boolean_checkbox
+    region: content
+  field_short_name:
+    weight: 12
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
     region: content
   field_year:
     weight: 9

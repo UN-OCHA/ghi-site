@@ -21,6 +21,20 @@ class StringHelper {
   }
 
   /**
+   * Get an abbreviation for a string.
+   */
+  public static function getAbbreviation($string) {
+    if (strpos($string, ' ') === FALSE) {
+      return $string;
+    }
+    $words = explode(' ', $string);
+    $abbreviation = implode('', array_map(function ($word) {
+      return $word[0];
+    }, $words));
+    return strtoupper($abbreviation);
+  }
+
+  /**
    * Render a string.
    */
   public static function renderString($string, $is_export = TRUE) {

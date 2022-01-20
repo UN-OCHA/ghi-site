@@ -1,0 +1,10 @@
+hpc_downloads.settings:
+  type: config_object
+  label: 'HPC Downloads settings'
+  mapping:
+    logo_path:
+      type: string
+      label: 'Path to the logo'
+    logo_path_xls:
+      type: string
+      label: 'Path to the logo for Excel exports'
