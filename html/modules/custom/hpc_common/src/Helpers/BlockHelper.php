@@ -3,6 +3,7 @@
 namespace Drupal\hpc_common\Helpers;
 
 use Drupal\hpc_common\Plugin\HPCBlockBase;
+use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\node\Entity\Node;
 
 /**
@@ -138,7 +139,7 @@ class BlockHelper {
       //
       // First see if this is an overridden node, in which case the node has a
       // field named 'layout_builder__layout'.
-      $layout_builder = $entity->hasField('layout_builder__layout') ? $entity->get('layout_builder__layout')->getValue() : NULL;
+      $layout_builder = $entity->hasField(OverridesSectionStorage::FIELD_NAME) ? $entity->get(OverridesSectionStorage::FIELD_NAME)->getValue() : NULL;
       $sections = [];
       if ($layout_builder) {
         // Extract the nested sections.

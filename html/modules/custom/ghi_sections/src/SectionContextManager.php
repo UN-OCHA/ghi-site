@@ -1,11 +1,11 @@
 <?php
 
-namespace Drupal\ghi_sections\ContextProvider;
+namespace Drupal\ghi_sections;
 
-use Drupal\Core\Plugin\Context\ContextDefinition;
-use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Cache\CacheableMetadata;
-use Drupal\Core\Plugin\Context\ContextProviderInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Plugin\Context\Context;
+use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\hpc_common\Plugin\Condition\PageParameterCondition;
@@ -14,21 +14,12 @@ use Drupal\node\NodeInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Provides a "year" context.
+ * Sync element service class.
  */
-class YearProvider implements ContextProviderInterface {
+class SectionContextManager {
 
-  use StringTranslationTrait;
   use PageManagerTrait;
-
-  const SERVICE_KEY = '@ghi_sections.year_context:year';
-
-  /**
-   * The route match.
-   *
-   * @var \Drupal\Core\Routing\RouteMatchInterface
-   */
-  protected $routeMatch;
+  use StringTranslationTrait;
 
   /**
    * The request stack.
@@ -38,65 +29,51 @@ class YearProvider implements ContextProviderInterface {
   protected $requestStack;
 
   /**
-   * Constructs a new YearProvider.
+   * The route match.
    *
-   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
-   *   The route match.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
+   * @var \Drupal\Core\Routing\RouteMatchInterface
    */
-  public function __construct(RouteMatchInterface $route_match, RequestStack $request_stack) {
-    $this->routeMatch = $route_match;
+  protected $routeMatch;
+
+  /**
+   * Constructs a section create form.
+   */
+  public function __construct(RequestStack $request_stack, RouteMatchInterface $route_match) {
     $this->requestStack = $request_stack;
+    $this->routeMatch = $route_match;
   }
 
   /**
-   * {@inheritdoc}
+   * Get the current year context.
    */
-  public function getRuntimeContexts(array $unqualified_context_ids) {
-    $result = [];
-
+  public function getYearContext() {
+    $context = NULL;
     $request_attributes = $this->requestStack->getCurrentRequest()->attributes;
 
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $request_attributes->get('node');
-
-    if ($node && $node instanceof NodeInterface) {
-      $context = new Context($this->getContextDefinition(), $this->getYearFromNode($node));
-
-      // We are reusing cache contexts.
-      $cacheContexts = $node->getCacheContexts();
-      $cacheability = new CacheableMetadata();
-      $cacheability->setCacheContexts($cacheContexts);
-      $context->addCacheableDependency($cacheability);
-
-      $result[self::SERVICE_KEY] = $context;
-      $result['year'] = $context;
-    }
-    elseif ($year = $request_attributes->get('year')) {
+    if ($year = $request_attributes->get('year')) {
       $context = new Context($this->getContextDefinition(), $year);
-      $result[self::SERVICE_KEY] = $context;
-      $result['year'] = $context;
     }
     elseif ($year = $this->getSelectionYearFromPageVariant()) {
       $context = new Context($this->getContextDefinition(), $year);
-      $result[self::SERVICE_KEY] = $context;
-      $result['year'] = $context;
     }
-    return $result;
+    return $context;
   }
 
   /**
-   * {@inheritdoc}
+   * Get the current year context.
    */
-  public function getAvailableContexts() {
-    $contexts = $this->getRuntimeContexts([]);
-    if (empty($contexts)) {
-      $context = new Context($this->getContextDefinition());
-      $contexts[self::SERVICE_KEY] = $context;
-      $contexts['year'] = $context;
+  public function getYearContextFromEntity(EntityInterface $entity) {
+    if (!$entity || !$entity instanceof NodeInterface) {
+      return NULL;
     }
-    return $contexts;
+    $context = new Context($this->getContextDefinition(), $this->getYearFromNode($entity));
+
+    // We are reusing cache contexts.
+    $cacheContexts = $entity->getCacheContexts();
+    $cacheability = new CacheableMetadata();
+    $cacheability->setCacheContexts($cacheContexts);
+    $context->addCacheableDependency($cacheability);
+    return $context;
   }
 
   /**

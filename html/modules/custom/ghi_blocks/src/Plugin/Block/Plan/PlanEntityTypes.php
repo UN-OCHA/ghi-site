@@ -24,7 +24,7 @@ use Drupal\node\NodeInterface;
  *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object:plan", label = @Translation("Plan"))
+ *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
  *  }
  * )
  */
@@ -366,7 +366,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
       ];
     }
     if (!empty($conf['sort'])) {
-      list($key, $sort) = explode('_', $conf['sort_column']);
+      [$key, $sort] = explode('_', $conf['sort_column']);
       uasort($items, function ($a, $b) use ($key, $sort) {
         $a_value = !empty($a[$key]) ? $a[$key] : 0;
         $b_value = !empty($b[$key]) ? $b[$key] : 0;

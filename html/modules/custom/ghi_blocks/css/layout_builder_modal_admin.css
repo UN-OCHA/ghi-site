@@ -76,6 +76,10 @@
 form.layout-builder-configure-block.glb-canvas-form {
   position: inherit;
 }
+form.layout-builder-configure-block.glb-canvas-form details.glb-claro-details {
+  margin-top: 1rem;
+  border-top: 0 !important;
+}
 form.layout-builder-configure-block.glb-canvas-form .glb-messages-list {
   margin: 0 !important;
   display: none !important;
@@ -112,48 +116,4 @@ form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions in
 #layout-builder-modal form.layout-builder-configure-block .canvas-form__actions input[disabled] {
   cursor: not-allowed !important;
   opacity: 0.5;
-}
-
-/**
- Make the progress throbber for the preview button behave identical for
- layout builder on page manager pages and node pages.
-*/
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .form-item-preview-toggle .ajax-progress.ajax-progress-throbber,
-#layout-builder-modal form.layout-builder-configure-block .canvas-form__actions .form-item-preview-toggle .ajax-progress.ajax-progress--throbber {
-  position: fixed;
-  z-index: 1000;
-  top: 50%;
-  left: 50%;
-  box-sizing: border-box;
-  width: 3.5rem;
-  height: 3.5rem;
-  margin: -1.75rem;
-  border: 1px solid rgba(216, 217, 224, 0.8) !important;
-  border-radius: 3.5rem;
-  background: #fff !important;
-  box-shadow: 0 0.25rem 0.625rem rgb(34 35 48 / 10%) !important;
-  display: inline-flex;
-  align-content: center;
-  vertical-align: middle;
-  white-space: nowrap;
-  line-height: 1.125rem;
-}
-
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .form-item-preview-toggle .ajax-progress.ajax-progress-throbber:before,
-#layout-builder-modal form.layout-builder-configure-block .canvas-form__actions .form-item-preview-toggle .ajax-progress .ajax-progress__throbber {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 1.75rem;
-  height: 1.75rem;
-  margin: -0.875rem;
-  content: "";
-  border: 3px solid var(--colorGinPrimary);
-  border-right: 3px dotted transparent;
-  background: var(--colorGinLayerBackground) !important;
-  color: var(--colorGinText) !important;
-}
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .form-item-preview-toggle .ajax-progress .message,
-#layout-builder-modal form.layout-builder-configure-block .canvas-form__actions .form-item-preview-toggle .ajax-progress .ajax-progress__message {
-  display: none;
 }

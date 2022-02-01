@@ -2,23 +2,9 @@
 
 namespace Drupal\ghi_content\Plugin\Block;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\File\FileSystemInterface;
-use Drupal\Core\KeyValueStore\KeyValueFactory;
-use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Drupal\Core\Routing\Router;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
-use Drupal\ghi_blocks\LayoutBuilder\SelectionCriteriaArgument;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
-use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
-use Drupal\ghi_sections\SectionManager;
-use Drupal\hpc_api\Query\EndpointQuery;
-use Drupal\hpc_api\Query\EndpointQueryManager;
 
 /**
  * Base class for HPC Block plugins.
@@ -33,47 +19,16 @@ abstract class GhiContentBlockBase extends GHIBlockBase implements AutomaticTitl
   protected $remoteSource;
 
   /**
-   * The module handler service.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system, ConfigFactoryInterface $config_factory, ContextRepositoryInterface $context_repository, EndpointQueryManager $endpoint_query_manager, ConfigurationContainerItemManager $configuration_container_item_manager, SectionManager $section_manager, SelectionCriteriaArgument $selection_criteria_argument, ModuleHandlerInterface $module_handler, RemoteSourceInterface $remote_source) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $request_stack, $router, $keyValueFactory, $endpoint_query, $entity_type_manager, $file_system, $config_factory, $context_repository, $endpoint_query_manager, $configuration_container_item_manager, $section_manager, $selection_criteria_argument);
-
-    $this->moduleHandler = $module_handler;
-    $this->remoteSource = $remote_source;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+
     /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
     $remote_source_manager = $container->get('plugin.manager.remote_source');
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('request_stack'),
-      $container->get('router.no_access_checks'),
-      $container->get('keyvalue'),
-      $container->get('hpc_api.endpoint_query'),
-      $container->get('entity_type.manager'),
-      $container->get('file_system'),
-      $container->get('config.factory'),
-      $container->get('context.repository'),
-      $container->get('plugin.manager.endpoint_query_manager'),
-      $container->get('plugin.manager.configuration_container_item_manager'),
-      $container->get('ghi_sections.manager'),
-      $container->get('ghi_blocks.layout_builder_edit_page.selection_criteria_argument'),
-      $container->get('module_handler'),
-      $remote_source_manager->createInstance($plugin_definition['remote_source']),
-    );
+    $instance->remoteSource = $remote_source_manager->createInstance($plugin_definition['remote_source']);
+
+    return $instance;
   }
 
   /**

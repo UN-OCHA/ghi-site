@@ -1,9 +1,4 @@
 services:
-  ghi_plans.plan_context:
-    class: Drupal\ghi_plans\ContextProvider\PlanProvider
-    arguments: ['@context.repository', '@ghi_base_objects.base_object_context']
-    tags:
-      - { name: 'context_provider' }
   ghi_plans.measurement_search_query:
     parent: hpc_api.endpoint_query
     class: Drupal\ghi_plans\Query\MeasurementSearchQuery

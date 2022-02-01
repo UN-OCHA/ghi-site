@@ -8,31 +8,17 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
-use Drupal\Core\KeyValueStore\KeyValueFactory;
-use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Routing\Router;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
-use Drupal\ghi_blocks\LayoutBuilder\SelectionCriteriaArgument;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
-use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
-use Drupal\ghi_plans\ContextProvider\PlanProvider;
-use Drupal\ghi_sections\ContextProvider\YearProvider;
-use Drupal\ghi_sections\SectionManager;
-use Drupal\hpc_api\Query\EndpointQuery;
-use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -97,20 +83,11 @@ abstract class GHIBlockBase extends HPCBlockBase {
   protected $selectionCriteriaArgument;
 
   /**
-   * {@inheritdoc}
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system, ConfigFactoryInterface $config_factory, ContextRepositoryInterface $context_repository, EndpointQueryManager $endpoint_query_manager, ConfigurationContainerItemManager $configuration_container_item_manager, SectionManager $section_manager, SelectionCriteriaArgument $selection_criteria_argument) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $request_stack, $router, $keyValueFactory, $endpoint_query, $entity_type_manager, $file_system);
-
-    $this->configFactory = $config_factory;
-    $this->contextRepository = $context_repository;
-    $this->endpointQueryManager = $endpoint_query_manager;
-    $this->configurationContainerItemManager = $configuration_container_item_manager;
-    $this->sectionManager = $section_manager;
-    $this->selectionCriteriaArgument = $selection_criteria_argument;
-
-    $this->injectDefaultContextValues();
-  }
+  protected $moduleHandler;
 
   /**
    * Retrieves a configuration object.
@@ -129,60 +106,20 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('request_stack'),
-      $container->get('router.no_access_checks'),
-      $container->get('keyvalue'),
-      $container->get('hpc_api.endpoint_query'),
-      $container->get('entity_type.manager'),
-      $container->get('file_system'),
-      $container->get('config.factory'),
-      $container->get('context.repository'),
-      $container->get('plugin.manager.endpoint_query_manager'),
-      $container->get('plugin.manager.configuration_container_item_manager'),
-      $container->get('ghi_sections.manager'),
-      $container->get('ghi_blocks.layout_builder_edit_page.selection_criteria_argument')
-    );
-  }
+    /** @var \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $instance */
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
-  /**
-   * {@inheritdoc}
-   */
-  public function getContextMapping() {
-    // Get the context mapping that the block has, based on it's stored
-    // configuration.
-    $context_mapping = parent::getContextMapping();
+    // Set our own properties.
+    $instance->configFactory = $container->get('config.factory');
+    $instance->contextRepository = $container->get('context.repository');
+    $instance->endpointQueryManager = $container->get('plugin.manager.endpoint_query_manager');
+    $instance->configurationContainerItemManager = $container->get('plugin.manager.configuration_container_item_manager');
+    $instance->sectionManager = $container->get('ghi_sections.manager');
+    $instance->selectionCriteriaArgument = $container->get('ghi_blocks.layout_builder_edit_page.selection_criteria_argument');
+    $instance->moduleHandler = $container->get('module_handler');
 
-    // Get the context definition from the plugin definition.
-    $plugin_definition = $this->getPluginDefinition();
-    $context_definitions = $plugin_definition['context_definitions'] ?? [];
-
-    // If there are no unmapped context definitions, there is nothing more to
-    // do here.
-    if (empty($context_definitions) || empty(array_diff_key($context_definitions, $context_mapping))) {
-      return $context_mapping;
-    }
-
-    // Create a map with known context providers.
-    $mapping_map = [
-      'plan' => PlanProvider::SERVICE_KEY,
-      'year' => YearProvider::SERVICE_KEY,
-    ];
-
-    // Go over context definitions that are not yet mapped and see if we can
-    // add one of the known services to the mapping to fulfill the contexts.
-    foreach (array_keys(array_diff_key($context_definitions, $context_mapping)) as $key) {
-      if (!$this->hasContext($key) || !array_key_exists($key, $mapping_map) || array_key_exists($key, $context_mapping)) {
-        continue;
-      }
-      // The context exists and we have a mapping, so we add it.
-      $context_mapping[$key] = $mapping_map[$key];
-    }
-
-    return $context_mapping;
+    $instance->alterContexts();
+    return $instance;
   }
 
   /**
@@ -623,6 +560,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       if ($section_storage->getContext('entity')) {
         try {
           $this->setContext('layout_builder.entity', $build_info['args'][0]->getContext('entity'));
+          $this->alterContexts();
         }
         catch (ContextException $e) {
           // Fail silently.
@@ -1225,34 +1163,16 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
-   * Inject default values into the available contexts.
-   *
-   * This checks the selection criteria argument service to see if a value
-   * can be extracted from the current request. This would be the case when a
-   * page manager page, that is using layout builder, is being edited.
+   * Alter the contexts for this plugin.
    */
-  protected function injectDefaultContextValues() {
+  protected function alterContexts() {
     $contexts = $this->getContexts();
-
-    if (empty($contexts)) {
-      return;
-    }
-    foreach (array_keys($contexts) as $context_key) {
-      if (!$this->hasContext($context_key)) {
+    $this->moduleHandler->alter('layout_builder_view_context', $contexts, $section_storage);
+    foreach ($contexts as $context_name => $context) {
+      if (in_array($context_name, ['node', 'entity', 'layout_builder.entity'])) {
         continue;
       }
-      /** @var \Drupal\Core\Plugin\Context\ContextInterface $context */
-      $context = $this->getContext($context_key);
-      $context_value = $context->hasContextValue() ? $context->getContextValue() : NULL;
-
-      if (empty($context_value)) {
-        // Empty context value. Let's check if we can get an argument from the
-        // selection criteria.
-        $value_from_selection_criteria = $this->selectionCriteriaArgument->getArgumentFromSelectionCriteria($context_key);
-        if ($value_from_selection_criteria) {
-          $this->setContextValue($context_key, $value_from_selection_criteria);
-        }
-      }
+      $this->setContext($context_name, $context);
     }
   }
 

@@ -2,15 +2,13 @@
 
 namespace Drupal\ghi_sections;
 
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Sync element service class.
  */
-class SectionManager implements ContainerInjectionInterface {
+class SectionManager {
 
   /**
    * The entity type manager service.
@@ -24,15 +22,6 @@ class SectionManager implements ContainerInjectionInterface {
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager) {
     $this->entityTypeManager = $entity_type_manager;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity_type.manager'),
-    );
   }
 
   /**

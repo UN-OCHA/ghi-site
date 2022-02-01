@@ -116,7 +116,7 @@ trait GlobalSettingsTrait {
     $config = $this->getYearConfig($year);
 
     if (empty($config['caseload_reached'])) {
-      // Hide the coverage column.
+      // Hide the reached column.
       unset($header['reached']);
       $rows = array_map(function ($row) {
         unset($row['reached']);
@@ -124,8 +124,8 @@ trait GlobalSettingsTrait {
       }, $rows);
     }
 
-    if (empty($config['caseload_reached'])) {
-      // Hide the coverage column.
+    if (empty($config['caseload_expected_reach'])) {
+      // Hide the expected reach column.
       unset($header['expected_reach']);
       $rows = array_map(function ($row) {
         unset($row['expected_reach']);

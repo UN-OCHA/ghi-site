@@ -4,16 +4,10 @@ namespace Drupal\hpc_common\Plugin;
 
 use Drupal\node\Entity\Node;
 use Drupal\Core\Block\BlockBase;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
-use Drupal\Core\File\FileSystemInterface;
-use Drupal\Core\KeyValueStore\KeyValueFactory;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Drupal\Core\Routing\Router;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\hpc_common\Helpers\ContextHelper;
 
@@ -116,38 +110,24 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = new static($configuration, $plugin_id, $plugin_definition);
 
-    $this->requestStack = $request_stack;
-    $this->router = $router;
-    $this->keyValueFactory = $keyValueFactory;
-    $this->endpointQuery = $endpoint_query;
-    $this->entityTypeManager = $entity_type_manager;
-    $this->fileSystem = $file_system;
+    // Set our own properties.
+    $instance->requestStack = $container->get('request_stack');
+    $instance->router = $container->get('router.no_access_checks');
+    $instance->keyValueFactory = $container->get('keyvalue');
+    $instance->endpointQuery = $container->get('hpc_api.endpoint_query');
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->fileSystem = $container->get('file_system');
 
     // Mostly used to support meta data in downloads.
-    $this->setCurrentUri();
+    $instance->setCurrentUri();
 
     // Inject context based on node fields.
-    $this->injectFieldContexts();
-  }
+    $instance->injectFieldContexts();
 
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('request_stack'),
-      $container->get('router.no_access_checks'),
-      $container->get('keyvalue'),
-      $container->get('hpc_api.endpoint_query'),
-      $container->get('entity_type.manager'),
-      $container->get('file_system')
-    );
+    return $instance;
   }
 
   /**
@@ -379,11 +359,11 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     }
     elseif (!empty($page_parameters['panels_storage_id'])) {
       // Used when in configuration editing context with Panels IPE.
-      list($this->page,) = explode('-', $page_parameters['panels_storage_id'], 2);
+      [$this->page] = explode('-', $page_parameters['panels_storage_id'], 2);
     }
     elseif (!empty($page_parameters['tempstore_id']) && $page_parameters['tempstore_id'] == 'page_manager.page') {
       // Used when configuring using the Panels UI.
-      list($this->page,) = explode('-', $page_parameters['machine_name'], 2);
+      [$this->page] = explode('-', $page_parameters['machine_name'], 2);
     }
     elseif (!empty($page_parameters['node'])) {
       // Node view context.
