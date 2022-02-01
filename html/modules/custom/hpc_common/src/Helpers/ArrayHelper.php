@@ -32,8 +32,8 @@ class ArrayHelper extends ApiArrayHelper {
     if (($index2 = array_search($key2, $keys, $strict)) === FALSE) {
       return FALSE;
     }
-    list($keys[$index1], $keys[$index2]) = [$key2, $key1];
-    list($array[$key1], $array[$key2]) = [$array[$key2], $array[$key1]];
+    [$keys[$index1], $keys[$index2]] = [$key2, $key1];
+    [$array[$key1], $array[$key2]] = [$array[$key2], $array[$key1]];
     $array = array_combine($keys, array_values($array));
   }
 

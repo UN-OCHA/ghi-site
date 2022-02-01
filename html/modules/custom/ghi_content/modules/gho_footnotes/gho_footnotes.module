@@ -301,7 +301,7 @@ function gho_footnotes_update_text($base_id, $text, array $references, array $fo
 
     // Start from the further reference in the text but preserve the index
     // as it's needed to generate the reference id for the backlinks.
-    foreach (array_reverse($info, TRUE) as $index => list($value, $position)) {
+    foreach (array_reverse($info, TRUE) as $index => [$value, $position]) {
       // Remove the reference and ensure we don't have double spaces left.
       if ($footnote_id === NULL) {
         $replacement = str_replace([$reference, '  '], ['', ' '], $value);

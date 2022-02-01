@@ -303,7 +303,7 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
         ]));
       }
 
-      list($base_path) = explode(';', $widget_url, 2);
+      [$base_path] = explode(';', $widget_url, 2);
       $url = parse_url($base_path);
       if (!UrlHelper::isValid($base_path, TRUE)) {
         $form_state->setError($subform['widgets'][$i]['widget_url'], $this->t('Please enter a full URL, containing protocol, host and path, e.g. <em>http://public.tableau.com/my-widget</em>.'));
@@ -345,7 +345,7 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
     $base_url = array_shift($widget_url_parts);
     $params = [];
     foreach ($widget_url_parts as $url_part) {
-      list($key, $value) = explode('=', $url_part, 2);
+      [$key, $value] = explode('=', $url_part, 2);
       $params[$key] = $value;
     }
 
@@ -437,7 +437,7 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
     foreach ($query_args as $key => $query_arg) {
       // Remove filters for "year=X".
       if (strpos($query_arg, '%23date%2Byear')) {
-        list($filter_key) = explode('=', $query_args[$key - 1]);
+        [$filter_key] = explode('=', $query_args[$key - 1]);
         $filter_number = str_replace('filter', '', $filter_key);
         $filter_numbers_to_remove[] = $filter_number;
         unset($query_args[$key]);
@@ -570,7 +570,7 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
       if (strpos($query_arg, 'filter') !== 0) {
         return 0;
       }
-      list($key) = explode('=', $query_arg);
+      [$key] = explode('=', $query_arg);
       return (int) str_replace('filter', '', $key);
     }, $query_args));
     return (int) $last_filter;

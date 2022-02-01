@@ -258,18 +258,18 @@ class ArrayHelper {
       $a_item = $a[$order];
       $b_item = $b[$order];
       uasort($a_item, function ($a, $b) use ($sort) {
-        list(, $a_value) = explode(':', $a);
-        list(, $b_value) = explode(':', $b);
+        [, $a_value] = explode(':', $a);
+        [, $b_value] = explode(':', $b);
         return $sort == EndpointQuery::SORT_ASC ? strnatcasecmp($a_value, $b_value) : strnatcasecmp($b_value, $a_value);
       });
       uasort($b_item, function ($a, $b) use ($sort) {
-        list(, $a_value) = explode(':', $a);
-        list(, $b_value) = explode(':', $b);
+        [, $a_value] = explode(':', $a);
+        [, $b_value] = explode(':', $b);
         return $sort == EndpointQuery::SORT_ASC ? strnatcasecmp($a_value, $b_value) : strnatcasecmp($b_value, $a_value);
       });
       // Step 2: Now we have prepared values to use for the actual sorting.
-      list(, $a_value) = explode(':', $a_item[0]);
-      list(, $b_value) = explode(':', $b_item[0]);
+      [, $a_value] = explode(':', $a_item[0]);
+      [, $b_value] = explode(':', $b_item[0]);
       return $sort == EndpointQuery::SORT_ASC ? strnatcasecmp($a_value, $b_value) : strnatcasecmp($b_value, $a_value);
     });
   }

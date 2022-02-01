@@ -4,6 +4,8 @@ namespace Drupal\hpc_downloads;
 
 /**
  * Class for download records.
+ *
+ * @phpcs:disable DrupalPractice.FunctionCalls.InsecureUnserialize
  */
 class DownloadRecord {
 

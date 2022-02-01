@@ -11,6 +11,8 @@ use Drupal\hpc_common\Helpers\NodeHelper;
 
 /**
  * Helper class for handling plan structure logic.
+ *
+ * @phpcs:disable DrupalPractice.FunctionCalls.InsecureUnserialize
  */
 class PlanStructureHelper {
 
