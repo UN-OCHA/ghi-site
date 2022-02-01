@@ -42,4 +42,8 @@
 .ghi-block {
   padding-top: 1rem;
   padding-bottom: 1rem;
+  // Explicitly set the same defaul line height as for the full document to
+  // prevent errors with previews inside the block configuration modal
+  // (ui-dialog sets a line-height of 1).
+  line-height: 1.5;
 }
