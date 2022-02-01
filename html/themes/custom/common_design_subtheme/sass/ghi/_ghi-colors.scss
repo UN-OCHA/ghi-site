@@ -3,9 +3,8 @@
   --hpc-brown: #464646;
   --hpc-dark-brown: #2f2f2f;
   --hpc-orange: #ee7325;
-  --hpc-orange-light: lighten(--hpc-orange, 40%);
+  --hpc-orange-light: var(--cd-orange--light);
   --hpc-grey: #ebebeb;
-  --hpc-brown-light: lighten(--hpc-brown, 50%);
   --hpc-blue-light: #e6ecf1;
   --green: #62b445;
   --hpc-border-color: #e1e1e1;
