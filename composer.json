@@ -53,6 +53,7 @@
         "drupal/gin_lb": "^1.0@beta",
         "drupal/gin_toolbar": "^1.0",
         "drupal/imageapi_optimize_binaries": "^1.0@alpha",
+        "drupal/layout_builder_ipe": "1.0.x-dev@dev",
         "drupal/layout_builder_lock": "^1.0@RC",
         "drupal/layout_builder_modal": "^1.1",
         "drupal/layout_builder_operation_link": "^1.0",
@@ -83,7 +84,9 @@
         "drupal/yaml_content": "^1.0@alpha",
         "phpcompatibility/php-compatibility": "^9.3",
         "phpmd/phpmd": "^2.9",
+        "phpspec/prophecy-phpunit": "^2",
         "phpunit/phpunit": "^9.5",
+        "symfony/phpunit-bridge": "^6.0",
         "weitzman/drupal-test-traits": "^1.5"
     },
     "conflict": {

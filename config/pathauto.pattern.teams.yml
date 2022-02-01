@@ -12,12 +12,12 @@ pattern: '/admin/people/teams/[term:name]'
 selection_criteria:
   bae0d8f0-b8f6-45b0-882a-47e0827ae071:
     id: 'entity_bundle:taxonomy_term'
-    bundles:
-      team: team
     negate: false
+    uuid: bae0d8f0-b8f6-45b0-882a-47e0827ae071
     context_mapping:
       taxonomy_term: taxonomy_term
-    uuid: bae0d8f0-b8f6-45b0-882a-47e0827ae071
+    bundles:
+      team: team
 selection_logic: and
 weight: -5
 relationships: {  }

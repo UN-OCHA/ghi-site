@@ -7,6 +7,7 @@
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\layout_builder\SectionStorageInterface;
 
 /**
  * Implements hook_form_FORM_ID_alter().
@@ -38,5 +39,31 @@ function ghi_sections_form_node_section_edit_form_alter(&$form, FormStateInterfa
   if (!\Drupal::currentUser()->hasPermission('administer teams')) {
     $form['field_team']['#disabled'] = TRUE;
     $form['field_team']['widget']['#description'] = t('You do not have permission to change the team for this section.');
+  }
+}
+
+/**
+ * Implements hook_layout_builder_view_context_alter().
+ */
+function ghi_sections_layout_builder_view_context_alter(array &$contexts, SectionStorageInterface $section_storage = NULL, $sample = FALSE) {
+  /** @var \Drupal\ghi_sections\SectionContextManager $section_context_manager */
+  $section_context_manager = \Drupal::service('ghi_sections.context_manager');
+
+  $context = NULL;
+  if (isset($contexts['layout_builder.entity']) && $contexts['layout_builder.entity']->hasContextValue()) {
+    $context = $section_context_manager->getYearContextFromEntity($contexts['layout_builder.entity']->getContextValue());
+  }
+  elseif (isset($contexts['entity']) && $contexts['entity']->hasContextValue()) {
+    $context = $section_context_manager->getYearContextFromEntity($contexts['entity']->getContextValue());
+  }
+  elseif (isset($contexts['node']) && $contexts['node']->hasContextValue()) {
+    $context = $section_context_manager->getYearContextFromEntity($contexts['node']->getContextValue());
+  }
+  else {
+    $context = $section_context_manager->getYearContext();
+  }
+
+  if ($context) {
+    $contexts['year'] = $context;
   }
 }

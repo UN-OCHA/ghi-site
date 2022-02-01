@@ -11,12 +11,12 @@ pattern: '[node:field_base_object:entity:type]/[node:field_base_object:entity:fi
 selection_criteria:
   92328ccb-ae93-4279-a035-09244e0a3e18:
     id: node_type
-    bundles:
-      section: section
     negate: false
+    uuid: 92328ccb-ae93-4279-a035-09244e0a3e18
     context_mapping:
       node: node
-    uuid: 92328ccb-ae93-4279-a035-09244e0a3e18
+    bundles:
+      section: section
 selection_logic: and
 weight: -10
 relationships: {  }

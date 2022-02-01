@@ -19,6 +19,8 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadViewsQueryInterface;
 
 /**
  * A download source class for batched views queries.
+ *
+ * @phpcs:disable DrupalPractice.FunctionCalls.InsecureUnserialize
  */
 class ViewsQueryBatchedSource extends DownloadSourceBase implements HPCBatchedDownloadExcelInterface {
 

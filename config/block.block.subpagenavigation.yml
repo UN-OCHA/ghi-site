@@ -16,13 +16,16 @@ plugin: subpage_navigation
 settings:
   id: subpage_navigation
   label: 'Subpage navigation'
-  provider: ghi_subpages
   label_display: '0'
+  provider: ghi_subpages
   context_mapping:
     node: '@node.node_route_context:node'
 visibility:
   'entity_bundle:node':
     id: 'entity_bundle:node'
+    negate: false
+    context_mapping:
+      node: '@node.node_route_context:node'
     bundles:
       financials: financials
       global_section: global_section
@@ -30,6 +33,3 @@ visibility:
       profile: profile
       risk_index: risk_index
       section: section
-    negate: false
-    context_mapping:
-      node: '@node.node_route_context:node'

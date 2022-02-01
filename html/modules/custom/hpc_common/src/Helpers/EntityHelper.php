@@ -49,7 +49,7 @@ class EntityHelper {
     if (empty($items)) {
       return NULL;
     }
-    $item = $delta !== NULL ? (isset($items[$delta]) ? $items[$delta] : NULL) : (isset($items[0]) ? $items[0] : NULL);
+    $item = $delta !== NULL ? ($items[$delta] ?? NULL) : ($items[0] ?? NULL);
     return $property !== NULL && isset($item[$property]) ? $item[$property] : $item;
   }
 

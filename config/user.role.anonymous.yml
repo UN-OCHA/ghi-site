@@ -1,7 +1,9 @@
 uuid: 7e7aa20a-581e-4429-961c-ff935bbe54b4
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - system
 _core:
   default_config_hash: j5zLMOdJBqC0bMvSdth5UebkprJB8g_2FXHqhfpJzow
 id: anonymous
@@ -10,8 +12,3 @@ weight: -10
 is_admin: false
 permissions:
   - 'access content'
-  - 'search content'
-  - 'use hybridauth'
-  - 'use manualcrop'
-  - 'view files'
-  - 'view own files'

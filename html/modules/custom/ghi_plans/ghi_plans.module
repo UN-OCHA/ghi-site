@@ -66,6 +66,8 @@ function ghi_plans_form_alter(&$form, FormStateInterface &$form_state, $form_id)
 
 /**
  * Implements hook_form_FORM_ID_alter().
+ *
+ * @phpcs:disable DrupalPractice.FunctionCalls.InsecureUnserialize
  */
 function ghi_plans_form_node_plan_edit_form_alter(&$form, FormStateInterface &$form_state) {
   $node = $form_state->getFormObject()->getEntity();

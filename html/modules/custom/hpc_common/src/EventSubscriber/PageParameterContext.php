@@ -39,7 +39,7 @@ class PageParameterContext implements EventSubscriberInterface {
     $parameters = $event->getPage()->getParameters();
     $available_contexts = $this->contextRepository->getAvailableContexts();
     foreach ($this->contextRepository->getRuntimeContexts(array_keys($available_contexts)) as $context_key => $context) {
-      list(, $parameter_name) = explode(':', $context_key);
+      [, $parameter_name] = explode(':', $context_key);
       if (!array_key_exists($parameter_name, $parameters)) {
         continue;
       }

@@ -6,10 +6,12 @@
  */
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\migrate\MigrateSkipRowException;
 use Drupal\migrate\Plugin\MigrateSourceInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
@@ -28,6 +30,42 @@ function ghi_base_objects_help($route_name, RouteMatchInterface $route_match) {
       return $output;
 
     default:
+  }
+}
+
+/**
+ * Implements hook_layout_builder_view_context_alter().
+ */
+function ghi_base_objects_layout_builder_view_context_alter(array &$contexts, SectionStorageInterface $section_storage = NULL, $sample = FALSE) {
+  if (!isset($contexts['layout_builder.entity']) && !isset($contexts['entity']) && !isset($contexts['node'])) {
+    return;
+  }
+
+  $entity_context = $contexts['layout_builder.entity'] ?? ($contexts['entity'] ?? $contexts['node']);
+  if (!$entity_context->hasContextValue()) {
+    return;
+  }
+  $entity = $entity_context->getContextValue();
+
+  $base_object = BaseObjectHelper::getBaseObjectFromNode($entity);
+  if (!$base_object) {
+    return;
+  }
+  if ($entity->id()) {
+    // This is an actual node page.
+    $context = EntityContext::fromEntity($base_object, $base_object->type->entity->label());
+    $context->getContextDefinition()->addConstraint('Bundle', $base_object->getEntityTypeId());
+    $contexts[$base_object->bundle()] = $context;
+  }
+  else {
+    // This some configuration page.
+    $types = \Drupal::entityTypeManager()->getStorage('base_object_type')->loadMultiple();
+    foreach ($types as $type) {
+      $entity = \Drupal::service('layout_builder.sample_entity_generator')->get('base_object', $type->id());
+      $context = EntityContext::fromEntity($entity, $type->label());
+      $context->getContextDefinition()->addConstraint('Bundle', $type->getEntityTypeId());
+      $contexts[$type->id()] = $context;
+    }
   }
 }
 

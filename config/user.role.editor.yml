@@ -1,7 +1,22 @@
 uuid: 0bb4d302-e6d1-4821-b5b7-65470d396528
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  config:
+    - core.entity_view_display.node.financials.default
+    - core.entity_view_display.node.population.default
+    - core.entity_view_display.node.profile.default
+    - core.entity_view_display.node.risk_index.default
+    - core.entity_view_display.node.section.default
+  module:
+    - contextual
+    - ghi_content
+    - layout_builder
+    - layout_builder_ipe
+    - node
+    - publishcontent
+    - system
+    - toolbar
 id: editor
 label: editor
 weight: -6
@@ -31,5 +46,11 @@ permissions:
   - 'unpublish editable node type profile'
   - 'unpublish editable node type risk_index'
   - 'unpublish editable node type section'
+  - 'use layout builder ipe on editable financials node layout overrides'
+  - 'use layout builder ipe on editable global_section node layout overrides'
+  - 'use layout builder ipe on editable population node layout overrides'
+  - 'use layout builder ipe on editable profile node layout overrides'
+  - 'use layout builder ipe on editable risk_index node layout overrides'
+  - 'use layout builder ipe on editable section node layout overrides'
   - 'view own unpublished content'
   - 'view the administration theme'

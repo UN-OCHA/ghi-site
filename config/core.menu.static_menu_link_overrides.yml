@@ -1,34 +1,36 @@
+_core:
+  default_config_hash: jdY7AU0tU-QsjmiOw3W8vwpYMb-By--_MSFgbqKUTYM
 definitions:
   'admin_toolbar_tools__extra_links:node__add__financials':
-    enabled: true
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
-    expanded: false
     weight: 0
+    expanded: false
+    enabled: true
   'admin_toolbar_tools__extra_links:node__add__population':
-    enabled: true
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 0
     expanded: false
+    enabled: true
   'admin_toolbar_tools__extra_links:node__add__profile':
-    enabled: true
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 0
     expanded: false
+    enabled: true
   'admin_toolbar_tools__extra_links:node__add__risk_index':
-    enabled: true
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 0
     expanded: false
+    enabled: true
   'admin_toolbar_tools__extra_links:node__add__overview':
-    enabled: true
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 0
     expanded: false
+    enabled: true
   entity__base_object__collection:
     menu_name: admin
     parent: entity.base_object
@@ -36,124 +38,122 @@ definitions:
     expanded: false
     enabled: true
   entity__base_object_type__collection:
-    weight: 101
     menu_name: admin
     parent: entity.base_object
-    enabled: true
+    weight: 101
     expanded: false
+    enabled: true
   update__status:
+    menu_name: admin
+    parent: system.admin_reports
     weight: 1
-    menu_name: admin
-    parent: system.admin_reports
-    enabled: true
     expanded: false
+    enabled: true
   dblog__overview:
-    weight: 2
     menu_name: admin
     parent: system.admin_reports
+    weight: 2
     expanded: false
     enabled: true
   locale__translate_status:
-    weight: 3
     menu_name: admin
     parent: system.admin_reports
+    weight: 3
     expanded: false
     enabled: true
   entity__field_storage_config__collection:
-    weight: 4
     menu_name: admin
     parent: system.admin_reports
+    weight: 4
     expanded: false
     enabled: true
   hpc_api__import_files_report:
-    weight: 6
     menu_name: admin
     parent: system.admin_reports
+    weight: 6
     expanded: false
     enabled: true
   dblog__access_denied:
-    weight: 7
     menu_name: admin
     parent: system.admin_reports
+    weight: 7
     expanded: false
     enabled: true
   dblog__page_not_found:
-    weight: 8
     menu_name: admin
     parent: system.admin_reports
+    weight: 8
     expanded: false
     enabled: true
   views_ui__reports_plugins:
-    weight: 5
     menu_name: admin
     parent: system.admin_reports
+    weight: 5
     expanded: false
     enabled: true
   system__admin_content:
+    menu_name: admin
+    parent: system.admin
     weight: -99
-    menu_name: admin
-    parent: system.admin
-    enabled: true
     expanded: false
+    enabled: true
   system__admin_structure:
-    weight: -98
     menu_name: admin
     parent: system.admin
+    weight: -98
     expanded: false
     enabled: true
   system__themes_page:
-    weight: -97
     menu_name: admin
     parent: system.admin
+    weight: -97
     expanded: false
     enabled: true
   system__modules_list:
-    weight: -96
     menu_name: admin
     parent: system.admin
+    weight: -96
     expanded: false
     enabled: true
   system__admin_config:
-    weight: -95
     menu_name: admin
     parent: system.admin
+    weight: -95
     expanded: false
     enabled: true
   entity__user__collection:
-    weight: -94
     menu_name: admin
     parent: system.admin
+    weight: -94
     expanded: false
     enabled: true
   system__admin_reports:
-    weight: -93
     menu_name: admin
     parent: system.admin
+    weight: -93
     expanded: false
     enabled: true
   'admin_toolbar_tools__extra_links:view__files':
+    menu_name: admin
+    parent: system.admin_content
     weight: 2
-    menu_name: admin
-    parent: system.admin_content
-    enabled: true
     expanded: false
+    enabled: true
   'admin_toolbar_tools__extra_links:media_page':
-    weight: 3
     menu_name: admin
     parent: system.admin_content
+    weight: 3
     expanded: false
     enabled: true
   'admin_toolbar_tools__extra_links:user__admin_permissions':
-    weight: 2
     menu_name: admin
     parent: entity.user.collection
+    weight: 2
     expanded: false
     enabled: true
   'admin_toolbar_tools__extra_links:entity__user_role__collection':
-    weight: 3
     menu_name: admin
     parent: entity.user.collection
-    enabled: true
+    weight: 3
     expanded: false
-_core:
-  default_config_hash: jdY7AU0tU-QsjmiOw3W8vwpYMb-By--_MSFgbqKUTYM
+    enabled: true

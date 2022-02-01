@@ -16,6 +16,8 @@ use Drupal\hpc_api\Query\EndpointQuery;
 
 /**
  * @covers Drupal\hpc_api\Query\EndpointQuery
+ *
+ * @group HPC API
  */
 class EndpointQueryTest extends UnitTestCase {
 

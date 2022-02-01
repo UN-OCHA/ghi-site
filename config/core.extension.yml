@@ -1,3 +1,5 @@
+_core:
+  default_config_hash: R4IF-ClDHXxblLcG0L7MgsLvfBIMAvi_skumNFQwkDc
 module:
   admin_denied: 0
   admin_toolbar: 0
@@ -46,6 +48,7 @@ module:
   inline_form_errors: 0
   language: 0
   layout_builder: 0
+  layout_builder_ipe: 0
   layout_builder_modal: 0
   layout_builder_operation_link: 0
   layout_builder_restrictions: 0
@@ -97,5 +100,3 @@ theme:
   claro: 0
   gin: 0
 profile: minimal
-_core:
-  default_config_hash: R4IF-ClDHXxblLcG0L7MgsLvfBIMAvi_skumNFQwkDc

@@ -52,6 +52,18 @@ function ghi_blocks_preprocess_block(&$variables) {
 }
 
 /**
+ * Implements hook_form_alter().
+ */
+function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  if (strpos($form_id, 'layout_builder_form')) {
+    $form['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
+    if (array_key_exists('placeholders', $form)) {
+      $form['placeholders']['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
+    }
+  }
+}
+
+/**
  * Implements hook_FORM_ID_alter().
  */
 function ghi_blocks_form_layout_builder_add_block_alter(array &$form, FormStateInterface $form_state, $form_id) {
@@ -67,7 +79,7 @@ function ghi_blocks_form_layout_builder_add_block_alter(array &$form, FormStateI
  * Implements hook_FORM_ID_alter().
  */
 function ghi_blocks_form_layout_builder_update_block_alter(array &$form, FormStateInterface $form_state, $form_id) {
-  list($section_storage, $delta, , $uuid) = $form_state->getBuildInfo()['args'];
+  [$section_storage, $delta, , $uuid] = $form_state->getBuildInfo()['args'];
   $component = $section_storage->getSection($delta)->getComponent($uuid);
   $plugin = $component->getPlugin();
   if (!$plugin instanceof GHIBlockBase) {
@@ -113,6 +125,7 @@ function ghi_blocks_page_attachments(array &$attachments) {
   if (ghi_blocks_is_layout_builder_route()) {
     $attachments['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
   }
+  $attachments['#attached']['library'][] = 'ghi_blocks/throbber';
 }
 
 /**
@@ -123,7 +136,7 @@ function ghi_blocks_page_attachments(array &$attachments) {
  */
 function ghi_blocks_is_layout_builder_route() {
   $route_name = \Drupal::routeMatch()->getRouteName();
-  if (preg_match('/^(layout_builder\.([^.]+\.)?)/', $route_name)) {
+  if ($route_name == 'layout_builder_ipe.edit_page' || preg_match('/^(layout_builder\.([^.]+\.)?)/', $route_name)) {
     return TRUE;
   }
   $page_parameters = \Drupal::routeMatch()->getRawParameters()->all();

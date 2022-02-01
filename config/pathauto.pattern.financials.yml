@@ -11,12 +11,12 @@ pattern: '[node:field_entity_reference:entity:url:path]/financials'
 selection_criteria:
   22edb89c-c8d5-42e1-b697-3cd30c5be658:
     id: node_type
-    bundles:
-      financials: financials
     negate: false
+    uuid: 22edb89c-c8d5-42e1-b697-3cd30c5be658
     context_mapping:
       node: node
-    uuid: 22edb89c-c8d5-42e1-b697-3cd30c5be658
+    bundles:
+      financials: financials
 selection_logic: and
 weight: -7
 relationships: {  }

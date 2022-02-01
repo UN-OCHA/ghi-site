@@ -13,9 +13,9 @@ bundle: user
 mode: featured
 content:
   member_for:
-    weight: 5
     settings: {  }
     third_party_settings: {  }
+    weight: 5
     region: content
 hidden:
   field_team: true

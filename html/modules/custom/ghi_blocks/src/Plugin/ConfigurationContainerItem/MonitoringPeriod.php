@@ -15,6 +15,7 @@ use Drupal\hpc_api\Query\EndpointQueryManager;
  *   label = @Translation("Monitoring period"),
  *   description = @Translation("This item displays the monitoring period for an attachment."),
  * )
+ * @phpcs:disable DrupalPractice.FunctionCalls.InsecureUnserialize
  */
 class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
 

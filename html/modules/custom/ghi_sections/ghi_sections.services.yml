@@ -1,9 +1,4 @@
 services:
-  ghi_sections.year_context:
-    class: Drupal\ghi_sections\ContextProvider\YearProvider
-    arguments: ['@current_route_match', '@request_stack']
-    tags:
-      - { name: 'context_provider' }
   ghi_sections.route_subscriber:
     class: Drupal\ghi_sections\EventSubscriber\RouteSubscriber
     tags:
@@ -11,3 +6,6 @@ services:
   ghi_sections.manager:
     class: Drupal\ghi_sections\SectionManager
     arguments: ['@entity_type.manager']
+  ghi_sections.context_manager:
+    class: Drupal\ghi_sections\SectionContextManager
+    arguments: ['@request_stack', '@current_route_match']

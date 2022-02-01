@@ -23,7 +23,7 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
  *  title = false,
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object:plan", label = @Translation("Plan"))
+ *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
  *   }
  * )
  */

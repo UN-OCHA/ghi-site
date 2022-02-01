@@ -88,7 +88,7 @@ class HidUserData {
       return NULL;
     }
     $session = $this->request->getCurrentRequest()->getSession();
-    return !empty($session->get('social_auth_hid_access_token')) ? $session->get('social_auth_hid_access_token')->getToken() : NULL;
+    return $session && !empty($session->get('social_auth_hid_access_token')) ? $session->get('social_auth_hid_access_token')->getToken() : NULL;
   }
 
 }
