@@ -15,12 +15,12 @@ bundle: ocha_services
 mode: featured
 content:
   description:
-    label: hidden
     type: text_default
-    weight: 0
-    region: content
+    label: hidden
     settings: {  }
     third_party_settings: {  }
+    weight: 0
+    region: content
 hidden:
   field_acronym: true
   field_link_pattern: true

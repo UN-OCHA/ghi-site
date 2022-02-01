@@ -16,8 +16,8 @@ dependencies:
     - user
 third_party_settings:
   layout_builder:
-    allow_custom: true
     enabled: true
+    allow_custom: true
     sections:
       -
         layout_id: layout_onecol
@@ -44,11 +44,11 @@ third_party_settings:
       - System
       - core
     entity_view_mode_restriction:
-      whitelisted_blocks: {  }
+      allowed_layouts: {  }
       blacklisted_blocks:
         'Narrative Content': {  }
         'Plan elements': {  }
-      allowed_layouts: {  }
+      whitelisted_blocks: {  }
       restricted_categories:
         - 'Chaos Tools'
         - 'Content fields'
@@ -68,32 +68,32 @@ bundle: profile
 mode: default
 content:
   field_entity_reference:
-    weight: 101
+    type: entity_reference_label
     label: above
     settings:
       link: true
     third_party_settings: {  }
-    type: entity_reference_label
+    weight: 101
     region: content
   field_hero_image:
-    weight: 103
+    type: ghi_hero_image
     label: above
     settings: {  }
     third_party_settings: {  }
-    type: ghi_hero_image
+    weight: 103
     region: content
   field_team:
-    weight: 102
+    type: entity_reference_label
     label: above
     settings:
       link: true
     third_party_settings: {  }
-    type: entity_reference_label
+    weight: 102
     region: content
   links:
-    weight: 100
     settings: {  }
     third_party_settings: {  }
+    weight: 100
     region: content
 hidden:
   langcode: true

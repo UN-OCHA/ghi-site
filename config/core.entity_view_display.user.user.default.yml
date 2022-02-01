@@ -12,10 +12,10 @@ bundle: user
 mode: default
 content:
   member_for:
-    weight: 2
-    region: content
     settings: {  }
     third_party_settings: {  }
+    weight: 2
+    region: content
 hidden:
   field_team: true
   langcode: true

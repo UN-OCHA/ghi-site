@@ -12,19 +12,19 @@ id: card_hero
 label: 'Card Hero'
 image_style_mappings:
   -
-    breakpoint_id: common_design.xl
-    multiplier: 1x
     image_mapping_type: image_style
     image_mapping: 16x9_720
+    breakpoint_id: common_design.xl
+    multiplier: 1x
   -
+    image_mapping_type: image_style
+    image_mapping: 16x9_480
     breakpoint_id: common_design.sm
     multiplier: 1x
+  -
     image_mapping_type: image_style
     image_mapping: 16x9_480
-  -
     breakpoint_id: common_design.xs
     multiplier: 2x
-    image_mapping_type: image_style
-    image_mapping: 16x9_480
 breakpoint_group: common_design
 fallback_image_style: 16x9_240

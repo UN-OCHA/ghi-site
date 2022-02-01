@@ -1,24 +1,22 @@
 uuid: b3c55f28-67c5-4c9e-a9cd-aac27eca6611
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  config:
+    - node.type.news_story
+  module:
+    - ghi_content
+    - node
+    - publishcontent
+    - system
 id: plan_lead
 label: 'plan lead'
 weight: -4
 is_admin: null
 permissions:
   - 'access remote content'
-  - 'add media from remote sources'
-  - 'administer panelizer node governing_entity content'
-  - 'administer panelizer node plan content'
-  - 'administer panelizer node plan_entity content'
-  - 'apply hpc page templates'
   - 'delete own news_story content'
-  - 'edit own governing_entity content'
-  - 'edit own plan_entity content'
   - 'publish editable content'
   - 'unpublish editable content'
-  - 'use page manager'
-  - 'use panels in place editing'
   - 'view own unpublished content'
   - 'view the administration theme'

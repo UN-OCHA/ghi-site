@@ -2,8 +2,8 @@ status: 1
 pattern: Population
 escape: false
 preserve_titles: false
-save: 0
-chunk: '50'
 dependencies:
   config:
     - node.type.population
+save: 0
+chunk: '50'

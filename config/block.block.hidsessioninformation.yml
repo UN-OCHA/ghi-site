@@ -17,17 +17,17 @@ plugin: hid_session_information
 settings:
   id: hid_session_information
   label: 'HID Session Information'
-  provider: hpc_common
   label_display: visible
+  provider: hpc_common
 visibility:
   user_role:
     id: user_role
-    roles:
-      administrator: administrator
     negate: false
     context_mapping:
       user: '@user.current_user_context:current_user'
+    roles:
+      administrator: administrator
   request_path:
     id: request_path
-    pages: '/user/*'
     negate: false
+    pages: '/user/*'

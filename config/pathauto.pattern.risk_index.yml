@@ -11,12 +11,12 @@ pattern: '[node:field_entity_reference:entity:url:path]/risk-index'
 selection_criteria:
   8df65b0f-4bbc-4c78-a908-8efcd2c7b6ad:
     id: node_type
-    bundles:
-      risk_index: risk_index
     negate: false
+    uuid: 8df65b0f-4bbc-4c78-a908-8efcd2c7b6ad
     context_mapping:
       node: node
-    uuid: 8df65b0f-4bbc-4c78-a908-8efcd2c7b6ad
+    bundles:
+      risk_index: risk_index
 selection_logic: and
 weight: -6
 relationships: {  }

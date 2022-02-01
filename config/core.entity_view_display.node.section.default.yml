@@ -17,8 +17,8 @@ dependencies:
     - user
 third_party_settings:
   layout_builder:
-    allow_custom: true
     enabled: true
+    allow_custom: true
     sections:
       -
         layout_id: layout_onecol
@@ -31,10 +31,12 @@ third_party_settings:
     allowed_block_categories:
       - 'Chaos Tools'
       - 'Content fields'
+      - 'Country elements'
       - 'Custom block types'
       - Forms
       - 'Generic elements'
       - HID
+      - Homepage
       - 'Inline blocks'
       - 'Lists (Views)'
       - Menus
@@ -45,14 +47,17 @@ third_party_settings:
       - System
       - core
     entity_view_mode_restriction:
-      whitelisted_blocks: {  }
+      allowed_layouts:
+        - layout_onecol
       blacklisted_blocks: {  }
+      whitelisted_blocks: {  }
       restricted_categories:
         - 'Chaos Tools'
         - 'Content fields'
         - 'Custom block types'
         - Forms
         - HID
+        - Homepage
         - 'Inline blocks'
         - 'Lists (Views)'
         - Menus
@@ -60,49 +65,47 @@ third_party_settings:
         - Subpage
         - System
         - core
-      allowed_layouts:
-        - layout_onecol
 id: node.section.default
 targetEntityType: node
 bundle: section
 mode: default
 content:
   field_base_object:
-    weight: 104
+    type: entity_reference_label
     label: above
     settings:
       link: true
     third_party_settings: {  }
-    type: entity_reference_label
+    weight: 104
     region: content
   field_hero_image:
-    weight: 106
+    type: ghi_hero_image
     label: above
     settings: {  }
     third_party_settings: {  }
-    type: ghi_hero_image
+    weight: 106
     region: content
   field_team:
-    weight: 105
+    type: entity_reference_label
     label: above
     settings:
       link: true
     third_party_settings: {  }
-    type: entity_reference_label
+    weight: 105
     region: content
   field_year:
-    weight: 103
+    type: number_integer
     label: above
     settings:
       thousand_separator: ''
       prefix_suffix: true
     third_party_settings: {  }
-    type: number_integer
+    weight: 103
     region: content
   links:
-    weight: 100
     settings: {  }
     third_party_settings: {  }
+    weight: 100
     region: content
 hidden:
   langcode: true

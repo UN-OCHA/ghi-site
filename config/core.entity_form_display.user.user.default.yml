@@ -18,11 +18,11 @@ content:
     settings: {  }
     third_party_settings: {  }
   field_team:
+    type: options_select
     weight: 1
+    region: content
     settings: {  }
     third_party_settings: {  }
-    type: options_select
-    region: content
   language:
     weight: 2
     region: content
