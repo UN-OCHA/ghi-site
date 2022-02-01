@@ -3462,7 +3462,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/layout_builder_ipe.git",
-                "reference": "2b447f682ef1b4f39730d4ebcbf9f21dfacfcf2f"
+                "reference": "6a57f28b4050160987f71fe2e121d28bab85f05f"
             },
             "require": {
                 "drupal/core": "^8 || ^9"
@@ -3474,7 +3474,7 @@
                 },
                 "drupal": {
                     "version": "1.0.x-dev",
-                    "datestamp": "1643315047",
+                    "datestamp": "1643330637",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
