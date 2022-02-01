@@ -567,18 +567,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
         }
       }
     }
-
-    // Also Make sure we have all the runtime contexts necessary to configure
-    // this plugin.
-    $runtime_contexts = $this->contextRepository->getRuntimeContexts(array_filter($this->getContextMapping(), function ($context_mapping_id) {
-      // Limit this to contexts that depend on services.
-      return $context_mapping_id[0] == '@' && strpos($context_mapping_id, ':') !== FALSE;
-    }));
-    $context_mapping = array_flip($this->getContextMapping());
-    foreach ($runtime_contexts as $context_key => $runtime_context) {
-      $this->setContext($context_mapping[$context_key], $runtime_context);
-      $this->setContextValue($context_mapping[$context_key], $runtime_context->getContextValue());
-    }
   }
 
   /**
