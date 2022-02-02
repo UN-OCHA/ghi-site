@@ -64,7 +64,7 @@ class GlobalSettingsForm extends ConfigFormBase {
       foreach ($this->getCheckboxOptions() as $key => $def) {
         $form['years'][$year][$key] = [
           '#type' => 'checkbox',
-          '#default_value' => $year_config[$key],
+          '#default_value' => $year_config[$key] ?? NULL,
         ] + $def;
       }
 
