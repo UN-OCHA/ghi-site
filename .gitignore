@@ -40,9 +40,3 @@ buildlog.txt
 .phpunit.result.cache
 /phpunit.xml
 ###< symfony/phpunit-bridge ###
-
-config/ghi_element_sync.settings.yml
-config/ghi_content.remote_sources.yml
-config/page_manager.page.homepage.yml
-config/page_manager.page_variant.homepage-*
-config/ghi_blocks.global_settings.yml

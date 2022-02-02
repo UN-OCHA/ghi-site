@@ -333,6 +333,17 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // in hooks.
     $build['#block_instance'] = $this;
 
+    $build['#cache'] = [
+      'contexts' => [
+        'url.path',
+        'user',
+      ],
+      'tags' => array_filter([
+        $this->getPageNode() ? $this->getPageNode()->id() : NULL,
+        $this->getCurrentBaseObjectId() ?? NULL,
+      ]),
+    ];
+
     return $build;
   }
 

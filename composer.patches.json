@@ -10,6 +10,9 @@
     },
     "drupal/page_manager": {
       "Issue #3176661: Allow to edit page title when using Layout Builder variant": "https://www.drupal.org/files/issues/2021-08-19/page_manager-lb-title-3176661-8.patch"
+    },
+    "drupal/config_ignore": {
+      "Issue #2857247: Support for export filtering via Drush": "https://www.drupal.org/files/issues/2021-08-18/config_ignore_2857247-75.patch"
     }
   }
 }

@@ -1,0 +1,14 @@
+_core:
+  default_config_hash: UVH1aJ4b44UM-VdPVN7hNNuuVqfReJxwfVeDQH1Hvsk
+ignored_config_entities:
+  - '// Ignore the homepage config.'
+  - 'page_manager.page.homepage:access_logic'
+  - 'page_manager.page.homepage:access_conditions'
+  - 'page_manager.page_variant.homepage*:variant_settings'
+  - '// Ignore global settings.'
+  - ghi_blocks.global_settings
+  - '// Ignore connection credentials.'
+  - ghi_content.remote_sources
+  - 'ghi_element_sync.settings:access_key'
+  - 'ghi_element_sync.settings:basic_auth'
+enable_export_filtering: true
