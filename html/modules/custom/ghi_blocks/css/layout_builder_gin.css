@@ -56,11 +56,24 @@ body.path-node #layout-builder .layout-builder__section .contextual-region .cont
   border: 0 !important;
 }
 
-#drupal-off-canvas .glb-layout-builder-browser .glb-claro-details__wrapper {
-  margin-left: 0;
-  margin-right: 0;
+.glb-layout-builder-browser.block-categories {
+  display: flex;
+  flex-wrap: wrap;
 }
-#drupal-off-canvas .glb-layout-builder-browser .glb-list {
+.glb-layout-builder-browser.block-categories .glb-claro-details {
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+  width: 33%;
+  min-width: 350px;
+  flex-grow: 5;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+}
+.glb-layout-builder-browser.block-categories .glb-claro-details__wrapper {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+.glb-layout-builder-browser.block-categories .glb-list {
   width: 100%;
 }
 
