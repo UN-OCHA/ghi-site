@@ -24,12 +24,14 @@ class RouteSubscriber extends RouteSubscriberBase {
     if ($route = $collection->get('node.add')) {
       $wizard_route = clone $route;
       $wizard_route->setPath('node/add/section');
+      $wizard_route->setRequirement('_entity_create_access', 'node:section');
       $wizard_route->setDefault('_form', '\Drupal\ghi_sections\Form\SectionWizard');
       $wizard_route->setDefault('node_type', 'section');
       $collection->add('ghi_sections.wizard.section', $wizard_route);
 
       $wizard_route = clone $route;
       $wizard_route->setPath('node/add/global_section');
+      $wizard_route->setRequirement('_entity_create_access', 'node:global_section');
       $wizard_route->setDefault('_form', '\Drupal\ghi_sections\Form\GlobalSectionWizard');
       $wizard_route->setDefault('node_type', 'global_section');
       $collection->add('ghi_sections.wizard.global_section', $wizard_route);
