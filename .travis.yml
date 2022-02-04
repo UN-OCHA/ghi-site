@@ -39,7 +39,7 @@ script:
   - sleep 10
 
   # Install the dev dependencies.
-  - docker exec -it -w /srv/www ghi-travis-site composer install --prerfer-dist --quiet
+  - docker exec -it -w /srv/www ghi-travis-site composer install --prefer-dist --quiet
 
   # Ensure the drupal coding standards config is installed.
   - docker exec -it -u appuser -w /srv/www ghi-travis-site ./vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
