@@ -56,7 +56,7 @@ script:
   - sleep 10
 
   # Install dev requirements, which we need for tests.
-  - docker exec -it -w /srv/www ghi-travis-site composer install
+  - docker exec -it -w /srv/www ghi-travis-site composer install --no-interaction --prefer-dist
 
   # Install the site with the existing config.
   - docker exec -it ghi-travis-site drush -y si --existing-config
