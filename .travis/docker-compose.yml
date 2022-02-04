@@ -34,7 +34,6 @@ services:
       - "../scripts:/srv/www/scripts:ro"
       - "../phpcs.xml:/srv/www/phpcs.xml:ro"
       - "../phpunit.xml:/srv/www/phpunit.xml:ro"
-      - "/tmp:/srv/www/tmp:rw"
 
     environment:
       - TERM=xterm
