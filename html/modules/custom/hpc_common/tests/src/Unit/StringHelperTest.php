@@ -21,7 +21,7 @@ class StringHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->stringHelper = new StringHelper();
@@ -30,7 +30,7 @@ class StringHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function tearDown() {
+  protected function tearDown(): void {
     parent::tearDown();
     unset($this->stringHelper);
   }

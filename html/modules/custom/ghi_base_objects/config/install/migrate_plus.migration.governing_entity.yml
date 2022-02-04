@@ -1,6 +1,8 @@
 id: governing_entity
 label: Governing entities from the HPC API
 migration_group: hpc_api_data
+migration_tags:
+  - 'HPC API'
 source:
   process_entities: governing
   filter:

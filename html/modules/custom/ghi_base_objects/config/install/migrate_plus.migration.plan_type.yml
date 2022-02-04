@@ -1,6 +1,8 @@
 id: plan_type
 label: 'Plan type categories from the HPC API'
 migration_group: hpc_api_data
+migration_tags:
+  - 'HPC API'
 source:
   plugin: hpc_api_url
   data_fetcher_plugin: hpc_api_http
