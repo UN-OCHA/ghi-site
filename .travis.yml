@@ -74,7 +74,7 @@ script:
   - sleep 5
 
   # Run all tests
-  - docker exec -it -w /srv/www -e DTT_BASE_URL=http://127.0.0.1 -e DTT_API_URL=http://localhost:9222 -e SIMPLETEST_BASE_URL=http://127.0.0.1 -e SIMPLETEST_DB=mysql://ghi:ghi@mysql/ghi -e BROWSERTEST_OUTPUT_DIRECTORY= ghi-travis-site ./vendor/bin/phpunit --debug
+  - docker exec -it -w /srv/www -e DTT_BASE_URL=http://127.0.0.1 -e DTT_API_URL=http://localhost:9222 -e SIMPLETEST_BASE_URL=http://127.0.0.1 -e SIMPLETEST_DB=mysql://ghi:ghi@mysql/ghi -e BROWSERTEST_OUTPUT_DIRECTORY= ghi-travis-site ./vendor/bin/phpunit --verbose --debug
 
 after_success:
   - echo "The tests completed without errors."
