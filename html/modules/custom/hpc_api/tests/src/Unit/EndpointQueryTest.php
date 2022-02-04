@@ -2,8 +2,6 @@
 
 namespace Drupal\Tests\hpc_api\Unit;
 
-require_once 'html/modules/custom/hpc_api/hpc_api.module';
-
 use Drupal\Tests\UnitTestCase;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Prophecy\Argument;
@@ -12,6 +10,8 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
+use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\hpc_api\ConfigService;
 use Drupal\hpc_api\Query\EndpointQuery;
 
 /**
@@ -45,7 +45,7 @@ class EndpointQueryTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Mock config.
@@ -97,18 +97,22 @@ class EndpointQueryTest extends UnitTestCase {
     // Mock kill switch.
     $kill_switch = $this->prophesize(KillSwitch::class)->reveal();
 
+    $config_service = new ConfigService($config_factory);
+
     // Set container.
     $container = new ContainerBuilder();
-    $container->set('config.factory', $config_factory);
+    $container->set('hpc_api.config', $config_service);
     \Drupal::setContainer($container);
 
-    $this->query = new OverrideEndpointQuery($config_factory, $logger, $cache, $kill_switch, $http_client);
+    $current_user = $this->prophesize(AccountProxyInterface::class)->reveal();
+
+    $this->query = new OverrideEndpointQuery($config_service, $logger, $cache, $kill_switch, $http_client, $current_user);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function tearDown() {
+  public function tearDown(): void {
     parent::tearDown();
     unset($this->query);
 
@@ -146,15 +150,10 @@ class EndpointQueryTest extends UnitTestCase {
    * @dataProvider substitutePlaceholdersDataProvider
    */
   public function testSubstitutePlaceholders($endpoint, $placeholders, $result) {
-    // Set arguments.
-    $this->query->setArguments([
-      'endpoint' => $endpoint,
-    ]);
-
     // Set placeholders.
     $this->query->setPlaceholders($placeholders);
 
-    $this->assertEquals($result, $this->query->substitutePlaceholders());
+    $this->assertEquals($result, $this->query->substitutePlaceholders($endpoint));
   }
 
   /**

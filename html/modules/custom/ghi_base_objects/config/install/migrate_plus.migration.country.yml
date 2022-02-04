@@ -1,6 +1,8 @@
 id: country
 label: Countries from the HPC API
 migration_group: hpc_api_data
+migration_tags:
+  - 'HPC API'
 source:
   include_raw_data: true
   track_changes: true
@@ -59,3 +61,4 @@ dependencies:
   enforced:
     module:
       - hpc_api
+migration_dependencies: {}

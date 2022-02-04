@@ -34,7 +34,7 @@ class CommonHelper {
   public static function canBeCastToString($item) {
     $is_array = is_array($item);
     $is_castable_object = is_object($item) && method_exists($item, '__toString');
-    $is_convertible_to_string = !is_object($item) && settype($item, 'string') !== FALSE;
+    $is_convertible_to_string = !$is_array && !is_object($item) && settype($item, 'string') !== FALSE;
     return !$is_array && ($is_castable_object || $is_convertible_to_string);
   }
 

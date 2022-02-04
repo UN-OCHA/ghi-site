@@ -14,7 +14,7 @@ use Drupal\hpc_common\Helpers\UserHelper;
 class UserHelperTest extends UnitTestCase {
 
   /**
-   * The user helpder class.
+   * The user helper class.
    *
    * @var \Drupal\hpc_common\Helpers\UserHelper
    */
@@ -23,7 +23,7 @@ class UserHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Mock current user service.
@@ -46,7 +46,7 @@ class UserHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function tearDown() {
+  protected function tearDown(): void {
     parent::tearDown();
     unset($this->userHelper);
 

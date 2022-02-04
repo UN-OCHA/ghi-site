@@ -24,7 +24,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->arrayHelper = new ArrayHelper();
   }
@@ -32,7 +32,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function tearDown() {
+  protected function tearDown(): void {
     parent::tearDown();
     unset($this->arrayHelper);
   }
@@ -85,7 +85,7 @@ class ArrayHelperTest extends UnitTestCase {
    * @dataProvider filterArrayByPropertiesDataProvider
    */
   public function testFilterArrayByProperties($array, $properties, $result) {
-    $this->assertArrayEquals($result, $this->arrayHelper->filterArrayByProperties($array, $properties));
+    $this->assertEquals($result, $this->arrayHelper->filterArrayByProperties($array, $properties));
   }
 
   /**
@@ -167,7 +167,7 @@ class ArrayHelperTest extends UnitTestCase {
    * @dataProvider filterArrayBySearchArrayDataProvider
    */
   public function testFilterArrayBySearchArray($array, $search_array, $result) {
-    $this->assertArrayEquals($result, $this->arrayHelper->filterArrayBySearchArray($array, $search_array));
+    $this->assertEquals($result, $this->arrayHelper->filterArrayBySearchArray($array, $search_array));
   }
 
   /**
@@ -224,7 +224,7 @@ class ArrayHelperTest extends UnitTestCase {
    */
   public function testSortArray($data, $order, $sort, $sort_type, $result) {
     $this->arrayHelper->sortArray($data, $order, $sort, $sort_type);
-    $this->assertArrayEquals($result, $data);
+    $this->assertEquals($result, $data);
   }
 
   /**
@@ -265,7 +265,7 @@ class ArrayHelperTest extends UnitTestCase {
    */
   public function testSortArrayByProgress($data, $order, $sort, $total, $result) {
     $this->arrayHelper->sortArrayByProgress($data, $order, $sort, $total);
-    $this->assertArrayEquals($result, $data);
+    $this->assertEquals($result, $data);
   }
 
   /**
@@ -357,7 +357,7 @@ class ArrayHelperTest extends UnitTestCase {
    */
   public function testSortArrayByCompositeArrayKey($data, $order, $sort, $result) {
     $this->arrayHelper->sortArrayByCompositeArrayKey($data, $order, $sort);
-    $this->assertArrayEquals($result, $data);
+    $this->assertEquals($result, $data);
   }
 
   /**
@@ -452,7 +452,7 @@ class ArrayHelperTest extends UnitTestCase {
    */
   public function testSortArrayByObjectListProperty($data, $order, $sort, $result) {
     $this->arrayHelper->sortArrayByObjectListProperty($data, $order, $sort);
-    $this->assertArrayEquals($result, $data);
+    $this->assertEquals($result, $data);
   }
 
   /**
@@ -512,7 +512,7 @@ class ArrayHelperTest extends UnitTestCase {
    * @dataProvider findFirstItemByPropertiesDataProvider
    */
   public function testFindFirstItemByProperties($data, $parameters, $result) {
-    $this->assertArrayEquals($result, $this->arrayHelper->findFirstItemByProperties($data, $parameters));
+    $this->assertEquals($result, $this->arrayHelper->findFirstItemByProperties($data, $parameters));
   }
 
   /**
@@ -555,7 +555,7 @@ class ArrayHelperTest extends UnitTestCase {
    */
   public function testExtendAssociativeArray($data, $key, $value, $pos, $result) {
     $this->arrayHelper->extendAssociativeArray($data, $key, $value, $pos);
-    $this->assertArrayEquals($result, $data);
+    $this->assertEquals($result, $data);
   }
 
   /**
@@ -638,7 +638,7 @@ class ArrayHelperTest extends UnitTestCase {
    */
   public function testSortObjectsByProperty($data, $property, $sort, $sort_type, $result) {
     $this->arrayHelper->sortObjectsByProperty($data, $property, $sort, $sort_type);
-    $this->assertArrayEquals($result, $data);
+    $this->assertEquals($result, $data);
   }
 
 }

@@ -1,6 +1,8 @@
 id: plan
 label: Plans from the HPC API
 migration_group: hpc_api_data
+migration_tags:
+  - 'HPC API'
 source:
   filter:
     -

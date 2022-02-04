@@ -3,12 +3,12 @@
 namespace Drupal\hpc_api\Query;
 
 use Drupal\Core\Url;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\hpc_api\ConfigService;
 use GuzzleHttp\ClientInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -36,11 +36,11 @@ class EndpointQuery {
   const LOG_ID = 'HPC API';
 
   /**
-   * The config factory service.
+   * The config service.
    *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   * @var \Drupal\hpc_api\ConfigService
    */
-  protected $configFactory;
+  protected $configService;
 
   /**
    * The logger factory service.
@@ -143,15 +143,15 @@ class EndpointQuery {
   /**
    * Constructs a new EndpointQuery object.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, CacheBackendInterface $cache, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user) {
-    $this->configFactory = $config_factory;
+  public function __construct(ConfigService $config_service, LoggerChannelFactoryInterface $logger_factory, CacheBackendInterface $cache, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user) {
+    $this->configService = $config_service;
     $this->loggerFactory = $logger_factory;
     $this->cache = $cache;
     $this->killSwitch = $kill_switch;
     $this->httpClient = $http_client;
     $this->user = $user;
 
-    $this->endpointVersion = hpc_api_get_default_api_version();
+    $this->endpointVersion = $this->configService->getDefaultApiVersion();
     $this->endpointUrl = NULL;
     $this->endpointArgs = [];
     $this->orderBy = NULL;
@@ -167,7 +167,7 @@ class EndpointQuery {
     // As this class is used as a service, we have to make sure to set each
     // property explicitely. Otherwhise we risk to keep some cached values in
     // there that create difficult to debug race conditions.
-    $this->endpointVersion = !empty($arguments['api_version']) ? $arguments['api_version'] : hpc_api_get_default_api_version();
+    $this->endpointVersion = !empty($arguments['api_version']) ? $arguments['api_version'] : $this->configService->getDefaultApiVersion();
     $this->endpointUrl = !empty($arguments['endpoint']) ? $arguments['endpoint'] : NULL;
     if ($this->user->isAuthenticated() && !empty($arguments['endpoint_restricted'])) {
       $this->endpointUrl = $arguments['endpoint_restricted'];
@@ -210,7 +210,7 @@ class EndpointQuery {
    *   The base url for the HPC API.
    */
   public function getBaseUrl() {
-    $config = $this->configFactory->get('hpc_api.settings');
+    $config = $this->configService;
     $url = parse_url($config->get('url'));
     $scheme = $url['scheme'];
     $host = $url['host'];
@@ -230,11 +230,12 @@ class EndpointQuery {
    */
   public function getAuthHeaders() {
     $headers = [];
+    $config = $this->configService;
     if ($this->authHeader) {
       $headers['Authorization'] = $this->authHeader;
     }
     elseif ($this->authMethod == self::AUTH_METHOD_BASIC) {
-      $config = $this->configFactory->get('hpc_api.settings');
+
       $username = $config->get('auth_username');
       if ($username) {
         $password = $config->get('auth_password');
@@ -242,7 +243,6 @@ class EndpointQuery {
       }
     }
     elseif ($this->authMethod == self::AUTH_METHOD_API_KEY) {
-      $config = $this->configFactory->get('hpc_api.settings');
       $api_key = $config->get('api_key');
       if (empty($api_key)) {
         // No backend accessconfigured.
@@ -375,7 +375,7 @@ class EndpointQuery {
       $headers = $this->getAuthHeaders();
     }
 
-    if ($this->configFactory->get('hpc_api.settings')->get('use_gzip_compression', FALSE)) {
+    if ($this->configService->get('use_gzip_compression', FALSE)) {
       $headers['Accept-Encoding'] = 'deflate,gzip';
     }
 
@@ -388,7 +388,7 @@ class EndpointQuery {
     try {
       $response = $this->httpClient->get($this->getFullEndpointUrl(), [
         'headers' => $headers,
-        'timeout' => $this->configFactory->get('hpc_api.settings')->get('timeout', 30),
+        'timeout' => $this->configService->get('timeout', 30),
           // @todo Check if we are the only ones whoe need this.
         'chunk_size_read' => 32768,
       ]);
@@ -463,7 +463,7 @@ class EndpointQuery {
     }
 
     // Store data in the cache with an explicit expiry time, default is 1 hour.
-    $expiration_time = REQUEST_TIME + $this->configFactory->get('hpc_api.settings')->get('cache_lifetime', 60 * 60);
+    $expiration_time = REQUEST_TIME + $this->configService->get('cache_lifetime', 60 * 60);
     $this->cache->set($cache_key, $data, $expiration_time);
 
     // Also store it in the static cache.

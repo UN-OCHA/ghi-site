@@ -27,22 +27,16 @@ function hpc_api_cache_flush() {
 }
 
 /**
- * Retrieve the default API version for HPC queries.
- */
-function hpc_api_get_default_api_version() {
-  return \Drupal::config('hpc_api.settings')->get('default_api_version', 'v1');
-}
-
-/**
  * Retrieve the complete public url for the given arguments.
  *
  * @return string
  *   A fully qualified URL for the public endpoint.
  */
 function hpc_api_get_public_api_search_url($args = []) {
-  $config = \Drupal::config('hpc_api.settings');
+  /** @var \Drupal\hpc_api\ConfigService $config */
+  $config = \Drupal::service('hpc_api.config');
   $api_url = $config->get('url');
-  $api_version = hpc_api_get_default_api_version();
+  $api_version = $config->getDefaultApiVersion();
   $api_base_path = $config->get('public_base_path');
   $endpoint = 'flow';
   $url = $api_url . '/' . $api_version . '/' . $api_base_path . '/' . $endpoint;

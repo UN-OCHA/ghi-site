@@ -65,7 +65,7 @@ class NodeHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Mock entity.
@@ -93,7 +93,7 @@ class NodeHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function tearDown() {
+  protected function tearDown(): void {
     parent::tearDown();
     unset($this->nodeHelper);
     unset($this->entity);
@@ -475,7 +475,7 @@ class NodeHelperTest extends UnitTestCase {
     \Drupal::getContainer()->set('entity_type.manager', $this->entityTypeManager);
     \Drupal::getContainer()->set('entity_type.repository', $entity_type_repository->reveal());
 
-    $this->assertArrayEquals(['1' => $node2->reveal()], $this->nodeHelper->getNodesFromTitle('Test Title', 'Test bundle'));
+    $this->assertEquals(['1' => $node2->reveal()], $this->nodeHelper->getNodesFromTitle('Test Title', 'Test bundle'));
   }
 
 }
