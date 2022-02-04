@@ -67,6 +67,7 @@ script:
 
   # Unit tests
   - cd $TRAVIS_BUILD_DIR
+  - composer install
   - DTT_BASE_URL=http://127.0.0.1:8080 DTT_API_URL=http://localhost:9222 ./vendor/bin/phpunit --debug --colors --testsuite=unit,kernel,functional,existing-site,existing-site-javascript
 
 after_success:
