@@ -61,6 +61,9 @@ script:
   # Install the site with the existing config.
   - docker exec -it ghi-travis-site drush -y si --existing-config
 
+  # Ensure the file directories are writable.
+  - docker exec -it ghi-travis-site chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
+
   # Import sample content.
   - docker exec -it ghi-travis-site drush en yaml_content -y
   - docker exec -it ghi-travis-site drush yaml-content-import /srv/www/shared/travis/
