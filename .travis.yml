@@ -31,6 +31,10 @@ before_script:
   - composer install
 
 script:
+  # Get docker information.
+  - docker version
+  - docker-compose version
+
   # PHP linting
   - test ! -d ./html/modules/custom || find -L ./html/modules/custom -iregex '.*\.\(php\|module\|inc\|install\)$' -print0 | xargs -0 -n 1 -P 4 php -l
   - test ! -d ./html/themes/custom || find -L ./html/themes/custom -iregex '.*\.\(php\|module\|inc\|install\)$' -print0 | xargs -0 -n 1 -P 4 php -l
@@ -43,16 +47,16 @@ script:
   - make
 
   # Create the site and mysql containers.
-  - docker-compose -f .travis/docker-compose.yml up -d
+  - docker-compose -p ghi-travis-site -f .travis/docker-compose.yml up -d
 
   # Dump some information about the created containers.
   - docker ps -a
 
   # Wait a bit for mysql to be ready.
-  - sleep 5
+  - sleep 10
 
   # Install dev requirements, which we need for tests.
-  - docker exec -it -w /srv/www -e COMPOSER_MEMORY_LIMIT=-1 ghi-travis-site composer install --no-interaction --prefer-dist --quiet
+  - docker exec -it -w /srv/www ghi-travis-site composer install
 
   # Install the site with the existing config.
   - docker exec -it ghi-travis-site drush -y si --existing-config
@@ -65,10 +69,8 @@ script:
   - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
   - sleep 5
 
-  # Unit tests
-  - cd $TRAVIS_BUILD_DIR
-  - composer install
-  - DTT_BASE_URL=http://127.0.0.1:8080 DTT_API_URL=http://localhost:9222 ./vendor/bin/phpunit --debug --colors --testsuite=unit,kernel,functional,existing-site,existing-site-javascript
+  # Run all tests
+  - docker exec -it -w /srv/www -e DTT_BASE_URL=http://127.0.0.1 -e DTT_API_URL=http://localhost:9222 -e SIMPLETEST_BASE_URL=http://127.0.0.1 ghi-travis-site ./vendor/bin/phpunit --debug
 
 after_success:
   - echo "The tests completed without errors."

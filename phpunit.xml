@@ -13,7 +13,7 @@
         <env name="SYMFONY_DEPRECATIONS_HELPER" value="disabled"/>
         <!-- Specify the default directory screenshots should be placed. -->
         <!--<env name="DTT_SCREENSHOT_REPORT_DIRECTORY" value=""/>-->
-        <env name="SIMPLETEST_BASE_URL" value="http://ghi.test"/>
+        <env name="SIMPLETEST_BASE_URL" value="http://ghi-site.docksal"/>
         <env name="SIMPLETEST_DB" value="mysql://ghi:ghi@mysql/ghi"/>
     </php>
 

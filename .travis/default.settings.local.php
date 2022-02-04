@@ -130,8 +130,6 @@ $settings['rebuild_access'] = TRUE;
  */
 $settings['skip_permissions_hardening'] = TRUE;
 
-
-
 // Docksal DB connection settings.
 $databases['default']['default'] = array (
   'database' => 'default',
