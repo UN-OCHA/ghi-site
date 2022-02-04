@@ -75,6 +75,7 @@ script:
 
   # Run all tests
   - docker exec -it -w /srv/www ghi-travis-site mkdir -p /srv/www/html/sites/default/files/browser_output
+  - docker exec -it -w /srv/www ghi-travis-site chmod -R 777 /srv/www/html/sites/default/files/browser_output
   - docker exec -it -w /srv/www -e DTT_BASE_URL=http://127.0.0.1 -e DTT_API_URL=http://localhost:9222 -e SIMPLETEST_BASE_URL=http://127.0.0.1 -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output ghi-travis-site ./vendor/bin/phpunit --debug
 
 after_success:
