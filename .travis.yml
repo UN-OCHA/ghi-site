@@ -1,34 +1,22 @@
-dist: bionic
+dist: focal
 language: php
-cache:
-  - composer
-
-addons:
-  chrome: stable
 
 php:
-  - 7.4
+  - 8.0
 
-# Disabled as it causes errors and doesn't seem necessary - 2020/10/14
-# install:
-#  - test -n "${SSH_AGENT_PID}" && ssh-agent -k
+# Make sure we have a recent version of docker-compose.
+addons:
+  apt:
+    packages:
+      - docker-compose
 
 before_script:
-  # Install the AWS CLI and login to the ECR. Credentials are secrets set via the UI.
-  - if ! [ -x "$(command -v aws)" ]; then curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" ; unzip awscliv2.zip ; sudo ./aws/install ; fi
-  - aws ecr-public get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin public.ecr.aws/unocha
-
-  # Composer.
-  - sed -i '1i export PATH="$HOME/.composer/vendor/bin:$PATH"' $HOME/.bashrc
-  - source $HOME/.bashrc
-  - composer self-update --2
-
   # Ensure the PHP environment is ready.
   - phpenv rehash
 
-  # Code sniff
-  - cd $TRAVIS_BUILD_DIR
-  - composer install
+  # Install the AWS CLI and login to the ECR. Credentials are secrets set via the UI.
+  - if ! [ -x "$(command -v aws)" ]; then curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" ; unzip awscliv2.zip ; sudo ./aws/install ; fi
+  - aws ecr-public get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin public.ecr.aws/unocha
 
 script:
   # Get docker information.
@@ -37,26 +25,31 @@ script:
 
   # PHP linting
   - test ! -d ./html/modules/custom || find -L ./html/modules/custom -iregex '.*\.\(php\|module\|inc\|install\)$' -print0 | xargs -0 -n 1 -P 4 php -l
-  - test ! -d ./html/themes/custom || find -L ./html/themes/custom -iregex '.*\.\(php\|module\|inc\|install\)$' -print0 | xargs -0 -n 1 -P 4 php -l
 
-  # PHP CS
-  # - ./vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
-  - test ! -d ./html/modules/custom || ./vendor/bin/phpcs -p --report=full ./html/modules/custom
-
-  # Build local image; this also builds the theme.
+  # Build local image.
   - make
 
-  # Create the site and mysql containers.
-  - docker-compose -p ghi-travis-site -f .travis/docker-compose.yml up -d
+  # Create the site, redis and mysql containers.
+  - docker-compose -p ghi-travis -f .travis/docker-compose.yml up -d
 
   # Dump some information about the created containers.
   - docker ps -a
 
-  # Wait a bit for mysql to be ready.
+  # Wait a bit for everything to be ready.
   - sleep 10
 
-  # Install dev requirements, which we need for tests.
-  - docker exec -it -w /srv/www ghi-travis-site composer install --no-interaction --prefer-dist
+  # Install the dev dependencies.
+  - docker exec -it -w /srv/www ghi-travis-site composer install
+
+  # Ensure the drupal coding standards config is installed.
+  - docker exec -it -u appuser -w /srv/www ghi-travis-site ./vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
+
+  # Check coding standards.
+  - docker exec -it -u appuser -w /srv/www ghi-travis-site ./vendor/bin/phpcs -p --report=full ./html/modules/custom ./html/themes/custom
+
+  # Run unit tests.
+  - docker exec -it -u root -w /srv/www ghi-travis-site mkdir -p /srv/www/html/sites/default/files/browser_output
+  - docker exec -it -u root -w /srv/www -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output ghi-travis-site ./vendor/bin/phpunit --testsuite Unit --debug
 
   # Install the site with the existing config.
   - docker exec -it ghi-travis-site drush -y si --existing-config
@@ -65,19 +58,25 @@ script:
   # Ensure the file directories are writable.
   - docker exec -it ghi-travis-site chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
 
-  # Import sample content.
-  - docker exec -it ghi-travis-site drush en yaml_content -y
-  - docker exec -it ghi-travis-site drush yaml-content-import /srv/www/shared/travis/
+  # Create the build logs directory and make sure it's writable.
+  - docker exec -it -u root ghi-travis-site mkdir -p /srv/www/html/build/logs
+  - docker exec -it -u root ghi-travis-site chmod -R 777 /srv/www/html/build/logs
 
-  # Chrome headless
-  - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
-  - sleep 5
-
-  # Run all tests
-  - docker exec -it -w /srv/www -e DTT_BASE_URL=http://127.0.0.1 -e DTT_API_URL=http://localhost:9222 -e SIMPLETEST_BASE_URL=http://127.0.0.1 -e SIMPLETEST_DB=mysql://ghi:ghi@mysql/ghi -e BROWSERTEST_OUTPUT_DIRECTORY= ghi-travis-site ./vendor/bin/phpunit --verbose --debug
+  # Run all tests and generate coverage report.
+  - docker exec -it -u root -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output -e DTT_BASE_URL=http://127.0.0.1 ghi-travis-site ./vendor/bin/phpunit --coverage-clover /srv/www/html/build/logs/clover.xml --debug
 
 after_success:
   - echo "The tests completed without errors."
+  # Create directory for clover.
+  - mkdir -p ./build/logs
+  - chmod -R 777 ./build/logs
+  - docker cp ghi-travis-site:/srv/www/html/build/logs/clover.xml ./build/logs/
+  # Fix source files path.
+  - sed -i 's#/srv/www#.#g' build/logs/clover.xml
+  # Get coveralls and execute.
+  - wget https://github.com/php-coveralls/php-coveralls/releases/download/v2.4.3/php-coveralls.phar
+  - chmod +x php-coveralls.phar
+  - ./php-coveralls.phar -vv
 
 after_failure:
   - echo "The tests failed. Please check the output above for problems."
