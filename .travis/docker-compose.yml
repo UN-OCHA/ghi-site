@@ -33,6 +33,8 @@ services:
       - "../.travis:/srv/www/shared/travis:ro"
       - "../scripts:/srv/www/scripts:ro"
       - "../phpcs.xml:/srv/www/phpcs.xml:ro"
+      - "../phpunit.xml:/srv/www/phpunit.xml:ro"
+
     environment:
       - TERM=xterm
       - ENVIRONMENT=dev

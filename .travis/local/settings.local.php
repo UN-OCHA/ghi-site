@@ -130,13 +130,11 @@ $settings['rebuild_access'] = TRUE;
  */
 $settings['skip_permissions_hardening'] = TRUE;
 
-
-
 // Docksal DB connection settings.
 $databases['default']['default'] = array (
-  'database' => 'test',
-  'username' => 'user',
-  'password' => 'user',
+  'database' => 'ghi',
+  'username' => 'ghi',
+  'password' => 'ghi',
   'prefix' => '',
   'host' => 'db',
   'port' => '3306',
