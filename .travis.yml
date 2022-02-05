@@ -42,7 +42,7 @@ script:
   - docker exec -it -w /srv/www ghi-travis-site composer install --prefer-dist --quiet
 
   # Ensure the drupal coding standards config is installed.
-  - docker exec -it -u appuser -w /srv/www ghi-travis-site ./vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
+  - docker exec -it -u appuser -w /srv/www ghi-travis-site ./vendor/bin/phpcs --config-set installed_paths ./vendor/drupal/coder/coder_sniffer
 
   # Check coding standards.
   - docker exec -it -u appuser -w /srv/www ghi-travis-site ./vendor/bin/phpcs -p --report=full ./html/modules/custom ./html/themes/custom
@@ -53,17 +53,17 @@ script:
   - docker exec -it ghi-travis-site drush status
 
   # Ensure the file directories are writable.
-  - docker exec -it ghi-travis-site chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
+  - docker exec -it ghi-travis-site chmod -R 755 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
 
   # Create the build logs directory and make sure it's writable.
   - docker exec -it -u root ghi-travis-site mkdir -p /srv/www/html/build/logs
-  - docker exec -it -u root ghi-travis-site chmod -R 777 /srv/www/html/build/logs
+  - docker exec -it -u root ghi-travis-site chmod -R 755 /srv/www/html/build/logs
 
   # Prepare the tests.
   - docker exec -it -u root -w /srv/www ghi-travis-site mkdir -p /srv/www/html/sites/simpletest
   - docker exec -it -u root -w /srv/www ghi-travis-site chmod g+s /srv/www/html/sites/simpletest
   - docker exec -it -u root -w /srv/www ghi-travis-site mkdir -p /srv/www/html/sites/simpletest/browser_output
-  - docker exec -it -u root -w /srv/www ghi-travis-site chmod -R 777 /srv/www/html/sites/simpletest
+  - docker exec -it -u root -w /srv/www ghi-travis-site chmod -R 755 /srv/www/html/sites/simpletest
 
   # Run all tests and generate coverage report.
   - docker exec -it -u root -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/simpletest/browser_output -e DTT_API_URL=http://localhost:9222 -e DTT_BASE_URL=http://127.0.0.1 -e SIMPLETEST_BASE_URL=http://127.0.0.1 -e SIMPLETEST_DB=mysql://ghi:ghi@mysql/ghi ghi-travis-site ./vendor/bin/phpunit --coverage-clover /srv/www/html/build/logs/clover.xml --debug
