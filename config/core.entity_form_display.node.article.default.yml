@@ -1,112 +1,86 @@
-uuid: 7dd1c956-5266-4ee1-a35d-5365116300a7
+uuid: 0ac3aefe-6aa4-4c7a-bb47-f0babd9c4c56
 langcode: en
 status: true
 dependencies:
   config:
-    - field.field.node.section.field_base_object
-    - field.field.node.section.field_hero_image
-    - field.field.node.section.field_tags
-    - field.field.node.section.field_team
-    - field.field.node.section.field_year
-    - field.field.node.section.layout_builder__layout
-    - node.type.section
+    - field.field.node.article.field_remote_article
+    - field.field.node.article.field_tags
+    - field.field.node.article.layout_builder__layout
+    - node.type.article
   module:
-    - ghi_hero_image
+    - ghi_content
     - path
-id: node.section.default
+id: node.article.default
 targetEntityType: node
-bundle: section
+bundle: article
 mode: default
 content:
   created:
     type: datetime_timestamp
-    weight: 6
+    weight: 10
     region: content
     settings: {  }
     third_party_settings: {  }
-  field_base_object:
-    type: entity_reference_autocomplete
-    weight: 0
-    region: content
-    settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
-  field_hero_image:
-    type: ghi_hero_image
-    weight: 13
+  field_remote_article:
+    type: ghi_remote_article
+    weight: 121
     region: content
     settings: {  }
     third_party_settings: {  }
   field_tags:
     type: entity_reference_autocomplete_tags
-    weight: 3
+    weight: 122
     region: content
     settings:
       match_operator: CONTAINS
       match_limit: 0
       size: 60
-      placeholder: 'Section tags'
-    third_party_settings: {  }
-  field_team:
-    type: options_select
-    weight: 12
-    region: content
-    settings: {  }
-    third_party_settings: {  }
-  field_year:
-    type: number
-    weight: 1
-    region: content
-    settings:
       placeholder: ''
     third_party_settings: {  }
   langcode:
     type: language_select
-    weight: 4
+    weight: 2
     region: content
     settings:
       include_locked: true
     third_party_settings: {  }
   path:
     type: path
-    weight: 10
+    weight: 30
     region: content
     settings: {  }
     third_party_settings: {  }
   promote:
     type: boolean_checkbox
-    weight: 8
+    weight: 15
     region: content
     settings:
       display_label: true
     third_party_settings: {  }
   status:
     type: boolean_checkbox
-    weight: 11
+    weight: 120
     region: content
     settings:
       display_label: true
     third_party_settings: {  }
   sticky:
     type: boolean_checkbox
-    weight: 9
+    weight: 16
     region: content
     settings:
       display_label: true
     third_party_settings: {  }
   title:
     type: string_textfield
-    weight: 2
+    weight: -5
     region: content
     settings:
       size: 60
       placeholder: ''
     third_party_settings: {  }
   translation:
-    weight: 7
+    weight: 10
     region: content
     settings: {  }
     third_party_settings: {  }

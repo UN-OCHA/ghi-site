@@ -1,17 +1,13 @@
-uuid: 3f527c63-9cea-4ac2-9f92-418270eff885
+uuid: f9bb2480-1acd-4df1-9ff7-f42bd3ec64b4
 langcode: en
 status: true
 dependencies:
   config:
-    - field.field.node.section.field_base_object
-    - field.field.node.section.field_hero_image
-    - field.field.node.section.field_tags
-    - field.field.node.section.field_team
-    - field.field.node.section.field_year
-    - field.field.node.section.layout_builder__layout
-    - node.type.section
+    - field.field.node.document.field_entity_reference
+    - field.field.node.document.field_team
+    - field.field.node.document.layout_builder__layout
+    - node.type.document
   module:
-    - ghi_hero_image
     - layout_builder
     - layout_builder_restrictions
     - layout_discovery
@@ -24,8 +20,7 @@ third_party_settings:
       -
         layout_id: layout_onecol
         layout_settings:
-          label: Content
-          context_mapping: {  }
+          label: ''
         components: {  }
         third_party_settings: {  }
   layout_builder_restrictions:
@@ -48,8 +43,7 @@ third_party_settings:
       - System
       - core
     entity_view_mode_restriction:
-      allowed_layouts:
-        - layout_onecol
+      allowed_layouts: {  }
       blacklisted_blocks: {  }
       whitelisted_blocks: {  }
       restricted_categories:
@@ -59,40 +53,24 @@ third_party_settings:
         - Forms
         - HID
         - Homepage
-        - 'Inline blocks'
         - 'Lists (Views)'
         - Menus
         - 'Social Auth'
         - Subpage
         - System
         - core
-id: node.section.default
+id: node.document.default
 targetEntityType: node
-bundle: section
+bundle: document
 mode: default
 content:
-  field_base_object:
+  field_entity_reference:
     type: entity_reference_label
     label: above
     settings:
       link: true
     third_party_settings: {  }
-    weight: 104
-    region: content
-  field_hero_image:
-    type: ghi_hero_image
-    label: above
-    settings: {  }
-    third_party_settings: {  }
-    weight: 106
-    region: content
-  field_tags:
-    type: entity_reference_label
-    label: above
-    settings:
-      link: true
-    third_party_settings: {  }
-    weight: 107
+    weight: 103
     region: content
   field_team:
     type: entity_reference_label
@@ -100,16 +78,7 @@ content:
     settings:
       link: true
     third_party_settings: {  }
-    weight: 105
-    region: content
-  field_year:
-    type: number_integer
-    label: above
-    settings:
-      thousand_separator: ''
-      prefix_suffix: true
-    third_party_settings: {  }
-    weight: 103
+    weight: 102
     region: content
   links:
     settings: {  }
