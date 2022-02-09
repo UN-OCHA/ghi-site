@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for GHI Content.
+ */
+
+use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_cron().
+ */
+function ghi_content_cron() {
+
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function ghi_content_node_presave(NodeInterface $node) {
+  if (!$node->hasField('field_remote_article') || !$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+    return;
+  }
+
+  /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
+  $remote_source_manager = \Drupal::service('plugin.manager.remote_source');
+
+  /** @var \Drupal\ghi_content\Import\ImportManager $import_manager */
+  $import_manager = \Drupal::service('ghi_content.import');
+
+  $remote_source = $node->get('field_remote_article')->remote_source;
+  $article_id = $node->get('field_remote_article')->article_id;
+
+  $remote_source_original = $node->original ? $node->original->get('field_remote_article')->remote_source : NULL;
+  $article_id_original = $node->original ? $node->original->get('field_remote_article')->article_id : NULL;
+
+  $cleanup = $remote_source_original && $article_id_original && ($remote_source != $remote_source_original || $article_id != $article_id_original);
+
+  /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source_instance */
+  $remote_source_instance = $remote_source_manager->createInstance($remote_source);
+  $article = $remote_source_instance->getArticle($article_id);
+
+  // Import the paragraphs for the article.
+  $import_manager->importParagraphs($node, $article, [], NULL, $cleanup);
+
+  // Import the tags.
+  $import_manager->importTags($node, $article, 'field_tags');
+}

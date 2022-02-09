@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\Element\EntityAutocomplete;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\ghi_content\Import\ImportManager;
 use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
@@ -34,6 +35,20 @@ class ImportArticleForm extends FormBase {
   protected $importManager;
 
   /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $currentUser;
+
+  /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+
+  /**
    * The node object.
    *
    * @var \Drupal\node\Entity\Node
@@ -43,9 +58,11 @@ class ImportArticleForm extends FormBase {
   /**
    * Constructs a section create form.
    */
-  public function __construct(RemoteSourceManager $remote_source_manager, ImportManager $import_manager) {
+  public function __construct(RemoteSourceManager $remote_source_manager, ImportManager $import_manager, AccountProxyInterface $user, TimeInterface $time) {
     $this->remoteSourceManager = $remote_source_manager;
     $this->importManager = $import_manager;
+    $this->currentUser = $user;
+    $this->time = $time;
   }
 
   /**
@@ -55,6 +72,8 @@ class ImportArticleForm extends FormBase {
     return new static(
       $container->get('plugin.manager.remote_source'),
       $container->get('ghi_content.import'),
+      $container->get('current_user'),
+      $container->get('datetime.time'),
     );
   }
 
@@ -224,6 +243,11 @@ class ImportArticleForm extends FormBase {
     $replace = $form_state->getValue('replace');
 
     $this->importManager->importParagraphs($this->node, $article, $paragraph_ids, NULL, TRUE, $replace);
+    $this->node->setNewRevision(TRUE);
+    $this->node->revision_log = $this->t('Imported page elements');
+    $this->node->setRevisionCreationTime($this->time->getRequestTime());
+    $this->node->setRevisionUserId($this->currentUser->id());
+    $this->node->save();
 
     $form_state->setRebuild();
   }

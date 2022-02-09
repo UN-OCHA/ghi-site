@@ -2,22 +2,22 @@
 
 namespace Drupal\ghi_content\Import;
 
-use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+use Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Messenger\MessengerTrait;
-use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\node\NodeInterface;
-use GuzzleHttp\Client;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -38,6 +38,13 @@ class ImportManager implements ContainerInjectionInterface {
   protected $config;
 
   /**
+   * The entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * The block manager.
    *
    * @var \Drupal\Core\Block\BlockManagerInterface
@@ -45,11 +52,11 @@ class ImportManager implements ContainerInjectionInterface {
   protected $blockManager;
 
   /**
-   * The http client.
+   * The Drupal account to use for checking for access to block.
    *
-   * @var \GuzzleHttp\Client
+   * @var \Drupal\Core\Session\AccountInterface
    */
-  protected $httpClient;
+  protected $currentUser;
 
   /**
    * The UUID of the component.
@@ -66,13 +73,6 @@ class ImportManager implements ContainerInjectionInterface {
   protected $time;
 
   /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected $currentUser;
-
-  /**
    * Layout tempstore repository.
    *
    * @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface
@@ -80,16 +80,23 @@ class ImportManager implements ContainerInjectionInterface {
   protected $layoutTempstoreRepository;
 
   /**
+   * The selection plugin manager.
+   *
+   * @var \Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginManager
+   */
+  protected $selectionPluginManager;
+
+  /**
    * Public constructor.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, BlockManagerInterface $block_manager, Client $http_client, UuidInterface $uuid, TimeInterface $time, AccountProxyInterface $user, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
+  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, BlockManagerInterface $block_manager, AccountInterface $current_user, UuidInterface $uuid, LayoutTempstoreRepositoryInterface $layout_tempstore_repository, SelectionPluginManager $selection_plugin_manager) {
     $this->config = $config_factory;
+    $this->entityTypeManager = $entity_type_manager;
     $this->blockManager = $block_manager;
-    $this->httpClient = $http_client;
+    $this->currentUser = $current_user;
     $this->uuidGenerator = $uuid;
-    $this->time = $time;
-    $this->currentUser = $user;
     $this->layoutTempstoreRepository = $layout_tempstore_repository;
+    $this->selectionPluginManager = $selection_plugin_manager;
   }
 
   /**
@@ -98,20 +105,20 @@ class ImportManager implements ContainerInjectionInterface {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('entity_type.manager'),
       $container->get('plugin.manager.block'),
-      $container->get('http_client'),
-      $container->get('uuid'),
-      $container->get('datetime.time'),
       $container->get('current_user'),
-      $container->get('layout_builder.tempstore_repository')
+      $container->get('uuid'),
+      $container->get('layout_builder.tempstore_repository'),
+      $container->get('plugin.manager.entity_reference_selection'),
     );
   }
 
   /**
-   * Sync a node form a remote source.
+   * Import article paragraphs into a node.
    *
    * @param \Drupal\node\NodeInterface $node
-   *   The node for which elements should be synced.
+   *   The node for which elements should be imported/synced.
    * @param object $article
    *   The article object as retrieved from the remote source.
    * @param array $paragraph_ids
@@ -119,18 +126,18 @@ class ImportManager implements ContainerInjectionInterface {
    *   $article->content.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
-   * @param bool $revisions
-   *   Whether new revisions should be created.
    * @param bool $cleanup
    *   Whether existing elements should be cleaned up first.
-   *
-   * @return bool
-   *   Indicating whether the node has been sucessfully processed or not.
    *
    * @throws SyncException
    *   When an error occurs.
    */
-  public function importParagraphs(NodeInterface $node, $article, array $paragraph_ids, MessengerInterface $messenger = NULL, $revisions = FALSE, $cleanup = FALSE) {
+  public function importParagraphs(NodeInterface $node, $article, array $paragraph_ids = [], MessengerInterface $messenger = NULL, $cleanup = FALSE) {
+
+    if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+      return FALSE;
+    }
+
     if ($messenger === NULL) {
       $messenger = $this->messenger();
     }
@@ -145,7 +152,7 @@ class ImportManager implements ContainerInjectionInterface {
     }
 
     foreach ($article->content as $paragraph) {
-      if (!in_array($paragraph->id, $paragraph_ids)) {
+      if (!empty($paragraph_ids) && !in_array($paragraph->id, $paragraph_ids)) {
         continue;
       }
 
@@ -199,13 +206,51 @@ class ImportManager implements ContainerInjectionInterface {
     $this->layoutManagerDiscardChanges($node, $messenger);
 
     $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
-    if ($revisions) {
-      $node->setNewRevision(TRUE);
-      $node->revision_log = $this->t('Imported page elements');
-      $node->setRevisionCreationTime($this->time->getRequestTime());
-      $node->setRevisionUserId($this->currentUser->id());
+
+    return TRUE;
+  }
+
+  /**
+   * Import tags for an article.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node for which tags should be imported/synced.
+   * @param object $article
+   *   The article object as retrieved from the remote source.
+   * @param string $field_name
+   *   The field name into which the tags should be imported.
+   */
+  public function importTags(NodeInterface $node, $article, $field_name = 'field_tags') {
+    if (!$node->hasField($field_name)) {
+      return FALSE;
     }
-    $node->save();
+    // Get the tags.
+    $main_tags = $article->content_space->tags ?? [];
+    $article_tags = $article->tags ?? [];
+
+    /** @var \Drupal\Core\Entity\Plugin\EntityReferenceSelection\DefaultSelection $handler */
+    $handler = $this->selectionPluginManager->getInstance([
+      // Restrict selection of terms to a single vocabulary.
+      'target_type' => 'taxonomy_term',
+      'target_bundles' => [
+        'tags' => 'tags',
+      ],
+    ]);
+    $terms = array_filter(array_map(function ($tag) use ($handler) {
+      $matches = $handler->getReferenceableEntities($tag, '=', 1);
+      $term = NULL;
+      if (!empty($matches) && !empty($matches['tags']) && count($matches['tags']) == 1) {
+        $term_id = array_key_first($matches['tags']);
+        $term = $this->entityTypeManager->getStorage('taxonomy_term')->load($term_id);
+      }
+      if (!$term) {
+        $term = $handler->createNewEntity('taxonomy_term', 'tags', $tag, $this->currentUser->id());
+        $term->save();
+      }
+      return $term->id() ? $term : NULL;
+    }, array_merge($main_tags, $article_tags)));
+
+    $node->get($field_name)->setValue($terms);
 
     return TRUE;
   }

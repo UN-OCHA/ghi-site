@@ -2,72 +2,13 @@
 
 namespace Drupal\ghi_sections\Form;
 
-use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\node\NodeInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a wizard form for creating global section nodes.
  */
-class GlobalSectionWizard extends FormBase {
-
-  use AjaxElementTrait;
-
-  /**
-   * The entity type manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The entity type manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
-   */
-  protected $entityFieldManager;
-
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected $currentUser;
-
-  /**
-   * Constructs a global section create form.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ModuleHandlerInterface $module_handler, AccountProxyInterface $user) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->entityFieldManager = $entity_field_manager;
-    $this->moduleHandler = $module_handler;
-    $this->currentUser = $user;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity_type.manager'),
-      $container->get('entity_field.manager'),
-      $container->get('module_handler'),
-      $container->get('current_user'),
-    );
-  }
+class GlobalSectionWizard extends WizardBase {
 
   /**
    * {@inheritdoc}
@@ -88,6 +29,7 @@ class GlobalSectionWizard extends FormBase {
     // Define our steps.
     $steps = [
       'year',
+      'tags',
       'title',
     ];
     // Find out in which step we currently are.
@@ -111,6 +53,29 @@ class GlobalSectionWizard extends FormBase {
       '#default_value' => $form_state->getValue('year'),
       '#required' => TRUE,
       '#disabled' => $step > 0,
+    ];
+
+    $tags = $this->getEntityReferenceFieldItemList('global_section', 'field_tags', $form_state->getValue('tags') ?? []);
+
+    // Add the team selector.
+    $form['tags'] = [
+      '#type' => 'entity_autocomplete',
+      '#title' => $this->t('Tags'),
+      '#description' => $this->t('Select the tags associated with this global section. This controls the content that will be available. Enter multiple tags separated by comma.'),
+      '#target_type' => 'taxonomy_term',
+      '#selection_handler' => 'default',
+      '#selection_settings' => [
+        'target_bundles' => ['tags'],
+      ],
+      '#autocreate' => [
+        'bundle' => 'tags',
+        'uid' => $this->currentUser()->id(),
+      ],
+      '#tags' => TRUE,
+      '#default_value' => $tags->referencedEntities(),
+      '#required' => TRUE,
+      '#disabled' => $step > array_flip($steps)['tags'],
+      '#access' => $step >= array_flip($steps)['tags'],
     ];
 
     if ($step == array_flip($steps)['title']) {
@@ -166,8 +131,9 @@ class GlobalSectionWizard extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $values = array_intersect_key($form_state->getValues(), array_flip([
-      'title',
       'year',
+      'tags',
+      'title',
     ]));
 
     $action = self::getActionFromFormState($form_state);
@@ -191,8 +157,9 @@ class GlobalSectionWizard extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = array_intersect_key($form_state->getValues(), array_flip([
-      'title',
       'year',
+      'tags',
+      'title',
     ]));
 
     // Clear the error messages.
@@ -206,6 +173,7 @@ class GlobalSectionWizard extends FormBase {
       'status' => FALSE,
     ]);
     $global_section->field_year = $values['year'];
+    $global_section->field_tags = $values['tags'];
     $status = $global_section->save();
     if ($status) {
       $this->messenger()->addStatus($this->t('Created @type for @title', [

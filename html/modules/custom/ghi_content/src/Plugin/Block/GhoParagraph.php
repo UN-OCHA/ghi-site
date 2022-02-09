@@ -80,6 +80,26 @@ class GhoParagraph extends GhiContentBlockBase implements MultiStepFormBlockInte
     // Add GHO specific theme components.
     $theme_components = [];
     $theme_components[] = 'common_design_subtheme/gho-' . Html::getClass($paragraph->type);
+    if ($paragraph->type == 'bottom_figure_row') {
+      $theme_components[] = 'common_design_subtheme/gho-needs-and-requirements';
+    }
+
+    // Move gho specific paragraph classes to the block wrapper attributes, so
+    // that CSS logic that targets subsequent elements can be applied.
+    $wrapper_attributes = [];
+    $dom = Html::load($paragraph->rendered);
+    $child = $dom->getElementsByTagName('div')->item(0);
+    $attributes = $child->attributes;
+    if ($attributes && $attributes->getNamedItem('class') && $attributes->getNamedItem('class')->nodeValue) {
+      $class_attribute = $attributes->getNamedItem('class')->nodeValue;
+      $classes = explode(' ', $class_attribute);
+      $gho_classes = !empty($classes) ? array_filter($classes, function ($class) {
+        return strpos($class, 'gho-') === 0;
+      }) : [];
+      $wrapper_attributes['class'] = $gho_classes;
+      $attributes->getNamedItem('class')->nodeValue = implode(' ', array_diff($classes, $gho_classes));
+      $paragraph->rendered = trim(Html::serialize($dom));
+    }
 
     $build = [
       '#type' => 'container',
@@ -92,6 +112,7 @@ class GhoParagraph extends GhiContentBlockBase implements MultiStepFormBlockInte
         '#markup' => Markup::create($paragraph->rendered),
         '#view_mode' => 'full',
       ],
+      '#wrapper_attributes' => $wrapper_attributes,
     ];
 
     if ($this->moduleHandler->moduleExists('gho_footnotes')) {
