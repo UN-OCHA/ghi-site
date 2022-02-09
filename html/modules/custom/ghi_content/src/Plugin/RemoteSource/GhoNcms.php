@@ -6,7 +6,7 @@ use Drupal\ghi_content\RemoteSource\RemoteSourceBaseGho;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 
 /**
- * Provides an attachment data item for configuration containers.
+ * Provides a remote source for the GHO NCMS.
  *
  * @RemoteSource(
  *   id = "gho_ncms",

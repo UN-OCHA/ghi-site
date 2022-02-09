@@ -52,7 +52,7 @@ class ArticleWizard extends FormBase {
   /**
    * The article manager.
    *
-   * @var \Drupal\ghi_content\ArticleManager
+   * @var \Drupal\ghi_content\ContentManager\ArticleManager
    */
   protected $articleManager;
 
@@ -116,7 +116,7 @@ class ArticleWizard extends FormBase {
     $team_options = $this->getTeamOptions($form_state);
     if (empty($team_options)) {
       // Bail out if there are no teams.
-      $this->messenger()->addError($this->t('No teams found. You must import teams before sections can be created.'));
+      $this->messenger()->addError($this->t('No teams found. You must import teams before articles can be created.'));
       return $form;
     }
 
@@ -171,7 +171,7 @@ class ArticleWizard extends FormBase {
       '#type' => 'select',
       '#title' => $this->t('Team'),
       '#options' => $team_options,
-      '#description' => $this->t('Select the team that will be responsible for this section'),
+      '#description' => $this->t('Select the team that will be responsible for this article.'),
       '#default_value' => $form_state->getValue('team'),
       '#required' => TRUE,
       '#disabled' => $step > array_flip($steps)['team'],
@@ -182,8 +182,8 @@ class ArticleWizard extends FormBase {
     $form['title'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Title'),
-      '#description' => $this->t('Optional: Change the title for this article'),
-      '#default_value' => $section ? $section->label() : NULL,
+      '#description' => $this->t('Optional: Change the title for this article.'),
+      '#default_value' => $article ? $article->title : NULL,
       '#required' => TRUE,
       '#access' => $step >= array_flip($steps)['title'],
     ];
@@ -231,6 +231,24 @@ class ArticleWizard extends FormBase {
   /**
    * {@inheritdoc}
    */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    $action = self::getActionFromFormState($form_state);
+    $source = $this->getSubmittedSource($form_state);
+    $article = $this->getSubmittedArticle($form_state);
+    if ($action != 'back' && $form_state->get('step') == 1 && $article) {
+      $node = $this->articleManager->loadNodeBySourceAndId($source, $article);
+      if ($node) {
+        $form_state->setErrorByName('article', $this->t('An article page for the selected article already exists: <a href="@url">@title</a>.', [
+          '@url' => $node->toUrl()->toString(),
+          '@title' => $node->label(),
+        ]));
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = array_intersect_key($form_state->getValues(), array_flip([
       'source',
@@ -242,7 +260,7 @@ class ArticleWizard extends FormBase {
     // Clear the error messages.
     $this->messenger()->deleteAll();
 
-    // Create and save the section.
+    // Create and save the article.
     $article = $this->entityTypeManager->getStorage('node')->create([
       'type' => 'article',
       'title' => $values['title'],
@@ -297,7 +315,8 @@ class ArticleWizard extends FormBase {
     if (empty($remote_source)) {
       return NULL;
     }
-    return $this->remoteSourceManager->createInstance($remote_source);
+    $instance = $this->remoteSourceManager->createInstance($remote_source);
+    return $instance;
   }
 
   /**
