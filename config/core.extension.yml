@@ -33,7 +33,6 @@ module:
   ghi_base_objects: 0
   ghi_blocks: 0
   ghi_content: 0
-  ghi_documents: 0
   ghi_element_sync: 0
   ghi_form_elements: 0
   ghi_hero_image: 0
