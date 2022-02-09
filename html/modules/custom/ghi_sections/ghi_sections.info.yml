@@ -10,4 +10,3 @@ dependencies:
   - ghi_teams:ghi_teams
   - ghi_form_elements:ghi_form_elements
   - publishcontent:publishcontent
-  - entity_reference:entity_reference
