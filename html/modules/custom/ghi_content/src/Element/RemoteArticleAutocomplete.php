@@ -193,7 +193,7 @@ class RemoteArticleAutocomplete extends Textfield {
         $multiples[] = $article->title . ' (' . $article->id . ')';
       }
       $params['@id'] = $id;
-      $form_state->setError($element, t('Multiple @entity_type_plural match this reference; "%multiple". Specify the one you want by appending the id in parentheses, like "@value (@id)".', ['%multiple' => strip_tags(implode('", "', $multiples))] + $params));
+      $form_state->setError($element, t('Multiple @entity_type_plural match this reference "%value"; "%multiple". Specify the one you want by appending the id in parentheses, like "@value (@id)".', ['%multiple' => strip_tags(implode('", "', $multiples))] + $params));
     }
     else {
       // Take the one and only matching entity.

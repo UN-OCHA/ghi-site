@@ -6,4 +6,4 @@ type: module
 core_version_requirement: ^8 || ^9
 
 dependencies:
-  - taxonomy:taxonomy
+  - drupal:taxonomy

@@ -1,0 +1,27 @@
+{
+  "articleSearch": {
+    "count": 5,
+    "items": [
+      {
+        "id": 1,
+        "title": "Global Humanitarian Overview 2022"
+      },
+      {
+        "id": 3,
+        "title": "Global Trends and Challenges"
+      },
+      {
+        "id": 9,
+        "title": "COVID-19 Continues to Disrupt the Global Economy as Extreme Poverty Rises  "
+      },
+      {
+        "id": 98,
+        "title": "Global Achievements "
+      },
+      {
+        "id": 114,
+        "title": "About the Global Humanitarian Overview"
+      }
+    ]
+  }
+}
