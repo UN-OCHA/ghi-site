@@ -26,10 +26,19 @@ class GlobalSectionWizard extends WizardBase {
     $form['#prefix'] = '<div id="' . $wrapper_id . '">';
     $form['#suffix'] = '</div>';
 
+    // Get the team options.
+    $team_options = $this->getTeamOptions($form_state);
+    if (empty($team_options)) {
+      // Bail out if there are no teams.
+      $this->messenger()->addError($this->t('No teams found. You must import teams before sections can be created.'));
+      return $form;
+    }
+
     // Define our steps.
     $steps = [
       'year',
       'tags',
+      'team',
       'title',
     ];
     // Find out in which step we currently are.
@@ -76,6 +85,18 @@ class GlobalSectionWizard extends WizardBase {
       '#required' => TRUE,
       '#disabled' => $step > array_flip($steps)['tags'],
       '#access' => $step >= array_flip($steps)['tags'],
+    ];
+
+    // Add the team selector.
+    $form['team'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Team'),
+      '#options' => $team_options,
+      '#description' => $this->t('Select the team that will be responsible for this section.'),
+      '#default_value' => $form_state->getValue('team'),
+      '#required' => TRUE,
+      '#disabled' => $step > array_flip($steps)['team'],
+      '#access' => $step >= array_flip($steps)['team'],
     ];
 
     if ($step == array_flip($steps)['title']) {
@@ -133,6 +154,7 @@ class GlobalSectionWizard extends WizardBase {
     $values = array_intersect_key($form_state->getValues(), array_flip([
       'year',
       'tags',
+      'team',
       'title',
     ]));
 
@@ -159,6 +181,7 @@ class GlobalSectionWizard extends WizardBase {
     $values = array_intersect_key($form_state->getValues(), array_flip([
       'year',
       'tags',
+      'team',
       'title',
     ]));
 
@@ -174,6 +197,7 @@ class GlobalSectionWizard extends WizardBase {
     ]);
     $global_section->field_year = $values['year'];
     $global_section->field_tags = $values['tags'];
+    $global_section->field_team = $values['team'];
     $status = $global_section->save();
     if ($status) {
       $this->messenger()->addStatus($this->t('Created @type for @title', [

@@ -28,6 +28,11 @@ class SectionWizard extends WizardBase {
 
     // Find out what base objects types can be referenced.
     $fields = $this->entityFieldManager->getFieldDefinitions('node', 'section');
+    if (!array_key_exists('field_base_object', $fields)) {
+      // Bail out if there are no teams.
+      $this->messenger()->addError($this->t('No base object field found on content type Section.'));
+      return $form;
+    }
     /** @var \Drupal\field\Entity\FieldConfig $base_object_field_config */
     $base_object_field_config = $fields['field_base_object'];
     $allowed_base_object_types = $base_object_field_config->getSetting('handler_settings')['target_bundles'];
@@ -353,29 +358,6 @@ class SectionWizard extends WizardBase {
       $base_object = $this->entityTypeManager->getStorage('base_object')->load($form_state->getValue('base_object')[0]['target_id']);
     }
     return $base_object;
-  }
-
-  /**
-   * Retrieve the team options for the team select field.
-   *
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state object.
-   *
-   * @return array
-   *   An array of team names, keyed by tid.
-   */
-  private function getTeamOptions(FormStateInterface $form_state) {
-    // @todo Ideally, this should fetch teams that have access to the base
-    // object, but for now we fetch all teams.
-    $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree('team');
-    if (empty($terms)) {
-      return [];
-    }
-    $options = [];
-    foreach ($terms as $term) {
-      $options[$term->tid] = $term->name;
-    }
-    return $options;
   }
 
 }

@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
@@ -106,6 +107,29 @@ abstract class WizardBase extends FormBase {
     $node = $node_storage->create(['type' => $bundle]);
     $tags = $this->typedDataManager->getPropertyInstance($node->getTypedData(), $field_name, $values);
     return $tags;
+  }
+
+  /**
+   * Retrieve the team options for the team select field.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   *
+   * @return array
+   *   An array of team names, keyed by tid.
+   */
+  protected function getTeamOptions(FormStateInterface $form_state) {
+    // @todo Ideally, this should fetch teams that have access to the base
+    // object, but for now we fetch all teams.
+    $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree('team');
+    if (empty($terms)) {
+      return [];
+    }
+    $options = [];
+    foreach ($terms as $term) {
+      $options[$term->tid] = $term->name;
+    }
+    return $options;
   }
 
 }
