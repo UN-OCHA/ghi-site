@@ -1,0 +1,27 @@
+uuid: f3bc1d5b-6d69-4841-9888-af19039cbf14
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.article.field_remote_article
+    - field.field.node.article.field_tags
+    - field.field.node.article.layout_builder__layout
+    - node.type.article
+  module:
+    - user
+id: node.article.teaser
+targetEntityType: node
+bundle: article
+mode: teaser
+content:
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  field_remote_article: true
+  field_tags: true
+  langcode: true
+  layout_builder__layout: true

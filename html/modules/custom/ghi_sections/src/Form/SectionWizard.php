@@ -2,82 +2,13 @@
 
 namespace Drupal\ghi_sections\Form;
 
-use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
-use Drupal\ghi_sections\SectionManager;
 use Drupal\node\NodeInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a wizard form for creating section nodes.
  */
-class SectionWizard extends FormBase {
-
-  use AjaxElementTrait;
-
-  /**
-   * The entity type manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The entity type manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
-   */
-  protected $entityFieldManager;
-
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected $currentUser;
-
-  /**
-   * The section manager.
-   *
-   * @var \Drupal\ghi_sections\Import\SectionManager
-   */
-  protected $sectionManager;
-
-  /**
-   * Constructs a section create form.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ModuleHandlerInterface $module_handler, AccountProxyInterface $user, SectionManager $section_manager) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->entityFieldManager = $entity_field_manager;
-    $this->moduleHandler = $module_handler;
-    $this->currentUser = $user;
-    $this->sectionManager = $section_manager;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity_type.manager'),
-      $container->get('entity_field.manager'),
-      $container->get('module_handler'),
-      $container->get('current_user'),
-      $container->get('ghi_sections.manager'),
-    );
-  }
+class SectionWizard extends WizardBase {
 
   /**
    * {@inheritdoc}
@@ -97,6 +28,11 @@ class SectionWizard extends FormBase {
 
     // Find out what base objects types can be referenced.
     $fields = $this->entityFieldManager->getFieldDefinitions('node', 'section');
+    if (!array_key_exists('field_base_object', $fields)) {
+      // Bail out if there are no teams.
+      $this->messenger()->addError($this->t('No base object field found on content type Section.'));
+      return $form;
+    }
     /** @var \Drupal\field\Entity\FieldConfig $base_object_field_config */
     $base_object_field_config = $fields['field_base_object'];
     $allowed_base_object_types = $base_object_field_config->getSetting('handler_settings')['target_bundles'];
@@ -128,6 +64,7 @@ class SectionWizard extends FormBase {
       'type',
       'base_object',
       $needs_year ? 'year' : NULL,
+      'tags',
       'team',
       'title',
     ]));
@@ -184,12 +121,35 @@ class SectionWizard extends FormBase {
       '#access' => $needs_year && $step >= array_flip($steps)['year'],
     ];
 
+    $tags = $this->getEntityReferenceFieldItemList('section', 'field_tags', $form_state->getValue('tags') ?? []);
+
+    // Add the team selector.
+    $form['tags'] = [
+      '#type' => 'entity_autocomplete',
+      '#title' => $this->t('Tags'),
+      '#description' => $this->t('Select the tags associated with this section. This controls the content that will be available. Enter multiple tags separated by comma.'),
+      '#target_type' => 'taxonomy_term',
+      '#selection_handler' => 'default',
+      '#selection_settings' => [
+        'target_bundles' => ['tags'],
+      ],
+      '#autocreate' => [
+        'bundle' => 'tags',
+        'uid' => $this->currentUser()->id(),
+      ],
+      '#tags' => TRUE,
+      '#default_value' => $tags->referencedEntities(),
+      '#required' => TRUE,
+      '#disabled' => $step > array_flip($steps)['tags'],
+      '#access' => $step >= array_flip($steps)['tags'],
+    ];
+
     // Add the team selector.
     $form['team'] = [
       '#type' => 'select',
       '#title' => $this->t('Team'),
       '#options' => $team_options,
-      '#description' => $this->t('Select the team that will be responsible for this section'),
+      '#description' => $this->t('Select the team that will be responsible for this section.'),
       '#default_value' => $form_state->getValue('team'),
       '#required' => TRUE,
       '#disabled' => $step > array_flip($steps)['team'],
@@ -200,7 +160,7 @@ class SectionWizard extends FormBase {
     $form['title'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Title'),
-      '#description' => $this->t('Optional: Change the title for this section'),
+      '#description' => $this->t('Optional: Change the title for this section.'),
       '#default_value' => $base_object ? $base_object->label() : NULL,
       '#required' => TRUE,
       '#access' => $step >= array_flip($steps)['title'],
@@ -289,6 +249,7 @@ class SectionWizard extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = array_intersect_key($form_state->getValues(), array_flip([
       'year',
+      'tags',
       'team',
       'title',
     ]));
@@ -311,6 +272,7 @@ class SectionWizard extends FormBase {
       $section->field_year = $values['year'];
     }
     $section->field_team = $values['team'];
+    $section->field_tags = $values['tags'];
     $status = $section->save();
     if ($status) {
       $this->messenger()->addStatus($this->t('Created @type for @title', [
@@ -396,29 +358,6 @@ class SectionWizard extends FormBase {
       $base_object = $this->entityTypeManager->getStorage('base_object')->load($form_state->getValue('base_object')[0]['target_id']);
     }
     return $base_object;
-  }
-
-  /**
-   * Retrieve the team options for the team select field.
-   *
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state object.
-   *
-   * @return array
-   *   An array of team names, keyed by tid.
-   */
-  private function getTeamOptions(FormStateInterface $form_state) {
-    // @todo Ideally, this should fetch teams that have access to the base
-    // object, but for now we fetch all teams.
-    $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree('team');
-    if (empty($terms)) {
-      return [];
-    }
-    $options = [];
-    foreach ($terms as $term) {
-      $options[$term->tid] = $term->name;
-    }
-    return $options;
   }
 
 }

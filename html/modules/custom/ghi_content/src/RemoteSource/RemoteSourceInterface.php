@@ -50,8 +50,8 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    * @param string $title
    *   The title to search.
    *
-   * @return object
-   *   The result object.
+   * @return object[]
+   *   The result objects.
    */
   public function searchArticlesByTitle($title);
 

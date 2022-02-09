@@ -2,7 +2,6 @@
 
 namespace Drupal\ghi_hero_image\Plugin\Field\FieldFormatter;
 
-use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Render\Markup;
@@ -10,7 +9,6 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\hpc_common\Helpers\ThemeHelper;
-use Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery;
 
 /**
  * Plugin implementation of the 'ghi_hero_image' formatter.
@@ -33,26 +31,10 @@ class HeroImageFormatter extends FormatterBase implements ContainerFactoryPlugin
   /**
    * {@inheritdoc}
    */
-  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings, PlanEntitiesQuery $entities_query) {
-    parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
-
-    $this->entitiesQuery = $entities_query;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $plugin_id,
-      $plugin_definition,
-      $configuration['field_definition'],
-      $configuration['settings'],
-      $configuration['label'],
-      $configuration['view_mode'],
-      $configuration['third_party_settings'],
-      $container->get('plugin.manager.endpoint_query_manager')->createInstance('plan_entities_query')
-    );
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->entitiesQuery = $container->get('plugin.manager.endpoint_query_manager')->createInstance('plan_entities_query');
+    return $instance;
   }
 
   /**

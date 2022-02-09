@@ -1,0 +1,31 @@
+uuid: d9f9ba81-f2a4-403d-900a-1e8e5cd1f41f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_entity_reference
+    - node.type.document
+    - node.type.global_section
+    - node.type.section
+id: node.document.field_entity_reference
+field_name: field_entity_reference
+entity_type: node
+bundle: document
+label: Section
+description: 'The section this document belongs to.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      global_section: global_section
+      section: section
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: global_section
+field_type: entity_reference

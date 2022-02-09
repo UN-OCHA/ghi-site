@@ -20,6 +20,11 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
     $fields = [
       'id',
       'title',
+      'tags',
+    ];
+    $fields['content_space'] = [
+      'title',
+      'tags',
     ];
     $fields['content'] = [
       'id',

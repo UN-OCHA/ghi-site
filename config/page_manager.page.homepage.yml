@@ -10,7 +10,7 @@ description: 'Year specific landing page'
 use_admin_theme: false
 path: '/home/{year}'
 access_logic: and
-access_conditions: {}
+access_conditions: {  }
 parameters:
   year:
     machine_name: year

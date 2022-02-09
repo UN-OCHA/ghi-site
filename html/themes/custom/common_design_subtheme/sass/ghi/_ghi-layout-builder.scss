@@ -8,3 +8,12 @@
 .js input.form-autocomplete.ui-autocomplete-loading {
   background-image: url("../img/misc/spinner-ltr.gif") !important;
 }
+
+.has-layout-builder-ipe-actions .gho-footnote-list__wrapper {
+  // Position this above the Layout Builder IPE action bar.
+  bottom: 64px !important;
+}
+.layout-builder-ipe-actions {
+  // Make this higher than the z-index of the gho tooltips.
+  z-index: 102;
+}

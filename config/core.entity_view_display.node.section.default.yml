@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.node.section.field_base_object
     - field.field.node.section.field_hero_image
+    - field.field.node.section.field_tags
     - field.field.node.section.field_team
     - field.field.node.section.field_year
     - field.field.node.section.layout_builder__layout
@@ -84,6 +85,14 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: 106
+    region: content
+  field_tags:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 107
     region: content
   field_team:
     type: entity_reference_label
