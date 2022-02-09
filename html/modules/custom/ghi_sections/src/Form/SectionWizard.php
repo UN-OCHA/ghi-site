@@ -214,6 +214,8 @@ class SectionWizard extends WizardBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
+
     $values = array_intersect_key($form_state->getValues(), array_flip([
       'year',
       'team',
