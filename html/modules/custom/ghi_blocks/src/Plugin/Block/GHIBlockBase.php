@@ -7,6 +7,8 @@ use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\CloseDialogCommand;
+use Drupal\Core\Ajax\OpenDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -18,6 +20,7 @@ use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
+use Drupal\layout_builder\Form\AddBlockForm;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -55,6 +58,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
   protected $contextRepository;
 
   /**
+   * Layout tempstore repository.
+   *
+   * @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface
+   */
+  protected $layoutTempstoreRepository;
+
+  /**
    * The manager class for endpoint query plugins.
    *
    * @var \Drupal\hpc_api\Query\EndpointQueryManager
@@ -90,6 +100,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
   protected $moduleHandler;
 
   /**
+   * The controller resolver.
+   *
+   * @var \Drupal\Core\Controller\ControllerResolverInterface
+   */
+  protected $controllerResolver;
+
+  /**
    * Retrieves a configuration object.
    *
    * @param string $name
@@ -112,11 +129,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Set our own properties.
     $instance->configFactory = $container->get('config.factory');
     $instance->contextRepository = $container->get('context.repository');
+    $instance->layoutTempstoreRepository = $container->get('layout_builder.tempstore_repository');
     $instance->endpointQueryManager = $container->get('plugin.manager.endpoint_query_manager');
     $instance->configurationContainerItemManager = $container->get('plugin.manager.configuration_container_item_manager');
     $instance->sectionManager = $container->get('ghi_sections.manager');
     $instance->selectionCriteriaArgument = $container->get('ghi_blocks.layout_builder_edit_page.selection_criteria_argument');
     $instance->moduleHandler = $container->get('module_handler');
+    $instance->controllerResolver = $container->get('controller_resolver');
 
     $instance->alterContexts();
     return $instance;
@@ -770,6 +789,77 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
+   * Ajax callback for the cancel button.
+   *
+   * This does some cleanup and either closes the current configuration modal
+   * (when editing) or going back to the choose block modal (when adding a new
+   * block).
+   */
+  public function cancelBlock(array $form, FormStateInterface $form_state) {
+    // First off, delete any existing form validation messages.
+    // @todo Is this to extreme? Setting #limit_validation_errors to [] on the
+    // cancel button doesn't work though.
+    $this->messenger()->deleteAll();
+
+    /** @var \Drupal\layout_builder\Form\ConfigureBlockFormBase $block_form */
+    $block_form = $form_state->getBuildInfo()['callback_object'];
+    $section_storage = $block_form->getSectionStorage();
+    $current_component = $block_form->getCurrentComponent();
+
+    if ($block_form instanceof AddBlockForm) {
+      // We don't want new blocks which got canceled to still be kept in the
+      // tempstore. It seems that they are not cleaned up automatically, so we
+      // remove them here manually.
+      $current_section = $block_form->getCurrentSection();
+      $current_section->removeComponent($current_component->getUuid());
+      $this->layoutTempstoreRepository->set($section_storage);
+
+      // We also want to return to the block selection modal.
+      // To do that we call the controller function that originally creates the
+      // choose block dialog.
+      /** @var \Drupal\layout_builder\Controller\ChooseBlockController $choose_block_controller */
+      $choose_block_controller = $this->controllerResolver->getControllerFromDefinition('\Drupal\layout_builder\Controller\ChooseBlockController');
+      $build = $choose_block_controller->build($section_storage, 0, $current_component->getRegion());
+      // We add the same class that LayoutBuilderBrowserEventSubscriber does for
+      // the original route.
+      $build['block_categories']['#attributes']['class'][] = 'layout-builder-browser';
+      // We take the layout builder modal settings.
+      $modal_config = $this->config('layout_builder_modal.settings');
+      $dialog_options = [
+        'width' => $modal_config->get('modal_width'),
+        'height' => $modal_config->get('modal_height'),
+        'target' => 'layout-builder-modal',
+        'autoResize' => $modal_config->get('modal_autoresize'),
+        'modal' => TRUE,
+      ];
+
+      // And create commands that close the current dialog and open a new one.
+      $response = new AjaxResponse();
+      $response->addCommand(new CloseDialogCommand('#layout-builder-modal'));
+      $response->addCommand(new OpenDialogCommand('#layout-builder-modal', $this->t('Choose a block'), $build, $dialog_options));
+      return $response;
+    }
+    else {
+      // Unset the stored form values.
+      $form_key = $form_state->get('current_subform');
+      $form_state->set($form_key, NULL);
+
+      // Do the same for every form of multi step forms.
+      $block = $current_component->getPlugin();
+      if ($block instanceof MultiStepFormBlockInterface) {
+        foreach (array_keys($block->getSubforms()) as $form_key) {
+          $form_state->set($form_key, NULL);
+        }
+      }
+    }
+
+    // And close the modal.
+    $response = new AjaxResponse();
+    $response->addCommand(new CloseDialogCommand('#layout-builder-modal'));
+    return $response;
+  }
+
+  /**
    * Custom form alter function for a block configuration.
    *
    * This get's called from ghi_blocks.module.
@@ -852,9 +942,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'layout-builder-cancel',
-      "#button_type" => 'primary',
+      '#limit_validation_errors' => [],
       "#ajax" => [
-        "callback" => 'ghi_blocks_layout_builder_cancel_callback',
+        "callback" => [$this, 'cancelBlock'],
       ],
     ];
     $form['actions']['#weight'] = 99;

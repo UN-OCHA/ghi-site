@@ -7,10 +7,7 @@
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 
 /**
@@ -84,11 +81,12 @@ function ghi_blocks_link_alter(&$variables) {
   }
 
   if (in_array('use-ajax', $variables['options']['attributes']['class'])) {
+    $config = \Drupal::config('layout_builder_modal.settings');
     $data_dialog_options = Json::encode([
-      'width' => "80%",
-      'height' => "auto",
+      'width' => $config->get('modal_width'),
+      'height' => $config->get('modal_height'),
       'target' => 'layout-builder-modal',
-      'autoResize' => TRUE,
+      'autoResize' => $config->get('modal_autoresize'),
       'modal' => TRUE,
     ]);
     $variables['options']['attributes']['data-dialog-options'] = $data_dialog_options;
@@ -132,36 +130,6 @@ function ghi_blocks_form_layout_builder_update_block_alter(array &$form, FormSta
     return;
   }
   $plugin->blockFormAlter($form, $form_state);
-}
-
-/**
- * Ajax cancel callback.
- *
- * @param array $form
- *   The form array.
- * @param \Drupal\Core\Form\FormStateInterface $form_state
- *   The form state object.
- *
- * @return \Drupal\Core\Ajax\AjaxResponse
- *   The ajax response object.
- */
-function ghi_blocks_layout_builder_cancel_callback(array $form, FormStateInterface $form_state) {
-  // Unset the stored form values.
-  $form_key = $form_state->get('current_subform');
-  $form_state->set($form_key, NULL);
-
-  // Do the same for every form of multi step forms.
-  $block = $form_state->getBuildInfo()['callback_object']->getCurrentComponent()->getPlugin();
-  if ($block instanceof MultiStepFormBlockInterface) {
-    foreach (array_keys($block->getSubforms()) as $form_key) {
-      $form_state->set($form_key, NULL);
-    }
-  }
-
-  // And close the modal.
-  $response = new AjaxResponse();
-  $response->addCommand(new CloseDialogCommand('#layout-builder-modal'));
-  return $response;
 }
 
 /**
