@@ -57,7 +57,7 @@ class ArticleWizardTest extends BrowserTestBase {
    */
   public function testArticleWizard() {
     // Fetch the autocomplete results first.
-    $autocomplete_url = 'http://ghi-site.docksal/content/remote/gho_ncms_test/search-article';
+    $autocomplete_url = $this->getAbsoluteUrl('/content/remote/gho_ncms_test/search-article');
     $autocomplete_result = $this->drupalGet($autocomplete_url, [
       'query' => [
         'q' => 'Global',
@@ -105,7 +105,7 @@ class ArticleWizardTest extends BrowserTestBase {
   public function testArticleDuplicateRejected() {
 
     // Fetch the autocomplete results first.
-    $autocomplete_url = 'http://ghi-site.docksal/content/remote/gho_ncms_test/search-article';
+    $autocomplete_url = $this->getAbsoluteUrl('/content/remote/gho_ncms_test/search-article');
     $autocomplete_result = $this->drupalGet($autocomplete_url, [
       'query' => [
         'q' => 'Global',
