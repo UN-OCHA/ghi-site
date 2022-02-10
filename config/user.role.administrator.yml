@@ -23,7 +23,6 @@ dependencies:
     - block
     - content_translation
     - contextual
-    - entity_usage
     - file
     - filter
     - ghi_base_objects
@@ -48,7 +47,6 @@ permissions:
   - 'access content'
   - 'access content overview'
   - 'access contextual links'
-  - 'access entity usage statistics'
   - 'access files overview'
   - 'access media overview'
   - 'access remote content'
