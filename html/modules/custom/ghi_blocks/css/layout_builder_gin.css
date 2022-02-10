@@ -76,6 +76,19 @@ body.path-node #layout-builder .layout-builder__section .contextual-region .cont
 .glb-layout-builder-browser.block-categories .glb-list {
   width: 100%;
 }
+.glb-layout-builder-browser.block-categories .glb-list li {
+  position: relative;
+}
+.glb-layout-builder-browser.block-categories .glb-list li .ajax-progress-throbber {
+  position: absolute;
+  top: 0.4rem;
+  right: -0.6rem;
+  background-color: white !important;
+}
+.glb-layout-builder-browser.block-categories .glb-list li .ajax-progress-throbber::before {
+  top: 0.4rem;
+  left: 0.4rem;
+}
 
 .glb-form-item--error-message {
   color: #d72222;
