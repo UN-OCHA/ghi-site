@@ -10,7 +10,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 
 /**
- * Provides a 'ParagraphGho' block.
+ * Provides a 'GhoParagraph' block.
  *
  * @Block(
  *  id = "gho_paragraph",
