@@ -90,6 +90,15 @@ abstract class WizardBase extends FormBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    // We need to prepare the ajax form, because validation is called before
+    // form building, and in case of errors doesn't reach the buildForm method.
+    self::prepareAjaxForm($form, $form_state);
+  }
+
+  /**
    * Get the entity reference field item list for the given bundle and field.
    *
    * @param string $bundle
