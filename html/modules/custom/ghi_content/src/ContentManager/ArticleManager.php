@@ -55,8 +55,9 @@ class ArticleManager extends BaseContentManager {
 
     // Setup the base query.
     $query = $this->entityTypeManager->getStorage('node')->getQuery();
-    $query->condition('status', TRUE);
+    $query->condition('status', NodeInterface::PUBLISHED);
     $query->condition('type', 'article');
+    $query->accessCheck();
 
     // For the logic behing the following conditions on tags see comments on
     // https://api.drupal.org/api/drupal/core!lib!Drupal!Core!Entity!Query!QueryInterface.php/function/QueryInterface%3A%3AandConditionGroup/8.2.x
