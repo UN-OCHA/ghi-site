@@ -8,3 +8,7 @@ configuration_container:
 states_regex:
   js:
     js/states.regex.js: {}
+
+tag_select.preview:
+  js:
+    js/tag_select.preview.js: {}

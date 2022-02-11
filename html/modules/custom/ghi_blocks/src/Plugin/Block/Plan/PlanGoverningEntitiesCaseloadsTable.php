@@ -336,7 +336,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    */
   public function getDefaultSubform() {
     $conf = $this->getBlockConfig();
-    if (!empty($conf['table']) && !empty($conf['table'])) {
+    if (!empty($conf['base']) && !empty($conf['table'])) {
       return 'table';
     }
     return 'base';

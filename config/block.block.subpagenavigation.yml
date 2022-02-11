@@ -3,8 +3,8 @@ langcode: en
 status: true
 dependencies:
   module:
-    - ctools
     - ghi_subpages
+    - node
   theme:
     - common_design_subtheme
 id: subpagenavigation

@@ -23,23 +23,7 @@ third_party_settings:
         layout_settings:
           label: Content
           context_mapping: {  }
-        components:
-          d129c6d3-1b74-4467-8c80-f800d5d83703:
-            uuid: d129c6d3-1b74-4467-8c80-f800d5d83703
-            region: content
-            configuration:
-              id: 'field_block:node:article:field_tags'
-              label_display: '0'
-              context_mapping:
-                entity: layout_builder.entity
-              formatter:
-                type: entity_reference_label
-                label: above
-                settings:
-                  link: true
-                third_party_settings: {  }
-            weight: 0
-            additional: {  }
+        components: {  }
         third_party_settings: {  }
   layout_builder_restrictions:
     allowed_block_categories:

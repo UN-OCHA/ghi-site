@@ -248,7 +248,7 @@ class ImportManager implements ContainerInjectionInterface {
         $term->save();
       }
       return $term->id() ? $term : NULL;
-    }, array_merge($main_tags, $article_tags)));
+    }, array_unique(array_merge($main_tags, $article_tags))));
 
     $node->get($field_name)->setValue($terms);
 

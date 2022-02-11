@@ -8,7 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 
 /**
- * Provides a 'ArticleGho' block.
+ * Provides a 'GhoArticle' block.
  *
  * @Block(
  *  id = "gho_article",
