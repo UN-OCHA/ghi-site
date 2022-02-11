@@ -64,6 +64,9 @@ class TagSelect extends FormElement {
   public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
     if ($input !== NULL) {
       // Make sure input is returned as normal during item configuration.
+      if (!array_key_exists('tag_op', $input) || $input['tag_op'] === NULL) {
+        $input['tag_op'] = 'OR';
+      }
       return $input;
     }
     return NULL;
@@ -91,7 +94,7 @@ class TagSelect extends FormElement {
 
     if (!empty($element['#disabled_tags'])) {
       foreach ($element['#disabled_tags'] as $id) {
-        // Section tags can't be unselected because the define the basic content
+        // Section tags can't be unselected because they define the basic content
         // "universe".
         $element['tag_ids'][$id]['#disabled'] = TRUE;
       }
@@ -104,8 +107,8 @@ class TagSelect extends FormElement {
 
     $element['tag_op'] = [
       '#type' => 'checkbox',
-      '#title' => t('Require all tags'),
-      '#return_value' => 'and',
+      '#title' => t('Require all selected tags'),
+      '#return_value' => 'AND',
       '#wrapper_attributes' => ['data-drupal-selector' => 'tag_op'],
       '#default_value' => $element['#default_value']['tag_op'],
     ];

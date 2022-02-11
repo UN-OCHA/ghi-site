@@ -171,6 +171,15 @@ class RemoteArticleAutocomplete extends Textfield {
     $result = $remote_source_instance->searchArticlesByTitle($input);
     $articles = $result && $result->items ? $result->items : [];
 
+    $exact_match = array_filter($articles, function ($article) use ($input) {
+      return $article->title === $input;
+    });
+
+    if ($exact_match && count($exact_match) == 1) {
+      $article = reset($exact_match);
+      return $article->id;
+    }
+
     $params = [
       '%value' => $input,
       '@value' => $input,

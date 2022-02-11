@@ -19,6 +19,13 @@ abstract class GhiContentBlockBase extends GHIBlockBase implements AutomaticTitl
   protected $remoteSource;
 
   /**
+   * The article manager.
+   *
+   * @var \Drupal\ghi_content\ContentManager\ArticleManager
+   */
+  protected $articleManager;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -27,6 +34,7 @@ abstract class GhiContentBlockBase extends GHIBlockBase implements AutomaticTitl
     /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
     $remote_source_manager = $container->get('plugin.manager.remote_source');
     $instance->remoteSource = $remote_source_manager->createInstance($plugin_definition['remote_source']);
+    $instance->articleManager = $container->get('ghi_content.manager.article');
 
     return $instance;
   }

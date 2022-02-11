@@ -1,0 +1,5 @@
+admin.article_collection:
+  version: VERSION
+  css:
+    component:
+      css/admin/article_collection.css: {}
