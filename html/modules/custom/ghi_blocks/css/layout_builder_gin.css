@@ -1,6 +1,9 @@
 .glb-toolbar {
   z-index: 200 !important;
 }
+input[type="checkbox"][disabled="disabled"] {
+  background-color: var(--colorGinDisabled) !important;
+}
 
 body.path-node #layout-builder .layout-builder__add-section {
   margin-top: 2rem;
