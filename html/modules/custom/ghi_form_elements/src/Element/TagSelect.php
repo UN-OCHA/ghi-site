@@ -94,8 +94,6 @@ class TagSelect extends FormElement {
 
     if (!empty($element['#disabled_tags'])) {
       foreach ($element['#disabled_tags'] as $id) {
-        // Section tags can't be unselected because they define the basic content
-        // "universe".
         $element['tag_ids'][$id]['#disabled'] = TRUE;
       }
     }
