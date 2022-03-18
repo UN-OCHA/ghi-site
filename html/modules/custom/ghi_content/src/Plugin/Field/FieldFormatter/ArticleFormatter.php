@@ -19,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ArticleFormatter extends FormatterBase implements ContainerFactoryPluginInterface {
 
   /**
-   * The attachment query.
+   * The remote source manager.
    *
    * @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager
    */

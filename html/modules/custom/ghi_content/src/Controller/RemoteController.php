@@ -4,6 +4,7 @@ namespace Drupal\ghi_content\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Link;
+use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
 use GuzzleHttp\Exception\ClientException;
@@ -51,19 +52,19 @@ class RemoteController extends ControllerBase {
     }
 
     try {
-      $result = $remote_source->searchArticlesByTitle($string);
+      $articles = $remote_source->searchArticlesByTitle($string);
     }
     catch (ClientException $e) {
       // Just catch it for the moment.
     }
 
-    if (!empty($result->items)) {
-      $matches = array_map(function ($article) {
+    if (!empty($articles)) {
+      $matches = array_map(function (RemoteArticleInterface $article) {
         return [
-          'value' => $article->title . ' (' . $article->id . ')',
-          'label' => $article->title,
+          'value' => $article->getTitle() . ' (' . $article->getId() . ')',
+          'label' => $article->getTitle(),
         ];
-      }, $result->items);
+      }, $articles);
     }
     return new JsonResponse($matches);
 

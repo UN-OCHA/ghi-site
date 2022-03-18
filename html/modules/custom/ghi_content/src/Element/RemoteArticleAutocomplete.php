@@ -5,6 +5,7 @@ namespace Drupal\ghi_content\Element;
 use Drupal\Component\Utility\Tags;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element\Textfield;
+use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 
 /**
@@ -45,11 +46,13 @@ class RemoteArticleAutocomplete extends Textfield {
     // its value is properly checked for access.
     $info['#process_default_value'] = TRUE;
 
-    $info['#element_validate'] = [[$class, 'validateRemoteArticleAutocomplete']];
     array_unshift($info['#process'], [
       $class,
       'processRemoteArticleAutocomplete',
     ]);
+
+    $info['#element_validate'] = [[$class, 'validateRemoteArticleAutocomplete']];
+    $info['#value_callback'] = [[$class, 'valueCallback']];
 
     return $info;
   }
@@ -61,23 +64,26 @@ class RemoteArticleAutocomplete extends Textfield {
     // Process the #default_value property.
     if ($input === FALSE && isset($element['#default_value']) && $element['#process_default_value']) {
       if ($element['#default_value']) {
-        if (!is_object(reset($element['#default_value']))) {
-          throw new \InvalidArgumentException('The #default_value property has to be an object.');
+        if (!is_object($element['#default_value']) || !$element['#default_value'] instanceof RemoteArticleInterface) {
+          throw new \InvalidArgumentException('The #default_value property has to be an instance of \Drupal\ghi_content\RemoteContent\RemoteArticleInterface.');
         }
 
-        // Extract the labels from the passed-in article objects, taking access
-        // checks into account.
-        return static::getRemoteArticleLabels($element['#default_value']);
+        /** @var \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $article */
+        $article = $element['#default_value'];
+        return $article->getTitle() . ' (' . $article->getId() . ')';
       }
     }
 
-    // Potentially the #value is set directly, so it contains the 'target_id'
-    // array structure instead of a string.
-    if ($input !== FALSE && is_array($input)) {
-      $remote_source_instance = self::getRemoteSourceInstance($element['#remote_source']);
-      return array_map(function (array $item) use ($remote_source_instance) {
-        return $remote_source_instance->getArticleTitle($item['article_id']);
-      }, $input);
+    if ($input !== FALSE) {
+      // Process the input. This can be either an article id, or a value in the
+      // format "title (id)".
+      $article_id = $input;
+      if (is_scalar($input) && strpos($input, ' ') !== FALSE) {
+        $article_id = self::extractArticleIdFromAutocompleteInput($input);
+      }
+      $remote_source = self::getRemoteSourceInstance($element['#remote_source']);
+      $article = $remote_source->getArticle($article_id);
+      return $article ? ($article->getTitle() . ' (' . $article_id . ')') : '';
     }
   }
 
@@ -127,7 +133,7 @@ class RemoteArticleAutocomplete extends Textfield {
         $value = $element['#value'];
       }
       else {
-        $input_values = [$element['#value']];
+        $input_values = [trim($element['#value'], ' "')];
         $remote_source_instance = self::getRemoteSourceInstance($element['#remote_source']);
         foreach ($input_values as $input) {
           $match = static::extractArticleIdFromAutocompleteInput($input);
@@ -139,9 +145,7 @@ class RemoteArticleAutocomplete extends Textfield {
           }
 
           if ($match !== NULL) {
-            $value[] = [
-              'article_id' => $match,
-            ];
+            $value = $match;
           }
         }
       }
@@ -168,16 +172,15 @@ class RemoteArticleAutocomplete extends Textfield {
    *   Value of a matching entity ID, or NULL if none.
    */
   protected static function matchRemoteArticleByTitle(RemoteSourceInterface $remote_source_instance, $input, array &$element, FormStateInterface $form_state) {
-    $result = $remote_source_instance->searchArticlesByTitle($input);
-    $articles = $result && $result->items ? $result->items : [];
+    $articles = $remote_source_instance->searchArticlesByTitle($input);
 
-    $exact_match = array_filter($articles, function ($article) use ($input) {
-      return $article->title === $input;
+    $exact_match = array_filter($articles, function (RemoteArticleInterface $article) use ($input) {
+      return $article->getTitle() === $input;
     });
 
     if ($exact_match && count($exact_match) == 1) {
       $article = reset($exact_match);
-      return $article->id;
+      return $article->getId();
     }
 
     $params = [
@@ -191,7 +194,7 @@ class RemoteArticleAutocomplete extends Textfield {
     }
     elseif (count($articles) > 5) {
       $article = reset($articles);
-      $params['@id'] = $article->id;
+      $params['@id'] = $article->getId();
       // Error if there are more than 5 matching entities.
       $form_state->setError($element, t('Many @entity_type_plural are called %value. Specify the one you want by appending the id in parentheses, like "@value (@id)".', $params));
     }
@@ -199,7 +202,7 @@ class RemoteArticleAutocomplete extends Textfield {
       // More helpful error if there are only a few matching entities.
       $multiples = [];
       foreach ($articles as $id => $article) {
-        $multiples[] = $article->title . ' (' . $article->id . ')';
+        $multiples[] = $article->getTitle() . ' (' . $article->getId() . ')';
       }
       $params['@id'] = $id;
       $form_state->setError($element, t('Multiple @entity_type_plural match this reference "%value"; "%multiple". Specify the one you want by appending the id in parentheses, like "@value (@id)".', ['%multiple' => strip_tags(implode('", "', $multiples))] + $params));
@@ -207,14 +210,14 @@ class RemoteArticleAutocomplete extends Textfield {
     else {
       // Take the one and only matching entity.
       $article = reset($articles);
-      return $article->id;
+      return $article->getId();
     }
   }
 
   /**
    * Converts an array of article objects into a string of article labels.
    *
-   * @param object[] $articles
+   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface[] $articles
    *   An array of article objects.
    *
    * @return string
@@ -227,7 +230,7 @@ class RemoteArticleAutocomplete extends Textfield {
 
       // Use the special view label, since some entities allow the label to be
       // viewed, even if the entity is not allowed to be viewed.
-      $label = $article->title;
+      $label = $article->getTitle();
 
       // Labels containing commas or quotes must be wrapped in quotes.
       $article_labels[] = Tags::encode($label);

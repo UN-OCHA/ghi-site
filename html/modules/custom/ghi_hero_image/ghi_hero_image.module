@@ -23,7 +23,7 @@ function ghi_hero_image_preprocess_page(&$variables) {
   $request = $request_stack->getMasterRequest();
   /** @var \Drupal\node\Entity\Node $node */
   $node = $request->attributes->has('node') ? $request->attributes->get('node') : NULL;
-  if (!$node || !$node->getFieldDefinitions()) {
+  if (!$node || !$node->getFieldDefinitions() || !$node->access()) {
     return;
   }
 

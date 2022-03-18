@@ -10,12 +10,14 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Ajax\OpenDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Element;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
@@ -353,17 +355,40 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $build['#block_instance'] = $this;
 
     $build['#cache'] = [
-      'contexts' => [
-        'url.path',
-        'user',
-      ],
-      'tags' => array_filter([
-        $this->getPageNode() ? $this->getPageNode()->id() : NULL,
-        $this->getCurrentBaseObjectId() ?? NULL,
-      ]),
+      'contexts' => $this->getCacheContexts(),
+      'tags' => $this->getCacheTags(),
     ];
 
     return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheContexts() {
+    $cache_contexts = parent::getCacheContexts();
+    $cache_contexts = Cache::mergeContexts($cache_contexts, [
+      'url.path',
+      'user',
+    ]);
+    return $cache_contexts;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    $cache_tags = parent::getCacheTags();
+    $cache_tags = Cache::mergeTags($cache_tags, array_filter([
+      $this->getPluginId() . ':' . $this->getUuid(),
+    ]));
+    if ($base_object = $this->getCurrentBaseObject()) {
+      // Not sure where the context handling goes wrong, but for the moment we
+      // have to add the base object cache tag manually to be sure that it's
+      // always present.
+      $cache_tags = Cache::mergeTags($cache_tags, $base_object->getCacheTags());
+    }
+    return $cache_tags;
   }
 
   /**
@@ -559,7 +584,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $build = $this->build();
       $form['container']['preview'] = [
         '#theme' => 'block',
-        '#attributes' => [],
+        '#attributes' => [
+          'data-block-preview' => $this->getPluginId(),
+        ],
         '#configuration' => [
           'label' => $this->configuration['label'],
           'label_display' => $this->configuration['label_display'],
@@ -569,6 +596,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
         '#plugin_id' => $this->getPluginId(),
         '#derivative_plugin_id' => $this->getDerivativeId(),
         '#id' => $this->getPluginId(),
+        '#attached' => [
+          'library' => ['ghi_blocks/block.preview'],
+        ],
         'content' => $build,
       ];
     }
@@ -682,9 +712,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
       }
     }
 
-    $form['context_mapping']['year']['#access'] = FALSE;
-    $form['context_mapping']['year']['#value'] = array_key_first($form['context_mapping']['year']['#options']);
-
+    if (array_key_exists('year', $form['context_mapping'])) {
+      $form['context_mapping']['year']['#access'] = FALSE;
+      $form['context_mapping']['year']['#value'] = array_key_first($form['context_mapping']['year']['#options']);
+    }
     return $form;
   }
 
@@ -786,6 +817,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
       // hide the block title.
       $this->configuration['label_display'] = TRUE;
     }
+
+    // Make sure that we have a UUID.
+    $this->configuration['uuid'] = $this->getUuid();
   }
 
   /**
@@ -871,6 +905,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
    */
   public function blockFormAlter(array &$form, FormStateInterface $form_state) {
 
+    $form['#attributes']['class'][] = Html::getClass($this->getPluginId());
+
     // Make sure the actions element is a container. GIN Layout Builder does
     // that already in the frontend, but when editing page manager pages in the
     // GIN backend theme, this is not done automatically.
@@ -878,7 +914,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $form['actions']['#attributes']['class'][] = 'canvas-form__actions';
 
     // Also load our library to improve the UI.
-    $form['#attached']['library'] = ['ghi_blocks/layout_builder_modal_admin'];
+    if (empty($form['#attached']['library'])) {
+      $form['#attached']['library'] = [];
+    }
+    $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
 
     $form['actions']['subforms'] = [
       '#type' => 'container',
@@ -891,6 +930,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     $is_preview = $form_state->get('preview');
 
+    $this->formState = $form_state;
     $this->setElementValidateOnAjaxElements($form['settings']['container']);
 
     if ($this->isMultistepForm()) {
@@ -1157,9 +1197,11 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * @return \Drupal\node\NodeInterface|null
    *   The section node or NULL.
    */
-  public function getCurrentBaseEntity() {
+  public function getCurrentBaseEntity($page_node = NULL) {
     // Get the section for the current page node.
-    $page_node = $this->getPageNode();
+    if ($page_node === NULL) {
+      $page_node = $this->getPageNode();
+    }
     if (!$page_node) {
       return NULL;
     }
@@ -1189,8 +1231,16 @@ abstract class GHIBlockBase extends HPCBlockBase {
       if (!$context_definition instanceof EntityContextDefinition) {
         continue;
       }
+
       if (substr($context_definition->getDataType(), 7) == 'base_object') {
         return $context->getContextValue();
+      }
+      elseif ($context_definition->getDataType() == 'entity:node' && $entity = $context->getContextValue()) {
+        /** @var \Drupal\Core\Entity\EntityInterface $entity */
+        $section = $this->getCurrentBaseEntity($entity);
+        if ($section) {
+          return BaseObjectHelper::getBaseObjectFromNode($section);
+        }
       }
     }
     return NULL;

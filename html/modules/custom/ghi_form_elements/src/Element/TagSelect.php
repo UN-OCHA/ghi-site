@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_form_elements\Element;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Element\FormElement;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
@@ -67,6 +68,7 @@ class TagSelect extends FormElement {
       if (!array_key_exists('tag_op', $input) || $input['tag_op'] === NULL) {
         $input['tag_op'] = 'OR';
       }
+      $input['tag_content_selected'] = array_filter(!is_array($input['tag_content_selected']) ? explode(',', $input['tag_content_selected']) : $input['tag_content_selected']);
       return $input;
     }
     return NULL;
@@ -80,7 +82,7 @@ class TagSelect extends FormElement {
    */
   public static function processTagSelect(array &$element, FormStateInterface $form_state) {
 
-    // Get a name that let's us identifiy this element.
+    // Get a name that let's us identify this element.
     $name = implode('-', array_merge(['edit'], $element['#parents']));
 
     $element['#wrapper_attributes']['data-drupal-selector'] = $name;
@@ -109,6 +111,12 @@ class TagSelect extends FormElement {
       '#return_value' => 'AND',
       '#wrapper_attributes' => ['data-drupal-selector' => 'tag_op'],
       '#default_value' => $element['#default_value']['tag_op'],
+    ];
+
+    $element['tag_content_selected'] = [
+      '#type' => 'hidden',
+      '#default_value' => implode(',', (array) $element['#default_value']['tag_content_selected']),
+      '#attributes' => ['class' => Html::getClass('selected_items')],
     ];
 
     return $element;

@@ -47,21 +47,10 @@ class ArticleWidget extends WidgetBase implements ContainerFactoryPluginInterfac
     $remote_source_instance = $this->remoteSourceManager->createInstance($remote_source);
     $article = $remote_source_instance->getArticle($article_id);
 
-    $element['remote_source'] = [
-      '#type' => 'remote_source',
-      '#title' => $this->t('Content source'),
-      '#description' => $this->t('Select the source of the article.'),
-      '#default_value' => $remote_source,
-    ];
-
     $element['article'] = [
-      '#type' => 'remote_article_autocomplete',
-      '#title' => $this->t('Article'),
-      '#remote_source' => $remote_source,
-      '#description' => $this->t('Type the title of an article to see suggestions.'),
-      '#default_value' => $article ? [$article] : NULL,
+      '#type' => 'remote_article',
+      '#default_value' => $article ? $article : NULL,
     ];
-
     return $element;
   }
 
@@ -69,8 +58,12 @@ class ArticleWidget extends WidgetBase implements ContainerFactoryPluginInterfac
    * {@inheritdoc}
    */
   public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
+    $remote_sources = $this->remoteSourceManager->getDefinitions();
     foreach ($values as $delta => $value) {
-      $values[$delta]['article_id'] = $value['article'][0]['article_id'];
+      if (empty($value['article']['remote_source'])) {
+        $value['article']['remote_source'] = array_key_first($remote_sources);
+      }
+      $values[$delta] = $value['article'];
     }
     return $values;
   }

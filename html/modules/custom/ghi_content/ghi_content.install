@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * @file
+ * Contains update hooks for the GHI Content module.
+ */
+
+use Drupal\Core\File\FileSystem;
+use Drupal\Core\Utility\UpdateException;
+use Drupal\ghi_content\ContentManager\ArticleManager;
+
+/**
+ * Create thumbnail directory for articles.
+ */
+function ghi_content_update_9001(&$sandbox) {
+  /** @var \Drupal\Core\File\FileSystem $file_system */
+  $file_system = \Drupal::service('file_system');
+  $directory = ArticleManager::THUMBNAIL_DIRECTORY;
+  if (!$file_system->prepareDirectory($directory, FileSystem::CREATE_DIRECTORY)) {
+    throw new UpdateException('Directory not created');
+  }
+}

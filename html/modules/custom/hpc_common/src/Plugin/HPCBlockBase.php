@@ -307,22 +307,20 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   }
 
   /**
-   * Set the UUID for this block, but only if not yet set.
-   */
-  public function setUuid($uuid) {
-    $plugin_configuration = $this->getConfiguration();
-    if (empty($plugin_configuration['uuid'])) {
-      $plugin_configuration['uuid'] = $uuid;
-      $this->setConfiguration($plugin_configuration);
-    }
-  }
-
-  /**
    * Get the UUID for this block if available.
    */
   public function getUuid() {
     $plugin_configuration = $this->getConfiguration();
-    return !empty($plugin_configuration['uuid']) ? $plugin_configuration['uuid'] : RequestHelper::getQueryArgument('block_uuid');
+    if (!empty($plugin_configuration['uuid'])) {
+      return $plugin_configuration['uuid'];
+    }
+    if ($uuid = RequestHelper::getQueryArgument('block_uuid')) {
+      return $uuid;
+    }
+    if ($this->requestStack) {
+      return $this->requestStack->getCurrentRequest()->attributes->get('uuid');
+    }
+    return NULL;
   }
 
   /**
@@ -559,12 +557,12 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    *   An associative array with the default configuration.
    */
   protected function baseConfigurationDefaults() {
-    if (empty($this->pluginDefinition['data_sources'])) {
-      return parent::baseConfigurationDefaults();
+    $defaults = parent::baseConfigurationDefaults();
+    if (!empty($this->pluginDefinition['data_sources'])) {
+      $defaults['data_sources'] = $this->pluginDefinition['data_sources'];
     }
-    return [
-      'data_sources' => $this->pluginDefinition['data_sources'],
-    ] + parent::baseConfigurationDefaults();
+    $defaults['uuid'] = $this->getUuid();
+    return $defaults;
   }
 
   /**

@@ -160,7 +160,7 @@ class ArticleWizard extends FormBase {
       '#title' => $this->t('Article'),
       '#remote_source' => $source ? $source->getPluginId() : NULL,
       '#description' => $this->t('Type the title of an article to see suggestions.'),
-      '#default_value' => $article ? [$article] : NULL,
+      '#default_value' => $article ? $article : NULL,
       '#required' => TRUE,
       '#disabled' => $step > array_flip($steps)['article'],
       '#access' => $step >= array_flip($steps)['article'],
@@ -183,8 +183,9 @@ class ArticleWizard extends FormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Title'),
       '#description' => $this->t('Optional: Change the title for this article.'),
-      '#default_value' => $article ? $article->title : NULL,
+      '#default_value' => $article ? trim($article->getTitle()) : NULL,
       '#required' => TRUE,
+      '#size' => 128,
       '#access' => $step >= array_flip($steps)['title'],
     ];
 
@@ -237,10 +238,9 @@ class ArticleWizard extends FormBase {
     self::prepareAjaxForm($form, $form_state);
 
     $action = self::getActionFromFormState($form_state);
-    $source = $this->getSubmittedSource($form_state);
     $article = $this->getSubmittedArticle($form_state);
     if ($action != 'back' && $form_state->get('step') == 1 && $article) {
-      $node = $this->articleManager->loadNodeBySourceAndId($source, $article);
+      $node = $this->articleManager->loadNodeForRemoteArticle($article);
       if ($node) {
         $form_state->setErrorByName('article', $this->t('An article page for the selected article already exists: <a href="@url">@title</a>.', [
           '@url' => $node->toUrl()->toString(),
@@ -274,10 +274,11 @@ class ArticleWizard extends FormBase {
     $article->field_remote_article = [
       0 => [
         'remote_source' => $values['source'],
-        'article_id' => $values['article'][0]['article_id'],
+        'article_id' => $values['article'],
       ],
     ];
     $article->field_team = $values['team'];
+
     $status = $article->save();
     if ($status) {
       $this->messenger()->addStatus($this->t('Created @type for @title', [
@@ -329,7 +330,7 @@ class ArticleWizard extends FormBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state object.
    *
-   * @return object
+   * @return \Drupal\ghi_content\RemoteContent\RemoteArticleInterface
    *   The article object as retrieved from the remote.
    */
   private function getSubmittedArticle(FormStateInterface $form_state) {
@@ -337,11 +338,12 @@ class ArticleWizard extends FormBase {
     if (!$source) {
       return NULL;
     }
-    $articles = $form_state->getValue('article');
-    if (empty($articles) || empty($articles[0]['article_id'])) {
+
+    $article = $form_state->getValue('article');
+    if (empty($article)) {
       return NULL;
     }
-    return $source->getArticle($articles[0]['article_id']);
+    return $source->getArticle($article);
   }
 
   /**

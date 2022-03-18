@@ -28,21 +28,10 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    * @param int $id
    *   The id of the article on the remote.
    *
-   * @return object
-   *   The result object.
+   * @return \Drupal\ghi_content\RemoteContent\RemoteArticleInterface
+   *   The article object.
    */
   public function getArticle($id);
-
-  /**
-   * Get a title for an article.
-   *
-   * @param int $id
-   *   The id of the article on the remote.
-   *
-   * @return object
-   *   The result object.
-   */
-  public function getArticleTitle($id);
 
   /**
    * Search articles by title.
@@ -50,8 +39,8 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    * @param string $title
    *   The title to search.
    *
-   * @return object[]
-   *   The result objects.
+   * @return \Drupal\ghi_content\RemoteContent\RemoteArticleInterface[]
+   *   The set of matching article objects.
    */
   public function searchArticlesByTitle($title);
 
@@ -61,7 +50,7 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    * @param int $id
    *   The id of the paragraph on the remote.
    *
-   * @return object
+   * @return \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface
    *   The result object.
    */
   public function getParagraph($id);
@@ -86,7 +75,7 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    * @return string
    *   The final string.
    *
-   * @toto Bad idea. Find a different solution!
+   * @todo Bad idea. Find a different solution!
    */
   public function changeRessourceLinks($string);
 
@@ -115,5 +104,16 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    * Save the plugin configuration.
    */
   public function saveConfiguration();
+
+  /**
+   * Get the url to a content item.
+   *
+   * @param int $id
+   *   The id of the content on the remote.
+   *
+   * @return \Drupal\core\Url
+   *   A url object.
+   */
+  public function getContentUrl($id);
 
 }

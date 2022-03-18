@@ -59,11 +59,3 @@ display:
         langcode:
           expose:
             label: Langue
-  page_1:
-    display_title: Page
-    display_options:
-      menu:
-        title: Contenu
-      tab_options:
-        title: Contenu
-        description: 'Trouver et gérer le contenu'

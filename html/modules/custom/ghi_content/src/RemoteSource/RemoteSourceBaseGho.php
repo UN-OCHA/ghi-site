@@ -3,6 +3,9 @@
 namespace Drupal\ghi_content\RemoteSource;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\ghi_content\RemoteContent\Gho\RemoteArticle;
+use Drupal\ghi_content\RemoteContent\Gho\RemoteParagraph;
 use Drupal\ghi_content\RemoteResponse\RemoteResponse;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\ClientException;
@@ -33,16 +36,11 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
       'typeLabel',
       'rendered',
     ];
-    return $this->fetchArticleData($id, $fields);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getArticleTitle($id) {
-    $fields = ['title'];
-    $article = $this->fetchArticleData($id, $fields);
-    return $article->title;
+    $fields['thumbnail'] = [
+      'imageUrl',
+    ];
+    $article_data = $this->fetchArticleData($id, $fields);
+    return $article_data ? new RemoteArticle($article_data, $this) : NULL;
   }
 
   /**
@@ -71,7 +69,8 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
       'typeLabel',
       'rendered',
     ];
-    return $this->fetchParagraphData($id, $fields);
+    $paragraph_data = $this->fetchParagraphData($id, $fields);
+    return new RemoteParagraph($paragraph_data, $this);
   }
 
   /**
@@ -98,15 +97,17 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
         count
         items {
           id
-          title
         }
       }
     }';
     $response = $this->query($query);
-    if (!$response->has('articleSearch')) {
-      return NULL;
+    if (!$response->has('articleSearch') || !$response->get('articleSearch')->items) {
+      return [];
     }
-    return $response->get('articleSearch');
+    return array_map(function ($item) {
+      $this->getArticle($item->id)->getSource()->getPluginId();
+      return $this->getArticle($item->id);
+    }, $response->get('articleSearch')->items);
   }
 
   /**
@@ -290,6 +291,13 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
     ];
 
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContentUrl($id) {
+    return Url::fromUri($this->getRemoteBaseUrl() . '/node/' . $id);
   }
 
 }

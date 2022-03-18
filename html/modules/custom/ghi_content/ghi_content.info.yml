@@ -6,6 +6,7 @@ type: module
 core_version_requirement: ^8 || ^9
 
 dependencies:
+  - core:file
   - ghi_blocks:ghi_blocks
   - ghi_teams:ghi_teams
   - ghi_sections:ghi_sections

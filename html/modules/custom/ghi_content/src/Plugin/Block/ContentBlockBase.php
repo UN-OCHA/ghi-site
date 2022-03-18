@@ -7,9 +7,9 @@ use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 
 /**
- * Base class for HPC Block plugins.
+ * Base class for Content block plugins.
  */
-abstract class GhiContentBlockBase extends GHIBlockBase implements AutomaticTitleBlockInterface {
+abstract class ContentBlockBase extends GHIBlockBase implements AutomaticTitleBlockInterface {
 
   /**
    * The remote source service.
@@ -31,9 +31,11 @@ abstract class GhiContentBlockBase extends GHIBlockBase implements AutomaticTitl
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
-    /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
-    $remote_source_manager = $container->get('plugin.manager.remote_source');
-    $instance->remoteSource = $remote_source_manager->createInstance($plugin_definition['remote_source']);
+    if (!empty($plugin_definition['remote_source'])) {
+      /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
+      $remote_source_manager = $container->get('plugin.manager.remote_source');
+      $instance->remoteSource = $remote_source_manager->createInstance($plugin_definition['remote_source']);
+    }
     $instance->articleManager = $container->get('ghi_content.manager.article');
 
     return $instance;

@@ -3,7 +3,7 @@
 namespace Drupal\ghi_content\ContentManager;
 
 use Drupal\Core\Entity\Query\QueryInterface;
-use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
+use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\TermInterface;
 
@@ -13,21 +13,24 @@ use Drupal\taxonomy\TermInterface;
 class ArticleManager extends BaseContentManager {
 
   /**
-   * Load an article node by remote source and id.
+   * Default mode for new directories. See self::chmod().
+   */
+  const THUMBNAIL_DIRECTORY = 'public://thumbnails/article';
+
+  /**
+   * Load a local article node for the given remote article.
    *
-   * @param \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $source
-   *   The remote source that the article should come from.
-   * @param object $article
+   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $article
    *   An article object from that remote source.
    *
    * @return \Drupal\node\NodeInterface|null
    *   The article node if found or NULL.
    */
-  public function loadNodeBySourceAndId(RemoteSourceInterface $source, $article) {
+  public function loadNodeForRemoteArticle(RemoteArticleInterface $article) {
     $results = $this->entityTypeManager->getStorage('node')->loadByProperties([
       'type' => 'article',
-      'field_remote_article.remote_source' => $source->getPluginId(),
-      'field_remote_article.article_id' => $article->id,
+      'field_remote_article.remote_source' => $article->getSource()->getPluginId(),
+      'field_remote_article.article_id' => $article->getId(),
     ]);
     return $results && !empty($results) ? reset($results) : NULL;
   }
@@ -42,11 +45,13 @@ class ArticleManager extends BaseContentManager {
    *   Optional: A node object which tags serve as a base context.
    * @param string $op
    *   The logical operator (conjunction) for combining the tags.
+   * @param int $limit
+   *   An optional limit.
    *
    * @return \Drupal\Core\Entity\EntityInterface[]|null
    *   An array of entity objects indexed by their ids.
    */
-  public function loadNodesForTags(array $tags = NULL, NodeInterface $node = NULL, $op = 'AND') {
+  public function loadNodesForTags(array $tags = NULL, NodeInterface $node = NULL, $op = 'AND', $limit = NULL) {
     if (empty($tags) && $node === NULL) {
       return NULL;
     }
@@ -58,6 +63,10 @@ class ArticleManager extends BaseContentManager {
     $query->condition('status', NodeInterface::PUBLISHED);
     $query->condition('type', 'article');
     $query->accessCheck();
+
+    if ($limit !== NULL) {
+      $query->pager((int) $limit);
+    }
 
     // For the logic behing the following conditions on tags see comments on
     // https://api.drupal.org/api/drupal/core!lib!Drupal!Core!Entity!Query!QueryInterface.php/function/QueryInterface%3A%3AandConditionGroup/8.2.x
@@ -160,7 +169,7 @@ class ArticleManager extends BaseContentManager {
   }
 
   /**
-   * Load minor tags for a section.
+   * Load available tags for a section.
    *
    * @param \Drupal\node\NodeInterface $section
    *   The section.
@@ -182,13 +191,13 @@ class ArticleManager extends BaseContentManager {
   }
 
   /**
-   * Load minor tags for a section.
+   * Load node ids for the section, grouped by tag ids.
    *
    * @param \Drupal\node\NodeInterface $section
    *   The section.
    *
    * @return array
-   *   An array with term ids as keys and term labels as values.
+   *   An array with term ids as keys. The values are arrays of node ids.
    */
   public function getNodeIdsGroupedByTag(NodeInterface $section) {
     if ($section->bundle() != 'section') {
@@ -203,6 +212,25 @@ class ArticleManager extends BaseContentManager {
       }
     }
     return $tags;
+  }
+
+  /**
+   * Get fully rendered nodes.
+   *
+   * @param \Drupal\node\NodeInterface[] $articles
+   *   The list of articles to render.
+   * @param string $view_mode
+   *   The view mode to use for rendering.
+   *
+   * @return array
+   *   An array with term ids as keys and term labels as values.
+   */
+  public function getNodePreviews(array $articles, $view_mode) {
+    $previews = [];
+    foreach ($articles as $article) {
+      $previews[$article->id()] = $this->renderer->render($this->entityTypeManager->getViewBuilder('node')->view($article, $view_mode));
+    }
+    return $previews;
   }
 
 }

@@ -4,51 +4,41 @@ namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
-use Drupal\Core\Entity\Element\EntityAutocomplete;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 
 /**
  * Provides a 'GhoParagraph' block.
  *
  * @Block(
- *  id = "gho_paragraph",
- *  admin_label = @Translation("Paragraph: GHO NCMS"),
+ *  id = "paragraph",
+ *  admin_label = @Translation("Paragraph"),
  *  category = @Translation("Narrative Content"),
- *  remote_source = "gho_ncms",
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
  *   }
  * )
  */
-class GhoParagraph extends GhiContentBlockBase implements MultiStepFormBlockInterface {
+class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface {
 
   /**
    * {@inheritdoc}
    */
   public function getAutomaticBlockTitle() {
-    $conf = $this->getBlockConfig();
-    if (empty($conf['paragraph_id'])) {
-      return;
-    }
-    $remote_source = $this->getRemoteSource();
-    if (!$remote_source) {
-      // No available source. Technically, this block is broken now.
-      return;
-    }
-
-    return $remote_source->getArticleTitle($conf['paragraph_id']);
+    return NULL;
   }
 
   /**
    * Get the configured paragraph from the remote.
    *
-   * @return object|null
+   * @return \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface|null
    *   A paragraph object as retrieved from the remote source.
    */
   private function getParagraph() {
     $conf = $this->getBlockConfig();
+
     if (empty($conf['paragraph']['paragraph_id'])) {
       return;
     }
@@ -62,7 +52,6 @@ class GhoParagraph extends GhiContentBlockBase implements MultiStepFormBlockInte
       // No paragraph found. Technically, this block is broken now.
       return;
     }
-    $paragraph->rendered = $remote_source->changeRessourceLinks($paragraph->rendered);
     return $paragraph;
   }
 
@@ -79,15 +68,17 @@ class GhoParagraph extends GhiContentBlockBase implements MultiStepFormBlockInte
 
     // Add GHO specific theme components.
     $theme_components = [];
-    $theme_components[] = 'common_design_subtheme/gho-' . Html::getClass($paragraph->type);
-    if ($paragraph->type == 'bottom_figure_row') {
+    $theme_components[] = 'common_design_subtheme/gho-' . Html::getClass($paragraph->getType());
+    if ($paragraph->getType() == 'bottom_figure_row') {
       $theme_components[] = 'common_design_subtheme/gho-needs-and-requirements';
     }
+
+    $rendered = $paragraph->getRendered();
 
     // Move gho specific paragraph classes to the block wrapper attributes, so
     // that CSS logic that targets subsequent elements can be applied.
     $wrapper_attributes = [];
-    $dom = Html::load($paragraph->rendered);
+    $dom = Html::load($rendered);
     $child = $dom->getElementsByTagName('div')->item(0);
     $attributes = $child->attributes;
     if ($attributes && $attributes->getNamedItem('class') && $attributes->getNamedItem('class')->nodeValue) {
@@ -98,18 +89,18 @@ class GhoParagraph extends GhiContentBlockBase implements MultiStepFormBlockInte
       }) : [];
       $wrapper_attributes['class'] = $gho_classes;
       $attributes->getNamedItem('class')->nodeValue = implode(' ', array_diff($classes, $gho_classes));
-      $paragraph->rendered = trim(Html::serialize($dom));
+      $rendered = trim(Html::serialize($dom));
     }
 
     $build = [
       '#type' => 'container',
       '#title' => $conf['paragraph']['title'],
       '#attributes' => [
-        'data-paragraph-id' => $paragraph->id,
+        'data-paragraph-id' => $paragraph->getId(),
       ],
       'content' => [
         '#type' => 'markup',
-        '#markup' => Markup::create($paragraph->rendered),
+        '#markup' => Markup::create($rendered),
         '#view_mode' => 'full',
       ],
       '#wrapper_attributes' => $wrapper_attributes,
@@ -136,6 +127,7 @@ class GhoParagraph extends GhiContentBlockBase implements MultiStepFormBlockInte
   protected function getConfigurationDefaults() {
     return [
       'article_select' => [
+        'remote_source' => NULL,
         'article_id' => NULL,
       ],
       'paragraph' => [
@@ -153,7 +145,6 @@ class GhoParagraph extends GhiContentBlockBase implements MultiStepFormBlockInte
       'article_select' => [
         'title' => $this->t('Article selection'),
         'callback' => 'articleSelectForm',
-        'base_form' => TRUE,
       ],
       'paragraph' => [
         'title' => $this->t('Paragraph'),
@@ -166,20 +157,18 @@ class GhoParagraph extends GhiContentBlockBase implements MultiStepFormBlockInte
    * {@inheritdoc}
    */
   public function getDefaultSubform() {
-    $conf = $this->getBlockConfig();
-    if (!empty($conf['paragraph']['paragraph_id'])) {
-      return 'paragraph';
+    if (!$this->getArticle()) {
+      return 'article_select';
     }
-    return 'article_select';
+    return 'paragraph';
   }
 
   /**
    * {@inheritdoc}
    */
   public function canShowSubform($form, FormStateInterface $form_state, $subform_key) {
-    $conf = $this->getBlockConfig();
     if ($subform_key == 'paragraph') {
-      return (array_key_exists('article_id', $conf['article_select']) && !empty($conf['article_select']['article_id'])) || $form_state->hasValue(['article_select']['article_id']);
+      return $this->getArticle() instanceof RemoteArticleInterface;
     }
     return TRUE;
   }
@@ -188,31 +177,11 @@ class GhoParagraph extends GhiContentBlockBase implements MultiStepFormBlockInte
    * Select article form.
    */
   public function articleSelectForm(array $form, FormStateInterface $form_state) {
-    $remote_source = $this->getRemoteSource();
-    if (!$remote_source) {
-      // No remote source is set yet, so there is nothing we can do.
-      return $form;
-    }
-
-    $conf = $this->getBlockConfig();
-    $plugin_definitinon = $this->getPluginDefinition();
     $wrapper_id = Html::getId('form-wrapper-ghi-block-config');
 
-    $article = !empty($conf['article_select']['article_id']) ? $remote_source->getArticle($conf['article_select']['article_id']) : NULL;
-
-    $form['article_id'] = [
-      '#type' => 'hidden',
-      '#default_value' => $article ? $article->id : NULL,
-    ];
     $form['article'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Article'),
-      '#description' => $this->t('Type the title of an article to see suggestions.'),
-      '#default_value' => $article ? $article->title . ' (' . $article->id . ')' : NULL,
-      '#autocomplete_route_name' => 'ghi_content.remote.autocomplete_article',
-      '#autocomplete_route_parameters' => [
-        'remote_source' => $plugin_definitinon['remote_source'],
-      ],
+      '#type' => 'remote_article',
+      '#default_value' => $this->getArticle(),
     ];
 
     $form['select_article'] = [
@@ -244,13 +213,6 @@ class GhoParagraph extends GhiContentBlockBase implements MultiStepFormBlockInte
    *   An ajax response.
    */
   public static function articleSelectSubmit(array $form, FormStateInterface $form_state) {
-    $value_key = ['article_select', 'article'];
-    if ($form_state->hasValue($value_key)) {
-      $article_id = EntityAutocomplete::extractEntityIdFromAutocompleteInput($form_state->getValue($value_key));
-      if ($article_id) {
-        $form_state->setValue(['article_select', 'article_id'], $article_id);
-      }
-    }
     return self::ajaxMultiStepSubmit($form, $form_state);
   }
 
@@ -259,24 +221,24 @@ class GhoParagraph extends GhiContentBlockBase implements MultiStepFormBlockInte
    */
   public function paragraphForm(array $form, FormStateInterface $form_state) {
     $conf = $this->getBlockConfig();
-    $article = !empty($conf['article_select']['article_id']) ? $this->getRemoteSource()->getArticle($conf['article_select']['article_id']) : NULL;
+    $article = $this->getArticle();
     $paragraph = $this->getParagraph();
     $form['article_summary'] = [
       '#type' => 'item',
       '#title' => $this->t('Selected article'),
-      '#markup' => $article->title,
+      '#markup' => $this->getRemoteSource()->getPluginLabel() . ': ' . $article->getTitle(),
     ];
 
     $options = [];
-    foreach ($article->content as $item) {
-      $options[$item->id] = Unicode::truncate(strip_tags($item->rendered), 180, FALSE, TRUE);
+    foreach ($article->getParagraphs() as $item) {
+      $options[$item->getId()] = Unicode::truncate(strip_tags($item->getRendered()), 180, FALSE, TRUE);
     }
     $form['paragraph_id'] = [
       '#type' => 'select',
       '#title' => $this->t('Paragraph'),
       '#description' => $this->t('Select a paragraph from the article.'),
       '#options' => $options,
-      '#default_value' => $paragraph ? $paragraph->id : NULL,
+      '#default_value' => $paragraph ? $paragraph->getId() : NULL,
     ];
 
     $form['title'] = [
@@ -287,6 +249,39 @@ class GhoParagraph extends GhiContentBlockBase implements MultiStepFormBlockInte
     ];
 
     return $form;
+  }
+
+  /**
+   * Get the configured article.
+   *
+   * @return \Drupal\ghi_content\RemoteContent\RemoteArticleInterface
+   *   The remote article.
+   */
+  protected function getArticle() {
+    $conf = $this->getBlockConfig();
+    $remote_source = $this->getRemoteSource();
+    $article_id = $conf['article_select']['article']['article_id'] ?? NULL;
+    if (!$remote_source || !$article_id) {
+      return NULL;
+    }
+    return $remote_source->getArticle($article_id);
+  }
+
+  /**
+   * Get a remote source instance.
+   *
+   * @return \Drupal\ghi_content\RemoteSource\RemoteSourceInterface
+   *   The remote source instance.
+   */
+  protected function getRemoteSource() {
+    $conf = $this->getBlockConfig();
+    $remote_source_key = $conf['article_select']['article']['remote_source'] ?? NULL;
+    if (!$remote_source_key) {
+      return NULL;
+    }
+    /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
+    $remote_source_manager = \Drupal::service('plugin.manager.remote_source');
+    return $remote_source_manager->createInstance($remote_source_key);
   }
 
 }

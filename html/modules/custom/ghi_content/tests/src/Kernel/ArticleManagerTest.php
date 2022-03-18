@@ -38,6 +38,7 @@ class ArticleManagerTest extends KernelTestBase {
     'layout_discovery',
     'text',
     'filter',
+    'file',
     'ghi_content',
   ];
 
@@ -67,9 +68,10 @@ class ArticleManagerTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
     $this->installEntitySchema('taxonomy_term');
+    $this->installEntitySchema('file');
     $this->installSchema('system', 'sequences');
     $this->installSchema('node', ['node_access']);
-    $this->installConfig(['system', 'node', 'taxonomy', 'field']);
+    $this->installConfig(['system', 'node', 'taxonomy', 'field', 'file']);
 
     $this->articleManager = \Drupal::service('ghi_content.manager.article');
 

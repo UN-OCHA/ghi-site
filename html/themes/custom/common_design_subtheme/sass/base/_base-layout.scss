@@ -110,3 +110,13 @@
     }
   }
 }
+
+/* ------------------------------------------------------------------------------
+ * Editorial indication for unpublished/untranslated entities.
+ *---------------------------------------------------------------------------- */
+.node--unpublished {
+  background-color: unset;
+}
+.user-logged-in [class*="--unpublished"] {
+  outline: 4px dashed  #ffc310;
+}

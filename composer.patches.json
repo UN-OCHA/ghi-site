@@ -15,6 +15,9 @@
     "drupal/config_ignore": {
       "Issue #2857247: Support for export filtering via Drush": "https://www.drupal.org/files/issues/2021-08-18/config_ignore_2857247-75.patch"
     },
+    "drupal/config_default_image": {
+      "Issue #2921908: Provide a 2nd formatter \"Responsive image or default image\"": "https://www.drupal.org/files/issues/2020-06-11/config_default_image-responsive-2921908-5.patch"
+    },
     "drupal/layout_builder_modal": {
       "Issue #3127943: Modal not resizing for narrow screens": "https://www.drupal.org/files/issues/2021-10-06/layout_builder_modal-3127943-6.patch"
     }
