@@ -141,9 +141,12 @@ class ImportManager implements ContainerInjectionInterface {
    *   An optional messenger to use for result messages.
    */
   public function importImage(NodeInterface $node, RemoteArticleInterface $article, $field_name = 'field_image', MessengerInterface $messenger = NULL) {
+    if (!$node->hasField($field_name)) {
+      return FALSE;
+    }
     $thumbnail_url = $article->getImageUri();
     if (!$thumbnail_url) {
-      return;
+      return FALSE;
     }
 
     if ($messenger === NULL) {
