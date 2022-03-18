@@ -14,3 +14,7 @@ throbber:
   css:
     component:
       css/throbber.css: {}
+block.preview:
+  version: VERSION
+  js:
+    js/block.preview.js: {}

@@ -13,6 +13,8 @@ module:
   cer: 0
   ckeditor: 0
   config: 0
+  config_default_image: 0
+  config_default_responsive_image: 0
   config_filter: 0
   config_ignore: 0
   config_translation: 0

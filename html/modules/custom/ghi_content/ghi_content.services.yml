@@ -10,11 +10,11 @@ services:
     lazy: true
   ghi_content.import:
     class: Drupal\ghi_content\Import\ImportManager
-    arguments: ['@config.factory', '@entity_type.manager', '@plugin.manager.block', '@current_user', '@uuid', '@layout_builder.tempstore_repository', '@plugin.manager.entity_reference_selection']
+    arguments: ['@config.factory', '@entity_type.manager', '@plugin.manager.block', '@current_user', '@uuid', '@layout_builder.tempstore_repository', '@plugin.manager.entity_reference_selection', '@file.repository']
   ghi_content.route_subscriber:
     class: Drupal\ghi_content\EventSubscriber\RouteSubscriber
     tags:
       - { name: event_subscriber }
   ghi_content.manager.article:
     class: Drupal\ghi_content\ContentManager\ArticleManager
-    arguments: ['@entity_type.manager']
+    arguments: ['@entity_type.manager', '@renderer']

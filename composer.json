@@ -41,6 +41,7 @@
         "drupal/bigint": "^1.1",
         "drupal/cer": "^4.0@alpha",
         "drupal/coder": "^8.3",
+        "drupal/config_default_image": "^2",
         "drupal/config_ignore": "^2.3",
         "drupal/config_split": "^2.0",
         "drupal/console": "^1.9",

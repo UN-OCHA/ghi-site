@@ -5,6 +5,7 @@ namespace Drupal\ghi_content_test\Plugin\RemoteSource;
 use Drupal\ghi_content\RemoteSource\RemoteSourceBaseGho;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\ghi_content\RemoteContent\Gho\RemoteArticle;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -51,7 +52,7 @@ class GhoNcmsTest extends RemoteSourceBaseGho implements RemoteSourceInterface, 
    */
   public function getArticle($id) {
     $json = $this->getFixture('article', $id);
-    return $json->article ?? NULL;
+    return $json->article ? new RemoteArticle($json->article, $this) : NULL;
   }
 
   /**
@@ -59,7 +60,7 @@ class GhoNcmsTest extends RemoteSourceBaseGho implements RemoteSourceInterface, 
    */
   public function getArticleTitle($id) {
     $article = $this->getArticle($id);
-    return $article->title;
+    return $article->getTitle();
   }
 
   /**
@@ -78,7 +79,10 @@ class GhoNcmsTest extends RemoteSourceBaseGho implements RemoteSourceInterface, 
     $json->articleSearch->items = array_filter($json->articleSearch->items, function ($item) use ($title) {
       return stripos($item->title, $title) !== FALSE;
     });
-    return $json->articleSearch ?? NULL;
+    return array_map(function ($item) {
+      $this->getArticle($item->id)->getSource()->getPluginId();
+      return $this->getArticle($item->id);
+    }, $json->articleSearch->items);
   }
 
   /**

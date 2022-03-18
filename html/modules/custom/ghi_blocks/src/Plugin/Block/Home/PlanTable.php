@@ -67,7 +67,7 @@ class PlanTable extends GHIBlockBase {
 
     foreach ($plans as $plan) {
       $plan_entity = $plan->getEntity();
-      $document_uri = $plan_entity->get('field_plan_document_link')->uri;
+      $document_uri = $plan_entity ? $plan_entity->get('field_plan_document_link')->uri : NULL;
       $rows[$plan->getId()] = [
         'name' => $plan->getName(),
         'inneed' => [

@@ -5,10 +5,23 @@ configuration_container:
       css/configuration_container.css: {}
       css/attachment_select.css: {}
       css/data_point.css: {}
+
 states_regex:
   js:
     js/states.regex.js: {}
 
 tag_select.preview:
+  css:
+    component:
+      css/tag_select.css: {}
   js:
     js/tag_select.preview.js: {}
+
+entity_preview_select:
+  css:
+    component:
+      css/entity_preview_select.css: {}
+  js:
+    js/entity_preview_select.js: {}
+  dependencies:
+    - core/sortable

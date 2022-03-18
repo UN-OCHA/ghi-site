@@ -7,6 +7,7 @@
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 
@@ -56,6 +57,14 @@ function ghi_blocks_preprocess_block(&$variables) {
   if ($block->shouldDisplayTitle() && array_key_exists('#title', $variables['content'])) {
     $variables['label'] = $variables['content']['#title'];
   }
+
+  // This is necessary to make sure that cache metadata from the block
+  // correctly bubbles up the chain.
+  // @see https://drupal.stackexchange.com/a/225569/8881
+  $content = $variables['content'];
+  CacheableMetadata::createFromRenderArray($variables)
+    ->merge(CacheableMetadata::createFromRenderArray($content))
+    ->applyTo($variables);
 }
 
 /**

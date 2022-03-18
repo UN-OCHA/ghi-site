@@ -10,11 +10,21 @@
     logicToggleSelector: '[data-drupal-selector="tag_op"] input[type="checkbox"]',
   };
 
+  Drupal.TagSelectPreview.updateSelectedPreviewItems = function($wrapper) {
+    var selected = [];
+    $wrapper.find('.preview-content [data-content-id].selected:visible').each(function (item) {
+      selected.push($(this).attr('data-content-id'));
+    });
+    $wrapper.find('input.selected-items').val(selected.join());
+  };
+
   Drupal.TagSelectPreview.updateSummary = function(key, $wrapper) {
 
     // Get the tag select configuration.
     let tag_select = drupalSettings.tag_select[key];
     let ids_by_tag = tag_select.ids_by_tag;
+    let previews = tag_select.previews;
+    let select_preview_items = tag_select.select_preview_items;
     let tag_op = $wrapper.find(Drupal.TagSelectPreview.logicToggleSelector).is(':checked') ? 'and' : 'or';
     let all_ids = [...new Set([].concat.apply([], Object.values(tag_select.ids_by_tag).map(items => Object.values(items))))];
 
@@ -22,6 +32,46 @@
       $summary = $('<span></span>');
       $summary.addClass('preview-summary');
       $wrapper.find('legend').append($summary);
+    }
+
+    if (previews && $wrapper.find('.preview-content').length == 0) {
+      $preview_label = $('<div class="label">' + Drupal.t('Content preview') + '</div>');
+      $preview_wrapper = $('<div></div>');
+      $preview_wrapper.addClass('preview-wrapper');
+      $preview_wrapper.prepend($preview_label);
+      $preview = $('<div></div>');
+      $preview.addClass('preview-content');
+      $preview.addClass('ghi-grid');
+      $preview.addClass('cols-5');
+      let selected = select_preview_items ? $wrapper.find('input.selected-items').val().split(',') : false;
+
+      for (nid in previews) {
+        let $node_view = $(previews[nid]);
+        $node_view.attr('data-content-id', nid);
+        $node_view.attr('tabindex', 0);
+
+        if (select_preview_items && selected.indexOf(nid) > -1) {
+          $node_view.addClass('selected');
+        }
+        $preview.append($node_view);
+      }
+      $preview_wrapper.append($preview);
+      $wrapper.append($preview_wrapper);
+      $wrapper.find('.preview-content [data-content-id] a').each(function () {
+        $(this).removeAttr('href');
+      });
+      if (select_preview_items) {
+        $wrapper.find('.preview-content [data-content-id]').on('click', function (e) {
+          $(this).toggleClass('selected');
+          Drupal.TagSelectPreview.updateSelectedPreviewItems($wrapper);
+        });
+        $wrapper.find('.preview-content [data-content-id]').on('keypress', function (e) {
+          if (e.which == 13) {
+            $(this).toggleClass('selected');
+            Drupal.TagSelectPreview.updateSelectedPreviewItems($wrapper);
+          }
+        });
+      }
     }
 
     var checked = [];
@@ -45,7 +95,20 @@
         }
       }
     }
+
+    // Update the preview summary (number of matched items).
     $wrapper.find('.preview-summary').html(' (' + Drupal.formatPlural(ids.length, tag_select.labels.singular, tag_select.labels.plural) + ')');
+
+    // Update the content preview (preview of the actual rendered items).
+    if (previews) {
+      $wrapper.find('.preview-content [data-content-id]').hide();
+      for (i in ids) {
+        $wrapper.find('.preview-content [data-content-id=' + ids[i] + ']').show();
+      }
+      if (select_preview_items) {
+        Drupal.TagSelectPreview.updateSelectedPreviewItems($wrapper);
+      }
+    }
   }
 
   Drupal.behaviors.TagSelectPreview = {

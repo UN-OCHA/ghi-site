@@ -9,10 +9,15 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileSystem;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\file\FileRepositoryInterface;
+use Drupal\ghi_content\ContentManager\ArticleManager;
+use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
+use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -87,9 +92,16 @@ class ImportManager implements ContainerInjectionInterface {
   protected $selectionPluginManager;
 
   /**
+   * File system service.
+   *
+   * @var \Drupal\file\FileRepositoryInterface
+   */
+  protected $fileRepository;
+
+  /**
    * Public constructor.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, BlockManagerInterface $block_manager, AccountInterface $current_user, UuidInterface $uuid, LayoutTempstoreRepositoryInterface $layout_tempstore_repository, SelectionPluginManager $selection_plugin_manager) {
+  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, BlockManagerInterface $block_manager, AccountInterface $current_user, UuidInterface $uuid, LayoutTempstoreRepositoryInterface $layout_tempstore_repository, SelectionPluginManager $selection_plugin_manager, FileRepositoryInterface $file_repository) {
     $this->config = $config_factory;
     $this->entityTypeManager = $entity_type_manager;
     $this->blockManager = $block_manager;
@@ -97,6 +109,7 @@ class ImportManager implements ContainerInjectionInterface {
     $this->uuidGenerator = $uuid;
     $this->layoutTempstoreRepository = $layout_tempstore_repository;
     $this->selectionPluginManager = $selection_plugin_manager;
+    $this->fileRepository = $file_repository;
   }
 
   /**
@@ -111,7 +124,47 @@ class ImportManager implements ContainerInjectionInterface {
       $container->get('uuid'),
       $container->get('layout_builder.tempstore_repository'),
       $container->get('plugin.manager.entity_reference_selection'),
+      $container->get('file.repository'),
     );
+  }
+
+  /**
+   * Import an image for the node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node for which elements should be imported/synced.
+   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $article
+   *   The article object as retrieved from the remote source.
+   * @param string $field_name
+   *   The field name of the target field for the image.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   An optional messenger to use for result messages.
+   */
+  public function importImage(NodeInterface $node, RemoteArticleInterface $article, $field_name = 'field_image', MessengerInterface $messenger = NULL) {
+    $thumbnail_url = $article->getImageUri();
+    if (!$thumbnail_url) {
+      return;
+    }
+
+    if ($messenger === NULL) {
+      $messenger = $this->messenger();
+    }
+
+    $thumbnail_name = basename($thumbnail_url);
+    $data = file_get_contents($thumbnail_url);
+    $file = $this->fileRepository->writeData($data, ArticleManager::THUMBNAIL_DIRECTORY . '/' . $thumbnail_name, FileSystem::EXISTS_RENAME);
+    $update = !$node->get($field_name)->isEmpty();
+    $node->get($field_name)->setValue([
+      'target_id' => $file->id(),
+      'alt' => $node->getTitle(),
+      'title' => $node->getTitle(),
+    ]);
+    if ($update) {
+      $messenger->addMessage($this->t('Updated image'));
+    }
+    else {
+      $messenger->addMessage($this->t('Imported image'));
+    }
   }
 
   /**
@@ -119,11 +172,11 @@ class ImportManager implements ContainerInjectionInterface {
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node for which elements should be imported/synced.
-   * @param object $article
+   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $article
    *   The article object as retrieved from the remote source.
    * @param array $paragraph_ids
    *   An array of paragraph ids to process. These must appear in
-   *   $article->content.
+   *   $article->getParagraphs().
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    * @param bool $cleanup
@@ -132,7 +185,7 @@ class ImportManager implements ContainerInjectionInterface {
    * @throws SyncException
    *   When an error occurs.
    */
-  public function importParagraphs(NodeInterface $node, $article, array $paragraph_ids = [], MessengerInterface $messenger = NULL, $cleanup = FALSE) {
+  public function importParagraphs(NodeInterface $node, RemoteArticleInterface $article, array $paragraph_ids = [], MessengerInterface $messenger = NULL, $cleanup = FALSE) {
 
     if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
       return FALSE;
@@ -151,7 +204,7 @@ class ImportManager implements ContainerInjectionInterface {
       }
     }
 
-    foreach ($article->content as $paragraph) {
+    foreach ($article->getParagraphs() as $paragraph) {
       if (!empty($paragraph_ids) && !in_array($paragraph->id, $paragraph_ids)) {
         continue;
       }
@@ -167,10 +220,13 @@ class ImportManager implements ContainerInjectionInterface {
       $paragraph_configuration = [
         'hpc' => [
           'article_select' => [
-            'article_id' => $article->id,
+            'article' => [
+              'remote_source' => $article->getSource()->getPluginId(),
+              'article_id' => $article->getId(),
+            ],
           ],
           'paragraph' => [
-            'paragraph_id' => $paragraph->id,
+            'paragraph_id' => $paragraph->getId(),
           ],
         ],
       ];
@@ -180,20 +236,20 @@ class ImportManager implements ContainerInjectionInterface {
         $existing_component->setConfiguration($configuration);
         $messenger->addMessage($this->t('Updated %plugin_title (%uuid)', [
           '%plugin_title' => $definition['admin_label'],
-          '%uuid' => $paragraph->uuid,
+          '%uuid' => $paragraph->getUuid(),
         ]));
       }
       else {
         // Append a new component.
         $messenger->addMessage($this->t('Added %plugin_title (%uuid)', [
           '%plugin_title' => $definition['admin_label'],
-          '%uuid' => $paragraph->uuid,
+          '%uuid' => $paragraph->getUuid(),
         ]), $messenger::TYPE_STATUS, TRUE);
         $config = array_filter([
           'id' => $definition['id'],
           'provider' => $definition['provider'],
           'sync' => [
-            'source_uuid' => $paragraph->uuid,
+            'source_uuid' => $paragraph->getUuid(),
           ],
         ]) + $context_mapping;
         $config += $paragraph_configuration;
@@ -215,18 +271,27 @@ class ImportManager implements ContainerInjectionInterface {
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node for which tags should be imported/synced.
-   * @param object $article
+   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $article
    *   The article object as retrieved from the remote source.
    * @param string $field_name
    *   The field name into which the tags should be imported.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   An optional messenger to use for result messages.
    */
-  public function importTags(NodeInterface $node, $article, $field_name = 'field_tags') {
+  public function importTags(NodeInterface $node, RemoteArticleInterface $article, $field_name = 'field_tags', MessengerInterface $messenger = NULL) {
     if (!$node->hasField($field_name)) {
       return FALSE;
     }
+
+    if ($messenger === NULL) {
+      $messenger = $this->messenger();
+    }
+
     // Get the tags.
-    $main_tags = $article->content_space->tags ?? [];
-    $article_tags = $article->tags ?? [];
+    $main_tags = $article->getMajorTags();
+    $article_tags = $article->getMinorTags();
+
+    $update = !$node->get($field_name)->isEmpty();
 
     /** @var \Drupal\Core\Entity\Plugin\EntityReferenceSelection\DefaultSelection $handler */
     $handler = $this->selectionPluginManager->getInstance([
@@ -252,17 +317,24 @@ class ImportManager implements ContainerInjectionInterface {
 
     $node->get($field_name)->setValue($terms);
 
+    if ($update) {
+      $messenger->addMessage($this->t('Updated tags'));
+    }
+    else {
+      $messenger->addMessage($this->t('Imported tags'));
+    }
+
     return TRUE;
   }
 
   /**
-   * Get the plugin definition for a gho paragraph.
+   * Get the plugin definition for a paragraph block.
    *
    * @return mixed
    *   A plugin definition, or NULL if it can't be found
    */
   public function getParagraphPluginDefintion() {
-    return $this->blockManager->getDefinition('gho_paragraph', FALSE);
+    return $this->blockManager->getDefinition('paragraph', FALSE);
   }
 
   /**
@@ -270,18 +342,18 @@ class ImportManager implements ContainerInjectionInterface {
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
-   * @param object $paragraph
+   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface $paragraph
    *   The paragraph object from the remote source.
    *
    * @return \Drupal\layout_builder\SectionComponent|null
    *   Either a matching component, or NULL.
    */
-  private function getExistingSyncedParagraph(NodeInterface $node, $paragraph) {
+  private function getExistingSyncedParagraph(NodeInterface $node, RemoteParagraphInterface $paragraph) {
     $section_storage = $this->getSectionStorageForEntity($node);
     $sections = $section_storage->getSections();
     foreach ($sections[0]->getComponents() as $component) {
       $configuration = $component->get('configuration');
-      if (!empty($configuration['sync']) && !empty($configuration['sync']['source_uuid']) && $configuration['sync']['source_uuid'] == $paragraph->uuid) {
+      if (!empty($configuration['sync']) && !empty($configuration['sync']['source_uuid']) && $configuration['sync']['source_uuid'] == $paragraph->getUuid()) {
         return $component;
       }
     }

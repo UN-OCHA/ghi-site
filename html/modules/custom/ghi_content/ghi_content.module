@@ -5,6 +5,7 @@
  * Hook implementations for GHI Content.
  */
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\node\NodeInterface;
 
@@ -13,6 +14,49 @@ use Drupal\node\NodeInterface;
  */
 function ghi_content_cron() {
 
+}
+
+/**
+ * Implements hook_theme().
+ */
+function ghi_content_theme($existing, $type, $theme, $path) {
+  return [
+    'article_collection_cards' => [
+      'variables' => [
+        'articles' => [],
+        'options' => [
+          'alignment' => 'horizontal',
+          'columns' => 3,
+          'featured' => NULL,
+        ],
+      ],
+      'file' => 'ghi_content.theme.inc',
+      'template' => 'article-collection-cards',
+    ],
+    'article_collection_table' => [
+      'variables' => [
+        'articles' => [],
+      ],
+      'file' => 'ghi_content.theme.inc',
+      'template' => 'article-collection-table',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Used to disable fields that automatically populated.
+ */
+function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateInterface $form_state) {
+  $disable_fields = [
+    'field_image',
+    'field_tags',
+  ];
+  foreach ($disable_fields as $field_name) {
+    $form[$field_name]['#disabled'] = TRUE;
+    $form[$field_name]['#attributes']['title'] = t('This field is disabled because it is automatically populated from the remote source.');
+  }
 }
 
 /**
@@ -41,9 +85,69 @@ function ghi_content_node_presave(NodeInterface $node) {
   $remote_source_instance = $remote_source_manager->createInstance($remote_source);
   $article = $remote_source_instance->getArticle($article_id);
 
+  // Import the image.
+  $import_manager->importImage($node, $article, 'field_image');
+
   // Import the paragraphs for the article.
   $import_manager->importParagraphs($node, $article, [], NULL, $cleanup);
 
   // Import the tags.
   $import_manager->importTags($node, $article, 'field_tags');
+}
+
+/**
+ * Implements hook_preprocess_page().
+ *
+ * This is used to add the configured hero image (or a default image) to the
+ * page title region.
+ *
+ * This code assumes that there is a page_title region in the theme.
+ */
+function ghi_content_preprocess_page(&$variables) {
+  $region_name = 'page_title';
+  if (!array_key_exists($region_name, $variables['page'])) {
+    return;
+  }
+
+  $request_stack = \Drupal::requestStack();
+  $request = $request_stack->getMasterRequest();
+  /** @var \Drupal\node\Entity\Node $node */
+  $node = $request->attributes->has('node') ? $request->attributes->get('node') : NULL;
+  if (!$node || !$node->getFieldDefinitions()) {
+    return;
+  }
+
+  if ($node->bundle() != 'article') {
+    return;
+  }
+
+  // We do not check if the field has actual values, because we might want to
+  // show a default image.
+  $image_field = $node->get('field_image');
+  if ($image_field->isEmpty()) {
+    // Don't show default images in the page view.
+    return;
+  }
+  // Get the image for the current page.
+  $image = $image_field->view();
+  if ($image) {
+    $image['#label_display'] = 'hidden';
+    array_unshift($variables['page'][$region_name], $image);
+  }
+
+}
+
+/**
+ * Implements hook_contextual_links_alter().
+ *
+ * Disable contextual links to declutter the interface. If it wouldn't be for
+ * layout builder who needs the contextual links for it's own interface, we
+ * could just disable the module entirely.
+ * See https://www.drupal.org/project/drupal/issues/3042516
+ */
+function ghi_content_contextual_links_alter(array &$links, $group, array $route_parameters) {
+  $disabled_groups = ['node', 'block', 'menu'];
+  if (in_array($group, $disabled_groups)) {
+    $links = [];
+  }
 }
