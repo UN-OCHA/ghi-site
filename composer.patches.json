@@ -6,7 +6,6 @@
       "Issue #2902481: Add GROUP_CONCAT aggregate function to views": "https://www.drupal.org/files/issues/2021-07-26/add_group_concat_aggregate-2902481-33.patch",
       "Issue #151311: More granular and intuitive permissions for the user module": "https://www.drupal.org/files/issues/2021-02-03/split_administer_permissions_151311-61.patch",
       "Issue #3001188: Make it possible to add relationships to layout builder": "./patches/3001188-make-it-possible-to-add-relationships-to-layout-builder.patch",
-      "Issue #3259744: PHPUnit 9.5.12 (released 2022-01-21) throws unhandled deprecation notice": "https://www.drupal.org/files/issues/2022-02-02/3259744-16.patch",
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch"
     },
     "drupal/page_manager": {
