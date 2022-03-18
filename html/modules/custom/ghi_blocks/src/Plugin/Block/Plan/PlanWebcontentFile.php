@@ -5,9 +5,7 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
-use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
  * Provides a 'PlanWebcontentFile' block.
@@ -73,13 +71,6 @@ class PlanWebcontentFile extends GHIBlockBase {
 
     if (!empty($attachments)) {
       foreach ($attachments as $attachment) {
-        $preview_image = ThemeHelper::theme('image', [
-          '#uri' => $attachment->url,
-          '#attributes' => [
-            'style' => 'height: 100px',
-          ],
-        ], TRUE, FALSE);
-
         $file_options[$attachment->id] = [
           'id' => $attachment->id,
           'title' => $attachment->title,
@@ -91,7 +82,10 @@ class PlanWebcontentFile extends GHIBlockBase {
             ],
           ])),
           'preview' => [
-            '#markup' => Markup::create($preview_image),
+            'data' => [
+              '#theme' => 'image',
+              '#uri' => $attachment->url,
+            ],
           ],
         ];
       }
