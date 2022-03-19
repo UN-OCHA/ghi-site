@@ -64,7 +64,6 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
       '#theme' => 'article_collection_' . $display['type'],
       '#title' => $this->t('Article collection'),
       '#articles' => $articles,
-      '#featured' => $featured,
       '#options' => [
         'columns' => 3,
       ] + $options,
@@ -136,6 +135,17 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
       return 'display';
     }
     return 'articles';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function canShowSubform($form, FormStateInterface $form_state, $subform_key) {
+    if ($subform_key == 'articles') {
+      return TRUE;
+    }
+    $conf = $this->getBlockConfig();
+    return !empty($conf['articles']);
   }
 
   /**

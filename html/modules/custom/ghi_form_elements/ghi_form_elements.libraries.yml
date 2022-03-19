@@ -16,6 +16,8 @@ tag_select.preview:
       css/tag_select.css: {}
   js:
     js/tag_select.preview.js: {}
+  dependencies:
+    - common_design_subtheme/ghi-grid
 
 entity_preview_select:
   css:
@@ -25,3 +27,4 @@ entity_preview_select:
     js/entity_preview_select.js: {}
   dependencies:
     - core/sortable
+    - common_design_subtheme/ghi-grid
