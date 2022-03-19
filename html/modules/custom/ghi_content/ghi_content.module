@@ -136,18 +136,3 @@ function ghi_content_preprocess_page(&$variables) {
   }
 
 }
-
-/**
- * Implements hook_contextual_links_alter().
- *
- * Disable contextual links to declutter the interface. If it wouldn't be for
- * layout builder who needs the contextual links for it's own interface, we
- * could just disable the module entirely.
- * See https://www.drupal.org/project/drupal/issues/3042516
- */
-function ghi_content_contextual_links_alter(array &$links, $group, array $route_parameters) {
-  $disabled_groups = ['node', 'block', 'menu'];
-  if (in_array($group, $disabled_groups)) {
-    $links = [];
-  }
-}

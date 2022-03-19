@@ -1,0 +1,92 @@
+.contextual-region.layout-builder-block,
+.contextual-region.layout-builder-block.focus {
+  margin: 2rem 0;
+  padding: 1rem;
+  border-radius: 2px;
+  outline-width: 1px !important;
+  outline-style: solid !important;
+  outline-color: var(--colorGinFormElementBorder);
+  outline-offset: 0;
+}
+
+.contextual-region.layout-builder-block .contextual {
+  & > button {
+    display: none !important;
+    clip: unset !important;
+  }
+
+  & > ul.contextual-links {
+    top: -2.5rem !important;
+    display: none;
+    flex-direction: row-reverse;
+    background: none;
+    background-color: transparent !important;
+    box-shadow: none !important;
+
+    & li {
+
+      &.layout-builder-block-move {
+        display: none;
+      }
+
+      a {
+        padding: 0 0.25em 0 0.25em;
+        padding-left: 20px;
+        color: var(--colorGinFormElementBorder) !important;
+        background-color: transparent !important;
+        line-height: 19px;
+
+        &:focus,
+        &:hover {
+          box-shadow: none;
+        }
+
+        &:hover:after {
+          z-index: -1;
+          content: "";
+          background-color: var(--colorGinPrimary) !important;
+          background-repeat: no-repeat;
+          background-position: center;
+          background-size: 17px 17px;
+        }
+
+        &:after {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 17px;
+          height: 17px;
+          content: "&amp;";
+          background-color: var(--colorGinFormElementBorder);
+          mask-size: 17px 17px;
+          mask-position: center;
+          mask-repeat: no-repeat;
+        }
+      }
+
+      &.layout-builder-block-update a:after {
+        -webkit-mask-image: icon("edit-section");
+        mask-image: icon("edit-section");
+      }
+
+      &.layout-builder-block-remove a:after {
+        -webkit-mask-image: icon("remove-section");
+        mask-image: icon("remove-section");
+      }
+    }
+  }
+}
+
+.contextual-region.layout-builder-block:focus,
+.contextual-region.layout-builder-block:hover {
+  outline-width: 2px !important;
+  outline-color: var(--colorGinPrimary);
+
+  ul.contextual-links {
+    display: flex;
+
+    li:hover a {
+      color: var(--colorGinPrimary) !important;
+    }
+  }
+}

@@ -68,6 +68,22 @@ function ghi_blocks_preprocess_block(&$variables) {
 }
 
 /**
+ * Implements hook_contextual_links_alter().
+ *
+ * Disable contextual links to declutter the interface. If it wouldn't be for
+ * layout builder who needs the contextual links for it's own interface, we
+ * could just disable the module entirely.
+ * See https://www.drupal.org/project/drupal/issues/3042516
+ */
+function ghi_blocks_contextual_links_alter(array &$links, $group, array $route_parameters) {
+  $allowed_groups = ['layout_builder_block'];
+  if (!in_array($group, $allowed_groups)) {
+    $links = [];
+    return;
+  }
+}
+
+/**
  * Implements hook_link_alter().
  *
  * Show the block selection in a modal instead of the offcanvas sidebar.

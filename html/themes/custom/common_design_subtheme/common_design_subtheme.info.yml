@@ -34,3 +34,7 @@ regions:
 ## Requires Components module
 # components:
 #   namespaces:
+
+# This theme depends on gin_lb for seom icons.
+dependencies:
+  - gin_lb:gin_lb
