@@ -197,9 +197,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   public function getConfiguration() {
     // Make sure we always use up to data data source information.
     $plugin_definition = $this->getPluginDefinition();
-    if (!empty($plugin_definition['data_sources']) && $plugin_definition['data_sources'] != $this->configuration['data_sources']) {
-      $this->configuration['data_sources'] = $plugin_definition['data_sources'];
-    }
+    $this->configuration['data_sources'] = $plugin_definition['data_sources'] ?? NULL;
     return $this->configuration;
   }
 
