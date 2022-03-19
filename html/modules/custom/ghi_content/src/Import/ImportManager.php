@@ -154,7 +154,7 @@ class ImportManager implements ContainerInjectionInterface {
     }
 
     $thumbnail_name = basename($thumbnail_url);
-    $data = file_get_contents($thumbnail_url);
+    $data = $article->getSource()->getFileContent($thumbnail_url);
     $file = $this->fileRepository->writeData($data, ArticleManager::THUMBNAIL_DIRECTORY . '/' . $thumbnail_name, FileSystem::EXISTS_RENAME);
     $update = !$node->get($field_name)->isEmpty();
     $node->get($field_name)->setValue([

@@ -129,4 +129,11 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
     $this->configFactory->getEditable('ghi_content.remote_sources')->set($this->getPluginId(), $this->configuration)->save();
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getFileContent($uri) {
+    return file_get_contents($uri);
+  }
+
 }

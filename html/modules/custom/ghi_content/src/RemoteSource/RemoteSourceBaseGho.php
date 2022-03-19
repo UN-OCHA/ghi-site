@@ -105,7 +105,6 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
       return [];
     }
     return array_map(function ($item) {
-      $this->getArticle($item->id)->getSource()->getPluginId();
       return $this->getArticle($item->id);
     }, $response->get('articleSearch')->items);
   }
@@ -298,6 +297,21 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
    */
   public function getContentUrl($id) {
     return Url::fromUri($this->getRemoteBaseUrl() . '/node/' . $id);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFileContent($uri) {
+    $options = [];
+    if ($basic_auth = $this->getRemoteBasicAuth()) {
+      $options['http'] = [
+        'method' => 'GET',
+        'header' => 'Authorization: Basic ' . base64_encode($basic_auth['user'] . ':' . $basic_auth['pass']),
+      ];
+    }
+    $context = stream_context_create($options);
+    return file_get_contents($uri, FALSE, $context);
   }
 
 }
