@@ -105,7 +105,6 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
       return [];
     }
     return array_map(function ($item) {
-      $this->getArticle($item->id)->getSource()->getPluginId();
       return $this->getArticle($item->id);
     }, $response->get('articleSearch')->items);
   }
