@@ -138,6 +138,17 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function canShowSubform($form, FormStateInterface $form_state, $subform_key) {
+    if ($subform_key == 'articles') {
+      return TRUE;
+    }
+    $conf = $this->getBlockConfig();
+    return !empty($conf['articles']);
+  }
+
+  /**
    * Form callback for the articles form.
    */
   public function articlesForm(array $form, FormStateInterface $form_state) {
