@@ -64,7 +64,6 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
       '#theme' => 'article_collection_' . $display['type'],
       '#title' => $this->t('Article collection'),
       '#articles' => $articles,
-      '#featured' => $featured,
       '#options' => [
         'columns' => 3,
       ] + $options,
