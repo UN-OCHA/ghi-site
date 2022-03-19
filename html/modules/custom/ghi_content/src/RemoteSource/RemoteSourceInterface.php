@@ -116,4 +116,15 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    */
   public function getContentUrl($id);
 
+  /**
+   * Get the file data for the given url.
+   *
+   * @param string $uri
+   *   The URI as a string.
+   *
+   * @return string
+   *   A file contents.
+   */
+  public function getFileContent($uri);
+
 }

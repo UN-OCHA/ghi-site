@@ -299,4 +299,19 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
     return Url::fromUri($this->getRemoteBaseUrl() . '/node/' . $id);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getFileContent($uri) {
+    $options = [];
+    if ($basic_auth = $this->getRemoteBasicAuth()) {
+      $options['http'] = [
+        'method' => 'GET',
+        'header' => 'Authorization: Basic ' . base64_encode($basic_auth['user'] . ':' . $basic_auth['pass']),
+      ];
+    }
+    $context = stream_context_create($options);
+    return file_get_contents($uri, FALSE, $context);
+  }
+
 }
