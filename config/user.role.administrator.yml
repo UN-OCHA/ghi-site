@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - core.entity_view_display.node.financials.default
+    - core.entity_view_display.node.global_section.default
     - core.entity_view_display.node.population.default
     - core.entity_view_display.node.profile.default
     - core.entity_view_display.node.risk_index.default
@@ -71,6 +72,7 @@ permissions:
   - 'administer users roles'
   - 'configure any layout'
   - 'configure editable financials node layout overrides'
+  - 'configure editable global_section node layout overrides'
   - 'configure editable population node layout overrides'
   - 'configure editable profile node layout overrides'
   - 'configure editable risk_index node layout overrides'
