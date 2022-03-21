@@ -102,23 +102,23 @@ class RemoteArticle extends FormElement {
     $element['#prefix'] = '<div id="' . $wrapper_id . '">';
     $element['#suffix'] = '</div>';
 
+    $remote_source_options = self::getRemoteSourceOptions();
+
     $values = $form_state->getValue($element['#parents']);
-    $submitted_remote_source = $values['remote_source'] ?? NULL;
-    $form_state->set('remote_source', $submitted_remote_source);
+    $remote_source_key = $values['remote_source'] ?? array_key_first($remote_source_options);
+    $form_state->set('remote_source', $remote_source_key);
     $form_state->setValue('article_id', NULL);
 
-    $remote_source_options = self::getRemoteSourceOptions();
     $element['remote_source'] = [
       '#type' => 'remote_source',
       '#title' => t('Remote source'),
+      '#default_value' => $remote_source_key,
       '#ajax' => [
         'event' => 'change',
         'callback' => [static::class, 'updateAjax'],
         'wrapper' => $wrapper_id,
       ],
     ];
-
-    $remote_source_key = $values['remote_source'] ?? array_key_first($remote_source_options);
 
     if ($remote_source_key && $remote_source = self::getRemoteSourceInstance($remote_source_key)) {
       // Select the remote article.

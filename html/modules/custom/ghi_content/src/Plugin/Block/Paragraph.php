@@ -127,8 +127,10 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
   protected function getConfigurationDefaults() {
     return [
       'article_select' => [
-        'remote_source' => NULL,
-        'article_id' => NULL,
+        'article' => [
+          'remote_source' => NULL,
+          'article_id' => NULL,
+        ],
       ],
       'paragraph' => [
         'paragraph_id' => NULL,
@@ -226,7 +228,7 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
     $form['article_summary'] = [
       '#type' => 'item',
       '#title' => $this->t('Selected article'),
-      '#markup' => $this->getRemoteSource()->getPluginLabel() . ': ' . $article->getTitle(),
+      '#markup' => $article->getSource()->getPluginLabel() . ': ' . $article->getTitle(),
     ];
 
     $options = [];
