@@ -41,6 +41,8 @@ class RemoteSource extends Select {
 
     if ($disabled) {
       $element['#disabled'] = TRUE;
+      $element['#value'] = array_key_first($element['#options']);
+      $element['#default_value'] = array_key_first($element['#options']);
       $element['#attributes']['disabled'] = 'disabled';
       $element['#description'] .= '<br />' . t('<em>Note:</em> This option is deactivated because there is only a single content source available: @content_source', [
         '@content_source' => $definitions[array_key_first($definitions)]['label'],
