@@ -27,9 +27,8 @@ visibility:
     context_mapping:
       node: '@node.node_route_context:node'
     bundles:
-      country: country
+      document: document
       financials: financials
-      plan: plan
       population: population
       profile: profile
       risk_index: risk_index
