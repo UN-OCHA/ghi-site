@@ -41,11 +41,14 @@ body.path-node #layout-builder:hover .layout-builder__section:hover .layout-buil
   border: 0 !important;
 }
 
-.glb-layout-builder-browser.block-categories {
+/**
+ * Show the block selection in the modal as 3 columns.
+ */
+#layout-builder-modal .block-categories {
   display: flex;
   flex-wrap: wrap;
 }
-.glb-layout-builder-browser.block-categories .glb-claro-details {
+#layout-builder-modal .block-categories .glb-claro-details {
   margin-right: 0 !important;
   margin-left: 0 !important;
   width: 33%;
@@ -54,27 +57,30 @@ body.path-node #layout-builder:hover .layout-builder__section:hover .layout-buil
   border-top: 0 !important;
   border-bottom: 0 !important;
 }
-.glb-layout-builder-browser.block-categories .glb-claro-details__wrapper {
+#layout-builder-modal .block-categories .glb-claro-details__wrapper {
   margin-left: 0 !important;
   margin-right: 0 !important;
 }
-.glb-layout-builder-browser.block-categories .glb-list {
+#layout-builder-modal .block-categories .glb-list {
   width: 100%;
 }
-.glb-layout-builder-browser.block-categories .glb-list li {
+#layout-builder-modal .block-categories .glb-list li {
   position: relative;
 }
-.glb-layout-builder-browser.block-categories .glb-list li .ajax-progress-throbber {
+#layout-builder-modal .block-categories .glb-list li .ajax-progress-throbber {
   position: absolute;
   top: 0.4rem;
   right: -0.6rem;
   background-color: white !important;
 }
-.glb-layout-builder-browser.block-categories .glb-list li .ajax-progress-throbber::before {
+#layout-builder-modal .block-categories .glb-list li .ajax-progress-throbber::before {
   top: 0.4rem;
   left: 0.4rem;
 }
 
+/**
+ * Improve display of error messages.
+ */
 .glb-form-item--error-message {
   color: #d72222;
   font-size: .79em

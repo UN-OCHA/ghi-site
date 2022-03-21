@@ -62,6 +62,11 @@ function common_design_subtheme_preprocess_page(&$variables) {
         'local_tasks_block',
       ]);
     }
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $variables['node'];
+    if (!$node->isPublished()) {
+      $variables['attributes']['class'][] = 'node--unpublished';
+    }
   }
 }
 

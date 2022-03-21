@@ -144,7 +144,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Build the content of a GHI block.
+   *
+   * @return array
+   *   Must return a render array.
    */
   abstract public function buildContent();
 
@@ -338,7 +341,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Add some classes for styling.
     $build['#attributes']['class'][] = Html::getClass('ghi-block-' . $this->getPluginId());
     $build['#attributes']['class'][] = 'ghi-block';
-    $build['#attributes']['class'][] = 'ghi-block-' . $this->getUuid();
+    if ($this->getUuid()) {
+      $build['#attributes']['class'][] = 'ghi-block-' . $this->getUuid();
+    }
 
     // Allow the plugin to define attributes for it's wrapper.
     if (array_key_exists('#wrapper_attributes', $build_content)) {

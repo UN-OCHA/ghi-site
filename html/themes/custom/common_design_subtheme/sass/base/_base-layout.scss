@@ -52,6 +52,6 @@
 .node--unpublished {
   background-color: unset;
 }
-.user-logged-in [class*="--unpublished"] {
+.user-logged-in main[class*="--unpublished"] {
   outline: 4px dashed  #ffc310;
 }

@@ -104,6 +104,7 @@ class SubpageHelper {
    */
   public static function getSubpagesForBaseNode(NodeInterface $node) {
     return \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+      'type' => self::SUPPORTED_SUBPAGE_TYPES,
       'field_entity_reference' => $node->id(),
     ]);
   }
@@ -150,7 +151,23 @@ class SubpageHelper {
    *   TRUE if it is a subpage type, FALSE otherwhise.
    */
   public static function isSubpageTypeNode(NodeInterface $node) {
-    return in_array($node->bundle(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES);
+    if (in_array($node->bundle(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES)) {
+      // Subpage type directly supported by this module.
+      return TRUE;
+    }
+
+    // Let's see if other module think this should be treated as a subpage.
+    $is_subpage = FALSE;
+    /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
+    $module_handler = \Drupal::service('module_handler');
+    foreach ($module_handler->getImplementations('is_subpage_type') as $module_name) {
+      // If any module says yes, we accept that and stop.
+      $is_subpage = $is_subpage || $module_handler->invoke($module_name, 'is_subpage_type', [$node->bundle()]);
+      if ($is_subpage) {
+        break;
+      }
+    }
+    return $is_subpage;
   }
 
 }
