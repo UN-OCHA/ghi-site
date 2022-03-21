@@ -64,16 +64,37 @@ class EntityPreviewSelect extends FormElement {
    * {@inheritdoc}
    */
   public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
-    if ($input !== NULL) {
+    if ($input) {
       // Make sure input is returned as normal during item configuration.
-      $input['order'] = array_filter(!is_array($input['order']) ? explode(',', $input['order']) : $input['order']);
-      $input['selected'] = array_filter(!is_array($input['selected']) ? explode(',', $input['selected']) : $input['selected']);
-      if (array_key_exists('featured', $input)) {
-        $input['featured'] = array_filter(!is_array($input['featured']) ? explode(',', $input['featured']) : $input['featured']);
-      }
+      self::massageValues($input, ['order', 'selected', 'featured']);
       return $input;
     }
     return NULL;
+  }
+
+  /**
+   * Massage the submitted input values from strings to arrays.
+   *
+   * @param array $input
+   *   The input array.
+   * @param array $value_keys
+   *   The value keys to process.
+   */
+  public static function massageValues(array &$input, array $value_keys) {
+    foreach ($value_keys as $value_key) {
+      if (!array_key_exists($value_key, $input) || empty($input[$value_key])) {
+        $input[$value_key] = [];
+        continue;
+      }
+      if (is_array($input[$value_key])) {
+        continue;
+      }
+      if (strpos($input[$value_key], ',') === FALSE) {
+        $input[$value_key] = (array) $input[$value_key];
+        continue;
+      }
+      $input[$value_key] = array_filter(explode(',', $input[$value_key]));
+    }
   }
 
   /**

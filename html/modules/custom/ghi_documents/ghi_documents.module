@@ -6,6 +6,8 @@
  */
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
 
 /**
  * Implements hook_form_FORM_ID_alter().
@@ -23,6 +25,9 @@ function ghi_documents_form_node_document_edit_form_alter(&$form, FormStateInter
  * Implements hook_subpage_navigation_links().
  */
 function ghi_documents_subpage_navigation_links_alter(&$links, array $context) {
+  /** @var \Drupal\node\NodeInterface $node */
+  $node = $context['node'];
+
   /** @var \Drupal\node\NodeInterface $base_entity */
   $base_entity = $context['base_entity'];
 
@@ -35,7 +40,22 @@ function ghi_documents_subpage_navigation_links_alter(&$links, array $context) {
     return;
   }
   foreach ($documents as $document) {
-    $links[] = $document->toLink(NULL)->toRenderable();
+    $link = $document->toLink(NULL)->toRenderable();
+    if ($node->id() == $document->id() && ($document->access('view') || $document->access('update'))) {
+      $link['#attributes']['class'][] = 'active';
+      if (!$document->isPublished()) {
+        $link['#attributes']['class'][] = 'node--unpublished';
+      }
+      // Get the subheadings and add quick links on the current page.
+      $subheadings = $document_manager->getSubHeadings($document);
+      if (!empty($subheadings)) {
+        $link['children'] = [];
+        foreach ($subheadings as $id => $subheading) {
+          $link['children'][] = Link::fromTextAndUrl($subheading, Url::fromUserInput('#' . $id))->toString();
+        }
+      }
+    }
+    $links[] = $link;
   }
 }
 

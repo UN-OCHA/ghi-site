@@ -38,9 +38,12 @@ function ghi_blocks_theme_suggestions_item_list_alter(array &$suggestions, array
  * Implements hook_plugin_filter_TYPE__CONSUMER_alter().
  */
 function ghi_blocks_plugin_filter_block__layout_builder_alter(&$definitions) {
-  $definitions = array_filter($definitions, function ($definition) {
-    return in_array($definition['provider'], ['ghi_blocks', 'ghi_content']);
-  });
+  // @codingStandardsIgnoreStart
+  // @todo Check if this could actually be useful.
+  // $definitions = array_filter($definitions, function ($definition) {
+  //   return in_array($definition['provider'], ['ghi_blocks', 'ghi_content']);
+  // });
+  // @codingStandardsIgnoreEnd
 }
 
 /**
