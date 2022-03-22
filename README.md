@@ -38,6 +38,4 @@ If you run into this error when committing:
 
 You need to install all Drupal packages by doing this from the project root:
 
-    fin bash
-    cd html/core
-    yarn
+    fin exec "cd html/core && yarn"

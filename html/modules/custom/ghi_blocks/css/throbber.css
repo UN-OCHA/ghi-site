@@ -1,10 +1,12 @@
 /**
  Make the progress throbber for the preview button behave identical for
  layout builder on page manager pages and node pages.
+ Actually, make all button throbbers behave the same.
 */
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .ajax-progress.ajax-progress-throbber,
+form.layout-builder-configure-block.glb-canvas-form .ajax-progress.ajax-progress-throbber,
 #layout-builder-modal form.layout-builder-configure-block .canvas-form__actions .ajax-progress.ajax-progress--throbber,
-.layout-builder-ipe-actions .ajax-progress.ajax-progress-throbber {
+.layout-builder-ipe-actions .ajax-progress.ajax-progress-throbber,
+#layout-builder .ajax-progress.ajax-progress-throbber {
   position: fixed;
   z-index: 1000;
   top: 50%;
@@ -24,9 +26,10 @@ form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .a
   line-height: 1.125rem;
 }
 
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .ajax-progress.ajax-progress-throbber:before,
+form.layout-builder-configure-block.glb-canvas-form .ajax-progress.ajax-progress-throbber:before,
 #layout-builder-modal form.layout-builder-configure-block .canvas-form__actions .ajax-progress .ajax-progress__throbber,
-.layout-builder-ipe-actions .ajax-progress.ajax-progress-throbber:before {
+.layout-builder-ipe-actions .ajax-progress.ajax-progress-throbber:before,
+#layout-builder .ajax-progress.ajax-progress-throbber:before {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -42,7 +45,8 @@ form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .a
   -webkit-animation: gin-throbber 0.75s linear infinite;
   animation: gin-throbber 0.75s linear infinite;
 }
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .ajax-progress .message,
+
+form.layout-builder-configure-block.glb-canvas-form .ajax-progress .message,
 #layout-builder-modal form.layout-builder-configure-block .canvas-form__actions .ajax-progress .ajax-progress__message {
   display: none;
 }
