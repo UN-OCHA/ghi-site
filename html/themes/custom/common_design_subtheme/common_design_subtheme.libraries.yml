@@ -24,6 +24,10 @@ ghi-section-teaser:
       components/ghi-section-teaser/ghi-section-teaser.css: {}
 
 # Copy libraries from GHO
+datawrapper-responsive-iframe:
+  header: true
+  js:
+    js/datawrapper-responsive-iframe.js: {}
 gho-achievement:
   css:
     theme:
@@ -50,6 +54,8 @@ gho-interactive-content:
   css:
     theme:
       components/gho-interactive-content/gho-interactive-content.css: {}
+  dependencies:
+    - common_design_subtheme/datawrapper-responsive-iframe
 gho-needs-and-requirements:
   css:
     theme:
