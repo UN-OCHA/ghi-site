@@ -9,6 +9,10 @@
   margin-top: 0;
 }
 
+.form-type--markup_select .preview-content > [data-content-id] iframe {
+  pointer-events: none;
+}
+
 .form-type--markup_select .preview-content > [data-content-id]:focus {
   outline: 2px solid rgb(5, 80, 230) !important;
 }
