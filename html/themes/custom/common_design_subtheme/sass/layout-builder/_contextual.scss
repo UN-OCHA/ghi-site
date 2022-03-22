@@ -1,6 +1,6 @@
-.contextual-region.layout-builder-block,
-.contextual-region.layout-builder-block.focus {
-  margin: 2rem 0;
+#layout-builder .contextual-region.layout-builder-block,
+#layout-builder .contextual-region.layout-builder-block.focus {
+  margin: 3rem 0 2rem 0;
   padding: 1rem;
   border-radius: 2px;
   outline-width: 1px !important;
@@ -9,7 +9,7 @@
   outline-offset: 0;
 }
 
-.contextual-region.layout-builder-block .contextual {
+#layout-builder .contextual-region.layout-builder-block .contextual {
   & > button {
     display: none !important;
     clip: unset !important;
@@ -17,7 +17,7 @@
 
   & > ul.contextual-links {
     top: -2.5rem !important;
-    display: none;
+    display: flex;
     flex-direction: row-reverse;
     background: none;
     background-color: transparent !important;
@@ -77,8 +77,8 @@
   }
 }
 
-.contextual-region.layout-builder-block:focus,
-.contextual-region.layout-builder-block:hover {
+#layout-builder .contextual-region.layout-builder-block:focus,
+#layout-builder .contextual-region.layout-builder-block:hover {
   outline-width: 2px !important;
   outline-color: var(--colorGinPrimary);
 
