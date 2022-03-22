@@ -28,3 +28,13 @@ entity_preview_select:
   dependencies:
     - core/sortable
     - common_design_subtheme/ghi-grid
+
+markup_select:
+  css:
+    component:
+      css/markup_select.css: {}
+  js:
+    js/markup_select.js: {}
+  dependencies:
+    - core/sortable
+    - common_design_subtheme/ghi-grid

@@ -102,8 +102,11 @@ function ghi_blocks_link_alter(&$variables) {
   }
 
   $route_name = $url->getRouteName();
-
-  if ($route_name != 'layout_builder.choose_block') {
+  $allowed_routes = [
+    'layout_builder.choose_block',
+    'layout_builder.remove_block',
+  ];
+  if (!in_array($route_name, $allowed_routes)) {
     // All other routes are already handled by the Layout Buidler Modal module.
     return;
   }
@@ -129,8 +132,10 @@ function ghi_blocks_link_alter(&$variables) {
 function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
   if (strpos($form_id, 'layout_builder_form')) {
     $form['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
+    $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
     if (array_key_exists('placeholders', $form)) {
       $form['placeholders']['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
+      $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
     }
   }
 }

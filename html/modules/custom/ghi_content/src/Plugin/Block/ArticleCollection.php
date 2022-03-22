@@ -7,7 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 
 /**
- * Provides a 'ArticleCollection' block.
+ * Provides an 'ArticleCollection' block.
  *
  * @Block(
  *  id = "article_collection",

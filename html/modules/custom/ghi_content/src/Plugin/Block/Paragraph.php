@@ -3,14 +3,14 @@
 namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
+use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 
 /**
- * Provides a 'GhoParagraph' block.
+ * Provides a 'Paragraph' block.
  *
  * @Block(
  *  id = "paragraph",
@@ -31,31 +31,6 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
   }
 
   /**
-   * Get the configured paragraph from the remote.
-   *
-   * @return \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface|null
-   *   A paragraph object as retrieved from the remote source.
-   */
-  private function getParagraph() {
-    $conf = $this->getBlockConfig();
-
-    if (empty($conf['paragraph']['paragraph_id'])) {
-      return;
-    }
-    $remote_source = $this->getRemoteSource();
-    if (!$remote_source) {
-      // No available source. Technically, this block is broken now.
-      return;
-    }
-    $paragraph = $remote_source->getParagraph($conf['paragraph']['paragraph_id']);
-    if (!$paragraph) {
-      // No paragraph found. Technically, this block is broken now.
-      return;
-    }
-    return $paragraph;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function buildContent() {
@@ -67,12 +42,9 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
     $conf = $this->getBlockConfig();
 
     // Add GHO specific theme components.
-    $theme_components = [];
-    $theme_components[] = 'common_design_subtheme/gho-' . Html::getClass($paragraph->getType());
-    if ($paragraph->getType() == 'bottom_figure_row') {
-      $theme_components[] = 'common_design_subtheme/gho-needs-and-requirements';
-    }
+    $theme_components = $this->getThemeComponents($paragraph);
 
+    // Get the rendered paragraph.
     $rendered = $paragraph->getRendered();
 
     // Move gho specific paragraph classes to the block wrapper attributes, so
@@ -116,6 +88,24 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
     ];
 
     return $build;
+  }
+
+  /**
+   * Get the required theme components for the given paragraph.
+   *
+   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface $paragraph
+   *   The paragraph for which theme components should be fetched.
+   *
+   * @return array
+   *   An array of library keys.
+   */
+  public function getThemeComponents(RemoteParagraphInterface $paragraph) {
+    $theme_components = [];
+    $theme_components[] = 'common_design_subtheme/gho-' . Html::getClass($paragraph->getType());
+    if ($paragraph->getType() == 'bottom_figure_row') {
+      $theme_components[] = 'common_design_subtheme/gho-needs-and-requirements';
+    }
+    return $theme_components;
   }
 
   /**
@@ -223,6 +213,7 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
    */
   public function paragraphForm(array $form, FormStateInterface $form_state) {
     $conf = $this->getBlockConfig();
+
     $article = $this->getArticle();
     $paragraph = $this->getParagraph();
     $form['article_summary'] = [
@@ -231,23 +222,31 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
       '#markup' => $article->getSource()->getPluginLabel() . ': ' . $article->getTitle(),
     ];
 
-    $options = [];
-    foreach ($article->getParagraphs() as $item) {
-      $options[$item->getId()] = Unicode::truncate(strip_tags($item->getRendered()), 180, FALSE, TRUE);
-    }
-    $form['paragraph_id'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Paragraph'),
-      '#description' => $this->t('Select a paragraph from the article.'),
-      '#options' => $options,
-      '#default_value' => $paragraph ? $paragraph->getId() : NULL,
-    ];
-
     $form['title'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Title'),
       '#description' => $this->t('Give this paragraph an optional title.'),
       '#default_value' => !empty($conf['paragraph']['title']) ? $conf['paragraph']['title'] : NULL,
+    ];
+
+    $options = [];
+    $theme_components = [];
+    foreach ($article->getParagraphs() as $_paragraph) {
+      $options[$_paragraph->getId()] = $_paragraph->getRendered();
+      $theme_components += array_merge($theme_components, $this->getThemeComponents($_paragraph));
+    }
+
+    $form['paragraph_id'] = [
+      '#type' => 'markup_select',
+      '#title' => $this->t('Paragraph'),
+      '#description' => $this->t('Select a paragraph from the article.'),
+      '#options' => $options,
+      '#limit' => 1,
+      '#cols' => 3,
+      '#default_value' => $paragraph ? $paragraph->getId() : NULL,
+      '#attached' => [
+        'library' => $theme_components,
+      ],
     ];
 
     return $form;
@@ -261,7 +260,13 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
    */
   protected function getArticle() {
     $conf = $this->getBlockConfig();
-    $remote_source = $this->getRemoteSource();
+    $remote_source_key = $conf['article_select']['article']['remote_source'] ?? NULL;
+    if (!$remote_source_key) {
+      return NULL;
+    }
+    /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
+    $remote_source_manager = \Drupal::service('plugin.manager.remote_source');
+    $remote_source = $remote_source_manager->createInstance($remote_source_key);
     $article_id = $conf['article_select']['article']['article_id'] ?? NULL;
     if (!$remote_source || !$article_id) {
       return NULL;
@@ -270,20 +275,18 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
   }
 
   /**
-   * Get a remote source instance.
+   * Get the configured paragraph from the article.
    *
-   * @return \Drupal\ghi_content\RemoteSource\RemoteSourceInterface
-   *   The remote source instance.
+   * @return \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface|null
+   *   A paragraph object as retrieved from the article.
    */
-  protected function getRemoteSource() {
+  private function getParagraph() {
+    $article = $this->getArticle();
     $conf = $this->getBlockConfig();
-    $remote_source_key = $conf['article_select']['article']['remote_source'] ?? NULL;
-    if (!$remote_source_key) {
-      return NULL;
+    if (!$article || empty($conf['paragraph']['paragraph_id'])) {
+      return;
     }
-    /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
-    $remote_source_manager = \Drupal::service('plugin.manager.remote_source');
-    return $remote_source_manager->createInstance($remote_source_key);
+    return $article->getParagraph(reset($conf['paragraph']['paragraph_id']));
   }
 
 }
