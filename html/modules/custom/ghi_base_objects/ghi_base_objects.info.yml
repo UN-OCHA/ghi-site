@@ -1,4 +1,4 @@
-name: 'GHI Base objects'
+name: 'GHI Base Objects'
 type: module
 description: 'Provides logic and data migration handling for API base objects'
 core_version_requirement: ^8 || ^9

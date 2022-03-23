@@ -81,6 +81,9 @@ form.layout-builder-configure-block.glb-canvas-form details.glb-claro-details {
   margin-top: 1rem;
   border-top: 0 !important;
 }
+form.layout-builder-configure-block.glb-canvas-form details.glb-claro-details .claro-details__description {
+  line-height: 1.5rem;
+}
 form.layout-builder-configure-block.glb-canvas-form .glb-messages-list {
   margin: 0 !important;
   display: none !important;
@@ -90,6 +93,10 @@ form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper > .glb-for
 }
 form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .glb-form-item__description {
   max-width: 100% !important;
+}
+form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .glb-form-checkboxes .glb-form-type--checkbox {
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
 }
 form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .glb-form-boolean--type-radio {
   box-shadow: none !important;

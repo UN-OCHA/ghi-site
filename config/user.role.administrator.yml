@@ -34,6 +34,8 @@ dependencies:
     - media
     - menu_link_content
     - node
+    - page_manager
+    - page_manager_publishable_variants
     - publishcontent
     - social_api
     - system
@@ -55,6 +57,7 @@ permissions:
   - 'access site reports'
   - 'access taxonomy overview'
   - 'access toolbar'
+  - 'access unpublished page variants'
   - 'access user profiles'
   - 'administer base object entities'
   - 'administer base_object_type labels'
@@ -62,6 +65,7 @@ permissions:
   - 'administer content translation'
   - 'administer menu'
   - 'administer nodes'
+  - 'administer pages'
   - 'administer social api authentication'
   - 'administer social api autoposting'
   - 'administer social api blocks'
