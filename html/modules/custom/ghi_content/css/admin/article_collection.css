@@ -5,7 +5,7 @@ form.article-collection [data-drupal-selector="edit-articles"] .form-type--tag_s
 form.article-collection [data-drupal-selector="edit-articles"] .form-type--tag_selection .glb-form-checkboxes .glb-form-type--checkbox {
   margin-top: .5em !important;
   margin-bottom: .5em !important;
-  min-width: 25%;
+  min-width: 15%;
 }
 
 form.article-collection [data-drupal-selector="edit-display-type"] .form-boolean-group,

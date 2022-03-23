@@ -11,13 +11,13 @@ input[type="checkbox"][disabled="disabled"] {
   background-color: var(--colorGinDisabled) !important;
 }
 
-#layout-builder .layout-builder__add-section {
+#layout-builder-ipe-wrapper #layout-builder .layout-builder__add-section {
   margin-top: 2rem;
 }
-#layout-builder .layout-builder__add-section:first-child {
+#layout-builder-ipe-wrapper #layout-builder .layout-builder__add-section:first-child {
   margin-top: 0;
 }
-#layout-builder .layout-builder__section:after {
+#layout-builder-ipe-wrapper #layout-builder .layout-builder__section:after {
   position: absolute;
   outline-width: 1px !important;
   outline-style: solid !important;
@@ -31,26 +31,27 @@ input[type="checkbox"][disabled="disabled"] {
   pointer-events: none;
   content: '' !important;
 }
-#layout-builder .layout-builder__section:hover:after {
+#layout-builder-ipe-wrapper #layout-builder .layout-builder__section:hover:after {
   outline-width: 2px !important;
   outline-color: var(--colorGinPrimary);
 }
-body.path-node #layout-builder .layout-builder__section:after {
+body.path-node #layout-builder-ipe-wrapper #layout-builder .layout-builder__section:after {
   content: none !important;
 }
 
-#layout-builder .layout-builder__section > .layout-builder__link {
+#layout-builder-ipe-wrapper #layout-builder .layout-builder__section > .layout-builder__link {
   top: -1.5rem !important;
   display: block !important;
   color: var(--colorGinFormElementBorder);
 }
-#layout-builder .layout-builder__section .layout-builder__link--remove {
+#layout-builder-ipe-wrapper #layout-builder .layout-builder__section .layout-builder__link--remove {
   background-color: var(--colorGinFormElementBorder);
+  left: -10px;
 }
-#layout-builder:hover .layout-builder__section .layout-builder__link {
-  display: block;
+#layout-builder-ipe-wrapper #layout-builder .layout-builder__section .layout-builder__link--configure {
+  left: 10px !important;
 }
-#layout-builder:hover .layout-builder__section:hover .layout-builder__link--configure:after {
+#layout-builder-ipe-wrapper #layout-builder:hover .layout-builder__section:hover .layout-builder__link--configure:after {
   background-color: var(--colorGinFormElementBorder);
 }
 
@@ -61,11 +62,11 @@ body.path-node #layout-builder .layout-builder__section:after {
 /**
  * Show the block selection in the modal as 3 columns.
  */
-#layout-builder-modal .block-categories {
+.layout-builder-ipe-editing #layout-builder-modal .block-categories {
   display: flex;
   flex-wrap: wrap;
 }
-#layout-builder-modal .block-categories .glb-claro-details {
+.layout-builder-ipe-editing #layout-builder-modal .block-categories .glb-claro-details {
   margin-right: 0 !important;
   margin-left: 0 !important;
   width: 33%;
@@ -74,23 +75,23 @@ body.path-node #layout-builder .layout-builder__section:after {
   border-top: 0 !important;
   border-bottom: 0 !important;
 }
-#layout-builder-modal .block-categories .glb-claro-details__wrapper {
+.layout-builder-ipe-editing #layout-builder-modal .block-categories .glb-claro-details__wrapper {
   margin-left: 0 !important;
   margin-right: 0 !important;
 }
-#layout-builder-modal .block-categories .glb-list {
+.layout-builder-ipe-editing #layout-builder-modal .block-categories .glb-list {
   width: 100%;
 }
-#layout-builder-modal .block-categories .glb-list li {
+.layout-builder-ipe-editing #layout-builder-modal .block-categories .glb-list li {
   position: relative;
 }
-#layout-builder-modal .block-categories .glb-list li .ajax-progress-throbber {
+.layout-builder-ipe-editing #layout-builder-modal .block-categories .glb-list li .ajax-progress-throbber {
   position: absolute;
   top: 0.4rem;
   right: -0.6rem;
   background-color: white !important;
 }
-#layout-builder-modal .block-categories .glb-list li .ajax-progress-throbber::before {
+.layout-builder-ipe-editing #layout-builder-modal .block-categories .glb-list li .ajax-progress-throbber::before {
   top: 0.4rem;
   left: 0.4rem;
 }
