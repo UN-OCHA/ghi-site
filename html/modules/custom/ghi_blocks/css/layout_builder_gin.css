@@ -1,3 +1,9 @@
+/**
+ * Special styles for the layout builder when used with gin.
+ *
+ * @todo Check if thiss should be moved into the theme as all of this is
+ *   probably frontend related.
+ */
 .glb-toolbar {
   z-index: 200 !important;
 }
@@ -5,35 +11,46 @@ input[type="checkbox"][disabled="disabled"] {
   background-color: var(--colorGinDisabled) !important;
 }
 
-body.path-node #layout-builder .layout-builder__add-section {
+#layout-builder .layout-builder__add-section {
   margin-top: 2rem;
 }
-body.path-node #layout-builder .layout-builder__add-section:first-child {
+#layout-builder .layout-builder__add-section:first-child {
   margin-top: 0;
 }
-
-body.path-node #layout-builder:hover .layout-builder__section > .layout-builder__layout > .layout-builder__region {
-  outline-offset: 1.5rem;
-  outline-color: var(--colorGinPrimary);
-  outline-style: none;
-  outline-width: 1px;
+#layout-builder .layout-builder__section:after {
+  position: absolute;
+  outline-width: 1px !important;
+  outline-style: solid !important;
+  outline-color: var(--colorGinFormElementBorder);
+  border-radius: 2px;
+  border: 0 !important;
+  width: calc(100% + 2rem);
+  height: 100%;
+  left: -1rem;
+  top: 0;
+  pointer-events: none;
+  content: '' !important;
 }
-body.path-node #layout-builder .layout-builder__section:not(.gin-lb--disable-section-focus):hover:after {
+#layout-builder .layout-builder__section:hover:after {
+  outline-width: 2px !important;
+  outline-color: var(--colorGinPrimary);
+}
+body.path-node #layout-builder .layout-builder__section:after {
   content: none !important;
 }
 
-body.path-node #layout-builder .layout-builder__section .layout-builder__link {
-  top: -3rem !important;
-  display: none;
+#layout-builder .layout-builder__section > .layout-builder__link {
+  top: -1.5rem !important;
+  display: block !important;
   color: var(--colorGinFormElementBorder);
 }
-body.path-node #layout-builder .layout-builder__section .layout-builder__link--remove {
+#layout-builder .layout-builder__section .layout-builder__link--remove {
   background-color: var(--colorGinFormElementBorder);
 }
-body.path-node #layout-builder:hover .layout-builder__section .layout-builder__link {
+#layout-builder:hover .layout-builder__section .layout-builder__link {
   display: block;
 }
-body.path-node #layout-builder:hover .layout-builder__section:hover .layout-builder__link--configure:after {
+#layout-builder:hover .layout-builder__section:hover .layout-builder__link--configure:after {
   background-color: var(--colorGinFormElementBorder);
 }
 
