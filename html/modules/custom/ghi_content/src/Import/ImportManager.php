@@ -229,7 +229,7 @@ class ImportManager implements ContainerInjectionInterface {
             ],
           ],
           'paragraph' => [
-            'paragraph_id' => $paragraph->getId(),
+            'paragraph_id' => [$paragraph->getId()],
           ],
         ],
       ];

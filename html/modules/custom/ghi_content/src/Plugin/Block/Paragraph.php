@@ -286,7 +286,10 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
     if (!$article || empty($conf['paragraph']['paragraph_id'])) {
       return;
     }
-    return $article->getParagraph(reset($conf['paragraph']['paragraph_id']));
+    // Make sure wa are always having an array, as this is the way that the
+    // markup_select form element provides it's value.
+    $paragraph_id = (array) $conf['paragraph']['paragraph_id'];
+    return $article->getParagraph(reset($paragraph_id));
   }
 
 }
