@@ -3,3 +3,8 @@ admin.article_collection:
   css:
     component:
       css/admin/article_collection.css: {}
+admin.related_articles:
+  version: VERSION
+  css:
+    component:
+      css/admin/related_articles.css: {}

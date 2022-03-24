@@ -40,6 +40,17 @@ function ghi_content_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_content.theme.inc',
       'template' => 'article-collection-table',
     ],
+    'related_articles_cards' => [
+      'variables' => [
+        'articles' => [],
+        'options' => [
+          'alignment' => 'horizontal',
+          'columns' => 3,
+        ],
+      ],
+      'file' => 'ghi_content.theme.inc',
+      'template' => 'related-articles-cards',
+    ],
   ];
 }
 
