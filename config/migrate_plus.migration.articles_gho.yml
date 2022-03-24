@@ -1,0 +1,59 @@
+uuid: 0e7aad74-bb51-4c14-af9b-7af26a0c7fc6
+langcode: en
+status: true
+dependencies: {  }
+id: articles_gho
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags:
+  - NCMS
+migration_group: ncms
+label: 'Articles from the GHO NCMS backend'
+source:
+  track_changes: true
+  remote_source: gho_ncms
+  fields:
+    -
+      name: id
+      label: ID
+      selector: id
+    -
+      name: title
+      label: Title
+      selector: title
+    -
+      name: created
+      label: 'Created datetime'
+      selector: created
+    -
+      name: updated
+      label: 'Updated datetime'
+      selector: updated
+  ids:
+    id:
+      type: integer
+process:
+  type:
+    plugin: default_value
+    default_value: article
+  title: title
+  created:
+    plugin: callback
+    callable: strtotime
+    source: created
+  changed:
+    plugin: callback
+    callable: strtotime
+    source: updated
+  field_remote_article/remote_source:
+    plugin: default_value
+    default_value: gho_ncms
+  field_remote_article/article_id: id
+destination:
+  plugin: 'entity:node'
+  overwrite_properties:
+    - title
+    - created
+    - changed
+migration_dependencies: null

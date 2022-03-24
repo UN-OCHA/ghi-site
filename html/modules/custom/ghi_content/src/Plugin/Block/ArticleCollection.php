@@ -14,7 +14,7 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
  *  admin_label = @Translation("Article collection"),
  *  category = @Translation("Narrative Content"),
  *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
+ *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
  *   }
  * )
  */
@@ -154,7 +154,7 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
   public function articlesForm(array $form, FormStateInterface $form_state) {
 
     $section = $this->getCurrentBaseEntity();
-    $section_tag_ids = array_keys($this->articleManager->getTags($section));
+    $section_tag_ids = $section ? array_keys($this->articleManager->getTags($section)) : [];
 
     // Get the available tags, section tags will be first.
     $available_tags = $this->articleManager->loadAvailableTagsForSection($section);
@@ -238,7 +238,7 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
       ]),
       '#states' => [
         'visible' => [
-          ':input[name="display[cards][populate]"]' => ['value' => 'auto'],
+          ':input[name="display[type]"]' => ['value' => 'cards'],
         ],
       ],
     ];

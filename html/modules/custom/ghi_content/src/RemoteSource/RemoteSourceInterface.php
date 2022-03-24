@@ -127,4 +127,12 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    */
   public function getFileContent($uri);
 
+  /**
+   * Get the import source for a remote system.
+   *
+   * @return array
+   *   An array of source identifiers.
+   */
+  public function importSource();
+
 }

@@ -314,4 +314,28 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
     return file_get_contents($uri, FALSE, $context);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function importSource() {
+    $query = '{
+      articleExport {
+        count
+        items {
+          id
+          title
+          created
+          updated
+        }
+      }
+    }';
+    $response = $this->query($query);
+    if (!$response->has('articleExport') || !$response->get('articleExport')->items) {
+      return [];
+    }
+    return array_map(function ($item) {
+      return (array) $item;
+    }, $response->get('articleExport')->items);
+  }
+
 }

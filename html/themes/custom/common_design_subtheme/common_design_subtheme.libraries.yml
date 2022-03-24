@@ -64,7 +64,19 @@ gho-photo-gallery:
   css:
     theme:
       components/gho-photo-gallery/gho-photo-gallery.css: {}
+  dependencies:
+    - common_design_subtheme/gho-aside
 gho-text:
   css:
     theme:
       components/gho-text/gho-text.css: {}
+gho-caption:
+  css:
+    theme:
+      components/gho-caption/gho-caption.css: {}
+gho-aside:
+  css:
+    theme:
+      components/gho-aside/gho-aside.css: {}
+  dependencies:
+    - common_design_subtheme/gho-caption
