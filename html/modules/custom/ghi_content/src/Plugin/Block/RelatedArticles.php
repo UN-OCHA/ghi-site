@@ -13,7 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
  *  admin_label = @Translation("Related articles"),
  *  category = @Translation("Narrative Content"),
  *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
+ *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
  *   }
  * )
  */

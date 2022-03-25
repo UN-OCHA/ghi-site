@@ -721,6 +721,15 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $form['context_mapping']['year']['#access'] = FALSE;
       $form['context_mapping']['year']['#value'] = array_key_first($form['context_mapping']['year']['#options']);
     }
+
+    if (array_key_exists('node', $form['context_mapping'])) {
+      $options = array_keys($form['context_mapping']['node']['#options']);
+      $options = array_filter($options);
+      if (count($options) == 1) {
+        $form['context_mapping']['node']['#access'] = FALSE;
+        $form['context_mapping']['node']['#value'] = reset($options);
+      }
+    }
     return $form;
   }
 
@@ -969,7 +978,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
       '#name' => 'preview-toggle',
       // Note: This doesn't work. We manually add the checked attribute later.
       '#default_value' => (bool) $is_preview,
-      // '#element_validate' => [get_class($this) . '::previewValidate'],
       '#ajax' => [
         'event' => 'change',
         'callback' => [$this, 'navigateFormStep'],

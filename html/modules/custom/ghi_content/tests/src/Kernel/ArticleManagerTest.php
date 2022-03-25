@@ -181,7 +181,8 @@ class ArticleManagerTest extends KernelTestBase {
     ]);
     $section->save();
 
-    $this->assertEquals($section_term_ids, array_keys($this->articleManager->loadAvailableTagsForSection($section)));
+    $this->assertEquals($section_term_ids, array_keys($this->articleManager->getTags($section)));
+    $this->assertEquals([], array_keys($this->articleManager->loadNodesForSection($section)));
 
     // Create an article.
     $article_1_tags = array_merge($section_term_ids, [
@@ -211,7 +212,15 @@ class ArticleManagerTest extends KernelTestBase {
     ]);
     $article_2->save();
 
-    $this->assertCount(2, array_keys($this->articleManager->loadNodesForSection($section)));
+    // Check the number of articles found for a section.
+    $section_articles = $this->articleManager->loadNodesForSection($section);
+    $this->assertCount(2, array_keys($section_articles));
+
+    // Check the available tags returned for the section articles.
+    $expected_tags = array_unique(array_merge($article_1_tags, $article_2_tags));
+    sort($expected_tags);
+    $this->assertEquals($expected_tags, array_keys($this->articleManager->getAvailableTags($section_articles)));
+
   }
 
   /**

@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\node\NodeInterface;
 
@@ -128,7 +129,7 @@ function ghi_content_preprocess_page(&$variables) {
     return;
   }
 
-  if ($node->bundle() != 'article') {
+  if ($node->bundle() != ArticleManager::ARTICLE_BUNDLE) {
     return;
   }
 

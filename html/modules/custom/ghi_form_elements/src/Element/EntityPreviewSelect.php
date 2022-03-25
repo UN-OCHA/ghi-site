@@ -27,6 +27,7 @@ class EntityPreviewSelect extends FormElement {
       '#entity_type' => NULL,
       '#view_mode' => NULL,
       '#limit_field' => NULL,
+      '#allow_selected' => NULL,
       '#allow_featured' => NULL,
       '#process' => [
         [$class, 'processEntityPreviewSelect'],
@@ -39,6 +40,9 @@ class EntityPreviewSelect extends FormElement {
       ],
       '#element_submit' => [
         [$class, 'elementSubmit'],
+      ],
+      '#element_validate' => [
+        [$class, 'elementValidate'],
       ],
       '#theme_wrappers' => ['form_element'],
     ];
@@ -113,7 +117,9 @@ class EntityPreviewSelect extends FormElement {
     $entities = $element['#entities'];
     $entity_type = $element['#entity_type'];
     $view_mode = $element['#view_mode'];
+    $allow_selected = !empty($element['#allow_selected']) && is_int($element['#allow_selected']) ? (int) $element['#allow_selected'] : NULL;
     $allow_featured = !empty($element['#allow_featured']) && is_int($element['#allow_featured']) ? (int) $element['#allow_featured'] : NULL;
+
     $previews = [];
     foreach ($entities as $entity) {
       $entity_view = \Drupal::entityTypeManager()->getViewBuilder($entity_type)->view($entity, $view_mode);
@@ -125,6 +131,7 @@ class EntityPreviewSelect extends FormElement {
       'previews' => $previews,
       'entity_ids' => array_keys($entities),
       'limit_field' => $element['#limit_field'] ?? NULL,
+      'allow_selected' => $allow_selected,
       'allow_featured' => $allow_featured,
     ];
     $element['order'] = [

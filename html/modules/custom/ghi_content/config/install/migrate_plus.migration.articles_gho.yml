@@ -49,3 +49,4 @@ destination:
     - title
     - created
     - changed
+migration_dependencies: {}
