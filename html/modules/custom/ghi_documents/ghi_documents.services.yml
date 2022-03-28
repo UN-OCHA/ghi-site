@@ -5,4 +5,4 @@ services:
       - { name: event_subscriber }
   ghi_documents.manager:
     class: Drupal\ghi_documents\DocumentManager
-    arguments: ['@entity_type.manager', '@renderer']
+    arguments: ['@entity_type.manager', '@renderer', '@current_user']
