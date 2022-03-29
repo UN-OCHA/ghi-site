@@ -5,6 +5,7 @@ namespace Drupal\Tests\ghi_content\Functional;
 use Drupal\Component\Serialization\Json;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
@@ -117,7 +118,7 @@ class ArticleWizardTest extends BrowserTestBase {
     $this->assertNotEmpty($data);
 
     Node::create([
-      'type' => 'article',
+      'type' => ArticleManager::ARTICLE_BUNDLE,
       'title' => $data[0]['label'],
       'field_remote_article' => [
         0 => [
@@ -164,10 +165,10 @@ class ArticleWizardTest extends BrowserTestBase {
    */
   private function setupContent() {
     $this->drupalCreateContentType([
-      'type' => 'article',
+      'type' => ArticleManager::ARTICLE_BUNDLE,
       'name' => 'Article',
     ]);
-    $this->createField('node', 'article', 'ghi_remote_article', 'field_remote_article', 'Remote Article');
+    $this->createField('node', ArticleManager::ARTICLE_BUNDLE, 'ghi_remote_article', 'field_remote_article', 'Remote Article');
 
     // Create team vocabulary and fields.
     Vocabulary::create([
@@ -179,7 +180,7 @@ class ArticleWizardTest extends BrowserTestBase {
         'team' => 'team',
       ],
     ];
-    $this->createEntityReferenceField('node', 'article', 'field_team', 'Team', 'taxonomy_term', 'default', $handler_settings);
+    $this->createEntityReferenceField('node', ArticleManager::ARTICLE_BUNDLE, 'field_team', 'Team', 'taxonomy_term', 'default', $handler_settings);
     Term::create([
       'name' => $this->randomMachineName(),
       'vid' => 'team',

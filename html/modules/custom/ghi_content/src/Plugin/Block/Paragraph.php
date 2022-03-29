@@ -16,9 +16,6 @@ use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
  *  id = "paragraph",
  *  admin_label = @Translation("Paragraph"),
  *  category = @Translation("Narrative Content"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *   }
  * )
  */
 class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface {
@@ -52,16 +49,18 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
     $wrapper_attributes = [];
     $dom = Html::load($rendered);
     $child = $dom->getElementsByTagName('div')->item(0);
-    $attributes = $child->attributes;
-    if ($attributes && $attributes->getNamedItem('class') && $attributes->getNamedItem('class')->nodeValue) {
-      $class_attribute = $attributes->getNamedItem('class')->nodeValue;
-      $classes = explode(' ', $class_attribute);
-      $gho_classes = !empty($classes) ? array_filter($classes, function ($class) {
-        return strpos($class, 'gho-') === 0;
-      }) : [];
-      $wrapper_attributes['class'] = $gho_classes;
-      $attributes->getNamedItem('class')->nodeValue = implode(' ', array_diff($classes, $gho_classes));
-      $rendered = trim(Html::serialize($dom));
+    if ($child) {
+      $attributes = $child->attributes;
+      if ($attributes && $attributes->getNamedItem('class') && $attributes->getNamedItem('class')->nodeValue) {
+        $class_attribute = $attributes->getNamedItem('class')->nodeValue;
+        $classes = explode(' ', $class_attribute);
+        $gho_classes = !empty($classes) ? array_filter($classes, function ($class) {
+          return strpos($class, 'gho-') === 0;
+        }) : [];
+        $wrapper_attributes['class'] = $gho_classes;
+        $attributes->getNamedItem('class')->nodeValue = implode(' ', array_diff($classes, $gho_classes));
+        $rendered = trim(Html::serialize($dom));
+      }
     }
 
     $build = [

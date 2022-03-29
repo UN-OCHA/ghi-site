@@ -1,0 +1,52 @@
+id: articles_gho
+label: Articles from the GHO NCMS backend
+migration_group: ncms
+migration_tags:
+  - 'NCMS'
+source:
+  track_changes: true
+  remote_source: gho_ncms
+  fields:
+    -
+      name: id
+      label: 'ID'
+      selector: id
+    -
+      name: title
+      label: 'Title'
+      selector: title
+    -
+      name: created
+      label: 'Created datetime'
+      selector: created
+    -
+      name: updated
+      label: 'Updated datetime'
+      selector: updated
+  ids:
+    id:
+      type: integer
+process:
+  type:
+    plugin: default_value
+    default_value: article
+  title: title
+  created:
+    plugin: callback
+    callable: strtotime
+    source: created
+  changed:
+    plugin: callback
+    callable: strtotime
+    source: updated
+  field_remote_article/remote_source:
+    plugin: default_value
+    default_value: gho_ncms
+  field_remote_article/article_id: id
+destination:
+  plugin: 'entity:node'
+  overwrite_properties:
+    - title
+    - created
+    - changed
+migration_dependencies: {}

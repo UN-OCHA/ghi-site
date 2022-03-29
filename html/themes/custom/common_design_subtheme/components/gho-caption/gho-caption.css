@@ -1,0 +1,49 @@
+.gho-caption {
+  /* Margin top and bottom vary depending on where the caption is used, so
+   * we let the components using them to set their margins. */
+  margin-top: 0;
+  margin-bottom: 0;
+  color: #707070;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .gho-caption {
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+  }
+}
+/* The border is not on the container itself due to eventual left/right padding
+ * values that can interfere. Ex: when it has the `content-width` class. */
+.gho-caption--article::after {
+  display: block;
+  padding-bottom: 2rem;
+  content: "";
+  border-bottom: 1px solid #d8d8d8;
+}
+
+/* We don't put the max-width on the container so we can more easily add
+ * the border bottom for the article captions. */
+.gho-caption > * {
+  max-width: var(--reading-width);
+}
+.gho-caption__location {
+  margin: 0;
+  font-weight: bold;
+}
+.gho-caption__text {
+  margin: 0;
+}
+.gho-caption__text > :first-child {
+  margin-top: 0;
+}
+.gho-caption__text > :last-child {
+  margin-bottom: 0;
+}
+.gho-caption--formatted .gho-caption__text > p:last-of-type {
+  display: inline;
+}
+.gho-caption__credits {
+  font-style: italic;
+}

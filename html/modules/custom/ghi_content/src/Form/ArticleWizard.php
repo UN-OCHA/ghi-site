@@ -264,30 +264,19 @@ class ArticleWizard extends FormBase {
     // Clear the error messages.
     $this->messenger()->deleteAll();
 
-    // Create and save the article.
-    $article = $this->entityTypeManager->getStorage('node')->create([
-      'type' => 'article',
-      'title' => $values['title'],
-      'uid' => $this->currentUser()->id(),
-      'status' => FALSE,
-    ]);
-    $article->field_remote_article = [
-      0 => [
-        'remote_source' => $values['source'],
-        'article_id' => $values['article'],
-      ],
-    ];
-    $article->field_team = $values['team'];
+    $article = $this->getSubmittedArticle($form_state);
 
-    $status = $article->save();
-    if ($status) {
+    // Create the article.
+    $node = $this->articleManager->createNodeFromRemoteArticle($article, $values['title'], $values['team']);
+    if ($node) {
       $this->messenger()->addStatus($this->t('Created @type for @title', [
-        '@type' => $article->type->entity->label(),
-        '@title' => $article->label(),
+        '@type' => $node->type->entity->label(),
+        '@title' => $node->label(),
       ]));
+      $form_state->setRedirectUrl($node->toUrl());
     }
 
-    $form_state->setRedirectUrl($article->toUrl());
+    $this->messenger()->addError($this->t('There was processing this form. Please check the logs or contact an administrator'));
   }
 
   /**

@@ -2,7 +2,6 @@
 
 namespace Drupal\ghi_content\Plugin\Block;
 
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 
@@ -14,13 +13,15 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
  *  admin_label = @Translation("Article collection"),
  *  category = @Translation("Narrative Content"),
  *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
+ *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
  *   }
  * )
  */
 class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockInterface {
 
   const MAX_FEATURE_COUNT = 2;
+  const CARD_LIMIT = 9;
+  const CARD_COUNT_DEFAULT = 6;
 
   /**
    * {@inheritdoc}
@@ -43,21 +44,45 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
     }
 
     if ($display['type'] == 'cards') {
-      if ($display['cards']['populate'] == 'manual' && !empty($display['cards']['select'])) {
-        if (!empty($display['cards']['select']['selected'])) {
-          $articles = array_intersect_key($articles, array_flip($display['cards']['select']['selected']));
+      if ($display['cards']['populate'] == 'manual') {
+        $card_select = $display['cards']['select'];
+
+        // First order the articles.
+        if (!empty($card_select['order'])) {
+          $order = array_filter($card_select['order'], function ($id) use ($articles) {
+            return array_key_exists($id, $articles);
+          });
+          $order = array_map(function ($id) {
+            return (int) $id;
+          }, $order);
+          $articles = array_map(function ($id) use ($articles) {
+            return $articles[$id];
+          }, array_combine($order, $order));
         }
-        if (!empty($display['cards']['select']['order'])) {
-          $articles = array_filter(array_map(function ($id) use ($articles) {
-            return $articles[$id] ?? NULL;
-          }, $display['cards']['select']['order']));
+
+        // Then get the featured ones into the options.
+        $options['featured'] = $card_select['featured'] ?? [];
+
+        // Then filter for only the selected ones if there are any.
+        if (!empty($card_select['selected'])) {
+          $articles = array_intersect_key($articles, array_flip($card_select['selected']));
         }
-        $options['featured'] = $display['cards']['select']['featured'] ?? [];
+        else {
+          $card_limit = self::CARD_LIMIT;
+          $articles = array_slice($articles, 0, $card_limit, TRUE);
+        }
       }
       else {
-        $card_limit = $display['cards']['count'] ?? 6;
-        $articles = $this->getArticles($card_limit);
+        // Otherwhise just take the first X articles.
+        $card_limit = $display['cards']['count'] ?? self::CARD_LIMIT;
+        $card_limit = $card_limit <= self::CARD_LIMIT ? $card_limit : self::CARD_LIMIT;
+        $articles = array_slice($articles, 0, $card_limit, TRUE);
       }
+    }
+
+    if (empty($articles)) {
+      // Check again if we have something to show.
+      return;
     }
 
     $build = [
@@ -98,7 +123,7 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
         // Card specific configuration.
         'cards' => [
           'populate' => 'manual',
-          'count' => 6,
+          'count' => self::CARD_COUNT_DEFAULT,
           'select' => [
             'order' => NULL,
             'selected' => [],
@@ -154,12 +179,22 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
   public function articlesForm(array $form, FormStateInterface $form_state) {
 
     $section = $this->getCurrentBaseEntity();
-    $section_tag_ids = array_keys($this->articleManager->getTags($section));
+    $section_tags = $section ? $this->articleManager->getTags($section) : [];
+    $section_tag_ids = array_keys($section_tags);
 
-    // Get the available tags, section tags will be first.
-    $available_tags = $this->articleManager->loadAvailableTagsForSection($section);
-    $node_ids_by_tag = $this->articleManager->getNodeIdsGroupedByTag($section);
-    $node_previews = $this->articleManager->getNodePreviews($this->articleManager->loadNodesForSection($section), 'grid');
+    if ($section) {
+      // Get the available tags, section tags will be first.
+      $available_nodes = $this->articleManager->loadNodesForSection($section);
+    }
+    else {
+      // This is a global section or a global landing page. Get all available
+      // tags and nodes.
+      $available_nodes = $this->articleManager->loadAllNodes();
+    }
+
+    $available_tags = $section_tags + $this->articleManager->getAvailableTags($available_nodes);
+    $node_ids_by_tag = $this->articleManager->getNodeIdsGroupedByTag($available_nodes);
+    $node_previews = $this->articleManager->getNodePreviews($available_nodes, 'grid');
 
     // Get the defaults.
     $default_tags = $this->getDefaultFormValueFromFormState($form_state, 'tags') ?? [];
@@ -231,7 +266,7 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
       '#type' => 'number',
       '#title' => $this->t('Number of cards'),
       '#min' => 0,
-      '#max' => 9,
+      '#max' => self::CARD_LIMIT,
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
         'cards',
         'count',
@@ -246,23 +281,24 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
     $form['cards']['select'] = [
       '#type' => 'entity_preview_select',
       '#title' => $this->t('Cards'),
-      '#description' => $this->t('Select the articles that should be shown as cards. If no article is selected, all articles as defined by the constraints in the article selection dialog will be displayed. The article cards can be re-ordered by moving the cards, and up to @count cards can be selected as featured. Featured articles will be visually highlighted in the final display of this element.', [
-        '@count' => self::MAX_FEATURE_COUNT,
+      '#description' => $this->t('Up to @max_select articles can be selected to display as cards by clicking on them. If no article is selected, the first @max_select articles as defined by the constraints in the article selection dialog will be displayed. The article cards can be re-ordered by moving the cards, and up to @max_feature cards can be selected as featured. Featured articles will be visually highlighted in the final display of this element.', [
+        '@max_select' => self::CARD_LIMIT,
+        '@max_feature' => self::MAX_FEATURE_COUNT,
       ]),
       '#entities' => $this->getArticles(),
       '#entity_type' => 'node',
       '#view_mode' => 'grid',
+      '#allow_selected' => self::CARD_LIMIT,
       '#allow_featured' => self::MAX_FEATURE_COUNT,
-      '#limit_field' => Html::getClass(implode('-', array_merge(['edit'], $form['#parents'], [
-        'cards',
-        'count',
-      ]))),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
         'cards',
         'select',
       ]),
       '#states' => [
         'visible' => [
+          ':input[name="display[cards][populate]"]' => ['value' => 'manual'],
+        ],
+        'required' => [
           ':input[name="display[cards][populate]"]' => ['value' => 'manual'],
         ],
       ],
@@ -288,7 +324,10 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
     $section = $this->getCurrentBaseEntity();
     $tag_ids = $this->getApplicabbleTagIds();
     $tag_conjunction = $this->getTagConjunction();
-    return $this->articleManager->loadNodesForTags($tag_ids, $section, $tag_conjunction, $limit);
+    if ($section || $tag_ids) {
+      return $this->articleManager->loadNodesForTags($tag_ids, $section, $tag_conjunction, $limit);
+    }
+    return $this->articleManager->loadAllNodes($limit);
   }
 
   /**

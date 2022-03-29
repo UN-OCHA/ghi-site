@@ -1,3 +1,13 @@
+.form-type--entity_preview_select > label > .preview-summary {
+  font-weight: normal;
+  font-size: 0.85em;
+}
+.form-type--entity_preview_select .preview-wrapper {
+  max-height: 25rem;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding: 0.25rem;
+}
 .form-type--entity_preview_select .preview-content > [data-content-id] {
   padding: 3px;
   background-color: white;
@@ -12,8 +22,12 @@
 .form-type--entity_preview_select .preview-content > [data-content-id] > * {
   zoom: 0.7;
 }
-.form-type--entity_preview_select .preview-content > [data-content-id] > .featured-checkbox {
+.form-type--entity_preview_select .preview-content > [data-content-id] > .featured-checkbox  {
   zoom: 1;
+}
+.form-type--entity_preview_select .preview-content > [data-content-id] > .featured-checkbox.disabled > * {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .form-type--entity_preview_select .preview-content > [data-content-id].selected {

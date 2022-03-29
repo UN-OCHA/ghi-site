@@ -23,7 +23,7 @@
    */
   Drupal.EntityPreviewSelect.getSelectLimit = function($wrapper) {
     let $limit_field = Drupal.EntityPreviewSelect.getSelectLimitField($wrapper);
-    return $limit_field ? $limit_field.val() : null;
+    return $limit_field ? $limit_field.val() : $wrapper.data('config').allow_selected;
   }
 
   /**
@@ -39,6 +39,10 @@
       return;
     }
     $(el).toggleClass('selected');
+    if (!$(el).hasClass('selected') && $(el).hasClass('featured')) {
+      $(el).toggleClass('featured');
+      Drupal.EntityPreviewSelect.updateFeatureSelectedPreviewItems($wrapper);
+    }
     Drupal.EntityPreviewSelect.updateSelectedPreviewItems($wrapper);
   }
 
@@ -56,6 +60,7 @@
       selected.push($(this).attr('data-content-id'));
     });
     $wrapper.find('input.entities-selected').val(selected.join());
+    Drupal.EntityPreviewSelect.updatePreviewSummary($wrapper);
   };
 
   /**
@@ -68,6 +73,10 @@
       return;
     }
     $(el).toggleClass('featured');
+    if ($(el).hasClass('featured') && !$(el).hasClass('selected')) {
+      $(el).toggleClass('selected');
+      Drupal.EntityPreviewSelect.updateSelectedPreviewItems($wrapper);
+    }
     Drupal.EntityPreviewSelect.updateFeatureSelectedPreviewItems($wrapper);
   }
 
@@ -86,9 +95,66 @@
     });
     $wrapper.find('.preview-content [data-content-id]:visible').each(function () {
       $(this).find('input[type="checkbox"').prop('checked', $(this).hasClass('featured'));
+      let disabled = !$(this).hasClass('featured') && (limit && featured.length >= limit);
+      $(this).find('input[type="checkbox"').attr('disabled', disabled);
+      $(this).find('input[type="checkbox"').parent().toggleClass('disabled', disabled);
     });
     $wrapper.find('input.entities-featured').val(featured.join());
+    Drupal.EntityPreviewSelect.updatePreviewSummary($wrapper);
   };
+
+  /**
+   * Update the preview summary.
+   */
+  Drupal.EntityPreviewSelect.updatePreviewSummary = function($wrapper) {
+    let selected = Drupal.EntityPreviewSelect.getSelected($wrapper);
+    let featured = Drupal.EntityPreviewSelect.getFeatured($wrapper);
+    let limit_selected = Drupal.EntityPreviewSelect.getSelectLimit($wrapper);
+    let limit_featured = $wrapper.data('config').allow_featured;
+    var summary_selected = null;
+    var summary_featured = null;
+    if (limit_selected) {
+      summary_selected = Drupal.t('!selected/!limit selected', {
+        '!selected': selected.length,
+        '!limit': limit_selected,
+      });
+    }
+    else {
+      summary_selected = Drupal.t('!selected selected', {
+        '!selected': selected.length,
+      });
+    }
+    if (limit_featured) {
+      summary_featured = Drupal.t('!selected/!limit featured', {
+        '!selected': featured.length,
+        '!limit': limit_featured,
+      });
+    }
+    if (summary_selected || summary_featured) {
+      $wrapper.find('.preview-summary').html(' (' + [
+        summary_selected,
+        summary_featured
+      ].filter((x) => x).join(', ') + ')');
+    }
+    else {
+      $wrapper.find('.preview-summary').html();
+    }
+  }
+
+  /**
+   * Get the list of selected items.
+   */
+  Drupal.EntityPreviewSelect.getSelected = function($wrapper) {
+    return $wrapper.find('input.entities-selected').val().split(',').filter((x) => x).map(Number);
+  }
+
+  /**
+   * Get the list of featured items.
+   */
+  Drupal.EntityPreviewSelect.getFeatured = function($wrapper) {
+    $input_featured = $wrapper.find('input.entities-featured');
+    return $input_featured ? $input_featured.val().split(',').filter((x) => x).map(Number) : [];
+  }
 
   /**
    * Initialize the element.
@@ -99,10 +165,15 @@
     let config = $wrapper.data('config');
     let previews = config.previews;
     let entity_ids = config.entity_ids || [];
-    let selected = $wrapper.find('input.entities-selected').val().split(',').map(Number);
+    let selected = Drupal.EntityPreviewSelect.getSelected($wrapper);
     let allow_featured = config.allow_featured || 0;
-    let featured = allow_featured ? $wrapper.find('input.entities-featured').val().split(',').map(Number) : [];
-    featured.map
+    let featured = allow_featured ? Drupal.EntityPreviewSelect.getFeatured($wrapper) : [];
+    console.log(selected, featured);
+    if ($wrapper.find('.preview-summary').length == 0) {
+      $summary = $('<span></span>');
+      $summary.addClass('preview-summary');
+      $wrapper.children('label').append($summary);
+    }
 
     if ($wrapper.find('.preview-content').length == 0) {
       $preview_wrapper = $('<div></div>');

@@ -149,10 +149,6 @@ class ImportManager implements ContainerInjectionInterface {
       return FALSE;
     }
 
-    if ($messenger === NULL) {
-      $messenger = $this->messenger();
-    }
-
     $thumbnail_name = basename($thumbnail_url);
     $data = $article->getSource()->getFileContent($thumbnail_url);
     $file = $this->fileRepository->writeData($data, ArticleManager::THUMBNAIL_DIRECTORY . '/' . $thumbnail_name, FileSystem::EXISTS_RENAME);
@@ -162,12 +158,11 @@ class ImportManager implements ContainerInjectionInterface {
       'alt' => $node->getTitle(),
       'title' => $node->getTitle(),
     ]);
-    if ($update) {
-      $messenger->addMessage($this->t('Updated image'));
+
+    if ($messenger !== NULL) {
+      $messenger->addMessage($update ? $this->t('Updated image') : $this->t('Imported image'));
     }
-    else {
-      $messenger->addMessage($this->t('Imported image'));
-    }
+
   }
 
   /**
@@ -194,10 +189,6 @@ class ImportManager implements ContainerInjectionInterface {
       return FALSE;
     }
 
-    if ($messenger === NULL) {
-      $messenger = $this->messenger();
-    }
-
     $sections = $this->getNodeSections($node);
     $delta = 0;
 
@@ -219,6 +210,8 @@ class ImportManager implements ContainerInjectionInterface {
         ],
       ];
 
+      $messages = [];
+
       $existing_component = $this->getExistingSyncedParagraph($node, $paragraph);
       $paragraph_configuration = [
         'hpc' => [
@@ -237,17 +230,17 @@ class ImportManager implements ContainerInjectionInterface {
         // Update an existing component.
         $configuration = $paragraph_configuration + $context_mapping + $existing_component->get('configuration');
         $existing_component->setConfiguration($configuration);
-        $messenger->addMessage($this->t('Updated %plugin_title (%uuid)', [
+        $messages[] = $this->t('Updated %plugin_title (%uuid)', [
           '%plugin_title' => $definition['admin_label'],
           '%uuid' => $paragraph->getUuid(),
-        ]));
+        ]);
       }
       else {
         // Append a new component.
-        $messenger->addMessage($this->t('Added %plugin_title (%uuid)', [
+        $messages[] = $this->t('Added %plugin_title (%uuid)', [
           '%plugin_title' => $definition['admin_label'],
           '%uuid' => $paragraph->getUuid(),
-        ]), $messenger::TYPE_STATUS, TRUE);
+        ]);
         $config = array_filter([
           'id' => $definition['id'],
           'provider' => $definition['provider'],
@@ -265,6 +258,12 @@ class ImportManager implements ContainerInjectionInterface {
     $this->layoutManagerDiscardChanges($node, $messenger);
 
     $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+
+    if ($messenger !== NULL && count($messages)) {
+      foreach ($messages as $message) {
+        $messenger->addMessage($message);
+      }
+    }
 
     return TRUE;
   }
@@ -286,13 +285,9 @@ class ImportManager implements ContainerInjectionInterface {
       return FALSE;
     }
 
-    if ($messenger === NULL) {
-      $messenger = $this->messenger();
-    }
-
     // Get the tags.
-    $main_tags = $article->getMajorTags();
-    $article_tags = $article->getMinorTags();
+    $main_tags = $article->getMajorTags() ?? [];
+    $article_tags = $article->getMinorTags() ?? [];
 
     $update = !$node->get($field_name)->isEmpty();
 
@@ -320,11 +315,8 @@ class ImportManager implements ContainerInjectionInterface {
 
     $node->get($field_name)->setValue($terms);
 
-    if ($update) {
-      $messenger->addMessage($this->t('Updated tags'));
-    }
-    else {
-      $messenger->addMessage($this->t('Imported tags'));
+    if ($messenger !== NULL) {
+      $messenger->addMessage($update ? $this->t('Updated tags') : $this->t('Imported tags'));
     }
 
     return TRUE;
@@ -389,12 +381,14 @@ class ImportManager implements ContainerInjectionInterface {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    */
-  private function layoutManagerDiscardChanges(NodeInterface $node, MessengerInterface $messenger) {
+  private function layoutManagerDiscardChanges(NodeInterface $node, MessengerInterface $messenger = NULL) {
     $section_storage = $this->getSectionStorageForEntity($node);
     // @todo See if the view mode can be retrieved somehow.
     $section_storage->setContextValue('view_mode', 'default');
     $this->layoutTempstoreRepository->delete($section_storage);
-    $messenger->addMessage($this->t('Cleared layout builder temporary storage'));
+    if ($messenger !== NULL) {
+      $messenger->addMessage($this->t('Cleared layout builder temporary storage'));
+    }
   }
 
 }

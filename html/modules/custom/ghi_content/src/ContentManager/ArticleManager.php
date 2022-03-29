@@ -18,17 +18,60 @@ class ArticleManager extends BaseContentManager {
   const THUMBNAIL_DIRECTORY = 'public://thumbnails/article';
 
   /**
+   * The machine name of the bundle to use for articles.
+   */
+  const ARTICLE_BUNDLE = 'article';
+
+  /**
+   * Create a local article node for the given remote article.
+   *
+   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $article
+   *   An article object from the remote source.
+   * @param string $title
+   *   An title for the article node.
+   * @param int $team
+   *   An optional term id for the team field.
+   *
+   * @return \Drupal\node\NodeInterface|null
+   *   The created article node if successful or NULL otherwise.
+   */
+  public function createNodeFromRemoteArticle(RemoteArticleInterface $article, $title, $team = NULL) {
+    $node = $this->loadNodeForRemoteArticle($article);
+    if ($node) {
+      // We allow only a single local article per remote article.
+      return FALSE;
+    }
+    $node = $this->entityTypeManager->getStorage('node')->create([
+      'type' => self::ARTICLE_BUNDLE,
+      'title' => $title,
+      'uid' => $this->currentUser->id(),
+      'status' => FALSE,
+    ]);
+    $node->field_remote_article = [
+      0 => [
+        'remote_source' => $article->getSource()->getPluginId(),
+        'article_id' => $article->getId(),
+      ],
+    ];
+    if ($team) {
+      $node->field_team = $team;
+    }
+    $status = $node->save();
+    return $status == SAVED_NEW ? $node : NULL;
+  }
+
+  /**
    * Load a local article node for the given remote article.
    *
    * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $article
-   *   An article object from that remote source.
+   *   An article object from the remote source.
    *
    * @return \Drupal\node\NodeInterface|null
    *   The article node if found or NULL.
    */
   public function loadNodeForRemoteArticle(RemoteArticleInterface $article) {
     $results = $this->entityTypeManager->getStorage('node')->loadByProperties([
-      'type' => 'article',
+      'type' => self::ARTICLE_BUNDLE,
       'field_remote_article.remote_source' => $article->getSource()->getPluginId(),
       'field_remote_article.article_id' => $article->getId(),
     ]);
@@ -61,7 +104,7 @@ class ArticleManager extends BaseContentManager {
     // Setup the base query.
     $query = $this->entityTypeManager->getStorage('node')->getQuery();
     $query->condition('status', NodeInterface::PUBLISHED);
-    $query->condition('type', 'article');
+    $query->condition('type', self::ARTICLE_BUNDLE);
     $query->accessCheck();
 
     if ($limit !== NULL) {
@@ -133,8 +176,8 @@ class ArticleManager extends BaseContentManager {
    * @param \Drupal\node\NodeInterface $section
    *   The section that articles belong to.
    *
-   * @return \Drupal\Core\Entity\EntityInterface[]|null
-   *   An array of entity objects indexed by their ids.
+   * @return \Drupal\node\NodeInterface[]|null
+   *   An array of node objects indexed by their ids.
    */
   public function loadNodesForSection(NodeInterface $section) {
     if ($section->bundle() != 'section') {
@@ -183,35 +226,61 @@ class ArticleManager extends BaseContentManager {
     }
     $nodes = $this->loadNodesForSection($section);
     $section_tags = $this->getTags($section);
+    $article_tags = $this->getAvailableTags($nodes);
+    return array_unique($section_tags + $article_tags);
+  }
+
+  /**
+   * Load available tags for a section.
+   *
+   * @param \Drupal\node\NodeInterface[] $nodes
+   *   The nodes to extract the tags from.
+   *
+   * @return array
+   *   An array with term ids as keys and term labels as values.
+   */
+  public function getAvailableTags(array $nodes) {
     $tags = [];
     foreach ($nodes as $node) {
       $tags = $tags + $this->getTags($node);
     }
-    return array_unique($section_tags + $tags);
+    return $tags;
   }
 
   /**
-   * Load node ids for the section, grouped by tag ids.
+   * Group node ids by associated tags.
    *
-   * @param \Drupal\node\NodeInterface $section
-   *   The section.
+   * @param \Drupal\node\NodeInterface[] $nodes
+   *   The nodes to process.
+   * @param array $additional_tags
+   *   An optional array of additional tags to apply to every node.
    *
    * @return array
    *   An array with term ids as keys. The values are arrays of node ids.
    */
-  public function getNodeIdsGroupedByTag(NodeInterface $section) {
-    if ($section->bundle() != 'section') {
-      return NULL;
-    }
-    $nodes = $this->loadNodesForSection($section);
-    $section_tags = $this->getTags($section);
+  public function getNodeIdsGroupedByTag(array $nodes, array $additional_tags = []) {
     $tags = [];
     foreach ($nodes as $node) {
-      foreach (array_unique($section_tags + $this->getTags($node)) as $id => $tag) {
+      foreach (array_unique($additional_tags + $this->getTags($node)) as $id => $tag) {
         $tags[$id][$node->id()] = $node->id();
       }
     }
     return $tags;
+  }
+
+  /**
+   * Load all articles.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface[]|null
+   *   An array of entity objects indexed by their ids.
+   */
+  public function loadAllNodes() {
+    $nodes = $this->entityTypeManager->getStorage('node')
+      ->loadByProperties([
+        'type' => self::ARTICLE_BUNDLE,
+        'status' => NodeInterface::PUBLISHED,
+      ]);
+    return $nodes;
   }
 
   /**

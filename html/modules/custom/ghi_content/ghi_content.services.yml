@@ -17,4 +17,4 @@ services:
       - { name: event_subscriber }
   ghi_content.manager.article:
     class: Drupal\ghi_content\ContentManager\ArticleManager
-    arguments: ['@entity_type.manager', '@renderer']
+    arguments: ['@entity_type.manager', '@renderer', '@current_user']

@@ -1,0 +1,13 @@
+uuid: 562b476c-f8de-41af-93a7-525d25b11971
+langcode: en
+status: true
+dependencies: {  }
+id: ncms
+label: NCMS
+description: 'Import data from the connected NCMS backends.'
+source_type: NCMS
+module: null
+shared_configuration:
+  source:
+    plugin: remote_source_graphql
+    data_fetcher_plugin: remote_source_graphql

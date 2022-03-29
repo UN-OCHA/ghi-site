@@ -55,3 +55,9 @@
 .user-logged-in main[class*="--unpublished"] {
   outline: 4px dashed  #ffc310;
 }
+
+// Maximum width on full screen for texts, photo galleries etc.
+:root {
+  --content-width: 904px;
+  --reading-width: 720px;
+}

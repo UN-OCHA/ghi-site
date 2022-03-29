@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\node\NodeInterface;
 
@@ -13,6 +14,46 @@ use Drupal\node\NodeInterface;
  * Implements hook_cron().
  */
 function ghi_content_cron() {
+
+}
+
+/**
+ * Implements hook_preprocess_views_view_field().
+ *
+ * This is used to remove the section tags from the tags field in views that
+ * take tag ids as an argument in order to show articles belonging to a
+ * specific section.
+ */
+function ghi_content_preprocess_views_view_field__field_tags(&$variables) {
+  $valid_view_ids = ['articles_by_tags'];
+  /** @var \Drupal\views\ViewExecutable $view */
+  $view = $variables['view'];
+  if (!in_array($view->storage->id(), $valid_view_ids)) {
+    return;
+  }
+
+  /** @var \Drupal\views\ResultRow $row */
+  $row = $variables['row'];
+  /** @var \Drupal\views\Plugin\views\field\EntityField $field */
+  $field = $variables['field'];
+
+  // Get the tags that are specific to each row and remove the term ids passed
+  // in as arguments.
+  $tags = array_diff($field->getValue($row), $view->args);
+
+  // Get the build items from the field and filter it be restricted to these
+  // tags.
+  $items = $field->getItems($row);
+  $items = array_filter($items, function ($item) use ($tags) {
+    return in_array($item['raw']->entity->id(), $tags);
+  });
+
+  // Then render again according to the options set in the view and overwrite
+  // the output.
+  $build = $field->renderItems(array_map(function ($item) {
+    return $item['rendered'];
+  }, $items));
+  $variables['output'] = $build;
 
 }
 
@@ -95,15 +136,17 @@ function ghi_content_node_presave(NodeInterface $node) {
   /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source_instance */
   $remote_source_instance = $remote_source_manager->createInstance($remote_source);
   $article = $remote_source_instance->getArticle($article_id);
+  if ($article) {
 
-  // Import the image.
-  $import_manager->importImage($node, $article, 'field_image');
+    // Import the image.
+    $import_manager->importImage($node, $article, 'field_image');
 
-  // Import the paragraphs for the article.
-  $import_manager->importParagraphs($node, $article, [], NULL, $cleanup);
+    // Import the paragraphs for the article.
+    $import_manager->importParagraphs($node, $article, [], NULL, $cleanup);
 
-  // Import the tags.
-  $import_manager->importTags($node, $article, 'field_tags');
+    // Import the tags.
+    $import_manager->importTags($node, $article, 'field_tags');
+  }
 }
 
 /**
@@ -124,11 +167,11 @@ function ghi_content_preprocess_page(&$variables) {
   $request = $request_stack->getMasterRequest();
   /** @var \Drupal\node\Entity\Node $node */
   $node = $request->attributes->has('node') ? $request->attributes->get('node') : NULL;
-  if (!$node || !$node->getFieldDefinitions()) {
+  if (!$node instanceof NodeInterface || !$node->getFieldDefinitions()) {
     return;
   }
 
-  if ($node->bundle() != 'article') {
+  if ($node->bundle() != ArticleManager::ARTICLE_BUNDLE) {
     return;
   }
 
