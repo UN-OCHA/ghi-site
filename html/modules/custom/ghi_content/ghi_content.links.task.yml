@@ -1,5 +1,5 @@
-entity.node.import_article:
-  route_name: ghi_content.node.import_article
+entity.node.articles:
+  route_name: ghi_content.node.articles
   base_route: entity.node.canonical
-  title: Import article
-  weight: 100
+  title: Articles
+  weight: 1

@@ -5,6 +5,8 @@
  * Contains hook implementations for the GHI Hero Image module.
  */
 
+use Drupal\node\NodeInterface;
+
 /**
  * Implements hook_preprocess_page().
  *
@@ -23,7 +25,7 @@ function ghi_hero_image_preprocess_page(&$variables) {
   $request = $request_stack->getMasterRequest();
   /** @var \Drupal\node\Entity\Node $node */
   $node = $request->attributes->has('node') ? $request->attributes->get('node') : NULL;
-  if (!$node || !$node->getFieldDefinitions() || !$node->access()) {
+  if (!$node instanceof NodeInterface || !$node->getFieldDefinitions() || !$node->access()) {
     return;
   }
 

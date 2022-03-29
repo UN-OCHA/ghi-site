@@ -176,8 +176,8 @@ class ArticleManager extends BaseContentManager {
    * @param \Drupal\node\NodeInterface $section
    *   The section that articles belong to.
    *
-   * @return \Drupal\Core\Entity\EntityInterface[]|null
-   *   An array of entity objects indexed by their ids.
+   * @return \Drupal\node\NodeInterface[]|null
+   *   An array of node objects indexed by their ids.
    */
   public function loadNodesForSection(NodeInterface $section) {
     if ($section->bundle() != 'section') {

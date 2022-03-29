@@ -11,6 +11,11 @@ use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 class SectionManager {
 
   /**
+   * The machine name of the bundle to use for articles.
+   */
+  const SECTION_BUNDLES = ['section', 'global_section'];
+
+  /**
    * The entity type manager service.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface

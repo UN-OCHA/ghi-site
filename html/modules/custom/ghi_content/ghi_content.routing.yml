@@ -30,13 +30,13 @@ ghi_content.remote.settings:
       remote_source:
         type: 'remote_source'
 
-ghi_content.node.import_article:
-  path: '/node/{node}/import-article'
+ghi_content.node.articles:
+  path: '/node/{node}/articles'
   defaults:
-    _form: '\Drupal\ghi_content\Form\ImportArticleForm'
-    _title: 'Import remote article'
+    _controller: '\Drupal\ghi_content\Controller\ArticleListController::listArticles'
+    _title_callback: '\Drupal\ghi_content\Controller\ArticleListController::getTitle'
   requirements:
-    _custom_access: '\Drupal\ghi_content\Controller\ContentController::access'
+    _custom_access: '\Drupal\ghi_content\Controller\ArticleListController::access'
   options:
     parameters:
       node:
