@@ -130,9 +130,12 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
   /**
    * Get the import source for a remote system.
    *
+   * @param array $tags
+   *   Optional argument to filter the source data by tag names.
+   *
    * @return array
    *   An array of source identifiers.
    */
-  public function importSource();
+  public function importSource(array $tags = NULL);
 
 }

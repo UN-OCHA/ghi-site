@@ -68,7 +68,8 @@ class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPl
    * Return the generator using yield.
    */
   private function getGenerator() {
-    $results = $this->remoteSource->importSource();
+    $tags = property_exists($this->migration, 'configuration') ? ($this->migration->configuration['source_tags'] ?? NULL) : NULL;
+    $results = $this->remoteSource->importSource($tags);
     foreach ($results as $result) {
       yield $result;
     }

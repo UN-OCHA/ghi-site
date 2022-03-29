@@ -317,9 +317,9 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
-  public function importSource() {
+  public function importSource(array $tags = NULL) {
     $query = '{
-      articleExport {
+      articleExport ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
         count
         items {
           id

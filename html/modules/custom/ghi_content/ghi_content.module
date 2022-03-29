@@ -136,15 +136,17 @@ function ghi_content_node_presave(NodeInterface $node) {
   /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source_instance */
   $remote_source_instance = $remote_source_manager->createInstance($remote_source);
   $article = $remote_source_instance->getArticle($article_id);
+  if ($article) {
 
-  // Import the image.
-  $import_manager->importImage($node, $article, 'field_image');
+    // Import the image.
+    $import_manager->importImage($node, $article, 'field_image');
 
-  // Import the paragraphs for the article.
-  $import_manager->importParagraphs($node, $article, [], NULL, $cleanup);
+    // Import the paragraphs for the article.
+    $import_manager->importParagraphs($node, $article, [], NULL, $cleanup);
 
-  // Import the tags.
-  $import_manager->importTags($node, $article, 'field_tags');
+    // Import the tags.
+    $import_manager->importTags($node, $article, 'field_tags');
+  }
 }
 
 /**

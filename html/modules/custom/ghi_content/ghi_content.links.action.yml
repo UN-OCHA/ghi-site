@@ -1,0 +1,5 @@
+entity.node.articles:
+  route_name: ghi_content.node.articles.update
+  title: Update articles
+  appears_on:
+    - ghi_content.node.articles

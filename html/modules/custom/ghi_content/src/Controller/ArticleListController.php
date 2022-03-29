@@ -4,12 +4,16 @@ namespace Drupal\ghi_content\Controller;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\Datetime\DateFormatter;
+use Drupal\Core\Url;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_sections\SectionManager;
+use Drupal\migrate\MigrateMessage;
+use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
+use Drupal\migrate_tools\MigrateBatchExecutable;
 use Drupal\node\NodeInterface;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -35,18 +39,18 @@ class ArticleListController extends ControllerBase {
   protected $articleManager;
 
   /**
-   * The date formatter service.
+   * The migration plugin manager.
    *
-   * @var \Drupal\Core\Datetime\DateFormatter
+   * @var \Drupal\migrate\Plugin\MigrationPluginManagerInterface
    */
-  protected $dateFormatter;
+  protected $migrationPluginManager;
 
   /**
    * Public constructor.
    */
-  public function __construct(ArticleManager $article_manager, DateFormatter $date_formatter) {
+  public function __construct(ArticleManager $article_manager, MigrationPluginManagerInterface $migration_plugin_manager) {
     $this->articleManager = $article_manager;
-    $this->dateFormatter = $date_formatter;
+    $this->migrationPluginManager = $migration_plugin_manager;
   }
 
   /**
@@ -55,7 +59,7 @@ class ArticleListController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('ghi_content.manager.article'),
-      $container->get('date.formatter')
+      $container->get('plugin.manager.migration'),
     );
   }
 
@@ -124,6 +128,44 @@ class ArticleListController extends ControllerBase {
       '#embed' => TRUE,
     ];
     return $build;
+  }
+
+  /**
+   * Callback for updating articles for a section from the remote source.
+   *
+   * This runs a migration in a batch process.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   A redirect to a batch url.
+   */
+  public function updateArticles(NodeInterface $node) {
+    $migration = $this->migrationPluginManager->createInstance('articles_gho');
+    if (empty($migration)) {
+      return [
+        '#markup' => $this->t('There was an error processing your request. Please contact an administrator.'),
+      ];
+    }
+
+    $options = [
+      'limit' => 5,
+      'update' => 1,
+      'force' => 1,
+      'configuration' => [
+        'source_tags' => $this->articleManager->getTags($node),
+        'limit' => 5,
+        'update' => 1,
+        'force' => 1,
+      ],
+    ];
+    $executable = new MigrateBatchExecutable($migration, new MigrateMessage(), $options);
+    $executable->batchImport();
+    batch_process(Url::fromRoute('ghi_content.node.articles', ['node' => $node->id()])->toString());
+    $batch = batch_get();
+    $url = $batch['url'];
+    return new RedirectResponse($url->toString());
   }
 
 }
