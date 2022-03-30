@@ -55,3 +55,13 @@ ghi_content.node.articles.update:
       node:
         type: entity:node
     _admin_route: TRUE
+
+ghi_content.articles.update:
+  path: '/admin/content/articles/update'
+  defaults:
+    _controller: '\Drupal\ghi_content\Controller\ArticleListController::updateArticles'
+    _title: 'Update articles'
+  requirements:
+    _custom_access: '\Drupal\ghi_content\Controller\ArticleListController::access'
+  options:
+    _admin_route: TRUE
