@@ -1,0 +1,19 @@
+.local-actions .article-update-info {
+  display: none;
+}
+@media only screen and (min-width: 900px) {
+  .local-actions li {
+    position: relative;
+  }
+  .local-actions .article-update-info {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: normal;
+    position: absolute;
+    bottom: -1.5rem;
+    color: var(--colorGinTextLight);
+    width: 300px;
+    right: 0;
+    text-align: right;
+  }
+}

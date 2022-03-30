@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\node\NodeInterface;
@@ -189,4 +190,37 @@ function ghi_content_preprocess_views_view_field__field_tags(&$variables) {
   }, $items));
   $variables['output'] = $build;
 
+}
+
+/**
+ * Implements hook_local_actions_render_alter().
+ *
+ * This depends on https://www.drupal.org/project/drupal/issues/2585169.
+ */
+function ghi_content_local_actions_render_alter(&$data, $route_appears) {
+  $supported_routes = [
+    'ghi_content.article_update',
+    'ghi_content.node.article_update',
+  ];
+  foreach ($data as $link_key => &$element) {
+    if (!in_array($link_key, $supported_routes)) {
+      continue;
+    }
+
+    $migrate_last_imported_store = \Drupal::keyValue('migrate_last_imported');
+    $last_imported = $migrate_last_imported_store->get('articles_gho');
+    $last_imported = $last_imported ? intval($last_imported / 1000) : NULL;
+
+    /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
+    $date_formatter = \Drupal::service('date.formatter');
+
+    if ($last_imported) {
+      $element['#link']['title'] = new TranslatableMarkup('@link_title<div class="article-update-info">Last updated: @last_updated ago</div>', [
+        '@link_title' => $element['#link']['title'],
+        '@last_updated' => $date_formatter->formatTimeDiffSince($last_imported),
+      ]);
+      $element['#cache'] = ['max-age' => 0];
+      $element['#attached']['library'][] = 'ghi_content/admin.article_list';
+    }
+  }
 }
