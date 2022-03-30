@@ -36,6 +36,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
   use VerticalTabsTrait;
 
+  /**
+   * The default form key for the configuration form.
+   */
   const DEFAULT_FORM_KEY = 'basic';
 
   /**
@@ -109,6 +112,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
   protected $controllerResolver;
 
   /**
+   * The route matcher.
+   *
+   * @var \Drupal\Core\Routing\RouteMatchInterface
+   */
+  protected $routeMatch;
+
+  /**
    * Retrieves a configuration object.
    *
    * @param string $name
@@ -138,6 +148,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $instance->selectionCriteriaArgument = $container->get('ghi_blocks.layout_builder_edit_page.selection_criteria_argument');
     $instance->moduleHandler = $container->get('module_handler');
     $instance->controllerResolver = $container->get('controller_resolver');
+    $instance->routeMatch = $container->get('current_route_match');
 
     $instance->alterContexts();
     return $instance;
@@ -586,6 +597,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $this->configuration['hpc'] = $temporary_settings;
       $this->configuration['label'] = $temporary_settings['label'];
       $this->configuration['label_display'] = $temporary_settings['label_display'];
+      $this->configuration['is_preview'] = TRUE;
       $build = $this->build();
       $form['container']['preview'] = [
         '#theme' => 'block',
@@ -595,7 +607,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
         '#configuration' => [
           'label' => $this->configuration['label'],
           'label_display' => $this->configuration['label_display'],
-          'hpc' => $this->configuration,
+          'hpc' => $this->configuration['hpc'],
         ] + $this->configuration,
         '#base_plugin_id' => $this->getBaseId(),
         '#plugin_id' => $this->getPluginId(),
@@ -609,6 +621,21 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
 
     return $form;
+  }
+
+  /**
+   * Check if a block is currently in preview.
+   *
+   * This can be either because it's previewed as part of the block
+   * configuration, or because it's displayed in the Layout Builder interface,
+   * which is some kind of preview too.
+   *
+   * @return bool
+   *   TRUE if considered preview, FALSE otherwise.
+   */
+  protected function isPreview() {
+    $route_name = $this->routeMatch->getRouteName();
+    return !empty($this->configuration['is_preview']) || strpos($route_name, 'layout_builder') === 0;
   }
 
   /**
