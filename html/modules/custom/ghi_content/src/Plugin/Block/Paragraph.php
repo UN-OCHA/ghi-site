@@ -161,7 +161,7 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
     if ($subform_key == 'paragraph') {
       return $this->getArticle() instanceof RemoteArticleInterface;
     }
-    return TRUE;
+    return !$this->lockArticle();
   }
 
   /**
@@ -217,7 +217,7 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
     $paragraph = $this->getParagraph();
     $form['article_summary'] = [
       '#type' => 'item',
-      '#title' => $this->t('Selected article'),
+      '#title' => $this->lockArticle() ? $this->t('Article (locked)') : $this->t('Selected article'),
       '#markup' => $article->getSource()->getPluginLabel() . ': ' . $article->getTitle(),
     ];
 
@@ -289,6 +289,19 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
     // markup_select form element provides it's value.
     $paragraph_id = (array) $conf['paragraph']['paragraph_id'];
     return $article->getParagraph(reset($paragraph_id));
+  }
+
+  /**
+   * Check if the article is locked for this paragraph element.
+   *
+   * The article for a paragraph is locked if there is an article set and if
+   * additionally the lock_article flag is set in the configuration.
+   *
+   * @return bool
+   *   TRUE if the article is locked, FALSE otherwise.
+   */
+  private function lockArticle() {
+    return $this->getArticle() && !empty($this->configuration['lock_article']);
   }
 
 }

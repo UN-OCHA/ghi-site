@@ -225,6 +225,7 @@ class ImportManager implements ContainerInjectionInterface {
             'paragraph_id' => [$paragraph->getId()],
           ],
         ],
+        'lock_article' => TRUE,
       ];
       if ($existing_component) {
         // Update an existing component.
