@@ -70,6 +70,9 @@ function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateIn
     $form[$field_name]['#disabled'] = TRUE;
     $form[$field_name]['#attributes']['title'] = t('This field is disabled because it is automatically populated from the remote source.');
   }
+  // Also disable the remote article field.
+  $form['field_remote_article']['#disabled'] = TRUE;
+  $form['field_remote_article']['#attributes']['title'] = t('This field cannot be edited anymore after an article page has been created.');
 }
 
 /**
