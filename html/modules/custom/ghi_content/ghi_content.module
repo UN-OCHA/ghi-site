@@ -18,46 +18,6 @@ function ghi_content_cron() {
 }
 
 /**
- * Implements hook_preprocess_views_view_field().
- *
- * This is used to remove the section tags from the tags field in views that
- * take tag ids as an argument in order to show articles belonging to a
- * specific section.
- */
-function ghi_content_preprocess_views_view_field__field_tags(&$variables) {
-  $valid_view_ids = ['articles_by_tags'];
-  /** @var \Drupal\views\ViewExecutable $view */
-  $view = $variables['view'];
-  if (!in_array($view->storage->id(), $valid_view_ids)) {
-    return;
-  }
-
-  /** @var \Drupal\views\ResultRow $row */
-  $row = $variables['row'];
-  /** @var \Drupal\views\Plugin\views\field\EntityField $field */
-  $field = $variables['field'];
-
-  // Get the tags that are specific to each row and remove the term ids passed
-  // in as arguments.
-  $tags = array_diff($field->getValue($row), $view->args);
-
-  // Get the build items from the field and filter it be restricted to these
-  // tags.
-  $items = $field->getItems($row);
-  $items = array_filter($items, function ($item) use ($tags) {
-    return in_array($item['raw']->entity->id(), $tags);
-  });
-
-  // Then render again according to the options set in the view and overwrite
-  // the output.
-  $build = $field->renderItems(array_map(function ($item) {
-    return $item['rendered'];
-  }, $items));
-  $variables['output'] = $build;
-
-}
-
-/**
  * Implements hook_theme().
  */
 function ghi_content_theme($existing, $type, $theme, $path) {
@@ -188,5 +148,45 @@ function ghi_content_preprocess_page(&$variables) {
     $image['#label_display'] = 'hidden';
     array_unshift($variables['page'][$region_name], $image);
   }
+
+}
+
+/**
+ * Implements hook_preprocess_views_view_field().
+ *
+ * This is used to remove the section tags from the tags field in views that
+ * take tag ids as an argument in order to show articles belonging to a
+ * specific section.
+ */
+function ghi_content_preprocess_views_view_field__field_tags(&$variables) {
+  $valid_view_ids = ['articles_by_tags'];
+  /** @var \Drupal\views\ViewExecutable $view */
+  $view = $variables['view'];
+  if (!in_array($view->storage->id(), $valid_view_ids)) {
+    return;
+  }
+
+  /** @var \Drupal\views\ResultRow $row */
+  $row = $variables['row'];
+  /** @var \Drupal\views\Plugin\views\field\EntityField $field */
+  $field = $variables['field'];
+
+  // Get the tags that are specific to each row and remove the term ids passed
+  // in as arguments.
+  $tags = array_diff($field->getValue($row), $view->args);
+
+  // Get the build items from the field and filter it be restricted to these
+  // tags.
+  $items = $field->getItems($row);
+  $items = array_filter($items, function ($item) use ($tags) {
+    return in_array($item['raw']->entity->id(), $tags);
+  });
+
+  // Then render again according to the options set in the view and overwrite
+  // the output.
+  $build = $field->renderItems(array_map(function ($item) {
+    return $item['rendered'];
+  }, $items));
+  $variables['output'] = $build;
 
 }
