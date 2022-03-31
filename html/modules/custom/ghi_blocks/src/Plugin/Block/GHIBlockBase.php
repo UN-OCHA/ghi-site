@@ -24,6 +24,7 @@ use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\layout_builder\Form\AddBlockForm;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\layout_builder\Plugin\SectionStorage\SectionStorageBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -307,43 +308,59 @@ abstract class GHIBlockBase extends HPCBlockBase {
   public function build() {
     $plugin_configuration = $this->getConfiguration();
 
-    // Get the build content from the block plugin.
-    $build_content = $this->buildContent();
-    if (!$build_content) {
-      return [];
-    }
-
     $build = [
       '#type' => 'container',
     ];
 
-    // Handle the title display.
-    if ($this->shouldDisplayTitle()) {
-      if ($this instanceof AutomaticTitleBlockInterface) {
-        $build['#title'] = $this->getAutomaticBlockTitle();
-      }
-      elseif (!empty($build_content['#title'])) {
-        $build['#title'] = $build_content['#title'];
-        unset($build_content['#title']);
-      }
-
-      if (empty($plugin_configuration['label']) && $this->hasDefaultTitle()) {
-        $plugin_definition = $this->getPluginDefinition();
-        $build['#title'] = $plugin_definition['default_title'];
-      }
-
-      if (!empty($plugin_configuration['label_display']) && !array_key_exists('#title', $build)) {
-        $build += [
-          '#title' => $this->label(),
-        ];
-      }
-      elseif (empty($plugin_configuration['label_display']) && array_key_exists('#title', $build)) {
-        unset($build['#title']);
-      }
+    if ($this->isHidden() && !$this->isPreview()) {
+      // If the block is hidden and not in preview bail out.
+      return [];
     }
 
-    if (!empty($build_content['#theme']) && $build_content['#theme'] == 'item_list') {
-      $build_content['#context']['plugin_id'] = $this->getPluginId();
+    if ($this->isHidden() && $this->isLayoutBuilder()) {
+      // If we are here, the block is hidden and displayed inside the layout
+      // builder interface. We want to inform the user that the block is
+      // configured to be hidden and provide a container so that interactions
+      // on the block work, but we don't want to fully render the block.
+      $build_content = [
+        '#markup' => $this->t('This block is currently set to be hidden.'),
+      ];
+    }
+    else {
+      // Otherwise build the full block. First get the actual block content.
+      $build_content = $this->buildContent();
+      if (!$build_content) {
+        return [];
+      }
+
+      // Handle the title display.
+      if ($this->shouldDisplayTitle()) {
+        if ($this instanceof AutomaticTitleBlockInterface) {
+          $build['#title'] = $this->getAutomaticBlockTitle();
+        }
+        elseif (!empty($build_content['#title'])) {
+          $build['#title'] = $build_content['#title'];
+          unset($build_content['#title']);
+        }
+
+        if (empty($plugin_configuration['label']) && $this->hasDefaultTitle()) {
+          $plugin_definition = $this->getPluginDefinition();
+          $build['#title'] = $plugin_definition['default_title'];
+        }
+
+        if (!empty($plugin_configuration['label_display']) && !array_key_exists('#title', $build)) {
+          $build += [
+            '#title' => $this->label(),
+          ];
+        }
+        elseif (empty($plugin_configuration['label_display']) && array_key_exists('#title', $build)) {
+          unset($build['#title']);
+        }
+      }
+
+      if (!empty($build_content['#theme']) && $build_content['#theme'] == 'item_list') {
+        $build_content['#context']['plugin_id'] = $this->getPluginId();
+      }
     }
 
     // Add the build content as a child.
@@ -354,6 +371,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $build['#attributes']['class'][] = 'ghi-block';
     if ($this->getUuid()) {
       $build['#attributes']['class'][] = 'ghi-block-' . $this->getUuid();
+    }
+    if ($this->isHidden()) {
+      $build['#attributes']['class'][] = 'ghi-block--hidden';
     }
 
     // Allow the plugin to define attributes for it's wrapper.
@@ -624,6 +644,16 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
+   * Check if a block is set to be hidden.
+   *
+   * @return bool
+   *   TRUE if hidden, FALSE otherwise.
+   */
+  public function isHidden() {
+    return !empty($this->configuration['visibility_status']) && $this->configuration['visibility_status'] == 'hidden';
+  }
+
+  /**
    * Check if a block is currently in preview.
    *
    * This can be either because it's previewed as part of the block
@@ -634,8 +664,27 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   TRUE if considered preview, FALSE otherwise.
    */
   protected function isPreview() {
-    $route_name = $this->routeMatch->getRouteName();
-    return !empty($this->configuration['is_preview']) || strpos($route_name, 'layout_builder') === 0;
+    return $this->isConfigurationPreview() || $this->isLayoutBuilder();
+  }
+
+  /**
+   * Check if a block is currently viewed inside the LayoutBuilder interface.
+   *
+   * @return bool
+   *   TRUE if considered layout builder, FALSE otherwise.
+   */
+  protected function isLayoutBuilder() {
+    return $this->routeMatch->getParameter('section_storage') instanceof SectionStorageBase;
+  }
+
+  /**
+   * Check if a block is currently previewed in the configuration modal.
+   *
+   * @return bool
+   *   TRUE if considered configuration preview, FALSE otherwise.
+   */
+  protected function isConfigurationPreview() {
+    return !empty($this->configuration['is_preview']);
   }
 
   /**
@@ -849,6 +898,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // configuration.
     $this->configuration['label'] = NestedArray::getValue($values, array_merge($value_parents, ['label']));
     $this->configuration['label_display'] = NestedArray::getValue($values, array_merge($value_parents, ['label_display']));
+    unset($this->configuration['is_preview']);
 
     // Set the HPC specific block config.
     $this->setBlockConfig($values);

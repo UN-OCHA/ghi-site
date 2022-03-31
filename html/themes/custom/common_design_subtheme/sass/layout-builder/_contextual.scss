@@ -24,6 +24,7 @@
     box-shadow: none !important;
 
     & li {
+      display: block;
 
       &.layout-builder-block-move {
         display: none;
@@ -73,7 +74,29 @@
         -webkit-mask-image: icon("remove-section");
         mask-image: icon("remove-section");
       }
+
+      &.layout-builder-block-hide a:after {
+        -webkit-mask-image: icon("hide");
+        mask-image: icon("hide");
+      }
+
+      &.layout-builder-block-unhide {
+        display: none;
+      }
+
+      &.layout-builder-block-unhide a:after {
+        -webkit-mask-image: icon("show");
+        mask-image: icon("show");
+      }
     }
+  }
+}
+#layout-builder .contextual-region.ghi-block--hidden {
+  .layout-builder-block-hide {
+    display: none !important;
+  }
+  .layout-builder-block-unhide {
+    display: block !important;
   }
 }
 

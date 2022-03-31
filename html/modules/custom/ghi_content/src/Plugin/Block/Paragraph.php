@@ -99,8 +99,10 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
       // Make sure to add the gho-footnotes component.
       $theme_components[] = 'common_design_subtheme/gho-footnotes';
       if ($preview) {
-        $build['#view_mode'] = 'preview';
-        $build['#post_render'][] = [GhoFootnotes::class, 'updateFootnotes'];
+        $build['content']['#post_render'][] = [
+          GhoFootnotes::class,
+          'updateFootnotes',
+        ];
       }
     }
 
@@ -254,7 +256,8 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
     foreach ($article->getParagraphs() as $_paragraph) {
       // We need to fully prerender the paragraph so that things like footnotes
       // are handled correctly.
-      $options[$_paragraph->getId()] = $this->renderer->render($this->buildParagraph($_paragraph, NULL, TRUE));
+      $build = $this->buildParagraph($_paragraph, NULL, TRUE);
+      $options[$_paragraph->getId()] = $this->renderer->render($build);
       $theme_components += array_merge($theme_components, $this->getThemeComponents($_paragraph));
     }
 
@@ -323,7 +326,7 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
    * @return bool
    *   TRUE if the article is locked, FALSE otherwise.
    */
-  private function lockArticle() {
+  public function lockArticle() {
     return $this->getArticle() && !empty($this->configuration['lock_article']);
   }
 

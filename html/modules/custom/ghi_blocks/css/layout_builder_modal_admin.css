@@ -124,8 +124,8 @@ form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .g
   left: 20px;
 }
 
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .ghi-layout-builder-subform-buttons .form-item-preview-toggle,
-#layout-builder-modal form.layout-builder-configure-block .canvas-form__actions .ghi-layout-builder-subform-buttons .form-item-preview-toggle {
+form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .ghi-layout-builder-subform-buttons > .glb-form-type--checkbox,
+#layout-builder-modal form.layout-builder-configure-block .canvas-form__actions .ghi-layout-builder-subform-buttons > .glb-form-type--checkbox {
   display: inline-block;
 }
 form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions input[disabled],
