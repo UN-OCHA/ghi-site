@@ -19,7 +19,6 @@ function ghi_teams_node_access_records(NodeInterface $node) {
     return [];
   }
 
-  $team_id = !$node->field_team->isEmpty() ? $node->field_team->entity->tid->value : NULL;
   $grants = [];
   $grants[] = [
     'realm' => 'ghi_teams_node_access',
@@ -30,8 +29,10 @@ function ghi_teams_node_access_records(NodeInterface $node) {
     'priority' => 0,
   ];
 
-  // Try to get the team from the referenced entity.
+  // Get the team id from the current node if it's available.
+  $team_id = !$node->field_team->isEmpty() ? $node->field_team->entity->tid->value : NULL;
   if (!$team_id) {
+    // Otherwise try to get the team from the referenced entity.
     $parent_entity = NULL;
     if ($node->hasField('field_entity_reference') && $node->field_entity_reference->entity->hasField('field_team')) {
       $parent_entity = $node->field_entity_reference->entity;
