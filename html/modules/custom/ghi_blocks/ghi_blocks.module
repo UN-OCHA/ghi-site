@@ -144,6 +144,10 @@ function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $fo
       $form['placeholders']['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
       $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
     }
+    // Disable the "Revert to defaults" button.
+    if (array_key_exists('revert', $form['actions'])) {
+      $form['actions']['revert']['#access'] = FALSE;
+    }
   }
 }
 
