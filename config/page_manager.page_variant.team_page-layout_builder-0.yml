@@ -5,7 +5,7 @@ dependencies:
   config:
     - page_manager.page.team_page
   module:
-    - ctools
+    - taxonomy
 id: team_page-layout_builder-0
 label: 'Layout Builder'
 weight: 0
