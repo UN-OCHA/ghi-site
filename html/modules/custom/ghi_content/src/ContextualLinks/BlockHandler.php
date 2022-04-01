@@ -99,11 +99,27 @@ class BlockHandler implements ContainerInjectionInterface {
     }
     /** @var \Drupal\ghi_content\Plugin\Block\Paragraph $plugin */
     $configuration = $component->get('configuration');
-    if (!$plugin->lockArticle() || empty($configuration['sync']) || empty($configuration['sync']['source_uuid'])) {
-      // Article not locked and not synced from a source.
-      return;
+    if ($plugin->lockArticle() && !empty($configuration['sync']) && !empty($configuration['sync']['source_uuid'])) {
+      // Article locked and synced from a source. Remove the "remove" link.
+      unset($links[$remove_link]);
     }
-    unset($links[$remove_link]);
+
+    // Order the links.
+    $order = [
+      'layout_builder_block_update',
+      'layout_builder_block_hide',
+      'layout_builder_block_unhide',
+      'layout_builder_block_remove',
+    ];
+    $_links = [];
+    foreach ($order as $key) {
+      if (!array_key_exists($key, $links)) {
+        continue;
+      }
+      $_links[$key] = $links[$key];
+    }
+    $links = $_links;
+    unset($_links);
   }
 
 }

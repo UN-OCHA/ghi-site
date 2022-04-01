@@ -112,10 +112,12 @@ class BlockHandler implements ContainerInjectionInterface {
       'langcode' => 'en',
     ];
 
+    $links['layout_builder_block_remove']['title'] = $this->t('Remove');
+
     $links['layout_builder_block_hide'] = [
       'route_name' => 'ghi_blocks.hide_block',
       'route_parameters' => $route_parameters,
-      'title' => $this->t('Hide block'),
+      'title' => $this->t('Hide'),
       'weight' => NULL,
       'localized_options' => $localized_options,
       'metadata' => $metadata,
@@ -123,7 +125,7 @@ class BlockHandler implements ContainerInjectionInterface {
     $links['layout_builder_block_unhide'] = [
       'route_name' => 'ghi_blocks.unhide_block',
       'route_parameters' => $route_parameters,
-      'title' => $this->t('Unhide block'),
+      'title' => $this->t('Unhide'),
       'weight' => NULL,
       'localized_options' => $localized_options,
       'metadata' => $metadata,
