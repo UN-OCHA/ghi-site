@@ -5,6 +5,7 @@ namespace Drupal\ghi_content\Plugin\Block;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
@@ -19,7 +20,7 @@ use Drupal\gho_footnotes\GhoFootnotes;
  *  category = @Translation("Narrative Content"),
  * )
  */
-class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface {
+class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface, TrustedCallbackInterface {
 
   /**
    * {@inheritdoc}
@@ -100,8 +101,8 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
       $theme_components[] = 'common_design_subtheme/gho-footnotes';
       if ($preview) {
         $build['content']['#post_render'][] = [
-          GhoFootnotes::class,
-          'updateFootnotes',
+          static::class,
+          'preparePreviewParagraph',
         ];
       }
     }
@@ -328,6 +329,51 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
    */
   public function lockArticle() {
     return $this->getArticle() && !empty($this->configuration['lock_article']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function trustedCallbacks() {
+    return [
+      'preparePreviewParagraph',
+    ];
+  }
+
+  /**
+   * Post render function to prepare a paragraph for display.
+   *
+   * In preview, we need to call GhoFootnotes::updateFootnotes, so that
+   * footnotes inside each paragraph are processed inidividually, thus turning
+   * the custom gho footnote markup into little jump links, assuring a frontend
+   * rendering that equals the output on a fully rendered page.
+   * We also need to wrap that into logic for temporarily disabling theme
+   * debug, because the file suggestion HTML comments might create file
+   * suggestions containing double-hyphens, which are not allowed in XML
+   * comments and prevent the dom related logic in
+   * GhoFootnotes::updateFootnotes from working correctly.
+   *
+   * In GHI the problem is introduced by the Gin Layout Builder module, which
+   * alters file suggestions in gin_lb_theme_suggestions_alter() for some
+   * routes, particularily the block remove route.
+   *
+   * We could have made modifications directly in GhoFootnotes, but because the
+   * gho_footnotes module is a straight copy from the GHO project, it's better
+   * to handle this here and leave the module untouched so that we can easier
+   * keep both versions in sync.
+   */
+  public static function preparePreviewParagraph($html, $build) {
+    /** @var \Twig\Environment $twig_service */
+    $twig_service = \Drupal::service('twig');
+    $twig_debug = $twig_service->isDebug();
+    if ($twig_debug) {
+      $twig_service->disableDebug();
+    }
+    $html = GhoFootnotes::updateFootnotes($html, $build);
+    if ($twig_debug) {
+      $twig_service->enableDebug();
+    }
+    return $html;
   }
 
 }
