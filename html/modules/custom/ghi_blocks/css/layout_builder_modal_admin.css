@@ -133,3 +133,8 @@ form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions in
   cursor: not-allowed !important;
   opacity: 0.5;
 }
+
+#layout-builder-modal .layout-builder-hide-block,
+#layout-builder-modal .layout-builder-unhide-block {
+  padding-top: 40px;
+}

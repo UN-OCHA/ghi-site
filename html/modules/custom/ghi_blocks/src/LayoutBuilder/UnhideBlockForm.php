@@ -3,27 +3,12 @@
 namespace Drupal\ghi_blocks\LayoutBuilder;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\layout_builder\Form\LayoutRebuildConfirmFormBase;
 use Drupal\layout_builder\SectionStorageInterface;
 
 /**
  * Provides a form to confirm the unhiding of a block.
  */
-class UnhideBlockForm extends LayoutRebuildConfirmFormBase {
-
-  /**
-   * The current region.
-   *
-   * @var string
-   */
-  protected $region;
-
-  /**
-   * The UUID of the block being removed.
-   *
-   * @var string
-   */
-  protected $uuid;
+class UnhideBlockForm extends ConfirmFormBase {
 
   /**
    * {@inheritdoc}
@@ -57,15 +42,6 @@ class UnhideBlockForm extends LayoutRebuildConfirmFormBase {
    */
   public function getFormId() {
     return 'layout_builder_unhide_block';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function buildForm(array $form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL, $delta = NULL, $region = NULL, $uuid = NULL) {
-    $this->region = $region;
-    $this->uuid = $uuid;
-    return parent::buildForm($form, $form_state, $section_storage, $delta);
   }
 
   /**
