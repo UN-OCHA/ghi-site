@@ -77,6 +77,8 @@ function ghi_blocks_preprocess_block(&$variables) {
  * layout builder who needs the contextual links for it's own interface, we
  * could just disable the module entirely.
  * See https://www.drupal.org/project/drupal/issues/3042516
+ *
+ * Also alter the contextual links for shared functionality of our own blocks.
  */
 function ghi_blocks_contextual_links_alter(array &$links, $group, array $route_parameters) {
   $allowed_groups = ['layout_builder_block'];
@@ -84,6 +86,9 @@ function ghi_blocks_contextual_links_alter(array &$links, $group, array $route_p
     $links = [];
     return;
   }
+  /** @var \Drupal\ghi_blocks\ContextualLinks\BlockHandler $contextual_links_block_handler */
+  $contextual_links_block_handler = \Drupal::service('ghi_blocks.contextual_links.block_handler');
+  $contextual_links_block_handler->alterLinks($links, $group, $route_parameters);
 }
 
 /**
@@ -105,6 +110,8 @@ function ghi_blocks_link_alter(&$variables) {
   $allowed_routes = [
     'layout_builder.choose_block',
     'layout_builder.remove_block',
+    'ghi_blocks.hide_block',
+    'ghi_blocks.unhide_block',
   ];
   if (!in_array($route_name, $allowed_routes)) {
     // All other routes are already handled by the Layout Buidler Modal module.
@@ -136,6 +143,10 @@ function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $fo
     if (array_key_exists('placeholders', $form)) {
       $form['placeholders']['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
       $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
+    }
+    // Disable the "Revert to defaults" button.
+    if (array_key_exists('revert', $form['actions'])) {
+      $form['actions']['revert']['#access'] = FALSE;
     }
   }
 }

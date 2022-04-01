@@ -15,3 +15,26 @@ ghi_blocks.global_config:
     _admin_route: TRUE
   requirements:
     _permission: 'administer site configuration'
+
+ghi_blocks.hide_block:
+  path: '/layout_builder/hide/block/{section_storage_type}/{section_storage}/{delta}/{region}/{uuid}'
+  defaults:
+    _form: '\Drupal\ghi_blocks\LayoutBuilder\HideBlockForm'
+  requirements:
+    _layout_builder_access: 'view'
+  options:
+    _admin_route: TRUE
+    parameters:
+      section_storage:
+        layout_builder_tempstore: TRUE
+ghi_blocks.unhide_block:
+  path: '/layout_builder/unhide/block/{section_storage_type}/{section_storage}/{delta}/{region}/{uuid}'
+  defaults:
+    _form: '\Drupal\ghi_blocks\LayoutBuilder\UnhideBlockForm'
+  requirements:
+    _layout_builder_access: 'view'
+  options:
+    _admin_route: TRUE
+    parameters:
+      section_storage:
+        layout_builder_tempstore: TRUE

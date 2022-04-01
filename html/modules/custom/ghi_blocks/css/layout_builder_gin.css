@@ -11,13 +11,13 @@ input[type="checkbox"][disabled="disabled"] {
   background-color: var(--colorGinDisabled) !important;
 }
 
-#layout-builder-ipe-wrapper #layout-builder .layout-builder__add-section {
+#layout-builder .layout-builder__add-section {
   margin-top: 2rem;
 }
-#layout-builder-ipe-wrapper #layout-builder .layout-builder__add-section:first-child {
+#layout-builder .layout-builder__add-section:first-child {
   margin-top: 0;
 }
-#layout-builder-ipe-wrapper #layout-builder .layout-builder__section:after {
+#layout-builder .layout-builder__section:after {
   position: absolute;
   outline-width: 1px !important;
   outline-style: solid !important;
@@ -31,27 +31,27 @@ input[type="checkbox"][disabled="disabled"] {
   pointer-events: none;
   content: '' !important;
 }
-#layout-builder-ipe-wrapper #layout-builder .layout-builder__section:hover:after {
+#layout-builder .layout-builder__section:hover:after {
   outline-width: 2px !important;
   outline-color: var(--colorGinPrimary);
 }
-body.path-node #layout-builder-ipe-wrapper #layout-builder .layout-builder__section:after {
+#layout-builder .layout-builder__section:after {
   content: none !important;
 }
 
-#layout-builder-ipe-wrapper #layout-builder .layout-builder__section > .layout-builder__link {
+#layout-builder .layout-builder__section > .layout-builder__link {
   top: -1.5rem !important;
   display: block !important;
   color: var(--colorGinFormElementBorder);
 }
-#layout-builder-ipe-wrapper #layout-builder .layout-builder__section .layout-builder__link--remove {
+#layout-builder .layout-builder__section .layout-builder__link--remove {
   background-color: var(--colorGinFormElementBorder);
   left: -10px;
 }
-#layout-builder-ipe-wrapper #layout-builder .layout-builder__section .layout-builder__link--configure {
+#layout-builder .layout-builder__section .layout-builder__link--configure {
   left: 10px !important;
 }
-#layout-builder-ipe-wrapper #layout-builder:hover .layout-builder__section:hover .layout-builder__link--configure:after {
+#layout-builder:hover .layout-builder__section:hover .layout-builder__link--configure:after {
   background-color: var(--colorGinFormElementBorder);
 }
 

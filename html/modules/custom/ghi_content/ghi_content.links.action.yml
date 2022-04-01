@@ -1,4 +1,9 @@
-entity.node.articles:
+ghi_content.article_update:
+  route_name: ghi_content.articles.update
+  title: Update articles
+  appears_on:
+    - view.content.page_articles
+ghi_content.node.article_update:
   route_name: ghi_content.node.articles.update
   title: Update articles
   appears_on:

@@ -32,6 +32,11 @@ class ArticleListController extends ControllerBase {
   const VIEW_DISPLAY = 'block_articles_table';
 
   /**
+   * The route name for the article listing backend page.
+   */
+  const ARTICLE_LIST_ROUTE = 'view.content.page_articles';
+
+  /**
    * The article manager.
    *
    * @var \Drupal\ghi_content\ContentManager\ArticleManager
@@ -72,8 +77,11 @@ class ArticleListController extends ControllerBase {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function access(NodeInterface $node) {
-    return AccessResult::allowedIf($node->access('update') && in_array($node->bundle(), SectionManager::SECTION_BUNDLES));
+  public function access(NodeInterface $node = NULL) {
+    if ($node) {
+      return AccessResult::allowedIf($node->access('update') && in_array($node->bundle(), SectionManager::SECTION_BUNDLES));
+    }
+    return Url::fromRoute(self::ARTICLE_LIST_ROUTE)->access(NULL, TRUE);
   }
 
   /**
@@ -135,34 +143,56 @@ class ArticleListController extends ControllerBase {
    *
    * This runs a migration in a batch process.
    *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node object.
+   * @param \Drupal\node\NodeInterface|null $node
+   *   An optional node object, which limits the migration to only those
+   *   articles relevant to the given node via its tags.
    *
-   * @return \Symfony\Component\HttpFoundation\RedirectResponse
-   *   A redirect to a batch url.
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse|array
+   *   A redirect to a batch url or a render array if the migration can't be
+   *   found.
    */
-  public function updateArticles(NodeInterface $node) {
+  public function updateArticles(NodeInterface $node = NULL) {
+    $redirect_url = Url::fromRoute(self::ARTICLE_LIST_ROUTE)->toString();
+    $tags = NULL;
+    if ($node) {
+      $redirect_url = Url::fromRoute('ghi_content.node.articles', ['node' => $node->id()])->toString();
+      $tags = $this->articleManager->getTags($node);
+    }
+    return $this->runArticlesMigration($redirect_url, $tags);
+  }
+
+  /**
+   * Run the articles migrations.
+   *
+   * @param string $redirect
+   *   The url to redirect to after the migration has finished.
+   * @param array $tags
+   *   Optional tags to filter the source data by.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse|array
+   *   A redirect to a batch url or a render array if the migration can't be
+   *   found.
+   */
+  private function runArticlesMigration($redirect, array $tags = NULL) {
+    // @todo Make this work with more than a single migration. One way to do
+    // this, would be to fetch all definitions and then filter by the source
+    // plugin used (RemoteSourceGraphQL).
     $migration = $this->migrationPluginManager->createInstance('articles_gho');
     if (empty($migration)) {
       return [
         '#markup' => $this->t('There was an error processing your request. Please contact an administrator.'),
       ];
     }
-
     $options = [
-      'limit' => 5,
       'update' => 1,
       'force' => 1,
-      'configuration' => [
-        'source_tags' => $this->articleManager->getTags($node),
-        'limit' => 5,
-        'update' => 1,
-        'force' => 1,
-      ],
     ];
+    if ($tags !== NULL) {
+      $options['configuration'] = ['source_tags' => $tags];
+    }
     $executable = new MigrateBatchExecutable($migration, new MigrateMessage(), $options);
     $executable->batchImport();
-    batch_process(Url::fromRoute('ghi_content.node.articles', ['node' => $node->id()])->toString());
+    batch_process($redirect);
     $batch = batch_get();
     $url = $batch['url'];
     return new RedirectResponse($url->toString());

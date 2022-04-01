@@ -7,3 +7,6 @@ services:
     arguments: ['@ghi_blocks.layout_builder_edit_page.selection_criteria_argument']
     tags:
       - { name: event_subscriber }
+  ghi_blocks.contextual_links.block_handler:
+    class: Drupal\ghi_blocks\ContextualLinks\BlockHandler
+    arguments: ['@entity_type.manager', '@layout_builder.tempstore_repository']

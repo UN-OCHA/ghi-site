@@ -26,6 +26,13 @@ abstract class ContentBlockBase extends GHIBlockBase implements AutomaticTitleBl
   protected $articleManager;
 
   /**
+   * The renderer service.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -37,6 +44,7 @@ abstract class ContentBlockBase extends GHIBlockBase implements AutomaticTitleBl
       $instance->remoteSource = $remote_source_manager->createInstance($plugin_definition['remote_source']);
     }
     $instance->articleManager = $container->get('ghi_content.manager.article');
+    $instance->renderer = $container->get('renderer');
 
     return $instance;
   }

@@ -82,8 +82,14 @@ class LayoutBuilderRouteSubscriber extends RouteSubscriberBase {
       $block->setRegion($event->getComponent()->getRegion());
     }
 
-    if (!$block instanceof ViewsBlock || !$block->getContextDefinition('field_year_value')) {
-      // No views block or no year context expected.
+    if (!$block instanceof ViewsBlock) {
+      // No views block.
+      return;
+    }
+
+    $context_definitions = $block->getContextDefinitions();
+    if (!array_key_exists('field_year_value', $context_definitions)) {
+      // No year context expected.
       return;
     }
 

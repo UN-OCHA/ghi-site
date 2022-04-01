@@ -28,6 +28,7 @@ function ghi_sections_form_node_section_edit_form_alter(&$form, FormStateInterfa
   // Always disable the base object field. It's currently not allowed to
   // change it.
   $form['field_base_object']['#disabled'] = TRUE;
+  $form['field_base_object']['widget'][0]['target_id']['#title'] .= ': ' . $object->type->entity->label();
   $form['field_base_object']['widget'][0]['target_id']['#description'] = t('The base object cannot be changed after the initial creation of a section.');
 
   // Also disable the year field. Beeing able to change it would at least need

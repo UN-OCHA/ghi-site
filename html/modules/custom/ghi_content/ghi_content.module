@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\node\NodeInterface;
@@ -14,46 +15,6 @@ use Drupal\node\NodeInterface;
  * Implements hook_cron().
  */
 function ghi_content_cron() {
-
-}
-
-/**
- * Implements hook_preprocess_views_view_field().
- *
- * This is used to remove the section tags from the tags field in views that
- * take tag ids as an argument in order to show articles belonging to a
- * specific section.
- */
-function ghi_content_preprocess_views_view_field__field_tags(&$variables) {
-  $valid_view_ids = ['articles_by_tags'];
-  /** @var \Drupal\views\ViewExecutable $view */
-  $view = $variables['view'];
-  if (!in_array($view->storage->id(), $valid_view_ids)) {
-    return;
-  }
-
-  /** @var \Drupal\views\ResultRow $row */
-  $row = $variables['row'];
-  /** @var \Drupal\views\Plugin\views\field\EntityField $field */
-  $field = $variables['field'];
-
-  // Get the tags that are specific to each row and remove the term ids passed
-  // in as arguments.
-  $tags = array_diff($field->getValue($row), $view->args);
-
-  // Get the build items from the field and filter it be restricted to these
-  // tags.
-  $items = $field->getItems($row);
-  $items = array_filter($items, function ($item) use ($tags) {
-    return in_array($item['raw']->entity->id(), $tags);
-  });
-
-  // Then render again according to the options set in the view and overwrite
-  // the output.
-  $build = $field->renderItems(array_map(function ($item) {
-    return $item['rendered'];
-  }, $items));
-  $variables['output'] = $build;
 
 }
 
@@ -96,6 +57,24 @@ function ghi_content_theme($existing, $type, $theme, $path) {
 }
 
 /**
+ * Implements hook_contextual_links_alter().
+ *
+ * Disable contextual links to declutter the interface. If it wouldn't be for
+ * layout builder who needs the contextual links for it's own interface, we
+ * could just disable the module entirely.
+ * See https://www.drupal.org/project/drupal/issues/3042516
+ */
+function ghi_content_contextual_links_alter(array &$links, $group, array $route_parameters) {
+  $allowed_groups = ['layout_builder_block'];
+  if (!in_array($group, $allowed_groups)) {
+    return;
+  }
+  /** @var \Drupal\ghi_content\ContextualLinks\BlockHandler $contextual_links_block_handler */
+  $contextual_links_block_handler = \Drupal::service('ghi_content.contextual_links.block_handler');
+  $contextual_links_block_handler->alterLinks($links, $group, $route_parameters);
+}
+
+/**
  * Implements hook_form_FORM_ID_alter().
  *
  * Used to disable fields that automatically populated.
@@ -109,6 +88,9 @@ function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateIn
     $form[$field_name]['#disabled'] = TRUE;
     $form[$field_name]['#attributes']['title'] = t('This field is disabled because it is automatically populated from the remote source.');
   }
+  // Also disable the remote article field.
+  $form['field_remote_article']['#disabled'] = TRUE;
+  $form['field_remote_article']['#attributes']['title'] = t('This field cannot be edited anymore after an article page has been created.');
 }
 
 /**
@@ -171,7 +153,7 @@ function ghi_content_preprocess_page(&$variables) {
     return;
   }
 
-  if ($node->bundle() != ArticleManager::ARTICLE_BUNDLE) {
+  if ($node->bundle() != ArticleManager::ARTICLE_BUNDLE || !$node->access()) {
     return;
   }
 
@@ -189,4 +171,77 @@ function ghi_content_preprocess_page(&$variables) {
     array_unshift($variables['page'][$region_name], $image);
   }
 
+}
+
+/**
+ * Implements hook_preprocess_views_view_field().
+ *
+ * This is used to remove the section tags from the tags field in views that
+ * take tag ids as an argument in order to show articles belonging to a
+ * specific section.
+ */
+function ghi_content_preprocess_views_view_field__field_tags(&$variables) {
+  $valid_view_ids = ['articles_by_tags'];
+  /** @var \Drupal\views\ViewExecutable $view */
+  $view = $variables['view'];
+  if (!in_array($view->storage->id(), $valid_view_ids)) {
+    return;
+  }
+
+  /** @var \Drupal\views\ResultRow $row */
+  $row = $variables['row'];
+  /** @var \Drupal\views\Plugin\views\field\EntityField $field */
+  $field = $variables['field'];
+
+  // Get the tags that are specific to each row and remove the term ids passed
+  // in as arguments.
+  $tags = array_diff($field->getValue($row), $view->args);
+
+  // Get the build items from the field and filter it be restricted to these
+  // tags.
+  $items = $field->getItems($row);
+  $items = array_filter($items, function ($item) use ($tags) {
+    return in_array($item['raw']->entity->id(), $tags);
+  });
+
+  // Then render again according to the options set in the view and overwrite
+  // the output.
+  $build = $field->renderItems(array_map(function ($item) {
+    return $item['rendered'];
+  }, $items));
+  $variables['output'] = $build;
+
+}
+
+/**
+ * Implements hook_local_actions_render_alter().
+ *
+ * This depends on https://www.drupal.org/project/drupal/issues/2585169.
+ */
+function ghi_content_local_actions_render_alter(&$data, $route_appears) {
+  $supported_routes = [
+    'ghi_content.article_update',
+    'ghi_content.node.article_update',
+  ];
+  foreach ($data as $link_key => &$element) {
+    if (!in_array($link_key, $supported_routes)) {
+      continue;
+    }
+
+    $migrate_last_imported_store = \Drupal::keyValue('migrate_last_imported');
+    $last_imported = $migrate_last_imported_store->get('articles_gho');
+    $last_imported = $last_imported ? intval($last_imported / 1000) : NULL;
+
+    /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
+    $date_formatter = \Drupal::service('date.formatter');
+
+    if ($last_imported) {
+      $element['#link']['title'] = new TranslatableMarkup('@link_title<div class="article-update-info">Last updated: @last_updated ago</div>', [
+        '@link_title' => $element['#link']['title'],
+        '@last_updated' => $date_formatter->formatTimeDiffSince($last_imported),
+      ]);
+      $element['#cache'] = ['max-age' => 0];
+      $element['#attached']['library'][] = 'ghi_content/admin.article_list';
+    }
+  }
 }

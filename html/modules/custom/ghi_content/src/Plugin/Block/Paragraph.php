@@ -5,9 +5,11 @@ namespace Drupal\ghi_content\Plugin\Block;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
+use Drupal\gho_footnotes\GhoFootnotes;
 
 /**
  * Provides a 'Paragraph' block.
@@ -18,7 +20,7 @@ use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
  *  category = @Translation("Narrative Content"),
  * )
  */
-class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface {
+class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface, TrustedCallbackInterface {
 
   /**
    * {@inheritdoc}
@@ -35,8 +37,25 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
     if (!$paragraph) {
       return;
     }
-
     $conf = $this->getBlockConfig();
+    return $this->buildParagraph($paragraph, $conf['paragraph']['title'], $this->isPreview());
+  }
+
+  /**
+   * Build the render array for a paragraph.
+   *
+   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface $paragraph
+   *   The remote paragraph object.
+   * @param string|null $title
+   *   A title for the paragraph or NULL.
+   * @param bool $preview
+   *   Whether this is a preview of the paragraph or not. The main reason this
+   *   is needed is for proper footnote support.
+   *
+   * @return array
+   *   The full render array for this paragraph block.
+   */
+  private function buildParagraph(RemoteParagraphInterface $paragraph, $title = NULL, $preview = FALSE) {
 
     // Add GHO specific theme components.
     $theme_components = $this->getThemeComponents($paragraph);
@@ -65,7 +84,7 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
 
     $build = [
       '#type' => 'container',
-      '#title' => $conf['paragraph']['title'],
+      '#title' => $title,
       '#attributes' => [
         'data-paragraph-id' => $paragraph->getId(),
       ],
@@ -80,12 +99,17 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
     if ($this->moduleHandler->moduleExists('gho_footnotes')) {
       // Make sure to add the gho-footnotes component.
       $theme_components[] = 'common_design_subtheme/gho-footnotes';
+      if ($preview) {
+        $build['content']['#post_render'][] = [
+          static::class,
+          'preparePreviewParagraph',
+        ];
+      }
     }
 
     $build['content']['#attached'] = [
       'library' => $theme_components,
     ];
-
     return $build;
   }
 
@@ -161,7 +185,7 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
     if ($subform_key == 'paragraph') {
       return $this->getArticle() instanceof RemoteArticleInterface;
     }
-    return TRUE;
+    return !$this->lockArticle();
   }
 
   /**
@@ -217,7 +241,7 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
     $paragraph = $this->getParagraph();
     $form['article_summary'] = [
       '#type' => 'item',
-      '#title' => $this->t('Selected article'),
+      '#title' => $this->lockArticle() ? $this->t('Article (locked)') : $this->t('Selected article'),
       '#markup' => $article->getSource()->getPluginLabel() . ': ' . $article->getTitle(),
     ];
 
@@ -231,7 +255,10 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
     $options = [];
     $theme_components = [];
     foreach ($article->getParagraphs() as $_paragraph) {
-      $options[$_paragraph->getId()] = $_paragraph->getRendered();
+      // We need to fully prerender the paragraph so that things like footnotes
+      // are handled correctly.
+      $build = $this->buildParagraph($_paragraph, NULL, TRUE);
+      $options[$_paragraph->getId()] = $this->renderer->render($build);
       $theme_components += array_merge($theme_components, $this->getThemeComponents($_paragraph));
     }
 
@@ -289,6 +316,64 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface 
     // markup_select form element provides it's value.
     $paragraph_id = (array) $conf['paragraph']['paragraph_id'];
     return $article->getParagraph(reset($paragraph_id));
+  }
+
+  /**
+   * Check if the article is locked for this paragraph element.
+   *
+   * The article for a paragraph is locked if there is an article set and if
+   * additionally the lock_article flag is set in the configuration.
+   *
+   * @return bool
+   *   TRUE if the article is locked, FALSE otherwise.
+   */
+  public function lockArticle() {
+    return $this->getArticle() && !empty($this->configuration['lock_article']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function trustedCallbacks() {
+    return [
+      'preparePreviewParagraph',
+    ];
+  }
+
+  /**
+   * Post render function to prepare a paragraph for display.
+   *
+   * In preview, we need to call GhoFootnotes::updateFootnotes, so that
+   * footnotes inside each paragraph are processed inidividually, thus turning
+   * the custom gho footnote markup into little jump links, assuring a frontend
+   * rendering that equals the output on a fully rendered page.
+   * We also need to wrap that into logic for temporarily disabling theme
+   * debug, because the file suggestion HTML comments might create file
+   * suggestions containing double-hyphens, which are not allowed in XML
+   * comments and prevent the dom related logic in
+   * GhoFootnotes::updateFootnotes from working correctly.
+   *
+   * In GHI the problem is introduced by the Gin Layout Builder module, which
+   * alters file suggestions in gin_lb_theme_suggestions_alter() for some
+   * routes, particularily the block remove route.
+   *
+   * We could have made modifications directly in GhoFootnotes, but because the
+   * gho_footnotes module is a straight copy from the GHO project, it's better
+   * to handle this here and leave the module untouched so that we can easier
+   * keep both versions in sync.
+   */
+  public static function preparePreviewParagraph($html, $build) {
+    /** @var \Twig\Environment $twig_service */
+    $twig_service = \Drupal::service('twig');
+    $twig_debug = $twig_service->isDebug();
+    if ($twig_debug) {
+      $twig_service->disableDebug();
+    }
+    $html = GhoFootnotes::updateFootnotes($html, $build);
+    if ($twig_debug) {
+      $twig_service->enableDebug();
+    }
+    return $html;
   }
 
 }
