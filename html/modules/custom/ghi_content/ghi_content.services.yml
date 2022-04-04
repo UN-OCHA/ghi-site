@@ -15,6 +15,11 @@ services:
     class: Drupal\ghi_content\EventSubscriber\RouteSubscriber
     tags:
       - { name: event_subscriber }
+  ghi_content.migrate_post_import_subscriber:
+    class: Drupal\ghi_content\EventSubscriber\MigrationPostImportSubscriber
+    arguments: ['@entity_type.manager', '@ghi_content.manager.article']
+    tags:
+      - { name: event_subscriber }
   ghi_content.manager.article:
     class: Drupal\ghi_content\ContentManager\ArticleManager
     arguments: ['@entity_type.manager', '@renderer', '@current_user']

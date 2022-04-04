@@ -38,6 +38,13 @@ class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPl
   private $remoteSource;
 
   /**
+   * Optional source tags for a given migration using this source.
+   *
+   * @var array
+   */
+  private $sourceTags;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
@@ -45,6 +52,7 @@ class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPl
     /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
     $remote_source_manager = $container->get('plugin.manager.remote_source');
     $instance->remoteSource = $remote_source_manager->createInstance($configuration['remote_source']);
+    $instance->sourceTags = $configuration['source_tags'] ?? NULL;
     return $instance;
   }
 
@@ -69,10 +77,11 @@ class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPl
    */
   private function getGenerator() {
     $tags = property_exists($this->migration, 'configuration') ? ($this->migration->configuration['source_tags'] ?? NULL) : NULL;
+    $this->setSourceTags($tags ?? []);
+
     $results = $this->remoteSource->importSource($tags);
-    foreach ($results as $result) {
-      yield $result;
-    }
+    $object = new \ArrayObject($results);
+    return $object->getIterator();
   }
 
   /**
@@ -93,6 +102,26 @@ class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPl
       $fields[$field['name']] = $field['label'];
     }
     return $fields;
+  }
+
+  /**
+   * Set the tags used to limit the source data.
+   *
+   * @param array $tags
+   *   An array of tag names keyed by tag id.
+   */
+  public function setSourceTags(array $tags) {
+    $this->sourceTags = $tags;
+  }
+
+  /**
+   * Get the tags used to limit the source data.
+   *
+   * @return array
+   *   An array of tag names keyed by tag id.
+   */
+  public function getSourceTags() {
+    return $this->sourceTags;
   }
 
 }

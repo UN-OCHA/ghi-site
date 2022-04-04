@@ -31,6 +31,9 @@ process:
     plugin: default_value
     default_value: article
   title: title
+  status:
+    plugin: default_value
+    default_value: 1
   created:
     plugin: callback
     callable: strtotime
@@ -47,6 +50,7 @@ destination:
   plugin: 'entity:node'
   overwrite_properties:
     - title
+    - status
     - created
     - changed
 migration_dependencies: {}
