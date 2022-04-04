@@ -4,6 +4,7 @@ namespace Drupal\ghi_content\Breadcrumb;
 
 use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Breadcrumb\BreadcrumbBuilderInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -18,11 +19,30 @@ class AdminContentBreadcrumbBuilder implements BreadcrumbBuilderInterface {
   use StringTranslationTrait;
 
   /**
+   * The entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * Public constructor.
+   */
+  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
+    $this->entityTypeManager = $entity_type_manager;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function applies(RouteMatchInterface $route_match) {
     $node = $route_match->getParameter('node');
-    $allowed_bundles = [ArticleManager::ARTICLE_BUNDLE, 'document', 'section', 'global_section'];
+    $allowed_bundles = [
+      ArticleManager::ARTICLE_BUNDLE,
+      'document',
+      'section',
+      'global_section',
+    ];
     return ($node instanceof NodeInterface && in_array($node->bundle(), $allowed_bundles));
   }
 
@@ -52,9 +72,8 @@ class AdminContentBreadcrumbBuilder implements BreadcrumbBuilderInterface {
         $breadcrumb->addLink(Link::createFromRoute($this->t('Sections'), 'view.content.page_sections'));
 
         if ($node->hasField('field_base_object')) {
-          $content_type = \Drupal::entityTypeManager()->getStorage('node_type')->load($node->bundle())->label();
           $base_object_type = $node->field_base_object->entity->bundle();
-          $section_type = \Drupal::entityTypeManager()->getStorage('base_object_type')->load($base_object_type)->label();
+          $section_type = $this->entityTypeManager->getStorage('base_object_type')->load($base_object_type)->label();
           $breadcrumb->addLink(Link::createFromRoute($this->t('@type Sections', ['@type' => $section_type]), 'view.content.page_sections', [], [
             'query' => [
               'type' => $base_object_type,

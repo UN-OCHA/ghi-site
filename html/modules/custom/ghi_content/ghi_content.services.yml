@@ -28,5 +28,6 @@ services:
     arguments: ['@entity_type.manager', '@layout_builder.tempstore_repository']
   ghi_content.breadcrumb:
     class: Drupal\ghi_content\Breadcrumb\AdminContentBreadcrumbBuilder
+    arguments: ['@entity_type.manager']
     tags:
       - { name: breadcrumb_builder, priority: 1003 }
