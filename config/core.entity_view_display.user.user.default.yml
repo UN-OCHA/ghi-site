@@ -11,11 +11,18 @@ targetEntityType: user
 bundle: user
 mode: default
 content:
+  field_team:
+    type: entity_reference_label
+    label: visually_hidden
+    settings:
+      link: false
+    third_party_settings: {  }
+    weight: 0
+    region: content
   member_for:
     settings: {  }
     third_party_settings: {  }
-    weight: 2
+    weight: 1
     region: content
 hidden:
-  field_team: true
   langcode: true
