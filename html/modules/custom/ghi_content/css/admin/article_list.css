@@ -16,4 +16,8 @@
     right: 0;
     text-align: right;
   }
+
+  .region-sticky--is-sticky .local-actions .article-update-info {
+    display: none;
+  }
 }

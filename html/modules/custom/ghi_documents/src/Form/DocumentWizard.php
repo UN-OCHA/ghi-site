@@ -256,7 +256,7 @@ class DocumentWizard extends FormBase {
 
     // Create and save the section.
     $document = $this->entityTypeManager->getStorage('node')->create([
-      'type' => 'document',
+      'type' => DocumentManager::DOCUMENT_BUNDLE,
       'title' => $values['title'],
       'uid' => $this->currentUser()->id(),
       'status' => FALSE,

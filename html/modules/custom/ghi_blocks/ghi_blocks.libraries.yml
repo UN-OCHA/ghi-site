@@ -1,3 +1,8 @@
+gin:
+  version: VERSION
+  css:
+    component:
+      css/gin.css: {}
 layout_builder_modal_admin:
   version: VERSION
   css:

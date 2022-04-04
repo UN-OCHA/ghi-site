@@ -322,7 +322,7 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
    */
   private function getArticles($limit = NULL) {
     $section = $this->getCurrentBaseEntity();
-    $tag_ids = $this->getApplicabbleTagIds();
+    $tag_ids = $this->getApplicableTagIds();
     $tag_conjunction = $this->getTagConjunction();
     if ($section || $tag_ids) {
       return $this->articleManager->loadNodesForTags($tag_ids, $section, $tag_conjunction, $limit);
@@ -336,7 +336,7 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
    * @return array
    *   The tags that should be applied for article selection.
    */
-  private function getApplicabbleTagIds() {
+  private function getApplicableTagIds() {
     $conf = $this->getBlockConfig();
     $tag_ids = array_filter($conf['articles']['tags']['tag_ids'] ?? []);
     return $tag_ids;

@@ -92,6 +92,19 @@ function ghi_blocks_contextual_links_alter(array &$links, $group, array $route_p
 }
 
 /**
+ * Implements hook_local_tasks_alter().
+ *
+ * This is used to remove the layout link from nodes local tasks when the
+ * Layout Builder IPE module is active.
+ */
+function ghi_blocks_local_tasks_alter(&$local_tasks) {
+  $plugin_id = 'layout_builder_ui:layout_builder.overrides.node.view';
+  if (!empty($local_tasks[$plugin_id]) && \Drupal::moduleHandler()->moduleExists('layout_builder_ipe')) {
+    unset($local_tasks[$plugin_id]);
+  }
+}
+
+/**
  * Implements hook_link_alter().
  *
  * Show the block selection in a modal instead of the offcanvas sidebar.
@@ -184,6 +197,7 @@ function ghi_blocks_page_attachments(array &$attachments) {
     $attachments['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
   }
   $attachments['#attached']['library'][] = 'ghi_blocks/throbber';
+  $attachments['#attached']['library'][] = 'ghi_blocks/gin';
 }
 
 /**

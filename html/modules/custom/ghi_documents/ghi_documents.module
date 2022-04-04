@@ -8,6 +8,7 @@
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\ghi_documents\DocumentManager;
 
 /**
  * Implements hook_form_FORM_ID_alter().
@@ -63,5 +64,5 @@ function ghi_documents_subpage_navigation_links_alter(&$links, array $context) {
  * Implements hook_is_subpage_type().
  */
 function ghi_documents_is_subpage_type($node_type) {
-  return in_array($node_type, ['document']);
+  return in_array($node_type, [DocumentManager::DOCUMENT_BUNDLE]);
 }
