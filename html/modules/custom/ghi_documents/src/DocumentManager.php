@@ -14,6 +14,11 @@ class DocumentManager extends BaseContentManager {
   use LayoutEntityHelperTrait;
 
   /**
+   * The machine name of the bundle to use for articles.
+   */
+  const DOCUMENT_BUNDLE = 'document';
+
+  /**
    * Load all documents for a section.
    *
    * @param \Drupal\node\NodeInterface $section
@@ -28,7 +33,7 @@ class DocumentManager extends BaseContentManager {
     }
 
     $matching_documents = $this->entityTypeManager->getStorage('node')->loadByProperties([
-      'type' => 'document',
+      'type' => self::DOCUMENT_BUNDLE,
       'field_entity_reference' => $section->id(),
     ]);
     return !empty($matching_documents) ? $matching_documents : NULL;
