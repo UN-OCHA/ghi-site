@@ -1,0 +1,7 @@
+.glb-toolbar {
+  z-index: 200 !important;
+}
+.views-element-container .gin-table-scroll-wrapper {
+  /** Needed to always see the operation links dropbutton content. */
+  overflow: visible;
+}

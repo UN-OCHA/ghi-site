@@ -4,9 +4,6 @@
  * @todo Check if thiss should be moved into the theme as all of this is
  *   probably frontend related.
  */
-.glb-toolbar {
-  z-index: 200 !important;
-}
 input[type="checkbox"][disabled="disabled"] {
   background-color: var(--colorGinDisabled) !important;
 }
