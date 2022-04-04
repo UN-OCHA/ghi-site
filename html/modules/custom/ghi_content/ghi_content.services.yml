@@ -26,3 +26,7 @@ services:
   ghi_content.contextual_links.block_handler:
     class: Drupal\ghi_content\ContextualLinks\BlockHandler
     arguments: ['@entity_type.manager', '@layout_builder.tempstore_repository']
+  ghi_content.breadcrumb:
+    class: Drupal\ghi_content\Breadcrumb\AdminContentBreadcrumbBuilder
+    tags:
+      - { name: breadcrumb_builder, priority: 1003 }
