@@ -4,6 +4,7 @@ namespace Drupal\ghi_content\ContentManager;
 
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
+use Drupal\ghi_sections\SectionManager;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\TermInterface;
 
@@ -90,11 +91,13 @@ class ArticleManager extends BaseContentManager {
    *   The logical operator (conjunction) for combining the tags.
    * @param int $limit
    *   An optional limit.
+   * @param bool $published
+   *   An optional flag to restrict this to published nodes. Default is TRUE.
    *
    * @return \Drupal\Core\Entity\EntityInterface[]|null
    *   An array of entity objects indexed by their ids.
    */
-  public function loadNodesForTags(array $tags = NULL, NodeInterface $node = NULL, $op = 'AND', $limit = NULL) {
+  public function loadNodesForTags(array $tags = NULL, NodeInterface $node = NULL, $op = 'AND', $limit = NULL, $published = TRUE) {
     if (empty($tags) && $node === NULL) {
       return NULL;
     }
@@ -103,10 +106,11 @@ class ArticleManager extends BaseContentManager {
 
     // Setup the base query.
     $query = $this->entityTypeManager->getStorage('node')->getQuery();
-    $query->condition('status', NodeInterface::PUBLISHED);
+    if ($published) {
+      $query->condition('status', NodeInterface::PUBLISHED);
+      $query->accessCheck();
+    }
     $query->condition('type', self::ARTICLE_BUNDLE);
-    $query->accessCheck();
-
     if ($limit !== NULL) {
       $query->pager((int) $limit);
     }
@@ -114,6 +118,7 @@ class ArticleManager extends BaseContentManager {
     // For the logic behing the following conditions on tags see comments on
     // https://api.drupal.org/api/drupal/core!lib!Drupal!Core!Entity!Query!QueryInterface.php/function/QueryInterface%3A%3AandConditionGroup/8.2.x
     if ($node) {
+      // Get the base tags, these must all be present in the articles.
       $node_tags = $this->getTags($node);
       foreach (array_keys($node_tags) as $tag_id) {
         $query->condition($this->getLogicalQueryCondition($query, 'AND', $tag_field, $tag_id));
@@ -184,6 +189,43 @@ class ArticleManager extends BaseContentManager {
       return NULL;
     }
     return $this->loadNodesForTags(NULL, $section, 'AND');
+  }
+
+  /**
+   * Load all sections where the given node can appear.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   *
+   * @return \Drupal\node\NodeInterface[]
+   *   Array of section nodes.
+   */
+  public function loadSectionsForNode(NodeInterface $node) {
+    $sections = [];
+
+    $tags = $this->getTags($node);
+    if (empty($tags)) {
+      return $sections;
+    }
+
+    // Setup the base query.
+    $section_candidates = $this->entityTypeManager->getStorage('node')->loadByProperties([
+      'type' => SectionManager::SECTION_BUNDLES,
+      'field_tags' => array_keys($tags),
+    ]);
+
+    foreach ($section_candidates as $section) {
+      $section_tags = $this->getTags($section);
+      if (count(array_diff_key($section_tags, $tags)) > 0) {
+        // We only want to keep sections where all tags are part of the article
+        // tags. But here we have at least one section tag that is not present
+        // on the article, so we skip this section.
+        continue;
+      }
+      $sections[] = $section;
+    }
+
+    return $sections;
   }
 
   /**

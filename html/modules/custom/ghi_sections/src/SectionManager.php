@@ -4,6 +4,7 @@ namespace Drupal\ghi_sections;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\taxonomy\TermInterface;
 
 /**
  * Sync element service class.
@@ -55,6 +56,23 @@ class SectionManager {
     }
     $sections = $this->entityTypeManager->getStorage('node')->loadByProperties($properties);
     return count($sections) ? reset($sections) : NULL;
+  }
+
+  /**
+   * Load all sections assigned to the given team term.
+   *
+   * @param \Drupal\taxonomy\TermInterface $term
+   *   The taxonomy term for the team.
+   *
+   * @return \Drupal\node\NodeInterface[]
+   *   An array of sections assigned to the team.
+   */
+  public function loadSectionsForTeam(TermInterface $term) {
+    $sections = $this->entityTypeManager->getStorage('node')->loadByProperties([
+      'type' => 'section',
+      'field_team' => $term->id(),
+    ]);
+    return $sections;
   }
 
 }

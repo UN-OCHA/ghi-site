@@ -5,9 +5,12 @@
  * Hook implementations for GHI Content.
  */
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_content\ContentManager\ArticleManager;
+use Drupal\ghi_sections\SectionManager;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\node\NodeInterface;
 
@@ -245,3 +248,93 @@ function ghi_content_local_actions_render_alter(&$data, $route_appears) {
     }
   }
 }
+
+/**
+ * Implements hook_entity_operation().
+ */
+function ghi_content_entity_operation(EntityInterface $entity) {
+  $account = \Drupal::currentUser();
+  if (!$entity instanceof NodeInterface || !in_array($entity->bundle(), SectionManager::SECTION_BUNDLES)) {
+    return;
+  }
+
+  $route_name = 'ghi_content.node.articles';
+  $route_parameters = [
+    'node' => $entity->id(),
+  ];
+
+  // If current user has access to route, then add the operation link.
+  /** @var \Drupal\Core\Access\AccessManagerInterface $access_manager */
+  $access_manager = \Drupal::service('access_manager');
+  if (!$access_manager->checkNamedRoute($route_name, $route_parameters, $account)) {
+    return;
+  }
+
+  return [
+    'articles' => [
+      'title' => t('Articles'),
+      'weight' => 50,
+      'url' => Url::fromRoute($route_name, $route_parameters),
+    ],
+  ];
+}
+
+// @codingStandardsIgnoreStart
+// /**
+//  * Implements hook_node_access_records().
+//  *
+//  * The basic logic for the moment is that users with edit access to a section
+//  * should be able to view any articles listed in that section, whether
+//  * published or unpublished.
+//  */
+// function ghi_content_node_access_records(NodeInterface $node) {
+//   $grants = [];
+//   if ($node->bundle() != ArticleManager::ARTICLE_BUNDLE || $node->isPublished()) {
+//     // Not an article node or already published.
+//     return $grants;
+//   }
+
+//   /** @var \Drupal\ghi_content\ContentManager\ArticleManager */
+//   $article_manager = \Drupal::service('ghi_content.manager.article');
+//   $sections = $article_manager->loadSectionsForNode($node);
+//   if (empty($sections)) {
+//     return $grants;
+//   }
+
+//   // Grant view access to all unpublished articles of a section.
+//   foreach ($sections as $section) {
+//     $grants[] = [
+//       'realm' => 'ghi_content_article_access',
+//       'gid' => $section->id(),
+//       'grant_view' => 1,
+//       'grant_update' => 0,
+//       'grant_delete' => 0,
+//       'priority' => 0,
+//     ];
+//   }
+//   return $grants;
+// }
+
+// /**
+//  * Implements hook_node_grants().
+//  */
+// function ghi_content_node_grants(AccountInterface $account, $op) {
+//   $grants = [];
+//   $grants['ghi_content_article_access'] = [0];
+
+//   $user = User::load($account->id());
+//   if (!$user->hasField('field_team') || $user->get('field_team')->isEmpty()) {
+//     return $grants;
+//   }
+
+//   /** @var \Drupal\ghi_sections\SectionManager */
+//   $section_manager = \Drupal::service('ghi_sections.manager');
+
+//   // Load the available sections for the users team.
+//   $sections = $section_manager->loadSectionsForTeam($user->field_team->entity);
+//   foreach ($sections as $section) {
+//     $grants['ghi_content_article_access'][] = $section->id();
+//   }
+//   return $grants;
+// }
+// @codingStandardsIgnoreEnd
