@@ -168,7 +168,7 @@
     let selected = Drupal.EntityPreviewSelect.getSelected($wrapper);
     let allow_featured = config.allow_featured || 0;
     let featured = allow_featured ? Drupal.EntityPreviewSelect.getFeatured($wrapper) : [];
-    console.log(selected, featured);
+
     if ($wrapper.find('.preview-summary').length == 0) {
       $summary = $('<span></span>');
       $summary.addClass('preview-summary');
