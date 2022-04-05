@@ -50,16 +50,22 @@ third_party_settings:
       allowed_layouts:
         - layout_onecol
       blacklisted_blocks: {  }
-      whitelisted_blocks: {  }
+      whitelisted_blocks:
+        'Narrative Content':
+          - paragraph
+          - related_articles
       restricted_categories:
         - 'Chaos Tools'
         - 'Content fields'
+        - 'Country elements'
         - 'Custom block types'
         - Forms
         - HID
+        - Homepage
         - 'Inline blocks'
         - 'Lists (Views)'
         - Menus
+        - 'Plan elements'
         - 'Social Auth'
         - Subpage
         - System
