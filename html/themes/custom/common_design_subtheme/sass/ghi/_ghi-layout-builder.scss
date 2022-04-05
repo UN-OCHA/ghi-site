@@ -17,3 +17,15 @@
   // Make this higher than the z-index of the gho tooltips.
   z-index: 102;
 }
+
+#layout-builder-modal .cd-alert {
+  margin-top: 0;
+  margin-right: 21px;
+  margin-bottom: 1rem;
+  margin-left: 30px;
+  padding: 0.5rem;
+
+  & > div {
+    align-items: center;
+  }
+}

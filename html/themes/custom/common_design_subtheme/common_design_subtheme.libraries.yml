@@ -2,6 +2,8 @@ global-styling:
   css:
     theme:
       css/styles.css: {}
+  js:
+    js/common.js: {}
 
 # CSS custom properties polyfill for IE11.
 # https://jhildenbiddle.github.io/css-vars-ponyfill
