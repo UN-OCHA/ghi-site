@@ -11,7 +11,7 @@ field_name: field_tags
 entity_type: node
 bundle: global_section
 label: 'Global section tags'
-description: ''
+description: 'Define the tags for this global section. This has implications on what content will appear on subpages of this global section. Separate multiple tags by comma. Leave empty to not restrict the available content.'
 required: false
 translatable: true
 default_value: {  }
