@@ -84,10 +84,6 @@ class RelatedArticles extends ContentBlockBase {
    */
   public function getConfigForm(array $form, FormStateInterface $form_state) {
 
-    $form = [
-      '#type' => 'container',
-      '#tree' => TRUE,
-    ];
     $form['mode'] = [
       '#type' => 'radios',
       '#title' => $this->t('Mode'),
@@ -95,6 +91,7 @@ class RelatedArticles extends ContentBlockBase {
         'fixed' => $this->t('Fixed'),
       ],
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'mode'),
+      '#access' => FALSE,
     ];
     $form['count'] = [
       '#type' => 'number',
