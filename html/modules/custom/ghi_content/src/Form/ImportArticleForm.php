@@ -15,6 +15,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an edit form for remote sources processors.
+ *
+ * @todo This can probably be removed since we autoimport via migrations.
  */
 class ImportArticleForm extends FormBase {
 

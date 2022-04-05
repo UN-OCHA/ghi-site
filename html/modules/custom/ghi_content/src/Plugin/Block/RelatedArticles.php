@@ -2,7 +2,6 @@
 
 namespace Drupal\ghi_content\Plugin\Block;
 
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -39,10 +38,12 @@ class RelatedArticles extends ContentBlockBase {
       return;
     }
 
-    if ($conf['mode'] == 'fixed' && !empty($conf['select'])) {
-      if (!empty($conf['select']['selected'])) {
-        $articles = array_intersect_key($articles, array_flip($conf['select']['selected']));
+    if ($conf['mode'] == 'fixed') {
+      if (empty($conf['select']) || empty($conf['select']['selected'])) {
+        // Nothing selected.
+        return;
       }
+      $articles = array_intersect_key($articles, array_flip($conf['select']['selected']));
       if (!empty($conf['select']['order'])) {
         $articles = array_filter(array_map(function ($id) use ($articles) {
           return $articles[$id] ?? NULL;
@@ -84,10 +85,6 @@ class RelatedArticles extends ContentBlockBase {
    */
   public function getConfigForm(array $form, FormStateInterface $form_state) {
 
-    $form = [
-      '#type' => 'container',
-      '#tree' => TRUE,
-    ];
     $form['mode'] = [
       '#type' => 'radios',
       '#title' => $this->t('Mode'),
@@ -95,6 +92,7 @@ class RelatedArticles extends ContentBlockBase {
         'fixed' => $this->t('Fixed'),
       ],
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'mode'),
+      '#access' => FALSE,
     ];
     $form['count'] = [
       '#type' => 'number',
@@ -111,12 +109,11 @@ class RelatedArticles extends ContentBlockBase {
       '#entities' => $this->getArticles(),
       '#entity_type' => 'node',
       '#view_mode' => 'grid',
-      '#limit_field' => Html::getClass(implode('-', array_merge(['edit'], $form['#parents'], [
-        'count',
-      ]))),
+      '#limit_field' => array_merge($form['#parents'], ['count']),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
         'select',
       ]),
+      '#required' => TRUE,
     ];
 
     $form['#attached'] = [
@@ -136,9 +133,7 @@ class RelatedArticles extends ContentBlockBase {
    *   An array of entity objects indexed by their ids.
    */
   private function getArticles($limit = NULL) {
-    $section = $this->getCurrentBaseEntity();
-    $tag_ids = [];
-    return $this->articleManager->loadNodesForTags($tag_ids, $section, 'AND', $limit);
+    return $this->articleManager->loadAllNodes();
   }
 
 }

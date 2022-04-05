@@ -29,6 +29,7 @@ third_party_settings:
     allowed_block_categories:
       - 'Chaos Tools'
       - 'Content fields'
+      - 'Country elements'
       - 'Custom block types'
       - Forms
       - 'Generic elements'
@@ -46,10 +47,14 @@ third_party_settings:
     entity_view_mode_restriction:
       allowed_layouts: {  }
       blacklisted_blocks: {  }
-      whitelisted_blocks: {  }
+      whitelisted_blocks:
+        'Narrative Content':
+          - article_collection
+          - paragraph
       restricted_categories:
         - 'Chaos Tools'
         - 'Content fields'
+        - 'Country elements'
         - 'Custom block types'
         - Forms
         - HID

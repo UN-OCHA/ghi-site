@@ -324,6 +324,76 @@ class ImportManager implements ContainerInjectionInterface {
   }
 
   /**
+   * Setup the related articles element.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node for which tags should be imported/synced.
+   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $article
+   *   The article object as retrieved from the remote source.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   An optional messenger to use for result messages.
+   */
+  public function setupRelatedArticlesElement(NodeInterface $node, RemoteArticleInterface $article, MessengerInterface $messenger = NULL) {
+    if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+      return FALSE;
+    }
+
+    $sections = $this->getNodeSections($node);
+    $delta = 0;
+    $definition = $this->blockManager->getDefinition('related_articles', FALSE);
+    if (!$definition) {
+      return;
+    }
+
+    $configuration = [
+      'hpc' => [
+        'mode' => 'fixed',
+        'count' => 3,
+        'select' => [
+          'order' => NULL,
+          'selected' => [],
+        ],
+      ],
+    ];
+
+    $existing_components = $this->getExistingComponentsByType($node, $definition['id']);
+    if (!empty($existing_components)) {
+      // Only do this once.
+      return;
+    }
+
+    $context_mapping = [
+      'context_mapping' => [
+        'node' => 'layout_builder.entity',
+      ],
+    ];
+
+    // Append a new component.
+    $messages[] = $this->t('Added %plugin_title', [
+      '%plugin_title' => $definition['admin_label'],
+    ]);
+    $config = array_filter([
+      'id' => $definition['id'],
+      'provider' => $definition['provider'],
+    ]) + $context_mapping;
+    $config += $configuration;
+    $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
+    $sections[$delta]->appendComponent($component);
+
+    $this->layoutManagerDiscardChanges($node, $messenger);
+
+    $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+
+    if ($messenger !== NULL && count($messages)) {
+      foreach ($messages as $message) {
+        $messenger->addMessage($message);
+      }
+    }
+
+    return TRUE;
+  }
+
+  /**
    * Get the plugin definition for a paragraph block.
    *
    * @return mixed
@@ -354,6 +424,29 @@ class ImportManager implements ContainerInjectionInterface {
       }
     }
     return NULL;
+  }
+
+  /**
+   * Find a section component corresponding to the given source element.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   * @param string $plugin_id
+   *   The plugin id of the component to search.
+   *
+   * @return \Drupal\layout_builder\SectionComponent|null
+   *   Either a matching component, or NULL.
+   */
+  private function getExistingComponentsByType(NodeInterface $node, $plugin_id) {
+    $section_storage = $this->getSectionStorageForEntity($node);
+    $sections = $section_storage->getSections();
+    $components = [];
+    foreach ($sections[0]->getComponents() as $component) {
+      if ($component->getPluginId() == $plugin_id) {
+        $components[] = $component;
+      }
+    }
+    return $components;
   }
 
   /**

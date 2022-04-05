@@ -60,6 +60,34 @@ class EntityPreviewSelect extends FormElement {
    *
    * @todo Check if this is actually needed.
    */
+  public static function elementValidate(array &$element, FormStateInterface $form_state, array $form) {
+    if ($element['#required']) {
+      $values = $form_state->getValue($element['#parents']);
+      if ($element['#limit_field'] && $limit = $form_state->getValue($element['#limit_field'])) {
+        if (count($values['selected']) < $limit) {
+          $form_state->setError($element, t('At least @limit cards must be selected.', [
+            '@limit' => $limit,
+          ]));
+        }
+      }
+      elseif (!count($values['selected'])) {
+        $form_state->setError($element, t('At least 1 card must be selected.'));
+      }
+    }
+  }
+
+  /**
+   * Element submit callback.
+   *
+   * @param array $element
+   *   The base element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param array $form
+   *   The full form.
+   *
+   * @todo Check if this is actually needed.
+   */
   public static function elementSubmit(array &$element, FormStateInterface $form_state, array $form) {
     $form_state->setRebuild(TRUE);
   }
@@ -130,7 +158,7 @@ class EntityPreviewSelect extends FormElement {
     $element['#attached']['drupalSettings']['entity_preview_select'][$name] = [
       'previews' => $previews,
       'entity_ids' => array_keys($entities),
-      'limit_field' => $element['#limit_field'] ?? NULL,
+      'limit_field' => $element['#limit_field'] ? Html::getClass(implode('-', array_merge(['edit'], $element['#limit_field']))) : NULL,
       'allow_selected' => $allow_selected,
       'allow_featured' => $allow_featured,
     ];

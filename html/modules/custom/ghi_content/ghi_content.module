@@ -132,6 +132,10 @@ function ghi_content_node_presave(NodeInterface $node) {
     // Import the tags.
     $import_manager->importTags($node, $article, 'field_tags');
   }
+
+  if ($node->isNew()) {
+    $import_manager->setupRelatedArticlesElement($node, $article);
+  }
 }
 
 /**
