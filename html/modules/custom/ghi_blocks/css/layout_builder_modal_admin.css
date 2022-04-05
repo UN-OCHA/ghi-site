@@ -104,18 +104,25 @@ form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .glb-form-
 form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions,
 #layout-builder-modal form.glb-canvas-form .glb-canvas-form__actions {
   position: absolute !important;
-  display: flex;
   bottom: 0;
   right: 0;
   left: 0;
+  display: block;
+  text-align: right;
+  padding-right: 20px;
   flex-direction: row-reverse;
   border-top: 1px solid var(--colorGinLayerBorder);
   background: var(--colorGinAppBackground);
+}
+form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions > *:not(.ghi-layout-builder-subform-buttons),
+#layout-builder-modal form.glb-canvas-form .glb-canvas-form__actions > *:not(.ghi-layout-builder-subform-buttons) {
+  margin: 1em 0.75em 1em 0 !important;
 }
 
 #layout-builder-modal form.glb-canvas-form.confirmation .glb-canvas-form__actions {
   flex-direction: row;
   display: block;
+  text-align: left;
 }
 
 form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .ghi-layout-builder-subform-buttons,
@@ -127,6 +134,7 @@ form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .g
 form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .ghi-layout-builder-subform-buttons > .glb-form-type--checkbox,
 #layout-builder-modal form.layout-builder-configure-block .canvas-form__actions .ghi-layout-builder-subform-buttons > .glb-form-type--checkbox {
   display: inline-block;
+  text-align: left;
 }
 form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions input[disabled],
 #layout-builder-modal form.layout-builder-configure-block .canvas-form__actions input[disabled] {

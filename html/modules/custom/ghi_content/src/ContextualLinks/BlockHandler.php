@@ -104,22 +104,6 @@ class BlockHandler implements ContainerInjectionInterface {
       unset($links[$remove_link]);
     }
 
-    // Order the links.
-    $order = [
-      'layout_builder_block_update',
-      'layout_builder_block_hide',
-      'layout_builder_block_unhide',
-      'layout_builder_block_remove',
-    ];
-    $_links = [];
-    foreach ($order as $key) {
-      if (!array_key_exists($key, $links)) {
-        continue;
-      }
-      $_links[$key] = $links[$key];
-    }
-    $links = $_links;
-    unset($_links);
   }
 
 }

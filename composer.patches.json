@@ -13,6 +13,9 @@
     "drupal/gin": {
       "Issue #33272105: PHP notice when user pictures are not setup by the standard install profile": "https://www.drupal.org/files/issues/2022-03-31/3272105-7.patch"
     },
+    "drupal/gin_lb": {
+      "Issue #??: Add alter hook for template suggestions trigger": "./patches/hook_gin_lb_add_suggestions_alter.patch"
+    },
     "drupal/gin_toolbar": {
       "Issue #3121440: Add option for node local tasks in toolbar": "https://www.drupal.org/files/issues/2022-02-11/3263805-41.patch"
     },
