@@ -7,8 +7,6 @@ use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\CloseDialogCommand;
-use Drupal\Core\Ajax\OpenDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -17,6 +15,7 @@ use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
@@ -914,77 +913,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
-   * Ajax callback for the cancel button.
-   *
-   * This does some cleanup and either closes the current configuration modal
-   * (when editing) or going back to the choose block modal (when adding a new
-   * block).
-   */
-  public function cancelBlock(array $form, FormStateInterface $form_state) {
-    // First off, delete any existing form validation messages.
-    // @todo Is this to extreme? Setting #limit_validation_errors to [] on the
-    // cancel button doesn't work though.
-    $this->messenger()->deleteAll();
-
-    /** @var \Drupal\layout_builder\Form\ConfigureBlockFormBase $block_form */
-    $block_form = $form_state->getBuildInfo()['callback_object'];
-    $section_storage = $block_form->getSectionStorage();
-    $current_component = $block_form->getCurrentComponent();
-
-    if ($block_form instanceof AddBlockForm) {
-      // We don't want new blocks which got canceled to still be kept in the
-      // tempstore. It seems that they are not cleaned up automatically, so we
-      // remove them here manually.
-      $current_section = $block_form->getCurrentSection();
-      $current_section->removeComponent($current_component->getUuid());
-      $this->layoutTempstoreRepository->set($section_storage);
-
-      // We also want to return to the block selection modal.
-      // To do that we call the controller function that originally creates the
-      // choose block dialog.
-      /** @var \Drupal\layout_builder\Controller\ChooseBlockController $choose_block_controller */
-      $choose_block_controller = $this->controllerResolver->getControllerFromDefinition('\Drupal\layout_builder\Controller\ChooseBlockController');
-      $build = $choose_block_controller->build($section_storage, 0, $current_component->getRegion());
-      // We add the same class that LayoutBuilderBrowserEventSubscriber does for
-      // the original route.
-      $build['block_categories']['#attributes']['class'][] = 'layout-builder-browser';
-      // We take the layout builder modal settings.
-      $modal_config = $this->config('layout_builder_modal.settings');
-      $dialog_options = [
-        'width' => $modal_config->get('modal_width'),
-        'height' => $modal_config->get('modal_height'),
-        'target' => 'layout-builder-modal',
-        'autoResize' => $modal_config->get('modal_autoresize'),
-        'modal' => TRUE,
-      ];
-
-      // And create commands that close the current dialog and open a new one.
-      $response = new AjaxResponse();
-      $response->addCommand(new CloseDialogCommand('#layout-builder-modal'));
-      $response->addCommand(new OpenDialogCommand('#layout-builder-modal', $this->t('Choose a block'), $build, $dialog_options));
-      return $response;
-    }
-    else {
-      // Unset the stored form values.
-      $form_key = $form_state->get('current_subform');
-      $form_state->set($form_key, NULL);
-
-      // Do the same for every form of multi step forms.
-      $block = $current_component->getPlugin();
-      if ($block instanceof MultiStepFormBlockInterface) {
-        foreach (array_keys($block->getSubforms()) as $form_key) {
-          $form_state->set($form_key, NULL);
-        }
-      }
-    }
-
-    // And close the modal.
-    $response = new AjaxResponse();
-    $response->addCommand(new CloseDialogCommand('#layout-builder-modal'));
-    return $response;
-  }
-
-  /**
    * Custom form alter function for a block configuration.
    *
    * This get's called from ghi_blocks.module.
@@ -1068,15 +996,25 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $form['actions']['subforms']['preview']['#attributes']['checked'] = 'checked';
     }
 
+    // Add a cancel link.
     $form['actions']['cancel'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Cancel'),
-      '#name' => 'layout-builder-cancel',
-      '#limit_validation_errors' => [],
-      "#ajax" => [
-        "callback" => [$this, 'cancelBlock'],
+      '#type' => 'link',
+      '#title' => $this->t('Cancel'),
+      '#url' => $this->routeMatch->getParameter('section_storage')->getLayoutBuilderUrl(),
+      '#weight' => -1,
+      '#attributes' => [
+        'class' => [
+          'dialog-cancel',
+        ],
       ],
     ];
+
+    if ($form_state->getBuildInfo()['callback_object'] instanceof AddBlockForm) {
+      // For the add block form, kake this a link back to the block browser.
+      $form['actions']['cancel']['#url'] = Url::fromRoute('layout_builder.choose_block', $this->routeMatch->getRawParameters()->all());
+      $form['actions']['cancel']['#attributes']['class'][] = 'use-ajax';
+    }
+
     $form['actions']['#weight'] = 99;
 
     // Set the element validate callback for all ajax enabled form elements.
