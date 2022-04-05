@@ -35,6 +35,6 @@ regions:
 # components:
 #   namespaces:
 
-# This theme depends on gin_lb for seom icons.
+# This theme depends on gin_lb for some icons.
 dependencies:
   - gin_lb:gin_lb
