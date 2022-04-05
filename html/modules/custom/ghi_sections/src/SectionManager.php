@@ -38,7 +38,7 @@ class SectionManager {
    * @param int $year
    *   An optional year.
    *
-   * @return \Drupal\node\NodeInterface
+   * @return \Drupal\node\NodeInterface|null
    *   The section node if one could be found.
    */
   public function loadSectionForBaseObject(BaseObjectInterface $base_object, $year = NULL) {

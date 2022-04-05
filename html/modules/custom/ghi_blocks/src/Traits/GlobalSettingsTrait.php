@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
+use Drupal\ghi_sections\SectionManager;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
@@ -27,6 +28,19 @@ trait GlobalSettingsTrait {
    */
   public function getConfigKey() {
     return 'ghi_blocks.global_settings';
+  }
+
+  /**
+   * Get the section manager.
+   *
+   * @return \Drupal\ghi_sections\SectionManager
+   *   The section manager instance.
+   */
+  public function getSectionManager() {
+    if (property_exists($this, 'sectionManager') && $this->sectionManager instanceof SectionManager) {
+      return $this->sectionManager;
+    }
+    return \Drupal::service('ghi_sections.manager');
   }
 
   /**
@@ -142,6 +156,22 @@ trait GlobalSettingsTrait {
       }, $rows);
     }
 
+    // First make sure the name column is using the array notation so that we
+    // have common ground to work on.
+    $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) {
+      if (is_array($row['name'])) {
+        return $row;
+      }
+      $row['name'] = [
+        'data' => [
+          [
+            '#markup' => $row['name'],
+          ],
+        ],
+      ];
+      return $row;
+    }, $rows);
+
     if (!empty($config['plan_short_names'])) {
       // Replace plan name with short name if available.
       $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
@@ -150,13 +180,29 @@ trait GlobalSettingsTrait {
         if (!$plan) {
           return $row;
         }
-        $row['name'] = $plan->getName(TRUE);
+        $row['name']['data'][0]['#markup'] = $plan->getName(TRUE);
         return $row;
       }, $rows);
     }
 
+    // Link to existing sections if possible.
+    $section_manager = $this->getSectionManager();
+    $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans, $section_manager) {
+      /** @var \Drupal\ghi_base_objects\ApiObjects\Plan $plan */
+      $plan = $plans[$plan_id];
+      if (!$plan || !$plan->getEntity()) {
+        return $row;
+      }
+      $section = $section_manager->loadSectionForBaseObject($plan->getEntity());
+      if (!$section || !$section->isPublished()) {
+        return $row;
+      }
+      $row['name']['data'][0] = $section->toLink($row['name']['data'][0]['#markup'])->toRenderable();
+      return $row;
+    }, $rows);
+
     if (!empty($config['plan_status_text'])) {
-      // Replace plan name with short name if available.
+      // Add a plan status text if available.
       $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
         /** @var \Drupal\ghi_base_objects\ApiObjects\Plan $plan */
         $plan = $plans[$plan_id];
@@ -165,7 +211,9 @@ trait GlobalSettingsTrait {
         }
         $plan_status_text = $plan->getEntity()->get('field_plan_status_string')->value ?? NULL;
         if ($plan_status_text) {
-          $row['name'] .= Markup::create('<span class="plan-status"> (' . $plan_status_text . ')</span>');
+          $row['name']['data'][] = [
+            '#markup' => Markup::create('<span class="plan-status"> (' . $plan_status_text . ')</span>'),
+          ];
         }
         return $row;
       }, $rows);
@@ -180,21 +228,14 @@ trait GlobalSettingsTrait {
           return $row;
         }
         $name = $row['name'];
-        $row['name'] = [
-          'data' => [
-            [
-              '#markup' => Markup::create($name),
-            ],
-            [
-              '#theme' => 'hpc_tooltip',
-              '#tooltip' => $plan->getTypeName(),
-              '#tag' => 'span',
-              '#tag_content' => $plan->getTypeShortName(),
-              '#class' => [
-                'plan-type-icon',
-                Html::getClass('plan-type-' . $plan->getTypeShortName()),
-              ],
-            ],
+        $row['name']['data'][] = [
+          '#theme' => 'hpc_tooltip',
+          '#tooltip' => $plan->getTypeName(),
+          '#tag' => 'span',
+          '#tag_content' => $plan->getTypeShortName(),
+          '#class' => [
+            'plan-type-icon',
+            Html::getClass('plan-type-' . $plan->getTypeShortName()),
           ],
         ];
         return $row;
