@@ -36,8 +36,13 @@ class MigrationBatchController {
 
       /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
       $article_manager = \Drupal::service('ghi_content.manager.article');
-      $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadMultiple(array_keys($source_tags));
-      $existing_tagged_nodes = !empty($source_tags) ? $article_manager->loadNodesForTags($terms, NULL, 'AND', NULL, FALSE) : NULL;
+      if (!empty($source_tags)) {
+        $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadMultiple(array_keys($source_tags));
+        $nodes = $article_manager->loadNodesForTags($terms, NULL, 'AND', NULL, FALSE);
+      }
+      else {
+        $nodes = $article_manager->loadAllNodes();
+      }
 
       $source_keys = $source->getIds();
       $source_id_values = [];
@@ -47,8 +52,8 @@ class MigrationBatchController {
 
       $context['finished'] = 0;
       $context['sandbox'] = [];
-      $context['sandbox']['total'] = count($existing_tagged_nodes);
-      $context['sandbox']['nodes'] = $existing_tagged_nodes;
+      $context['sandbox']['total'] = count($nodes);
+      $context['sandbox']['nodes'] = $nodes;
       $context['sandbox']['source_ids'] = $source_id_values;
       $context['sandbox']['updated'] = 0;
       $context['results'][$migration->id()] = [];

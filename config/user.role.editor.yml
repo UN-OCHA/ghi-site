@@ -14,6 +14,7 @@ dependencies:
   module:
     - contextual
     - ghi_content
+    - ghi_element_sync
     - layout_builder
     - layout_builder_ipe
     - node
@@ -28,6 +29,7 @@ permissions:
   - 'access administration pages'
   - 'access content overview'
   - 'access contextual links'
+  - 'access element sync'
   - 'access remote content'
   - 'access toolbar'
   - 'configure editable article node layout overrides'

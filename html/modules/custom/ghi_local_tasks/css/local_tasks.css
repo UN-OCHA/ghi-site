@@ -1,0 +1,7 @@
+.toolbar-tray-horizontal ul li.menu-item__local_tasks {
+  position: absolute;
+  right: 0;
+}
+.toolbar-tray-horizontal ul li.menu-item__local_tasks.hover-intent ul {
+  width: auto !important;
+}

@@ -30,6 +30,7 @@ dependencies:
     - filter
     - ghi_base_objects
     - ghi_content
+    - ghi_element_sync
     - ghi_teams
     - layout_builder
     - layout_builder_ipe
@@ -52,6 +53,7 @@ permissions:
   - 'access content'
   - 'access content overview'
   - 'access contextual links'
+  - 'access element sync'
   - 'access files overview'
   - 'access media overview'
   - 'access remote content'

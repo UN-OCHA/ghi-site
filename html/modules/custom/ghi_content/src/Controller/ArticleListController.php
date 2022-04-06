@@ -7,6 +7,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_sections\SectionManager;
+use Drupal\ghi_sections\SectionTrait;
 use Drupal\migrate\MigrateMessage;
 use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
 use Drupal\migrate_tools\MigrateBatchExecutable;
@@ -20,6 +21,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Controller for article lists.
  */
 class ArticleListController extends ControllerBase {
+
+  use SectionTrait;
 
   /**
    * The machine name of the view to use for this article list.
@@ -79,7 +82,8 @@ class ArticleListController extends ControllerBase {
    */
   public function access(NodeInterface $node = NULL) {
     if ($node) {
-      return AccessResult::allowedIf($node->access('update') && in_array($node->bundle(), SectionManager::SECTION_BUNDLES));
+      $section = $this->getSectionNode($node);
+      return AccessResult::allowedIf($section && $section->access('update'));
     }
     return Url::fromRoute(self::ARTICLE_LIST_ROUTE)->access(NULL, TRUE);
   }
@@ -105,10 +109,14 @@ class ArticleListController extends ControllerBase {
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
    *
-   * @return array
+   * @return array|null
    *   A render array.
    */
   public function listArticles(NodeInterface $node) {
+    $node = $this->getSectionNode($node);
+    if (!in_array($node->bundle(), SectionManager::SECTION_BUNDLES)) {
+      return;
+    }
     $section_tags = $this->articleManager->getTags($node);
     $view = Views::getView(self::VIEW_NAME);
 
@@ -152,11 +160,16 @@ class ArticleListController extends ControllerBase {
    *   found.
    */
   public function updateArticles(NodeInterface $node = NULL) {
+    $section = $this->getSectionNode($node);
+    if ($node !== NULL && !$section) {
+      $this->messenger()->addError($this->t('Invalid content object to run this migration.'));
+      return new RedirectResponse($node->toUrl()->toString());
+    }
     $redirect_url = Url::fromRoute(self::ARTICLE_LIST_ROUTE)->toString();
     $tags = NULL;
-    if ($node) {
-      $redirect_url = Url::fromRoute('ghi_content.node.articles', ['node' => $node->id()])->toString();
-      $tags = $this->articleManager->getTags($node);
+    if ($section) {
+      $redirect_url = Url::fromRoute('ghi_content.node.articles', ['node' => $section->id()])->toString();
+      $tags = $this->articleManager->getTags($section);
     }
     return $this->runArticlesMigration($redirect_url, $tags);
   }
