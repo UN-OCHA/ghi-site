@@ -9,6 +9,8 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_content\ContentManager\ArticleManager;
+use Drupal\ghi_sections\SectionManager;
+use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\node\NodeInterface;
 
 /**
@@ -37,12 +39,10 @@ class AdminContentBreadcrumbBuilder implements BreadcrumbBuilderInterface {
    */
   public function applies(RouteMatchInterface $route_match) {
     $node = $route_match->getParameter('node');
-    $allowed_bundles = [
+    $allowed_bundles = array_merge([
       ArticleManager::ARTICLE_BUNDLE,
       'document',
-      'section',
-      'global_section',
-    ];
+    ], SectionManager::SECTION_BUNDLES, SubpageHelper::SUPPORTED_SUBPAGE_TYPES);
     return ($node instanceof NodeInterface && in_array($node->bundle(), $allowed_bundles));
   }
 
@@ -66,21 +66,34 @@ class AdminContentBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       case 'document':
         $breadcrumb->addLink(Link::createFromRoute($this->t('Documents'), 'view.content.page_documents'));
         break;
+    }
 
-      case 'section':
-      case 'global_section':
-        $breadcrumb->addLink(Link::createFromRoute($this->t('Sections'), 'view.content.page_sections'));
+    if (in_array($node->bundle(), SectionManager::SECTION_BUNDLES)) {
+      $breadcrumb->addLink(Link::createFromRoute($this->t('Sections'), 'view.content.page_sections'));
+      if ($node->hasField('field_base_object')) {
+        $base_object_type = $node->field_base_object->entity->bundle();
+        $section_type = $this->entityTypeManager->getStorage('base_object_type')->load($base_object_type)->label();
+        $breadcrumb->addLink(Link::createFromRoute($this->t('@type Sections', ['@type' => $section_type]), 'view.content.page_sections', [], [
+          'query' => [
+            'type' => $base_object_type,
+          ],
+        ]));
+      }
+    }
 
-        if ($node->hasField('field_base_object')) {
-          $base_object_type = $node->field_base_object->entity->bundle();
-          $section_type = $this->entityTypeManager->getStorage('base_object_type')->load($base_object_type)->label();
-          $breadcrumb->addLink(Link::createFromRoute($this->t('@type Sections', ['@type' => $section_type]), 'view.content.page_sections', [], [
-            'query' => [
-              'type' => $base_object_type,
-            ],
-          ]));
-        }
-        break;
+    if (in_array($node->bundle(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES)) {
+      $section = $node->get('field_entity_reference')->entity;
+      $breadcrumb->addLink(Link::createFromRoute($this->t('Sections'), 'view.content.page_sections'));
+      if ($section->hasField('field_base_object')) {
+        $base_object_type = $section->field_base_object->entity->bundle();
+        $section_type = $this->entityTypeManager->getStorage('base_object_type')->load($base_object_type)->label();
+        $breadcrumb->addLink(Link::createFromRoute($this->t('@type Sections', ['@type' => $section_type]), 'view.content.page_sections', [], [
+          'query' => [
+            'type' => $base_object_type,
+          ],
+        ]));
+      }
+      $breadcrumb->addLink($section->toLink());
     }
 
     $breadcrumb->addLink($node->toLink($current_item_title));

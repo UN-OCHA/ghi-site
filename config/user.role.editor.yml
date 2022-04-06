@@ -11,9 +11,12 @@ dependencies:
     - core.entity_view_display.node.profile.default
     - core.entity_view_display.node.risk_index.default
     - core.entity_view_display.node.section.default
+    - node.type.article
+    - node.type.document
   module:
     - contextual
     - ghi_content
+    - ghi_element_sync
     - layout_builder
     - layout_builder_ipe
     - node
@@ -28,6 +31,7 @@ permissions:
   - 'access administration pages'
   - 'access content overview'
   - 'access contextual links'
+  - 'access element sync'
   - 'access remote content'
   - 'access toolbar'
   - 'configure editable article node layout overrides'
@@ -38,20 +42,30 @@ permissions:
   - 'configure editable profile node layout overrides'
   - 'configure editable risk_index node layout overrides'
   - 'configure editable section node layout overrides'
+  - 'create document content'
+  - 'delete own document content'
+  - 'edit any article content'
+  - 'edit own document content'
   - 'publish editable content'
+  - 'publish editable node type article'
+  - 'publish editable node type document'
   - 'publish editable node type financials'
   - 'publish editable node type global_section'
   - 'publish editable node type population'
   - 'publish editable node type profile'
   - 'publish editable node type risk_index'
   - 'publish editable node type section'
+  - 'publish own node type document'
   - 'unpublish editable content'
+  - 'unpublish editable node type article'
+  - 'unpublish editable node type document'
   - 'unpublish editable node type financials'
   - 'unpublish editable node type global_section'
   - 'unpublish editable node type population'
   - 'unpublish editable node type profile'
   - 'unpublish editable node type risk_index'
   - 'unpublish editable node type section'
+  - 'unpublish own node type document'
   - 'use layout builder ipe on editable article node layout overrides'
   - 'use layout builder ipe on editable document node layout overrides'
   - 'use layout builder ipe on editable financials node layout overrides'

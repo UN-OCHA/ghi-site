@@ -12,6 +12,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
+use Drupal\ghi_subpages\SubpageTrait;
 use Drupal\node\NodeInterface;
 use Drupal\publishcontent\Access\PublishContentAccess;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -20,6 +21,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Provides a form for managing subpages of a base entity.
  */
 class SubpagesPagesForm extends FormBase {
+
+  use SubpageTrait;
 
   /**
    * The date formatter service.
@@ -111,6 +114,8 @@ class SubpagesPagesForm extends FormBase {
     ];
 
     $rows = [];
+
+    $node = $this->getBaseTypeNode($node);
 
     if (!$node->isPublished()) {
       $this->messenger()->addWarning($this->t('This @type is currently unpublished. The subpages listed on this page can only be published once the @type itself is published.', [

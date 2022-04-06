@@ -1,0 +1,69 @@
+<?php
+
+/**
+ * @file
+ * Improvements for the Drupal local tasks.
+ *
+ * This module depends on gin_toolbar and a patch from the feature requested in
+ * http://drupal.org/node/3121440.
+ */
+
+use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
+use Drupal\Core\Render\Element;
+use Drupal\ghi_subpages\Helpers\SubpageHelper;
+
+/**
+ * Implements hook_page_attachments().
+ */
+function ghi_local_tasks_page_attachments(array &$attachments) {
+  $attachments['#attached']['library'][] = 'ghi_local_tasks/local_tasks';
+}
+
+/**
+ * Implements hook_local_tasks_alter().
+ */
+function ghi_local_tasks_local_tasks_render_alter(&$data, $route_name, RefinableCacheableDependencyInterface &$cacheability) {
+  if (empty($data['tabs']) || empty($data['tabs'][0])) {
+    return;
+  }
+  if (count(Element::getVisibleChildren($data['tabs'][0])) <= 1) {
+    // Hide the local tasks if there is only a single visible item.
+    unset($data['tabs'][0]);
+  }
+}
+
+/**
+ * Implements hook_link_alter().
+ */
+function ghi_local_tasks_link_alter(&$variables) {
+  if ((string) $variables['text'] != t('Local Tasks')) {
+    return;
+  }
+  /** @var Drupal\Core\Url $url */
+  $url = $variables['url'];
+
+  if (!$url->isRouted()) {
+    return;
+  }
+
+  $route_parameters = $url->getRouteParameters();
+  $node_id = $route_parameters['node'] ?? NULL;
+  if (!$node_id) {
+    return;
+  }
+  $node = \Drupal::entityTypeManager()->getStorage('node')->load($node_id);
+  if ($node) {
+    $type = $node->type->entity->label();
+    if (SubpageHelper::isSubpageTypeNode($node)) {
+      $base_node = SubpageHelper::getBaseTypeNode($node);
+      $variables['text'] = t('@parent_type subpage: @type', [
+        '@parent_type' => $base_node->type->entity->label(),
+        '@type' => $type,
+      ]);
+    }
+    else {
+      $variables['text'] = $type;
+    }
+
+  }
+}

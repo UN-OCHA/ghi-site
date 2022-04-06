@@ -9,9 +9,9 @@ use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Access controller for the element sync form.
+ * Controller class for the element sync form.
  */
-class SyncAccessController extends ControllerBase {
+class SyncController extends ControllerBase {
 
   /**
    * The entity type manager.
@@ -54,6 +54,22 @@ class SyncAccessController extends ControllerBase {
     }
     $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
     return AccessResult::allowedIf($base_object && $base_object->bundle() == 'plan');
+  }
+
+  /**
+   * Title callback for the sync node form.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   *
+   * @return string
+   *   The page title.
+   */
+  public function syncFormTitle(NodeInterface $node) {
+    return $this->t('Sync elements for <em>@title: @type page</em>', [
+      '@title' => $node->label(),
+      '@type' => $node->type->entity->label(),
+    ]);
   }
 
 }

@@ -13,6 +13,8 @@ dependencies:
     - core.entity_view_display.node.section.default
     - filter.format.html_text
     - filter.format.wysiwyg_text
+    - node.type.article
+    - node.type.document
     - node.type.financials
     - node.type.global_section
     - node.type.news_story
@@ -30,6 +32,7 @@ dependencies:
     - filter
     - ghi_base_objects
     - ghi_content
+    - ghi_element_sync
     - ghi_teams
     - layout_builder
     - layout_builder_ipe
@@ -52,6 +55,7 @@ permissions:
   - 'access content'
   - 'access content overview'
   - 'access contextual links'
+  - 'access element sync'
   - 'access files overview'
   - 'access media overview'
   - 'access remote content'
@@ -86,6 +90,7 @@ permissions:
   - 'configure editable risk_index node layout overrides'
   - 'configure editable section node layout overrides'
   - 'create content translations'
+  - 'create document content'
   - 'create global_section content'
   - 'create media'
   - 'create news_story content'
@@ -98,10 +103,12 @@ permissions:
   - 'delete content translations'
   - 'delete global_section revisions'
   - 'delete media'
+  - 'delete own document content'
   - 'delete own global_section content'
   - 'delete own news_story content'
   - 'delete own section content'
   - 'delete section revisions'
+  - 'edit any article content'
   - 'edit any financials content'
   - 'edit any global_section content'
   - 'edit any news_story content'
@@ -110,6 +117,7 @@ permissions:
   - 'edit any profile content'
   - 'edit any risk_index content'
   - 'edit any section content'
+  - 'edit own document content'
   - 'edit own financials content'
   - 'edit own global_section content'
   - 'edit own news_story content'
@@ -128,6 +136,8 @@ permissions:
   - 'publish any node type risk_index'
   - 'publish any node type section'
   - 'publish editable content'
+  - 'publish editable node type article'
+  - 'publish editable node type document'
   - 'publish editable node type financials'
   - 'publish editable node type global_section'
   - 'publish editable node type news_story'
@@ -136,6 +146,7 @@ permissions:
   - 'publish editable node type profile'
   - 'publish editable node type risk_index'
   - 'publish editable node type section'
+  - 'publish own node type document'
   - 'publish own node type financials'
   - 'publish own node type global_section'
   - 'publish own node type news_story'
@@ -170,6 +181,8 @@ permissions:
   - 'unpublish any node type risk_index'
   - 'unpublish any node type section'
   - 'unpublish editable content'
+  - 'unpublish editable node type article'
+  - 'unpublish editable node type document'
   - 'unpublish editable node type financials'
   - 'unpublish editable node type global_section'
   - 'unpublish editable node type news_story'
@@ -178,6 +191,7 @@ permissions:
   - 'unpublish editable node type profile'
   - 'unpublish editable node type risk_index'
   - 'unpublish editable node type section'
+  - 'unpublish own node type document'
   - 'unpublish own node type financials'
   - 'unpublish own node type global_section'
   - 'unpublish own node type news_story'

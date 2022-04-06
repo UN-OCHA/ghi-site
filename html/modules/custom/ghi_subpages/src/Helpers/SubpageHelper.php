@@ -129,6 +129,24 @@ class SubpageHelper {
   }
 
   /**
+   * Get the corresponding base type node for the given node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   *
+   * @return \Drupal\node\NodeInterface|null
+   *   The base type node if found.
+   */
+  public static function getBaseTypeNode(NodeInterface $node) {
+    if (SubpageHelper::isBaseTypeNode($node)) {
+      return $node;
+    }
+    if (SubpageHelper::isSubpageTypeNode($node)) {
+      return $node->get('field_entity_reference')->entity;
+    }
+  }
+
+  /**
    * Check if the given node is a base type.
    *
    * @param \Drupal\node\NodeInterface $node
@@ -151,6 +169,9 @@ class SubpageHelper {
    *   TRUE if it is a subpage type, FALSE otherwhise.
    */
   public static function isSubpageTypeNode(NodeInterface $node) {
+    if (!$node->hasField('field_entity_reference')) {
+      return FALSE;
+    }
     if (in_array($node->bundle(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES)) {
       // Subpage type directly supported by this module.
       return TRUE;
