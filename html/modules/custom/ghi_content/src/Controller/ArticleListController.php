@@ -160,7 +160,7 @@ class ArticleListController extends ControllerBase {
    *   found.
    */
   public function updateArticles(NodeInterface $node = NULL) {
-    $section = $this->getSectionNode($node);
+    $section = $node ? $this->getSectionNode($node) : NULL;
     if ($node !== NULL && !$section) {
       $this->messenger()->addError($this->t('Invalid content object to run this migration.'));
       return new RedirectResponse($node->toUrl()->toString());
