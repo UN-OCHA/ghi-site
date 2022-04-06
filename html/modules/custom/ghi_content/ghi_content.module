@@ -5,11 +5,13 @@
  * Hook implementations for GHI Content.
  */
 
+use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_content\ContentManager\ArticleManager;
+use Drupal\ghi_content\Controller\MigrationBatchController;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\node\NodeInterface;
@@ -57,6 +59,32 @@ function ghi_content_theme($existing, $type, $theme, $path) {
       'template' => 'related-articles-cards',
     ],
   ];
+}
+
+/**
+ * Implements hook_batch_alter().
+ */
+function ghi_content_batch_alter(&$batch) {
+  $targeted_migration = 'articles_gho';
+  $operations = &$batch['sets'][0]['operations'];
+  if ($operations[0][0] != '\Drupal\migrate_tools\MigrateBatchExecutable::batchProcessImport' || $operations[0][1][0] != $targeted_migration) {
+    return;
+  }
+  // Add a post-process batch set to article imports to make sure that articles
+  // that are not available on the remote source anymore will get unpublished.
+  $placeholders = [
+    '@name' => $targeted_migration,
+  ];
+  $batch_builder = (new BatchBuilder())
+    ->setTitle(t('Post process @name', $placeholders))
+    ->setInitMessage(t('Start post-processing for @name', $placeholders))
+    ->setProgressMessage(t('Post-processing @name', $placeholders))
+    ->addOperation(
+        [MigrationBatchController::class, 'batchProcessCleanupArticles'],
+        [$operations[0][1][0], $operations[0][1][1]]
+      )
+    ->setFinishCallback([MigrationBatchController::class, 'batchFinished']);
+  batch_set($batch_builder->toArray());
 }
 
 /**

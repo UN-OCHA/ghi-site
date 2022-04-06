@@ -94,7 +94,7 @@ class ArticleManager extends BaseContentManager {
    * @param bool $published
    *   An optional flag to restrict this to published nodes. Default is TRUE.
    *
-   * @return \Drupal\Core\Entity\EntityInterface[]|null
+   * @return \Drupal\node\NodeInterface[]|null
    *   An array of entity objects indexed by their ids.
    */
   public function loadNodesForTags(array $tags = NULL, NodeInterface $node = NULL, $op = 'AND', $limit = NULL, $published = TRUE) {
