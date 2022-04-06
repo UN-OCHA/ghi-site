@@ -198,6 +198,7 @@ class ImportManager implements ContainerInjectionInterface {
       }
     }
 
+    $paragraph_uuids = [];
     foreach ($article->getParagraphs() as $paragraph) {
       if (!empty($paragraph_ids) && !in_array($paragraph->id, $paragraph_ids)) {
         continue;
@@ -235,6 +236,7 @@ class ImportManager implements ContainerInjectionInterface {
           '%plugin_title' => $definition['admin_label'],
           '%uuid' => $paragraph->getUuid(),
         ]);
+        $paragraph_uuids[] = $existing_component->getUuid();
       }
       else {
         // Append a new component.
@@ -252,8 +254,20 @@ class ImportManager implements ContainerInjectionInterface {
         $config += $paragraph_configuration;
         $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
         $sections[$delta]->appendComponent($component);
+        $paragraph_uuids[] = $component->getUuid();
       }
 
+    }
+
+    // Always cleanup paragraphs that have been removed from the source.
+    foreach ($sections[$delta]->getComponents() as $component) {
+      if ($component->getPluginId() != $definition['id']) {
+        // Not a paragraph, ignore.
+      }
+      if (in_array($component->getUuid(), $paragraph_uuids)) {
+        continue;
+      }
+      $sections[$delta]->removeComponent($component->getUuid());
     }
 
     $this->layoutManagerDiscardChanges($node, $messenger);

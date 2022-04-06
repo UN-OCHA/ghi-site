@@ -184,7 +184,6 @@ class ArticleListController extends ControllerBase {
       ];
     }
     $options = [
-      'update' => 1,
       'force' => 1,
     ];
     if ($tags !== NULL) {
