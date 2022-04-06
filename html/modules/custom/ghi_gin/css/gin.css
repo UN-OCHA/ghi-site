@@ -2,6 +2,7 @@ h1.page-title {
   padding-right: 0.3rem;
 }
 
-.gin--horizontal-toolbar #toolbar-administration .toolbar-lining {
-  -webkit-overflow-scrolling: auto;
+.gin--horizontal-toolbar #toolbar-administration .toolbar-lining,
+.ui-dialog {
+  -webkit-overflow-scrolling: auto !important;
 }
