@@ -23,6 +23,9 @@ function ghi_local_tasks_page_attachments(array &$attachments) {
  * Implements hook_local_tasks_alter().
  */
 function ghi_local_tasks_local_tasks_render_alter(&$data, $route_name, RefinableCacheableDependencyInterface &$cacheability) {
+  if (empty($data['tabs']) || empty($data['tabs'][0])) {
+    return;
+  }
   if (count(Element::getVisibleChildren($data['tabs'][0])) <= 1) {
     // Hide the local tasks if there is only a single visible item.
     unset($data['tabs'][0]);
