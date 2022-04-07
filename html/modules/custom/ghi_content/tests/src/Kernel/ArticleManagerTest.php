@@ -36,6 +36,7 @@ class ArticleManagerTest extends KernelTestBase {
     'entity_reference',
     'layout_builder',
     'layout_discovery',
+    'migrate',
     'text',
     'filter',
     'file',
