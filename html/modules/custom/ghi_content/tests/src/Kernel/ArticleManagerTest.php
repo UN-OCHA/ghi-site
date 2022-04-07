@@ -13,7 +13,7 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
- * Tests the import manager.
+ * Tests the article manager.
  *
  * @group ghi_content
  */

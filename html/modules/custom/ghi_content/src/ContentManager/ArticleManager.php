@@ -2,9 +2,13 @@
 
 namespace Drupal\ghi_content\ContentManager;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_sections\SectionManager;
+use Drupal\migrate\Plugin\MigrationPluginManager;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\TermInterface;
 
@@ -27,6 +31,21 @@ class ArticleManager extends BaseContentManager {
    * The machine name of the field that holds the remove article.
    */
   const REMOTE_ARTICLE_FIELD = 'field_remote_article';
+
+  /**
+   * The migration plugin manager.
+   *
+   * @var \Drupal\migrate\Plugin\MigrationPluginManager
+   */
+  protected $migrationManager;
+
+  /**
+   * Constructs a document manager.
+   */
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer, AccountInterface $current_user, MigrationPluginManager $migration_manager) {
+    parent::__construct($entity_type_manager, $renderer, $current_user);
+    $this->migrationManager = $migration_manager;
+  }
 
   /**
    * Create a local article node for the given remote article.
