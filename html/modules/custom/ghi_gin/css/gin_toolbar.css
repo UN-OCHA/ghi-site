@@ -1,0 +1,15 @@
+/* Fix annoying issues with disappearing elements on iOS. */
+.gin--horizontal-toolbar #toolbar-administration .toolbar-lining,
+.ui-dialog {
+  -webkit-overflow-scrolling: auto !important;
+}
+
+/**
+ * Make sure that the toolbar height is not double counted.
+ *
+ * @see Drupal.toolbar.ToolbarVisualView.prototype.updateToolbarHeight in
+ *  gin_lb_toolbar.js
+ */
+body.toolbar-horizontal nav#toolbar-bar {
+  height: 0 !important;
+}
