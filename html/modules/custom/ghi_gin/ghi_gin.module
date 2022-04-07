@@ -13,8 +13,10 @@
  */
 function ghi_gin_preprocess_page(&$variables) {
   $theme = \Drupal::theme()->getActiveTheme();
-  if ($theme->getName() != 'gin') {
-    return;
+  if ($theme->getName() == 'gin') {
+    $variables['page']['content']['#attached']['library'][] = 'ghi_gin/gin';
   }
-  $variables['page']['content']['#attached']['library'][] = 'ghi_gin/gin';
+  if (\Drupal::moduleHandler()->moduleExists('gin_toolbar') && _gin_toolbar_gin_is_active()) {
+    $variables['page']['content']['#attached']['library'][] = 'ghi_gin/gin_toolbar';
+  }
 }

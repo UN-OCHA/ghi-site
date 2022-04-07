@@ -3,3 +3,8 @@ gin:
   css:
     component:
       css/gin.css: {}
+gin_toolbar:
+  version: VERSION
+  css:
+    component:
+      css/gin_toolbar.css: {}

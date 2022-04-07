@@ -10,6 +10,7 @@
 
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Url;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 
 /**
@@ -64,6 +65,7 @@ function ghi_local_tasks_link_alter(&$variables) {
     else {
       $variables['text'] = $type;
     }
-
+    // Replace the URL with a dummy that just points to the same page.
+    $variables['url'] = Url::fromRoute('<none>', []);
   }
 }
