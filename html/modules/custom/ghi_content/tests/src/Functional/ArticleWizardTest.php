@@ -14,7 +14,7 @@ use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 
 /**
- * Tests the node wizard pages.
+ * Tests the article wizard pages.
  *
  * @group ghi_sections
  */
