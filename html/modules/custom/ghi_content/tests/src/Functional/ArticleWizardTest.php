@@ -120,7 +120,7 @@ class ArticleWizardTest extends BrowserTestBase {
     Node::create([
       'type' => ArticleManager::ARTICLE_BUNDLE,
       'title' => $data[0]['label'],
-      'field_remote_article' => [
+      ArticleManager::REMOTE_ARTICLE_FIELD => [
         0 => [
           'remote_source' => 'gho_ncms_test',
           'article_id' => 1,
@@ -168,7 +168,7 @@ class ArticleWizardTest extends BrowserTestBase {
       'type' => ArticleManager::ARTICLE_BUNDLE,
       'name' => 'Article',
     ]);
-    $this->createField('node', ArticleManager::ARTICLE_BUNDLE, 'ghi_remote_article', 'field_remote_article', 'Remote Article');
+    $this->createField('node', ArticleManager::ARTICLE_BUNDLE, 'ghi_remote_article', ArticleManager::REMOTE_ARTICLE_FIELD, 'Remote Article');
 
     // Create team vocabulary and fields.
     Vocabulary::create([

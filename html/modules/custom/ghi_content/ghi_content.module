@@ -120,15 +120,17 @@ function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateIn
     $form[$field_name]['#attributes']['title'] = t('This field is disabled because it is automatically populated from the remote source.');
   }
   // Also disable the remote article field.
-  $form['field_remote_article']['#disabled'] = TRUE;
-  $form['field_remote_article']['#attributes']['title'] = t('This field cannot be edited anymore after an article page has been created.');
+  $remote_field = ArticleManager::REMOTE_ARTICLE_FIELD;
+  $form[$remote_field]['#disabled'] = TRUE;
+  $form[$remote_field]['#attributes']['title'] = t('This field cannot be edited anymore after an article page has been created.');
 }
 
 /**
  * Implements hook_ENTITY_TYPE_update().
  */
 function ghi_content_node_presave(NodeInterface $node) {
-  if (!$node->hasField('field_remote_article') || !$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+  $remote_field = ArticleManager::REMOTE_ARTICLE_FIELD;
+  if (!$node->hasField($remote_field) || !$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
     return;
   }
 
@@ -138,11 +140,11 @@ function ghi_content_node_presave(NodeInterface $node) {
   /** @var \Drupal\ghi_content\Import\ImportManager $import_manager */
   $import_manager = \Drupal::service('ghi_content.import');
 
-  $remote_source = $node->get('field_remote_article')->remote_source;
-  $article_id = $node->get('field_remote_article')->article_id;
+  $remote_source = $node->get($remote_field)->remote_source;
+  $article_id = $node->get($remote_field)->article_id;
 
-  $remote_source_original = $node->original ? $node->original->get('field_remote_article')->remote_source : NULL;
-  $article_id_original = $node->original ? $node->original->get('field_remote_article')->article_id : NULL;
+  $remote_source_original = $node->original ? $node->original->get($remote_field)->remote_source : NULL;
+  $article_id_original = $node->original ? $node->original->get($remote_field)->article_id : NULL;
 
   $cleanup = $remote_source_original && $article_id_original && ($remote_source != $remote_source_original || $article_id != $article_id_original);
 
@@ -164,6 +166,15 @@ function ghi_content_node_presave(NodeInterface $node) {
   if ($node->isNew()) {
     $import_manager->setupRelatedArticlesElement($node, $article);
   }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_predelete() for node entities.
+ */
+function ghi_content_node_predelete(NodeInterface $node) {
+  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
+  $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
+  $article_manager->cleanupArticleOnDelete($node);
 }
 
 /**
