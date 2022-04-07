@@ -59,22 +59,27 @@ class MigrationBatchController {
       $context['results'][$migration->id()] = [];
     }
 
-    $node = array_shift($context['sandbox']['nodes']);
-    if ($node instanceof NodeInterface) {
-      $source_id = $migration->getIdMap()->lookupSourceId(['nid' => $node->id()]);
-      if (!in_array($source_id, $context['sandbox']['source_ids']) && $node->isPublished()) {
-        $node->setUnpublished();
-        $node->save();
-        $context['sandbox']['updated']++;
+    if (!empty($context['sandbox']['nodes'])) {
+      $node = array_shift($context['sandbox']['nodes']);
+      if ($node instanceof NodeInterface) {
+        $source_id = $migration->getIdMap()->lookupSourceId(['nid' => $node->id()]);
+        if (!in_array($source_id, $context['sandbox']['source_ids']) && $node->isPublished()) {
+          $node->setUnpublished();
+          $node->save();
+          $context['sandbox']['updated']++;
+        }
+        if (in_array($source_id, $context['sandbox']['source_ids']) && !$node->isPublished()) {
+          $node->setPublished();
+          $node->save();
+          $context['sandbox']['updated']++;
+        }
       }
-      if (in_array($source_id, $context['sandbox']['source_ids']) && !$node->isPublished()) {
-        $node->setPublished();
-        $node->save();
-        $context['sandbox']['updated']++;
-      }
+      $context['finished'] = ((float) ($context['sandbox']['total'] - count($context['sandbox']['nodes'])) / (float) $context['sandbox']['total']);
+    }
+    else {
+      $context['finished'] = 1;
     }
 
-    $context['finished'] = ((float) ($context['sandbox']['total'] - count($context['sandbox']['nodes'])) / (float) $context['sandbox']['total']);
     $context['message'] = t('Post-processing %migration (@percent%).', [
       '%migration' => $migration->label(),
       '@percent' => (int) ($context['finished'] * 100),

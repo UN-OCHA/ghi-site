@@ -24,6 +24,11 @@ class ArticleManager extends BaseContentManager {
   const ARTICLE_BUNDLE = 'article';
 
   /**
+   * The machine name of the field that holds the remove article.
+   */
+  const REMOTE_ARTICLE_FIELD = 'field_remote_article';
+
+  /**
    * Create a local article node for the given remote article.
    *
    * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $article
@@ -48,7 +53,7 @@ class ArticleManager extends BaseContentManager {
       'uid' => $this->currentUser->id(),
       'status' => FALSE,
     ]);
-    $node->field_remote_article = [
+    $node->{self::REMOTE_ARTICLE_FIELD} = [
       0 => [
         'remote_source' => $article->getSource()->getPluginId(),
         'article_id' => $article->getId(),
@@ -73,8 +78,8 @@ class ArticleManager extends BaseContentManager {
   public function loadNodeForRemoteArticle(RemoteArticleInterface $article) {
     $results = $this->entityTypeManager->getStorage('node')->loadByProperties([
       'type' => self::ARTICLE_BUNDLE,
-      'field_remote_article.remote_source' => $article->getSource()->getPluginId(),
-      'field_remote_article.article_id' => $article->getId(),
+      self::REMOTE_ARTICLE_FIELD . '.remote_source' => $article->getSource()->getPluginId(),
+      self::REMOTE_ARTICLE_FIELD . '.article_id' => $article->getId(),
     ]);
     return $results && !empty($results) ? reset($results) : NULL;
   }
@@ -342,6 +347,57 @@ class ArticleManager extends BaseContentManager {
       $previews[$article->id()] = $this->renderer->render($this->entityTypeManager->getViewBuilder('node')->view($article, $view_mode));
     }
     return $previews;
+  }
+
+  /**
+   * Cleanup after an article has been deleted.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   */
+  public function cleanupArticleOnDelete(NodeInterface $node) {
+    if ($node->bundle() != self::ARTICLE_BUNDLE) {
+      return;
+    }
+    $this->removeMigrationMapEntries($node);
+  }
+
+  /**
+   * Remove migration map entries for the given node.
+   *
+   * Doeing this, allows to re-import a previously imported article that has
+   * been deleted on the backend. This is more of an user-1 rescue thing to do.
+   * Generally, articles can't be deleted in the backend but need to be removed
+   * (unpublished/deleted) from the remote source.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   */
+  private function removeMigrationMapEntries(NodeInterface $node) {
+    if (!$node->hasField(self::REMOTE_ARTICLE_FIELD) || $node->get(self::REMOTE_ARTICLE_FIELD)->isEmpty()) {
+      return;
+    }
+    $remote_source = $node->get(self::REMOTE_ARTICLE_FIELD)->remote_source;
+    $migrations = $this->migrationManager->getDefinitions();
+    foreach ($migrations as $key => $def) {
+      if (empty($def['source'])) {
+        continue;
+      }
+      if (empty($def['source']['remote_source']) || $def['source']['remote_source'] != $remote_source) {
+        continue;
+      }
+      // This is a candidate for a migration. Now let's look up the idmap.
+      /** @var \Drupal\migrate\Plugin\MigrationInterface $migration */
+      $migration = $this->migrationManager->createInstance($key);
+      if (!$migration) {
+        continue;
+      }
+      $source_id = $migration->getIdMap()->lookupSourceId(['nid' => $node->id()]);
+      if (!$source_id) {
+        continue;
+      }
+      $migration->getIdMap()->delete($source_id);
+    }
   }
 
 }
