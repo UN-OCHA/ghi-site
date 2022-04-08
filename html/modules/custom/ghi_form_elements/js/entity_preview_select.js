@@ -153,7 +153,7 @@
    */
   Drupal.EntityPreviewSelect.getFeatured = function($wrapper) {
     $input_featured = $wrapper.find('input.entities-featured');
-    return $input_featured ? $input_featured.val().split(',').filter((x) => x).map(Number) : [];
+    return $input_featured.length ? $input_featured.val().split(',').filter((x) => x).map(Number) : [];
   }
 
   /**

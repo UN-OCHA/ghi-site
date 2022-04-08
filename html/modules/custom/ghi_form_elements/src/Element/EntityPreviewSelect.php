@@ -172,11 +172,13 @@ class EntityPreviewSelect extends FormElement {
       '#default_value' => implode(',', array_filter((array) $element['#default_value']['selected'])),
       '#attributes' => ['class' => Html::getClass('entities_selected')],
     ];
-    $element['featured'] = [
-      '#type' => 'hidden',
-      '#default_value' => implode(',', array_filter((array) $element['#default_value']['featured'])),
-      '#attributes' => ['class' => Html::getClass('entities_featured')],
-    ];
+    if ($allow_featured) {
+      $element['featured'] = [
+        '#type' => 'hidden',
+        '#default_value' => implode(',', array_filter((array) $element['#default_value']['featured'])),
+        '#attributes' => ['class' => Html::getClass('entities_featured')],
+      ];
+    }
 
     if (!empty($element['#states'])) {
       // Propagate states logic to the child elements.
