@@ -588,8 +588,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $form['container']['label_display'] = $form['label_display'];
 
         $temporary_settings = $this->getTemporarySettings($form_state);
-        $form['container']['label']['#default_value'] = $temporary_settings['label'];
-        $form['container']['label_display']['#default_value'] = $temporary_settings['label_display'];
+        $form['container']['label']['#default_value'] = $temporary_settings['label'] ?? '';
+        $form['container']['label_display']['#default_value'] = $temporary_settings['label_display'] ?? FALSE;
 
         // Set the default values.
         $plugin_definition = $this->getPluginDefinition();
@@ -797,7 +797,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $form['context_mapping']['year']['#value'] = array_key_first($form['context_mapping']['year']['#options']);
     }
 
-    if (array_key_exists('node', $form['context_mapping'])) {
+    if (array_key_exists('node', $form['context_mapping']) && array_key_exists('#options', $form['context_mapping']['node'])) {
       $options = array_keys($form['context_mapping']['node']['#options']);
       $options = array_filter($options);
       if (count($options) == 1) {

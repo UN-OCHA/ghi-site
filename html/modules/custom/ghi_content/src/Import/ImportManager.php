@@ -260,9 +260,11 @@ class ImportManager implements ContainerInjectionInterface {
     }
 
     // Always cleanup paragraphs that have been removed from the source.
+    $definition = $this->getParagraphPluginDefintion();
     foreach ($sections[$delta]->getComponents() as $component) {
       if ($component->getPluginId() != $definition['id']) {
         // Not a paragraph, ignore.
+        continue;
       }
       if (in_array($component->getUuid(), $paragraph_uuids)) {
         continue;
