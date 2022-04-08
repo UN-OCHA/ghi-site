@@ -10,6 +10,7 @@ dependencies:
     - node.type.global_section
   module:
     - layout_builder
+    - layout_builder_ipe
     - layout_builder_restrictions
     - layout_discovery
     - user
@@ -66,6 +67,8 @@ third_party_settings:
         - Subpage
         - System
         - core
+  layout_builder_ipe:
+    enabled: 1
 id: node.global_section.default
 targetEntityType: node
 bundle: global_section

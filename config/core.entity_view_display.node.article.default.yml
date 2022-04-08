@@ -12,6 +12,7 @@ dependencies:
     - ghi_content
     - image
     - layout_builder
+    - layout_builder_ipe
     - layout_builder_restrictions
     - layout_discovery
     - user
@@ -70,6 +71,8 @@ third_party_settings:
         - Subpage
         - System
         - core
+  layout_builder_ipe:
+    enabled: 1
 id: node.article.default
 targetEntityType: node
 bundle: article
