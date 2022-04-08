@@ -1742,17 +1742,17 @@
         },
         {
             "name": "drupal/allowed_formats",
-            "version": "1.4.0",
+            "version": "1.5.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/allowed_formats.git",
-                "reference": "8.x-1.4"
+                "reference": "8.x-1.5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/allowed_formats-8.x-1.4.zip",
-                "reference": "8.x-1.4",
-                "shasum": "6c73fd69781e8a7c3ebc394ce74f981b6da50eae"
+                "url": "https://ftp.drupal.org/files/projects/allowed_formats-8.x-1.5.zip",
+                "reference": "8.x-1.5",
+                "shasum": "dbf61bee7aec87beaa2cf307c1d0d9d5b896328c"
             },
             "require": {
                 "drupal/core": "^8.8 || ^9"
@@ -1760,8 +1760,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "8.x-1.4",
-                    "datestamp": "1643490593",
+                    "version": "8.x-1.5",
+                    "datestamp": "1648060331",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -2083,17 +2083,17 @@
         },
         {
             "name": "drupal/config_filter",
-            "version": "2.2.0",
+            "version": "2.3.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/config_filter.git",
-                "reference": "8.x-2.2"
+                "reference": "8.x-2.3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/config_filter-8.x-2.2.zip",
-                "reference": "8.x-2.2",
-                "shasum": "dc6bc8107255066507cfc1d6766e664c3673cda0"
+                "url": "https://ftp.drupal.org/files/projects/config_filter-8.x-2.3.zip",
+                "reference": "8.x-2.3",
+                "shasum": "043fc712997cdd6b384024ab96bebba70e5c6b26"
             },
             "require": {
                 "drupal/core": "^8.8 || ^9"
@@ -2107,8 +2107,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "8.x-2.2",
-                    "datestamp": "1601934694",
+                    "version": "8.x-2.3",
+                    "datestamp": "1649336106",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -3268,7 +3268,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/gin.git",
-                "reference": "a4128c591e3b963766f365c9d732ab0a1ab5bfa5"
+                "reference": "0e02281b957a8e0a1b326c9b5e7d2b5db26c13fb"
             },
             "require": {
                 "drupal/core": "^8.9 || ^9 || ^10",
@@ -3280,8 +3280,8 @@
                     "dev-3.x": "3.x-dev"
                 },
                 "drupal": {
-                    "version": "8.x-3.0-beta1+12-dev",
-                    "datestamp": "1648386638",
+                    "version": "8.x-3.0-beta1+17-dev",
+                    "datestamp": "1649327602",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Dev releases are not covered by Drupal security advisories."
@@ -3318,17 +3318,17 @@
         },
         {
             "name": "drupal/gin_lb",
-            "version": "1.0.0-beta12",
+            "version": "1.0.0-beta15",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/gin_lb.git",
-                "reference": "1.0.0-beta12"
+                "reference": "1.0.0-beta15"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/gin_lb-1.0.0-beta12.zip",
-                "reference": "1.0.0-beta12",
-                "shasum": "69ad955efe8dc55e94964bb80f4820aaedc00f1c"
+                "url": "https://ftp.drupal.org/files/projects/gin_lb-1.0.0-beta15.zip",
+                "reference": "1.0.0-beta15",
+                "shasum": "45247c78974a99702a7124cfc69b94c6c76696f7"
             },
             "require": {
                 "drupal/core": "^8 || ^9",
@@ -3341,7 +3341,7 @@
                 "drupal/console": "~1.0",
                 "drupal/core-composer-scaffold": "^8.0",
                 "drupal/core-dev": "^8.0",
-                "drupal/core-recommended": "~9.1.0",
+                "drupal/core-recommended": "~9.3.0",
                 "drupal/field_group": "3.x-dev@dev",
                 "drupal/gin": "^3.0@alpha",
                 "drupal/layout_builder_browser": "~1.2",
@@ -3354,8 +3354,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "1.0.0-beta12",
-                    "datestamp": "1635416796",
+                    "version": "1.0.0-beta15",
+                    "datestamp": "1649015895",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Beta releases are not covered by Drupal security advisories."
@@ -3455,7 +3455,7 @@
             "extra": {
                 "drupal": {
                     "version": "8.x-1.0-beta21",
-                    "datestamp": "1646929714",
+                    "datestamp": "1648220706",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Beta releases are not covered by Drupal security advisories."
@@ -3596,7 +3596,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/layout_builder_ipe.git",
-                "reference": "6a57f28b4050160987f71fe2e121d28bab85f05f"
+                "reference": "99b067211ed06c4249c89f093093a93a6e479a35"
             },
             "require": {
                 "drupal/core": "^8 || ^9"
@@ -3608,7 +3608,7 @@
                 },
                 "drupal": {
                     "version": "1.0.x-dev",
-                    "datestamp": "1643330637",
+                    "datestamp": "1649407248",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
