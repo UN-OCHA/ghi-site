@@ -22,6 +22,15 @@
 .form-type--entity_preview_select .preview-content > [data-content-id] > * {
   zoom: 0.7;
 }
+.form-type--entity_preview_select .preview-content > [data-content-id] > *:not(.featured-checkbox) {
+  touch-action: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
 .form-type--entity_preview_select .preview-content > [data-content-id] > .featured-checkbox  {
   zoom: 1;
 }
