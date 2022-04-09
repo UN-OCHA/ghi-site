@@ -3,13 +3,12 @@
 namespace Drupal\ghi_content\Plugin\Block;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 
 /**
  * Base class for Content block plugins.
  */
-abstract class ContentBlockBase extends GHIBlockBase implements AutomaticTitleBlockInterface {
+abstract class ContentBlockBase extends GHIBlockBase {
 
   /**
    * The remote source service.

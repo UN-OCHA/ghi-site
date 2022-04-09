@@ -266,6 +266,12 @@ class ImportManager implements ContainerInjectionInterface {
         // Not a paragraph, ignore.
         continue;
       }
+      if ($component->getPlugin()->getArticle() != $article) {
+        // Only remove pragraphs from the same article. This allows to add more
+        // paragraphs from different articles.
+        // @todo Good idea?
+        continue;
+      }
       if (in_array($component->getUuid(), $paragraph_uuids)) {
         continue;
       }

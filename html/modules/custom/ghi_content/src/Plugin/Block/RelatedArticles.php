@@ -3,6 +3,7 @@
 namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 
 /**
  * Provides an 'RelatedArticles' block.
@@ -16,14 +17,7 @@ use Drupal\Core\Form\FormStateInterface;
  *   }
  * )
  */
-class RelatedArticles extends ContentBlockBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getAutomaticBlockTitle() {
-    return NULL;
-  }
+class RelatedArticles extends ContentBlockBase implements OptionalTitleBlockInterface {
 
   /**
    * {@inheritdoc}

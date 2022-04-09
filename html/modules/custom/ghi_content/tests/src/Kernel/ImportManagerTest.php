@@ -41,7 +41,11 @@ class ImportManagerTest extends KernelTestBase {
     'text',
     'file',
     'filter',
+    'hpc_api',
+    'ghi_blocks',
     'ghi_content',
+    'ghi_form_elements',
+    'ghi_sections',
   ];
 
   const BUNDLE = 'page';

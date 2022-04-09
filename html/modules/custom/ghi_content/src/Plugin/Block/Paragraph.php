@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
@@ -20,7 +21,7 @@ use Drupal\gho_footnotes\GhoFootnotes;
  *  category = @Translation("Narrative Content"),
  * )
  */
-class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface, TrustedCallbackInterface {
+class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface, MultiStepFormBlockInterface, TrustedCallbackInterface {
 
   /**
    * {@inheritdoc}
@@ -284,7 +285,7 @@ class Paragraph extends ContentBlockBase implements MultiStepFormBlockInterface,
    * @return \Drupal\ghi_content\RemoteContent\RemoteArticleInterface
    *   The remote article.
    */
-  protected function getArticle() {
+  public function getArticle() {
     $conf = $this->getBlockConfig();
     $remote_source_key = $conf['article_select']['article']['remote_source'] ?? NULL;
     if (!$remote_source_key) {

@@ -19,6 +19,7 @@ use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\layout_builder\Form\AddBlockForm;
@@ -291,6 +292,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getTitleSubform() {
+    return self::DEFAULT_FORM_KEY;
+  }
+
+  /**
    * Check if the block has a default title.
    *
    * @return bool
@@ -336,6 +344,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
       if ($this->shouldDisplayTitle()) {
         if ($this instanceof AutomaticTitleBlockInterface) {
           $build['#title'] = $this->getAutomaticBlockTitle();
+        }
+        elseif ($this instanceof OptionalTitleBlockInterface) {
+          $build['#title'] = $plugin_configuration['label'] ?? NULL;
         }
         elseif (!empty($build_content['#title'])) {
           $build['#title'] = $build_content['#title'];
@@ -525,7 +536,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Default is a simple form with a single configuration callback.
     $current_subform = self::DEFAULT_FORM_KEY;
     $form_callback = 'getConfigForm';
-    $is_base_form = TRUE;
 
     if ($this->isMultistepForm()) {
       /** @var \Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface $this */
@@ -540,7 +550,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
       }
       $subform = $forms[$current_subform];
       $form_callback = $subform['callback'];
-      $is_base_form = !empty($subform['base_form']);
 
       if (!method_exists($this, $form_callback)) {
         return $form;
@@ -582,14 +591,20 @@ abstract class GHIBlockBase extends HPCBlockBase {
     ];
 
     if (!$form_state->get('preview')) {
-      if ($is_base_form) {
-        // Add the label widget to the base form.
+      if ($this->getTitleSubform() == $current_subform) {
+        // Add the label widget to the form.
         $form['container']['label'] = $form['label'];
         $form['container']['label_display'] = $form['label_display'];
 
         $temporary_settings = $this->getTemporarySettings($form_state);
-        $form['container']['label']['#default_value'] = $temporary_settings['label'] ?? '';
-        $form['container']['label_display']['#default_value'] = $temporary_settings['label_display'] ?? FALSE;
+        if ($this instanceof MultiStepFormBlockInterface) {
+          $form['container']['label']['#default_value'] = $temporary_settings[$this->getTitleSubform()]['label'] ?? $this->label();
+          $form['container']['label_display']['#default_value'] = $temporary_settings[$this->getTitleSubform()]['label_display'] ?? $this->configuration['label_display'];
+        }
+        else {
+          $form['container']['label']['#default_value'] = $temporary_settings['label'] ?? $this->label();
+          $form['container']['label_display']['#default_value'] = $temporary_settings['label_display'] ?? $this->configuration['label_display'];
+        }
 
         // Set the default values.
         $plugin_definition = $this->getPluginDefinition();
@@ -613,9 +628,16 @@ abstract class GHIBlockBase extends HPCBlockBase {
     else {
       // Show a preview area.
       $temporary_settings = $this->getTemporarySettings($form_state);
+      $label_subkey = $this instanceof MultiStepFormBlockInterface ? $this->getTitleSubform() : NULL;
       $this->configuration['hpc'] = $temporary_settings;
-      $this->configuration['label'] = $temporary_settings['label'];
-      $this->configuration['label_display'] = $temporary_settings['label_display'];
+      $this->configuration['label'] = NestedArray::getValue($temporary_settings, array_filter([
+        $label_subkey,
+        'label',
+      ]));
+      $this->configuration['label_display'] = NestedArray::getValue($temporary_settings, array_filter([
+        $label_subkey,
+        'label_display',
+      ]));
       $this->configuration['is_preview'] = TRUE;
       $build = $this->build();
       $form['container']['preview'] = [
@@ -623,11 +645,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
         '#attributes' => [
           'data-block-preview' => $this->getPluginId(),
         ],
-        '#configuration' => [
-          'label' => $this->configuration['label'],
-          'label_display' => $this->configuration['label_display'],
-          'hpc' => $this->configuration['hpc'],
-        ] + $this->configuration,
+        '#configuration' => $this->configuration,
         '#base_plugin_id' => $this->getBaseId(),
         '#plugin_id' => $this->getPluginId(),
         '#derivative_plugin_id' => $this->getDerivativeId(),
@@ -749,7 +767,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   The updated form array.
    */
   public function blockFormAfterBuild(array $form, FormStateInterface $form_state) {
-
     $plugin_definition = $this->getPluginDefinition();
 
     // Disable all of the default settings elements. We will handle them.
@@ -772,8 +789,18 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $settings_form['label_display']['#default_value'] = TRUE;
       }
 
+      if ($this instanceof OptionalTitleBlockInterface) {
+        // This label field is optional and the display toggle can be hidden.
+        // Display status will be determined based on the presence of a title.
+        $settings_form['label']['#required'] = FALSE;
+        $settings_form['label']['#description'] = $this->t('You can set a title for this element. Leave empty to not use a title.');
+        $settings_form['label_display']['#access'] = FALSE;
+        $settings_form['label_display']['#value'] = TRUE;
+        $settings_form['label_display']['#default_value'] = TRUE;
+      }
+
       if ($this->hasDefaultTitle()) {
-        // This block plugin provides a default title, se the label field is
+        // This block plugin provides a default title, so the label field is
         // optional and the display toggle can be hidden.
         $settings_form['label']['#required'] = FALSE;
         $settings_form['label']['#description'] = $this->t('Leave empty to use the default title %default_title.', [
@@ -852,6 +879,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
       return;
     }
 
+    if ($this instanceof OptionalTitleBlockInterface && $current_subform == $this->getTitleSubform()) {
+      $step_values['label_display'] = !empty($step_values['label']);
+    }
+
     if ($action == 'submit') {
       // For the final submit of the form, put the values into the form
       // storage of the current form, so that we have them available later.
@@ -886,17 +917,19 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Get all submitted values.
     $values = $this->getTemporarySettings($form_state);
 
-    // Values on multi step forms are internally stored keyed by the respective
-    // form keys of each available subform of the multi step form.
-    $value_parents = [];
-    if ($this->isMultistepForm()) {
-      $value_parents[] = $this->getBaseSubFormKey();
-    }
-
     // Because we handle the label fields, we also have to update the
     // configuration.
-    $this->configuration['label'] = NestedArray::getValue($values, array_merge($value_parents, ['label']));
-    $this->configuration['label_display'] = NestedArray::getValue($values, array_merge($value_parents, ['label_display']));
+    $title_form_key = $this instanceof MultiStepFormBlockInterface ? $this->getTitleSubform() : NULL;
+    $this->configuration['label'] = NestedArray::getValue($values, array_filter([
+      $title_form_key,
+      'label',
+    ]));
+    $this->configuration['label_display'] = NestedArray::getValue($values, array_filter([
+      $title_form_key,
+      'label_display',
+    ]));
+
+    // Remove traces of preview.
     unset($this->configuration['is_preview']);
 
     // Set the HPC specific block config.
@@ -906,6 +939,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
       // This is important to set, otherwise template_preprocess_block() will
       // hide the block title.
       $this->configuration['label_display'] = TRUE;
+    }
+    if ($this instanceof OptionalTitleBlockInterface) {
+      $this->configuration['label_display'] = !empty($this->configuration['label']);
     }
 
     // Make sure that we have a UUID.
@@ -1023,26 +1059,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // elements that might depend on the changed data.
     $this->setElementValidateOnAjaxElements($form['settings']['container']);
     $this->setElementValidateOnAjaxElements($form['actions']['subforms']['preview']);
-  }
-
-  /**
-   * Get the base form key if this is a multi step form.
-   *
-   * @return string
-   *   Get the subform key for the base form.
-   */
-  private function getBaseSubFormKey() {
-    if (!$this->isMultistepForm()) {
-      return self::DEFAULT_FORM_KEY;
-    }
-    $subforms = $this->getSubforms();
-    foreach ($subforms as $subform_key => $subform) {
-      if (!empty($subform['base_form'])) {
-        return $subform_key;
-      }
-    }
-    // Fallback is the first defined subform.
-    return array_key_first($subforms);
   }
 
   /**
@@ -1215,7 +1231,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $form_state->set($storage_key, $settings);
       }
     }
-
     return $settings;
   }
 
