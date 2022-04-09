@@ -8,7 +8,7 @@ third_party_settings:
   menu_ui:
     available_menus: {  }
     parent: ''
-name: Document
+name: 'Document subpage'
 type: document
 description: 'A document, e.g. a News story or a Feature, which represents an article from a content backend.'
 help: ''

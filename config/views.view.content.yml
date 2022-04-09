@@ -1279,11 +1279,11 @@ display:
         - 'config:field.storage.node.field_entity_reference'
   page_articles:
     id: page_articles
-    display_title: Articles
+    display_title: 'Article pages'
     display_plugin: page
     position: 2
     display_options:
-      title: Articles
+      title: 'Article pages'
       fields:
         node_bulk_form:
           id: node_bulk_form
@@ -1880,7 +1880,7 @@ display:
       path: admin/content/articles
       menu:
         type: tab
-        title: Articles
+        title: 'Article pages'
         description: ''
         weight: -8
         expanded: false
@@ -1907,11 +1907,11 @@ display:
         - 'config:field.storage.node.field_tags'
   page_documents:
     id: page_documents
-    display_title: Documents
+    display_title: 'Document subpages'
     display_plugin: page
     position: 2
     display_options:
-      title: Documents
+      title: 'Document subpages'
       fields:
         node_bulk_form:
           id: node_bulk_form
@@ -2457,7 +2457,7 @@ display:
       path: admin/content/documents
       menu:
         type: tab
-        title: Documents
+        title: 'Document subpages'
         description: ''
         weight: -8
         expanded: false

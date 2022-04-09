@@ -8,7 +8,7 @@ third_party_settings:
   menu_ui:
     available_menus: {  }
     parent: ''
-name: Article
+name: 'Article page'
 type: article
 description: 'An article page imported from a valid remote content source'
 help: ''
