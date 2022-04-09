@@ -14,6 +14,7 @@
   position: relative;
   border-radius: 5px;
   outline: 2px solid rgb(235 235 239);
+  box-shadow: 0 0 0 2px rgb(235 235 239);
 }
 .form-type--entity_preview_select .preview-content > [data-content-id]:focus {
   outline: 2px solid rgb(5, 80, 230) !important;

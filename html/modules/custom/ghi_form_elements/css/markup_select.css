@@ -3,7 +3,7 @@
   background-color: white;
   position: relative;
   border-radius: 5px;
-  outline: 2px solid rgb(235 235 239);
+  box-shadow: 0 0 0 2px rgb(235 235 239);
   max-height: 15rem;
   overflow: auto;
   margin-top: 0;
