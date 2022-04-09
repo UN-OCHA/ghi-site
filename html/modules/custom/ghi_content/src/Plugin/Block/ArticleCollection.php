@@ -4,6 +4,7 @@ namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 
 /**
  * Provides an 'ArticleCollection' block.
@@ -17,18 +18,11 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
  *   }
  * )
  */
-class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockInterface {
+class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockInterface, OptionalTitleBlockInterface {
 
   const MAX_FEATURE_COUNT = 2;
   const CARD_LIMIT = 9;
   const CARD_COUNT_DEFAULT = 6;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getAutomaticBlockTitle() {
-    return NULL;
-  }
 
   /**
    * {@inheritdoc}
@@ -160,6 +154,13 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
       return 'display';
     }
     return 'articles';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTitleSubform() {
+    return 'display';
   }
 
   /**
