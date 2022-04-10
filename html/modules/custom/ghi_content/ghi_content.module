@@ -50,10 +50,6 @@ function ghi_content_theme($existing, $type, $theme, $path) {
     'related_articles_cards' => [
       'variables' => [
         'articles' => [],
-        'options' => [
-          'alignment' => 'horizontal',
-          'columns' => 3,
-        ],
       ],
       'file' => 'ghi_content.theme.inc',
       'template' => 'related-articles-cards',
@@ -112,7 +108,10 @@ function ghi_content_contextual_links_alter(array &$links, $group, array $route_
  */
 function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateInterface $form_state) {
   $disable_fields = [
+    'title',
+    'langcode',
     'field_image',
+    'field_summary',
     'field_tags',
   ];
   foreach ($disable_fields as $field_name) {
@@ -155,6 +154,9 @@ function ghi_content_node_presave(NodeInterface $node) {
 
     // Import the image.
     $import_manager->importImage($node, $article, 'field_image');
+
+    // Import the image.
+    $import_manager->importSummary($node, $article, 'field_summary');
 
     // Import the paragraphs for the article.
     $import_manager->importParagraphs($node, $article, [], NULL, $cleanup);

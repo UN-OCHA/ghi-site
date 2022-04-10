@@ -40,6 +40,14 @@ interface RemoteArticleInterface {
   public function getTitle();
 
   /**
+   * Get the summary text of the article.
+   *
+   * @return string|\Drupal\Component\Render\MarkupInterface
+   *   The article summary.
+   */
+  public function getSummary();
+
+  /**
    * Get the articles header image.
    *
    * @return string

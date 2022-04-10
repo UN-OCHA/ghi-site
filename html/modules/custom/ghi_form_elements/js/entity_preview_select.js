@@ -220,7 +220,7 @@
         ghostClass: 'ui-state-drop',
         group: 'entity-preview-selection',
         dataIdAttr: 'data-content-id',
-        delay: 500,
+        delay: 50,
         delayOnTouchOnly: true,
         store: {
           get: function (sortable) {

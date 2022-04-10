@@ -1,0 +1,76 @@
+/* Reset the max-width and paddings of the main content area so that it uses the
+ * full width allowing elements like hero images to also use the full width. */
+.path-frontpage .cd-layout-container main.cd-container,
+.path-node .cd-layout-container main.cd-container {
+  max-width: 1400px;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.node__local_tasks {
+  position: relative;
+  z-index: 1;
+  margin: 2rem 0;
+}
+
+.node__content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Contrain the element with the `content-width` class. The paddings reflect
+ * those that were on the `<main>` element. There is no need to have the 1024px
+ * media query with the 40px padding because 904px + 2 * 40px < 1024px. */
+.content-width {
+  width: 100%;
+  max-width: calc(var(--content-width) + 24px);
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: 12px;
+  padding-left: 12px;
+}
+
+@media (min-width: 768px) {
+  .content-width {
+    max-width: calc(var(--content-width) + 48px);
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+}
+
+/* Variant to constrain the content within the reading width while keeping
+ * the content width for the container. This mostly for the article and
+ * sub-article headers to allow the appeal tags to be inlined with the title. */
+.content-width--reading {
+  max-width: calc(var(--reading-width) + 24px);
+  margin-right: 0;
+  margin-left: 0;
+}
+
+@media (min-width: 768px) {
+  .content-width--reading {
+    max-width: calc(var(--reading-width) + 48px);
+  }
+}
+
+@media (min-width: 952px) {
+  .content-width--reading {
+    max-width: calc(var(--content-width) + 48px);
+    margin-right: auto;
+    margin-left: auto;
+  }
+  html[dir="ltr"] .content-width--reading {
+    padding-right: calc(var(--content-width) - var(--reading-width) + 24px);
+  }
+  html[dir="rtl"] .content-width--reading {
+    padding-left: calc(var(--content-width) - var(--reading-width) + 24px);
+  }
+}
+
+/* For nested elements with the `content-width` class, only the first element
+ * in the hierarchy should have the paddings. */
+.content-width .content-width {
+  max-width: var(--content-width);
+  padding-right: 0;
+  padding-left: 0;
+}

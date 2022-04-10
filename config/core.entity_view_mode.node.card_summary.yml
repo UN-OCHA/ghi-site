@@ -1,0 +1,10 @@
+uuid: d109f060-b8e9-4830-a2e0-7e2c8c543d5a
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.card_summary
+label: 'Card summary'
+targetEntityType: node
+cache: true

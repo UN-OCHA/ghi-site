@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_content\RemoteContent\Gho;
 
+use Drupal\Core\Render\Markup;
 use Drupal\ghi_content\RemoteContent\RemoteArticleBase;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 
@@ -50,6 +51,13 @@ class RemoteArticle extends RemoteArticleBase {
    */
   public function getTitle() {
     return trim($this->data->title);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSummary() {
+    return Markup::create($this->data->summary);
   }
 
   /**

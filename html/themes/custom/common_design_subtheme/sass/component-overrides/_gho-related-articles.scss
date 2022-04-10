@@ -1,0 +1,19 @@
+/**
+ * List styles
+ */
+.ghi-block .gho-related-articles {
+  margin: 0;
+  padding: 0;
+  border-top: 0;
+}
+
+/**
+ * Thumbnail image
+ */
+@media screen and (min-width: 768px) {
+  .gho-related-article .field--name-field-image {
+    /* The 2.25rem are for the padding of the text */
+    width: calc(40% - 2.25rem);
+    min-width: 320px;
+  }
+}

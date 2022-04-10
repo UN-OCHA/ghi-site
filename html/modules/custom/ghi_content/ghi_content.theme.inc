@@ -47,17 +47,10 @@ function ghi_content_preprocess_article_collection_table(&$variables) {
 function ghi_content_preprocess_related_articles_cards(&$variables) {
   $view_builder = \Drupal::entityTypeManager()->getViewBuilder('node');
   $items = [];
-  $subkey = 0;
   foreach ($variables['articles'] as $article) {
     /** @var \Drupal\node\NodeInterface $article */
-    $entity_view = $view_builder->view($article, 'grid');
-    $items[$subkey]['content'][] = [
-      'content' => $entity_view,
-    ];
-    if (count($items[$subkey]) == $variables['options']['columns']) {
-      $subkey++;
-    }
+    $items[] = $view_builder->view($article, 'card_summary');
   }
 
-  $variables['items'] = $items;
+  $variables['list'] = $items;
 }

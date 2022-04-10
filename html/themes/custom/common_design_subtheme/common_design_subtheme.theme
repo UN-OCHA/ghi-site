@@ -68,6 +68,7 @@ function common_design_subtheme_preprocess_page(&$variables) {
       $variables['attributes']['class'][] = 'node--unpublished';
     }
   }
+  $variables['#attached']['library'][] = 'common_design_subtheme/gho-page-node';
 }
 
 /**
