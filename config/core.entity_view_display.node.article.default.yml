@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.node.article.field_image
     - field.field.node.article.field_remote_article
+    - field.field.node.article.field_summary
     - field.field.node.article.field_tags
     - field.field.node.article.layout_builder__layout
     - node.type.article
@@ -15,6 +16,7 @@ dependencies:
     - layout_builder_ipe
     - layout_builder_restrictions
     - layout_discovery
+    - text
     - user
 third_party_settings:
   layout_builder:
@@ -26,7 +28,22 @@ third_party_settings:
         layout_settings:
           label: Content
           context_mapping: {  }
-        components: {  }
+        components:
+          ca643001-7203-483f-b8d3-76ea7f078351:
+            uuid: ca643001-7203-483f-b8d3-76ea7f078351
+            region: content
+            configuration:
+              id: 'field_block:node:article:field_summary'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: text_default
+                label: above
+                settings: {  }
+                third_party_settings: {  }
+            weight: 0
+            additional: {  }
         third_party_settings: {  }
   layout_builder_restrictions:
     allowed_block_categories:
@@ -93,6 +110,13 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: 1
+    region: content
+  field_summary:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 4
     region: content
   field_tags:
     type: entity_reference_label

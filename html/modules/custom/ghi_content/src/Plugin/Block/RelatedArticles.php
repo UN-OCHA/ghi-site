@@ -47,11 +47,9 @@ class RelatedArticles extends ContentBlockBase implements OptionalTitleBlockInte
 
     $build = [
       '#theme' => 'related_articles_cards',
-      '#title' => $this->t('Related Articles'),
+      '#title' => $this->label(),
       '#articles' => $articles,
-      '#options' => [
-        'columns' => 3,
-      ] + $options,
+      '#options' => $options,
     ];
 
     return $build;

@@ -62,12 +62,20 @@ gho-needs-and-requirements:
   css:
     theme:
       components/gho-needs-and-requirements/gho-needs-and-requirements.css: {}
+gho-page-node:
+  css:
+    theme:
+      components/gho-page-node/gho-page-node.css: {}
 gho-photo-gallery:
   css:
     theme:
       components/gho-photo-gallery/gho-photo-gallery.css: {}
   dependencies:
     - common_design_subtheme/gho-aside
+gho-related-articles:
+  css:
+    theme:
+      components/gho-related-articles/gho-related-articles.css: {}
 gho-text:
   css:
     theme:
