@@ -546,7 +546,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
       $current_subform = $form_state->get('current_subform');
       if (!$current_subform || !array_key_exists($current_subform, $forms)) {
-        $current_subform = $this->getDefaultSubform();
+        $current_subform = $this->getDefaultSubform(!$this->getUuid());
       }
       $subform = $forms[$current_subform];
       $form_callback = $subform['callback'];

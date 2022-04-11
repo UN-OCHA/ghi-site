@@ -30,10 +30,13 @@ interface MultiStepFormBlockInterface {
   /**
    * Return the machine name of the form to be used as default.
    *
+   * @param bool $is_new
+   *   Flag indicating whether this is a new block or an existing one.
+   *
    * @return string
    *   The default form key.
    */
-  public function getDefaultSubform();
+  public function getDefaultSubform($is_new = FALSE);
 
   /**
    * Decide if the given subform can show.
