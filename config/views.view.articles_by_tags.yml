@@ -128,6 +128,8 @@ display:
           type: ghi_remote_article_source_link
           settings:
             link_label: ''
+            link_to_edit: 1
+            include_publisher_destination: 1
           group_column: ''
           group_columns: {  }
           group_rows: true

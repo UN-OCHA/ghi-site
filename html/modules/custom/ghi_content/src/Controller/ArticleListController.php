@@ -122,7 +122,7 @@ class ArticleListController extends ControllerBase {
 
     $build = [];
     $build[] = [
-      '#markup' => '<p>' . $this->t('This list shows you all articles that are available in this section via the shared common section tags: <em>@section_tags</em>', [
+      '#markup' => '<p>' . $this->t('This list shows you all articles that are currently available in this section via the shared common section tags: <em>@section_tags</em>', [
         '@section_tags' => implode(', ', $section_tags),
       ]) . '</p>',
     ];
