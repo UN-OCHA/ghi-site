@@ -26,6 +26,14 @@ function ghi_hero_image_preprocess_page(&$variables) {
   /** @var \Drupal\node\Entity\Node $node */
   $node = $request->attributes->has('node') ? $request->attributes->get('node') : NULL;
   if (!$node instanceof NodeInterface || !$node->getFieldDefinitions() || !$node->access()) {
+    // No access to the node.
+    return;
+  }
+
+  $status = $request_stack->getCurrentRequest()->attributes->get('exception');
+  if ($status && $status->getStatusCode() >= 400) {
+    // Probably another node related access denied or not found page, maybe for
+    // subpages. We don't want to show the image here either.
     return;
   }
 
