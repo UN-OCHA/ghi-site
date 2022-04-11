@@ -176,6 +176,7 @@ class SectionWizard extends WizardBase {
         '#limit_validation_errors' => array_filter([
           $step > array_flip($steps)['type'] ? ['type'] : NULL,
           $step > array_flip($steps)['base_object'] ? ['base_object'] : NULL,
+          $step > array_flip($steps)['tags'] ? ['tags'] : NULL,
           $needs_year && $step > array_flip($steps)['year'] ? ['year'] : NULL,
           $step > array_flip($steps)['team'] ? ['team'] : NULL,
         ]),
