@@ -4,6 +4,7 @@ namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
+use Drupal\ghi_content\ContentManager\ArticleManager;
 
 /**
  * Provides an 'RelatedArticles' block.
@@ -102,6 +103,7 @@ class RelatedArticles extends ContentBlockBase implements OptionalTitleBlockInte
       '#entity_type' => 'node',
       '#view_mode' => 'grid',
       '#limit_field' => array_merge($form['#parents'], ['count']),
+      '#show_filter' => TRUE,
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
         'select',
       ]),
@@ -125,7 +127,12 @@ class RelatedArticles extends ContentBlockBase implements OptionalTitleBlockInte
    *   An array of entity objects indexed by their ids.
    */
   private function getArticles($limit = NULL) {
-    return $this->articleManager->loadAllNodes();
+    $articles = $this->articleManager->loadAllNodes();
+    $node = $this->getPageNode();
+    if ($node && $node->bundle() == ArticleManager::ARTICLE_BUNDLE && array_key_exists($node->id(), $articles)) {
+      unset($articles[$node->id()]);
+    }
+    return $articles;
   }
 
 }

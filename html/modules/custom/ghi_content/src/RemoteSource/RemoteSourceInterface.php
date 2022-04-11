@@ -110,11 +110,13 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    *
    * @param int $id
    *   The id of the content on the remote.
+   * @param string $type
+   *   The type of link. Defaults to "canonical".
    *
    * @return \Drupal\core\Url
    *   A url object.
    */
-  public function getContentUrl($id);
+  public function getContentUrl($id, $type = 'canonical');
 
   /**
    * Get the file data for the given url.

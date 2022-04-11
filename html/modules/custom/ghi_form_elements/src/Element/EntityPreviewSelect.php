@@ -27,6 +27,7 @@ class EntityPreviewSelect extends FormElement {
       '#entity_type' => NULL,
       '#view_mode' => NULL,
       '#limit_field' => NULL,
+      '#show_filter' => NULL,
       '#allow_selected' => NULL,
       '#allow_featured' => NULL,
       '#process' => [
@@ -161,6 +162,7 @@ class EntityPreviewSelect extends FormElement {
       'limit_field' => $element['#limit_field'] ? Html::getClass(implode('-', array_merge(['edit'], $element['#limit_field']))) : NULL,
       'allow_selected' => $allow_selected,
       'allow_featured' => $allow_featured,
+      'show_filter' => $element['#show_filter'],
     ];
     $element['order'] = [
       '#type' => 'hidden',
