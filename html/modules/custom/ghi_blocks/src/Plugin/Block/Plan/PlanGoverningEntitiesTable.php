@@ -384,7 +384,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   /**
    * {@inheritdoc}
    */
-  public function getDefaultSubform() {
+  public function getDefaultSubform($is_new = FALSE) {
     $conf = $this->getBlockConfig();
     if (!empty($conf['table']) && !empty($conf['table'])) {
       return 'table';

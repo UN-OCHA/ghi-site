@@ -115,6 +115,8 @@ class GlobalSectionWizard extends WizardBase {
         '#value' => $this->t('Back'),
         '#limit_validation_errors' => array_filter([
           $step > 0 ? ['year'] : NULL,
+          $step > array_flip($steps)['tags'] ? ['tags'] : NULL,
+          $step > array_flip($steps)['team'] ? ['team'] : NULL,
         ]),
         '#ajax' => [
           'event' => 'click',

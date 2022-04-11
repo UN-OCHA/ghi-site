@@ -193,8 +193,6 @@ class SyncManager implements ContainerInjectionInterface {
 
     }
 
-    $this->layoutManagerDiscardChanges($node, $messenger);
-
     $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
     if ($revisions) {
       $node->setNewRevision(TRUE);
@@ -203,6 +201,8 @@ class SyncManager implements ContainerInjectionInterface {
       $node->setRevisionUserId($this->currentUser->id());
     }
     $node->save();
+
+    $this->layoutManagerDiscardChanges($node, $messenger);
 
     return TRUE;
   }

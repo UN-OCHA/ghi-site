@@ -60,7 +60,7 @@ class AdminContentBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     $current_item_title = NULL;
     switch ($node->bundle()) {
       case ArticleManager::ARTICLE_BUNDLE:
-        $breadcrumb->addLink(Link::createFromRoute($this->t('Articles'), 'view.content.page_articles'));
+        $breadcrumb->addLink(Link::createFromRoute($this->t('Article pages'), 'view.content.page_articles'));
         break;
 
       case 'document':

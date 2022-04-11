@@ -172,7 +172,7 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
   /**
    * {@inheritdoc}
    */
-  public function getDefaultSubform() {
+  public function getDefaultSubform($is_new = FALSE) {
     if (!$this->getArticle()) {
       return 'article_select';
     }
@@ -272,7 +272,7 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
       '#cols' => 3,
       '#default_value' => $paragraph ? $paragraph->getId() : NULL,
       '#attached' => [
-        'library' => $theme_components,
+        'library' => array_unique($theme_components),
       ],
     ];
 

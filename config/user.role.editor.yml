@@ -11,10 +11,12 @@ dependencies:
     - core.entity_view_display.node.profile.default
     - core.entity_view_display.node.risk_index.default
     - core.entity_view_display.node.section.default
+    - filter.format.html_text
     - node.type.article
     - node.type.document
   module:
     - contextual
+    - filter
     - ghi_content
     - ghi_element_sync
     - layout_builder
@@ -81,6 +83,7 @@ permissions:
   - 'use layout builder ipe on editable profile node layout overrides'
   - 'use layout builder ipe on editable risk_index node layout overrides'
   - 'use layout builder ipe on editable section node layout overrides'
+  - 'use text format html_text'
   - 'view any unpublished article content'
   - 'view own unpublished content'
   - 'view the administration theme'
