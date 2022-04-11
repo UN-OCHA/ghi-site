@@ -167,6 +167,7 @@
     let entity_ids = config.entity_ids || [];
     let selected = Drupal.EntityPreviewSelect.getSelected($wrapper);
     let allow_featured = config.allow_featured || 0;
+    let show_filter = config.show_filter || false;
     let featured = allow_featured ? Drupal.EntityPreviewSelect.getFeatured($wrapper) : [];
 
     if ($wrapper.find('.preview-summary').length == 0) {
@@ -254,6 +255,22 @@
         $wrapper.find('.featured-checkbox > *:not(input)').on('click', function (e) {
           e.stopPropagation();
           Drupal.EntityPreviewSelect.handleFeatureSelection($(this).parents('[data-content-id]'), $wrapper);
+        });
+      }
+
+      if (show_filter) {
+        $filter_field = $('<div class="filter-field-wrapper"><label for="filter-field" class="glb-form-item__label">' + Drupal.t('Filter by text') + '</label><input id="entity-preview-filter-field" name="filter-field" type="search" placeholder="' + Drupal.t('Type to filter') + '" aria-label="' + Drupal.t('Filter the available articles') + '"></div>');
+        $wrapper.prepend($filter_field);
+        $wrapper.find('input[name="filter-field"]').on('input', function() {
+          let value = $(this).val();
+          if(!value) {
+            $wrapper.find('.preview-content [data-content-id]').show();
+          }
+          $wrapper.find('.preview-content [data-content-id]').each(function () {
+            if (!($(this).html().toLowerCase().includes(value.toLowerCase()))) {
+              $(this).hide();
+            }
+          });
         });
       }
     }

@@ -2,9 +2,31 @@
   font-weight: normal;
   font-size: 0.85em;
 }
+
+.form-type--entity_preview_select .filter-field-wrapper {
+  float: right;
+  position: relative;
+  top: 1rem;
+  display: flex;
+  margin: 0 !important;
+}
+.form-type--entity_preview_select .filter-field-wrapper > label {
+  font-weight: normal;
+  font-size: 0.85em;
+  margin-right: 0.5rem;
+  padding-bottom: 0;
+}
+.form-type--entity_preview_select .filter-field-wrapper > input {
+  font-size: 0.85em;
+}
+
+.form-type--entity_preview_select .filter-field-wrapper > input[type=search]::-webkit-search-cancel-button {
+  appearance: searchfield-cancel-button;
+}
+
 .form-type--entity_preview_select .preview-wrapper {
   max-height: 25rem;
-  overflow-y: scroll;
+  overflow-y: auto;
   overflow-x: hidden;
   padding: 0.25rem;
 }
