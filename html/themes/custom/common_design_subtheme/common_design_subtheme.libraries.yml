@@ -4,6 +4,7 @@ global-styling:
       css/styles.css: {}
   js:
     js/common.js: {}
+    js/login_destination.js: {}
 
 # CSS custom properties polyfill for IE11.
 # https://jhildenbiddle.github.io/css-vars-ponyfill
