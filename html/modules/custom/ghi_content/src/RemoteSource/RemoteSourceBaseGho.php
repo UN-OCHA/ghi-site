@@ -296,7 +296,10 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
-  public function getContentUrl($id) {
+  public function getContentUrl($id, $type = 'canonical') {
+    if ($type == 'edit') {
+      return Url::fromUri($this->getRemoteBaseUrl() . '/node/' . $id . '/edit');
+    }
     return Url::fromUri($this->getRemoteBaseUrl() . '/node/' . $id);
   }
 
