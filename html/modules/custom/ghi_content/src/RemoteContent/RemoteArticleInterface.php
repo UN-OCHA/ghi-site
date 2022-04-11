@@ -18,10 +18,13 @@ interface RemoteArticleInterface {
   /**
    * Get a url to the source of the article.
    *
+   * @param string $type
+   *   The type of link. Defaults to "canonical".
+   *
    * @return \Drupal\core\Url
    *   A url object.
    */
-  public function getSourceUrl();
+  public function getSourceUrl($type = 'canonical');
 
   /**
    * Get the id of the article.
@@ -38,6 +41,14 @@ interface RemoteArticleInterface {
    *   The article title.
    */
   public function getTitle();
+
+  /**
+   * Get the updated time of the article.
+   *
+   * @return string
+   *   A datetime string.
+   */
+  public function getUpdated();
 
   /**
    * Get the summary text of the article.

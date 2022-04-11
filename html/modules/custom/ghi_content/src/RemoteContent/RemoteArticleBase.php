@@ -24,8 +24,8 @@ abstract class RemoteArticleBase implements RemoteArticleInterface {
   /**
    * {@inheritdoc}
    */
-  public function getSourceUrl() {
-    return $this->source->getContentUrl($this->getId());
+  public function getSourceUrl($type = 'canonical') {
+    return $this->source->getContentUrl($this->getId(), $type);
   }
 
 }

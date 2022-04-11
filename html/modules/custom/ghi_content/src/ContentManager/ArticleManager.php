@@ -6,9 +6,14 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\ghi_content\Import\ImportManager;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
+use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
 use Drupal\ghi_sections\SectionManager;
+use Drupal\migrate\MigrateExecutable;
+use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Plugin\MigrationPluginManager;
+use Drupal\migrate\Row;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\TermInterface;
 
@@ -40,11 +45,27 @@ class ArticleManager extends BaseContentManager {
   protected $migrationManager;
 
   /**
+   * The remote source manager.
+   *
+   * @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager
+   */
+  protected $remoteSourceManager;
+
+  /**
+   * The remote source manager.
+   *
+   * @var \Drupal\ghi_content\Import\ImportManager
+   */
+  protected $importManager;
+
+  /**
    * Constructs a document manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer, AccountInterface $current_user, MigrationPluginManager $migration_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer, AccountInterface $current_user, MigrationPluginManager $migration_manager, RemoteSourceManager $remote_source_manager, ImportManager $import_manager) {
     parent::__construct($entity_type_manager, $renderer, $current_user);
     $this->migrationManager = $migration_manager;
+    $this->remoteSourceManager = $remote_source_manager;
+    $this->importManager = $import_manager;
   }
 
   /**
@@ -101,6 +122,29 @@ class ArticleManager extends BaseContentManager {
       self::REMOTE_ARTICLE_FIELD . '.article_id' => $article->getId(),
     ]);
     return $results && !empty($results) ? reset($results) : NULL;
+  }
+
+  /**
+   * Load the article for the given node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node entity.
+   *
+   * @return \Drupal\ghi_content\RemoteContent\RemoteArticleInterface|null
+   *   The remote article object if found.
+   */
+  public function loadArticleForNode(NodeInterface $node) {
+    $remote_field = self::REMOTE_ARTICLE_FIELD;
+    if (!$node->hasField($remote_field)) {
+      return;
+    }
+
+    $remote_source = $node->get($remote_field)->remote_source;
+    $article_id = $node->get($remote_field)->article_id;
+
+    /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source_instance */
+    $remote_source_instance = $this->remoteSourceManager->createInstance($remote_source);
+    return $remote_source_instance->getArticle($article_id);
   }
 
   /**
@@ -373,6 +417,8 @@ class ArticleManager extends BaseContentManager {
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
+   *
+   * @see ghi_content_node_predelete()
    */
   public function cleanupArticleOnDelete(NodeInterface $node) {
     if ($node->bundle() != self::ARTICLE_BUNDLE) {
@@ -382,17 +428,15 @@ class ArticleManager extends BaseContentManager {
   }
 
   /**
-   * Remove migration map entries for the given node.
-   *
-   * Doeing this, allows to re-import a previously imported article that has
-   * been deleted on the backend. This is more of an user-1 rescue thing to do.
-   * Generally, articles can't be deleted in the backend but need to be removed
-   * (unpublished/deleted) from the remote source.
+   * Get the migration for the given node.
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
+   *
+   * @return \\Drupal\migrate\Plugin\MigrationInterface|null
+   *   The migration plugin if found.
    */
-  private function removeMigrationMapEntries(NodeInterface $node) {
+  private function getMigration(NodeInterface $node) {
     if (!$node->hasField(self::REMOTE_ARTICLE_FIELD) || $node->get(self::REMOTE_ARTICLE_FIELD)->isEmpty()) {
       return;
     }
@@ -412,10 +456,162 @@ class ArticleManager extends BaseContentManager {
         continue;
       }
       $source_id = $migration->getIdMap()->lookupSourceId(['nid' => $node->id()]);
-      if (!$source_id) {
+      if ($source_id) {
+        return $migration;
+      }
+    }
+  }
+
+  /**
+   * Remove migration map entries for the given node.
+   *
+   * Doing this, allows to re-import a previously imported article that has
+   * been deleted on the backend. This is more of an user-1 rescue thing to do.
+   * Generally, articles can't be deleted in the backend but need to be removed
+   * (unpublished/deleted) from the remote source.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   */
+  private function removeMigrationMapEntries(NodeInterface $node) {
+    $migration = $this->getMigration($node);
+    if (!$migration) {
+      return;
+    }
+    $source_id = $migration->getIdMap()->lookupSourceId(['nid' => $node->id()]);
+    $migration->getIdMap()->delete($source_id);
+  }
+
+  /**
+   * Update the given node according to the data on its remote source.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   *
+   * @see ghi_content_node_presave()
+   */
+  public function updateNodeFromRemote(NodeInterface $node) {
+    $remote_field = self::REMOTE_ARTICLE_FIELD;
+    $article = $this->loadArticleForNode($node);
+    if (!$article) {
+      return;
+    }
+
+    // See if the article needs a cleanup.
+    $remote_source = $node->get($remote_field)->remote_source;
+    $article_id = $node->get($remote_field)->article_id;
+    $remote_source_original = $node->original ? $node->original->get($remote_field)->remote_source : NULL;
+    $article_id_original = $node->original ? $node->original->get($remote_field)->article_id : NULL;
+    $cleanup = $remote_source_original && $article_id_original && ($remote_source != $remote_source_original || $article_id != $article_id_original);
+
+    // Set the base properties.
+    $node->setTitle($article->getTitle());
+    $node->setChangedTime($article->getUpdated());
+
+    // Import the image.
+    $this->importManager->importImage($node, $article, 'field_image');
+
+    // Import the image.
+    $this->importManager->importSummary($node, $article, 'field_summary');
+
+    // Import the paragraphs for the article.
+    $this->importManager->importParagraphs($node, $article, [], NULL, $cleanup);
+
+    // Import the tags.
+    $this->importManager->importTags($node, $article, 'field_tags');
+
+    if ($node->isNew()) {
+      $this->importManager->setupRelatedArticlesElement($node, $article);
+    }
+  }
+
+  /**
+   * Check if the given node is in-sync with its remote source.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   *
+   * @return bool|null
+   *   TRUE if in-sync, FALSE if not and NULL if the migration is not found.
+   *
+   * @see ghi_content_form_node_article_edit_form_alter()
+   */
+  public function isUpToDateWithRemote(NodeInterface $node) {
+    $migration = $this->getMigration($node);
+    if (!$migration) {
+      return NULL;
+    }
+
+    $migrate_executable = new MigrateExecutable($migration);
+
+    /** @var \Drupal\ghi_content\Plugin\migrate\source\RemoteSourceGraphQL $source */
+    $source = $migration->getSourcePlugin();
+    $source_id = $migration->getIdMap()->lookupSourceId(['nid' => $node->id()]);
+
+    $source_iterator = $source->initializeIterator();
+    $source_iterator->rewind();
+    foreach ($source_iterator as $row_data) {
+      $row = new Row($row_data + $migration->getSourceConfiguration(), $source->getIds());
+      if ($source_id != $row->getSourceIdValues()) {
         continue;
       }
-      $migration->getIdMap()->delete($source_id);
+      $migrate_executable->processRow($row);
+      $id_map = $migration->getIdMap()->getRowBySource($row->getSourceIdValues());
+      if (!$id_map) {
+        continue;
+      }
+      $row->setIdMap($id_map);
+      $row->rehash();
+      if ($row->changed()) {
+        return FALSE;
+      }
+    }
+    return TRUE;
+  }
+
+  /**
+   * Update the migration state of the given node.
+   *
+   * This is usefull when manually importing the source data.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   *
+   * @see ghi_content_form_node_article_edit_form_submit()
+   */
+  public function updateMigrationState(NodeInterface $node) {
+    $migration = $this->getMigration($node);
+    if (!$migration) {
+      return;
+    }
+
+    $migrate_executable = new MigrateExecutable($migration);
+
+    /** @var \Drupal\ghi_content\Plugin\migrate\source\RemoteSourceGraphQL $source */
+    $source = $migration->getSourcePlugin();
+    $source_id = $migration->getIdMap()->lookupSourceId(['nid' => $node->id()]);
+    $destination = $migration->getDestinationPlugin();
+
+    $source_iterator = $source->initializeIterator();
+    $source_iterator->rewind();
+    foreach ($source_iterator as $row_data) {
+      $row = new Row($row_data + $migration->getSourceConfiguration(), $source_id);
+      if ($source_id != $row->getSourceIdValues()) {
+        continue;
+      }
+      $migrate_executable->processRow($row);
+      $id_map = $migration->getIdMap()->getRowBySource($row->getSourceIdValues());
+      if (!$id_map) {
+        continue;
+      }
+
+      $row->setIdMap($id_map);
+      $row->rehash();
+
+      $destination_ids = $migration->getIdMap()->lookupDestinationIds($source_id);
+      $destination_id_values = $destination_ids ? reset($destination_ids) : [];
+      $destination->import($row, $destination_id_values);
+      $migration->getIdMap()->saveIdMapping($row, $destination_id_values, MigrateIdMapInterface::STATUS_IMPORTED, $destination->rollbackAction());
     }
   }
 

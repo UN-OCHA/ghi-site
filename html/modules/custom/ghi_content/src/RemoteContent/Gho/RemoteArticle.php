@@ -56,6 +56,13 @@ class RemoteArticle extends RemoteArticleBase {
   /**
    * {@inheritdoc}
    */
+  public function getUpdated() {
+    return strtotime($this->data->updated);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getSummary() {
     return Markup::create($this->data->summary);
   }

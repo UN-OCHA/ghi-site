@@ -148,9 +148,9 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
   /**
    * {@inheritdoc}
    */
-  public function getDefaultSubform() {
+  public function getDefaultSubform($is_new = FALSE) {
     $conf = $this->getBlockConfig();
-    if (!empty($conf['articles'])) {
+    if (!empty($conf['articles']) && !$is_new) {
       return 'display';
     }
     return 'articles';

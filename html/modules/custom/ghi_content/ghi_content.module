@@ -122,52 +122,112 @@ function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateIn
   $remote_field = ArticleManager::REMOTE_ARTICLE_FIELD;
   $form[$remote_field]['#disabled'] = TRUE;
   $form[$remote_field]['#attributes']['title'] = t('This field cannot be edited anymore after an article page has been created.');
+
+  $admin_permission = \Drupal::currentUser()->hasPermission('administer content types');
+  $form['meta']['#access'] = $admin_permission;
+  $form['meta']['published']['#access'] = $admin_permission;
+  $form['meta']['author']['#access'] = $admin_permission;
+  $form['author']['#access'] = $admin_permission;
+  $form['changed']['#access'] = $admin_permission;
+  $form['options']['#access'] = $admin_permission;
+
+  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
+  $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
+  /** @var \Drupal\node\NodeForm $form_object */
+  $form_object = $form_state->getFormObject();
+  /** @var \Drupal\node\NodeInterface $node */
+  $node = $form_object->getEntity();
+
+  $view_builder = \Drupal::entityTypeManager()->getViewBuilder('node');
+  $article_in_sync = $article_manager->isUpToDateWithRemote($node);
+
+  $form['remote_article_info'] = [
+    '#type' => 'details',
+    '#title' => t('Remote article'),
+    '#open' => TRUE,
+    '#group' => 'advanced',
+  ];
+
+  $form['remote_article_info']['status'] = [
+    '#type' => 'item',
+    '#title' => t('Up to date'),
+    '#markup' => '<p>' . t('This article page is up to date with its source content on the remote system.') . '</p>',
+    '#weight' => 1,
+  ];
+
+  if (!$article_in_sync) {
+    $form['remote_article_info']['status']['#title'] = t('Outdated');
+    $form['remote_article_info']['status']['#markup'] = '<p>' . t('The source of this article page has changed on the remote system. It will be automatically updated the next time that the article import will run. To apply the changes immediately use the button below.') . '</p>';
+
+    $form['remote_article_info']['apply_changes'] = [
+      '#type' => 'submit',
+      '#value' => t('Apply changes from remote'),
+      '#submit' => ['ghi_content_form_node_article_edit_form_submit'],
+      '#weight' => 2,
+    ];
+  }
+
+  /** @var \Drupal\Core\Routing\RedirectDestinationInterface $redirect_destination */
+  $redirect_destination = \Drupal::service('redirect.destination');
+  $queryParams = \Drupal::request()->query->all();
+  $redirect_url = Url::fromRouteMatch(\Drupal::routeMatch());
+  if (!empty($queryParams)) {
+    $redirect_url->setOption('query', $queryParams);
+  }
+  $redirect_destination->set($redirect_url->toString());
+  $form['remote_article_info']['link_label'] = [
+    '#type' => 'item',
+    '#title' => t('Go to remote system'),
+    '#weight' => 3,
+  ];
+  $form['remote_article_info']['link'] = $view_builder->viewField($node->get($remote_field), [
+    'label' => 'hidden',
+    'type' => 'ghi_remote_article_source_link',
+    'settings' => [
+      'link_label' => t('Edit this article on the remote system'),
+      'link_to_edit' => TRUE,
+      'include_publisher_destination' => TRUE,
+    ],
+  ]);
+  $form['remote_article_info']['link']['#weight'] = 4;
+
 }
 
 /**
- * Implements hook_ENTITY_TYPE_update().
+ * Form submit handler for the "Apply changes" button on article forms.
+ *
+ * This just saves the node.
+ */
+function ghi_content_form_node_article_edit_form_submit($form, FormStateInterface $form_state) {
+  /** @var \Drupal\node\NodeForm $form_object */
+  $form_object = $form_state->getFormObject();
+  $node = $form_object->getEntity();
+
+  // Just save the node, this will trigger the update.
+  $node->save();
+
+  // The only thing we need to do after that is to update the migration state,
+  // so that this article is not wrongly treated as changed on the next
+  // migration run.
+  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
+  $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
+  $article_manager->updateMigrationState($node);
+
+  $form_state->setRebuild();
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for node entities.
  */
 function ghi_content_node_presave(NodeInterface $node) {
-  $remote_field = ArticleManager::REMOTE_ARTICLE_FIELD;
-  if (!$node->hasField($remote_field) || !$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+  if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+    // We only process nodes that use layout builder.
     return;
   }
 
-  /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
-  $remote_source_manager = \Drupal::service('plugin.manager.remote_source');
-
-  /** @var \Drupal\ghi_content\Import\ImportManager $import_manager */
-  $import_manager = \Drupal::service('ghi_content.import');
-
-  $remote_source = $node->get($remote_field)->remote_source;
-  $article_id = $node->get($remote_field)->article_id;
-
-  $remote_source_original = $node->original ? $node->original->get($remote_field)->remote_source : NULL;
-  $article_id_original = $node->original ? $node->original->get($remote_field)->article_id : NULL;
-
-  $cleanup = $remote_source_original && $article_id_original && ($remote_source != $remote_source_original || $article_id != $article_id_original);
-
-  /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source_instance */
-  $remote_source_instance = $remote_source_manager->createInstance($remote_source);
-  $article = $remote_source_instance->getArticle($article_id);
-  if ($article) {
-
-    // Import the image.
-    $import_manager->importImage($node, $article, 'field_image');
-
-    // Import the image.
-    $import_manager->importSummary($node, $article, 'field_summary');
-
-    // Import the paragraphs for the article.
-    $import_manager->importParagraphs($node, $article, [], NULL, $cleanup);
-
-    // Import the tags.
-    $import_manager->importTags($node, $article, 'field_tags');
-  }
-
-  if ($node->isNew()) {
-    $import_manager->setupRelatedArticlesElement($node, $article);
-  }
+  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
+  $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
+  $article_manager->updateNodeFromRemote($node);
 }
 
 /**
@@ -317,7 +377,7 @@ function ghi_content_entity_operation(EntityInterface $entity) {
 
   return [
     'articles' => [
-      'title' => t('Articles'),
+      'title' => t('Article pages'),
       'weight' => 50,
       'url' => Url::fromRoute($route_name, $route_parameters),
     ],
