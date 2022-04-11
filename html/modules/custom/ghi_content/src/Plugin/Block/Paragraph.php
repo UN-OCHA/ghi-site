@@ -272,7 +272,7 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
       '#cols' => 3,
       '#default_value' => $paragraph ? $paragraph->getId() : NULL,
       '#attached' => [
-        'library' => $theme_components,
+        'library' => array_unique($theme_components),
       ],
     ];
 

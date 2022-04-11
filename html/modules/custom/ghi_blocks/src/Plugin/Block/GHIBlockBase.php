@@ -969,6 +969,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $form['actions']['#attributes']['class'][] = 'canvas-form__actions';
 
     // Also load our library to improve the UI.
+    // @todo Check if this is sufficiently handled by ghi_blocks_form_alter().
     if (empty($form['#attached']['library'])) {
       $form['#attached']['library'] = [];
     }

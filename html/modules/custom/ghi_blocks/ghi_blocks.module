@@ -152,7 +152,7 @@ function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $fo
     $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
     if (array_key_exists('placeholders', $form)) {
       $form['placeholders']['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
-      $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
+      $form['placeholders']['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
     }
     // Disable the "Revert to defaults" button.
     if ($form['actions'] && array_key_exists('revert', $form['actions'])) {
