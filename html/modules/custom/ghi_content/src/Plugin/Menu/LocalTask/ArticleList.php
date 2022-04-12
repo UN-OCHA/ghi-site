@@ -60,9 +60,9 @@ class ArticleList extends LocalTaskDefault implements ContainerFactoryPluginInte
   public function getTitle(Request $request = NULL) {
     $node = $this->routeMatch->getParameter('node');
     if ($node && !$this->isSectionNode($node) && $this->getSectionNode($node)) {
-      return $this->t('Section articles');
+      return $this->t('Section article pages');
     }
-    return $this->t('Articles');
+    return $this->t('Article pages');
   }
 
 }

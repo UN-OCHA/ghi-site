@@ -98,7 +98,7 @@ class ArticleListController extends ControllerBase {
    *   The page title.
    */
   public function getTitle(NodeInterface $node) {
-    return $this->t('Articles for <em>@title</em>', [
+    return $this->t('Article pages for <em>@title</em>', [
       '@title' => $node->label(),
     ]);
   }
