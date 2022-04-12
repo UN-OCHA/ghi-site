@@ -62,6 +62,12 @@ function ghi_local_tasks_link_alter(&$variables) {
         '@type' => $type,
       ]);
     }
+    elseif (SubpageHelper::isBaseTypeNode($node) && $label = SubpageHelper::getSectionOverviewLabel($node)) {
+      $variables['text'] = t('@parent_type: @label', [
+        '@parent_type' => $node->type->entity->label(),
+        '@label' => $label,
+      ]);
+    }
     else {
       $variables['text'] = $type;
     }

@@ -76,7 +76,7 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
     }
 
     // Always output parent link.
-    $overview_link = $base_entity->toLink($this->t('Overview'))->toRenderable();
+    $overview_link = $base_entity->toLink(SubpageHelper::getSectionOverviewLabel($base_entity))->toRenderable();
     if ($node->id() == $base_entity->id()) {
       $overview_link['#attributes']['class'][] = 'active';
     }

@@ -29,6 +29,22 @@ class SubpageHelper {
   ];
 
   /**
+   * Get the label for the section overview page.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The base node.
+   *
+   * @return string|null
+   *   The label of a section overview page.
+   */
+  public static function getSectionOverviewLabel(NodeInterface $node) {
+    if (!self::isBaseTypeNode($node)) {
+      return;
+    }
+    return t('Overview');
+  }
+
+  /**
    * Assure that subpages for a base node exist.
    *
    * If they don't exist, this function will create the missing ones.
