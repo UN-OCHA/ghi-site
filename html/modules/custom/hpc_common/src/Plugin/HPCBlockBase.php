@@ -10,6 +10,8 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\hpc_common\Helpers\ContextHelper;
+use Drupal\layout_builder\SectionStorageInterface;
+use Drupal\node\NodeInterface;
 
 /**
  * Base class for HPC Block plugins.
@@ -502,7 +504,12 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     }
 
     $page_arguments = $this->getAllAvailablePageParameters();
-
+    if (!empty($page_arguments['section_storage']) && $page_arguments['section_storage'] instanceof SectionStorageInterface) {
+      /** @var \Drupal\layout_builder\SectionStorageInterface $section_storage */
+      $section_storage = $page_arguments['section_storage'];
+      $entity = $section_storage->getContextValue('entity');
+      return $entity instanceof NodeInterface ? $entity : NULL;
+    }
     if (!empty($page_arguments['node'])) {
       return $page_arguments['node'];
     }

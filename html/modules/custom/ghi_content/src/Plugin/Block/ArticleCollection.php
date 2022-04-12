@@ -61,9 +61,8 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
         if (!empty($card_select['selected'])) {
           $articles = array_intersect_key($articles, array_flip($card_select['selected']));
         }
-        else {
-          $card_limit = self::CARD_LIMIT;
-          $articles = array_slice($articles, 0, $card_limit, TRUE);
+        elseif (count($articles) > self::CARD_LIMIT) {
+          $articles = array_slice($articles, 0, self::CARD_LIMIT, TRUE);
         }
       }
       else {
