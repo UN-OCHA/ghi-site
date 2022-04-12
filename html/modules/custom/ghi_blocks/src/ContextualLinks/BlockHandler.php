@@ -85,9 +85,6 @@ class BlockHandler implements ContainerInjectionInterface {
     $section_storage = $this->getSectionStorageForEntity($entity);
     $section_storage = $this->layoutTempstoreRepository->get($section_storage);
 
-    $section_storage = $this->getSectionStorageForEntity($entity);
-    $section_storage = $this->layoutTempstoreRepository->get($section_storage);
-
     $component_keys = array_keys($section_storage->getSection($delta)->getComponents());
     if (!in_array($uuid, $component_keys)) {
       // Unknown uuid, keep going.
