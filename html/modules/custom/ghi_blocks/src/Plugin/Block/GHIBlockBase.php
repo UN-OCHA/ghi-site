@@ -324,53 +324,42 @@ abstract class GHIBlockBase extends HPCBlockBase {
       return [];
     }
 
-    if ($this->isHidden() && $this->isLayoutBuilder()) {
-      // If we are here, the block is hidden and displayed inside the layout
-      // builder interface. We want to inform the user that the block is
-      // configured to be hidden and provide a container so that interactions
-      // on the block work, but we don't want to fully render the block.
-      $build_content = [
-        '#markup' => $this->t('This block is currently set to be hidden.'),
-      ];
+    // Otherwise build the full block. First get the actual block content.
+    $build_content = $this->buildContent();
+    if (!$build_content) {
+      return [];
     }
-    else {
-      // Otherwise build the full block. First get the actual block content.
-      $build_content = $this->buildContent();
-      if (!$build_content) {
-        return [];
+
+    // Handle the title display.
+    if ($this->shouldDisplayTitle()) {
+      if ($this instanceof AutomaticTitleBlockInterface) {
+        $build['#title'] = $this->getAutomaticBlockTitle();
+      }
+      elseif ($this instanceof OptionalTitleBlockInterface) {
+        $build['#title'] = $plugin_configuration['label'] ?? NULL;
+      }
+      elseif (!empty($build_content['#title'])) {
+        $build['#title'] = $build_content['#title'];
+        unset($build_content['#title']);
       }
 
-      // Handle the title display.
-      if ($this->shouldDisplayTitle()) {
-        if ($this instanceof AutomaticTitleBlockInterface) {
-          $build['#title'] = $this->getAutomaticBlockTitle();
-        }
-        elseif ($this instanceof OptionalTitleBlockInterface) {
-          $build['#title'] = $plugin_configuration['label'] ?? NULL;
-        }
-        elseif (!empty($build_content['#title'])) {
-          $build['#title'] = $build_content['#title'];
-          unset($build_content['#title']);
-        }
-
-        if (empty($plugin_configuration['label']) && $this->hasDefaultTitle()) {
-          $plugin_definition = $this->getPluginDefinition();
-          $build['#title'] = $plugin_definition['default_title'];
-        }
-
-        if (!empty($plugin_configuration['label_display']) && !array_key_exists('#title', $build)) {
-          $build += [
-            '#title' => $this->label(),
-          ];
-        }
-        elseif (empty($plugin_configuration['label_display']) && array_key_exists('#title', $build)) {
-          unset($build['#title']);
-        }
+      if (empty($plugin_configuration['label']) && $this->hasDefaultTitle()) {
+        $plugin_definition = $this->getPluginDefinition();
+        $build['#title'] = $plugin_definition['default_title'];
       }
 
-      if (!empty($build_content['#theme']) && $build_content['#theme'] == 'item_list') {
-        $build_content['#context']['plugin_id'] = $this->getPluginId();
+      if (!empty($plugin_configuration['label_display']) && !array_key_exists('#title', $build)) {
+        $build += [
+          '#title' => $this->label(),
+        ];
       }
+      elseif (empty($plugin_configuration['label_display']) && array_key_exists('#title', $build)) {
+        unset($build['#title']);
+      }
+    }
+
+    if (!empty($build_content['#theme']) && $build_content['#theme'] == 'item_list') {
+      $build_content['#context']['plugin_id'] = $this->getPluginId();
     }
 
     // Add the build content as a child.
@@ -382,8 +371,15 @@ abstract class GHIBlockBase extends HPCBlockBase {
     if ($this->getUuid()) {
       $build['#attributes']['class'][] = 'ghi-block-' . $this->getUuid();
     }
+    // Add hidden classes.
     if ($this->isHidden()) {
       $build['#attributes']['class'][] = 'ghi-block--hidden';
+      if ($this->isLayoutBuilder()) {
+        // If we are here, the block is hidden and displayed inside the layout
+        // builder interface. We want to inform the user that the block is
+        // configured to be hidden..
+        $build['#attributes']['class'][] = 'ghi-block--hidden-preview';
+      }
     }
 
     // Allow the plugin to define attributes for it's wrapper.
