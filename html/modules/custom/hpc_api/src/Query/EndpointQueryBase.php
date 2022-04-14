@@ -3,8 +3,10 @@
 namespace Drupal\hpc_api\Query;
 
 use Drupal\Component\Plugin\PluginBase;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Drupal\hpc_common\Hid\HidUserData;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -12,6 +14,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Base class for endpoint query plugins.
  */
 abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPluginInterface, ContainerFactoryPluginInterface {
+
+  use SimpleCacheTrait;
 
   /**
    * The endpoint query service.
@@ -42,14 +46,22 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
   protected $isAutenticatedEndpoint;
 
   /**
+   * The cache service.
+   *
+   * @var \Drupal\Core\Cache\CacheBackendInterface
+   */
+  public $cache;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQuery $endpoint_query, AccountProxyInterface $user, HidUserData $hid_user_data) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQuery $endpoint_query, AccountProxyInterface $user, HidUserData $hid_user_data, CacheBackendInterface $cache) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $endpoint_query);
 
     $this->endpointQuery = clone $endpoint_query;
     $this->user = $user;
     $this->hidUserData = $hid_user_data;
+    $this->cache = $cache;
 
     $endpoint_public = $plugin_definition['endpoint']['public'] ?? NULL;
     $endpoint_authenticated = $plugin_definition['endpoint']['authenticated'] ?? NULL;
@@ -73,7 +85,8 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
       $plugin_definition,
       $container->get('hpc_api.endpoint_query'),
       $container->get('current_user'),
-      $container->get('hpc_common.hid_user_data')
+      $container->get('hpc_common.hid_user_data'),
+      $container->get('cache.data')
     );
   }
 
@@ -125,6 +138,13 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
    */
   public function setPlaceholder($key, $value) {
     $this->endpointQuery->setPlaceholder($key, $value);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPlaceholders() {
+    return $this->endpointQuery->getPlaceholders();
   }
 
   /**

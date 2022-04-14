@@ -52,11 +52,11 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
         'config' => ['entity_type' => 'plan'],
       ],
       'partners_counter' => [
-        'target' => 'project_data',
+        'target' => 'project_counter',
         'config' => ['data_type' => 'organizations_count'],
       ],
       'projects_counter' => [
-        'target' => 'project_data',
+        'target' => 'project_counter',
         'config' => ['data_type' => 'projects_count'],
       ],
       'original_requirements' => [
@@ -163,17 +163,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
 
     $context = $this->getBlockContext();
 
-    $header = [];
-    foreach ($columns as $column) {
-      /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
-      $item_type = $this->getItemTypePluginForColumn($column);
-      $header[] = [
-        'data' => $item_type->getLabel(),
-        'data-sort-type' => $item_type::SORT_TYPE,
-        'data-sort-order' => count($header) == 0 ? 'ASC' : '',
-        'data-column-type' => $item_type::ITEM_TYPE,
-      ];
-    }
+    $header = $this->buildTableHeader($columns);
 
     // Sort the entites by name.
     usort($entities, function ($a, $b) {
@@ -540,7 +530,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
         'entity_type' => 'plan',
         'value_preview' => FALSE,
       ],
-      'project_data' => [
+      'project_counter' => [
         'access' => [
           'plan_costing' => [0, 1, 3],
         ],

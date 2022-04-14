@@ -210,9 +210,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $theme_function = !empty($data_type['theme']) ? $data_type['theme'] : 'hpc_currency';
     $theme_options = !empty($data_type['theme_options']) ? $data_type['theme_options'] : [];
 
-    $rendered = [
-      '#theme' => $theme_function,
-    ] + ThemeHelper::getThemeOptions($theme_function, $this->getValue($data_type_key, $scale, $cluster_restrict), [
+    $rendered = ThemeHelper::getThemeOptions($theme_function, $this->getValue($data_type_key, $scale, $cluster_restrict), [
       'scale' => $scale,
       'formatting_decimals' => $this->getContextValue('plan_object')->field_decimal_format->value,
     ] + $theme_options);

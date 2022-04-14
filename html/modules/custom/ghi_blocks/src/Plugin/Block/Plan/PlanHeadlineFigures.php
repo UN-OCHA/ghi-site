@@ -46,11 +46,11 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
         'config' => ['entity_type' => 'governing'],
       ],
       'partners_counter' => [
-        'target' => 'project_data',
+        'target' => 'project_counter',
         'config' => ['data_type' => 'organizations_count'],
       ],
       'projects_counter' => [
-        'target' => 'project_data',
+        'target' => 'project_counter',
         'config' => ['data_type' => 'projects_count'],
       ],
       'attachment_value' => [
@@ -123,7 +123,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
           $item['config']['scale'] = property_exists($value, 'formatting') ? $value->formatting : 'auto';
           break;
 
-        case 'project_data':
+        case 'project_counter':
           if ($value === NULL && empty($incoming_item->label)) {
             // Skip this item entirely.
             continue(2);
@@ -269,7 +269,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
         ],
       ],
       'entity_counter' => [],
-      'project_data' => [
+      'project_counter' => [
         'access' => [
           'plan_costing' => [0, 1, 3],
         ],

@@ -19,17 +19,17 @@ use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
- * Provides an entity counter item for configuration containers.
+ * Provides project based counter items for configuration containers.
  *
  * @todo This is still missing support for cluster filters.
  *
  * @ConfigurationContainerItem(
- *   id = "project_data",
- *   label = @Translation("Project data"),
- *   description = @Translation("This item displays project related information. For the moment the only supported options are number of projects and number of partners."),
+ *   id = "project_counter",
+ *   label = @Translation("Project counter"),
+ *   description = @Translation("This item displays project based counters."),
  * )
  */
-class ProjectData extends ConfigurationContainerItemPluginBase {
+class ProjectCounter extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemClusterRestrictTrait;
   use ConfigurationItemValuePreviewTrait;

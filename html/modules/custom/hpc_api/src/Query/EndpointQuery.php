@@ -2,6 +2,7 @@
 
 namespace Drupal\hpc_api\Query;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
@@ -141,15 +142,23 @@ class EndpointQuery {
   protected $user;
 
   /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+
+  /**
    * Constructs a new EndpointQuery object.
    */
-  public function __construct(ConfigService $config_service, LoggerChannelFactoryInterface $logger_factory, CacheBackendInterface $cache, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user) {
+  public function __construct(ConfigService $config_service, LoggerChannelFactoryInterface $logger_factory, CacheBackendInterface $cache, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user, TimeInterface $time) {
     $this->configService = $config_service;
     $this->loggerFactory = $logger_factory;
     $this->cache = $cache;
     $this->killSwitch = $kill_switch;
     $this->httpClient = $http_client;
     $this->user = $user;
+    $this->time = $time;
 
     $this->endpointVersion = $this->configService->getDefaultApiVersion();
     $this->endpointUrl = NULL;
@@ -463,7 +472,7 @@ class EndpointQuery {
     }
 
     // Store data in the cache with an explicit expiry time, default is 1 hour.
-    $expiration_time = REQUEST_TIME + $this->configService->get('cache_lifetime', 60 * 60);
+    $expiration_time = $this->time->getRequestTime() + $this->configService->get('cache_lifetime', 60 * 60);
     $this->cache->set($cache_key, $data, $expiration_time);
 
     // Also store it in the static cache.

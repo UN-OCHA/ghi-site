@@ -29,6 +29,11 @@ interface EndpointQueryPluginInterface extends PluginInspectionInterface, Contai
   public function setPlaceholder($key, $value);
 
   /**
+   * Wrapper around EndpointQuery::getPlaceholders().
+   */
+  public function getPlaceholders();
+
+  /**
    * Wrapper around EndpointQuery::getFullEndpointUrl().
    *
    * @return string
