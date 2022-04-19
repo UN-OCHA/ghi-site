@@ -29,6 +29,7 @@ class PlanProjectFundingQuery extends EndpointQueryBase {
    * {@inheritdoc}
    */
   public function getData(array $placeholders = [], array $query_args = []) {
+    $placeholders = array_merge($placeholders, $this->getPlaceholders());
     $cache_key = $this->getCacheKeyFromAssociativeArray($placeholders);
     if ($cached_data = $this->cache($cache_key)) {
       return $cached_data;

@@ -158,13 +158,11 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getValue($data_type = NULL, $cluster_restrict = NULL) {
-    $data_type = $data_type ?? $this->get('data_type');
-    $cluster_restrict = $cluster_restrict ?? $this->get('cluster_restrict');
-
-    $project_query = $this->initializeQuery($data_type, $cluster_restrict);
+    $project_query = $this->initializeQuery();
     if (!$project_query) {
       return NULL;
     }
+    $data_type = $data_type ?? $this->get('data_type');
     return $this->getValueForDataType($data_type, $project_query);
   }
 
@@ -172,11 +170,6 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getRenderArray() {
-    $project_query = $this->initializeQuery();
-    if (!$project_query) {
-      return NULL;
-    }
-
     $popover = $this->getPopover();
     if (!$popover) {
       return parent::getRenderArray();
@@ -374,7 +367,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery
    *   A project query instance, with cluster filters applied if appropriate.
    */
-  private function initializeQuery($data_type = NULL, $cluster_restrict = NULL) {
+  private function initializeQuery() {
     $project_query = $this->projectSearchQuery;
     $plan_object = $this->getContextValue('plan_object');
     if (!$plan_object) {
@@ -387,7 +380,6 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
 
-    $data_type = $data_type ?? $this->get('data_type');
     $cluster_restrict = $cluster_restrict ?? $this->get('cluster_restrict');
 
     if (!empty($cluster_restrict) && $cluster_ids = $this->getClusterIdsForConfig($cluster_restrict)) {

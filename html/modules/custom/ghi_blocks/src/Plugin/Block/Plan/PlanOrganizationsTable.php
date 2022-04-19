@@ -44,7 +44,10 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
         'target' => 'entity_name',
       ],
       // 'project_codes' => [],
-      // 'clusters' => [],
+      'clusters' => [
+        'target' => 'organization_cluster_list',
+        'config' => ['display_icons' => FALSE],
+      ],
       // 'plan_entities' => [],
       'original_requirements' => [
         'target' => 'project_funding',
@@ -67,6 +70,7 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
         'config' => ['data_type' => 'requirements_changes'],
       ],
     ];
+
     foreach ($config->table_columns as $incoming_item) {
       $source_type = !empty($incoming_item->element) ? $incoming_item->element : NULL;
       if (!$source_type || !array_key_exists($source_type, $transition_map)) {
@@ -86,6 +90,9 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
 
       // Do special processing for individual item types.
       $value = property_exists($incoming_item, 'value') ? $incoming_item->value : NULL;
+      if (is_object($value) && property_exists($value, 'display_icons')) {
+        $item['config']['display_icons'] = $value->display_icons;
+      }
       if (is_object($value) && property_exists($value, 'cluster_restrict') && property_exists($value, 'cluster_tag')) {
         $item['config']['cluster_restrict'] = [
           'type' => $value->cluster_restrict,
@@ -270,7 +277,7 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
     $item_types = [
       'entity_name' => [],
       // 'project_codes' => [],
-      // 'clusters' => [],
+      'organization_cluster_list' => [],
       // 'plan_entities' => [],
       'project_funding' => [
         'value_preview' => FALSE,
@@ -332,7 +339,11 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
   private function getOrganizations() {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery $query */
     $query = $this->getQueryHandler('project_search');
-    return $query->getOrganizations();
+    $organizations = $query->getOrganizations();
+    uasort($organizations, function ($a, $b) {
+      return strcmp($a->name, $b->name);
+    });
+    return $organizations;
   }
 
 }

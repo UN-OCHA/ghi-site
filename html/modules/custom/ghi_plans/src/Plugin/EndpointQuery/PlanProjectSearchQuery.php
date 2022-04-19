@@ -48,6 +48,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    * {@inheritdoc}
    */
   public function getData(array $placeholders = [], array $query_args = []) {
+    $placeholders = array_merge($placeholders, $this->getPlaceholders());
     $cache_key = $this->getCacheKeyFromAssociativeArray($placeholders);
     if ($cached_data = $this->cache($cache_key)) {
       return $cached_data;
@@ -72,6 +73,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
         'name' => $project->name,
         'version_code' => $project->versionCode,
         'cluster_ids' => $cluster_ids,
+        'clusters' => $project->governingEntities ?? [],
         'organizations' => $this->processProjectOrganizations($project),
         'published' => $project->currentPublishedVersionId,
         'requirements' => $project->currentRequestedFunds,
@@ -251,6 +253,43 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
     }
 
     return $projects;
+  }
+
+  /**
+   * Get the clusters grouped by organizations.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_node
+   *   The context node.
+   * @param array $projects
+   *   An optonal array of projects from which the clusters will be extracted.
+   *
+   * @return array[]
+   *   An array of arrays. First level key is the organization id, second level
+   *   key the cluster id and the value is the cluster object as retrieved from
+   *   the API.
+   */
+  public function getClustersByOrganization(ContentEntityInterface $context_node = NULL, array $projects = NULL) {
+    if (empty($projects)) {
+      $projects = $this->getProjects($context_node);
+    }
+    $clusters = [];
+    foreach ($projects as $project) {
+      if (empty($project->organizations)) {
+        continue;
+      }
+      foreach ($project->organizations as $organization) {
+        if (empty($clusters[$organization->id])) {
+          $clusters[$organization->id] = [];
+        }
+        foreach ($project->clusters as $cluster) {
+          if (!empty($clusters[$organization->id][$cluster->id])) {
+            continue;
+          }
+          $clusters[$organization->id][$cluster->id] = $cluster;
+        }
+      }
+    }
+    return $clusters;
   }
 
 }
