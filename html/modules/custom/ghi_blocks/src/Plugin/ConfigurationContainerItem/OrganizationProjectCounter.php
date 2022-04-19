@@ -2,21 +2,15 @@
 
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
-use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
-use Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery;
 use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
-use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
  * Provides project based counter items for configuration containers.
@@ -24,16 +18,15 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
  * @todo This is still missing support for cluster filters.
  *
  * @ConfigurationContainerItem(
- *   id = "project_counter",
+ *   id = "organization_project_counter",
  *   label = @Translation("Project counter"),
- *   description = @Translation("This item displays project based counters."),
+ *   description = @Translation("This item displays a project counter per organization."),
  * )
  */
-class ProjectCounter extends ConfigurationContainerItemPluginBase {
+class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemClusterRestrictTrait;
   use ConfigurationItemValuePreviewTrait;
-  use FtsLinkTrait;
 
   /**
    * The plan entities query.
@@ -64,13 +57,6 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
   public $clusterQuery;
 
   /**
-   * The icon query.
-   *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\IconQuery
-   */
-  public $iconQuery;
-
-  /**
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
@@ -80,55 +66,6 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
     $this->projectSearchQuery = $this->endpointQueryManager->createInstance('plan_project_search_query');
     $this->flowSearchQuery = $this->endpointQueryManager->createInstance('flow_search_query');
     $this->clusterQuery = $this->endpointQueryManager->createInstance('cluster_query');
-    $this->iconQuery = $this->endpointQueryManager->createInstance('icon_query');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function buildForm($element, FormStateInterface $form_state) {
-    $element = parent::buildForm($element, $form_state);
-
-    $context = $this->getContext();
-    $plugin_configuration = $this->getPluginConfiguration();
-
-    $data_type_options = [
-      'projects_count' => $this->t('Projects count'),
-      'organizations_count' => $this->t('Partners count'),
-    ];
-    $data_type = $this->getSubmittedOptionsValue($element, $form_state, 'data_type', $data_type_options);
-    $cluster_restrict = $this->getSubmittedValue($element, $form_state, 'cluster_restrict', [
-      'type' => NULL,
-      'tag' => NULL,
-    ]);
-
-    $element['data_type'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Data type'),
-      '#options' => $data_type_options,
-      '#default_value' => $data_type,
-      '#weight' => 0,
-      '#ajax' => [
-        'event' => 'change',
-        'callback' => [static::class, 'updateAjax'],
-        'wrapper' => $this->wrapperId,
-      ],
-    ];
-    $element['label']['#weight'] = 1;
-    $element['label']['#placeholder'] = $this->getDefaultLabel($data_type);
-
-    $cluster_restrict_disabled = array_key_exists('cluster_restrict', $plugin_configuration) && $plugin_configuration['cluster_restrict'] === FALSE;
-    if (in_array($context['context_node']->bundle(), ['plan', 'plan_entity']) && !$cluster_restrict_disabled) {
-      $element['cluster_restrict'] = $this->buildClusterRestrictFormElement($cluster_restrict);
-    }
-
-    // Add a preview.
-    if ($this->shouldDisplayPreview()) {
-      $preview_value = $this->getValue($data_type, $cluster_restrict);
-      $element['value_preview'] = $this->buildValuePreviewFormElement($preview_value);
-    }
-
-    return $element;
   }
 
   /**
@@ -145,25 +82,32 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    * @return string|null
    *   A default label or NULL.
    */
-  public function getDefaultLabel($data_type = NULL) {
-    $data_type = $data_type ?: $this->get('data_type');
-    $default_map = [
-      'projects_count' => $this->t('Projects'),
-      'organizations_count' => $this->t('Partners'),
-    ];
-    return $data_type ? $default_map[$data_type] : NULL;
+  public function getDefaultLabel() {
+    return $this->t('Projects');
+  }
+
+  /**
+   * Get the projects for the current context.
+   *
+   * @return array
+   *   An array of project objects.
+   */
+  private function getProjects() {
+    $project_query = $this->initializeQuery();
+    if (!$project_query) {
+      return NULL;
+    }
+    $context_node = $this->getContextValue('context_node');
+    $organization = $this->getContextValue('organization');
+
+    return $project_query->getOrganizationProjects($organization, $context_node);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getValue($data_type = NULL, $cluster_restrict = NULL) {
-    $project_query = $this->initializeQuery();
-    if (!$project_query) {
-      return NULL;
-    }
-    $data_type = $data_type ?? $this->get('data_type');
-    return $this->getValueForDataType($data_type, $project_query);
+  public function getValue($cluster_restrict = NULL) {
+    return count($this->getProjects());
   }
 
   /**
@@ -182,37 +126,6 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function getClasses() {
-    $classes = parent::getClasses();
-    $classes[] = Html::getClass($this->getPluginId() . '--' . $this->get('data_type'));
-    return $classes;
-  }
-
-  /**
-   * Get the value for the given data type.
-   *
-   * @param string $data_type
-   *   The data type.
-   * @param \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery $project_query
-   *   A project query instance, with cluster filters applied if appropriate.
-   *
-   * @return int
-   *   The number of project related items of the given type.
-   */
-  private function getValueForDataType($data_type, PlanProjectSearchQuery $project_query) {
-    $context_node = $this->getContextValue('context_node');
-    switch ($data_type) {
-      case 'projects_count':
-        return $project_query->getProjectCount($context_node);
-
-      case 'organizations_count':
-        return $project_query->getOrganizationCount($context_node);
-    }
-  }
-
-  /**
    * Get a popover for the current value.
    *
    * Those are either projects or organizations.
@@ -221,43 +134,12 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    *   An render array for the popover.
    */
   private function getPopover() {
-    $project_query = $this->initializeQuery();
-    $data_type = $data_type ?? $this->get('data_type');
-    $context_node = $this->getContextValue('context_node');
-
-    $fts_link = NULL;
-    $link_title = $this->t('For more details, view on <img src="@logo_url" />', [
-      '@logo_url' => ThemeHelper::getUriToFtsIcon(),
-    ]);
-    $needs_fts_link = $context_node->bundle() == 'governing_entity';
-
-    $popover_content = NULL;
-    switch ($data_type) {
-      case 'projects_count':
-        $objects = $project_query->getProjects($context_node);
-        $popover_content = $this->getProjectPopoverContent($objects);
-        $fts_link = $needs_fts_link ? self::buildFtsLink($link_title, $this->getContextValue('plan_object'), 'projects', $context_node) : NULL;
-        break;
-
-      case 'organizations_count':
-        $objects = $project_query->getOrganizations($context_node);
-        $popover_content = $this->getOrganizationPopoverContent($objects);
-        $fts_link = $needs_fts_link ? self::buildFtsLink($link_title, $this->getContextValue('plan_object'), 'recipients', $context_node) : NULL;
-        break;
-    }
-
-    $entity = $this->getContextValue('entity');
-    // Get the icon if there is any.
-    $icon = NULL;
-    if ($entity && !empty($entity->icon)) {
-      $icon = $this->iconQuery->getIconEmbedCode($entity->icon);
-    }
-
+    $organization = $this->getContextValue('organization');
+    $popover_content = $this->getProjectPopoverContent($this->getProjects());
     return [
       '#theme' => 'hpc_popover',
-      '#title' => Markup::create($icon . '<span class="name">' . $this->getLabel() . '</span>'),
+      '#title' => Markup::create('<span class="name">' . $organization->name . '</span>'),
       '#content' => [
-        $fts_link,
         $popover_content,
       ],
       '#class' => 'project-data project-data-popover',
@@ -279,8 +161,6 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
     $header = [
       $this->t('Project code'),
       $this->t('Project name'),
-      $this->t('Organizations'),
-      $this->t('Project Target'),
       $this->t('Requirements'),
     ];
 
@@ -295,19 +175,6 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
         ],
       ];
       $row[] = $project->name;
-      $row[] = [
-        'data' => [
-          '#theme' => 'item_list',
-          '#items' => $this->getOrganizationLinks($project->organizations),
-        ],
-      ];
-      $row[] = [
-        'data' => [
-          '#theme' => 'hpc_amount',
-          '#amount' => $project->target,
-          '#scale' => 'full',
-        ],
-      ];
       $row[] = [
         'data' => [
           '#theme' => 'hpc_currency',
@@ -325,40 +192,6 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
   }
 
   /**
-   * Get the popover content for oragnization items.
-   *
-   * @param array $organizations
-   *   The organizations to include in the table.
-   *
-   * @return array
-   *   A table render array.
-   */
-  private function getOrganizationPopoverContent(array $organizations) {
-    $links = $this->getOrganizationLinks($organizations);
-    $popover_content = [
-      '#theme' => 'item_list',
-      '#items' => $links,
-      '#list_type' => 'ol',
-    ];
-    return $popover_content;
-  }
-
-  /**
-   * Get organization links when available.
-   *
-   * @param array $objects
-   *   The organization objects.
-   *
-   * @return array
-   *   An array of organization links, or their names if no url is set.
-   */
-  private function getOrganizationLinks(array $objects) {
-    return array_values(array_map(function ($object) {
-      return $object->url ? Link::fromTextAndUrl($object->name, Url::fromUri($object->url)) : $object->name;
-    }, $objects));
-  }
-
-  /**
    * Initialize the project query.
    *
    * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery
@@ -366,19 +199,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    */
   private function initializeQuery() {
     $project_query = $this->projectSearchQuery;
-    $plan_object = $this->getContextValue('plan_object');
-    if (!$plan_object) {
-      return NULL;
-    }
-    $project_query->setPlaceholder('plan_id', $plan_object->get('field_original_id')->value);
-
-    $context_node = $this->getContextValue('context_node');
-    if (!$context_node) {
-      return NULL;
-    }
-
     $cluster_restrict = $cluster_restrict ?? $this->get('cluster_restrict');
-
     if (!empty($cluster_restrict) && $cluster_ids = $this->getClusterIdsForConfig($cluster_restrict)) {
       $project_query->setFilterByClusterIds($cluster_ids);
     }

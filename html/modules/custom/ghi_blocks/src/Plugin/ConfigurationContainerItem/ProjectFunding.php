@@ -152,9 +152,6 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
   public function getClasses() {
     $classes = parent::getClasses();
     $classes[] = Html::getClass($this->getPluginId() . '--' . $this->get('data_type'));
-    if (empty($this->getValue())) {
-      $classes[] = 'empty';
-    }
     return $classes;
   }
 

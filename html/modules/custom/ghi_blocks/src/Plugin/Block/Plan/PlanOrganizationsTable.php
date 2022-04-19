@@ -43,7 +43,9 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
       'organization_name' => [
         'target' => 'entity_name',
       ],
-      // 'project_codes' => [],
+      'project_codes' => [
+        'target' => 'organization_project_counter',
+      ],
       'clusters' => [
         'target' => 'organization_cluster_list',
         'config' => ['display_icons' => FALSE],
@@ -276,7 +278,7 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
   public function getAllowedItemTypes() {
     $item_types = [
       'entity_name' => [],
-      // 'project_codes' => [],
+      'organization_project_counter' => [],
       'organization_cluster_list' => [],
       // 'plan_entities' => [],
       'project_funding' => [

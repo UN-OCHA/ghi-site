@@ -14,7 +14,7 @@ use Drupal\hpc_api\Query\EndpointQueryManager;
  *
  * @ConfigurationContainerItem(
  *   id = "organization_cluster_list",
- *   label = @Translation("Organization clusters"),
+ *   label = @Translation("Clusters"),
  *   description = @Translation("This item displays a list of clusters per organization."),
  * )
  */
