@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\hpc_api\Unit;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Prophecy\Argument;
@@ -105,8 +106,9 @@ class EndpointQueryTest extends UnitTestCase {
     \Drupal::setContainer($container);
 
     $current_user = $this->prophesize(AccountProxyInterface::class)->reveal();
+    $time = $this->prophesize(TimeInterface::class)->reveal();
 
-    $this->query = new OverrideEndpointQuery($config_service, $logger, $cache, $kill_switch, $http_client, $current_user);
+    $this->query = new OverrideEndpointQuery($config_service, $logger, $cache, $kill_switch, $http_client, $current_user, $time);
   }
 
   /**

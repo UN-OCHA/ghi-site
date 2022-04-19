@@ -175,9 +175,13 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    * {@inheritdoc}
    */
   public function getClasses() {
-    return [
+    $classes = [
       Html::getClass($this->getPluginId()),
     ];
+    if (empty($this->getValue())) {
+      $classes[] = 'empty';
+    }
+    return $classes;
   }
 
   /**

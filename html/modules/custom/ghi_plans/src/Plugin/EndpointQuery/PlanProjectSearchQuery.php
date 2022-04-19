@@ -11,7 +11,7 @@ use Drupal\hpc_common\Helpers\CommonHelper;
  *
  * @EndpointQuery(
  *   id = "plan_project_search_query",
- *   label = @Translation("Plan entities query"),
+ *   label = @Translation("Plan project search query"),
  *   endpoint = {
  *     "public" = "public/project/search",
  *     "version" = "v2",
@@ -48,8 +48,13 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    * {@inheritdoc}
    */
   public function getData(array $placeholders = [], array $query_args = []) {
-    $data = parent::getData($placeholders, $query_args);
+    $placeholders = array_merge($placeholders, $this->getPlaceholders());
+    $cache_key = $this->getCacheKeyFromAssociativeArray($placeholders);
+    if ($cached_data = $this->cache($cache_key)) {
+      return $cached_data;
+    }
 
+    $data = parent::getData($placeholders, $query_args);
     if (empty($data) || !is_object($data) || !property_exists($data, 'results')) {
       return [];
     }
@@ -68,6 +73,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
         'name' => $project->name,
         'version_code' => $project->versionCode,
         'cluster_ids' => $cluster_ids,
+        'clusters' => $project->governingEntities ?? [],
         'organizations' => $this->processProjectOrganizations($project),
         'published' => $project->currentPublishedVersionId,
         'requirements' => $project->currentRequestedFunds,
@@ -143,6 +149,35 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
   }
 
   /**
+   * Get the projects for an organization.
+   *
+   * @param object $organization
+   *   The organization for which to look up the projects.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_node
+   *   The context node.
+   *
+   * @return object[]
+   *   An array of project objects for the given organization.
+   */
+  public function getOrganizationProjects($organization, ContentEntityInterface $context_node = NULL) {
+    $projects = $this->getProjects($context_node);
+    $organization_projects = [];
+    foreach ($projects as $project) {
+      if (empty($project->organizations)) {
+        continue;
+      }
+      $organization_ids = array_map(function ($_organization) {
+        return $_organization->id;
+      }, $project->organizations);
+
+      if (in_array($organization->id, $organization_ids)) {
+        $organization_projects[] = $project;
+      }
+    }
+    return $organization_projects;
+  }
+
+  /**
    * Get the organizations in the context of the given node.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $context_node
@@ -152,7 +187,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    *   extracted.
    *
    * @return array
-   *   An array of organizations.
+   *   An array of organization objects as returned from the API.
    */
   public function getOrganizations(ContentEntityInterface $context_node = NULL, array $projects = NULL) {
     if (empty($projects)) {
@@ -218,6 +253,43 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
     }
 
     return $projects;
+  }
+
+  /**
+   * Get the clusters grouped by organizations.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_node
+   *   The context node.
+   * @param array $projects
+   *   An optonal array of projects from which the clusters will be extracted.
+   *
+   * @return array[]
+   *   An array of arrays. First level key is the organization id, second level
+   *   key the cluster id and the value is the cluster object as retrieved from
+   *   the API.
+   */
+  public function getClustersByOrganization(ContentEntityInterface $context_node = NULL, array $projects = NULL) {
+    if (empty($projects)) {
+      $projects = $this->getProjects($context_node);
+    }
+    $clusters = [];
+    foreach ($projects as $project) {
+      if (empty($project->organizations)) {
+        continue;
+      }
+      foreach ($project->organizations as $organization) {
+        if (empty($clusters[$organization->id])) {
+          $clusters[$organization->id] = [];
+        }
+        foreach ($project->clusters as $cluster) {
+          if (!empty($clusters[$organization->id][$cluster->id])) {
+            continue;
+          }
+          $clusters[$organization->id][$cluster->id] = $cluster;
+        }
+      }
+    }
+    return $clusters;
   }
 
 }

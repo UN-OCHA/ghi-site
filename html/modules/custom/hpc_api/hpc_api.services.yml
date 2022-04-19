@@ -4,7 +4,7 @@ services:
     arguments: ['@config.factory']
   hpc_api.endpoint_query:
     class: Drupal\hpc_api\Query\EndpointQuery
-    arguments: ['@hpc_api.config', '@logger.factory', '@cache.data', '@page_cache_kill_switch', '@http_client', '@current_user']
+    arguments: ['@hpc_api.config', '@logger.factory', '@cache.data', '@page_cache_kill_switch', '@http_client', '@current_user', '@datetime.time']
   plugin.manager.endpoint_query_manager:
     class: Drupal\hpc_api\Query\EndpointQueryManager
     parent: default_plugin_manager

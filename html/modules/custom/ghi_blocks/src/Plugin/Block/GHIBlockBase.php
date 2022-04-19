@@ -193,7 +193,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * @param string $source_key
    *   The source key that should be used to retrieve data for a block.
    *
-   * @return Drupal\hpc_api\EndpointQuery
+   * @return \Drupal\hpc_api\Query\EndpointQueryPluginInterface
    *   The query handler class.
    */
   protected function getQueryHandler($source_key = 'data') {
@@ -205,19 +205,12 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     $sources = $configuration['data_sources'];
     $definition = !empty($sources[$source_key]) ? $sources[$source_key] : NULL;
-    if (!$definition) {
+    if (!$definition || !is_scalar($definition) || !$this->endpointQueryManager->hasDefinition($definition)) {
       return NULL;
     }
 
-    if (!empty($definition['service'])) {
-      // Get an instance of the service.
-      // @todo Find a different approach to discover endpoint services.
-      /** @var \Drupal\hpc_api\Query\EndpointQuery $query_handler */
-      $query_handler = \Drupal::service($definition['service']);
-    }
-    elseif (is_scalar($definition) && $this->endpointQueryManager->hasDefinition($definition)) {
-      $query_handler = $this->endpointQueryManager->createInstance($definition);
-    }
+    /** @var \Drupal\hpc_api\Query\EndpointQueryPluginInterface $query_handler */
+    $query_handler = $this->endpointQueryManager->createInstance($definition);
 
     // Get the available context values and use them as placeholder values for
     // the query.

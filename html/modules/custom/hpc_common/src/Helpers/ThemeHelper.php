@@ -60,6 +60,7 @@ class ThemeHelper {
     switch ($theme_function) {
       case 'hpc_amount':
         return [
+          '#theme' => $theme_function,
           '#amount' => $value,
           '#scale' => !empty($options['scale']) ? $options['scale'] : 'auto',
           '#formatting_decimals' => !empty($options['formatting_decimals']) ? $options['formatting_decimals'] : self::DECIMALS_POINT,
@@ -67,6 +68,7 @@ class ThemeHelper {
 
       case 'hpc_currency':
         return [
+          '#theme' => $theme_function,
           '#value' => $value,
           '#scale' => !empty($options['scale']) ? $options['scale'] : 'auto',
           '#formatting_decimals' => !empty($options['formatting_decimals']) ? $options['formatting_decimals'] : self::DECIMALS_POINT,
@@ -74,12 +76,14 @@ class ThemeHelper {
 
       case 'hpc_percent':
         return [
+          '#theme' => $theme_function,
           '#percent' => $value,
           '#formatting_decimals' => !empty($options['formatting_decimals']) ? $options['formatting_decimals'] : self::DECIMALS_POINT,
         ];
 
       case 'hpc_progress_bar':
         return [
+          '#theme' => $theme_function,
           '#percent' => $value,
           '#hide_value' => !empty($options['hide_value']) ? $options['hide_value'] : FALSE,
         ];

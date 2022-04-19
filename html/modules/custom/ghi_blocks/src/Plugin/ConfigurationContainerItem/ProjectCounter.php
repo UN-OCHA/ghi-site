@@ -19,17 +19,17 @@ use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
- * Provides an entity counter item for configuration containers.
+ * Provides project based counter items for configuration containers.
  *
  * @todo This is still missing support for cluster filters.
  *
  * @ConfigurationContainerItem(
- *   id = "project_data",
- *   label = @Translation("Project data"),
- *   description = @Translation("This item displays project related information. For the moment the only supported options are number of projects and number of partners."),
+ *   id = "project_counter",
+ *   label = @Translation("Project counter"),
+ *   description = @Translation("This item displays project based counters."),
  * )
  */
-class ProjectData extends ConfigurationContainerItemPluginBase {
+class ProjectCounter extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemClusterRestrictTrait;
   use ConfigurationItemValuePreviewTrait;
@@ -158,13 +158,11 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getValue($data_type = NULL, $cluster_restrict = NULL) {
-    $data_type = $data_type ?? $this->get('data_type');
-    $cluster_restrict = $cluster_restrict ?? $this->get('cluster_restrict');
-
-    $project_query = $this->initializeQuery($data_type, $cluster_restrict);
+    $project_query = $this->initializeQuery();
     if (!$project_query) {
       return NULL;
     }
+    $data_type = $data_type ?? $this->get('data_type');
     return $this->getValueForDataType($data_type, $project_query);
   }
 
@@ -172,11 +170,6 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getRenderArray() {
-    $project_query = $this->initializeQuery();
-    if (!$project_query) {
-      return NULL;
-    }
-
     $popover = $this->getPopover();
     if (!$popover) {
       return parent::getRenderArray();
@@ -194,9 +187,6 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
   public function getClasses() {
     $classes = parent::getClasses();
     $classes[] = Html::getClass($this->getPluginId() . '--' . $this->get('data_type'));
-    if (empty($this->getValue())) {
-      $classes[] = 'empty';
-    }
     return $classes;
   }
 
@@ -374,7 +364,7 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
    * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery
    *   A project query instance, with cluster filters applied if appropriate.
    */
-  private function initializeQuery($data_type = NULL, $cluster_restrict = NULL) {
+  private function initializeQuery() {
     $project_query = $this->projectSearchQuery;
     $plan_object = $this->getContextValue('plan_object');
     if (!$plan_object) {
@@ -387,7 +377,6 @@ class ProjectData extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
 
-    $data_type = $data_type ?? $this->get('data_type');
     $cluster_restrict = $cluster_restrict ?? $this->get('cluster_restrict');
 
     if (!empty($cluster_restrict) && $cluster_ids = $this->getClusterIdsForConfig($cluster_restrict)) {
