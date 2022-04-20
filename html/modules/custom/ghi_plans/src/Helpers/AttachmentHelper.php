@@ -2,6 +2,8 @@
 
 namespace Drupal\ghi_plans\Helpers;
 
+use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_common\Helpers\ArrayHelper;
 use Symfony\Component\Config\Definition\Exception\InvalidTypeException;
 
 /**
@@ -104,8 +106,10 @@ class AttachmentHelper {
   private static function processDataAttachment($attachment) {
     $metrics = $attachment->attachmentVersion->value->metrics;
     $unit = property_exists($metrics, 'unit') ? $metrics->unit : NULL;
-    $measure_fields = $metrics->measureFields ?? NULL;
     $prototype = self::getPrototypeData($attachment);
+    $period = self::fetchReportingPeriodForAttachment($attachment);
+    $metrics = self::getMetrics($attachment);
+    $measurement_fields = $metrics->measureFields ?? [];
 
     $processed = (object) [
       'id' => $attachment->id,
@@ -117,20 +121,18 @@ class AttachmentHelper {
       ],
       'composed_reference' => $attachment->composedReference,
       'description' => $attachment->attachmentVersion->value->description ?? NULL,
-      'values' => array_pad(array_merge(
-        array_map(function ($item) {
-          return $item->value;
-        }, $metrics->values->totals),
-        $measure_fields ? array_map(function ($item) {
-          return $item->value ?? NULL;
-        }, $measure_fields) : []
-      ), count($prototype->fields), NULL),
+      'values' => self::extractValues($attachment),
       'prototype' => $prototype,
       'unit' => $unit ? (object) [
         'label' => $unit->label ?? NULL,
         'type' => $unit->type ?? NULL,
         'group' => property_exists($unit, 'isGender') && $unit->isGender == 1 ? 'people' : 'amount',
       ] : NULL,
+      'monitoring_period' => $period ?? NULL,
+      'fields' => $prototype->fields,
+      'measurement_fields' => $measurement_fields ? array_map(function ($field) {
+        return $field->name->en;
+      }, $measurement_fields) : [],
     ];
 
     // Cleanup the values.
@@ -139,6 +141,81 @@ class AttachmentHelper {
     }, $processed->values);
 
     return $processed;
+  }
+
+  /**
+   * Extract the metric values from an attachment.
+   *
+   * @param object $attachment
+   *   The attachment from which to extract values.
+   *
+   * @return array
+   *   Array with values for each metric and measurement data point, according
+   *   to the prototype.
+   */
+  private static function extractValues($attachment) {
+    $prototype = self::getPrototypeData($attachment);
+    $metrics = self::getMetrics($attachment);
+    // Then get the measure fields.
+    $measure_fields = $metrics->measureFields ?? NULL;
+    // And merge metrics and measurements together.
+    return array_pad(array_merge(
+      array_map(function ($item) {
+        return $item->value;
+      }, $metrics->values->totals),
+      $measure_fields ? array_map(function ($item) {
+        return $item->value ?? NULL;
+      }, $measure_fields) : []
+    ), count($prototype->fields), NULL);
+  }
+
+  /**
+   * Get the metrics from the given attachment.
+   *
+   * This fetches either the metrics from the attachment version, or from a
+   * measurement if a published one is already present.
+   *
+   * @param object $attachment
+   *   The attachment from which to extract metrics.
+   *
+   * @return object
+   *   A metric object.
+   */
+  private static function getMetrics($attachment) {
+    // Get the metrics from the attachment version by default.
+    $metrics = $attachment->attachmentVersion->value->metrics;
+    // If there are measurements, look at the most recent one and get the
+    // metrics from there.
+    $measurement = self::getCurrentMeasurement($attachment);
+    if ($measurement) {
+      $metrics = $measurement->measurementVersion->value->metrics;
+    }
+    return $metrics;
+  }
+
+  /**
+   * Get the current measurement.
+   *
+   * @param object $attachment
+   *   The attachment from which to get the current measurement.
+   *
+   * @return object|null
+   *   The measurement object or NULL.
+   */
+  private static function getCurrentMeasurement($attachment) {
+    if (!property_exists($attachment, 'measurements')) {
+      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\MeasurementQuery $measurements_query */
+      $measurements_query = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('measurement_query');
+      $measurements = $measurements_query->getUnprocessedMeasurements($attachment->id);
+    }
+    else {
+      $measurements = $attachment->measurements ?? [];
+    }
+    if (empty($measurements)) {
+      return NULL;
+    }
+    ArrayHelper::sortObjectsByNumericProperty($measurements, 'planReportingPeriodId', EndpointQuery::SORT_DESC);
+    return reset($measurements);
   }
 
   /**
@@ -200,6 +277,29 @@ class AttachmentHelper {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
     $query_handler = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('attachment_prototype_query');
     return $query_handler->getPrototypeByPlanAndId($attachment->planId, $attachment->attachmentPrototypeId);
+  }
+
+  /**
+   * Fetch the reporting period for the given attachment.
+   *
+   * @param object $attachment
+   *   The attachment object from the API.
+   *
+   * @return object|null
+   *   A reporting period object or NULL.
+   */
+  private static function fetchReportingPeriodForAttachment($attachment) {
+    if (!property_exists($attachment, 'planId') || !$attachment->planId) {
+      return NULL;
+    }
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanReportingPeriodsQuery $planReportingPeriodsQuery */
+    $planReportingPeriodsQuery = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('plan_reporting_periods_query');
+    $planReportingPeriodsQuery->setPlaceholder('plan_id', $attachment->planId);
+    $measurement = self::getCurrentMeasurement($attachment);
+    if (!$measurement) {
+      return NULL;
+    }
+    return $planReportingPeriodsQuery->getReportingPeriod($measurement->planReportingPeriodId);
   }
 
 }

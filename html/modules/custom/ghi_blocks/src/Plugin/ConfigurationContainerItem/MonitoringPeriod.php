@@ -5,6 +5,7 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\Helpers\DataPointHelper;
 use Drupal\hpc_api\Query\EndpointQueryManager;
 
 /**
@@ -58,37 +59,16 @@ class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getValue() {
-    $period = $this->getMonitoringPeriod();
-    return $period->periodNumber;
+    $period = $this->getAttachmentObject()->monitoring_period;
+    return $period ? $period->periodNumber : NULL;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getRenderArray() {
-    $period = $this->getMonitoringPeriod();
-    $display_type = $this->get('display_type');
-    if ($display_type == 'icon') {
-      return [
-        '#theme' => 'hpc_tooltip',
-        '#tooltip' => [
-          '#theme' => 'hpc_reporting_period',
-          '#reporting_period' => $period,
-        ],
-        '#class' => 'api-url',
-        '#tag_content' => [
-          '#theme' => 'hpc_icon',
-          '#icon' => 'calendar_today',
-          '#tag' => 'span',
-        ],
-      ];
-    }
-    else {
-      return [
-        '#theme' => 'hpc_reporting_period',
-        '#reporting_period' => $period,
-      ];
-    }
+    $attachment = $this->getAttachmentObject();
+    return DataPointHelper::formatMonitoringPeriod($attachment, $this->get('display_type'));
   }
 
   /**
@@ -101,20 +81,14 @@ class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
   }
 
   /**
-   * Get the monitoring period for this item.
+   * Get the current attachment object.
    *
-   * @todo Correct this. Currently it just takes one period from the periods
-   * imported on plan level. Instead we need to check for a measurement or an
-   * attachment in the current context and extract it from there.
+   * @return object
+   *   The attachment object.
    */
-  private function getMonitoringPeriod() {
-    $plan_node = $this->getContextValue('plan_object');
-    $reporting_periods = unserialize($plan_node->field_plan_reporting_periods->value);
-    if (empty($reporting_periods)) {
-      return NULL;
-    }
-    $reporting_period = end($reporting_periods);
-    return $reporting_period;
+  private function getAttachmentObject() {
+    $attachment = $this->getContextValue('attachment');
+    return $attachment;
   }
 
 }
