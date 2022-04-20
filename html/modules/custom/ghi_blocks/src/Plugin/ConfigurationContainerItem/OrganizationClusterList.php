@@ -131,19 +131,18 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
     $attributes->addClass($display_icons ? 'display-icons' : 'display-text');
 
     if (!$display_icons) {
-      return [
-        '#markup' => Markup::create(implode(' | ', $this->getClusterNames())),
-        '#attributes' => $attributes,
+      $content = [
+        [
+          '#markup' => Markup::create(implode(' | ', $this->getClusterNames())),
+        ],
       ];
     }
-
-    $content = [];
     if ($display_icons) {
-      $content = array_merge($content, array_map(function ($cluster) {
+      $content = array_map(function ($cluster) {
         return [
           '#markup' => Markup::create($this->iconQuery->getIconEmbedCode($cluster->value->icon)),
         ];
-      }, $clusters));
+      }, $clusters);
     }
     return [
       '#type' => 'container',
