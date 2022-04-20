@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 
@@ -10,7 +11,7 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  *
  * @EndpointQuery(
  *   id = "attachment_query",
- *   label = @Translation("Plan entities query"),
+ *   label = @Translation("Attachment query"),
  *   endpoint = {
  *     "public" = "public/attachment/{attachment_id}",
  *     "authenticated" = "attachment/{attachment_id}",
@@ -22,7 +23,7 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  *   }
  * )
  */
-class AttachmentQuery extends EndpointQueryBase {
+class AttachmentQuery extends EndpointQueryBase implements ContainerFactoryPluginInterface {
 
   /**
    * Get an attachment by id.

@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\Helpers;
 
+use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\Config\Definition\Exception\InvalidTypeException;
 
 /**
@@ -51,12 +52,48 @@ class DataPointHelper {
    * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
    */
   public static function formatValue($attachment, array $data_point_conf) {
+    $build = [];
     if (empty($data_point_conf['widget']) || $data_point_conf['widget'] == 'none') {
-      return self::formatAsText($attachment, $data_point_conf);
+      $build = self::formatAsText($attachment, $data_point_conf);
     }
     else {
-      return self::formatAsWidget($attachment, $data_point_conf);
+      $build = self::formatAsWidget($attachment, $data_point_conf);
     }
+    if (self::isMeasurement($attachment, $data_point_conf) && $monitoring_period = self::formatMonitoringPeriod($attachment, 'icon')) {
+      $build = [
+        '#type' => 'container',
+        0 => $build,
+        1 => $monitoring_period,
+      ];
+    }
+    return $build;
+  }
+
+  /**
+   * Check if the given data point configuration involves measurement fields.
+   *
+   * @param object $attachment
+   *   The attachment object.
+   * @param array $data_point_conf
+   *   The data point configuration.
+   *
+   * @return bool
+   *   TRUE if any of the involved data points is a measurement, FALSE
+   *   otherwise.
+   */
+  private static function isMeasurement($attachment, array $data_point_conf) {
+    switch ($data_point_conf['processing']) {
+      case 'single':
+        $field = $attachment->fields[$data_point_conf['data_points'][0]];
+        return in_array($field, $attachment->measurement_fields);
+
+      case 'calculated':
+        $field_1 = $attachment->fields[$data_point_conf['data_points'][0]];
+        $field_2 = $attachment->fields[$data_point_conf['data_points'][1]];
+        return in_array($field_1, $attachment->measurement_fields) || in_array($field_2, $attachment->measurement_fields);
+
+    }
+    return FALSE;
   }
 
   /**
@@ -176,6 +213,48 @@ class DataPointHelper {
     }
 
     return $widget;
+  }
+
+  /**
+   * Get a formatted monitoring period for the attachment object.
+   *
+   * @param object $attachment
+   *   The attachment object.
+   * @param string $display_type
+   *   The display type, either "icon" or "text".
+   *
+   * @return array|null
+   *   A build array or NULL.
+   */
+  public static function formatMonitoringPeriod($attachment, $display_type) {
+    if (!$attachment->monitoring_period) {
+      return NULL;
+    }
+    switch ($display_type) {
+      case 'icon':
+        $build = [
+          '#theme' => 'hpc_tooltip',
+          '#tooltip' => ThemeHelper::render([
+            '#theme' => 'hpc_reporting_period',
+            '#reporting_period' => $attachment->monitoring_period,
+          ], FALSE),
+          '#class' => 'monitoring period',
+          '#tag_content' => [
+            '#theme' => 'hpc_icon',
+            '#icon' => 'calendar_today',
+            '#tag' => 'span',
+          ],
+        ];
+        break;
+
+      case 'text':
+        $build = [
+          '#theme' => 'hpc_reporting_period',
+          '#reporting_period' => $attachment->monitoring_period,
+        ];
+        break;
+    }
+    return $build;
   }
 
   /**

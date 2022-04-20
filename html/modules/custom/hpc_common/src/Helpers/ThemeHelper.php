@@ -34,12 +34,27 @@ class ThemeHelper {
   }
 
   /**
-   * Simple wrapper around the render layer.
+   * Wrapper around the render layer.
+   *
+   * This also disables twig debug if it's enabled, so that the final render
+   * string doesn't contain any additional debugging information.
    */
   public static function render($build, $xss_filter = TRUE) {
+    // Disable twig debug if it's enabled.
+    /** @var \Twig\Environment $twig_service */
+    $twig_service = \Drupal::service('twig');
+    $twig_debug = $twig_service->isDebug();
+    if ($twig_debug) {
+      $twig_service->disableDebug();
+    }
+    // Render the build array using the renderer service.
     $renderer = \Drupal::service('renderer');
     $has_render_context = $renderer->hasRenderContext();
     $render_value = $has_render_context ? $renderer->render($build) : $renderer->renderPlain($build);
+    // Re-enable twig debug if it's been enabled before.
+    if ($twig_debug) {
+      $twig_service->enableDebug();
+    }
     return $xss_filter ? trim(Xss::filter($render_value)) : trim($render_value);
   }
 
