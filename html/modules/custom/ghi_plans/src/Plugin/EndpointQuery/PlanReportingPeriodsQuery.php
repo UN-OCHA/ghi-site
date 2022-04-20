@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_api\Query\EndpointQueryBase;
+use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
@@ -20,6 +21,8 @@ use Drupal\hpc_common\Helpers\ArrayHelper;
  */
 class PlanReportingPeriodsQuery extends EndpointQueryBase {
 
+  use SimpleCacheTrait;
+
   /**
    * Get the reporting periods for a plan.
    *
@@ -28,6 +31,12 @@ class PlanReportingPeriodsQuery extends EndpointQueryBase {
    *   number.
    */
   public function getReportingPeriods() {
+    $cache_key = $this->getCacheKeyFromAssociativeArray($this->getPlaceholders());
+    $periods = $this->cache($cache_key);
+    if ($periods) {
+      return $periods;
+    }
+
     $data = $this->getData();
     if (!$data) {
       return [];
@@ -37,6 +46,8 @@ class PlanReportingPeriodsQuery extends EndpointQueryBase {
     }, $data);
     $periods = array_combine($period_ids, $data);
     ArrayHelper::sortObjectsByNumericProperty($data, 'periodNumber', EndpointQuery::SORT_ASC);
+
+    $this->cache($cache_key, $periods);
     return $periods;
   }
 
