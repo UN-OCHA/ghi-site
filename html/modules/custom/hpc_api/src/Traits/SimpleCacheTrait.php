@@ -18,7 +18,10 @@ trait SimpleCacheTrait {
    */
   public function getCacheKeyFromAssociativeArray(array $array) {
     ksort($array);
-    array_unshift($array, ['class' => get_called_class()]);
+    array_unshift($array, [
+      'class' => get_called_class(),
+      'method' => debug_backtrace(!DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'],
+    ]);
     return http_build_query($array);
   }
 

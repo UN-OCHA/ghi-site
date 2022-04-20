@@ -9,6 +9,7 @@ use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\hpc_api\Query\EndpointQueryBase;
+use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
  * Provides a query plugin for plan entities.
@@ -32,6 +33,7 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
 class PlanEntitiesQuery extends EndpointQueryBase {
 
   use AttachmentFilterTrait;
+  use SimpleCacheTrait;
 
   /**
    * Get all attachments.
@@ -52,6 +54,11 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    *   An array of attachment objects for the given context.
    */
   private function getAttachments(ContentEntityInterface $context_object = NULL, array $filter = []) {
+    $cache_key = $this->getCacheKeyFromAssociativeArray(array_filter(['id' => $context_object ? $context_object->id() : NULL] + $filter));
+    $attachments = $this->cache($cache_key);
+    if ($attachments) {
+      return $attachments;
+    }
     $data = $this->getData();
 
     if (empty($data)) {
@@ -111,6 +118,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
     if (!empty($filter)) {
       $attachments = $this->filterAttachments($attachments, $filter);
     }
+    $this->cache($cache_key, $attachments);
     return $attachments;
   }
 
@@ -197,12 +205,21 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    *   An array of plan entity objects for the given context.
    */
   public function getPlanEntities(ContentEntityInterface $context_object, $entity_type = NULL, array $filters = NULL) {
+    $cache_key = $this->getCacheKeyFromAssociativeArray(array_filter([
+      'id' => $context_object ? $context_object->id() : NULL,
+      'entity_type' => $entity_type,
+    ] + ($filters ?? [])));
+
+    $plan_entities = $this->cache($cache_key);
+    if ($plan_entities) {
+      return $plan_entities;
+    }
     $data = $this->getData();
     if (empty($data)) {
       return NULL;
     }
 
-    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($this->getData(), $context_object->bundle() != 'plan' ? $context_object : NULL, $entity_type);
+    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($data, $context_object->bundle() != 'plan' ? $context_object : NULL, $entity_type);
     if (empty($matching_entities)) {
       return NULL;
     }
@@ -227,6 +244,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
     if (is_array($filters) && !empty($filters)) {
       $plan_entities = ArrayHelper::filterArray($plan_entities, $filters);
     }
+    $this->cache($cache_key, $plan_entities);
     return $plan_entities;
   }
 
@@ -259,6 +277,11 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    *   An array of cluster IDs.
    */
   public function getGoverningEntityIdsForPlanEntityId($plan_entity_id) {
+    $cache_key = $this->getCacheKeyFromAssociativeArray(['plan_entity_id' => $plan_entity_id] + $this->getPlaceholders());
+    $cluster_ids = $this->cache($cache_key);
+    if ($cluster_ids) {
+      return $cluster_ids;
+    }
     // Get the plan structure.
     $ple_structure = PlanStructureHelper::getPlanEntityStructure($this->getData());
     $cluster_ids = [];
@@ -281,6 +304,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
         }
       }
     }
+    $this->cache($cache_key, $cluster_ids);
     return $cluster_ids;
   }
 

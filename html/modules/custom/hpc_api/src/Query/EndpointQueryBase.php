@@ -137,7 +137,12 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
         $this->endpointQuery->setAuthHeader('Bearer ' . $this->hidUserData->getAccessToken($this->user));
       }
     }
-    return $this->endpointQuery->getData();
+    // Cache the result in memory.
+    $cache_key = $this->getCacheKeyFromAssociativeArray(['endpoint' => $this->getFullEndpointUrl()]);
+    if (!$this->cache($cache_key)) {
+      $this->cache($cache_key, $this->endpointQuery->getData());
+    }
+    return $this->cache($cache_key);
   }
 
   /**
