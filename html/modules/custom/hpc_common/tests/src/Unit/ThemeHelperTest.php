@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\hpc_common\Unit;
 
+use Twig\Environment;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -27,6 +28,7 @@ class ThemeHelperTest extends UnitTestCase {
 
     // Mock renderer service.
     $renderer = $this->prophesize(RendererInterface::class);
+    $twig = $this->prophesize(Environment::class);
 
     // Mock render.
     $build = [
@@ -36,9 +38,12 @@ class ThemeHelperTest extends UnitTestCase {
     $renderer->hasRenderContext()->willReturn(TRUE);
     $renderer->render($build)->willReturn('<h1>My name is Jon Snow</h1>');
 
+    $twig->isDebug()->willReturn(FALSE);
+
     // Set container.
     $container = new ContainerBuilder();
     $container->set('renderer', $renderer->reveal());
+    $container->set('twig', $twig->reveal());
     \Drupal::setContainer($container);
 
     $this->themeHelper = new ThemeHelper();
