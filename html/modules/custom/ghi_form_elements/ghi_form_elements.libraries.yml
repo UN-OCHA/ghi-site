@@ -10,6 +10,18 @@ states_regex:
   js:
     js/states.regex.js: {}
 
+entity_select:
+  css:
+    component:
+      css/entity_select.css: {}
+
+entity_attachment_select:
+  css:
+    component:
+      css/entity_attachment_select.css: {}
+  dependencies:
+    - ghi_form_elements/entity_select
+
 tag_select.preview:
   css:
     component:

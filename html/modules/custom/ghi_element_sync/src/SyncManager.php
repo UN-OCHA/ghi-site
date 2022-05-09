@@ -156,17 +156,21 @@ class SyncManager implements ContainerInjectionInterface {
         continue;
       }
       $definition = $this->getCorrespondingPluginDefintionForElement($element);
-      $class = $definition['class'];
       $context_mapping = [
         'context_mapping' => [
           'node' => 'layout_builder.entity',
         ],
       ];
-
+      try {
+        $mapped_config = $this->getMappedConfig($element, $node);
+      }
+      catch (IncompleteElementConfigurationException $e) {
+        continue;
+      }
       $existing_component = $this->getExistingSyncedComponent($node, $element);
       if ($existing_component) {
         // Update an existing component.
-        $configuration = $class::mapConfig($element->configuration, $node, $element->type) + $context_mapping + $existing_component->get('configuration');
+        $configuration = $mapped_config + $context_mapping + $existing_component->get('configuration');
         $existing_component->setConfiguration($configuration);
         $messenger->addMessage($this->t('Updated %plugin_title', [
           '%plugin_title' => $definition['admin_label'],
@@ -185,7 +189,7 @@ class SyncManager implements ContainerInjectionInterface {
             'source_uuid' => $element->uuid,
           ],
         ]) + $context_mapping;
-        $config += $class::mapConfig($element->configuration, $node, $element->type);
+        $config += $mapped_config;
 
         $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
         $sections[$delta]->appendComponent($component);
@@ -326,6 +330,9 @@ class SyncManager implements ContainerInjectionInterface {
    */
   public function getCorrespondingPluginDefintionForElement($element) {
     $definitions = $this->blockManager->getDefinitions();
+    if (!property_exists($element, 'type')) {
+      return NULL;
+    }
     if (isset($definitions[$element->type])) {
       return $definitions[$element->type];
     }
@@ -356,29 +363,85 @@ class SyncManager implements ContainerInjectionInterface {
   }
 
   /**
-   * Get the current sync status.
+   * Checks if the given element has a valid source that allows synching.
    *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node object.
    * @param object $element
    *   The element object from the remote.
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   *
+   * @return bool
+   *   Whether the element has a valid source.
+   */
+  public function hasValidSource($element, NodeInterface $node) {
+    if (!$this->isSyncable($element)) {
+      return FALSE;
+    }
+    try {
+      $mapped_config = $this->getMappedConfig($element, $node, TRUE);
+    }
+    catch (IncompleteElementConfigurationException $e) {
+      return FALSE;
+    }
+    return !empty($mapped_config);
+  }
+
+  /**
+   * Get the current sync status.
+   *
+   * @param object $element
+   *   The element object from the remote.
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
    *
    * @return string
    *   A string representing the sync status.
    */
-  public function getSyncStatus(NodeInterface $node, $element) {
+  public function getSyncStatus($element, NodeInterface $node) {
     if (!$this->isSyncable($element)) {
       return '';
     }
-    $definition = $this->getCorrespondingPluginDefintionForElement($element);
-    $class = $definition['class'];
     $existing_component = $this->getExistingSyncedComponent($node, $element);
     if (!$existing_component) {
       return $this->t('Not synced');
     }
-    $remote_hash = md5(serialize($class::mapConfig($element->configuration, $node, $element->type, TRUE)['hpc']));
+    try {
+      $mapped_config = $this->getMappedConfig($element, $node, TRUE);
+    }
+    catch (IncompleteElementConfigurationException $e) {
+      $mapped_config = NULL;
+    }
+    if ($mapped_config === NULL) {
+      return $this->t('Invalid source');
+    }
+    $remote_hash = md5(serialize($mapped_config['hpc']));
     $local_hash = md5(serialize($existing_component->get('configuration')['hpc']));
     return $remote_hash == $local_hash ? $this->t('In sync') : $this->t('Changed');
+  }
+
+  /**
+   * Get the mapped config for the given element.
+   *
+   * @param object $element
+   *   The source element.
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object that is the sync target.
+   * @param bool $dry_run
+   *   Whether this is a test or a real mapping.
+   *
+   * @return array
+   *   A mapped config array.
+   *
+   * @throws \Drupal\ghi_element_sync\IncompleteElementConfigurationException;
+   */
+  private function getMappedConfig($element, NodeInterface $node, $dry_run = FALSE) {
+    $definition = $this->getCorrespondingPluginDefintionForElement($element);
+    if (!$definition) {
+      return NULL;
+    }
+    $class = $definition['class'];
+    $config = json_decode(json_encode($element->configuration));
+    return $class::mapConfig($config, $node, $element->type, $dry_run);
   }
 
   /**

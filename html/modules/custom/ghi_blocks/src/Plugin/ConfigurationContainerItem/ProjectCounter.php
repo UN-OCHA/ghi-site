@@ -276,6 +276,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    *   A render array.
    */
   private function getProjectPopoverContent(array $projects) {
+    $decimal_format = $this->getDecimalFormat();
     $header = [
       $this->t('Project code'),
       $this->t('Project name'),
@@ -306,12 +307,14 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
           '#theme' => 'hpc_amount',
           '#amount' => $project->target,
           '#scale' => 'full',
+          '#decimal_format' => $decimal_format,
         ],
       ];
       $row[] = [
         'data' => [
           '#theme' => 'hpc_currency',
           '#value' => $project->requirements,
+          '#decimal_format' => $decimal_format,
         ],
       ];
       $rows[] = $row;
@@ -465,6 +468,18 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
     // one of the valid ones.
     $term = TaxonomyHelper::getTermById($plan_object->field_plan_costing->target_id, 'plan_costing');
     return $term ? in_array($term->field_plan_costing_code->value, $valid_type_codes) : FALSE;
+  }
+
+  /**
+   * Get the decimal format to use for number formatting.
+   *
+   * @return string|null
+   *   Either 'comma', 'point' or NULL.
+   */
+  private function getDecimalFormat() {
+    $plan_object = $this->getContextValue('plan_object');
+    $decimal_format = $plan_object ? $plan_object->get('field_decimal_format')->value : NULL;
+    return $decimal_format;
   }
 
 }

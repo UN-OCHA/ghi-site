@@ -23,3 +23,67 @@ block.preview:
   version: VERSION
   js:
     js/block.preview.js: {}
+theme:
+  version: VERSION
+  js:
+    js/theme.js: {}
+d3:
+  version: 3.0.0
+  js:
+    /libraries/d3/dist/d3.min.js: {}
+leaflet:
+  version: 0.7.3
+  js:
+    /libraries/leaflet/dist/leaflet.js: {}
+  css:
+    component:
+      /libraries/leaflet/dist/leaflet.css: {}
+leaflet.d3svgoverlay:
+  version: 3.0.0
+  js:
+    js/assets/L.D3SvgOverlay.js: {}
+leaflet.modal:
+  version: 0.2.0
+  js:
+    /libraries/leaflet-modal/dist/L.Modal.min.js: {}
+  css:
+    component:
+      /libraries/leaflet-modal/dist/leaflet.modal.min.css: {}
+leaflet.search:
+  version: 2.9.8
+  js:
+    /libraries/leaflet-search/dist/leaflet-search.src.js: {}
+  css:
+    component:
+      /libraries/leaflet-search/dist/leaflet-search.min.css: {}
+leaflet.sidebar:
+  version: 0.2.2
+  js:
+    /libraries/leaflet-sidebar/src/L.Control.Sidebar.js: {}
+  css:
+    component:
+      /libraries/leaflet-sidebar/src/L.Control.Sidebar.css: {}
+
+map:
+  version: VERSION
+  js:
+    js/map/map.search_control.js: {}
+    js/map/map.circle.js: {}
+    js/map/map.donut.js: {}
+    js/map/map.js: {}
+  dependencies:
+    - hpc_common/tooltip
+    - ghi_blocks/theme
+    - ghi_blocks/d3
+    - ghi_blocks/leaflet
+    - ghi_blocks/leaflet.d3svgoverlay
+    - ghi_blocks/leaflet.modal
+    - ghi_blocks/leaflet.search
+    - ghi_blocks/leaflet.sidebar
+
+map.plan:
+  version: VERSION
+  js:
+    js/map/map.plan.js: {}
+  dependencies:
+    - ghi_blocks/map

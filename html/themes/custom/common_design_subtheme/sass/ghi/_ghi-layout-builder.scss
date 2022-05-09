@@ -14,8 +14,8 @@
   bottom: 64px !important;
 }
 .layout-builder-ipe-actions {
-  // Make this higher than the z-index of the gho tooltips.
-  z-index: 102;
+  // Make this higher than the z-index of everything else.
+  z-index: 1002;
 }
 
 #layout-builder-modal .cd-alert {

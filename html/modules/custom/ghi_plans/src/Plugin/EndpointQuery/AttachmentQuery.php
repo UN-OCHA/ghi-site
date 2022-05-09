@@ -31,7 +31,7 @@ class AttachmentQuery extends EndpointQueryBase implements ContainerFactoryPlugi
    * @param int $attachment_id
    *   The attachment id to query.
    *
-   * @return object
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface
    *   The processed attachment object.
    */
   public function getAttachment($attachment_id) {
@@ -41,6 +41,25 @@ class AttachmentQuery extends EndpointQueryBase implements ContainerFactoryPlugi
     }
 
     return AttachmentHelper::processAttachment($data);
+  }
+
+  /**
+   * Get an attachment by id with the full dissagregated data.
+   *
+   * @param int $attachment_id
+   *   The attachment id to query.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface
+   *   The processed attachment object.
+   */
+  public function getAttachmentWithDisaggregatedData($attachment_id) {
+    $data = $this->getData(['attachment_id' => $attachment_id], [
+      'disaggregation' => 'true',
+    ]);
+    if (empty($data)) {
+      return NULL;
+    }
+    return $data;
   }
 
 }

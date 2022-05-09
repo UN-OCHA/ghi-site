@@ -1,13 +1,35 @@
 <?php
 
-namespace Drupal\ghi_base_objects\ApiObjects;
+namespace Drupal\ghi_plans\ApiObjects\Partials;
 
+use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\hpc_common\Helpers\StringHelper;
 
 /**
- * Class for API plan objects.
+ * Abstraction class for a plan partial object.
+ *
+ * This kind of partial object is a stripped-down, limited-data, object that
+ * appears in some specific endpoints. We map this here to provide type hinting
+ * and abstracted data access.
  */
-class Plan extends BaseObject {
+class PlanOverviewPlan extends BaseObject {
+
+  /**
+   * Map the raw data.
+   *
+   * @return object
+   *   An object with the mapped data.
+   */
+  protected function map() {
+    $data = $this->getRawData();
+    return (object) [
+      'id' => $data->id,
+      'name' => $data->name,
+      'funding' => $data->funding->totalFunding ?? 0,
+      'requirements' => $data->requirements ? $data->requirements->revisedRequirements : 0,
+      'coverage' => $data->funding->progress ?? 0,
+    ];
+  }
 
   /**
    * Get the plan type object from a plan.
@@ -16,10 +38,10 @@ class Plan extends BaseObject {
    *   The plan type object if found.
    */
   private function getTypeObject() {
-    if (!property_exists($this->data, 'planType') || !is_object($this->data->planType)) {
+    if (!is_object($this->getRawData()->planType)) {
       return NULL;
     }
-    return $this->data->planType;
+    return $this->getRawData()->planType;
   }
 
   /**
@@ -56,7 +78,7 @@ class Plan extends BaseObject {
    *   The plan type name.
    */
   public function getTypeShortName() {
-    return StringHelper::getAbbreviation($this->getTypeProperty('name'));
+    return StringHelper::getAbbreviation($this->getTypeName());
   }
 
   /**
@@ -132,7 +154,7 @@ class Plan extends BaseObject {
    *   The plan funding.
    */
   public function getFunding() {
-    return $this->data->funding->totalFunding ?? 0;
+    return $this->funding;
   }
 
   /**
@@ -142,7 +164,7 @@ class Plan extends BaseObject {
    *   The coverage for a plan.
    */
   public function getCoverage() {
-    return $this->data->funding->progress ?? 0;
+    return $this->coverage;
   }
 
   /**
@@ -152,11 +174,17 @@ class Plan extends BaseObject {
    *   The plan funding.
    */
   public function getRequirements() {
-    if (!property_exists($this->data, 'requirements') || empty($this->data->requirements)) {
-      return 0;
-    }
-    $requirements = $this->data->requirements;
-    return $requirements->revisedRequirements ?? 0;
+    return $this->requirements;
+  }
+
+  /**
+   * Check if the current plan partial has caseloads.
+   *
+   * @return bool
+   *   TRUE of the plan has caseloads, FALSE otherwise.
+   */
+  private function hasCaseloads() {
+    return !empty($this->getRawData()->caseLoads);
   }
 
   /**
@@ -171,7 +199,7 @@ class Plan extends BaseObject {
    *   The caseload value if found.
    */
   public function getCaseloadValue($metric_type, $metric_name = NULL) {
-    if (empty($this->data->caseLoads)) {
+    if (!$this->hasCaseloads()) {
       return NULL;
     }
     $caseload_item = $this->getCaseloadItemByType($metric_type);
@@ -192,7 +220,7 @@ class Plan extends BaseObject {
    *   A caseload item if found.
    */
   private function getCaseloadItemByType($type) {
-    $totals = $this->data->caseLoads[0]->totals;
+    $totals = $this->getRawData()->caseLoads[0]->totals;
     $candidates = array_filter($totals, function ($item) use ($type) {
       return (strtolower($item->type) == strtolower($type));
     });
@@ -212,7 +240,7 @@ class Plan extends BaseObject {
    *   A caseload item if found.
    */
   private function getCaseloadItemByName($name) {
-    $totals = $this->data->caseLoads[0]->totals;
+    $totals = $this->getRawData()->caseLoads[0]->totals;
     $candidates = array_filter($totals, function ($item) use ($name) {
       return property_exists($item->name, 'en') && ($item->name->en == $name);
     });

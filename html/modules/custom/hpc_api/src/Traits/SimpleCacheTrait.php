@@ -16,7 +16,7 @@ trait SimpleCacheTrait {
    * @return string
    *   A cache key string.
    */
-  public function getCacheKeyFromAssociativeArray(array $array) {
+  public static function getCacheKey(array $array) {
     ksort($array);
     array_unshift($array, [
       'class' => get_called_class(),
@@ -39,7 +39,7 @@ trait SimpleCacheTrait {
    *   Either the stored data or nothing.
    */
   public function cache($cache_key, $data = NULL, $reset = FALSE) {
-    $cache_store = &drupal_static(__FUNCTION__);
+    $cache_store = &drupal_static(__FUNCTION__, []);
 
     if ($data === NULL && $reset === TRUE) {
       // Clear the cached data as requested.
@@ -48,7 +48,7 @@ trait SimpleCacheTrait {
     }
     elseif ($data === NULL) {
       // Retrieve data from static cache.
-      if (isset($cache_store[$cache_key])) {
+      if (array_key_exists($cache_key, $cache_store)) {
         return $cache_store[$cache_key];
       }
       return NULL;
@@ -56,6 +56,7 @@ trait SimpleCacheTrait {
 
     // Also store it in the static cache.
     $cache_store[$cache_key] = $data;
+    return $cache_store[$cache_key];
   }
 
 }

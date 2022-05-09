@@ -31,7 +31,7 @@ class PlanReportingPeriodsQuery extends EndpointQueryBase {
    *   number.
    */
   public function getReportingPeriods() {
-    $cache_key = $this->getCacheKeyFromAssociativeArray($this->getPlaceholders());
+    $cache_key = $this->getCacheKey($this->getPlaceholders());
     $periods = $this->cache($cache_key);
     if ($periods) {
       return $periods;

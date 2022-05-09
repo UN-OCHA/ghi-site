@@ -81,15 +81,16 @@ class SyncNodeForm extends FormBase {
     try {
       foreach ($this->syncManager->getRemoteConfigurations($node) as $element) {
         $is_syncable = $this->syncManager->isSyncable($element);
+        $has_valid_source = $this->syncManager->hasValidSource($element, $node);
         $row = [];
         $row['source_type'] = $element->type;
         $definition = $this->syncManager->getCorrespondingPluginDefintionForElement($element);
         $row['plugin'] = $definition ? $definition['admin_label'] : $this->t('Unknown');
-        $row['syncable'] = $is_syncable ? $this->t('Syncable') : $this->t('Not syncable');
-        $row['status'] = $this->syncManager->getSyncStatus($node, $element);
+        $row['syncable'] = $is_syncable && $has_valid_source ? $this->t('Syncable') : $this->t('Not syncable');
+        $row['status'] = $this->syncManager->getSyncStatus($element, $node);
 
         $form['sync_element_select']['#options'][$element->uuid] = $row;
-        $form['sync_element_select'][$element->uuid] = !$is_syncable ? ['#disabled' => TRUE] : NULL;
+        $form['sync_element_select'][$element->uuid] = !$is_syncable || !$has_valid_source ? ['#disabled' => TRUE] : NULL;
       }
     }
     catch (SyncException $e) {

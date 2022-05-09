@@ -3,7 +3,7 @@
 namespace Drupal\ghi_blocks\Interfaces;
 
 /**
- * Interface for blocks having automatic titles.
+ * Interface for blocks having optional titles.
  */
 interface OptionalTitleBlockInterface {
 

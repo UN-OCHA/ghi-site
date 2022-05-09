@@ -5,6 +5,7 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\node\NodeInterface;
 
@@ -54,7 +55,19 @@ class EntityName extends ConfigurationContainerItemPluginBase {
    */
   public function getValue() {
     $entity = $this->getContextValue('entity');
-    return $entity && property_exists($entity, 'name') ? $entity->name : NULL;
+    if (!$entity) {
+      return NULL;
+    }
+    // This should work for Api entity objects.
+    if ($entity instanceof EntityObjectInterface) {
+      /** @var \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface $entity */
+      return $entity->getEntityName();
+    }
+    if (property_exists($entity, 'name')) {
+      // This should work for organizations.
+      return $entity->name;
+    }
+    return NULL;
   }
 
   /**

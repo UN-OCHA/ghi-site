@@ -32,7 +32,6 @@ class ArrayHelper {
         $obj = (object) $item;
 
         foreach ($properties as $i => $p) {
-
           if (count($properties) == ($i + 1) && !is_array($value) && $obj->{$p} != $value) {
             $found = FALSE;
           }
@@ -42,7 +41,7 @@ class ArrayHelper {
 
           if (count($properties) > ($i + 1)) {
             if (is_object($obj)) {
-              if (property_exists($obj, $p)) {
+              if (isset($obj->{$p})) {
                 $obj = $obj->{$p};
               }
               else {

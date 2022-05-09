@@ -1,15 +1,15 @@
-entity.node.hpc:
-  route_name: ghi_plans.node.plan_structure
-  base_route: entity.node.canonical
+entity.base_object.hpc:
+  route_name: ghi_plans.base_object.plan_structure
+  base_route: entity.base_object.canonical
   title: HPC
   weight: 100
-entity.node.hpc.plan_structure:
-  route_name: ghi_plans.node.plan_structure
-  base_route: entity.node.canonical
-  parent_id: entity.node.hpc
+entity.base_object.hpc.plan_structure:
+  route_name: ghi_plans.base_object.plan_structure
+  base_route: entity.base_object.canonical
+  parent_id: entity.base_object.hpc
   title: Plan structure
-entity.node.hpc.plan_settings:
-  route_name: ghi_plans.node.plan_settings
-  base_route: entity.node.canonical
-  parent_id: entity.node.hpc
-  title: Plan settings
+# entity.node.hpc.plan_settings:
+#   route_name: ghi_plans.node.plan_settings
+#   base_route: entity.node.canonical
+#   parent_id: entity.node.hpc
+#   title: Plan settings

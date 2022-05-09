@@ -229,7 +229,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
       return [];
     }
     return array_filter($entities, function ($entity) use ($entity_prototype) {
-      return $entity->prototype_id == $entity_prototype;
+      return $entity->entity_prototype_id == $entity_prototype;
     });
   }
 
@@ -276,7 +276,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     $entity_prototype_options = [];
     $weight = [];
     foreach ($this->getEntities($entity_type) as $entity) {
-      $prototype_id = $entity->prototype_id;
+      $prototype_id = $entity->entity_prototype_id;
       if (empty($entity_prototype_options[$prototype_id])) {
         $name = $entity->plural_name;
         $entity_prototype_options[$prototype_id] = $name;

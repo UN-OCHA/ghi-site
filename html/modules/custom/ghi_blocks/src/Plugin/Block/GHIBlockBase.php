@@ -20,6 +20,7 @@ use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\layout_builder\Form\AddBlockForm;
@@ -309,7 +310,11 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $plugin_configuration = $this->getConfiguration();
 
     $build = [
-      '#type' => 'container',
+      '#theme_wrappers' => [
+        'container' => [
+          '#attributes' => ['class' => ['block-content']],
+        ],
+      ],
     ];
 
     if ($this->isHidden() && !$this->isPreview()) {
@@ -324,12 +329,18 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
 
     // Handle the title display.
+    // @todo This is confusing and needs cleanup.
     if ($this->shouldDisplayTitle()) {
       if ($this instanceof AutomaticTitleBlockInterface) {
         $build['#title'] = $this->getAutomaticBlockTitle();
+        $plugin_configuration['label_display'] = TRUE;
       }
       elseif ($this instanceof OptionalTitleBlockInterface) {
         $build['#title'] = $plugin_configuration['label'] ?? NULL;
+      }
+      elseif ($this instanceof OverrideDefaultTitleBlockInterface) {
+        $build['#title'] = $plugin_configuration['label'] ?? NULL;
+        $plugin_configuration['label_display'] = TRUE;
       }
       elseif (!empty($build_content['#title'])) {
         $build['#title'] = $build_content['#title'];
@@ -339,6 +350,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       if (empty($plugin_configuration['label']) && $this->hasDefaultTitle()) {
         $plugin_definition = $this->getPluginDefinition();
         $build['#title'] = $plugin_definition['default_title'];
+        $plugin_configuration['label_display'] = TRUE;
       }
 
       if (!empty($plugin_configuration['label_display']) && !array_key_exists('#title', $build)) {
@@ -356,7 +368,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
 
     // Add the build content as a child.
-    $build[] = $build_content;
+    $build += $build_content;
 
     // Add some classes for styling.
     $build['#attributes']['class'][] = Html::getClass('ghi-block-' . $this->getPluginId());
@@ -778,7 +790,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $settings_form['label_display']['#default_value'] = TRUE;
       }
 
-      if ($this instanceof OptionalTitleBlockInterface) {
+      if ($this instanceof OptionalTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface) {
         // This label field is optional and the display toggle can be hidden.
         // Display status will be determined based on the presence of a title.
         $settings_form['label']['#required'] = FALSE;
@@ -788,7 +800,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $settings_form['label_display']['#default_value'] = TRUE;
       }
 
-      if ($this->hasDefaultTitle()) {
+      if ($this instanceof OverrideDefaultTitleBlockInterface || $this->hasDefaultTitle()) {
         // This block plugin provides a default title, so the label field is
         // optional and the display toggle can be hidden.
         $settings_form['label']['#required'] = FALSE;
@@ -924,7 +936,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Set the HPC specific block config.
     $this->setBlockConfig($values);
 
-    if ($this instanceof AutomaticTitleBlockInterface || $this->hasDefaultTitle()) {
+    if ($this instanceof AutomaticTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface || $this->hasDefaultTitle()) {
       // This is important to set, otherwise template_preprocess_block() will
       // hide the block title.
       $this->configuration['label_display'] = TRUE;

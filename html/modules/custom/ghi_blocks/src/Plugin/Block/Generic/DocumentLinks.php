@@ -114,17 +114,13 @@ class DocumentLinks extends GHIBlockBase implements SyncableBlockInterface {
 
     // Build the content.
     return [
-      '#type' => 'html_tag',
-      '#tag' => 'div',
+      '#theme' => 'item_list',
+      '#items' => $items,
       '#attributes' => [
         'class' => [
           'generic-document-links',
           'up-' . count($items),
         ],
-      ],
-      0 => [
-        '#theme' => 'item_list',
-        '#items' => $items,
       ],
     ];
   }

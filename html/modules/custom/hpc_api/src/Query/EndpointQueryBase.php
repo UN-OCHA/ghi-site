@@ -138,7 +138,7 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
       }
     }
     // Cache the result in memory.
-    $cache_key = $this->getCacheKeyFromAssociativeArray(['endpoint' => $this->getFullEndpointUrl()]);
+    $cache_key = $this->getCacheKey(['endpoint' => $this->getFullEndpointUrl()]);
     if (!$this->cache($cache_key)) {
       $this->cache($cache_key, $this->endpointQuery->getData());
     }

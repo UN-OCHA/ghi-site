@@ -3,7 +3,9 @@
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
+use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
@@ -34,6 +36,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
 
   use AttachmentFilterTrait;
   use SimpleCacheTrait;
+  use StringTranslationTrait;
 
   /**
    * Get all attachments.
@@ -54,7 +57,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    *   An array of attachment objects for the given context.
    */
   private function getAttachments(ContentEntityInterface $context_object = NULL, array $filter = []) {
-    $cache_key = $this->getCacheKeyFromAssociativeArray(array_filter(['id' => $context_object ? $context_object->id() : NULL] + $filter));
+    $cache_key = $this->getCacheKey(array_filter(['id' => $context_object ? $context_object->id() : NULL] + $filter));
     $attachments = $this->cache($cache_key);
     if ($attachments) {
       return $attachments;
@@ -80,6 +83,12 @@ class PlanEntitiesQuery extends EndpointQueryBase {
     if (!$restrict_entity_type || $restrict_entity_type == 'plan') {
       // No restriction or plan level.
       $attachments = $data->attachments;
+      $plan_id = $data->id;
+      $attachments = array_map(function ($attachment) use ($plan_id) {
+        $attachment->entity_id = $plan_id;
+        $attachment->entity_type = 'plan';
+        return $attachment;
+      }, $attachments);
     }
 
     if ($context_object && array_key_exists($context_object->bundle(), $supported_contexts)) {
@@ -95,7 +104,13 @@ class PlanEntitiesQuery extends EndpointQueryBase {
         if (!isset($entity->attachments)) {
           continue;
         }
-        $attachments = array_merge($attachments, $entity->attachments);
+        $entity_id = $entity->id;
+        $entity_attachments = array_map(function ($attachment) use ($entity_id, $property) {
+          $attachment->entity_id = $entity_id;
+          $attachment->entity_type = $property;
+          return $attachment;
+        }, $entity->attachments);
+        $attachments = array_merge($attachments, $entity_attachments);
       }
     }
     else {
@@ -110,7 +125,13 @@ class PlanEntitiesQuery extends EndpointQueryBase {
           if (!isset($entity->attachments)) {
             continue;
           }
-          $attachments = array_merge($attachments, $entity->attachments);
+          $entity_id = $entity->id;
+          $entity_attachments = array_map(function ($attachment) use ($entity_id, $property) {
+            $attachment->entity_id = $entity_id;
+            $attachment->entity_type = $property;
+            return $attachment;
+          }, $entity->attachments);
+          $attachments = array_merge($attachments, $entity_attachments);
         }
       }
     }
@@ -201,11 +222,11 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    * @param array $filters
    *   The optional aray with filter key value pairs.
    *
-   * @return array
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
    *   An array of plan entity objects for the given context.
    */
   public function getPlanEntities(ContentEntityInterface $context_object, $entity_type = NULL, array $filters = NULL) {
-    $cache_key = $this->getCacheKeyFromAssociativeArray(array_filter([
+    $cache_key = $this->getCacheKey(array_filter([
       'id' => $context_object ? $context_object->id() : NULL,
       'entity_type' => $entity_type,
     ] + ($filters ?? [])));
@@ -223,22 +244,14 @@ class PlanEntitiesQuery extends EndpointQueryBase {
     if (empty($matching_entities)) {
       return NULL;
     }
+
+    $matching_entity_ids = array_map(function ($entity) {
+      return $entity->id;
+    }, $matching_entities);
+    $matching_entities = array_combine($matching_entity_ids, $matching_entities);
+
     $plan_entities = array_map(function ($entity) {
-      $entity_version = ApiEntityHelper::getEntityVersion($entity);
-      return (object) [
-        'id' => $entity->id,
-        'name' => $this->getEntityName($entity),
-        'plural_name' => $entity->entityPrototype->value->name->en->plural,
-        'order_number' => $entity->entityPrototype->orderNumber,
-        'ref_code' => $entity->entityPrototype->refCode,
-        'prototype_id' => $entity->entityPrototype->id,
-        'custom_id' => $entity_version->customReference,
-        'custom_id_prefixed_refcode' => $entity->entityPrototype->refCode . $entity_version->customReference,
-        'composed_reference' => $entity->composedReference,
-        'description' => property_exists($entity_version->value, 'description') ? $entity_version->value->description : NULL,
-        'icon' => !empty($entity_version->value->icon) ? $entity_version->value->icon : NULL,
-        'tags' => property_exists($entity_version, 'tags') ? $entity_version->tags : [],
-      ];
+      return PlanEntityHelper::getObject($entity);
     }, $matching_entities);
 
     if (is_array($filters) && !empty($filters)) {
@@ -246,25 +259,6 @@ class PlanEntitiesQuery extends EndpointQueryBase {
     }
     $this->cache($cache_key, $plan_entities);
     return $plan_entities;
-  }
-
-  /**
-   * Get the name of an entity.
-   *
-   * @param object $entity
-   *   The entity object.
-   *
-   * @return string
-   *   The name of the given entity.
-   */
-  private function getEntityName($entity) {
-    $entity_version = ApiEntityHelper::getEntityVersion($entity);
-    if (property_exists($entity_version, 'name')) {
-      // Governing entity.
-      return $entity_version->name;
-    }
-    // Plan entity.
-    return $entity->entityPrototype->value->name->en->singular . ' ' . $entity_version->customReference;
   }
 
   /**
@@ -277,7 +271,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    *   An array of cluster IDs.
    */
   public function getGoverningEntityIdsForPlanEntityId($plan_entity_id) {
-    $cache_key = $this->getCacheKeyFromAssociativeArray(['plan_entity_id' => $plan_entity_id] + $this->getPlaceholders());
+    $cache_key = $this->getCacheKey(['plan_entity_id' => $plan_entity_id] + $this->getPlaceholders());
     $cluster_ids = $this->cache($cache_key);
     if ($cluster_ids) {
       return $cluster_ids;
@@ -289,10 +283,10 @@ class PlanEntitiesQuery extends EndpointQueryBase {
       if (in_array($plan_item->id, $cluster_ids)) {
         continue;
       }
-      if (empty($plan_item->children)) {
+      if (empty($plan_item->getChildren())) {
         continue;
       }
-      foreach ($plan_item->children as $child) {
+      foreach ($plan_item->getChildren() as $child) {
         if (in_array($plan_item->id, $cluster_ids)) {
           continue;
         }

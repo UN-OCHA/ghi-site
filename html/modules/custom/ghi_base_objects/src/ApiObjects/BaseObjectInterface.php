@@ -2,18 +2,12 @@
 
 namespace Drupal\ghi_base_objects\ApiObjects;
 
+use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
+
 /**
  * Base class for API base objects.
  */
-interface BaseObjectInterface {
-
-  /**
-   * Get the ID of the API object.
-   *
-   * @return int
-   *   The id of the object.
-   */
-  public function getId();
+interface BaseObjectInterface extends ApiObjectInterface {
 
   /**
    * Get the name of the API object.

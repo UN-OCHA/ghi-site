@@ -5,6 +5,7 @@ namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\hpc_api\Query\EndpointQueryBase;
+use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
  * Provides a query plugin for attachment search.
@@ -26,6 +27,7 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
 class AttachmentSearchQuery extends EndpointQueryBase {
 
   use AttachmentFilterTrait;
+  use SimpleCacheTrait;
 
   /**
    * Get attachments by object type and id, optionally filtered.
@@ -41,29 +43,38 @@ class AttachmentSearchQuery extends EndpointQueryBase {
    *     'type' => 'caseload',
    *   ].
    *
-   * @return array
-   *   The matching and processed attachment objects.
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
+   *   The matching (processed) attachment objects, keyed by the attachment id.
    */
   public function getAttachmentsByObject($object_type, $object_ids, array $filter = NULL) {
+    sort($object_ids);
+    $cache_key = $this->getCacheKey([
+      'object_type' => $object_type,
+      'object_ids' => $object_ids,
+    ] + $filter);
+    $attachments = $this->cache($cache_key);
+    if ($attachments) {
+      return $attachments;
+    }
     $attachments = $this->getData([], [
       'objectType' => $object_type,
       'objectIds' => implode(',', (array) $object_ids),
     ]);
 
     if (empty($attachments)) {
-      return NULL;
+      return [];
     }
 
     if (is_array($filter)) {
       $attachments = $this->filterAttachments($attachments, $filter);
       if (empty($attachments)) {
-        return NULL;
+        return [];
       }
     }
 
-    return array_map(function ($attachment) {
-      return AttachmentHelper::processAttachment($attachment);
-    }, $attachments);
+    $processed_attachments = AttachmentHelper::processAttachments($attachments);
+    $this->cache($cache_key, $processed_attachments);
+    return $processed_attachments;
   }
 
 }

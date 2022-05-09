@@ -122,8 +122,6 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
     }
 
     return [
-      '#type' => 'html_tag',
-      '#tag' => 'div',
       '#attributes' => [
         'class' => [
           'external-widget',
