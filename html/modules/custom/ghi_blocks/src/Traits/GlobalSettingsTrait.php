@@ -65,7 +65,7 @@ trait GlobalSettingsTrait {
    * This requires that the table data is using associative arrays for both
    * header and rows.
    *
-   * @param \Drupal\ghi_base_objects\ApiObjects\Plan[] $plans
+   * @param \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[] $plans
    *   The plans.
    * @param int $year
    *   The year for which the configuration should be applied.
@@ -100,8 +100,8 @@ trait GlobalSettingsTrait {
       $plans = [];
       foreach ($grouped_plans as $group) {
         foreach ($group as $plan) {
-          /** @var \Drupal\ghi_base_objects\ApiObjects\Plan $plan */
-          $plans[$plan->getId()] = $plan;
+          /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
+          $plans[$plan->id()] = $plan;
         }
       }
     }
@@ -123,7 +123,7 @@ trait GlobalSettingsTrait {
    *   The build table rows.
    * @param int $year
    *   The year for which the configuration should be applied.
-   * @param \Drupal\ghi_base_objects\ApiObjects\Plan[] $plans
+   * @param \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[] $plans
    *   An array of plan objects.
    */
   private function applyGlobalConfigurationTable(array &$header, array &$rows, $year, array $plans) {
@@ -175,7 +175,7 @@ trait GlobalSettingsTrait {
     if (!empty($config['plan_short_names'])) {
       // Replace plan name with short name if available.
       $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
-        /** @var \Drupal\ghi_base_objects\ApiObjects\Plan $plan */
+        /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
         $plan = $plans[$plan_id];
         if (!$plan) {
           return $row;
@@ -188,7 +188,7 @@ trait GlobalSettingsTrait {
     // Link to existing sections if possible.
     $section_manager = $this->getSectionManager();
     $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans, $section_manager) {
-      /** @var \Drupal\ghi_base_objects\ApiObjects\Plan $plan */
+      /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
       $plan = $plans[$plan_id];
       if (!$plan || !$plan->getEntity()) {
         return $row;
@@ -204,7 +204,7 @@ trait GlobalSettingsTrait {
     if (!empty($config['plan_status_text'])) {
       // Add a plan status text if available.
       $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
-        /** @var \Drupal\ghi_base_objects\ApiObjects\Plan $plan */
+        /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
         $plan = $plans[$plan_id];
         if (!$plan || !$plan->getEntity() || !$plan->getEntity()->hasField('field_plan_status_string')) {
           return $row;
@@ -222,7 +222,7 @@ trait GlobalSettingsTrait {
     if (!empty($config['plan_type_icons'])) {
       // Add plan type icons to plan name column.
       $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
-        /** @var \Drupal\ghi_base_objects\ApiObjects\Plan $plan */
+        /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
         $plan = $plans[$plan_id];
         if (!$plan) {
           return $row;

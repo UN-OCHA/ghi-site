@@ -21,6 +21,18 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'document-link-box',
     ],
+    'plan_attachment_map' => [
+      'variables' => [
+        'chart_id' => NULL,
+        'sidebar' => NULL,
+        'map_type' => NULL,
+        'map_tabs' => NULL,
+        'attachment_switcher' => NULL,
+        'legend' => FALSE,
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'plan-attachment-map',
+    ],
   ];
 }
 

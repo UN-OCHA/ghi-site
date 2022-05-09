@@ -78,8 +78,10 @@ trait ConfigurationContainerTrait {
     if ($context === NULL) {
       $context = $this->getBlockContext();
     }
+    $item_type_plugin = $allowed_items[$column['item_type']]['item_type_base'] ?? $column['item_type'];
+
     /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
-    $item_type = $this->getConfigurationContainerItemManager()->createInstance($column['item_type'], $allowed_items[$column['item_type']]);
+    $item_type = $this->getConfigurationContainerItemManager()->createInstance($item_type_plugin, $allowed_items[$column['item_type']]);
     $item_type->setConfig($column['config']);
     $item_type->setContext($context);
     return $item_type;

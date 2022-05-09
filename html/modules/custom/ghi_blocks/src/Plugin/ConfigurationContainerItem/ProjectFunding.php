@@ -125,7 +125,7 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
   public function getRenderArray() {
     $data_type = $data_type ?? $this->get('data_type');
     $additional_theme_options = [
-      'formatting_decimals' => $this->getContextValue('plan_object')->field_decimal_format->value,
+      'decimal_format' => $this->getContextValue('plan_object')->field_decimal_format->value,
     ];
     $build = [];
     switch ($data_type) {

@@ -44,7 +44,7 @@ class PlanTable extends GHIBlockBase {
   /**
    * Build a table representation of the plan data.
    *
-   * @param \Drupal\ghi_base_objects\ApiObjects\Plan[] $plans
+   * @param \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[] $plans
    *   The plans to include in the table.
    *
    * @return array
@@ -68,7 +68,7 @@ class PlanTable extends GHIBlockBase {
     foreach ($plans as $plan) {
       $plan_entity = $plan->getEntity();
       $document_uri = $plan_entity ? $plan_entity->get('field_plan_document_link')->uri : NULL;
-      $rows[$plan->getId()] = [
+      $rows[$plan->id()] = [
         'name' => $plan->getName(),
         'inneed' => [
           'data' => [
@@ -390,7 +390,7 @@ class PlanTable extends GHIBlockBase {
   /**
    * Retrieve the plans to display in this block.
    *
-   * @return \Drupal\ghi_base_objects\ApiObjects\Plan[]
+   * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[]
    *   Array of plan objects.
    */
   private function getPlans() {

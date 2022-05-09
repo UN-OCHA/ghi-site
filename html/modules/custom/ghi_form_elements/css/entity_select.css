@@ -1,0 +1,6 @@
+.form-type--entity_select tr.entity-group-row input[type="checkbox"] {
+  display: none !important;
+}
+.form-type--entity_select tr.entity-group-row td {
+  font-weight: bold;
+}

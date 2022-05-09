@@ -2,7 +2,7 @@
 
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
-use Drupal\ghi_base_objects\ApiObjects\Plan;
+use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 
 /**
@@ -23,7 +23,7 @@ class PlanOverviewQuery extends EndpointQueryBase {
   /**
    * The fetched and processed plans.
    *
-   * @var \Drupal\ghi_base_objects\ApiObjects\Plan[]
+   * @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[]
    */
   private $plans = NULL;
 
@@ -40,19 +40,19 @@ class PlanOverviewQuery extends EndpointQueryBase {
 
     $plan_objects = $data->plans;
     foreach ($plan_objects as $plan_object) {
-      $plan = new Plan($plan_object);
-      $this->plans[$plan->getId()] = $plan;
+      $plan = new PlanOverviewPlan($plan_object);
+      $this->plans[$plan->id()] = $plan;
     }
 
     uasort($this->plans, function ($a, $b) {
-      return strnatcmp($a->getName(), $b->getName());
+      return strnatcmp($a->name, $b->name);
     });
   }
 
   /**
    * Get plans.
    *
-   * @return \Drupal\ghi_base_objects\ApiObjects\Plan[]
+   * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[]
    *   An array of plan objects.
    */
   public function getPlans() {

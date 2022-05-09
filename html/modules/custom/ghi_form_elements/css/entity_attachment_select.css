@@ -1,0 +1,12 @@
+.form-type--entity_attachment_select .entity-attachment-select-actions-wrapper {
+  position: absolute;
+  right: 40px;
+  top: 6rem;
+  padding: 0;
+  margin: 0;
+  background-color: white;
+}
+
+.form-type--entity_attachment_select .entity-attachment-select-actions-wrapper .form-submit {
+  margin:0 !important;
+}

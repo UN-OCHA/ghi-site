@@ -10,7 +10,7 @@ use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 
 /**
- * Provides a configuration container element.
+ * Provides a cluster restrict element.
  *
  * @FormElement("cluster_restrict")
  */

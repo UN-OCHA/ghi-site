@@ -4,16 +4,14 @@ namespace Drupal\ghi_plans\Controller;
 
 use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
-use Drupal\Core\Url;
 use Drupal\Core\Routing\RedirectDestinationInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
-use Drupal\hpc_common\Helpers\NodeHelper;
-use Drupal\node\NodeInterface;
 use Drupal\publishcontent\Access\PublishContentAccess;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -84,33 +82,24 @@ class PlanStructureController extends ControllerBase {
   /**
    * Page callback for the plan structure page.
    *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node object.
+   * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
+   *   The base object.
    */
-  public function showPage(NodeInterface $node) {
+  public function showPage(BaseObjectInterface $base_object) {
 
-    $plan_original_id = $node->field_original_id->value;
+    $plan_original_id = $base_object->field_original_id->value;
 
     $plan_data = $this->getPlanEntitiesData($plan_original_id);
     $ple_structure = PlanStructureHelper::getPlanEntityStructure($plan_data);
 
     $prototype_data = $this->getPrototypeData($plan_original_id);
-    $plan_structure = PlanStructureHelper::getPlanStructureFromPrototype($prototype_data, $node);
-
-    $edit_icon = Markup::create('<i class="material-icon edit-icon">edit</i>');
-    $published_icon = Markup::create('<i class="material-icon published">toggle_off</i>');
-    $unpublished_icon = Markup::create('<i class="material-icon unpublished">toggle_on</i>');
-
-    $link_options = [
-      'query' => $this->redirectDestination->getAsArray(),
-      'html' => TRUE,
-    ];
+    $plan_structure = PlanStructureHelper::getPlanStructureFromPrototype($prototype_data, $base_object);
 
     $items = [];
     foreach (array_merge($plan_structure['plan_entities'], $plan_structure['governing_entities']) as $plan_object) {
       $group_items = [
         '#theme' => 'item_list',
-        '#title' => Markup::create('<h3>' . $plan_object->label . '</h3>'),
+        '#title' => $plan_object->label,
         '#items' => [],
       ];
       foreach ($ple_structure as $entity) {
@@ -119,67 +108,19 @@ class PlanStructureController extends ControllerBase {
         }
         $title = $entity->name . ' ' . $entity->custom_reference . ' (' . $entity->composed_reference . ')';
         $title_tooltip = $entity->name . ' ' . $entity->custom_reference . ' (' . $entity->composed_reference . ', ' . $entity->id . ')';
+        $item_title = Markup::create('<span title="' . $title_tooltip . '">' . $title . '</span>');
 
-        // Get the node for url building.
-        $entity_node = NodeHelper::getNodeFromOriginalId($entity->id, $plan_object->drupal_entity_type);
-
-        if ($entity_node) {
-          // The token for the publishing links need to be generated manually
-          // here.
-          $token = $this->csrfToken->get('node/' . $entity_node->id() . '/toggleStatus');
-
-          $route_args = ['node' => $entity_node->id()];
-
-          // Add some quick action links.
-          $operations = [];
-
-          // An edit link for the entity.
-          $options = $link_options + [
-            'attributes' => [
-              'title' => $this->t('Edit this entity'),
-            ],
-          ];
-          $operations[] = Link::fromTextAndUrl($edit_icon, Url::fromRoute('entity.node.edit_form', $route_args, $options))->toString();
-
-          // And a toggle for the publishing state.
-          if ($this->publishContentAccess->access($this->currentUser, $entity_node)->isAllowed()) {
-            $link_options['query']['token'] = $token;
-            if ($entity->published) {
-              $options = $link_options + [
-                'attributes' => [
-                  'title' => $this->t('This entity is currently published. Click to unpublish.'),
-                ],
-              ];
-              $operations[] = Link::fromTextAndUrl($published_icon, Url::fromRoute('entity.node.publish', $route_args, $options))->toString();
-            }
-            elseif ($node->isPublished()) {
-              $options = $link_options + [
-                'attributes' => [
-                  'title' => $this->t('This entity is currently unpublished. Click to publish.'),
-                ],
-              ];
-              $operations[] = Link::fromTextAndUrl($unpublished_icon, Url::fromRoute('entity.node.publish', $route_args, $options))->toString();
-            }
-          }
-
-          $options = ['attributes' => ['title' => $title_tooltip]];
-          $item_title = Link::fromTextAndUrl($title, Url::fromRoute('entity.node.canonical', $route_args, $options))->toString() . implode('', $operations);
-        }
-        else {
-          $item_title = Markup::create('<span title="' . $title_tooltip . '">' . $title . '</span>');
-        }
-
-        if (!empty($entity->children)) {
+        if (!empty($entity->getChildren())) {
           $item = [
             '#theme' => 'item_list',
-            '#title' => Markup::create($item_title),
+            '#title' => $item_title,
             '#items' => [],
           ];
           $this->addChildren($entity, $item);
           $group_items['#items'][] = $item;
         }
         else {
-          $group_items['#items'][] = Markup::create($item_title);
+          $group_items['#items'][] = $item_title;
         }
       }
 
@@ -201,31 +142,52 @@ class PlanStructureController extends ControllerBase {
   /**
    * Add child elements to plan structure page output.
    *
-   * @param object $entity
+   * @param \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface $entity
    *   The API entity object holding the children.
    * @param array $item
    *   The item to which the children should be added.
    */
-  private function addChildren($entity, array &$item) {
-    if (!empty($entity->children)) {
-      ArrayHelper::sortObjectsByStringProperty($entity->children, 'display_name');
-      foreach ($entity->children as $child) {
+  private function addChildren(EntityObjectInterface $entity, array &$item) {
+    $last_group_name = NULL;
+    if (!empty($entity->getChildren())) {
+      $children = $entity->getChildren();
+      ArrayHelper::sortObjectsByStringProperty($children, 'display_name');
+      $group_items = NULL;
+
+      foreach ($children as $child) {
+        $current_group_name = $child->group_name;
+        if ($current_group_name != $last_group_name) {
+          if ($group_items && !empty($group_items['#items'])) {
+            $item['#items'][] = $group_items;
+          }
+          $group_items = [
+            '#theme' => 'item_list',
+            '#title' => $current_group_name,
+            '#items' => [],
+          ];
+        }
+        $last_group_name = $current_group_name;
+
         $title = $child->display_name . ' (' . $child->composed_reference . ')';
         $title_tooltip = $child->display_name . ' (' . $child->composed_reference . ', ' . $child->id . ')';
         $item_title = Markup::create('<span title="' . $title_tooltip . '">' . $title . '</span>');
 
-        if (!empty($child->children)) {
+        if (!empty($child->getChildren())) {
           $sub_item = [
             '#theme' => 'item_list',
             '#title' => $item_title,
             '#items' => [],
           ];
           $this->addChildren($child, $sub_item);
-          $item['#items'][] = $sub_item;
+          $group_items['#items'][] = $sub_item;
         }
         else {
-          $item['#items'][] = $item_title;
+          $group_items['#items'][] = $item_title;
         }
+      }
+
+      if (!empty($group_items['#items'])) {
+        $item['#items'][] = $group_items;
       }
     }
   }

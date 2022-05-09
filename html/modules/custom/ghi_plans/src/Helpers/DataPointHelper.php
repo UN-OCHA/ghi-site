@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\Helpers;
 
+use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\Config\Definition\Exception\InvalidTypeException;
 
@@ -13,7 +14,7 @@ class DataPointHelper {
   /**
    * Get a value for a data point.
    *
-   * @param object $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
    *   The attachment object.
    * @param array $data_point_conf
    *   The data point configuration.
@@ -24,7 +25,7 @@ class DataPointHelper {
    *
    * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
    */
-  public static function getValue($attachment, array $data_point_conf) {
+  public static function getValue(DataAttachment $attachment, array $data_point_conf) {
     switch ($data_point_conf['processing']) {
       case 'single':
         return self::getSingleValue($attachment, $data_point_conf);
@@ -40,7 +41,7 @@ class DataPointHelper {
   /**
    * Get a formatted value for a data point.
    *
-   * @param object $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
    *   The attachment object.
    * @param array $data_point_conf
    *   The data point configuration.
@@ -51,7 +52,7 @@ class DataPointHelper {
    *
    * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
    */
-  public static function formatValue($attachment, array $data_point_conf) {
+  public static function formatValue(DataAttachment $attachment, array $data_point_conf) {
     $build = [];
     if (empty($data_point_conf['widget']) || $data_point_conf['widget'] == 'none') {
       $build = self::formatAsText($attachment, $data_point_conf);
@@ -72,7 +73,7 @@ class DataPointHelper {
   /**
    * Check if the given data point configuration involves measurement fields.
    *
-   * @param object $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
    *   The attachment object.
    * @param array $data_point_conf
    *   The data point configuration.
@@ -81,16 +82,16 @@ class DataPointHelper {
    *   TRUE if any of the involved data points is a measurement, FALSE
    *   otherwise.
    */
-  private static function isMeasurement($attachment, array $data_point_conf) {
+  private static function isMeasurement(DataAttachment $attachment, array $data_point_conf) {
     switch ($data_point_conf['processing']) {
       case 'single':
         $field = $attachment->fields[$data_point_conf['data_points'][0]];
-        return in_array($field, $attachment->measurement_fields);
+        return $attachment->isMeasurementField($field);
 
       case 'calculated':
         $field_1 = $attachment->fields[$data_point_conf['data_points'][0]];
         $field_2 = $attachment->fields[$data_point_conf['data_points'][1]];
-        return in_array($field_1, $attachment->measurement_fields) || in_array($field_2, $attachment->measurement_fields);
+        return $attachment->isMeasurementField($field_1) || $attachment->isMeasurementField($field_2);
 
     }
     return FALSE;
@@ -117,6 +118,7 @@ class DataPointHelper {
         '#markup' => t('Pending'),
       ];
     }
+    $decimal_format = $data_point_conf['decimal_format'] ?? NULL;
     $rendered_value = NULL;
     switch ($data_point_conf['formatting']) {
       case 'raw':
@@ -130,12 +132,14 @@ class DataPointHelper {
             '#theme' => 'hpc_percent',
             '#ratio' => $value,
             '#decimals' => 1,
+            '#decimal_format' => $decimal_format,
           ];
         }
         $rendered_value = [
           '#theme' => 'hpc_autoformat_value',
           '#value' => $value,
           '#unit_type' => $attachment->unit ? $attachment->unit->type : 'amount',
+          '#decimal_format' => $decimal_format,
         ];
         break;
 
@@ -143,6 +147,7 @@ class DataPointHelper {
         $rendered_value = [
           '#theme' => 'hpc_currency',
           '#value' => $value,
+          '#decimal_format' => $decimal_format,
         ];
         break;
 
@@ -151,6 +156,7 @@ class DataPointHelper {
           '#theme' => 'hpc_amount',
           '#amount' => $value,
           '#scale' => 'full',
+          '#decimal_format' => $decimal_format,
         ];
         break;
 
@@ -159,6 +165,7 @@ class DataPointHelper {
           '#theme' => 'hpc_amount',
           '#amount' => $value,
           '#decimals' => 1,
+          '#decimal_format' => $decimal_format,
         ];
         break;
 
@@ -167,6 +174,7 @@ class DataPointHelper {
           '#theme' => 'hpc_percent',
           '#ratio' => $value,
           '#decimals' => 1,
+          '#decimal_format' => $decimal_format,
         ];
         break;
 

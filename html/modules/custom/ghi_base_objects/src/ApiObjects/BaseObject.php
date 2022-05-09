@@ -3,25 +3,12 @@
 namespace Drupal\ghi_base_objects\ApiObjects;
 
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 
 /**
  * Base class for API base objects.
  */
-abstract class BaseObject implements BaseObjectInterface {
-
-  /**
-   * The original data for an object from the HPC API.
-   *
-   * @var object
-   */
-  protected $data;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct($data) {
-    $this->data = $data;
-  }
+abstract class BaseObject extends ApiObjectBase implements BaseObjectInterface {
 
   /**
    * Get the corresponding bundle.
@@ -46,14 +33,7 @@ abstract class BaseObject implements BaseObjectInterface {
    *   The base object entity.
    */
   public function getEntity() {
-    return BaseObjectHelper::getBaseObjectFromOriginalId($this->getId(), $this->getBundle());
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getId() {
-    return $this->data->id;
+    return BaseObjectHelper::getBaseObjectFromOriginalId($this->id(), $this->getBundle());
   }
 
   /**
@@ -66,7 +46,7 @@ abstract class BaseObject implements BaseObjectInterface {
         return $entity->get('field_short_name')->value;
       }
     }
-    return $this->data->name;
+    return $this->name ?? ($this->getRawData()->name ?? NULL);
   }
 
 }

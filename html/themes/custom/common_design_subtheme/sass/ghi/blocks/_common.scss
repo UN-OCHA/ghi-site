@@ -55,4 +55,8 @@
   &.ghi-block--hidden-preview > *:not(.contextual) {
     opacity: 0.5;
   }
+
+  & > div.block-content {
+    position: relative;
+  }
 }

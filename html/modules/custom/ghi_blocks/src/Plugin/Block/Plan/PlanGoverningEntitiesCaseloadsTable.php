@@ -22,6 +22,7 @@ use Drupal\node\NodeInterface;
  *  data_sources = {
  *    "entities" = "plan_entities_query",
  *    "attachment_search" = "attachment_search_query",
+ *    "attachment_prototype" = "attachment_prototype_query",
  *  },
  *  default_title = @Translation("Cluster caseloads"),
  *  context_definitions = {
@@ -113,6 +114,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
         'base' => [
           'include_non_caseloads' => property_exists($config, 'include_non_caseloads') ? $config->include_non_caseloads : FALSE,
           'include_unpublished_clusters' => property_exists($config, 'include_unpublished_clusters') ? $config->include_unpublished_clusters : FALSE,
+          'prototype_id' => NULL,
         ],
         'table' => [
           'columns' => $columns,
@@ -413,13 +415,18 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    * Get the attachment prototype to use for the current block instance.
    *
    * @return object
-   *   The attachment prototype object..
+   *   The attachment prototype object.
    */
   private function getAttachmentPrototype() {
     $conf = $this->getBlockConfig();
     $prototype_id = $conf['base']['prototype_id'];
-    $prototypes = $this->getUniquePrototypes();
-    return array_key_exists($prototype_id, $prototypes) ? $prototypes[$prototype_id] : reset($prototypes);
+    if (!$prototype_id) {
+      $prototypes = $this->getUniquePrototypes();
+      $prototype_id = array_key_first($prototypes);
+    }
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
+    $query = $this->getQueryHandler('attachment_prototype');
+    return $query->getPrototypeByPlanAndId($this->getCurrentPlanId(), $prototype_id);
   }
 
   /**
@@ -500,7 +507,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
 
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
     $query = $this->getQueryHandler('attachment_search');
-    return $query->getAttachmentsByObject('governingEntity', implode(',', $entity_ids), $filter);
+    return $query->getAttachmentsByObject('governingEntity', $entity_ids, $filter);
   }
 
   /**

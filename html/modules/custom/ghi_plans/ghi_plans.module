@@ -3,17 +3,12 @@
 /**
  * @file
  * Contains hook implementations for the GHI Plans module.
- *
- * The migration hooks in this file could also be put into an event handler.
- *
- * @see https://www.drupal.org/docs/upgrading-drupal/customize-migrations-when-upgrading-to-drupal-8-or-later#s-migrate-plus-provides-a-prepare-row-event
  */
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Markup;
-use Drupal\ghi_plans\Helpers\PlanStructureHelper;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
 
 /**
@@ -32,6 +27,22 @@ function ghi_plans_page_attachments(array &$page) {
 }
 
 /**
+ * Implements hook_preprocess_page().
+ */
+function ghi_plans_preprocess_page(array &$variables) {
+  /** @var \Drupal\node\NodeInterface $node */
+  $node = $variables['node'] ?? NULL;
+  /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
+  $base_object = $node ? BaseObjectHelper::getBaseObjectFromNode($node) : NULL;
+  if ($base_object && $base_object->bundle() == 'plan') {
+    $decimal_format = $base_object->get('field_decimal_format')->value;
+    $variables['#attached']['drupalSettings']['plan_settings'] = [
+      'decimal_format' => $decimal_format,
+    ];
+  }
+}
+
+/**
  * Implements hook_form_alter().
  */
 function ghi_plans_form_alter(&$form, FormStateInterface &$form_state, $form_id) {
@@ -39,9 +50,9 @@ function ghi_plans_form_alter(&$form, FormStateInterface &$form_state, $form_id)
     return;
   }
   $valid_form_ids = [
-    'node_plan_edit_form',
-    'node_plan_entity_edit_form',
-    'node_governing_entity_edit_form',
+    'base_object_plan_edit_form',
+    // 'node_plan_entity_edit_form',
+    // 'node_governing_entity_edit_form',
   ];
   if (!in_array($form_id, $valid_form_ids)) {
     return;
@@ -61,25 +72,25 @@ function ghi_plans_form_alter(&$form, FormStateInterface &$form_state, $form_id)
     }
     $form[$element_key]['#disabled'] = 'disabled';
   }
-  \Drupal::messenger()->addWarning(t('Most of the data in this form is imported automatically from the HPC API and should not be changed here.'));
+  \Drupal::messenger()->addWarning(t('Most of the data in this form is imported automatically from the HPC API and cannot be changed here.'));
 }
 
 /**
  * Implements hook_form_FORM_ID_alter().
  *
- * @phpcs:disable DrupalPractice.FunctionCalls.InsecureUnserialize
+ * Selectively allow specific fields on edit pages of plan base objects.
  */
-function ghi_plans_form_node_plan_edit_form_alter(&$form, FormStateInterface &$form_state) {
-  $node = $form_state->getFormObject()->getEntity();
-  $plan_structure = PlanStructureHelper::getRpmPlanStructure($node);
-  $form['field_plan_structure_rpm']['widget'][0]['preview'] = $form['field_plan_structure_rpm']['widget'][0]['value'];
-  $form['field_plan_structure_rpm']['widget'][0]['value']['#access'] = FALSE;
-  $form['field_plan_structure_rpm']['widget'][0]['preview']['#rows'] = 20;
-  $form['field_plan_structure_rpm']['widget'][0]['preview']['#default_value'] = Markup::create(print_r($plan_structure, TRUE));
-
-  $reporting_periods = unserialize($form['field_plan_reporting_periods']['widget'][0]['value']['#default_value']);
-  $form['field_plan_reporting_periods']['widget'][0]['preview'] = $form['field_plan_reporting_periods']['widget'][0]['value'];
-  $form['field_plan_reporting_periods']['widget'][0]['value']['#access'] = FALSE;
-  $form['field_plan_reporting_periods']['widget'][0]['preview']['#rows'] = 20;
-  $form['field_plan_reporting_periods']['widget'][0]['preview']['#default_value'] = Markup::create(print_r($reporting_periods, TRUE));
+function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterface &$form_state) {
+  $allow_fields = [
+    'field_decimal_format',
+    'field_plan_document_link',
+    'field_plan_status_string',
+    'field_short_name',
+  ];
+  foreach (Element::children($form) as $element_key) {
+    if (!in_array($element_key, $allow_fields) && $form[$element_key]['#type'] != 'actions') {
+      continue;
+    }
+    unset($form[$element_key]['#disabled']);
+  }
 }

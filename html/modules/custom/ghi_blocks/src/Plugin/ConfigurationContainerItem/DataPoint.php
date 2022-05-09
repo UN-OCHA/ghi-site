@@ -52,7 +52,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
       '#attachment_prototype' => $configuration['attachment_prototype'],
       '#default_value' => $data_point,
       '#weight' => 5,
-    ];
+    ] + ($configuration['presets'] ?? []);
 
     return $element;
   }
@@ -61,8 +61,13 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getDefaultLabel() {
+    $attachment = $this->getContextValue('attachment');
+    if ($attachment) {
+      return $attachment->fields[$this->get('data_point')['data_points'][0]];
+    }
     $attachment_prototype = $this->getContextValue('attachment_prototype');
-    return $attachment_prototype->fields[$this->get('data_point')['data_points'][0]];
+    $fields = array_merge($attachment_prototype->value->metrics, $attachment_prototype->value->measureFields ?? []);
+    return $fields[$this->get('data_point')['data_points'][0]]->name->en;
   }
 
   /**
@@ -103,11 +108,14 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   private function getAttachmentObject() {
     $attachment = $this->getContextValue('attachment');
+    $plan_object = $this->getContextValue('plan_object') ?? NULL;
+    $configuration = $this->getPluginConfiguration();
     $data_point_conf = $this->get('data_point');
     if (!$attachment || !$data_point_conf) {
       return NULL;
     }
-    $attachment->data_point_conf = $data_point_conf;
+    $data_point_conf['decimal_format'] = $plan_object ? $plan_object->get('field_decimal_format')->value : NULL;
+    $attachment->data_point_conf = $data_point_conf + ($configuration['presets'] ?? []);
     return $attachment;
   }
 

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5072ec8c4186b308c699045834fb8fe4",
+    "content-hash": "4fcb59aa53ad847458267fd379ee3955",
     "packages": [
         {
             "name": "alchemy/zippy",
@@ -6446,6 +6446,642 @@
                 "source": "https://github.com/nikic/PHP-Parser/tree/v4.13.2"
             },
             "time": "2021-11-30T19:35:32+00:00"
+        },
+        {
+            "name": "npm-asset/commander",
+            "version": "7.2.0",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/commander/-/commander-7.2.0.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "MIT"
+            ]
+        },
+        {
+            "name": "npm-asset/d3",
+            "version": "7.4.4",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3/-/d3-7.4.4.tgz"
+            },
+            "require": {
+                "npm-asset/d3-array": "~3",
+                "npm-asset/d3-axis": "~3",
+                "npm-asset/d3-brush": "~3",
+                "npm-asset/d3-chord": "~3",
+                "npm-asset/d3-color": "~3",
+                "npm-asset/d3-contour": "~3",
+                "npm-asset/d3-delaunay": "~6",
+                "npm-asset/d3-dispatch": "~3",
+                "npm-asset/d3-drag": "~3",
+                "npm-asset/d3-dsv": "~3",
+                "npm-asset/d3-ease": "~3",
+                "npm-asset/d3-fetch": "~3",
+                "npm-asset/d3-force": "~3",
+                "npm-asset/d3-format": "~3",
+                "npm-asset/d3-geo": "~3",
+                "npm-asset/d3-hierarchy": "~3",
+                "npm-asset/d3-interpolate": "~3",
+                "npm-asset/d3-path": "~3",
+                "npm-asset/d3-polygon": "~3",
+                "npm-asset/d3-quadtree": "~3",
+                "npm-asset/d3-random": "~3",
+                "npm-asset/d3-scale": "~4",
+                "npm-asset/d3-scale-chromatic": "~3",
+                "npm-asset/d3-selection": "~3",
+                "npm-asset/d3-shape": "~3",
+                "npm-asset/d3-time": "~3",
+                "npm-asset/d3-time-format": "~4",
+                "npm-asset/d3-timer": "~3",
+                "npm-asset/d3-transition": "~3",
+                "npm-asset/d3-zoom": "~3"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-array",
+            "version": "3.1.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-array/-/d3-array-3.1.1.tgz"
+            },
+            "require": {
+                "npm-asset/internmap": ">=1,<3.0"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-axis",
+            "version": "3.0.0",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-axis/-/d3-axis-3.0.0.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-brush",
+            "version": "3.0.0",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-brush/-/d3-brush-3.0.0.tgz"
+            },
+            "require": {
+                "npm-asset/d3-dispatch": ">=1,<4.0",
+                "npm-asset/d3-drag": ">=2,<4.0",
+                "npm-asset/d3-interpolate": ">=1,<4.0",
+                "npm-asset/d3-selection": "~3",
+                "npm-asset/d3-transition": "~3"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-chord",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-chord/-/d3-chord-3.0.1.tgz"
+            },
+            "require": {
+                "npm-asset/d3-path": ">=1,<4.0"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-color",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-color/-/d3-color-3.0.1.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-contour",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-contour/-/d3-contour-3.0.1.tgz"
+            },
+            "require": {
+                "npm-asset/d3-array": ">=2,<4.0"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-delaunay",
+            "version": "6.0.2",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-delaunay/-/d3-delaunay-6.0.2.tgz"
+            },
+            "require": {
+                "npm-asset/delaunator": "~5"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-dispatch",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-dispatch/-/d3-dispatch-3.0.1.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-drag",
+            "version": "3.0.0",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-drag/-/d3-drag-3.0.0.tgz"
+            },
+            "require": {
+                "npm-asset/d3-dispatch": ">=1,<4.0",
+                "npm-asset/d3-selection": "~3"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-dsv",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-dsv/-/d3-dsv-3.0.1.tgz"
+            },
+            "require": {
+                "npm-asset/commander": "~7",
+                "npm-asset/iconv-lite": "0.6",
+                "npm-asset/rw": "~1"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-ease",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-ease/-/d3-ease-3.0.1.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "BSD-3-Clause"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-fetch",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-fetch/-/d3-fetch-3.0.1.tgz"
+            },
+            "require": {
+                "npm-asset/d3-dsv": ">=1,<4.0"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-force",
+            "version": "3.0.0",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-force/-/d3-force-3.0.0.tgz"
+            },
+            "require": {
+                "npm-asset/d3-dispatch": ">=1,<4.0",
+                "npm-asset/d3-quadtree": ">=1,<4.0",
+                "npm-asset/d3-timer": ">=1,<4.0"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-format",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-format/-/d3-format-3.0.1.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-geo",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-geo/-/d3-geo-3.0.1.tgz"
+            },
+            "require": {
+                "npm-asset/d3-array": ">=2.5.0,<4.0"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-hierarchy",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-hierarchy/-/d3-hierarchy-3.0.1.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-interpolate",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-interpolate/-/d3-interpolate-3.0.1.tgz"
+            },
+            "require": {
+                "npm-asset/d3-color": ">=1,<4.0"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-path",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-path/-/d3-path-3.0.1.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-polygon",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-polygon/-/d3-polygon-3.0.1.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-quadtree",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-quadtree/-/d3-quadtree-3.0.1.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-random",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-random/-/d3-random-3.0.1.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-scale",
+            "version": "4.0.2",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-scale/-/d3-scale-4.0.2.tgz"
+            },
+            "require": {
+                "npm-asset/d3-array": ">=2.10.0,<4.0",
+                "npm-asset/d3-format": ">=1,<4.0",
+                "npm-asset/d3-interpolate": ">=1.2.0,<4.0",
+                "npm-asset/d3-time": ">=2.1.1,<4.0",
+                "npm-asset/d3-time-format": ">=2,<5.0"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-scale-chromatic",
+            "version": "3.0.0",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-scale-chromatic/-/d3-scale-chromatic-3.0.0.tgz"
+            },
+            "require": {
+                "npm-asset/d3-color": ">=1,<4.0",
+                "npm-asset/d3-interpolate": ">=1,<4.0"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-selection",
+            "version": "3.0.0",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-selection/-/d3-selection-3.0.0.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-shape",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-shape/-/d3-shape-3.0.1.tgz"
+            },
+            "require": {
+                "npm-asset/d3-path": ">=1,<4.0"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-time",
+            "version": "3.0.0",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-time/-/d3-time-3.0.0.tgz"
+            },
+            "require": {
+                "npm-asset/d3-array": ">=2,<4.0"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-time-format",
+            "version": "4.0.0",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-time-format/-/d3-time-format-4.0.0.tgz"
+            },
+            "require": {
+                "npm-asset/d3-time": ">=1,<4.0"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-timer",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-timer/-/d3-timer-3.0.1.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-transition",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-transition/-/d3-transition-3.0.1.tgz"
+            },
+            "require": {
+                "npm-asset/d3-color": ">=1,<4.0",
+                "npm-asset/d3-dispatch": ">=1,<4.0",
+                "npm-asset/d3-ease": ">=1,<4.0",
+                "npm-asset/d3-interpolate": ">=1,<4.0",
+                "npm-asset/d3-timer": ">=1,<4.0"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/d3-zoom",
+            "version": "3.0.0",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/d3-zoom/-/d3-zoom-3.0.0.tgz"
+            },
+            "require": {
+                "npm-asset/d3-dispatch": ">=1,<4.0",
+                "npm-asset/d3-drag": ">=2,<4.0",
+                "npm-asset/d3-interpolate": ">=1,<4.0",
+                "npm-asset/d3-selection": ">=2,<4.0",
+                "npm-asset/d3-transition": ">=2,<4.0"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/delaunator",
+            "version": "5.0.0",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/delaunator/-/delaunator-5.0.0.tgz"
+            },
+            "require": {
+                "npm-asset/robust-predicates": ">=3.0.0,<4.0.0"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/iconv-lite",
+            "version": "0.6.0",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.6.0.tgz"
+            },
+            "require": {
+                "npm-asset/safer-buffer": ">=2.1.2,<3"
+            },
+            "type": "npm-asset",
+            "license": [
+                "MIT"
+            ]
+        },
+        {
+            "name": "npm-asset/internmap",
+            "version": "2.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/internmap/-/internmap-2.0.1.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "ISC"
+            ]
+        },
+        {
+            "name": "npm-asset/leaflet",
+            "version": "1.7.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/leaflet/-/leaflet-1.7.1.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "BSD-2-Clause"
+            ]
+        },
+        {
+            "name": "npm-asset/leaflet-modal",
+            "version": "0.2.0",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/leaflet-modal/-/leaflet-modal-0.2.0.tgz"
+            },
+            "require": {
+                "npm-asset/leaflet": ">=1.6.0,<2.0.0"
+            },
+            "type": "npm-asset",
+            "license": [
+                "MIT"
+            ]
+        },
+        {
+            "name": "npm-asset/leaflet-providers",
+            "version": "1.13.0",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/leaflet-providers/-/leaflet-providers-1.13.0.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "BSD-2-Clause"
+            ]
+        },
+        {
+            "name": "npm-asset/leaflet-search",
+            "version": "2.9.8",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/leaflet-search/-/leaflet-search-2.9.8.tgz"
+            },
+            "require": {
+                "npm-asset/leaflet": "*"
+            },
+            "type": "npm-asset",
+            "license": [
+                "MIT"
+            ]
+        },
+        {
+            "name": "npm-asset/leaflet-sidebar",
+            "version": "0.2.2",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/leaflet-sidebar/-/leaflet-sidebar-0.2.2.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "MIT"
+            ]
+        },
+        {
+            "name": "npm-asset/robust-predicates",
+            "version": "3.0.1",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/robust-predicates/-/robust-predicates-3.0.1.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "Unlicense"
+            ]
+        },
+        {
+            "name": "npm-asset/rw",
+            "version": "1.3.3",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/rw/-/rw-1.3.3.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "BSD-3-Clause"
+            ]
+        },
+        {
+            "name": "npm-asset/safer-buffer",
+            "version": "2.1.2",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "MIT"
+            ]
         },
         {
             "name": "oomphinc/composer-installers-extender",

@@ -5,6 +5,7 @@
  * Preprocess hooks and general purpose theme related functions for GHI Blocks.
  */
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
@@ -77,6 +78,21 @@ function ghi_blocks_preprocess_document_link_box(&$variables) {
 
   // Create meta.
   $variables['meta'] = $date ?? NULL;
+}
+
+/**
+ * Preprocess a plan attachment map.
+ */
+function ghi_blocks_preprocess_plan_attachment_map(&$variables) {
+  $outer_classes = [
+    'map-wrapper-outer',
+    'map-wrapper-' . $variables['chart_id'],
+  ];
+  if (!empty($variables['attachment_switcher'])) {
+    $outer_classes[] = Html::getClass('has-attachment-switcher');
+  }
+  $variables['outer_classes'] = implode(' ', $outer_classes);
+  $variables['attachment_select'] = $variables['attachment_switcher'] ?? '';
 }
 
 /**

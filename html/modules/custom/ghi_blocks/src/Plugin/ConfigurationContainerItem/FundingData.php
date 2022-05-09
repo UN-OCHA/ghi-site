@@ -212,7 +212,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
 
     $rendered = ThemeHelper::getThemeOptions($theme_function, $this->getValue($data_type_key, $scale, $cluster_restrict), [
       'scale' => $scale,
-      'formatting_decimals' => $this->getContextValue('plan_object')->field_decimal_format->value,
+      'decimal_format' => $this->getContextValue('plan_object')->field_decimal_format->value,
     ] + $theme_options);
 
     if (!$this->needsFtsLink()) {

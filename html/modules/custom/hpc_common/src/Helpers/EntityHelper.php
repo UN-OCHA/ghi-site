@@ -12,7 +12,7 @@ class EntityHelper {
   /**
    * Simple helper function to retrieve the number of items of a field.
    *
-   * @param \Drupal\Core\ContentEntityInterface $entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity object.
    * @param string $field_name
    *   The field name for which the data should be retrieved.
@@ -28,7 +28,7 @@ class EntityHelper {
   /**
    * Simple helper function to retrieve the raw data of a field.
    *
-   * @param \Drupal\Core\ContentEntityInterface $entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity object.
    * @param string $field_name
    *   The field name for which the data should be retrieved.
@@ -56,7 +56,7 @@ class EntityHelper {
   /**
    * Simple helper function to retrieve the raw data of a fields property.
    *
-   * @param \Drupal\Core\ContentEntityInterface $entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The source entity.
    * @param string $field_name
    *   The field name for which the data should be retrieved.
@@ -74,7 +74,7 @@ class EntityHelper {
   /**
    * Load an original ID for an entity.
    *
-   * @param \Drupal\Core\ContentEntityInterface $entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The source entity.
    */
   public static function getOriginalIdFromEntity(ContentEntityInterface $entity) {

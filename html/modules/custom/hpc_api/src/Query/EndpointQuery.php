@@ -434,7 +434,7 @@ class EndpointQuery {
     $args = $this->getEndpointArguments();
     unset($args['fts_public_backend']);
     $auth_method = $this->getAuthMethod() == self::AUTH_METHOD_NONE ? 'public' : $this->getAuthMethod();
-    $cache_key = 'hpc_api_request_' . $auth_method . '_' . urlencode($this->getFullEndpointUrl());
+    $cache_key = 'hpc_api_request_' . $auth_method . '_' . urlencode($this->getEndpointUrl());
     if (!empty($args)) {
       ksort($args);
       $cache_key .= '__' . urlencode(print_r($args, TRUE));
@@ -448,7 +448,7 @@ class EndpointQuery {
    * @codeCoverageIgnore
    */
   public function cache($data = NULL, $reset = FALSE) {
-    $responses = &drupal_static(__FUNCTION__);
+    $responses = &drupal_static(__FUNCTION__, []);
     $cache_key = $this->getCacheKey();
 
     if ($data === NULL && $reset === TRUE) {
@@ -474,7 +474,6 @@ class EndpointQuery {
     // Store data in the cache with an explicit expiry time, default is 1 hour.
     $expiration_time = $this->time->getRequestTime() + $this->configService->get('cache_lifetime', 60 * 60);
     $this->cache->set($cache_key, $data, $expiration_time);
-
     // Also store it in the static cache.
     $responses[$cache_key] = $data;
   }
@@ -549,7 +548,7 @@ class EndpointQuery {
    * @codeCoverageIgnore
    */
   public function setEndpointArguments($endpoint_arguments) {
-    $this->endpointArgs = $endpoint_arguments + $this->endpointArgs;
+    $this->endpointArgs = $endpoint_arguments;
   }
 
   /**

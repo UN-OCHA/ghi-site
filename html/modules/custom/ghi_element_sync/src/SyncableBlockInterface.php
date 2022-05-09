@@ -24,6 +24,8 @@ interface SyncableBlockInterface {
    *
    * @return array
    *   The mapped configuration array.
+   *
+   * @throws \Drupal\ghi_element_sync\IncompleteElementConfigurationException;
    */
   public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE);
 
