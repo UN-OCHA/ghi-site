@@ -13,9 +13,11 @@
   // Position this above the Layout Builder IPE action bar.
   bottom: 64px !important;
 }
+body.toolbar-horizontal .glb-toolbar,
+body.toolbar-horizontal #toolbar-administration,
 .layout-builder-ipe-actions {
   // Make this higher than the z-index of everything else.
-  z-index: 1002;
+  z-index: 1002 !important;
 }
 
 #layout-builder-modal .cd-alert {
