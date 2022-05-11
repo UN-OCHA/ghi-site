@@ -128,4 +128,26 @@ class PlanEntity extends EntityObjectBase {
     ]);
   }
 
+  /**
+   * Get a custom name for an entity, based on $type.
+   *
+   * @param string $type
+   *   The type for the name to be returned.
+   *
+   * @return string
+   *   The name according to $type.
+   */
+  public function getCustomName($type) {
+    switch ($type) {
+      case 'custom_id':
+        return $this->custom_reference;
+
+      case 'custom_id_prefixed_refcode':
+        return $this->ref_code . $this->custom_reference;
+
+      case 'composed_reference':
+        return $this->composed_reference;
+    }
+  }
+
 }

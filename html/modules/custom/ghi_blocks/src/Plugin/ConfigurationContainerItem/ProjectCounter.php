@@ -89,7 +89,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
 
-    $context = $this->getContext();
+    $context_node = $this->getContextValue('context_node');
     $plugin_configuration = $this->getPluginConfiguration();
 
     $data_type_options = [
@@ -118,7 +118,8 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
     $element['label']['#placeholder'] = $this->getDefaultLabel($data_type);
 
     $cluster_restrict_disabled = array_key_exists('cluster_restrict', $plugin_configuration) && $plugin_configuration['cluster_restrict'] === FALSE;
-    if (in_array($context['context_node']->bundle(), ['plan', 'plan_entity']) && !$cluster_restrict_disabled) {
+    $cluster_restrict_bundles = ['plan', 'plan_entity'];
+    if ($context_node && in_array($context_node->bundle(), $cluster_restrict_bundles) && !$cluster_restrict_disabled) {
       $element['cluster_restrict'] = $this->buildClusterRestrictFormElement($cluster_restrict);
     }
 
