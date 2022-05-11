@@ -172,18 +172,20 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getValue($data_type_key = NULL, $scale = NULL, $cluster_restrict = NULL) {
-    $context = $this->getContext();
-    $context_node = $context['context_node'];
+    $entity = $this->getContextValue('entity');
+    $plan_object = $this->getContextValue('plan_object');
+    $base_object = $this->getContextValue('base_object');
+    $cluster_context = $base_object && $base_object->bundle == 'governing_entity' ? $base_object : NULL;
 
     $data_type = $this->getDataType($data_type_key ?: $this->get('data_type'));
     $property = $data_type['property'];
     $cluster_restrict = $cluster_restrict ?: ($this->get('cluster_restrict') ?: NULL);
 
     $value = NULL;
-    if (empty($context_node) && !empty($context['entity'])) {
-      return $this->planClusterSummaryQuery->getClusterProperty($context['entity'], $property, 0);
+    if ($entity) {
+      return $this->planClusterSummaryQuery->getClusterProperty($entity, $property, 0);
     }
-    if (!$context_node && $this->getContextValue('plan_object')) {
+    if ($plan_object && !$cluster_context) {
       if (!empty($cluster_restrict) && !empty($cluster_restrict['type']) && $cluster_restrict['type'] != 'none') {
         $value = $this->getValueWithClusterRestrict($data_type, $cluster_restrict);
       }
@@ -191,8 +193,8 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         $value = $this->fundingSummaryQuery->get($property, 0);
       }
     }
-    elseif ($context_node && $context_node->bundle() == 'governing_entity') {
-      $cluster_id = $context_node->field_original_id->value;
+    elseif ($cluster_context) {
+      $cluster_id = $cluster_context->get('field_original_id')->value;
       $value = $this->planClusterSummaryQuery->getClusterPropertyById($cluster_id, $property, 0);
     }
 

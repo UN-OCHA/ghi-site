@@ -222,7 +222,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    * @param array $filters
    *   The optional aray with filter key value pairs.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[]
    *   An array of plan entity objects for the given context.
    */
   public function getPlanEntities(ContentEntityInterface $context_object, $entity_type = NULL, array $filters = NULL) {
