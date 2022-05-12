@@ -3,9 +3,16 @@
 //——————————————————————————————————————————————————————————————————————————————
 
 .cd-footer {
+  color: var(--cd-default-text-color);
   background: $implementation-primary;
 
+  svg {
+    fill: var(--cd-default-text-color);
+  }
+
   a {
+    color: var(--cd-default-text-color);
+
     &:focus {
       outline: 3px solid $cd-blue--bright;
     }
