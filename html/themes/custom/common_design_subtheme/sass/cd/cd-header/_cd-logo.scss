@@ -4,20 +4,33 @@
 // Replace images with your site logo.
 //——————————————————————————————————————————————————————————————————————————————
 
-.cd-site-logo {
-  width: 52px;
+.region-header-logo {
+  display: flex;
+  margin: 0.7rem 0;
+  padding-left: 0.5rem;
+  border-left: solid 2px var(--cd-primary-color);
 
-  &:focus {
-    outline: 3px solid $cd-blue--bright;
+  .cd-site-logo {
+    height: auto;
+    text-decoration: none;
+    color: var(--cd-default-text-color);
+    font-size: var(--cd-font-size--base);
+    font-weight: bold;
+    line-height: 1.3rem;
+
+    &:focus {
+      outline: none;
+    }
+
+    // Logo for mobile.
+    @include max-width(md) {
+      background: url("../../../../../custom/common_design_subtheme/img/logos/ocha-logo-blue@53x37.png") center no-repeat;
+      background: linear-gradient(transparent, transparent), url("../../../../../custom/common_design_subtheme/img/logos/ocha-logo-blue.svg") center no-repeat;
+    }
   }
 
-  // Logo for mobile.
-  @include max-width(md) {
-    background: url("../../../../../custom/common_design_subtheme/img/logos/ocha-logo-blue@53x37.png") center no-repeat;
-    background: linear-gradient(transparent, transparent), url("../../../../../custom/common_design_subtheme/img/logos/ocha-logo-blue.svg") center no-repeat;
-  }
-
-  @include tablet {
-    width: 186px; // width may need to be adjusted depending on logo width.
+  .cd-site-slogan {
+    margin: 0 0 0 1rem;
+    line-height: 0.8rem;
   }
 }

@@ -24,6 +24,12 @@
 //——————————————————————————————————————————————————————————————————————————————
 :root {
   /* Color palette */
+  --cd-ocha-orange: #fecb00;
+  --cd-ocha-orange--dark: #feba00;
+  --cd-primary-color: var(--cd-ocha-orange);
+  --cd-primary-color--dark: var(--cd-ocha-orange--dark);
+  --cd-ocha-yellow: rgb(254, 221, 89);
+
   /* OCHA blue is one colour ramp darker than brand blue */
   --cd-ocha-blue: #1f69b3;
   /* Dark blue is two colour ramps darker than brand blue */
@@ -35,10 +41,12 @@
   // This shade of red has been selected based on WCAG AAA requirements for contrast.
   --cd-contrast-red: #e00000;
   --cd-white: #fff;
-  --cd-grey--light: #f2f2f2;
+  --cd-grey--lighter: #f5f5f5;
+  --cd-grey--light: #eee;
   --cd-grey--mid: #595959;
-  --cd-grey--dark: #4a4a4a;
+  --cd-grey--dark: #4d4d4d;
   --cd-default-text-color: var(--cd-grey--dark);
+  --cd-default-border-color: #d6d6d6;
   --cd-black: #000;
   --cd-blue-grey: #e6ecf1;
   --cd-blue-grey--dark: #d3dde5;
@@ -119,6 +127,8 @@ $cd-global-header-height: 35px;
 $cd-site-header-height: 60px;
 
 // Colour palette
+$cd-ocha-orange: var(--cd-ocha-orange);
+$cd-ocha-orange: var(--cd-ocha-orange--dark);
 $cd-ocha-blue: var(--cd-ocha-blue);
 $cd-blue--dark: var(--cd-blue--dark);
 $cd-blue--bright: var(--cd-blue--bright);
@@ -149,8 +159,8 @@ $cd-rgb-highlight-red: var(--cd-rgb-highlight-red);
 $cd-rgb-blue-grey--dark: var(--cd-rgb-blue-grey--dark);
 
 // Brand colours
-$cd-primary: $cd-ocha-blue;
-$cd-primary--dark: $cd-blue--dark;
+$cd-primary: var(--cd-primary-color);
+$cd-primary--dark: var(--cd-primary-color--dark);
 
 //——————————————————————————————————————————————————————————————————————————————
 // Fonts
@@ -222,7 +232,7 @@ $zindex: (
 // Implementation colours
 //——————————————————————————————————————————————————————————————————————————————
 
-$implementation-primary: $cd-ocha-blue;
-$implementation-primary-dark: $cd-blue--dark;
+$implementation-primary: var(--cd-ocha-yellow);
+$implementation-primary-dark: $cd-primary;
 $implementation-secondary: $cd-blue--bright;
 $implementation-highlight: $cd-highlight-red;
