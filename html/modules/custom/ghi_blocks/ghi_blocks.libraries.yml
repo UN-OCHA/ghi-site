@@ -19,6 +19,11 @@ throbber:
   css:
     component:
       css/throbber.css: {}
+link_carousel:
+  version: VERSION
+  css:
+    component:
+      css/link_carousel.css: {}
 block.preview:
   version: VERSION
   js:

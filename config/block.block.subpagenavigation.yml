@@ -9,8 +9,8 @@ dependencies:
     - common_design_subtheme
 id: subpagenavigation
 theme: common_design_subtheme
-region: sidebar_first
-weight: 0
+region: page_title
+weight: -4
 provider: null
 plugin: subpage_navigation
 settings:

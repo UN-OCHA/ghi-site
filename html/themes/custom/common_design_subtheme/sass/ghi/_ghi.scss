@@ -2,10 +2,11 @@
 // GHI: root file
 //——————————————————————————————————————————————————————————————————————————————
 
-@import "ghi-variables";
 @import "ghi-icons";
-@import "ghi-tooltips";
 @import "ghi-layout-builder";
+@import "ghi-page";
+@import "ghi-tooltips";
+@import "ghi-variables";
 @import "components/components";
 @import "blocks/blocks";
 @import "map/_leaflet";

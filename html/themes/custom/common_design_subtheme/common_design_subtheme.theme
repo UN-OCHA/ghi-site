@@ -39,6 +39,18 @@ function common_design_subtheme_preprocess_html(&$vars) {
 }
 
 /**
+ * Implements hook_preprocess_block().
+ */
+function common_design_subtheme_preprocess_block(&$variables) {
+  $content_width_blocks = [
+    'generic_link_carousel',
+  ];
+  if (!in_array($variables['plugin_id'], $content_width_blocks)) {
+    $variables['attributes']['class'][] = 'content-width';
+  }
+}
+
+/**
  * Implements hook_preprocess_page().
  *
  * Reinstate the title and local task blocks on layout builder pages.

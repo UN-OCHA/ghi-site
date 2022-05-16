@@ -39,10 +39,24 @@
 #main-content {
   position: relative;
 
-  .cd-page-title {
-    margin: 1rem 0;
-    padding: 0;
-    border-bottom: 0;
+  .layout--onecol .layout__region {
+
+    & > div:not(.content-width) {
+      max-width: var(--cd-max-body-width);
+    }
+
+    /* Contrain the element with the `content-width` class. The paddings reflect
+     * those that were on the `<main>` element. There is no need to have the 1024px
+     * media query with the 40px padding because 904px + 2 * 40px < 1024px. */
+    .content-width {
+      max-width: calc(var(--content-width) + 24px) !important;
+    }
+
+    @media (min-width: 768px) {
+      .content-width {
+        max-width: calc(var(--content-width) + 48px) !important;
+      }
+    }
   }
 }
 

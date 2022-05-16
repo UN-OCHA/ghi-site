@@ -41,7 +41,9 @@ class SubpageHelper {
     if (!self::isBaseTypeNode($node)) {
       return;
     }
-    return t('Overview');
+    return t('@type overview', [
+      '@type' => $node->field_base_object->entity->type->entity->label(),
+    ]);
   }
 
   /**
