@@ -2,7 +2,7 @@
  * full width allowing elements like hero images to also use the full width. */
 .path-frontpage .cd-layout-container main.cd-container,
 .path-node .cd-layout-container main.cd-container {
-  max-width: 1400px;
+  max-width: var(--cd-max-body-width);
   padding-right: 0;
   padding-left: 0;
 }

@@ -4,11 +4,10 @@
 
 .block-subpage-navigation {
   ul.links--entity-navigation {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-    padding-inline-start: 0;
-    border-top: 1px solid var(--hpc-border-color);
-    border-bottom: 1px solid var(--hpc-border-color);
+    display: flex;
+    margin: 0;
+    padding: 0;
+    gap: 2rem;
 
     li {
       list-style-type: none;
@@ -35,7 +34,7 @@
 
 .block-subpage-title {
   h2 {
-    margin-top: 0.5rem;
+    margin: 2rem 0 0;
   }
 }
 

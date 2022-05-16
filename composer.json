@@ -82,6 +82,7 @@
         "npm-asset/leaflet-providers": "^1.13",
         "npm-asset/leaflet-search": "^2.9",
         "npm-asset/leaflet-sidebar": "^0.2.2",
+        "npm-asset/swiper": "^8.1",
         "oomphinc/composer-installers-extender": "^2.0",
         "phpoffice/phpspreadsheet": "^1.19",
         "unocha/common_design": "^4.0"

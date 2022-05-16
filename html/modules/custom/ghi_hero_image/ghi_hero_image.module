@@ -55,7 +55,7 @@ function ghi_hero_image_preprocess_page(&$variables) {
   $hero_image = $hero_image_field->view();
   if ($hero_image) {
     $hero_image['#label_display'] = 'hidden';
-    array_unshift($variables['page'][$region_name], $hero_image);
+    $variables['page'][$region_name] = ['hero_image' => $hero_image] + $variables['page'][$region_name];
   }
 
 }

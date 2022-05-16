@@ -16,6 +16,15 @@ css-vars-ponyfill:
     https://cdn.jsdelivr.net/npm/css-vars-ponyfill@2: { type: external, minified: true, attributes: { nomodule: true } }
     js/cd-css-vars-ponyfill.js: { attributes: { nomodule: true } }
 
+# External libraries
+swiper:
+  version: 8.1
+  js:
+    /libraries/swiper/swiper-bundle.min.js: {}
+  css:
+    component:
+      /libraries/swiper/swiper.min.css: {}
+
 # Libraries specific to GHI.
 ghi-grid:
   css:
@@ -25,6 +34,14 @@ ghi-section-teaser:
   css:
     theme:
       components/ghi-section-teaser/ghi-section-teaser.css: {}
+ghi-link-carousel:
+  css:
+    theme:
+      components/ghi-link-carousel/ghi-link-carousel.css: {}
+  js:
+    components/ghi-link-carousel/ghi-link-carousel.js: {}
+  dependencies:
+    - common_design_subtheme/swiper
 
 # Copy libraries from GHO
 datawrapper-responsive-iframe:

@@ -50,6 +50,7 @@ class ConfigurationContainer extends FormElement {
       '#element_context' => [],
       '#item_type_label' => $this->t('Item'),
       '#row_filter' => FALSE,
+      '#item_type_label' => NULL,
     ];
   }
 
@@ -249,7 +250,7 @@ class ConfigurationContainer extends FormElement {
     $element['#suffix'] = '</div>';
 
     if (!$form_state->has('items')) {
-      $items = self::cleanItemValues($element['#default_value']);
+      $items = self::cleanItemValues((array) $element['#default_value']);
       $form_state->set('items', $items);
       $form_state->setValue($element['#parents'], $items);
     }
@@ -287,23 +288,25 @@ class ConfigurationContainer extends FormElement {
     if (self::elementSupportsFiltering($element)) {
       $columns['filter'] = t('Filter');
     }
+    $item_type_options = self::getAvailablePluginTypes($element);
+    $include_type_column = count($item_type_options) > 1;
     $table_header = array_merge(
-      [
+      $include_type_column ? [
         'item_type' => t('@item_type_label type', [
           '@item_type_label' => $element['#item_type_label'],
         ]),
-      ],
+      ] : [],
       $columns,
       [
         'weight' => t('Weight'),
         'operations' => '',
       ]
     );
-    $table_rows = self::buildTableRows($element, $form_state);
+    $table_rows = self::buildTableRows($element, $form_state, $include_type_column);
     $element['summary_table'] = [
       '#type' => 'table',
       '#header' => $table_header,
-      '#empty' => t('No rows have been added yet'),
+      '#empty' => t('Nothing has been added yet'),
       '#tabledrag' => [
         [
           'action' => 'order',
@@ -359,11 +362,13 @@ class ConfigurationContainer extends FormElement {
    *   The form element.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state interface.
+   * @param bool $include_type_column
+   *   Whether to include the plugin type column.
    *
    * @return array
    *   An array with one item per table row.
    */
-  public static function buildTableRows(array $element, FormStateInterface $form_state) {
+  public static function buildTableRows(array $element, FormStateInterface $form_state, $include_type_column = TRUE) {
     $rows = [];
     $items = $form_state->has('items') ? $form_state->get('items') : [];
     if (!empty($items)) {
@@ -376,9 +381,11 @@ class ConfigurationContainer extends FormElement {
           '#attributes' => ['class' => ['draggable']],
           '#weight' => $key,
         ];
-        $row['item_type'] = [
-          '#markup' => $item_type->getPluginLabel(),
-        ];
+        if ($include_type_column) {
+          $row['item_type'] = [
+            '#markup' => $item_type->getPluginLabel(),
+          ];
+        }
         foreach (array_keys($element['#preview']['columns']) as $column_key) {
           $preview = $item_type->preview($column_key);
           $row[$column_key] = is_array($preview) ? $preview : [
@@ -483,16 +490,22 @@ class ConfigurationContainer extends FormElement {
     $triggering_element = $form_state->getTriggeringElement();
     $trigger_parents = $triggering_element ? $triggering_element['#parents'] : [];
 
-    if ($index === NULL || $form_state->get('mode') == 'select_item_type') {
+    if (($index === NULL || $form_state->get('mode') == 'select_item_type') && count($item_type_options) == 1) {
+      $item = [
+        'item_type' => array_key_first($item_type_options),
+      ];
+      $form_state->set('mode', $index !== NULL ? 'edit_item' : 'add_item');
+    }
+    elseif ($index === NULL || $form_state->get('mode') == 'select_item_type') {
       $values = $form_state->getValue($element['#parents']);
-      if (!empty($values) && array_key_exists('item_config', $values)) {
+      if (!empty($values) && array_key_exists('item_config', $values) && array_key_exists('item_type', $values['item_config'])) {
         $item = array_filter($values['item_config'], function ($key) {
           return in_array($key, ['item_type', 'plugin_config']);
         }, ARRAY_FILTER_USE_KEY);
       }
       else {
         $item = [
-          'item_type' => NULL,
+          'item_type' => $form_state->get('current_item_type') ?? NULL,
         ];
       }
 
@@ -560,22 +573,26 @@ class ConfigurationContainer extends FormElement {
         $element['item_config']['item_type']['#value'] = $item_type->getPluginId();
         $element['item_config']['item_type']['#default_value'] = $item_type->getPluginId();
 
-        $element['item_config']['change_item_type'] = [
-          '#type' => 'submit',
-          '#value' => t('Change @item_type_label type', [
-            '@item_type_label' => strtolower($element['#item_type_label']),
-          ]),
-          '#ajax' => [
-            'event' => 'click',
-            'callback' => [static::class, 'updateAjax'],
-            'wrapper' => $wrapper_id,
-          ],
-        ];
+        // If there are more than one type, allow to change it when still
+        // adding.
+        if (count($item_type_options) > 1) {
+          $element['item_config']['change_item_type'] = [
+            '#type' => 'submit',
+            '#value' => t('Change @item_type_label type', [
+              '@item_type_label' => strtolower($element['#item_type_label']),
+            ]),
+            '#ajax' => [
+              'event' => 'click',
+              'callback' => [static::class, 'updateAjax'],
+              'wrapper' => $wrapper_id,
+            ],
+          ];
 
-        $element['title'] = [
-          '#markup' => Markup::create('<h3>' . t('Selected type: %type', ['%type' => $item_type->getPluginLabel()]) . '</h3>'),
-          '#weight' => -1,
-        ];
+          $element['title'] = [
+            '#markup' => Markup::create('<h3>' . t('Selected type: %type', ['%type' => $item_type->getPluginLabel()]) . '</h3>'),
+            '#weight' => -1,
+          ];
+        }
       }
 
       $element['item_config']['plugin_config'] = [

@@ -10,7 +10,7 @@ dependencies:
 id: subpagetitle
 theme: common_design_subtheme
 region: content
-weight: 0
+weight: -4
 provider: null
 plugin: subpage_title
 settings:
@@ -29,6 +29,8 @@ visibility:
     bundles:
       document: document
       financials: financials
+      global_section: global_section
       population: population
       profile: profile
       risk_index: risk_index
+      section: section

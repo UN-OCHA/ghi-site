@@ -10,6 +10,7 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
@@ -948,6 +949,26 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Make sure that we have a UUID.
     $this->configuration['uuid'] = $this->getUuid();
   }
+
+  /**
+   * Allows block plugins to react to being permantenly added to an entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity being saved.
+   * @param string $uuid
+   *   The uuid of the block.
+   */
+  public function postSave(EntityInterface $entity, $uuid) {}
+
+  /**
+   * Allows block plugins to react to being permantenly removed from an entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity being saved.
+   * @param string $uuid
+   *   The uuid of the block.
+   */
+  public function postDelete(EntityInterface $entity, $uuid) {}
 
   /**
    * Custom form alter function for a block configuration.

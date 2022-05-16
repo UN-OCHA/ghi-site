@@ -16,10 +16,6 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
  */
 class LabelValue extends ConfigurationContainerItemPluginBase {
 
-  const SORT_TYPE = 'alfa';
-  const DATA_TYPE = 'string';
-  const ITEM_TYPE = 'mixed';
-
   /**
    * {@inheritdoc}
    */

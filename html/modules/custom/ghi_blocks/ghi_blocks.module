@@ -8,7 +8,9 @@
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_blocks\Controller\LayoutBuilderBlockController;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 
 /**
@@ -20,6 +22,13 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'render element' => 'document',
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'document-link-box',
+    ],
+    'link_carousel' => [
+      'variables' => [
+        'items' => [],
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'link-carousel',
     ],
     'plan_attachment_map' => [
       'variables' => [
@@ -114,6 +123,14 @@ function ghi_blocks_contextual_links_alter(array &$links, $group, array $route_p
 }
 
 /**
+ * Implements hook_entity_update().
+ */
+function ghi_blocks_entity_update(EntityInterface $entity) {
+  $controller = LayoutBuilderBlockController::create(\Drupal::getContainer());
+  $controller->updateEntity($entity);
+}
+
+/**
  * Implements hook_link_alter().
  *
  * Show the block selection in a modal instead of the offcanvas sidebar.
@@ -167,7 +184,7 @@ function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $fo
       $form['placeholders']['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
     }
     // Disable the "Revert to defaults" button.
-    if ($form['actions'] && array_key_exists('revert', $form['actions'])) {
+    if (array_key_exists('actions', $form) && array_key_exists('revert', $form['actions'])) {
       $form['actions']['revert']['#access'] = FALSE;
     }
   }

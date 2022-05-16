@@ -76,15 +76,13 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
     }
 
     // Always output parent link.
-    $overview_link = $base_entity->toLink(SubpageHelper::getSectionOverviewLabel($base_entity))->toRenderable();
+    $overview_link = $base_entity->toLink($this->t('Overview'))->toRenderable();
     if ($node->id() == $base_entity->id()) {
       $overview_link['#attributes']['class'][] = 'active';
     }
 
     $tabs = [
-      0 => $overview_link + [
-        'children' => [],
-      ],
+      0 => $overview_link,
     ];
 
     foreach (SubpageHelper::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
@@ -101,7 +99,7 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       $cache_tags = array_merge($cache_tags, $subpage->getCacheTags());
 
       if (!$subpage->access('view') || (!$this->subpageHasContent($subpage) && !$subpage->access('update'))) {
-        $tabs[0]['children'][] = [
+        $tabs[] = [
           '#markup' => $subpage->getTitle(),
           '#wrapper_attributes' => [
             'class' => ['disabled'],
@@ -113,7 +111,7 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       if ($node->id() == $subpage->id()) {
         $link['#attributes']['class'][] = 'active';
       }
-      $tabs[0]['children'][] = $link;
+      $tabs[] = $link;
     }
 
     // Allow other modules to alter the links.
@@ -134,6 +132,7 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       '#cache' => [
         'tags' => $cache_tags,
       ],
+
     ];
 
     return $output;
