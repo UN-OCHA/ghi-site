@@ -23,13 +23,6 @@ function common_design_subtheme_theme_suggestions_views_view_alter(&$suggestions
 }
 
 /**
- * Implements hook_preprocess_layout__onecol().
- */
-function common_design_subtheme_preprocess_layout__onecol(&$vars) {
-  $vars['attributes']['class'][] = 'content-width';
-}
-
-/**
  * Implements hook_preprocess_html().
  */
 function common_design_subtheme_preprocess_html(&$vars) {
