@@ -93,6 +93,14 @@ trait AjaxElementTrait {
     $form_subset = NestedArray::getValue($form, self::$elementParentsFormKey);
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand('#' . $wrapper_id, $form_subset));
+
+    // And also update action buttons as they might be changed due to this form
+    // submission. This is needed to support multi-step forms of GHI blocks.
+    $button_wrapper = $form['actions']['subforms']['#attributes']['id'] ?? NULL;
+    if ($button_wrapper) {
+      $response->addCommand(new ReplaceCommand('#' . $button_wrapper, $form['actions']['subforms']));
+    }
+
     return $response;
   }
 

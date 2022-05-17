@@ -1069,7 +1069,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     ];
 
     if ($form_state->getBuildInfo()['callback_object'] instanceof AddBlockForm) {
-      // For the add block form, kake this a link back to the block browser.
+      // For the add block form, make this a link back to the block browser.
       $form['actions']['cancel']['#url'] = Url::fromRoute('layout_builder.choose_block', $this->routeMatch->getRawParameters()->all());
       $form['actions']['cancel']['#attributes']['class'][] = 'use-ajax';
     }

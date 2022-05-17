@@ -956,9 +956,6 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
     if (empty($conf['attachments']['entity_attachments']['attachments']['attachment_id'])) {
       return $subform_key == 'attachments';
     }
-    if (empty($conf['sidebar']['slots'])) {
-      return in_array($subform_key, ['attachments', 'sidebar']);
-    }
     return TRUE;
   }
 

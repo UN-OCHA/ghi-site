@@ -202,11 +202,15 @@
     }
 
     .map-container {
-      width: 80%;
+      width: 100%;
       height: 400px;
       margin: 0;
       padding: 0;
       border: 1px solid var(--hpc-border-color);
+
+      &.has-sidebar {
+        width: 80%;
+      }
 
       .leaflet-container {
         width: 100%;
