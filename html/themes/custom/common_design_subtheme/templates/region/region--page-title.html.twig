@@ -22,11 +22,13 @@
 {% if elements %}
   <div{{ attributes.addClass(classes) }}>
     {% for key, item in elements if key|first != '#' %}
-      <div class="block-wrapper block-wrapper--{{ key }}">
-        <div class="block-wrapper__inner">
-          {{ item|render }}
+      {% if item|render|striptags|trim %}
+        <div class="block-wrapper block-wrapper--{{ key }}">
+          <div class="block-wrapper__inner">
+            {{ item|render }}
+          </div>
         </div>
-      </div>
+      {% endif %}
     {% endfor %}
   </div>
 {% endif %}

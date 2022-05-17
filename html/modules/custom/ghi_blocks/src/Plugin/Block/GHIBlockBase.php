@@ -326,7 +326,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Otherwise build the full block. First get the actual block content.
     $build_content = $this->buildContent();
     if (!$build_content) {
-      return [];
+      return $build_content;
     }
 
     // Handle the title display.
