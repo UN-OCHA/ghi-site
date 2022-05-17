@@ -10,6 +10,7 @@ use Drupal\ghi_content\Import\ImportManager;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
 use Drupal\ghi_sections\SectionManager;
+use Drupal\ghi_sections\SectionTrait;
 use Drupal\migrate\MigrateExecutable;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Plugin\MigrationPluginManager;
@@ -21,6 +22,8 @@ use Drupal\taxonomy\TermInterface;
  * Article manager service class.
  */
 class ArticleManager extends BaseContentManager {
+
+  use SectionTrait;
 
   /**
    * Default mode for new directories. See self::chmod().
@@ -253,7 +256,7 @@ class ArticleManager extends BaseContentManager {
    *   An array of node objects indexed by their ids.
    */
   public function loadNodesForSection(NodeInterface $section) {
-    if ($section->bundle() != 'section') {
+    if (!$this->isSectionNode($section)) {
       return NULL;
     }
     return $this->loadNodesForTags(NULL, $section, 'AND');

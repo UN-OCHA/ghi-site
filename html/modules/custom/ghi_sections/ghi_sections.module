@@ -8,6 +8,21 @@
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\layout_builder\SectionStorageInterface;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_preprocess_page_title().
+ */
+function ghi_sections_preprocess_page_title(&$variables) {
+  $node = \Drupal::routeMatch()->getParameter('node');
+  $is_admin_route = \Drupal::service('router.admin_context')->isAdminRoute();
+  if ($is_admin_route || !$node instanceof NodeInterface) {
+    return;
+  }
+  if ($node->bundle() == 'global_section') {
+    $variables['title'] = NULL;
+  }
+}
 
 /**
  * Implements hook_form_FORM_ID_alter().

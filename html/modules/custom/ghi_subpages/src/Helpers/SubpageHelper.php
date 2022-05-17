@@ -4,6 +4,7 @@ namespace Drupal\ghi_subpages\Helpers;
 
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Drupal\node\NodeTypeInterface;
 
 /**
  * Helper class for subpages.
@@ -41,9 +42,12 @@ class SubpageHelper {
     if (!self::isBaseTypeNode($node)) {
       return;
     }
-    return t('@type overview', [
-      '@type' => $node->field_base_object->entity->type->entity->label(),
-    ]);
+    if ($node->field_base_object) {
+      return t('@type overview', [
+        '@type' => $node->field_base_object->entity->type->entity->label(),
+      ]);
+    }
+    return NULL;
   }
 
   /**
@@ -178,13 +182,37 @@ class SubpageHelper {
   }
 
   /**
+   * Check if the given node type is a subpage type.
+   *
+   * @param \Drupal\node\NodeTypeInterface $node_type
+   *   The node type to check.
+   *
+   * @return bool
+   *   TRUE if it is a subpage type, FALSE otherwhise.
+   */
+  public static function isSubpageType(NodeTypeInterface $node_type) {
+    // Let's see if other module think this should be treated as a subpage.
+    $is_subpage = FALSE;
+    /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
+    $module_handler = \Drupal::service('module_handler');
+    foreach ($module_handler->getImplementations('is_subpage_type') as $module_name) {
+      // If any module says yes, we accept that and stop.
+      $is_subpage = $is_subpage || $module_handler->invoke($module_name, 'is_subpage_type', [$node_type->id()]);
+      if ($is_subpage) {
+        break;
+      }
+    }
+    return $is_subpage;
+  }
+
+  /**
    * Check if the given node is a subpage type.
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node to check.
    *
    * @return bool
-   *   TRUE if it is a subpage type, FALSE otherwhise.
+   *   TRUE if it is a subpage type node, FALSE otherwhise.
    */
   public static function isSubpageTypeNode(NodeInterface $node) {
     if (!$node->hasField('field_entity_reference')) {
@@ -194,19 +222,7 @@ class SubpageHelper {
       // Subpage type directly supported by this module.
       return TRUE;
     }
-
-    // Let's see if other module think this should be treated as a subpage.
-    $is_subpage = FALSE;
-    /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
-    $module_handler = \Drupal::service('module_handler');
-    foreach ($module_handler->getImplementations('is_subpage_type') as $module_name) {
-      // If any module says yes, we accept that and stop.
-      $is_subpage = $is_subpage || $module_handler->invoke($module_name, 'is_subpage_type', [$node->bundle()]);
-      if ($is_subpage) {
-        break;
-      }
-    }
-    return $is_subpage;
+    return self::isSubpageType($node->type->entity);
   }
 
 }

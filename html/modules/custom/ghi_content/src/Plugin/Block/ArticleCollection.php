@@ -5,6 +5,7 @@ namespace Drupal\ghi_content\Plugin\Block;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
+use Drupal\ghi_sections\SectionTrait;
 
 /**
  * Provides an 'ArticleCollection' block.
@@ -19,6 +20,8 @@ use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
  * )
  */
 class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockInterface, OptionalTitleBlockInterface {
+
+  use SectionTrait;
 
   const MAX_FEATURE_COUNT = 2;
   const CARD_LIMIT = 9;
@@ -182,7 +185,7 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
     $section_tags = $section ? $this->articleManager->getTags($section) : [];
     $section_tag_ids = array_keys($section_tags);
 
-    if ($section) {
+    if ($section && $this->isSectionNode($section)) {
       // Get the available tags, section tags will be first.
       $available_nodes = $this->articleManager->loadNodesForSection($section);
     }

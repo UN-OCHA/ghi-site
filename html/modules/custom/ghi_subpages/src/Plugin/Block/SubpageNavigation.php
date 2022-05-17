@@ -59,6 +59,10 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       return [];
     }
     $node = $contexts['node']->getContextValue();
+    if ($node && $node->bundle() == 'global_section') {
+      // Don't show the subpage navigation on nodes of type global section.
+      return NULL;
+    }
 
     $output = [];
     $cache_tags = [];

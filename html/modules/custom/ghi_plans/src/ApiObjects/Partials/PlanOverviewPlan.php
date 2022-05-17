@@ -32,6 +32,13 @@ class PlanOverviewPlan extends BaseObject {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getBundle() {
+    return 'plan';
+  }
+
+  /**
    * Get the plan type object from a plan.
    *
    * @return object

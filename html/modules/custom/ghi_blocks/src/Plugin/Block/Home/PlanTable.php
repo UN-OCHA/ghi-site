@@ -9,6 +9,7 @@ use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanTable' block.
@@ -29,6 +30,25 @@ class PlanTable extends GHIBlockBase {
 
   use GlobalSettingsTrait;
   use PlanTypeTrait;
+
+  /**
+   * The section manager.
+   *
+   * @var \Drupal\ghi_sections\SectionManager
+   */
+  protected $sectionManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $instance */
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+
+    // Set our own properties.
+    $instance->sectionManager = $container->get('ghi_sections.manager');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -67,9 +87,10 @@ class PlanTable extends GHIBlockBase {
 
     foreach ($plans as $plan) {
       $plan_entity = $plan->getEntity();
+      $section = $plan_entity ? $this->sectionManager->loadSectionForBaseObject($plan_entity) : NULL;
       $document_uri = $plan_entity ? $plan_entity->get('field_plan_document_link')->uri : NULL;
       $rows[$plan->id()] = [
-        'name' => $plan->getName(),
+        'name' => $section && $section->isPublished() ? $section->toLink($plan->getName()) : $plan->getName(),
         'inneed' => [
           'data' => [
             '#theme' => 'hpc_amount',
