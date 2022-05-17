@@ -1,11 +1,20 @@
+{%
+  set map_container_classes = [
+    'map-container',
+    sidebar ? 'has-sidebar',
+  ]
+%}
+
 <div class="{{ outer_classes }}">
  {{ attachment_select }}
   <div class="plan-attachment-map-wrapper pane-{{ chart_id }} {{ map_type }}">
-    <div class="pane-sidebar-left">{{ sidebar }}</div>
+    {% if sidebar %}
+      <div class="pane-sidebar-left">{{ sidebar }}</div>
+    {% endif %}
     {% if map_tabs %}
       <div class="map-tabs cd-container">{{ map_tabs }}</div>
     {% endif %}
-    <div class="map-container">
+    <div {{ attributes.addClass(map_container_classes) }}">
       {% if legend %}
         <div id="{{ chart_id }}-legend" class="map-legend"><ul></ul></div>
       {% endif %}
