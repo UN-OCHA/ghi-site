@@ -30,13 +30,13 @@ class RelatedArticles extends ContentBlockBase implements OptionalTitleBlockInte
     $articles = $this->getArticles();
     if (empty($articles)) {
       // Nothing to show.
-      return;
+      return [];
     }
 
     if ($conf['mode'] == 'fixed') {
       if (empty($conf['select']) || empty($conf['select']['selected'])) {
         // Nothing selected.
-        return;
+        return [];
       }
       $articles = array_intersect_key($articles, array_flip($conf['select']['selected']));
       if (!empty($conf['select']['order'])) {
