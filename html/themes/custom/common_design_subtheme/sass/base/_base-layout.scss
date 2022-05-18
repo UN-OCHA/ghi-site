@@ -67,6 +67,8 @@
   background-color: unset;
 }
 .user-logged-in main[class*="--unpublished"] {
+  margin-top: 4px;
+  margin-bottom: 4px;
   outline: 4px dashed  #ffc310;
 }
 

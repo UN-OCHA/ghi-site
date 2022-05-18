@@ -14,6 +14,13 @@
 }
 
 .cd-site-header__nav-holder {
+  @include max-width(lg) {
+    // Fix offset for mobile device when toolbar is present.
+    .gin--horizontal-toolbar & .cd-nav[data-cd-hidden="false"] {
+      top: calc(var(--ginHorizontalToolbarOffset) + #{$cd-global-header-height} + #{$cd-site-header-height} + 6px);
+    }
+  }
+
   // Active trail for mobile menu.
   @include max-width(lg) {
     .cd-nav > ul > li {
