@@ -24,6 +24,18 @@ body.toolbar-horizontal #toolbar-administration {
   z-index: 1003 !important;
 }
 
+body.layout-builder-ipe-editing .dialog-off-canvas-main-canvas {
+  // Account for Layout Builder toolbar height.
+  padding-top: 64px;
+}
+
+.layout-builder--content-preview-disabled .layout-builder-block.content-width {
+  // Make sure that content-width is also applied correctly when content
+  // preview is disabled.
+  margin-right: auto;
+  margin-left: auto;
+}
+
 #layout-builder-modal .cd-alert {
   margin-top: 0;
   margin-right: 21px;
