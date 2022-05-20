@@ -167,12 +167,12 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
 
     // Sort the entites by name.
     usort($entities, function ($a, $b) {
-      return strnatcasecmp($a->name, $b->name);
+      return strnatcasecmp($a->getEntityName(), $b->getEntityName());
     });
 
     $rows = [];
     foreach ($entities as $entity) {
-      if (!array_key_exists($entity->id, $objects)) {
+      if (!array_key_exists($entity->id(), $objects)) {
         continue;
       }
 
@@ -449,7 +449,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   /**
    * Get all governing entity objects for the current block instance.
    *
-   * @return object[]
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
    *   An array of entity objects, aka clusters.
    */
   private function getEntityObjects() {

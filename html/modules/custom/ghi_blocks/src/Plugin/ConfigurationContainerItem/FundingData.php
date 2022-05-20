@@ -172,6 +172,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getValue($data_type_key = NULL, $scale = NULL, $cluster_restrict = NULL) {
+    /** @var \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface $entity */
     $entity = $this->getContextValue('entity');
     $plan_object = $this->getContextValue('plan_object');
     $base_object = $this->getContextValue('base_object');
@@ -183,7 +184,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
 
     $value = NULL;
     if ($entity) {
-      return $this->planClusterSummaryQuery->getClusterProperty($entity, $property, 0);
+      return $this->planClusterSummaryQuery->getClusterPropertyById($entity->id(), $property, 0);
     }
     if ($plan_object && !$cluster_context) {
       if (!empty($cluster_restrict) && !empty($cluster_restrict['type']) && $cluster_restrict['type'] != 'none') {

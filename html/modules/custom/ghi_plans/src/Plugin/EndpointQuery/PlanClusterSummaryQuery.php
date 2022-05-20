@@ -63,9 +63,9 @@ class PlanClusterSummaryQuery extends EndpointQueryBase {
    *   A default value to return if the property is not set.
    *
    * @return mixed
-   *   The value for tha property on the cluster, or the default value.
+   *   The value for the property on the cluster, or the default value.
    */
-  public function getClusterProperty($cluster, $property, $default = NULL) {
+  private function getClusterProperty($cluster, $property, $default = NULL) {
     if (!$cluster || !is_object($cluster)) {
       return $default;
     }
