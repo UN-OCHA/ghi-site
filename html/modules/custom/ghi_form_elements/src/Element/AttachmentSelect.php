@@ -147,9 +147,9 @@ class AttachmentSelect extends FormElement {
     // Get the list of attachments that this element can access.
     $element_context_filter = array_filter([
       'entity_id' => $element['#entity_ids'] ?? NULL,
-      'entity_type' => $element['#entity_type'] ?? NULL,
-      'type' => $element['#attachment_type'] ?? NULL,
-      'prototype_id' => $element['#attachment_prototype'] ?? NULL,
+      'entity_type' => $defaults['entity_type'] ? ($defaults['entity_type'] !== 'overview' ? $defaults['entity_type'] . 'Entity' : 'plan') : NULL,
+      'type' => $defaults['attachment_type'] ?? NULL,
+      'prototype_id' => $defaults['attachment_prototype'] ?? NULL,
     ]);
     $attachment_cache_key = self::getCacheKey($element_context_filter);
     $attachments = $form_state->get($attachment_cache_key);
