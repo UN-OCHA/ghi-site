@@ -379,7 +379,7 @@ class ConfigurationContainer extends FormElement {
     $table_rows = self::buildTableRows($element, $form_state, $include_type_column);
     $element['summary_table'] = [
       '#type' => 'table',
-      '#caption' => $element['#description'],
+      '#caption' => $element['#description'] ?? NULL,
       '#header' => $table_header,
       '#empty' => t('Nothing has been added yet'),
       '#tabledrag' => array_filter([
@@ -791,6 +791,9 @@ class ConfigurationContainer extends FormElement {
           '#type' => 'item',
           '#title' => $item_type->getPluginLabel(),
           '#markup' => $plugin_description,
+          '#wrapper_attributes' => [
+            'class' => ['plugin-description'],
+          ],
         ];
       }
 

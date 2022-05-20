@@ -41,4 +41,12 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
     ArrayHelper::sortObjectsByStringProperty($this->children, 'sort_key', EndpointQuery::SORT_ASC);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getTags() {
+    // Make all tags lowercase.
+    return array_map('strtolower', $this->tags);
+  }
+
 }

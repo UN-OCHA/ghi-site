@@ -49,4 +49,12 @@ interface EntityObjectInterface extends ApiObjectInterface {
    */
   public function getFullName();
 
+  /**
+   * Get tags for an entity.
+   *
+   * @return array
+   *   The tags for the entity as retrieved from the API.
+   */
+  public function getTags();
+
 }
