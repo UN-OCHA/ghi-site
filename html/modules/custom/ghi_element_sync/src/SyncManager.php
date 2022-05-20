@@ -473,7 +473,7 @@ class SyncManager implements ContainerInjectionInterface {
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
    *
-   * @return array
+   * @return \Drupal\layout_builder\Section[]
    *   An array of layout builder sections.
    */
   private function getNodeSections(NodeInterface $node) {
