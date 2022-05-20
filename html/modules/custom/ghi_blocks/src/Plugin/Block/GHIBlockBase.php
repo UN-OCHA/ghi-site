@@ -326,7 +326,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Otherwise build the full block. First get the actual block content.
     $build_content = $this->buildContent();
     if (!$build_content) {
-      return $build_content;
+      return $build_content ?? [];
     }
 
     // Handle the title display.
@@ -646,7 +646,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
         '#theme' => 'block',
         '#attributes' => [
           'data-block-preview' => $this->getPluginId(),
-        ],
+        ] + $build['#attributes'],
         '#configuration' => $this->configuration,
         '#base_plugin_id' => $this->getBaseId(),
         '#plugin_id' => $this->getPluginId(),
@@ -821,7 +821,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       }
     }
 
-    if (array_key_exists('year', $form['context_mapping'])) {
+    if (array_key_exists('year', $form['context_mapping']) && $form['context_mapping']['year']['#type'] == 'select') {
       $form['context_mapping']['year']['#access'] = FALSE;
       $form['context_mapping']['year']['#value'] = array_key_first($form['context_mapping']['year']['#options']);
     }

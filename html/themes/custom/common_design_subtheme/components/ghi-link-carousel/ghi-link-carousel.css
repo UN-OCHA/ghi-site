@@ -6,6 +6,10 @@
   height: 568px;
 }
 
+.link-carousel-wrapper .swiper .swiper-wrapper .swiper-slide {
+  width: 100% !important;
+}
+
 .link-carousel-wrapper .slide-navigation-wrapper {
   position: absolute;
   z-index: 2;

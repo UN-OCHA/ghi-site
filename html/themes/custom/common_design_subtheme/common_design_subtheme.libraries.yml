@@ -34,6 +34,14 @@ ghi-section-teaser:
   css:
     theme:
       components/ghi-section-teaser/ghi-section-teaser.css: {}
+ghi-tab-container:
+  css:
+    theme:
+      components/ghi-tab-container/ghi-tab-container.css: {}
+  js:
+    components/ghi-tab-container/ghi-tab-container.js: {}
+  dependencies:
+    - common_design_subtheme/swiper
 ghi-link-carousel:
   css:
     theme:

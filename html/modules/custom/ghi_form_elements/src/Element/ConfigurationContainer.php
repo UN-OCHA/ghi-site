@@ -11,6 +11,7 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
+use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 
 /**
  * Provides a configuration container element.
@@ -22,6 +23,7 @@ class ConfigurationContainer extends FormElement {
   use AjaxElementTrait {
     updateAjax as traitUpdateAjax;
   }
+  use ConfigurationContainerGroup;
 
   /**
    * {@inheritdoc}
@@ -51,6 +53,7 @@ class ConfigurationContainer extends FormElement {
       '#item_type_label' => $this->t('Item'),
       '#row_filter' => FALSE,
       '#item_type_label' => NULL,
+      '#groups' => FALSE,
     ];
   }
 
@@ -74,6 +77,10 @@ class ConfigurationContainer extends FormElement {
     $new_mode = NULL;
 
     switch ($action) {
+      case 'add_group':
+        $new_mode = 'add_group';
+        break;
+
       case 'add_new_item':
       case 'change_item_type':
         $new_mode = 'select_item_type';
@@ -90,13 +97,35 @@ class ConfigurationContainer extends FormElement {
 
       case 'edit':
         array_pop($parents);
-        $index = array_pop($parents);
+        $id = array_pop($parents);
 
         // Set the index of the editable item.
-        $form_state->set('edit_item', $index);
+        $form_state->set('edit_item', $id);
 
         // Switch to edit mode.
         $new_mode = 'edit_item';
+        break;
+
+      case 'submit_group':
+        $mode = $form_state->get('mode');
+        $values = $form_state->getValue($parents);
+        if ($mode == 'add_group') {
+          $items[] = [
+            'id' => count($items),
+            'item_type' => 'item_group',
+            'config' => $values['plugin_config'],
+            'weight' => 0,
+            'pid' => NULL,
+          ];
+        }
+        elseif ($mode == 'edit_group') {
+          $id = $form_state->get('edit_item');
+          $index = self::getItemIndexById($items, $id);
+          $items[$index]['config'] = $values['plugin_config'] + $items[$index]['config'];
+        }
+
+        // Switch to list mode.
+        $new_mode = 'list';
         break;
 
       case 'submit_item':
@@ -104,17 +133,29 @@ class ConfigurationContainer extends FormElement {
         $values = $form_state->getValue($parents);
 
         if ($mode == 'add_item') {
+          $pid = NULL;
+          if (self::canGroupItems($element) && $groups = self::getGroups($items)) {
+            // See if we aready have groups. In that case we want to add new
+            // items to the last group.
+            $last_group = end($groups);
+            $pid = $last_group['id'] ?? NULL;
+          }
           $items[] = [
+            'id' => count($items),
             'item_type' => $values['item_type'],
             'config' => $values['plugin_config'],
+            'weight' => 0,
+            'pid' => $pid,
           ];
         }
         elseif ($mode == 'edit_item') {
-          $index = $form_state->get('edit_item');
+          $id = $form_state->get('edit_item');
+          $index = self::getItemIndexById($items, $id);
           $items[$index]['config'] = $values['plugin_config'] + $items[$index]['config'];
         }
         elseif ($mode == 'edit_item_filter') {
-          $index = $form_state->get('edit_item');
+          $id = $form_state->get('edit_item');
+          $index = self::getItemIndexById($items, $id);
           $items[$index]['config']['filter'] = $values['filter_config'];
         }
 
@@ -134,10 +175,10 @@ class ConfigurationContainer extends FormElement {
 
       case 'edit_filter':
         array_pop($parents);
-        $index = array_pop($parents);
+        $id = array_pop($parents);
 
         // Set the index of the editable item.
-        $form_state->set('edit_item', $index);
+        $form_state->set('edit_item', $id);
 
         // Switch to edit mode.
         $new_mode = 'edit_item_filter';
@@ -145,15 +186,17 @@ class ConfigurationContainer extends FormElement {
 
       case 'save_order':
         $sorted_rows = $form_state->getValue(array_merge($parents, ['summary_table']));
-        uksort($items, function ($a, $b) use ($sorted_rows) {
-          return $sorted_rows[$a]['weight'] > $sorted_rows[$b]['weight'];
-        });
+        foreach ($sorted_rows as $row) {
+          $item_key = self::getItemIndexById($items, $row['id']);
+          $items[$item_key]['weight'] = (int) $row['weight'];
+          $items[$item_key]['pid'] = $row['pid'] !== '' && $row['pid'] !== NULL ? (int) $row['pid'] : NULL;
+        }
         break;
 
       case 'remove':
         array_pop($parents);
-        $index = array_pop($parents);
-
+        $id = array_pop($parents);
+        $index = self::getItemIndexById($items, $id);
         // Remove the requested index from the items.
         unset($items[$index]);
 
@@ -168,8 +211,8 @@ class ConfigurationContainer extends FormElement {
     }
 
     // Update stored items.
-    $form_state->set('items', array_values($items));
-    $form_state->setTemporaryValue($element['#parents'], array_values($items));
+    $form_state->set('items', $items);
+    $form_state->setTemporaryValue($element['#parents'], $items);
 
     if ($new_mode) {
       // Update the mode.
@@ -218,13 +261,17 @@ class ConfigurationContainer extends FormElement {
    *   The cleaned output array.
    */
   private static function cleanItemValues(array $values) {
-    return array_filter($values, function ($item_key) {
+    $values = array_filter($values, function ($item_key) {
       return is_int($item_key);
     }, ARRAY_FILTER_USE_KEY);
+    $values = array_filter($values, function ($item) {
+      return !empty($item['item_type']);
+    });
+    return $values;
   }
 
   /**
-   * Process the usage year form element.
+   * Process the configuration container form element.
    *
    * This is called during form build. Note that it is not possible to store
    * any arbitrary data inside the form_state object.
@@ -259,6 +306,13 @@ class ConfigurationContainer extends FormElement {
       self::buildSummaryTable($element, $form_state);
     }
 
+    if ($mode == 'add_group') {
+      self::buildGroupConfig($element, $form_state);
+    }
+    if ($mode == 'edit_group') {
+      self::buildGroupConfig($element, $form_state, $form_state->get('edit_item'));
+    }
+
     if ($mode == 'select_item_type' || $mode == 'add_item') {
       self::buildItemConfig($element, $form_state);
     }
@@ -272,6 +326,20 @@ class ConfigurationContainer extends FormElement {
     }
 
     return $element;
+  }
+
+  /**
+   * See if this container can providing a grouping feature.
+   *
+   * @param array $element
+   *   The form element.
+   *
+   * @return bool
+   *   TRUE if this container can use groups, FALSE otherwise.
+   */
+  private static function canGroupItems(array $element) {
+    $allowed_item_types = self::getAllowedItemTypes($element);
+    return !empty($element['#groups']) && self::getGroupTypes($allowed_item_types) !== NULL;
   }
 
   /**
@@ -297,23 +365,38 @@ class ConfigurationContainer extends FormElement {
         ]),
       ] : [],
       $columns,
-      [
+      array_filter([
         'weight' => t('Weight'),
-        'operations' => '',
-      ]
+        'id' => [
+          'data' => t('Id'),
+          'class' => 'tabledrag-hide',
+        ],
+        'pid' => self::canGroupItems($element) ? t('Parent') : NULL,
+      ]),
+      ['operations' => '']
     );
+
     $table_rows = self::buildTableRows($element, $form_state, $include_type_column);
     $element['summary_table'] = [
       '#type' => 'table',
+      '#caption' => $element['#description'],
       '#header' => $table_header,
       '#empty' => t('Nothing has been added yet'),
-      '#tabledrag' => [
+      '#tabledrag' => array_filter([
+        self::canGroupItems($element) ? [
+          'action' => 'match',
+          'relationship' => 'parent',
+          'group' => 'row-pid',
+          'source' => 'row-id',
+          'hidden' => TRUE,
+          'limit' => FALSE,
+        ] : NULL,
         [
           'action' => 'order',
           'relationship' => 'sibling',
-          'group' => 'table-sort-weight',
+          'group' => 'row-weight',
         ],
-      ],
+      ]),
       '#attributes' => [
         'class' => array_filter([
           'summary-table',
@@ -321,7 +404,20 @@ class ConfigurationContainer extends FormElement {
         ]),
       ],
     ];
+    unset($element['#description']);
     $element['summary_table'] += $table_rows;
+
+    if (self::canGroupItems($element)) {
+      $element['add_group'] = [
+        '#type' => 'submit',
+        '#value' => t('Add new group'),
+        '#ajax' => [
+          'event' => 'click',
+          'callback' => [static::class, 'updateAjax'],
+          'wrapper' => $wrapper_id,
+        ],
+      ];
+    }
 
     $element['add_new_item'] = [
       '#type' => 'submit',
@@ -371,49 +467,113 @@ class ConfigurationContainer extends FormElement {
   public static function buildTableRows(array $element, FormStateInterface $form_state, $include_type_column = TRUE) {
     $rows = [];
     $items = $form_state->has('items') ? $form_state->get('items') : [];
-    if (!empty($items)) {
-      foreach ($items as $key => $item) {
-        $item_type = self::getItemTypeInstance($item, $element);
-        if (!$item_type) {
-          continue;
-        }
-        $row = [
-          '#attributes' => ['class' => ['draggable']],
-          '#weight' => $key,
+    if (empty($items)) {
+      return $rows;
+    }
+    foreach ($items as $key => $item) {
+      // Legacy check for the id property.
+      if (!array_key_exists('id', $item)) {
+        $items[$key]['id'] = $key;
+      }
+    }
+
+    // Build the sorted list via a tree representation and update the items.
+    $tree = self::buildTree($items);
+    $sorted_list = self::buildFlatList($tree);
+    $form_state->set('items', $sorted_list);
+
+    foreach ($sorted_list as $key => $item) {
+      $item += [
+        'weight' => $key,
+        'pid' => NULL,
+      ];
+
+      $item_type = self::getItemTypeInstance($item, $element);
+      if (!$item_type) {
+        continue;
+      }
+
+      $row = [
+        '#attributes' => [
+          'class' => [
+            'draggable',
+            $item_type->isGroupItem() ? 'tabledrag-root' : 'tabledrag-leaf',
+          ],
+        ],
+        '#weight' => (int) $item['weight'],
+      ];
+      if ($include_type_column) {
+        $row['item_type'] = [
+          '#markup' => $item_type->getPluginLabel(),
         ];
-        if ($include_type_column) {
-          $row['item_type'] = [
-            '#markup' => $item_type->getPluginLabel(),
-          ];
-        }
-        foreach (array_keys($element['#preview']['columns']) as $column_key) {
-          $preview = $item_type->preview($column_key);
-          $row[$column_key] = is_array($preview) ? $preview : [
-            '#markup' => $preview,
-          ];
-        }
-        if (self::elementSupportsFiltering($element)) {
-          $row['filter'] = [
-            '#markup' => $item_type->getFilterSummary(),
-          ];
-        }
-        $row['weight'] = [
-          '#type' => 'weight',
-          '#title' => t('Weight'),
+      }
+      foreach (array_keys($element['#preview']['columns']) as $column_key) {
+        $preview = $item_type->preview($column_key);
+        $row[$column_key] = is_array($preview) ? $preview : [
+          '#markup' => $preview,
+        ];
+      }
+      if (self::elementSupportsFiltering($element)) {
+        $row['filter'] = [
+          '#markup' => $item_type->getFilterSummary(),
+        ];
+      }
+      $row['weight'] = [
+        '#type' => 'weight',
+        '#title' => t('Weight'),
+        '#title_display' => 'invisible',
+        '#default_value' => $item['weight'],
+        // Classify the weight element for #tabledrag.
+        '#attributes' => [
+          'class' => [
+            'row-weight',
+          ],
+        ],
+      ];
+      $row['id'] = [
+        '#type' => 'number',
+        '#title' => t('Id'),
+        '#title_display' => 'invisible',
+        '#size' => 3,
+        '#min' => 0,
+        '#default_value' => $item['id'],
+        '#disabled' => TRUE,
+        // Classify the id element for #tabledrag.
+        '#attributes' => [
+          'class' => ['row-id', 'tabledrag-hide'],
+        ],
+        '#wrapper_attributes' => [
+          'class' => ['tabledrag-hide'],
+        ],
+      ];
+      if (self::canGroupItems($element)) {
+        $row['pid'] = [
+          '#type' => 'number',
+          '#size' => 3,
+          '#min' => 0,
+          '#title' => t('Group'),
           '#title_display' => 'invisible',
-          '#default_value' => $key,
-          // Classify the weight element for #tabledrag.
+          '#default_value' => $item['pid'],
+          // Classify the pid element for #tabledrag.
           '#attributes' => [
-            'class' => [
-              'table-sort-weight',
-            ],
+            'class' => ['row-pid'],
           ],
         ];
-        $row['operations'] = [
-          '#type' => 'container',
-        ] + self::buildRowOperations($element, $key, $item_type);
-        $rows[$key] = $row;
+
+        if ($row['pid']['#default_value'] !== NULL) {
+          $indentation = [
+            '#theme' => 'indentation',
+            '#size' => 1,
+          ];
+          $column_keys = Element::children($row);
+          $first_column_key = reset($column_keys);
+          $row[$first_column_key]['#prefix'] = \Drupal::service('renderer')->render($indentation);
+        }
       }
+      $row['operations'] = [
+        '#type' => 'container',
+      ] + self::buildRowOperations($element, $item['id'], $item_type);
+      $rows[$item['id']] = $row;
     }
     return $rows;
   }
@@ -470,16 +630,82 @@ class ConfigurationContainer extends FormElement {
   }
 
   /**
+   * Build the config form part for a group.
+   *
+   * @param array $element
+   *   The form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state interface.
+   * @param int $id
+   *   Optional id argument to specifiy an existing item to be configured.
+   */
+  public static function buildGroupConfig(array &$element, FormStateInterface $form_state, $id = NULL) {
+    $wrapper_id = self::getWrapperId($element);
+
+    $element['group_config'] = [
+      '#type' => 'container',
+    ];
+
+    $items = $form_state->get('items');
+    $item = self::getItemById($items, $id);
+    if (!$item) {
+      $item = ['item_type' => 'item_group'];
+      $id = NULL;
+    }
+    $form_state->set('mode', $id !== NULL ? 'edit_group' : 'add_group');
+    $item_type = self::getItemTypeInstance($item, $element);
+
+    $element['group_config']['plugin_config'] = [
+      '#type' => 'container',
+      '#parents' => array_merge($element['#parents'], [
+        'group_config',
+        'plugin_config',
+      ]),
+      '#array_parents' => array_merge($element['#array_parents'], [
+        'group_config',
+        'plugin_config',
+      ]),
+    ];
+    $subform_state = SubformState::createForSubform($element['group_config']['plugin_config'], $element, $form_state);
+    $element['group_config']['plugin_config'] += $item_type->buildForm($element['group_config']['plugin_config'], $subform_state);
+
+    $element['group_config']['submit_group'] = [
+      '#type' => 'submit',
+      '#value' => $id !== NULL ? t('Update group') : t('Add group'),
+      '#name' => 'group-config-submit',
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+    ];
+    $element['group_config']['cancel'] = [
+      '#type' => 'submit',
+      '#value' => t('Cancel'),
+      '#name' => 'group-config-cancel',
+      '#limit_validation_errors' => [],
+      // This is important to prevent form errors. Note that elementSubmit()
+      // is still run for this button.
+      '#submit' => [],
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+    ];
+  }
+
+  /**
    * Build the config form part for item configuration.
    *
    * @param array $element
    *   The form element.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state interface.
-   * @param int $index
+   * @param int $id
    *   Optional index argument to specifiy an existing item to be configured.
    */
-  public static function buildItemConfig(array &$element, FormStateInterface $form_state, $index = NULL) {
+  public static function buildItemConfig(array &$element, FormStateInterface $form_state, $id = NULL) {
     $wrapper_id = self::getWrapperId($element);
     $item_type_options = self::getAvailablePluginTypes($element);
 
@@ -490,13 +716,13 @@ class ConfigurationContainer extends FormElement {
     $triggering_element = $form_state->getTriggeringElement();
     $trigger_parents = $triggering_element ? $triggering_element['#parents'] : [];
 
-    if (($index === NULL || $form_state->get('mode') == 'select_item_type') && count($item_type_options) == 1) {
+    if (($id === NULL || $form_state->get('mode') == 'select_item_type') && count($item_type_options) == 1) {
       $item = [
         'item_type' => array_key_first($item_type_options),
       ];
-      $form_state->set('mode', $index !== NULL ? 'edit_item' : 'add_item');
+      $form_state->set('mode', $id !== NULL ? 'edit_item' : 'add_item');
     }
-    elseif ($index === NULL || $form_state->get('mode') == 'select_item_type') {
+    elseif ($id === NULL || $form_state->get('mode') == 'select_item_type') {
       $values = $form_state->getValue($element['#parents']);
       if (!empty($values) && array_key_exists('item_config', $values) && array_key_exists('item_type', $values['item_config'])) {
         $item = array_filter($values['item_config'], function ($key) {
@@ -545,7 +771,7 @@ class ConfigurationContainer extends FormElement {
     }
     else {
       $items = $form_state->get('items');
-      $item = $items[$index];
+      $item = self::getItemById($items, $id);
     }
 
     if (!empty($item['item_type'])) {
@@ -553,7 +779,7 @@ class ConfigurationContainer extends FormElement {
     }
 
     if (!empty($item['item_type']) && empty($trigger_parents)) {
-      $form_state->set('mode', $index !== NULL ? 'edit_item' : 'add_item');
+      $form_state->set('mode', $id !== NULL ? 'edit_item' : 'add_item');
     }
 
     $item_type = self::getItemTypeInstance($item, $element);
@@ -568,7 +794,7 @@ class ConfigurationContainer extends FormElement {
         ];
       }
 
-      if ($index === NULL) {
+      if ($id === NULL) {
         $element['item_config']['item_type']['#type'] = 'hidden';
         $element['item_config']['item_type']['#value'] = $item_type->getPluginId();
         $element['item_config']['item_type']['#default_value'] = $item_type->getPluginId();
@@ -647,14 +873,14 @@ class ConfigurationContainer extends FormElement {
    *   The form element.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state interface.
-   * @param int $index
-   *   Index to specifiy the item for which the filter is to be configured.
+   * @param int $id
+   *   Id to specifiy the item for which the filter is to be configured.
    */
-  public static function buildItemFilterConfig(array &$element, FormStateInterface $form_state, $index) {
+  public static function buildItemFilterConfig(array &$element, FormStateInterface $form_state, $id) {
     $wrapper_id = self::getWrapperId($element);
 
     $items = $form_state->get('items');
-    $item = $items[$index];
+    $item = self::getItemById($items, $id);
     $item_type = self::getItemTypeInstance($item, $element);
 
     $element['filter_config'] = [
@@ -732,6 +958,27 @@ class ConfigurationContainer extends FormElement {
   }
 
   /**
+   * Get the group types from the given item types.
+   *
+   * @param array $item_types
+   *   An array of item type definitions.
+   *
+   * @return array|null
+   *   An array of group item types definition or NULL if no group is found.
+   */
+  public static function getGroupTypes(array $item_types) {
+    $groups = [];
+    foreach ($item_types as $item_type => $configuration) {
+      /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $instance */
+      $instance = \Drupal::service('plugin.manager.configuration_container_item_manager')->createInstance($item_type, $configuration);
+      if ($instance && $instance->isGroupItem()) {
+        $groups[$item_type] = $instance;
+      }
+    }
+    return !empty($groups) ? $groups : NULL;
+  }
+
+  /**
    * Get an instance for the given item type plugin.
    *
    * @param array $item
@@ -744,10 +991,11 @@ class ConfigurationContainer extends FormElement {
    */
   private static function getItemTypeInstance(array $item, array $element) {
     $item_type = !empty($item['item_type']) ? $item['item_type'] : NULL;
-    if (empty($item_type) || !array_key_exists($item_type, $element['#allowed_item_types'])) {
+    $allowed_item_types = self::getAllowedItemTypes($element);
+    if (empty($item_type) || !array_key_exists($item_type, $allowed_item_types)) {
       return NULL;
     }
-    $configuration = $element['#allowed_item_types'][$item_type];
+    $configuration = $allowed_item_types[$item_type];
     $item_type = \Drupal::service('plugin.manager.configuration_container_item_manager')->createInstance($item_type, $configuration);
     if (!empty($item['config'])) {
       $item_type->setConfig((array) $item['config']);
@@ -759,13 +1007,26 @@ class ConfigurationContainer extends FormElement {
   }
 
   /**
+   * Get the allowed item types for this element.
+   *
+   * @param array $element
+   *   The element definition.
+   *
+   * @return array
+   *   An array of allowed item types.
+   */
+  private static function getAllowedItemTypes(array $element) {
+    return $element['#allowed_item_types'];
+  }
+
+  /**
    * Get the available plugin types.
    *
    * @param array $element
    *   The form element.
    *
    * @return array
-   *   A simple array suitful for select fields. Key is the machine name, value
+   *   A simple array suitable for select fields. Key is the machine name, value
    *   the label.
    */
   private static function getAvailablePluginTypes(array $element) {
@@ -777,6 +1038,9 @@ class ConfigurationContainer extends FormElement {
       }
       $definition = $definitions[$type_id];
       $instance = self::getItemTypeInstance(['item_type' => $type_id], $element);
+      if (!$instance || $instance->isGroupItem()) {
+        continue;
+      }
       $callable = [$instance, 'access'];
       if (array_key_exists('access', $configuration) && !empty($configuration['access'] && is_callable($callable))) {
         if (!$instance->access($element['#element_context'], $configuration['access'])) {

@@ -5,7 +5,7 @@ namespace Drupal\ghi_blocks\Traits;
 use Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery;
 
 /**
- * Helper trait for cluster restriction on configurtion item plugins.
+ * Helper trait for cluster restriction on configuration item plugins.
  */
 trait ConfigurationItemClusterRestrictTrait {
 

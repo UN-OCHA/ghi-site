@@ -1,0 +1,18 @@
+.tab-navigation-wrapper {
+  display: flex;
+  gap: 3rem;
+  border-top: 1px solid var(--cd-grey--light);
+  border-bottom: 1px solid var(--cd-grey--light);
+}
+
+.tab-navigation-wrapper .tab-navigation {
+  position: relative;
+  padding: 1rem 0;
+  cursor: pointer;
+  font-size: var(--cd-font-size--base);
+}
+
+.tab-navigation-wrapper .tab-navigation.active {
+  padding-bottom: calc(1rem - 2px);
+  border-bottom: 2px solid var(--cd-ocha-yellow);
+}

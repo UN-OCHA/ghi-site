@@ -219,6 +219,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
       '#type' => 'configuration_container',
       '#title' => $this->t('Configured headline figures'),
       '#title_display' => 'invisble',
+      '#item_type_label' => $this->t('Headline figure'),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'items'),
       '#allowed_item_types' => $this->getAllowedItemTypes(),
       '#preview' => [

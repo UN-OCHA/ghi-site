@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
+use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
@@ -19,6 +20,7 @@ class AttachmentSelect extends FormElement {
 
   use AjaxElementTrait;
   use SimpleCacheTrait;
+  use AttachmentFilterTrait;
 
   /**
    * {@inheritdoc}
@@ -103,7 +105,9 @@ class AttachmentSelect extends FormElement {
     $element['#suffix'] = '</div>';
 
     // Set the defaults.
-    $values = (array) $form_state->getValue($element['#parents']) + (array) $element['#default_value'];
+    $submitted_values = array_filter((array) $form_state->getValue($element['#parents']));
+    $values = $submitted_values + (array) $element['#default_value'];
+
     $defaults = [
       'entity_type' => !empty($values['entity_type']) ? $values['entity_type'] : ($element['#entity_type'] ?? NULL),
       'attachment_type' => !empty($values['attachment_type']) ? $values['attachment_type'] : ($element['#attachment_type'] ?? NULL),
@@ -111,20 +115,25 @@ class AttachmentSelect extends FormElement {
       'attachment_id' => !empty($values['attachment_id']) ? $values['attachment_id'] : NULL,
     ];
 
+    $element['entity_type'] = [
+      '#type' => 'hidden',
+      '#value' => $defaults['entity_type'],
+    ];
+    $element['attachment_type'] = [
+      '#type' => 'hidden',
+      '#value' => $defaults['attachment_type'],
+    ];
+    $element['attachment_prototype'] = [
+      '#type' => 'hidden',
+      '#value' => $defaults['attachment_prototype'],
+    ];
+    $element['attachment_id'] = [
+      '#type' => 'hidden',
+      '#value' => $defaults['attachment_id'],
+    ];
+
     if ($element['#summary_only'] && !$triggered_by_select && !$triggered_by_change_request) {
       $attachment = self::getAttachmentQuery()->getAttachment($defaults['attachment_id']);
-      $element['entity_type'] = [
-        '#type' => 'value',
-        '#value' => $defaults['entity_type'],
-      ];
-      $element['attachment_type'] = [
-        '#type' => 'value',
-        '#value' => $defaults['attachment_type'],
-      ];
-      $element['attachment_id'] = [
-        '#type' => 'value',
-        '#value' => $defaults['attachment_id'],
-      ];
       $element['summary'] = [
         '#markup' => $attachment ? Markup::create($attachment->composed_reference) : t('No attachment selected.'),
       ];
@@ -132,22 +141,6 @@ class AttachmentSelect extends FormElement {
     }
 
     if ($is_hidden) {
-      $element['entity_type'] = [
-        '#type' => 'value',
-        '#value' => $defaults['entity_type'],
-      ];
-      $element['attachment_type'] = [
-        '#type' => 'value',
-        '#value' => $defaults['attachment_type'],
-      ];
-      $element['attachment_prototype'] = [
-        '#type' => 'value',
-        '#value' => $defaults['attachment_prototype'],
-      ];
-      $element['attachment_id'] = [
-        '#type' => 'value',
-        '#value' => $defaults['attachment_id'],
-      ];
       return $element;
     }
 
@@ -177,15 +170,16 @@ class AttachmentSelect extends FormElement {
     // Build the filter to limit attachments to the once available using the
     // current filter values.
     $attachment_filter = array_filter([
-      'entity_type' => $defaults['entity_type'] ? ($defaults['entity_type'] !== 'overview' ? $defaults['entity_type'] . 'Entity' : 'plan') : NULL,
+      'source.entity_type' => $defaults['entity_type'] ? ($defaults['entity_type'] !== 'overview' ? $defaults['entity_type'] . 'Entity' : 'plan') : NULL,
       'type' => $defaults['attachment_type'] ?? NULL,
       'prototype.id' => $defaults['attachment_prototype'] ? (int) $defaults['attachment_prototype'] : NULL,
     ]);
-    if (empty($element['#entity_ids'])) {
-      $attachment_filter['entity_id'] = $element['#entity_ids'];
+    if (!empty($element['#entity_ids'])) {
+      $attachment_filter['source.entity_id'] = $element['#entity_ids'];
     }
 
-    // Apply the attachment filters.
+    // Apply the attachment filters and build the options array.
+    $attachment_options = [];
     foreach (ArrayHelper::filterArray($attachments, $attachment_filter) as $attachment) {
       $attachment_options[$attachment->id] = [
         'id' => $attachment->id,

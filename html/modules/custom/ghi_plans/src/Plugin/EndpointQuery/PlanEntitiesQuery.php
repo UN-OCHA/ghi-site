@@ -85,8 +85,8 @@ class PlanEntitiesQuery extends EndpointQueryBase {
       $attachments = $data->attachments;
       $plan_id = $data->id;
       $attachments = array_map(function ($attachment) use ($plan_id) {
-        $attachment->entity_id = $plan_id;
-        $attachment->entity_type = 'plan';
+        $attachment->objectId = $plan_id;
+        $attachment->objectType = 'plan';
         return $attachment;
       }, $attachments);
     }
@@ -106,8 +106,8 @@ class PlanEntitiesQuery extends EndpointQueryBase {
         }
         $entity_id = $entity->id;
         $entity_attachments = array_map(function ($attachment) use ($entity_id, $property) {
-          $attachment->entity_id = $entity_id;
-          $attachment->entity_type = $property;
+          $attachment->objectId = $entity_id;
+          $attachment->objectType = $property;
           return $attachment;
         }, $entity->attachments);
         $attachments = array_merge($attachments, $entity_attachments);
@@ -151,7 +151,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    * @param array $filter
    *   Optional array for filtering the attachments.
    *
-   * @return array
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
    *   An array of attachment objects for the given context.
    */
   public function getDataAttachments(ContentEntityInterface $context_object = NULL, array $filter = NULL) {
@@ -178,7 +178,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $context_object
    *   The current context object.
    *
-   * @return array
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
    *   An array of attachment objects for the given context.
    */
   public function getWebContentFileAttachments(ContentEntityInterface $context_object = NULL) {
@@ -198,7 +198,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $context_object
    *   The current context object.
    *
-   * @return array
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
    *   An array of attachment objects for the given context.
    */
   public function getWebContentTextAttachments(ContentEntityInterface $context_object) {

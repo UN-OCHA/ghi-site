@@ -83,6 +83,7 @@ function ghi_plans_form_alter(&$form, FormStateInterface &$form_state, $form_id)
 function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterface &$form_state) {
   $allow_fields = [
     'field_decimal_format',
+    'field_plan_caseload',
     'field_plan_document_link',
     'field_plan_status_string',
     'field_short_name',

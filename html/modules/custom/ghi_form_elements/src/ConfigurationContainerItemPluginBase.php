@@ -480,4 +480,11 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
     return $result;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function isGroupItem() {
+    return FALSE;
+  }
+
 }

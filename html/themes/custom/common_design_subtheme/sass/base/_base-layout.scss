@@ -38,6 +38,7 @@
 
 #main-content {
   position: relative;
+  max-width: var(--cd-max-page-width);
 
   .layout--onecol .layout__region {
 

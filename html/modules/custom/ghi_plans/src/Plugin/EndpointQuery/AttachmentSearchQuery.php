@@ -47,11 +47,12 @@ class AttachmentSearchQuery extends EndpointQueryBase {
    *   The matching (processed) attachment objects, keyed by the attachment id.
    */
   public function getAttachmentsByObject($object_type, $object_ids, array $filter = NULL) {
+    $object_ids = (array) $object_ids;
     sort($object_ids);
     $cache_key = $this->getCacheKey([
       'object_type' => $object_type,
       'object_ids' => $object_ids,
-    ] + $filter);
+    ] + (array) $filter);
     $attachments = $this->cache($cache_key);
     if ($attachments) {
       return $attachments;

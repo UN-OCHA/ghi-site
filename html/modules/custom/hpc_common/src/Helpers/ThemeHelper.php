@@ -71,7 +71,7 @@ class ThemeHelper {
    * @return array
    *   An array of final theme options.
    */
-  public static function getThemeOptions($theme_function, $value, array $options) {
+  public static function getThemeOptions($theme_function, $value, array $options = []) {
     switch ($theme_function) {
       case 'hpc_amount':
         return [

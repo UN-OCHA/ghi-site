@@ -3,12 +3,12 @@
 namespace Drupal\ghi_blocks\Traits;
 
 /**
- * Helper trait for cluster restriction on configurtion item plugins.
+ * Helper trait for value previews on configuration item plugins.
  */
 trait ConfigurationItemValuePreviewTrait {
 
   /**
-   * Build the cluster restrict form element.
+   * Build the value preview form element.
    *
    * @param mixed $default_value
    *   The default value for the element. Either a render array or a plain

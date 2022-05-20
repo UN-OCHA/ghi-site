@@ -1,0 +1,23 @@
+uuid: b1f98634-c636-43eb-82e5-332ebd884fe8
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_plan_caseload
+    - ghi_base_objects.base_object_type.plan
+  module:
+    - ghi_plans
+id: base_object.plan.field_plan_caseload
+field_name: field_plan_caseload
+entity_type: base_object
+bundle: plan
+label: 'Plan caseload'
+description: 'The plan level caseload attachment to use for PIN data retrieval on global pages, e.g. the homepage.'
+required: false
+translatable: false
+default_value:
+  -
+    attachment_id: null
+default_value_callback: ''
+settings: {  }
+field_type: ghi_plans_plan_caseload

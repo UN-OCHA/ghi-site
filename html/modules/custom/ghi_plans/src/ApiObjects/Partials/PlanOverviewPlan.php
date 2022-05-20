@@ -3,6 +3,8 @@
 namespace Drupal\ghi_plans\ApiObjects\Partials;
 
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
+use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\StringHelper;
 
 /**
@@ -210,7 +212,7 @@ class PlanOverviewPlan extends BaseObject {
       return NULL;
     }
     $caseload_item = $this->getCaseloadItemByType($metric_type);
-    if (!$caseload_item) {
+    if (!$caseload_item && $metric_name !== NULL) {
       // Fallback, see https://humanitarian.atlassian.net/browse/HPC-7838
       $caseload_item = $this->getCaseloadItemByName($metric_name);
     }
@@ -227,7 +229,11 @@ class PlanOverviewPlan extends BaseObject {
    *   A caseload item if found.
    */
   private function getCaseloadItemByType($type) {
-    $totals = $this->getRawData()->caseLoads[0]->totals;
+    $caseload = $this->getPlanCaseload();
+    if (!$caseload) {
+      return NULL;
+    }
+    $totals = $caseload->totals;
     $candidates = array_filter($totals, function ($item) use ($type) {
       return (strtolower($item->type) == strtolower($type));
     });
@@ -247,14 +253,87 @@ class PlanOverviewPlan extends BaseObject {
    *   A caseload item if found.
    */
   private function getCaseloadItemByName($name) {
-    $totals = $this->getRawData()->caseLoads[0]->totals;
-    $candidates = array_filter($totals, function ($item) use ($name) {
-      return property_exists($item->name, 'en') && ($item->name->en == $name);
+    $caseload = $this->getPlanCaseload();
+    if (!$caseload) {
+      return NULL;
+    }
+    $totals = $caseload->totals;
+
+    // We support alternative names based on RPM.
+    $alternative_names = [
+      // Reached.
+      'Reached' => [
+        'Atteints',
+        'Personas Atendidas',
+      ],
+      // Cumulative reach.
+      'Cumulative reach' => [
+        'Cumul atteint',
+        'Alcance cumulativo',
+      ],
+      // Covered.
+      'Covered' => [
+        'Couverts',
+        'Personas con Necesidades Cubiertas',
+      ],
+    ];
+
+    $candidates = array_filter($totals, function ($item) use ($name, $alternative_names) {
+      if (!property_exists($item->name, 'en')) {
+        return FALSE;
+      }
+      $item_name = $item->name->en;
+      if ($item_name == $name) {
+        return TRUE;
+      }
+      if (array_key_exists($name, $alternative_names) && in_array($item_name, $alternative_names[$name])) {
+        return TRUE;
+      }
+      return FALSE;
     });
     if (count($candidates) != 1) {
       return NULL;
     }
     return reset($candidates);
+  }
+
+  /**
+   * Get the plan caseload attachment.
+   *
+   * @param int $attachment_id
+   *   Optional argument to retrieve a specific caseload.
+   *
+   * @return object|null
+   *   A caseload object or NULL.
+   */
+  public function getPlanCaseload($attachment_id = NULL) {
+    $caseload = NULL;
+
+    $caseloads = $this->getRawData()->caseLoads ?? NULL;
+
+    // In case there are multiple plan level caseloads, sort by ascending
+    // attachment ID to be sure to use the first one.
+    if ($caseloads && count($caseloads) > 1) {
+      // We have 2 options here. Either a specific attachment has been
+      // requested and we use that if it is part of the available attachments.
+      if ($attachment_id !== NULL) {
+        $matching_caseloads = array_filter($caseloads, function ($caseload) use ($attachment_id) {
+          return $caseload->attachmentId == $attachment_id;
+        });
+        $caseload = !empty($matching_caseloads) && is_array($matching_caseloads) ? reset($matching_caseloads) : NULL;
+      }
+
+      // Or we try to deduce the suitable attachment by selecting the one with
+      // the lowest custom reference.
+      if ($caseload === NULL) {
+        ArrayHelper::sortObjectsByProperty($caseloads, 'customReference', EndpointQuery::SORT_ASC, SORT_STRING);
+        $caseload = is_array($caseloads) && count($caseloads) ? reset($caseloads) : NULL;
+      }
+    }
+    else {
+      $caseload = is_array($caseloads) && count($caseloads) ? reset($caseloads) : NULL;
+    }
+    return $caseload;
   }
 
 }
