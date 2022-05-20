@@ -1004,6 +1004,7 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
       '#type' => 'configuration_container',
       '#title' => $this->t('Configured sidebar slots'),
       '#title_display' => 'invisible',
+      '#item_type_label' => $this->t('Slot'),
       '#default_value' => $default_value,
       '#allowed_item_types' => $this->getAllowedItemTypes(),
       '#preview' => [

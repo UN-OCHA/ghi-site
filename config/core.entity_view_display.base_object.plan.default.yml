@@ -7,6 +7,7 @@ dependencies:
     - field.field.base_object.plan.field_decimal_format
     - field.field.base_object.plan.field_description
     - field.field.base_object.plan.field_original_id
+    - field.field.base_object.plan.field_plan_caseload
     - field.field.base_object.plan.field_plan_costing
     - field.field.base_object.plan.field_plan_document_link
     - field.field.base_object.plan.field_plan_status_string
@@ -17,6 +18,7 @@ dependencies:
     - field.field.base_object.plan.field_year
     - ghi_base_objects.base_object_type.plan
   module:
+    - ghi_plans
     - link
     - options
 id: base_object.plan.default
@@ -54,6 +56,13 @@ content:
       prefix_suffix: true
     third_party_settings: {  }
     weight: -2
+    region: content
+  field_plan_caseload:
+    type: ghi_plans_plan_caseload
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 9
     region: content
   field_plan_costing:
     type: entity_reference_label

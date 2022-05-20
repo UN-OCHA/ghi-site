@@ -43,6 +43,11 @@
   width: 100%;
 }
 
+.form-type--configuration_container table.summary-table > caption {
+  background-color: transparent;
+  line-height: 1.5rem;
+}
+
 .form-type--configuration_container table.summary-table thead th,
 .form-type--configuration_container table.summary-table tbody tr td {
   text-align: left;
@@ -59,6 +64,9 @@
 .form-type--configuration_container table.summary-table a.tabledrag-handle .handle {
   width: auto;
   height: auto;
+}
+.form-type--configuration_container table.summary-table .draggable.tabledrag-root td {
+  font-weight: bold;
 }
 
 .form-type--configuration_container input[type="radio"]:checked,

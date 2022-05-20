@@ -30,6 +30,13 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'link-carousel',
     ],
+    'tab_container' => [
+      'variables' => [
+        'tabs' => [],
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'tab-container',
+    ],
     'plan_attachment_map' => [
       'variables' => [
         'chart_id' => NULL,
@@ -177,6 +184,7 @@ function ghi_blocks_link_alter(&$variables) {
  */
 function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
   if (strpos($form_id, 'layout_builder_form')) {
+    $form['#attached']['library'][] = 'system/admin';
     $form['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
     $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
     if (array_key_exists('placeholders', $form)) {

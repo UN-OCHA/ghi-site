@@ -9,6 +9,15 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResultForbidden;
 
 /**
+ * Implements hook_theme_registry_alter().
+ */
+function common_design_subtheme_theme_registry_alter(&$theme_registry) {
+  // Set some defaults for number formatting.
+  $theme_registry['hpc_currency']['variables']['use_abbreviation'] = FALSE;
+  $theme_registry['hpc_amount']['variables']['use_abbreviation'] = FALSE;
+}
+
+/**
  * Implements hook_theme_suggestions_HOOK_alter().
  *
  * We need more granularity when Views displays are getting rendered, because
@@ -183,6 +192,21 @@ function common_design_subtheme_preprocess_hpc_progress_bar(array &$variables) {
  */
 function common_design_subtheme_preprocess_hpc_pie_chart(array &$variables) {
   $variables['#attached']['library'][] = 'common_design_subtheme/ghi-pie-chart';
+}
+
+/**
+ * Preprocess a plan headline figures list.
+ */
+function common_design_subtheme_preprocess_item_list__global_key_figures(&$variables) {
+  $items = &$variables['items'];
+  $figures = [];
+  foreach ($items as &$item) {
+    $figures[] = [
+      'label' => $item['value']['#title'],
+      'value' => $item['value'][0],
+    ];
+  }
+  $variables['figures'] = $figures;
 }
 
 /**
