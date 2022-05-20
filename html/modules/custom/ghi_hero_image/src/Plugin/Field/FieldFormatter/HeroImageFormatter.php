@@ -74,7 +74,7 @@ class HeroImageFormatter extends FormatterBase implements ContainerFactoryPlugin
     else {
       $item = (object) $items->get(0)->getValue();
       if ($item->source == 'hpc_webcontent_file_attachment') {
-        // Somehow fine the right attachment based on the configuration. For
+        // Somehow find the right attachment based on the configuration. For
         // the time being we just take the first one, which is the same effect
         // as having the field empty.
         $attachment = $attachments ? reset($attachments) : NULL;
