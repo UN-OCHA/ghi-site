@@ -1,6 +1,7 @@
 .ui-dialog .hpc-form-wrapper .form-type--configuration_container.glb-form-item {
   margin-top: 0 !important;
   margin-bottom: 0 !important;
+  line-height: 1.5rem;
 }
 .ui-dialog .hpc-form-wrapper input.ajax-enabled:active {
   opacity: 0.2;
@@ -45,7 +46,6 @@
 
 .form-type--configuration_container table.summary-table > caption {
   background-color: transparent;
-  line-height: 1.5rem;
 }
 
 .form-type--configuration_container table.summary-table thead th,

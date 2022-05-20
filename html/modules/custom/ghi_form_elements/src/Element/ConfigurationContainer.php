@@ -791,6 +791,9 @@ class ConfigurationContainer extends FormElement {
           '#type' => 'item',
           '#title' => $item_type->getPluginLabel(),
           '#markup' => $plugin_description,
+          '#wrapper_attributes' => [
+            'class' => ['plugin-description'],
+          ],
         ];
       }
 
