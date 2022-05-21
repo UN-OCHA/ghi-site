@@ -86,8 +86,9 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
         'title' => Markup::create($item_type->getLabel()),
         'description' => Markup::create($item_type->getDescription()),
         'image' => [
-          '#theme' => 'image',
+          '#theme' => 'image_style',
           '#uri' => $file->getFileUri(),
+          '#style_name' => 'wide',
         ],
         'button' => $link->toRenderable(),
       ];

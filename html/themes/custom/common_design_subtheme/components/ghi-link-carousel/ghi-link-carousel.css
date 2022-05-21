@@ -10,6 +10,10 @@
   width: 100% !important;
 }
 
+.link-carousel-wrapper .swiper .swiper-wrapper .swiper-slide img {
+  width: 100%;
+}
+
 .link-carousel-wrapper .slide-navigation-wrapper {
   position: absolute;
   z-index: 2;
