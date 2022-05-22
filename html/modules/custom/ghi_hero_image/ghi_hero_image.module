@@ -59,3 +59,20 @@ function ghi_hero_image_preprocess_page(&$variables) {
   }
 
 }
+
+/**
+ * Implements hook_cache_flush().
+ *
+ * Flush the external image cache. By default, imagecache_external only allows
+ * to configure flushing max once a day, which is not enough for us.
+ */
+function ghi_hero_image_cache_flush() {
+  if (\Drupal::moduleHandler()->moduleExists('imagecache_external') && function_exists('imagecache_external_get_directory_path')) {
+    // A bit extreme to delete the full external storage, but
+    // imagecache_external_flush_cache() doesn't work when not called from
+    // cron. The directory will be recreated without any problem for the first
+    // image that get's downloaded and cached, so this is ok.
+    $directory = imagecache_external_get_directory_path();
+    \Drupal::service('file_system')->deleteRecursive($directory);
+  }
+}

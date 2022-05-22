@@ -60,8 +60,9 @@ class HeroImageFormatter extends FormatterBase implements ContainerFactoryPlugin
 
     if ($items->isEmpty()) {
       $attachment = $attachments ? reset($attachments) : NULL;
-      $image = $attachment ? ThemeHelper::theme('image', [
+      $image = $attachment ? ThemeHelper::theme('imagecache_external', [
         '#uri' => $attachment->url,
+        '#style_name' => 'wide',
         '#attributes' => [
           'style' => 'width: 100%',
         ],
@@ -79,8 +80,9 @@ class HeroImageFormatter extends FormatterBase implements ContainerFactoryPlugin
         // as having the field empty.
         $attachment = $attachments ? reset($attachments) : NULL;
 
-        $preview_image = $attachment ? ThemeHelper::theme('image', [
+        $preview_image = $attachment ? ThemeHelper::theme('imagecache_external', [
           '#uri' => $attachment->url,
+          '#style_name' => 'wide',
           '#attributes' => [
             'style' => 'width: 100%',
           ],
