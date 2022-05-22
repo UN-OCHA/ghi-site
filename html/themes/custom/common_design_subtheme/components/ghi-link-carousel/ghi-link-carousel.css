@@ -1,3 +1,7 @@
+.link-carousel-wrapper {
+  width: var(--cd-max-page-width);
+}
+
 .link-carousel-wrapper .swiper {
   position: relative;
 }

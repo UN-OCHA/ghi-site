@@ -1248,8 +1248,11 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
    */
   private function getDefaultAttachment() {
     $conf = $this->getBlockConfig();
-    $attachment_ids = $conf['attachments']['entity_attachments']['attachments']['attachment_id'];
-    $attachment_id = $conf['map']['common']['default_attachment'] ?? reset($attachment_ids);
+    $attachment_ids = $conf['attachments']['entity_attachments']['attachments']['attachment_id'] ?? NULL;
+    $attachment_id = $conf['map']['common']['default_attachment'] ?? ($attachment_ids ? reset($attachment_ids) : NULL);
+    if (!$attachment_id) {
+      return NULL;
+    }
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
     $query = $this->getQueryHandler('attachment');
     $attachment = $query->getAttachment($attachment_id);

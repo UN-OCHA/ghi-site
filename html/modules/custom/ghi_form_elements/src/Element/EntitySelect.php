@@ -7,6 +7,8 @@ use Drupal\Core\Render\Element\FormElement;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
+use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
+use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_common\Helpers\NodeHelper;
 
@@ -297,22 +299,23 @@ class EntitySelect extends FormElement {
     // Create a nested option list based on the plan structure.
     $options = [];
     foreach ($ple_structure as $first_level_item) {
-      if ($first_level_item->entity_type == 'GVE' && $context_entity_original_id !== NULL && $first_level_item->id == $context_entity_original_id && !empty($first_level_item->children) && empty($entity_options[$context_entity_original_id])) {
+      if ($first_level_item instanceof GoverningEntity && $context_entity_original_id !== NULL && $first_level_item->id() == $context_entity_original_id && !empty($first_level_item->getChildren()) && empty($entity_options[$context_entity_original_id])) {
         // Only for GVE subpages, if we are on a plan subpage we don't want the
         // entities to be grouped under the root level GVE as per the plan
         // structure, but we want to start one level lower. So we call this
         // function again with the childs of this first level item as a default
         // PLE structure.
-        $options = self::sortEntitiesByPlanStructure($entity_options, $plan_data, $context_node, $hierarchical, $label_only, $first_level_item->children);
+        $options = self::sortEntitiesByPlanStructure($entity_options, $plan_data, $context_node, $hierarchical, $label_only, $first_level_item->getChildren());
       }
       else {
         if (empty($options[$first_level_item->group_name])) {
           $options[$first_level_item->group_name] = [];
         }
-        if (!empty($entity_options[$first_level_item->id])) {
-          $options[$first_level_item->group_name][$first_level_item->id] = $label_only ? $first_level_item->display_name : $entity_options[$first_level_item->id];
+        if (!empty($entity_options[$first_level_item->id()])) {
+          $options[$first_level_item->group_name][$first_level_item->id()] = $label_only ? $first_level_item->getEntityName() : $entity_options[$first_level_item->id()];
         }
-        if (!empty($first_level_item->children) && $hierarchical) {
+        $children = $first_level_item->getChildren();
+        if (!empty($children) && $hierarchical) {
           $options[$first_level_item->group_name] += self::addChildItemsToOptionsGroup($first_level_item, $entity_options, 1, !$label_only);
         }
       }
@@ -335,7 +338,7 @@ class EntitySelect extends FormElement {
   /**
    * Recursively add child entities to an option group.
    *
-   * @param object $parent_item
+   * @param \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface $parent_item
    *   The parent item object.
    * @param array $entity_options
    *   An entity options array.
@@ -347,21 +350,21 @@ class EntitySelect extends FormElement {
    * @return array
    *   An array containing all child entities.
    */
-  public static function addChildItemsToOptionsGroup($parent_item, array $entity_options, $level = 1, $full_childs = FALSE) {
-    if (empty($parent_item->children)) {
+  public static function addChildItemsToOptionsGroup(EntityObjectInterface $parent_item, array $entity_options, $level = 1, $full_childs = FALSE) {
+    if (empty($parent_item->getChildren())) {
       return [];
     }
     $options = [];
-    foreach ($parent_item->children as $child_item) {
-      if (!empty($entity_options[$child_item->id])) {
+    foreach ($parent_item->getChildren() as $child_item) {
+      if (!empty($entity_options[$child_item->id()])) {
         if ($full_childs) {
-          $options[$child_item->id] = $entity_options[$child_item->id];
+          $options[$child_item->id()] = $entity_options[$child_item->id()];
         }
         else {
-          $options[$child_item->id] = str_repeat('—', $level) . ' ' . $child_item->display_name;
+          $options[$child_item->id()] = str_repeat('—', $level) . ' ' . $child_item->getEntityName();
         }
       }
-      if (!empty($child_item->children)) {
+      if (!empty($child_item->getChildren())) {
         $options += self::addChildItemsToOptionsGroup($child_item, $entity_options, $level + 1, $full_childs);
       }
     }
