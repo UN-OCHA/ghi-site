@@ -45,7 +45,7 @@ trait ConfigurationContainerGroup {
    */
   public static function getItemById(array $items, $id) {
     $index = self::getItemIndexById($items, $id);
-    return $index && array_key_exists($index, $items) ? $items[$index] : NULL;
+    return $index !== NULL && array_key_exists($index, $items) ? $items[$index] : NULL;
   }
 
   /**

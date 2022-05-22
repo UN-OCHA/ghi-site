@@ -43,7 +43,7 @@
   .layout--onecol .layout__region {
 
     & > div:not(.content-width) {
-      max-width: var(--cd-max-body-width);
+      max-width: var(--cd-max-page-width);
     }
 
     /* Contrain the element with the `content-width` class. The paddings reflect
