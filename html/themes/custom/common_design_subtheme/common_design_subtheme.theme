@@ -7,6 +7,7 @@
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResultForbidden;
+use Drupal\Core\Render\Element;
 
 /**
  * Implements hook_theme_registry_alter().
@@ -45,6 +46,28 @@ function common_design_subtheme_preprocess_html(&$vars) {
     '#type' => 'inline_template',
     '#template' => '<span class="hidden">' . $icons . '</span>',
   ];
+}
+
+/**
+ * Implements hook_preprocess_region().
+ *
+ * Unset blocks that don't have any content besides or only HTML comments.
+ */
+function common_design_subtheme_preprocess_region(&$variables) {
+  if ($variables['region'] == 'page_title' && !empty($variables['elements'])) {
+    foreach (Element::children($variables['elements']) as $key) {
+      $block = $variables['elements'][$key];
+      if (!array_key_exists('#markup', $block)) {
+        continue;
+      }
+      if (empty($block['#markup']) && empty($block['#children'])) {
+        unset($variables['elements'][$key]);
+      }
+      if (empty(trim(preg_replace('/<!--(.|\s)*?-->/', '', $block['#markup'])))) {
+        unset($variables['elements'][$key]);
+      }
+    }
+  }
 }
 
 /**
