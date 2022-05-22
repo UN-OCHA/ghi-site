@@ -1,5 +1,6 @@
 .link-carousel-wrapper {
-  width: var(--cd-max-page-width);
+  width: 100%;
+  max-width: var(--cd-max-page-width);
 }
 
 .link-carousel-wrapper .swiper {
@@ -7,7 +8,7 @@
 }
 
 .link-carousel-wrapper .swiper .swiper-wrapper {
-  height: 568px;
+  max-height: 568px;
 }
 
 .link-carousel-wrapper .swiper .swiper-wrapper .swiper-slide {
@@ -23,9 +24,10 @@
   z-index: 2;
   bottom: 0;
   left: 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   width: 100%;
-  height: 100px;
+  height: auto;
   padding: 0 6rem;
   color: var(--cd-white);
   background-color: rgb(0, 0, 0, 0.8);
@@ -33,6 +35,7 @@
 
 .link-carousel-wrapper .slide-navigation-wrapper .slide-navigation {
   position: relative;
+  min-width: 250px;
   padding: 0 1.5rem;
   cursor: pointer;
   font-size: var(--cd-font-size--tiny);
