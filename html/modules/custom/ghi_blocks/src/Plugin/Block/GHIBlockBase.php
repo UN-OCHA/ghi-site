@@ -646,7 +646,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
         '#theme' => 'block',
         '#attributes' => [
           'data-block-preview' => $this->getPluginId(),
-        ] + $build['#attributes'],
+        ] + ($build['#attributes'] ?? []),
         '#configuration' => $this->configuration,
         '#base_plugin_id' => $this->getBaseId(),
         '#plugin_id' => $this->getPluginId(),
