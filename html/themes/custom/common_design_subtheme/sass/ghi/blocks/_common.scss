@@ -49,6 +49,7 @@
 
   .layout__region &:first-child {
     margin-top: 0;
+    padding-top: 0;
   }
 
   &.ghi-block--hidden-preview > *:not(.contextual) {

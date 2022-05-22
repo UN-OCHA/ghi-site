@@ -37,7 +37,7 @@ class SubpageTitle extends BlockBase {
         ]),
       ];
     }
-    elseif (SubpageHelper::isBaseTypeNode($node)) {
+    elseif (SubpageHelper::isBaseTypeNode($node) && SubpageHelper::getSectionOverviewLabel($node)) {
       return [
         '#markup' => new FormattableMarkup('<h2>@title</h2>', [
           '@title' => SubpageHelper::getSectionOverviewLabel($node),
