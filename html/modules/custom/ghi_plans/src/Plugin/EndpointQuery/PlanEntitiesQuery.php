@@ -127,8 +127,8 @@ class PlanEntitiesQuery extends EndpointQueryBase {
           }
           $entity_id = $entity->id;
           $entity_attachments = array_map(function ($attachment) use ($entity_id, $property) {
-            $attachment->entity_id = $entity_id;
-            $attachment->entity_type = $property;
+            $attachment->objectId = $entity_id;
+            $attachment->objectType = $property;
             return $attachment;
           }, $entity->attachments);
           $attachments = array_merge($attachments, $entity_attachments);
@@ -167,6 +167,23 @@ class PlanEntitiesQuery extends EndpointQueryBase {
       $filter['type'] = array_filter((array) $filter['type'], function ($item) use ($allowed_types) {
         return in_array($item, $allowed_types);
       });
+    }
+
+    // Map some filters from what the external caller should use, to what we
+    // use internally on the raw data before creating actual Attachment objects
+    // using AttachmentHelper::processAttachments.
+    if (!empty($filter['entity_type'])) {
+      $filter['objectType'] = $filter['entity_type'];
+      unset($filter['entity_type']);
+    }
+    if (!empty($filter['entity_id'])) {
+      $filter['objectId'] = $filter['entity_id'];
+      unset($filter['entity_id']);
+    }
+
+    if (!empty($filter['prototype_id'])) {
+      $filter['attachmentPrototype.id'] = $filter['prototype_id'];
+      unset($filter['prototype_id']);
     }
 
     return AttachmentHelper::processAttachments($this->getAttachments($context_object, $filter));
