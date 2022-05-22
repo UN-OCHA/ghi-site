@@ -36,7 +36,7 @@
 .link-carousel-wrapper .slide-navigation-wrapper .slide-navigation {
   position: relative;
   min-width: 250px;
-  padding: 0 1.5rem;
+  padding: 0 2.5rem;
   cursor: pointer;
   font-size: var(--cd-font-size--tiny);
 }
@@ -44,8 +44,8 @@
   padding: 1.5rem 0;
 }
 .link-carousel-wrapper .slide-navigation-wrapper .slide-navigation.active .slide-navigation__inner {
-  padding-top: calc(1.5rem - 2px);
-  border-top: 2px solid var(--cd-ocha-yellow);
+  padding-top: calc(1.5rem - 3px);
+  border-top: 3px solid var(--cd-ocha-yellow);
 }
 
 .link-carousel-wrapper .slide-navigation-wrapper .slide-navigation:after {
