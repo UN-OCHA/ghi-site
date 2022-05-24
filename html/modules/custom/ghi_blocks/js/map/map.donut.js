@@ -329,7 +329,7 @@
 
     // Now, based on the donut_data array, create a container for each donut in
     // the dataset, add circles, text and donuts.
-    sel.selectAll('g')
+    sel.selectAll('#' + map_id + ' g')
       .data(donut_data)
       .join(
         function(enter) {
@@ -340,7 +340,7 @@
             .attr('location-name', d => d.object.location_name)
             .attr('x', d => d.x)
             .attr('y', d => d.y)
-            .attr('id', d => d.object.location_id)
+            .attr('id', d => map_id + '--' + d.object.location_id)
           .append("g")
             .attr("class", d => Drupal.hpc_map_donut.hasData(d, state) ? 'has-data' : 'empty')
             .attr('width', d => d.width)
@@ -473,12 +473,12 @@
         }
     );
 
-    if (!sel.selectAll('use').size()) {
+    if (!sel.selectAll('#' + map_id + ' use').size()) {
       sel.append('use');
     }
 
     // Add event listeners.
-    sel.selectAll('svg').on('click', function(event, d) {
+    sel.selectAll('#' + map_id + ' svg').on('click', function(event, d) {
       var state = Drupal.hpc_map.getMapStateFromContainedElement(this);
       Drupal.hpc_map.setActiveLocation(this, d.object, state);
       Drupal.hpc_map.showPopup(d.object, state);

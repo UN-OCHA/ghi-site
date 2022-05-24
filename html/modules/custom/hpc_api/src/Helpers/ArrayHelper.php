@@ -179,7 +179,7 @@ class ArrayHelper {
    *   The sort direction.
    */
   public static function sortArrayByStringKey(array &$data, $order, $sort) {
-    usort($data, function ($a, $b) use ($order, $sort) {
+    uasort($data, function ($a, $b) use ($order, $sort) {
       if (empty($a[$order]) || empty($b[$order])) {
         return $sort == EndpointQuery::SORT_ASC ? empty($a[$order]) > empty($b[$order]) : empty($a[$order]) < empty($b[$order]);
       }

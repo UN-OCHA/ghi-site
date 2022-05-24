@@ -8,6 +8,7 @@
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Link;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\ghi_blocks\Plugin\Block\Generic\DocumentLinks;
@@ -78,6 +79,33 @@ function ghi_blocks_preprocess_document_link_box(&$variables) {
 
   // Create meta.
   $variables['meta'] = $date ?? NULL;
+}
+
+/**
+ * Preprocess a plan attachment map.
+ */
+function ghi_blocks_preprocess_plan_overview_map(&$variables) {
+  $outer_classes = [
+    'map-wrapper-outer',
+    'map-wrapper-' . $variables['chart_id'],
+  ];
+  $variables['outer_classes'] = implode(' ', $outer_classes);
+  $variables['map_type'] = 'donut';
+}
+
+/**
+ * Preprocess a modal for the plan overview map element.
+ */
+function ghi_blocks_preprocess_plan_overview_map_modal(&$variables) {
+  foreach ($variables['items'] as &$item) {
+    // Make sure the values are markup objects or strings.
+    if (!empty($item['label']) && is_string($item['label'])) {
+      $item['label'] = Markup::create($item['label']);
+    }
+    if (!empty($item['value']) && is_string($item['value'])) {
+      $item['value'] = Markup::create($item['value']);
+    }
+  }
 }
 
 /**

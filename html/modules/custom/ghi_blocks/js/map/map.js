@@ -778,7 +778,8 @@
     }
     // Move the element to the front.
     // See https://developer.mozilla.org/en-US/docs/Web/SVG/Element/use
-    $(element).parent().find('use').attr('href', '#' + object.location_id);
+    let map_id = Drupal.hpc_map.getMapIdFromContainedElement(element);
+    $(element).parent().find('use').attr('href', '#' + map_id + '--' + object.location_id);
   }
 
   // Set an element as the currently active one.
@@ -998,7 +999,7 @@
 
     if (state.options.popup_style == 'modal') {
       state.map.openModal(popup_content);
-      Drupal.attachBehaviors('.leaflet-modal');
+      Drupal.attachBehaviors($('.leaflet-modal').get(0));
       state.map.on('modal.hide', function() {
         state.active_location = null;
         Drupal.hpc_map.resetActiveLocation(state);
