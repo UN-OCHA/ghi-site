@@ -6,6 +6,7 @@ dependencies:
     - field.field.base_object.plan.field_country
     - field.field.base_object.plan.field_decimal_format
     - field.field.base_object.plan.field_description
+    - field.field.base_object.plan.field_footnotes
     - field.field.base_object.plan.field_original_id
     - field.field.base_object.plan.field_plan_caseload
     - field.field.base_object.plan.field_plan_costing
@@ -18,6 +19,7 @@ dependencies:
     - field.field.base_object.plan.field_year
     - ghi_base_objects.base_object_type.plan
   module:
+    - ghi_base_objects
     - ghi_plans
     - link
     - options
@@ -47,6 +49,13 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: 0
+    region: content
+  field_footnotes:
+    type: ghi_footnotes
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 10
     region: content
   field_original_id:
     type: number_integer

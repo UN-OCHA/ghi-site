@@ -85,6 +85,7 @@
   /* Fonts sizes in REMs */
   --cd-font-size--tiny: 0.75rem;      /* 12px */
   --cd-font-size--small: 0.875rem;    /* 14px */
+  --cd-font-size--default: 1rem;      /* 16px */
   --cd-font-size--base: 1.125rem;     /* 18px */
   --cd-font-size--medium: 1.375rem;   /* 22px */
   --cd-font-size--large: 1.625rem;    /* 26px */
@@ -120,7 +121,7 @@ $cd-container-padding-tablet: var(--cd-container-padding-tablet);
 $cd-container-padding-xlarge: var(--cd-container-padding-xlarge);
 
 $cd-global-header-height: 35px;
-$cd-site-header-height: 60px;
+$cd-site-header-height: 80px;
 
 // Colour palette
 $cd-ocha-orange: var(--cd-ocha-orange);
@@ -231,4 +232,4 @@ $zindex: (
 $implementation-primary: var(--cd-ocha-yellow);
 $implementation-primary-dark: $cd-primary;
 $implementation-secondary: $cd-blue--bright;
-$implementation-highlight: $cd-highlight-red;
+$implementation-highlight: var(--cd-ocha-yellow);

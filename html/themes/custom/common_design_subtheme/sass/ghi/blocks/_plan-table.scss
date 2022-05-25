@@ -37,18 +37,6 @@
           font-size: var(--cd-font-size--tiny);
         }
       }
-      td[data-column="inneed"],
-      td[data-column="funding"],
-      td[data-column="requirements"] {
-        text-align: right;
-      }
-      td[data-column="coverage"] {
-        text-align: right;
-
-        .hpc-progress-bar-wrapper {
-          width: 60px;
-        }
-      }
     }
   }
 }

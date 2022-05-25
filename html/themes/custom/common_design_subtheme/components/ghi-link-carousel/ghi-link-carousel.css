@@ -38,7 +38,7 @@
   min-width: 250px;
   padding: 0 2.5rem;
   cursor: pointer;
-  font-size: var(--cd-font-size--tiny);
+  font-size: var(--cd-font-size--small);
 }
 .link-carousel-wrapper .slide-navigation-wrapper .slide-navigation .slide-navigation__inner {
   padding: 1.5rem 0;

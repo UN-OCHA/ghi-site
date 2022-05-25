@@ -1,7 +1,7 @@
 .cd-layout-container {
   @supports (display: grid) {
     @include tablet {
-      grid-template-rows: 95px auto 1fr auto;
+      grid-template-rows: 115px auto 1fr auto;
       grid-auto-rows: auto;
     }
   }

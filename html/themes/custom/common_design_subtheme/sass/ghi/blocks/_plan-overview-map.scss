@@ -151,7 +151,7 @@
                 i.tooltip.info {
                   position: relative;
                   top: 0.2rem;
-                  right: 0;
+                  right: -0.2rem;
                   margin: 0 0 -2rem 0;
                   padding: 0;
                   line-height: 0;
@@ -160,6 +160,10 @@
                   position: relative;
                   top: 1px;
                   left: 2px;
+                }
+
+                i.tooltip svg {
+                  fill: var(--cd-primary-color);
                 }
               }
 

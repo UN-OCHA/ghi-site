@@ -1,4 +1,5 @@
 table.ghi-table {
+  font-size: var(--cd-font-size--default);
 
   .ghi-block & {
     margin-bottom: 0;
@@ -6,11 +7,25 @@ table.ghi-table {
 
   thead {
     th {
+      padding-left: 0;
       white-space: nowrap;
+      text-transform: uppercase;
+      color: var(--cd-default-text-color);
+      border-bottom: 1px solid var(--cd-default-border-color);
+      background: transparent;
+      font-size: var(--cd-font-size--small);
     }
   }
 
   tbody {
+
+    tr {
+      border-bottom: 1px solid var(--cd-default-border-color);
+    }
+
+    td {
+      padding: 1.5rem 0;
+    }
 
     td:first-child.subrow {
       padding-left: 2.5rem;
