@@ -175,38 +175,35 @@ class ArrayHelperTest extends UnitTestCase {
    */
   public function sortArrayDataProvider() {
     $array = [
-      ['total' => 200, 'name' => 'Apple'],
-      ['total' => 500, 'name' => 'Strawberry'],
-      ['total' => 250, 'name' => 'Orange'],
+      'apple' => [
+        'total' => 200,
+        'name' => 'Apple',
+      ],
+      'strawberry' => [
+        'total' => 500,
+        'name' => 'Strawberry',
+      ],
+      'orange' => [
+        'total' => 250,
+        'name' => 'Orange',
+      ],
     ];
 
-    // Result for 1st set of options.
+    // Result sorted by total.
     $result_1 = [
-      0 => ['total' => 200, 'name' => 'Apple'],
-      2 => ['total' => 250, 'name' => 'Orange'],
-      1 => ['total' => 500, 'name' => 'Strawberry'],
+      'apple' => $array['apple'],
+      'orange' => $array['orange'],
+      'strawberry' => $array['strawberry'],
     ];
+    $result_2 = array_reverse($result_1, TRUE);
 
-    // Result for 2nd set of options.
-    $result_2 = [
-      1 => ['total' => 500, 'name' => 'Strawberry'],
-      2 => ['total' => 250, 'name' => 'Orange'],
-      0 => ['total' => 200, 'name' => 'Apple'],
-    ];
-
-    // Result for 3rd set of options.
+    // Result sorted by name.
     $result_3 = [
-      0 => ['total' => 200, 'name' => 'Apple'],
-      1 => ['total' => 250, 'name' => 'Orange'],
-      2 => ['total' => 500, 'name' => 'Strawberry'],
+      'apple' => $array['apple'],
+      'orange' => $array['orange'],
+      'strawberry' => $array['strawberry'],
     ];
-
-    // Result for 2nd set of options.
-    $result_4 = [
-      0 => ['total' => 500, 'name' => 'Strawberry'],
-      1 => ['total' => 250, 'name' => 'Orange'],
-      2 => ['total' => 200, 'name' => 'Apple'],
-    ];
+    $result_4 = array_reverse($result_3);
 
     return [
       [$array, 'total', EndpointQuery::SORT_ASC, SORT_NUMERIC, $result_1],
