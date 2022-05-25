@@ -37,6 +37,22 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'tab-container',
     ],
+    'plan_overview_map' => [
+      'variables' => [
+        'chart_id' => NULL,
+        'map_tabs' => NULL,
+        'legend' => FALSE,
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'plan-overview-map',
+    ],
+    'plan_overview_map_modal' => [
+      'variables' => [
+        'items' => [],
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'plan-overview-map-modal',
+    ],
     'plan_attachment_map' => [
       'variables' => [
         'chart_id' => NULL,

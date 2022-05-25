@@ -8,6 +8,22 @@ namespace Drupal\ghi_plans\Traits;
 trait PlanReportingPeriodTrait {
 
   /**
+   * Get a single specified reporting period object for the given plan.
+   *
+   * @param int $plan_id
+   *   The plan id.
+   * @param int $period_id
+   *   The reporting period id.
+   *
+   * @return object
+   *   A reporting period object.
+   */
+  public static function getReportingPeriod($plan_id, $period_id) {
+    $periods = self::getReportingPeriods($plan_id, FALSE);
+    return array_key_exists($period_id, $periods) ? $periods[$period_id] : NULL;
+  }
+
+  /**
    * Get the attachment query service.
    *
    * @param int $plan_id

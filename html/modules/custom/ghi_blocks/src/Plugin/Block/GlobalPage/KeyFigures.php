@@ -18,7 +18,6 @@ use Drupal\hpc_common\Helpers\CommonHelper;
  *  data_sources = {
  *    "plans" = "plan_overview_query",
  *  },
- *  title = false,
  *  context_definitions = {
  *    "year" = @ContextDefinition("integer", label = @Translation("Year"))
  *  }

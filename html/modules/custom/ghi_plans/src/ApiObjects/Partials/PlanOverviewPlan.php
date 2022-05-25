@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\ApiObjects\Partials;
 
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
+use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\StringHelper;
@@ -15,6 +16,8 @@ use Drupal\hpc_common\Helpers\StringHelper;
  * and abstracted data access.
  */
 class PlanOverviewPlan extends BaseObject {
+
+  use PlanReportingPeriodTrait;
 
   /**
    * Map the raw data.
@@ -334,6 +337,53 @@ class PlanOverviewPlan extends BaseObject {
       $caseload = is_array($caseloads) && count($caseloads) ? reset($caseloads) : NULL;
     }
     return $caseload;
+  }
+
+  /**
+   * Get the last published reporting period.
+   *
+   * @return object|null
+   *   The reporting period object or NULL.
+   */
+  public function getLastPublishedReportingPeriod() {
+    $period_id = $this->getRawData()->lastPublishedReportingPeriodId;
+    if (!$period_id) {
+      return NULL;
+    }
+    return $this->getReportingPeriod($this->id(), $period_id);
+  }
+
+  /**
+   * Get the countries associated to a plan partial.
+   *
+   * @return array
+   *   An array of country objects, keyed by the country id.
+   *   Each item has the properties "id", "name" and "latLng".
+   */
+  public function getCountries() {
+    $countries = [];
+    if (empty($this->getRawData()->countries)) {
+      return $countries;
+    }
+    foreach ($this->getRawData()->countries as $country) {
+      $countries[$country->id] = (object) [
+        'id' => $country->id,
+        'name' => $country->name,
+        'latLng' => [(string) $country->latitude, (string) $country->longitude],
+      ];
+    }
+    return $countries;
+  }
+
+  /**
+   * Get the country for a plan.
+   *
+   * @return object
+   *   A country object, see self::getCountries() for details.
+   */
+  public function getCountry() {
+    $countries = $this->getCountries();
+    return count($countries) ? reset($countries) : NULL;
   }
 
 }

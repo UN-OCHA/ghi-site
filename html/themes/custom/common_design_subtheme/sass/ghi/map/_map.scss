@@ -1,3 +1,5 @@
+@import "leaflet";
+
 .map-wrapper-outer {
   .leaflet-container.leaflet-map-disabled {
     .leaflet-pane,
@@ -446,7 +448,7 @@
 
   // Map tabs for mobile, make sure this is not applied for downloads. Sigh.
   body:not(.download-type-pdf) {
-    @include max-width("sm") {
+    @include max-width(sm) {
       .donut .map-tabs {
         /* Map tabs mobile */
         position: relative;

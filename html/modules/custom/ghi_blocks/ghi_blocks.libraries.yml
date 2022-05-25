@@ -92,3 +92,10 @@ map.plan:
     js/map/map.plan.js: {}
   dependencies:
     - ghi_blocks/map
+
+map.plan_overview:
+  version: VERSION
+  js:
+    js/map/map.plan_overview.js: {}
+  dependencies:
+    - ghi_blocks/map
