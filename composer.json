@@ -57,7 +57,6 @@
         "drupal/gin_toolbar": "^1.0",
         "drupal/imageapi_optimize_binaries": "^1.0@alpha",
         "drupal/imagecache_external": "^3.0",
-        "drupal/key_value_field": "^1.2",
         "drupal/layout_builder_ipe": "1.0.x-dev@dev",
         "drupal/layout_builder_lock": "^1.1",
         "drupal/layout_builder_modal": "^1.1",
