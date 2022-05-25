@@ -4,9 +4,11 @@
   // GHI colors.
   --cd-ocha-orange: #fecb00;
   --cd-ocha-orange--dark: #feba00;
+  --cd-ocha-yellow: rgb(254, 221, 89);
   --cd-primary-color: var(--cd-ocha-orange);
   --cd-primary-color--dark: var(--cd-ocha-orange--dark);
-  --cd-ocha-yellow: rgb(254, 221, 89);
+  --cd-widget-color--light: var(--cd-ocha-yellow);
+  --cd-widget-color--dark: var(--cd-ocha-orange--dark);
   --cd-primary-background-color: #faf9f5;
 
   // Legacy Hum Insight colors.

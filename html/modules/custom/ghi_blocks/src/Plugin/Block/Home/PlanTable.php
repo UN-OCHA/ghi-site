@@ -7,7 +7,6 @@ use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
-use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -74,14 +73,15 @@ class PlanTable extends GHIBlockBase {
     $year = $this->getContextValue('year');
 
     $header = [
-      'name' => $this->t('Interagency Response Plans'),
-      'inneed' => $this->t('In need'),
-      'targeted' => $this->t('Targeted'),
+      'name' => $this->t('Plans'),
+      'type' => $this->t('Plan type'),
+      'inneed' => $this->t('People in need'),
+      'targeted' => $this->t('People targeted'),
       'expected_reach' => $this->t('Expected reach'),
       'reached' => $this->t('Reached'),
-      'funding' => $this->t('Funding'),
-      'coverage' => $this->t('Funding coverage'),
       'requirements' => $this->t('Requirements'),
+      'funding' => $this->t('Funding'),
+      'coverage' => $this->t('Coverage'),
       'document' => '',
     ];
 
@@ -91,6 +91,7 @@ class PlanTable extends GHIBlockBase {
       $document_uri = $plan_entity ? $plan_entity->get('field_plan_document_link')->uri : NULL;
       $rows[$plan->id()] = [
         'name' => $section && $section->isPublished() ? $section->toLink($plan->getName()) : $plan->getName(),
+        'type' => $plan->getTypeShortName(),
         'inneed' => [
           'data' => [
             '#theme' => 'hpc_amount',
@@ -115,6 +116,12 @@ class PlanTable extends GHIBlockBase {
             '#amount' => $plan->getCaseloadValue('reached', 'Reached'),
           ],
         ],
+        'requirements' => [
+          'data' => [
+            '#theme' => 'hpc_currency',
+            '#value' => $plan->getRequirements($plan),
+          ],
+        ],
         'funding' => [
           'data' => [
             '#theme' => 'hpc_currency',
@@ -123,14 +130,8 @@ class PlanTable extends GHIBlockBase {
         ],
         'coverage' => [
           'data' => [
-            '#theme' => 'hpc_progress_bar',
+            '#theme' => 'hpc_percent',
             '#ratio' => $plan->getCoverage($plan) / 100,
-          ],
-        ],
-        'requirements' => [
-          'data' => [
-            '#theme' => 'hpc_currency',
-            '#value' => $plan->getRequirements($plan),
           ],
         ],
         'document' => [
@@ -165,16 +166,10 @@ class PlanTable extends GHIBlockBase {
     $table_config = $config['table'] ?? [];
 
     if (empty($table_config['total_funding'])) {
-      // If the funding column should not be shown, the desired order for the
-      // plan table financial columns becomes (Requirements | Coverage) instead
-      // of the default (Funding | Coverage | Requirements).
-      // So we must swap the columns in the header and in each row.
+      // Hide the funding column.
       unset($header['funding']);
-      ArrayHelper::swap($header, 'coverage', 'requirements');
-
       $rows = array_map(function ($row) {
         unset($row['funding']);
-        ArrayHelper::swap($row, 'coverage', 'requirements', TRUE);
         return $row;
       }, $rows);
     }

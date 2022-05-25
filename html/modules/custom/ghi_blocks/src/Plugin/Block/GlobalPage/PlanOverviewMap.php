@@ -9,6 +9,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
+use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
@@ -35,6 +36,7 @@ class PlanOverviewMap extends GHIBlockBase {
 
   use GlobalSettingsTrait;
   use PlanTypeTrait;
+  use PlanFootnoteTrait;
 
   const DEFAULT_DISCLAIMER = 'The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations.';
 
@@ -123,10 +125,8 @@ class PlanOverviewMap extends GHIBlockBase {
 
     // Prepare object data per per plan.
     $country_objects = [];
+    $footnotes = [];
     foreach ($plans as $plan) {
-      $plan_entity = $plan->getEntity();
-      $section = $plan_entity ? $this->sectionManager->loadSectionForBaseObject($plan_entity) : NULL;
-
       $funding = $plan->getFunding();
       $requirements = $plan->getRequirements();
 
@@ -142,6 +142,12 @@ class PlanOverviewMap extends GHIBlockBase {
       if (!$location) {
         continue;
       }
+
+      $plan_entity = $plan->getEntity();
+      if ($plan_entity) {
+        $footnotes[$plan->id()] = $this->getFootnotesForPlanBaseobject($plan_entity);
+      }
+      $section = $plan_entity ? $this->sectionManager->loadSectionForBaseObject($plan_entity) : NULL;
 
       $country_objects[] = (object) [
         'plan_id' => $plan->id(),
@@ -167,7 +173,6 @@ class PlanOverviewMap extends GHIBlockBase {
     // Assemble the locations and modal_contents arrays.
     $locations = [];
     $modal_contents = [];
-    $footnotes = [];
     foreach ($country_objects as $object) {
       $plan_id = $object->plan_id;
       $location = [
@@ -272,16 +277,16 @@ class PlanOverviewMap extends GHIBlockBase {
     // Prepare the tooltips if any.
     $inneed_tooltip = !empty($footnotes->in_need) ? ThemeHelper::theme('hpc_tooltip', [
       '#tooltip' => ['#plain_text' => $footnotes->in_need],
-    ]) : NULL;
+    ], TRUE, FALSE) : NULL;
     $target_tooltip = !empty($footnotes->target) ? ThemeHelper::theme('hpc_tooltip', [
-      'tooltip' => ['#plain_text' => $footnotes->target],
-    ]) : NULL;
+      '#tooltip' => ['#plain_text' => $footnotes->target],
+    ], TRUE, FALSE) : NULL;
     $estimated_reach_tooltip = !empty($footnotes->target) ? ThemeHelper::theme('hpc_tooltip', [
-      'tooltip' => ['#plain_text' => $footnotes->estimated_reach],
-    ]) : NULL;
+      '#tooltip' => ['#plain_text' => $footnotes->estimated_reach],
+    ], TRUE, FALSE) : NULL;
     $requirements_tooltip = !empty($footnotes->requirements) ? ThemeHelper::theme('hpc_tooltip', [
-      'tooltip' => ['#plain_text' => $footnotes->requirements],
-    ]) : NULL;
+      '#tooltip' => ['#plain_text' => $footnotes->requirements],
+    ], TRUE, FALSE) : NULL;
 
     $items = [
       'total_population' => [

@@ -1,11 +1,14 @@
 (function ($) {
 
+  const root_styles = getComputedStyle(document.documentElement);
+
+
   Drupal.hpc_map_donut = Drupal.hpc_map_donut || {};
 
   Drupal.hpc_map_donut.config = {
     colors: [
-      '#ee7325', // HPC orange for the first segment
-      '#f6b891', // Lighter orange
+      root_styles.getPropertyValue('--cd-widget-color--dark'), // Darker for the first segment.
+      root_styles.getPropertyValue('--cd-widget-color--light'), // Lighter for the first segment.
     ],
     empty_color: '#919191',
     donut_attrs: {

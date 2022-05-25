@@ -1,0 +1,5 @@
+.field--type-ghi-footnotes table.field-multiple-table td > div.form-wrapper,
+.field--type-ghi-footnotes table.field-multiple-table td > div.ajax-new-content div.form-wrapper {
+  display: flex;
+  column-gap: 1rem;
+}

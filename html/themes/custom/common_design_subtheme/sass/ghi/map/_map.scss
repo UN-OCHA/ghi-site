@@ -38,7 +38,7 @@
         margin: 0;
         text-indent: 0;
         opacity: 1 !important;
-        color: var(--hpc-orange);
+        color: var(--cd-primary-color);
         background: none;
       }
 
@@ -57,7 +57,7 @@
           .modal-header {
             height: auto;
             padding: 1rem 1rem 0.5rem 1rem;
-            color: var(--hpc-brown);
+            color: var(--cd-default-text-color);
             border: none;
             font: inherit;
 
@@ -84,13 +84,13 @@
               position: relative;
               left: -0.5rem;
               display: flex;
-              color: var(--hpc-brown);
+              color: var(--cd-default-text-color);
               font-size: var(--cd-font-size--tiny);
               line-height: 24px;
 
               .link {
                 cursor: pointer;
-                color: var(--hpc-orange);
+                color: var(--cd-primary-color);
                 font-weight: bold;
                 &.disabled {
                   cursor: default;
@@ -127,7 +127,7 @@
             }
 
             div.monitoring-period {
-              color: var(--hpc-brown);
+              color: var(--cd-default-text-color);
               font-size: var(--cd-font-size--small);
             }
 
@@ -209,7 +209,7 @@
                   // Covers the SVG to make it seem clickable.
                   padding: 0 24px 0 9px;
                   white-space: nowrap;
-                  color: var(--hpc-orange);
+                  color: var(--cd-primary-color);
                   border-bottom: 1px solid var(--hpc-orange);
                   border-radius: 0;
                   background-color: transparent;
@@ -249,7 +249,7 @@
                   font-weight: bold;
 
                   &.selected {
-                    color: var(--hpc-orange);
+                    color: var(--cd-primary-color);
                     background-color: transparent;
                   }
                 }
@@ -267,7 +267,7 @@
               margin-bottom: 0.5rem;
               padding: 6px 8px;
               color: var(--cd-white);
-              background-color: var(--hpc-orange);
+              background-color: var(--cd-primary-color);
             }
           }
         }
@@ -293,13 +293,13 @@
         line-height: 14px;
 
         a {
-          color: var(--hpc-brown);
+          color: var(--cd-default-text-color);
           font-size: var(--cd-font-size--small);
           font-weight: 400;
         }
 
         &.active a {
-          color: var(--hpc-orange);
+          color: var(--cd-primary-color);
         }
 
         &:first-child {
@@ -336,13 +336,13 @@
                 background: #d5d5d5;
               }
               &.active {
-                color: var(--hpc-orange);
+                color: var(--cd-primary-color);
               }
             }
           }
         }
         &.active .dropdown .icon {
-          fill: var(--hpc-orange);
+          fill: var(--cd-primary-color);
         }
       }
     }
@@ -375,7 +375,7 @@
           }
 
           &.active {
-            background-color: var(--hpc-orange);
+            background-color: var(--cd-primary-color);
             a {
               color: var(--cd-white);
             }
@@ -424,7 +424,7 @@
             border-radius: 50%;
           }
           .legend-label {
-            color: var(--hpc-brown);
+            color: var(--cd-default-text-color);
             font-size: var(--cd-font-size--tiny);
           }
 
@@ -479,7 +479,7 @@
               }
             }
             &.active a.mobile .icon {
-              background-color: var(--hpc-orange);
+              background-color: var(--cd-primary-color);
               fill: var(--cd-white);
             }
           }

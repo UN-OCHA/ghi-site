@@ -176,7 +176,6 @@ function common_design_subtheme_preprocess_table(&$vars) {
       'ghi-table',
       'cd-table',
       'cd-table--responsive',
-      'cd-table--striped',
     ],
   ];
   $attached = [

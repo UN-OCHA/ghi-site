@@ -258,7 +258,8 @@ function hpc_common_preprocess_hpc_tooltip(array &$vars) {
   }
 
   if (empty($vars['tag_content'])) {
-    $vars['tag_content'] = '<svg class="cd-icon icon cd-icon--help"><use xlink:href="#cd-icon--help"></use></svg>';
+    $vars['tag_content'] = Markup::create('<svg class="cd-icon icon cd-icon--about"><use xlink:href="#cd-icon--about"></use></svg>');
+    $attributes->addClass('info');
   }
 
   $vars['attributes'] = $attributes;

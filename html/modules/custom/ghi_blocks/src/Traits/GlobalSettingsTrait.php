@@ -224,6 +224,7 @@ trait GlobalSettingsTrait {
       $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
         /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
         $plan = $plans[$plan_id];
+        unset($row['type']);
         if (!$plan) {
           return $row;
         }

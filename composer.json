@@ -66,6 +66,7 @@
         "drupal/metatag": "^1.16",
         "drupal/migrate_plus": "^5.1",
         "drupal/migrate_tools": "^5.0",
+        "drupal/multiple_fields_remove_button": "^1.0@alpha",
         "drupal/page_manager": "^4.0@beta",
         "drupal/pathauto": "^1.8",
         "drupal/publishcontent": "^1.3",

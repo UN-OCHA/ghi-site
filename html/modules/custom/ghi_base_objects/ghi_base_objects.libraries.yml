@@ -1,0 +1,5 @@
+footnote_widget:
+  version: VERSION
+  css:
+    component:
+      css/footnote_widget.css: {}
