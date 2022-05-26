@@ -39,10 +39,10 @@
 
   @supports (display: grid) {
     grid-template-rows: $cd-site-header-height;
-    grid-template-columns: 340px 1fr;
+    grid-template-columns: 360px 1fr;
 
     @include tablet {
-      grid-template-columns: 340px 1fr;
+      grid-template-columns: 360px 1fr;
     }
   }
 }

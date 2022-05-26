@@ -2,12 +2,15 @@
 // Common Design: Main Navigation
 //——————————————————————————————————————————————————————————————————————————————
 .cd-nav__btn {
+  height: $cd-site-header-height;
+
   &[aria-expanded] .cd-icon--arrow-down {
     fill: $implementation-highlight;
   }
 
   &[aria-expanded="true"] {
     &::before {
+      bottom: 0;
       background: $implementation-highlight;
     }
   }
@@ -17,7 +20,7 @@
   @include max-width(lg) {
     // Fix offset for mobile device when toolbar is present.
     .gin--horizontal-toolbar & .cd-nav[data-cd-hidden="false"] {
-      top: calc(var(--ginHorizontalToolbarOffset) + #{$cd-global-header-height} + #{$cd-site-header-height} + 6px);
+      top: calc(var(--ginHorizontalToolbarOffset) + #{$cd-global-header-height} + #{$cd-site-header-height});
     }
   }
 

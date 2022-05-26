@@ -73,6 +73,7 @@ permissions:
   - 'administer menu'
   - 'administer nodes'
   - 'administer pages'
+  - 'administer site configuration'
   - 'administer social api authentication'
   - 'administer social api autoposting'
   - 'administer social api blocks'
