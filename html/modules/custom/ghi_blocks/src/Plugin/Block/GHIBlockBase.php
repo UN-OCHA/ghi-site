@@ -402,9 +402,11 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // in hooks.
     $build['#block_instance'] = $this;
 
+    // Set the cache properties, merge in anything that the builder might have
+    // set.
     $build['#cache'] = [
-      'contexts' => $this->getCacheContexts(),
-      'tags' => $this->getCacheTags(),
+      'contexts' => Cache::mergeContexts($this->getCacheContexts(), $build_content['#cache']['contexts'] ?? []),
+      'tags' => Cache::mergeTags($this->getCacheTags(), $build_content['#cache']['tags'] ?? []),
     ];
 
     return $build;
