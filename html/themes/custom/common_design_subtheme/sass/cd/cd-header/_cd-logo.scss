@@ -7,20 +7,28 @@
 .region-header-logo {
   display: flex;
   margin: 0.7rem 0;
-  padding-left: 0.5rem;
-  border-left: solid 2px var(--cd-primary-color);
 
   .cd-site-logo {
     width: 186px;
     height: auto;
+    margin: 0.6rem 0;
+    padding-left: 0.5rem;
     text-decoration: none;
     color: var(--cd-default-text-color);
+    border-left: solid 2px var(--cd-primary-color);
     font-size: var(--cd-font-size--base);
     font-weight: bold;
     line-height: 1.3rem;
 
     &:focus {
       outline: none;
+    }
+
+    @supports (display: flex) {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
     }
 
     // Logo for mobile.
@@ -31,7 +39,7 @@
   }
 
   .cd-site-slogan {
-    margin: 0.7rem 0 0 1rem;
+    margin: 0.7rem 0 0 2rem;
     line-height: 0.8rem;
   }
 }
