@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
+use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -30,6 +31,7 @@ class PlanTable extends GHIBlockBase {
 
   use GlobalSettingsTrait;
   use PlanTypeTrait;
+  use PlanFootnoteTrait;
 
   /**
    * The section manager.
@@ -94,6 +96,8 @@ class PlanTable extends GHIBlockBase {
         $cache_tags = Cache::mergeTags($cache_tags, $plan_entity->getCacheTags());
       }
 
+      $footnotes = $this->getFootnotesForPlanBaseobject($plan_entity);
+
       $section = $plan_entity ? $this->sectionManager->loadSectionForBaseObject($plan_entity) : NULL;
       $document_uri = $plan_entity ? $plan_entity->get('field_plan_document_link')->uri : NULL;
       $rows[$plan->id()] = [
@@ -101,20 +105,29 @@ class PlanTable extends GHIBlockBase {
         'type' => $plan->getTypeShortName(),
         'inneed' => [
           'data' => [
-            '#theme' => 'hpc_amount',
-            '#amount' => $plan->getCaseloadValue('inNeed'),
+            [
+              '#theme' => 'hpc_amount',
+              '#amount' => $plan->getCaseloadValue('inNeed'),
+            ],
+            $this->buildFootnoteTooltip($footnotes, 'in_need'),
           ],
         ],
         'targeted' => [
           'data' => [
-            '#theme' => 'hpc_amount',
-            '#amount' => $plan->getCaseloadValue('target'),
+            [
+              '#theme' => 'hpc_amount',
+              '#amount' => $plan->getCaseloadValue('target'),
+            ],
+            $this->buildFootnoteTooltip($footnotes, 'target'),
           ],
         ],
         'expected_reach' => [
           'data' => [
-            '#theme' => 'hpc_amount',
-            '#amount' => $plan->getCaseloadValue('expectedReach', 'Expected Reach'),
+            [
+              '#theme' => 'hpc_amount',
+              '#amount' => $plan->getCaseloadValue('expectedReach', 'Expected Reach'),
+            ],
+            $this->buildFootnoteTooltip($footnotes, 'estimated_reach'),
           ],
         ],
         'reached' => [
@@ -125,8 +138,11 @@ class PlanTable extends GHIBlockBase {
         ],
         'requirements' => [
           'data' => [
-            '#theme' => 'hpc_currency',
-            '#value' => $plan->getRequirements($plan),
+            [
+              '#theme' => 'hpc_currency',
+              '#value' => $plan->getRequirements($plan),
+            ],
+            $this->buildFootnoteTooltip($footnotes, 'requirements'),
           ],
         ],
         'funding' => [
