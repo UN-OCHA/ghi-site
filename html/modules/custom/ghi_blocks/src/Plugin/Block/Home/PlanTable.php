@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Home;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
@@ -85,8 +86,14 @@ class PlanTable extends GHIBlockBase {
       'document' => '',
     ];
 
+    $cache_tags = [];
+
     foreach ($plans as $plan) {
       $plan_entity = $plan->getEntity();
+      if ($plan_entity) {
+        $cache_tags = Cache::mergeTags($cache_tags, $plan_entity->getCacheTags());
+      }
+
       $section = $plan_entity ? $this->sectionManager->loadSectionForBaseObject($plan_entity) : NULL;
       $document_uri = $plan_entity ? $plan_entity->get('field_plan_document_link')->uri : NULL;
       $rows[$plan->id()] = [
@@ -149,6 +156,9 @@ class PlanTable extends GHIBlockBase {
       '#rows' => $rows,
       '#wrapper_attributes' => [
         'class' => ['plan-table'],
+      ],
+      '#cache' => [
+        'tags' => $cache_tags,
       ],
     ];
   }

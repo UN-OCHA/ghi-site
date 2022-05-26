@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -80,6 +81,22 @@ class PlanOverviewMap extends GHIBlockBase {
         ],
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    $cache_tags = parent::getCacheTags();
+    $plans = $this->getPlans();
+    foreach ($plans as $plan) {
+      $plan_entity = $plan->getEntity();
+      if (!$plan_entity) {
+        continue;
+      }
+      $cache_tags = Cache::mergeTags($cache_tags, $plan_entity->getCacheTags());
+    }
+    return $cache_tags;
   }
 
   /**
