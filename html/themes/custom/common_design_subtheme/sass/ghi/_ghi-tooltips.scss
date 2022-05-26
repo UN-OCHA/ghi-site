@@ -1,5 +1,10 @@
 .tooltip {
   cursor: pointer;
+  vertical-align: middle;
+
+  svg {
+    fill: var(--cd-primary-color);
+  }
 }
 
 .tippy-box .tippy-content {

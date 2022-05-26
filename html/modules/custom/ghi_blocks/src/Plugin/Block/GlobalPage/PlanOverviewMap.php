@@ -291,51 +291,30 @@ class PlanOverviewMap extends GHIBlockBase {
    *   The content of the modal.
    */
   private function buildCountryModal($data, $footnotes = NULL) {
-    // Prepare the tooltips if any.
-    $inneed_tooltip = !empty($footnotes->in_need) ? ThemeHelper::theme('hpc_tooltip', [
-      '#tooltip' => ['#plain_text' => $footnotes->in_need],
-    ], TRUE, FALSE) : NULL;
-    $target_tooltip = !empty($footnotes->target) ? ThemeHelper::theme('hpc_tooltip', [
-      '#tooltip' => ['#plain_text' => $footnotes->target],
-    ], TRUE, FALSE) : NULL;
-    $estimated_reach_tooltip = !empty($footnotes->target) ? ThemeHelper::theme('hpc_tooltip', [
-      '#tooltip' => ['#plain_text' => $footnotes->estimated_reach],
-    ], TRUE, FALSE) : NULL;
-    $requirements_tooltip = !empty($footnotes->requirements) ? ThemeHelper::theme('hpc_tooltip', [
-      '#tooltip' => ['#plain_text' => $footnotes->requirements],
-    ], TRUE, FALSE) : NULL;
+    $common_theme_args = [
+      'decimals' => 1,
+      'use_abbreviation' => FALSE,
+    ];
 
     $items = [
       'total_population' => [
         'label' => $this->t('Population'),
-        'value' => CommonHelper::renderValue($data->caseload->total_population, 'amount', 'hpc_amount', [
-          'decimals' => 1,
-          'use_abbreviation' => FALSE,
-        ]),
+        'value' => CommonHelper::renderValue($data->caseload->total_population, 'amount', 'hpc_amount', $common_theme_args),
       ],
       'inneed' => [
-        'label' => $this->t('In Need') . $inneed_tooltip,
-        'value' => CommonHelper::renderValue($data->caseload->in_need, 'amount', 'hpc_amount', [
-          'decimals' => 1,
-          'use_abbreviation' => FALSE,
-        ]),
+        'label' => $this->t('In Need') . $this->getRenderedFootnoteTooltip($footnotes, 'in_need'),
+        'value' => CommonHelper::renderValue($data->caseload->in_need, 'amount', 'hpc_amount', $common_theme_args),
       ],
       'target' => [
-        'label' => $this->t('Targeted') . $target_tooltip,
-        'value' => CommonHelper::renderValue($data->caseload->target, 'amount', 'hpc_amount', [
-          'decimals' => 1,
-          'use_abbreviation' => FALSE,
-        ]),
+        'label' => $this->t('Targeted') . $this->getRenderedFootnoteTooltip($footnotes, 'target'),
+        'value' => CommonHelper::renderValue($data->caseload->target, 'amount', 'hpc_amount', $common_theme_args),
       ],
       // Note that due to space restrictions, the "estimated reach" and
       // "reached" values are mutually exclusive in the modal.
       // @see plan-overview-map-modal.tpl.php
       'estimated_reach' => [
-        'label' => $this->t('Est. Reach') . $estimated_reach_tooltip,
-        'value' => CommonHelper::renderValue($data->caseload->estimated_reach, 'amount', 'hpc_amount', [
-          'decimals' => 1,
-          'use_abbreviation' => FALSE,
-        ]),
+        'label' => $this->t('Est. Reach') . $this->getRenderedFootnoteTooltip($footnotes, 'estimated_reach'),
+        'value' => CommonHelper::renderValue($data->caseload->estimated_reach, 'amount', 'hpc_amount', $common_theme_args),
       ],
       'reached' => [
         'label' => $this->t('Reached') . (!empty($data->reporting_period) ? ThemeHelper::render([
@@ -355,11 +334,8 @@ class PlanOverviewMap extends GHIBlockBase {
         'value' => CommonHelper::renderValue($data->caseload->reached_percent, 'ratio', 'hpc_percent'),
       ],
       'funding_required' => [
-        'label' => (new TranslatableMarkup('Required <span class="suffix-light">USD</span>')) . $requirements_tooltip,
-        'value' => CommonHelper::renderValue($data->funding->total_requirements, 'value', 'hpc_currency', [
-          'use_abbreviation' => FALSE,
-          'decimals' => 1,
-        ]),
+        'label' => (new TranslatableMarkup('Required <span class="suffix-light">USD</span>')) . $this->getRenderedFootnoteTooltip($footnotes, 'requirements'),
+        'value' => CommonHelper::renderValue($data->funding->total_requirements, 'value', 'hpc_currency', $common_theme_args),
       ],
       'funding_progress' => [
         'label' => $this->t('Coverage <strong>@value</strong>', [

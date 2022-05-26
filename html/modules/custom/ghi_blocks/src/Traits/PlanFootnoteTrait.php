@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Traits;
 
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
  * Helper trait for plan footnotes.
@@ -34,6 +35,48 @@ trait PlanFootnoteTrait {
       $footnotes[$property] = $values[$property] ?? NULL;
     }
     return (object) $footnotes;
+  }
+
+  /**
+   * Build a footnote as a tooltip.
+   *
+   * @param object $footnotes
+   *   A footnotes object.
+   * @param string $property
+   *   The property for which to retrieve the footnote.
+   *
+   * @return array|null
+   *   A render array for the footnote tooltip.
+   */
+  public function buildFootnoteTooltip($footnotes, $property) {
+    if (!is_object($footnotes)) {
+      return NULL;
+    }
+    if (!property_exists($footnotes, $property) || empty($footnotes->$property)) {
+      return NULL;
+    }
+    return [
+      '#theme' => 'hpc_tooltip',
+      '#tooltip' => [
+        '#plain_text' => $footnotes->$property,
+      ],
+    ];
+  }
+
+  /**
+   * Get a rendered footnote as a tooltip.
+   *
+   * @param object $footnotes
+   *   A footnotes object.
+   * @param string $property
+   *   The property for which to retrieve the footnote.
+   *
+   * @return string|null
+   *   The fully rendered footnote tooltip.
+   */
+  public function getRenderedFootnoteTooltip($footnotes, $property) {
+    $build = $this->buildFootnoteTooltip($footnotes, $property);
+    return ThemeHelper::render($build, FALSE);
   }
 
 }
