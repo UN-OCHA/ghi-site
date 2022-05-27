@@ -96,7 +96,7 @@ class PlanTable extends GHIBlockBase {
         $cache_tags = Cache::mergeTags($cache_tags, $plan_entity->getCacheTags());
       }
 
-      $footnotes = $this->getFootnotesForPlanBaseobject($plan_entity);
+      $footnotes = $plan_entity ? $this->getFootnotesForPlanBaseobject($plan_entity) : NULL;
 
       $section = $plan_entity ? $this->sectionManager->loadSectionForBaseObject($plan_entity) : NULL;
       $document_uri = $plan_entity ? $plan_entity->get('field_plan_document_link')->uri : NULL;
