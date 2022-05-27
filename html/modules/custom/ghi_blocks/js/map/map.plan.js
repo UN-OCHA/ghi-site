@@ -17,7 +17,7 @@
         }
         var options = {
           admin_level_selector: true,
-          mapbox_url: 'https://api.mapbox.com/styles/v1/berliner/cjtekox5u4wng1foawbxty5iq/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiYmVybGluZXIiLCJhIjoiY2p0ZWtheXZ4MWl3ejQ0b2FxenV3NGNlbSJ9.BHeHnEiQ_uY33hRMmW-HJA',
+          mapbox_url: 'https://api.mapbox.com/styles/v1/berliner/cl3o1f4qv002p14qav6jil9tw/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiYmVybGluZXIiLCJhIjoiY2p0ZWtheXZ4MWl3ejQ0b2FxenV3NGNlbSJ9.BHeHnEiQ_uY33hRMmW-HJA',
           popup_style: 'sidebar',
           search_enabled: true,
           search_options: {
