@@ -198,7 +198,7 @@
   Drupal.hpc_map.init = function (map_id, data, options) {
     let defaults = {
       admin_level_selector : false,
-      mapbox_url: 'https://api.mapbox.com/styles/v1/kevingask/cjlppg8p47w0m2rpso4grzumx/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoia2V2aW5nYXNrIiwiYSI6ImNqYTl6enpxbTBtcTMzMHE5eGc1eGVtOWYifQ.8-OdMNzoKFYd2zNMfjSnqQ',
+      mapbox_url: 'https://api.mapbox.com/styles/v1/berliner/cl3o1f4qv002p14qav6jil9tw/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiYmVybGluZXIiLCJhIjoiY2p0ZWtheXZ4MWl3ejQ0b2FxenV3NGNlbSJ9.BHeHnEiQ_uY33hRMmW-HJA',
       map_style: 'circle',
       popup_style: 'modal',
       search_enabled: false,
