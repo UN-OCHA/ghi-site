@@ -1,0 +1,10 @@
+uuid: 16f6215d-a18e-438e-a06b-714fe0221f6f
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_link_content
+id: menu_link_content.classic
+label: Classic
+targetEntityType: menu_link_content
+cache: true
