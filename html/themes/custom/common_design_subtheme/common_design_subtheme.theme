@@ -77,6 +77,7 @@ function common_design_subtheme_preprocess_block(&$variables) {
   $content_width_blocks = [
     'generic_link_carousel',
     'global_plan_overview_map',
+    'system_menu_block:operations-menu',
   ];
   if (!in_array($variables['plugin_id'], $content_width_blocks)) {
     $variables['attributes']['class'][] = 'content-width';

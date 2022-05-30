@@ -1,0 +1,44 @@
+uuid: 89493e8e-ae06-406f-9505-1e2503067adc
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.main
+  module:
+    - layout_builder
+    - layout_builder_ipe
+third_party_settings:
+  layout_builder:
+    enabled: true
+    allow_custom: true
+    sections:
+      -
+        layout_id: layout_onecol
+        layout_settings:
+          label: ''
+        components:
+          8f51ed73-e8fb-47bf-8588-96f0697b38db:
+            uuid: 8f51ed73-e8fb-47bf-8588-96f0697b38db
+            region: content
+            configuration:
+              id: 'extra_field_block:menu_link_content:main:children'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+            weight: 0
+            additional: {  }
+        third_party_settings: {  }
+  layout_builder_ipe:
+    enabled: 0
+id: menu_link_content.main.default
+targetEntityType: menu_link_content
+bundle: main
+mode: default
+content:
+  children:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 1
+    region: content
+hidden:
+  langcode: true
