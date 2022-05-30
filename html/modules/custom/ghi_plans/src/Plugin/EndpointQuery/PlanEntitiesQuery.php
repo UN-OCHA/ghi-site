@@ -57,7 +57,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    *   An array of attachment objects for the given context.
    */
   private function getAttachments(ContentEntityInterface $context_object = NULL, array $filter = []) {
-    $cache_key = $this->getCacheKey(array_filter(['id' => $context_object ? $context_object->id() : NULL] + $filter));
+    $cache_key = $this->getCacheKey(array_filter(['id' => $context_object ? $context_object->id() : NULL] + $filter + $this->getPlaceholders()));
     $attachments = $this->cache($cache_key);
     if ($attachments) {
       return $attachments;

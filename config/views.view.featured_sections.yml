@@ -292,8 +292,8 @@ display:
         - 'user.node_grants:view'
         - user.permissions
       tags: {  }
-  block_sections_featured:
-    id: block_sections_featured
+  block_sections_featured_3:
+    id: block_sections_featured_3
     display_title: 'Featured 3'
     display_plugin: block
     position: 3
