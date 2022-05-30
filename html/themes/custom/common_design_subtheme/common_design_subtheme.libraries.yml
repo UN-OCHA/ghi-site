@@ -4,10 +4,7 @@ global-styling:
       css/styles.css: {}
   js:
     js/common.js: {}
-    js/main-menu.js: {}
     js/login_destination.js: {}
-  dependencies:
-    - common_design/cd-dropdown
 
 # CSS custom properties polyfill for IE11.
 # https://jhildenbiddle.github.io/css-vars-ponyfill
