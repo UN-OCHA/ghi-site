@@ -10,8 +10,21 @@
   .leaflet-top.leaflet-left {
     width: 50%;
 
+    .leaflet-control {
+      color: var(--cd-default-text-color);
+      border: 1px solid var(--cd-default-border-color);
+      border-radius: 0;
+      box-shadow: none;
+      font-size: var(--cd-font-size--default);
+    }
+
     .leaflet-control-zoom {
       z-index: 1001;
+
+      a {
+        font-size: var(--cd-font-size--default);
+        line-height: 26px;
+      }
     }
 
     .leaflet-control-search {
@@ -19,18 +32,13 @@
       left: 2.5rem;
       width: 17rem;
       padding: 4px 0;
-      color: var(--cd-grey--mid);
-      border: none;
-      border-radius: 4px;
-      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
-      font-size: var(--cd-font-size--small);
 
       input.search-input {
         display: block !important;
         width: 75%;
         margin: 4px 1rem 4px 1rem;
         padding: 0;
-        border: 1px solid var(--cd-grey--mid);
+        border: 1px solid var(--cd-default-border-color);
         border: none;
         font-size: var(--cd-font-size--small);
         &:focus {

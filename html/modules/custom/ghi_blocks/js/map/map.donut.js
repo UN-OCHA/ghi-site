@@ -2,7 +2,6 @@
 
   const root_styles = getComputedStyle(document.documentElement);
 
-
   Drupal.hpc_map_donut = Drupal.hpc_map_donut || {};
 
   Drupal.hpc_map_donut.config = {
