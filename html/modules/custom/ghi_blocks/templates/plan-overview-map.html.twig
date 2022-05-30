@@ -8,15 +8,8 @@
   <div class="plan-overview-map-wrapper pane-{{ chart_id }} {{ map_type }}">
     <div {{ attributes.addClass(map_container_classes) }}">
       {% if map_tabs %}
-        <div class="map-tabs map-tabs-btn cd-container">
-          {% for key, item in map_tabs %}
-            <a href="#" class="map-tab desktop" data-map-index="{{ key }}">{{ item.label }}</a>
-            <a href="#" class="map-tab mobile" data-map-index="{{ key }}">
-              <svg class="icon icon--{{ item.icon }}">
-                <use xlink:href="#{{ item.icon }}"></use>
-              </svg>
-            </a>
-          {% endfor %}
+        <div class="map-tabs map-tabs-btn">
+          {{ map_tabs }}
         </div>
       {% endif %}
       <div id="{{ chart_id }}">

@@ -71,7 +71,10 @@ class PlanOverviewMap extends GHIBlockBase {
     return [
       '#theme' => 'plan_overview_map',
       '#chart_id' => $chart_id,
-      '#map_tabs' => $map['tabs'] ?? NULL,
+      '#map_tabs' => $map['tabs'] ? [
+        '#theme' => 'item_list',
+        '#items' => $map['tabs'],
+      ] : NULL,
       '#attached' => [
         'library' => ['ghi_blocks/map.plan_overview'],
         'drupalSettings' => [
@@ -260,9 +263,9 @@ class PlanOverviewMap extends GHIBlockBase {
         'modal_contents' => $modal_contents,
         'legend' => $tab['legend'],
       ];
-    }
 
-    $map['tabs'] = $tabs;
+      $map['tabs'][] = Markup::create('<a href="#" class="map-tab desktop" data-map-index="' . $key . '">' . $tab['label'] . '</a><a href="#" class="map-tab mobile" data-map-index="' . $key . '"><svg class="icon icon--' . $tab['icon'] . '"><use xlink:href="#' . $tab['icon'] . '"></use></svg></a>');
+    }
 
     $map['settings'] = [
       'json' => !empty($map['data']) ? $map['data'] : NULL,

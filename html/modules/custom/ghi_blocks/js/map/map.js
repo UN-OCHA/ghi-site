@@ -668,8 +668,8 @@
 
   // Get a dom element based on the given data object.
   Drupal.hpc_map.getElementFromDataObject = function(object, state) {
-    let element = $('#' + state.map_id).find('svg[location-id=' + object.location_id + '],circle[location-id=' + object.location_id + ']');
-    return element.length ? element[0] : null;
+    let elements = $('#' + state.map_id).find('svg[location-id=' + object.location_id + '],circle[location-id=' + object.location_id + ']');
+    return elements.length ? elements[0] : null;
   }
 
   // Get a location data object by it's ID.
@@ -680,12 +680,29 @@
     return filtered_locations.length ? filtered_locations[0] : null;
   }
 
+  // Get a location data object from the HTML element or on of its childs.
   Drupal.hpc_map.getLocationObjectFromContainedElement = function(element) {
     if ($(element).attr('location-id')) {
-      return d3.select(element).data()[0].object;
+      var state = Drupal.hpc_map.getMapStateFromContainedElement(element);
+      return Drupal.hpc_map.getLocationDataById(state, $(element).attr('location-id'));
     }
     let parents = $(element).parents('svg[location-id]');
     return parents.length ? d3.select(parents[0]).data()[0].object : null;
+  }
+
+  // Get a dom element for the given use element.
+  Drupal.hpc_map.getElementFromUseElement = function(element) {
+    var state = Drupal.hpc_map.getMapStateFromContainedElement(element);
+    let location_id = $(element).attr('location-id');
+    let elements = $('#' + state.map_id).find('svg[location-id=' + location_id + '],circle[location-id=' + location_id + ']');
+    return elements.length ? elements[0] : null;
+  }
+
+  // Get a location data object from an HTML <use> element.
+  Drupal.hpc_map.getLocationObjectFromUseElement = function(element) {
+    var state = Drupal.hpc_map.getMapStateFromContainedElement(element);
+    let location_id = $(element).attr('location-id');
+    return Drupal.hpc_map.getLocationDataById(state, location_id);
   }
 
   // See if the given data point is empty for the current map state.
@@ -1095,6 +1112,8 @@
             $(state.map_container_class + ' input.search-input').val('');
           }
           Drupal.hpc_map.showPopup(new_active_location, state);
+          let element = Drupal.hpc_map.getElementFromDataObject(new_active_location, state);
+          Drupal.hpc_map.focusLocation(element, state, 1);
         }
       });
     }

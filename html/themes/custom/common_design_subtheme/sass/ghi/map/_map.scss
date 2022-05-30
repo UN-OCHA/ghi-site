@@ -21,7 +21,6 @@
       top: 0.8rem;
       right: 0.1rem;
       border: none;
-      box-shadow: none;
 
       .donut-control-icon {
         cursor: pointer;
@@ -354,31 +353,28 @@
     .map-tabs {
       margin-bottom: 0.5rem;
 
-      .item-list {
-        display: inline-block;
+      ul {
+        margin: 0;
 
-        ul li {
+        li {
           display: inline-block;
           margin: 0;
           margin-right: 0.5rem;
           padding: 0.5rem 1rem;
           border-right: none;
-          border-radius: 3px;
           background-color: var(--cd-grey--light);
           line-height: 14px;
 
           a {
+            text-decoration: none;
             text-transform: uppercase;
-            color: var(--cd-grey--mid);
-            font-size: var(--cd-font-size--tiny);
+            color: var(--cd-default-text-color);
+            font-size: var(--cd-font-size--small);
             font-weight: 600;
           }
 
           &.active {
             background-color: var(--cd-primary-color);
-            a {
-              color: var(--cd-white);
-            }
           }
           &:last-child {
             margin-right: 0;
@@ -456,6 +452,7 @@
         margin-right: 0.5rem;
 
         .item-list ul {
+          margin: 0;
 
           li {
             padding: 0;
