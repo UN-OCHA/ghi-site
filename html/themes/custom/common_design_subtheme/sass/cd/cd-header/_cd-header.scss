@@ -20,6 +20,10 @@
 
   .menu > li {
 
+    &:last-child {
+      padding-right: 0;
+    }
+
     a {
       color: var(--cd-default-text-color);
 
@@ -27,11 +31,23 @@
         background: var(--cd-default-border-color);
       }
     }
+
+    &:last-child a {
+      padding-right: 0;
+
+      &::after {
+        display: none;
+      }
+    }
   }
 }
 
 .cd-site-header {
   border-bottom: 0;
+
+  .cd-nav > .menu > li:last-child {
+    padding-right: 0;
+  }
 }
 
 .cd-site-header__inner {
