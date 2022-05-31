@@ -28,8 +28,8 @@ class SectionWizard extends WizardBase {
 
     $base_object_types = $this->sectionManager->getAvailableBaseObjectTypes();
     if (!$base_object_types) {
-      // Bail out if there are no teams.
-      $this->messenger()->addError($this->t('No base object field found on content type Section.'));
+      // Bail out if there are no base objects.
+      $this->messenger()->addError($this->t('No base objects available to create a section.'));
       return $form;
     }
     $base_object_type = $this->getSubmittedBaseObjectType($form_state);

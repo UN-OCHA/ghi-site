@@ -6,6 +6,7 @@ use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\ghi_base_objects\Traits\BasicObjectTypeCreationTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 
 /**
@@ -15,6 +16,7 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
  */
 class WizardTest extends BrowserTestBase {
 
+  use BasicObjectTypeCreationTrait;
   use EntityReferenceTestTrait;
   use TaxonomyTestTrait;
 
@@ -53,7 +55,7 @@ class WizardTest extends BrowserTestBase {
   public function testSectionWizard() {
     $this->drupalGet('/node/add/section');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextNotContains('No base object field found on content type Section.');
+    $this->assertSession()->pageTextNotContains('No base objects available to create a section.');
     $this->assertSession()->pageTextNotContains('No teams found. You must import teams before sections can be created.');
     $this->assertSession()->pageTextContains('Select a section type.');
     $this->assertSession()->buttonExists('Next');
@@ -74,6 +76,11 @@ class WizardTest extends BrowserTestBase {
    * Setup content types and content for these tests.
    */
   private function setupContent() {
+    $this->createBaseObjectType([
+      'id' => 'plan',
+      'label' => 'Plan',
+      'hasYear' => TRUE,
+    ]);
     $this->drupalCreateContentType([
       'type' => 'section',
       'name' => 'Section',
@@ -84,7 +91,7 @@ class WizardTest extends BrowserTestBase {
     ]);
 
     $handler_settings = [
-      'target_bundles' => [],
+      'target_bundles' => ['plan'],
     ];
     $this->createEntityReferenceField('node', 'section', 'field_base_object', 'Base object', 'base_object', 'default', $handler_settings);
 
