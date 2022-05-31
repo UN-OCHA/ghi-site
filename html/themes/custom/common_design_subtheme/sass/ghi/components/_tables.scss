@@ -7,6 +7,7 @@ table.ghi-table {
 
   thead {
     th {
+      padding-right: 2rem;
       padding-left: 0;
       white-space: nowrap;
       text-transform: uppercase;
@@ -14,6 +15,24 @@ table.ghi-table {
       border-bottom: 1px solid var(--cd-default-border-color);
       background: transparent;
       font-size: var(--cd-font-size--small);
+
+      &.sorttable_sorted,
+      &.sorttable_sorted_reverse {
+        padding-right: 0;
+
+        & > span {
+          display: inline-block;
+          width: 2rem;
+          color: var(--cd-primary-color);
+        }
+      }
+    }
+  }
+  &.sortable th {
+    cursor: pointer;
+
+    &.sorttable_nosort {
+      cursor: initial;
     }
   }
 

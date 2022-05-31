@@ -78,7 +78,9 @@ function common_design_subtheme_preprocess_block(&$variables) {
     'generic_link_carousel',
     'global_plan_overview_map',
     'system_menu_block:operations-menu',
+    'system_menu_block:account',
   ];
+
   if (!in_array($variables['plugin_id'], $content_width_blocks)) {
     $variables['attributes']['class'][] = 'content-width';
   }
@@ -189,15 +191,26 @@ function common_design_subtheme_preprocess_table(&$vars) {
       'ghi-table',
       'cd-table',
       'cd-table--responsive',
+      'sortable',
     ],
   ];
   $attached = [
     'library' => [
       'common_design/cd-table',
+      'common_design_subtheme/sorttable',
     ],
   ];
   $vars['attributes'] = array_key_exists('attributes', $vars) ? NestedArray::mergeDeep($vars['attributes'], $attributes) : $attributes;
   $vars['#attached'] = array_key_exists('#attached', $vars) ? NestedArray::mergeDeep($vars['#attached'], $attached) : $attached;
+
+  foreach ($vars['header'] as &$header) {
+
+    $attribute = is_array($header) && array_key_exists('attributes', $header) ? $header['attributes'] : NULL;
+    if ($attribute->hasAttribute('sortable') && $attribute['sortable']->value() === FALSE) {
+      $attribute->addClass('sorttable_nosort');
+      $attribute->removeAttribute('sortable');
+    }
+  }
 
   foreach ($vars['rows'] as &$row) {
     foreach ($row as &$columns) {
@@ -210,6 +223,11 @@ function common_design_subtheme_preprocess_table(&$vars) {
             $attributes = $attribute->toArray();
             $attribute->addClass('cd-table--' . $attributes['data-column-type']);
           }
+        }
+
+        if ($attribute->hasAttribute('sort_value')) {
+          $attribute->setAttribute('sorttable_customkey', $attribute['sort_value']);
+          $attribute->removeAttribute('sort_value');
         }
       }
     }
