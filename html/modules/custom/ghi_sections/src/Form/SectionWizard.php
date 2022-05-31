@@ -26,23 +26,12 @@ class SectionWizard extends WizardBase {
     $form['#prefix'] = '<div id="' . $wrapper_id . '">';
     $form['#suffix'] = '</div>';
 
-    // Find out what base objects types can be referenced.
-    $fields = $this->entityFieldManager->getFieldDefinitions('node', 'section');
-    if (!array_key_exists('field_base_object', $fields)) {
-      // Bail out if there are no teams.
-      $this->messenger()->addError($this->t('No base object field found on content type Section.'));
+    $base_object_types = $this->sectionManager->getAvailableBaseObjectTypes();
+    if (!$base_object_types) {
+      // Bail out if there are no base objects.
+      $this->messenger()->addError($this->t('No base objects available to create a section.'));
       return $form;
     }
-    /** @var \Drupal\field\Entity\FieldConfig $base_object_field_config */
-    $base_object_field_config = $fields['field_base_object'];
-    $allowed_base_object_types = $base_object_field_config->getSetting('handler_settings')['target_bundles'];
-
-    // Then get the list of available base object types and filter it by the
-    // allowed ones.
-    $base_object_types = $this->entityTypeManager->getStorage('base_object_type')->loadMultiple();
-    $base_object_types = array_filter($base_object_types, function ($type) use ($allowed_base_object_types) {
-      return in_array($type->id(), $allowed_base_object_types);
-    });
     $base_object_type = $this->getSubmittedBaseObjectType($form_state);
 
     // And also get the base object in case it has already been submitted.
@@ -257,27 +246,14 @@ class SectionWizard extends WizardBase {
       'title',
     ]));
 
-    $base_object_type = $this->getSubmittedBaseObjectType($form_state);
     $base_object = $this->getSubmittedBaseObject($form_state);
 
     // Clear the error messages.
     $this->messenger()->deleteAll();
 
     // Create and save the section.
-    $section = $this->entityTypeManager->getStorage('node')->create([
-      'type' => 'section',
-      'title' => $values['title'],
-      'uid' => $this->currentUser()->id(),
-      'status' => FALSE,
-    ]);
-    $section->field_base_object->entity = $base_object;
-    if ($base_object_type->needsYearForDataRetrieval()) {
-      $section->field_year = $values['year'];
-    }
-    $section->field_team = $values['team'];
-    $section->field_tags = $values['tags'];
-    $status = $section->save();
-    if ($status) {
+    $section = $this->sectionManager->createSectionForBaseObject($base_object, $values);
+    if ($section) {
       $this->messenger()->addStatus($this->t('Created @type for @title', [
         '@type' => $section->type->entity->label(),
         '@title' => $section->label(),

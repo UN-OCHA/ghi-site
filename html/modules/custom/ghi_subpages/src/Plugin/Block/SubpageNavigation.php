@@ -64,6 +64,11 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       return NULL;
     }
 
+    if ($node && $node->bundle() == 'document') {
+      // Don't show the subpage navigation on document nodes.
+      return NULL;
+    }
+
     $output = [];
     $cache_tags = [];
 

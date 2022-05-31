@@ -16,6 +16,7 @@ function common_design_subtheme_theme_registry_alter(&$theme_registry) {
   // Set some defaults for number formatting.
   $theme_registry['hpc_currency']['variables']['use_abbreviation'] = FALSE;
   $theme_registry['hpc_amount']['variables']['use_abbreviation'] = FALSE;
+  $theme_registry['table']['variables']['sortable'] = FALSE;
 }
 
 /**
@@ -191,7 +192,6 @@ function common_design_subtheme_preprocess_table(&$vars) {
       'ghi-table',
       'cd-table',
       'cd-table--responsive',
-      'sortable',
     ],
   ];
   $attached = [
@@ -200,15 +200,22 @@ function common_design_subtheme_preprocess_table(&$vars) {
       'common_design_subtheme/sorttable',
     ],
   ];
+
+  $sortable = !empty($vars['sortable']);
+  if ($sortable) {
+    $attributes['class'][] = 'sortable';
+  }
+
   $vars['attributes'] = array_key_exists('attributes', $vars) ? NestedArray::mergeDeep($vars['attributes'], $attributes) : $attributes;
   $vars['#attached'] = array_key_exists('#attached', $vars) ? NestedArray::mergeDeep($vars['#attached'], $attached) : $attached;
 
-  foreach ($vars['header'] as &$header) {
-
-    $attribute = is_array($header) && array_key_exists('attributes', $header) ? $header['attributes'] : NULL;
-    if ($attribute->hasAttribute('sortable') && $attribute['sortable']->value() === FALSE) {
-      $attribute->addClass('sorttable_nosort');
-      $attribute->removeAttribute('sortable');
+  if ($sortable) {
+    foreach ($vars['header'] as &$header) {
+      $attribute = is_array($header) && array_key_exists('attributes', $header) ? $header['attributes'] : NULL;
+      if ($attribute->hasAttribute('sortable') && $attribute['sortable']->value() === FALSE) {
+        $attribute->addClass('sorttable_nosort');
+        $attribute->removeAttribute('sortable');
+      }
     }
   }
 
@@ -223,11 +230,11 @@ function common_design_subtheme_preprocess_table(&$vars) {
             $attributes = $attribute->toArray();
             $attribute->addClass('cd-table--' . $attributes['data-column-type']);
           }
-        }
 
-        if ($attribute->hasAttribute('sort_value')) {
-          $attribute->setAttribute('sorttable_customkey', $attribute['sort_value']);
-          $attribute->removeAttribute('sort_value');
+          if ($sortable && $attribute->hasAttribute('sort_value')) {
+            $attribute->setAttribute('sorttable_customkey', $attribute['sort_value']);
+            $attribute->removeAttribute('sort_value');
+          }
         }
       }
     }

@@ -82,9 +82,6 @@ class SyncBatch {
   /**
    * Finish batch.
    *
-   * This function is a static function to avoid serializing the ConfigSync
-   * object unnecessarily.
-   *
    * @param bool $success
    *   Indicate that the batch API tasks were all completed successfully.
    * @param array $results

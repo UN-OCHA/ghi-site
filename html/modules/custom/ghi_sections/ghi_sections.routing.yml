@@ -1,0 +1,7 @@
+ghi_sections.bulk_create:
+  path: '/admin/content/sections/bulk-create'
+  defaults:
+    _form: '\Drupal\ghi_sections\Form\SectionBulkCreate'
+    _title: 'Section bulk-create'
+  requirements:
+    _permission: 'administer site configuration'

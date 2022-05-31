@@ -56,6 +56,10 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
    * {@inheritdoc}
    */
   public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
+    $plan = $base_object && $base_object->bundle() == 'plan' ? $base_object : NULL;
+    $plan_id = $plan ? $plan->get('field_original_id')->value : NULL;
+
     if (!property_exists($config, 'entity_select')) {
       if (($config->entity_type ?? NULL) == 'overview' && $base_object = BaseObjectHelper::getBaseObjectFromNode($node)) {
         $entity_id = BaseObjectHelper::getOriginalIdFromEntity($base_object);
@@ -70,7 +74,20 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
       }
     }
     $entity_id = $config->entity_select->entity_id;
-    $attachment_id = $config->attachment_select->attachment_id;
+    $attachment_id = $config->attachment_select->attachment_id ?? NULL;
+
+    // Sanity check to prevent importing of misconfigured map elements.
+    if ($attachment_id && $plan_id) {
+      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $attachment_query */
+      $attachment_query = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('attachment_query');
+      $attachment = $attachment_query->getAttachment(is_array($attachment_id) ? reset($attachment_id) : $attachment_id);
+      if (!$attachment || !$attachment instanceof DataAttachment) {
+        $attachment_id = NULL;
+      }
+      elseif ($attachment && $attachment->getPlanId() != $plan_id) {
+        $attachment_id = NULL;
+      }
+    }
     if (!$attachment_id) {
       throw new IncompleteElementConfigurationException('Incomplete configuration for "plan_attachment_map"');
     }
@@ -82,7 +99,7 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
         'target' => 'data_point',
       ],
       'data_point_single' => [
-        'target' => 'data_point_single',
+        'target' => 'data_point',
       ],
       'data_point_calculated_progressbar' => [
         'target' => 'data_point',
@@ -114,8 +131,6 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
       switch ($transition_definition['target']) {
 
         case 'data_point':
-        case 'data_point_single':
-        case 'data_point_calculated_progressbar':
           $value->data_points[0] = $value->data_point_1;
           $value->data_points[1] = $value->data_point_2;
           $value->widget = $value->mini_widget;
@@ -1256,7 +1271,13 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
     $query = $this->getQueryHandler('attachment');
     $attachment = $query->getAttachment($attachment_id);
-    return $attachment instanceof DataAttachment ? $attachment : NULL;
+    if (!$attachment || !$attachment instanceof DataAttachment) {
+      return NULL;
+    }
+    if ($attachment->getPlanId() != $this->getCurrentPlanId()) {
+      return NULL;
+    }
+    return $attachment;
   }
 
   /**

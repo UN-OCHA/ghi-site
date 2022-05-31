@@ -19,7 +19,7 @@ class RouteSubscriber extends RouteSubscriberBase {
   protected function alterRoutes(RouteCollection $collection) {
 
     // Add a custom route based on the generic node.add route, in order to use
-    // our Section Wizard form class for the creation of a sections and global
+    // our Section Wizard form class for the creation of sections and global
     // sections.
     if ($route = $collection->get('node.add')) {
       $wizard_route = clone $route;
