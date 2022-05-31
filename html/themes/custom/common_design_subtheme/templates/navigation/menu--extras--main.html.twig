@@ -92,8 +92,8 @@
             })
           %}
 
-          <div {{ attributes }}
-            {{ item.content }}
+          <div {{ attributes }}>
+            {{ item.content|render }}
           </div>
 
         {% endif %}
