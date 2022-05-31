@@ -85,7 +85,7 @@ class PlanTable extends GHIBlockBase {
       'requirements' => $this->t('Requirements'),
       'funding' => $this->t('Funding'),
       'coverage' => $this->t('Coverage'),
-      'document' => '',
+      'document' => ['data' => '', 'sortable' => FALSE],
     ];
 
     $cache_tags = [];
@@ -111,6 +111,7 @@ class PlanTable extends GHIBlockBase {
             ],
             $this->buildFootnoteTooltip($footnotes, 'in_need'),
           ],
+          'sort_value' => $plan->getCaseloadValue('inNeed'),
         ],
         'targeted' => [
           'data' => [
@@ -120,6 +121,7 @@ class PlanTable extends GHIBlockBase {
             ],
             $this->buildFootnoteTooltip($footnotes, 'target'),
           ],
+          'sort_value' => $plan->getCaseloadValue('target'),
         ],
         'expected_reach' => [
           'data' => [
@@ -129,12 +131,14 @@ class PlanTable extends GHIBlockBase {
             ],
             $this->buildFootnoteTooltip($footnotes, 'estimated_reach'),
           ],
+          'sort_value' => $plan->getCaseloadValue('expectedReach', 'Expected Reach'),
         ],
         'reached' => [
           'data' => [
             '#theme' => 'hpc_amount',
             '#amount' => $plan->getCaseloadValue('reached', 'Reached'),
           ],
+          'sort_value' => $plan->getCaseloadValue('reached', 'Reached'),
         ],
         'requirements' => [
           'data' => [
@@ -144,18 +148,21 @@ class PlanTable extends GHIBlockBase {
             ],
             $this->buildFootnoteTooltip($footnotes, 'requirements'),
           ],
+          'sort_value' => $plan->getRequirements($plan),
         ],
         'funding' => [
           'data' => [
             '#theme' => 'hpc_currency',
             '#value' => $plan->getFunding($plan),
           ],
+          'sort_value' => $plan->getFunding($plan),
         ],
         'coverage' => [
           'data' => [
             '#theme' => 'hpc_percent',
             '#ratio' => $plan->getCoverage($plan) / 100,
           ],
+          'sort_value' => $plan->getCoverage($plan),
         ],
         'document' => [
           'data' => $document_uri ? DownloadHelper::getDownloadIcon($document_uri) : NULL,
