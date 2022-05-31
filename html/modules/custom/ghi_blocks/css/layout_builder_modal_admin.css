@@ -15,18 +15,18 @@
   background-color: var(--colorGinAppBackground) !important;
 }
 
-.hpc-form-wrapper table {
+.hpc-form-wrapper > div:not([data-block-preview]) table {
   width: 100%;
   margin-top: 0;
   margin-bottom: 1.5rem;
   border-collapse: collapse;
 }
-.hpc-form-wrapper table thead {
+.hpc-form-wrapper > div:not([data-block-preview]) table thead {
   border-radius: 6px;
   -webkit-box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
   box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
 }
-.hpc-form-wrapper table th {
+.hpc-form-wrapper > div:not([data-block-preview]) table th {
   color: var(--colorGinText);
   background: var(--colorGinTableHeader);
   position: relative;
@@ -39,25 +39,25 @@
   line-height: 1.25rem;
   white-space: nowrap;
 }
-.hpc-form-wrapper table th:first-child {
+.hpc-form-wrapper > div:not([data-block-preview]) table th:first-child {
   border-top-left-radius: 6px;
   border-bottom-left-radius: 6px;
 }
-.hpc-form-wrapper table th:last-child {
+.hpc-form-wrapper > div:not([data-block-preview]) table th:last-child {
   border-top-right-radius: 6px;
   border-bottom-right-radius: 6px;
 }
-.hpc-form-wrapper table tbody tr {
+.hpc-form-wrapper > div:not([data-block-preview]) table tbody tr {
   border-bottom: 1px solid var(--colorGinTableBorder);
   color: var(--colorGinText);
   background-color: transparent;
 }
-.hpc-form-wrapper table tbody tr:hover,
-.hpc-form-wrapper table tbody tr:focus {
+.hpc-form-wrapper > div:not([data-block-preview]) table tbody tr:hover,
+.hpc-form-wrapper > div:not([data-block-preview]) table tbody tr:focus {
   color: #222330;
   background: #f0f5fd;
 }
-.hpc-form-wrapper table tbody tr td {
+.hpc-form-wrapper > div:not([data-block-preview]) table tbody tr td {
   box-sizing: border-box;
   height: 4rem;
   padding: 0.5rem 1rem;

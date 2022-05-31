@@ -6,10 +6,17 @@
       }
 
       if (typeof sorttable != 'undefined') {
-        sorttable.init();
-        $('table.sortable', context).once('sortable-table').each(function () {
-          column = $(this).find('th:not(.sorttable_nosort)')[0];
-          sorttable.innerSortFunction.apply(column, []);
+        if (context == document) {
+          sorttable.init();
+        }
+        $('table.sortable', context).once('sortable-table').each(function() {
+          if (context != document) {
+            sorttable.makeSortable(this);
+          }
+          column = $('th:not(.sorttable_nosort):first-child', this).get(0);
+          if (column) {
+            sorttable.innerSortFunction.apply(column, []);
+          }
         });
       }
     }
