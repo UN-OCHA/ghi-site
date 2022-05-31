@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
+use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_api\Helpers\ArrayHelper;
@@ -137,7 +138,7 @@ class DataAttachment extends AttachmentBase {
    * @return int
    *   The plan ID if any can be found.
    */
-  private function getPlanId() {
+  public function getPlanId() {
     $attachment_data = $this->getRawData();
     $plan_id = NULL;
     if (!empty($attachment_data->objectType) && is_string($attachment_data->objectType) && $attachment_data->objectType == 'plan') {
@@ -509,7 +510,7 @@ class DataAttachment extends AttachmentBase {
     // And merge metrics and measurements together.
     return array_pad(array_merge(
       array_map(function ($item) {
-        return $item->value;
+        return $item->value ?? NULL;
       }, $metrics->values->totals),
       $measure_fields ? array_map(function ($item) {
         return $item->value ?? NULL;
@@ -617,7 +618,7 @@ class DataAttachment extends AttachmentBase {
   protected function getPrototypeData() {
     $attachment = $this->getRawData();
     if (property_exists($attachment, 'attachmentPrototype')) {
-      $prototype = $attachment->attachmentPrototype;
+      $prototype = new AttachmentPrototype($attachment->attachmentPrototype);
     }
     else {
       $prototype = self::fetchPrototypeForAttachment($attachment);
@@ -627,20 +628,7 @@ class DataAttachment extends AttachmentBase {
       throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $attachment->id));
     }
 
-    return (object) [
-      'id' => $prototype->id,
-      'name' => $prototype->value->name->en,
-      'ref_code' => $prototype->refCode,
-      'type' => strtolower($prototype->type),
-      'fields' => array_merge(
-        array_map(function ($item) {
-          return $item->name->en;
-        }, $prototype->value->metrics),
-        array_map(function ($item) {
-          return $item->name->en;
-        }, $prototype->value->measureFields)
-      ),
-    ];
+    return $prototype;
   }
 
   /**
@@ -649,7 +637,7 @@ class DataAttachment extends AttachmentBase {
    * @param object $attachment
    *   The attachment object from the API.
    *
-   * @return object
+   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype
    *   An attachment prototype object.
    */
   protected static function fetchPrototypeForAttachment($attachment) {

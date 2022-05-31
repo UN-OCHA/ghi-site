@@ -27,7 +27,7 @@ abstract class BaseObject extends ApiObjectBase implements BaseObjectInterface {
   }
 
   /**
-   * Get the base object entity coresponding to this API object.
+   * Get the base object entity corresponding to this API object.
    *
    * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface
    *   The base object entity.

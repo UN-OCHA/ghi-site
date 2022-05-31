@@ -84,8 +84,7 @@ abstract class WizardBase extends FormBase {
       $container->get('typed_data_manager'),
       $container->get('module_handler'),
       $container->get('current_user'),
-      $container->get('ghi_sections.manager'),
-      $container->get('ghi_sections.manager'),
+      $container->get('ghi_sections.manager')
     );
   }
 
