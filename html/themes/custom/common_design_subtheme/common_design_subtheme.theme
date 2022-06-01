@@ -209,13 +209,18 @@ function common_design_subtheme_preprocess_table(&$vars) {
   $vars['attributes'] = array_key_exists('attributes', $vars) ? NestedArray::mergeDeep($vars['attributes'], $attributes) : $attributes;
   $vars['#attached'] = array_key_exists('#attached', $vars) ? NestedArray::mergeDeep($vars['#attached'], $attached) : $attached;
 
-  if ($sortable) {
-    foreach ($vars['header'] as &$header) {
-      $attribute = is_array($header) && array_key_exists('attributes', $header) ? $header['attributes'] : NULL;
-      if ($attribute->hasAttribute('sortable') && $attribute['sortable']->value() === FALSE) {
-        $attribute->addClass('sorttable_nosort');
-        $attribute->removeAttribute('sortable');
-      }
+  foreach ($vars['header'] as &$header) {
+    $attribute = is_array($header) && array_key_exists('attributes', $header) ? $header['attributes'] : NULL;
+    if (!$attribute) {
+      continue;
+    }
+    if ($attribute->hasAttribute('data-column-type')) {
+      $attributes = $attribute->toArray();
+      $attribute->addClass('cd-table--' . $attributes['data-column-type']);
+    }
+    if ($sortable && $attribute->hasAttribute('sortable') && $attribute['sortable']->value() === FALSE) {
+      $attribute->addClass('sorttable_nosort');
+      $attribute->removeAttribute('sortable');
     }
   }
 
@@ -224,17 +229,18 @@ function common_design_subtheme_preprocess_table(&$vars) {
       foreach ($columns as $column_name => &$column) {
         /** @var \Drupal\Core\Template\Attribute $attribute */
         $attribute = is_array($column) && array_key_exists('attributes', $column) ? $column['attributes'] : NULL;
-        if ($attribute) {
-          $attribute->setAttribute('data-column', $column_name);
-          if ($attribute->hasAttribute('data-column-type')) {
-            $attributes = $attribute->toArray();
-            $attribute->addClass('cd-table--' . $attributes['data-column-type']);
-          }
+        if (!$attribute) {
+          continue;
+        }
+        $attribute->setAttribute('data-column', $column_name);
+        if ($attribute->hasAttribute('data-column-type')) {
+          $attributes = $attribute->toArray();
+          $attribute->addClass('cd-table--' . $attributes['data-column-type']);
+        }
 
-          if ($sortable && $attribute->hasAttribute('sort_value')) {
-            $attribute->setAttribute('sorttable_customkey', $attribute['sort_value']);
-            $attribute->removeAttribute('sort_value');
-          }
+        if ($sortable && $attribute->hasAttribute('data-sort-value')) {
+          $attribute->setAttribute('sorttable_customkey', $attribute['data-sort-value']);
+          $attribute->removeAttribute('data-sort-value');
         }
       }
     }

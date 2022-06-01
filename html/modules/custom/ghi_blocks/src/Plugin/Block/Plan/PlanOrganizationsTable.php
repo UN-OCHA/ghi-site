@@ -173,6 +173,7 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
       '#theme' => 'table',
       '#header' => $header,
       '#rows' => $rows,
+      '#sortable' => TRUE,
     ];
   }
 

@@ -331,6 +331,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       '#theme' => 'table',
       '#header' => $header,
       '#rows' => $rows,
+      '#sortable' => TRUE,
     ];
   }
 
