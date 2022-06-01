@@ -147,6 +147,11 @@ function common_design_subtheme_preprocess_page(&$variables) {
     }
   }
   $variables['#attached']['library'][] = 'common_design_subtheme/gho-page-node';
+
+  $subpage_title = $variables['page']['content']['subpagetitle'] ?? NULL;
+  if ($subpage_title) {
+    $variables['attributes']['class'][] = 'has-subpage-title';
+  }
 }
 
 /**
