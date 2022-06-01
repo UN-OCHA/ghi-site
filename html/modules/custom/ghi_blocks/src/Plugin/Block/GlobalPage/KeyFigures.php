@@ -108,8 +108,11 @@ class KeyFigures extends GHIBlockBase {
             'class' => ['key-figures'],
           ],
           // This is important to make the template suggestions logic work in
-          // ghi_blocks.module.
-          '#context' => ['plugin_id' => $this->getPluginId()],
+          // common_design_subtheme.theme.
+          '#context' => [
+            'plugin_type' => 'key_figures',
+            'plugin_id' => $this->getPluginId(),
+          ],
         ],
       ];
     }
