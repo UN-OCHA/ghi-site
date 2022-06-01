@@ -78,13 +78,34 @@ class PlanTable extends GHIBlockBase {
     $header = [
       'name' => $this->t('Plans'),
       'type' => $this->t('Plan type'),
-      'inneed' => $this->t('People in need'),
-      'targeted' => $this->t('People targeted'),
-      'expected_reach' => $this->t('Expected reach'),
-      'reached' => $this->t('Reached'),
-      'requirements' => $this->t('Requirements'),
-      'funding' => $this->t('Funding'),
-      'coverage' => $this->t('Coverage'),
+      'inneed' => [
+        'data' => $this->t('People in need'),
+        'data-column-type' => 'amount',
+      ],
+      'targeted' => [
+        'data' => $this->t('People targeted'),
+        'data-column-type' => 'amount',
+      ],
+      'expected_reach' => [
+        'data' => $this->t('Expected reach'),
+        'data-column-type' => 'amount',
+      ],
+      'reached' => [
+        'data' => $this->t('Reached'),
+        'data-column-type' => 'amount',
+      ],
+      'requirements' => [
+        'data' => $this->t('Requirements'),
+        'data-column-type' => 'amount',
+      ],
+      'funding' => [
+        'data' => $this->t('Funding'),
+        'data-column-type' => 'amount',
+      ],
+      'coverage' => [
+        'data' => $this->t('Coverage'),
+        'data-column-type' => 'amount',
+      ],
       'document' => ['data' => '', 'sortable' => FALSE],
     ];
 
@@ -111,7 +132,8 @@ class PlanTable extends GHIBlockBase {
             ],
             $this->buildFootnoteTooltip($footnotes, 'in_need'),
           ],
-          'sort_value' => $plan->getCaseloadValue('inNeed'),
+          'data-sort-value' => $plan->getCaseloadValue('inNeed'),
+          'data-column-type' => 'amount',
         ],
         'targeted' => [
           'data' => [
@@ -121,7 +143,8 @@ class PlanTable extends GHIBlockBase {
             ],
             $this->buildFootnoteTooltip($footnotes, 'target'),
           ],
-          'sort_value' => $plan->getCaseloadValue('target'),
+          'data-sort-value' => $plan->getCaseloadValue('target'),
+          'data-column-type' => 'amount',
         ],
         'expected_reach' => [
           'data' => [
@@ -131,14 +154,16 @@ class PlanTable extends GHIBlockBase {
             ],
             $this->buildFootnoteTooltip($footnotes, 'estimated_reach'),
           ],
-          'sort_value' => $plan->getCaseloadValue('expectedReach', 'Expected Reach'),
+          'data-sort-value' => $plan->getCaseloadValue('expectedReach', 'Expected Reach'),
+          'data-column-type' => 'amount',
         ],
         'reached' => [
           'data' => [
             '#theme' => 'hpc_amount',
             '#amount' => $plan->getCaseloadValue('reached', 'Reached'),
           ],
-          'sort_value' => $plan->getCaseloadValue('reached', 'Reached'),
+          'data-sort-value' => $plan->getCaseloadValue('reached', 'Reached'),
+          'data-column-type' => 'amount',
         ],
         'requirements' => [
           'data' => [
@@ -148,21 +173,24 @@ class PlanTable extends GHIBlockBase {
             ],
             $this->buildFootnoteTooltip($footnotes, 'requirements'),
           ],
-          'sort_value' => $plan->getRequirements($plan),
+          'data-sort-value' => $plan->getRequirements($plan),
+          'data-column-type' => 'amount',
         ],
         'funding' => [
           'data' => [
             '#theme' => 'hpc_currency',
             '#value' => $plan->getFunding($plan),
           ],
-          'sort_value' => $plan->getFunding($plan),
+          'data-sort-value' => $plan->getFunding($plan),
+          'data-column-type' => 'amount',
         ],
         'coverage' => [
           'data' => [
             '#theme' => 'hpc_percent',
             '#ratio' => $plan->getCoverage($plan) / 100,
           ],
-          'sort_value' => $plan->getCoverage($plan),
+          'data-sort-value' => $plan->getCoverage($plan),
+          'data-column-type' => 'amount',
         ],
         'document' => [
           'data' => $document_uri ? DownloadHelper::getDownloadIcon($document_uri) : NULL,

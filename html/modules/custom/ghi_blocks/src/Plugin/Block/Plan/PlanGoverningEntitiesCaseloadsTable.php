@@ -231,7 +231,6 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       '#theme' => 'table',
       '#header' => $header,
       '#rows' => $rows,
-      '#sortable' => TRUE,
     ];
   }
 

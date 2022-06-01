@@ -7,10 +7,30 @@
       margin-bottom: 0;
     }
 
+    th.cd-table--amount,
+    td.cd-table--amount {
+      text-align: left;
+    }
+
+    th,
+    td {
+      padding: 1.5rem 2rem 1.5rem 0;
+
+      &:last-child {
+        padding-right: 0;
+      }
+
+      @include desktop {
+        &.cd-table--amount {
+          white-space: nowrap;
+        }
+      }
+    }
+
     thead {
       th {
-        padding-right: 2rem;
-        padding-left: 0;
+        padding-top: inherit;
+        padding-bottom: inherit;
         white-space: nowrap;
         text-transform: uppercase;
         color: var(--cd-default-text-color);
@@ -42,10 +62,6 @@
 
       tr {
         border-bottom: 1px solid var(--cd-default-border-color);
-      }
-
-      td {
-        padding: 1.5rem 0;
       }
 
       td:first-child.subrow {
