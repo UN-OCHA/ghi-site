@@ -1,6 +1,10 @@
-.ghi-block-global-key-figures {
+.ghi-block-global-key-figures,
+.ghi-block-plan-headline-figures {
 
   .key-figures {
+    margin-bottom: 0;
+    padding-top: 1rem;
+    padding-bottom: 0;
 
     .cd-figure-list__label {
       font-weight: normal;

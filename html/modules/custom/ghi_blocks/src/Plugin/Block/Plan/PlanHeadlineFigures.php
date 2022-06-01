@@ -7,6 +7,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
+use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\node\NodeInterface;
 
@@ -27,6 +28,7 @@ use Drupal\node\NodeInterface;
 class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlockInterface, SyncableBlockInterface, ContainerFactoryPluginInterface {
 
   use ConfigurationContainerTrait;
+  use ConfigurationContainerGroup;
 
   const MAX_ITEMS = 6;
 
@@ -35,6 +37,45 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
    */
   public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
     $items = [];
+
+    // First define a default group. Incoming elements are not grouped, but the
+    // target plugin uses grouping.
+    $items[] = [
+      'item_type' => 'item_group',
+      'id' => count($items),
+      'config' => [
+        'label' => t('Financials'),
+      ],
+      'weight' => 0,
+      'pid' => NULL,
+    ];
+    $items[] = [
+      'item_type' => 'item_group',
+      'id' => count($items),
+      'config' => [
+        'label' => t('Population'),
+      ],
+      'weight' => 0,
+      'pid' => NULL,
+    ];
+    $items[] = [
+      'item_type' => 'item_group',
+      'id' => count($items),
+      'config' => [
+        'label' => t('Presence'),
+      ],
+      'weight' => 0,
+      'pid' => NULL,
+    ];
+
+    $group_map = [
+      'funding_data' => 0,
+      'attachment_data' => 1,
+      'entity_counter' => 2,
+      'project_counter' => 2,
+      'label_value' => 2,
+    ];
+
     // Define a transition map.
     $transition_map = [
       'plan_entities_counter' => [
@@ -93,6 +134,9 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
       $transition_definition = $transition_map[$source_type];
       $item = [
         'item_type' => $transition_definition['target'],
+        'pid' => $group_map[$transition_definition['target']] ?? 0,
+        'id' => count($items),
+        'weight' => count($items),
         'config' => [
           'label' => $incoming_item->label,
         ],
@@ -169,33 +213,64 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
     $conf = $this->getBlockConfig();
 
     $items = $this->getConfiguredItems($conf['items']);
-
     if (empty($items)) {
       return;
     }
 
     $context = $this->getBlockContext();
+    $tree = $this->buildTree($items);
+    if (empty($tree)) {
+      return NULL;
+    }
 
-    $rendered = [];
-    foreach ($conf['items'] as $item) {
+    $tabs = [];
+    foreach ($tree as $group) {
+      $rendered = [];
+      if (empty($group['children'])) {
+        continue;
+      }
 
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
-      $item_type = $this->getItemTypePluginForColumn($item, $context);
+      $group_item = $this->getItemTypePluginForColumn($group, $context);
 
-      $rendered[] = [
-        '#type' => 'item',
-        '#title' => $item_type->getLabel(),
-        0 => $item_type->getRenderArray(),
+      foreach ($group['children'] as $item) {
+
+        /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
+        $item_type = $this->getItemTypePluginForColumn($item, $context);
+
+        $rendered[] = [
+          '#type' => 'item',
+          '#title' => $item_type->getLabel(),
+          0 => $item_type->getRenderArray(),
+        ];
+      }
+      if (empty($rendered)) {
+        continue;
+      }
+      $tabs[] = [
+        'title' => [
+          '#markup' => $group_item->getLabel(),
+        ],
+        'items' => [
+          '#theme' => 'item_list',
+          '#items' => $rendered,
+          '#attributes' => [
+            'class' => ['key-figures'],
+          ],
+          // This is important to make the template suggestions logic work in
+          // common_design_subtheme.theme.
+          '#context' => [
+            'plugin_type' => 'key_figures',
+            'plugin_id' => $this->getPluginId(),
+          ],
+        ],
       ];
     }
 
-    return [
-      '#theme' => 'item_list',
-      '#items' => $rendered,
-      '#attributes' => [
-        'class' => ['plan-headline-figures'],
-      ],
-    ];
+    return $tabs ? [
+      '#theme' => 'tab_container',
+      '#tabs' => $tabs,
+    ] : NULL;
   }
 
   /**
@@ -230,6 +305,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
       ],
       '#element_context' => $this->getBlockContext(),
       '#max_items' => self::MAX_ITEMS,
+      '#groups' => TRUE,
     ];
     return $form;
   }
@@ -258,6 +334,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
    */
   public function getAllowedItemTypes() {
     $item_types = [
+      'item_group' => [],
       'funding_data' => [
         'item_types' => [
           'funding_totals',
