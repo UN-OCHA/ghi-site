@@ -441,7 +441,14 @@ class SyncManager implements ContainerInjectionInterface {
     }
     $class = $definition['class'];
     $config = json_decode(json_encode($element->configuration));
-    return $class::mapConfig($config, $node, $element->type, $dry_run);
+
+    $common_config = [];
+    $widget_options = $config->widget_options ?? NULL;
+    $widget_visibility = $widget_options ? ($widget_options->widget_visibility ?? NULL) : NULL;
+    if (!empty($widget_visibility) && $widget_visibility != 'public') {
+      $common_config['visibility_status'] = 'hidden';
+    }
+    return $class::mapConfig($config, $node, $element->type, $dry_run) + $common_config;
   }
 
   /**

@@ -44,7 +44,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
       'item_type' => 'item_group',
       'id' => count($items),
       'config' => [
-        'label' => t('Financials'),
+        'label' => t('Population'),
       ],
       'weight' => 0,
       'pid' => NULL,
@@ -53,7 +53,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
       'item_type' => 'item_group',
       'id' => count($items),
       'config' => [
-        'label' => t('Population'),
+        'label' => t('Financials'),
       ],
       'weight' => 0,
       'pid' => NULL,
@@ -69,8 +69,8 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
     ];
 
     $group_map = [
-      'funding_data' => 0,
-      'attachment_data' => 1,
+      'attachment_data' => 0,
+      'funding_data' => 1,
       'entity_counter' => 2,
       'project_counter' => 2,
       'label_value' => 2,
