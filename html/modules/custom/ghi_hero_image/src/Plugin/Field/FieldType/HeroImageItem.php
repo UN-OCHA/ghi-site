@@ -47,12 +47,11 @@ class HeroImageItem extends FieldItemBase {
    * {@inheritdoc}
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
-
+    $properties = [];
     $properties['source'] = DataDefinition::create('string')
       ->setLabel(t('Source'));
     $properties['settings'] = MapDataDefinition::create()
       ->setLabel(t('Settings'));
-
     return $properties;
   }
 

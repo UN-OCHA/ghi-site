@@ -8,7 +8,6 @@ use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
-use Drupal\ghi_plans\Traits\PlanTypeTrait;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -30,7 +29,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class PlanTable extends GHIBlockBase {
 
   use GlobalSettingsTrait;
-  use PlanTypeTrait;
   use PlanFootnoteTrait;
 
   /**
@@ -110,6 +108,7 @@ class PlanTable extends GHIBlockBase {
     ];
 
     $cache_tags = [];
+    $rows = [];
 
     foreach ($plans as $plan) {
       $plan_entity = $plan->getEntity();

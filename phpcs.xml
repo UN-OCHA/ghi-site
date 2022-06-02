@@ -12,7 +12,10 @@
   <exclude-pattern>node_modules/*</exclude-pattern>
   <exclude-pattern>assets/*</exclude-pattern>
   <exclude-pattern>gulpfile.js</exclude-pattern>
+  <exclude-pattern>node_modules/*</exclude-pattern>
 
   <rule ref="./vendor/drupal/coder/coder_sniffer/Drupal" />
-  <rule ref="./vendor/drupal/coder/coder_sniffer/DrupalPractice" />
+  <rule ref="./vendor/drupal/coder/coder_sniffer/DrupalPractice">
+    <exclude name="DrupalPractice.FunctionCalls.InsecureUnserialize"/>
+  </rule>
 </ruleset>

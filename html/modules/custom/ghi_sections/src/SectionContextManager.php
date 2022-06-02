@@ -112,7 +112,7 @@ class SectionContextManager {
       // The page node is already a section node.
       /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
       $base_object = $node->get('field_base_object')->entity;
-      return $base_object->hasField('field_year') ? $base_object->get('field_year')->value : NULL;
+      return $base_object && $base_object->hasField('field_year') ? $base_object->get('field_year')->value : NULL;
     }
     return NULL;
   }

@@ -27,6 +27,7 @@ class QueryProfileSubscriber implements EventSubscriberInterface {
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
+    $events = [];
     $events[KernelEvents::TERMINATE] = 'logQueryProfileForRequest';
     return $events;
   }

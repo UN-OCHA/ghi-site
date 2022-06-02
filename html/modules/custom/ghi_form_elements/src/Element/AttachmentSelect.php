@@ -161,6 +161,7 @@ class AttachmentSelect extends FormElement {
     // Get the different options from the available set of all attachments in
     // the current base context.
     $entity_type_options = [];
+    $attachment_type_options = [];
     $attachment_prototype_options = [];
     foreach ($attachments as $attachment) {
       $attachment_type_options[$attachment->type] = ucfirst($attachment->type);

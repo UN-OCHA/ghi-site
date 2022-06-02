@@ -12,7 +12,7 @@ class StringHelper {
   /**
    * Make a string camel case.
    */
-  public static function makeCamelCase($string, $initial_lower_case = FALSE) {
+  public static function makeCamelCase($string, $initial_lower_case) {
     $string = str_replace('_', '', ucwords($string, '_'));
     if ($initial_lower_case) {
       $string = lcfirst($string);
@@ -37,7 +37,7 @@ class StringHelper {
   /**
    * Render a string.
    */
-  public static function renderString($string, $is_export = TRUE) {
+  public static function renderString($string, $is_export) {
     return $is_export ? trim(Html::decodeEntities(strip_tags($string))) : $string;
   }
 

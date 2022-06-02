@@ -45,6 +45,7 @@ class LayoutBuilderRouteSubscriber extends RouteSubscriberBase {
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
+    $events = [];
     $events[RoutingEvents::ALTER] = 'onAlterRoutes';
     $events[LayoutBuilderEvents::SECTION_COMPONENT_BUILD_RENDER_ARRAY] = [
       'onBuildRender',

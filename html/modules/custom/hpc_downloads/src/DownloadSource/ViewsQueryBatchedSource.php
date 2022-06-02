@@ -543,6 +543,7 @@ class ViewsQueryBatchedSource extends DownloadSourceBase implements HPCBatchedDo
     }
 
     $current_rows = unserialize(gzuncompress(array_shift($context['sandbox']['rows'])));
+    $sheets = [];
     foreach ($sheet_keys as $sheet_key => $sheet_name) {
       $sheets[$sheet_name] = $sheet_key == 0 ? [[]] : (!empty($current_rows[$sheet_name]) ? $current_rows[$sheet_name] : [[]]);
     }

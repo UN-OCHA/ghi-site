@@ -21,6 +21,7 @@ class BlockComponentRenderArray implements EventSubscriberInterface {
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
+    $events = [];
     // This must be higher than the value in
     // \Drupal\layout_builder\EventSubscriber\BlockComponentRenderArray.
     $events[LayoutBuilderEvents::SECTION_COMPONENT_BUILD_RENDER_ARRAY] = [

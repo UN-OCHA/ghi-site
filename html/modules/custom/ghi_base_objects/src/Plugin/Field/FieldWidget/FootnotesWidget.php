@@ -56,11 +56,13 @@ class FootnotesWidget extends WidgetBase {
     $property_keys = array_keys($property_states);
 
     $values = [];
-    for ($delta = 0; $delta < $items->count(); $delta++) {
+    $item_count = $items->count();
+    for ($delta = 0; $delta < $item_count; $delta++) {
       $values[$items[$delta]->property] = $items[$delta]->footnote;
     }
 
-    for ($delta = 0; $delta < count($property_options); $delta++) {
+    $property_options_count = count($property_options);
+    for ($delta = 0; $delta < $property_options_count; $delta++) {
       $property = $property_keys[$delta];
       if (empty($property_states[$property])) {
         continue;

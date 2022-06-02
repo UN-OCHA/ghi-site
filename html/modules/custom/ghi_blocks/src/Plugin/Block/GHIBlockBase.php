@@ -1294,6 +1294,22 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   A base object if it can be found.
    */
   public function getCurrentBaseObject() {
+    $base_objects = $this->getCurrentBaseObjects();
+    d($base_objects);
+    if (!is_array($base_objects) || count($base_objects) !== 1) {
+      return NULL;
+    }
+    return reset($base_objects);
+  }
+
+  /**
+   * Get the base object for the current page context.
+   *
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface[]|null
+   *   An array of base objects or NULL if none can be found.
+   */
+  public function getCurrentBaseObjects() {
+    $base_objects = [];
     foreach ($this->getContexts() as $context) {
       $context_definition = $context->getContextDefinition();
       if (!$context_definition instanceof EntityContextDefinition) {
@@ -1301,17 +1317,18 @@ abstract class GHIBlockBase extends HPCBlockBase {
       }
 
       if (substr($context_definition->getDataType(), 7) == 'base_object') {
-        return $context->getContextValue();
+        $base_object = $context->getContextValue();
+        $base_objects[$base_object->id()] = $base_object;
       }
       elseif ($context_definition->getDataType() == 'entity:node' && $entity = $context->getContextValue()) {
         /** @var \Drupal\Core\Entity\EntityInterface $entity */
         $section = $this->getCurrentBaseEntity($entity);
-        if ($section) {
-          return BaseObjectHelper::getBaseObjectFromNode($section);
+        if ($section && $base_object = BaseObjectHelper::getBaseObjectFromNode($section)) {
+          $base_objects[$base_object->id()] = $base_object;
         }
       }
     }
-    return NULL;
+    return $base_objects;
   }
 
   /**
@@ -1374,7 +1391,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    */
   protected function alterContexts() {
     $contexts = $this->getContexts();
-    $this->moduleHandler->alter('layout_builder_view_context', $contexts, $section_storage);
+    $this->moduleHandler->alter('layout_builder_view_context', $contexts);
     foreach ($contexts as $context_name => $context) {
       if (in_array($context_name, ['node', 'entity', 'layout_builder.entity'])) {
         continue;

@@ -74,6 +74,7 @@ class FootnotesItem extends FieldItemBase {
    * {@inheritdoc}
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
+    $properties = [];
     $properties['property'] = DataDefinition::create('string')
       ->setLabel(t('Property'));
     $properties['footnote'] = DataDefinition::create('string')
