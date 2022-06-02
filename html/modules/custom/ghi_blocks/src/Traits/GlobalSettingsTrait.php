@@ -91,8 +91,9 @@ trait GlobalSettingsTrait {
         }
         // And sort it by plan name.
         if (!empty($grouped_plans[strtolower($plan_type)])) {
-          ArrayHelper::sortObjectsByCallback($grouped_plans[strtolower($plan_type)], function ($item) use ($config) {
-            return $item->getName($config['plan_short_names'] ?? FALSE);
+          $use_shortname = $config['plan_short_names'] ?? FALSE;
+          ArrayHelper::sortObjectsByCallback($grouped_plans[strtolower($plan_type)], function ($item) use ($use_shortname) {
+            return $use_shortname ? $item->getShortName() : $item->getName();
           }, EndpointQuery::SORT_ASC, SORT_STRING);
         }
       }
@@ -180,7 +181,7 @@ trait GlobalSettingsTrait {
         if (!$plan) {
           return $row;
         }
-        $row['name']['data'][0]['#markup'] = $plan->getName(TRUE);
+        $row['name']['data'][0]['#markup'] = $plan->getShortName();
         return $row;
       }, $rows);
     }

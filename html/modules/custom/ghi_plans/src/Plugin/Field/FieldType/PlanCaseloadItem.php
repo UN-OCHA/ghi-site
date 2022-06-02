@@ -38,6 +38,7 @@ class PlanCaseloadItem extends FieldItemBase {
    * {@inheritdoc}
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
+    $properties = [];
     $properties['attachment_id'] = DataDefinition::create('integer')
       ->setLabel(t('Attachment id'));
     return $properties;

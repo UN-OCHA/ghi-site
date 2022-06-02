@@ -53,6 +53,7 @@ class PageParameterContext implements EventSubscriberInterface {
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
+    $events = [];
     $events[PageManagerEvents::PAGE_CONTEXT][] = 'onPageContext';
     return $events;
   }

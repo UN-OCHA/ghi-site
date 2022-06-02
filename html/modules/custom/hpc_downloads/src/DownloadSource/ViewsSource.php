@@ -132,9 +132,9 @@ class ViewsSource extends DownloadSourceBase {
     $rows = [];
 
     // Go over the rendered fields array and create the table rows.
-    foreach ($view->result as $index => $result_row) {
+    foreach (array_keys($view->result) as $index) {
       $row = [];
-      foreach ($fields as $field_key => $field) {
+      foreach (array_keys($fields) as $field_key) {
         $field_value = (string) $view->style_plugin->getField($index, $field_key);
         if (strpos($field_value, 'multivalue-item')) {
           $row[$field_key] = [

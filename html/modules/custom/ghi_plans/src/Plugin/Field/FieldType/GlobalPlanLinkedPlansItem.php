@@ -42,12 +42,11 @@ class GlobalPlanLinkedPlansItem extends FieldItemBase {
    * {@inheritdoc}
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
-
+    $properties = [];
     $properties['linked_plan'] = DataDefinition::create('integer')
       ->setLabel(t('Linked Plan'));
     $properties['requirements_override'] = DataDefinition::create('integer')
       ->setLabel(t('Requirements override'));
-
     return $properties;
   }
 

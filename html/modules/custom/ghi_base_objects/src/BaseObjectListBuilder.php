@@ -17,6 +17,7 @@ class BaseObjectListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildHeader() {
+    $header = [];
     $header['id'] = $this->t('Base object ID');
     $header['name'] = $this->t('Name');
     return $header + parent::buildHeader();
@@ -27,6 +28,7 @@ class BaseObjectListBuilder extends EntityListBuilder {
    */
   public function buildRow(EntityInterface $entity) {
     /** @var \Drupal\ghi_base_objects\Entity\BaseObject $entity */
+    $row = [];
     $row['id'] = $entity->id();
     $row['name'] = Link::createFromRoute(
       $entity->label(),

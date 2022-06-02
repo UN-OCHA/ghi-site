@@ -12,12 +12,18 @@ interface BaseObjectInterface extends ApiObjectInterface {
   /**
    * Get the name of the API object.
    *
-   * @param bool $shortname
-   *   Whether to get the shortname if available.
-   *
    * @return string
    *   A name for the object.
    */
-  public function getName($shortname = FALSE);
+  public function getName();
+
+  /**
+   * Get the short name of the API object if it's available.
+   *
+   * @return string
+   *   A short name for the object, or the original name if the short name is
+   *   not available.
+   */
+  public function getShortName();
 
 }

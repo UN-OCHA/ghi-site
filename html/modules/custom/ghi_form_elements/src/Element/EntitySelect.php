@@ -120,6 +120,7 @@ class EntitySelect extends FormElement {
     });
 
     $entity_options = [];
+    $entity_header_parts = [];
 
     // If requested, the main plan context is always force-set for inclusion,
     // so we add this here, check it and mark it as disabled.

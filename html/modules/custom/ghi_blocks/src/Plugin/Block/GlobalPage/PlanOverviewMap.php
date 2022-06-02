@@ -11,7 +11,6 @@ use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
-use Drupal\ghi_plans\Traits\PlanTypeTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
@@ -36,7 +35,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class PlanOverviewMap extends GHIBlockBase {
 
   use GlobalSettingsTrait;
-  use PlanTypeTrait;
   use PlanFootnoteTrait;
 
   const DEFAULT_DISCLAIMER = 'The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations.';

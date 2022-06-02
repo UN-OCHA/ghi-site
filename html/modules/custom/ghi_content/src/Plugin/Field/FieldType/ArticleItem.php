@@ -46,12 +46,11 @@ class ArticleItem extends FieldItemBase {
    * {@inheritdoc}
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
-
+    $properties = [];
     $properties['remote_source'] = DataDefinition::create('string')
       ->setLabel(t('Remote source'));
     $properties['article_id'] = DataDefinition::create('integer')
       ->setLabel(t('ID'));
-
     return $properties;
   }
 
