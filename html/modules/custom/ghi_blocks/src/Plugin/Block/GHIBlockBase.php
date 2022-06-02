@@ -1295,7 +1295,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
    */
   public function getCurrentBaseObject() {
     $base_objects = $this->getCurrentBaseObjects();
-    d($base_objects);
     if (!is_array($base_objects) || count($base_objects) !== 1) {
       return NULL;
     }

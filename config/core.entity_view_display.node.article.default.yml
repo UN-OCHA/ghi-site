@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.node.article.field_base_object
     - field.field.node.article.field_image
     - field.field.node.article.field_remote_article
     - field.field.node.article.field_summary
@@ -28,7 +29,23 @@ third_party_settings:
         layout_settings:
           label: Content
           context_mapping: {  }
-        components: {  }
+        components:
+          f73aa8a8-7831-4bec-8927-ba3cf839b70a:
+            uuid: f73aa8a8-7831-4bec-8927-ba3cf839b70a
+            region: content
+            configuration:
+              id: 'field_block:node:article:field_base_object'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: entity_reference_label
+                label: above
+                settings:
+                  link: true
+                third_party_settings: {  }
+            weight: 0
+            additional: {  }
         third_party_settings: {  }
   layout_builder_restrictions:
     allowed_block_categories:
@@ -80,6 +97,14 @@ targetEntityType: node
 bundle: article
 mode: default
 content:
+  field_base_object:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 5
+    region: content
   field_image:
     type: image
     label: above
