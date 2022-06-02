@@ -4,6 +4,7 @@ status: false
 dependencies:
   config:
     - core.entity_view_mode.node.card
+    - field.field.node.article.field_base_object
     - field.field.node.article.field_image
     - field.field.node.article.field_remote_article
     - field.field.node.article.field_summary
@@ -80,6 +81,7 @@ content:
     weight: 1
     region: content
 hidden:
+  field_base_object: true
   field_remote_article: true
   field_summary: true
   langcode: true
