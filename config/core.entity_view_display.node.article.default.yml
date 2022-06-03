@@ -55,6 +55,7 @@ third_party_settings:
       - 'Custom block types'
       - Forms
       - 'Generic elements'
+      - Global
       - HID
       - Homepage
       - 'Inline blocks'
@@ -80,12 +81,12 @@ third_party_settings:
         - 'Country elements'
         - 'Custom block types'
         - Forms
+        - Global
         - HID
         - Homepage
         - 'Inline blocks'
         - 'Lists (Views)'
         - Menus
-        - 'Plan elements'
         - 'Social Auth'
         - Subpage
         - System

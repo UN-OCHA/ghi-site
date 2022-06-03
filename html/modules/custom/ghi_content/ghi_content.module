@@ -276,7 +276,7 @@ function ghi_content_preprocess_page(&$variables) {
   $image = $image_field->view();
   if ($image) {
     $image['#label_display'] = 'hidden';
-    array_unshift($variables['page'][$region_name], $image);
+    $variables['page'][$region_name] = ['hero_image' => $image] + $variables['page'][$region_name];
   }
 
 }
