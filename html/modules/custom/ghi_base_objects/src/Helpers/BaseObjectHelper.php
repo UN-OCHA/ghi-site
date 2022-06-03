@@ -21,7 +21,7 @@ class BaseObjectHelper extends EntityHelper {
    *   The entity to check.
    *
    * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
-   *   A base object if onw is found, NULL otherwhise.
+   *   A base object if one is found, NULL otherwhise.
    */
   public static function getBaseObjectFromNode(FieldableEntityInterface $entity) {
     $base_object = $entity->hasField('field_base_object') ? $entity->field_base_object->entity : NULL;
@@ -30,6 +30,28 @@ class BaseObjectHelper extends EntityHelper {
       $base_object = $parent_node ? self::getBaseObjectFromNode($parent_node) : NULL;
     }
     return $base_object;
+  }
+
+  /**
+   * Get all base objects from an entity.
+   *
+   * This first checks if the entity has field 'field_base_object'. If not, it
+   * also checks if the entity has a field 'field_entity_reference' and bubbles
+   * up that reference.
+   *
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   *   The entity to check.
+   *
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface[]|null
+   *   All base objects if found, NULL otherwhise.
+   */
+  public static function getBaseObjectsFromNode(FieldableEntityInterface $entity) {
+    $base_objects = $entity->hasField('field_base_object') ? $entity->field_base_object->referencedEntities() : NULL;
+    if (!$base_objects) {
+      $parent_node = $entity->hasField('field_entity_reference') ? $entity->field_entity_reference->entity : NULL;
+      $base_objects = $parent_node ? self::getBaseObjectsFromNode($parent_node) : NULL;
+    }
+    return $base_objects;
   }
 
   /**

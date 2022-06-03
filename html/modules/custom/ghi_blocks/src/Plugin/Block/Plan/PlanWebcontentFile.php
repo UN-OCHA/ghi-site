@@ -41,7 +41,8 @@ class PlanWebcontentFile extends GHIBlockBase {
     $query = $this->getQueryHandler('attachment');
     $attachment = $query->getAttachment($conf['attachment_id']);
     return [
-      '#theme' => 'image',
+      '#theme' => 'imagecache_external',
+      '#style_name' => 'wide',
       '#uri' => $attachment->url,
     ];
   }
@@ -83,7 +84,8 @@ class PlanWebcontentFile extends GHIBlockBase {
           ])),
           'preview' => [
             'data' => [
-              '#theme' => 'image',
+              '#theme' => 'imagecache_external',
+              '#style_name' => 'thumbnail',
               '#uri' => $attachment->url,
             ],
           ],

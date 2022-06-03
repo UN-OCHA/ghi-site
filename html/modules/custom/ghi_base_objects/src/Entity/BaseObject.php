@@ -76,6 +76,29 @@ class BaseObject extends ContentEntityBase implements BaseObjectInterface {
   /**
    * {@inheritdoc}
    */
+  public function getOriginalId() {
+    if (!$this->hasField('field_original_id')) {
+      return NULL;
+    }
+    return $this->get('field_original_id')->value ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function equals(BaseObjectInterface $base_object) {
+    if (!$this->getOriginalId() || !$base_object->getOriginalId() || $this->getOriginalId() != $base_object->getOriginalId()) {
+      return FALSE;
+    }
+    if ($this->bundle() != $base_object->bundle()) {
+      return FALSE;
+    }
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function needsYear() {
     return $this->type->entity->needsYearForDataRetrieval();
   }

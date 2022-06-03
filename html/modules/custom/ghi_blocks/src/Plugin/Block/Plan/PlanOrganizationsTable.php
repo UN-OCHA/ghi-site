@@ -26,7 +26,18 @@ use Drupal\node\NodeInterface;
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
  *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
- *   }
+ *  },
+ *  config_forms = {
+ *    "organizations" = {
+ *      "title" = @Translation("Organizations"),
+ *      "callback" = "organizationsForm",
+ *      "base_form" = TRUE
+ *    },
+ *    "table" = {
+ *      "title" = @Translation("Table configuration"),
+ *      "callback" = "tableForm"
+ *    }
+ *  }
  * )
  */
 class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface {
@@ -190,23 +201,6 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
       ],
       'table' => [
         'columns' => [],
-      ],
-    ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSubforms() {
-    return [
-      'organizations' => [
-        'title' => $this->t('Organizations'),
-        'callback' => 'organizationsForm',
-        'base_form' => TRUE,
-      ],
-      'table' => [
-        'title' => $this->t('Table configuration'),
-        'callback' => 'tableForm',
       ],
     ];
   }

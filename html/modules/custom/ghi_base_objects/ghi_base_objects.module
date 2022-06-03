@@ -37,7 +37,6 @@ function ghi_base_objects_help($route_name, RouteMatchInterface $route_match) {
  * Implements hook_layout_builder_view_context_alter().
  */
 function ghi_base_objects_layout_builder_view_context_alter(array &$contexts, SectionStorageInterface $section_storage = NULL, $sample = FALSE) {
-
   // See if there is a context.
   $entity_context = $contexts['layout_builder.entity'] ?? ($contexts['entity'] ?? ($contexts['node'] ?? NULL));
   if (!$entity_context || !$entity_context->hasContextValue()) {
@@ -57,11 +56,13 @@ function ghi_base_objects_layout_builder_view_context_alter(array &$contexts, Se
       $contexts[$type->id()] = $context;
     }
   }
-  elseif ($base_object = BaseObjectHelper::getBaseObjectFromNode($entity)) {
+  elseif ($base_objects = BaseObjectHelper::getBaseObjectsFromNode($entity)) {
     // This is an actual node page.
-    $context = EntityContext::fromEntity($base_object, $base_object->type->entity->label());
-    $context->getContextDefinition()->addConstraint('Bundle', $base_object->getEntityTypeId());
-    $contexts[$base_object->bundle()] = $context;
+    foreach ($base_objects as $base_object) {
+      $context = EntityContext::fromEntity($base_object, $base_object->label());
+      $context->getContextDefinition()->addConstraint('Bundle', $base_object->getEntityTypeId());
+      $contexts[$base_object->bundle() . '--' . $base_object->get('field_original_id')->value] = $context;
+    }
   }
 }
 

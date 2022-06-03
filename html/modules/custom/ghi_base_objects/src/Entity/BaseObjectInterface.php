@@ -36,6 +36,25 @@ interface BaseObjectInterface extends ContentEntityInterface, EntityChangedInter
   public function setName($name);
 
   /**
+   * Get the original id of the base object.
+   *
+   * @return int|null
+   *   The original id or NULL.
+   */
+  public function getOriginalId();
+
+  /**
+   * Check if an object equals another one.
+   *
+   * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
+   *   The bae object to compare against.
+   *
+   * @return bool
+   *   TRUE if considered equal, FALSE otherwise.
+   */
+  public function equals(BaseObjectInterface $base_object);
+
+  /**
    * Check if this base object needs a year for data display.
    *
    * @return bool

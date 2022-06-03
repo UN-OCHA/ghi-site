@@ -188,8 +188,9 @@ class ConfigurationContainer extends FormElement {
         $sorted_rows = $form_state->getValue(array_merge($parents, ['summary_table']));
         foreach ($sorted_rows as $row) {
           $item_key = self::getItemIndexById($items, $row['id']);
+          $pid = $row['pid'] ?? NULL;
           $items[$item_key]['weight'] = (int) $row['weight'];
-          $items[$item_key]['pid'] = $row['pid'] !== '' && $row['pid'] !== NULL ? (int) $row['pid'] : NULL;
+          $items[$item_key]['pid'] = $pid !== '' && $pid !== NULL ? (int) $pid : NULL;
         }
         break;
 
