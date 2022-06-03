@@ -16,7 +16,18 @@ use Drupal\ghi_sections\SectionTrait;
  *  category = @Translation("Narrative Content"),
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
- *   }
+ *  },
+ *  config_forms = {
+ *    "articles" = {
+ *      "title" = @Translation("Articles"),
+ *      "callback" = "articlesForm",
+ *      "base_form" = TRUE
+ *    },
+ *    "display" = {
+ *      "title" = @Translation("Display"),
+ *      "callback" = "displayForm"
+ *    }
+ *  }
  * )
  */
 class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockInterface, OptionalTitleBlockInterface {
@@ -126,23 +137,6 @@ class ArticleCollection extends ContentBlockBase implements MultiStepFormBlockIn
             'featured' => [],
           ],
         ],
-      ],
-    ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSubforms() {
-    return [
-      'articles' => [
-        'title' => $this->t('Articles'),
-        'callback' => 'articlesForm',
-        'base_form' => TRUE,
-      ],
-      'display' => [
-        'title' => $this->t('Display'),
-        'callback' => 'displayForm',
       ],
     ];
   }

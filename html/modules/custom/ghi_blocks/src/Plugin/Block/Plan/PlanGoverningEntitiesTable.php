@@ -7,6 +7,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
@@ -29,10 +30,21 @@ use Drupal\node\NodeInterface;
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
  *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
- *   }
+ *  },
+ *  config_forms = {
+ *    "base" = {
+ *      "title" = @Translation("Base settings"),
+ *      "callback" = "baseForm",
+ *      "base_form" = TRUE
+ *    },
+ *    "table" = {
+ *      "title" = @Translation("Table columns"),
+ *      "callback" = "tableForm"
+ *    }
+ *  }
  * )
  */
-class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface {
+class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface {
 
   use ConfigurationContainerTrait;
   use ConfigurationItemClusterRestrictTrait;
@@ -358,28 +370,18 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   /**
    * {@inheritdoc}
    */
-  public function getSubforms() {
-    return [
-      'base' => [
-        'title' => $this->t('Base settings'),
-        'callback' => 'baseForm',
-        'base_form' => TRUE,
-      ],
-      'table' => [
-        'title' => $this->t('Table columns'),
-        'callback' => 'tableForm',
-      ],
-    ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getDefaultSubform($is_new = FALSE) {
     $conf = $this->getBlockConfig();
     if (!empty($conf['table']) && !empty($conf['table'])) {
       return 'table';
     }
+    return 'base';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTitleSubform() {
     return 'base';
   }
 

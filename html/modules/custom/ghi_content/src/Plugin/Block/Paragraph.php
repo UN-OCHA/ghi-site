@@ -19,6 +19,17 @@ use Drupal\gho_footnotes\GhoFootnotes;
  *  id = "paragraph",
  *  admin_label = @Translation("Paragraph"),
  *  category = @Translation("Narrative Content"),
+ *  config_forms = {
+ *    "article_select" = {
+ *      "title" = @Translation("Article selection"),
+ *      "callback" = "articleSelectForm",
+ *      "base_form" = TRUE
+ *    },
+ *    "paragraph" = {
+ *      "title" = @Translation("Paragraph"),
+ *      "callback" = "paragraphForm"
+ *    }
+ *  }
  * )
  */
 class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface, MultiStepFormBlockInterface, TrustedCallbackInterface {
@@ -149,22 +160,6 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
       'paragraph' => [
         'paragraph_id' => NULL,
         'title' => NULL,
-      ],
-    ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSubforms() {
-    return [
-      'article_select' => [
-        'title' => $this->t('Article selection'),
-        'callback' => 'articleSelectForm',
-      ],
-      'paragraph' => [
-        'title' => $this->t('Paragraph'),
-        'callback' => 'paragraphForm',
       ],
     ];
   }

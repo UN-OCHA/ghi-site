@@ -35,7 +35,22 @@ use Drupal\node\NodeInterface;
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
  *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
- *   }
+ *  },
+ *  config_forms = {
+ *    "attachments" = {
+ *      "title" = @Translation("Attachments"),
+ *      "callback" = "attachmentsForm"
+ *    },
+ *    "sidebar" = {
+ *      "title" = @Translation("Sidebar"),
+ *      "callback" = "sidebarForm"
+ *    },
+ *    "map" = {
+ *      "title" = @Translation("Map"),
+ *      "callback" = "mapForm",
+ *      "base_form" = TRUE
+ *    }
+ *  }
  * )
  */
 class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface {
@@ -938,27 +953,6 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
           'pcodes_enabled' => FALSE,
         ],
         'metric_labels' => [],
-      ],
-    ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSubforms() {
-    return [
-      'attachments' => [
-        'title' => $this->t('Attachments'),
-        'callback' => 'attachmentsForm',
-      ],
-      'sidebar' => [
-        'title' => $this->t('Sidebar'),
-        'callback' => 'sidebarForm',
-      ],
-      'map' => [
-        'title' => $this->t('Map'),
-        'callback' => 'mapForm',
-        'base_form' => TRUE,
       ],
     ];
   }
