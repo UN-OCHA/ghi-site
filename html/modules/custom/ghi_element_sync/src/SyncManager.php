@@ -157,10 +157,12 @@ class SyncManager implements ContainerInjectionInterface {
       }
       $definition = $this->getCorrespondingPluginDefintionForElement($element);
       $context_mapping = [
-        'context_mapping' => [
+        'context_mapping' => array_intersect_key([
           'node' => 'layout_builder.entity',
-        ],
+          $base_object->bundle() => $base_object->bundle() . '--' . $base_object->getOriginalId(),
+        ], $definition['context_definitions']),
       ];
+
       try {
         $mapped_config = $this->getMappedConfig($element, $node);
       }

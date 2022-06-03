@@ -1506,7 +1506,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     // I'm pretty sure that this is not how it should work. But the context
     // mapping is sometimes empty, so in order to use we try to set it up on
-    // our own.
+    // our own, based on the context definitions.
     $context_mapping = $this->getContextMapping();
     if (empty($context_mapping)) {
       $context_mapping = array_map(function ($definition) use ($contexts) {
