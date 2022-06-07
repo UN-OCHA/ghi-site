@@ -63,6 +63,10 @@ datawrapper-responsive-iframe:
   header: true
   js:
     js/datawrapper-responsive-iframe.js: {}
+gho-appeals-tags:
+  css:
+    theme:
+      components/gho-appeals-tags/gho-appeals-tags.css: {}
 gho-achievement:
   css:
     theme:
@@ -123,3 +127,9 @@ gho-aside:
       components/gho-aside/gho-aside.css: {}
   dependencies:
     - common_design_subtheme/gho-caption
+gho-sub-article:
+  css:
+    theme:
+      components/gho-sub-article/gho-sub-article.css: {}
+  dependencies:
+    - common_design_subtheme/gho-appeals-tags

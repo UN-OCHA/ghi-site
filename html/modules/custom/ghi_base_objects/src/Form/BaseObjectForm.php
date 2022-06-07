@@ -44,7 +44,6 @@ class BaseObjectForm extends ContentEntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     $entity = $this->entity;
-
     $status = parent::save($form, $form_state);
 
     switch ($status) {

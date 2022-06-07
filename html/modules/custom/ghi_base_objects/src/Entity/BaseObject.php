@@ -76,7 +76,7 @@ class BaseObject extends ContentEntityBase implements BaseObjectInterface {
   /**
    * {@inheritdoc}
    */
-  public function getOriginalId() {
+  public function getSourceId() {
     if (!$this->hasField('field_original_id')) {
       return NULL;
     }
@@ -87,7 +87,7 @@ class BaseObject extends ContentEntityBase implements BaseObjectInterface {
    * {@inheritdoc}
    */
   public function equals(BaseObjectInterface $base_object) {
-    if (!$this->getOriginalId() || !$base_object->getOriginalId() || $this->getOriginalId() != $base_object->getOriginalId()) {
+    if (!$this->getSourceId() || !$base_object->getSourceId() || $this->getSourceId() != $base_object->getSourceId()) {
       return FALSE;
     }
     if ($this->bundle() != $base_object->bundle()) {

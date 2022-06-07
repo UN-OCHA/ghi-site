@@ -79,6 +79,12 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
     // that CSS logic that targets subsequent elements can be applied.
     $wrapper_attributes = [];
     $dom = Html::load($rendered);
+    if ($paragraph->getType() == 'sub_article') {
+      // Remove the footer from sub articles.
+      foreach (iterator_to_array($dom->getElementsByTagName('footer')) as $footer) {
+        $footer->parentNode->removeChild($footer);
+      }
+    }
     $child = $dom->getElementsByTagName('div')->item(0);
     if ($child) {
       $attributes = $child->attributes;
@@ -139,6 +145,19 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
     $theme_components[] = 'common_design_subtheme/gho-' . Html::getClass($paragraph->getType());
     if ($paragraph->getType() == 'bottom_figure_row') {
       $theme_components[] = 'common_design_subtheme/gho-needs-and-requirements';
+    }
+    if ($paragraph->getType() == 'sub_article') {
+      // Find the paragraph types used in the sub article and add the
+      // components for those too.
+      $matches = [];
+      preg_match_all('/paragraph--type--((\w|-)*)/', $paragraph->getRendered(), $matches);
+      $types = !empty($matches[1]) ? array_unique($matches[1]) : [];
+      foreach ($types as $type) {
+        $theme_components[] = 'common_design_subtheme/gho-' . $type;
+        if ($type == 'bottom-figure-row') {
+          $theme_components[] = 'common_design_subtheme/gho-needs-and-requirements';
+        }
+      }
     }
     return $theme_components;
   }
