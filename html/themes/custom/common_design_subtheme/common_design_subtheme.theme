@@ -17,6 +17,7 @@ function common_design_subtheme_theme_registry_alter(&$theme_registry) {
   $theme_registry['hpc_currency']['variables']['use_abbreviation'] = FALSE;
   $theme_registry['hpc_amount']['variables']['use_abbreviation'] = FALSE;
   $theme_registry['table']['variables']['sortable'] = FALSE;
+  $theme_registry['table']['variables']['autosort'] = FALSE;
 }
 
 /**
@@ -226,6 +227,10 @@ function common_design_subtheme_preprocess_table(&$vars) {
   $sortable = !empty($vars['sortable']);
   if ($sortable) {
     $attributes['class'][] = 'sortable';
+  }
+  $autosort = !empty($vars['autosort']);
+  if ($autosort) {
+    $attributes['class'][] = 'autosort';
   }
 
   $vars['attributes'] = array_key_exists('attributes', $vars) ? NestedArray::mergeDeep($vars['attributes'], $attributes) : $attributes;

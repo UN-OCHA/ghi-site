@@ -205,6 +205,7 @@ class PlanTable extends GHIBlockBase {
       '#header' => $header,
       '#rows' => $rows,
       '#sortable' => TRUE,
+      '#autosort' => FALSE,
       '#wrapper_attributes' => [
         'class' => ['plan-table'],
       ],

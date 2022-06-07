@@ -9,7 +9,7 @@
         if (context == document) {
           sorttable.init();
         }
-        $('table.sortable', context).once('sortable-table').each(function() {
+        $('table.sortable.autosort', context).once('sortable-table').each(function() {
           if (context != document) {
             sorttable.makeSortable(this);
           }
