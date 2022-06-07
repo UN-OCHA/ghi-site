@@ -870,6 +870,9 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
     }
     $plan_id = $this->getCurrentPlanId();
     $reporting_periods = $this->getReportingPeriods($plan_id, TRUE);
+    if (empty($reporting_periods)) {
+      return [];
+    }
     $latest = end($reporting_periods);
     $periods = [];
     foreach ($configured_reporting_periods as $period_id) {

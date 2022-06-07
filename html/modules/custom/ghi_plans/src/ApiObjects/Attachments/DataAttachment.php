@@ -371,13 +371,12 @@ class DataAttachment extends AttachmentBase {
    * metrics will be used.
    */
   private function getBaseMetricTotals($reporting_period = 'latest') {
-    $attachment_data = $this->getRawData();
     $measurement = $this->getMeasurementByReportingPeriod($reporting_period);
     if ($measurement && !empty($measurement->totals)) {
       $base_metrics = $measurement->totals;
     }
     else {
-      $base_metrics = $attachment_data->totals;
+      $base_metrics = $this->totals;
     };
     return $base_metrics;
   }
@@ -389,13 +388,12 @@ class DataAttachment extends AttachmentBase {
    * metrics data will be used.
    */
   private function getBaseData($reporting_period = 'latest') {
-    $attachment_data = $this->getRawData();
     $measurement = $this->getMeasurementByReportingPeriod($reporting_period);
     if ($measurement && !empty($measurement->disaggregated)) {
       $base_data = $measurement->disaggregated;
     }
-    elseif (!empty($attachment_data->disaggregated)) {
-      $base_data = $attachment_data->disaggregated;
+    elseif (!empty($this->disaggregated)) {
+      $base_data = $this->disaggregated;
     }
     else {
       return NULL;
