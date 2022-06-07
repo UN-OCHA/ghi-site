@@ -1,0 +1,80 @@
+/**
+ * Base styles
+ */
+.gho-sub-article {
+  position: relative;
+  /* Flex-box so we can hoist our social icons up form their low position in the
+     source-order but display them near the top of the Sub-Article */
+  display: flex;
+  flex-direction: column;
+}
+.gho-sub-article > * {
+  flex: 0 0 auto;
+}
+.gho-sub-article-paragraph--no-hero {
+  margin-top: 6.75rem;
+  padding-top: 4.5rem;
+  border-top: 1px solid #d8d8d8;
+}
+.gho-sub-article-paragraph--hero {
+  margin-top: 6.75rem;
+}
+.gho-caption--article + .gho-sub-article-paragraph {
+  margin-top: 4.5rem;
+  padding-top: 0;
+  border-top: none;
+}
+.gho-sub-article--hero .gho-hero-image {
+  margin-bottom: 3rem;
+}
+.gho-sub-article__header {
+  /* This is to be able to display the social links between the header and the
+   * the content on small screens. */
+  order: 0;
+  margin-bottom: 3rem;
+}
+.gho-sub-article__title {
+  display: inline;
+  padding: 0;
+  color: #1f1f1f;
+  font-size: 1.625rem;
+  font-weight: 700;
+  line-height: 1.75rem;
+}
+
+@media (min-width: 768px) {
+  .gho-sub-article__title {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+}
+
+.gho-sub-article__content {
+  /* This is to be able to display the social links between the header and the
+   * the content on small screens. */
+  order: 2;
+}
+
+/**
+ * Social links.
+ */
+.gho-sub-article__social-links {
+  /* This is to be able to display the social links between the header and the
+   * the content on small screens. */
+  order: 1;
+  margin: -2rem 0 3rem 0;
+}
+
+@media (min-width: 576px) {
+  .gho-sub-article__social-links {
+    position: absolute;
+    top: 0;
+    margin: 0;
+    padding-top: 0;
+  }
+  .gho-sub-article--hero .gho-sub-article__social-links {
+    /* This includes the height of the hero image which has a ratio of 2:1 and
+     * it works because the padding-top is based on the width of the parent. */
+    padding-top: calc(50% + 2rem);
+  }
+}

@@ -1,0 +1,47 @@
+/**
+ * Base component styles for the collection of tags
+ */
+.gho-appeals-tags {
+  display: inline-block;
+  /* This combined with the line-height, ensures proper vertical alignement. */
+  vertical-align: top;
+  line-height: 1rem;
+}
+
+/**
+ * Individual tag
+ */
+.gho-appeals-tag {
+  display: inline-block;
+  width: 2.5rem;
+  margin: 0.25rem;
+  text-align: center;
+  vertical-align: top;
+  letter-spacing: 0.05rem;
+  text-transform: uppercase;
+  color: #fff;
+  background: #5090cd;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 0.9375rem; /* 1.5 of font-size */
+}
+
+.gho-appeals-tag--hrp {
+  background-color: #5090cd; /* default */
+}
+.gho-appeals-tag--fa {
+  background-color: #8869ae;
+}
+.gho-appeals-tag--rrp,
+.gho-appeals-tag--3rp {
+  background-color: #d85f49;
+}
+.gho-appeals-tag--rmrp,
+.gho-appeals-tag--mrp,
+.gho-appeals-tag--jrp {
+  background-color: #f9a456;
+}
+.gho-appeals-tag--other,
+.gho-appeals-tag--covid {
+  background-color: #65c296;
+}
