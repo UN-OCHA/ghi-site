@@ -205,12 +205,14 @@ class PlanTable extends GHIBlockBase {
       '#header' => $header,
       '#rows' => $rows,
       '#sortable' => TRUE,
+      '#autosort' => FALSE,
       '#wrapper_attributes' => [
         'class' => ['plan-table'],
       ],
       '#cache' => [
         'tags' => $cache_tags,
       ],
+      '#soft_limit' => 10,
     ];
   }
 

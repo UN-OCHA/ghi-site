@@ -5,6 +5,7 @@
  * Template overrides, preprocess, and hooks for the GHI subtheme.
  */
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResultForbidden;
 use Drupal\Core\Render\Element;
@@ -17,6 +18,8 @@ function common_design_subtheme_theme_registry_alter(&$theme_registry) {
   $theme_registry['hpc_currency']['variables']['use_abbreviation'] = FALSE;
   $theme_registry['hpc_amount']['variables']['use_abbreviation'] = FALSE;
   $theme_registry['table']['variables']['sortable'] = FALSE;
+  $theme_registry['table']['variables']['autosort'] = FALSE;
+  $theme_registry['table']['variables']['soft_limit'] = FALSE;
 }
 
 /**
@@ -225,7 +228,14 @@ function common_design_subtheme_preprocess_table(&$vars) {
 
   $sortable = !empty($vars['sortable']);
   if ($sortable) {
-    $attributes['class'][] = 'sortable';
+    $attributes['class'][] = Html::getClass('sortable');
+  }
+  if (!empty($vars['autosort'])) {
+    $attributes['class'][] = Html::getClass('autosort');
+  }
+  if (!empty($vars['soft_limit'])) {
+    $attributes['class'][] = Html::getClass('soft_limit');
+    $attributes['data-soft-limit'][] = (int) $vars['soft_limit'];
   }
 
   $vars['attributes'] = array_key_exists('attributes', $vars) ? NestedArray::mergeDeep($vars['attributes'], $attributes) : $attributes;

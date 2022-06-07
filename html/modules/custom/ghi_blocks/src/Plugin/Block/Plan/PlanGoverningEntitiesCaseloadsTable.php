@@ -7,6 +7,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
@@ -42,7 +43,7 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface {
+class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface {
 
   use ConfigurationContainerTrait;
 
@@ -335,6 +336,13 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     if (!empty($conf['base']) && !empty($conf['table'])) {
       return 'table';
     }
+    return 'base';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTitleSubform() {
     return 'base';
   }
 
