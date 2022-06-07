@@ -212,6 +212,7 @@ class PlanTable extends GHIBlockBase {
       '#cache' => [
         'tags' => $cache_tags,
       ],
+      '#soft_limit' => 10,
     ];
   }
 

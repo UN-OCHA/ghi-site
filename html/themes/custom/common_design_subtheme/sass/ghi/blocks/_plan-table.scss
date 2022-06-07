@@ -1,3 +1,10 @@
+.ghi-table.soft-limit + a.expand-table {
+  display: block;
+  max-width: fit-content;
+  margin-right: auto;
+  margin-left: auto;
+}
+
 .ghi-block-home-plan-table {
   table {
     tbody {
