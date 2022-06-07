@@ -1141,25 +1141,27 @@ abstract class GHIBlockBase extends HPCBlockBase {
     ];
 
     $forms = $this->getSubforms();
-    foreach ($forms as $form_key => $subform) {
-      $form['actions']['subforms'][$form_key] = [
-        '#type' => 'submit',
-        '#name' => $form_key . '-button',
-        '#button_type' => $active_subform == $form_key ? 'primary' : 'secondary',
-        '#value' => $subform['title'],
-        '#element_submit' => [get_class($this) . '::ajaxMultiStepSubmit'],
-        '#ajax' => [
-          'callback' => [$this, 'navigateFormStep'],
-          'wrapper' => $form['settings']['container']['#attributes']['id'],
-          'effect' => 'fade',
-          'method' => 'replace',
-          'parents' => ['settings', 'container'],
-        ],
-        '#attributes' => [
-          'class' => [$active_subform == $form_key ? 'active' : 'inactive'],
-        ],
-        '#disabled' => $is_preview || (!$this->canShowSubform($form, $form_state, $form_key) && $form_key != self::CONTEXTS_FORM_KEY),
-      ];
+    if (count($forms) > 1) {
+      foreach ($forms as $form_key => $subform) {
+        $form['actions']['subforms'][$form_key] = [
+          '#type' => 'submit',
+          '#name' => $form_key . '-button',
+          '#button_type' => $active_subform == $form_key ? 'primary' : 'secondary',
+          '#value' => $subform['title'],
+          '#element_submit' => [get_class($this) . '::ajaxMultiStepSubmit'],
+          '#ajax' => [
+            'callback' => [$this, 'navigateFormStep'],
+            'wrapper' => $form['settings']['container']['#attributes']['id'],
+            'effect' => 'fade',
+            'method' => 'replace',
+            'parents' => ['settings', 'container'],
+          ],
+          '#attributes' => [
+            'class' => [$active_subform == $form_key ? 'active' : 'inactive'],
+          ],
+          '#disabled' => $is_preview || (!$this->canShowSubform($form, $form_state, $form_key) && $form_key != self::CONTEXTS_FORM_KEY),
+        ];
+      }
     }
 
     $form['actions']['subforms']['preview'] = [
