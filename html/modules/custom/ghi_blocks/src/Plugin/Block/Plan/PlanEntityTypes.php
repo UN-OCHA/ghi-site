@@ -333,6 +333,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
    */
   private function getPlanEntities($entity_ref_code = NULL) {
     $context_object = $this->getCurrentBaseObject();
+    d($context_object);
     $filter = NULL;
     if ($entity_ref_code) {
       $filter = ['ref_code' => $entity_ref_code];

@@ -36,12 +36,12 @@ interface BaseObjectInterface extends ContentEntityInterface, EntityChangedInter
   public function setName($name);
 
   /**
-   * Get the original id of the base object.
+   * Get the original id of the base object from the source.
    *
    * @return int|null
    *   The original id or NULL.
    */
-  public function getOriginalId();
+  public function getSourceId();
 
   /**
    * Check if an object equals another one.

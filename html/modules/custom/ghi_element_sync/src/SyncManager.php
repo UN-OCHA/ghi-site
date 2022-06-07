@@ -159,7 +159,7 @@ class SyncManager implements ContainerInjectionInterface {
       $context_mapping = [
         'context_mapping' => array_intersect_key([
           'node' => 'layout_builder.entity',
-          $base_object->bundle() => $base_object->bundle() . '--' . $base_object->getOriginalId(),
+          $base_object->bundle() => $base_object->bundle() . '--' . $base_object->getSourceId(),
         ], $definition['context_definitions']),
       ];
 
