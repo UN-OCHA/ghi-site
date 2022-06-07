@@ -1429,7 +1429,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
    */
   public function getCurrentBaseObject() {
     $contexts = $this->getContexts();
-
     foreach ($this->getContextMapping() as $context_name) {
       $context = $contexts[$context_name] ?? NULL;
       if (!$context || !$context->hasContextValue()) {
@@ -1463,6 +1462,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   A plan object if it can be found.
    */
   public function getCurrentPlanObject() {
+    $this->getContexts();
     if ($this->hasContext('plan')) {
       return $this->getContext('plan')->getContextValue();
     }
@@ -1518,6 +1518,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
         }
         return NULL;
       }, $this->getContextDefinitions());
+      $this->setContextMapping($context_mapping);
     }
 
     foreach ($context_mapping as $key => $context_name) {
