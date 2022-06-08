@@ -33,7 +33,7 @@ function ghi_sections_form_node_section_edit_form_alter(&$form, FormStateInterfa
   $entity = $form_object->buildEntity($form, $form_state);
 
   /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $object */
-  $object = $entity->field_base_object->entity;
+  $object = $entity->get('field_base_object')->entity;
 
   // Hide the year field if the object doesn't need it.
   if ($object instanceof BaseObjectInterface && !$object->needsYear()) {

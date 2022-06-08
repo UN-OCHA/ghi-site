@@ -3,7 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.node.article.field_base_object
+    - field.field.node.article.field_base_objects
     - field.field.node.article.field_image
     - field.field.node.article.field_remote_article
     - field.field.node.article.field_summary
@@ -30,11 +30,11 @@ third_party_settings:
           label: Content
           context_mapping: {  }
         components:
-          f73aa8a8-7831-4bec-8927-ba3cf839b70a:
-            uuid: f73aa8a8-7831-4bec-8927-ba3cf839b70a
+          427cf39f-edf6-45ee-8c5e-f22fd99f6e1a:
+            uuid: 427cf39f-edf6-45ee-8c5e-f22fd99f6e1a
             region: content
             configuration:
-              id: 'field_block:node:article:field_base_object'
+              id: 'field_block:node:article:field_base_objects'
               label_display: '0'
               context_mapping:
                 entity: layout_builder.entity
@@ -98,7 +98,7 @@ targetEntityType: node
 bundle: article
 mode: default
 content:
-  field_base_object:
+  field_base_objects:
     type: entity_reference_label
     label: above
     settings:

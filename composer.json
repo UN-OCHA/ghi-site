@@ -89,7 +89,8 @@
         "npm-asset/swiper": "^8.1",
         "oomphinc/composer-installers-extender": "^2.0",
         "phpoffice/phpspreadsheet": "^1.19",
-        "unocha/common_design": "^4.0"
+        "unocha/common_design": "^4.0",
+        "wieni/wmbert": "^1.11"
     },
     "require-dev": {
         "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1",

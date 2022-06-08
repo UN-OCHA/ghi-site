@@ -91,7 +91,7 @@ class LayoutBuilderBlockController extends ControllerBase implements ContainerIn
   }
 
   /**
-   * React to an entity being updates.
+   * React to an entity being updated.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity being updated.

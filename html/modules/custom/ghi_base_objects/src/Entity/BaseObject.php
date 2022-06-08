@@ -86,6 +86,13 @@ class BaseObject extends ContentEntityBase implements BaseObjectInterface {
   /**
    * {@inheritdoc}
    */
+  public function getUniqueIdentifier() {
+    return $this->bundle() . '--' . $this->getSourceId();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function equals(BaseObjectInterface $base_object) {
     if (!$this->getSourceId() || !$base_object->getSourceId() || $this->getSourceId() != $base_object->getSourceId()) {
       return FALSE;

@@ -44,6 +44,14 @@ interface BaseObjectInterface extends ContentEntityInterface, EntityChangedInter
   public function getSourceId();
 
   /**
+   * Get the unique identifier of the base object.
+   *
+   * @return string|null
+   *   The original id or NULL.
+   */
+  public function getUniqueIdentifier();
+
+  /**
    * Check if an object equals another one.
    *
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object

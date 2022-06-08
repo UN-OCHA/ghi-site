@@ -3,7 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.node.article.field_base_object
+    - field.field.node.article.field_base_objects
     - field.field.node.article.field_image
     - field.field.node.article.field_remote_article
     - field.field.node.article.field_summary
@@ -17,6 +17,7 @@ dependencies:
     - image
     - path
     - text
+    - wmbert
 third_party_settings:
   field_group:
     group_tabs:
@@ -36,7 +37,7 @@ third_party_settings:
         width_breakpoint: 640
     group_data_objects:
       children:
-        - field_base_object
+        - field_base_objects
       label: 'Data objects'
       region: content
       parent_name: group_tabs
@@ -47,7 +48,7 @@ third_party_settings:
         show_empty_fields: false
         id: ''
         formatter: closed
-        description: 'Associating this article page with base objects allows to use data driven page elements that require an object context, e.g. plan based elements like headline figures or attachment maps/tables.'
+        description: 'Associating this article page with data objects allows the use of data driven page elements that require an object context, e.g. plan based elements like headline figures or attachment maps/tables.'
         required_fields: true
     group_remote_article:
       children:
@@ -78,15 +79,18 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
-  field_base_object:
-    type: entity_reference_autocomplete
-    weight: 14
+  field_base_objects:
+    type: wmbert
+    weight: 26
     region: content
     settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
+      list: title_bundle
+      add: auto_complete
+      add_placeholder: 'Start typing to add a data object'
+      disable_duplicate_selection: '1'
+      disable_remove: 0
+      disable_drag_and_drop: 0
+      wrapper: 0
     third_party_settings: {  }
   field_image:
     type: image_image

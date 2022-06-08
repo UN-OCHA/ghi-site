@@ -18,6 +18,7 @@ use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
@@ -1416,7 +1417,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $entities = $page_node->get('field_entity_reference')->referencedEntities();
       $base_entity = reset($entities);
     }
-    elseif ($page_node->hasField('field_base_object')) {
+    elseif (BaseObjectHelper::getBaseObjectFieldName($page_node)) {
       // The page node is already a section node.
       $base_entity = $page_node;
     }

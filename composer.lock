@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a61aaf2a10657aa53fcaa704cf85a0ed",
+    "content-hash": "64278624bebd4ddb7b2906a95abebe52",
     "packages": [
         {
             "name": "alchemy/zippy",
@@ -12164,6 +12164,47 @@
             },
             "abandoned": "symfony/filesystem",
             "time": "2015-12-17T08:42:14+00:00"
+        },
+        {
+            "name": "wieni/wmbert",
+            "version": "1.11.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/wieni/wmbert.git",
+                "reference": "9a8ff81ee8b1f448d7b99b9ae96cabcb6069816b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/wieni/wmbert/zipball/9a8ff81ee8b1f448d7b99b9ae96cabcb6069816b",
+                "reference": "9a8ff81ee8b1f448d7b99b9ae96cabcb6069816b",
+                "shasum": ""
+            },
+            "require": {
+                "drupal/core": "^8.6 || ^9.0",
+                "php": ">=7.1.0"
+            },
+            "require-dev": {
+                "composer-runtime-api": "^2.0",
+                "ergebnis/composer-normalize": "^2.0",
+                "wieni/wmcodestyle": "^1.0"
+            },
+            "type": "drupal-module",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Wieni",
+                    "email": "info@wieni.be"
+                }
+            ],
+            "description": "A more user-friendly entity reference list field widget for Drupal 8.",
+            "support": {
+                "issues": "https://github.com/wieni/wmbert/issues",
+                "source": "https://github.com/wieni/wmbert/tree/1.11.7"
+            },
+            "time": "2022-01-13T11:41:42+00:00"
         }
     ],
     "packages-dev": [
