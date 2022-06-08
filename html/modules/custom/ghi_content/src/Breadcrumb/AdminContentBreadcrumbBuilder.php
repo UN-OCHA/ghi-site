@@ -71,7 +71,7 @@ class AdminContentBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     if (in_array($node->bundle(), SectionManager::SECTION_BUNDLES)) {
       $breadcrumb->addLink(Link::createFromRoute($this->t('Sections'), 'view.content.page_sections'));
       if ($node->hasField('field_base_object')) {
-        $base_object_type = $node->field_base_object->entity->bundle();
+        $base_object_type = $node->get('field_base_object')->entity->bundle();
         $section_type = $this->entityTypeManager->getStorage('base_object_type')->load($base_object_type)->label();
         $breadcrumb->addLink(Link::createFromRoute($this->t('@type Sections', ['@type' => $section_type]), 'view.content.page_sections', [], [
           'query' => [
@@ -85,7 +85,7 @@ class AdminContentBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       $section = $node->get('field_entity_reference')->entity;
       $breadcrumb->addLink(Link::createFromRoute($this->t('Sections'), 'view.content.page_sections'));
       if ($section->hasField('field_base_object')) {
-        $base_object_type = $section->field_base_object->entity->bundle();
+        $base_object_type = $section->get('field_base_object')->entity->bundle();
         $section_type = $this->entityTypeManager->getStorage('base_object_type')->load($base_object_type)->label();
         $breadcrumb->addLink(Link::createFromRoute($this->t('@type Sections', ['@type' => $section_type]), 'view.content.page_sections', [], [
           'query' => [

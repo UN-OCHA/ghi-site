@@ -9,8 +9,11 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_blocks\Controller\BaseObjectReferenceController;
 use Drupal\ghi_blocks\Controller\LayoutBuilderBlockController;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\node\NodeInterface;
 
 /**
  * Implements hook_theme().
@@ -204,6 +207,21 @@ function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $fo
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Used to add warnings for removed base object references.
+ */
+function ghi_blocks_form_node_form_alter(array &$form, FormStateInterface $form_state) {
+  $node = $form_state->getFormObject()->getEntity();
+  if (!$node->hasField(OverridesSectionStorage::FIELD_NAME) || !$node->hasField('field_base_objects')) {
+    // No overrideable node or not base object references available.
+    return;
+  }
+  $controller = BaseObjectReferenceController::create(\Drupal::getContainer());
+  $controller->nodeFormAlter($form, $form_state);
+}
+
+/**
  * Implements hook_FORM_ID_alter().
  */
 function ghi_blocks_form_layout_builder_add_block_alter(array &$form, FormStateInterface $form_state, $form_id) {
@@ -226,6 +244,20 @@ function ghi_blocks_form_layout_builder_update_block_alter(array &$form, FormSta
     return;
   }
   $plugin->blockFormAlter($form, $form_state);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for node entities.
+ */
+function ghi_blocks_node_presave(NodeInterface $node) {
+  if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+    // We only process nodes that use layout builder.
+    return;
+  }
+
+  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
+  $controller = BaseObjectReferenceController::create(\Drupal::getContainer());
+  $controller->cleanupDataBlocks($node);
 }
 
 /**

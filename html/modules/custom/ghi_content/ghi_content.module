@@ -162,7 +162,7 @@ function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateIn
     $form['remote_article_info']['apply_changes'] = [
       '#type' => 'submit',
       '#value' => t('Apply changes from remote'),
-      '#submit' => ['ghi_content_form_node_article_edit_form_submit'],
+      '#submit' => ['ghi_content_form_node_article_edit_form_apply_changes_submit'],
       '#weight' => 2,
     ];
   }
@@ -190,7 +190,7 @@ function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateIn
     ],
   ]);
   $form['remote_article_info']['link']['#weight'] = 4;
-
+  $form['#attached']['library'][] = 'ghi_content/admin.article_edit';
 }
 
 /**
@@ -198,7 +198,7 @@ function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateIn
  *
  * This just saves the node.
  */
-function ghi_content_form_node_article_edit_form_submit($form, FormStateInterface $form_state) {
+function ghi_content_form_node_article_edit_form_apply_changes_submit($form, FormStateInterface $form_state) {
   /** @var \Drupal\node\NodeForm $form_object */
   $form_object = $form_state->getFormObject();
   $node = $form_object->getEntity();
