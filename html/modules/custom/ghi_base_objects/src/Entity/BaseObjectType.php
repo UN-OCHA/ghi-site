@@ -24,7 +24,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
  *     "access" = "Drupal\ghi_base_objects\BaseObjectTypeAccessControlHandler",
  *   },
  *   config_prefix = "base_object_type",
- *   admin_permission = "administer base object entities",
+ *   admin_permission = "administer base object types",
  *   bundle_of = "base_object",
  *   entity_keys = {
  *     "id" = "id",
@@ -37,10 +37,10 @@ use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
  *     "hasYear",
  *   },
  *   links = {
- *     "add-form" = "/admin/structure/base-objects/manage/add",
- *     "edit-form" = "/admin/structure/base-objects/manage/{base_object_type}",
- *     "delete-form" = "/admin/structure/base-objects/manage/{base_object_type}/delete",
- *     "collection" = "/admin/structure/base-objects/manage"
+ *     "add-form" = "/admin/structure/base-objects/add",
+ *     "edit-form" = "/admin/structure/base-objects/{base_object_type}",
+ *     "delete-form" = "/admin/structure/base-objects/{base_object_type}/delete",
+ *     "collection" = "/admin/structure/base-objects"
  *   }
  * )
  */

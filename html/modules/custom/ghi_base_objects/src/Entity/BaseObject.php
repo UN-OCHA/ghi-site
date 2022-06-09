@@ -44,11 +44,11 @@ use Drupal\Core\Entity\EntityTypeInterface;
  *     "langcode" = "langcode",
  *   },
  *   links = {
- *     "canonical" = "/admin/structure/base-objects/imported/{base_object}",
- *     "add-page" = "/admin/structure/base-objects/imported/add",
- *     "add-form" = "/admin/structure/base-objects/imported/add/{base_object_type}",
- *     "edit-form" = "/admin/structure/base-objects/imported/{base_object}/edit",
- *     "delete-form" = "/admin/structure/base-objects/imported/{base_object}/delete",
+ *     "canonical" = "/admin/content/base-objects/{base_object}",
+ *     "add-page" = "/admin/content/base-objects/add",
+ *     "add-form" = "/admin/content/base-objects/add/{base_object_type}",
+ *     "edit-form" = "/admin/content/base-objects/{base_object}/edit",
+ *     "delete-form" = "/admin/content/base-objects/{base_object}/delete",
  *   },
  *   bundle_entity_type = "base_object_type",
  *   field_ui_base_route = "entity.base_object_type.edit_form"

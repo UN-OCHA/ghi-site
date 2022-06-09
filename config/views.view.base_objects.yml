@@ -370,7 +370,7 @@ display:
       access:
         type: perm
         options:
-          perm: 'administer base object entities'
+          perm: 'edit base object entities'
       cache:
         type: tag
         options: {  }
@@ -770,7 +770,7 @@ display:
         filter_groups: false
       display_description: ''
       display_extenders: {  }
-      path: admin/structure/base-objects/imported/countries
+      path: admin/content/base-objects/countries
       menu:
         type: tab
         title: Countries
@@ -956,7 +956,7 @@ display:
         filter_groups: false
       display_description: ''
       display_extenders: {  }
-      path: admin/structure/base-objects/imported/organizations
+      path: admin/content/base-objects/organizations
       menu:
         type: tab
         title: Organizations
@@ -990,7 +990,7 @@ display:
       enabled: true
       display_description: ''
       display_extenders: {  }
-      path: admin/structure/base-objects/imported
+      path: admin/content/base-objects
       menu:
         type: 'default tab'
         title: Plans

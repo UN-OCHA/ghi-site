@@ -1,22 +1,14 @@
-entity.base_object:
-  route_name: entity.base_object
-  parent: system.admin_structure
-  description: 'Administer base objects'
-  title: Base objects
-  weight: -8
-
-# Base object menu items definition
-entity.base_object.collection:
-  title: 'Imported objects'
+# Base object listing
+base_object.collection:
+  title: 'Base objects'
   route_name: view.base_objects.plans
   description: 'List base object entities'
-  parent: entity.base_object
-  weight: 1
+  parent: system.admin_content
+  weight: 10
 
-# Base object type menu items definition
+# Base object type listing
 entity.base_object_type.collection:
-  title: 'Base types'
+  title: 'Base object types'
   route_name: entity.base_object_type.collection
   description: 'Manage base object types'
-  parent: entity.base_object
-  weight: 2
+  parent: system.admin_structure
