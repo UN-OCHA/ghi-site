@@ -25,21 +25,19 @@ dependencies:
     - node.type.section
   module:
     - auto_entitylabel
-    - block
     - content_translation
     - contextual
     - file
     - filter
     - ghi_base_objects
+    - ghi_blocks
     - ghi_content
     - ghi_element_sync
     - ghi_teams
     - layout_builder
     - layout_builder_ipe
     - media
-    - menu_link_content
     - node
-    - page_manager
     - page_manager_publishable_variants
     - publishcontent
     - social_api
@@ -68,21 +66,19 @@ permissions:
   - 'access user profiles'
   - 'administer base object entities'
   - 'administer base_object_type labels'
-  - 'administer blocks'
   - 'administer content translation'
+  - 'administer element sync'
+  - 'administer ghi global config'
   - 'administer menu'
   - 'administer nodes'
-  - 'administer pages'
-  - 'administer site configuration'
+  - 'administer remote services'
   - 'administer social api authentication'
   - 'administer social api autoposting'
-  - 'administer social api blocks'
   - 'administer social api widgets'
   - 'administer taxonomy'
   - 'administer teams'
   - 'administer users'
   - 'administer users roles'
-  - 'configure any layout'
   - 'configure editable article node layout overrides'
   - 'configure editable document node layout overrides'
   - 'configure editable financials node layout overrides'
@@ -119,6 +115,7 @@ permissions:
   - 'edit any profile content'
   - 'edit any risk_index content'
   - 'edit any section content'
+  - 'edit base object entities'
   - 'edit own article content'
   - 'edit own document content'
   - 'edit own financials content'
