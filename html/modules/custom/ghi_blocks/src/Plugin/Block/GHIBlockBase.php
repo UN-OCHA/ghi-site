@@ -1473,6 +1473,14 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getContextValue($name) {
+    $contexts = $this->getContexts();
+    return $contexts[$name] ? $contexts[$name]->getContextValue() : NULL;
+  }
+
+  /**
    * Get a plan id for the current page context.
    *
    * @return int|null

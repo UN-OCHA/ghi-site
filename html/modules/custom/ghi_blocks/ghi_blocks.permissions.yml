@@ -1,0 +1,4 @@
+administer ghi global config:
+  title: 'Administer GHI global config'
+  description: 'Allow to access the GHI global administration pages.'
+  restrict access: true

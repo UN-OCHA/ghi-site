@@ -8,6 +8,7 @@ use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
+use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -30,6 +31,7 @@ class PlanTable extends GHIBlockBase {
 
   use GlobalSettingsTrait;
   use PlanFootnoteTrait;
+  use TableSoftLimitTrait;
 
   /**
    * The section manager.
@@ -117,11 +119,10 @@ class PlanTable extends GHIBlockBase {
       }
 
       $footnotes = $plan_entity ? $this->getFootnotesForPlanBaseobject($plan_entity) : NULL;
-
-      $section = $plan_entity ? $this->sectionManager->loadSectionForBaseObject($plan_entity) : NULL;
       $document_uri = $plan_entity ? $plan_entity->get('field_plan_document_link')->uri : NULL;
+
       $rows[$plan->id()] = [
-        'name' => $section && $section->isPublished() ? $section->toLink($plan->getName()) : $plan->getName(),
+        'name' => $plan->getName(),
         'type' => $plan->getTypeShortName(),
         'inneed' => [
           'data' => [
@@ -212,7 +213,7 @@ class PlanTable extends GHIBlockBase {
       '#cache' => [
         'tags' => $cache_tags,
       ],
-      '#soft_limit' => 10,
+      '#soft_limit' => $this->getBlockConfig()['table']['soft_limit'] ?? 0,
     ];
   }
 
@@ -389,6 +390,10 @@ class PlanTable extends GHIBlockBase {
       '#description' => $this->t('Check this to show icons for "Tracked on FTS".'),
       '#disabled' => TRUE,
     ];
+    $form['table']['soft_limit'] = $this->buildSoftLimitFormElement($this->getDefaultFormValueFromFormState($form_state, [
+      'table',
+      'soft_limit',
+    ]));
 
     // @codingStandardsIgnoreStart
     // $global_plan_options = hpc_entities_get_available_global_plan_options();
