@@ -27,7 +27,6 @@ visibility:
     context_mapping:
       node: '@node.node_route_context:node'
     bundles:
-      document: document
       financials: financials
       global_section: global_section
       population: population
