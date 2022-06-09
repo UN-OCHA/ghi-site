@@ -30,7 +30,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
   use ConfigurationContainerTrait;
   use ConfigurationContainerGroup;
 
-  const MAX_ITEMS = 6;
+  const MAX_ITEMS = 20;
 
   /**
    * {@inheritdoc}

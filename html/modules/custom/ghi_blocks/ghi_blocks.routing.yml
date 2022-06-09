@@ -4,7 +4,7 @@ system.admin_config_ghi:
     _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
     _title: 'GHI'
   requirements:
-    _permission: 'access administration pages'
+    _permission: 'administer ghi global config'
 
 ghi_blocks.global_config:
   path: '/admin/config/ghi/global-settings'
@@ -14,7 +14,7 @@ ghi_blocks.global_config:
   options:
     _admin_route: TRUE
   requirements:
-    _permission: 'administer site configuration'
+    _permission: 'administer ghi global config'
 
 ghi_blocks.hide_block:
   path: '/layout_builder/hide/block/{section_storage_type}/{section_storage}/{delta}/{region}/{uuid}'

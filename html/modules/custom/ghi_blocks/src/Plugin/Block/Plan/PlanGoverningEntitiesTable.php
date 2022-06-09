@@ -11,6 +11,7 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
+use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\node\NodeInterface;
@@ -40,6 +41,10 @@ use Drupal\node\NodeInterface;
  *    "table" = {
  *      "title" = @Translation("Table columns"),
  *      "callback" = "tableForm"
+ *    },
+ *    "display" = {
+ *      "title" = @Translation("Display"),
+ *      "callback" = "displayForm"
  *    }
  *  }
  * )
@@ -48,6 +53,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
 
   use ConfigurationContainerTrait;
   use ConfigurationItemClusterRestrictTrait;
+  use TableSoftLimitTrait;
 
   /**
    * {@inheritdoc}
@@ -344,6 +350,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       '#header' => $header,
       '#rows' => $rows,
       '#sortable' => TRUE,
+      '#soft_limit' => $this->getBlockConfig()['display']['soft_limit'] ?? 0,
     ];
   }
 
@@ -446,6 +453,14 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       '#element_context' => $this->getBlockContext(),
       '#row_filter' => TRUE,
     ];
+    return $form;
+  }
+
+  /**
+   * Form callback for the display configuration form.
+   */
+  public function displayForm(array $form, FormStateInterface $form_state) {
+    $form['soft_limit'] = $this->buildSoftLimitFormElement($this->getDefaultFormValueFromFormState($form_state, 'soft_limit'));
     return $form;
   }
 

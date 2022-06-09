@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\node\NodeInterface;
@@ -34,8 +35,12 @@ use Drupal\node\NodeInterface;
  *      "base_form" = TRUE
  *    },
  *    "table" = {
- *      "title" = @Translation("Table configuration"),
+ *      "title" = @Translation("Table columns"),
  *      "callback" = "tableForm"
+ *    },
+ *    "display" = {
+ *      "title" = @Translation("Display"),
+ *      "callback" = "displayForm"
  *    }
  *  }
  * )
@@ -43,6 +48,7 @@ use Drupal\node\NodeInterface;
 class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface {
 
   use ConfigurationContainerTrait;
+  use TableSoftLimitTrait;
 
   /**
    * {@inheritdoc}
@@ -185,6 +191,7 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
       '#header' => $header,
       '#rows' => $rows,
       '#sortable' => TRUE,
+      '#soft_limit' => $this->getBlockConfig()['display']['soft_limit'] ?? 0,
     ];
   }
 
@@ -264,6 +271,15 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
       '#element_context' => $this->getBlockContext(),
       '#row_filter' => TRUE,
     ];
+
+    return $form;
+  }
+
+  /**
+   * Form callback for the display configuration form.
+   */
+  public function displayForm(array $form, FormStateInterface $form_state) {
+    $form['soft_limit'] = $this->buildSoftLimitFormElement($this->getDefaultFormValueFromFormState($form_state, 'soft_limit'));
     return $form;
   }
 

@@ -23,10 +23,10 @@
       $('table.soft-limit', context).once('soft-limit-table').each(function() {
         let $table = $(this);
         let soft_limit = $table.data('soft-limit');
-        let $rows = $table.find('tr');
+        let $rows = $table.find('> tbody > tr');
         if ($rows.length > soft_limit) {
           // Hide all rows beyond the first ones defined by the soft limit.
-          $rows.slice(soft_limit + 1).each(function () {
+          $rows.slice(soft_limit).each(function () {
             $(this).hide();
           });
           // Add a button to expand the rest of the rows.

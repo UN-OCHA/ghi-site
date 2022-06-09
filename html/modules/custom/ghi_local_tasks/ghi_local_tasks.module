@@ -8,6 +8,7 @@
  * http://drupal.org/node/3121440.
  */
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
@@ -35,8 +36,13 @@ function ghi_local_tasks_local_tasks_render_alter(&$data, $route_name, Refinable
 
 /**
  * Implements hook_link_alter().
+ *
+ * This is used to rename "Local tasks" to something more "in-context".
  */
 function ghi_local_tasks_link_alter(&$variables) {
+  if (is_object($variables['text']) && !$variables['text'] instanceof MarkupInterface) {
+    return;
+  }
   if ((string) $variables['text'] != t('Local Tasks')) {
     return;
   }
