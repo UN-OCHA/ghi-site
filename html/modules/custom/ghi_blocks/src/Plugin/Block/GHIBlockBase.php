@@ -396,7 +396,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     // Allow the plugin to define attributes for it's wrapper.
     if (array_key_exists('#wrapper_attributes', $build_content)) {
-      $build['#attributes'] = NestedArray::mergeDeep($build['#attributes'], $build_content['#wrapper_attributes']);
+      $build['#theme_wrappers']['container']['#attributes'] = NestedArray::mergeDeep($build['#theme_wrappers']['container']['#attributes'], $build_content['#wrapper_attributes']);
     }
 
     $build['#title_attributes']['class'][] = 'block-title';

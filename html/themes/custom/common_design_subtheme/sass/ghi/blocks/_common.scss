@@ -58,5 +58,8 @@
 
   & > div.block-content {
     position: relative;
+    // This also needs to overwrite any additional margins defined in the
+    // common design components.
+    margin: 0 !important;
   }
 }

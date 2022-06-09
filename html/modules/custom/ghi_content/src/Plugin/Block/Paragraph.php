@@ -44,6 +44,17 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
   /**
    * {@inheritdoc}
    */
+  public function getPreviewFallbackString() {
+    $paragraph = $this->getParagraph();
+    return $this->t('"@block: @paragraph_type" block', [
+      '@block' => $this->label(),
+      '@paragraph_type' => $paragraph->getTypeLabel(),
+    ]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildContent() {
     $paragraph = $this->getParagraph();
     if (!$paragraph) {
@@ -78,6 +89,7 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
     // Move gho specific paragraph classes to the block wrapper attributes, so
     // that CSS logic that targets subsequent elements can be applied.
     $wrapper_attributes = [];
+    $block_attributes = [];
     $dom = Html::load($rendered);
     if ($paragraph->getType() == 'sub_article') {
       // Remove the footer from sub articles.
@@ -94,6 +106,9 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
         $gho_classes = !empty($classes) ? array_filter($classes, function ($class) {
           return strpos($class, 'gho-') === 0;
         }) : [];
+        $block_attributes['class'] = array_map(function ($class) {
+          return $this->getPluginId() . '--' . $class;
+        }, $gho_classes);
         $wrapper_attributes['class'] = $gho_classes;
         $attributes->getNamedItem('class')->nodeValue = implode(' ', array_diff($classes, $gho_classes));
         $rendered = trim(Html::serialize($dom));
@@ -105,7 +120,7 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
       '#title' => $title,
       '#attributes' => [
         'data-paragraph-id' => $paragraph->getId(),
-      ],
+      ] + $block_attributes,
       'content' => [
         '#type' => 'markup',
         '#markup' => Markup::create($rendered),
