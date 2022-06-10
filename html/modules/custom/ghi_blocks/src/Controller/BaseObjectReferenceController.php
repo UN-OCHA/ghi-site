@@ -207,7 +207,7 @@ class BaseObjectReferenceController extends ControllerBase implements ContainerI
    */
   public function getOrphanedBaseObjectComponents(NodeInterface $node) {
     $section_storage = $this->getSectionStorageForEntity($node);
-    if (!$section_storage || !$node->hasField('field_base_objects') || $node->get('field_base_objects')->isEmpty()) {
+    if (!$section_storage || !$node->hasField('field_base_objects')) {
       return [];
     }
     $sections = $section_storage->getSections();
