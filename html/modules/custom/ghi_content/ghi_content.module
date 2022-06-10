@@ -118,6 +118,11 @@ function ghi_content_contextual_links_alter(array &$links, $group, array $route_
  * Used to disable fields that automatically populated.
  */
 function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateInterface $form_state) {
+  /** @var \Drupal\node\NodeForm $form_object */
+  $form_object = $form_state->getFormObject();
+  /** @var \Drupal\node\NodeInterface $node */
+  $node = $form_object->getEntity();
+
   $disable_fields = [
     'title',
     'langcode',
@@ -142,14 +147,16 @@ function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateIn
   $form['changed']['#access'] = $admin_permission;
   $form['options']['#access'] = $admin_permission;
 
+  // If the hero image control checkbox is NULL (never actively saved), we want
+  // to make sure that it shows as selected, which is the default state for new
+  // articles pages.
+  $display_hero_image = $node->get('field_display_hero_image')->value;
+  if ($display_hero_image === NULL) {
+    $form['field_display_hero_image']['widget']['value']['#default_value'] = TRUE;
+  }
+
   /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
   $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
-  /** @var \Drupal\node\NodeForm $form_object */
-  $form_object = $form_state->getFormObject();
-  /** @var \Drupal\node\NodeInterface $node */
-  $node = $form_object->getEntity();
-
-  $view_builder = \Drupal::entityTypeManager()->getViewBuilder('node');
   $article_in_sync = $article_manager->isUpToDateWithRemote($node);
 
   $form['remote_article_info'] = [
@@ -191,6 +198,7 @@ function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateIn
     '#title' => t('Go to remote system'),
     '#weight' => 3,
   ];
+  $view_builder = \Drupal::entityTypeManager()->getViewBuilder('node');
   $form['remote_article_info']['link'] = $view_builder->viewField($node->get($remote_field), [
     'label' => 'hidden',
     'type' => 'ghi_remote_article_source_link',
@@ -273,6 +281,18 @@ function ghi_content_preprocess_page(&$variables) {
   }
 
   if ($node->bundle() != ArticleManager::ARTICLE_BUNDLE || !$node->access()) {
+    return;
+  }
+
+  if (!$node->hasField('field_image') || !$node->hasField('field_display_hero_image')) {
+    return;
+  }
+
+  // We want to display the image as a hero image if it's not been
+  // specifically disabled.
+  $display_hero_image = $node->get('field_display_hero_image')->value;
+  $should_display = $display_hero_image == 1 || $display_hero_image === NULL;
+  if (!$should_display) {
     return;
   }
 
