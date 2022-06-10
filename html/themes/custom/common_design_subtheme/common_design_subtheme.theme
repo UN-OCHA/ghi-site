@@ -137,7 +137,6 @@ function common_design_subtheme_preprocess_page(&$variables) {
   if (isset($variables['node']) && is_a($variables['node'], '\Drupal\node\NodeInterface')) {
     // Check if we are on a layout builder page.
     $route = \Drupal::routeMatch()->getRouteName();
-    d($route, strpos($route, 'layout_builder.overrides.node') === 0);
     if (strpos($route, 'layout_builder.overrides.node') === 0) {
       // If so, reinstate the blocks.
       common_design_subtheme_show_hidden_blocks_from_page($variables, [
