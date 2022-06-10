@@ -2,11 +2,9 @@
 
 namespace Drupal\ghi_content\Element;
 
-use Drupal\Component\Utility\Tags;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element\FormElement;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
-use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 
 /**
@@ -51,6 +49,7 @@ class RemoteArticle extends FormElement {
         [$class, 'preRenderGroup'],
       ],
       '#theme_wrappers' => ['form_element'],
+      '#required' => FALSE,
     ];
   }
 
@@ -118,6 +117,7 @@ class RemoteArticle extends FormElement {
         'callback' => [static::class, 'updateAjax'],
         'wrapper' => $wrapper_id,
       ],
+      '#required' => $element['#required'],
     ];
 
     if ($remote_source_key && $remote_source = self::getRemoteSourceInstance($remote_source_key)) {
@@ -127,120 +127,14 @@ class RemoteArticle extends FormElement {
         '#title' => t('Article'),
         '#remote_source' => $remote_source->getPluginId(),
         '#description' => t('Type the title of an article to see suggestions.'),
-        '#default_value' => $values['article_id'] ? $remote_source->getArticle($values['article_id']) : NULL,
+        '#default_value' => !empty($values['article_id']) ? $remote_source->getArticle($values['article_id']) : NULL,
+        '#required' => $element['#required'],
       ];
     }
     else {
       $element['#disabled'] = TRUE;
     }
     return $element;
-  }
-
-  /**
-   * Finds an entity from an autocomplete input without an explicit ID.
-   *
-   * The method will return an entity ID if one single entity unambiguously
-   * matches the incoming input, and assign form errors otherwise.
-   *
-   * @param \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source_instance
-   *   Remote source instance.
-   * @param string $input
-   *   Single string from autocomplete element.
-   * @param array $element
-   *   The form element to set a form error.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current form state.
-   *
-   * @return int|null
-   *   Value of a matching entity ID, or NULL if none.
-   */
-  protected static function matchRemoteArticleByTitle(RemoteSourceInterface $remote_source_instance, $input, array &$element, FormStateInterface $form_state) {
-    $articles = $remote_source_instance->searchArticlesByTitle($input);
-
-    $exact_match = array_filter($articles, function (RemoteArticleInterface $article) use ($input) {
-      return $article->getTitle() === $input;
-    });
-
-    if ($exact_match && count($exact_match) == 1) {
-      $article = reset($exact_match);
-      return $article->getId();
-    }
-
-    $params = [
-      '%value' => $input,
-      '@value' => $input,
-      '@entity_type_plural' => t('Articles'),
-    ];
-    if (empty($articles)) {
-      // Error if there are no entities available for a required field.
-      $form_state->setError($element, t('There are no @entity_type_plural matching "%value".', $params));
-    }
-    elseif (count($articles) > 5) {
-      $article = reset($articles);
-      $params['@id'] = $article->getId();
-      // Error if there are more than 5 matching entities.
-      $form_state->setError($element, t('Many @entity_type_plural are called %value. Specify the one you want by appending the id in parentheses, like "@value (@id)".', $params));
-    }
-    elseif (count($articles) > 1) {
-      // More helpful error if there are only a few matching entities.
-      $multiples = [];
-      foreach ($articles as $id => $article) {
-        $multiples[] = $article->getTitle() . ' (' . $article->getId() . ')';
-      }
-      $params['@id'] = $id;
-      $form_state->setError($element, t('Multiple @entity_type_plural match this reference "%value"; "%multiple". Specify the one you want by appending the id in parentheses, like "@value (@id)".', ['%multiple' => strip_tags(implode('", "', $multiples))] + $params));
-    }
-    else {
-      // Take the one and only matching entity.
-      $article = reset($articles);
-      return $article->getId();
-    }
-  }
-
-  /**
-   * Converts an array of article objects into a string of article labels.
-   *
-   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface[] $articles
-   *   An array of article objects.
-   *
-   * @return string
-   *   A string of entity labels separated by commas.
-   */
-  public static function getRemoteArticleLabels(array $articles) {
-
-    $article_labels = [];
-    foreach ($articles as $article) {
-
-      // Use the special view label, since some entities allow the label to be
-      // viewed, even if the entity is not allowed to be viewed.
-      $label = $article->getTitle();
-
-      // Labels containing commas or quotes must be wrapped in quotes.
-      $article_labels[] = Tags::encode($label);
-    }
-
-    return implode(', ', $article_labels);
-  }
-
-  /**
-   * Extracts the entity ID from the autocompletion result.
-   *
-   * @param string $input
-   *   The input coming from the autocompletion result.
-   *
-   * @return mixed|null
-   *   An entity ID or NULL if the input does not contain one.
-   */
-  public static function extractArticleIdFromAutocompleteInput($input) {
-    $match = NULL;
-
-    // Take "label (article id)', match the ID from inside the parentheses.
-    // @todo Add support for articles containing parentheses in their ID.
-    if (preg_match("/.+\s\(([^\)]+)\)/", $input, $matches)) {
-      $match = $matches[1];
-    }
-
-    return $match;
   }
 
   /**
