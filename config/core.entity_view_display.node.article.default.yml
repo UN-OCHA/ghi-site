@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.node.article.field_base_objects
+    - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
     - field.field.node.article.field_remote_article
     - field.field.node.article.field_summary
@@ -45,6 +46,24 @@ third_party_settings:
                   link: true
                 third_party_settings: {  }
             weight: 0
+            additional: {  }
+          2a159b57-2c25-4982-81ff-0c38bd7e544a:
+            uuid: 2a159b57-2c25-4982-81ff-0c38bd7e544a
+            region: content
+            configuration:
+              id: 'field_block:node:article:field_display_hero_image'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: boolean
+                label: above
+                settings:
+                  format: default
+                  format_custom_false: ''
+                  format_custom_true: ''
+                third_party_settings: {  }
+            weight: 1
             additional: {  }
         third_party_settings: {  }
   layout_builder_restrictions:
@@ -106,6 +125,16 @@ content:
       link: true
     third_party_settings: {  }
     weight: 5
+    region: content
+  field_display_hero_image:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 6
     region: content
   field_image:
     type: image

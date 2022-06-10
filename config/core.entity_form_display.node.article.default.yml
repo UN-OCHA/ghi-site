@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.node.article.field_base_objects
+    - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
     - field.field.node.article.field_remote_article
     - field.field.node.article.field_summary
@@ -22,6 +23,7 @@ third_party_settings:
   field_group:
     group_tabs:
       children:
+        - group_display
         - group_remote_article
         - group_data_objects
       label: Tabs
@@ -59,6 +61,21 @@ third_party_settings:
       label: 'Remote article'
       region: content
       parent_name: group_tabs
+      weight: 21
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        formatter: closed
+        description: ''
+        required_fields: true
+    group_display:
+      children:
+        - field_display_hero_image
+      label: Display
+      region: content
+      parent_name: group_tabs
       weight: 20
       format_type: tab
       format_settings:
@@ -91,6 +108,13 @@ content:
       disable_remove: 0
       disable_drag_and_drop: 0
       wrapper: 0
+    third_party_settings: {  }
+  field_display_hero_image:
+    type: boolean_checkbox
+    weight: 27
+    region: content
+    settings:
+      display_label: true
     third_party_settings: {  }
   field_image:
     type: image_image
