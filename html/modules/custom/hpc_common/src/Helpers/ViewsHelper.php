@@ -103,8 +103,14 @@ class ViewsHelper {
     $view->setDisplay($view_display);
     $view->initHandlers();
     // Add in the arguments.
+    /** @var \Drupal\Core\Routing\Router $router */
     $router = \Drupal::service('router.no_access_checks');
-    $page_parameters = $router->match($uri);
+    try {
+      $page_parameters = $router->match($uri);
+    }
+    catch (\Exception $e) {
+      return NULL;
+    }
 
     // Map expected views arguments (keys) to their respective expected page
     // arguments (values)

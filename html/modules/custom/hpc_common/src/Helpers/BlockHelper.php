@@ -86,12 +86,18 @@ class BlockHelper {
    * @param string $block_uuid
    *   The UUID of the block instance.
    *
-   * @return \Drupal\hpc_common\Plugin\HPCBlockBase
+   * @return \Drupal\hpc_common\Plugin\HPCBlockBase|null
    *   The block instances if it has been found.
    */
   public static function getBlockInstance($uri, $plugin_id, $block_uuid) {
+    /** @var \Drupal\Core\Routing\Router $router */
     $router = \Drupal::service('router.no_access_checks');
-    $page_parameters = $router->match($uri);
+    try {
+      $page_parameters = $router->match($uri);
+    }
+    catch (\Exception $e) {
+      return NULL;
+    }
 
     $block = NULL;
 
