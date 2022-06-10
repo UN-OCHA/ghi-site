@@ -337,7 +337,12 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
       $page_parameters = [];
     }
 
-    $page_parameters = $this->router->match($this->getCurrentUri());
+    try {
+      $page_parameters = $this->router->match($this->getCurrentUri());
+    }
+    catch (\Exception $e) {
+      return $page_parameters;
+    }
     $page_parameters = array_filter($page_parameters, function ($key) {
       return $key[0] != '_';
     }, ARRAY_FILTER_USE_KEY);

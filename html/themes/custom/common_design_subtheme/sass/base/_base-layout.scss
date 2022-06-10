@@ -60,6 +60,11 @@
       }
     }
   }
+
+  .region-content > form.confirmation.cd-container {
+    margin-top: 4rem;
+    margin-bottom: 4rem;
+  }
 }
 
 /* ------------------------------------------------------------------------------
@@ -72,6 +77,26 @@
   margin-top: 4px;
   margin-bottom: 4px;
   outline: 4px dashed  #ffc310;
+}
+
+/* ------------------------------------------------------------------------------
+ * Error pages.
+ *---------------------------------------------------------------------------- */
+body.path-error main .cd-layout-content-wrapper {
+  width: 100%;
+  max-width: var(--cd-max-width);
+  margin-top: 1rem;
+  margin-right: auto;
+  margin-left: auto;
+  padding: 4rem var(--cd-container-padding);
+
+  @include tablet {
+    padding: 0 var(--cd-container-padding-tablet);
+  }
+
+  @include xlarge {
+    padding: 4rem 3rem;
+  }
 }
 
 // Maximum width on full screen for texts, photo galleries etc.

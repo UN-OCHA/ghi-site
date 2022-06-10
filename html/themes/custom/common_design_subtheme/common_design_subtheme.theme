@@ -8,6 +8,7 @@
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResultForbidden;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 
 /**
@@ -136,7 +137,8 @@ function common_design_subtheme_preprocess_page(&$variables) {
   if (isset($variables['node']) && is_a($variables['node'], '\Drupal\node\NodeInterface')) {
     // Check if we are on a layout builder page.
     $route = \Drupal::routeMatch()->getRouteName();
-    if ($route == 'layout_builder.overrides.node.view') {
+    d($route, strpos($route, 'layout_builder.overrides.node') === 0);
+    if (strpos($route, 'layout_builder.overrides.node') === 0) {
       // If so, reinstate the blocks.
       common_design_subtheme_show_hidden_blocks_from_page($variables, [
         'page_title_block',
@@ -315,4 +317,11 @@ function common_design_subtheme_preprocess_item_list__plan_entity_types(&$variab
   // Limit to 3 items in a row.
   $count = count($variables['items']);
   $variables['cols'] = $count == 4 ? 2 : 3;
+}
+
+/**
+ * Implements hook_FORM_ID_alter().
+ */
+function common_design_subtheme_form_layout_builder_discard_changes_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $form['#attributes']['class'][] = 'cd-container';
 }
