@@ -54,6 +54,17 @@ function ghi_content_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_content.theme.inc',
       'template' => 'related-articles-cards',
     ],
+    'related_sections' => [
+      'variables' => [
+        'sections' => [],
+        'options' => [
+          'alignment' => 'horizontal',
+          'columns' => 3,
+        ],
+      ],
+      'file' => 'ghi_content.theme.inc',
+      'template' => 'related-sections',
+    ],
   ];
 }
 

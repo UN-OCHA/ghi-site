@@ -75,6 +75,7 @@ third_party_settings:
         'Narrative Content':
           - paragraph
           - related_articles
+          - related_sections
       restricted_categories:
         - 'Chaos Tools'
         - 'Content fields'
