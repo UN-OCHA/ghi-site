@@ -2,7 +2,6 @@
 
 namespace Drupal\ghi_content\Element;
 
-use Drupal\Component\Utility\Tags;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element\Textfield;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
@@ -75,13 +74,16 @@ class RemoteArticleAutocomplete extends Textfield {
     }
 
     if ($input !== FALSE) {
+      $remote_source = self::getRemoteSourceInstance($element['#remote_source']);
       // Process the input. This can be either an article id, or a value in the
       // format "title (id)".
       $article_id = $input;
-      if (is_scalar($input) && strpos($input, ' ') !== FALSE) {
+      if (is_scalar($input)) {
         $article_id = self::extractArticleIdFromAutocompleteInput($input);
+        if (!$article_id) {
+          $article_id = self::matchRemoteArticleByTitle($remote_source, $input, $element, $form_state);
+        }
       }
-      $remote_source = self::getRemoteSourceInstance($element['#remote_source']);
       $article = $remote_source->getArticle($article_id);
       return $article ? ($article->getTitle() . ' (' . $article_id . ')') : '';
     }
@@ -124,7 +126,6 @@ class RemoteArticleAutocomplete extends Textfield {
    */
   public static function validateRemoteArticleAutocomplete(array &$element, FormStateInterface $form_state, array &$complete_form) {
     $value = NULL;
-
     if (!empty($element['#value'])) {
 
       // GET forms might pass the validated data around on the next request, in
@@ -212,31 +213,6 @@ class RemoteArticleAutocomplete extends Textfield {
       $article = reset($articles);
       return $article->getId();
     }
-  }
-
-  /**
-   * Converts an array of article objects into a string of article labels.
-   *
-   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface[] $articles
-   *   An array of article objects.
-   *
-   * @return string
-   *   A string of entity labels separated by commas.
-   */
-  public static function getRemoteArticleLabels(array $articles) {
-
-    $article_labels = [];
-    foreach ($articles as $article) {
-
-      // Use the special view label, since some entities allow the label to be
-      // viewed, even if the entity is not allowed to be viewed.
-      $label = $article->getTitle();
-
-      // Labels containing commas or quotes must be wrapped in quotes.
-      $article_labels[] = Tags::encode($label);
-    }
-
-    return implode(', ', $article_labels);
   }
 
   /**

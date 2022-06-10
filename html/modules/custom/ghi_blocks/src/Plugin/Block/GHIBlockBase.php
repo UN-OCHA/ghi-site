@@ -543,6 +543,21 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $base_objects_per_bundle = [];
     $can_configure = FALSE;
 
+    // Get the expected base object types. This assumes that the context
+    // definition contains a constraint on the base object bundle.
+    $expected_base_object_types = array_filter(array_map(function ($definition) {
+      /** @var \Drupal\Core\Plugin\Context\ContextDefinitionInterface $definition */
+      $data_type = $definition->getDataType();
+      if (strpos($data_type, 'entity:') !== 0) {
+        return NULL;
+      }
+      [, $entity_type_id] = explode(':', $data_type);
+      if ($entity_type_id != 'base_object') {
+        return NULL;
+      }
+      return $definition->getConstraint('Bundle');
+    }, $this->getContextDefinitions()));
+
     foreach ($instance->getContexts() as $context) {
       if (!$context->hasContextValue()) {
         continue;
@@ -551,6 +566,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
         continue;
       }
       $base_object = $context->getContextValue();
+      if (!in_array($base_object->bundle(), $expected_base_object_types)) {
+        // The block does not need this kind of object.
+        continue;
+      }
       $base_objects_per_bundle[$base_object->bundle()] = $base_objects_per_bundle[$base_object->bundle()] ?? [];
       $base_objects_per_bundle[$base_object->bundle()][$base_object->id()] = $base_object->id();
       if (count($base_objects_per_bundle[$base_object->bundle()]) > 1) {
@@ -1256,7 +1275,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     $subforms = $form_state->get('block')->getSubforms();
     $requested_subform = array_key_exists('#next_step', $triggering_element) ? $triggering_element['#next_step'] : end($parents);
-    if (array_key_exists($requested_subform, $subforms)) {
+    if (array_key_exists($requested_subform, $subforms) && $form_state->get('block')->canShowSubform($element, $form_state, $requested_subform)) {
       // Update the current subform.
       $form_state->set('current_subform', $requested_subform);
     }

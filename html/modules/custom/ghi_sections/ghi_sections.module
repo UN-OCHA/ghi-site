@@ -19,7 +19,7 @@ function ghi_sections_preprocess_page_title(&$variables) {
   if ($is_admin_route || !$node instanceof NodeInterface) {
     return;
   }
-  if ($node->bundle() == 'global_section') {
+  if ($node->bundle() == 'global_section' && \Drupal::routeMatch()->getRouteName() == 'entity.node.canonical') {
     $variables['title'] = NULL;
   }
 }

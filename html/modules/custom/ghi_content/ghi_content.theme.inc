@@ -54,3 +54,24 @@ function ghi_content_preprocess_related_articles_cards(&$variables) {
 
   $variables['list'] = $items;
 }
+
+/**
+ * Implements hook_preprocess().
+ */
+function ghi_content_preprocess_related_sections(&$variables) {
+  $view_builder = \Drupal::entityTypeManager()->getViewBuilder('node');
+  $items = [];
+  $subkey = 0;
+  foreach ($variables['sections'] as $section) {
+    /** @var \Drupal\node\NodeInterface $section */
+    $entity_view = $view_builder->view($section, 'teaser');
+    $items[$subkey]['content'][] = [
+      'content' => $entity_view,
+    ];
+    if (count($items[$subkey]) == $variables['options']['columns']) {
+      $subkey++;
+    }
+  }
+
+  $variables['items'] = $items;
+}

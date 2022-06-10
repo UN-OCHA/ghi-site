@@ -46,6 +46,9 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
    */
   public function getPreviewFallbackString() {
     $paragraph = $this->getParagraph();
+    if (!$paragraph) {
+      return parent::getPreviewFallbackString();
+    }
     return $this->t('"@block: @paragraph_type" block', [
       '@block' => $this->label(),
       '@paragraph_type' => $paragraph->getTypeLabel(),
@@ -213,7 +216,7 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
    */
   public function canShowSubform($form, FormStateInterface $form_state, $subform_key) {
     if ($subform_key == 'paragraph') {
-      return $this->getArticle() instanceof RemoteArticleInterface;
+      return $this->getArticle() && $this->getArticle() instanceof RemoteArticleInterface;
     }
     return !$this->lockArticle();
   }
@@ -227,6 +230,7 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
     $form['article'] = [
       '#type' => 'remote_article',
       '#default_value' => $this->getArticle(),
+      '#required' => TRUE,
     ];
 
     $form['select_article'] = [

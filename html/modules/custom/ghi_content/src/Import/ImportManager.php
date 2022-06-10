@@ -144,25 +144,30 @@ class ImportManager implements ContainerInjectionInterface {
     if (!$node->hasField($field_name)) {
       return FALSE;
     }
+    $message = NULL;
     $thumbnail_url = $article->getImageUri();
-    if (!$thumbnail_url) {
-      return FALSE;
+    if (!empty($thumbnail_url)) {
+      $thumbnail_name = basename($thumbnail_url);
+      $data = $article->getSource()->getFileContent($thumbnail_url);
+      $file = $this->fileRepository->writeData($data, ArticleManager::THUMBNAIL_DIRECTORY . '/' . $thumbnail_name, FileSystem::EXISTS_RENAME);
+      $update = !$node->get($field_name)->isEmpty();
+      $node->get($field_name)->setValue([
+        'target_id' => $file->id(),
+        'alt' => $node->getTitle(),
+        'title' => $node->getTitle(),
+      ]);
+      $message = $update ? $this->t('Updated image') : $this->t('Imported image');
+    }
+    else {
+      if (!$node->get($field_name)->isEmpty()) {
+        $message = $this->t('Removed image');
+      }
+      $node->get($field_name)->setValue(NULL);
     }
 
-    $thumbnail_name = basename($thumbnail_url);
-    $data = $article->getSource()->getFileContent($thumbnail_url);
-    $file = $this->fileRepository->writeData($data, ArticleManager::THUMBNAIL_DIRECTORY . '/' . $thumbnail_name, FileSystem::EXISTS_RENAME);
-    $update = !$node->get($field_name)->isEmpty();
-    $node->get($field_name)->setValue([
-      'target_id' => $file->id(),
-      'alt' => $node->getTitle(),
-      'title' => $node->getTitle(),
-    ]);
-
-    if ($messenger !== NULL) {
-      $messenger->addMessage($update ? $this->t('Updated image') : $this->t('Imported image'));
+    if ($messenger !== NULL && $message) {
+      $messenger->addMessage($message);
     }
-
   }
 
   /**
