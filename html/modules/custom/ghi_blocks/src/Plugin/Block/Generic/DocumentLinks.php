@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an 'External Widget' block.
@@ -36,6 +37,25 @@ class DocumentLinks extends GHIBlockBase implements SyncableBlockInterface {
     'العربية' => 'العربية',
     '普通话' => '普通话',
   ];
+
+  /**
+   * The http client.
+   *
+   * @var \GuzzleHttp\Client
+   */
+  protected $httpClient;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $instance */
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+
+    // Set our own properties.
+    $instance->httpClient = $container->get('http_client');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -259,7 +279,22 @@ class DocumentLinks extends GHIBlockBase implements SyncableBlockInterface {
         }
 
         // Check if the file target url is valid.
-        $data = file_get_contents($value['target_url']);
+        $data = NULL;
+        try {
+          $response = $this->httpClient->get($value['target_url']);
+        }
+        catch (\Exception $e) {
+          // Just fail silently.
+        }
+        if (!$response || $response->getStatusCode() !== 200) {
+          $form_state->setError($subform['documents'][$key]['file_details'][$index]['target_url'], $this->t('Document #@number: Failed to retrieve file information for <em>Target URL</em> for Document details #@detail_number.', [
+            '@number' => $key + 1,
+            '@detail_number' => $index + 1,
+          ]));
+          continue;
+        }
+
+        $data = $response->getBody()->getContents();
         if (empty($data)) {
           $form_state->setError($subform['documents'][$key]['file_details'][$index]['target_url'], $this->t('Document #@number: The <em>Target URL</em> field does not seem to contain a valid reference for Document details #@detail_number.', [
             '@number' => $key + 1,
