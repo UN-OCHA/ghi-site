@@ -1,0 +1,29 @@
+uuid: 848bf742-6a91-44f1-ae33-c097e5e21670
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_country
+    - ghi_base_objects.base_object_type.country
+    - ghi_base_objects.base_object_type.plan
+id: base_object.plan.field_country
+field_name: field_country
+entity_type: base_object
+bundle: plan
+label: Country
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:base_object'
+  handler_settings:
+    target_bundles:
+      country: country
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

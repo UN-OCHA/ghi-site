@@ -78,11 +78,37 @@ trait ConfigurationContainerTrait {
     if ($context === NULL) {
       $context = $this->getBlockContext();
     }
+    $item_type_plugin = $allowed_items[$column['item_type']]['item_type_base'] ?? $column['item_type'];
+
     /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
-    $item_type = $this->getConfigurationContainerItemManager()->createInstance($column['item_type'], $allowed_items[$column['item_type']]);
+    $item_type = $this->getConfigurationContainerItemManager()->createInstance($item_type_plugin, $allowed_items[$column['item_type']]);
     $item_type->setConfig($column['config']);
     $item_type->setContext($context);
     return $item_type;
+  }
+
+  /**
+   * Build a table header based on the given columns.
+   *
+   * @param array $columns
+   *   An array of valid item configurations.
+   *
+   * @return array
+   *   An array of header items, suitable to be used with theme_table.
+   */
+  public function buildTableHeader(array $columns) {
+    $header = [];
+    foreach ($columns as $column) {
+      /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
+      $item_type = $this->getItemTypePluginForColumn($column);
+      $header[] = [
+        'data' => $item_type->getLabel(),
+        'data-sort-type' => $item_type::SORT_TYPE,
+        'data-sort-order' => count($header) == 0 ? 'ASC' : '',
+        'data-column-type' => $item_type::ITEM_TYPE,
+      ];
+    }
+    return $header;
   }
 
 }

@@ -28,18 +28,19 @@ class SubpageTitle extends BlockBase {
     if (empty($contexts['node']) || !$contexts['node']->getContextValue()) {
       return NULL;
     }
+    /** @var \Drupal\node\NodeInterface $node */
     $node = $contexts['node']->getContextValue();
-    if (in_array($node->getType(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES)) {
+    if (SubpageHelper::isSubpageTypeNode($node)) {
       return [
         '#markup' => new FormattableMarkup('<h2>@title</h2>', [
           '@title' => $node->getTitle(),
         ]),
       ];
     }
-    elseif (in_array($node->getType(), SubpageHelper::SUPPORTED_BASE_TYPES)) {
+    elseif (SubpageHelper::isBaseTypeNode($node) && SubpageHelper::getSectionOverviewLabel($node)) {
       return [
         '#markup' => new FormattableMarkup('<h2>@title</h2>', [
-          '@title' => $this->t('Overview'),
+          '@title' => SubpageHelper::getSectionOverviewLabel($node),
         ]),
       ];
     }

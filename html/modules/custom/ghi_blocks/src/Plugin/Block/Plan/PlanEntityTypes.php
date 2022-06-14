@@ -9,6 +9,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
+use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\node\NodeInterface;
 
@@ -20,12 +21,11 @@ use Drupal\node\NodeInterface;
  *  admin_label = @Translation("Entity Types"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = {
- *      "service" = "ghi_plans.plan_entities_query"
- *    },
+ *    "entities" = "plan_entities_query"
  *  },
  *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"))
+ *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
+ *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
  *  }
  * )
  */
@@ -34,7 +34,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
   /**
    * {@inheritdoc}
    */
-  public static function mapConfig($config, NodeInterface $node) {
+  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
     return [
       'label' => '',
       'label_display' => TRUE,
@@ -328,24 +328,30 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
    * @param string $entity_ref_code
    *   The entity type to restrict the context.
    *
-   * @return array
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[]
    *   An array of plan entity objects for the current context.
    */
   private function getPlanEntities($entity_ref_code = NULL) {
-    $page_node = $this->getPageNode();
+    $context_object = $this->getCurrentBaseObject();
+
     $filter = NULL;
     if ($entity_ref_code) {
       $filter = ['ref_code' => $entity_ref_code];
     }
-    /** @var \Drupal\ghi_plans\Query\PlanEntitiesQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
     $query = $this->getQueryHandler('entities');
-    return $query->getPlanEntities($page_node, 'plan', $filter);
+    $entities = $query->getPlanEntities($context_object, 'plan', $filter);
+    // This should give us only PlanEntity objects, but let's make sure.
+    $entities = is_array($entities) ? array_filter($entities, function ($entity) {
+      return $entity instanceof PlanEntity;
+    }) : [];
+    return $entities;
   }
 
   /**
    * Build the item list for rendering.
    *
-   * @param array $entities
+   * @param \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[] $entities
    *   The entity objects to build.
    * @param array $conf
    *   The current element configuration used to apply formatting.
@@ -361,13 +367,13 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
     $id_type = !empty($conf['id_type']) ? $conf['id_type'] : 'custom_id';
     foreach ($entities as $entity) {
       $description = $entity->description;
-      $items[$entity->id] = [
-        'id' => $entity->$id_type,
+      $items[$entity->id()] = [
+        'id' => $entity->getCustomName($id_type),
         'description' => $truncate_description ? Unicode::truncate($description, 120, TRUE, TRUE) : $description,
       ];
     }
     if (!empty($conf['sort'])) {
-      list($key, $sort) = explode('_', $conf['sort_column']);
+      [$key, $sort] = explode('_', $conf['sort_column']);
       uasort($items, function ($a, $b) use ($key, $sort) {
         $a_value = !empty($a[$key]) ? $a[$key] : 0;
         $b_value = !empty($b[$key]) ? $b[$key] : 0;
@@ -385,7 +391,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
   /**
    * Get entities that are valid for display.
    *
-   * @param array $entities
+   * @param \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[] $entities
    *   The entity objects to check.
    * @param array $conf
    *   The current element configuration used to apply validation.
@@ -410,7 +416,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
   /**
    * Validate that the given entity is valid for display.
    *
-   * @param object $entity
+   * @param \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity $entity
    *   An entity object.
    * @param array $conf
    *   The current element configuration used to apply validation.
@@ -418,9 +424,9 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
    * @return object
    *   True if the entity passed validation, False otherwhise.
    */
-  private function validatePlanEntity($entity, array $conf) {
+  private function validatePlanEntity(PlanEntity $entity, array $conf) {
     $entity_ids = !empty($conf['entity_ids']) ? array_filter($conf['entity_ids']) : [];
-    if (!empty($entity_ids) && !in_array($entity->id, $entity_ids)) {
+    if (!empty($entity_ids) && !in_array($entity->id(), $entity_ids)) {
       return FALSE;
     }
     if (empty($entity->description)) {
@@ -428,7 +434,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
     }
 
     $id_type = !empty($conf['id_type']) ? $conf['id_type'] : 'custom_id';
-    if (empty($entity->$id_type)) {
+    if (empty($entity->getCustomName($id_type))) {
       return FALSE;
     }
     return TRUE;

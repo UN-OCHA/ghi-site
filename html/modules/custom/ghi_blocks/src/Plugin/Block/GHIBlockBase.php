@@ -2,21 +2,33 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block;
 
+use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Component\Plugin\Exception\PluginException;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
-use Drupal\Core\Plugin\Context\Context;
-use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Url;
+use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
+use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
+use Drupal\layout_builder\Form\AddBlockForm;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\layout_builder\Plugin\SectionStorage\SectionStorageBase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base class for GHI blocks.
@@ -26,7 +38,17 @@ use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
  */
 abstract class GHIBlockBase extends HPCBlockBase {
 
+  use VerticalTabsTrait;
+
+  /**
+   * The default form key for the configuration form.
+   */
   const DEFAULT_FORM_KEY = 'basic';
+
+  /**
+   * The form key for the base object form.
+   */
+  const CONTEXTS_FORM_KEY = 'contexts';
 
   /**
    * Current form state object if in a configuration context.
@@ -36,7 +58,117 @@ abstract class GHIBlockBase extends HPCBlockBase {
   protected $formState;
 
   /**
+   * The config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
+   * The context repository manager.
+   *
+   * @var \Drupal\Core\Plugin\Context\ContextRepositoryInterface
+   */
+  protected $contextRepository;
+
+  /**
+   * Layout tempstore repository.
+   *
+   * @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface
+   */
+  protected $layoutTempstoreRepository;
+
+  /**
+   * The manager class for endpoint query plugins.
+   *
+   * @var \Drupal\hpc_api\Query\EndpointQueryManager
+   */
+  protected $endpointQueryManager;
+
+  /**
+   * The manager class for configuration container items.
+   *
+   * @var \Drupal\ghi_form_elements\ConfigurationContainerItemManager
+   */
+  protected $configurationContainerItemManager;
+
+  /**
+   * The section manager.
+   *
+   * @var \Drupal\ghi_sections\SectionManager
+   */
+  protected $sectionManager;
+
+  /**
+   * The selection criteria argument service.
+   *
+   * @var \Drupal\ghi_blocks\LayoutBuilder\SelectionCriteriaArgument
+   */
+  protected $selectionCriteriaArgument;
+
+  /**
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
+   * The controller resolver.
+   *
+   * @var \Drupal\Core\Controller\ControllerResolverInterface
+   */
+  protected $controllerResolver;
+
+  /**
+   * The route matcher.
+   *
+   * @var \Drupal\Core\Routing\RouteMatchInterface
+   */
+  protected $routeMatch;
+
+  /**
+   * Retrieves a configuration object.
+   *
+   * @param string $name
+   *   The name of the configuration object to retrieve.
+   *
+   * @return \Drupal\Core\Config\Config
+   *   A configuration object.
+   */
+  protected function config($name) {
+    return $this->configFactory->get($name);
+  }
+
+  /**
    * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $instance */
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+
+    // Set our own properties.
+    $instance->configFactory = $container->get('config.factory');
+    $instance->contextRepository = $container->get('context.repository');
+    $instance->layoutTempstoreRepository = $container->get('layout_builder.tempstore_repository');
+    $instance->endpointQueryManager = $container->get('plugin.manager.endpoint_query_manager');
+    $instance->configurationContainerItemManager = $container->get('plugin.manager.configuration_container_item_manager');
+    $instance->sectionManager = $container->get('ghi_sections.manager');
+    $instance->selectionCriteriaArgument = $container->get('ghi_blocks.layout_builder_edit_page.selection_criteria_argument');
+    $instance->moduleHandler = $container->get('module_handler');
+    $instance->controllerResolver = $container->get('controller_resolver');
+    $instance->routeMatch = $container->get('current_route_match');
+
+    $instance->getContexts();
+
+    return $instance;
+  }
+
+  /**
+   * Build the content of a GHI block.
+   *
+   * @return array
+   *   Must return a render array.
    */
   abstract public function buildContent();
 
@@ -64,14 +196,17 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *
    * This returns either the requested named handler if it exists, or the only
    * one defined if no source key is given.
+   * The handler will be initialized with placeholders reflecting the current
+   * contexts.
    *
    * @param string $source_key
    *   The source key that should be used to retrieve data for a block.
    *
-   * @return Drupal\hpc_api\EndpointQuery
+   * @return \Drupal\hpc_api\Query\EndpointQueryPluginInterface
    *   The query handler class.
    */
   protected function getQueryHandler($source_key = 'data') {
+
     $configuration = $this->getPluginDefinition();
     if (empty($configuration['data_sources'])) {
       return NULL;
@@ -79,30 +214,32 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     $sources = $configuration['data_sources'];
     $definition = !empty($sources[$source_key]) ? $sources[$source_key] : NULL;
-    if (!$definition || empty($definition['service'])) {
+    if (!$definition || !is_scalar($definition) || !$this->endpointQueryManager->hasDefinition($definition)) {
       return NULL;
     }
 
-    $query_handler = \Drupal::service($definition['service']);
-    $page_node = $this->getPageNode();
-    if ($page_node->bundle() == 'plan') {
-      if (isset($page_node->field_original_id) && !$page_node->field_original_id->isEmpty()) {
-        $plan_id = $page_node->field_original_id->value;
-        $query_handler->setPlaceholder('plan_id', $plan_id);
+    /** @var \Drupal\hpc_api\Query\EndpointQueryPluginInterface $query_handler */
+    $query_handler = $this->endpointQueryManager->createInstance($definition);
+
+    // Get the available context values and use them as placeholder values for
+    // the query.
+    foreach ($this->getContexts() as $context_key => $context) {
+      /** @var \Drupal\Core\Plugin\Context\Context $context */
+      if ($context_key == 'node' || strpos($context_key, '--') || !$context->hasContextValue()) {
+        continue;
       }
-    }
-    elseif ($page_node->hasField('field_plan') && count($page_node->get('field_plan')->referencedEntities()) == 1) {
-      $entities = $page_node->get('field_plan')->referencedEntities();
-      $plan = reset($entities);
-      $plan_id = $plan->field_original_id->value;
-      $query_handler->setPlaceholder('plan_id', $plan_id);
-    }
-    elseif ($page_node->hasField('field_entity_reference') && count($page_node->get('field_entity_reference')->referencedEntities()) == 1) {
-      $entities = $page_node->get('field_entity_reference')->referencedEntities();
-      $base_entity = reset($entities);
-      $plan_id = $base_entity->getType() == 'plan' ? $base_entity->field_original_id->value : NULL;
-      if ($plan_id) {
-        $query_handler->setPlaceholder('plan_id', $plan_id);
+      $context_value = $context->getContextValue();
+
+      if (is_scalar($context_value)) {
+        // Arguments like "year".
+        $query_handler->setPlaceholder($context_key, $context->getContextValue());
+      }
+      elseif ($context_value instanceof ContentEntityInterface && $context_value->hasField('field_original_id')) {
+        // Arguments like "plan_id".
+        $original_id = $context_value->get('field_original_id')->value;
+        if ($original_id && is_scalar($original_id)) {
+          $query_handler->setPlaceholder($context_key . '_id', $original_id);
+        }
       }
     }
 
@@ -156,6 +293,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getTitleSubform() {
+    return self::DEFAULT_FORM_KEY;
+  }
+
+  /**
    * Check if the block has a default title.
    *
    * @return bool
@@ -172,20 +316,38 @@ abstract class GHIBlockBase extends HPCBlockBase {
   public function build() {
     $plugin_configuration = $this->getConfiguration();
 
-    // Get the build content from the block plugin.
-    $build_content = $this->buildContent();
-    if (!$build_content) {
+    $build = [
+      '#theme_wrappers' => [
+        'container' => [
+          '#attributes' => ['class' => ['block-content']],
+        ],
+      ],
+    ];
+
+    if ($this->isHidden() && !$this->isPreview()) {
+      // If the block is hidden and not in preview bail out.
       return [];
     }
 
-    $build = [
-      '#type' => 'container',
-    ];
+    // Otherwise build the full block. First get the actual block content.
+    $build_content = $this->buildContent();
+    if (!$build_content) {
+      return $build_content ?? [];
+    }
 
     // Handle the title display.
+    // @todo This is confusing and needs cleanup.
     if ($this->shouldDisplayTitle()) {
       if ($this instanceof AutomaticTitleBlockInterface) {
         $build['#title'] = $this->getAutomaticBlockTitle();
+        $plugin_configuration['label_display'] = TRUE;
+      }
+      elseif ($this instanceof OptionalTitleBlockInterface) {
+        $build['#title'] = $plugin_configuration['label'] ?? NULL;
+      }
+      elseif ($this instanceof OverrideDefaultTitleBlockInterface) {
+        $build['#title'] = $plugin_configuration['label'] ?? NULL;
+        $plugin_configuration['label_display'] = TRUE;
       }
       elseif (!empty($build_content['#title'])) {
         $build['#title'] = $build_content['#title'];
@@ -195,12 +357,16 @@ abstract class GHIBlockBase extends HPCBlockBase {
       if (empty($plugin_configuration['label']) && $this->hasDefaultTitle()) {
         $plugin_definition = $this->getPluginDefinition();
         $build['#title'] = $plugin_definition['default_title'];
+        $plugin_configuration['label_display'] = TRUE;
       }
 
-      if ($plugin_configuration['label_display'] == 'visible' && !array_key_exists('#title', $build)) {
+      if (!empty($plugin_configuration['label_display']) && !array_key_exists('#title', $build)) {
         $build += [
           '#title' => $this->label(),
         ];
+      }
+      elseif (empty($plugin_configuration['label_display']) && array_key_exists('#title', $build)) {
+        unset($build['#title']);
       }
     }
 
@@ -209,19 +375,76 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
 
     // Add the build content as a child.
-    $build[] = $build_content;
+    $build += $build_content;
 
     // Add some classes for styling.
     $build['#attributes']['class'][] = Html::getClass('ghi-block-' . $this->getPluginId());
     $build['#attributes']['class'][] = 'ghi-block';
-    $build['#attributes']['class'][] = 'ghi-block-' . $this->getUuid();
+    if ($this->getUuid()) {
+      $build['#attributes']['class'][] = 'ghi-block-' . $this->getUuid();
+    }
+    // Add hidden classes.
+    if ($this->isHidden()) {
+      $build['#attributes']['class'][] = 'ghi-block--hidden';
+      if ($this->isLayoutBuilder()) {
+        // If we are here, the block is hidden and displayed inside the layout
+        // builder interface. We want to inform the user that the block is
+        // configured to be hidden..
+        $build['#attributes']['class'][] = 'ghi-block--hidden-preview';
+      }
+    }
+
+    // Allow the plugin to define attributes for it's wrapper.
+    if (array_key_exists('#wrapper_attributes', $build_content)) {
+      $build['#theme_wrappers']['container']['#attributes'] = NestedArray::mergeDeep($build['#theme_wrappers']['container']['#attributes'], $build_content['#wrapper_attributes']);
+    }
 
     $build['#title_attributes']['class'][] = 'block-title';
     if (empty($build['#region'])) {
       $build['#region'] = $this->getRegion();
     }
 
+    // Add the block instance to the render array, so that we have it available
+    // in hooks.
+    $build['#block_instance'] = $this;
+
+    // Set the cache properties, merge in anything that the builder might have
+    // set.
+    $build['#cache'] = [
+      'contexts' => Cache::mergeContexts($this->getCacheContexts(), $build_content['#cache']['contexts'] ?? []),
+      'tags' => Cache::mergeTags($this->getCacheTags(), $build_content['#cache']['tags'] ?? []),
+    ];
+
     return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheContexts() {
+    $cache_contexts = parent::getCacheContexts();
+    $cache_contexts = Cache::mergeContexts($cache_contexts, [
+      'url.path',
+      'user',
+    ]);
+    return $cache_contexts;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    $cache_tags = parent::getCacheTags();
+    $cache_tags = Cache::mergeTags($cache_tags, array_filter([
+      $this->getPluginId() . ':' . $this->getUuid(),
+    ]));
+    if ($base_object = $this->getCurrentBaseObject()) {
+      // Not sure where the context handling goes wrong, but for the moment we
+      // have to add the base object cache tag manually to be sure that it's
+      // always present.
+      $cache_tags = Cache::mergeTags($cache_tags, $base_object->getCacheTags());
+    }
+    return $cache_tags;
   }
 
   /**
@@ -251,8 +474,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // https://www.drupal.org/project/drupal/issues/2798261#comment-12735075
     $current_subform = $form_state->get('current_subform');
 
+    $key = (array) $key;
+
     $step_values = NULL;
-    $value_parents = [$current_subform, $key];
+    $value_parents = array_merge([$current_subform], $key);
 
     if ($form_state instanceof SubformStateInterface) {
       $step_values = $form_state->getCompleteFormState()->cleanValues()->getValue($value_parents);
@@ -269,9 +494,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $block = $form_state->get('block');
     $config = $block->getBlockConfig();
 
-    $settings_key = [$key];
+    $settings_key = $key;
     if ($block->isMultistepForm()) {
-      $settings_key = [$current_subform, $key];
+      $settings_key = array_merge([$current_subform], $settings_key);
     }
     return NestedArray::getValue($config, $settings_key);
   }
@@ -289,10 +514,122 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * {@inheritdoc}
    */
+  public function canShowSubform($form, FormStateInterface $form_state, $subform_key) {
+    return TRUE;
+  }
+
+  /**
+   * See if this block needs to configure the data object it works with.
+   *
+   * @return bool
+   *   TRUE if the block needs a base object, FALSE if it already has one.
+   */
+  public function needsContextConfiguration() {
+    $instance = $this->formState->get('block') ?? $this;
+    return empty($instance->getCurrentBaseObject());
+  }
+
+  /**
+   * See if the block can configure the base object it works with.
+   *
+   * This is the case if for any of the expected base objects, more than one is
+   * available.
+   *
+   * @return bool
+   *   TRUE if the blocks base object can be configured, FASLE otherwise.
+   */
+  public function canConfigureContexts() {
+    $instance = $this->formState->get('block') ?? $this;
+    $base_objects_per_bundle = [];
+    $can_configure = FALSE;
+
+    // Get the expected base object types. This assumes that the context
+    // definition contains a constraint on the base object bundle.
+    $expected_base_object_types = array_filter(array_map(function ($definition) {
+      /** @var \Drupal\Core\Plugin\Context\ContextDefinitionInterface $definition */
+      $data_type = $definition->getDataType();
+      if (strpos($data_type, 'entity:') !== 0) {
+        return NULL;
+      }
+      [, $entity_type_id] = explode(':', $data_type);
+      if ($entity_type_id != 'base_object') {
+        return NULL;
+      }
+      return $definition->getConstraint('Bundle');
+    }, $this->getContextDefinitions()));
+
+    foreach ($instance->getContexts() as $context) {
+      if (!$context->hasContextValue()) {
+        continue;
+      }
+      if (!$context->getContextValue() instanceof BaseObjectInterface) {
+        continue;
+      }
+      $base_object = $context->getContextValue();
+      if (!in_array($base_object->bundle(), $expected_base_object_types)) {
+        // The block does not need this kind of object.
+        continue;
+      }
+      $base_objects_per_bundle[$base_object->bundle()] = $base_objects_per_bundle[$base_object->bundle()] ?? [];
+      $base_objects_per_bundle[$base_object->bundle()][$base_object->id()] = $base_object->id();
+      if (count($base_objects_per_bundle[$base_object->bundle()]) > 1) {
+        $can_configure = TRUE;
+      }
+    }
+    return $can_configure;
+  }
+
+  /**
+   * The context select form callback.
+   */
+  protected function contextForm($form, FormStateInterface $form_state) {
+    // We just reuse the context mapping from Drupal here. This is added in
+    // self::blockFormAlter().
+    // We can provide some context for the user though.
+    $message = $this->t('There are multiple context objects available on the current page. In order for this element to function correctly, you must select which object to use to retrieve the underlying data from the data source.');
+    $form['message'] = [
+      '#type' => 'markup',
+      '#markup' => new FormattableMarkup('<p>@message</p>', ['@message' => $message]),
+    ];
+    return $form;
+  }
+
+  /**
+   * Get the configuration subforms available to this block.
+   *
+   * @return array
+   *   An array of subforms, keyed by the machine name, values are arrays with
+   *   title" and "callback" keys that hold strings.
+   */
+  public function getSubforms() {
+    $definition = $this->getPluginDefinition();
+    $plugin_subforms = $definition['config_forms'] ?? [];
+    $subforms = [];
+    if ($this->canConfigureContexts()) {
+      $subforms[self::CONTEXTS_FORM_KEY] = [
+        'title' => $this->t('Context'),
+        'callback' => 'contextForm',
+      ];
+    }
+    if (!$this->isMultistepForm()) {
+      $subforms[self::DEFAULT_FORM_KEY] = [
+        'title' => $this->t('Configuration'),
+        'callback' => 'getConfigForm',
+      ];
+    }
+    return $subforms + $plugin_subforms;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function blockForm($form, FormStateInterface $form_state) {
     parent::blockForm($form, $form_state);
 
-    // Not sure why, but the preview toggles vallue is not available in the
+    $form_state->set('block', $this);
+    $this->formState = $form_state;
+
+    // Not sure why, but the preview toggles value is not available in the
     // blockElementSubmit callback, so we have to catch this here.
     if ($form_state->getTriggeringElement()) {
       $action = (string) end($form_state->getTriggeringElement()['#parents']);
@@ -303,37 +640,38 @@ abstract class GHIBlockBase extends HPCBlockBase {
       }
     }
 
-    $this->formState = $form_state;
     $form_state->addCleanValueKey('actions');
     $form_state->addCleanValueKey(['actions', 'subforms']);
+    $form_state->addCleanValueKey(['actions', 'submit']);
 
-    // Provide context so that data can be retrieved.
-    $build_info = $form_state->getBuildInfo();
-    if (!empty($build_info['args']) && $build_info['args'][0] instanceof OverridesSectionStorage) {
-      $section_storage = $build_info['args'][0];
-      if ($section_storage->getContext('entity')) {
-        $this->setContextValue('node', $build_info['args'][0]->getContextValue('entity'));
-      }
-    }
+    // Set contexts during the form building so that data can be retrieved.
+    $this->setFormContexts($form_state);
 
     // Default is a simple form with a single configuration callback.
     $current_subform = self::DEFAULT_FORM_KEY;
     $form_callback = 'getConfigForm';
-    $is_base_form = TRUE;
 
-    if ($this->isMultistepForm()) {
-      $forms = $this->getSubforms();
+    // Get the available subforms.
+    $forms = $this->getSubforms();
+
+    // If this block needs to select the base object, that's really the first
+    // thing to do.
+    $show_context_form = $this->needsContextConfiguration() || $form_state->get('current_subform') == self::CONTEXTS_FORM_KEY;
+    if ($show_context_form && array_key_exists(self::CONTEXTS_FORM_KEY, $forms)) {
+      $subform = $forms[self::CONTEXTS_FORM_KEY];
+      $current_subform = self::CONTEXTS_FORM_KEY;
+      $form_callback = $subform['callback'];
+    }
+    elseif ($this->isMultistepForm()) {
       if (empty($forms)) {
         return $form;
       }
-
       $current_subform = $form_state->get('current_subform');
       if (!$current_subform || !array_key_exists($current_subform, $forms)) {
-        $current_subform = $this->getDefaultSubform();
+        $current_subform = $this->getDefaultSubform(!$this->getUuid());
       }
       $subform = $forms[$current_subform];
       $form_callback = $subform['callback'];
-      $is_base_form = !empty($subform['base_form']);
 
       if (!method_exists($this, $form_callback)) {
         return $form;
@@ -342,7 +680,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     // Set state. This is important.
     $form_state->set('current_subform', $current_subform);
-    $form_state->set('block', $this);
 
     $form['#parents'] = [];
     $form['#array_parents'] = [];
@@ -372,16 +709,23 @@ abstract class GHIBlockBase extends HPCBlockBase {
         'id' => $wrapper_id,
         'class' => [Html::getClass('hpc-form-wrapper')],
       ],
-      '#attached' => [
-        'library' => ['ghi_blocks/layout_builder_modal_admin'],
-      ],
     ];
 
     if (!$form_state->get('preview')) {
-      if ($is_base_form) {
-        // Add the label widget to the base form.
+      if ($this->getTitleSubform() == $current_subform) {
+        // Add the label widget to the form.
         $form['container']['label'] = $form['label'];
         $form['container']['label_display'] = $form['label_display'];
+
+        $temporary_settings = $this->getTemporarySettings($form_state);
+        if ($this instanceof MultiStepFormBlockInterface) {
+          $form['container']['label']['#default_value'] = $temporary_settings[$this->getTitleSubform()]['label'] ?? $this->label();
+          $form['container']['label_display']['#default_value'] = $temporary_settings[$this->getTitleSubform()]['label_display'] ?? $this->configuration['label_display'];
+        }
+        else {
+          $form['container']['label']['#default_value'] = $temporary_settings['label'] ?? $this->label();
+          $form['container']['label_display']['#default_value'] = $temporary_settings['label_display'] ?? $this->configuration['label_display'];
+        }
 
         // Set the default values.
         $plugin_definition = $this->getPluginDefinition();
@@ -394,29 +738,138 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $subform_state = SubformState::createForSubform($form['container'], $form, $form_state);
       $form['container'] += $this->{$form_callback}($form['container'], $subform_state);
 
+      $this->processVerticalTabs($form['container'], $form_state);
+
+      // Exclude buttons from submission values.
+      $this->addButtonsToCleanValueKeys($form['container'], $form_state, $form['container']['#parents']);
+
       // Add after build callback for label handling.
       $form['#after_build'][] = [$this, 'blockFormAfterBuild'];
     }
     else {
       // Show a preview area.
+      $temporary_settings = $this->getTemporarySettings($form_state);
+      $label_subkey = $this instanceof MultiStepFormBlockInterface ? $this->getTitleSubform() : NULL;
+      $this->configuration['hpc'] = $temporary_settings;
+      $this->configuration['label'] = NestedArray::getValue($temporary_settings, array_filter([
+        $label_subkey,
+        'label',
+      ]));
+      $this->configuration['label_display'] = NestedArray::getValue($temporary_settings, array_filter([
+        $label_subkey,
+        'label_display',
+      ]));
+      $this->configuration['is_preview'] = TRUE;
       $build = $this->build();
       $form['container']['preview'] = [
         '#theme' => 'block',
-        '#attributes' => [],
-        '#configuration' => [
-          'label' => array_key_exists('#title', $build) ? $build['#title'] : NULL,
-          'label_display' => $this->configuration['label_display'],
-          'hpc' => $this->getTemporarySettings($form_state),
-        ] + $this->configuration,
+        '#attributes' => [
+          'data-block-preview' => $this->getPluginId(),
+        ] + ($build['#attributes'] ?? []),
+        '#configuration' => $this->configuration,
         '#base_plugin_id' => $this->getBaseId(),
         '#plugin_id' => $this->getPluginId(),
         '#derivative_plugin_id' => $this->getDerivativeId(),
         '#id' => $this->getPluginId(),
+        '#attached' => [
+          'library' => ['ghi_blocks/block.preview'],
+        ],
         'content' => $build,
       ];
     }
 
     return $form;
+  }
+
+  /**
+   * Check if a block is set to be hidden.
+   *
+   * @return bool
+   *   TRUE if hidden, FALSE otherwise.
+   */
+  public function isHidden() {
+    return !empty($this->configuration['visibility_status']) && $this->configuration['visibility_status'] == 'hidden';
+  }
+
+  /**
+   * Check if a block is currently in preview.
+   *
+   * This can be either because it's previewed as part of the block
+   * configuration, or because it's displayed in the Layout Builder interface,
+   * which is some kind of preview too.
+   *
+   * @return bool
+   *   TRUE if considered preview, FALSE otherwise.
+   */
+  protected function isPreview() {
+    return $this->isConfigurationPreview() || $this->isLayoutBuilder();
+  }
+
+  /**
+   * Check if a block is currently viewed inside the LayoutBuilder interface.
+   *
+   * @return bool
+   *   TRUE if considered layout builder, FALSE otherwise.
+   */
+  protected function isLayoutBuilder() {
+    return $this->routeMatch->getParameter('section_storage') instanceof SectionStorageBase;
+  }
+
+  /**
+   * Check if a block is currently previewed in the configuration modal.
+   *
+   * @return bool
+   *   TRUE if considered configuration preview, FALSE otherwise.
+   */
+  protected function isConfigurationPreview() {
+    return !empty($this->configuration['is_preview']);
+  }
+
+  /**
+   * Set the plugin contexts during form processing.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   */
+  private function setFormContexts(FormStateInterface $form_state) {
+    // Provide context so that data can be retrieved.
+    $build_info = $form_state->getBuildInfo();
+    if (!empty($build_info['args']) && $build_info['args'][0] instanceof OverridesSectionStorage) {
+      $section_storage = $build_info['args'][0];
+      if ($section_storage->getContext('entity')) {
+        try {
+          $this->setContext('layout_builder.entity', $build_info['args'][0]->getContext('entity'));
+        }
+        catch (ContextException $e) {
+          // Fail silently.
+        }
+      }
+    }
+  }
+
+  /**
+   * Add all buttons recursively to the form state's clean value keys.
+   *
+   * This keeps the values array smaller and easier to debug.
+   *
+   * @param array $form
+   *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param array $parents
+   *   An array of parent elements.
+   */
+  protected function addButtonsToCleanValueKeys(array $form, FormStateInterface $form_state, array $parents = []) {
+    $buttons = ['submit', 'button'];
+    foreach (Element::children($form) as $element_key) {
+      $element = $form[$element_key];
+      if (array_key_exists('#type', $element) && in_array($element['#type'], $buttons)) {
+        $form_state->addCleanValueKey(array_merge($parents, [$element_key]));
+      }
+      if (count(Element::children($element)) > 0) {
+        $this->addButtonsToCleanValueKeys($element, $form_state, array_merge($parents, [$element_key]));
+      }
+    }
   }
 
   /**
@@ -434,19 +887,19 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   The updated form array.
    */
   public function blockFormAfterBuild(array $form, FormStateInterface $form_state) {
-
     $plugin_definition = $this->getPluginDefinition();
-    $plugin_configuration = $this->getConfiguration();
 
     // Disable all of the default settings elements. We will handle them.
     $form['admin_label']['#access'] = FALSE;
     $form['admin_label']['#value'] = (string) $plugin_definition['admin_label'];
     $form['label']['#access'] = FALSE;
     $form['label']['#required'] = FALSE;
-    $form['label']['#value'] = (string) $plugin_configuration['label'];
     $form['label_display']['#access'] = FALSE;
-    $form['label_display']['#value'] = (string) $plugin_configuration['label_display'];
+    $form['context_mapping']['#access'] = FALSE;
+
     $settings_form = &$form['container'];
+
+    $settings_form['context_mapping']['#access'] = $form_state->get('current_subform') == self::CONTEXTS_FORM_KEY;
 
     // Now manipulate the default settings elements according to our needs.
     if (array_key_exists('label', $settings_form)) {
@@ -460,8 +913,18 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $settings_form['label_display']['#default_value'] = TRUE;
       }
 
-      if ($this->hasDefaultTitle()) {
-        // This block plugin provides a default title, se the label field is
+      if ($this instanceof OptionalTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface) {
+        // This label field is optional and the display toggle can be hidden.
+        // Display status will be determined based on the presence of a title.
+        $settings_form['label']['#required'] = FALSE;
+        $settings_form['label']['#description'] = $this->t('You can set a title for this element. Leave empty to not use a title.');
+        $settings_form['label_display']['#access'] = FALSE;
+        $settings_form['label_display']['#value'] = TRUE;
+        $settings_form['label_display']['#default_value'] = TRUE;
+      }
+
+      if ($this instanceof OverrideDefaultTitleBlockInterface || $this->hasDefaultTitle()) {
+        // This block plugin provides a default title, so the label field is
         // optional and the display toggle can be hidden.
         $settings_form['label']['#required'] = FALSE;
         $settings_form['label']['#description'] = $this->t('Leave empty to use the default title %default_title.', [
@@ -480,7 +943,38 @@ abstract class GHIBlockBase extends HPCBlockBase {
       }
     }
 
+    if (array_key_exists('year', $form['context_mapping']) && $form['context_mapping']['year']['#type'] == 'select') {
+      $form['context_mapping']['year']['#access'] = FALSE;
+      $form['context_mapping']['year']['#value'] = array_key_first($form['context_mapping']['year']['#options']);
+    }
+
+    if (array_key_exists('node', $form['context_mapping']) && array_key_exists('#options', $form['context_mapping']['node'])) {
+      $options = array_keys($form['context_mapping']['node']['#options']);
+      $options = array_filter($options);
+      if (count($options) == 1) {
+        $form['context_mapping']['node']['#access'] = FALSE;
+        $form['context_mapping']['node']['#value'] = reset($options);
+      }
+    }
     return $form;
+  }
+
+  /**
+   * Check if the given form state originates in a preview submit action.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state interface.
+   *
+   * @return bool
+   *   TRUE if the form state has been created by a preview action, FALSE
+   *   otherwise.
+   */
+  public function isPreviewSubmit(FormStateInterface $form_state) {
+    $current_subform = $form_state->get('current_subform');
+    $triggering_element = $form_state->getTriggeringElement();
+    $action = end($triggering_element['#parents']);
+    $values = $form_state->getValues();
+    return $action == 'preview' && !array_key_exists($current_subform, $values);
   }
 
   /**
@@ -498,6 +992,11 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Get the subform key we have been on when the action was triggered.
     $current_subform = $form_state->get('current_subform');
     $action = end($triggering_element['#parents']);
+
+    if ($contexts = $form_state->getValue(self::CONTEXTS_FORM_KEY)) {
+      $form_state->setValue('context_mapping', $contexts['context_mapping']);
+    }
+
     if (!in_array($action, ['submit', 'preview'])) {
       return;
     }
@@ -507,6 +1006,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
     if ($step_values === NULL) {
       $form_state->setRebuild($action == 'preview');
       return;
+    }
+
+    if ($this instanceof OptionalTitleBlockInterface && $current_subform == $this->getTitleSubform()) {
+      $step_values['label_display'] = !empty($step_values['label']);
     }
 
     if ($action == 'submit') {
@@ -520,6 +1023,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $form_state->setValue($current_subform, $step_values);
       $form_state->set(['storage', $current_subform], $step_values);
       $form_state->setTemporaryValue($current_subform, $step_values);
+
+      // Store the current tab, so that we can get back to it later.
+      $this->processVerticalTabsSubmit($form_state->getCompleteForm()['settings']['container'], $form_state);
     }
 
     // Important to rebuild, otherwhise the preview won't update.
@@ -540,27 +1046,62 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Get all submitted values.
     $values = $this->getTemporarySettings($form_state);
 
-    // Values on multi step forms are internally stored keyed by the respective
-    // form keys of each available subform of the multi step form.
-    $value_parents = [];
-    if ($this->isMultistepForm()) {
-      $value_parents[] = $this->getBaseSubFormKey();
+    if (array_key_exists(self::CONTEXTS_FORM_KEY, $values)) {
+      $context_mapping = $values[self::CONTEXTS_FORM_KEY]['context_mapping'] ?? $this->configuration['context_mapping'];
+      $form_state->setValue('context_mapping', $context_mapping);
+      unset($values[self::CONTEXTS_FORM_KEY]['context_mapping']);
     }
 
     // Because we handle the label fields, we also have to update the
     // configuration.
-    $this->configuration['label'] = NestedArray::getValue($values, array_merge($value_parents, ['label']));
-    $this->configuration['label_display'] = NestedArray::getValue($values, array_merge($value_parents, ['label_display']));
+    $title_form_key = $this instanceof MultiStepFormBlockInterface ? $this->getTitleSubform() : self::DEFAULT_FORM_KEY;
+    $this->configuration['label'] = NestedArray::getValue($values, array_filter([
+      $title_form_key,
+      'label',
+    ]));
+    $this->configuration['label_display'] = NestedArray::getValue($values, array_filter([
+      $title_form_key,
+      'label_display',
+    ]));
+
+    // Remove traces of preview.
+    unset($this->configuration['is_preview']);
 
     // Set the HPC specific block config.
     $this->setBlockConfig($values);
 
-    if ($this instanceof AutomaticTitleBlockInterface || $this->hasDefaultTitle()) {
+    if ($this instanceof AutomaticTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface || $this->hasDefaultTitle()) {
       // This is important to set, otherwise template_preprocess_block() will
       // hide the block title.
       $this->configuration['label_display'] = TRUE;
     }
+    if ($this instanceof OptionalTitleBlockInterface) {
+      $this->configuration['label_display'] = !empty($this->configuration['label']);
+    }
+
+    // Make sure that we have a UUID.
+    $this->configuration['uuid'] = $this->getUuid();
   }
+
+  /**
+   * Allows block plugins to react to being permantenly added to an entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity being saved.
+   * @param string $uuid
+   *   The uuid of the block.
+   */
+  public function postSave(EntityInterface $entity, $uuid) {}
+
+  /**
+   * Allows block plugins to react to being permantenly removed from an entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity being saved.
+   * @param string $uuid
+   *   The uuid of the block.
+   */
+  public function postDelete(EntityInterface $entity, $uuid) {}
 
   /**
    * Custom form alter function for a block configuration.
@@ -573,6 +1114,43 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   The form state object.
    */
   public function blockFormAlter(array &$form, FormStateInterface $form_state) {
+    $form['#attributes']['class'][] = Html::getClass($this->getPluginId());
+
+    // Make sure the actions element is a container. GIN Layout Builder does
+    // that already in the frontend, but when editing page manager pages in the
+    // GIN backend theme, this is not done automatically.
+    $form['actions']['#type'] = 'container';
+    $form['actions']['#attributes']['class'][] = 'canvas-form__actions';
+
+    // Also load our library to improve the UI.
+    // @todo Check if this is sufficiently handled by ghi_blocks_form_alter().
+    if (empty($form['#attached']['library'])) {
+      $form['#attached']['library'] = [];
+    }
+    $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
+
+    $is_preview = $form_state->get('preview');
+    $active_subform = $form_state->get('current_subform');
+
+    if ($active_subform == self::CONTEXTS_FORM_KEY) {
+      // Add the context mapping widget to the subform.
+      foreach (Element::children($form['settings']['context_mapping']) as $element_key) {
+        $element = &$form['settings']['context_mapping'][$element_key];
+        if ($element['#type'] != 'select') {
+          continue;
+        }
+        $element['#required'] = FALSE;
+        if (empty($element['#default_value']) && !empty($element['#options'])) {
+          $element['#default_value'] = array_key_first($element['#options']);
+        }
+      }
+      $form['settings']['container']['context_mapping'] = $form['settings']['context_mapping'];
+    }
+
+    $this->formState = $form_state;
+    $this->setElementValidateOnAjaxElements($form['settings']['container']);
+
+    // Assemble the subform buttons.
     $form['actions']['subforms'] = [
       '#type' => 'container',
       '#weight' => -1,
@@ -582,11 +1160,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
       ],
     ];
 
-    $is_preview = $form_state->get('preview');
-
-    if ($this->isMultistepForm()) {
-      $forms = $this->getSubforms();
-      $active_subform = $form_state->get('current_subform');
+    $forms = $this->getSubforms();
+    if (count($forms) > 1) {
       foreach ($forms as $form_key => $subform) {
         $form['actions']['subforms'][$form_key] = [
           '#type' => 'submit',
@@ -604,7 +1179,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
           '#attributes' => [
             'class' => [$active_subform == $form_key ? 'active' : 'inactive'],
           ],
-          '#disabled' => $is_preview,
+          '#disabled' => $is_preview || (!$this->canShowSubform($form, $form_state, $form_key) && $form_key != self::CONTEXTS_FORM_KEY),
         ];
       }
     }
@@ -615,7 +1190,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
       '#name' => 'preview-toggle',
       // Note: This doesn't work. We manually add the checked attribute later.
       '#default_value' => (bool) $is_preview,
-      // '#element_validate' => [get_class($this) . '::previewValidate'],
       '#ajax' => [
         'event' => 'change',
         'callback' => [$this, 'navigateFormStep'],
@@ -629,15 +1203,25 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $form['actions']['subforms']['preview']['#attributes']['checked'] = 'checked';
     }
 
+    // Add a cancel link.
     $form['actions']['cancel'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Cancel'),
-      '#name' => 'layout-builder-cancel',
-      "#button_type" => 'primary',
-      "#ajax" => [
-        "callback" => 'ghi_blocks_layout_builder_cancel_callback',
+      '#type' => 'link',
+      '#title' => $this->t('Cancel'),
+      '#url' => $this->routeMatch->getParameter('section_storage')->getLayoutBuilderUrl(),
+      '#weight' => -1,
+      '#attributes' => [
+        'class' => [
+          'dialog-cancel',
+        ],
       ],
     ];
+
+    if ($form_state->getBuildInfo()['callback_object'] instanceof AddBlockForm) {
+      // For the add block form, make this a link back to the block browser.
+      $form['actions']['cancel']['#url'] = Url::fromRoute('layout_builder.choose_block', $this->routeMatch->getRawParameters()->all());
+      $form['actions']['cancel']['#attributes']['class'][] = 'use-ajax';
+    }
+
     $form['actions']['#weight'] = 99;
 
     // Set the element validate callback for all ajax enabled form elements.
@@ -646,26 +1230,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // elements that might depend on the changed data.
     $this->setElementValidateOnAjaxElements($form['settings']['container']);
     $this->setElementValidateOnAjaxElements($form['actions']['subforms']['preview']);
-  }
-
-  /**
-   * Get the base form key if this is a multi step form.
-   *
-   * @return string
-   *   Get the subform key for the base form.
-   */
-  private function getBaseSubFormKey() {
-    if (!$this->isMultistepForm()) {
-      return self::DEFAULT_FORM_KEY;
-    }
-    $subforms = $this->getSubforms();
-    foreach ($subforms as $subform_key => $subform) {
-      if (!empty($subform['base_form'])) {
-        return $subform_key;
-      }
-    }
-    // Fallback is the first defined subform.
-    return array_key_first($subforms);
   }
 
   /**
@@ -699,15 +1263,19 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $current_subform = $form_state->get('current_subform');
 
     // Get the submitted values.
-    $values = $form_state->getValue($current_subform);
+    $values = $form_state->cleanValues()->getValue($current_subform);
+    if (!empty($values['context_mapping'])) {
+      $form_state->get('block')->setContextMapping($values['context_mapping']);
+    }
+
     // Put them into our form storage.
     if ($values !== NULL) {
       $form_state->set(['storage', $current_subform], $values);
     }
 
     $subforms = $form_state->get('block')->getSubforms();
-    $requested_subform = end($parents);
-    if (array_key_exists($requested_subform, $subforms)) {
+    $requested_subform = array_key_exists('#next_step', $triggering_element) ? $triggering_element['#next_step'] : end($parents);
+    if (array_key_exists($requested_subform, $subforms) && $form_state->get('block')->canShowSubform($element, $form_state, $requested_subform)) {
       // Update the current subform.
       $form_state->set('current_subform', $requested_subform);
     }
@@ -763,6 +1331,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Update the requested section of the form.
     $parents = $triggering_element['#ajax']['parents'];
     $wrapper = $triggering_element['#ajax']['wrapper'];
+
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand('#' . $wrapper, NestedArray::getValue($form, $parents)));
 
@@ -795,6 +1364,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
 
     if ($this->isMultistepForm()) {
+      /** @var \Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface $this */
       $subforms = $this->getSubforms();
       if (empty($subforms)) {
         return [];
@@ -806,7 +1376,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $temporary_values = $form_state->hasTemporaryValue($form_key) ? (array) $form_state->getTemporaryValue($form_key) : [];
         $storage_values = $form_state->has($storage_key) ? (array) $form_state->get($storage_key) : [];
         $submitted_values = !empty($values[$form_key]) ? $values[$form_key] : [];
-
         $settings[$form_key] = $temporary_values + $storage_values + $submitted_values;
 
         if (empty($settings[$form_key]) && !empty($this->configuration['hpc'][$form_key])) {
@@ -823,7 +1392,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $temporary_values = $form_state->hasTemporaryValue($form_key) ? (array) $form_state->getTemporaryValue($form_key) : [];
       $storage_values = $form_state->has($storage_key) ? (array) $form_state->get($storage_key) : [];
       $submitted_values = !empty($values[$form_key]) ? $values[$form_key] : [];
-      $settings = $temporary_values + $storage_values + $submitted_values;
+      $settings = array_merge($temporary_values, $storage_values, $submitted_values);
 
       // If we still have nothing, we fall back to the existing configuration.
       if (empty($settings)) {
@@ -837,83 +1406,166 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $form_state->set($storage_key, $settings);
       }
     }
-
+    if (!empty($settings[self::CONTEXTS_FORM_KEY])) {
+      $context_mapping = $settings[self::CONTEXTS_FORM_KEY]['context_mapping'] ?? [];
+      if (!empty($context_mapping)) {
+        $this->setContextMapping($context_mapping);
+      }
+    }
     return $settings;
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function injectFieldContexts() {
-    if ($this->injectedFieldContexts) {
-      return;
-    }
-    $plugin_definition = $this->getPluginDefinition();
-    $field_context_mapping = !empty($plugin_definition['field_context_mapping']) ? $plugin_definition['field_context_mapping'] : NULL;
-
-    if (!empty($field_context_mapping)) {
-      parent::injectFieldContexts();
-      return;
-    }
-
-    $node = $this->getNodeFromContexts();
-    if (!$node) {
-      return;
-    }
-
-    $plan_node = $this->getCurrentPlanNode($node);
-    $plan_id = $plan_node->field_original_id->value;
-
-    if (empty($plugin_definition['context_definitions']['plan_id'])) {
-      // Create a new context.
-      $context = new Context(new ContextDefinition('integer', $this->t('Plan id'), FALSE), $plan_id);
-      $this->setContext('plan_id', $context);
-    }
-    else {
-      // Overwrite the existing context value if there is any.
-      $this->setContextValue('plan_id', $plan_id);
-    }
-    $this->injectedFieldContexts = TRUE;
-  }
-
-  /**
-   * Get a plan id for the current page context.
+   * Get the current base entity.
    *
-   * @return \Drupal\node\NodeInterface
-   *   A plan node if it can be found.
+   * @return \Drupal\node\NodeInterface|null
+   *   The section node or NULL.
    */
-  public function getCurrentPlanNode($page_node = NULL) {
+  public function getCurrentBaseEntity($page_node = NULL) {
+    // Get the section for the current page node.
     if ($page_node === NULL) {
       $page_node = $this->getPageNode();
     }
     if (!$page_node) {
       return NULL;
     }
+    $base_entity = NULL;
+    if ($page_node->hasField('field_entity_reference') && count($page_node->get('field_entity_reference')->referencedEntities()) == 1) {
+      // The page node is a subpage of a section and references a section,
+      // which references a base object.
+      $entities = $page_node->get('field_entity_reference')->referencedEntities();
+      $base_entity = reset($entities);
+    }
+    elseif (BaseObjectHelper::getBaseObjectFieldName($page_node)) {
+      // The page node is already a section node.
+      $base_entity = $page_node;
+    }
+    return $base_entity;
+  }
 
-    if ($page_node->bundle() == 'plan') {
-      return $page_node;
+  /**
+   * Get the base object for the current page context.
+   *
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
+   *   A base object if it can be found.
+   */
+  public function getCurrentBaseObject() {
+    $contexts = $this->getContexts();
+    foreach ($this->getContextMapping() as $context_name) {
+      $context = $contexts[$context_name] ?? NULL;
+      if (!$context || !$context->hasContextValue()) {
+        continue;
+      }
+      if (!$context->getContextValue() instanceof BaseObjectInterface) {
+        continue;
+      }
+      return $context->getContextValue();
     }
-    if ($page_node->hasField('field_plan') && $referenced_entities = $page_node->field_plan->referencedEntities()) {
-      return count($referenced_entities) ? reset($referenced_entities) : NULL;
-    }
-    if ($page_node->hasField('field_entity_reference') && $referenced_entities = $page_node->field_entity_reference->referencedEntities()) {
-      return count($referenced_entities) && reset($referenced_entities)->getType() == 'plan' ? reset($referenced_entities) : NULL;
-    }
-    return NULL;
   }
 
   /**
    * Get a plan id for the current page context.
    *
-   * @return int
+   * @return int|null
    *   A plan id if it can be found.
    */
-  public function getCurrentPlanId($page_node = NULL) {
-    $plan_node = $this->getCurrentPlanNode($page_node);
-    if (!$plan_node) {
+  public function getCurrentBaseObjectId() {
+    $base_object = $this->getCurrentBaseObject();
+    if (!$base_object) {
       return NULL;
     }
-    return $plan_node->field_original_id->value;
+    return $base_object->field_original_id->value;
+  }
+
+  /**
+   * Get a plan id for the current page context.
+   *
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
+   *   A plan object if it can be found.
+   */
+  public function getCurrentPlanObject() {
+    $this->getContexts();
+    if ($this->hasContext('plan')) {
+      return $this->getContext('plan')->getContextValue();
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContextValue($name) {
+    $contexts = $this->getContexts();
+    return $contexts[$name] ? $contexts[$name]->getContextValue() : NULL;
+  }
+
+  /**
+   * Get a plan id for the current page context.
+   *
+   * @return int|null
+   *   A plan id if it can be found.
+   */
+  public function getCurrentPlanId() {
+    $plan_object = $this->getCurrentPlanObject();
+    if (!$plan_object) {
+      return NULL;
+    }
+    return $plan_object->field_original_id->value;
+  }
+
+  /**
+   * Get the specified named argument for the current page.
+   *
+   * This also checks whether the retrieved argument is a default value, in
+   * which case it also checks with the selection criteria argument service to
+   * see if a page argument can be extracted from the current request. This
+   * would be the case when a page manager page, that is using layout builder,
+   * is being edited.
+   */
+  protected function getPageArgument($key) {
+    $context = $this->hasContext($key) ? $this->getContext($key) : NULL;
+    return $context ? $context->getContextValue() : parent::getPageArgument($key);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContexts() {
+    $contexts = parent::getContexts();
+    $this->moduleHandler->alter('layout_builder_view_context', $contexts);
+
+    // I'm pretty sure that this is not how it should work. But the context
+    // mapping is sometimes empty, so in order to use we try to set it up on
+    // our own, based on the context definitions.
+    $context_mapping = $this->getContextMapping();
+    if (empty($context_mapping)) {
+      $context_mapping = array_map(function ($definition) use ($contexts) {
+        /** @var \Drupal\Core\Plugin\Context\ContextDefinitionInterface $definition */
+        foreach ($contexts as $context_key => $context) {
+          if ($context->hasContextValue() && $definition->isSatisfiedBy($context)) {
+            return $context_key;
+          }
+        }
+        return NULL;
+      }, $this->getContextDefinitions());
+      $this->setContextMapping($context_mapping);
+    }
+
+    foreach ($context_mapping as $key => $context_name) {
+      $definition = $this->getContextDefinition($key);
+      if (substr($definition->getDataType(), 7) != 'base_object') {
+        continue;
+      }
+      if (!strpos($context_name, '--')) {
+        continue;
+      }
+      if (!array_key_exists($context_name, $contexts)) {
+        continue;
+      }
+      $this->setContext($key, $contexts[$context_name]);
+      $contexts[$key] = $contexts[$context_name];
+    }
+    return $contexts;
   }
 
 }

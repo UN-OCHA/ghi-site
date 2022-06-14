@@ -1,4 +1,13 @@
-sync_source: null
-access_key: null
 _core:
   default_config_hash: EUme9KS2VfxTESc5BX_gkXaKewmPiO8b-glUb5lg7UM
+sync_source: 'https://demo.hum-insight-info.ahconu.org/'
+access_key: ''
+basic_auth:
+  user: ''
+  pass: ''
+node_types:
+  - section
+  - profile
+  - population
+  - financials
+  - risk_index

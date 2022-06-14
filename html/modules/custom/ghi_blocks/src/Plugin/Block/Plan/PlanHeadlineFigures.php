@@ -2,20 +2,14 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\KeyValueStore\KeyValueFactory;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Routing\Router;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
-use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
+use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\node\NodeInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Provides a 'PlanHeadlineFigures' block.
@@ -26,54 +20,62 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *  category = @Translation("Plan elements"),
  *  title = FALSE,
  *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"))
+ *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
+ *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
  *  }
  * )
  */
 class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlockInterface, SyncableBlockInterface, ContainerFactoryPluginInterface {
 
   use ConfigurationContainerTrait;
+  use ConfigurationContainerGroup;
 
-  const MAX_ITEMS = 6;
-
-  /**
-   * The manager class for configuration container items.
-   *
-   * @var \Drupal\ghi_form_elements\ConfigurationContainerItemManager
-   */
-  protected $configurationContainerItemManager;
+  const MAX_ITEMS = 20;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, ConfigurationContainerItemManager $configuration_container_item_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $request_stack, $router, $keyValueFactory, $endpoint_query, $entity_type_manager);
-
-    $this->configurationContainerItemManager = $configuration_container_item_manager;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('request_stack'),
-      $container->get('router.no_access_checks'),
-      $container->get('keyvalue'),
-      $container->get('hpc_api.endpoint_query'),
-      $container->get('entity_type.manager'),
-      $container->get('plugin.manager.configuration_container_item_manager')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function mapConfig($config, NodeInterface $node) {
+  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
     $items = [];
+
+    // First define a default group. Incoming elements are not grouped, but the
+    // target plugin uses grouping.
+    $items[] = [
+      'item_type' => 'item_group',
+      'id' => count($items),
+      'config' => [
+        'label' => t('Population'),
+      ],
+      'weight' => 0,
+      'pid' => NULL,
+    ];
+    $items[] = [
+      'item_type' => 'item_group',
+      'id' => count($items),
+      'config' => [
+        'label' => t('Financials'),
+      ],
+      'weight' => 0,
+      'pid' => NULL,
+    ];
+    $items[] = [
+      'item_type' => 'item_group',
+      'id' => count($items),
+      'config' => [
+        'label' => t('Presence'),
+      ],
+      'weight' => 0,
+      'pid' => NULL,
+    ];
+
+    $group_map = [
+      'attachment_data' => 0,
+      'funding_data' => 1,
+      'entity_counter' => 2,
+      'project_counter' => 2,
+      'label_value' => 2,
+    ];
+
     // Define a transition map.
     $transition_map = [
       'plan_entities_counter' => [
@@ -85,11 +87,11 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
         'config' => ['entity_type' => 'governing'],
       ],
       'partners_counter' => [
-        'target' => 'project_data',
+        'target' => 'project_counter',
         'config' => ['data_type' => 'organizations_count'],
       ],
       'projects_counter' => [
-        'target' => 'project_data',
+        'target' => 'project_counter',
         'config' => ['data_type' => 'projects_count'],
       ],
       'attachment_value' => [
@@ -132,6 +134,9 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
       $transition_definition = $transition_map[$source_type];
       $item = [
         'item_type' => $transition_definition['target'],
+        'pid' => $group_map[$transition_definition['target']] ?? 0,
+        'id' => count($items),
+        'weight' => count($items),
         'config' => [
           'label' => $incoming_item->label,
         ],
@@ -162,7 +167,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
           $item['config']['scale'] = property_exists($value, 'formatting') ? $value->formatting : 'auto';
           break;
 
-        case 'project_data':
+        case 'project_counter':
           if ($value === NULL && empty($incoming_item->label)) {
             // Skip this item entirely.
             continue(2);
@@ -208,31 +213,64 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
     $conf = $this->getBlockConfig();
 
     $items = $this->getConfiguredItems($conf['items']);
-
     if (empty($items)) {
       return;
     }
 
-    $rendered = [];
-    foreach ($conf['items'] as $item) {
+    $context = $this->getBlockContext();
+    $tree = $this->buildTree($items);
+    if (empty($tree)) {
+      return NULL;
+    }
+
+    $tabs = [];
+    foreach ($tree as $group) {
+      $rendered = [];
+      if (empty($group['children'])) {
+        continue;
+      }
 
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
-      $item_type = $this->getItemTypePluginForColumn($item);
+      $group_item = $this->getItemTypePluginForColumn($group, $context);
 
-      $rendered[] = [
-        '#type' => 'item',
-        '#title' => $item_type->getLabel(),
-        0 => $item_type->getRenderArray(),
+      foreach ($group['children'] as $item) {
+
+        /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
+        $item_type = $this->getItemTypePluginForColumn($item, $context);
+
+        $rendered[] = [
+          '#type' => 'item',
+          '#title' => $item_type->getLabel(),
+          0 => $item_type->getRenderArray(),
+        ];
+      }
+      if (empty($rendered)) {
+        continue;
+      }
+      $tabs[] = [
+        'title' => [
+          '#markup' => $group_item->getLabel(),
+        ],
+        'items' => [
+          '#theme' => 'item_list',
+          '#items' => $rendered,
+          '#attributes' => [
+            'class' => ['key-figures'],
+          ],
+          // This is important to make the template suggestions logic work in
+          // common_design_subtheme.theme.
+          '#context' => [
+            'plugin_type' => 'key_figures',
+            'plugin_id' => $this->getPluginId(),
+          ],
+        ],
       ];
     }
 
-    return [
-      '#theme' => 'item_list',
-      '#items' => $rendered,
-      '#attributes' => [
-        'class' => ['plan-headline-figures'],
-      ],
-    ];
+    return $tabs ? [
+      '#theme' => 'tab_container',
+      '#tabs' => $tabs,
+    ] : NULL;
   }
 
   /**
@@ -256,6 +294,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
       '#type' => 'configuration_container',
       '#title' => $this->t('Configured headline figures'),
       '#title_display' => 'invisble',
+      '#item_type_label' => $this->t('Headline figure'),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'items'),
       '#allowed_item_types' => $this->getAllowedItemTypes(),
       '#preview' => [
@@ -266,6 +305,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
       ],
       '#element_context' => $this->getBlockContext(),
       '#max_items' => self::MAX_ITEMS,
+      '#groups' => TRUE,
     ];
     return $form;
   }
@@ -279,7 +319,8 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
   public function getBlockContext() {
     return [
       'page_node' => $this->getPageNode(),
-      'plan_node' => $this->getCurrentPlanNode(),
+      'plan_object' => $this->getCurrentPlanObject(),
+      'base_object' => $this->getCurrentBaseObject(),
       'context_node' => $this->getPageNode(),
     ];
   }
@@ -293,6 +334,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
    */
   public function getAllowedItemTypes() {
     $item_types = [
+      'item_group' => [],
       'funding_data' => [
         'item_types' => [
           'funding_totals',
@@ -304,7 +346,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
         ],
       ],
       'entity_counter' => [],
-      'project_data' => [
+      'project_counter' => [
         'access' => [
           'plan_costing' => [0, 1, 3],
         ],

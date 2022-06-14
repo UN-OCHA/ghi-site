@@ -1,0 +1,29 @@
+uuid: 4f445e33-9a8d-4bf8-91bf-a7dfcd99350a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_plan_type
+    - ghi_base_objects.base_object_type.plan
+    - taxonomy.vocabulary.plan_type
+id: base_object.plan.field_plan_type
+field_name: field_plan_type
+entity_type: base_object
+bundle: plan
+label: 'Plan type'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      plan_type: plan_type
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

@@ -1,0 +1,14 @@
+uuid: c92a3112-c1bc-4070-b979-4c266e76517f
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.plan_type
+id: taxonomy_vocabulary_plan_type
+entity_type_id: taxonomy_vocabulary
+entity_id: plan_type
+action: access_denied
+allow_override: 0
+redirect: ''
+redirect_code: 301
+redirect_fallback_action: access_denied

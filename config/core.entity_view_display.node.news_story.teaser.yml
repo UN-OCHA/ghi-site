@@ -20,29 +20,29 @@ bundle: news_story
 mode: teaser
 content:
   body:
-    label: hidden
-    weight: 1
     type: text_default
+    label: hidden
     settings: {  }
     third_party_settings: {  }
+    weight: 1
     region: content
   field_image:
-    label: hidden
-    weight: 0
     type: responsive_image
+    label: hidden
     settings:
       responsive_image_style: card_hero
       image_link: content
     third_party_settings: {  }
+    weight: 0
     region: content
   field_news_story_tags:
     type: entity_reference_label
-    weight: 2
-    region: content
     label: visually_hidden
     settings:
       link: false
     third_party_settings: {  }
+    weight: 2
+    region: content
 hidden:
   field_display_author: true
   langcode: true

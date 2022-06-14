@@ -2,10 +2,10 @@
 
 namespace Drupal\ghi_blocks\Traits;
 
-use Drupal\ghi_plans\Query\ClusterQuery;
+use Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery;
 
 /**
- * Helper trait for cluster restriction on configurtion item plugins.
+ * Helper trait for cluster restriction on configuration item plugins.
  */
 trait ConfigurationItemClusterRestrictTrait {
 
@@ -38,7 +38,7 @@ trait ConfigurationItemClusterRestrictTrait {
    *   A cluster restriction to apply.
    * @param object $search_results
    *   A result object from the custom search endpoint.
-   * @param \Drupal\ghi_plans\Query\ClusterQuery $clusterQuery
+   * @param \Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery $clusterQuery
    *   A query object for the cluster endpoint.
    *
    * @return mixed|null
@@ -50,7 +50,7 @@ trait ConfigurationItemClusterRestrictTrait {
     }
 
     $context = $this->getContext();
-    $plan_node = $context['plan_node'];
+    $plan_node = $context['plan_object'];
     $plan_id = $plan_node->field_original_id->value;
 
     // First extract the cluster ids for the given cluster tag, as used for
@@ -72,12 +72,12 @@ trait ConfigurationItemClusterRestrictTrait {
   /**
    * Apply a cluster restrict config set to a list of plan entities.
    *
-   * @param object[] $entities
+   * @param \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[] $entities
    *   A list of entity objects.
    * @param array $cluster_restrict
    *   A cluster restriction to apply.
    *
-   * @return array
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
    *   The filtered list of entities.
    */
   public function applyClusterRestrictFilterToEntities(array $entities, array $cluster_restrict) {
@@ -85,13 +85,12 @@ trait ConfigurationItemClusterRestrictTrait {
       return $entities;
     }
     foreach ($entities as $key => $entity) {
-      if (empty($entity->tags) && $cluster_restrict['type'] == 'tag_include') {
+      $tags = $entity->getTags();
+      if (empty($tags) && $cluster_restrict['type'] == 'tag_include') {
         // The entity has no tags, so the requested tag can't be there.
         unset($entities[$key]);
         continue;
       }
-      // Make all tags lowercase for comparison.
-      $tags = array_map('strtolower', $entity->tags);
       if ($cluster_restrict['type'] == 'tag_include' && !in_array(strtolower($cluster_restrict['tag']), $tags)) {
         // The requested tag is not part of the entity tags and tag inclusion
         // has been requested.

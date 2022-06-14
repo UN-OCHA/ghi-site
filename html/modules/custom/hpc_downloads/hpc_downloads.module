@@ -1,0 +1,591 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations and general purpose functions for downloads.
+ */
+
+use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Url;
+
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use PhpOffice\PhpSpreadsheet\Shared\Drawing as SharedDrawing;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+
+use Drupal\hpc_common\Helpers\BlockHelper;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
+use Drupal\hpc_downloads\Helpers\DownloadHelper;
+
+/**
+ * Implements hook_theme().
+ */
+function hpc_downloads_theme($existing, $type, $theme, $path) {
+  $common = [
+    'file' => 'hpc_downloads.theme.inc',
+  ];
+
+  return [
+    'hpc_download_link' => [
+      'variables' => [
+        'link' => NULL,
+      ],
+      'template' => 'hpc-download-link',
+    ] + $common,
+    'hpc_download_dialog' => [
+      'variables' => [
+        'content' => NULL,
+        'footer' => NULL,
+        'attributes' => [],
+      ],
+      'template' => 'hpc-download-dialog',
+    ] + $common,
+    'hpc_download_batch_progress_bar' => [
+      'variables' => [
+        'label' => NULL,
+        'percent' => NULL,
+        'message' => NULL,
+      ] + $common,
+    ],
+    'hpc_download_pdf_header' => [
+      'variables' => [
+        'title' => NULL,
+        'caption' => NULL,
+        'link' => NULL,
+        'date' => NULL,
+
+      ],
+    ] + $common,
+    'hpc_download_pdf_footer' => [
+      'variables' => [
+        'footer_text' => NULL,
+      ],
+    ] + $common,
+    'hpc_download_png_header' => [
+      'variables' => [
+        'title' => NULL,
+        'caption' => NULL,
+        'link' => NULL,
+        'date' => NULL,
+        'logo' => NULL,
+      ],
+    ] + $common,
+  ];
+}
+
+/**
+ * Implements hook_preprocess_block().
+ */
+function hpc_downloads_preprocess_block(&$vars) {
+
+  if (empty($vars['configuration'])) {
+    return;
+  }
+  if (empty($vars['plugin_id']) || empty($vars['configuration']['uuid'])) {
+    return;
+  }
+
+  // Add PNG header to blocks that support PNG downloads.
+  $uri = \Drupal::request()->getRequestUri();
+  $block_instance = BlockHelper::getBlockInstance($uri, $vars['plugin_id'], $vars['configuration']['uuid']);
+  if (!$block_instance || !$block_instance instanceof HPCDownloadPluginInterface) {
+    return;
+  }
+
+  $supported_download_types = $block_instance->getAvailableDownloadTypes();
+  if (!empty($supported_download_types[HPCDownloadPluginInterface::DOWNLOAD_TYPE_PNG])) {
+    // This block does support PNG downloads, so prepare a header that is used
+    // when downloading this blocks content as PNG using OCHAs snap service.
+    $vars['snap_png_header'] = [
+      '#theme' => 'hpc_download_png_header',
+      '#title' => $block_instance->label(),
+      '#caption' => $block_instance->getDownloadCaption(),
+      '#link' => Url::fromUserInput($block_instance->getCurrentUri())->setAbsolute()->toString(),
+      '#date' => date('d-M-Y'),
+      '#logo' => hpc_downloads_get_logo_path(FALSE),
+    ];
+  }
+}
+
+/**
+ * Retrieve a range selector for an Excel table.
+ *
+ * @param string $sheet_key
+ *   The sheet_key indicating the current worksheet.
+ * @param int $row
+ *   The row in the worksheet.
+ * @param array $options
+ *   An options array that should contain an item by the key of header. It is
+ *   assumed that this holds an array with the header column labels keyed by
+ *   sheet_key.
+ *
+ * @return string
+ *   The range selector to be used directly in PHPExcel.
+ */
+function hpc_downloads_excel_get_column_range_for_sheet_key($sheet_key, $row, array $options) {
+  $count = 1;
+  $min_column = 'A';
+  $max_column = '';
+
+  for ($column_id = $min_column; $column_id !== 'AZ'; $column_id++) {
+    $max_column = $column_id;
+    if ($count == count($options['header'][$sheet_key])) {
+      break;
+    }
+    $count++;
+  }
+  return $min_column . $row . ':' . $max_column . $row;
+}
+
+/**
+ * Retrieve a column identifier for an Excel table.
+ *
+ * @param int $column_index
+ *   The column in the worksheet.
+ *
+ * @return string
+ *   The column identifier to be used directly in PHPExcel.
+ */
+function hpc_downloads_excel_get_column_identifier($column_index) {
+  $count = 0;
+  for ($column_id = 'A'; $column_id !== 'AZ'; $column_id++) {
+    if ($count == $column_index) {
+      return $column_id;
+    }
+    $count++;
+  }
+  return NULL;
+}
+
+/**
+ * Add the FTS logo to the given XLS sheet.
+ *
+ * @param \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet
+ *   The worksheet object where the logo should be added.
+ */
+function hpc_downloads_excel_add_logo_to_xls_sheet(Worksheet $sheet) {
+  $logo = hpc_downloads_get_logo_path(TRUE, TRUE);
+  if (!$logo) {
+    return FALSE;
+  }
+  $size = getimagesize($logo);
+  $image_height = $size[1];
+  $image_height_points = SharedDrawing::pixelsToPoints($image_height);
+
+  // Create the image.
+  $image_object = new Drawing();
+  $image_object->setName('FTS logo');
+  $image_object->setDescription('FTS logo');
+  $image_object->setPath($logo);
+  $image_object->setCoordinates('A1');
+  $image_object->setResizeProportional(FALSE);
+
+  // Add the image to the worksheet.
+  $image_object->setWorksheet($sheet);
+
+  // Adapt the row height.
+  $sheet->getRowDimension(1)->setRowHeight($image_height_points);
+}
+
+/**
+ * Retrieve the url for the theme logo.
+ */
+function hpc_downloads_get_logo_path($trim = TRUE, $xls = FALSE) {
+  $logo_path = !$xls ? \Drupal::config('hpc_downloads.settings')->get('logo_path') : \Drupal::config('hpc_downloads.settings')->get('logo_path_xls');
+  if (!$logo_path) {
+    $logo_path = theme_get_setting('logo.url');
+  }
+  if (!$logo_path) {
+    return FALSE;
+  }
+  return $trim ? trim($logo_path, '/') : $logo_path;
+}
+
+/**
+ * Get an option from the download options array.
+ */
+function hpc_downloads_get_named_option_for_sheet_cell($options, $option_name, $sheet_index, $column, $row = 0) {
+  $option_values = !empty($options[$option_name]) && !empty($options[$option_name][$sheet_index]) ? $options[$option_name][$sheet_index] : NULL;
+  return $option_values && !empty($option_values[$row]) && !empty($option_values[$row][$column]) ? $option_values[$row][$column] : NULL;
+}
+
+/**
+ * Implements hook_phpexcel_export().
+ *
+ * This is potentially used for multiple purposes, so pay attention when
+ * changing things here.
+ */
+function hpc_downloads_phpexcel_export($op, &$data, $phpexcel, $options, $column = NULL, $row = NULL) {
+  ini_set('memory_limit', '512M');
+
+  // Static helper variable to remember rows that we have to merge.
+  $merged_rows = &drupal_static('FTS_PHPEXCEL_MERGED_ROWS', []);
+  // .. and borders that we want to draw.
+  $borders = &drupal_static('FTS_PHPEXCEL_BORDERS', []);
+  // .. and cells we want to highlight.
+  $highlights = &drupal_static('FTS_PHPEXCEL_HIGHLIGHTS', []);
+
+  $format_map = [
+    'percentage' => NumberFormat::FORMAT_PERCENTAGE_00,
+    'coverage' => '0.0%',
+    'currency' => '"$"#,##0',
+    'amount' => NumberFormat::FORMAT_NUMBER,
+    'number' => NumberFormat::FORMAT_NUMBER,
+  ];
+
+  switch ($op) {
+    case 'headers':
+      $phpexcel->getProperties()->setLastModifiedBy($options['creator']);
+      break;
+
+    case 'new sheet':
+      $sheet = $phpexcel->getSheet($data);
+      if ($data == 0) {
+        // Metadata sheet.
+        $sheet->getStyle('A')->getFont()->setBold(TRUE);
+        $sheet->getColumnDimension('A')->setWidth(10);
+        $sheet->getColumnDimension('B')->setWidth(10);
+      }
+      else {
+        // Header row in bold.
+        $sheet->getStyle('1:1')->getFont()->setBold(TRUE);
+      }
+      break;
+
+    case 'data':
+      // Adjust column sizes and add autofilters.
+      $sheet_keys = array_flip(array_keys($data));
+      foreach ($data as $sheet_key => $sheet) {
+        $sheet_index = $sheet_keys[$sheet_key];
+        $sheet_obj = $phpexcel->getSheet($sheet_index);
+
+        foreach ($sheet as $row_key => $row) {
+          if ($row == HPCDownloadPluginInterface::EXCEL_SEPARATOR) {
+            $borders[$sheet_index][$row_key + 3] = Border::BORDER_THIN;
+            $data[$sheet_key][$row_key] = $row = [];
+          }
+
+          // $row_key is zero base: +1
+          // first row is header: +2
+          $row_index = $row_key + 2;
+
+          if (!is_array($row)) {
+            // This is a commentary row, we will have to merge all cells.
+            // Unfortunately we can't do this here, for some reason that screws
+            // up the whole table. So we remember this row in a static variable
+            // and do the actual cell merging later right before the cell is
+            // written in $op = "post data".
+            $start = 'A' . $row_index;
+            $end = 'Z' . $row_index;
+            $merged_rows[$sheet_index][$row_index] = "{$start}:{$end}";
+
+            // Also update the data array to have an array.
+            $data[$sheet_key][$row_key] = [$row];
+          }
+
+          // Search for cells with special syntax.
+          if (is_array($row)) {
+            foreach ($row as $cell_index => $cell) {
+              if (is_array($cell) && !empty($cell['class'])) {
+                $highlights[$sheet_index][$row_index][$cell_index] = $cell['class'];
+              }
+              if (is_array($cell) && array_key_exists('data', $cell)) {
+                $data[$sheet_key][$row_key][$cell_index] = $cell['data'];
+              }
+            }
+          }
+        }
+
+        // Add autofilter for all sheets but the first.
+        // Note: Autofilter seem to work only on newer Excel versions.
+        if ($sheet_key != 'Meta data') {
+          foreach ($sheet_obj->getColumnIterator() as $column_id => $column) {
+            $sheet_obj->getColumnDimension($column_id)->setAutoSize(TRUE);
+          }
+
+          // Cell formats per column.
+          if (!empty($options['column_formats']) && !empty($options['column_formats'][$sheet_index])) {
+            $columns = array_keys(iterator_to_array($sheet_obj->getColumnIterator()));
+            $column_formats = $options['column_formats'][$sheet_index];
+            foreach ($columns as $column_index => $column_id) {
+              if (empty($column_formats[$column_index])) {
+                continue;
+              }
+              $cell_format = $column_formats[$column_index];
+
+              $format = $cell_format ? (is_array($cell_format) ? $cell_format['format'] : $cell_format) : NULL;
+              if ($format && array_key_exists($format, $format_map)) {
+
+                // Set the default format code.
+                $format_code = $format_map[$format];
+
+                // If the requested format is currency, see if there are
+                // additional options given, e.g. for a specific currency
+                // symbol.
+                if ($format == 'currency' && is_array($cell_format) && !empty($cell_format['options']) && !empty($cell_format['options']['currency'])) {
+                  $currency = $cell_format['options']['currency'];
+                  $locale = 'en-US';
+                  $format = new NumberFormatter($locale . "@currency=$currency", NumberFormatter::CURRENCY);
+                  $currency_symbol = $format->getSymbol(NumberFormatter::CURRENCY_SYMBOL);
+                  $format_code = '"' . $currency_symbol . '"#,##0';
+                }
+                $sheet_obj->getStyle($column_id)->getNumberFormat()->setFormatCode($format_code);
+                $sheet_obj->getStyle($column_id)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+              }
+            }
+          }
+
+          // Freeze first 3 rows and add autofilter for the third row that
+          // contains the column headers.
+          $sheet_obj->freezePane('A2');
+          $range = hpc_downloads_excel_get_column_range_for_sheet_key($sheet_key, 1, $options);
+          $sheet_obj->setAutoFilter($range);
+        }
+        else {
+          // Fixed width for first column and left alignment for second column.
+          $sheet_obj->getColumnDimension('A')->setWidth(20);
+          $sheet_obj->getColumnDimension('B')->setAutoSize(TRUE);
+          $sheet_obj->getStyle('B')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        }
+      }
+      break;
+
+    case 'post cell':
+      // Setup some variables.
+      $column_index = $column + 1;
+
+      $cell = $phpexcel->getCellByColumnAndRow($column_index, $row);
+      $cell_value = $cell->getValue();
+
+      $sheet = $cell->getWorksheet();
+      $excel = $sheet->getParent();
+      $sheet_index = $excel->getIndex($sheet);
+
+      if ($cell_value === HPCDownloadPluginInterface::EXCEL_SEPARATOR) {
+        $cell->setValue('');
+      }
+
+      // Make full-cell urls clickable.
+      if (strpos($cell_value, 'http') === 0 && UrlHelper::isValid($cell_value, TRUE) && strlen($cell_value) <= 845) {
+        $cell->getHyperlink()->setUrl($cell_value);
+        $cell->setValue(t('View this on @site_name', [
+          '@site_name' => \Drupal::config('system.site')->get('name'),
+        ]));
+        $cell->getStyle()->getFont()->setUnderline(TRUE);
+        $cell->getStyle()->getFont()->getColor()->setRGB('0000FF');
+      }
+
+      // Highlights.
+      if (!empty($highlights[$sheet_index][$row][$column])) {
+        $class = $highlights[$sheet_index][$row][$column];
+        switch ($class) {
+          case 'multivalue-item':
+            $cell->getStyle()->applyFromArray([
+              'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '00CCFF'],
+              ],
+            ]);
+            break;
+        }
+      }
+      break;
+
+    // This $op value is only available if applying the patch from
+    // https://www.drupal.org/project/phpexcel/issues/2839576
+    case 'post data':
+      if (!empty($options['progressive']) && empty($options['finished'])) {
+        return;
+      }
+
+      // This is a work around based on http://stackoverflow.com/a/35915339
+      // It will only work when patching the phpexcel module for an additional
+      // alter hook.
+      foreach ($phpexcel->getAllSheets() as $sheet_index => $sheet) {
+        $sheet_obj = $phpexcel->getSheet($sheet_index);
+
+        // Check if this row should be merged.
+        if (!empty($merged_rows[$sheet_index])) {
+          foreach ($merged_rows[$sheet_index] as $row => $range) {
+            $column_ids = array_keys($sheet->getColumnDimensions());
+            $sheet->mergeCells($range);
+            $sheet->getStyle(reset($column_ids) . $row)->getAlignment()->setWrapText(TRUE);
+          }
+        }
+        if (!empty($borders[$sheet_index])) {
+          foreach ($borders[$sheet_index] as $row => $border) {
+            // Add a top borders to this row.
+            $border_range = 'A' . $row . ':' . $sheet->getHighestColumn() . $row;
+            $sheet->getStyle($border_range)->getBorders()->getTop()->setBorderStyle($border);
+          }
+        }
+
+        // 2 new lines on top of the document.
+        $sheet->insertNewRowBefore(1, 2);
+
+        // Add the logo.
+        hpc_downloads_excel_add_logo_to_xls_sheet($sheet);
+
+        $sheet->calculateColumnWidths();
+        foreach ($sheet_obj->getColumnIterator() as $column_id => $column) {
+          $column_dimension = $sheet->getColumnDimension($column_id);
+          $column_dimension->setAutoSize(FALSE)->setWidth($column_dimension->getWidth());
+        }
+
+        // Cell formats for individual cells.
+        if (!empty($options['cell_formats']) && !empty($options['cell_formats'][$sheet_index])) {
+          $cell_formats = $options['cell_formats'][$sheet_index];
+          foreach ($cell_formats as $row_key => $columns) {
+            foreach ($columns as $column_key => $cell_format) {
+              $format = $cell_format ? (is_array($cell_format) ? $cell_format['format'] : $cell_format) : NULL;
+              if ($format && array_key_exists($format, $format_map)) {
+                // Set the default format code.
+                $format_code = $format_map[$format];
+                // If the requested format is currency, see if there are
+                // additional options given, e.g. for a specific currency
+                // symbol.
+                if ($format == 'currency' && is_array($cell_format) && !empty($cell_format['options']) && !empty($cell_format['options']['currency'])) {
+                  $currency = $cell_format['options']['currency'];
+                  $locale = 'en-US';
+                  $format = new NumberFormatter($locale . "@currency=$currency", NumberFormatter::CURRENCY);
+                  $currency_symbol = $format->getSymbol(NumberFormatter::CURRENCY_SYMBOL);
+                  $format_code = '"' . $currency_symbol . '"#,##0';
+                }
+
+                // $row_key is zero base: +1
+                // first row is header: +2
+                // 2 additional rows for logo and separation line: +4
+                $row_index = $row_key + 4;
+
+                // column_key is zero base: +1.
+                $column_index = $column_key + 1;
+
+                $cell = $sheet->getCellByColumnAndRow($column_index, $row_index);
+                $cell->getStyle()->getNumberFormat()->setFormatCode($format_code);
+
+                if ($format == 'percentage') {
+                  $cell_value = (float) $cell->getValue();
+                  $cell->setValue($cell_value / 100);
+                }
+              }
+            }
+          }
+        }
+
+        // See if there are cells that should have a specific alignment.
+        if (!empty($options['cell_align'][$sheet_index])) {
+          $align_map = [
+            'left' => Alignment::HORIZONTAL_LEFT,
+            'right' => Alignment::HORIZONTAL_RIGHT,
+            'center' => Alignment::HORIZONTAL_CENTER,
+          ];
+          foreach ($options['cell_align'][$sheet_index] as $row_key => $column_align) {
+            if (empty(array_filter($column_align))) {
+              continue;
+            }
+            // $row_key is zero base: +1
+            // first row is header: +2
+            // 2 additional rows for logo and separation line: +4
+            $row_index = $row_key + 4;
+
+            foreach (array_filter($column_align) as $column_key => $cell_align) {
+              if (empty($align_map[$cell_align])) {
+                continue;
+              }
+              // $column_key is zero base: +1
+              $column_index = $column_key + 1;
+              $cell = $sheet->getCellByColumnAndRow($column_index, $row_index);
+              $cell->getStyle()
+                ->getAlignment()
+                ->setHorizontal($align_map[$cell_align]);
+            }
+          }
+        }
+
+        // See if there are cells that use colspan.
+        if (!empty($options['colspan'][$sheet_index])) {
+          foreach ($options['colspan'][$sheet_index] as $row_key => $row_colspan) {
+            if (empty(array_filter($row_colspan))) {
+              continue;
+            }
+            // $row_key is zero base: +1
+            // first row is header: +2
+            // 2 additional rows for logo and separation line: +4
+            $row_index = $row_key + 4;
+
+            foreach (array_filter($row_colspan) as $column_key => $cell_colspan) {
+              // $column_key is zero base: +1
+              $column_index = $column_key + 1;
+              $start_cell = $sheet->getCellByColumnAndRow($column_index, $row_index);
+              $end_cell = $sheet->getCellByColumnAndRow($column_index + $cell_colspan - 1, $row_index);
+              $range = $start_cell->getCoordinate() . ':' . $end_cell->getCoordinate();
+              $sheet->mergeCells($range);
+            }
+          }
+        }
+
+        // Footnotes.
+        if (!empty($options['footnotes'][$sheet_index])) {
+          foreach ($options['footnotes'][$sheet_index] as $row_key => $rows) {
+            // $row_key is zero base: +1
+            // first row is header: +2
+            // 2 additional rows for logo and separation line: +4
+            $row_index = $row_key + 4;
+
+            foreach ($rows as $column_key => $footnote) {
+              // column_key is zero base: +1.
+              $column_index = $column_key + 1;
+              $cell = $sheet->getCellByColumnAndRow($column_index, $row_index);
+
+              // Get the coordinate.
+              $cell_coordinate = $cell->getCoordinate();
+
+              // Add the comment.
+              $comment = $sheet->getComment($cell_coordinate);
+              $comment->getText()->createTextRun($footnote);
+
+              // Width and height adjustements.
+              $width = (int) (192 / 350 * strlen($footnote) * 1.5);
+              $height = (int) (112 / 350 * strlen($footnote) / 1.1);
+
+              $comment->setWidth(($width > 40 ? $width : 40) . 'pt');
+              $comment->setHeight(($height > 20 ? $height : 20) . 'pt');
+
+              // Position top and left.
+              $column_ids = $sheet->getColumnDimensions();
+              $column_key = $cell->getColumn();
+
+              $left_margin = 0;
+              for ($i = 'A'; $i <= $column_key; $i++) {
+                $left_margin += (int) $column_ids[$i]->getWidth();
+              }
+              $top_margin = 0;
+              $row_key = $cell->getRow();
+              for ($i = 0; $i <= $row_key + 3; $i++) {
+                $row_height = (int) $sheet->getRowDimension($i)->getRowHeight();
+                $top_margin += $row_height > 0 ? $row_height : 12;
+              }
+              $margin_scale_factor = 6;
+              $comment->setMarginTop(($top_margin - 10) . 'pt');
+              $comment->setMarginLeft(($left_margin * $margin_scale_factor + 20) . 'pt');
+            }
+          }
+        }
+      }
+
+      // Make sure that the meta tab worksheet is selected when the document is
+      // opened.
+      $phpexcel->setActiveSheetIndex(0)->setSelectedCells('A4');
+      break;
+  }
+}
+
+/**
+ * Implements hook_cache_flush().
+ */
+function hpc_downloads_cache_flush() {
+  DownloadHelper::clearDownloadFiles();
+}

@@ -1,0 +1,29 @@
+uuid: e2692f53-92aa-4119-833d-5b45cc554728
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_team
+    - node.type.population
+    - taxonomy.vocabulary.team
+id: node.population.field_team
+field_name: field_team
+entity_type: node
+bundle: population
+label: Team
+description: 'The team that is responsible for this content item. Leave empty to inherit the team that is responsible for the section that this content belongs to.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      team: team
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

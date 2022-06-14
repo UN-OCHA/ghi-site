@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * @file
+ * Hook definitions for the GHI Gin module.
+ *
+ * This module provides improvements when the gin theme is used as an admin
+ * theme.
+ */
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function ghi_gin_preprocess_page(&$variables) {
+  $theme = \Drupal::theme()->getActiveTheme();
+  if ($theme->getName() == 'gin') {
+    $variables['page']['content']['#attached']['library'][] = 'ghi_gin/gin';
+  }
+  if (\Drupal::moduleHandler()->moduleExists('gin_toolbar') && _gin_toolbar_gin_is_active()) {
+    $variables['page']['content']['#attached']['library'][] = 'ghi_gin/gin_toolbar';
+  }
+}

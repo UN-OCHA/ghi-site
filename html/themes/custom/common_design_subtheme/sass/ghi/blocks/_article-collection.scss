@@ -1,0 +1,19 @@
+.article-collection-cards {
+
+  .ghi-grid-item {
+    padding: 0 0.5rem;
+
+    &.featured {
+      color: var(--cd-white);
+      background-color: var(--cd-primary-color);
+
+      a {
+        color: var(--cd-white);
+      }
+    }
+
+    .field--type-image {
+      width: 100%;
+    }
+  }
+}

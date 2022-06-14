@@ -10,7 +10,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
-use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_api\Query\EndpointQueryManager;
+use Drupal\hpc_api\Query\EndpointQueryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -47,13 +48,30 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   protected $wrapperId;
 
   /**
+   * The manager class for endpoint query plugins.
+   *
+   * @var \Drupal\hpc_api\Query\EndpointQueryManager
+   */
+  protected $endpointQueryManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+
+    $this->endpointQueryManager = $endpoint_query_manager;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static(
       $configuration,
       $plugin_id,
-      $plugin_definition
+      $plugin_definition,
+      $container->get('plugin.manager.endpoint_query_manager'),
     );
   }
 
@@ -157,9 +175,13 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    * {@inheritdoc}
    */
   public function getClasses() {
-    return [
+    $classes = [
       Html::getClass($this->getPluginId()),
     ];
+    if (empty($this->getValue())) {
+      $classes[] = 'empty';
+    }
+    return $classes;
   }
 
   /**
@@ -200,12 +222,11 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    */
   public function setContext($context) {
     $this->context = $context;
-
-    $plan_node = $context['plan_node'] ?? NULL;
-    if ($plan_node && $plan_node->bundle() == 'plan') {
+    $plan_object = $context['plan_object'] ?? NULL;
+    if ($plan_object) {
       $query_handlers = $this->getQueryHandlers();
       foreach ($query_handlers as $query) {
-        $query->setPlaceholder('plan_id', $plan_node->field_original_id->value);
+        $query->setPlaceholder('plan_id', $plan_object->field_original_id->value);
       }
     }
   }
@@ -246,7 +267,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
         continue;
       }
       $value = $property->getValue($this);
-      if (!is_object($value) || !$value instanceof EndpointQuery) {
+      if (!is_object($value) || !$value instanceof EndpointQueryPluginInterface) {
         continue;
       }
       $query_handlers[] = $value;
@@ -457,6 +478,13 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
     }
 
     return $result;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isGroupItem() {
+    return FALSE;
   }
 
 }

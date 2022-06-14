@@ -12,9 +12,11 @@
 // These optional Sass files can be used to start out with a more complete theme
 // if you want something to get you started quickly.
 //——————————————————————————————————————————————————————————————————————————————
-@import "base/typography";
+@import "base/base";
 
 //——————————————————————————————————————————————————————————————————————————————
 // Block specific styling
 //——————————————————————————————————————————————————————————————————————————————
 @import "ghi/ghi";
+@import "component-overrides/component-overrides";
+@import "layout-builder/layout-builder";

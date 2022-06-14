@@ -1,0 +1,23 @@
+uuid: ed2884e6-683b-4902-8080-d1534e088185
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_longitude
+    - ghi_base_objects.base_object_type.country
+id: base_object.country.field_longitude
+field_name: field_longitude
+entity_type: base_object
+bundle: country
+label: Longitude
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: decimal

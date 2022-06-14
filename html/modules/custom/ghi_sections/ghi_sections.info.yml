@@ -1,0 +1,12 @@
+name: GHI Sections
+description: Provide logic around page sections based on API base objects.
+package: GHI
+
+type: module
+core_version_requirement: ^8 || ^9
+
+dependencies:
+  - ghi_base_objects:ghi_base_objects
+  - ghi_teams:ghi_teams
+  - ghi_form_elements:ghi_form_elements
+  - publishcontent:publishcontent

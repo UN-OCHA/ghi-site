@@ -1,14 +1,4 @@
-//——————————————————————————————————————————————————————————————————————————————
-// Base styles
-//——————————————————————————————————————————————————————————————————————————————
-body {
-  @include font-size($cd-font-size-base);
-
-  color: $cd-dark-grey;
-  font-family: $cd-font--system;
-  -ms-text-size-adjust: 100%;
-  -webkit-text-size-adjust: 100%;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-font-smoothing: antialiased;
-  line-height: 1.5;
-}
+@import "base-layout";
+@import "base-typography";
+@import "button";
+@import "toolbar";

@@ -23,6 +23,51 @@ class CommonHelper {
   }
 
   /**
+   * Centralized value rendering assuring uniform output.
+   *
+   * @param mixed $value
+   *   The value to render.
+   * @param string $theme_key
+   *   The theme key that the theme function uses.
+   * @param string $theme_function
+   *   The theme function to use.
+   * @param array $theme_args
+   *   Additional arguments to the theme function.
+   * @param string $pending_string
+   *   An optional overide of the default "pending" string.
+   * @param string $not_available_string
+   *   An optional overide of the default "not_available_string" string.
+   * @param bool $is_export
+   *   Whether this is happening in an export context.
+   *
+   * @return string
+   *   The rendered value.
+   */
+  public static function renderValue($value, $theme_key, $theme_function, array $theme_args = [], $pending_string = NULL, $not_available_string = NULL, $is_export = FALSE) {
+    // In export contexts, we will display the "pending" string, but not the
+    // "no data" string.
+    $pending_string = $pending_string ?? t('Pending');
+    $not_available_string = $is_export ? '' : ($not_available_string ?? t('No data'));
+
+    if (empty($value)) {
+      return $value !== NULL
+        ? '<span class="empty pending">' . $pending_string . '</span>'
+        : '<span class="empty not-available">' . $not_available_string . '</span>';
+    }
+
+    $theme_array = [
+      '#theme' => $theme_function,
+      '#' . $theme_key => $value,
+    ];
+    if (!empty($theme_args)) {
+      foreach ($theme_args as $arg_key => $arg_value) {
+        $theme_array['#' . $arg_key] = $arg_value;
+      }
+    }
+    return ThemeHelper::render($theme_array);
+  }
+
+  /**
    * Test if the given item can safely be cast to a string.
    *
    * @param mixed $item
@@ -34,7 +79,7 @@ class CommonHelper {
   public static function canBeCastToString($item) {
     $is_array = is_array($item);
     $is_castable_object = is_object($item) && method_exists($item, '__toString');
-    $is_convertible_to_string = !is_object($item) && settype($item, 'string') !== FALSE;
+    $is_convertible_to_string = !$is_array && !is_object($item) && settype($item, 'string') !== FALSE;
     return !$is_array && ($is_castable_object || $is_convertible_to_string);
   }
 

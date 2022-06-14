@@ -1,6 +1,7 @@
 .ui-dialog .hpc-form-wrapper .form-type--configuration_container.glb-form-item {
   margin-top: 0 !important;
   margin-bottom: 0 !important;
+  line-height: 1.5rem;
 }
 .ui-dialog .hpc-form-wrapper input.ajax-enabled:active {
   opacity: 0.2;
@@ -43,6 +44,10 @@
   width: 100%;
 }
 
+.form-type--configuration_container table.summary-table > caption {
+  background-color: transparent;
+}
+
 .form-type--configuration_container table.summary-table thead th,
 .form-type--configuration_container table.summary-table tbody tr td {
   text-align: left;
@@ -52,13 +57,16 @@
 }
 
 .form-type--configuration_container table.summary-table thead th:last-child,
-.form-type--configuration_container table.summary-table tbody tr td:last-child {
+.form-type--configuration_container table.summary-table:not(.empty-table) tbody tr td:last-child {
   text-align: right;
 }
 
 .form-type--configuration_container table.summary-table a.tabledrag-handle .handle {
   width: auto;
   height: auto;
+}
+.form-type--configuration_container table.summary-table .draggable.tabledrag-root td {
+  font-weight: bold;
 }
 
 .form-type--configuration_container input[type="radio"]:checked,

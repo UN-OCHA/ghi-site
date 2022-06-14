@@ -1,0 +1,14 @@
+# Base object listing
+base_object.collection:
+  title: 'Base objects'
+  route_name: view.base_objects.plans
+  description: 'List base object entities'
+  parent: system.admin_content
+  weight: 10
+
+# Base object type listing
+entity.base_object_type.collection:
+  title: 'Base object types'
+  route_name: entity.base_object_type.collection
+  description: 'Manage base object types'
+  parent: system.admin_structure

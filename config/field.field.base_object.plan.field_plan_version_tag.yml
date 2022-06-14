@@ -1,0 +1,19 @@
+uuid: 5d442569-4e05-4230-9368-536f8fa94885
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_plan_version_tag
+    - ghi_base_objects.base_object_type.plan
+id: base_object.plan.field_plan_version_tag
+field_name: field_plan_version_tag
+entity_type: base_object
+bundle: plan
+label: 'Plan version tag'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

@@ -11,12 +11,12 @@ pattern: '[node:field_entity_reference:entity:url:path]/profile'
 selection_criteria:
   1b5c2989-6c4c-453f-bbe1-30f8121c098a:
     id: node_type
-    bundles:
-      profile: profile
     negate: false
+    uuid: 1b5c2989-6c4c-453f-bbe1-30f8121c098a
     context_mapping:
       node: node
-    uuid: 1b5c2989-6c4c-453f-bbe1-30f8121c098a
+    bundles:
+      profile: profile
 selection_logic: and
-weight: -5
+weight: -9
 relationships: {  }

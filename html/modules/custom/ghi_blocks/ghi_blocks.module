@@ -5,20 +5,90 @@
  * Contains hook implementations for the GHI Blocks module.
  */
 
-use Drupal\Component\Utility\Html;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\CloseDialogCommand;
+use Drupal\Component\Serialization\Json;
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Controller\BaseObjectReferenceController;
+use Drupal\ghi_blocks\Controller\LayoutBuilderBlockController;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\node\NodeInterface;
 
 /**
- * Implements hook_theme_suggestions_item_list_alter() for form templates.
+ * Implements hook_theme().
  */
-function ghi_blocks_theme_suggestions_item_list_alter(array &$suggestions, array $variables, $hook) {
-  if (isset($variables['context']['plugin_id'])) {
-    $id = str_replace('-', '_', Html::getId($variables['context']['plugin_id']));
-    $suggestions[] = $hook . '__' . $id;
+function ghi_blocks_theme($existing, $type, $theme, $path) {
+  return [
+    'document_link_box' => [
+      'render element' => 'document',
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'document-link-box',
+    ],
+    'link_carousel' => [
+      'variables' => [
+        'items' => [],
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'link-carousel',
+    ],
+    'tab_container' => [
+      'variables' => [
+        'tabs' => [],
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'tab-container',
+    ],
+    'plan_overview_map' => [
+      'variables' => [
+        'chart_id' => NULL,
+        'map_tabs' => NULL,
+        'legend' => FALSE,
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'plan-overview-map',
+    ],
+    'plan_overview_map_modal' => [
+      'variables' => [
+        'items' => [],
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'plan-overview-map-modal',
+    ],
+    'plan_attachment_map' => [
+      'variables' => [
+        'chart_id' => NULL,
+        'sidebar' => NULL,
+        'map_type' => NULL,
+        'map_tabs' => NULL,
+        'attachment_switcher' => NULL,
+        'legend' => FALSE,
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'plan-attachment-map',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_plugin_filter_TYPE__CONSUMER_alter().
+ */
+function ghi_blocks_plugin_filter_block__layout_builder_alter(&$definitions) {
+  // @codingStandardsIgnoreStart
+  // @todo Check if this could actually be useful.
+  // $definitions = array_filter($definitions, function ($definition) {
+  //   return in_array($definition['provider'], ['ghi_blocks', 'ghi_content']);
+  // });
+  // @codingStandardsIgnoreEnd
+}
+
+/**
+ * Implements hook_gin_lb_add_suggestions_alter().
+ */
+function ghi_blocks_gin_lb_add_suggestions_alter(&$add_suggestions, $element, $hook) {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if ($route_name == 'layout_builder.add_block' && $add_suggestions) {
+    $add_suggestions = FALSE;
   }
 }
 
@@ -32,10 +102,123 @@ function ghi_blocks_preprocess_block(&$variables) {
   if (!$block instanceof GHIBlockBase) {
     return;
   }
-  if (!$block->shouldDisplayTitle()) {
-    // Hide the title.
-    unset($variables['label']);
+  // Set the title if needed.
+  if ($block->shouldDisplayTitle() && array_key_exists('#title', $variables['content'])) {
+    $variables['label'] = $variables['content']['#title'];
   }
+
+  // This is necessary to make sure that cache metadata from the block
+  // correctly bubbles up the chain.
+  // @see https://drupal.stackexchange.com/a/225569/8881
+  $content = $variables['content'];
+  CacheableMetadata::createFromRenderArray($variables)
+    ->merge(CacheableMetadata::createFromRenderArray($content))
+    ->applyTo($variables);
+}
+
+/**
+ * Implements hook_contextual_links_alter().
+ *
+ * Disable contextual links to declutter the interface. If it wouldn't be for
+ * layout builder who needs the contextual links for it's own interface, we
+ * could just disable the module entirely.
+ * See https://www.drupal.org/project/drupal/issues/3042516
+ *
+ * Also alter the contextual links for shared functionality of our own blocks.
+ */
+function ghi_blocks_contextual_links_alter(array &$links, $group, array $route_parameters) {
+  $allowed_groups = ['layout_builder_block'];
+  if (!in_array($group, $allowed_groups)) {
+    $links = [];
+    return;
+  }
+  /** @var \Drupal\ghi_blocks\ContextualLinks\BlockHandler $contextual_links_block_handler */
+  $contextual_links_block_handler = \Drupal::service('ghi_blocks.contextual_links.block_handler');
+  $contextual_links_block_handler->alterLinks($links, $group, $route_parameters);
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function ghi_blocks_entity_update(EntityInterface $entity) {
+  $controller = LayoutBuilderBlockController::create(\Drupal::getContainer());
+  $controller->updateEntity($entity);
+}
+
+/**
+ * Implements hook_link_alter().
+ *
+ * Show the block selection in a modal instead of the offcanvas sidebar.
+ * Boldly copied from the Layout Builder Browser module.
+ */
+function ghi_blocks_link_alter(&$variables) {
+
+  /** @var Drupal\Core\Url $url */
+  $url = $variables['url'];
+
+  if (!$url->isRouted()) {
+    return;
+  }
+
+  $route_name = $url->getRouteName();
+  $allowed_routes = [
+    'layout_builder.choose_block',
+    'layout_builder.remove_block',
+    'ghi_blocks.hide_block',
+    'ghi_blocks.unhide_block',
+  ];
+  if (!in_array($route_name, $allowed_routes)) {
+    // All other routes are already handled by the Layout Buidler Modal module.
+    return;
+  }
+
+  if (in_array('use-ajax', $variables['options']['attributes']['class'])) {
+    $config = \Drupal::config('layout_builder_modal.settings');
+    $data_dialog_options = Json::encode([
+      'width' => $config->get('modal_width'),
+      'height' => $config->get('modal_height'),
+      'target' => 'layout-builder-modal',
+      'autoResize' => $config->get('modal_autoresize'),
+      'modal' => TRUE,
+    ]);
+    $variables['options']['attributes']['data-dialog-options'] = $data_dialog_options;
+    $variables['options']['attributes']['data-dialog-type'] = 'dialog';
+    unset($variables['options']['attributes']['data-dialog-renderer']);
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  if (strpos($form_id, 'layout_builder_form')) {
+    $form['#attached']['library'][] = 'system/admin';
+    $form['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
+    $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
+    if (array_key_exists('placeholders', $form)) {
+      $form['placeholders']['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
+      $form['placeholders']['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
+    }
+    // Disable the "Revert to defaults" button.
+    if (array_key_exists('actions', $form) && array_key_exists('revert', $form['actions'])) {
+      $form['actions']['revert']['#access'] = FALSE;
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Used to add warnings for removed base object references.
+ */
+function ghi_blocks_form_node_form_alter(array &$form, FormStateInterface $form_state) {
+  $node = $form_state->getFormObject()->getEntity();
+  if (!$node->hasField(OverridesSectionStorage::FIELD_NAME) || !$node->hasField('field_base_objects')) {
+    // No overrideable node or not base object references available.
+    return;
+  }
+  $controller = BaseObjectReferenceController::create(\Drupal::getContainer());
+  $controller->nodeFormAlter($form, $form_state);
 }
 
 /**
@@ -54,7 +237,7 @@ function ghi_blocks_form_layout_builder_add_block_alter(array &$form, FormStateI
  * Implements hook_FORM_ID_alter().
  */
 function ghi_blocks_form_layout_builder_update_block_alter(array &$form, FormStateInterface $form_state, $form_id) {
-  list($section_storage, $delta, , $uuid) = $form_state->getBuildInfo()['args'];
+  [$section_storage, $delta, , $uuid] = $form_state->getBuildInfo()['args'];
   $component = $section_storage->getSection($delta)->getComponent($uuid);
   $plugin = $component->getPlugin();
   if (!$plugin instanceof GHIBlockBase) {
@@ -64,33 +247,17 @@ function ghi_blocks_form_layout_builder_update_block_alter(array &$form, FormSta
 }
 
 /**
- * Ajax cancel callback.
- *
- * @param array $form
- *   The form array.
- * @param \Drupal\Core\Form\FormStateInterface $form_state
- *   The form state object.
- *
- * @return \Drupal\Core\Ajax\AjaxResponse
- *   The ajax response object.
+ * Implements hook_ENTITY_TYPE_presave() for node entities.
  */
-function ghi_blocks_layout_builder_cancel_callback(array $form, FormStateInterface $form_state) {
-  // Unset the stored form values.
-  $form_key = $form_state->get('current_subform');
-  $form_state->set($form_key, NULL);
-
-  // Do the same for every form of multi step forms.
-  $block = $form_state->getBuildInfo()['callback_object']->getCurrentComponent()->getPlugin();
-  if ($block instanceof MultiStepFormBlockInterface) {
-    foreach (array_keys($block->getSubforms()) as $form_key) {
-      $form_state->set($form_key, NULL);
-    }
+function ghi_blocks_node_presave(NodeInterface $node) {
+  if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+    // We only process nodes that use layout builder.
+    return;
   }
 
-  // And close the modal.
-  $response = new AjaxResponse();
-  $response->addCommand(new CloseDialogCommand('#layout-builder-modal'));
-  return $response;
+  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
+  $controller = BaseObjectReferenceController::create(\Drupal::getContainer());
+  $controller->cleanupDataBlocks($node);
 }
 
 /**
@@ -100,6 +267,8 @@ function ghi_blocks_page_attachments(array &$attachments) {
   if (ghi_blocks_is_layout_builder_route()) {
     $attachments['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
   }
+  $attachments['#attached']['library'][] = 'ghi_blocks/throbber';
+  $attachments['#attached']['library'][] = 'ghi_blocks/gin';
 }
 
 /**
@@ -110,8 +279,21 @@ function ghi_blocks_page_attachments(array &$attachments) {
  */
 function ghi_blocks_is_layout_builder_route() {
   $route_name = \Drupal::routeMatch()->getRouteName();
-  if (preg_match('/^(layout_builder\.([^.]+\.)?)/', $route_name)) {
+  if ($route_name == 'layout_builder_ipe.edit_page' || preg_match('/^(layout_builder\.([^.]+\.)?)/', $route_name)) {
     return TRUE;
   }
+  $page_parameters = \Drupal::routeMatch()->getRawParameters()->all();
+  if (array_key_exists('machine_name', $page_parameters) && array_key_exists('step', $page_parameters)) {
+    return $route_name == 'entity.page.edit_form' && strpos($page_parameters['step'], 'layout_builder');
+  }
   return FALSE;
+}
+
+/**
+ * Implements hook_gin_lb_is_layout_builder_route_alter().
+ *
+ * Define a page manager edit form to be a layout builder route.
+ */
+function ghi_blocks_gin_lb_is_layout_builder_route_alter(&$gin_lb_is_layout_builder_route, $context) {
+  $gin_lb_is_layout_builder_route = ghi_blocks_is_layout_builder_route();
 }

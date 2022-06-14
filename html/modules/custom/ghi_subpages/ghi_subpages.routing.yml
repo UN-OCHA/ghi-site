@@ -1,5 +1,5 @@
 ghi_subpages.node.pages:
-  path: '/node/{node}/hpc/pages'
+  path: '/node/{node}/pages'
   defaults:
     _form: '\Drupal\ghi_subpages\Form\SubpagesPagesForm'
     _title_callback: '\Drupal\ghi_subpages\Controller\SubpagesAdminController::title'
@@ -10,4 +10,3 @@ ghi_subpages.node.pages:
     _admin_route: TRUE
   requirements:
     _custom_access: '\Drupal\ghi_subpages\Controller\SubpagesAdminController::access'
-    _permission: 'administer site configuration'

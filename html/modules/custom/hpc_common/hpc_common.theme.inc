@@ -19,7 +19,7 @@ function hpc_common_preprocess_hpc_autoformat_value(array &$vars) {
   $value = $vars['value'];
   $unit_type = !empty($vars['unit_type']) ? $vars['unit_type'] : 'amount';
   $unit_defaults = $vars['unit_defaults'];
-  $formatting_decimals = !empty($vars['formatting_decimals']) ? $vars['formatting_decimals'] : ThemeHelper::DECIMALS_POINT;
+  $decimal_format = !empty($vars['decimal_format']) ? $vars['decimal_format'] : ThemeHelper::DECIMALS_POINT;
 
   switch ($unit_type) {
     case 'percentage':
@@ -27,7 +27,7 @@ function hpc_common_preprocess_hpc_autoformat_value(array &$vars) {
       $vars['output'] = [
         '#theme' => 'hpc_percent',
         '#ratio' => $value / 100,
-        '#formatting_decimals' => $formatting_decimals,
+        '#decimal_format' => $decimal_format,
       ] + (!empty($unit_defaults['percentage']) ? $unit_defaults['percentage'] : []);
       break;
 
@@ -36,7 +36,7 @@ function hpc_common_preprocess_hpc_autoformat_value(array &$vars) {
       $vars['output'] = [
         '#theme' => 'hpc_amount',
         '#amount' => $value,
-        '#formatting_decimals' => $formatting_decimals,
+        '#decimal_format' => $decimal_format,
       ] + (!empty($unit_defaults['amount']) ? $unit_defaults['amount'] : []);
       break;
   }
@@ -50,7 +50,7 @@ function hpc_common_preprocess_hpc_currency(array &$vars) {
   $currency = $vars['currency'];
   $scale = $vars['scale'] != 'auto' ? $vars['scale'] : NULL;
   $use_abbreviation = $vars['use_abbreviation'];
-  $formatting_decimals = !empty($vars['formatting_decimals']) ? $vars['formatting_decimals'] : ThemeHelper::DECIMALS_POINT;
+  $decimal_format = !empty($vars['decimal_format']) ? $vars['decimal_format'] : ThemeHelper::DECIMALS_POINT;
 
   $export = $vars['export'];
 
@@ -82,7 +82,7 @@ function hpc_common_preprocess_hpc_currency(array &$vars) {
     '#export' => $export,
     '#use_abbreviation' => $use_abbreviation,
     '#decimals' => $value > $billion ? 2 : ($value > $million / 2 ? 1 : 0),
-    '#formatting_decimals' => $formatting_decimals,
+    '#decimal_format' => $decimal_format,
   ]));
 }
 
@@ -101,7 +101,7 @@ function hpc_common_preprocess_hpc_amount(array &$vars) {
   $export = $vars['export'];
   $decimals = $vars['decimals'];
 
-  $formatting_decimals = !empty($vars['formatting_decimals']) ? $vars['formatting_decimals'] : ThemeHelper::DECIMALS_POINT;
+  $decimal_format = !empty($vars['decimal_format']) ? $vars['decimal_format'] : ThemeHelper::DECIMALS_POINT;
 
   if ($amount !== NULL && !is_numeric($amount)) {
     $vars['output'] = $amount;
@@ -147,8 +147,8 @@ function hpc_common_preprocess_hpc_amount(array &$vars) {
     $scaled_amount = $amount;
   }
 
-  $dec_point = $formatting_decimals == ThemeHelper::DECIMALS_POINT ? '.' : ',';
-  $thousands_sep = $formatting_decimals == ThemeHelper::DECIMALS_POINT ? ',' : ' ';
+  $dec_point = $decimal_format == ThemeHelper::DECIMALS_POINT ? '.' : ',';
+  $thousands_sep = $decimal_format == ThemeHelper::DECIMALS_POINT ? ',' : ' ';
   $formatted_amount = number_format($scaled_amount, $decimals, $dec_point, $thousands_sep);
 
   // If the value ends with ".0", then it is unnecessary
@@ -177,7 +177,7 @@ function hpc_common_preprocess_hpc_amount(array &$vars) {
  */
 function hpc_common_preprocess_hpc_percent(array &$vars) {
   $export = $vars['export'];
-  $formatting_decimals = !empty($vars['formatting_decimals']) ? $vars['formatting_decimals'] : ThemeHelper::DECIMALS_POINT;
+  $decimal_format = !empty($vars['decimal_format']) ? $vars['decimal_format'] : ThemeHelper::DECIMALS_POINT;
   $precision = $vars['precision'];
   if (!empty($vars['percent'])) {
     $percent = $vars['percent'];
@@ -191,8 +191,8 @@ function hpc_common_preprocess_hpc_percent(array &$vars) {
   if ($percent > 100) {
     $precision = 0;
   }
-  $dec_point = $formatting_decimals == ThemeHelper::DECIMALS_POINT ? '.' : ',';
-  $thousands_sep = $formatting_decimals == ThemeHelper::DECIMALS_POINT ? ',' : '.';
+  $dec_point = $decimal_format == ThemeHelper::DECIMALS_POINT ? '.' : ',';
+  $thousands_sep = $decimal_format == ThemeHelper::DECIMALS_POINT ? ',' : '.';
   $formatted = number_format($percent, $precision, $dec_point, $thousands_sep);
   $suffix = $export ? '%' : '<span class="suffix">%</span>';
 
@@ -258,7 +258,8 @@ function hpc_common_preprocess_hpc_tooltip(array &$vars) {
   }
 
   if (empty($vars['tag_content'])) {
-    $vars['tag_content'] = '<svg class="cd-icon icon cd-icon--help"><use xlink:href="#cd-icon--help"></use></svg>';
+    $vars['tag_content'] = Markup::create('<svg class="cd-icon icon cd-icon--about"><use xlink:href="#cd-icon--about"></use></svg>');
+    $attributes->addClass('info');
   }
 
   $vars['attributes'] = $attributes;

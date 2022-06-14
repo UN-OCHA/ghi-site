@@ -1,0 +1,5 @@
+ghi_element_sync.config:
+  title: Plan element sync
+  description: 'Configure synchronisation settings for plan elements.'
+  route_name: ghi_element_sync.config
+  parent: system.admin_config_services

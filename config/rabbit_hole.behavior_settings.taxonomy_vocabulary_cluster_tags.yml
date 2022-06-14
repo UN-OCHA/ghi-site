@@ -1,0 +1,14 @@
+uuid: a2200882-421e-4263-9a23-c2ec6d347fc7
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.cluster_tags
+id: taxonomy_vocabulary_cluster_tags
+entity_type_id: taxonomy_vocabulary
+entity_id: cluster_tags
+action: access_denied
+allow_override: 0
+redirect: ''
+redirect_code: 301
+redirect_fallback_action: access_denied

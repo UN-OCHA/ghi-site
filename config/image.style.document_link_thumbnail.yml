@@ -1,0 +1,15 @@
+uuid: 71124dd2-f6af-497b-9c8e-6cb009eb21ed
+langcode: en
+status: true
+dependencies: {  }
+name: document_link_thumbnail
+label: 'Document link thumbnail'
+effects:
+  c83336a4-d168-4552-ac95-b0c3151a70f1:
+    uuid: c83336a4-d168-4552-ac95-b0c3151a70f1
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 156
+      height: 220
+      anchor: center-center

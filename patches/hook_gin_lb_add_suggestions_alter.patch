@@ -1,0 +1,44 @@
+diff --git a/gin_lb.api.php b/gin_lb.api.php
+index 4a3c7ce..1a782ac 100644
+--- a/gin_lb.api.php
++++ b/gin_lb.api.php
+@@ -41,6 +41,25 @@ function hook_gin_lb_is_layout_builder_route_alter(&$gin_lb_is_layout_builder_ro
+   }
+ }
+ 
++/**
++ * Alter the template suggestion logic.
++ *
++ * Allows modules to disable template suggestions based route name or form id.
++ *
++ * @param boolean $add_suggestions
++ *   Boolean flag.
++ * @param array $element
++ *   A render element.
++ * @param string $hook
++ *   The theme hook.
++ */
++function hook_gin_lb_add_suggestions_alter(&$add_suggestions, $element, $hook) {
++  $route_name = \Drupal::routeMatch()->getRouteName();
++  if ($route_name == 'layout_builder.add_block' && $add_suggestions) {
++    $add_suggestions = FALSE;
++  }
++}
++
+ /**
+  * @} End of "addtogroup hooks".
+  */
+diff --git a/gin_lb.module b/gin_lb.module
+index f9511d2..045dfee 100644
+--- a/gin_lb.module
++++ b/gin_lb.module
+@@ -227,6 +227,9 @@ function gin_lb_theme_suggestions_alter(
+     $add_suggestions = TRUE;
+   }
+ 
++  // Allow other modules to chime in.
++  \Drupal::moduleHandler()->alter('gin_lb_add_suggestions', $add_suggestions, $variables['element'], $hook);
++
+   if (isset($variables['element']['#gin_lb_form']) || $add_suggestions === TRUE) {
+ 
+     // Fix form element suggestions when they are not implemented in the theme.

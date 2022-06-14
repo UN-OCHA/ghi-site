@@ -1,0 +1,23 @@
+uuid: 73feb830-a2dd-4b08-a38d-a491739a6c8e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_original_id
+    - taxonomy.vocabulary.organization_type
+id: taxonomy_term.organization_type.field_original_id
+field_name: field_original_id
+entity_type: taxonomy_term
+bundle: organization_type
+label: 'Original ID'
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

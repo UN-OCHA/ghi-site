@@ -1,0 +1,10 @@
+.ghi-block-document-subheading {
+  position: relative;
+
+  a[name] {
+    // Make the link target slightly higher to
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+}

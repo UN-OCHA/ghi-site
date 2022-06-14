@@ -12,6 +12,7 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -113,6 +114,8 @@ class SyncManager implements ContainerInjectionInterface {
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node for which elements should be synced.
+   * @param array $source_uuids
+   *   Optionally limit to specific source uuids.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    * @param bool $revisions
@@ -126,9 +129,14 @@ class SyncManager implements ContainerInjectionInterface {
    * @throws SyncException
    *   When an error occurs.
    */
-  public function syncNode(NodeInterface $node, MessengerInterface $messenger = NULL, $revisions = FALSE, $cleanup = FALSE) {
+  public function syncNode(NodeInterface $node, array $source_uuids = NULL, MessengerInterface $messenger = NULL, $revisions = FALSE, $cleanup = FALSE) {
     if ($messenger === NULL) {
       $messenger = $this->messenger();
+    }
+
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
+    if ($base_object->bundle() != 'plan') {
+      return FALSE;
     }
 
     $sections = $this->getNodeSections($node);
@@ -144,28 +152,37 @@ class SyncManager implements ContainerInjectionInterface {
       if (!$this->isSyncable($element)) {
         continue;
       }
+      if ($source_uuids !== NULL && !in_array($element->uuid, $source_uuids)) {
+        continue;
+      }
       $definition = $this->getCorrespondingPluginDefintionForElement($element);
-      $class = $definition['class'];
       $context_mapping = [
-        'context_mapping' => [
+        'context_mapping' => array_intersect_key([
           'node' => 'layout_builder.entity',
-        ],
+          $base_object->bundle() => $base_object->bundle() . '--' . $base_object->getSourceId(),
+        ], $definition['context_definitions']),
       ];
 
+      try {
+        $mapped_config = $this->getMappedConfig($element, $node);
+      }
+      catch (IncompleteElementConfigurationException $e) {
+        continue;
+      }
       $existing_component = $this->getExistingSyncedComponent($node, $element);
       if ($existing_component) {
         // Update an existing component.
-        $configuration = $class::mapConfig($element->configuration, $node) + $context_mapping + $existing_component->get('configuration');
+        $configuration = $mapped_config + $context_mapping + $existing_component->get('configuration');
         $existing_component->setConfiguration($configuration);
         $messenger->addMessage($this->t('Updated %plugin_title', [
           '%plugin_title' => $definition['admin_label'],
-        ]));
+        ]), $messenger::TYPE_STATUS, TRUE);
       }
       else {
         // Append a new component.
         $messenger->addMessage($this->t('Added %plugin_title', [
           '%plugin_title' => $definition['admin_label'],
-        ]));
+        ]), $messenger::TYPE_STATUS, TRUE);
         $config = array_filter([
           'id' => $definition['id'],
           'provider' => $definition['provider'],
@@ -174,7 +191,7 @@ class SyncManager implements ContainerInjectionInterface {
             'source_uuid' => $element->uuid,
           ],
         ]) + $context_mapping;
-        $config += $class::mapConfig($element->configuration, $node);
+        $config += $mapped_config;
 
         $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
         $sections[$delta]->appendComponent($component);
@@ -182,15 +199,58 @@ class SyncManager implements ContainerInjectionInterface {
 
     }
 
-    $this->layoutManagerDiscardChanges($node, $messenger);
-
     $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
     if ($revisions) {
       $node->setNewRevision(TRUE);
-      $node->revision_log = $this->t('Synced page elements from @source_url', ['@source_url' => $source_url]);
+      $node->revision_log = $this->t('Synced page elements from @source_url', ['@source_url' => $this->getSyncSourceUrl()]);
       $node->setRevisionCreationTime($this->time->getRequestTime());
       $node->setRevisionUserId($this->currentUser->id());
     }
+    $node->save();
+
+    $this->layoutManagerDiscardChanges($node, $messenger);
+
+    return TRUE;
+  }
+
+  /**
+   * Remove previously synched elements from a node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node for which elements should be synced.
+   *
+   * @return bool
+   *   Indicating whether the node has been sucessfully reset or not.
+   *
+   * @throws SyncException
+   *   When an error occurs.
+   */
+  public function resetNode(NodeInterface $node) {
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
+    if ($base_object->bundle() != 'plan') {
+      return FALSE;
+    }
+
+    $sections = $this->getNodeSections($node);
+    $delta = 0;
+
+    foreach ($this->getRemoteConfigurations($node) as $element) {
+      if (!$this->isSyncable($element)) {
+        continue;
+      }
+      $existing_component = $this->getExistingSyncedComponent($node, $element);
+      if ($existing_component) {
+        $sections[$delta]->removeComponent($existing_component->getUuid());
+      }
+    }
+
+    $this->layoutManagerDiscardChanges($node, $this->messenger());
+
+    $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+    $node->setNewRevision(TRUE);
+    $node->revision_log = $this->t('Removed previously synced page elements from @source_url', ['@source_url' => $this->getSyncSourceUrl()]);
+    $node->setRevisionCreationTime($this->time->getRequestTime());
+    $node->setRevisionUserId($this->currentUser->id());
     $node->save();
 
     return TRUE;
@@ -206,21 +266,39 @@ class SyncManager implements ContainerInjectionInterface {
    *   An array of element configuration objects from the remote.
    */
   public function getRemoteConfigurations(NodeInterface $node) {
-    $settings = $this->config->get('ghi_element_sync.settings');
+    $settings = $this->getSettings();
 
-    $original_id = $node->field_original_id->value;
-    $bundle = $node->bundle();
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
+
+    $original_id = $base_object->field_original_id->value;
+    $bundle = $base_object->bundle();
 
     if (empty($settings->get('sync_source'))) {
       throw new SyncException('Error: Source is not configured');
     }
     $source_url = rtrim($settings->get('sync_source'), '/');
     $url = $source_url . '/admin/hpc/plan-elements/export/' . $original_id . '/' . $bundle . '?time=' . microtime(TRUE);
+
+    $headers = [];
+    $basic_auth = $settings->get('basic_auth');
+    if ($basic_auth && !empty($basic_auth['user']) && !empty($basic_auth['pass'])) {
+      $headers['Authorization'] = 'Basic ' . base64_encode($basic_auth['user'] . ':' . $basic_auth['pass']);
+    }
+
     $cookies = [
       'ghi_access' => $settings->get('access_key'),
     ];
     $jar = CookieJar::fromArray($cookies, parse_url($settings->get('sync_source'), PHP_URL_HOST));
-    $response = $this->httpClient->request('GET', $url, ['cookies' => $jar]);
+
+    try {
+      $response = $this->httpClient->request('GET', $url, [
+        'headers' => $headers,
+        'cookies' => $jar,
+      ]);
+    }
+    catch (\Exception $e) {
+      throw new SyncException($e->getMessage());
+    }
 
     $code = $response->getStatusCode();
     if ($code != 200) {
@@ -253,7 +331,19 @@ class SyncManager implements ContainerInjectionInterface {
    *   A plugin definition, or NULL if the element type is invalid.
    */
   public function getCorrespondingPluginDefintionForElement($element) {
-    return $this->blockManager->getDefinition($element->type, FALSE);
+    $definitions = $this->blockManager->getDefinitions();
+    if (!property_exists($element, 'type')) {
+      return NULL;
+    }
+    if (isset($definitions[$element->type])) {
+      return $definitions[$element->type];
+    }
+    // If there is no direct match, see if we can find a plugin that wants to
+    // handle this element type.
+    $definitions = array_filter($definitions, function ($definition) use ($element) {
+      return array_key_exists('valid_source_elements', $definition) && in_array($element->type, $definition['valid_source_elements']);
+    });
+    return !empty($definitions) && count($definitions) == 1 ? reset($definitions) : NULL;
   }
 
   /**
@@ -275,29 +365,92 @@ class SyncManager implements ContainerInjectionInterface {
   }
 
   /**
-   * Get the current sync status.
+   * Checks if the given element has a valid source that allows synching.
    *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node object.
    * @param object $element
    *   The element object from the remote.
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   *
+   * @return bool
+   *   Whether the element has a valid source.
+   */
+  public function hasValidSource($element, NodeInterface $node) {
+    if (!$this->isSyncable($element)) {
+      return FALSE;
+    }
+    try {
+      $mapped_config = $this->getMappedConfig($element, $node, TRUE);
+    }
+    catch (IncompleteElementConfigurationException $e) {
+      return FALSE;
+    }
+    return !empty($mapped_config);
+  }
+
+  /**
+   * Get the current sync status.
+   *
+   * @param object $element
+   *   The element object from the remote.
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
    *
    * @return string
    *   A string representing the sync status.
    */
-  public function getSyncStatus(NodeInterface $node, $element) {
+  public function getSyncStatus($element, NodeInterface $node) {
     if (!$this->isSyncable($element)) {
       return '';
     }
-    $definition = $this->getCorrespondingPluginDefintionForElement($element);
-    $class = $definition['class'];
     $existing_component = $this->getExistingSyncedComponent($node, $element);
     if (!$existing_component) {
       return $this->t('Not synced');
     }
-    $remote_hash = md5(serialize($class::mapConfig($element->configuration, $node)['hpc']));
+    try {
+      $mapped_config = $this->getMappedConfig($element, $node, TRUE);
+    }
+    catch (IncompleteElementConfigurationException $e) {
+      $mapped_config = NULL;
+    }
+    if ($mapped_config === NULL) {
+      return $this->t('Invalid source');
+    }
+    $remote_hash = md5(serialize($mapped_config['hpc']));
     $local_hash = md5(serialize($existing_component->get('configuration')['hpc']));
     return $remote_hash == $local_hash ? $this->t('In sync') : $this->t('Changed');
+  }
+
+  /**
+   * Get the mapped config for the given element.
+   *
+   * @param object $element
+   *   The source element.
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object that is the sync target.
+   * @param bool $dry_run
+   *   Whether this is a test or a real mapping.
+   *
+   * @return array
+   *   A mapped config array.
+   *
+   * @throws \Drupal\ghi_element_sync\IncompleteElementConfigurationException;
+   */
+  private function getMappedConfig($element, NodeInterface $node, $dry_run = FALSE) {
+    $definition = $this->getCorrespondingPluginDefintionForElement($element);
+    if (!$definition) {
+      return NULL;
+    }
+    $class = $definition['class'];
+    $config = json_decode(json_encode($element->configuration));
+
+    $common_config = [];
+    $widget_options = $config->widget_options ?? NULL;
+    $widget_visibility = $widget_options ? ($widget_options->widget_visibility ?? NULL) : NULL;
+    if (!empty($widget_visibility) && $widget_visibility != 'public') {
+      $common_config['visibility_status'] = 'hidden';
+    }
+    return $class::mapConfig($config, $node, $element->type, $dry_run) + $common_config;
   }
 
   /**
@@ -329,7 +482,7 @@ class SyncManager implements ContainerInjectionInterface {
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
    *
-   * @return array
+   * @return \Drupal\layout_builder\Section[]
    *   An array of layout builder sections.
    */
   private function getNodeSections(NodeInterface $node) {
@@ -347,7 +500,7 @@ class SyncManager implements ContainerInjectionInterface {
    * @param \Drupal\node\NodeInterface $node
    *   The node for which elements should be synced.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   An optional messenger to use for result messages.
+   *   A messenger to use for result messages.
    */
   private function layoutManagerDiscardChanges(NodeInterface $node, MessengerInterface $messenger) {
     $section_storage = $this->getSectionStorageForEntity($node);
@@ -355,6 +508,36 @@ class SyncManager implements ContainerInjectionInterface {
     $section_storage->setContextValue('view_mode', 'default');
     $this->layoutTempstoreRepository->delete($section_storage);
     $messenger->addMessage($this->t('Cleared layout builder temporary storage'));
+  }
+
+  /**
+   * Get the sync settings.
+   *
+   * @return \Drupal\Core\Config\ImmutableConfig
+   *   A settings object.
+   */
+  private function getSettings() {
+    return $this->config->get('ghi_element_sync.settings');
+  }
+
+  /**
+   * Get the sync source URL.
+   *
+   * @return string
+   *   The sync source url.
+   */
+  public function getSyncSourceUrl() {
+    return $this->getSettings()->get('sync_source');
+  }
+
+  /**
+   * Get the available node types for syncing.
+   *
+   * @return array
+   *   An array of node type names.
+   */
+  public function getAvailableNodeTypes() {
+    return $this->getSettings()->get('node_types') ?? [];
   }
 
 }

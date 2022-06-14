@@ -1,0 +1,23 @@
+uuid: a7077aec-906d-4a40-b6d6-88bb5140d57f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_prototype_id
+    - ghi_base_objects.base_object_type.governing_entity
+id: base_object.governing_entity.field_prototype_id
+field_name: field_prototype_id
+entity_type: base_object
+bundle: governing_entity
+label: 'Prototype ID'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

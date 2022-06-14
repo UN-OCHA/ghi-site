@@ -179,4 +179,12 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
    */
   public function checkFilter();
 
+  /**
+   * Check if an item represents a group.
+   *
+   * @return bool
+   *   TRUE if the item is a group, FALSE otherwise.
+   */
+  public function isGroupItem();
+
 }

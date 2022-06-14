@@ -4,6 +4,7 @@ namespace Drupal\ghi_element_sync\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_element_sync\SyncException;
 use Drupal\ghi_element_sync\SyncManager;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -49,33 +50,56 @@ class SyncNodeForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
     $form['#node'] = $node;
 
-    $form['sync_elements'] = [
+    $form['sync_all'] = [
       '#type' => 'submit',
       '#value' => $this->t('Sync all elements'),
     ];
 
-    $header = [
-      $this->t('Source type'),
-      $this->t('Plugin'),
-      $this->t('Syncable'),
-      $this->t('Status'),
+    $form['sync_selected'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Sync selected elements'),
     ];
 
-    foreach ($this->syncManager->getRemoteConfigurations($node) as $element) {
-      $row = [];
-      $row[] = $element->type;
-      $definition = $this->syncManager->getCorrespondingPluginDefintionForElement($element);
-      $row[] = $definition ? $definition['admin_label'] : $this->t('Unknown');
-      $row[] = $this->syncManager->isSyncable($element) ? $this->t('Syncable') : $this->t('Not syncable');
-      $row[] = $this->syncManager->getSyncStatus($node, $element);
-      $rows[] = $row;
+    $form['remove_synced'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Remove all sync elements'),
+    ];
+
+    $header = [
+      'source_type' => $this->t('Source type'),
+      'plugin' => $this->t('Plugin'),
+      'syncable' => $this->t('Syncable'),
+      'status' => $this->t('Status'),
+    ];
+
+    $form['sync_element_select'] = [
+      '#type' => 'tableselect',
+      '#header' => $header,
+      '#options' => [],
+    ];
+
+    try {
+      foreach ($this->syncManager->getRemoteConfigurations($node) as $element) {
+        $is_syncable = $this->syncManager->isSyncable($element);
+        $has_valid_source = $this->syncManager->hasValidSource($element, $node);
+        $row = [];
+        $row['source_type'] = $element->type;
+        $definition = $this->syncManager->getCorrespondingPluginDefintionForElement($element);
+        $row['plugin'] = $definition ? $definition['admin_label'] : $this->t('Unknown');
+        $row['syncable'] = $is_syncable && $has_valid_source ? $this->t('Syncable') : $this->t('Not syncable');
+        $row['status'] = $this->syncManager->getSyncStatus($element, $node);
+
+        $form['sync_element_select']['#options'][$element->uuid] = $row;
+        $form['sync_element_select'][$element->uuid] = !$is_syncable || !$has_valid_source ? ['#disabled' => TRUE] : NULL;
+      }
+    }
+    catch (SyncException $e) {
+      $this->messenger()->addError($this->t('There was a problem accessing the sync source:<br />@error', [
+        '@error' => $e->getMessage(),
+      ]));
+      $form['sync_elements']['#disabled'] = TRUE;
     }
 
-    $form['sync_status'] = [
-      '#type' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-    ];
     return $form;
   }
 
@@ -84,7 +108,14 @@ class SyncNodeForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $node = $form['#node'];
-    $this->syncManager->syncNode($node);
+    $selected_source_uuids = array_filter($form_state->getValue('sync_element_select'));
+    $action = end($form_state->getTriggeringElement()['#parents']);
+    if ($action == 'remove_synced') {
+      $this->syncManager->resetNode($node);
+    }
+    else {
+      $this->syncManager->syncNode($node, $action == 'sync_selected' ? $selected_source_uuids : NULL);
+    }
   }
 
 }

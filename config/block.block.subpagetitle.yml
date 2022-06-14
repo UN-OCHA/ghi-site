@@ -3,33 +3,33 @@ langcode: en
 status: true
 dependencies:
   module:
-    - ctools
     - ghi_subpages
+    - node
   theme:
     - common_design_subtheme
 id: subpagetitle
 theme: common_design_subtheme
 region: content
-weight: 0
+weight: -4
 provider: null
 plugin: subpage_title
 settings:
   id: subpage_title
   label: 'Subpage title'
-  provider: ghi_subpages
   label_display: '0'
+  provider: ghi_subpages
   context_mapping:
     node: '@node.node_route_context:node'
 visibility:
   'entity_bundle:node':
     id: 'entity_bundle:node'
-    bundles:
-      country: country
-      financials: financials
-      plan: plan
-      population: population
-      profile: profile
-      risk_index: risk_index
     negate: false
     context_mapping:
       node: '@node.node_route_context:node'
+    bundles:
+      financials: financials
+      global_section: global_section
+      population: population
+      profile: profile
+      risk_index: risk_index
+      section: section

@@ -1,26 +1,33 @@
 .hpc-form-wrapper {
   padding: 1rem;
   margin-bottom: 1rem;
+  line-height: 1.5rem;
 }
 
-/* #layout-builder-modal input[data-drupal-selector="edit-actions-submit"].button--primary {
-  position: absolute;
-  bottom: 1rem;
-  right: 1rem;
-} */
+#form-wrapper-ghi-block-config.hpc-form-wrapper {
+  padding: 0;
+}
 
-.hpc-form-wrapper table {
+.hpc-form-wrapper .glb-form-item--error-message {
+  padding: 0.5rem 0;
+}
+
+.hpc-form-wrapper .glb-claro-details {
+  background-color: var(--colorGinAppBackground) !important;
+}
+
+.hpc-form-wrapper > div:not([data-block-preview]) table {
   width: 100%;
   margin-top: 0;
   margin-bottom: 1.5rem;
   border-collapse: collapse;
 }
-.hpc-form-wrapper table thead {
+.hpc-form-wrapper > div:not([data-block-preview]) table thead {
   border-radius: 6px;
   -webkit-box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
   box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
 }
-.hpc-form-wrapper table th {
+.hpc-form-wrapper > div:not([data-block-preview]) table th {
   color: var(--colorGinText);
   background: var(--colorGinTableHeader);
   position: relative;
@@ -33,25 +40,25 @@
   line-height: 1.25rem;
   white-space: nowrap;
 }
-.hpc-form-wrapper table th:first-child {
+.hpc-form-wrapper > div:not([data-block-preview]) table th:first-child {
   border-top-left-radius: 6px;
   border-bottom-left-radius: 6px;
 }
-.hpc-form-wrapper table th:last-child {
+.hpc-form-wrapper > div:not([data-block-preview]) table th:last-child {
   border-top-right-radius: 6px;
   border-bottom-right-radius: 6px;
 }
-.hpc-form-wrapper table tbody tr {
+.hpc-form-wrapper > div:not([data-block-preview]) table tbody tr {
   border-bottom: 1px solid var(--colorGinTableBorder);
   color: var(--colorGinText);
   background-color: transparent;
 }
-.hpc-form-wrapper table tbody tr:hover,
-.hpc-form-wrapper table tbody tr:focus {
+.hpc-form-wrapper > div:not([data-block-preview]) table tbody tr:hover,
+.hpc-form-wrapper > div:not([data-block-preview]) table tbody tr:focus {
   color: #222330;
   background: #f0f5fd;
 }
-.hpc-form-wrapper table tbody tr td {
+.hpc-form-wrapper > div:not([data-block-preview]) table tbody tr td {
   box-sizing: border-box;
   height: 4rem;
   padding: 0.5rem 1rem;
@@ -59,30 +66,84 @@
   vertical-align: inherit;
 }
 
+.hpc-form-wrapper .ghi-block {
+  margin-top: 0 !important;
+}
+
 #layout-builder-modal {
   margin-bottom: 5rem;
 }
-form.layout-builder-configure-block.glb-canvas-form {
+form.layout-builder-configure-block.glb-canvas-form,
+#layout-builder-modal form.glb-canvas-form {
   position: inherit;
+  min-height: 6rem;
 }
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions {
+form.layout-builder-configure-block.glb-canvas-form details.glb-claro-details {
+  margin-top: 1rem;
+  border-top: 0 !important;
+}
+form.layout-builder-configure-block.glb-canvas-form details.glb-claro-details .claro-details__description {
+  line-height: 1.5rem;
+}
+form.layout-builder-configure-block.glb-canvas-form .glb-messages-list {
+  margin: 0 !important;
+  display: none !important;
+}
+form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper > .glb-form-item:first-child {
+  margin-top: 0 !important;
+}
+form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .glb-form-item__description {
+  max-width: 100% !important;
+}
+form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .glb-form-checkboxes .glb-form-type--checkbox {
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .glb-form-boolean--type-radio {
+  box-shadow: none !important;
+}
+form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions,
+#layout-builder-modal form.glb-canvas-form .glb-canvas-form__actions {
   position: absolute !important;
-  display: flex;
   bottom: 0;
   right: 0;
   left: 0;
+  display: block;
+  text-align: right;
+  padding-right: 20px;
   flex-direction: row-reverse;
+  border-top: 1px solid var(--colorGinLayerBorder);
+  background: var(--colorGinAppBackground);
+}
+form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions > *:not(.ghi-layout-builder-subform-buttons),
+#layout-builder-modal form.glb-canvas-form .glb-canvas-form__actions > *:not(.ghi-layout-builder-subform-buttons) {
+  margin: 1em 0.75em 1em 0 !important;
 }
 
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .ghi-layout-builder-subform-buttons {
+#layout-builder-modal form.glb-canvas-form.confirmation .glb-canvas-form__actions {
+  flex-direction: row;
+  display: block;
+  text-align: left;
+}
+
+form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .ghi-layout-builder-subform-buttons,
+#layout-builder-modal form.layout-builder-configure-block .canvas-form__actions .ghi-layout-builder-subform-buttons {
   position: absolute;
   left: 20px;
 }
 
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .ghi-layout-builder-subform-buttons .form-item-preview-toggle {
+form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .ghi-layout-builder-subform-buttons > .glb-form-type--checkbox,
+#layout-builder-modal form.layout-builder-configure-block .canvas-form__actions .ghi-layout-builder-subform-buttons > .glb-form-type--checkbox {
   display: inline-block;
+  text-align: left;
 }
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .ghi-layout-builder-subform-buttons input[disabled] {
+form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions input[disabled],
+#layout-builder-modal form.layout-builder-configure-block .canvas-form__actions input[disabled] {
   cursor: not-allowed !important;
   opacity: 0.5;
+}
+
+#layout-builder-modal .layout-builder-hide-block,
+#layout-builder-modal .layout-builder-unhide-block {
+  padding-top: 40px;
 }

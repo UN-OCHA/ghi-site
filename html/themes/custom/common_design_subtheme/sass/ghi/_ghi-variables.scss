@@ -1,0 +1,34 @@
+// HPC colors
+:root {
+
+  // GHI colors.
+  --cd-ocha-orange: #fecb00;
+  --cd-ocha-orange--dark: #feba00;
+  --cd-ocha-yellow: rgb(254, 221, 89);
+  --cd-primary-color: var(--cd-ocha-orange);
+  --cd-primary-color--dark: var(--cd-ocha-orange--dark);
+  --cd-widget-color--light: var(--cd-grey--light);
+  --cd-widget-color--dark: var(--cd-primary-color--dark);
+  --cd-primary-background-color: #faf9f5;
+  --cd-tag--color: #ccc;
+
+  // Legacy Hum Insight colors.
+  --hpc-brown: #464646;
+  --hpc-dark-brown: #2f2f2f;
+  --hpc-orange: #ee7325;
+  --hpc-orange-light: var(--cd-orange--light);
+  --hpc-grey: #ebebeb;
+  --hpc-blue-light: #e6ecf1;
+  --green: #62b445;
+  --hpc-border-color: #e1e1e1;
+  --cd-font-size--extra-tiny: 0.625rem;      /* 10px */
+}
+
+//——————————————————————————————————————————————————————————————————————————————
+// Implementation colours (for the common design).
+//——————————————————————————————————————————————————————————————————————————————
+
+$implementation-primary: var(--cd-ocha-yellow);
+$implementation-primary-dark: $cd-primary;
+$implementation-secondary: $cd-blue--bright;
+$implementation-highlight: $cd-highlight-red;

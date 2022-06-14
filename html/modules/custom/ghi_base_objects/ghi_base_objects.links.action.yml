@@ -1,0 +1,10 @@
+entity.base_object.add_form:
+  route_name: entity.base_object.add_page
+  title: 'Add Base object'
+  appears_on:
+    - entity.base_object.collection
+entity.base_object_type.add_form:
+  route_name: entity.base_object_type.add_form
+  title: 'Add Base object type'
+  appears_on:
+    - entity.base_object_type.collection

@@ -2,22 +2,16 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\KeyValueStore\KeyValueFactory;
 use Drupal\Core\Render\Markup;
-use Drupal\Core\Routing\Router;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
-use Drupal\ghi_form_elements\ConfigurationContainerItemManager;
-use Drupal\hpc_api\Query\EndpointQuery;
-use Drupal\hpc_common\Helpers\NodeHelper;
 use Drupal\node\NodeInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanGoverningEntitiesCaseloadsTable' block.
@@ -27,60 +21,36 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  admin_label = @Translation("Governing Entities Caseloads Table"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = {
- *      "service" = "ghi_plans.plan_entities_query"
- *    },
- *    "attachment_search" = {
- *      "service" = "ghi_plans.attachment_search_query"
- *    },
+ *    "entities" = "plan_entities_query",
+ *    "attachment_search" = "attachment_search_query",
+ *    "attachment_prototype" = "attachment_prototype_query",
  *  },
  *  default_title = @Translation("Cluster caseloads"),
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *   }
+ *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
+ *  },
+ *  config_forms = {
+ *    "base" = {
+ *      "title" = @Translation("Base settings"),
+ *      "callback" = "baseForm",
+ *      "base_form" = TRUE
+ *    },
+ *    "table" = {
+ *      "title" = @Translation("Table columns"),
+ *      "callback" = "tableForm"
+ *    }
+ *  }
  * )
  */
-class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface {
+class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface {
 
   use ConfigurationContainerTrait;
 
   /**
-   * The manager class for configuration container items.
-   *
-   * @var \Drupal\ghi_form_elements\ConfigurationContainerItemManager
-   */
-  protected $configurationContainerItemManager;
-
-  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager, ConfigurationContainerItemManager $configuration_container_item_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $request_stack, $router, $keyValueFactory, $endpoint_query, $entity_type_manager);
-
-    $this->configurationContainerItemManager = $configuration_container_item_manager;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('request_stack'),
-      $container->get('router.no_access_checks'),
-      $container->get('keyvalue'),
-      $container->get('hpc_api.endpoint_query'),
-      $container->get('entity_type.manager'),
-      $container->get('plugin.manager.configuration_container_item_manager')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function mapConfig($config, NodeInterface $node) {
+  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
     $columns = [];
     // Define a transition map.
     $transition_map = [
@@ -156,6 +126,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
         'base' => [
           'include_non_caseloads' => property_exists($config, 'include_non_caseloads') ? $config->include_non_caseloads : FALSE,
           'include_unpublished_clusters' => property_exists($config, 'include_unpublished_clusters') ? $config->include_unpublished_clusters : FALSE,
+          'prototype_id' => NULL,
         ],
         'table' => [
           'columns' => $columns,
@@ -170,10 +141,18 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   public function buildContent() {
     $conf = $this->getBlockConfig();
 
+    // Get the entities and configured columns.
     $entities = $this->getEntityObjects();
     $columns = $this->getConfiguredItems($conf['table']['columns']);
 
     if (empty($columns) || empty($entities)) {
+      return;
+    }
+
+    $attachments = $this->getAttachmentsForEntities($entities) ?? [];
+    if (empty($attachments) && !$conf['base']['include_non_caseloads']) {
+      // No attachments found and the table is not configured to show entities
+      // without attachments.
       return;
     }
 
@@ -194,9 +173,6 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     // Get the prototype.
     $prototype = $this->getAttachmentPrototype();
 
-    // Get all attachments.
-    $attachments = $this->getAttachmentsForEntities($entities);
-
     // Filter for the configured attachment prototype id.
     $attachments = $this->filterAttachmentsByPrototype($attachments, $prototype->id);
 
@@ -207,18 +183,27 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     $grouped_attachments = $this->filterEmptyDescriptionInGroupedAttachments($grouped_attachments);
 
     // Load the node objects.
-    $nodes = $this->loadNodesForEntities($entities);
+    $objects = $this->loadBaseObjectsForEntities($entities);
+    if (empty($objects)) {
+      return NULL;
+    }
+
+    // Sort the entities by name.
+    usort($entities, function ($a, $b) {
+      return strnatcasecmp($a->name, $b->name);
+    });
 
     $rows = [];
     foreach ($entities as $entity) {
-      if (!array_key_exists($entity->id, $nodes)) {
+      if (!array_key_exists($entity->id, $objects)) {
         continue;
       }
-      $entity_node = $nodes[$entity->id];
+      $base_object = $objects[$entity->id];
+      $section = !$base_object->needsYear() ? $this->sectionManager->loadSectionForBaseObject($base_object) : NULL;
 
       // Clusters are displayed if they are either published, or the element is
       // configured to also display unpublished clusters.
-      if (!$entity_node->access('view') && empty($conf['base']['include_unpublished_clusters'])) {
+      if ($section && !$section->access('view') && empty($conf['base']['include_unpublished_clusters'])) {
         continue;
       }
 
@@ -229,10 +214,12 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       }
 
       // Get the attachment.
-      $attachments = $grouped_attachments[$entity->id];
+      $attachments = $grouped_attachments[$entity->id] ?? [];
 
       // Add the entity and the node object to the context array.
-      $context['context_node'] = $entity_node;
+      $context['base_object'] = $base_object;
+      $context['context_node'] = $base_object && $base_object->bundle() != 'plan' ? $base_object : NULL;
+      $context['section_node'] = $section;
       $context['entity'] = $entity;
 
       // Add another row as a group header for clusters with multiple plan
@@ -248,11 +235,9 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     }
     $rows = array_filter($rows);
 
-    // @todo Make this work with an arbitrary setup. Currently it only works
-    // for the entity name as first column.
-    usort($rows, function ($a, $b) {
-      return strnatcasecmp($a[0]['data-sort-value'], $b[0]['data-sort-value']);
-    });
+    if (empty($rows)) {
+      return;
+    }
 
     return [
       '#theme' => 'table',
@@ -346,28 +331,18 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   /**
    * {@inheritdoc}
    */
-  public function getSubforms() {
-    return [
-      'base' => [
-        'title' => $this->t('Base settings'),
-        'callback' => 'baseForm',
-        'base_form' => TRUE,
-      ],
-      'table' => [
-        'title' => $this->t('Table columns'),
-        'callback' => 'tableForm',
-      ],
-    ];
+  public function getDefaultSubform($is_new = FALSE) {
+    $conf = $this->getBlockConfig();
+    if (!empty($conf['base']) && !empty($conf['table'])) {
+      return 'table';
+    }
+    return 'base';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getDefaultSubform() {
-    $conf = $this->getBlockConfig();
-    if (!empty($conf['table']) && !empty($conf['table'])) {
-      return 'table';
-    }
+  public function getTitleSubform() {
     return 'base';
   }
 
@@ -423,8 +398,9 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     }
     $form['columns'] = [
       '#type' => 'configuration_container',
-      '#title' => $this->t('Configured headline figures'),
-      '#title_display' => 'invisble',
+      '#title' => $this->t('Configured table columns'),
+      '#title_display' => 'invisible',
+      '#item_type_label' => $this->t('Column'),
       '#default_value' => $default_value,
       '#allowed_item_types' => $this->getAllowedItemTypes(),
       '#preview' => [
@@ -442,13 +418,18 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    * Get the attachment prototype to use for the current block instance.
    *
    * @return object
-   *   The attachment prototype object..
+   *   The attachment prototype object.
    */
   private function getAttachmentPrototype() {
     $conf = $this->getBlockConfig();
     $prototype_id = $conf['base']['prototype_id'];
-    $prototypes = $this->getUniquePrototypes();
-    return array_key_exists($prototype_id, $prototypes) ? $prototypes[$prototype_id] : reset($prototypes);
+    if (!$prototype_id) {
+      $prototypes = $this->getUniquePrototypes();
+      $prototype_id = array_key_first($prototypes);
+    }
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
+    $query = $this->getQueryHandler('attachment_prototype');
+    return $query->getPrototypeByPlanAndId($this->getCurrentPlanId(), $prototype_id);
   }
 
   /**
@@ -458,7 +439,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    *   An array of entity objects, aka clusters.
    */
   private function getEntityObjects() {
-    /** @var \Drupal\ghi_plans\Query\PlanEntitiesQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
     $query = $this->getQueryHandler('entities');
     return $query->getPlanEntities($this->getPageNode(), 'governing');
   }
@@ -484,7 +465,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    *   An array of prototype names, keyed by the prototype id.
    */
   private function getUniquePrototypes() {
-    $attachments = $this->getAttachments();
+    $attachments = $this->getAttachments() ?? [];
     $prototype_opions = [];
     foreach ($attachments as $attachment) {
       $prototype = $attachment->prototype;
@@ -527,9 +508,9 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       'type' => 'caseload',
     ]);
 
-    /** @var \Drupal\ghi_plans\Query\AttachmentSearchQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
     $query = $this->getQueryHandler('attachment_search');
-    return $query->getAttachmentsByObject('governingEntity', implode(',', $entity_ids), $filter);
+    return $query->getAttachmentsByObject('governingEntity', $entity_ids, $filter);
   }
 
   /**
@@ -602,31 +583,31 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    * @param array $entities
    *   The entity objects.
    *
-   * @return \Drupal\node\NodeInterface[]
-   *   An array of node objects.
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface[]
+   *   An array of base objects.
    */
-  private function loadNodesForEntities(array $entities) {
+  private function loadBaseObjectsForEntities(array $entities) {
     $entity_ids = array_map(function ($entity) {
       return $entity->id;
     }, $entities);
 
-    return NodeHelper::getNodesFromOriginalIds($entity_ids, 'governing_entity');
+    return BaseObjectHelper::getBaseObjectsFromOriginalIds($entity_ids, 'governing_entity');
   }
 
   /**
    * Get the first entity node for column configuration.
    *
-   * @return \Drupal\node\NodeInterface
-   *   The first entity node available.
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface
+   *   The first entity object available.
    */
-  private function getFirstEntityNode() {
+  private function getFirstEntityObject() {
     $entities = $this->getEntityObjects();
     if (empty($entities)) {
       return NULL;
     }
     $entity = reset($entities);
-    $entity_nodes = $this->loadNodesForEntities([$entity]);
-    return !empty($entity_nodes) ? reset($entity_nodes) : NULL;
+    $entity_objects = $this->loadBaseObjectsForEntities([$entity]);
+    return !empty($entity_objects) ? reset($entity_objects) : NULL;
   }
 
   /**
@@ -638,8 +619,9 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   public function getBlockContext() {
     return [
       'page_node' => $this->getPageNode(),
-      'plan_node' => $this->getCurrentPlanNode(),
-      'context_node' => $this->getFirstEntityNode(),
+      'plan_object' => $this->getCurrentPlanObject(),
+      'base_object' => $this->getFirstEntityObject(),
+      'context_node' => $this->getFirstEntityObject(),
       'attachment_prototype' => $this->getAttachmentPrototype(),
     ];
   }

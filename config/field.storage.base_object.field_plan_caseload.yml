@@ -1,0 +1,19 @@
+uuid: 05281be6-7886-4616-b278-2bcc05c1f4e8
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+    - ghi_plans
+id: base_object.field_plan_caseload
+field_name: field_plan_caseload
+entity_type: base_object
+type: ghi_plans_plan_caseload
+settings: {  }
+module: ghi_plans
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

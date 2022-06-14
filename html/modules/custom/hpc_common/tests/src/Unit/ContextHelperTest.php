@@ -22,7 +22,7 @@ class ContextHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->contextHelper = new ContextHelper();
@@ -31,7 +31,7 @@ class ContextHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function tearDown() {
+  protected function tearDown(): void {
     parent::tearDown();
     unset($this->contextHelper);
   }

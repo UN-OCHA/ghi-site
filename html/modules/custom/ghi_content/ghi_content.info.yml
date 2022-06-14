@@ -1,0 +1,15 @@
+name: GHI Content
+description: Provides API integration and blocks for GHI representing content from one or multiple external data sources.
+package: GHI
+
+type: module
+core_version_requirement: ^8 || ^9
+
+dependencies:
+  - drupal:file
+  - drupal:migrate
+  - view_unpublished:view_unpublished
+  - ghi_blocks:ghi_blocks
+  - ghi_teams:ghi_teams
+  - ghi_sections:ghi_sections
+  - ghi_subpages:ghi_subpages

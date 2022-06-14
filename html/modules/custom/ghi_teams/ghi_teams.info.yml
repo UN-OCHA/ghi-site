@@ -1,0 +1,9 @@
+name: GHI Teams
+description: Provide logic teams and content access based on team association.
+package: GHI
+
+type: module
+core_version_requirement: ^8 || ^9
+
+dependencies:
+  - drupal:taxonomy

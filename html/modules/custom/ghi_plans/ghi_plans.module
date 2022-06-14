@@ -3,27 +3,13 @@
 /**
  * @file
  * Contains hook implementations for the GHI Plans module.
- *
- * The migration hooks in this file could also be put into an event handler.
- *
- * @see https://www.drupal.org/docs/upgrading-drupal/customize-migrations-when-upgrading-to-drupal-8-or-later#s-migrate-plus-provides-a-prepare-row-event
  */
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Markup;
-use Drupal\ghi_plans\Helpers\PlanStructureHelper;
-use Drupal\hpc_api\Query\EndpointQuery;
-use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
-use Drupal\hpc_common\Helpers\NodeHelper;
-use Drupal\migrate\MigrateSkipRowException;
-use Drupal\migrate\Plugin\MigrateSourceInterface;
-use Drupal\migrate\Plugin\MigrationInterface;
-use Drupal\migrate\Row;
-use Drupal\node\NodeInterface;
 
 /**
  * Implements hook_page_attachments().
@@ -41,6 +27,22 @@ function ghi_plans_page_attachments(array &$page) {
 }
 
 /**
+ * Implements hook_preprocess_page().
+ */
+function ghi_plans_preprocess_page(array &$variables) {
+  /** @var \Drupal\node\NodeInterface $node */
+  $node = $variables['node'] ?? NULL;
+  /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
+  $base_object = $node ? BaseObjectHelper::getBaseObjectFromNode($node) : NULL;
+  if ($base_object && $base_object->bundle() == 'plan') {
+    $decimal_format = $base_object->get('field_decimal_format')->value;
+    $variables['#attached']['drupalSettings']['plan_settings'] = [
+      'decimal_format' => $decimal_format,
+    ];
+  }
+}
+
+/**
  * Implements hook_form_alter().
  */
 function ghi_plans_form_alter(&$form, FormStateInterface &$form_state, $form_id) {
@@ -48,9 +50,9 @@ function ghi_plans_form_alter(&$form, FormStateInterface &$form_state, $form_id)
     return;
   }
   $valid_form_ids = [
-    'node_plan_edit_form',
-    'node_plan_entity_edit_form',
-    'node_governing_entity_edit_form',
+    'base_object_plan_edit_form',
+    // 'node_plan_entity_edit_form',
+    // 'node_governing_entity_edit_form',
   ];
   if (!in_array($form_id, $valid_form_ids)) {
     return;
@@ -70,228 +72,27 @@ function ghi_plans_form_alter(&$form, FormStateInterface &$form_state, $form_id)
     }
     $form[$element_key]['#disabled'] = 'disabled';
   }
-  \Drupal::messenger()->addWarning(t('Most of the data in this form is imported automatically from the HPC API and should not be changed here.'));
+  \Drupal::messenger()->addWarning(t('Most of the data in this form is imported automatically from the HPC API and cannot be changed here.'));
 }
 
 /**
  * Implements hook_form_FORM_ID_alter().
+ *
+ * Selectively allow specific fields on edit pages of plan base objects.
  */
-function ghi_plans_form_node_plan_edit_form_alter(&$form, FormStateInterface &$form_state) {
-  $node = $form_state->getFormObject()->getEntity();
-  $plan_structure = PlanStructureHelper::getRpmPlanStructure($node);
-  $form['field_plan_structure_rpm']['widget'][0]['preview'] = $form['field_plan_structure_rpm']['widget'][0]['value'];
-  $form['field_plan_structure_rpm']['widget'][0]['value']['#access'] = FALSE;
-  $form['field_plan_structure_rpm']['widget'][0]['preview']['#rows'] = 20;
-  $form['field_plan_structure_rpm']['widget'][0]['preview']['#default_value'] = Markup::create(print_r($plan_structure, TRUE));
-
-  $reporting_periods = unserialize($form['field_plan_reporting_periods']['widget'][0]['value']['#default_value']);
-  $form['field_plan_reporting_periods']['widget'][0]['preview'] = $form['field_plan_reporting_periods']['widget'][0]['value'];
-  $form['field_plan_reporting_periods']['widget'][0]['value']['#access'] = FALSE;
-  $form['field_plan_reporting_periods']['widget'][0]['preview']['#rows'] = 20;
-  $form['field_plan_reporting_periods']['widget'][0]['preview']['#default_value'] = Markup::create(print_r($reporting_periods, TRUE));
-}
-
-/**
- * Implements hook_migrate_MIGRATE_ID_prepare_row().
- */
-function ghi_plans_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
-  $raw_data = (object) $row->getSource()['raw'];
-
-  /** @var \Drupal\hpc_api\Query\EndpointPlanQuery $query */
-  $query = \Drupal::service('hpc_api.endpoint_query');
-
-  $has_published_version = FALSE;
-  $published_version = NULL;
-
-  // Fetching plan data with version=current for plans without a published
-  // version, will result in an empty planVersion property, which will result
-  // in us not being able to fetch the plan name. So we fetch current version
-  // data whenever possible, and if not possible, we fetch the unpublished
-  // version data, but set the plan node to unpublished in Drupal.
-  $plan_tags = $raw_data->planTags;
-
-  if (!empty($plan_tags)) {
-    $published_versions = array_filter($plan_tags, function ($version) {
-      return $version['public'] == TRUE;
-    });
-    if (!empty($published_versions)) {
-      // There can be multiple public plan tags, we want the one with the
-      // highest number.
-      ArrayHelper::sortArray($published_versions, 'name', EndpointQuery::SORT_DESC, SORT_STRING);
+function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterface &$form_state) {
+  $allow_fields = [
+    'field_decimal_format',
+    'field_plan_caseload',
+    'field_plan_document_link',
+    'field_plan_status_string',
+    'field_short_name',
+    'field_footnotes',
+  ];
+  foreach (Element::children($form) as $element_key) {
+    if (!in_array($element_key, $allow_fields) && $form[$element_key]['#type'] != 'actions') {
+      continue;
     }
-    $published_version = !empty($published_versions) ? reset($published_versions) : NULL;
-    $has_published_version = $published_version !== NULL;
+    unset($form[$element_key]['#disabled']);
   }
-
-  $query->setArguments([
-    'endpoint' => 'plan/' . $raw_data->id,
-    'api_version' => 'v2',
-    'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
-  ]);
-  if ($has_published_version) {
-    // If we have plan version tags, let's fetch the most current one.
-    $query->setEndpointArgument('version', 'current');
-  }
-  $plan_data = $query->getData();
-  if (!$plan_data) {
-    throw new MigrateSkipRowException();
-  }
-
-  // First see if this plan exists already. If it doesn't, set it to
-  // unpublished first.
-  $plan_node = NodeHelper::getNodeFromOriginalId($raw_data->id, 'plan');
-  if ($plan_node && $has_published_version) {
-    $row->setSourceProperty('status', $plan_node->isPublished());
-  }
-  else {
-    $row->setSourceProperty('status', NodeInterface::NOT_PUBLISHED);
-  }
-
-  $row->setSourceProperty('version_tag', $published_version ? $published_version['name'] : NULL);
-  $row->setSourceProperty('name', !empty($plan_data->planVersion->name) ? $plan_data->planVersion->name : NULL);
-
-  $row->setSourceProperty('start_date', !empty($plan_data->planVersion->startDate) ? $plan_data->planVersion->startDate : NULL);
-  $row->setSourceProperty('end_date', !empty($plan_data->planVersion->endDate) ? $plan_data->planVersion->endDate : NULL);
-  $row->setSourceProperty('comments', !empty($plan_data->planVersion->comments) ? $plan_data->planVersion->comments : NULL);
-
-  // Query the API for the prototype of this plan.
-  $query->setArguments([
-    'api_version' => 'v2',
-    'endpoint' => 'plan/' . $raw_data->id . '/entity-prototype',
-    'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
-    'sort' => 'orderNumber',
-  ]);
-  $prototype = $query->getData();
-  if ($prototype) {
-    $row->setSourceProperty('prototype', serialize($prototype));
-  }
-
-  // Query the API for the reporting periods of this plan.
-  if (!empty($plan_data->planVersion->lastPublishedReportingPeriodId)) {
-    $query->setArguments([
-      'api_version' => 'v2',
-      'endpoint' => 'plan/' . $plan_data->id . '/reportingPeriod',
-      'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
-      'sort' => 'periodNumber',
-    ]);
-    $reporting_periods = [];
-    foreach ($query->getData() as $object) {
-      if ($object->id > $plan_data->planVersion->lastPublishedReportingPeriodId) {
-        continue;
-      }
-      unset($object->plan);
-      $reporting_periods[$object->id] = $object;
-    }
-    $row->setSourceProperty('reporting_periods', serialize($reporting_periods));
-  }
-
-  // Parse the categories to retrieve the categories.
-  if (!empty($plan_data->categories)) {
-    // Plan type.
-    $plan_types = array_filter($plan_data->categories, function ($item) {
-      return $item->group == 'planType';
-    });
-    if (!empty($plan_types)) {
-      // There should really be only one.
-      $plan_type = reset($plan_types);
-      $row->setSourceProperty('plan_type_id', $plan_type->id);
-    }
-
-    // Plan costing.
-    $plan_costing = array_filter($plan_data->categories, function ($item) {
-      return $item->group == 'planCosting';
-    });
-    if (!empty($plan_costing)) {
-      // There should really be only one.
-      $plan_costing = reset($plan_costing);
-      $row->setSourceProperty('plan_costing_id', $plan_costing->id);
-    }
-  }
-
-  // Country references.
-  if (!empty($raw_data->locations)) {
-    $countries = array_filter($raw_data->locations, function ($location) {
-      return $location['adminLevel'] == 0;
-    });
-    $row->setSourceProperty('countries', !empty($countries) ? $countries : []);
-  }
-
-  // Then get the year.
-  if (!empty($plan_data->years)) {
-    // There should really be only one.
-    $year = reset($plan_data->years);
-    $row->setSourceProperty('plan_year', $year->year);
-  }
-
-  unset($plan_data);
-}
-
-/**
- * Implements hook_migrate_prepare_row().
- */
-function ghi_plans_migrate_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
-  if (!in_array($migration->id(), ['plan_entity', 'governing_entity'])) {
-    return;
-  }
-
-  $raw_data = (object) $row->getSource()['raw'];
-  $plan_node = NodeHelper::getNodeFromOriginalId($raw_data->plan_id, 'plan');
-  if (!$plan_node) {
-    // No associated plan node found.
-    throw new MigrateSkipRowException();
-  }
-
-  // See if this plan entity exists already. If it doesn't, set it to
-  // unpublished.
-  $plan_entity = NodeHelper::getNodeFromOriginalId($raw_data->id, $raw_data->type);
-  if ($plan_entity) {
-    $row->setSourceProperty('status', $plan_entity->isPublished());
-  }
-  else {
-    $row->setSourceProperty('status', NodeInterface::NOT_PUBLISHED);
-  }
-
-  if (empty($raw_data->name) && !empty($raw_data->description)) {
-    $row->setSourceProperty('name', Unicode::truncate($raw_data->description, 255, TRUE, TRUE));
-  }
-
-  $subpage = NULL;
-
-  // Retrieve the subpage information from the plan structure. This is used
-  // to create the path alias for each plan or governing entity.
-  $plan_structure = PlanStructureHelper::getRpmPlanStructure($plan_node);
-  if (!empty($plan_structure[$raw_data->entity_type . '_entities'][$raw_data->entity_prototype_id]->subpage)) {
-    $subpage = $plan_structure[$raw_data->entity_type . '_entities'][$raw_data->entity_prototype_id]->subpage;
-  }
-  elseif ($raw_data->entity_type == 'plan') {
-    // Plan entities can be children of governing entities.
-    foreach ($plan_structure['governing_entities'] as $entity) {
-      if (empty($entity->entity_prototype_child_ids)) {
-        continue;
-      }
-      if (!in_array($raw_data->entity_prototype_id, $entity->entity_prototype_child_ids)) {
-        continue;
-      }
-      $subpage = $entity->subpage;
-      break;
-    }
-    // Or they can be children of other plan entities.
-    foreach ($plan_structure['plan_entities'] as $entity) {
-      if (empty($entity->entity_prototype_child_ids)) {
-        continue;
-      }
-      if (!in_array($raw_data->entity_prototype_id, $entity->entity_prototype_child_ids)) {
-        continue;
-      }
-      $subpage = $entity->subpage;
-      break;
-    }
-  }
-
-  if (empty($subpage)) {
-    // If we can't find a subpage to put this entity on, don't import it.
-    throw new MigrateSkipRowException();
-  }
-  $row->setSourceProperty('subpage', $subpage);
-
 }

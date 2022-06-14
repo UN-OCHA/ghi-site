@@ -151,7 +151,7 @@ class GlobalPlanLinkedPlansWidget extends WidgetBase {
       '#type' => 'number',
       '#title' => $this->t('Requirements override'),
       '#min' => 0,
-      '#default_value' => isset($items[$delta]->requirements_override) ? $items[$delta]->requirements_override : '',
+      '#default_value' => $items[$delta]->requirements_override ?? '',
     ];
 
     if ($delta < $this->getMaxItemCount($form, $form_state)) {

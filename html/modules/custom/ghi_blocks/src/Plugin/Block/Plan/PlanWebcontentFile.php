@@ -5,11 +5,7 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
-use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\ghi_element_sync\SyncableBlockInterface;
-use Drupal\hpc_common\Helpers\ThemeHelper;
-use Drupal\node\NodeInterface;
 
 /**
  * Provides a 'PlanWebcontentFile' block.
@@ -19,33 +15,17 @@ use Drupal\node\NodeInterface;
  *  admin_label = @Translation("Web Content File"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = {
- *      "service" = "ghi_plans.plan_entities_query"
- *    },
- *    "attachment" = {
- *      "service" = "ghi_plans.attachment_query"
- *    },
+ *    "entities" = "plan_entities_query",
+ *    "attachment" = "attachment_query",
  *  },
  *  title = false,
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
+ *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
  *   }
  * )
  */
-class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface {
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function mapConfig($config, NodeInterface $node) {
-    return [
-      'label' => '',
-      'label_display' => FALSE,
-      'hpc' => [
-        'attachment_id' => property_exists($config, 'attachment_id') ? $config->attachment_id : NULL,
-      ],
-    ];
-  }
+class PlanWebcontentFile extends GHIBlockBase {
 
   /**
    * {@inheritdoc}
@@ -57,11 +37,12 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
       return;
     }
 
-    /** @var \Drupal\ghi_plans\Query\AttachmentQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
     $query = $this->getQueryHandler('attachment');
     $attachment = $query->getAttachment($conf['attachment_id']);
     return [
-      '#theme' => 'image',
+      '#theme' => 'imagecache_external',
+      '#style_name' => 'wide',
       '#uri' => $attachment->url,
     ];
   }
@@ -85,19 +66,12 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
     $file_options = [];
 
     // Retrieve the attachments.
-    /** @var \Drupal\ghi_plans\Query\PlanEntitiesQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
     $query = $this->getQueryHandler('entities');
-    $attachments = $query->getWebContentFileAttachments($this->getCurrentPlanNode());
+    $attachments = $this->getCurrentPlanObject() ? $query->getWebContentFileAttachments($this->getCurrentPlanObject()) : NULL;
 
     if (!empty($attachments)) {
       foreach ($attachments as $attachment) {
-        $preview_image = ThemeHelper::theme('image', [
-          '#uri' => $attachment->url,
-          '#attributes' => [
-            'style' => 'height: 100px',
-          ],
-        ], TRUE, FALSE);
-
         $file_options[$attachment->id] = [
           'id' => $attachment->id,
           'title' => $attachment->title,
@@ -109,7 +83,11 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
             ],
           ])),
           'preview' => [
-            '#markup' => Markup::create($preview_image),
+            'data' => [
+              '#theme' => 'imagecache_external',
+              '#style_name' => 'thumbnail',
+              '#uri' => $attachment->url,
+            ],
           ],
         ];
       }

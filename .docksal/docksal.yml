@@ -1,1 +1,15 @@
 version: "2.1"
+
+services:
+  cli:
+    environment:
+      - COMPOSER_MEMORY_LIMIT=-1
+  browser:
+    hostname: browser
+    image: selenium/standalone-chrome-debug:3.141.59
+    volumes:
+      # Workaround to avoid the browser crashing inside a docker container
+      # See https://github.com/SeleniumHQ/docker-selenium#quick-start
+      - /dev/shm:/dev/shm
+    ports:
+      - 5900:5900

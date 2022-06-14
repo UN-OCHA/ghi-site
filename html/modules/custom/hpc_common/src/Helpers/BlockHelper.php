@@ -2,11 +2,12 @@
 
 namespace Drupal\hpc_common\Helpers;
 
-use Drupal\Core\Plugin\Context\Context;
-use Drupal\Core\Plugin\Context\ContextDefinition;
-
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
+use Drupal\layout_builder\LayoutEntityHelperTrait;
+use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\node\Entity\Node;
+use Drupal\page_manager\Entity\PageVariant;
 
 /**
  * Helper functions for block handling, especially for custom extentions.
@@ -18,6 +19,8 @@ use Drupal\node\Entity\Node;
  * entities to that.
  */
 class BlockHelper {
+
+  use LayoutEntityHelperTrait;
 
   /**
    * Get the storage id for a block.
@@ -83,104 +86,36 @@ class BlockHelper {
    * @param string $block_uuid
    *   The UUID of the block instance.
    *
-   * @return \Drupal\hpc_common\Plugin\HPCBlockBase
+   * @return \Drupal\hpc_common\Plugin\HPCBlockBase|null
    *   The block instances if it has been found.
    */
   public static function getBlockInstance($uri, $plugin_id, $block_uuid) {
+    /** @var \Drupal\Core\Routing\Router $router */
     $router = \Drupal::service('router.no_access_checks');
-    $page_parameters = $router->match($uri);
+    try {
+      $page_parameters = $router->match($uri);
+    }
+    catch (\Exception $e) {
+      return NULL;
+    }
 
     $block = NULL;
-    $block_manager = \Drupal::service('plugin.manager.block');
 
     // We have 2 cases where we support to our blocks:
     // 1. Page manager pages
     // 2. Node views that are build by layout_builder.
     if (!empty($page_parameters['page_manager_page']) && !empty($page_parameters['page_manager_page_variant'])) {
-      // So this is a page manager page. We load the variant, get the block
-      // areas (called collections), look at the configuration of every panel
-      // and search in the blocks that are configured for this page until we
-      // find the block that matches plugin id and block uuid.
-      // Then we use the configuration for that block on that page to create an
-      // instance of that block using the block manager.
+      // So this is a page manager page, so we get the page variant object and
+      // extract the block from there.
+      /** @var \Drupal\page_manager\Entity\PageVariant $page_variant */
       $page_variant = $page_parameters['page_manager_page_variant'];
-      $plugin_collection = $page_variant->getPluginCollections();
-      if (empty($plugin_collection)) {
-        return NULL;
-      }
-      $panels_variant = $plugin_collection['variant_settings']->get('panels_variant');
-      if (!$panels_variant) {
-        return NULL;
-      }
-      $plugin_configuration = $panels_variant->getConfiguration();
-      if (empty($plugin_configuration['blocks'])) {
-        return NULL;
-      }
-      $blocks = $plugin_configuration['blocks'];
-      if (empty($blocks[$block_uuid])) {
-        return NULL;
-      }
-      // Get the config.
-      $block_config = $blocks[$block_uuid];
-      // Create the instance.
-      $block = $block_manager->createInstance($plugin_id, $block_config);
+      $block = self::getBlockInstanceFromPageVariant($page_variant, $plugin_id, $block_uuid);
     }
     elseif (!empty($page_parameters['node'])) {
       // So this is a node view. At the moment this can only be a plan node,
       // but let's plan ahead and support all bundles.
       $entity = $page_parameters['node'];
-      $entity = is_object($entity) ? $entity : Node::load($entity);
-      $bundle = $entity->bundle();
-
-      // We support 2 versions here:
-      // 1. Overridden nodes that use a custom layout.
-      // 2. Nodes using the default layout that is set on the nodes manage
-      //    display page.
-      //
-      // First see if this is an overridden node, in which case the node has a
-      // field named 'layout_builder__layout'.
-      $layout_builder = $entity->hasField('layout_builder__layout') ? $entity->get('layout_builder__layout')->getValue() : NULL;
-      $sections = [];
-      if ($layout_builder) {
-        // Extract the nested sections.
-        $sections = array_map(function ($section) {
-          return $section['section'];
-        }, $layout_builder);
-      }
-      if (empty($sections)) {
-        // If we don't have section at this point, we try the default display.
-        // That is more complicated, we need to get the section storage
-        // service, extract some context from the route and use that to load
-        // the defaults display and git it's sections.
-        $section_storage = \Drupal::service('plugin.manager.layout_builder.section_storage');
-        $contexts = $section_storage->loadEmpty('defaults')->deriveContextsFromRoute('node.' . $bundle . '.default', [], '', []);
-        $display = $section_storage->load('defaults', $contexts);
-        $sections = $display->getSections();
-      }
-      if ($sections) {
-        // If we have sections, search in the components until we find a block
-        // with a matching plugin id and block uuid.
-        // Then we use the configuration for that block on that page to create
-        // an instance of that block using the block manager.
-        foreach ($sections as $section) {
-          $components = $section->getComponents();
-          if (empty($components)) {
-            continue;
-          }
-          foreach ($components as $component) {
-            if ($component->getPluginId() != $plugin_id) {
-              continue;
-            }
-            if ($component->getUuid() != $block_uuid) {
-              continue;
-            }
-            $block_config = $component->getPlugin()->getConfiguration();
-            $block = $block_manager->createInstance($plugin_id, $block_config);
-            break(2);
-          }
-        }
-      }
-
+      $block = self::getBlockInstanceFromEntity($entity, $plugin_id, $block_uuid);
     }
 
     if (!$block || !$block instanceof HPCBlockBase) {
@@ -197,25 +132,7 @@ class BlockHelper {
     }
 
     // Now see if there are field contexts to setup too.
-    $plugin_definition = $block->getPluginDefinition();
-    if (!empty($plugin_definition['field_context_mapping'])) {
-      foreach ($plugin_definition['field_context_mapping'] as $context_key => $context_definition) {
-        $context_type = is_string($context_definition) ? 'integer' : $context_definition['type'];
-        if (empty($page_parameters[$context_key])) {
-          continue;
-        }
-        if (empty($plugin_definition['context_definitions'][$context_key])) {
-          // Create a new context.
-          $context_definition = new ContextDefinition($context_type, 'test', FALSE);
-          $context = new Context($context_definition, $page_parameters[$context_key]);
-          $block->setContext($context_key, $context);
-        }
-        else {
-          // Overwrite the existing context value if there is any.
-          $block->setContextValue($context_key, $page_parameters[$context_key]);
-        }
-      }
-    }
+    $block->injectFieldContexts();
 
     // Set the page (node or page manager identifier) from the current page
     // parameters, so that the block knows more about it's context.
@@ -224,6 +141,154 @@ class BlockHelper {
     $block->setCurrentUri($uri);
 
     return $block;
+  }
+
+  /**
+   * Get a block instance from a page variant.
+   *
+   * @param \Drupal\page_manager\Entity\PageVariant $page_variant
+   *   The page variant object.
+   * @param string $plugin_id
+   *   The plugin id of the block.
+   * @param string $block_uuid
+   *   The uuid of the block.
+   *
+   * @return \Drupal\Core\Block\BlockPluginInterface|null
+   *   A block plugin object or NULL.
+   */
+  private static function getBlockInstanceFromPageVariant(PageVariant $page_variant, $plugin_id, $block_uuid) {
+    // We load the variant, get the block areas (called collections), look at
+    // the configuration of every panel and search in the blocks that are
+    // configured for this page until we find the block that matches plugin id
+    // and block uuid. Then we use the configuration for that block on that
+    // page to create an instance of that block using the block manager.
+    $plugin_collection = $page_variant->getPluginCollections();
+    if (empty($plugin_collection)) {
+      return NULL;
+    }
+    $layout_builder_variant = $plugin_collection['variant_settings']->get('layout_builder');
+    if (!$layout_builder_variant) {
+      return NULL;
+    }
+    $plugin_configuration = $layout_builder_variant->getConfiguration();
+    if (empty($plugin_configuration['blocks'])) {
+      return NULL;
+    }
+    $blocks = $plugin_configuration['blocks'];
+    if (empty($blocks[$block_uuid])) {
+      return NULL;
+    }
+    // Get the config.
+    $block_config = $blocks[$block_uuid];
+    // Create the instance.
+    return self::getBlockManager()->createInstance($plugin_id, $block_config);
+  }
+
+  /**
+   * Get a block instance from an entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity object.
+   * @param string $plugin_id
+   *   The plugin id of the block.
+   * @param string $block_uuid
+   *   The uuid of the block.
+   *
+   * @return \Drupal\Core\Block\BlockPluginInterface|null
+   *   A block plugin object or NULL.
+   */
+  private static function getBlockInstanceFromEntity(ContentEntityInterface $entity, $plugin_id, $block_uuid) {
+    $entity = is_object($entity) ? $entity : Node::load($entity);
+    $bundle = $entity->bundle();
+
+    // We support 2 versions here:
+    // 1. Overridden nodes that use a custom layout.
+    // 2. Nodes using the default layout that is set on the nodes manage
+    //    display page.
+    //
+    // First see if this is an overridden node, in which case the node has a
+    // field named 'layout_builder__layout'.
+    // @todo This should ideally use LayoutEntityHelperTrait::getEntitySections
+    // via a service.
+    $layout_builder = $entity->hasField(OverridesSectionStorage::FIELD_NAME) ? $entity->get(OverridesSectionStorage::FIELD_NAME)->getValue() : NULL;
+    $sections = [];
+    if ($layout_builder) {
+      // Extract the nested sections.
+      $sections = array_map(function ($section) {
+        return $section['section'];
+      }, $layout_builder);
+    }
+    if (empty($sections)) {
+      // If we don't have section at this point, we try the default display.
+      // That is more complicated, we need to get the section storage
+      // service, extract some context from the route and use that to load
+      // the defaults display and git it's sections.
+      /** @var \Drupal\layout_builder\SectionStorage\SectionStorageManagerInterface $section_storage */
+      $section_storage = \Drupal::service('plugin.manager.layout_builder.section_storage');
+      $contexts = $section_storage->loadEmpty('defaults')->deriveContextsFromRoute('node.' . $bundle . '.default', [], '', []);
+      $display = $section_storage->load('defaults', $contexts);
+      $sections = $display->getSections();
+    }
+    if (empty($sections)) {
+      return NULL;
+    }
+    /** @var \Drupal\layout_builder\Section[] $sections */
+    $component = self::getComponentFromLayoutBuilderSections($sections, $plugin_id, $block_uuid);
+    if (!$component) {
+      return NULL;
+    }
+    /** @var \Drupal\Core\Block\BlockPluginInterface $plugin */
+    $plugin = $component->getPlugin();
+    $block_config = $plugin->getConfiguration();
+    return self::getBlockManager()->createInstance($plugin_id, $block_config);
+  }
+
+  /**
+   * Get a component from a section list.
+   *
+   * @param \Drupal\layout_builder\Section[] $sections
+   *   An array of sections.
+   * @param string $plugin_id
+   *   The plugin id of the block.
+   * @param string $block_uuid
+   *   The uuid of the block.
+   *
+   * @return \Drupal\layout_builder\SectionComponent|null
+   *   A section component object or NULL.
+   */
+  private static function getComponentFromLayoutBuilderSections(array $sections, $plugin_id, $block_uuid) {
+    if (empty($sections)) {
+      return NULL;
+    }
+    // If we have sections, search in the components until we find a block
+    // with a matching plugin id and block uuid.
+    // Then we use the configuration for that block on that page to create
+    // an instance of that block using the block manager.
+    foreach ($sections as $section) {
+      $components = $section->getComponents();
+      if (empty($components)) {
+        continue;
+      }
+      foreach ($components as $component) {
+        if ($component->getPluginId() != $plugin_id) {
+          continue;
+        }
+        if ($component->getUuid() != $block_uuid) {
+          continue;
+        }
+        return $component;
+      }
+    }
+  }
+
+  /**
+   * Get the block manager service.
+   *
+   * @return \Drupal\Core\Block\BlockManager
+   *   The block manager service.
+   */
+  private static function getBlockManager() {
+    return \Drupal::service('plugin.manager.block');
   }
 
 }

@@ -1,0 +1,23 @@
+uuid: 108f4401-d140-4a5c-823e-117c206644b7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_year
+    - ghi_base_objects.base_object_type.plan
+id: base_object.plan.field_year
+field_name: field_year
+entity_type: base_object
+bundle: plan
+label: Year
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

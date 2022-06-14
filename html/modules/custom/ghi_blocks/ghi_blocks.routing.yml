@@ -1,0 +1,40 @@
+system.admin_config_ghi:
+  path: '/admin/config/ghi'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'GHI'
+  requirements:
+    _permission: 'administer ghi global config'
+
+ghi_blocks.global_config:
+  path: '/admin/config/ghi/global-settings'
+  defaults:
+    _form: '\Drupal\ghi_blocks\Form\GlobalSettingsForm'
+    _title: 'Global settings'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer ghi global config'
+
+ghi_blocks.hide_block:
+  path: '/layout_builder/hide/block/{section_storage_type}/{section_storage}/{delta}/{region}/{uuid}'
+  defaults:
+    _form: '\Drupal\ghi_blocks\LayoutBuilder\HideBlockForm'
+  requirements:
+    _layout_builder_access: 'view'
+  options:
+    _admin_route: TRUE
+    parameters:
+      section_storage:
+        layout_builder_tempstore: TRUE
+ghi_blocks.unhide_block:
+  path: '/layout_builder/unhide/block/{section_storage_type}/{section_storage}/{delta}/{region}/{uuid}'
+  defaults:
+    _form: '\Drupal\ghi_blocks\LayoutBuilder\UnhideBlockForm'
+  requirements:
+    _layout_builder_access: 'view'
+  options:
+    _admin_route: TRUE
+    parameters:
+      section_storage:
+        layout_builder_tempstore: TRUE

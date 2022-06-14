@@ -1,0 +1,29 @@
+uuid: ff66f53c-abc6-4a36-8d51-05e10e473058
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_plan
+    - ghi_base_objects.base_object_type.plan
+    - ghi_base_objects.base_object_type.plan_entity
+id: base_object.plan_entity.field_plan
+field_name: field_plan
+entity_type: base_object
+bundle: plan_entity
+label: Plan
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:base_object'
+  handler_settings:
+    target_bundles:
+      plan: plan
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

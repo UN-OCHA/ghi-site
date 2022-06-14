@@ -5,8 +5,23 @@
  * Template overrides, preprocess, and hooks for the GHI subtheme.
  */
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResultForbidden;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function common_design_subtheme_theme_registry_alter(&$theme_registry) {
+  // Set some defaults for number formatting.
+  $theme_registry['hpc_currency']['variables']['use_abbreviation'] = FALSE;
+  $theme_registry['hpc_amount']['variables']['use_abbreviation'] = FALSE;
+  $theme_registry['table']['variables']['sortable'] = FALSE;
+  $theme_registry['table']['variables']['autosort'] = FALSE;
+  $theme_registry['table']['variables']['soft_limit'] = FALSE;
+}
 
 /**
  * Implements hook_theme_suggestions_HOOK_alter().
@@ -20,6 +35,89 @@ use Drupal\Core\Access\AccessResultForbidden;
 function common_design_subtheme_theme_suggestions_views_view_alter(&$suggestions, $variables) {
   $suggestions[] = sprintf('views_view__%s', $variables['view']->id());
   $suggestions[] = sprintf('views_view__%s__%s', $variables['view']->id(), $variables['view']->current_display);
+}
+
+/**
+ * Implements hook_theme_suggestions_item_list_alter().
+ */
+function common_design_subtheme_theme_suggestions_item_list_alter(array &$suggestions, array $variables, $hook) {
+  $plugin_type = $variables['context']['plugin_type'] ?? NULL;
+  $plugin_id = $variables['context']['plugin_id'] ?? NULL;
+  if ($plugin_type) {
+    $suggestions[] = $hook . '__' . strtr($plugin_type, '-', '_');
+  }
+  if ($plugin_id) {
+    $suggestions[] = $hook . '__' . strtr($plugin_id, '-', '_');
+  }
+  if ($plugin_type && $plugin_id) {
+    $suggestions[] = $hook . '__' . strtr($plugin_type, '-', '_') . '__' . strtr($plugin_id, '-', '_');
+  }
+}
+
+/**
+ * Implements hook_preprocess_html().
+ */
+function common_design_subtheme_preprocess_html(&$vars) {
+  // SVG sprite
+  // Get the contents of the SVG sprite.
+  $icons = file_get_contents(drupal_get_path('theme', 'common_design_subtheme') . '/img/icons/ghi-icons-sprite.svg');
+
+  // Add a new render array to page_bottom so the icons
+  // get added to the page.
+  $vars['page_bottom']['hpc_icons'] = [
+    '#type' => 'inline_template',
+    '#template' => '<span class="hidden">' . $icons . '</span>',
+  ];
+}
+
+/**
+ * Implements hook_preprocess_region().
+ *
+ * Unset blocks that don't have any content besides or only HTML comments.
+ */
+function common_design_subtheme_preprocess_region(&$variables) {
+  if ($variables['region'] == 'page_title' && !empty($variables['elements'])) {
+    foreach (Element::children($variables['elements']) as $key) {
+      $block = $variables['elements'][$key];
+      if (!array_key_exists('#markup', $block)) {
+        continue;
+      }
+      if (empty($block['#markup']) && empty($block['#children'])) {
+        unset($variables['elements'][$key]);
+      }
+      if (empty(trim(preg_replace('/<!--(.|\s)*?-->/', '', $block['#markup'])))) {
+        unset($variables['elements'][$key]);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_block().
+ */
+function common_design_subtheme_preprocess_block(&$variables) {
+  $content_width_blocks = [
+    'generic_link_carousel',
+    'global_plan_overview_map',
+    'system_menu_block:operations-menu',
+    'system_menu_block:account',
+  ];
+
+  if (!in_array($variables['plugin_id'], $content_width_blocks)) {
+    $variables['attributes']['class'][] = 'content-width';
+  }
+}
+
+/**
+ * Implements hook_preprocess_menu().
+ */
+function common_design_subtheme_preprocess_menu(&$variables) {
+  if ($variables['menu_name'] == 'main') {
+    // Mark items as using a mega menu.
+    foreach ($variables['items'] as &$item) {
+      $item['mega_menu'] = $item['content']['#view_mode'] == 'default';
+    }
+  }
 }
 
 /**
@@ -39,13 +137,24 @@ function common_design_subtheme_preprocess_page(&$variables) {
   if (isset($variables['node']) && is_a($variables['node'], '\Drupal\node\NodeInterface')) {
     // Check if we are on a layout builder page.
     $route = \Drupal::routeMatch()->getRouteName();
-    if ($route == 'layout_builder.overrides.node.view') {
+    if (strpos($route, 'layout_builder.overrides.node') === 0) {
       // If so, reinstate the blocks.
       common_design_subtheme_show_hidden_blocks_from_page($variables, [
         'page_title_block',
         'local_tasks_block',
       ]);
     }
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $variables['node'];
+    if (!$node->isPublished()) {
+      $variables['attributes']['class'][] = 'node--unpublished';
+    }
+  }
+  $variables['#attached']['library'][] = 'common_design_subtheme/gho-page-node';
+
+  $subpage_title = $variables['page']['content']['subpagetitle'] ?? NULL;
+  if ($subpage_title) {
+    $variables['attributes']['class'][] = 'has-subpage-title';
   }
 }
 
@@ -109,24 +218,62 @@ function common_design_subtheme_preprocess_table(&$vars) {
       'ghi-table',
       'cd-table',
       'cd-table--responsive',
-      'cd-table--striped',
     ],
   ];
   $attached = [
     'library' => [
       'common_design/cd-table',
+      'common_design_subtheme/sorttable',
     ],
   ];
+
+  $sortable = !empty($vars['sortable']);
+  if ($sortable) {
+    $attributes['class'][] = Html::getClass('sortable');
+  }
+  if (!empty($vars['autosort'])) {
+    $attributes['class'][] = Html::getClass('autosort');
+  }
+  if (!empty($vars['soft_limit'])) {
+    $attributes['class'][] = Html::getClass('soft_limit');
+    $attributes['data-soft-limit'][] = (int) $vars['soft_limit'];
+  }
+
   $vars['attributes'] = array_key_exists('attributes', $vars) ? NestedArray::mergeDeep($vars['attributes'], $attributes) : $attributes;
   $vars['#attached'] = array_key_exists('#attached', $vars) ? NestedArray::mergeDeep($vars['#attached'], $attached) : $attached;
+
+  foreach ($vars['header'] as &$header) {
+    $attribute = is_array($header) && array_key_exists('attributes', $header) ? $header['attributes'] : NULL;
+    if (!$attribute) {
+      continue;
+    }
+    if ($attribute->hasAttribute('data-column-type')) {
+      $attributes = $attribute->toArray();
+      $attribute->addClass('cd-table--' . $attributes['data-column-type']);
+    }
+    if ($sortable && $attribute->hasAttribute('sortable') && $attribute['sortable']->value() === FALSE) {
+      $attribute->addClass('sorttable_nosort');
+      $attribute->removeAttribute('sortable');
+    }
+  }
+
   foreach ($vars['rows'] as &$row) {
     foreach ($row as &$columns) {
-      foreach ($columns as &$column) {
+      foreach ($columns as $column_name => &$column) {
         /** @var \Drupal\Core\Template\Attribute $attribute */
         $attribute = is_array($column) && array_key_exists('attributes', $column) ? $column['attributes'] : NULL;
-        if ($attribute && $attribute->hasAttribute('data-column-type')) {
+        if (!$attribute) {
+          continue;
+        }
+        $attribute->setAttribute('data-column', $column_name);
+        if ($attribute->hasAttribute('data-column-type')) {
           $attributes = $attribute->toArray();
           $attribute->addClass('cd-table--' . $attributes['data-column-type']);
+        }
+
+        if ($sortable && $attribute->hasAttribute('data-sort-value')) {
+          $attribute->setAttribute('sorttable_customkey', $attribute['data-sort-value']);
+          $attribute->removeAttribute('data-sort-value');
         }
       }
     }
@@ -150,7 +297,7 @@ function common_design_subtheme_preprocess_hpc_pie_chart(array &$variables) {
 /**
  * Preprocess a plan headline figures list.
  */
-function common_design_subtheme_preprocess_item_list__plan_headline_figures(&$variables) {
+function common_design_subtheme_preprocess_item_list__key_figures(&$variables) {
   $items = &$variables['items'];
   $figures = [];
   foreach ($items as &$item) {
@@ -169,4 +316,11 @@ function common_design_subtheme_preprocess_item_list__plan_entity_types(&$variab
   // Limit to 3 items in a row.
   $count = count($variables['items']);
   $variables['cols'] = $count == 4 ? 2 : 3;
+}
+
+/**
+ * Implements hook_FORM_ID_alter().
+ */
+function common_design_subtheme_form_layout_builder_discard_changes_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $form['#attributes']['class'][] = 'cd-container';
 }

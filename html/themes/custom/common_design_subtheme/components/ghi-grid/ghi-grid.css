@@ -24,6 +24,13 @@
 }
 
 @media screen and (min-width: 576px) {
+  .ghi-grid {
+    /*
+     * Account for a right margin due to the way the flex base is calculated
+     * below.
+     */
+    margin-right: calc(0rem - var(--ghi-grid-gap));
+  }
   .ghi-grid > * {
     flex: 0 0 calc(100% * var(--ghi-grid-item-size) / var(--cols) - var(--ghi-grid-gap));
   }

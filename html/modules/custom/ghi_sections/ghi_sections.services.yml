@@ -1,0 +1,11 @@
+services:
+  ghi_sections.route_subscriber:
+    class: Drupal\ghi_sections\EventSubscriber\RouteSubscriber
+    tags:
+      - { name: event_subscriber }
+  ghi_sections.manager:
+    class: Drupal\ghi_sections\SectionManager
+    arguments: ['@entity_type.manager', '@entity_field.manager', '@current_user']
+  ghi_sections.context_manager:
+    class: Drupal\ghi_sections\SectionContextManager
+    arguments: ['@request_stack', '@current_route_match']

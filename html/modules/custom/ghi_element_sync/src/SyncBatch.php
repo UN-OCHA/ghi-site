@@ -56,7 +56,7 @@ class SyncBatch {
     $messenger = \Drupal::messenger();
 
     try {
-      if ($sync_manager->syncNode($node, $messenger, $revisions, $cleanup)) {
+      if ($sync_manager->syncNode($node, NULL, $messenger, $revisions, $cleanup)) {
         $context['results']['processed']++;
       }
       else {
@@ -81,9 +81,6 @@ class SyncBatch {
 
   /**
    * Finish batch.
-   *
-   * This function is a static function to avoid serializing the ConfigSync
-   * object unnecessarily.
    *
    * @param bool $success
    *   Indicate that the batch API tasks were all completed successfully.

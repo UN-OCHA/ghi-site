@@ -1,0 +1,20 @@
+hpc_downloads.config:
+  title: HPC Downloads
+  description: 'Configure settings HPC Downloads.'
+  route_name: hpc_downloads.config
+  parent: system.admin_config_services
+system.admin_reports_hpc_downloads:
+  title: 'HPC downloads'
+  route_name: system.admin_reports_hpc_downloads
+  parent: system.admin_reports
+  description: 'HPC download reports.'
+hpc_downloads.download_files_report:
+  title: Download files
+  description: 'List existing download files.'
+  route_name: hpc_downloads.reports.download_files
+  parent: system.admin_reports_hpc_downloads
+hpc_downloads.download_records_report:
+  title: Download records
+  description: 'List existing download records.'
+  route_name: hpc_downloads.reports.download_records
+  parent: system.admin_reports_hpc_downloads

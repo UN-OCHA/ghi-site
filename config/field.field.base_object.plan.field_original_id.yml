@@ -1,0 +1,23 @@
+uuid: f3f46330-d8b2-40c2-83ed-ef40f937c811
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_original_id
+    - ghi_base_objects.base_object_type.plan
+id: base_object.plan.field_original_id
+field_name: field_original_id
+entity_type: base_object
+bundle: plan
+label: 'Original ID'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

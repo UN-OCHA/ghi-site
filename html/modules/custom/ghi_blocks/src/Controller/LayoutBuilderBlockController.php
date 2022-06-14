@@ -7,6 +7,8 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -17,6 +19,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @see Drupal\ghi_blocks\EventSubscriber\LayoutBuilderRouteSubscriber
  */
 class LayoutBuilderBlockController extends ControllerBase implements ContainerInjectionInterface {
+
+  use LayoutEntityHelperTrait;
 
   /**
    * The block plugin manager.
@@ -84,6 +88,52 @@ class LayoutBuilderBlockController extends ControllerBase implements ContainerIn
     }
     $plugin_definition = $plugin->getPluginDefinition();
     return $plugin_definition['admin_label'];
+  }
+
+  /**
+   * React to an entity being updated.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity being updated.
+   */
+  public function updateEntity(EntityInterface $entity) {
+    $section_storage = $this->getSectionStorageForEntity($entity);
+    if (!$section_storage) {
+      return;
+    }
+    $existing_uuids = [];
+    $sections = $section_storage->getSections();
+    foreach ($sections as $section) {
+      $component = $section->getComponents();
+      foreach ($component as $uuid => $component) {
+        $plugin = $component->getPlugin();
+        if (!$plugin instanceof GHIBlockBase) {
+          continue;
+        }
+        $plugin->postSave($entity, $uuid);
+        $existing_uuids[] = $uuid;
+      }
+    }
+
+    // Now check if the original version had blocks that have disappeard.
+    $section_storage = $this->getSectionStorageForEntity($entity->original);
+    if (!$section_storage) {
+      return;
+    }
+    $sections = $section_storage->getSections();
+    foreach ($sections as $section) {
+      $component = $section->getComponents();
+      foreach ($component as $uuid => $component) {
+        if (in_array($uuid, $existing_uuids)) {
+          continue;
+        }
+        $plugin = $component->getPlugin();
+        if (!$plugin instanceof GHIBlockBase) {
+          continue;
+        }
+        $plugin->postDelete($entity, $uuid);
+      }
+    }
   }
 
 }

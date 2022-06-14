@@ -1,0 +1,9 @@
+status: 1
+pattern: 'Risk index'
+escape: false
+preserve_titles: false
+dependencies:
+  config:
+    - node.type.risk_index
+save: 0
+chunk: '50'

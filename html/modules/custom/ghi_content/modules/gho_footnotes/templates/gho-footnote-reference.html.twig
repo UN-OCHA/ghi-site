@@ -1,0 +1,24 @@
+{#
+  Template implementation for a footnote reference.
+
+  Available variables are:
+  - id: ID of the reference
+  - target: ID of the footnote
+  - index: Index of the footnote
+#}
+{% set label = 'Jump to footnote @index'|t({'@index': index}) %}
+{% spaceless %}
+{#
+  The use of `<sup>` to be closer to standards (of course that depends on
+  the languages. The text is also a simple number for the same standard reason
+  but for better accessibility a `aria-label` is set, explaining what the link
+  does. The span with the `aria-hidden` is to allow the display of the title
+  tooltip without having screen readers reading the label twice (aria-label +
+  title).
+#}
+<sup id="{{ id }}" class="gho-footnote-reference">
+  <a href="#{{ target }}" aria-label="{{ label }}">
+    <span title="{{ label }}" aria-hidden="true">{{ index }}</span>
+  </a>
+</sup>
+{% endspaceless %}

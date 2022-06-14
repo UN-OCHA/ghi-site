@@ -11,12 +11,12 @@ pattern: '[node:field_entity_reference:entity:url:path]/population'
 selection_criteria:
   8e0c0cdc-468b-4259-86fa-51820473d5b1:
     id: node_type
-    bundles:
-      population: population
     negate: false
+    uuid: 8e0c0cdc-468b-4259-86fa-51820473d5b1
     context_mapping:
       node: node
-    uuid: 8e0c0cdc-468b-4259-86fa-51820473d5b1
+    bundles:
+      population: population
 selection_logic: and
-weight: -5
+weight: -8
 relationships: {  }

@@ -1,0 +1,29 @@
+uuid: 5ac9cda2-c0d7-4a21-a78a-a21ea6d6cd64
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_locations
+    - ghi_base_objects.base_object_type.country
+    - ghi_base_objects.base_object_type.organization
+id: base_object.organization.field_locations
+field_name: field_locations
+entity_type: base_object
+bundle: organization
+label: Locations
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:base_object'
+  handler_settings:
+    target_bundles:
+      country: country
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

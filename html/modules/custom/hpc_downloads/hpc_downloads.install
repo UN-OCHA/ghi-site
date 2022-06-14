@@ -1,0 +1,163 @@
+<?php
+
+/**
+ * @file
+ * Install related hook implementations for the HPC Downloads module.
+ */
+
+use Drupal\Core\File\FileSystem;
+
+use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
+
+/**
+ * Implements hook_install().
+ */
+function hpc_downloads_install() {
+
+  $file_system = \Drupal::service('file_system');
+  $path = HPCDownloadPluginInterface::DOWNLOAD_DIR;
+  if (!$file_system->prepareDirectory($path, FileSystem::CREATE_DIRECTORY | FileSystem::MODIFY_PERMISSIONS)) {
+    \Drupal::service('messenger')->addMessage(t('Unable to create the download file directory. Check the permissions on your files directory.'), 'error');
+  }
+
+  $path = HPCDownloadPluginInterface::DOWNLOAD_DIR . '/pdf';
+  if (!$file_system->prepareDirectory($path, FileSystem::CREATE_DIRECTORY | FileSystem::MODIFY_PERMISSIONS)) {
+    \Drupal::service('messenger')->addMessage(t('Unable to create the PDF directory. Check the permissions on your files directory.'), 'error');
+  }
+
+  $path = HPCDownloadPluginInterface::DOWNLOAD_DIR . '/png';
+  if (!$file_system->prepareDirectory($path, FileSystem::CREATE_DIRECTORY | FileSystem::MODIFY_PERMISSIONS)) {
+    \Drupal::service('messenger')->addMessage(t('Unable to create the PNG directory. Check the permissions on your files directory.'), 'error');
+  }
+
+  $path = HPCDownloadPluginInterface::DOWNLOAD_DIR . '/xlsx';
+  if (!$file_system->prepareDirectory($path, FileSystem::CREATE_DIRECTORY | FileSystem::MODIFY_PERMISSIONS)) {
+    \Drupal::service('messenger')->addMessage(t('Unable to create the XLSX directory. Check the permissions on your files directory.'), 'error');
+  }
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function hpc_downloads_requirements($phase) {
+
+  $file_system = \Drupal::service('file_system');
+  $requirements = [];
+  if ($phase == 'runtime') {
+
+    $download_subdirectories = [
+      'pdf' => t('PDF'),
+      'png' => t('PNG'),
+      'xls' => t('XlS'),
+      'xlsx' => t('XlSX'),
+    ];
+
+    foreach ($download_subdirectories as $directory => $label) {
+      $requirements['hpc_downloads_directory_' . $directory] = [
+        'title' => t('HPC Downloads: @type', [
+          '@type' => $label,
+        ]),
+        'severity' => REQUIREMENT_OK,
+        'value' => t('Download directory exists'),
+      ];
+      $path = HPCDownloadPluginInterface::DOWNLOAD_DIR . '/' . $directory;
+      if (!$file_system->prepareDirectory($path, FileSystem::CREATE_DIRECTORY | FileSystem::MODIFY_PERMISSIONS)) {
+        $requirements['hpc_downloads_directory_' . $directory]['description'] = t('The data directory for @type files: <em>@path</em> could not be created due to a misconfigured files directory. Please ensure that the files directory is correctly configured and that the webserver has permission to create directories.', [
+          '@type' => $label,
+          '@path' => \Drupal::service('stream_wrapper_manager')->getTarget($path),
+        ]);
+        $requirements['hpc_downloads_directory_' . $directory]['severity'] = REQUIREMENT_ERROR;
+        $requirements['hpc_downloads_directory_' . $directory]['value'] = t('Unable to create');
+      }
+    }
+  }
+  return $requirements;
+}
+
+/**
+ * Implements hook_schema().
+ */
+function hpc_downloads_schema() {
+  $schema['hpc_download_processes'] = [
+    'description' => 'Table for holding information about dowload processes',
+    'fields' => [
+      'id' => [
+        'description' => 'Primary Key: file generation process ID',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ],
+      'file_path' => [
+        'description' => 'Unique full path for the file',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'url' => [
+        'description' => 'URL of the page triggering the file generation',
+        'type' => 'varchar',
+        'length' => 2000,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'uid' => [
+        'description' => 'The ID of the user that triggered the download.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'options' => [
+        'description' => 'Options for the file generation process',
+        'type' => 'blob',
+        'size' => 'normal',
+        'not null' => TRUE,
+      ],
+      'status' => [
+        'description' => 'Status of the process: 0=pending, 1=success, 2=error',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'default' => 0,
+      ],
+      'started' => [
+        'description' => 'Unix timestamp of the process start.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'updated' => [
+        'description' => 'Unix timestamp of most recent process update.',
+        'type' => 'int',
+        'not null' => FALSE,
+        'default' => 0,
+      ],
+      'completed' => [
+        'description' => 'Unix timestamp of completed file generation.',
+        'type' => 'int',
+        'not null' => FALSE,
+        'default' => 0,
+      ],
+      'command' => [
+        'description' => 'The shell command used to create the file.',
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'normal',
+      ],
+      'message' => [
+        'description' => 'Optional messages for the file generation process.',
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+      ],
+      'errors' => [
+        'description' => 'Optional error messages for the file generation process.',
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+      ],
+    ],
+    'primary key' => ['id'],
+  ];
+  return $schema;
+}

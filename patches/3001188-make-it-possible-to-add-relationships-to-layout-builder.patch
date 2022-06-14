@@ -1,0 +1,156 @@
+diff --git a/core/modules/layout_builder/layout_builder.api.php b/core/modules/layout_builder/layout_builder.api.php
+index 66afc1fb175a49d6d475bc6a9f57e46937fcc915..fe31348445a34d99e00ee3e8564dbf80e6211c09 100644
+--- a/core/modules/layout_builder/layout_builder.api.php
++++ b/core/modules/layout_builder/layout_builder.api.php
+@@ -5,6 +5,10 @@
+  * Hooks provided by the Layout Builder module.
+  */
+ 
++use Drupal\Core\Plugin\Context\EntityContext;
++use Drupal\Core\Session\AccountInterface;
++use Drupal\layout_builder\SectionStorageInterface;
++
+ /**
+  * @defgroup layout_builder_access Layout Builder access
+  * @{
+@@ -26,6 +30,56 @@
+  * @see https://www.drupal.org/project/drupal/issues/2942975
+  */
+ 
++/**
++ * Add and alter contexts available to sections before building content.
++ *
++ * In this example we add a customer profile context whenever a user entity is
++ * being viewed.
++ *
++ * @param \Drupal\Core\Plugin\Context\ContextInterface[] &$contexts
++ *   Array of contexts for the layout keyed.
++ * @param \Drupal\layout_builder\SectionStorageInterface $section_storage
++ *   The section storage used to construct the layout. This is provided so that
++ *   DefaultsSectionStorage third party settings can be used to alter contexts.
++ *   Note that OverridesSectionStorage does not have third party settings.
++ * @param bool $sample
++ *   Whether or not to permit sample entities. If true, you should ensure that
++ *   every possible context has a value to allow for preview and placeholder
++ *   content in blocks.
++ */
++function hook_layout_builder_view_context_alter(array &$contexts, SectionStorageInterface $section_storage, $sample = FALSE) {
++  if (!isset($contexts['layout_builder.entity'])) {
++    return;
++  }
++
++  /** @var \Drupal\Core\Plugin\Context\EntityContext $layout_entity_context */
++  $layout_entity_context = $contexts['layout_builder.entity'];
++
++  /** @var \Drupal\Core\Entity\EntityInterface $layout_entity */
++  $layout_entity = $layout_entity_context->getContextData()->getValue();
++
++  if ($layout_entity instanceof AccountInterface) {
++    $profile_types = [
++      'customer',
++    ];
++
++    foreach ($profile_types as $type) {
++      if ($layout_entity->get("profile_{$type}")->target_id) {
++        $entity = $layout_entity->get("profile_{$type}")->entity;
++      }
++      elseif ($sample) {
++        /** @var \Drupal\layout_builder\Entity\SampleEntityGeneratorInterface $sample_generator */
++        $sample_generator = \Drupal::service('layout_builder.sample_entity_generator');
++        $entity = $sample_generator->get('profile', $type);
++      }
++
++      if (isset($entity)) {
++        $contexts['layout_builder.additional.' . $type] = EntityContext::fromEntity($entity);
++      }
++    }
++  }
++}
++
+ /**
+  * @} End of "defgroup layout_builder_access".
+  */
+diff --git a/core/modules/layout_builder/src/Entity/LayoutBuilderEntityViewDisplay.php b/core/modules/layout_builder/src/Entity/LayoutBuilderEntityViewDisplay.php
+index 70e86f69991359deb6c086cc1a12df7a3711037e..f4fae08d088ffc15680b8aeea4971048403d20f8 100644
+--- a/core/modules/layout_builder/src/Entity/LayoutBuilderEntityViewDisplay.php
++++ b/core/modules/layout_builder/src/Entity/LayoutBuilderEntityViewDisplay.php
+@@ -335,11 +335,22 @@ protected function buildSections(FieldableEntityInterface $entity) {
+    */
+   protected function getContextsForEntity(FieldableEntityInterface $entity) {
+     $available_context_ids = array_keys($this->contextRepository()->getAvailableContexts());
+-    return [
++    $contexts = [
+       'view_mode' => new Context(ContextDefinition::create('string'), $this->getMode()),
+       'entity' => EntityContext::fromEntity($entity),
+       'display' => EntityContext::fromEntity($this),
+     ] + $this->contextRepository()->getRuntimeContexts($available_context_ids);
++
++    // Get section storage to pass to contexts hook.
++    $cacheability = new CacheableMetadata();
++    $storage = $this->sectionStorageManager()->findByContext($contexts, $cacheability);
++
++    // Allow modules to alter the contexts available. Pass the section storage
++    // as context so that DefaultsSectionStorage's thirdPartySettings can be
++    // used to influence contexts.
++    \Drupal::moduleHandler()->alter('layout_builder_view_context', $contexts, $storage);
++
++    return $contexts;
+   }
+ 
+   /**
+diff --git a/core/modules/layout_builder/src/Plugin/SectionStorage/DefaultsSectionStorage.php b/core/modules/layout_builder/src/Plugin/SectionStorage/DefaultsSectionStorage.php
+index dc0f35707b412399c9a0bfb915e7c1f4e3c099a3..d8546c19577e394a2d9071c0cc3ec1b64fdb4710 100644
+--- a/core/modules/layout_builder/src/Plugin/SectionStorage/DefaultsSectionStorage.php
++++ b/core/modules/layout_builder/src/Plugin/SectionStorage/DefaultsSectionStorage.php
+@@ -224,6 +224,9 @@ public function getContextsDuringPreview() {
+     $entity = $this->sampleEntityGenerator->get($display->getTargetEntityTypeId(), $display->getTargetBundle());
+ 
+     $contexts['layout_builder.entity'] = EntityContext::fromEntity($entity);
++
++    $allow_sample = TRUE;
++    \Drupal::moduleHandler()->alter('layout_builder_view_context', $contexts, $this, $allow_sample);
+     return $contexts;
+   }
+ 
+diff --git a/core/modules/layout_builder/src/Plugin/SectionStorage/OverridesSectionStorage.php b/core/modules/layout_builder/src/Plugin/SectionStorage/OverridesSectionStorage.php
+index 219a3c6a0a8446e16537c0563b942215c2cb032d..565c42d3ae1734f6e98efa291f81438f3a9845e5 100644
+--- a/core/modules/layout_builder/src/Plugin/SectionStorage/OverridesSectionStorage.php
++++ b/core/modules/layout_builder/src/Plugin/SectionStorage/OverridesSectionStorage.php
+@@ -316,6 +316,9 @@ public function getContextsDuringPreview() {
+       $contexts['layout_builder.entity'] = $contexts['entity'];
+       unset($contexts['entity']);
+     }
++
++    $allow_sample = TRUE;
++    \Drupal::moduleHandler()->alter('layout_builder_view_context', $contexts, $this, $allow_sample);
+     return $contexts;
+   }
+ 
+diff --git a/core/modules/layout_builder/src/SectionComponent.php b/core/modules/layout_builder/src/SectionComponent.php
+index b0f8ff13e4f3a8a6257411af2cffd78cb394d7c9..85274ca8a38976a2fadf683347959b4d6c22180b 100644
+--- a/core/modules/layout_builder/src/SectionComponent.php
++++ b/core/modules/layout_builder/src/SectionComponent.php
+@@ -2,6 +2,7 @@
+ 
+ namespace Drupal\layout_builder;
+ 
++use Drupal\Component\Plugin\Exception\ContextException;
+ use Drupal\Component\Plugin\Exception\PluginException;
+ use Drupal\Core\Plugin\ContextAwarePluginInterface;
+ use Drupal\layout_builder\Event\SectionComponentBuildRenderArrayEvent;
+@@ -86,7 +87,14 @@ public function __construct($uuid, $region, array $configuration = [], array $ad
+    *   A renderable array representing the content of the component.
+    */
+   public function toRenderArray(array $contexts = [], $in_preview = FALSE) {
+-    $event = new SectionComponentBuildRenderArrayEvent($this, $contexts, $in_preview);
++    // If plugin instantiation throws an exception due to missing context,
++    // return an empty array.
++    try {
++      $event = new SectionComponentBuildRenderArrayEvent($this, $contexts, $in_preview);
++    }
++    catch (ContextException $e) {
++      return [];
++    }
+     $this->eventDispatcher()->dispatch($event, LayoutBuilderEvents::SECTION_COMPONENT_BUILD_RENDER_ARRAY);
+     $output = $event->getBuild();
+     $event->getCacheableMetadata()->applyTo($output);

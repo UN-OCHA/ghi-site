@@ -5,6 +5,8 @@ dependencies:
   config:
     - core.entity_view_mode.node.teaser
     - field.field.node.population.field_entity_reference
+    - field.field.node.population.field_hero_image
+    - field.field.node.population.field_team
     - field.field.node.population.layout_builder__layout
     - node.type.population
   module:
@@ -15,11 +17,13 @@ bundle: population
 mode: teaser
 content:
   links:
-    weight: 100
     settings: {  }
     third_party_settings: {  }
+    weight: 100
     region: content
 hidden:
   field_entity_reference: true
+  field_hero_image: true
+  field_team: true
   langcode: true
   layout_builder__layout: true

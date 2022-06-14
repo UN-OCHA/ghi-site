@@ -6,8 +6,10 @@ type: module
 core_version_requirement: ^8 || ^9
 
 dependencies:
+  - drupal:layout_builder
   - hpc_common:hpc_common
+  - ghi_base_objects:ghi_base_objects
   - ghi_plans:ghi_plans
+  - ghi_sections:ghi_sections
   - ghi_form_elements:ghi_form_elements
   - ghi_element_sync:ghi_element_sync
-  # - layout_builder_modal:layout_builder_modal

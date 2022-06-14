@@ -1,0 +1,24 @@
+uuid: eae3689a-1a7c-4599-828b-7338065b7800
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_hero_image
+    - node.type.financials
+  module:
+    - ghi_hero_image
+id: node.financials.field_hero_image
+field_name: field_hero_image
+entity_type: node
+bundle: financials
+label: 'Hero image'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    source: hpc_webcontent_file_attachment
+    settings: {  }
+default_value_callback: ''
+settings: {  }
+field_type: ghi_hero_image

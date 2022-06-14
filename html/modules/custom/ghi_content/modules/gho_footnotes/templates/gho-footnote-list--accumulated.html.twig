@@ -1,0 +1,19 @@
+{#
+  Template implementation for an accumulated footnote list.
+
+  Available variables are:
+  - id: ID of the list
+  - footnotes: list of footnotes (see gho-footnote.html.twig for details)
+#}
+{% if footnotes %}
+<section id="{{ id }}" class="gho-footnote-list">
+  <h2 id="{{ id  }}-title" class="gho-footnote-list__title">{{ 'Footnotes'|t }}</h2>
+  <ol aria-labelledBy="{{ id  }}-title" class="gho-footnote-list__list">
+    {% for footnote in footnotes %}
+    <li class="gho-footnote-list__list__item">
+      {{ footnote }}
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+{% endif %}

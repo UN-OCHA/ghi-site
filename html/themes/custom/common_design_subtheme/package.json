@@ -14,7 +14,7 @@
     "sass:postcss": "postcss --no-map css/styles.css --use autoprefixer -b 'last 3 versions' -r",
     "sass:build": "npm run sass:lint && npm run sass:compile && npm run sass:postcss",
     "js:lint": "eslint js/*.js",
-    "svg:sprite": "svg-sprite --svg-xmldecl=false --svg-doctype=false --svg-rootattrs=_config/svg-sprite.config.json --log=info --symbol --symbol-prefix='%s' --symbol-example=true --shape-id-generator='cd-icon--' --symbol-dest=img/icons --symbol-sprite=cd-icons-sprite.svg img/icons/*.svg",
+    "svg:sprite": "svg-sprite --svg-xmldecl=false --svg-doctype=false --svg-rootattrs=_config/svg-sprite.config.json --log=info --symbol --symbol-prefix='%s' --symbol-example=true --shape-id-generator='' --symbol-dest=img/icons --symbol-sprite=ghi-icons-sprite.svg img/icons/*.svg",
     "e2e": "jest _tests/*.test.js",
     "test": "jest _tests/*.test.js"
   },
@@ -33,7 +33,7 @@
     "eslint": "^7.32.0",
     "jest": "^26.6.3",
     "jest-puppeteer": "^5.0.4",
-    "minimist": "^1.2.5",
+    "minimist": "^1.2.6",
     "postcss": "^8.3.6",
     "postcss-cli": "^8.3.1",
     "puppeteer": "^9.1.1",

@@ -1,0 +1,85 @@
+<?php
+
+/**
+ * @file
+ * Contains hook implementations for the GHI Sections module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\layout_builder\SectionStorageInterface;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_preprocess_page_title().
+ */
+function ghi_sections_preprocess_page_title(&$variables) {
+  $node = \Drupal::routeMatch()->getParameter('node');
+  $is_admin_route = \Drupal::service('router.admin_context')->isAdminRoute();
+  if ($is_admin_route || !$node instanceof NodeInterface) {
+    return;
+  }
+  if ($node->bundle() == 'global_section' && \Drupal::routeMatch()->getRouteName() == 'entity.node.canonical') {
+    $variables['title'] = NULL;
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ghi_sections_form_node_section_edit_form_alter(&$form, FormStateInterface &$form_state) {
+  /** @var \Drupal\node\NodeForm $form_object */
+  $form_object = $form_state->getFormObject();
+  $entity = $form_object->buildEntity($form, $form_state);
+
+  /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $object */
+  $object = $entity->get('field_base_object')->entity;
+
+  // Hide the year field if the object doesn't need it.
+  if ($object instanceof BaseObjectInterface && !$object->needsYear()) {
+    $form['field_year']['#access'] = FALSE;
+  }
+
+  // Always disable the base object field. It's currently not allowed to
+  // change it.
+  $form['field_base_object']['#disabled'] = TRUE;
+  $form['field_base_object']['widget'][0]['target_id']['#title'] .= ': ' . $object->type->entity->label();
+  $form['field_base_object']['widget'][0]['target_id']['#description'] = t('The base object cannot be changed after the initial creation of a section.');
+
+  // Also disable the year field. Beeing able to change it would at least need
+  // another validation for duplication of base object - year combinations, as
+  // we do them during section creation.
+  $form['field_year']['#disabled'] = TRUE;
+
+  // Restrict access to the team field.
+  if (!\Drupal::currentUser()->hasPermission('administer teams')) {
+    $form['field_team']['#disabled'] = TRUE;
+    $form['field_team']['widget']['#description'] = t('You do not have permission to change the team for this section.');
+  }
+}
+
+/**
+ * Implements hook_layout_builder_view_context_alter().
+ */
+function ghi_sections_layout_builder_view_context_alter(array &$contexts, SectionStorageInterface $section_storage = NULL, $sample = FALSE) {
+  /** @var \Drupal\ghi_sections\SectionContextManager $section_context_manager */
+  $section_context_manager = \Drupal::service('ghi_sections.context_manager');
+
+  $context = NULL;
+  if (isset($contexts['layout_builder.entity']) && $contexts['layout_builder.entity']->hasContextValue()) {
+    $context = $section_context_manager->getYearContextFromEntity($contexts['layout_builder.entity']->getContextValue());
+  }
+  elseif (isset($contexts['entity']) && $contexts['entity']->hasContextValue()) {
+    $context = $section_context_manager->getYearContextFromEntity($contexts['entity']->getContextValue());
+  }
+  elseif (isset($contexts['node']) && $contexts['node']->hasContextValue()) {
+    $context = $section_context_manager->getYearContextFromEntity($contexts['node']->getContextValue());
+  }
+  else {
+    $context = $section_context_manager->getYearContext();
+  }
+
+  if ($context) {
+    $contexts['year'] = $context;
+  }
+}

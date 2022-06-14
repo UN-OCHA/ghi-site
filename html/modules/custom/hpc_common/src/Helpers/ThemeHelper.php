@@ -34,12 +34,27 @@ class ThemeHelper {
   }
 
   /**
-   * Simple wrapper around the render layer.
+   * Wrapper around the render layer.
+   *
+   * This also disables twig debug if it's enabled, so that the final render
+   * string doesn't contain any additional debugging information.
    */
   public static function render($build, $xss_filter = TRUE) {
+    // Disable twig debug if it's enabled.
+    /** @var \Twig\Environment $twig_service */
+    $twig_service = \Drupal::service('twig');
+    $twig_debug = $twig_service->isDebug();
+    if ($twig_debug) {
+      $twig_service->disableDebug();
+    }
+    // Render the build array using the renderer service.
     $renderer = \Drupal::service('renderer');
     $has_render_context = $renderer->hasRenderContext();
     $render_value = $has_render_context ? $renderer->render($build) : $renderer->renderPlain($build);
+    // Re-enable twig debug if it's been enabled before.
+    if ($twig_debug) {
+      $twig_service->enableDebug();
+    }
     return $xss_filter ? trim(Xss::filter($render_value)) : trim($render_value);
   }
 
@@ -56,30 +71,34 @@ class ThemeHelper {
    * @return array
    *   An array of final theme options.
    */
-  public static function getThemeOptions($theme_function, $value, array $options) {
+  public static function getThemeOptions($theme_function, $value, array $options = []) {
     switch ($theme_function) {
       case 'hpc_amount':
         return [
+          '#theme' => $theme_function,
           '#amount' => $value,
           '#scale' => !empty($options['scale']) ? $options['scale'] : 'auto',
-          '#formatting_decimals' => !empty($options['formatting_decimals']) ? $options['formatting_decimals'] : self::DECIMALS_POINT,
+          '#decimal_format' => !empty($options['decimal_format']) ? $options['decimal_format'] : self::DECIMALS_POINT,
         ];
 
       case 'hpc_currency':
         return [
+          '#theme' => $theme_function,
           '#value' => $value,
           '#scale' => !empty($options['scale']) ? $options['scale'] : 'auto',
-          '#formatting_decimals' => !empty($options['formatting_decimals']) ? $options['formatting_decimals'] : self::DECIMALS_POINT,
+          '#decimal_format' => !empty($options['decimal_format']) ? $options['decimal_format'] : self::DECIMALS_POINT,
         ];
 
       case 'hpc_percent':
         return [
+          '#theme' => $theme_function,
           '#percent' => $value,
-          '#formatting_decimals' => !empty($options['formatting_decimals']) ? $options['formatting_decimals'] : self::DECIMALS_POINT,
+          '#decimal_format' => !empty($options['decimal_format']) ? $options['decimal_format'] : self::DECIMALS_POINT,
         ];
 
       case 'hpc_progress_bar':
         return [
+          '#theme' => $theme_function,
           '#percent' => $value,
           '#hide_value' => !empty($options['hide_value']) ? $options['hide_value'] : FALSE,
         ];

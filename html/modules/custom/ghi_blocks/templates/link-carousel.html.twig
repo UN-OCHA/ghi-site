@@ -1,0 +1,33 @@
+{{ attach_library('common_design_subtheme/ghi-link-carousel') }}
+
+<div class="link-carousel-wrapper">
+  <div class="swiper">
+    <div class="swiper-wrapper">
+      {% for key, item in items %}
+        <div id="slide-{{ key }}" class="swiper-slide">
+          {{ item.image }}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="slide-navigation-wrapper">
+      {% for key, item in items %}
+        <div data-slide-index="{{ key }}" class="slide-navigation">
+          <div class="slide-navigation__inner">
+            {{ item.title }}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="slide-details-wrapper">
+    {% for key, item in items %}
+      <div data-slide-index="{{ key }}" class="slide-details">
+        <div class="title">{{ item.title }}</div>
+        <div class="description">
+          {{ item.description }}
+          <p>{{ item.button }}</p>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>

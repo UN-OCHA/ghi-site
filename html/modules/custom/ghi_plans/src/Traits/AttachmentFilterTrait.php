@@ -44,6 +44,10 @@ trait AttachmentFilterTrait {
     if (!empty($filter['type'])) {
       $filter['type'] = array_map([$this, 'mapAttachmentType'], (array) $filter['type']);
     }
+    if (!empty($filter['prototype_id'])) {
+      $filter['attachmentPrototypeId'] = $filter['prototype_id'];
+      unset($filter['prototype_id']);
+    }
     return $filter;
   }
 
@@ -58,7 +62,7 @@ trait AttachmentFilterTrait {
    * @return array
    *   An array with the attachments who match the filter.
    */
-  private function filterAttachments(array $attachments, array $filter) {
+  public function filterAttachments(array $attachments, array $filter) {
     return ArrayHelper::filterArray($attachments, $this->prepareAttachmentFilter($filter));
   }
 

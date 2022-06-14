@@ -1,0 +1,5 @@
+services:
+  ghi_teams.breadcrumb:
+    class: Drupal\ghi_teams\Breadcrumb\TeamsBreadcrumbBuilder
+    tags:
+      - { name: breadcrumb_builder, priority: 1003 }

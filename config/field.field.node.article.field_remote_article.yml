@@ -1,0 +1,24 @@
+uuid: 9821e496-c266-46b4-8059-e64d936a3a98
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_remote_article
+    - node.type.article
+  module:
+    - ghi_content
+id: node.article.field_remote_article
+field_name: field_remote_article
+entity_type: node
+bundle: article
+label: 'Remote article'
+description: ''
+required: true
+translatable: false
+default_value:
+  -
+    remote_source: null
+    article_id: null
+default_value_callback: ''
+settings: {  }
+field_type: ghi_remote_article

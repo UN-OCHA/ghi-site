@@ -2,6 +2,8 @@
 
 namespace Drupal\ghi_plans\Helpers;
 
+use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\Config\Definition\Exception\InvalidTypeException;
 
 /**
@@ -12,7 +14,7 @@ class DataPointHelper {
   /**
    * Get a value for a data point.
    *
-   * @param object $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
    *   The attachment object.
    * @param array $data_point_conf
    *   The data point configuration.
@@ -23,7 +25,7 @@ class DataPointHelper {
    *
    * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
    */
-  public static function getValue($attachment, array $data_point_conf) {
+  public static function getValue(DataAttachment $attachment, array $data_point_conf) {
     switch ($data_point_conf['processing']) {
       case 'single':
         return self::getSingleValue($attachment, $data_point_conf);
@@ -39,7 +41,7 @@ class DataPointHelper {
   /**
    * Get a formatted value for a data point.
    *
-   * @param object $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
    *   The attachment object.
    * @param array $data_point_conf
    *   The data point configuration.
@@ -50,13 +52,49 @@ class DataPointHelper {
    *
    * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
    */
-  public static function formatValue($attachment, array $data_point_conf) {
-    if ($data_point_conf['widget'] == 'none') {
-      return self::formatAsText($attachment, $data_point_conf);
+  public static function formatValue(DataAttachment $attachment, array $data_point_conf) {
+    $build = [];
+    if (empty($data_point_conf['widget']) || $data_point_conf['widget'] == 'none') {
+      $build = self::formatAsText($attachment, $data_point_conf);
     }
     else {
-      return self::formatAsWidget($attachment, $data_point_conf);
+      $build = self::formatAsWidget($attachment, $data_point_conf);
     }
+    if (self::isMeasurement($attachment, $data_point_conf) && $monitoring_period = self::formatMonitoringPeriod($attachment, 'icon')) {
+      $build = [
+        '#type' => 'container',
+        0 => $build,
+        1 => $monitoring_period,
+      ];
+    }
+    return $build;
+  }
+
+  /**
+   * Check if the given data point configuration involves measurement fields.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
+   *   The attachment object.
+   * @param array $data_point_conf
+   *   The data point configuration.
+   *
+   * @return bool
+   *   TRUE if any of the involved data points is a measurement, FALSE
+   *   otherwise.
+   */
+  private static function isMeasurement(DataAttachment $attachment, array $data_point_conf) {
+    switch ($data_point_conf['processing']) {
+      case 'single':
+        $field = $attachment->fields[$data_point_conf['data_points'][0]];
+        return $attachment->isMeasurementField($field);
+
+      case 'calculated':
+        $field_1 = $attachment->fields[$data_point_conf['data_points'][0]];
+        $field_2 = $attachment->fields[$data_point_conf['data_points'][1]];
+        return $attachment->isMeasurementField($field_1) || $attachment->isMeasurementField($field_2);
+
+    }
+    return FALSE;
   }
 
   /**
@@ -80,6 +118,7 @@ class DataPointHelper {
         '#markup' => t('Pending'),
       ];
     }
+    $decimal_format = $data_point_conf['decimal_format'] ?? NULL;
     $rendered_value = NULL;
     switch ($data_point_conf['formatting']) {
       case 'raw':
@@ -93,12 +132,14 @@ class DataPointHelper {
             '#theme' => 'hpc_percent',
             '#ratio' => $value,
             '#decimals' => 1,
+            '#decimal_format' => $decimal_format,
           ];
         }
         $rendered_value = [
           '#theme' => 'hpc_autoformat_value',
           '#value' => $value,
           '#unit_type' => $attachment->unit ? $attachment->unit->type : 'amount',
+          '#decimal_format' => $decimal_format,
         ];
         break;
 
@@ -106,6 +147,7 @@ class DataPointHelper {
         $rendered_value = [
           '#theme' => 'hpc_currency',
           '#value' => $value,
+          '#decimal_format' => $decimal_format,
         ];
         break;
 
@@ -113,6 +155,8 @@ class DataPointHelper {
         $rendered_value = [
           '#theme' => 'hpc_amount',
           '#amount' => $value,
+          '#scale' => 'full',
+          '#decimal_format' => $decimal_format,
         ];
         break;
 
@@ -121,6 +165,7 @@ class DataPointHelper {
           '#theme' => 'hpc_amount',
           '#amount' => $value,
           '#decimals' => 1,
+          '#decimal_format' => $decimal_format,
         ];
         break;
 
@@ -129,6 +174,7 @@ class DataPointHelper {
           '#theme' => 'hpc_percent',
           '#ratio' => $value,
           '#decimals' => 1,
+          '#decimal_format' => $decimal_format,
         ];
         break;
 
@@ -175,6 +221,48 @@ class DataPointHelper {
     }
 
     return $widget;
+  }
+
+  /**
+   * Get a formatted monitoring period for the attachment object.
+   *
+   * @param object $attachment
+   *   The attachment object.
+   * @param string $display_type
+   *   The display type, either "icon" or "text".
+   *
+   * @return array|null
+   *   A build array or NULL.
+   */
+  public static function formatMonitoringPeriod($attachment, $display_type) {
+    if (!$attachment->monitoring_period) {
+      return NULL;
+    }
+    switch ($display_type) {
+      case 'icon':
+        $build = [
+          '#theme' => 'hpc_tooltip',
+          '#tooltip' => ThemeHelper::render([
+            '#theme' => 'hpc_reporting_period',
+            '#reporting_period' => $attachment->monitoring_period,
+          ], FALSE),
+          '#class' => 'monitoring period',
+          '#tag_content' => [
+            '#theme' => 'hpc_icon',
+            '#icon' => 'calendar_today',
+            '#tag' => 'span',
+          ],
+        ];
+        break;
+
+      case 'text':
+        $build = [
+          '#theme' => 'hpc_reporting_period',
+          '#reporting_period' => $attachment->monitoring_period,
+        ];
+        break;
+    }
+    return $build;
   }
 
   /**

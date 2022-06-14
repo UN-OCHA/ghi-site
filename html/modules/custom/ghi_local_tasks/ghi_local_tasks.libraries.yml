@@ -1,0 +1,5 @@
+local_tasks:
+  version: VERSION
+  css:
+    component:
+      css/local_tasks.css: {}

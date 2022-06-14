@@ -4,10 +4,9 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\Html;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\DataPointHelper;
-use Drupal\ghi_plans\Query\AttachmentQuery;
+use Drupal\hpc_api\Query\EndpointQueryManager;
 
 /**
  * Provides an attachment data item for configuration containers.
@@ -23,28 +22,16 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   /**
    * The attachment query.
    *
-   * @var \Drupal\ghi_plans\Query\AttachmentQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery
    */
   public $attachmentQuery;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, AttachmentQuery $attachment_query) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->attachmentQuery = $attachment_query;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('ghi_plans.attachment_query'),
-    );
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $endpoint_query_manager);
+    $this->attachmentQuery = $endpoint_query_manager->createInstance('attachment_query');
   }
 
   /**
@@ -65,7 +52,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
       '#attachment_prototype' => $configuration['attachment_prototype'],
       '#default_value' => $data_point,
       '#weight' => 5,
-    ];
+    ] + ($configuration['presets'] ?? []);
 
     return $element;
   }
@@ -74,8 +61,13 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getDefaultLabel() {
+    $attachment = $this->getContextValue('attachment');
+    if ($attachment) {
+      return $attachment->fields[$this->get('data_point')['data_points'][0]];
+    }
     $attachment_prototype = $this->getContextValue('attachment_prototype');
-    return $attachment_prototype->fields[$this->get('data_point')['data_points'][0]];
+    $fields = array_merge($attachment_prototype->fields ?? []);
+    return $fields[$this->get('data_point')['data_points'][0]];
   }
 
   /**
@@ -116,11 +108,14 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   private function getAttachmentObject() {
     $attachment = $this->getContextValue('attachment');
+    $plan_object = $this->getContextValue('plan_object') ?? NULL;
+    $configuration = $this->getPluginConfiguration();
     $data_point_conf = $this->get('data_point');
     if (!$attachment || !$data_point_conf) {
       return NULL;
     }
-    $attachment->data_point_conf = $data_point_conf;
+    $data_point_conf['decimal_format'] = $plan_object ? $plan_object->get('field_decimal_format')->value : NULL;
+    $attachment->data_point_conf = $data_point_conf + ($configuration['presets'] ?? []);
     return $attachment;
   }
 

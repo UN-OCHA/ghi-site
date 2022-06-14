@@ -1,23 +1,92 @@
-table.ghi-table {
-  tbody {
-    td.data-point--widget-pie-chart {
-      white-space: nowrap;
+#main-content,
+.layout-builder-configure-block div[data-block-preview] {
+  table.ghi-table {
+    font-size: var(--cd-font-size--default);
 
-      .hpc-pie-chart-wrapper {
-        display: inline-flex;
-        width: auto;
-        height: 100%;
-        margin-left: 5px;
-        aspect-ratio: 1 / 1;
-        vertical-align: middle;
+    .ghi-block & {
+      margin-bottom: 0;
+    }
+
+    th.cd-table--amount,
+    td.cd-table--amount {
+      text-align: left;
+    }
+
+    th,
+    td {
+      padding: 1.5rem 2rem 1.5rem 0;
+
+      &:last-child {
+        padding-right: 0;
+      }
+
+      @include desktop {
+        &.cd-table--amount {
+          white-space: nowrap;
+        }
       }
     }
 
-    td.data-point--widget-progressbar {
-      white-space: nowrap;
+    thead {
+      th {
+        padding-top: inherit;
+        padding-bottom: inherit;
+        white-space: nowrap;
+        text-transform: uppercase;
+        color: var(--cd-default-text-color);
+        border-bottom: 1px solid var(--cd-default-border-color);
+        background: transparent;
+        font-size: var(--cd-font-size--small);
 
-      .hpc-progress-bar-wrapper {
-        margin-left: 5px;
+        &.sorttable_sorted,
+        &.sorttable_sorted_reverse {
+          padding-right: 0;
+
+          & > span {
+            display: inline-block;
+            width: 2rem;
+            color: var(--cd-primary-color);
+          }
+        }
+      }
+    }
+    &.sortable th {
+      cursor: pointer;
+
+      &.sorttable_nosort {
+        cursor: initial;
+      }
+    }
+
+    tbody {
+
+      tr {
+        border-bottom: 1px solid var(--cd-default-border-color);
+      }
+
+      td:first-child.subrow {
+        padding-left: 2.5rem;
+      }
+
+      td.data-point--widget-pie-chart {
+        white-space: nowrap;
+
+        .hpc-pie-chart-wrapper {
+          display: inline-flex;
+          width: auto;
+          height: 100%;
+          margin-left: 5px;
+          aspect-ratio: 1 / 1;
+          vertical-align: middle;
+        }
+      }
+
+      td.data-point--widget-progressbar {
+        white-space: nowrap;
+
+        .hpc-progress-bar-wrapper {
+          margin-left: 5px;
+        }
       }
     }
   }

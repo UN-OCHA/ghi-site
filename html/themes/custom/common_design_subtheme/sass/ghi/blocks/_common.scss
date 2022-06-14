@@ -1,3 +1,65 @@
 //——————————————————————————————————————————————————————————————————————————————
 // GHI: Blocks common definitions
 //——————————————————————————————————————————————————————————————————————————————
+
+.block-subpage-navigation {
+  ul.links--entity-navigation {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    gap: 2rem;
+
+    li {
+      list-style-type: none;
+
+      ul {
+        padding-inline-start: 1rem;
+
+        li.disabled {
+          opacity: 0.5;
+        }
+      }
+
+      a {
+        text-decoration: none;
+        color: var(--hpc-dark-brown);
+
+        &.active {
+          font-weight: bold;
+        }
+      }
+    }
+  }
+}
+
+.block-subpage-title {
+  h2 {
+    margin: 3rem 0;
+  }
+}
+
+.ghi-block {
+  margin-top: 4.5rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  // Explicitly set the same default line height as for the full document to
+  // prevent errors with previews inside the block configuration modal
+  // (ui-dialog sets a line-height of 1).
+  line-height: 1.5;
+
+  #main-content.has-subpage-title .layout__region &:first-child {
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  &.ghi-block--hidden-preview > *:not(.contextual) {
+    opacity: 0.5;
+  }
+
+  & > div.block-content {
+    position: relative;
+    // This also needs to overwrite any additional margins defined in the
+    // common design components.
+    margin: 0 !important;
+  }
+}

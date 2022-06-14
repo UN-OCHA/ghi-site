@@ -1,0 +1,49 @@
+<div class="plan-overview-map-modal-content-wrapper">
+  <div class="section-wrapper">
+    <div class="section-header">
+      <i class="material-icons group">group</i>
+      <span>{{ 'People'|t }}</span>
+    </div>
+    <div class="section-row clearfix">
+      <div class="section-row-item">
+        <span class="label">{{ items.total_population.label }}</span>
+        <span class="value">{{ items.total_population.value }}</span>
+      </div>
+      <div class="section-row-item">
+        <span class="label">{{ items.inneed.label }}</span>
+        <span class="value">{{ items.inneed.value }}</span>
+      </div>
+    </div>
+    <div class="section-row clearfix">
+      <div class="section-row-item">
+        <span class="label">{{ items.target.label }}</span>
+        <span class="value">{{ items.target.value }}</span>
+      </div>
+      {% if items.estimated_reach %}
+        <div class="section-row-item">
+          <span class="label">{{ items.estimated_reach.label }}</span>
+          <span class="value">{{ items.estimated_reach.value }}</span>
+        </div>
+      {% elseif items.reached %}
+        <div class="section-row-item">
+          <span class="label">{{ items.reached.label }}</span>
+          <span class="value">{{ items.reached.value }}</span>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="section-wrapper last">
+    <div class="section-header">
+      <i class="material-icons attach-money">attach_money</i>
+      <span>{{ 'Funding'|t }}</span>
+    </div>
+    <div class="section-row">
+      <span class="label">{{ items.funding_required.label }}</span>
+      <span class="value">{{ items.funding_required.value }}</span>
+    </div>
+    <div class="section-row">
+      <span class="label">{{ items.funding_progress.label }}</span>
+      <span class="value">{{ items.funding_progress.value }}</span>
+    </div>
+  </div>
+</div>

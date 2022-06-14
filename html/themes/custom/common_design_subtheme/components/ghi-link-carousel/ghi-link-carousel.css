@@ -1,0 +1,86 @@
+.link-carousel-wrapper {
+  width: 100%;
+  max-width: var(--cd-max-page-width);
+}
+
+.link-carousel-wrapper .swiper {
+  position: relative;
+}
+
+.link-carousel-wrapper .swiper .swiper-wrapper {
+  max-height: 568px;
+}
+
+.link-carousel-wrapper .swiper .swiper-wrapper .swiper-slide {
+  width: 100% !important;
+}
+
+.link-carousel-wrapper .swiper .swiper-wrapper .swiper-slide img {
+  width: 100%;
+}
+
+.link-carousel-wrapper .slide-navigation-wrapper {
+  position: absolute;
+  z-index: 2;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  width: 100%;
+  height: auto;
+  padding: 0 6rem;
+  color: var(--cd-white);
+  background-color: rgb(0, 0, 0, 0.8);
+}
+
+.link-carousel-wrapper .slide-navigation-wrapper .slide-navigation {
+  position: relative;
+  min-width: 250px;
+  padding: 0 2.5rem;
+  cursor: pointer;
+  font-size: var(--cd-font-size--small);
+}
+.link-carousel-wrapper .slide-navigation-wrapper .slide-navigation .slide-navigation__inner {
+  padding: 1.5rem 0;
+}
+.link-carousel-wrapper .slide-navigation-wrapper .slide-navigation.active .slide-navigation__inner {
+  padding-top: calc(1.5rem - 3px);
+  border-top: 3px solid var(--cd-ocha-yellow);
+}
+
+.link-carousel-wrapper .slide-navigation-wrapper .slide-navigation:after {
+  position: absolute;
+  top: 50%;
+  right: -1px;
+  width: 1px;
+  height: calc(100% / 2);
+  content: "";
+  transform: translateY(-50%);
+  background: var(--cd-white);
+}
+.link-carousel-wrapper .slide-navigation-wrapper .slide-navigation:last-child:after {
+  content: none;
+}
+
+.link-carousel-wrapper .slide-details-wrapper {
+  padding: 0 4rem;
+  background-color: var(--cd-primary-background-color);
+}
+
+.link-carousel-wrapper .slide-details-wrapper .slide-details {
+  display: none;
+}
+.link-carousel-wrapper.swiper-processed .slide-details-wrapper .slide-details {
+  display: flex;
+}
+
+.link-carousel-wrapper .slide-details-wrapper .slide-details > div {
+  flex: 50%;
+  padding: 3rem;
+}
+
+.link-carousel-wrapper .slide-details-wrapper .slide-details > div.title {
+  display: block;
+  font-size: var(--cd-font-size--2xbase);
+  font-weight: bold;
+}

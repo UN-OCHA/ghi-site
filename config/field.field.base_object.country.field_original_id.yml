@@ -1,0 +1,23 @@
+uuid: cc5e1910-a1b6-4884-a4ab-7e90bd5d628e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_original_id
+    - ghi_base_objects.base_object_type.country
+id: base_object.country.field_original_id
+field_name: field_original_id
+entity_type: base_object
+bundle: country
+label: 'Original ID'
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

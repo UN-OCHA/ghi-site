@@ -2,6 +2,15 @@
 // GHI: Blocks
 //——————————————————————————————————————————————————————————————————————————————
 
+@import "article-collection";
 @import "common";
-@import "entity_types";
-@import "hid_session_information";
+@import "document-links";
+@import "document-subheading";
+@import "entity-types";
+@import "external-widgets";
+@import "headline-figures";
+@import "hid-session-information";
+@import "key-figures";
+@import "plan-attachment-map";
+@import "plan-overview-map";
+@import "plan-table";

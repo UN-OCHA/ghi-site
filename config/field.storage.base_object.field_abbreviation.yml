@@ -1,0 +1,21 @@
+uuid: 6cd3204b-dc00-446e-be82-d9a9f3653910
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+id: base_object.field_abbreviation
+field_name: field_abbreviation
+entity_type: base_object
+type: string
+settings:
+  max_length: 255
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

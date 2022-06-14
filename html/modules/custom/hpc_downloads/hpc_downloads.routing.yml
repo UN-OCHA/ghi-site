@@ -1,0 +1,85 @@
+hpc_downloads.download_dialog:
+  path: '/download/dialog/{download_source_type}'
+  defaults:
+    _controller: 'Drupal\hpc_downloads\Controller\DownloadController::showDialog'
+  parameters:
+      download_source_type:
+        type: string
+  requirements:
+    _permission: 'access content'
+hpc_downloads.initiate:
+  path: '/download/initiate/{download_source_type}/{download_type}'
+  defaults:
+    _controller: 'Drupal\hpc_downloads\Controller\DownloadController::initiate'
+  parameters:
+      download_source_type:
+        type: string
+      download_type:
+        type: string
+  requirements:
+    _permission: 'access content'
+hpc_downloads.check:
+  path: '/download/{id}/check'
+  defaults:
+    _controller: 'Drupal\hpc_downloads\Controller\DownloadController::check'
+  requirements:
+    _permission: 'access content'
+  parameters:
+      id:
+        type: integer
+hpc_downloads.abort:
+  path: '/download/{id}/abort'
+  defaults:
+    _controller: 'Drupal\hpc_downloads\Controller\DownloadController::abort'
+  requirements:
+    _permission: 'access content'
+  parameters:
+      id:
+        type: integer
+hpc_downloads.download:
+  path: '/download/{id}/download'
+  defaults:
+    _controller: 'Drupal\hpc_downloads\Controller\DownloadController::download'
+  requirements:
+    _permission: 'access content'
+  parameters:
+      id:
+        type: integer
+hpc_downloads.config:
+  path: '/admin/config/hpc_downloads/config'
+  defaults:
+    _form: '\Drupal\hpc_downloads\Form\ConfigForm'
+    _title: 'HPC Downloads Configuration'
+  requirements:
+    _permission: 'administer site configuration'
+system.admin_reports_hpc_downloads:
+  path: '/admin/reports/hpc-downloads'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'FTS'
+  requirements:
+    _permission: 'access administration pages'
+hpc_downloads.reports.download_files:
+  path: '/admin/reports/downloads/files'
+  defaults:
+    _controller: '\Drupal\hpc_downloads\Controller\DownloadReportController::buildFileListPage'
+    _title: 'Download files'
+  requirements:
+    _permission: 'administer site configuration'
+hpc_downloads.reports.download_records:
+  path: '/admin/reports/downloads/records'
+  defaults:
+    _controller: '\Drupal\hpc_downloads\Controller\DownloadReportController::buildRecordListPage'
+    _title: 'Download records'
+  requirements:
+    _permission: 'administer site configuration'
+hpc_downloads.reports.download_records.view:
+  path: '/admin/reports/downloads/records/{id}'
+  defaults:
+    _controller: '\Drupal\hpc_downloads\Controller\DownloadReportController::viewRecord'
+    _title: 'Download record'
+  requirements:
+    _permission: 'administer site configuration'
+  parameters:
+      id:
+        type: integer

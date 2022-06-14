@@ -1,0 +1,211 @@
+// Styles for Map
+// --------------------------------------------------
+
+.ghi-block-global-plan-overview-map {
+  position: relative;
+  clear: both;
+  margin-top: 1em;
+
+  .block-content {
+    margin-top: 2rem;
+  }
+
+  .overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    opacity: 0.25;
+    //z-index: 1000;
+  }
+
+  // .pane-title-wrapper {
+  //   padding-top: 0px;
+  //   min-height: 50px;
+  //   @include tablet {
+  //     padding-top: 10px;
+  //   }
+
+  //   .pane-title, h2.pane-title {
+  //     border-bottom: none;
+  //     display: inline-block;
+  //     padding-bottom: 0;
+  //     margin-bottom: 0.5rem;
+  //     float: left;
+  //     margin-right: 0px;
+  //     @media (min-width: 450px) {
+  //       margin-right: 10px;
+  //     }
+  //   }
+  // }
+
+  .map-container {
+    margin-bottom: 1rem;
+    padding: 0 0.5rem;
+
+    .map-tabs {
+      position: absolute;
+      top: -2.5rem;
+      right: 0;
+      display: inline-block;
+      text-align: right;
+
+      @include max-width(sm) {
+        ul {
+          display: inline-block;
+        }
+      }
+    }
+
+    .leaflet-container {
+      position: relative;
+      min-height: 400px;
+      border-width: 1px;
+      border-style: solid;
+      border-color: var(--hpc-border-color);
+
+      .leaflet-control-container {
+
+        .leaflet-bottom {
+          width: 100%;
+        }
+
+        .leaflet-control-attribution {
+          float: none;
+          width: 100%;
+          margin-right: auto;
+          margin-left: auto;
+          padding: 0.5rem;
+          text-align: center;
+
+          @include max-width(sm) {
+            padding-bottom: 0.3rem;
+          }
+        }
+
+        .modal-content {
+          .modal-inner {
+            padding: 1.2rem 1.6rem 0.5rem 1.4rem;
+            cursor: default;
+          }
+          strong {
+            font-weight: bold;
+          }
+          .title {
+            margin-bottom: 0;
+            color: var(--hpc-orange);
+            font-size: var(--cd-font-size--base);
+            font-weight: bold;
+
+            a {
+              color: var(--hpc-orange);
+            }
+          }
+          .section-wrapper {
+            margin-bottom: 10px;
+            padding-top: 10px;
+            border-bottom: 1px solid var(--hpc-border-color);
+
+            .section-header {
+              margin-bottom: 1.2rem;
+              text-transform: uppercase;
+              font-size: var(--cd-font-size--small);
+              font-weight: bold;
+              line-height: 16px;
+
+              .material-icons {
+                float: left;
+                margin-right: 10px;
+
+                &.attach-money {
+                  margin-right: 0;
+                  margin-left: -5px;
+                }
+              }
+
+              span {
+                display: block;
+                padding-top: 5px;
+              }
+            }
+
+            .section-row {
+              width: 100%;
+              margin-bottom: 1rem;
+              cursor: text;
+
+              .section-row-item {
+                float: left;
+                width: 50%;
+
+                &:nth-child(2) {
+                  padding-left: 0.5rem;
+                }
+              }
+
+              .label {
+                position: relative;
+                display: inline;
+                margin-bottom: 3px;
+                text-align: left;
+                font-size: var(--cd-font-size--small);
+                font-weight: normal;
+
+                i.tooltip.info {
+                  position: relative;
+                  margin-left: 0.2rem;
+                  line-height: 1.3rem;
+                }
+                i.tooltip.monitoring-period {
+                  position: relative;
+                  top: 1px;
+                  left: 2px;
+                }
+
+                i.tooltip svg {
+                  fill: var(--cd-primary-color);
+                }
+              }
+
+              .value {
+                display: block;
+                font-size: var(--cd-font-size--small);
+                font-weight: bold;
+
+                .hpc-percent-progress-bar-wrapper {
+                  margin-top: 2px;
+                  cursor: default;
+                }
+              }
+              .note {
+                font-size: var(--cd-font-size--tiny);
+              }
+            }
+
+            &.last {
+              margin-bottom: 0;
+              padding-bottom: 0;
+              border: none;
+            }
+          }
+        }
+      }
+
+      .leaflet-overlay-pane {
+        text.donut-label {
+          font-family: var(--cd-font--roboto);
+          font-weight: 500;
+        }
+      }
+
+      @include tablet() {
+        min-height: 500px;
+        border: 0 none;
+      }
+    }
+
+    @include tablet() {
+      padding: 0;
+    }
+  }
+}

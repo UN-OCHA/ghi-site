@@ -1,0 +1,8 @@
+uuid: 7f2b2f1b-b495-4bd2-a196-aef30215f326
+langcode: en
+status: true
+dependencies: {  }
+name: 'Organization type'
+vid: organization_type
+description: ''
+weight: 0

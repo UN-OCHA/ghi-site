@@ -12,14 +12,14 @@ id: publication
 label: Publication
 image_style_mappings:
   -
-    breakpoint_id: common_design.xl
-    multiplier: 2x
     image_mapping_type: image_style
     image_mapping: publication_3x
-  -
-    breakpoint_id: common_design.md
+    breakpoint_id: common_design.xl
     multiplier: 2x
+  -
     image_mapping_type: image_style
     image_mapping: publication_2x
+    breakpoint_id: common_design.md
+    multiplier: 2x
 breakpoint_group: common_design
 fallback_image_style: publication_1x

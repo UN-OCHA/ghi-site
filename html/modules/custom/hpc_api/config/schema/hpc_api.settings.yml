@@ -1,0 +1,28 @@
+hpc_api.settings:
+  type: config_object
+  label: 'HPC API settings'
+  mapping:
+    url:
+      type: string
+      label: 'The API url'
+    default_api_version:
+      type: string
+      label: 'The default API version as a string (v1, v2, ..)'
+    auth_username:
+      type: boolean
+      label: 'A basic auth username'
+    auth_password:
+      type: string
+      label: 'A basic auth password'
+    public_base_path:
+      type: string
+      label: 'The base path for public AI requests'
+    timeout:
+      type: integer
+      label: 'The timeout for API requests'
+    cache_lifetime:
+      type: integer
+      label: 'The cache lifetime'
+    use_gzip_compression:
+      type: boolean
+      label: 'Whether to use gzip compression for API requests'

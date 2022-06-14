@@ -11,7 +11,7 @@ use Drupal\ghi_plans\Helpers\DataPointHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
- * Provides a configuration container element.
+ * Provides a data point element.
  *
  * @FormElement("data_point")
  */
@@ -42,9 +42,12 @@ class DataPoint extends FormElement {
       ],
       '#theme_wrappers' => ['form_element'],
       '#attachment' => NULL,
+      '#attachment_prototype' => NULL,
       '#widget' => TRUE,
       '#hidden' => FALSE,
       '#disabled_empty_fields' => TRUE,
+      // Preset options.
+      '#presets' => [],
     ];
   }
 
@@ -102,12 +105,12 @@ class DataPoint extends FormElement {
         1 => array_key_exists(1, $values['data_points']) ? $values['data_points'][1] : NULL,
       ],
       'formatting' => !empty($values['formatting']) ? $values['formatting'] : array_key_first(DataPointHelper::getFormattingOptions()),
-      'widget' => !empty($values['widget']) ? $values['widget'] : NULL,
+      'widget' => !empty($values['widget']) ? $values['widget'] : 'none',
     ];
 
     $element['processing'] = [
       '#type' => 'select',
-      '#title' => t('Processing'),
+      '#title' => t('Type'),
       '#options' => DataPointHelper::getProcessingOptions(),
       '#default_value' => $defaults['processing'],
       '#ajax' => [

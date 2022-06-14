@@ -1,0 +1,23 @@
+uuid: 36ee14ab-1476-40c3-9cb5-62c422d25b44
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_plan_document_link
+    - ghi_base_objects.base_object_type.plan
+  module:
+    - link
+id: base_object.plan.field_plan_document_link
+field_name: field_plan_document_link
+entity_type: base_object
+bundle: plan
+label: 'Plan document link'
+description: 'Enter a fully qualified URL to the remote document, e.g.: <em>https://external.domain/files/document.pdf</em>.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  title: 0
+  link_type: 17
+field_type: link

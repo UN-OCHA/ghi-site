@@ -3,14 +3,12 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_plans\Query\IconQuery;
-use Drupal\ghi_plans\Query\PlanEntitiesQuery;
-use Drupal\node\NodeInterface;
+use Drupal\hpc_api\Query\EndpointQueryManager;
 
 /**
  * Provides an entity counter item for configuration containers.
@@ -34,37 +32,25 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
   /**
    * The plan entities query.
    *
-   * @var \Drupal\ghi_plans\Query\PlanEntitiesQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
    */
   public $planEntitiesQuery;
 
   /**
    * The icon query.
    *
-   * @var \Drupal\ghi_plans\Query\IconQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\IconQuery
    */
   public $iconQuery;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, PlanEntitiesQuery $plan_entities_query, IconQuery $icon_query) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->planEntitiesQuery = $plan_entities_query;
-    $this->iconQuery = $icon_query;
-  }
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $endpoint_query_manager);
 
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('ghi_plans.plan_entities_query'),
-      $container->get('ghi_plans.icon_query'),
-    );
+    $this->iconQuery = $this->endpointQueryManager->createInstance('icon_query');
+    $this->planEntitiesQuery = $this->endpointQueryManager->createInstance('plan_entities_query');
   }
 
   /**
@@ -181,9 +167,6 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
   public function getClasses() {
     $classes = parent::getClasses();
     $classes[] = Html::getClass($this->getPluginId() . '--' . $this->get('entity_type'));
-    if (empty($this->getValue())) {
-      $classes[] = 'empty';
-    }
     return $classes;
   }
 
@@ -246,7 +229,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
       return [];
     }
     return array_filter($entities, function ($entity) use ($entity_prototype) {
-      return $entity->prototype_id == $entity_prototype;
+      return $entity->entity_prototype_id == $entity_prototype;
     });
   }
 
@@ -261,10 +244,10 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
    */
   private function getEntities($entity_type) {
     $context = $this->getContext();
-    if (empty($context['context_node']) || !$context['context_node'] instanceof NodeInterface) {
+    if (empty($context['base_object']) || !$context['base_object'] instanceof ContentEntityInterface) {
       return [];
     }
-    return $this->planEntitiesQuery->getPlanEntities($context['context_node'], $entity_type, NULL);
+    return $this->planEntitiesQuery->getPlanEntities($context['base_object'], $entity_type, NULL);
   }
 
   /**
@@ -293,7 +276,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     $entity_prototype_options = [];
     $weight = [];
     foreach ($this->getEntities($entity_type) as $entity) {
-      $prototype_id = $entity->prototype_id;
+      $prototype_id = $entity->entity_prototype_id;
       if (empty($entity_prototype_options[$prototype_id])) {
         $name = $entity->plural_name;
         $entity_prototype_options[$prototype_id] = $name;

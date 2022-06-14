@@ -1,0 +1,11 @@
+uuid: 2b519de8-5499-40e6-ad59-878de919f380
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.plan_type
+id: taxonomy_term.plan_type
+target_entity_type_id: taxonomy_term
+target_bundle: plan_type
+default_langcode: site_default
+language_alterable: false

@@ -1,0 +1,48 @@
+.gho-text {
+  margin: 4.5rem 0 0 0;
+  font-size: 1rem;
+  line-height: 1.75rem;
+}
+
+@media (min-width: 768px) {
+  .gho-text {
+    font-size: 1.125rem;
+    line-height: 2rem;
+  }
+}
+.gho-text__text {
+  max-width: var(--reading-width);
+}
+.gho-text p.highlight {
+  color: #1f1f1f;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .gho-text p.highlight {
+    font-size: 1.5rem;
+    line-height: 2.25rem;
+  }
+}
+/* Same styling as caption. @see gho-caption */
+.gho-text blockquote {
+  margin: 2rem 0;
+  color: #707070;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .gho-text blockquote {
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+  }
+}
+.gho-text__text > :first-child {
+  margin-top: 0;
+}
+.gho-text__text > :last-child {
+  margin-bottom: 0;
+}

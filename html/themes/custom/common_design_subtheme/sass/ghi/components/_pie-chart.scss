@@ -1,0 +1,17 @@
+.hpc-pie-chart-wrapper {
+  svg {
+    width: 20px;
+    height: 20px;
+    transform: rotate(-90deg);
+    border: 1px solid var(--cd-widget-color--dark);
+    border-radius: 50%;
+    fill: var(--cd-widget-color--light);
+
+    circle {
+      fill: var(--cd-widget-color--light);
+      stroke: var(--cd-widget-color--dark);
+      stroke-width: 32;
+      stroke-dasharray: 100 100; /* for 38% */
+    }
+  }
+}

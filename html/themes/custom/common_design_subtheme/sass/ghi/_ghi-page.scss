@@ -1,0 +1,37 @@
+.region-page-title {
+
+  .block-wrapper:not(.block-wrapper--hero_image) {
+    border-bottom: 1px solid var(--cd-default-border-color);
+
+    .block-wrapper__inner {
+      max-width: $cd-max-width;
+      padding: 0 $cd-container-padding;
+
+      .cd-page-title {
+        margin: 1rem 0;
+        padding: 0;
+      }
+
+      @include tablet {
+        margin: 1rem auto;
+        padding: 0 $cd-container-padding-tablet;
+      }
+
+      @include xlarge {
+        padding: 0 $cd-container-padding-xlarge;
+      }
+    }
+
+    &.block-wrapper--subpagenavigation .block-wrapper__inner {
+      padding: 1rem 0;
+
+      @include tablet {
+        padding: 0;
+      }
+    }
+  }
+
+  .block-wrapper--hero_image .field--type-ghi-hero-image {
+    line-height: 0;
+  }
+}

@@ -1,0 +1,29 @@
+uuid: 66693845-7138-420f-b456-4c393845f475
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_tags
+    - node.type.section
+    - taxonomy.vocabulary.tags
+id: node.section.field_tags
+field_name: field_tags
+entity_type: node
+bundle: section
+label: 'Section tags'
+description: 'Define the tags for this section. This has implications on what content will appear on subpages of this section. Separate multiple tags by comma.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      tags: tags
+    sort:
+      field: name
+      direction: asc
+    auto_create: true
+    auto_create_bundle: ''
+field_type: entity_reference

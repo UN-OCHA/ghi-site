@@ -11,6 +11,13 @@ services:
       - { name: 'event_subscriber' }
   hpc_common.render_block_component_subscriber:
     class: Drupal\hpc_common\EventSubscriber\BlockComponentRenderArray
-    arguments: []
     tags:
       - { name: event_subscriber }
+  hpc_common.page_parameter_context:
+    class: Drupal\hpc_common\EventSubscriber\PageParameterContext
+    arguments: ['@context.repository']
+    tags:
+      - { name: 'event_subscriber' }
+  hpc_common.hid_user_data:
+    class: Drupal\hpc_common\Hid\HidUserData
+    arguments: ['@request_stack', '@entity_type.manager', '@current_user']

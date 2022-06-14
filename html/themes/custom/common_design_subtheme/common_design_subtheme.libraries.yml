@@ -2,31 +2,11 @@ global-styling:
   css:
     theme:
       css/styles.css: {}
-
-ghi-grid:
-  css:
-    theme:
-      components/ghi-grid/ghi-grid.css: {}
-
-ghi-plan-teaser:
-  css:
-    theme:
-      components/ghi-plan-teaser/ghi-plan-teaser.css: {}
-
-ghi-publication:
-  css:
-    theme:
-      components/ghi-publication/ghi-publication.css: {}
-
-ghi-progress-bar:
-  css:
-    theme:
-      components/ghi-progress-bar/ghi-progress-bar.css: {}
-
-ghi-pie-chart:
-  css:
-    theme:
-      components/ghi-pie-chart/ghi-pie-chart.css: {}
+  js:
+    js/common.js: {}
+    js/login_destination.js: {}
+  dependencies:
+    - common_design_subtheme/sorttable
 
 # CSS custom properties polyfill for IE11.
 # https://jhildenbiddle.github.io/css-vars-ponyfill
@@ -37,3 +17,119 @@ css-vars-ponyfill:
   js:
     https://cdn.jsdelivr.net/npm/css-vars-ponyfill@2: { type: external, minified: true, attributes: { nomodule: true } }
     js/cd-css-vars-ponyfill.js: { attributes: { nomodule: true } }
+
+sorttable:
+  version: 2
+  js:
+    js/sorttable.js: {}
+
+# External libraries
+swiper:
+  version: 8.1
+  js:
+    /libraries/swiper/swiper-bundle.min.js: {}
+  css:
+    component:
+      /libraries/swiper/swiper.min.css: {}
+
+# Libraries specific to GHI.
+ghi-grid:
+  css:
+    theme:
+      components/ghi-grid/ghi-grid.css: {}
+ghi-section-teaser:
+  css:
+    theme:
+      components/ghi-section-teaser/ghi-section-teaser.css: {}
+ghi-tab-container:
+  css:
+    theme:
+      components/ghi-tab-container/ghi-tab-container.css: {}
+  js:
+    components/ghi-tab-container/ghi-tab-container.js: {}
+  dependencies:
+    - common_design_subtheme/swiper
+ghi-link-carousel:
+  css:
+    theme:
+      components/ghi-link-carousel/ghi-link-carousel.css: {}
+  js:
+    components/ghi-link-carousel/ghi-link-carousel.js: {}
+  dependencies:
+    - common_design_subtheme/swiper
+
+# Copy libraries from GHO
+datawrapper-responsive-iframe:
+  header: true
+  js:
+    js/datawrapper-responsive-iframe.js: {}
+gho-appeals-tags:
+  css:
+    theme:
+      components/gho-appeals-tags/gho-appeals-tags.css: {}
+gho-achievement:
+  css:
+    theme:
+      components/gho-achievement/gho-achievement.css: {}
+gho-bottom-figure-row:
+  css:
+    theme:
+      components/gho-bottom-figure-row/gho-bottom-figure-row.css: {}
+gho-facts-and-figures:
+  css:
+    theme:
+      components/gho-facts-and-figures/gho-facts-and-figures.css: {}
+gho-footnotes:
+  js:
+    components/gho-footnotes/gho-footnotes.js: {}
+  css:
+    theme:
+      components/gho-footnotes/gho-footnotes.css: {}
+gho-further-reading:
+  css:
+    theme:
+      components/gho-further-reading/gho-further-reading.css: {}
+gho-interactive-content:
+  css:
+    theme:
+      components/gho-interactive-content/gho-interactive-content.css: {}
+  dependencies:
+    - common_design_subtheme/datawrapper-responsive-iframe
+gho-needs-and-requirements:
+  css:
+    theme:
+      components/gho-needs-and-requirements/gho-needs-and-requirements.css: {}
+gho-page-node:
+  css:
+    theme:
+      components/gho-page-node/gho-page-node.css: {}
+gho-photo-gallery:
+  css:
+    theme:
+      components/gho-photo-gallery/gho-photo-gallery.css: {}
+  dependencies:
+    - common_design_subtheme/gho-aside
+gho-related-articles:
+  css:
+    theme:
+      components/gho-related-articles/gho-related-articles.css: {}
+gho-text:
+  css:
+    theme:
+      components/gho-text/gho-text.css: {}
+gho-caption:
+  css:
+    theme:
+      components/gho-caption/gho-caption.css: {}
+gho-aside:
+  css:
+    theme:
+      components/gho-aside/gho-aside.css: {}
+  dependencies:
+    - common_design_subtheme/gho-caption
+gho-sub-article:
+  css:
+    theme:
+      components/gho-sub-article/gho-sub-article.css: {}
+  dependencies:
+    - common_design_subtheme/gho-appeals-tags

@@ -5,6 +5,11 @@
   font-size: 16px;
 }
 
+.item-list ul.plan-structure,
+.item-list ul.plan-structure ul {
+  margin-left: 0;
+}
+
 .item-list ul.plan-structure li {
   list-style-type: none;
   font-weight: normal;
@@ -18,13 +23,21 @@
   font-weight: bold;
 }
 
+.item-list ul.plan-structure > li > div.item-list div.item-list h3 {
+  font-size: inherit;
+  font-weight: normal;
+  letter-spacing: inherit;
+  margin: 0;
+}
+
 .item-list ul.plan-structure > li > div.item-list > ul,
 .item-list ul.plan-structure > li > div.item-list > ul > li {
   margin-left: 0;
 }
 
-.item-list ul.plan-structure > li div.item-list {
+.item-list ul.plan-structure > li div.item-list div.item-list ul {
   margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .item-list ul.plan-structure .edit-icon {

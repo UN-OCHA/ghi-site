@@ -1,0 +1,137 @@
+/**
+ * List styles
+ */
+.gho-related-articles {
+  margin: 6.75rem 0 2rem 0;
+  padding: 4.5rem 0 0 0;
+  border-top: 1px solid #d8d8d8;
+}
+
+/**
+ * List title
+ */
+.gho-related-articles__title {
+  margin: 0;
+  color: #1f1f1f;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 2rem;
+}
+
+/**
+ * Individual Article
+ */
+.gho-related-article {
+  margin-top: 2rem;
+  font-size: 1rem;
+  line-height: 1.75rem;
+}
+
+@media screen and (min-width: 768px) {
+  .gho-related-article {
+    /* Using flex-wrap here to avoid having the design failing due to the
+     * editorial status (language - published) displayed via article::before. */
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
+
+/**
+ * Lists of related articles have separators
+ */
+.gho-related-article + .gho-related-article {
+  padding-top: 2rem;
+  border-top: 1px solid #d8d8d8;
+}
+
+/**
+ * Thumbnail image
+ */
+@media screen and (min-width: 768px) {
+  .gho-related-article .field--name-field-thumbnail-image {
+    /* The 2.25rem are for the padding of the text */
+    width: calc(40% - 2.25rem);
+    min-width: 320px;
+  }
+}
+
+/**
+ * Content: title, summary and read-more lunk.
+ */
+@media screen and (min-width: 768px) {
+  .gho-related-article__content {
+    display: flex;
+    flex-direction: column;
+    /* Minimum width of the image. */
+    flex-basis: 320px;
+    flex-grow: 1;
+    flex-shrink: 0;
+  }
+  [dir="ltr"] .gho-related-article__content {
+    padding-right: 0;
+    padding-left: 2.25rem;
+  }
+  [dir="rtl"] .gho-related-article__content {
+    padding-right: 2.25rem;
+    padding-left: 0;
+  }
+}
+
+/**
+ * Title
+ */
+.gho-related-article__title {
+  margin: 1rem 0 0.625rem 0;
+  font-size: 1.125em;
+  font-weight: 700;
+  line-height: 2rem;
+}
+.gho-related-article__title a {
+  text-decoration: none;
+  color: #1f1f1f;
+}
+
+@media screen and (min-width: 768px) {
+  .gho-related-article__title {
+    margin-top: -9px; /* @see GHO-144 */
+  }
+}
+
+/**
+ * Summary
+ */
+.gho-related-article .field--name-field-summary > :first-child {
+  margin-top: 0;
+}
+.gho-related-article .field--name-field-summary > :last-child {
+  margin-bottom: 0;
+}
+
+@media screen and (min-width: 768px) {
+  .gho-related-article .field--name-field-summary {
+    flex-basis: auto;
+    flex-grow: 1;
+    flex-shrink: 0;
+  }
+}
+
+/**
+ * Link to read article
+ */
+.gho-related-article__read-article,
+.gho-related-article__read-article:hover,
+.gho-related-article__read-article:active {
+  display: block;
+  padding: 1rem 0 0 0;
+  color: #1f1f1f;
+  font-weight: 700;
+}
+.gho-related-article__arrow {
+  margin: 0 0 0 0.25rem;
+  /* @todo should this be the same color as the links or use the UN blue? */
+  fill: #3a90d2; /* UN blue */
+}
+[dir="rtl"] .gho-related-article__arrow {
+  margin: 0 0.25rem 0 0;
+  transform: scale(-1, 1);
+}
