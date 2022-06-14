@@ -2,7 +2,7 @@ _core:
   default_config_hash: yXadRE77Va-G6dxhd2kPYapAvbnSvTF6hO4oXiOEynI
 langcode: en
 uuid: bbcc1eba-da39-4de7-bbe0-7ff4553fb0cc
-name: 'Humanitarian Overview'
+name: 'Humanitarian Action'
 mail: admin@example.com
 slogan: 'An evidence-based overview of the humanitarian response coordinated by the United Nations'
 page:
