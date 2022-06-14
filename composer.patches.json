@@ -31,6 +31,9 @@
     },
     "drupal/layout_builder_modal": {
       "Issue #3127943: Modal not resizing for narrow screens": "https://www.drupal.org/files/issues/2021-10-06/layout_builder_modal-3127943-6.patch"
+    },
+    "drupal/smugmug_api": {
+      "Issue #3285444: Add support for image search": "https://www.drupal.org/files/issues/2022-06-13/3285444-2.patch"
     }
   }
 }

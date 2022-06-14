@@ -1,0 +1,15 @@
+uuid: 1ac187cf-ef2d-41c4-8bbb-ad0a22489e9f
+langcode: en
+status: true
+dependencies: {  }
+name: hero_image
+label: 'Hero image'
+effects:
+  ff334ff2-315f-46cd-ba30-31606804cbee:
+    uuid: ff334ff2-315f-46cd-ba30-31606804cbee
+    id: image_scale
+    weight: 1
+    data:
+      width: 1400
+      height: null
+      upscale: true

@@ -1,0 +1,6 @@
+_core:
+  default_config_hash: INg4WFRIZMd78q57pPWn430A4clpEme-cQKaD6QdMf0
+api_key: APIKEY
+api_secret: APISECRET
+api_base_uri: 'https://api.smugmug.com/api/v2/'
+api_cache_maximum_age: '86400'

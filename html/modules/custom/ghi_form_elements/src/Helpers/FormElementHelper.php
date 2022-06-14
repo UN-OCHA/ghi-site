@@ -19,7 +19,22 @@ class FormElementHelper {
    *   The final state selector string.
    */
   public static function getStateSelector(array $element, array $subkeys) {
-    return reset($element['#parents']) . '[' . implode('][', array_merge(array_slice($element['#parents'], 1), $subkeys)) . ']';
+    return self::getStateSelectorFromParents($element['#parents'], $subkeys);
+  }
+
+  /**
+   * Get a selector from the passed in parents array.
+   *
+   * @param array $parents
+   *   The parents array.
+   * @param array $subkeys
+   *   Additional subkeys.
+   *
+   * @return string
+   *   The final state selector string.
+   */
+  public static function getStateSelectorFromParents(array $parents, array $subkeys) {
+    return reset($parents) . '[' . implode('][', array_merge(array_slice($parents, 1), $subkeys)) . ']';
   }
 
 }

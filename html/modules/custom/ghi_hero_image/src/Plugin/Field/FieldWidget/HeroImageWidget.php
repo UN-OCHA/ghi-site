@@ -2,9 +2,14 @@
 
 namespace Drupal\ghi_hero_image\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_form_elements\Helpers\FormElementHelper;
+use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines the 'ghi_hero_image' field widget.
@@ -18,39 +23,97 @@ use Drupal\Core\Form\FormStateInterface;
 class HeroImageWidget extends WidgetBase {
 
   /**
+   * The SmugMug user service.
+   *
+   * @var \Drupal\smugmug_api\Service\User
+   */
+  public $smugmugUser;
+
+  /**
    * {@inheritdoc}
    */
-  public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-
-    // @todo This needs an option to integrate the SmugMug API.
-    $source_options = [
-      'hpc_webcontent_file_attachment' => $this->t('HPC Webcontent File Attachment'),
-    ];
-
-    $element['source'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Source'),
-      '#options' => $source_options,
-      '#default_value' => isset($items[$delta]->source) ? $source_options[$items[$delta]->source] : array_key_first($source_options),
-    ];
-
-    // @todo This needs an actual configuration, based on the source selection.
-    $element['settings'] = [
-      '#type' => 'hidden',
-      '#value' => 'test',
-    ];
-
-    return $element;
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->smugmugUser = $container->get('smugmug_api.user');
+    return $instance;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
-    foreach ($values as $delta => $value) {
-      $values[$delta]['settings'] = [];
+  public static function defaultSettings() {
+    return [
+      'source' => NULL,
+      'settings' => [
+        'hpc_webcontent_file_attachment' => NULL,
+        'smugmug_api' => NULL,
+      ],
+    ] + parent::defaultSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
+
+    $form_object = $form_state->getFormObject();
+    $entity = $form_object instanceof EntityFormInterface ? $form_object->getEntity() : NULL;
+
+    // See if we have a plan context.
+    $plan_object = NULL;
+    if ($entity instanceof NodeInterface) {
+      $base_object = BaseObjectHelper::getBaseObjectFromNode($entity);
+      $plan_object = $base_object && $base_object->bundle() == 'plan' ? $base_object : NULL;
     }
-    return $values;
+
+    // See if we can use SmugMug.
+    $smugmug_ocha = $this->smugmugUser->getUser('ocha');
+
+    $source_options = array_filter([
+      'none' => $this->t('No image'),
+      'hpc_webcontent_file_attachment' => $plan_object ? $this->t('HPC Webcontent File Attachment') : NULL,
+      'smugmug_api' => $smugmug_ocha ? $this->t('Smugmug: @user', ['@user' => $smugmug_ocha['Name']]) : NULL,
+    ]);
+
+    $element['source'] = [
+      '#type' => 'select',
+      '#title' => $element['#title'],
+      '#options' => $source_options,
+      '#default_value' => $items[$delta]->source ?? array_key_first($source_options),
+    ];
+
+    $element['settings'] = [
+      '#type' => 'container',
+    ];
+
+    $parents = $element['#field_parents'];
+    $parents[] = $this->fieldDefinition->getName();
+    $parents[] = $delta;
+
+    $source_selector = FormElementHelper::getStateSelectorFromParents($parents, ['source']);
+
+    $element['settings']['hpc_webcontent_file_attachment'] = [
+      '#type' => 'webcontent_file_select',
+      '#default_value' => $items[$delta]->settings['hpc_webcontent_file_attachment'] ?? NULL,
+      '#plan_object' => $plan_object,
+      '#states' => [
+        'visible' => [
+          ':input[name="' . $source_selector . '"]' => ['value' => 'hpc_webcontent_file_attachment'],
+        ],
+      ],
+    ];
+    $element['settings']['smugmug_api'] = [
+      '#type' => 'smugmug_image',
+      '#default_value' => $items[$delta]->settings['smugmug_api'] ?? NULL,
+      '#states' => [
+        'visible' => [
+          ':input[name="' . $source_selector . '"]' => ['value' => 'smugmug_api'],
+        ],
+      ],
+      '#smugmug_user_scope' => $smugmug_ocha,
+    ];
+
+    return $element;
   }
 
 }

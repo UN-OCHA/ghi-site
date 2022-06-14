@@ -75,6 +75,7 @@
         "drupal/rabbit_hole": "^1.0@beta",
         "drupal/redirect": "^1.6",
         "drupal/redis": "^1.5",
+        "drupal/smugmug_api": "1.x-dev",
         "drupal/social_auth_hid": "^2.6",
         "drupal/tippy": "^1.0",
         "drupal/view_unpublished": "^1.0",
@@ -110,7 +111,16 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "composer/installers": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "drupal/console-extend-plugin": true,
+            "cweagans/composer-patches": true,
+            "drupal/core-composer-scaffold": true,
+            "drupal/core-project-message": true,
+            "oomphinc/composer-installers-extender": true
+        }
     },
     "autoload": {
       "classmap": [

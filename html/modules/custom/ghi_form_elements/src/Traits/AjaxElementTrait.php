@@ -39,9 +39,9 @@ trait AjaxElementTrait {
       $prefix = reset($element['#attributes']['class']);
     }
     elseif (method_exists(self::class, 'getFormId')) {
-      $prefix = Html::getClass(self::getFormId());
+      $prefix = self::getFormId();
     }
-    return $prefix . '-wrapper';
+    return Html::getClass($prefix) . '-wrapper';
   }
 
   /**

@@ -3,6 +3,9 @@ _core:
 ignored_config_entities:
   - '// System settings.'
   - 'system.site:page:front'
+  - '// Smugmug API'
+  - 'smugmug_api.settings:api_key'
+  - 'smugmug_api.settings:api_secret'
   - '// Ignore global settings.'
   - ghi_blocks.global_settings
   - '// Ignore connection credentials.'

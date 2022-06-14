@@ -204,7 +204,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
       if (empty($attachment->attachmentVersion->value->file->url)) {
         continue;
       }
-      $attachments[] = AttachmentHelper::processAttachment($attachment);
+      $attachments[$attachment->id] = AttachmentHelper::processAttachment($attachment);
     }
     return $attachments;
   }
@@ -224,7 +224,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
       if (empty($attachment->attachmentVersion->value->content ?? '')) {
         continue;
       }
-      $attachments[] = AttachmentHelper::processAttachment($attachment);
+      $attachments[$attachment->id] = AttachmentHelper::processAttachment($attachment);
     }
     return $attachments;
   }
