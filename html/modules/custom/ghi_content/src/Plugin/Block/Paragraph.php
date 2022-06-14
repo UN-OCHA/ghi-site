@@ -38,7 +38,8 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
    * {@inheritdoc}
    */
   public function getAutomaticBlockTitle() {
-    return NULL;
+    $conf = $this->getBlockConfig();
+    return $conf['paragraph']['title'] ?? NULL;
   }
 
   /**
@@ -106,12 +107,23 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
       if ($attributes && $attributes->getNamedItem('class') && $attributes->getNamedItem('class')->nodeValue) {
         $class_attribute = $attributes->getNamedItem('class')->nodeValue;
         $classes = explode(' ', $class_attribute);
+
+        // Get the original GHO specific classes.
         $gho_classes = !empty($classes) ? array_filter($classes, function ($class) {
           return strpos($class, 'gho-') === 0;
         }) : [];
+
+        // Set new classes specific to out system.
         $block_attributes['class'] = array_map(function ($class) {
           return $this->getPluginId() . '--' . $class;
         }, $gho_classes);
+
+        // Special logic for bottom figure rows to assure that styles are also
+        // applied during preview.
+        if ($preview && in_array('gho-bottom-figure-row', $classes)) {
+          $block_attributes['class'][] = 'gho-bottom-figure-row';
+        }
+
         $wrapper_attributes['class'] = $gho_classes;
         $attributes->getNamedItem('class')->nodeValue = implode(' ', array_diff($classes, $gho_classes));
         $rendered = trim(Html::serialize($dom));

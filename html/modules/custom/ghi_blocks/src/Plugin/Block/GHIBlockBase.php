@@ -1054,7 +1054,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     // Because we handle the label fields, we also have to update the
     // configuration.
-    $title_form_key = $this instanceof MultiStepFormBlockInterface ? $this->getTitleSubform() : self::DEFAULT_FORM_KEY;
+    $title_form_key = $this instanceof MultiStepFormBlockInterface ? $this->getTitleSubform() : NULL;
     $this->configuration['label'] = NestedArray::getValue($values, array_filter([
       $title_form_key,
       'label',
