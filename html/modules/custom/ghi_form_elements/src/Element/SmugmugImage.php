@@ -97,6 +97,9 @@ class SmugmugImage extends FormElement {
       if ($action == 'change_image' || $action == 'apply') {
         $editing = TRUE;
       }
+      if ($action == 'select_cancel') {
+        $editing = FALSE;
+      }
       if ($action == 'select_image') {
         $editing = FALSE;
         $values['image_id'] = $values['search']['image_id'];
@@ -263,6 +266,16 @@ class SmugmugImage extends FormElement {
       '#value' => t('Select this image'),
       '#name' => 'select_image',
       '#limit_validation_errors' => [array_merge($element['#parents'], ['search'])],
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+    ];
+    $element['search']['select_cancel'] = [
+      '#type' => 'submit',
+      '#value' => t('Cancel'),
+      '#name' => 'select_cancel',
       '#ajax' => [
         'event' => 'click',
         'callback' => [static::class, 'updateAjax'],
