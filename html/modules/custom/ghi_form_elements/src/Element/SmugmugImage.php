@@ -107,7 +107,11 @@ class SmugmugImage extends FormElement {
 
     // Setup the services we need.
     $date_formatter = self::getDateFormatter();
+    $image_service = self::getSmugmugImageService();
     $image_search = self::getSmugmugImageSearchService();
+    if (!$image_service || !$image_search) {
+      return $element;
+    }
     $smugmug_ocha = $element['#smugmug_user_scope'];
     if (!$smugmug_ocha) {
       return $element;
@@ -146,7 +150,6 @@ class SmugmugImage extends FormElement {
       '#empty' => t('No image selected yet'),
     ];
     if (!empty($values['image_id'])) {
-      $image_service = self::getSmugmugImageService();
       $image = $image_service->getImage($values['image_id']);
 
       $element['currently_selected']['preview']['#rows'][] = [
@@ -290,7 +293,12 @@ class SmugmugImage extends FormElement {
    *   The SmugMug image search service.
    */
   private static function getSmugmugImageSearchService() {
-    return \Drupal::service('smugmug_api.image_search');
+    try {
+      return \Drupal::service('smugmug_api.image_search');
+    }
+    catch (\Exception $e) {
+      // Fail silently.
+    }
   }
 
   /**
@@ -300,7 +308,12 @@ class SmugmugImage extends FormElement {
    *   The SmugMug image service.
    */
   private static function getSmugmugImageService() {
-    return \Drupal::service('smugmug_api.image');
+    try {
+      return \Drupal::service('smugmug_api.image');
+    }
+    catch (\Exception $e) {
+      // Fail silently.
+    }
   }
 
   /**
