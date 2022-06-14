@@ -38,7 +38,8 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
    * {@inheritdoc}
    */
   public function getAutomaticBlockTitle() {
-    return NULL;
+    $conf = $this->getBlockConfig();
+    return $conf['paragraph']['title'] ?? NULL;
   }
 
   /**
