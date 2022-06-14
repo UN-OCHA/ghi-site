@@ -196,12 +196,12 @@ class SmugmugImage extends FormElement {
     $element['search']['text'] = [
       '#type' => 'textfield',
       '#title' => t('Text'),
-      '#default_value' => $values['search']['text'],
+      '#default_value' => $values['search']['text'] ?? '',
     ];
     $element['search']['keywords'] = [
       '#type' => 'textfield',
       '#title' => t('Keywords'),
-      '#default_value' => $values['search']['keywords'],
+      '#default_value' => $values['search']['keywords'] ?? '',
     ];
     $element['search']['apply'] = [
       '#type' => 'submit',

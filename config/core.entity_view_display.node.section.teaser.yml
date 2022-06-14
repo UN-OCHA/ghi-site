@@ -13,7 +13,11 @@ dependencies:
     - node.type.section
   module:
     - ghi_hero_image
+    - layout_builder_ipe
     - user
+third_party_settings:
+  layout_builder_ipe:
+    enabled: 0
 id: node.section.teaser
 targetEntityType: node
 bundle: section
@@ -22,7 +26,8 @@ content:
   field_hero_image:
     type: ghi_hero_image
     label: visually_hidden
-    settings: {  }
+    settings:
+      responsive_image_style: card_hero
     third_party_settings: {  }
     weight: 0
     region: content

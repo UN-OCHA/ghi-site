@@ -11,9 +11,6 @@
       "Issue #3001188: Make it possible to add relationships to layout builder": "./patches/3001188-make-it-possible-to-add-relationships-to-layout-builder.patch",
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch"
     },
-    "drupal/gin": {
-      "Issue #33272105: PHP notice when user pictures are not setup by the standard install profile": "https://www.drupal.org/files/issues/2022-03-31/3272105-7.patch"
-    },
     "drupal/gin_lb": {
       "Issue #??: Add alter hook for template suggestions trigger": "./patches/hook_gin_lb_add_suggestions_alter.patch"
     },
