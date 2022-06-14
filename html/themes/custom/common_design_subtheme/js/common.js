@@ -42,6 +42,23 @@
           $table.after($button);
         }
       });
+
+
     }
+
+
+
+
   };
+
+  // $(document).ajaxSend(function (event, jqxhr, settings) {
+  //   console.log(settings);
+  //   console.log('start');
+  // });
+
+  // $(document).ajaxStop(function (event, s, settings) {
+  //   console.log(event, settings);
+  //   console.log('stop');
+  // });
+
 }(jQuery));
