@@ -6,16 +6,17 @@
 
 .region-header-logo {
   display: flex;
-  margin: 0.7rem 0;
+  // margin: 0.7rem 0;
 
   .cd-site-logo {
-    width: 186px;
+    // width: 186px;
+    width: 360px;
     height: auto;
-    margin: 0.6rem 0 0.6rem -0.5rem;
+    margin: 0 0 0 -1.5rem;
     padding-left: 0.5rem;
     text-decoration: none;
     color: var(--cd-default-text-color);
-    border-left: solid 2px var(--cd-primary-color);
+    // border-left: solid 2px var(--cd-primary-color);
     font-size: var(--cd-font-size--base);
     font-weight: bold;
     line-height: 1.3rem;
