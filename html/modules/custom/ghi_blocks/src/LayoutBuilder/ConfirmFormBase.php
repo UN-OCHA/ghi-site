@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\LayoutBuilder;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_blocks\Traits\GinLbModalTrait;
 use Drupal\layout_builder\Form\LayoutRebuildConfirmFormBase;
 use Drupal\layout_builder\SectionStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -11,6 +12,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Provides a form to confirm the hiding of a block.
  */
 abstract class ConfirmFormBase extends LayoutRebuildConfirmFormBase {
+
+  use GinLbModalTrait;
 
   /**
    * The current region.
@@ -56,14 +59,7 @@ abstract class ConfirmFormBase extends LayoutRebuildConfirmFormBase {
       $form['#attributes']['class'][] = 'glb-form';
     }
 
-    $form['#attributes']['class'][] = 'canvas-form';
-
-    $form['description']['#type'] = 'container';
-    $form['description']['#attributes']['class'][] = 'canvas-form__settings';
-
-    $form['actions']['#type'] = 'container';
-    $form['actions']['#attributes']['class'][] = 'canvas-form__actions';
-
+    $this->makeGinLbForm($form, $form_state);
     return $form;
   }
 
