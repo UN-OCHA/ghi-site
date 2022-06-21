@@ -10,3 +10,6 @@ services:
   ghi_blocks.contextual_links.block_handler:
     class: Drupal\ghi_blocks\ContextualLinks\BlockHandler
     arguments: ['@entity_type.manager', '@layout_builder.tempstore_repository']
+  ghi_blocks.layout_builder_form_alter:
+    class: Drupal\ghi_blocks\LayoutBuilder\LayoutBuilderFormAlter
+    arguments: ['@form_builder']

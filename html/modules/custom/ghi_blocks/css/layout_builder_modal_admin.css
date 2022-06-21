@@ -143,7 +143,6 @@ form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions in
   opacity: 0.5;
 }
 
-#layout-builder-modal .layout-builder-hide-block,
-#layout-builder-modal .layout-builder-unhide-block {
+#layout-builder-modal .confirmation {
   padding-top: 40px;
 }
