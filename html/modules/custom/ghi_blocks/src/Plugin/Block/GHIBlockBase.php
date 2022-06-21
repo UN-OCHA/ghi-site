@@ -1214,6 +1214,11 @@ abstract class GHIBlockBase extends HPCBlockBase {
           'dialog-cancel',
         ],
       ],
+      '#options' => [
+        'query' => [
+          'position' => $this->requestStack->getCurrentRequest()->query->get('position'),
+        ],
+      ],
     ];
 
     if ($form_state->getBuildInfo()['callback_object'] instanceof AddBlockForm) {
