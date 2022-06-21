@@ -904,9 +904,9 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
       $item_type = $this->getItemTypePluginForColumn($item, $context);
 
       $sidebar[] = [
-        '#type' => 'item',
-        '#title' => $item_type->getLabel(),
-        0 => $item_type->getRenderArray(),
+        '#theme' => 'sidebar_slot_item',
+        '#label' => $item_type->getLabel(),
+        '#value' => $item_type->getRenderArray(),
       ];
     }
     return $sidebar;

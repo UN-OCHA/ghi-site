@@ -124,6 +124,13 @@ function ghi_blocks_preprocess_plan_attachment_map(&$variables) {
 }
 
 /**
+ * Preprocess the sidebar slot item.
+ */
+function ghi_blocks_preprocess_sidebar_slot_item(&$variables) {
+
+}
+
+/**
  * Build a download link render array for documents.
  *
  * @param array $document

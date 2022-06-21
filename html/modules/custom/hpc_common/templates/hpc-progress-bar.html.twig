@@ -5,7 +5,7 @@
 %}
 
 {% if hide_value == false %}
-  {{ formatted_value }}
+  <span class="value">{{ formatted_value }}</span>
 {% endif %}
 <div {{ wrapper_attributes.addClass(classes) }}>
   <div class="hpc-progress-bar-inner" style="width: {{ percent }}%">&nbsp;</div>
