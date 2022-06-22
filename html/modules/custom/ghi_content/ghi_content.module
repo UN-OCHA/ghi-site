@@ -72,9 +72,13 @@ function ghi_content_theme($existing, $type, $theme, $path) {
  * Implements hook_batch_alter().
  */
 function ghi_content_batch_alter(&$batch) {
+  $targeted_callback = '\Drupal\migrate_tools\MigrateBatchExecutable::batchProcessImport';
   $targeted_migration = 'articles_gho';
-  $operations = &$batch['sets'][0]['operations'];
-  if ($operations[0][0] != '\Drupal\migrate_tools\MigrateBatchExecutable::batchProcessImport' || $operations[0][1][0] != $targeted_migration) {
+  $current_set = $batch['current_set'];
+  $operations = &$batch['sets'][$current_set]['operations'];
+  $callback = $operations[0][0] ?? NULL;
+  $migration_name = $operations[0][1][0] ?? NULL;
+  if ($callback != $targeted_callback || $migration_name != $targeted_migration) {
     return;
   }
   // Add a post-process batch set to article imports to make sure that articles
