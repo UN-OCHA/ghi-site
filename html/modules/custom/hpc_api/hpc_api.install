@@ -5,7 +5,9 @@
  * Install, uninstall and update hooks for HPC API module.
  */
 
+use Drupal\Core\File\FileSystem;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\hpc_api\ApiObjects\Location;
 use Psr\Http\Message\ResponseInterface;
 use Drupal\hpc_api\Helpers\QueryHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
@@ -14,8 +16,18 @@ use Drupal\hpc_api\Query\EndpointQuery;
  * Implements hook_install().
  */
 function hpc_api_install($is_syncing) {
+  $file_system = \Drupal::service('file_system');
+
   // Create import directory.
-  \Drupal::service('file_system')->mkdir(QueryHelper::IMPORT_DIR);
+  $path = QueryHelper::IMPORT_DIR;
+  if (!$file_system->prepareDirectory($path, Filesystem::CREATE_DIRECTORY | FileSystem::MODIFY_PERMISSIONS)) {
+    \Drupal::service('messenger')->addMessage(t('Unable to create the import file directory. Check the permissions on your files directory.'), 'error');
+  }
+
+  $path = Location::GEO_JSON_DIR;
+  if (!$file_system->prepareDirectory($path, Filesystem::CREATE_DIRECTORY | FileSystem::MODIFY_PERMISSIONS)) {
+    \Drupal::service('messenger')->addMessage(t('Unable to create the geojson file directory. Check the permissions on your files directory.'), 'error');
+  }
 }
 
 /**
@@ -74,27 +86,38 @@ function hpc_api_requirements($phase) {
     $requirements['hpc_api_import']['title'] = t('HPC API: Import directory');
     $requirements['hpc_api_import']['value'] = t('The directory for local storage of HPC data for imports exists and is writable.');
     $requirements['hpc_api_import']['severity'] = REQUIREMENT_OK;
-    $destination = QueryHelper::IMPORT_DIR;
+    hpc_api_directory_requirements(QueryHelper::IMPORT_DIR, $requirements['hpc_api_import']);
 
-    \Drupal::service('file_system')->prepareDirectory($destination, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
-    $is_writable = is_writable($destination);
-    $is_directory = is_dir($destination);
-    if (!$is_writable || !$is_directory) {
-      if (!$is_directory) {
-        $error = t('The directory %directory does not exist.', ['%directory' => $destination]);
-      }
-      else {
-        $error = t('The directory %directory is not writable.', ['%directory' => $destination]);
-      }
-      $description = t('An automated attempt to create this directory failed, possibly due to a permissions problem. To proceed with the installation, either create the directory and modify its permissions manually or ensure that the installer has the permissions to create it automatically. For more information, see INSTALL.txt or the <a href=":handbook_url">online handbook</a>.', [':handbook_url' => 'https://www.drupal.org/server-permissions']);
-      if (!empty($error)) {
-        $description = $error . ' ' . $description;
-        $requirements['hpc_api_import']['value'] = $description;
-        $requirements['hpc_api_import']['severity'] = REQUIREMENT_ERROR;
-      }
-    }
+    // Setup the imports directory.
+    $requirements['hpc_api_geojson']['title'] = t('HPC API: GEO JSON directory');
+    $requirements['hpc_api_geojson']['value'] = t('The directory for local storage of GEO JSON data exists and is writable.');
+    $requirements['hpc_api_geojson']['severity'] = REQUIREMENT_OK;
+    hpc_api_directory_requirements(Location::GEO_JSON_DIR, $requirements['hpc_api_geojson']);
   }
   return $requirements;
+}
+
+/**
+ * Set the status requirements for a directory check point.
+ */
+function hpc_api_directory_requirements($destination, &$requirements) {
+  \Drupal::service('file_system')->prepareDirectory($destination, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+  $is_writable = is_writable($destination);
+  $is_directory = is_dir($destination);
+  if (!$is_writable || !$is_directory) {
+    if (!$is_directory) {
+      $error = t('The directory %directory does not exist.', ['%directory' => $destination]);
+    }
+    else {
+      $error = t('The directory %directory is not writable.', ['%directory' => $destination]);
+    }
+    $description = t('An automated attempt to create this directory failed, possibly due to a permissions problem. To proceed with the installation, either create the directory and modify its permissions manually or ensure that the installer has the permissions to create it automatically. For more information, see INSTALL.txt or the <a href=":handbook_url">online handbook</a>.', [':handbook_url' => 'https://www.drupal.org/server-permissions']);
+    if (!empty($error)) {
+      $description = $error . ' ' . $description;
+      $requirements['value'] = $description;
+      $requirements['severity'] = REQUIREMENT_ERROR;
+    }
+  }
 }
 
 /**

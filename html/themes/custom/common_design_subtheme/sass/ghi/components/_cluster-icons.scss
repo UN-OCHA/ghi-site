@@ -1,0 +1,16 @@
+.cluster-icon {
+
+  svg {
+    position: relative;
+    top: 20%;
+    left: 20%;
+
+    * {
+      fill: var(--hpc-brown);
+    }
+  }
+
+  .cluster-item.active & svg * {
+    fill: $cd-white;
+  }
+}

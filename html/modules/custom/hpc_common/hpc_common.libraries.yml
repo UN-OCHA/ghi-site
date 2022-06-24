@@ -11,3 +11,6 @@ popover:
       css/popover.css: {}
   js:
     js/popover.js: {}
+toggle:
+  js:
+    js/toggle.js: {}

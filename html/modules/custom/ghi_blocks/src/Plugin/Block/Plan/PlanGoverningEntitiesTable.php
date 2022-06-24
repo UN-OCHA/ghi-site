@@ -149,6 +149,9 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
         'table' => [
           'columns' => $columns,
         ],
+        'display' => [
+          'soft_limit' => 5,
+        ],
       ],
     ];
   }

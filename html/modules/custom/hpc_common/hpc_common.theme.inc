@@ -361,3 +361,16 @@ function hpc_common_preprocess_hpc_reporting_period(array &$vars) {
     '@date_range' => $start_date_formatted . ' - ' . $end_date_formatted,
   ]);
 }
+
+/**
+ * Preprocess function for a simple toggle element.
+ */
+function hpc_common_preprocess_hpc_toggle(array &$vars) {
+  $vars['#attached']['library'][] = 'hpc_common/toggle';
+  $parent_selector = $vars['parent_selector'];
+  $target_selector = $vars['target_selector'];
+  $vars['output'] = new FormattableMarkup('<span class="toggle" tabindex="0" data-parent-selector="@parent_selector" data-target-selector="@target_selector"><svg class="cd-icon icon icon--arrow-down" ><use xlink:href="#cd-icon--arrow-down"></use></svg></span>', [
+    '@parent_selector' => $parent_selector,
+    '@target_selector' => $target_selector,
+  ]);
+}

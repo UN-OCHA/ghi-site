@@ -378,6 +378,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $build += $build_content;
 
     // Add some classes for styling.
+    $build['#attributes']['id'] = Html::getId('block-' . $this->getUuid());
     $build['#attributes']['class'][] = Html::getClass('ghi-block-' . $this->getPluginId());
     $build['#attributes']['class'][] = 'ghi-block';
     if ($this->getUuid()) {

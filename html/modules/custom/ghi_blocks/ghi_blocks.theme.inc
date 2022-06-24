@@ -124,6 +124,25 @@ function ghi_blocks_preprocess_plan_attachment_map(&$variables) {
 }
 
 /**
+ * Preprocess a plan attachment map.
+ */
+function ghi_blocks_preprocess_plan_operational_presence_map(&$variables) {
+  $outer_classes = [
+    'map-wrapper-outer',
+    'map-wrapper-' . $variables['chart_id'],
+  ];
+  if (!empty($variables['view_switcher'])) {
+    $outer_classes[] = Html::getClass('has-view-switcher');
+  }
+  if (!empty($variables['object_switcher'])) {
+    $outer_classes[] = Html::getClass('has-object-switcher');
+  }
+  $variables['outer_classes'] = implode(' ', $outer_classes);
+  $variables['view_select'] = $variables['view_switcher'] ?? '';
+  $variables['object_select'] = $variables['object_switcher'] ?? '';
+}
+
+/**
  * Preprocess the sidebar slot item.
  */
 function ghi_blocks_preprocess_sidebar_slot_item(&$variables) {
@@ -164,4 +183,21 @@ function ghi_blocks_build_document_download_link(array $document, $language = NU
       'target' => '_blank',
     ],
   ]))->toRenderable();
+}
+
+/**
+ * Render an ajax switcher element.
+ *
+ * @see \Drupal\ghi_blocks\Form\AjaxSwitcherForm
+ * @see \Drupal\ghi_blocks\Controller\AjaxBlockController
+ */
+function ghi_blocks_preprocess_ajax_switcher(&$variables) {
+  $element_key = $variables['element_key'];
+  $options = $variables['options'];
+  $plugin_id = $variables['plugin_id'];
+  $block_uuid = $variables['block_uuid'];
+  $uri = $variables['uri'];
+  $query = $variables['query'];
+  $default_value = $variables['default_value'];
+  $variables['ajax_switcher'] = \Drupal::formBuilder()->getForm('\Drupal\ghi_blocks\Form\AjaxSwitcherForm', $element_key, $plugin_id, $block_uuid, $options, $default_value, $uri, $query);
 }
