@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\OrganizationsBlockTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
@@ -49,6 +50,7 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
 
   use ConfigurationContainerTrait;
   use TableSoftLimitTrait;
+  use OrganizationsBlockTrait;
 
   /**
    * {@inheritdoc}
@@ -129,6 +131,9 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
         ],
         'table' => [
           'columns' => $columns,
+        ],
+        'display' => [
+          'soft_limit' => 5,
         ],
       ],
     ];
@@ -284,6 +289,22 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
   }
 
   /**
+   * Get the organization options available in the current context.
+   *
+   * @return array
+   *   An array of organizations, keyed by id.
+   */
+  private function getAvailableOrganizationOptions() {
+    $organizations = $this->getOrganizations();
+    return array_map(function ($organization) {
+      return [
+        'id' => $organization->id,
+        'organization_name' => $organization->name,
+      ];
+    }, $organizations);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getAllowedItemTypes() {
@@ -310,53 +331,6 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
       'plan_object' => $this->getCurrentPlanObject(),
       'projects' => $project_search_query->getProjects(),
     ];
-  }
-
-  /**
-   * Get the organization options available in the current context.
-   *
-   * @return array
-   *   An array of organizations, keyed by id.
-   */
-  private function getAvailableOrganizationOptions() {
-    $organizations = $this->getOrganizations();
-    return array_map(function ($organization) {
-      return [
-        'id' => $organization->id,
-        'organization_name' => $organization->name,
-      ];
-    }, $organizations);
-  }
-
-  /**
-   * Get the configured organizations.
-   *
-   * @return object[]
-   *   An array of organization objects.
-   */
-  private function getConfiguredOrganizations() {
-    $conf = $this->getBlockConfig();
-    $organizations = $this->getOrganizations();
-    if (empty($conf['organizations']['organization_ids']) || empty(array_filter($conf['organizations']['organization_ids']))) {
-      return $organizations;
-    }
-    return array_intersect_key($organizations, array_flip(array_filter($conf['organizations']['organization_ids'])));
-  }
-
-  /**
-   * Get all organizations for the current context.
-   *
-   * @return object[]
-   *   Array of organization objects as returned by the API.
-   */
-  private function getOrganizations() {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery $query */
-    $query = $this->getQueryHandler('project_search');
-    $organizations = $query->getOrganizations();
-    uasort($organizations, function ($a, $b) {
-      return strcmp($a->name, $b->name);
-    });
-    return $organizations;
   }
 
 }

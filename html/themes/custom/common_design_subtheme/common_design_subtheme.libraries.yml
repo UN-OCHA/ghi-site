@@ -7,6 +7,7 @@ global-styling:
     js/login_destination.js: {}
   dependencies:
     - common_design_subtheme/sorttable
+    - common_design_subtheme/select2
 
 # CSS custom properties polyfill for IE11.
 # https://jhildenbiddle.github.io/css-vars-ponyfill
@@ -22,6 +23,14 @@ sorttable:
   version: 2
   js:
     js/sorttable.js: {}
+
+select2:
+  version: 2
+  js:
+    /libraries/select2/dist/js/select2.min.js: {}
+  css:
+    component:
+      /libraries/select2/dist/css/select2.min.css: {}
 
 # External libraries
 swiper:

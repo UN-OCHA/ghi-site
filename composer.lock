@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bd887964644f0795462eccc4e3f6c561",
+    "content-hash": "2da8d3d7b50c5d92d932a3861a31f07c",
     "packages": [
         {
             "name": "alchemy/zippy",
@@ -7657,6 +7657,18 @@
             "dist": {
                 "type": "tar",
                 "url": "https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "MIT"
+            ]
+        },
+        {
+            "name": "npm-asset/select2",
+            "version": "4.0.13",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/select2/-/select2-4.0.13.tgz"
             },
             "type": "npm-asset",
             "license": [

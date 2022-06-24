@@ -63,11 +63,7 @@ class EntityName extends ConfigurationContainerItemPluginBase {
       /** @var \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface $entity */
       return $entity->getEntityName();
     }
-    if (property_exists($entity, 'name')) {
-      // This should work for organizations.
-      return $entity->name;
-    }
-    return NULL;
+    return $entity->name ?? NULL;
   }
 
   /**

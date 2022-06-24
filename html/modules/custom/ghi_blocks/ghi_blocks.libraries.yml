@@ -24,6 +24,14 @@ link_carousel:
   css:
     component:
       css/link_carousel.css: {}
+ajax_switcher:
+  version: VERSION
+  js:
+    js/ajax_switcher.js: {}
+# ajax_reload:
+#   version: VERSION
+#   js:
+#     js/ajax_reload.js: {}
 block.preview:
   version: VERSION
   js:
@@ -69,13 +77,10 @@ leaflet.sidebar:
     component:
       /libraries/leaflet-sidebar/src/L.Control.Sidebar.css: {}
 
-map:
+map.base:
   version: VERSION
   js:
     js/map/map.search_control.js: {}
-    js/map/map.circle.js: {}
-    js/map/map.donut.js: {}
-    js/map/map.js: {}
   dependencies:
     - hpc_common/tooltip
     - ghi_blocks/theme
@@ -85,6 +90,15 @@ map:
     - ghi_blocks/leaflet.modal
     - ghi_blocks/leaflet.search
     - ghi_blocks/leaflet.sidebar
+
+map:
+  version: VERSION
+  js:
+    js/map/map.circle.js: {}
+    js/map/map.donut.js: {}
+    js/map/map.js: {}
+  dependencies:
+    - ghi_blocks/map.base
 
 map.plan:
   version: VERSION
@@ -99,3 +113,10 @@ map.plan_overview:
     js/map/map.plan_overview.js: {}
   dependencies:
     - ghi_blocks/map
+
+map.chloropleth:
+  version: VERSION
+  js:
+    js/map/map.chloropleth.js: {}
+  dependencies:
+    - ghi_blocks/map.base

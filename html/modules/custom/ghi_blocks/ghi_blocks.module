@@ -67,6 +67,16 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'plan-attachment-map',
     ],
+    'plan_operational_presence_map' => [
+      'variables' => [
+        'chart_id' => NULL,
+        'chart_class' => NULL,
+        'view_switcher' => NULL,
+        'object_switcher' => NULL,
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'plan-operational-presence-map',
+    ],
     'sidebar_slot_item' => [
       'variables' => [
         'label' => NULL,
@@ -75,6 +85,20 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       ],
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'sidebar-slot-item',
+    ],
+    'ajax_switcher' => [
+      'variables' => [
+        'options' => NULL,
+        'element_key' => NULL,
+        'default_value' => NULL,
+        'wrapper_id' => NULL,
+        'plugin_id' => NULL,
+        'block_uuid' => NULL,
+        'uri' => NULL,
+        'query' => [],
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'ajax-switcher',
     ],
   ];
 }
@@ -101,6 +125,10 @@ function ghi_blocks_gin_lb_add_suggestions_alter(&$add_suggestions, $element, $h
   }
   if ($route_name == 'layout_builder_ipe.entity.edit') {
     $add_suggestions = TRUE;
+  }
+  // Allow elements to declare whether they want to be rendered by Gin LB.
+  if (is_array($element) && array_key_exists('#gin_lb_form_element', $element)) {
+    $add_suggestions = $element['#gin_lb_form_element'];
   }
 }
 

@@ -7,6 +7,9 @@
 input[type="checkbox"][disabled="disabled"] {
   background-color: var(--colorGinDisabled) !important;
 }
+input[type="checkbox"][disabled="disabled"]:not(:checked) {
+  background-image: none !important;
+}
 
 #layout-builder .layout-builder__add-section {
   margin-top: 2rem;

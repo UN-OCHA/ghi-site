@@ -7,8 +7,16 @@
 }
 
 .leaflet-control-container {
-  .leaflet-top.leaflet-left {
+  .leaflet-sidebar,
+  .leaflet-top {
     z-index: 100;
+  }
+
+  .leaflet-sidebar {
+    height: 97%;
+  }
+
+  .leaflet-top.leaflet-left {
     width: 50%;
 
     .leaflet-control {

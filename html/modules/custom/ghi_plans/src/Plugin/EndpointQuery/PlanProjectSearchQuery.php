@@ -3,8 +3,8 @@
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\ghi_plans\ApiObjects\Project;
 use Drupal\hpc_api\Query\EndpointQueryBase;
-use Drupal\hpc_common\Helpers\CommonHelper;
 
 /**
  * Provides a query plugin for project search.
@@ -58,66 +58,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
     if (empty($data) || !is_object($data) || !property_exists($data, 'results')) {
       return [];
     }
-    $projects = [];
-    foreach ($data->results as $project) {
-      // Extract the cluster ids.
-      $cluster_ids = property_exists($project, 'clusterId') ? [$project->clusterId] : [];
-      if (empty($cluster_ids) && property_exists($project, 'governingEntities')) {
-        $cluster_ids = array_map(function ($governing_entity) {
-          return $governing_entity->id;
-        }, $project->governingEntities);
-      }
-
-      $projects[] = (object) [
-        'id' => $project->id,
-        'name' => $project->name,
-        'version_code' => $project->versionCode,
-        'cluster_ids' => $cluster_ids,
-        'clusters' => $project->governingEntities ?? [],
-        'organizations' => $this->processProjectOrganizations($project),
-        'published' => $project->currentPublishedVersionId,
-        'requirements' => $project->currentRequestedFunds,
-        'target' => !empty($project->targets) ? array_sum(array_map(function ($item) {
-          return $item->total;
-        }, $project->targets)) : 0,
-      ];
-    }
-    return $projects;
-  }
-
-  /**
-   * Process organization objects from the API.
-   *
-   * @param object $project
-   *   A project object as returned by the API.
-   *
-   * @return array
-   *   An array of processed organization objects.
-   */
-  private function processProjectOrganizations($project) {
-    $processed_organizations = [];
-
-    // First find the organizations. There are 2 ways.
-    $project_organizations = !empty($project->organizations) ? $project->organizations : [];
-    if (property_exists($project, 'projectVersions')) {
-      $project_version = array_filter($project->projectVersions, function ($item) use ($project) {
-        return $item->id == $project->currentPublishedVersionId && !empty($item->organizations);
-      });
-      $project_organizations = $project_version->organizations;
-    }
-
-    // Now process the organizations.
-    foreach ($project_organizations as $organization) {
-      if (!empty($processed_organizations[$organization->id])) {
-        continue;
-      }
-      $processed_organizations[$organization->id] = (object) [
-        'id' => $organization->id,
-        'name' => $organization->name,
-        'url' => CommonHelper::assureWellFormedUri($organization->url),
-      ];
-    }
-    return $processed_organizations;
+    return $data;
   }
 
   /**
@@ -156,25 +97,54 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $context_node
    *   The context node.
    *
-   * @return object[]
+   * @return \Drupal\ghi_plans\ApiObjects\Project[]
    *   An array of project objects for the given organization.
    */
   public function getOrganizationProjects($organization, ContentEntityInterface $context_node = NULL) {
     $projects = $this->getProjects($context_node);
     $organization_projects = [];
     foreach ($projects as $project) {
+      if (!$project->published) {
+        continue;
+      }
       if (empty($project->organizations)) {
         continue;
       }
-      $organization_ids = array_map(function ($_organization) {
-        return $_organization->id;
-      }, $project->organizations);
-
+      $organization_ids = array_keys($project->organizations);
       if (in_array($organization->id, $organization_ids)) {
-        $organization_projects[] = $project;
+        $organization_projects[$project->id] = $project;
       }
     }
     return $organization_projects;
+  }
+
+  /**
+   * Get the clusters for an organization.
+   *
+   * @param object $organization
+   *   The organization for which to look up the projects.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_node
+   *   The context node.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster[]
+   *   An array of cluster objects for the given organization.
+   */
+  public function getOrganizationClusters($organization, ContentEntityInterface $context_node = NULL) {
+    $projects = $this->getProjects($context_node);
+    $organization_clusters = [];
+    foreach ($projects as $project) {
+      if (!$project->published) {
+        continue;
+      }
+      if (empty($project->clusters)) {
+        continue;
+      }
+      $organization_ids = array_keys($project->organizations);
+      if (in_array($organization->id, $organization_ids)) {
+        $organization_clusters += $project->clusters;
+      }
+    }
+    return $organization_clusters;
   }
 
   /**
@@ -182,12 +152,12 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $context_node
    *   The context node.
-   * @param array $projects
+   * @param \Drupal\ghi_plans\ApiObjects\Project[] $projects
    *   An optonal array of projects from which the organizations should be
    *   extracted.
    *
-   * @return array
-   *   An array of organization objects as returned from the API.
+   * @return \Drupal\ghi_plans\ApiObjects\Organization[]
+   *   An array of organization objects.
    */
   public function getOrganizations(ContentEntityInterface $context_node = NULL, array $projects = NULL) {
     if (empty($projects)) {
@@ -198,6 +168,9 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
       return $organizations;
     }
     foreach ($projects as $project) {
+      if (!$project->published) {
+        continue;
+      }
       if (empty($project->organizations)) {
         continue;
       }
@@ -206,6 +179,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
           continue;
         }
         $organizations[$organization->id] = $organization;
+
       }
     }
     return $organizations;
@@ -219,28 +193,30 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    * @param bool $filter_unpublished
    *   Whether unpublished projects should be filtered.
    *
-   * @return array
-   *   An array of projects.
+   * @return \Drupal\ghi_plans\ApiObjects\Project[]
+   *   An array of project objects.
    */
   public function getProjects(ContentEntityInterface $context_node = NULL, $filter_unpublished = FALSE) {
     $data = $this->getData();
-    if (empty($data) || !is_array($data)) {
+    if (empty($data) || !is_object($data)) {
       return [];
+    }
+
+    $projects = [];
+    foreach ($data->results as $project) {
+      $projects[] = new Project($project);
     }
 
     if (!empty($context_node) && $context_node->bundle() == 'governing_entity') {
       $context_original_id = $context_node->field_original_id->value;
-      $projects = array_filter($data, function ($item) use ($context_original_id) {
+      $projects = array_filter($projects, function ($item) use ($context_original_id) {
         return in_array($context_original_id, $item->cluster_ids);
       });
-    }
-    else {
-      $projects = $data;
     }
 
     if ($this->filterByClusterIds !== NULL) {
       $cluster_ids = $this->filterByClusterIds;
-      $projects = array_filter($data, function ($item) use ($cluster_ids) {
+      $projects = array_filter($projects, function ($item) use ($cluster_ids) {
         return count(array_intersect($cluster_ids, $item->cluster_ids));
       });
     }
@@ -290,6 +266,70 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
       }
     }
     return $clusters;
+  }
+
+  /**
+   * Get the projects grouped by organizations.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_node
+   *   The context node.
+   * @param \Drupal\ghi_plans\ApiObjects\Project[] $projects
+   *   An optonal array of projects from which the clusters will be extracted.
+   *
+   * @return array[]
+   *   An array of arrays. First level key is the organization id, second level
+   *   key the project id and the value is a project object.
+   */
+  public function getProjectsByOrganization(ContentEntityInterface $context_node = NULL, array $projects = NULL) {
+    if (empty($projects)) {
+      $projects = $this->getProjects($context_node);
+    }
+    $organization_projects = [];
+    foreach ($projects as $project) {
+      if (empty($project->organizations)) {
+        continue;
+      }
+      foreach ($project->organizations as $organization) {
+        if (empty($organization_projects[$organization->id])) {
+          $organization_projects[$organization->id] = [];
+        }
+        $organization_projects[$organization->id][$project->id] = $project;
+      }
+    }
+    return $organization_projects;
+  }
+
+  /**
+   * Get the projects grouped by location.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_node
+   *   The context node.
+   * @param array $projects
+   *   An optonal array of projects from which the clusters will be extracted.
+   *
+   * @return array[]
+   *   An array of arrays. First level key is the location id, the value is an
+   *   array of project ids associated with that location.
+   */
+  public function getProjectsByLocation(ContentEntityInterface $context_node = NULL, array $projects = NULL) {
+    if (empty($projects)) {
+      $projects = $this->getProjects($context_node);
+    }
+    $projects_by_location = [];
+    foreach ($projects as $project) {
+      if (empty($project->location_ids)) {
+        continue;
+      }
+      foreach ($project->location_ids as $location_id) {
+        if (empty($projects_by_location[$location_id])) {
+          $projects_by_location[$location_id] = [];
+        }
+        if (!in_array($project->id, $projects_by_location[$location_id])) {
+          $projects_by_location[$location_id][] = $project->id;
+        }
+      }
+    }
+    return $projects_by_location;
   }
 
 }

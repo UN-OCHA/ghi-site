@@ -5,6 +5,12 @@
         $(window).trigger('scroll');
       }
 
+      $('select').select2({
+        width: 'resolve',
+        minimumResultsForSearch: 5,
+        dropdownAutoWidth: true,
+      });
+
       if (typeof sorttable != 'undefined') {
         if (context == document) {
           sorttable.init();

@@ -91,6 +91,16 @@ abstract class ApiObjectBase implements ApiObjectInterface {
   }
 
   /**
+   * Represent this as an array.
+   *
+   * @return array
+   *   The mapped data as an array.
+   */
+  public function toArray() {
+    return (array) $this->map;
+  }
+
+  /**
    * Map the raw data.
    *
    * @return object

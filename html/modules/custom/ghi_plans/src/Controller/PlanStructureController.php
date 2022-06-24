@@ -10,7 +10,7 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
-use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\publishcontent\Access\PublishContentAccess;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -21,11 +21,18 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class PlanStructureController extends ControllerBase {
 
   /**
-   * The endpoint query handler.
+   * The plan entities query handler.
    *
-   * @var \Drupal\hpc_api\Query\EndpointQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
    */
-  protected $endpointQuery;
+  protected $planEntitiesQuery;
+
+  /**
+   * The plan prototype query handler.
+   *
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanPrototypeQuery
+   */
+  protected $planPrototypeQuery;
 
   /**
    * The redirect destination service.
@@ -58,8 +65,9 @@ class PlanStructureController extends ControllerBase {
   /**
    * Public constructor.
    */
-  public function __construct(EndpointQuery $endpoint_query, RedirectDestinationInterface $redirect_destination, PublishContentAccess $publish_content_access, AccountProxyInterface $user, CsrfTokenGenerator $csrf_token) {
-    $this->endpointQuery = $endpoint_query;
+  public function __construct(EndpointQueryManager $endpoint_query_manager, RedirectDestinationInterface $redirect_destination, PublishContentAccess $publish_content_access, AccountProxyInterface $user, CsrfTokenGenerator $csrf_token) {
+    $this->planEntitiesQuery = $endpoint_query_manager->createInstance('plan_entities_query');
+    $this->planPrototypeQuery = $endpoint_query_manager->createInstance('plan_prototype_query');
     $this->redirectDestination = $redirect_destination;
     $this->publishContentAccess = $publish_content_access;
     $this->currentUser = $user;
@@ -71,7 +79,7 @@ class PlanStructureController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('hpc_api.endpoint_query'),
+      $container->get('plugin.manager.endpoint_query_manager'),
       $container->get('redirect.destination'),
       $container->get('publishcontent.access'),
       $container->get('current_user'),
@@ -202,18 +210,7 @@ class PlanStructureController extends ControllerBase {
    *   The structured data object.
    */
   private function getPlanEntitiesData($plan_id) {
-    $this->endpointQuery->setArguments([
-      'endpoint' => 'plan/' . $plan_id,
-      'api_version' => 'v2',
-      'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
-      'query_args' => [
-        'content' => 'entities',
-        'addPercentageOfTotalTarget' => 'true',
-        'disaggregation' => 'false',
-        'version' => 'latest',
-      ],
-    ]);
-    return $this->endpointQuery->getData();
+    return $this->planEntitiesQuery->getData(['plan_id' => $plan_id]);
   }
 
   /**
@@ -226,14 +223,7 @@ class PlanStructureController extends ControllerBase {
    *   Array with the plans prototype objects.
    */
   private function getPrototypeData($plan_id) {
-    // Query the API for the prototype of this plan.
-    $this->endpointQuery->setArguments([
-      'endpoint' => 'plan/' . $plan_id . '/entity-prototype',
-      'api_version' => 'v2',
-      'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
-      'sort' => 'orderNumber',
-    ]);
-    return $this->endpointQuery->getData();
+    return $this->planPrototypeQuery->getPrototype($plan_id);
   }
 
 }

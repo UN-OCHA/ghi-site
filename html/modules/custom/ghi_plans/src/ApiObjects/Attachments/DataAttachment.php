@@ -476,7 +476,8 @@ class DataAttachment extends AttachmentBase {
 
     // Then we get the coordinates for all locations that the API knows for this
     // country. The coordinates are keyed by the location id.
-    $location_coordinates = $country ? $locations_query->getCountryLocationCoordinates($country) : [];
+    /** @var \Drupal\hpc_api\ApiObjects\Location[] $location_coordinates */
+    $location_coordinates = $country ? $locations_query->getCountryLocations($country) : [];
 
     foreach ($locations as $location_key => $location) {
       $locations[$location_key]->country_id = $country->id;
@@ -487,7 +488,7 @@ class DataAttachment extends AttachmentBase {
       if (empty($coordinates)) {
         continue;
       }
-      $locations[$location_key]->map_data = $coordinates;
+      $locations[$location_key]->map_data = $coordinates->toArray();
       $locations[$location_key]->map_data['total'] = 0;
     }
     return $locations;
