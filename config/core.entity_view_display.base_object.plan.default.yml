@@ -7,6 +7,7 @@ dependencies:
     - field.field.base_object.plan.field_decimal_format
     - field.field.base_object.plan.field_description
     - field.field.base_object.plan.field_footnotes
+    - field.field.base_object.plan.field_max_admin_level
     - field.field.base_object.plan.field_original_id
     - field.field.base_object.plan.field_plan_caseload
     - field.field.base_object.plan.field_plan_costing
@@ -56,6 +57,15 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: 10
+    region: content
+  field_max_admin_level:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 11
     region: content
   field_original_id:
     type: number_integer

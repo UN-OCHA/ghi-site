@@ -1,0 +1,20 @@
+uuid: 43594b3a-c7f9-4450-9794-633fb83ba44c
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+id: base_object.field_max_admin_level
+field_name: field_max_admin_level
+entity_type: base_object
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
