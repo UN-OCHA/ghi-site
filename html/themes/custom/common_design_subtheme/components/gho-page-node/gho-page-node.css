@@ -7,12 +7,6 @@
   padding-left: 0;
 }
 
-.node__local_tasks {
-  position: relative;
-  z-index: 1;
-  margin: 2rem 0;
-}
-
 .node__content {
   position: relative;
   z-index: 1;

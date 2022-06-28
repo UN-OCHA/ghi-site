@@ -17,6 +17,7 @@
   Important: This file has been slightly modified to provide additional
   features:
   - Sort numeric columns in descending order first
+  - Fix class names to use dashes instead of underscores
 */
 
 
@@ -82,8 +83,8 @@ sorttable = {
     headrow = table.tHead.rows[0].cells;
     for (var i=0; i<headrow.length; i++) {
       // manually override the type with a sorttable_type attribute
-      if (!headrow[i].className.match(/\bsorttable_nosort\b/)) { // skip this col
-        mtch = headrow[i].className.match(/\bsorttable_([a-z0-9]+)\b/);
+      if (!headrow[i].className.match(/\bsorttable\-nosort\b/)) { // skip this col
+        mtch = headrow[i].className.match(/\bsorttable\-([a-z0-9]+)\b/);
         if (mtch) { override = mtch[1]; }
         if (mtch && typeof sorttable["sort_"+override] == 'function') {
           headrow[i].sorttable_sortfunction = sorttable["sort_"+override];
@@ -95,30 +96,31 @@ sorttable = {
         headrow[i].sorttable_tbody = table.tBodies[0];
         dean_addEvent(headrow[i],"click", sorttable.innerSortFunction = function(e) {
 
-          if (this.className.search(/\bsorttable_sorted\b/) != -1) {
-            // if we're already sorted by this column, just
-            // reverse the table, which is quicker
-            sorttable.reverse(this.sorttable_tbody);
-            this.className = this.className.replace('sorttable_sorted',
-                                                    'sorttable_sorted_reverse');
-            this.removeChild(document.getElementById('sorttable_sortfwdind'));
-            sortrevind = document.createElement('span');
-            sortrevind.id = "sorttable_sortrevind";
-            sortrevind.innerHTML = stIsIE ? '&nbsp<font face="webdings">5</font>' : '&nbsp;&#x25B4;';
-            this.appendChild(sortrevind);
-            return;
-          }
-          if (this.className.search(/\bsorttable_sorted_reverse\b/) != -1) {
+          if (this.className.search(/\bsorttable-sorted-reverse\b/) != -1) {
             // if we're already sorted by this column in reverse, just
             // re-reverse the table, which is quicker
             sorttable.reverse(this.sorttable_tbody);
-            this.className = this.className.replace('sorttable_sorted_reverse',
-                                                    'sorttable_sorted');
-            this.removeChild(document.getElementById('sorttable_sortrevind'));
+            this.className = this.className.replace('sorttable-sorted-reverse',
+                                                    'sorttable-sorted');
+            this.removeChild(document.getElementById('sorttable-sortrevind'));
             sortfwdind = document.createElement('span');
-            sortfwdind.id = "sorttable_sortfwdind";
+            sortfwdind.id = "sorttable-sortfwdind";
             sortfwdind.innerHTML = stIsIE ? '&nbsp<font face="webdings">6</font>' : '&nbsp;&#x25BE;';
             this.appendChild(sortfwdind);
+            return;
+          }
+
+          if (this.className.search(/\bsorttable-sorted\b/) != -1) {
+            // if we're already sorted by this column, just
+            // reverse the table, which is quicker
+            sorttable.reverse(this.sorttable_tbody);
+            this.className = this.className.replace('sorttable-sorted',
+                                                    'sorttable-sorted-reverse');
+            this.removeChild(document.getElementById('sorttable-sortfwdind'));
+            sortrevind = document.createElement('span');
+            sortrevind.id = "sorttable-sortrevind";
+            sortrevind.innerHTML = stIsIE ? '&nbsp<font face="webdings">5</font>' : '&nbsp;&#x25B4;';
+            this.appendChild(sortrevind);
             return;
           }
 
@@ -126,18 +128,18 @@ sorttable = {
           theadrow = this.parentNode;
           forEach(theadrow.childNodes, function(cell) {
             if (cell.nodeType == 1) { // an element
-              cell.className = cell.className.replace('sorttable_sorted_reverse','');
-              cell.className = cell.className.replace('sorttable_sorted','');
+              cell.className = cell.className.replace('sorttable-sorted-reverse','');
+              cell.className = cell.className.replace('sorttable-sorted','');
             }
           });
-          sortfwdind = document.getElementById('sorttable_sortfwdind');
+          sortfwdind = document.getElementById('sorttable-sortfwdind');
           if (sortfwdind) { sortfwdind.parentNode.removeChild(sortfwdind); }
-          sortrevind = document.getElementById('sorttable_sortrevind');
+          sortrevind = document.getElementById('sorttable-sortrevind');
           if (sortrevind) { sortrevind.parentNode.removeChild(sortrevind); }
 
-          this.className += ' sorttable_sorted';
+          this.className += ' sorttable-sorted';
           sortfwdind = document.createElement('span');
-          sortfwdind.id = "sorttable_sortfwdind";
+          sortfwdind.id = "sorttable-sortfwdind";
           sortfwdind.innerHTML = stIsIE ? '&nbsp<font face="webdings">6</font>' : '&nbsp;&#x25BE;';
           this.appendChild(sortfwdind);
 

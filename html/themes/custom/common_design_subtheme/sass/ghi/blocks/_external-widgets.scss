@@ -7,7 +7,7 @@
       width: 100% !important;
     }
 
-    @include tablet() {
+    @include tablet {
       display: flex;
       justify-content: space-between;
       .iframe-wrapper {

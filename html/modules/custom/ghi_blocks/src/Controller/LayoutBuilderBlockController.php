@@ -2,6 +2,8 @@
 
 namespace Drupal\ghi_blocks\Controller;
 
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\OpenDialogCommand;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
@@ -9,6 +11,8 @@ use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
+use Drupal\layout_builder\Controller\MoveBlockController;
+use Drupal\layout_builder_restrictions\Controller\MoveBlockController as RestrictedMoveBlockController;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -23,6 +27,13 @@ class LayoutBuilderBlockController extends ControllerBase implements ContainerIn
   use LayoutEntityHelperTrait;
 
   /**
+   * The container.
+   *
+   * @var \Symfony\Component\DependencyInjection\ContainerInterface
+   */
+  protected $container;
+
+  /**
    * The block plugin manager.
    *
    * @var \Drupal\Core\Block\BlockManagerInterface
@@ -32,7 +43,8 @@ class LayoutBuilderBlockController extends ControllerBase implements ContainerIn
   /**
    * {@inheritdoc}
    */
-  public function __construct(BlockManagerInterface $plugin_manager) {
+  public function __construct(ContainerInterface $container, BlockManagerInterface $plugin_manager) {
+    $this->container = $container;
     $this->pluginManager = $plugin_manager;
   }
 
@@ -41,6 +53,7 @@ class LayoutBuilderBlockController extends ControllerBase implements ContainerIn
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container,
       $container->get('plugin.manager.block')
     );
   }
@@ -134,6 +147,46 @@ class LayoutBuilderBlockController extends ControllerBase implements ContainerIn
         $plugin->postDelete($entity, $uuid);
       }
     }
+  }
+
+  /**
+   * Moves a block to another region.
+   *
+   * @param \Drupal\layout_builder\SectionStorageInterface $section_storage
+   *   The section storage.
+   * @param int $delta_from
+   *   The delta of the original section.
+   * @param int $delta_to
+   *   The delta of the destination section.
+   * @param string $region_to
+   *   The new region for this block.
+   * @param string $block_uuid
+   *   The UUID for this block.
+   * @param string|null $preceding_block_uuid
+   *   (optional) If provided, the UUID of the block to insert this block after.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   An AJAX response.
+   */
+  public function moveBlock(SectionStorageInterface $section_storage, int $delta_from, int $delta_to, $region_to, $block_uuid, $preceding_block_uuid = NULL) {
+    // Decide which controller to use.
+    $controller = MoveBlockController::create($this->container);
+    if ($this->moduleHandler()->moduleExists('layout_builder_restrictions')) {
+      $controller = RestrictedMoveBlockController::create($this->container);
+    }
+
+    // Prepare our own response. With the exception of errors from the
+    // layout_builder_restrictions module, it will be empty.
+    $response = new AjaxResponse();
+
+    // Call the controller build method to persist changes.
+    $original_response = $controller->build($section_storage, $delta_from, $delta_to, $region_to, $block_uuid, $preceding_block_uuid);
+    foreach ($original_response->getCommands() as $command) {
+      if ($command['command'] == 'openDialog') {
+        $response->addCommand(new OpenDialogCommand($command['selector'], $command['dialogOptions']['title'], $command['data']));
+      }
+    }
+    return $response;
   }
 
 }

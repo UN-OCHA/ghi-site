@@ -106,7 +106,7 @@
   .pane-sidebar-left {
     position: relative;
     width: 19%;
-    height: 400px;
+    min-height: 400px;
     padding: 1rem;
     border: 1px solid var(--hpc-border-color);
 

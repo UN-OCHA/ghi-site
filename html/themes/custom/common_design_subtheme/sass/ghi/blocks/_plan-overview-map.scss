@@ -198,13 +198,13 @@
         }
       }
 
-      @include tablet() {
+      @include tablet {
         min-height: 500px;
         border: 0 none;
       }
     }
 
-    @include tablet() {
+    @include tablet {
       padding: 0;
     }
   }

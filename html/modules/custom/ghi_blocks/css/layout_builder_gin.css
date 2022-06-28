@@ -91,10 +91,6 @@ input[type="checkbox"][disabled="disabled"]:not(:checked) {
   right: -0.6rem;
   background-color: white !important;
 }
-.layout-builder-ipe-editing #layout-builder-modal .block-categories .glb-list li .ajax-progress-throbber::before {
-  top: 0.4rem;
-  left: 0.4rem;
-}
 
 /**
  * Improve display of error messages.

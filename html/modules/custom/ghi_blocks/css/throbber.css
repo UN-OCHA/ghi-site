@@ -3,12 +3,10 @@
  layout builder on page manager pages and node pages.
  Actually, make all button throbbers behave the same.
 */
-form.layout-builder-configure-block.glb-canvas-form .ajax-progress.ajax-progress-throbber,
-#layout-builder-modal form.layout-builder-configure-block .canvas-form__actions .ajax-progress.ajax-progress--throbber,
-.layout-builder-ipe-actions .ajax-progress.ajax-progress-throbber,
-#layout-builder .ajax-progress.ajax-progress-throbber {
+.ajax-progress.ajax-progress-throbber,
+.ajax-progress.ajax-progress--throbber {
   position: fixed;
-  z-index: 1000;
+  z-index: 1260;
   top: 50%;
   left: 50%;
   box-sizing: border-box;
@@ -26,10 +24,9 @@ form.layout-builder-configure-block.glb-canvas-form .ajax-progress.ajax-progress
   line-height: 1.125rem;
 }
 
-form.layout-builder-configure-block.glb-canvas-form .ajax-progress.ajax-progress-throbber:before,
-#layout-builder-modal form.layout-builder-configure-block .canvas-form__actions .ajax-progress .ajax-progress__throbber,
-.layout-builder-ipe-actions .ajax-progress.ajax-progress-throbber:before,
-#layout-builder .ajax-progress.ajax-progress-throbber:before {
+.ajax-progress.ajax-progress-throbber:before,
+.ajax-progress__throbber,
+.ajax-progress.ajax-progress-throbber:before {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -44,9 +41,21 @@ form.layout-builder-configure-block.glb-canvas-form .ajax-progress.ajax-progress
   color: var(--colorGinText) !important;
   -webkit-animation: gin-throbber 0.75s linear infinite;
   animation: gin-throbber 0.75s linear infinite;
+  z-index: 1;
 }
 
-form.layout-builder-configure-block.glb-canvas-form .ajax-progress .message,
-#layout-builder-modal form.layout-builder-configure-block .canvas-form__actions .ajax-progress .ajax-progress__message {
+.ajax-progress .message,
+.ajax-progress .ajax-progress__message {
   display: none;
+}
+
+.ajax-progress .overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.8;
+  background-color: white;
+  pointer-events: all;
 }

@@ -16,6 +16,8 @@ layout_builder_gin:
         weight: 1001
 throbber:
   version: VERSION
+  js:
+    js/throbber.js: {}
   css:
     component:
       css/throbber.css: {}

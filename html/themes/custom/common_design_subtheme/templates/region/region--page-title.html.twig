@@ -23,7 +23,7 @@
   <div{{ attributes.addClass(classes) }}>
     {% for key, item in elements if key|first != '#' %}
       {% if item|render %}
-        <div class="block-wrapper block-wrapper--{{ key }}">
+        <div class="block-wrapper block-wrapper--{{ key|replace({'_': "-"}) }}">
           <div class="block-wrapper__inner">
             {{ item|render }}
           </div>

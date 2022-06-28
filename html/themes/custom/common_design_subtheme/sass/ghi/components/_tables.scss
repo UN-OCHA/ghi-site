@@ -38,8 +38,8 @@
         background: transparent;
         font-size: var(--cd-font-size--small);
 
-        &.sorttable_sorted,
-        &.sorttable_sorted_reverse {
+        &.sorttable-sorted,
+        &.sorttable-sorted-reverse {
           padding-right: 0;
 
           & > span {
@@ -53,7 +53,7 @@
     &.sortable th {
       cursor: pointer;
 
-      &.sorttable_nosort {
+      &.sorttable-nosort {
         cursor: initial;
       }
     }

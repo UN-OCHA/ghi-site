@@ -46,7 +46,7 @@ class LayoutBuilderRouteSubscriber extends RouteSubscriberBase {
    */
   public static function getSubscribedEvents() {
     $events = [];
-    $events[RoutingEvents::ALTER] = 'onAlterRoutes';
+    $events[RoutingEvents::ALTER] = ['onAlterRoutes', -150];
     $events[LayoutBuilderEvents::SECTION_COMPONENT_BUILD_RENDER_ARRAY] = [
       'onBuildRender',
       150,
@@ -67,6 +67,12 @@ class LayoutBuilderRouteSubscriber extends RouteSubscriberBase {
 
     if ($route = $collection->get('layout_builder.update_block')) {
       $route->setDefault('_title_callback', $title_callback_update);
+    }
+
+    // Swap out the move block controller to prevent reloading of the editable
+    // area after moving blocks.
+    if ($route = $collection->get('layout_builder.move_block')) {
+      $route->setDefault('_controller', '\Drupal\ghi_blocks\Controller\LayoutBuilderBlockController::moveBlock');
     }
   }
 
