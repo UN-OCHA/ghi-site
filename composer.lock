@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2da8d3d7b50c5d92d932a3861a31f07c",
+    "content-hash": "87f8147862ddb35d0bfff91b7a3e8cd8",
     "packages": [
         {
             "name": "alchemy/zippy",
@@ -3778,7 +3778,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/layout_builder_ipe.git",
-                "reference": "17cd1998b5ac0cb6983d145107492741a0c67742"
+                "reference": "b373c29a23b2eec7e977691ca942b0cb39aa1605"
             },
             "require": {
                 "drupal/core": "^8 || ^9"
@@ -3790,7 +3790,7 @@
                 },
                 "drupal": {
                     "version": "1.0.x-dev",
-                    "datestamp": "1655800663",
+                    "datestamp": "1656352026",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
@@ -12054,16 +12054,16 @@
         },
         {
             "name": "unocha/common_design",
-            "version": "v4.1.1",
+            "version": "v7.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/common_design.git",
-                "reference": "6630e0b7e231ade2195cd21f630a62dcfcae831c"
+                "reference": "b6b3a4f5c9b6360fa02155535de689b55d5983c2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/6630e0b7e231ade2195cd21f630a62dcfcae831c",
-                "reference": "6630e0b7e231ade2195cd21f630a62dcfcae831c",
+                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/b6b3a4f5c9b6360fa02155535de689b55d5983c2",
+                "reference": "b6b3a4f5c9b6360fa02155535de689b55d5983c2",
                 "shasum": ""
             },
             "require": {
@@ -12077,9 +12077,9 @@
             "description": "OCHA Common Design base theme for Drupal 8",
             "support": {
                 "issues": "https://github.com/UN-OCHA/common_design/issues",
-                "source": "https://github.com/UN-OCHA/common_design/tree/v4.1.1"
+                "source": "https://github.com/UN-OCHA/common_design/tree/v7.0.1"
             },
-            "time": "2021-07-23T10:34:36+00:00"
+            "time": "2022-04-26T07:53:53+00:00"
         },
         {
             "name": "webflo/drupal-finder",
@@ -16722,5 +16722,5 @@
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }

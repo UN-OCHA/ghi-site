@@ -1,6 +1,6 @@
 .region-page-title {
 
-  .block-wrapper:not(.block-wrapper--hero_image) {
+  .block-wrapper:not(.block-wrapper--hero-image) {
     border-bottom: 1px solid var(--cd-default-border-color);
 
     .block-wrapper__inner {
@@ -31,7 +31,7 @@
     }
   }
 
-  .block-wrapper--hero_image .field--type-ghi-hero-image {
+  .block-wrapper--hero-image .field--type-ghi-hero-image {
     line-height: 0;
   }
 }
