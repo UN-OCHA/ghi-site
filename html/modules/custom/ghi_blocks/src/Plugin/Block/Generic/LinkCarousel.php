@@ -9,8 +9,8 @@ use Drupal\Core\Render\Markup;
 use Drupal\file\Entity\File;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\ManagedFileBlockTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'LinkCarousel' block.
@@ -25,33 +25,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterface {
 
   use ConfigurationContainerTrait;
-
-  /**
-   * The file usage service.
-   *
-   * @var \Drupal\file\FileUsage\DatabaseFileUsageBackend
-   */
-  protected $fileUsage;
-
-  /**
-   * The database connection used to store file usage information.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $connection;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $instance */
-    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-
-    // Set our own properties.
-    $instance->fileUsage = $container->get('file.usage');
-    $instance->connection = $container->get('database');
-    return $instance;
-  }
+  use ManagedFileBlockTrait;
 
   /**
    * {@inheritdoc}
@@ -155,21 +129,8 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
     if (empty($files)) {
       return;
     }
-    // Make files permanent and add file usage.
-    $usage_type = $this->getFileUsageType($entity);
-    foreach ($files as $file) {
-      if ($file->isPermanent()) {
-        continue;
-      }
-      $file->setPermanent();
-      $file->save();
-      $this->fileUsage->add($file, 'ghi_blocks', $usage_type, $uuid);
-    }
-    $stored_files = $this->getStoredFiles($entity, $uuid);
-    $removed_files = array_diff_key($stored_files, $files);
-    if (!empty($removed_files)) {
-      $this->cleanupFiles($removed_files, $entity, $uuid);
-    }
+    $files = $this->getFiles();
+    $this->persistFiles($files, $entity, $uuid);
   }
 
   /**
@@ -178,28 +139,6 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
   public function postDelete(EntityInterface $entity, $uuid) {
     $files = $this->getFiles();
     $this->cleanupFiles($files, $entity, $uuid);
-  }
-
-  /**
-   * Properly remove and cleanup files that are no longer in use.
-   *
-   * @param array $files
-   *   The array of files to remove.
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The entity associated to this block.
-   * @param string $uuid
-   *   The uuid of the block.
-   */
-  private function cleanupFiles(array $files, EntityInterface $entity, $uuid) {
-    if (empty($files)) {
-      return;
-    }
-    // Delete file usage and delete file.
-    $usage_type = $this->getFileUsageType($entity);
-    foreach ($files as $file) {
-      $this->fileUsage->delete($file, 'ghi_blocks', $usage_type, $uuid);
-      $file->delete();
-    }
   }
 
   /**
@@ -229,48 +168,6 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
       }
     }
     return $files;
-  }
-
-  /**
-   * Get the files stored for this block.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The entity associated to this block.
-   * @param string $uuid
-   *   The uuid of the block.
-   *
-   * @return \Drupal\file\Entity\File[]
-   *   An array of file objects.
-   */
-  private function getStoredFiles(EntityInterface $entity, $uuid) {
-    $usage_type = $this->getFileUsageType($entity);
-    $result = $this->connection->select('file_usage', 'f')
-      ->fields('f', ['fid'])
-      ->condition('module', 'ghi_blocks')
-      ->condition('type', $usage_type)
-      ->condition('id', $uuid)
-      ->execute();
-    $files = [];
-    foreach ($result as $record) {
-      $files[$record->fid] = File::load($record->fid);
-    }
-    return $files;
-  }
-
-  /**
-   * Get the type string used in the `file_usage' table.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The entity associated to this block.
-   *
-   * @return string
-   *   Get a string that describes the file usage type.
-   */
-  private function getFileUsageType(EntityInterface $entity) {
-    return implode(':', [
-      $entity->getEntityTypeId(),
-      $entity->id(),
-    ]);
   }
 
   /**

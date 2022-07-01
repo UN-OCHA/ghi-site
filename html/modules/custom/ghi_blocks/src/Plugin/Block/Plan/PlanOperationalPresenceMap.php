@@ -64,7 +64,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       'label_display' => TRUE,
       'hpc' => [
         'organizations' => [
-          'organization_ids' => $config->organization_ids ?? [],
+          'organization_ids' => (array) $config->organization_ids ?? [],
         ],
         'display' => [
           'available_views' => (array) $config->available_views,

@@ -2,9 +2,12 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Generic;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\file\Entity\File;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\ManagedFileBlockTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -20,6 +23,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class DocumentLinks extends GHIBlockBase implements SyncableBlockInterface {
+
+  use ManagedFileBlockTrait;
 
   const MAX_ITEMS = 3;
   const MAX_LANGUAGES = 4;
@@ -161,7 +166,6 @@ class DocumentLinks extends GHIBlockBase implements SyncableBlockInterface {
    * {@inheritdoc}
    */
   public function getConfigForm(array $form, FormStateInterface $form_state) {
-
     $form['documents'] = [
       '#tree' => TRUE,
     ];
@@ -279,9 +283,9 @@ class DocumentLinks extends GHIBlockBase implements SyncableBlockInterface {
         }
 
         // Check if the file target url is valid.
-        $data = NULL;
+        $response = NULL;
         try {
-          $response = $this->httpClient->get($value['target_url']);
+          $response = $this->httpClient->head($value['target_url'], ['stream' => TRUE]);
         }
         catch (\Exception $e) {
           // Just fail silently.
@@ -293,9 +297,11 @@ class DocumentLinks extends GHIBlockBase implements SyncableBlockInterface {
           ]));
           continue;
         }
+        $content_length = $response->getHeader('Content-Length') ?? NULL;
+        $content_type = $response->getHeader(('Content-Type')) ?? [];
 
-        $data = $response->getBody()->getContents();
-        if (empty($data)) {
+        $file_size = reset($content_length);
+        if (empty($file_size)) {
           $form_state->setError($subform['documents'][$key]['file_details'][$index]['target_url'], $this->t('Document #@number: The <em>Target URL</em> field does not seem to contain a valid reference for Document details #@detail_number.', [
             '@number' => $key + 1,
             '@detail_number' => $index + 1,
@@ -304,10 +310,7 @@ class DocumentLinks extends GHIBlockBase implements SyncableBlockInterface {
         else {
           $filename = $value['target_url'];
           $ext = pathinfo($filename, PATHINFO_EXTENSION);
-          $filename = pathinfo($filename, PATHINFO_FILENAME);
-          $filepath = 'temporary://' . $filename . microtime() . '.' . $ext;
-          file_put_contents($filepath, $data);
-          $mime_type = mime_content_type($filepath);
+          $mime_type = reset($content_type);
           $file_type = end(explode('/', $mime_type));
           if (strlen($file_type) > 4 || strpos($file_type, '.')) {
             // Prevent file types like
@@ -329,7 +332,7 @@ class DocumentLinks extends GHIBlockBase implements SyncableBlockInterface {
             ]));
           }
 
-          $document['file_details'][$index]['filesize'] = filesize($filepath);
+          $document['file_details'][$index]['filesize'] = $file_size;
           $document['file_details'][$index]['mimetype'] = $mime_type;
           $document['file_details'][$index]['filetype'] = $file_type;
 
@@ -340,10 +343,51 @@ class DocumentLinks extends GHIBlockBase implements SyncableBlockInterface {
           ], $document);
 
           $file_ext_array[] = $file_type;
-          $this->fileSystem->delete($filepath);
         }
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityInterface $entity, $uuid) {
+    $files = $this->getFiles();
+    if (empty($files)) {
+      return;
+    }
+    $files = $this->getFiles();
+    $this->persistFiles($files, $entity, $uuid);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postDelete(EntityInterface $entity, $uuid) {
+    $files = $this->getFiles();
+    $this->cleanupFiles($files, $entity, $uuid);
+  }
+
+  /**
+   * Get the files included in this blocks configuration.
+   *
+   * @return \Drupal\file\Entity\File[]
+   *   The file objects configured for this block.
+   */
+  private function getFiles() {
+    $conf = $this->getBlockConfig();
+    $files = [];
+    foreach ($conf['documents'] as $item) {
+      if (empty($item['thumbnail'])) {
+        continue;
+      }
+      $file = File::load(reset($item['thumbnail']));
+      if (!$file) {
+        continue;
+      }
+      $files[$file->id()] = $file;
+    }
+    return $files;
   }
 
 }
