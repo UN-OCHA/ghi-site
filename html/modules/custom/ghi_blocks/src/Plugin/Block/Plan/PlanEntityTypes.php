@@ -128,7 +128,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
    */
   protected function getConfigurationDefaults() {
     return [
-      'entity_ids' => [],
+      'entity_ids' => NULL,
       'entity_ref_code' => NULL,
       'id_type' => NULL,
       'sort' => FALSE,

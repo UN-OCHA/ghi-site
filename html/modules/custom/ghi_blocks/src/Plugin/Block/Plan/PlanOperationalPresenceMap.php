@@ -64,10 +64,10 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       'label_display' => TRUE,
       'hpc' => [
         'organizations' => [
-          'organizations_ids' => $config->organization_ids,
+          'organization_ids' => $config->organization_ids ?? [],
         ],
         'display' => [
-          'available_views' => $config->available_views,
+          'available_views' => (array) $config->available_views,
           'default_view' => $config->default_view,
           'disclaimer' => $config->map_disclaimer,
           'pcodes_enabled' => $config->pcodes_enabled,
@@ -565,13 +565,17 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
   protected function getConfigurationDefaults() {
     return [
       'organizations' => [
-        'organizations_ids' => [],
+        // It is important to set the default value to NULL, otherwhise the
+        // array keys, which are integers will be renumbered by
+        // NestedArray::mergeDeep() which is called from
+        // BlockPluginTrait::setConfiguration().
+        'organization_ids' => NULL,
       ],
       'display' => [
         'available_views' => [
-          'organization',
-          'cluster',
-          'project',
+          'organization' => 'organization',
+          'cluster' => 'cluster',
+          'project' => 'project',
         ],
         'default_view' => NULL,
         'disclaimer' => self::DEFAULT_DISCLAIMER,
