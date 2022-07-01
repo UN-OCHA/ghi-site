@@ -29,7 +29,7 @@
         // Covers the SVG to make it seem clickable.
         padding-right: 24px;
         white-space: nowrap;
-        color: var(--hpc-orange);
+        color: var(--cd-default-text-color);
         background-color: transparent;
         font-size: var(--cd-font-size--small);
         font-weight: bold;
@@ -44,7 +44,7 @@
         right: 6px;
         width: 12px;
         height: 12px;
-        fill: var(--hpc-orange);
+        fill: var(--cd-default-text-color);
       }
     }
   }
@@ -70,7 +70,7 @@
       font-weight: normal;
 
       &.select2-results__option--highlighted {
-        color: var(--hpc-orange);
+        color: var(--cd-primary-color);
         background-color: transparent;
       }
     }

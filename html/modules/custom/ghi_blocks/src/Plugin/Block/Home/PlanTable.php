@@ -263,7 +263,7 @@ class PlanTable extends GHIBlockBase {
       'plans' => [
         'include' => 'hrp_status',
         'hrp_status' => 'hrp',
-        'plan_types' => [],
+        'plan_types' => NULL,
         'hide_unpublished' => FALSE,
         'hide_empty_requirements' => FALSE,
       ],

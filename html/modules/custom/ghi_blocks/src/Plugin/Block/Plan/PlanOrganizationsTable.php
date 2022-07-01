@@ -127,7 +127,7 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
       'label_display' => TRUE,
       'hpc' => [
         'organizations' => [
-          'organization_ids' => property_exists($config, 'organization_ids') ? (array) $config->organization_ids : [],
+          'organization_ids' => (array) $config->organization_ids ?? [],
         ],
         'table' => [
           'columns' => $columns,
@@ -209,7 +209,11 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
   protected function getConfigurationDefaults() {
     return [
       'organizations' => [
-        'organization_ids' => [],
+        // It is important to set the default value to NULL, otherwhise the
+        // array keys, which are integers will be renumbered by
+        // NestedArray::mergeDeep() which is called from
+        // BlockPluginTrait::setConfiguration().
+        'organization_ids' => NULL,
       ],
       'table' => [
         'columns' => [],

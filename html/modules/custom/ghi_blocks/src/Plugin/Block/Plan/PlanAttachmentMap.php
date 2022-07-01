@@ -923,12 +923,12 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
       'attachments' => [
         'entity_attachments' => [
           'entities' => [
-            'entity_ids' => [],
+            'entity_ids' => NULL,
           ],
           'attachments' => [
             'entity_type' => NULL,
             'attachment_type' => NULL,
-            'attachment_id' => [],
+            'attachment_id' => NULL,
           ],
         ],
       ],

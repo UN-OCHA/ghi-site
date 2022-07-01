@@ -1,5 +1,7 @@
 (function ($, Drupal) {
 
+  const root_styles = getComputedStyle(document.documentElement);
+
   // Attach behaviors.
   Drupal.behaviors.hpc_plan_map_chloropleth = {
     attach: function(context, settings) {
@@ -36,6 +38,21 @@
 
   Drupal.hpc_map_chloropleth = Drupal.hpc_map_chloropleth || {};
   Drupal.hpc_map_chloropleth.states = Drupal.hpc_map_chloropleth.states || {};
+
+  Drupal.hpc_map_chloropleth.convertToRGB = function(color_string_hex) {
+    color_string_hex = color_string_hex.trim().replace('#', '');
+    if (color_string_hex.length != 6){
+      throw "Only six-digit hex colors are allowed.";
+    }
+    var aRgbHex = color_string_hex.match(/.{1,2}/g);
+    var aRgb = [
+      parseInt(aRgbHex[0], 16),
+      parseInt(aRgbHex[1], 16),
+      parseInt(aRgbHex[2], 16)
+    ];
+    console.log('rgb(' + aRgb.join(',') + ')');
+    return 'rgb(' + aRgb.join(',') + ')';
+}
 
   // Color interpolation boldly copied and adapted from
   // https://graphicdesign.stackexchange.com/a/83867
@@ -78,9 +95,7 @@
       color: '#026CB6',
       dashArray: '',
     },
-    // rgb(238,115,37) is #ee7325, which is the HPC orange used as a highlight
-    // color in other parts of our color scheme.
-    colors: Drupal.hpc_map_chloropleth.interpolateColors("rgb(255, 255, 255)", "rgb(238, 115, 37)", 6),
+    colors: Drupal.hpc_map_chloropleth.interpolateColors("rgb(255, 255, 255)", Drupal.hpc_map_chloropleth.convertToRGB(root_styles.getPropertyValue('--cd-widget-color--dark')), 6),
     modal: {
       wrapperTemplate: [
         '<div class="{OVERLAY_CLS}"></div>',
