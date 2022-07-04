@@ -9,6 +9,8 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResultForbidden;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Render\Markup;
+use Drupal\Core\Template\Attribute;
 
 /**
  * Implements hook_theme_registry_alter().
@@ -18,6 +20,7 @@ function common_design_subtheme_theme_registry_alter(&$theme_registry) {
   $theme_registry['hpc_currency']['variables']['use_abbreviation'] = FALSE;
   $theme_registry['hpc_amount']['variables']['use_abbreviation'] = FALSE;
   $theme_registry['table']['variables']['sortable'] = FALSE;
+  $theme_registry['table']['variables']['progress_groups'] = FALSE;
   $theme_registry['table']['variables']['autosort'] = FALSE;
   $theme_registry['table']['variables']['soft_limit'] = FALSE;
 }
@@ -226,6 +229,7 @@ function common_design_subtheme_preprocess_table(&$vars) {
     ],
   ];
 
+  // Sorting.
   $sortable = !empty($vars['sortable']);
   if ($sortable) {
     $attributes['class'][] = Html::getClass('sortable');
@@ -233,13 +237,21 @@ function common_design_subtheme_preprocess_table(&$vars) {
   if (!empty($vars['autosort'])) {
     $attributes['class'][] = Html::getClass('autosort');
   }
+
+  // Soft limits.
   if (!empty($vars['soft_limit'])) {
     $attributes['class'][] = Html::getClass('soft_limit');
     $attributes['data-soft-limit'][] = (int) $vars['soft_limit'];
   }
 
+  // Progress indicators.
+  $progress_indicators = !empty($vars['progress_groups']);
+  $progress_groups = [];
+  if ($progress_indicators) {
+    $attributes['class'][] = Html::getClass('has-progress-indicator');
+  }
+
   $vars['attributes'] = array_key_exists('attributes', $vars) ? NestedArray::mergeDeep($vars['attributes'], $attributes) : $attributes;
-  $vars['#attached'] = array_key_exists('#attached', $vars) ? NestedArray::mergeDeep($vars['#attached'], $attached) : $attached;
 
   foreach ($vars['header'] as &$header) {
     $attribute = is_array($header) && array_key_exists('attributes', $header) ? $header['attributes'] : NULL;
@@ -256,27 +268,88 @@ function common_design_subtheme_preprocess_table(&$vars) {
     }
   }
 
-  foreach ($vars['rows'] as &$row) {
-    foreach ($row as &$columns) {
-      foreach ($columns as $column_name => &$column) {
-        /** @var \Drupal\Core\Template\Attribute $attribute */
-        $attribute = is_array($column) && array_key_exists('attributes', $column) ? $column['attributes'] : NULL;
-        if (!$attribute) {
-          continue;
-        }
-        $attribute->setAttribute('data-column', $column_name);
-        if ($attribute->hasAttribute('data-column-type')) {
-          $attributes = $attribute->toArray();
-          $attribute->addClass('cd-table--' . $attributes['data-column-type']);
-        }
+  foreach ($vars['rows'] as $row_key => &$row) {
+    foreach ($row['cells'] as $column_name => &$column) {
+      /** @var \Drupal\Core\Template\Attribute $attribute */
+      $attribute = is_array($column) && array_key_exists('attributes', $column) ? $column['attributes'] : NULL;
+      if (!$attribute) {
+        continue;
+      }
+      $attribute->setAttribute('data-column', $column_name);
+      if ($attribute->hasAttribute('data-column-type')) {
+        $attributes = $attribute->toArray();
+        $attribute->addClass('cd-table--' . $attributes['data-column-type']);
+      }
 
-        if ($sortable && $attribute->hasAttribute('data-sort-value')) {
+      if ($sortable) {
+        if ($attribute->hasAttribute('data-sort-value')) {
           $attribute->setAttribute('sorttable_customkey', $attribute['data-sort-value']);
           $attribute->removeAttribute('data-sort-value');
         }
+        elseif ($attribute->hasAttribute('data-raw-value')) {
+          $attribute->setAttribute('sorttable_customkey', $attribute['data-raw-value']);
+        }
+      }
+
+      if ($progress_indicators && $attribute->hasAttribute('data-progress-group') && $attribute->hasAttribute('data-raw-value')) {
+        $progress_group = $attribute->offsetGet('data-progress-group')->value();
+        $raw_value = $attribute->offsetGet('data-raw-value')->value();
+        if (empty($raw_value)) {
+          continue;
+        }
+        if (!array_key_exists($progress_group, $progress_groups)) {
+          $progress_groups[$progress_group] = [];
+        }
+        $progress_groups[$progress_group][] = [
+          'row' => $row_key,
+          'column' => $column_name,
+          'value' => $raw_value,
+        ];
       }
     }
   }
+
+  if (!empty($progress_groups)) {
+    $attached['library'][] = 'common_design_subtheme/table-progress-indicator';
+    foreach ($progress_groups as $group => $items) {
+      $max = max(array_map(function ($item) {
+        return $item['value'];
+      }, $items));
+      foreach ($items as $progress_item) {
+        $row = $progress_item['row'];
+        $column = $progress_item['column'];
+        $value = $progress_item['value'];
+        $progress = 100 / $max * $value;
+        $progress_attributes = new Attribute([
+          'data-progress-group' => $group,
+          'data-progress-value' => $value,
+          'data-progress' => $progress,
+          'style' => 'width: ' . $progress . '%',
+        ]);
+        if (!is_array($vars['rows'][$row]) || !is_array($vars['rows'][$row]['cells'][$column])) {
+          continue;
+        }
+        $content = &$vars['rows'][$row]['cells'][$column]['content'];
+        if (empty(Element::children($content))) {
+          $content = [$content];
+        }
+        $content = [
+          '#type' => 'container',
+          '#attributes' => [
+            'class' => [
+              'value-wrapper',
+            ],
+          ],
+          0 => $content,
+          1 => [
+            '#markup' => Markup::create('<span class="progress-indicator-wrapper"><span class="progress-indicator" ' . $progress_attributes . '></span></span>'),
+          ],
+        ];
+      }
+    }
+  }
+
+  $vars['#attached'] = array_key_exists('#attached', $vars) ? NestedArray::mergeDeep($vars['#attached'], $attached) : $attached;
 }
 
 /**

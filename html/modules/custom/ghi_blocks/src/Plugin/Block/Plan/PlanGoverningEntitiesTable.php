@@ -214,7 +214,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
         $row[] = [
           'data' => $item_type->getRenderArray(),
           'data-value' => $item_type->getValue(),
-          'data-sort-value' => $item_type->getSortableValue(),
+          'data-raw-value' => $item_type->getSortableValue(),
           'data-sort-type' => $item_type::SORT_TYPE,
           'data-column-type' => $item_type::ITEM_TYPE,
           'class' => $item_type->getClasses(),
@@ -258,7 +258,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
               'class' => array_merge($item_type->getClasses(), [
                 'not-reported',
               ]),
-              'data-sort-value' => $not_reported_label,
+              'data-raw-value' => $not_reported_label,
               'data-sort-type' => $item_type::SORT_TYPE,
               'data-column-type' => $item_type::ITEM_TYPE,
             ];
@@ -268,7 +268,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
             $row[] = [
               'data' => $item_type->getRenderArray(),
               'data-value' => $item_type->getValue(),
-              'data-sort-value' => $item_type->getSortableValue(),
+              'data-raw-value' => $item_type->getSortableValue(),
               'data-sort-type' => $item_type::SORT_TYPE,
               'data-column-type' => $item_type::ITEM_TYPE,
               'class' => $item_type->getClasses(),
@@ -278,7 +278,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
             $row[] = [
               'data' => $this->t('N/A'),
               'data-value' => 0,
-              'data-sort-value' => 0,
+              'data-raw-value' => 0,
               'data-sort-type' => $item_type::SORT_TYPE,
               'data-column-type' => $item_type::ITEM_TYPE,
               'class' => array_merge($item_type->getClasses(), [
@@ -313,7 +313,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
             'class' => array_merge($item_type->getClasses(), [
               'shared-funding',
             ]),
-            'data-sort-value' => $not_reported_label,
+            'data-raw-value' => $not_reported_label,
             'data-sort-type' => $item_type::SORT_TYPE,
             'data-column-type' => $item_type::ITEM_TYPE,
           ];
@@ -325,7 +325,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
           $row[] = [
             'data' => $item_type->getRenderArray(),
             'data-value' => $item_type->getValue(),
-            'data-sort-value' => $item_type->getSortableValue(),
+            'data-raw-value' => $item_type->getSortableValue(),
             'data-sort-type' => $item_type::SORT_TYPE,
             'data-column-type' => $item_type::ITEM_TYPE,
             'class' => $item_type->getClasses(),
@@ -335,7 +335,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
           $row[] = [
             'data' => $this->t('N/A'),
             'data-value' => 0,
-            'data-sort-value' => 0,
+            'data-raw-value' => 0,
             'data-sort-type' => $item_type::SORT_TYPE,
             'data-column-type' => $item_type::ITEM_TYPE,
             'class' => array_merge($item_type->getClasses(), [

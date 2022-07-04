@@ -241,7 +241,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
 
     // Sort the entities by name.
     usort($rows, function ($a, $b) {
-      return strnatcasecmp($a[0]['data-sort-value'], $b[0]['data-sort-value']);
+      return strnatcasecmp($a[0]['data-raw-value'], $b[0]['data-raw-value']);
     });
 
     return [
@@ -293,7 +293,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
             '#markup' => Markup::create('<span class="name">' . $attachment->description . '</span>'),
           ],
           'data-value' => $attachment->description,
-          'data-sort-value' => $attachment->description,
+          'data-raw-value' => $attachment->description,
           'data-sort-type' => $item_type::SORT_TYPE,
           'data-column-type' => $item_type::ITEM_TYPE,
           'class' => array_merge($item_type->getClasses(), ['subrow']),
@@ -304,7 +304,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
         $row[] = [
           'data' => $item_type->getRenderArray(),
           'data-value' => $item_type->getValue(),
-          'data-sort-value' => $item_type->getSortableValue(),
+          'data-raw-value' => $item_type->getSortableValue(),
           'data-sort-type' => $item_type::SORT_TYPE,
           'data-column-type' => $item_type::ITEM_TYPE,
           'class' => $item_type->getClasses(),

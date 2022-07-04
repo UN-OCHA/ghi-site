@@ -1,4 +1,43 @@
-(function ($) {
+(function ($, Drupal) {
+
+  Drupal.CommonDesignSubtheme = {};
+
+  Drupal.CommonDesignSubtheme.SoftLimit = {};
+  Drupal.CommonDesignSubtheme.SoftLimit.applyLimit = function($table) {
+    let soft_limit = $table.data('soft-limit');
+    let $rows = $table.find('> tbody > tr');
+    if ($rows.length <= soft_limit) {
+      return false;
+    }
+    $rows.each(function () {
+      $(this).show();
+    });
+    // Hide all rows beyond the first ones defined by the soft limit.
+    $rows.slice(soft_limit).each(function () {
+      $(this).hide();
+    });
+    if (!$table.parent().find('.expand-table')) {
+
+    }
+  }
+
+  Drupal.CommonDesignSubtheme.SoftLimit.addExpandButton = function($table) {
+    if ($table.parent().find('.expand-table').length > 0) {
+      return;
+    }
+    // Add a button to expand the rest of the rows.
+    $button = $('<a href="#">')
+      .addClass('expand-table')
+      .addClass('cd-button')
+      .text(Drupal.t('Show all'));
+    $button.on('click', function (e) {
+      $table.find('tr:hidden').slideDown();
+      $(this).hide();
+      e.preventDefault();
+    });
+    $table.after($button);
+  }
+
   Drupal.behaviors.CommonDesignSubtheme = {
     attach: function (context, settings) {
       if ($(context).hasClass('glb-canvas-form')) {
@@ -35,43 +74,18 @@
 
       $('table.soft-limit', context).once('soft-limit-table').each(function() {
         let $table = $(this);
-        let soft_limit = $table.data('soft-limit');
-        let $rows = $table.find('> tbody > tr');
-        if ($rows.length > soft_limit) {
-          // Hide all rows beyond the first ones defined by the soft limit.
-          $rows.slice(soft_limit).each(function () {
-            $(this).hide();
+        Drupal.CommonDesignSubtheme.SoftLimit.applyLimit($table);
+        Drupal.CommonDesignSubtheme.SoftLimit.addExpandButton($table);
+
+        // Update the list when sorting is used.
+        if ($table.hasClass('sortable')) {
+          $table.find('> thead th').on('click', function () {
+            Drupal.CommonDesignSubtheme.SoftLimit.applyLimit($table);
           });
-          // Add a button to expand the rest of the rows.
-          $button = $('<a href="#">')
-            .addClass('expand-table')
-            .addClass('cd-button')
-            .text(Drupal.t('Show all'));
-          $button.on('click', function (e) {
-            $table.find('tr:hidden').slideDown();
-            $(this).hide();
-            e.preventDefault();
-          });
-          $table.after($button);
         }
       });
-
-
     }
-
-
-
 
   };
 
-  // $(document).ajaxSend(function (event, jqxhr, settings) {
-  //   console.log(settings);
-  //   console.log('start');
-  // });
-
-  // $(document).ajaxStop(function (event, s, settings) {
-  //   console.log(event, settings);
-  //   console.log('stop');
-  // });
-
-}(jQuery));
+}(jQuery, Drupal));

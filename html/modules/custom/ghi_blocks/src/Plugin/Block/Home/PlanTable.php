@@ -132,8 +132,9 @@ class PlanTable extends GHIBlockBase {
             ],
             $this->buildFootnoteTooltip($footnotes, 'in_need'),
           ],
-          'data-sort-value' => $plan->getCaseloadValue('inNeed'),
+          'data-raw-value' => $plan->getCaseloadValue('inNeed'),
           'data-column-type' => 'amount',
+          'data-progress-group' => 'people',
         ],
         'targeted' => [
           'data' => [
@@ -143,8 +144,9 @@ class PlanTable extends GHIBlockBase {
             ],
             $this->buildFootnoteTooltip($footnotes, 'target'),
           ],
-          'data-sort-value' => $plan->getCaseloadValue('target'),
+          'data-raw-value' => $plan->getCaseloadValue('target'),
           'data-column-type' => 'amount',
+          'data-progress-group' => 'people',
         ],
         'expected_reach' => [
           'data' => [
@@ -154,16 +156,18 @@ class PlanTable extends GHIBlockBase {
             ],
             $this->buildFootnoteTooltip($footnotes, 'estimated_reach'),
           ],
-          'data-sort-value' => $plan->getCaseloadValue('expectedReach', 'Expected Reach'),
+          'data-raw-value' => $plan->getCaseloadValue('expectedReach', 'Expected Reach'),
           'data-column-type' => 'amount',
+          'data-progress-group' => 'people',
         ],
         'reached' => [
           'data' => [
             '#theme' => 'hpc_amount',
             '#amount' => $plan->getCaseloadValue('reached', 'Reached'),
           ],
-          'data-sort-value' => $plan->getCaseloadValue('reached', 'Reached'),
+          'data-raw-value' => $plan->getCaseloadValue('reached', 'Reached'),
           'data-column-type' => 'amount',
+          'data-progress-group' => 'people',
         ],
         'requirements' => [
           'data' => [
@@ -173,23 +177,25 @@ class PlanTable extends GHIBlockBase {
             ],
             $this->buildFootnoteTooltip($footnotes, 'requirements'),
           ],
-          'data-sort-value' => $plan->getRequirements($plan),
+          'data-raw-value' => $plan->getRequirements($plan),
           'data-column-type' => 'amount',
+          'data-progress-group' => 'financial',
         ],
         'funding' => [
           'data' => [
             '#theme' => 'hpc_currency',
             '#value' => $plan->getFunding($plan),
           ],
-          'data-sort-value' => $plan->getFunding($plan),
+          'data-raw-value' => $plan->getFunding($plan),
           'data-column-type' => 'amount',
+          'data-progress-group' => 'financial',
         ],
         'coverage' => [
           'data' => [
             '#theme' => 'hpc_percent',
             '#ratio' => $plan->getCoverage($plan) / 100,
           ],
-          'data-sort-value' => $plan->getCoverage($plan),
+          'data-raw-value' => $plan->getCoverage($plan),
           'data-column-type' => 'amount',
         ],
         'document' => [
@@ -210,6 +216,7 @@ class PlanTable extends GHIBlockBase {
       '#wrapper_attributes' => [
         'class' => ['plan-table'],
       ],
+      '#progress_groups' => TRUE,
       '#cache' => [
         'tags' => $cache_tags,
       ],

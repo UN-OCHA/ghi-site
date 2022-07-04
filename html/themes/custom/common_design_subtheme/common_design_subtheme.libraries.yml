@@ -24,6 +24,11 @@ sorttable:
   js:
     js/sorttable.js: {}
 
+table-progress-indicator:
+  css:
+    theme:
+      components/ghi-table-progress-indicator/ghi-table-progress-indicator.css: {}
+
 select2:
   version: 2
   js:
