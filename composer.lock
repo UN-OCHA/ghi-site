@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e21310e8a47dd71cc71ca95239feefe7",
+    "content-hash": "c50c945d14cd3328798a9c829c476a61",
     "packages": [
         {
             "name": "alchemy/zippy",
@@ -4571,6 +4571,24 @@
                 "issues": "https://www.drupal.org/project/issues/pathauto",
                 "documentation": "https://www.drupal.org/docs/8/modules/pathauto"
             }
+        },
+        {
+            "name": "drupal/phpexcel",
+            "version": "dev-3148435-automated-drupal-9",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/issue/phpexcel-3148435.git",
+                "reference": "e22e3f91f8e1b04e27928835e0465422700f98aa"
+            },
+            "require": {
+                "phpoffice/phpspreadsheet": "^1.18"
+            },
+            "type": "drupal-module",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "description": "Provides a simple API for using the PhpSpreadsheet library",
+            "time": "2021-07-30T11:08:53+00:00"
         },
         {
             "name": "drupal/publishcontent",
@@ -16714,6 +16732,7 @@
         "drupal/layout_builder_ipe": 20,
         "drupal/multiple_fields_remove_button": 15,
         "drupal/page_manager": 10,
+        "drupal/phpexcel": 20,
         "drupal/rabbit_hole": 10,
         "drupal/smugmug_api": 20,
         "drupal/yaml_content": 15
