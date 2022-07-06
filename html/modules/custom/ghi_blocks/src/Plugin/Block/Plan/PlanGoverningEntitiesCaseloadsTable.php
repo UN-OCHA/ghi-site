@@ -11,6 +11,7 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\node\NodeInterface;
 
 /**
@@ -43,7 +44,7 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface {
+class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface {
 
   use ConfigurationContainerTrait;
 
@@ -139,6 +140,24 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    * {@inheritdoc}
    */
   public function buildContent() {
+    $table_data = $this->buildTableData();
+    if (empty($table_data)) {
+      return NULL;
+    }
+    return [
+      '#theme' => 'table',
+      '#header' => $table_data['header'],
+      '#rows' => $table_data['rows'],
+    ];
+  }
+
+  /**
+   * Build the table data for this element.
+   *
+   * @return array|null
+   *   An array with the keys "header" and "rows".
+   */
+  private function buildTableData() {
     $conf = $this->getBlockConfig();
 
     // Get the entities and configured columns.
@@ -243,11 +262,9 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     usort($rows, function ($a, $b) {
       return strnatcasecmp($a[0]['data-raw-value'], $b[0]['data-raw-value']);
     });
-
     return [
-      '#theme' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
+      'header' => $header,
+      'rows' => $rows,
     ];
   }
 
@@ -648,6 +665,13 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       'monitoring_period' => [],
     ];
     return $item_types;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildDownloadData() {
+    return $this->buildTableData();
   }
 
 }

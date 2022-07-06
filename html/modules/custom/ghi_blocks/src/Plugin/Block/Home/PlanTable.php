@@ -10,6 +10,7 @@ use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -23,11 +24,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *    "plans" = "plan_overview_query",
  *  },
  *  context_definitions = {
+ *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
  *    "year" = @ContextDefinition("integer", label = @Translation("Year"))
  *  }
  * )
  */
-class PlanTable extends GHIBlockBase {
+class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
 
   use GlobalSettingsTrait;
   use PlanFootnoteTrait;
@@ -56,23 +58,38 @@ class PlanTable extends GHIBlockBase {
    * {@inheritdoc}
    */
   public function buildContent() {
-    $plans = $this->getPlans();
-    if (empty($plans)) {
+    $table_data = $this->buildTableData();
+    if ($table_data === NULL) {
       return NULL;
     }
-    return $this->buildTable($plans);
+    return [
+      '#theme' => 'table',
+      '#header' => $table_data['header'],
+      '#rows' => $table_data['rows'],
+      '#sortable' => TRUE,
+      '#autosort' => FALSE,
+      '#wrapper_attributes' => [
+        'class' => ['plan-table'],
+      ],
+      '#progress_groups' => TRUE,
+      '#cache' => [
+        'tags' => $table_data['cache_tags'],
+      ],
+      '#soft_limit' => $this->getBlockConfig()['table']['soft_limit'] ?? 0,
+    ];
   }
 
   /**
    * Build a table representation of the plan data.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[] $plans
-   *   The plans to include in the table.
-   *
    * @return array
    *   A render array for a table.
    */
-  public function buildTable(array $plans) {
+  public function buildTableData() {
+    $plans = $this->getPlans();
+    if (empty($plans)) {
+      return NULL;
+    }
     $year = $this->getContextValue('year');
 
     $header = [
@@ -122,7 +139,14 @@ class PlanTable extends GHIBlockBase {
       $document_uri = $plan_entity ? $plan_entity->get('field_plan_document_link')->uri : NULL;
 
       $rows[$plan->id()] = [
-        'name' => $plan->getName(),
+        'name' => [
+          'data' => [
+            [
+              '#markup' => $plan->getName(),
+            ],
+          ],
+          'data-value' => $plan->getName(),
+        ],
         'type' => $plan->getTypeShortName(),
         'inneed' => [
           'data' => [
@@ -207,20 +231,14 @@ class PlanTable extends GHIBlockBase {
     $this->applyTableConfiguration($header, $rows);
     $this->applyGlobalConfigurationTable($header, $rows, $year, $plans);
 
+    if (empty($rows)) {
+      return NULL;
+    }
+
     return [
-      '#theme' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-      '#sortable' => TRUE,
-      '#autosort' => FALSE,
-      '#wrapper_attributes' => [
-        'class' => ['plan-table'],
-      ],
-      '#progress_groups' => TRUE,
-      '#cache' => [
-        'tags' => $cache_tags,
-      ],
-      '#soft_limit' => $this->getBlockConfig()['table']['soft_limit'] ?? 0,
+      'header' => $header,
+      'rows' => $rows,
+      'cache_tags' => $cache_tags,
     ];
   }
 
@@ -557,6 +575,13 @@ class PlanTable extends GHIBlockBase {
    */
   private function getPlanQuery() {
     return $this->getQueryHandler('plans');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildDownloadData() {
+    return $this->buildTableData();
   }
 
 }

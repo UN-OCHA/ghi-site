@@ -12,12 +12,11 @@
     $rows.each(function () {
       $(this).show();
     });
-    // Hide all rows beyond the first ones defined by the soft limit.
-    $rows.slice(soft_limit).each(function () {
-      $(this).hide();
-    });
-    if (!$table.parent().find('.expand-table')) {
-
+    if ($table.parent().find('a.expand-table:visible').length) {
+      // Hide all rows beyond the first ones defined by the soft limit.
+      $rows.slice(soft_limit).each(function () {
+        $(this).hide();
+      });
     }
   }
 
@@ -74,8 +73,8 @@
 
       $('table.soft-limit', context).once('soft-limit-table').each(function() {
         let $table = $(this);
-        Drupal.CommonDesignSubtheme.SoftLimit.applyLimit($table);
         Drupal.CommonDesignSubtheme.SoftLimit.addExpandButton($table);
+        Drupal.CommonDesignSubtheme.SoftLimit.applyLimit($table);
 
         // Update the list when sorting is used.
         if ($table.hasClass('sortable')) {

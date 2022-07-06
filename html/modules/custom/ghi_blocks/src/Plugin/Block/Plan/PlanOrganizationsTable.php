@@ -10,6 +10,7 @@ use Drupal\ghi_blocks\Traits\OrganizationsBlockTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\node\NodeInterface;
 
 /**
@@ -46,7 +47,7 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface {
+class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, HPCDownloadExcelInterface {
 
   use ConfigurationContainerTrait;
   use TableSoftLimitTrait;
@@ -143,6 +144,23 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
    * {@inheritdoc}
    */
   public function buildContent() {
+    $table_data = $this->buildTableData();
+    return [
+      '#theme' => 'table',
+      '#header' => $table_data['header'],
+      '#rows' => $table_data['rows'],
+      '#sortable' => TRUE,
+      '#soft_limit' => $this->getBlockConfig()['display']['soft_limit'] ?? 0,
+    ];
+  }
+
+  /**
+   * Build the table data for this element.
+   *
+   * @return array
+   *   An array with the keys "header" and "rows".
+   */
+  private function buildTableData() {
     $conf = $this->getBlockConfig();
 
     $organizations = $this->getConfiguredOrganizations();
@@ -153,7 +171,6 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
     }
 
     $context = $this->getBlockContext();
-    $header = $this->buildTableHeader($columns);
 
     $rows = [];
     foreach ($organizations as $organization) {
@@ -176,6 +193,7 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
           'data-sort-type' => $item_type::SORT_TYPE,
           'data-column-type' => $item_type::ITEM_TYPE,
           'class' => $item_type->getClasses(),
+          'export_value' => $item_type->getSortableValue(),
         ];
 
         // Update the skip row flag. Make it lazy, only check the item type if
@@ -192,11 +210,8 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
     }
 
     return [
-      '#theme' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-      '#sortable' => TRUE,
-      '#soft_limit' => $this->getBlockConfig()['display']['soft_limit'] ?? 0,
+      'header' => $this->buildTableHeader($columns),
+      'rows' => $rows,
     ];
   }
 
@@ -335,6 +350,13 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
       'plan_object' => $this->getCurrentPlanObject(),
       'projects' => $project_search_query->getProjects(),
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildDownloadData() {
+    return $this->buildTableData();
   }
 
 }
