@@ -121,7 +121,7 @@ class ViewsQueryBatchedSource extends DownloadSourceBase implements HPCBatchedDo
     // Remove anything which isn't a word, whitespace, number or any of the
     // following caracters -_~,;[]().
     $title = mb_ereg_replace("([^\w\s\d\-_~,;\[\]\(\).])", '', $title);
-    return 'FTS_' . $title;
+    return $title;
   }
 
   /**

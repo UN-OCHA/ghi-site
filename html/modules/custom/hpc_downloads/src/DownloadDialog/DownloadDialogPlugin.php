@@ -8,6 +8,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Component\Serialization\Json;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadSourceInterface;
 
 /**
  * Download dialog class.
@@ -77,8 +78,8 @@ class DownloadDialogPlugin {
   /**
    * Build a download link that is used inside the download dialog.
    *
-   * @param string $download_source
-   *   The download source identifier.
+   * @param \Drupal\hpc_downloads\Interfaces\HPCDownloadSourceInterface $download_source
+   *   The download source.
    * @param string $download_type
    *   The download type identifier.
    * @param string $label
@@ -89,7 +90,7 @@ class DownloadDialogPlugin {
    * @return array
    *   A fully built link render array.
    */
-  public function buildDownloadLink($download_source, $download_type, $label, array $options) {
+  public function buildDownloadLink(HPCDownloadSourceInterface $download_source, $download_type, $label, array $options) {
     $build = [
       '#type' => 'link',
       '#title' => $label,

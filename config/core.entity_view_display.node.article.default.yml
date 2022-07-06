@@ -65,6 +65,25 @@ third_party_settings:
                 third_party_settings: {  }
             weight: 1
             additional: {  }
+          59b1ab01-e47c-46fc-9770-e0ef3a83850e:
+            uuid: 59b1ab01-e47c-46fc-9770-e0ef3a83850e
+            region: content
+            configuration:
+              id: 'field_block:node:article:field_image'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: image
+                label: above
+                settings:
+                  image_link: ''
+                  image_style: ''
+                  image_loading:
+                    attribute: lazy
+                third_party_settings: {  }
+            weight: 2
+            additional: {  }
         third_party_settings: {  }
   layout_builder_restrictions:
     allowed_block_categories:
@@ -142,6 +161,8 @@ content:
     settings:
       image_link: ''
       image_style: ''
+      image_loading:
+        attribute: lazy
     third_party_settings: {  }
     weight: 3
     region: content

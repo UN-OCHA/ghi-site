@@ -16,6 +16,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
@@ -25,6 +26,12 @@ use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
+use Drupal\hpc_downloads\DownloadSource\BlockSource;
+use Drupal\hpc_downloads\Helpers\DownloadHelper;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadPDFInterface;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\layout_builder\Form\AddBlockForm;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Plugin\SectionStorage\SectionStorageBase;
@@ -403,6 +410,24 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $build['#title_attributes']['class'][] = 'block-title';
     if (empty($build['#region'])) {
       $build['#region'] = $this->getRegion();
+    }
+
+    $build['#children'] = $build['#children'] ?? [
+      '#type' => 'container',
+    ];
+    // Prepare action links.
+    $download_links = !empty($build['#download_links']) ? $build['#download_links'] : [];
+    if ($this instanceof HPCDownloadPluginInterface && !empty($plugin_configuration['uuid'])) {
+      $download_types = $this->getAvailableDownloadTypes();
+      if (!empty($download_types) && $download_source = $this->getDownloadSource()) {
+        /** @var \Drupal\hpc_downloads\DownloadDialog\DownloadDialogPlugin $download_dialog */
+        $download_dialog = \Drupal::service('hpc_downloads.download_dialog_plugin');
+        $download_links[] = $download_dialog->buildDialogLink($this, Markup::create(DownloadHelper::getDownloadIconMarkup() . $this->t('Downloads')));
+      }
+    }
+
+    if (!empty($download_links)) {
+      $build['#download_links'] = $download_links;
     }
 
     // Add the block instance to the render array, so that we have it available
@@ -1572,6 +1597,74 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $contexts[$key] = $contexts[$context_name];
     }
     return $contexts;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDownloadSource() {
+    return new BlockSource($this);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAvailableDownloadTypes() {
+    $download_types = [];
+    // PNG downloads.
+    if ($this instanceof HPCDownloadPNGInterface) {
+      $download_types += [
+        HPCDownloadPluginInterface::DOWNLOAD_TYPE_PNG => $this->t('Download PNG'),
+      ];
+    }
+    // PDF downloads.
+    if ($this instanceof HPCDownloadPDFInterface) {
+      $download_types += [
+        HPCDownloadPluginInterface::DOWNLOAD_TYPE_PDF => $this->t('Download PDF'),
+      ];
+    }
+    // Excel downloads.
+    if ($this instanceof HPCDownloadExcelInterface) {
+      $download_types += [
+        HPCDownloadPluginInterface::DOWNLOAD_TYPE_XLSX => $this->t('Download XLSX'),
+      ];
+    }
+    return $download_types;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDownloadCaption() {
+    return $this->label();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildMetaData() {
+    $meta_data = [];
+    $page = $this->getPageNode();
+    $meta_data[] = [
+      $this->t('Page'),
+      $page->label(),
+    ];
+    $meta_data[] = [
+      $this->t('Export of'),
+      $this->getDownloadCaption(),
+    ];
+    $meta_data[] = [
+      $this->t('Date'),
+      date('d/m/Y H:i'),
+    ];
+    $meta_data[] = [
+      $this->t('Source'),
+      Url::fromUserInput($this->getCurrentUri(), [
+        'absolute' => TRUE,
+        'query' => !empty($options['query']) ? $options['query'] : [],
+      ]),
+    ];
+    return $meta_data;
   }
 
 }

@@ -14,7 +14,7 @@ use Drupal\node\NodeInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Sync element service class.
+ * Section context manager class.
  */
 class SectionContextManager {
 
@@ -49,7 +49,6 @@ class SectionContextManager {
   public function getYearContext() {
     $context = NULL;
     $request_attributes = $this->requestStack->getCurrentRequest()->attributes;
-
     if ($year = $request_attributes->get('year')) {
       $context = new Context($this->getContextDefinition(), $year);
     }

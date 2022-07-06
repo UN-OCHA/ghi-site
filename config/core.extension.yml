@@ -80,6 +80,7 @@ module:
   page_manager_ui: 0
   path: 0
   path_alias: 0
+  phpexcel: 0
   publishcontent: 0
   rabbit_hole: 0
   responsive_image: 0

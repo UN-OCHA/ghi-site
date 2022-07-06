@@ -62,4 +62,27 @@
     // common design components.
     margin: 0 !important;
   }
+
+  & > div.block-links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--cd-default-border-color);
+    border-bottom: 1px solid var(--cd-default-border-color);
+
+    .block-download-links .download-item a {
+      text-decoration: none;
+
+      &:hover,
+      &:focus {
+        color: var(--cd-default-text-color);
+      }
+
+      svg {
+        height: 0.8rem;
+        margin-right: 0.5rem;
+      }
+    }
+  }
 }

@@ -182,6 +182,7 @@ trait GlobalSettingsTrait {
           return $row;
         }
         $row['name']['data'][0]['#markup'] = $plan->getShortName();
+        $row['name']['data-value'] = $plan->getShortName();
         return $row;
       }, $rows);
     }

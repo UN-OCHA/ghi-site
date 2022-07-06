@@ -9,6 +9,8 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
+use Drupal\Core\Serialization\Yaml;
 use Drupal\ghi_blocks\Controller\BaseObjectReferenceController;
 use Drupal\ghi_blocks\Controller\LayoutBuilderBlockController;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
@@ -142,9 +144,40 @@ function ghi_blocks_preprocess_block(&$variables) {
   if (!$block instanceof GHIBlockBase) {
     return;
   }
+
   // Set the title if needed.
   if ($block->shouldDisplayTitle() && array_key_exists('#title', $variables['content'])) {
     $variables['label'] = $variables['content']['#title'];
+  }
+
+  // Provide a support for block download links.
+  if (!empty($variables['content']['#download_links'])) {
+    $variables['download_links'] = $variables['content']['#download_links'];
+    unset($variables['content']['#download_links']);
+  }
+
+  if (\Drupal::currentUser()->hasPermission('administer site configuration')) {
+    $endpoint_urls = $block->getFullEndpointUrls();
+    if (!empty($endpoint_urls)) {
+      $variables['icons'][] = [
+        '#theme' => 'hpc_tooltip',
+        '#tooltip' => implode('<br />', $endpoint_urls),
+        '#class' => 'api-url',
+        '#tag_content' => [
+          '#theme' => 'hpc_icon',
+          '#icon' => 'help',
+          '#tag' => 'span',
+        ],
+      ];
+      $variables['icons'][] = [
+        '#theme' => 'hpc_popover',
+        '#title' => t('Block configuration'),
+        '#content' => Markup::create('<pre>' . Yaml::encode($variables['configuration']) . '</pre>'),
+        '#material_icon' => 'content_copy',
+        '#class' => 'block-configuration',
+      ];
+      $variables['attributes']['class'][] = 'has-api-url-tooltip';
+    }
   }
 
   // This is necessary to make sure that cache metadata from the block

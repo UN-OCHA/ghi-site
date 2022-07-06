@@ -19,6 +19,7 @@ use Drupal\hpc_common\Helpers\CommonHelper;
  *    "plans" = "plan_overview_query",
  *  },
  *  context_definitions = {
+ *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
  *    "year" = @ContextDefinition("integer", label = @Translation("Year"))
  *  }
  * )

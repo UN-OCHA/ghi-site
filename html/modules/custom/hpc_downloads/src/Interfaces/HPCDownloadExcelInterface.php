@@ -17,9 +17,4 @@ interface HPCDownloadExcelInterface extends HPCDownloadPluginInterface {
    */
   public function buildDownloadData();
 
-  /**
-   * Build the download table.
-   */
-  public function buildDownloadTable();
-
 }

@@ -1,16 +1,16 @@
-table.has-progress-indicator tbody td[data-progress-group] .value-wrapper {
+has-progress-indicator tbody td[data-progress-group] .value-wrapper {
   position: relative;
 }
 
-table.has-progress-indicator tbody td[data-progress-group] .value-wrapper span.progress-indicator-wrapper {
+has-progress-indicator tbody td[data-progress-group] .value-wrapper span.progress-indicator-wrapper {
   position: absolute;
   bottom: -0.4rem;
   left: 0;
   width: calc(100% - 2rem);
 }
 
-table.has-progress-indicator tbody td[data-progress-group] .value-wrapper span.progress-indicator-wrapper span.progress-indicator {
-  background-color: var(--cd-primary-color);
-  height: 4px;
+has-progress-indicator tbody td[data-progress-group] .value-wrapper span.progress-indicator-wrapper span.progress-indicator {
   display: block;
+  height: 4px;
+  background-color: var(--cd-primary-color);
 }

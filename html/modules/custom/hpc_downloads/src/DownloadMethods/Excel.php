@@ -28,6 +28,8 @@ class Excel {
    *   Returns TRUE if file generation was successful; otherwise returns FALSE.
    */
   public static function createDownloadFileFromSingleTable(array $record, array $data, array $meta_data) {
+    $data['header'] = array_values($data['header']);
+    $data['rows'] = array_values($data['rows']);
     $file_data = self::buildFileData($data, $meta_data);
     return self::createDownloadFile($record, $file_data);
   }
@@ -102,9 +104,9 @@ class Excel {
   private static function prepareTableData(array $build) {
     // Prepare header and rows, render arrays, strip_tags, check_plain.
     $build['header'] = self::renderTableArray($build['header']);
-    $build['header'] = array_map(function ($item) {
-      return is_array($item) && array_key_exists('data', $item) ? $item['data'] : $item;
-    }, $build['header']);
+    $build['header'] = array_values(array_map(function ($item) {
+      return is_array($item) && array_key_exists('data', $item) ? $item['data'] : (string) $item;
+    }, $build['header']));
 
     // Now that was an interesting problem. After adding the previous code
     // block to move group rows into the first column of each row that belongs
@@ -119,6 +121,9 @@ class Excel {
     unset($cells);
 
     $build['footnotes'] = [];
+    $build['rows'] = array_values(array_map(function ($cells) {
+      return array_values($cells);
+    }, $build['rows']));
     foreach ($build['rows'] as $row_key => $cells) {
       if (!is_array($cells)) {
         continue;
@@ -127,10 +132,19 @@ class Excel {
         $cells = $cells['data'];
         $build['rows'][$row_key] = $cells;
       }
+
       foreach ($cells as $cell_key => $cell) {
         if (is_array($cell) && array_key_exists('export_value', $cell)) {
           // This has been crafted before, so let's use it.
           $build['rows'][$row_key][$cell_key] = $cell['export_value'];
+        }
+        elseif (is_array($cell) && array_key_exists('data-raw-value', $cell)) {
+          // This has been crafted before, so let's use it.
+          $build['rows'][$row_key][$cell_key] = $cell['data-raw-value'];
+        }
+        elseif (is_array($cell) && array_key_exists('data-value', $cell)) {
+          // This has been crafted before, so let's use it.
+          $build['rows'][$row_key][$cell_key] = $cell['data-value'];
         }
         else {
           $build['rows'][$row_key][$cell_key] = $cell;
