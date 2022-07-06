@@ -18,6 +18,7 @@
         allowHTML: true,
         maxWidth: 'calc(100vw - 20%)',
         role: 'tooltip',
+        interactive: true,
       });
     });
   });
@@ -29,6 +30,7 @@
           allowHTML: true,
           maxWidth: 'calc(100vw - 20%)',
           role: 'tooltip',
+          interactive: true,
         });
       });
     }
