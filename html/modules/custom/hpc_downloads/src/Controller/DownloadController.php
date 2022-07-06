@@ -30,6 +30,7 @@ use Drupal\hpc_downloads\Ajax\DownloadObserverCommand;
 use Drupal\hpc_downloads\Ajax\DownloadStatusUpdateCommand;
 use Drupal\hpc_downloads\DownloadDialog\DownloadDialogPlugin;
 use Drupal\hpc_downloads\DownloadDialog\DownloadDialogViews;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadSourceInterface;
 
 /**
  * Download controller class.
@@ -415,7 +416,7 @@ class DownloadController extends ControllerBase {
   /**
    * Download the file and get its status.
    */
-  private function createDownloadFile($plugin, $record, $options, $download_source, $download_type) {
+  private function createDownloadFile($plugin, $record, $options, HPCDownloadSourceInterface $download_source, $download_type) {
     $status = FALSE;
     $download_method = $download_source->getDownloadMethod();
     if ($options['download_source'] == 'views_executable' || $this->isExcelDownload($plugin, $download_type)) {
