@@ -97,11 +97,12 @@
 .link-carousel-wrapper .slide-details-wrapper .slide-details > div:first-child {
   margin: 2rem 0 0;
 }
-
+.link-carousel-wrapper .slide-details-wrapper .slide-details > div.description {
+  position: relative;
+}
 .link-carousel-wrapper .slide-details-wrapper .slide-details > div.description > p {
   margin-block-end: 0;
 }
-
 .link-carousel-wrapper .slide-details-wrapper .slide-details .tag-line {
   text-transform: uppercase;
   color: var(--cd-tag--color);
@@ -120,10 +121,25 @@
   }
   .link-carousel-wrapper .slide-details-wrapper .slide-details > div {
     margin: 2rem 0 3rem;
-    padding: 0 2rem;
+  }
+  .link-carousel-wrapper .slide-details-wrapper .slide-details > div:first-child {
+    padding: 0 6rem 0 3rem;
+  }
+  .link-carousel-wrapper .slide-details-wrapper .slide-details > div.description {
+    margin: 2rem 0 3rem;
+    padding-right: 3rem;
+  }
+  .link-carousel-wrapper .slide-details-wrapper .slide-details > div.description:before {
+    position: absolute;
+    top: 5px;
+    left: -2rem;
+    width: 1px;
+    height: calc(100% - 5px);
+    content: "";
+    background: var(--cd-default-border-color);
   }
   .link-carousel-wrapper .slide-navigation-wrapper {
-    padding: 0 6rem;
+    padding: 0 7rem;
   }
   .link-carousel-wrapper .slide-navigation-wrapper .slide-navigation:after {
     position: absolute;
@@ -136,7 +152,7 @@
     background: var(--cd-default-border-color);
   }
   .link-carousel-wrapper .slide-navigation-wrapper .slide-navigation .slide-navigation__inner {
-    margin-right: 2rem;
+    margin-right: 1rem;
   }
   .link-carousel-wrapper .slide-navigation-wrapper .slide-navigation.active {
     background: inherit;
@@ -157,6 +173,7 @@
 
 @media screen and (max-width: 1024px) {
   .link-carousel-wrapper .slide-navigation-wrapper .swiper-wrapper {
+    padding-top: 1rem;
     /* Make sure slides are shown if already slided before resizing */
     transform: unset !important;
   }
