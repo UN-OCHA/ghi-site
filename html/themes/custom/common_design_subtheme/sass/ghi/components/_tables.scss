@@ -3,6 +3,13 @@
   table.ghi-table {
     font-size: var(--cd-font-size--default);
 
+    &.soft-limit + a.expand-table {
+      display: block;
+      max-width: fit-content;
+      margin-right: auto;
+      margin-left: auto;
+    }
+
     .ghi-block & {
       margin-bottom: 0;
     }

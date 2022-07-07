@@ -73,6 +73,11 @@ class CarouselItem extends FormElement {
    * any arbitrary data inside the form_state object.
    */
   public static function processCarouselItem(array &$element, FormStateInterface $form_state) {
+    $element['tag_line'] = [
+      '#type' => 'textfield',
+      '#title' => t('Tag line'),
+      '#default_value' => $element['#default_value']['tag_line'] ?? NULL,
+    ];
     $element['description'] = [
       '#type' => 'textarea',
       '#title' => t('Description'),

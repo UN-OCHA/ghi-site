@@ -1,10 +1,13 @@
 // Styles for Map
 // --------------------------------------------------
 
+.ghi-block-global-key-figures + .ghi-block-global-plan-overview-map {
+  margin-top: 1em;
+}
+
 .ghi-block-global-plan-overview-map {
   position: relative;
   clear: both;
-  margin-top: 1em;
 
   .block-content {
     margin-top: 2rem;

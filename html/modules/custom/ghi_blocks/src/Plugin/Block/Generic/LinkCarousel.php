@@ -57,8 +57,14 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
         ],
       ]);
       $carousel_items[] = [
+        'tag_line' => Markup::create($item_type->getTagLine()),
         'title' => Markup::create($item_type->getLabel()),
         'description' => Markup::create($item_type->getDescription()),
+        'thumbnail' => [
+          '#theme' => 'image_style',
+          '#uri' => $file->getFileUri(),
+          '#style_name' => 'link_carousel_thumbnail',
+        ],
         'image' => [
           '#theme' => 'image_style',
           '#uri' => $file->getFileUri(),
@@ -102,6 +108,7 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
       '#preview' => [
         'columns' => [
           'label' => $this->t('Title'),
+          'tag_line' => $this->t('Tag line'),
           'url_string' => $this->t('Url'),
           'thumbnail' => $this->t('Thumbnail'),
         ],

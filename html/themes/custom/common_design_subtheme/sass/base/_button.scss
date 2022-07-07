@@ -4,3 +4,8 @@ a.cd-button {
   color: var(--cd-default-text-color);
   background-color: var(--cd-ocha-yellow);
 }
+a.cd-button:hover,
+a.cd-button:focus {
+  color: var(--cd-default-text-color);
+  background-color: var(--cd-ocha-orange);
+}

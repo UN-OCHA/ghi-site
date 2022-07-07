@@ -1,0 +1,15 @@
+uuid: 3204271f-a343-4a2a-b619-ca91eedbe029
+langcode: en
+status: true
+dependencies: {  }
+name: link_carousel_thumbnail
+label: 'Link carousel thumbnail'
+effects:
+  fb42c6d4-83c8-4cea-96d0-3109c72da700:
+    uuid: fb42c6d4-83c8-4cea-96d0-3109c72da700
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 140
+      height: 85
+      anchor: center-center
