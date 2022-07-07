@@ -52,11 +52,13 @@
      * media query with the 40px padding because 904px + 2 * 40px < 1024px. */
     .content-width {
       max-width: calc(var(--content-width) + 24px) !important;
+      padding: 0 var(--cd-container-padding);
     }
 
     @media (min-width: 768px) {
       .content-width {
         max-width: calc(var(--content-width) + 48px) !important;
+        padding: 0 var(--cd-container-padding-xlarge);
       }
     }
   }
@@ -101,6 +103,6 @@ body.path-error main .cd-layout-content-wrapper {
 
 // Maximum width on full screen for texts, photo galleries etc.
 :root {
-  --content-width: 1004px;
+  --content-width: 1220px;
   --reading-width: 820px;
 }

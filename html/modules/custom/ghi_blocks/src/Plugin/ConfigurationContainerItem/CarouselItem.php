@@ -32,6 +32,13 @@ class CarouselItem extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * Get the tag line.
+   */
+  public function getTagLine() {
+    return $this->config['value']['tag_line'] ?? NULL;
+  }
+
+  /**
    * Get the description.
    */
   public function getDescription() {

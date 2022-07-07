@@ -15,10 +15,45 @@
     attach: function (context, settings) {
       $carousel = $('.link-carousel-wrapper', context);
       $.each($carousel, function(i, container) {
+        // The main image area.
         const swiper = new Swiper($(container).find('.swiper').get(0), {
           speed: 400,
           spaceBetween: 100,
+          autoHeight: true,
         });
+        // Navidation swiper if necessary.
+        let nav_slider = new Swiper($(container).find('.swiper').get(1), {
+          speed: 400,
+          spaceBetween: 0,
+          navigation: {
+            prevEl: '.swiper-button-prev',
+            nextEl: '.swiper-button-next',
+          },
+          createElements: true,
+          slidesPerView: 1,
+          enabled: false,
+          observer: true,
+          observeParents: true,
+          observeSlideChildren: true,
+          breakpoints: {
+            1024: {
+              slidesPerView: 2,
+              enabled: true,
+              spaceBetween: 30,
+            },
+            1400: {
+              slidesPerView: 3,
+              enabled: true,
+              spaceBetween: 30,
+            }
+          }
+        });
+        // This should not be necessary according to the swiper docs, but when
+        // resizing the browser window, the breakpoints do not seem to get
+        // applied without this.
+        $(window).on('resize', function() {
+          nav_slider.update();
+      });
         $(container).addClass('swiper-processed');
 
         Drupal.LinkCarousel.updateContent(container, swiper.activeIndex);

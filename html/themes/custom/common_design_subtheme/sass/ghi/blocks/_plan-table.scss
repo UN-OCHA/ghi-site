@@ -1,10 +1,3 @@
-.ghi-table.soft-limit + a.expand-table {
-  display: block;
-  max-width: fit-content;
-  margin-right: auto;
-  margin-left: auto;
-}
-
 .ghi-block-home-plan-table {
   table {
     tbody {
@@ -46,4 +39,8 @@
       }
     }
   }
+}
+
+.ghi-block-global-plan-overview-map + .ghi-block-home-plan-table {
+  margin-top: 0;
 }

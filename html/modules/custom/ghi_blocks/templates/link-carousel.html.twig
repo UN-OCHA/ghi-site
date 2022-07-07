@@ -1,7 +1,7 @@
 {{ attach_library('common_design_subtheme/ghi-link-carousel') }}
 
 <div class="link-carousel-wrapper">
-  <div class="swiper">
+  <div class="swiper main">
     <div class="swiper-wrapper">
       {% for key, item in items %}
         <div id="slide-{{ key }}" class="swiper-slide">
@@ -9,25 +9,44 @@
         </div>
       {% endfor %}
     </div>
-    <div class="slide-navigation-wrapper">
-      {% for key, item in items %}
-        <div data-slide-index="{{ key }}" class="slide-navigation">
-          <div class="slide-navigation__inner">
-            {{ item.title }}
-          </div>
-        </div>
-      {% endfor %}
-    </div>
   </div>
   <div class="slide-details-wrapper">
     {% for key, item in items %}
       <div data-slide-index="{{ key }}" class="slide-details">
-        <div class="title">{{ item.title }}</div>
+        <div class="title-wrapper">
+          {% if item.tag_line %}
+            <div class="tag-line">{{ item.tag_line }}</div>
+          {% endif %}
+          <div class="title">{{ item.title }}</div>
+        </div>
         <div class="description">
           {{ item.description }}
           <p>{{ item.button }}</p>
         </div>
       </div>
     {% endfor %}
+  </div>
+  <div class="slide-navigation-wrapper">
+    <div class="swiper navigation">
+      <div class="swiper-wrapper">
+        {% for key, item in items %}
+          <div data-slide-index="{{ key }}" class="swiper-slide slide-navigation">
+            <div class="slide-navigation__inner">
+              <div class="slide-navigation-column slide-navigation-left">
+                {{ item.thumbnail }}
+              </div>
+              <div class="slide-navigation-column slide-navigation-right">
+                {% if item.tag_line %}
+                  <div class="tag-line">{{ item.tag_line }}</div>
+                {% endif %}
+                <div class="title">{{ item.title }}</div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="swiper-button-prev"></div>
+    <div class="swiper-button-next"></div>
   </div>
 </div>
