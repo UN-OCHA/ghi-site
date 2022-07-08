@@ -44,6 +44,9 @@ trait ConfigurationContainerGroup {
    *   A single item array or NULL if not found.
    */
   public static function getItemById(array $items, $id) {
+    if ($id === NULL) {
+      return NULL;
+    }
     $index = self::getItemIndexById($items, $id);
     return $index !== NULL && array_key_exists($index, $items) ? $items[$index] : NULL;
   }
@@ -60,6 +63,9 @@ trait ConfigurationContainerGroup {
    *   The index of the item in the given items array.
    */
   public static function getItemIndexById(array $items, $id) {
+    if ($id === NULL) {
+      return NULL;
+    }
     $keys = array_keys(array_filter($items, function ($item) use ($id) {
       return (int) $item['id'] === (int) $id;
     }));

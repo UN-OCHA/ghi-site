@@ -130,6 +130,13 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
+  public function getConfig() {
+    return $this->config;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function setConfig($config) {
     $this->config = $config;
   }

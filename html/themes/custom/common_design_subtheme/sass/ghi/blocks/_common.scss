@@ -38,7 +38,8 @@
   }
 }
 
-.ghi-block {
+.ghi-block,
+.ghi-block.ui-state-drop {
   margin-top: 4.5rem;
   padding-top: 1rem;
   padding-bottom: 1rem;
@@ -74,14 +75,22 @@
     .block-download-links .download-item a {
       text-decoration: none;
 
+      &.link--download-dialog {
+        padding-left: 1.5rem;
+
+        &:before {
+          position: absolute;
+          top: calc(50% - 12px);
+          left: 0;
+          padding: 10px;
+          content: "";
+          background: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/download/default/20px.svg") no-repeat;
+        }
+      }
+
       &:hover,
       &:focus {
         color: var(--cd-default-text-color);
-      }
-
-      svg {
-        height: 0.8rem;
-        margin-right: 0.5rem;
       }
     }
   }

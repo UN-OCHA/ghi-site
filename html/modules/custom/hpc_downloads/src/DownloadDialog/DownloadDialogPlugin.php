@@ -36,12 +36,14 @@ class DownloadDialogPlugin {
       return NULL;
     }
 
-    $classes = NULL;
+    $classes = [];
     if ($text === NULL) {
       // Use an icon if no text is given.
       $text = DownloadHelper::getDownloadIconMarkup();
       $classes = ['btn', 'btn--download-pane'];
     }
+
+    $classes[] = 'link--download-dialog';
 
     $link_options = $download_source->getDialogOptions();
     $dialog_title = !empty($title) ? $title : $this->t('Data download');
@@ -49,7 +51,7 @@ class DownloadDialogPlugin {
     $link_url = Url::fromRoute('hpc_downloads.download_dialog', ['download_source_type' => $download_source->getType()]);
     $link_url->setOptions([
       'attributes' => [
-        'class' => array_merge(['use-ajax'], (is_array($classes) ? $classes : [])),
+        'class' => array_merge(['use-ajax'], $classes),
         'data-dialog-type' => 'modal',
         'data-dialog-options' => Json::encode([
           'width' => 400,

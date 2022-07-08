@@ -16,7 +16,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
@@ -27,7 +26,6 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\hpc_downloads\DownloadSource\BlockSource;
-use Drupal\hpc_downloads\Helpers\DownloadHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPDFInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
@@ -422,7 +420,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       if (!empty($download_types) && $download_source = $this->getDownloadSource()) {
         /** @var \Drupal\hpc_downloads\DownloadDialog\DownloadDialogPlugin $download_dialog */
         $download_dialog = \Drupal::service('hpc_downloads.download_dialog_plugin');
-        $download_links[] = $download_dialog->buildDialogLink($this, Markup::create(DownloadHelper::getDownloadIconMarkup() . $this->t('Downloads')));
+        $download_links[] = $download_dialog->buildDialogLink($this, $this->t('Downloads'));
       }
     }
 

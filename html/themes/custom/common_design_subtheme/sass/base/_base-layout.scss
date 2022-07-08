@@ -53,6 +53,8 @@
      * media query with the 40px padding because 904px + 2 * 40px < 1024px. */
     & > .content-width {
       max-width: calc(var(--content-width) + 24px) !important;
+      margin-right: auto !important;
+      margin-left: auto !important;
       padding-right: var(--cd-container-padding) !important;
       padding-left: var(--cd-container-padding) !important;
     }

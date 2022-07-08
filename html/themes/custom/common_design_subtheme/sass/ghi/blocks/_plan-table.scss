@@ -42,5 +42,59 @@
 }
 
 .ghi-block-global-plan-overview-map + .ghi-block-home-plan-table {
-  margin-top: 0;
+
+  /**
+   * Bleed the background only.
+   */
+  position: relative;
+  z-index: 1;
+  margin-top: -1rem;
+  padding-bottom: 0;
+  background-color: var(--cd-default-background-color);
+
+  &:before {
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 100%;
+    content: "";
+    background-color: inherit;
+
+    @include tablet {
+      right: calc(-4rem - 2px);
+      left: calc(-4rem - 2px);
+    }
+  }
+
+  .block-links {
+    /**
+    * Bleed the background only.
+    */
+    position: relative;
+    z-index: 1;
+    border-top: 0;
+    border-bottom: 0;
+    background-color: var(--cd-white);
+
+    &:before {
+      position: absolute;
+      z-index: -1;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      height: 100%;
+      content: "";
+      border-bottom: 1px solid var(--cd-default-border-color);
+      background-color: inherit;
+
+      @include tablet {
+        right: calc(-7rem - 2px);
+        left: calc(-7rem - 2px);
+      }
+    }
+  }
 }
