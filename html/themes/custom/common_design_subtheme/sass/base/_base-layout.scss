@@ -41,7 +41,8 @@
   max-width: var(--cd-max-page-width);
   padding-top: 0;
 
-  .layout--onecol .layout__region {
+  .layout--onecol .layout__region,
+  .region-content {
 
     & > div:not(.content-width) {
       max-width: var(--cd-max-page-width);
@@ -50,7 +51,7 @@
     /* Contrain the element with the `content-width` class. The paddings reflect
      * those that were on the `<main>` element. There is no need to have the 1024px
      * media query with the 40px padding because 904px + 2 * 40px < 1024px. */
-    .content-width {
+    & > .content-width {
       max-width: calc(var(--content-width) + 24px) !important;
       padding-right: var(--cd-container-padding) !important;
       padding-left: var(--cd-container-padding) !important;
