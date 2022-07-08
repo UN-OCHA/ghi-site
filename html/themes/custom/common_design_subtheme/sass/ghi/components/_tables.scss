@@ -3,9 +3,12 @@
   table.ghi-table {
     font-size: var(--cd-font-size--default);
 
+    &.soft-limit {
+      margin-bottom: 2rem;
+    }
+
     &.soft-limit + a.expand-table {
       display: block;
-      max-width: fit-content;
       margin-right: auto;
       margin-left: auto;
     }
@@ -32,6 +35,11 @@
           white-space: nowrap;
         }
       }
+    }
+
+    &.cd-table--responsive td:before {
+      top: 1.5rem;
+      font-size: inherit;
     }
 
     thead {

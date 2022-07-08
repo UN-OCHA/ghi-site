@@ -28,7 +28,7 @@
     $button = $('<a href="#">')
       .addClass('expand-table')
       .addClass('cd-button')
-      .text(Drupal.t('Show all'));
+      .text(Drupal.t('Show all rows'));
     $button.on('click', function (e) {
       $table.find('tr:hidden').slideDown();
       $(this).hide();
