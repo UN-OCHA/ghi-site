@@ -745,8 +745,14 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
         $temporary_settings = $this->getTemporarySettings($form_state);
         if ($this instanceof MultiStepFormBlockInterface) {
-          $form['container']['label']['#default_value'] = $temporary_settings[$this->getTitleSubform()]['label'] ?? $this->label();
-          $form['container']['label_display']['#default_value'] = $temporary_settings[$this->getTitleSubform()]['label_display'] ?? $this->configuration['label_display'];
+          if ($this instanceof OptionalTitleBlockInterface) {
+            $form['container']['label']['#default_value'] = $temporary_settings[$this->getTitleSubform()]['label'] ?? NULL;
+            $form['container']['label_display']['#default_value'] = !empty($form['container']['label']['#default_value']);
+          }
+          else {
+            $form['container']['label']['#default_value'] = $temporary_settings[$this->getTitleSubform()]['label'] ?? $this->label();
+            $form['container']['label_display']['#default_value'] = $temporary_settings[$this->getTitleSubform()]['label_display'] ?? $this->configuration['label_display'];
+          }
         }
         else {
           $form['container']['label']['#default_value'] = $temporary_settings['label'] ?? $this->label();

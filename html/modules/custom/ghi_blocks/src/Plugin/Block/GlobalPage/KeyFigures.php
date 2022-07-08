@@ -3,6 +3,8 @@
 namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
@@ -21,10 +23,21 @@ use Drupal\hpc_common\Helpers\CommonHelper;
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
  *    "year" = @ContextDefinition("integer", label = @Translation("Year"))
+ *  },
+ *  config_forms = {
+ *    "key_figures" = {
+ *      "title" = @Translation("Key figures"),
+ *      "callback" = "keyFiguresForm",
+ *      "base_form" = TRUE
+ *    },
+ *    "display" = {
+ *      "title" = @Translation("Display"),
+ *      "callback" = "displayForm"
+ *    }
  *  }
  * )
  */
-class KeyFigures extends GHIBlockBase {
+class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, OptionalTitleBlockInterface {
 
   use ConfigurationContainerTrait;
   use ConfigurationContainerGroup;
@@ -63,7 +76,7 @@ class KeyFigures extends GHIBlockBase {
   public function buildContent() {
     $conf = $this->getBlockConfig();
 
-    $items = $this->getConfiguredItems($conf['items']);
+    $items = $this->getConfiguredItems($conf['key_figures']['items']);
     if (empty($items)) {
       return NULL;
     }
@@ -139,8 +152,21 @@ class KeyFigures extends GHIBlockBase {
   /**
    * {@inheritdoc}
    */
-  public function getConfigForm(array $form, FormStateInterface $form_state) {
+  public function getDefaultSubform($is_new = FALSE) {
+    return 'key_figures';
+  }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getTitleSubform() {
+    return 'display';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function keyFiguresForm(array $form, FormStateInterface $form_state) {
     $form['items'] = [
       '#type' => 'configuration_container',
       '#title' => $this->t('Configured key figures'),
@@ -162,6 +188,13 @@ class KeyFigures extends GHIBlockBase {
       '#max_items' => self::MAX_ITEMS,
       '#groups' => TRUE,
     ];
+    return $form;
+  }
+
+  /**
+   * Form callback for the display configuration form.
+   */
+  public function displayForm(array $form, FormStateInterface $form_state) {
     return $form;
   }
 

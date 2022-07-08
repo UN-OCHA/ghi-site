@@ -52,13 +52,15 @@
      * media query with the 40px padding because 904px + 2 * 40px < 1024px. */
     .content-width {
       max-width: calc(var(--content-width) + 24px) !important;
-      padding: 0 var(--cd-container-padding);
+      padding-right: var(--cd-container-padding) !important;
+      padding-left: var(--cd-container-padding) !important;
     }
 
     @media (min-width: 768px) {
       .content-width {
         max-width: calc(var(--content-width) + 48px) !important;
-        padding: 0 var(--cd-container-padding-xlarge);
+        padding-right: var(--cd-container-padding-xlarge) !important;
+        padding-left: var(--cd-container-padding-xlarge) !important;
       }
     }
   }

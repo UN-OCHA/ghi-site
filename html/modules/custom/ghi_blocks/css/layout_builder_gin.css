@@ -59,6 +59,11 @@ input[type="checkbox"][disabled="disabled"]:not(:checked) {
   border: 0 !important;
 }
 
+.layout-builder__section .layout-builder-block.content-width {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
 /**
  * Show the block selection in the modal as 3 columns.
  */
@@ -98,4 +103,8 @@ input[type="checkbox"][disabled="disabled"]:not(:checked) {
 .glb-form-item--error-message {
   color: #d72222;
   font-size: .79em
+}
+.glb-button.is-disabled {
+  color: var(--colorGinDisabledText) !important;
+  cursor: not-allowed !important;
 }
