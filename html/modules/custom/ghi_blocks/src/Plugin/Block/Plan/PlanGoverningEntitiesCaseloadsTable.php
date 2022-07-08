@@ -258,10 +258,6 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       return;
     }
 
-    // Sort the entities by name.
-    usort($rows, function ($a, $b) {
-      return strnatcasecmp($a[0]['data-raw-value'], $b[0]['data-raw-value']);
-    });
     return [
       'header' => $header,
       'rows' => $rows,
