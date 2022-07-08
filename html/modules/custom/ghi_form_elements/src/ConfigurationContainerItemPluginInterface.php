@@ -43,6 +43,14 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
   public function buildForm(array $element, FormStateInterface $form_state);
 
   /**
+   * Get the configuration for an instance.
+   *
+   * @return array
+   *   Arbitrary config array, depending on the type of item.
+   */
+  public function getConfig();
+
+  /**
    * Set the configuration for an instance.
    *
    * @param array $config
