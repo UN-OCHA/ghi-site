@@ -491,13 +491,13 @@
   .map-container {
     position: relative;
     width: 100%;
-    min-height: 400px;
+    min-height: 500px;
     margin: 0;
     padding: 0;
     border: 1px solid var(--hpc-border-color);
 
     & > .leaflet-container {
-      min-height: 400px;
+      min-height: 500px;
     }
 
     .download-link-wrapper {
