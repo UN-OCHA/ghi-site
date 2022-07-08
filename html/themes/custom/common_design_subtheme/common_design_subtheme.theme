@@ -103,6 +103,7 @@ function common_design_subtheme_preprocess_block(&$variables) {
     'global_plan_overview_map',
     'system_menu_block:operations-menu',
     'system_menu_block:account',
+    'subpage_navigation',
   ];
 
   if (!in_array($variables['plugin_id'], $content_width_blocks)) {
