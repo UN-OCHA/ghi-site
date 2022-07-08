@@ -66,6 +66,8 @@
     @include tablet {
       right: calc(-4rem - 2px);
       left: calc(-4rem - 2px);
+      border: 1px solid var(--cd-default-border-color);
+      border-top: 0;
     }
   }
 
@@ -88,6 +90,7 @@
       left: 0;
       height: 100%;
       content: "";
+      border-top: 1px solid var(--cd-default-border-color);
       border-bottom: 1px solid var(--cd-default-border-color);
       background-color: inherit;
 
