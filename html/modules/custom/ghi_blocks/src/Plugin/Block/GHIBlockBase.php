@@ -410,9 +410,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $build['#region'] = $this->getRegion();
     }
 
-    $build['#children'] = $build['#children'] ?? [
-      '#type' => 'container',
-    ];
     // Prepare action links.
     $download_links = !empty($build['#download_links']) ? $build['#download_links'] : [];
     if ($this instanceof HPCDownloadPluginInterface && !empty($plugin_configuration['uuid'])) {
