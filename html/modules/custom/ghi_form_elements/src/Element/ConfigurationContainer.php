@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_form_elements\Element;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Render\Element\FormElement;
@@ -73,6 +74,11 @@ class ConfigurationContainer extends FormElement {
     $triggering_element = $form_state->getTriggeringElement();
     $parents = $triggering_element['#parents'];
     $action = (string) array_pop($parents);
+
+    if (end($parents) == 'actions') {
+      // Remove the actions key from the parents.
+      array_pop($parents);
+    }
 
     $new_mode = NULL;
 
@@ -286,6 +292,7 @@ class ConfigurationContainer extends FormElement {
       'add_new_item',
       'save_order',
       'change_item_type',
+      'actions',
     ];
     foreach ($exclude_form_keys as $exclude_form_key) {
       $form_state->addCleanValueKey(array_merge($element['#parents'], [$exclude_form_key]));
@@ -325,7 +332,8 @@ class ConfigurationContainer extends FormElement {
     if ($mode == 'edit_item_filter') {
       self::buildItemFilterConfig($element, $form_state, $form_state->get('edit_item'));
     }
-
+    unset($element['#description']);
+    $element['#wrapper_attributes']['class'][] = Html::getClass($mode . '-view');
     return $element;
   }
 
@@ -408,8 +416,17 @@ class ConfigurationContainer extends FormElement {
     unset($element['#description']);
     $element['summary_table'] += $table_rows;
 
+    $element['actions'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => [
+          'container-actions-wrapper',
+        ],
+      ],
+    ];
+
     if (self::canGroupItems($element)) {
-      $element['add_group'] = [
+      $element['actions']['add_group'] = [
         '#type' => 'submit',
         '#value' => t('Add new group'),
         '#ajax' => [
@@ -420,7 +437,7 @@ class ConfigurationContainer extends FormElement {
       ];
     }
 
-    $element['add_new_item'] = [
+    $element['actions']['add_new_item'] = [
       '#type' => 'submit',
       '#value' => t('Add new @item_type_label', [
         '@item_type_label' => strtolower($element['#item_type_label']),
@@ -430,17 +447,18 @@ class ConfigurationContainer extends FormElement {
         'callback' => [static::class, 'updateAjax'],
         'wrapper' => $wrapper_id,
       ],
+      '#disabled' => self::canGroupItems($element) && empty($table_rows),
     ];
 
     $item_count = count(Element::children($element['summary_table']));
     if (!empty($element['#max_items']) && $element['#max_items'] <= $item_count) {
-      $element['add_new_item']['#disabled'] = TRUE;
-      $element['add_new_item']['#attributes']['title'] = t('The maximum number of %max_items has been reached.', [
+      $element['actions']['add_new_item']['#disabled'] = TRUE;
+      $element['actions']['add_new_item']['#attributes']['title'] = t('The maximum number of %max_items has been reached.', [
         '%max_items' => $element['#max_items'],
       ]);
     }
 
-    $element['save_order'] = [
+    $element['actions']['save_order'] = [
       '#type' => 'submit',
       '#value' => t('Save order'),
       '#ajax' => [
@@ -573,6 +591,9 @@ class ConfigurationContainer extends FormElement {
       }
       $row['operations'] = [
         '#type' => 'container',
+        '#attributes' => [
+          'class' => ['operation-buttons'],
+        ],
       ] + self::buildRowOperations($element, $item['id'], $item_type);
       $rows[$item['id']] = $row;
     }
@@ -645,6 +666,14 @@ class ConfigurationContainer extends FormElement {
 
     $element['group_config'] = [
       '#type' => 'container',
+      'actions' => [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => [
+            'actions-wrapper',
+          ],
+        ],
+      ],
     ];
 
     $items = $form_state->get('items');
@@ -670,7 +699,7 @@ class ConfigurationContainer extends FormElement {
     $subform_state = SubformState::createForSubform($element['group_config']['plugin_config'], $element, $form_state);
     $element['group_config']['plugin_config'] += $item_type->buildForm($element['group_config']['plugin_config'], $subform_state);
 
-    $element['group_config']['submit_group'] = [
+    $element['group_config']['actions']['submit_group'] = [
       '#type' => 'submit',
       '#value' => $id !== NULL ? t('Update group') : t('Add group'),
       '#name' => 'group-config-submit',
@@ -680,7 +709,7 @@ class ConfigurationContainer extends FormElement {
         'wrapper' => $wrapper_id,
       ],
     ];
-    $element['group_config']['cancel'] = [
+    $element['group_config']['actions']['cancel'] = [
       '#type' => 'submit',
       '#value' => t('Cancel'),
       '#name' => 'group-config-cancel',
@@ -712,6 +741,22 @@ class ConfigurationContainer extends FormElement {
 
     $element['item_config'] = [
       '#type' => 'container',
+      'actions' => [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => [
+            'actions-wrapper',
+          ],
+        ],
+        '#parents' => array_merge($element['#parents'], [
+          'item_config',
+          'actions',
+        ]),
+        '#array_parents' => array_merge($element['#array_parents'], [
+          'item_config',
+          'actions',
+        ]),
+      ],
     ];
 
     $triggering_element = $form_state->getTriggeringElement();
@@ -754,7 +799,7 @@ class ConfigurationContainer extends FormElement {
         ],
       ];
       if ($form_state->get('mode') == 'select_item_type') {
-        $element['item_config']['cancel_item_type'] = [
+        $element['item_config']['actions']['cancel_item_type'] = [
           '#type' => 'submit',
           '#value' => t('Cancel'),
           '#name' => 'cancel-item-type',
@@ -841,9 +886,12 @@ class ConfigurationContainer extends FormElement {
     }
 
     if ($item_type && $form_state->get('mode') != 'select_item_type') {
-      $element['item_config']['submit_item'] = [
+      $translate_args = [
+        '@label' => strtolower($element['#item_type_label']),
+      ];
+      $element['item_config']['actions']['submit_item'] = [
         '#type' => 'submit',
-        '#value' => t('Submit'),
+        '#value' => $id === NULL ? t('Add @label', $translate_args) : t('Update @label', $translate_args),
         '#name' => 'item-config-submit',
         '#ajax' => [
           'event' => 'click',
@@ -853,7 +901,7 @@ class ConfigurationContainer extends FormElement {
         '#disabled' => $form_state->get('mode') == 'select_item_type',
       ];
 
-      $element['item_config']['cancel'] = [
+      $element['item_config']['actions']['cancel'] = [
         '#type' => 'submit',
         '#value' => t('Cancel'),
         '#name' => 'item-config-cancel',

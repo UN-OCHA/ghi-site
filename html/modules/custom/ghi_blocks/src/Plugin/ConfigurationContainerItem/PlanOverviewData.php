@@ -98,6 +98,11 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
         'callback' => [static::class, 'updateAjax'],
         'wrapper' => $this->wrapperId,
       ],
+      '#states' => [
+        'visible' => [
+          ':input[name="' . $checkbox_selector . '"]' => ['checked' => TRUE],
+        ],
+      ],
     ];
 
     $element['value_preview'] = $this->buildValuePreviewFormElement($this->getRenderArray($type, $use_custom_value, $custom_value, $sum));
