@@ -76,11 +76,12 @@
       text-decoration: none;
 
       &.link--download-dialog {
+        position: relative;
         padding-left: 1.5rem;
 
         &:before {
           position: absolute;
-          top: calc(50% - 12px);
+          top: calc(50% - 10px);
           left: 0;
           padding: 10px;
           content: "";
