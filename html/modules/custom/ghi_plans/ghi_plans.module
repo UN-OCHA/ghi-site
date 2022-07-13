@@ -83,6 +83,7 @@ function ghi_plans_form_alter(&$form, FormStateInterface &$form_state, $form_id)
 function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterface &$form_state) {
   $allow_fields = [
     'field_decimal_format',
+    'field_max_admin_level',
     'field_plan_caseload',
     'field_plan_document_link',
     'field_plan_status_string',
@@ -94,5 +95,40 @@ function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterf
       continue;
     }
     unset($form[$element_key]['#disabled']);
+  }
+
+  // Check for required fields with unset values, extract the default value
+  // from the field config and set that instead. This is a UX addition,
+  // applying only to existing items.
+  // Currently supported widget types are textfields and select dropdowns.
+  foreach (Element::children($form) as $element_key) {
+    if (strpos($element_key, 'field_') !== 0 || !empty($form[$element_key]['#disabled'])) {
+      continue;
+    }
+    $widget = &$form[$element_key]['widget'];
+    if (empty($widget['#required'])) {
+      continue;
+    }
+    /** @var \Drupal\field\FieldConfigInterface $field */
+    $field = \Drupal::entityTypeManager()->getStorage('field_config')->load('base_object.plan.' . $widget['#field_name']);
+    // Get the default value for the field. This is used to extract the path to
+    // the widget value and to set the #default_value in case it is NULL.
+    $default_widget_value = $field->get('default_value');
+    if (array_key_exists('#theme', $widget) && $widget['#theme'] == 'field_multiple_value_form') {
+      // Textfields.
+      $ref = &$widget;
+      while (is_array($default_widget_value) && array_key_exists(array_key_first($default_widget_value), $ref)) {
+        $key = array_key_first($default_widget_value);
+        $ref = &$ref[$key];
+        $default_widget_value = $default_widget_value[$key];
+      }
+      if ($ref['#default_value'] === NULL) {
+        $ref['#default_value'] = $default_widget_value;
+      }
+    }
+    elseif (array_key_exists('#type', $widget) && $widget['#type'] == 'select' && empty($widget['#default_value'])) {
+      // Select fields.
+      $widget['#default_value'] = $default_widget_value[0]['value'];
+    }
   }
 }
