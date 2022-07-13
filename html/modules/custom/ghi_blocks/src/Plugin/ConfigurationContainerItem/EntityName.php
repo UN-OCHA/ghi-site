@@ -10,12 +10,12 @@ use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\node\NodeInterface;
 
 /**
- * Provides an entity counter item for configuration containers.
+ * Provides an entity name item for configuration containers.
  *
  * @ConfigurationContainerItem(
  *   id = "entity_name",
  *   label = @Translation("Entity name"),
- *   description = @Translation("This item displays the name of the entities that this block displays."),
+ *   description = @Translation("This item displays the name of an entity."),
  * )
  */
 class EntityName extends ConfigurationContainerItemPluginBase {
@@ -27,7 +27,7 @@ class EntityName extends ConfigurationContainerItemPluginBase {
   /**
    * The icon query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\IconQuery
+   * @var \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery
    */
   public $iconQuery;
 
@@ -47,7 +47,8 @@ class EntityName extends ConfigurationContainerItemPluginBase {
    *   A default label.
    */
   public function getDefaultLabel() {
-    return $this->t('Cluster');
+    $configuration = $this->getPluginConfiguration();
+    return $configuration['default_label'] ?? $this->t('Cluster');
   }
 
   /**

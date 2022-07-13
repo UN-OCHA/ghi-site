@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ghi_plans\Plugin\EndpointQuery;
+namespace Drupal\hpc_api\Plugin\EndpointQuery;
 
 use Drupal\hpc_api\Query\EndpointQueryBase;
 

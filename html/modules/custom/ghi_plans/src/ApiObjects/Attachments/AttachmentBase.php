@@ -9,4 +9,11 @@ use Drupal\hpc_api\ApiObjects\ApiObjectBase;
  */
 abstract class AttachmentBase extends ApiObjectBase implements AttachmentInterface {
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getDescription() {
+    return NULL;
+  }
+
 }

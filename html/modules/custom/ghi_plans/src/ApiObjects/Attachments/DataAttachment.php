@@ -34,6 +34,7 @@ class DataAttachment extends AttachmentBase {
     $prototype = $this->getPrototypeData();
     $period = $this->fetchReportingPeriodForAttachment();
     $measurement_fields = $metrics->measureFields ?? [];
+    $references = explode('/', $attachment->composedReference);
 
     $processed = (object) [
       'id' => $attachment->id,
@@ -43,8 +44,10 @@ class DataAttachment extends AttachmentBase {
         'entity_id' => $attachment->objectId ?? NULL,
         'plan_id' => $attachment->planId ?? NULL,
       ],
+      'custom_id' => $attachment->attachmentVersion->value->customId ?? ($attachment->customReference ?? NULL),
+      'custom_id_prefixed_refcode' => end($references),
       'composed_reference' => $attachment->composedReference,
-      'description' => $attachment->attachmentVersion->value->description ?? NULL,
+      'description' => $attachment->attachmentVersion->value->description,
       'values' => $this->extractValues(),
       'prototype' => $prototype,
       'unit' => $unit ? (object) [
@@ -74,6 +77,28 @@ class DataAttachment extends AttachmentBase {
    */
   public function getTitle() {
     return $this->composed_reference;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDescription() {
+    return $this->description;
+  }
+
+  /**
+   * Get the source entity.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface
+   *   The entity object.
+   */
+  public function getSourceEntity() {
+    if (empty($this->source->entity_type) || $this->source->entity_type == 'plan' || empty($this->source->entity_id)) {
+      return NULL;
+    }
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $entityQuery */
+    $entityQuery = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('entity_query');
+    return $entityQuery->getEntity($this->source->entity_type, $this->source->entity_id);
   }
 
   /**

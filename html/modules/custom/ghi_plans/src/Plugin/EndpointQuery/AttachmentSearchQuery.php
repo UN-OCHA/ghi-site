@@ -30,6 +30,40 @@ class AttachmentSearchQuery extends EndpointQueryBase {
   use SimpleCacheTrait;
 
   /**
+   * Get attachments by id.
+   *
+   * @param array $attachment_ids
+   *   The attachment ids.
+   * @param bool $disaggregated
+   *   Whether to fecth disaggregated data or not.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
+   *   The matching (processed) attachment objects, keyed by the attachment id.
+   */
+  public function getAttachmentsById(array $attachment_ids, $disaggregated = FALSE) {
+    sort($attachment_ids);
+    $query_args = [
+      'attachmentIds' => implode(',', array_filter($attachment_ids)),
+    ];
+    if (!$disaggregated) {
+      $query_args['disaggregation'] = 'false';
+    }
+    $cache_key = $this->getCacheKey($query_args);
+    $attachments = $this->cache($cache_key);
+    if ($attachments) {
+      return $attachments;
+    }
+    $attachments = $this->getData([], $query_args);
+    if (empty($attachments)) {
+      return [];
+    }
+
+    $processed_attachments = AttachmentHelper::processAttachments($attachments);
+    $this->cache($cache_key, $processed_attachments);
+    return $processed_attachments;
+  }
+
+  /**
    * Get attachments by object type and id, optionally filtered.
    *
    * @param string $object_type

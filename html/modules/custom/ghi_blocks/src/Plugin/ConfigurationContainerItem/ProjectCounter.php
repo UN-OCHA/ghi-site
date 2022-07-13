@@ -66,7 +66,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
   /**
    * The icon query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\IconQuery
+   * @var \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery
    */
   public $iconQuery;
 

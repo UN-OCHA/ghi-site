@@ -17,4 +17,12 @@ interface AttachmentInterface extends ApiObjectInterface {
    */
   public function getTitle();
 
+  /**
+   * Get a description for the attachment.
+   *
+   * @return string
+   *   The attachment description.
+   */
+  public function getDescription();
+
 }
