@@ -52,4 +52,27 @@ class ArrayHelper extends ApiArrayHelper {
     return array_combine(array_keys($array), array_map($callable, $array, array_keys($array)));
   }
 
+  /**
+   * Map an array of items to strings.
+   *
+   * This turns objects into strings to the extent possible.
+   *
+   * @param array $array
+   *   The array to process.
+   *
+   * @return array
+   *   The processed array.
+   */
+  public static function mapObjectsToString(array $array) {
+    foreach ($array as $key => $value) {
+      if (is_object($value)) {
+        $array[$key] = (string) $value;
+      }
+      if (is_array($value)) {
+        $array[$key] = self::mapObjectsToString($value);
+      }
+    }
+    return $array;
+  }
+
 }

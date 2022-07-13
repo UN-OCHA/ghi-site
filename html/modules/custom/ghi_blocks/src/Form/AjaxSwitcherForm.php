@@ -25,10 +25,10 @@ class AjaxSwitcherForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $element_key = NULL, $plugin_id = NULL, $block_uuid = NULL, $options = NULL, $default_value = NULL, $uri = NULL, $query = []) {
-    $url = Url::fromRoute('ghi_blocks.load_block', [
+    $url = !empty($plugin_id) && !empty($block_uuid) ? Url::fromRoute('ghi_blocks.load_block', [
       'plugin_id' => $plugin_id,
       'block_uuid' => $block_uuid,
-    ]);
+    ]) : NULL;
     if (!array_key_exists($default_value, $options)) {
       $default_value = NULL;
     }
@@ -40,19 +40,17 @@ class AjaxSwitcherForm extends FormBase {
       '#gin_lb_form_element' => FALSE,
       '#options' => $options,
       '#default_value' => $default_value,
-      '#ajax' => [
+      '#ajax' => $url ? [
         'wrapper' => Html::getId('block-' . $block_uuid),
         'event' => 'change',
-        'progress' => [
-          'type' => 'fullscreen',
-        ],
+        'progress' => 'throbber',
         'url' => $url,
         'options' => [
           'query' => [
             'current_uri' => $uri,
           ] + $query,
         ],
-      ],
+      ] : NULL,
     ];
     $form_state->setMethod('GET');
     return $form;
