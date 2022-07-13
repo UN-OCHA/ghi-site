@@ -8,6 +8,8 @@ layout_builder_modal_admin:
   css:
     component:
       css/layout_builder_modal_admin.css: {}
+  js:
+    js/layout_builder_modal_admin.js: {}
 layout_builder_gin:
   version: VERSION
   css:
