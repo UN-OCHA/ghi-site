@@ -42,7 +42,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
     // target plugin uses grouping.
     $items[] = [
       'item_type' => 'item_group',
-      'id' => count($items),
+      'id' => 0,
       'config' => [
         'label' => t('Population'),
       ],
@@ -51,7 +51,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
     ];
     $items[] = [
       'item_type' => 'item_group',
-      'id' => count($items),
+      'id' => 1,
       'config' => [
         'label' => t('Financials'),
       ],
@@ -60,7 +60,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
     ];
     $items[] = [
       'item_type' => 'item_group',
-      'id' => count($items),
+      'id' => 2,
       'config' => [
         'label' => t('Presence'),
       ],
@@ -167,13 +167,6 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
           $item['config']['scale'] = property_exists($value, 'formatting') ? $value->formatting : 'auto';
           break;
 
-        case 'project_counter':
-          if ($value === NULL && empty($incoming_item->label)) {
-            // Skip this item entirely.
-            continue(2);
-          }
-          break;
-
         case 'attachment_data':
           $item['config']['attachment'] = [
             'entity_type' => $value->attachment_select->entity_type,
@@ -192,6 +185,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
           ];
           break;
 
+        case 'project_counter':
         default:
           break;
       }

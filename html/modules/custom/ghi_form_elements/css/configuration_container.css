@@ -3,9 +3,6 @@
   margin-bottom: 0 !important;
   line-height: 1.5rem;
 }
-.ui-dialog .hpc-form-wrapper .form-type--configuration_container.glb-form-item.list-view {
-  padding-bottom: 3rem;
-}
 .ui-dialog .hpc-form-wrapper input.ajax-enabled:active {
   opacity: 0.2;
 }
@@ -41,20 +38,6 @@
 .form-type--configuration_container table .glb-button {
   font-size: 0.8rem !important;
   margin: 0 !important;
-}
-
-.form-type--configuration_container .container-actions-wrapper {
-  display: flex;
-  flex-direction: row-reverse;
-  position: absolute;
-  bottom: 5rem;
-  left: 0;
-  z-index: 2;
-  padding: 0 1rem;
-  width: 100%;
-  background-color: var(--colorGinAppBackground);
-  border-top: 1px solid var(--cd-default-border-color);
-  border-bottom: 1px solid var(--cd-default-border-color);
 }
 .form-type--configuration_container .actions-wrapper {
   display: flex;

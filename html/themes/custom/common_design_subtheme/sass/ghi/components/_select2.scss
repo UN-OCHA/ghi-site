@@ -5,9 +5,21 @@
   display: inline-block;
   margin: 0;
 
+  & > div.ajax-switcher-wrapper {
+    display: inline-block;
+
+    & > form {
+      display: inline-block;
+      margin: 0 0 0 1rem;
+    }
+  }
+}
+
+div.ajax-switcher-wrapper {
+
   & > form {
     display: inline-block;
-    margin: 0 0 0 1rem;
+    margin: 0 1rem 0 0;
 
     .form-item {
       display: inline-block;
@@ -28,6 +40,7 @@
         margin: 0;
         // Covers the SVG to make it seem clickable.
         padding-right: 24px;
+        padding-left: 0;
         white-space: nowrap;
         color: var(--cd-default-text-color);
         background-color: transparent;

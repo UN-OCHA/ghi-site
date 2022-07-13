@@ -41,7 +41,9 @@ class EntityAttachmentSelect extends FormElement {
       '#theme_wrappers' => ['form_element'],
       '#disabled' => FALSE,
       '#entity_types' => [],
+      '#entity_type' => NULL,
       '#attachment_options' => NULL,
+      '#attachment_type' => NULL,
       '#element_context' => [],
     ];
   }
@@ -137,6 +139,7 @@ class EntityAttachmentSelect extends FormElement {
       '#default_value' => $defaults['entities'],
       '#multiple' => TRUE,
       '#element_context' => $element['#element_context'],
+      '#entity_types' => $element['#entity_types'] ?? NULL,
     ];
 
     if ($current_action != 'select_entities') {
@@ -151,6 +154,7 @@ class EntityAttachmentSelect extends FormElement {
       '#element_context' => $element['#element_context'],
       '#entity_ids' => $defaults['entities']['entity_ids'],
       '#available_options' => $element['#attachment_options'] ?? NULL,
+      '#attachment_type' => $element['#attachment_type'] ?? NULL,
     ];
     if ($current_action != 'select_attachments') {
       $element['attachments']['#hidden'] = TRUE;
@@ -160,6 +164,7 @@ class EntityAttachmentSelect extends FormElement {
       '#type' => 'container',
       '#attributes' => [
         'class' => [
+          'second-level-actions-wrapper',
           'entity-attachment-select-actions-wrapper',
         ],
       ],

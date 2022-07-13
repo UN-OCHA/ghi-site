@@ -5,10 +5,12 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
@@ -44,9 +46,10 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface {
+class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, HPCDownloadExcelInterface {
 
   use ConfigurationContainerTrait;
+  use AttachmentTableTrait;
 
   /**
    * {@inheritdoc}
@@ -433,88 +436,9 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   }
 
   /**
-   * Get the attachment prototype to use for the current block instance.
-   *
-   * @return object
-   *   The attachment prototype object.
+   * {@inheritdoc}
    */
-  private function getAttachmentPrototype() {
-    $conf = $this->getBlockConfig();
-    $prototype_id = $conf['base']['prototype_id'];
-    if (!$prototype_id) {
-      $prototypes = $this->getUniquePrototypes();
-      $prototype_id = array_key_first($prototypes);
-    }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
-    $query = $this->getQueryHandler('attachment_prototype');
-    return $query->getPrototypeByPlanAndId($this->getCurrentPlanId(), $prototype_id);
-  }
-
-  /**
-   * Get all governing entity objects for the current block instance.
-   *
-   * @return object[]
-   *   An array of entity objects, aka clusters.
-   */
-  private function getEntityObjects() {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
-    $query = $this->getQueryHandler('entities');
-    return $query->getPlanEntities($this->getPageNode(), 'governing');
-  }
-
-  /**
-   * Get all attachment objects for the current block instance.
-   *
-   * @return object[]
-   *   An array of attachment objects.
-   */
-  private function getAttachments() {
-    $entities = $this->getEntityObjects();
-    if (empty($entities)) {
-      return NULL;
-    }
-    return $this->getAttachmentsForEntities($entities);
-  }
-
-  /**
-   * Get unique prototype options for the available attachments of this block.
-   *
-   * @return array
-   *   An array of prototype names, keyed by the prototype id.
-   */
-  private function getUniquePrototypes() {
-    $attachments = $this->getAttachments() ?? [];
-    $prototype_opions = [];
-    foreach ($attachments as $attachment) {
-      $prototype = $attachment->prototype;
-      if (array_key_exists($prototype->id, $prototype_opions)) {
-        continue;
-      }
-      $prototype_opions[$prototype->id] = $prototype;
-    }
-    return $prototype_opions;
-  }
-
-  /**
-   * Get unique prototype options for the available attachments of this block.
-   *
-   * @return array
-   *   An array of prototype names, keyed by the prototype id.
-   */
-  private function getUniquePrototypeOptions() {
-    $prototypes = $this->getUniquePrototypes();
-    return array_map(function ($prototype) {
-      return $prototype->name;
-    }, $prototypes);
-  }
-
-  /**
-   * Get all attachment objects for the given entities.
-   *
-   * @return object[]
-   *   An array of attachment objects.
-   */
-  private function getAttachmentsForEntities(array $entities, $prototype_id = NULL) {
+  public function getAttachmentsForEntities(array $entities, $prototype_id = NULL) {
     if (empty($entities)) {
       return NULL;
     }
@@ -529,6 +453,19 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
     $query = $this->getQueryHandler('attachment_search');
     return $query->getAttachmentsByObject('governingEntity', $entity_ids, $filter);
+  }
+
+  /**
+   * Get unique prototype options for the available attachments of this block.
+   *
+   * @return array
+   *   An array of prototype names, keyed by the prototype id.
+   */
+  private function getUniquePrototypeOptions() {
+    $prototypes = $this->getUniquePrototypes();
+    return array_map(function ($prototype) {
+      return $prototype->name;
+    }, $prototypes);
   }
 
   /**

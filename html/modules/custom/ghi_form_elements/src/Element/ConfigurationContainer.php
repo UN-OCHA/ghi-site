@@ -420,7 +420,7 @@ class ConfigurationContainer extends FormElement {
       '#type' => 'container',
       '#attributes' => [
         'class' => [
-          'container-actions-wrapper',
+          'second-level-actions-wrapper',
         ],
       ],
     ];
@@ -937,6 +937,22 @@ class ConfigurationContainer extends FormElement {
 
     $element['filter_config'] = [
       '#type' => 'container',
+      'actions' => [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => [
+            'actions-wrapper',
+          ],
+        ],
+        '#parents' => array_merge($element['#parents'], [
+          'filter_config',
+          'actions',
+        ]),
+        '#array_parents' => array_merge($element['#array_parents'], [
+          'filter_config',
+          'actions',
+        ]),
+      ],
     ];
     $element['filter_config']['element_description'] = [
       '#type' => 'item',
@@ -957,7 +973,7 @@ class ConfigurationContainer extends FormElement {
     $subform_state = SubformState::createForSubform($element['filter_config']['filter_config'], $element, $form_state);
     $element['filter_config']['filter_config'] += $item_type->buildFilterForm($element['filter_config']['filter_config'], $subform_state);
 
-    $element['filter_config']['submit_item'] = [
+    $element['filter_config']['actions']['submit_item'] = [
       '#type' => 'submit',
       '#value' => t('Save filter'),
       '#name' => 'filter-config-submit',
@@ -968,7 +984,7 @@ class ConfigurationContainer extends FormElement {
       ],
     ];
 
-    $element['filter_config']['remove_filter'] = [
+    $element['filter_config']['actions']['remove_filter'] = [
       '#type' => 'submit',
       '#value' => t('Delete filter'),
       '#name' => 'filter-config-submit',
@@ -980,7 +996,7 @@ class ConfigurationContainer extends FormElement {
       '#disabled' => !$item_type->hasAppliccableFilter(),
     ];
 
-    $element['filter_config']['cancel'] = [
+    $element['filter_config']['actions']['cancel'] = [
       '#type' => 'submit',
       '#value' => t('Cancel'),
       '#name' => 'filter-config-cancel',

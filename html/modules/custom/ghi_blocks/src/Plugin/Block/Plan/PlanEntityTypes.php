@@ -10,6 +10,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
+use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\node\NodeInterface;
 
@@ -172,11 +173,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
       '#type' => 'select',
       '#title' => $this->t('ID type'),
       '#description' => $this->t('Define how the ID element should be constructed. See the table below for a preview of the data.'),
-      '#options' => [
-        'custom_id' => $this->t('Custom ID'),
-        'custom_id_prefixed_refcode' => $this->t('Custom ID, prefixed with object type (CA, CO, SO, ...)'),
-        'composed_reference' => $this->t('Composed reference'),
-      ],
+      '#options' => AttachmentHelper::idTypes(),
       '#default_value' => $defaults['id_type'],
       '#disabled' => empty($entity_ref_code_options),
     ];

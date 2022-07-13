@@ -161,6 +161,8 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
       $columns[] = $item;
     }
 
+    $entity_id = is_array($entity_id) ? array_filter(array_values($entity_id)) : (array) $entity_id;
+    $attachment_id = is_array($attachment_id) ? array_filter(array_values($attachment_id)) : (array) $attachment_id;
     return [
       'label' => property_exists($config, 'widget_title') ? $config->widget_title : NULL,
       'label_display' => TRUE,
@@ -168,17 +170,13 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
         'attachments' => [
           'entity_attachments' => [
             'entities' => [
-              'entity_ids' => is_array($entity_id) ? $entity_id : [
-                $entity_id => $entity_id,
-              ],
+              'entity_ids' => array_combine($entity_id, $entity_id),
             ],
             'attachments' => [
               'entity_type' => $config->attachment_select->entity_type,
               'attachment_type' => $config->attachment_select->attachment_type,
               'attachment_prototype' => $config->attachment_select->attachment_prototype ?? NULL,
-              'attachment_id' => is_array($attachment_id) ? $attachment_id : [
-                $attachment_id => $attachment_id,
-              ],
+              'attachment_id' => array_combine($attachment_id, $attachment_id),
             ],
           ],
         ],

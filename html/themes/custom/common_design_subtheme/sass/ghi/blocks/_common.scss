@@ -72,15 +72,20 @@
     border-top: 1px solid var(--cd-default-border-color);
     border-bottom: 1px solid var(--cd-default-border-color);
 
-    .block-download-links .download-item a {
+    a {
       text-decoration: none;
+      line-height: 1rem;
+    }
 
-      &.link--download-dialog {
+    .block-download-links .download-item {
+
+      a.link--download-dialog {
+        position: relative;
         padding-left: 1.5rem;
 
         &:before {
           position: absolute;
-          top: calc(50% - 12px);
+          top: calc(50% - 10px);
           left: 0;
           padding: 10px;
           content: "";
@@ -88,9 +93,38 @@
         }
       }
 
-      &:hover,
-      &:focus {
+      a:hover,
+      a:focus {
         color: var(--cd-default-text-color);
+      }
+    }
+
+    .block-admin-links {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+
+      a {
+        position: relative;
+        top: 2px;
+        font-size: 1.3rem;
+      }
+
+      button[data-toggle="popover"] {
+        position: relative;
+        top: -1px;
+        padding: 0;
+        transition: none;
+        color: inherit;
+        border: 0;
+        background-color: inherit;
+
+        &:hover,
+        &:focus {
+          color: var(--cd-primary-color--dark);
+          border: 0;
+          outline: 0;
+        }
       }
     }
   }

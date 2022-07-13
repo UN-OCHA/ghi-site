@@ -5,6 +5,7 @@ namespace Drupal\ghi_blocks\Plugin\Block;
 use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
@@ -16,6 +17,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
@@ -24,6 +26,7 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
+use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\hpc_downloads\DownloadSource\BlockSource;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
@@ -1666,6 +1669,63 @@ abstract class GHIBlockBase extends HPCBlockBase {
       ]),
     ];
     return $meta_data;
+  }
+
+  /**
+   * Get the available admin icons for the block.
+   *
+   * @return array
+   *   An array of render arrays for the icons.
+   */
+  public function getAdminIcons() {
+    $icons = [];
+    $endpoint_urls = $this->getFullEndpointUrls();
+    if (!empty($endpoint_urls)) {
+      $icons['api_url'] = [
+        '#theme' => 'hpc_tooltip',
+        '#tooltip' => implode('<br />', $endpoint_urls),
+        '#class' => 'api-url',
+        '#tag_content' => [
+          '#theme' => 'hpc_icon',
+          '#icon' => 'help',
+          '#tag' => 'span',
+        ],
+      ];
+    }
+    $icons['configuration'] = [
+      '#theme' => 'hpc_popover',
+      '#title' => $this->t('Block configuration'),
+      '#content' => Markup::create('<pre>' . Yaml::encode(ArrayHelper::mapObjectsToString($this->getConfiguration())) . '</pre>'),
+      '#material_icon' => 'content_copy',
+      '#class' => 'block-configuration',
+    ];
+    $block_uuid = $this->getUuid();
+    if (!empty($block_uuid)) {
+      $url = Url::fromRoute('ghi_blocks.load_block', [
+        'plugin_id' => $this->getPluginId(),
+        'block_uuid' => $block_uuid,
+      ]);
+      $icons['reload'] = [
+        '#type' => 'link',
+        '#title' => [
+          '#theme' => 'hpc_icon',
+          '#icon' => 'refresh',
+          '#tag' => 'span',
+        ],
+        '#url' => $url,
+        '#options' => [
+          'query' => [
+            'current_uri' => $this->getCurrentUri(),
+          ] + $this->requestStack->getCurrentRequest()->query->all(),
+        ],
+        '#attributes' => [
+          'class' => [
+            'use-ajax',
+          ],
+        ],
+      ];
+    }
+    return $icons;
   }
 
 }

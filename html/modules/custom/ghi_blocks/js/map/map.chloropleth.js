@@ -50,7 +50,6 @@
       parseInt(aRgbHex[1], 16),
       parseInt(aRgbHex[2], 16)
     ];
-    console.log('rgb(' + aRgb.join(',') + ')');
     return 'rgb(' + aRgb.join(',') + ')';
 }
 

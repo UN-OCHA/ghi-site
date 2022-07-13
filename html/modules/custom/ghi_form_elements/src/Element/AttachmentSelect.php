@@ -50,6 +50,7 @@ class AttachmentSelect extends FormElement {
       '#summary_only' => FALSE,
       '#available_options' => [],
       '#entity_ids' => [],
+      '#attachment_type' => NULL,
     ];
   }
 
@@ -75,6 +76,9 @@ class AttachmentSelect extends FormElement {
   public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
     if ($input !== NULL) {
       // Make sure input is returned as normal during item configuration.
+      if (is_array($input) && array_key_exists('attachment_id', $input)) {
+        $input['attachment_id'] = array_filter((array) $input['attachment_id']);
+      }
       return $input;
     }
     return NULL;
@@ -112,7 +116,7 @@ class AttachmentSelect extends FormElement {
       'entity_type' => !empty($values['entity_type']) ? $values['entity_type'] : ($element['#entity_type'] ?? NULL),
       'attachment_type' => !empty($values['attachment_type']) ? $values['attachment_type'] : ($element['#attachment_type'] ?? NULL),
       'attachment_prototype' => !empty($values['attachment_prototype']) ? $values['attachment_prototype'] : ($element['#attachment_prototype'] ?? NULL),
-      'attachment_id' => !empty($values['attachment_id']) ? $values['attachment_id'] : NULL,
+      'attachment_id' => !empty($values['attachment_id']) ? array_filter((array) $values['attachment_id']) : [],
     ];
 
     $element['entity_type'] = [
@@ -127,10 +131,20 @@ class AttachmentSelect extends FormElement {
       '#type' => 'hidden',
       '#value' => $defaults['attachment_prototype'],
     ];
-    $element['attachment_id'] = [
-      '#type' => 'hidden',
-      '#value' => $defaults['attachment_id'],
-    ];
+    // It is important to replicate the nested structure here, otherwise the
+    // form builder will create errors when trying to set NULL values in the
+    // form structure using NestedArray::setValue().
+    if (!empty($defaults['attachment_id'])) {
+      $element['attachment_id'] = [
+        '#type' => 'container',
+      ];
+      foreach ($defaults['attachment_id'] as $attachment_id) {
+        $element['attachment_id'][$attachment_id] = [
+          '#type' => 'hidden',
+          '#value' => $attachment_id,
+        ];
+      }
+    }
 
     if ($element['#summary_only'] && !$triggered_by_select && !$triggered_by_change_request) {
       $attachment = self::getAttachmentQuery()->getAttachment($defaults['attachment_id']);
@@ -168,7 +182,7 @@ class AttachmentSelect extends FormElement {
       $attachment_prototype_options[$attachment->prototype->id] = $attachment->prototype->name . ' (' . $attachment->prototype->ref_code . ')';
     }
 
-    // Build the filter to limit attachments to the once available using the
+    // Build the filter to limit attachments to the ones available using the
     // current filter values.
     $attachment_filter = array_filter([
       'source.entity_type' => $defaults['entity_type'] ? ($defaults['entity_type'] !== 'overview' ? $defaults['entity_type'] . 'Entity' : 'plan') : NULL,
@@ -193,6 +207,8 @@ class AttachmentSelect extends FormElement {
 
     // Either show a select with the available options for the entity type, or
     // set a preset value that should come from $element['#entity_type'].
+    // @todo Improve handling of #available_options. This is sometimes looking
+    // at the keys and sometimes at the values, which is highly unconsistent.
     if (!empty($element['#available_options']['entity_types'])) {
       $entity_type_options = $element['#available_options']['entities'];
       if (!empty($context['plan_object'])) {
@@ -281,12 +297,12 @@ class AttachmentSelect extends FormElement {
     $columns = [
       'id' => t('ID'),
       'composed_reference' => t('Reference'),
-      'type' => t('Type'),
       'prototype' => t('Type'),
       'description' => t('Description'),
     ];
 
-    $atachments_selected = (array) ($defaults['attachment_id'] ?? []);
+    $attachments_selected = (array) ($defaults['attachment_id'] ?? []);
+    $default_attachments = array_intersect($attachments_selected, array_keys($attachment_options));
     $element['attachment_id'] = [
       '#type' => 'tableselect',
       '#tree' => TRUE,
@@ -294,7 +310,7 @@ class AttachmentSelect extends FormElement {
       '#header' => $columns,
       '#validated' => TRUE,
       '#options' => $attachment_options,
-      '#default_value' => array_intersect($atachments_selected, array_keys($attachment_options)),
+      '#default_value' => $default_attachments ?? NULL,
       '#multiple' => $element['#multiple'],
       '#disabled' => $element['#disabled'],
       '#empty' => t('No suitable attachments found. Please review your selection criteria above.'),
