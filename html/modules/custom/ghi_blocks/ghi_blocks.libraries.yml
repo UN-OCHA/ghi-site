@@ -26,10 +26,6 @@ link_carousel:
   css:
     component:
       css/link_carousel.css: {}
-ajax_switcher:
-  version: VERSION
-  js:
-    js/ajax_switcher.js: {}
 # ajax_reload:
 #   version: VERSION
 #   js:
