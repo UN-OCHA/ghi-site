@@ -73,6 +73,7 @@ third_party_settings:
         - field_plan_status_string
         - field_plan_document_link
         - field_decimal_format
+        - field_max_admin_level
       label: Settings
       region: content
       parent_name: group_tabs
@@ -161,7 +162,7 @@ content:
     third_party_settings: {  }
   field_max_admin_level:
     type: number
-    weight: 12
+    weight: 11
     region: content
     settings:
       placeholder: ''
