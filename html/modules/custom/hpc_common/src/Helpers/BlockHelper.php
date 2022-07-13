@@ -180,6 +180,7 @@ class BlockHelper {
     }
     // Get the config.
     $block_config = $blocks[$block_uuid];
+    $block_config['uuid'] = $block_uuid;
     // Create the instance.
     return self::getBlockManager()->createInstance($plugin_id, $block_config);
   }
@@ -240,6 +241,7 @@ class BlockHelper {
     /** @var \Drupal\Core\Block\BlockPluginInterface $plugin */
     $plugin = $component->getPlugin();
     $block_config = $plugin->getConfiguration();
+    $block_config['uuid'] = $block_uuid;
     return self::getBlockManager()->createInstance($plugin_id, $block_config);
   }
 
