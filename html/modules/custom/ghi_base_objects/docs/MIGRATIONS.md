@@ -43,4 +43,4 @@ Import/update only countries
 ## Modifying migrations ##
 When making changes to the migration files in `config/install`, they need to be re-imported to take effect:
 
-```drush cim --partial --source="modules/custom/ghi_plans/config/install" -y```
+```drush cim --partial --source="modules/custom/ghi_base_objects/config/install" -y```
