@@ -1,0 +1,17 @@
+uuid: 69d56de2-76cc-4f8f-8a84-9eb9b30e2e88
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: 'Plan cluster'
+type: plan_cluster
+description: 'A page representing a plan cluster.'
+help: ''
+new_revision: true
+preview_mode: 0
+display_submitted: false

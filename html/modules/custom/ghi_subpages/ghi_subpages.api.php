@@ -31,3 +31,10 @@ function hook_is_subpage_type($node_type) {
   // Add a custom class to the main link wrapper.
   return in_array($node_type, ['custom_type']);
 }
+
+/**
+ * Implements hook_custom_subpages_alter().
+ */
+function hook_custom_subpages_alter(&$subpages, $node, $node_type) {
+
+}

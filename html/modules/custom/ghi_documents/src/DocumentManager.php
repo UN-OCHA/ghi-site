@@ -14,7 +14,7 @@ class DocumentManager extends BaseContentManager {
   use LayoutEntityHelperTrait;
 
   /**
-   * The machine name of the bundle to use for articles.
+   * The machine name of the bundle to use for documents.
    */
   const DOCUMENT_BUNDLE = 'document';
 

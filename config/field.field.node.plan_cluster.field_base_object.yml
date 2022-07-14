@@ -1,0 +1,29 @@
+uuid: 53b35635-895c-457c-a842-2f2cd8f3751f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_base_object
+    - ghi_base_objects.base_object_type.governing_entity
+    - node.type.plan_cluster
+id: node.plan_cluster.field_base_object
+field_name: field_base_object
+entity_type: node
+bundle: plan_cluster
+label: 'Governing Entity'
+description: 'The governing entity that this plan cluster page is associated with.'
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:base_object'
+  handler_settings:
+    target_bundles:
+      governing_entity: governing_entity
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

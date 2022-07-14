@@ -40,6 +40,7 @@ module:
   ghi_gin: 0
   ghi_hero_image: 0
   ghi_local_tasks: 0
+  ghi_plan_clusters: 0
   ghi_plans: 0
   ghi_sections: 0
   ghi_subpages: 0

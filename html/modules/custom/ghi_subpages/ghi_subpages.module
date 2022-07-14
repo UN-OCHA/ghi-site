@@ -29,8 +29,8 @@ function ghi_subpages_entity_insert(EntityInterface $entity) {
  * Implements hook_section_post_create().
  *
  * Go over all created subpages for a node and save it again, to fix an issue
- * with the generation of url alias for subpages, if these their patterns uses
- * the section's url alias as one of their tokens.
+ * with the generation of url alias for subpages, if the pattern uses the
+ * section's url alias as one of their tokens.
  */
 function ghi_subpages_section_post_create(NodeInterface $section_node) {
   if (!SubpageHelper::isBaseTypeNode($section_node)) {

@@ -47,10 +47,15 @@ class WebcontentFileSelect extends FormElement {
   public static function processWebcontentFileSelect(array &$element, FormStateInterface $form_state) {
     /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $plan_object */
     $plan_object = $element['#plan_object'];
+    if (!$plan_object) {
+      // This is probably a Fields UI backend page.
+      return $element;
+    }
     $entity_query = self::getPlanEntitiesQuery($plan_object->getSourceId());
     $attachments = $entity_query->getWebContentFileAttachments($plan_object);
     $states = $element['#states'] ?? [];
 
+    $file_options = [];
     if (!empty($attachments)) {
       foreach ($attachments as $attachment) {
         $file_options[$attachment->id] = [

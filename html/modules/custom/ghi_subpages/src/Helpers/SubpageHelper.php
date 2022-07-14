@@ -132,6 +132,28 @@ class SubpageHelper {
   }
 
   /**
+   * Get all subpage nodes for a base node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The base node.
+   * @param \Drupal\node\NodeTypeInterface $node_type
+   *   The node type for the custom subpage to fetch.
+   *
+   * @return \Drupal\node\NodeInterface[]|null
+   *   An array of subpage nodes if found, NULL otherwhise.
+   */
+  public static function getCustomSubpagesForBaseNode(NodeInterface $node, NodeTypeInterface $node_type) {
+    $subpages = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+      'type' => $node_type->id(),
+      'field_entity_reference' => $node->id(),
+    ]);
+    /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
+    $module_handler = \Drupal::service('module_handler');
+    $module_handler->alter('custom_subpages', $subpages, $node, $node_type);
+    return $subpages;
+  }
+
+  /**
    * Get the subpage node for a base node.
    *
    * @param \Drupal\node\NodeInterface $node

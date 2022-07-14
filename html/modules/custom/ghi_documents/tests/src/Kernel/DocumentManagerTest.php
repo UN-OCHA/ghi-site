@@ -39,7 +39,7 @@ class DocumentManagerTest extends KernelTestBase {
   const DOCUMENT_BUNDLE = 'document';
 
   /**
-   * The article manager to test.
+   * The document manager to test.
    *
    * @var \Drupal\ghi_documents\DocumentManager
    */
