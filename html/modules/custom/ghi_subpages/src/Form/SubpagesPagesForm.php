@@ -176,7 +176,7 @@ class SubpagesPagesForm extends FormBase {
     $node_types = $this->entityTypeManager->getStorage('node_type')->loadMultiple();
     $subpage_types = [];
     foreach ($node_types as $node_type) {
-      if (!SubpageHelper::isSubpageType($node_type) || in_array($node_type->id(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES)) {
+      if (in_array($node_type->id(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES) || !SubpageHelper::isSubpageType($node_type)) {
         continue;
       }
       $subpage_types[] = $node_type->id();

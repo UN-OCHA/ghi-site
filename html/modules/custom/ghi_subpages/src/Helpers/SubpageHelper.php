@@ -195,13 +195,10 @@ class SubpageHelper {
     $is_subpage = FALSE;
     /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
     $module_handler = \Drupal::service('module_handler');
-    foreach ($module_handler->getImplementations('is_subpage_type') as $module_name) {
-      // If any module says yes, we accept that and stop.
-      $is_subpage = $is_subpage || $module_handler->invoke($module_name, 'is_subpage_type', [$node_type->id()]);
-      if ($is_subpage) {
-        break;
-      }
-    }
+    $module_handler->invokeAllWith('is_subpage_type', function (callable $hook, string $module) use ($node_type, &$is_subpage) {
+      // If any module says yes, we accept that.
+      $is_subpage = $is_subpage || $hook($node_type->id());
+    });
     return $is_subpage;
   }
 
