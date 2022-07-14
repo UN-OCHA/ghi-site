@@ -5,7 +5,7 @@
      to run alongside core's test types. -->
 <phpunit bootstrap="vendor/weitzman/drupal-test-traits/src/bootstrap.php">
     <php>
-        <env name="DTT_BASE_URL" value="http://ghi-site.docksal"/>
+        <env name="DTT_BASE_URL" value="http://ghi-site.docksal.site"/>
         <env name="DTT_API_URL" value="http://chrome:9222"/>
         <env name="DTT_MINK_DRIVER_ARGS" value='["chrome", null, "http://selenium:4444/wd/hub"]'/>
         <env name="BROWSERTEST_OUTPUT_DIRECTORY" value="/tmp"/>
@@ -13,7 +13,7 @@
         <env name="SYMFONY_DEPRECATIONS_HELPER" value="disabled"/>
         <!-- Specify the default directory screenshots should be placed. -->
         <!--<env name="DTT_SCREENSHOT_REPORT_DIRECTORY" value=""/>-->
-        <env name="SIMPLETEST_BASE_URL" value="http://ghi-site.docksal"/>
+        <env name="SIMPLETEST_BASE_URL" value="http://ghi-site.docksal.site"/>
         <env name="SIMPLETEST_DB" value="sqlite://tmp/test.sqlite"/>
     </php>
 
