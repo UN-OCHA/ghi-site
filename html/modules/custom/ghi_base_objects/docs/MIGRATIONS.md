@@ -2,17 +2,19 @@
 
 ## Available object types ##
 
-This modules includes migrations for some basic object types from HPC, which are used in GHI.
+This modules includes migrations for some base object types from HPC, which are used in GHI.
 
 - Plans
 - Plan entities
 - Governing entities
 - Countries
+- Organizations
 
 There are also migrations to import some of the HPC categories
 
 - Plan types
-- Plan costing
+- Plan costing types
+- Organization types
 
 
 ## Running migrations with drush ##
