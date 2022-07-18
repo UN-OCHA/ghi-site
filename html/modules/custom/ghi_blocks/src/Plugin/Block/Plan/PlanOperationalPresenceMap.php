@@ -384,6 +384,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
           $content .= ThemeHelper::render([
             '#theme' => 'item_list',
             '#items' => $cluster['organizations'],
+            '#gin_lb_theme_suggestions' => FALSE,
           ]);
           $content .= '</div></div>';
         }
@@ -443,6 +444,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
           $content .= ThemeHelper::render([
             '#theme' => 'item_list',
             '#items' => $cluster['projects'],
+            '#gin_lb_theme_suggestions' => FALSE,
           ]);
           $content .= '</div></div>';
         }

@@ -41,11 +41,24 @@ class BaseObjectHelper extends EntityHelper {
    *
    * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
    *   The entity to check.
+   * @param string $bundle
+   *   An optional bundle argument.
    *
    * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
    *   A base object if one is found, NULL otherwhise.
    */
-  public static function getBaseObjectFromNode(FieldableEntityInterface $entity) {
+  public static function getBaseObjectFromNode(FieldableEntityInterface $entity, $bundle = NULL) {
+    if ($bundle !== NULL) {
+      $base_objects = self::getBaseObjectsFromNode($entity);
+      if (!empty($base_objects)) {
+        foreach ($base_objects as $base_object) {
+          if ($bundle == $base_object->bundle()) {
+            return $base_object;
+          }
+        }
+      }
+      return NULL;
+    }
     $field_name = self::getBaseObjectFieldName($entity);
     $base_object = $field_name ? $entity->get($field_name)->entity : NULL;
     if (!$base_object) {
@@ -74,6 +87,16 @@ class BaseObjectHelper extends EntityHelper {
     if (!$base_objects) {
       $parent_node = $entity->hasField('field_entity_reference') ? $entity->field_entity_reference->entity : NULL;
       $base_objects = $parent_node ? self::getBaseObjectsFromNode($parent_node) : NULL;
+    }
+    if (empty($base_objects)) {
+      return $base_objects;
+    }
+    // We support an additional level of object chaining here for plan and
+    // governing entities.
+    foreach ($base_objects as $base_object) {
+      if ($base_object->hasField('field_plan') && $plan_object = $base_object->get('field_plan')->entity) {
+        $base_objects[] = $plan_object;
+      }
     }
     return $base_objects;
   }

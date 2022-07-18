@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\ghi_sections\SectionManager;
 
 /**
  * Base manager service class..
@@ -18,6 +19,13 @@ abstract class BaseObjectSubpageManager {
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
+
+  /**
+   * The section manager.
+   *
+   * @var \Drupal\ghi_sections\SectionManager
+   */
+  protected $sectionManager;
 
   /**
    * The entity type manager service.
@@ -43,8 +51,9 @@ abstract class BaseObjectSubpageManager {
   /**
    * Constructs a document manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer, AccountInterface $current_user, MessengerInterface $messenger) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, SectionManager $section_manager, RendererInterface $renderer, AccountInterface $current_user, MessengerInterface $messenger) {
     $this->entityTypeManager = $entity_type_manager;
+    $this->sectionManager = $section_manager;
     $this->renderer = $renderer;
     $this->currentUser = $current_user;
     $this->messenger = $messenger;

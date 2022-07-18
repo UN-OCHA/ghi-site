@@ -127,6 +127,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Op
             'plugin_type' => 'key_figures',
             'plugin_id' => $this->getPluginId(),
           ],
+          '#gin_lb_theme_suggestions' => FALSE,
         ],
       ];
     }

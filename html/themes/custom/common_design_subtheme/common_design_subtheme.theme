@@ -390,3 +390,35 @@ function common_design_subtheme_preprocess_item_list__plan_entity_types(&$variab
   $count = count($variables['items']);
   $variables['cols'] = $count == 4 ? 2 : 3;
 }
+
+/**
+ * Preprocess a subpage navigation list.
+ */
+function common_design_subtheme_preprocess_item_list__subpage_navigation(&$variables) {
+  $items = &$variables['items'];
+  foreach ($items as &$item) {
+    if (!array_key_exists(0, $item['value']) || !array_key_exists(1, $item['value'])) {
+      continue;
+    }
+    $wrapper_attribute = $item['value']['#attributes']['class'] ?? [];
+    $item['value'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#attributes' => [
+        'data-cd-component' => 'cd-dropdown',
+        'data-cd-icon' => 'arrow-down',
+        'id' => 'cd-dropdown',
+        'class' => ['cd-dropdown'],
+        'aria-labelledby' => 'dropdown-title',
+        'data-cd-toggable' => $item['value'][0],
+      ],
+      '#attached' => [
+        'library' => [
+          'common_design/cd-dropdown',
+        ],
+      ],
+    ] + $item['value'][1]['#items'];
+    $item['attributes']['class'] = array_merge(['expandable'], $wrapper_attribute);
+  }
+
+}

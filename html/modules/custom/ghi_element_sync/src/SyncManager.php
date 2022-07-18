@@ -33,6 +33,11 @@ class SyncManager implements ContainerInjectionInterface {
   use LayoutEntityHelperTrait;
 
   /**
+   * Define the supported base object types.
+   */
+  const BASE_OBJECT_TYPES_SUPPORTED = ['plan', 'governing_entity'];
+
+  /**
    * The config factory service.
    *
    * @var \Drupal\Core\Config\ConfigFactoryInterface
@@ -135,7 +140,7 @@ class SyncManager implements ContainerInjectionInterface {
     }
 
     $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
-    if ($base_object->bundle() != 'plan') {
+    if (!in_array($base_object->bundle(), self::BASE_OBJECT_TYPES_SUPPORTED)) {
       return FALSE;
     }
 
@@ -159,9 +164,15 @@ class SyncManager implements ContainerInjectionInterface {
       $context_mapping = [
         'context_mapping' => array_intersect_key([
           'node' => 'layout_builder.entity',
-          $base_object->bundle() => $base_object->bundle() . '--' . $base_object->getSourceId(),
         ], $definition['context_definitions']),
       ];
+      $base_objects = BaseObjectHelper::getBaseObjectsFromNode($node);
+      foreach ($base_objects as $_base_object) {
+        if (!array_key_exists($_base_object->bundle(), $definition['context_definitions'])) {
+          continue;
+        }
+        $context_mapping['context_mapping'][$_base_object->bundle()] = $_base_object->bundle() . '--' . $_base_object->getSourceId();
+      }
 
       try {
         $mapped_config = $this->getMappedConfig($element, $node);
@@ -227,7 +238,7 @@ class SyncManager implements ContainerInjectionInterface {
    */
   public function resetNode(NodeInterface $node) {
     $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
-    if ($base_object->bundle() != 'plan') {
+    if (!in_array($base_object->bundle(), self::BASE_OBJECT_TYPES_SUPPORTED)) {
       return FALSE;
     }
 

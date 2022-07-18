@@ -11,3 +11,4 @@ node_types:
   - population
   - financials
   - risk_index
+  - plan_cluster

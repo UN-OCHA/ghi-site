@@ -5,8 +5,6 @@ namespace Drupal\ghi_form_elements\Element;
 use Drupal\Core\Render\Element\FormElement;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Link;
-use Drupal\Core\Url;
 
 /**
  * Provides an attachment select element.
@@ -58,21 +56,19 @@ class WebcontentFileSelect extends FormElement {
     $file_options = [];
     if (!empty($attachments)) {
       foreach ($attachments as $attachment) {
+        // @todo Add check for image files before trying to show a preview.
         $file_options[$attachment->id] = [
           'id' => $attachment->id,
           'title' => $attachment->title,
           'file_name' => $attachment->file_name,
-          'file_url' => Link::fromTextAndUrl($attachment->url, Url::fromUri($attachment->url, [
-            'external' => TRUE,
-            'attributes' => [
-              'target' => '_blank',
-            ],
-          ])),
           'preview' => [
             'data' => [
               '#theme' => 'imagecache_external',
               '#style_name' => 'thumbnail',
               '#uri' => $attachment->url,
+              '#attributes' => [
+                'title' => $attachment->url,
+              ],
             ],
           ],
         ];
@@ -83,7 +79,6 @@ class WebcontentFileSelect extends FormElement {
       'id' => t('Attachment ID'),
       'title' => t('Title'),
       'file_name' => t('File name'),
-      'file_url' => t('File URL'),
       'preview' => t('Preview'),
     ];
 

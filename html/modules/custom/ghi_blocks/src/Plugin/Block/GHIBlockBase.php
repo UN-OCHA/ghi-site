@@ -1485,6 +1485,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   A base object if it can be found.
    */
   public function getCurrentBaseObject() {
+    $page_node = $this->getPageNode();
+    if ($page_node && $page_node->hasField('field_base_object')) {
+      return $page_node->get('field_base_object')->entity;
+    }
     $contexts = $this->getContexts();
     foreach ($this->getContextMapping() as $context_name) {
       $context = $contexts[$context_name] ?? NULL;

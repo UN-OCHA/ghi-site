@@ -197,6 +197,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
         '#theme' => 'item_list',
         '#items' => $items,
         '#list_type' => 'ol',
+        '#gin_lb_theme_suggestions' => FALSE,
       ];
     }
 

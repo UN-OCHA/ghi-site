@@ -125,6 +125,8 @@ class SubpagesPagesForm extends FormBase {
 
     $section_team = $node->field_team->entity->getName();
 
+    // First create a table with the subpage types directly supported by this
+    // module.
     foreach (SubpageHelper::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
       $subpages = $this->entityTypeManager->getStorage('node')->loadByProperties([
         'type' => $subpage_type,
@@ -172,7 +174,7 @@ class SubpagesPagesForm extends FormBase {
       '#empty' => $this->t('No subpages exist for this item.'),
     ];
 
-    // Now show table per additional subpage type.
+    // Now show one table per additional subpage type.
     $node_types = $this->entityTypeManager->getStorage('node_type')->loadMultiple();
     foreach ($node_types as $node_type) {
       if (in_array($node_type->id(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES) || !SubpageHelper::isSubpageType($node_type)) {

@@ -197,7 +197,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
               'entity_ids' => array_combine($entity_id, $entity_id),
             ],
             'attachments' => [
-              'entity_type' => $config->attachment_select->entity_type,
+              'entity_type' => $config->attachment_select->entity_type ?? NULL,
               'attachment_type' => $config->attachment_select->attachment_type,
               'attachment_prototype' => $config->attachment_select->attachment_prototype ?? NULL,
               'attachment_id' => array_combine($attachment_id, $attachment_id),
@@ -538,7 +538,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       '#title' => $this->t('Default entity'),
       '#description' => $this->t('Please select the entity that will show by default. If multiple entities are available to this widget, then the user can select to see data for the other entities by using a drop-down selector.'),
       '#options' => $this->getCurrentEntityOptions(),
-      '#default_value' => $defaults['default_entity'],
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'default_entity') ?? NULL,
       '#states' => [
         'visible' => [
           ':input[name="' . $table_type_selector . '"]' => ['value' => self::TABLE_TYPE_GROUPED],

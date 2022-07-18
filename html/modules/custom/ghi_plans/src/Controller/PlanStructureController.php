@@ -219,7 +219,7 @@ class PlanStructureController extends ControllerBase {
    * @param int $plan_id
    *   The plan id for which to retrieve the data.
    *
-   * @return array
+   * @return \Drupal\ghi_plans\ApiObjects\PlanPrototype
    *   Array with the plans prototype objects.
    */
   private function getPrototypeData($plan_id) {

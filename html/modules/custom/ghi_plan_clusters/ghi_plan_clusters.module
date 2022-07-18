@@ -51,16 +51,36 @@ function ghi_plan_clusters_subpage_navigation_links_alter(&$links, array $contex
   if (empty($plan_clusters)) {
     return;
   }
+
+  $wrapper_attributes = [
+    'class' => [],
+  ];
   foreach ($plan_clusters as $plan_cluster) {
-    $link = $plan_cluster->toLink(NULL)->toRenderable();
-    if ($node->id() == $plan_cluster->id() && ($plan_cluster->access('view') || $plan_cluster->access('update'))) {
-      $link['#attributes']['class'][] = 'active';
-      if (!$plan_cluster->isPublished()) {
-        $link['#attributes']['class'][] = 'node--unpublished';
-      }
+    $cluster_link = $plan_cluster->toLink(NULL)->toRenderable();
+    if (!$plan_cluster->access('view')) {
+      continue;
     }
-    $links[] = $link;
+    if (!$plan_cluster->isPublished()) {
+      $cluster_link['#attributes']['class'][] = 'node--unpublished';
+    }
+    if ($node->id() == $plan_cluster->id()) {
+      $cluster_link['#attributes']['class'][] = 'active';
+      $wrapper_attributes['class'][] = 'active';
+    }
+    $cluster_links[] = $cluster_link;
   }
+  $links[] = [
+    '#type' => 'container',
+    '#attributes' => $wrapper_attributes,
+    [
+      '#markup' => t('Clusters'),
+    ],
+    [
+      '#theme' => 'item_list',
+      '#items' => $cluster_links,
+      '#gin_lb_theme_suggestions' => FALSE,
+    ],
+  ];
 }
 
 /**
@@ -136,6 +156,13 @@ function ghi_plan_clusters_entity_delete(EntityInterface $entity) {
 }
 
 /**
+ * Implements hook_is_subpage_type().
+ */
+function ghi_plan_clusters_is_subpage_type($node_type) {
+  return in_array($node_type, [PlanClusterManager::NODE_BUNDLE_PLAN_CLUSTER]);
+}
+
+/**
  * Implements hook_custom_subpages_alter().
  */
 function ghi_plan_clusters_custom_subpages_alter(array &$subpages, NodeInterface $node, NodeTypeInterface $node_type) {
@@ -151,8 +178,12 @@ function ghi_plan_clusters_custom_subpages_alter(array &$subpages, NodeInterface
 }
 
 /**
- * Implements hook_is_subpage_type().
+ * Implements hook_get_base_type_node_alter().
  */
-function ghi_plan_clusters_is_subpage_type($node_type) {
-  return in_array($node_type, [PlanClusterManager::NODE_BUNDLE_PLAN_CLUSTER]);
+function ghi_plan_clusters_get_base_type_node_alter(&$base_type_node, NodeInterface $node) {
+  if ($node->bundle() != PlanClusterManager::NODE_BUNDLE_PLAN_CLUSTER) {
+    return NULL;
+  }
+  $plan_cluster_manager = ghi_plan_clusters_get_manager_service();
+  $base_type_node = $plan_cluster_manager->loadSectionForClusterNode($node);
 }

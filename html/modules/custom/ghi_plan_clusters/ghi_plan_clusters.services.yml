@@ -1,4 +1,4 @@
 services:
   ghi_plan_clusters.manager:
     class: Drupal\ghi_plan_clusters\PlanClusterManager
-    arguments: ['@entity_type.manager', '@renderer', '@current_user', '@messenger']
+    arguments: ['@entity_type.manager', '@ghi_sections.manager', '@renderer', '@current_user', '@messenger']

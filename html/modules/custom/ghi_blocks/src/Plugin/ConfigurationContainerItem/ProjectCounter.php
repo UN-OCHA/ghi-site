@@ -301,6 +301,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
         'data' => [
           '#theme' => 'item_list',
           '#items' => $this->getOrganizationLinks($project->organizations),
+          '#gin_lb_theme_suggestions' => FALSE,
         ],
       ];
       $row[] = [
@@ -343,6 +344,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
       '#theme' => 'item_list',
       '#items' => $links,
       '#list_type' => 'ol',
+      '#gin_lb_theme_suggestions' => FALSE,
     ];
     return $popover_content;
   }

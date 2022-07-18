@@ -170,4 +170,27 @@ class PlanClusterManager extends BaseObjectSubpageManager {
     }
   }
 
+  /**
+   * Load the plan section for the given plan cluster node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The plan cluster node.
+   *
+   * @return \Drupal\node\NodeInterface|null
+   *   The section node if found.
+   */
+  public function loadSectionForClusterNode(NodeInterface $node) {
+    if ($node->bundle() != PlanClusterManager::NODE_BUNDLE_PLAN_CLUSTER) {
+      return NULL;
+    }
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
+    if (!$base_object || $base_object->bundle() != 'governing_entity') {
+      // We only support plan sections for now.
+      return NULL;
+    }
+
+    $plan_object = $base_object->get('field_plan')->entity;
+    return $this->sectionManager->loadSectionForBaseObject($plan_object);
+  }
+
 }

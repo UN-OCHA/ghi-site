@@ -112,6 +112,17 @@ class PlanEntitiesQuery extends EndpointQueryBase {
         }, $entity->attachments);
         $attachments = array_merge($attachments, $entity_attachments);
       }
+      if ($context_object->bundle() == 'governing_entity' && $plan_entities = $this->getPlanEntities($context_object)) {
+        // This is a governing entity, so we must also look for child elements.
+        foreach ($plan_entities as $plan_entity) {
+          $entity_attachments = array_map(function ($attachment) use ($plan_entity) {
+            $attachment->objectId = $plan_entity->id();
+            $attachment->objectType = 'planEntity';
+            return $attachment;
+          }, $plan_entity->getRawData()->attachments ?? []);
+          $attachments = array_merge($attachments, $entity_attachments);
+        }
+      }
     }
     else {
       // No context object has been given. So we either collect all attachments
