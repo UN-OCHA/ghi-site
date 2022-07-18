@@ -39,10 +39,11 @@ class PlanClusterManager extends BaseObjectSubpageManager {
    *   The subpage node.
    */
   public function loadClusterSubpageForBaseObject(BaseObjectInterface $base_object) {
-    return $this->entityTypeManager->getStorage('node')->loadByProperties([
+    $nodes = $this->entityTypeManager->getStorage('node')->loadByProperties([
       'type' => self::NODE_BUNDLE_PLAN_CLUSTER,
       'field_base_object' => $base_object->id(),
     ]);
+    return !empty($nodes) ? reset($nodes) : NULL;
   }
 
   /**
