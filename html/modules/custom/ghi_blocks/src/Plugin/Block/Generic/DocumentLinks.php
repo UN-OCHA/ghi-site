@@ -147,6 +147,7 @@ class DocumentLinks extends GHIBlockBase implements SyncableBlockInterface {
           'up-' . count($items),
         ],
       ],
+      '#gin_lb_theme_suggestions' => FALSE,
     ];
   }
 

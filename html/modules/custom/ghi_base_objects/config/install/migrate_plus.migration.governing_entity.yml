@@ -24,7 +24,7 @@ source:
       selector: id
     -
       name: name
-      label: 'Name of the plan entity'
+      label: 'Name of the governing entity'
       selector: name
     -
       name: plan_id
@@ -41,7 +41,7 @@ process:
   type:
     plugin: default_value
     default_value: governing_entity
-  title: name
+  name: name
   field_original_id: original_id
   field_plan:
     plugin: migration_lookup
@@ -52,7 +52,7 @@ process:
 destination:
   plugin: 'entity:base_object'
   overwrite_properties:
-    - title
+    - name
     - field_plan
     - field_prototype_id
 migration_dependencies:

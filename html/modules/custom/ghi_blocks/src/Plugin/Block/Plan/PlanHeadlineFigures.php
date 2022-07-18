@@ -251,6 +251,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
           '#attributes' => [
             'class' => ['key-figures'],
           ],
+          '#gin_lb_theme_suggestions' => FALSE,
           // This is important to make the template suggestions logic work in
           // common_design_subtheme.theme.
           '#context' => [

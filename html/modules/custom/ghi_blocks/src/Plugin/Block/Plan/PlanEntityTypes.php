@@ -116,6 +116,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
       '#attributes' => [
         'class' => ['plan-entity-types', $count >= 5 ? 'up-5' : 'up-' . $count],
       ],
+      '#gin_lb_theme_suggestions' => FALSE,
       '#prefix' => '<div class="entity-type-description">',
       '#suffix' => '</div>',
     ];

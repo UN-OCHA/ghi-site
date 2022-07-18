@@ -125,6 +125,8 @@ class SubpagesPagesForm extends FormBase {
 
     $section_team = $node->field_team->entity->getName();
 
+    // First create a table with the subpage types directly supported by this
+    // module.
     foreach (SubpageHelper::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
       $subpages = $this->entityTypeManager->getStorage('node')->loadByProperties([
         'type' => $subpage_type,
@@ -172,46 +174,48 @@ class SubpagesPagesForm extends FormBase {
       '#empty' => $this->t('No subpages exist for this item.'),
     ];
 
-    // Now show another table with other subpages.
+    // Now show one table per additional subpage type.
     $node_types = $this->entityTypeManager->getStorage('node_type')->loadMultiple();
-    $subpage_types = [];
     foreach ($node_types as $node_type) {
-      if (!SubpageHelper::isSubpageType($node_type) || in_array($node_type->id(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES)) {
+      if (in_array($node_type->id(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES) || !SubpageHelper::isSubpageType($node_type)) {
         continue;
       }
-      $subpage_types[] = $node_type->id();
-    }
-    /** @var \Drupal\node\NodeInterface[] $subpage_nodes */
-    $subpage_nodes = $subpage_types ? $this->entityTypeManager->getStorage('node')->loadByProperties([
-      'type' => $subpage_types,
-      'field_entity_reference' => $node->id(),
-    ]) : NULL;
-    if ($subpage_nodes) {
+
+      /** @var \Drupal\node\NodeInterface[] $subpage_nodes */
+      $subpage_nodes = SubpageHelper::getCustomSubpagesForBaseNode($node, $node_type);
+      if (empty($subpage_nodes)) {
+        continue;
+      }
       $header = [
         $this->t('Page'),
         $this->t('Status'),
-        $this->t('Type'),
+        $this->t('Team'),
         $this->t('Created'),
         $this->t('Updated'),
         $this->t('Operations'),
       ];
       $rows = [];
       foreach ($subpage_nodes as $subpage_node) {
+        /** @var \Drupal\taxonomy\Entity\Term $subpage_team */
+        $subpage_team = !$subpage->field_team->isEmpty() ? $subpage->field_team->entity : NULL;
+
         $row = [];
         $row[] = $subpage_node->toLink();
         $row[] = $subpage_node->isPublished() ? $this->t('Published') : $this->t('Unpublished');
-        $row[] = $subpage_node->type->entity->label();
+        $row[] = $subpage_team ? $subpage_team->getName() : $section_team . ' (' . $this->t('Inherit from section') . ')';
         $row[] = $this->dateFormatter->format($subpage_node->getCreatedTime(), 'custom', 'F j, Y h:ia');
         $row[] = $this->dateFormatter->format($subpage_node->getChangedTime(), 'custom', 'F j, Y h:ia');
         $row[] = $this->getOperationLinks($subpage_node, $node);
         $rows[] = $row;
       }
-      $form['subpages_other_header'] = [
+      $form['subpages_' . $node->id() . '_header'] = [
         '#type' => 'html_tag',
         '#tag' => 'h2',
-        '#value' => $this->t('Other subpages'),
+        '#value' => $this->t('@label subpages', [
+          '@label' => $node_type->label(),
+        ]),
       ];
-      $form['subpages_other'] = [
+      $form['subpages_' . $node->id()] = [
         '#type' => 'table',
         '#header' => $header,
         '#rows' => $rows,

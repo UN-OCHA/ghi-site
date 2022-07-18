@@ -1,5 +1,5 @@
 diff --git a/gin_lb.api.php b/gin_lb.api.php
-index 4a3c7ce..1a782ac 100644
+index 4a3c7ce..4773ff3 100644
 --- a/gin_lb.api.php
 +++ b/gin_lb.api.php
 @@ -41,6 +41,25 @@ function hook_gin_lb_is_layout_builder_route_alter(&$gin_lb_is_layout_builder_ro
@@ -9,16 +9,16 @@ index 4a3c7ce..1a782ac 100644
 +/**
 + * Alter the template suggestion logic.
 + *
-+ * Allows modules to disable template suggestions based route name or form id.
++ * Allows modules to overrule whether template suggestions should be added.
 + *
 + * @param boolean $add_suggestions
 + *   Boolean flag.
-+ * @param array $element
-+ *   A render element.
++ * @param array $variables
++ *   The variables array of a render item.
 + * @param string $hook
 + *   The theme hook.
 + */
-+function hook_gin_lb_add_suggestions_alter(&$add_suggestions, $element, $hook) {
++function hook_gin_lb_add_suggestions_alter(&$add_suggestions, $variables, $hook) {
 +  $route_name = \Drupal::routeMatch()->getRouteName();
 +  if ($route_name == 'layout_builder.add_block' && $add_suggestions) {
 +    $add_suggestions = FALSE;
@@ -29,15 +29,33 @@ index 4a3c7ce..1a782ac 100644
   * @} End of "addtogroup hooks".
   */
 diff --git a/gin_lb.module b/gin_lb.module
-index f9511d2..045dfee 100644
+index 020bf86..c29214a 100644
 --- a/gin_lb.module
 +++ b/gin_lb.module
-@@ -227,6 +227,9 @@ function gin_lb_theme_suggestions_alter(
+@@ -163,6 +163,17 @@ function gin_lb_views_pre_render(ViewExecutable $view) {
+   }
+ }
+ 
++/**
++ * Implements hook_theme_registry_alter().
++ */
++function gin_lb_theme_registry_alter(&$theme_registry) {
++  foreach ($theme_registry as &$value) {
++    if (array_key_exists('variables', $value)) {
++      $value['variables']['gin_lb_theme_suggestions'] = NULL;
++    }
++  }
++}
++
+ /**
+  * Implements hook_theme_suggestions_alter().
+  */
+@@ -228,6 +239,9 @@ function gin_lb_theme_suggestions_alter(
      $add_suggestions = TRUE;
    }
  
 +  // Allow other modules to chime in.
-+  \Drupal::moduleHandler()->alter('gin_lb_add_suggestions', $add_suggestions, $variables['element'], $hook);
++  \Drupal::moduleHandler()->alter('gin_lb_add_suggestions', $add_suggestions, $variables, $hook);
 +
    if (isset($variables['element']['#gin_lb_form']) || $add_suggestions === TRUE) {
  

@@ -116,6 +116,36 @@ class SubpageHelper {
   }
 
   /**
+   * Get all available subpage types.
+   *
+   * @return array
+   *   An array of node type machine names.
+   */
+  public static function getSubpageTypes() {
+    // The basic subpages defined by this module.
+    $subpage_types = self::SUPPORTED_SUBPAGE_TYPES;
+
+    /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
+    $module_handler = \Drupal::service('module_handler');
+
+    $node_types = \Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple();
+    foreach ($node_types as $node_type) {
+      if (in_array($node_type->id(), $subpage_types)) {
+        continue;
+      }
+      $is_subpage = FALSE;
+      $module_handler->invokeAllWith('is_subpage_type', function (callable $hook, string $module) use ($node_type, &$is_subpage) {
+        // If any module says yes, we accept that.
+        $is_subpage = $is_subpage || $hook($node_type->id());
+      });
+      if ($is_subpage) {
+        $subpage_types[] = $node_type->id();
+      }
+    }
+    return $subpage_types;
+  }
+
+  /**
    * Get all subpage nodes for a base node.
    *
    * @param \Drupal\node\NodeInterface $node
@@ -129,6 +159,28 @@ class SubpageHelper {
       'type' => self::SUPPORTED_SUBPAGE_TYPES,
       'field_entity_reference' => $node->id(),
     ]);
+  }
+
+  /**
+   * Get all subpage nodes for a base node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The base node.
+   * @param \Drupal\node\NodeTypeInterface $node_type
+   *   The node type for the custom subpage to fetch.
+   *
+   * @return \Drupal\node\NodeInterface[]|null
+   *   An array of subpage nodes if found, NULL otherwhise.
+   */
+  public static function getCustomSubpagesForBaseNode(NodeInterface $node, NodeTypeInterface $node_type) {
+    $subpages = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+      'type' => $node_type->id(),
+      'field_entity_reference' => $node->id(),
+    ]);
+    /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
+    $module_handler = \Drupal::service('module_handler');
+    $module_handler->alter('custom_subpages', $subpages, $node, $node_type);
+    return $subpages;
   }
 
   /**
@@ -160,12 +212,20 @@ class SubpageHelper {
    *   The base type node if found.
    */
   public static function getBaseTypeNode(NodeInterface $node) {
-    if (SubpageHelper::isBaseTypeNode($node)) {
+    if (self::isBaseTypeNode($node)) {
       return $node;
     }
-    if (SubpageHelper::isSubpageTypeNode($node)) {
-      return $node->get('field_entity_reference')->entity;
+    if (self::isSubpageTypeNode($node)) {
+      if ($node->hasField('field_entity_reference')) {
+        return $node->get('field_entity_reference')->entity;
+      }
+      $base_type_node = NULL;
+      /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
+      $module_handler = \Drupal::service('module_handler');
+      $module_handler->alter('get_base_type_node', $base_type_node, $node);
+      return $base_type_node;
     }
+    return NULL;
   }
 
   /**
@@ -178,7 +238,7 @@ class SubpageHelper {
    *   TRUE if it is a base type, FALSE otherwhise.
    */
   public static function isBaseTypeNode(NodeInterface $node) {
-    return in_array($node->bundle(), SubpageHelper::SUPPORTED_BASE_TYPES);
+    return in_array($node->bundle(), self::SUPPORTED_BASE_TYPES);
   }
 
   /**
@@ -191,18 +251,8 @@ class SubpageHelper {
    *   TRUE if it is a subpage type, FALSE otherwhise.
    */
   public static function isSubpageType(NodeTypeInterface $node_type) {
-    // Let's see if other module think this should be treated as a subpage.
-    $is_subpage = FALSE;
-    /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
-    $module_handler = \Drupal::service('module_handler');
-    foreach ($module_handler->getImplementations('is_subpage_type') as $module_name) {
-      // If any module says yes, we accept that and stop.
-      $is_subpage = $is_subpage || $module_handler->invoke($module_name, 'is_subpage_type', [$node_type->id()]);
-      if ($is_subpage) {
-        break;
-      }
-    }
-    return $is_subpage;
+    $subpage_types = self::getSubpageTypes();
+    return in_array($node_type->id(), $subpage_types);
   }
 
   /**
@@ -215,13 +265,6 @@ class SubpageHelper {
    *   TRUE if it is a subpage type node, FALSE otherwhise.
    */
   public static function isSubpageTypeNode(NodeInterface $node) {
-    if (!$node->hasField('field_entity_reference')) {
-      return FALSE;
-    }
-    if (in_array($node->bundle(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES)) {
-      // Subpage type directly supported by this module.
-      return TRUE;
-    }
     return self::isSubpageType($node->type->entity);
   }
 

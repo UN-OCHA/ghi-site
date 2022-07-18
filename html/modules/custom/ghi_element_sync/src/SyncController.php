@@ -53,7 +53,7 @@ class SyncController extends ControllerBase {
       return AccessResult::forbidden();
     }
     $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
-    return AccessResult::allowedIf($base_object && $base_object->bundle() == 'plan');
+    return AccessResult::allowedIf($base_object && in_array($base_object->bundle(), SyncManager::BASE_OBJECT_TYPES_SUPPORTED));
   }
 
   /**

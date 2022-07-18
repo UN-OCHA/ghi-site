@@ -159,7 +159,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
    */
   private function getPlanWebContentAttachments(FieldItemListInterface $items) {
     $entity = $items->getEntity();
-    $base_object = BaseObjectHelper::getBaseObjectFromNode($entity);
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($entity, 'plan');
     $plan_object = $base_object && $base_object->bundle() == 'plan' ? $base_object : NULL;
     if (!$plan_object) {
       return [];

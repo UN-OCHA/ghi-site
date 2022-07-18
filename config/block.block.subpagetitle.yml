@@ -29,6 +29,7 @@ visibility:
     bundles:
       financials: financials
       global_section: global_section
+      plan_cluster: plan_cluster
       population: population
       profile: profile
       risk_index: risk_index

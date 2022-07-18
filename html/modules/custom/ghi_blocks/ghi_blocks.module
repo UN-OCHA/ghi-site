@@ -118,7 +118,7 @@ function ghi_blocks_plugin_filter_block__layout_builder_alter(&$definitions) {
 /**
  * Implements hook_gin_lb_add_suggestions_alter().
  */
-function ghi_blocks_gin_lb_add_suggestions_alter(&$add_suggestions, $element, $hook) {
+function ghi_blocks_gin_lb_add_suggestions_alter(&$add_suggestions, $variables, $hook) {
   $route_name = \Drupal::routeMatch()->getRouteName();
   if ($route_name == 'layout_builder.add_block' && $add_suggestions) {
     $add_suggestions = FALSE;
@@ -127,8 +127,11 @@ function ghi_blocks_gin_lb_add_suggestions_alter(&$add_suggestions, $element, $h
     $add_suggestions = TRUE;
   }
   // Allow elements to declare whether they want to be rendered by Gin LB.
-  if (is_array($element) && array_key_exists('#gin_lb_form_element', $element)) {
-    $add_suggestions = $element['#gin_lb_form_element'];
+  if (array_key_exists('element', $variables) && is_array($variables['element']) && array_key_exists('#gin_lb_form_element', $variables['element'])) {
+    $add_suggestions = $variables['element']['#gin_lb_form_element'];
+  }
+  elseif (array_key_exists('gin_lb_theme_suggestions', $variables) && $variables['gin_lb_theme_suggestions'] !== NULL) {
+    $add_suggestions = $variables['gin_lb_theme_suggestions'];
   }
 }
 

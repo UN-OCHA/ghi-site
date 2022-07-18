@@ -73,6 +73,7 @@ class PlanOverviewMap extends GHIBlockBase {
       '#map_tabs' => $map['tabs'] ? [
         '#theme' => 'item_list',
         '#items' => $map['tabs'],
+        '#gin_lb_theme_suggestions' => FALSE,
       ] : NULL,
       '#attached' => [
         'library' => ['ghi_blocks/map.plan_overview'],

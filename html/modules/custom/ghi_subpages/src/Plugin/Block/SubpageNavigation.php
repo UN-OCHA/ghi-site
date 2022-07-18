@@ -6,6 +6,7 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
+use Drupal\ghi_subpages\SubpageTrait;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\node\NodeInterface;
 
@@ -24,6 +25,7 @@ use Drupal\node\NodeInterface;
 class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInterface {
 
   use LayoutEntityHelperTrait;
+  use SubpageTrait;
 
   /**
    * The entity type manager.
@@ -73,14 +75,8 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
     $cache_tags = [];
 
     // Get parent if needed.
-    /** @var \Drupal\node\NodeInterface $base_entity */
-    $base_entity = $node;
-    if ($node->hasField('field_entity_reference')) {
-      /** @var \Drupal\node\NodeInterface $base_entity */
-      $base_entity = $node->field_entity_reference->entity;
-    }
-
-    if (!SubpageHelper::isBaseTypeNode($base_entity) || !$base_entity->id()) {
+    $base_entity = $this->getBaseTypeNode($node);
+    if (!$base_entity || !SubpageHelper::isBaseTypeNode($base_entity) || !$base_entity->id()) {
       return [];
     }
 
@@ -141,7 +137,13 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       '#cache' => [
         'tags' => $cache_tags,
       ],
-
+      '#gin_lb_theme_suggestions' => FALSE,
+      // This is important to make the template suggestions logic work in
+      // common_design_subtheme.theme.
+      '#context' => [
+        'plugin_type' => 'subpage_navigation',
+        'plugin_id' => $this->getPluginId(),
+      ],
     ];
 
     return $output;

@@ -271,6 +271,7 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
       'tabs' => [
         '#theme' => 'item_list',
         '#items' => [],
+        '#gin_lb_theme_suggestions' => FALSE,
       ],
       'settings' => [],
     ];

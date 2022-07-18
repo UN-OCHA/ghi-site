@@ -40,6 +40,7 @@ module:
   ghi_gin: 0
   ghi_hero_image: 0
   ghi_local_tasks: 0
+  ghi_plan_clusters: 0
   ghi_plans: 0
   ghi_sections: 0
   ghi_subpages: 0
@@ -100,6 +101,7 @@ module:
   update: 0
   user: 0
   view_unpublished: 0
+  views_autocomplete_filters: 0
   views_ui: 0
   viewsreference: 0
   wmbert: 0

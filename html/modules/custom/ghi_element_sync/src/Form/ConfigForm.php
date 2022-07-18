@@ -89,7 +89,7 @@ class ConfigForm extends ConfigFormBase {
       '#default_value' => $basic_auth['pass'] ?? NULL,
     ];
 
-    $available_node_types = array_merge(['section'], SubpageHelper::SUPPORTED_SUBPAGE_TYPES);
+    $available_node_types = array_merge(['section'], SubpageHelper::getSubpageTypes());
     $form['node_types'] = [
       '#type' => 'checkboxes',
       '#title' => $this->t('Node types'),

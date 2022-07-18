@@ -1,0 +1,11 @@
+uuid: d3dc869e-5cfa-407b-b848-0cea4bffa41a
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.plan_cluster
+id: node.plan_cluster
+target_entity_type_id: node
+target_bundle: plan_cluster
+default_langcode: site_default
+language_alterable: false
