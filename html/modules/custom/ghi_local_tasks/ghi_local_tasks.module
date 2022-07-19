@@ -77,8 +77,7 @@ function ghi_local_tasks_link_alter(&$variables) {
   $node = \Drupal::entityTypeManager()->getStorage('node')->load($node_id);
   if ($node) {
     $type = $node->type->entity->label();
-    if (SubpageHelper::isSubpageTypeNode($node)) {
-      $base_node = SubpageHelper::getBaseTypeNode($node);
+    if (SubpageHelper::isSubpageTypeNode($node) && $base_node = SubpageHelper::getBaseTypeNode($node)) {
       $variables['text'] = t('@parent_type subpage: @type @active_title', [
         '@parent_type' => $base_node->type->entity->label(),
         '@type' => $type,

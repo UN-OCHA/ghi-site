@@ -269,43 +269,45 @@ function common_design_subtheme_preprocess_table(&$vars) {
     }
   }
 
-  foreach ($vars['rows'] as $row_key => &$row) {
-    foreach ($row['cells'] as $column_name => &$column) {
-      /** @var \Drupal\Core\Template\Attribute $attribute */
-      $attribute = is_array($column) && array_key_exists('attributes', $column) ? $column['attributes'] : NULL;
-      if (!$attribute) {
-        continue;
-      }
-      $attribute->setAttribute('data-column', $column_name);
-      if ($attribute->hasAttribute('data-column-type')) {
-        $attributes = $attribute->toArray();
-        $attribute->addClass('cd-table--' . $attributes['data-column-type']);
-      }
-
-      if ($sortable) {
-        if ($attribute->hasAttribute('data-sort-value')) {
-          $attribute->setAttribute('sorttable_customkey', $attribute['data-sort-value']);
-          $attribute->removeAttribute('data-sort-value');
-        }
-        elseif ($attribute->hasAttribute('data-raw-value')) {
-          $attribute->setAttribute('sorttable_customkey', $attribute['data-raw-value']);
-        }
-      }
-
-      if ($progress_indicators && $attribute->hasAttribute('data-progress-group') && $attribute->hasAttribute('data-raw-value')) {
-        $progress_group = $attribute->offsetGet('data-progress-group')->value();
-        $raw_value = $attribute->offsetGet('data-raw-value')->value();
-        if (empty($raw_value)) {
+  if (!empty($vars['rows'])) {
+    foreach ($vars['rows'] as $row_key => &$row) {
+      foreach ($row['cells'] as $column_name => &$column) {
+        /** @var \Drupal\Core\Template\Attribute $attribute */
+        $attribute = is_array($column) && array_key_exists('attributes', $column) ? $column['attributes'] : NULL;
+        if (!$attribute) {
           continue;
         }
-        if (!array_key_exists($progress_group, $progress_groups)) {
-          $progress_groups[$progress_group] = [];
+        $attribute->setAttribute('data-column', $column_name);
+        if ($attribute->hasAttribute('data-column-type')) {
+          $attributes = $attribute->toArray();
+          $attribute->addClass('cd-table--' . $attributes['data-column-type']);
         }
-        $progress_groups[$progress_group][] = [
-          'row' => $row_key,
-          'column' => $column_name,
-          'value' => $raw_value,
-        ];
+
+        if ($sortable) {
+          if ($attribute->hasAttribute('data-sort-value')) {
+            $attribute->setAttribute('sorttable_customkey', $attribute['data-sort-value']);
+            $attribute->removeAttribute('data-sort-value');
+          }
+          elseif ($attribute->hasAttribute('data-raw-value')) {
+            $attribute->setAttribute('sorttable_customkey', $attribute['data-raw-value']);
+          }
+        }
+
+        if ($progress_indicators && $attribute->hasAttribute('data-progress-group') && $attribute->hasAttribute('data-raw-value')) {
+          $progress_group = $attribute->offsetGet('data-progress-group')->value();
+          $raw_value = $attribute->offsetGet('data-raw-value')->value();
+          if (empty($raw_value)) {
+            continue;
+          }
+          if (!array_key_exists($progress_group, $progress_groups)) {
+            $progress_groups[$progress_group] = [];
+          }
+          $progress_groups[$progress_group][] = [
+            'row' => $row_key,
+            'column' => $column_name,
+            'value' => $raw_value,
+          ];
+        }
       }
     }
   }

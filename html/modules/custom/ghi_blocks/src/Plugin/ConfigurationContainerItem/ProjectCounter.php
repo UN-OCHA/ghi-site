@@ -236,15 +236,19 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
     switch ($data_type) {
       case 'projects_count':
         $objects = $project_query->getProjects($context_node);
-        $popover_content = $this->getProjectPopoverContent($objects);
+        $popover_content = !empty($objects) ? $this->getProjectPopoverContent($objects) : NULL;
         $fts_link = $needs_fts_link ? self::buildFtsLink($link_title, $this->getContextValue('plan_object'), 'projects', $context_node) : NULL;
         break;
 
       case 'organizations_count':
         $objects = $project_query->getOrganizations($context_node);
-        $popover_content = $this->getOrganizationPopoverContent($objects);
+        $popover_content = !empty($objects) ? $this->getOrganizationPopoverContent($objects) : NULL;
         $fts_link = $needs_fts_link ? self::buildFtsLink($link_title, $this->getContextValue('plan_object'), 'recipients', $context_node) : NULL;
         break;
+    }
+
+    if ($popover_content === NULL) {
+      return NULL;
     }
 
     $entity = $this->getContextValue('entity');
