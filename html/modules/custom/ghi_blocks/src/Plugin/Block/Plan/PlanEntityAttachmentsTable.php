@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
@@ -291,16 +292,34 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       return NULL;
     }
 
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $attachments */
     if ($this->isGroupedTable()) {
       $attachments = $this->getAttachmentsForCurrentEntity();
     }
 
     $context = $this->getBlockContext();
+    $current_entity_id = NULL;
+    $entity_id_options = array_keys($this->getCurrentEntityOptions());
 
     $rows = [];
     foreach ($attachments as $attachment) {
 
       $context['attachment'] = $attachment;
+
+      if (!$this->isGroupedTable() && (empty($current_entity_id) || $current_entity_id != $attachment->source->entity_id) && in_array($attachment->source->entity_id, $entity_id_options)) {
+        $entity = $attachment->getSourceEntity();
+        $current_entity_id = $attachment->source->entity_id;
+        $rows[] = [
+          [
+            'data' => new FormattableMarkup('@composed_reference: @description', [
+              '@composed_reference' => $entity->composed_reference,
+              '@description' => $entity->description,
+            ]),
+            'colspan' => count($columns),
+            'class' => 'group-name',
+          ],
+        ];
+      }
 
       $row = [];
       $skip_row = FALSE;
@@ -363,9 +382,13 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
    */
   private function getCurrentEntityOptions() {
     $attachments = $this->getSelectedAttachments();
+    $first_level = ($this->getBlockConfig()['display']['group_selector'] ?? self::TABLE_GROUP_SELECTOR_FIRST_LEVEL) == self::TABLE_GROUP_SELECTOR_FIRST_LEVEL;
     $entity_options = [];
     foreach ($attachments as $attachment) {
       $entity = $attachment->getSourceEntity();
+      if ($first_level && !empty($entity->getChildren())) {
+        continue;
+      }
       $entity_options[$entity->id()] = $entity->getEntityName();
     }
     return $entity_options;
@@ -593,7 +616,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
   /**
    * Get the attachment objects selected for the current block.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
    *   An array of attachment objects.
    */
   private function getSelectedAttachments() {
@@ -604,7 +627,12 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     }
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
     $query = $this->getQueryHandler('attachment_search');
-    return $query->getAttachmentsById($attachment_ids);
+    $attachments = $query->getAttachmentsById($attachment_ids);
+    // Filter out non-data attachments.
+    $attachments = array_filter($attachments, function ($attachment) {
+      return $attachment instanceof DataAttachment;
+    });
+    return $attachments;
   }
 
   /**
@@ -623,7 +651,12 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
 
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
     $query = $this->getQueryHandler('attachment_search');
-    return $query->getAttachmentsByObject('governingEntity', $entity_ids, $filter) + $query->getAttachmentsByObject('planEntity', $entity_ids, $filter);
+    $attachments = $query->getAttachmentsByObject('governingEntity', $entity_ids, $filter) + $query->getAttachmentsByObject('planEntity', $entity_ids, $filter);
+    // Filter out non-data attachments.
+    $attachments = array_filter($attachments, function ($attachment) {
+      return $attachment instanceof DataAttachment;
+    });
+    return $attachments;
   }
 
   /**
