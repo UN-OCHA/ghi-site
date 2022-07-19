@@ -398,8 +398,13 @@ function common_design_subtheme_preprocess_item_list__plan_entity_types(&$variab
  */
 function common_design_subtheme_preprocess_item_list__subpage_navigation(&$variables) {
   $items = &$variables['items'];
-  foreach ($items as &$item) {
+  foreach ($items as $key => &$item) {
     if (!array_key_exists(0, $item['value']) || !array_key_exists(1, $item['value'])) {
+      continue;
+    }
+    $children = $item['value'][1]['#items'] ?? [];
+    if (empty($children)) {
+      unset($items[$key]);
       continue;
     }
     $wrapper_attribute = $item['value']['#attributes']['class'] ?? [];
@@ -419,7 +424,7 @@ function common_design_subtheme_preprocess_item_list__subpage_navigation(&$varia
           'common_design/cd-dropdown',
         ],
       ],
-    ] + $item['value'][1]['#items'];
+    ] + $children;
     $item['attributes']['class'] = array_merge(['expandable'], $wrapper_attribute);
   }
 
