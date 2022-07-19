@@ -48,7 +48,7 @@ function ghi_hero_image_preprocess_page(&$variables) {
   $hero_image_field_definition = reset($hero_image_field_definitions);
 
   // We do not check if the field has actual values, because we might want to
-  // show a default image.
+  // show a default image or the image from a parent node.
   $hero_image_field = $node->get($hero_image_field_definition->getName());
 
   // Get the hero image for the current page.

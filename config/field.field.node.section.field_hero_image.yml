@@ -18,7 +18,16 @@ translatable: false
 default_value:
   -
     source: hpc_webcontent_file_attachment
-    settings: {  }
+    settings:
+      hpc_webcontent_file_attachment: ''
+      smugmug_api:
+        image_id: ''
+        search:
+          text: ''
+          keywords: ''
+          image_id: jdsGDPb-0
+        currently_selected:
+          preview: ''
 default_value_callback: ''
 settings: {  }
 field_type: ghi_hero_image

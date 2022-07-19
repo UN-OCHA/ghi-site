@@ -16,18 +16,19 @@ class BaseObjectHelper extends EntityHelper {
    * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
    *   The entity to check.
    *
-   * @return string
+   * @return string|null
    *   The field name if found.
    */
   public static function getBaseObjectFieldName(FieldableEntityInterface $entity) {
-    $candidates = [
-      'field_base_object',
-      'field_base_objects',
-    ];
-    foreach ($candidates as $candidate) {
-      if ($entity->hasField($candidate)) {
-        return $candidate;
+    foreach ($entity->getFieldDefinitions() as $field_definition) {
+      if ($field_definition->getType() != 'entity_reference') {
+        continue;
       }
+      $settings = $field_definition->getSettings();
+      if ($settings['target_type'] != 'base_object') {
+        continue;
+      }
+      return $field_definition->getName();
     }
     return NULL;
   }

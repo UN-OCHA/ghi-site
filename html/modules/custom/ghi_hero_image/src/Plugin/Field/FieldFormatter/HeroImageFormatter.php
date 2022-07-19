@@ -3,6 +3,7 @@
 namespace Drupal\ghi_hero_image\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
@@ -66,7 +67,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
     // only works for plan sections.
     $element = [];
 
-    $repsonsive_image_style_id = $this->getSetting('responsive_image_style') ?: '';
+    $repsonsive_image_style_id = $this->getSetting('responsive_image_style') ?: 'hero';
 
     // Collect cache tags to be added for each item in the field.
     $responsive_image_style = $this->responsiveImageStyleStorage->load($repsonsive_image_style_id);
@@ -82,10 +83,10 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
       $cache_tags = Cache::mergeTags($cache_tags, $image_style->getCacheTags());
     }
 
+    $entity = $items->getEntity();
     $url = NULL;
     // Check if the formatter involves a link.
     if ($this->getSetting('image_link') == 'content') {
-      $entity = $items->getEntity();
       if (!$entity->isNew()) {
         $url = $entity->toUrl();
       }
@@ -120,13 +121,16 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
         $image_urls = $image_id ? $this->smugmugImage->getImageSizes($image_id) : NULL;
         $image_url = $image_urls['X3LargeImageUrl'] ?? NULL;
       }
+      if ($item->source == 'inherit' && $parent_image = $this->getParentImage($entity)) {
+        return $parent_image->view();
+      }
     }
 
     if ($image_url) {
       $image_build = [
-        '#theme' => 'imagecache_external_responsive',
+        '#theme' => $responsive_image_style ? 'imagecache_external_responsive' : 'image',
         '#uri' => $image_url,
-        '#responsive_image_style_id' => $responsive_image_style ? $responsive_image_style->id() : '',
+        '#responsive_image_style_id' => $responsive_image_style ? $responsive_image_style->id() : NULL,
         '#attributes' => [
           'style' => 'width: 100%',
         ],
@@ -166,6 +170,52 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
     }
     $this->entitiesQuery->setPlaceholder('plan_id', $plan_object->field_original_id->value);
     return $this->entitiesQuery->getWebContentFileAttachments();
+  }
+
+  /**
+   * Get a non-empty image field from a parent.
+   *
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   *   The entity to start.
+   *
+   * @return \Drupal\Core\Field\FieldItemListInterface
+   *   A field item list instance.
+   */
+  private function getParentImage(FieldableEntityInterface $entity) {
+    $field_definitions = $entity->getFieldDefinitions();
+    foreach ($field_definitions as $field_definition) {
+      if ($field_definition->getType() != 'entity_reference') {
+        continue;
+      }
+      $candidate = $entity->get($field_definition->getName())->entity;
+      if (!$candidate || !$candidate instanceof FieldableEntityInterface) {
+        continue;
+      }
+      // Check if there is an image field.
+      $_parent_candidates = [];
+      foreach ($candidate->getFieldDefinitions() as $_field_definition) {
+        if ($_field_definition->getType() == 'entity_reference') {
+          $_parent_candidates[] = $candidate;
+        }
+        if ($_field_definition->getType() != 'ghi_hero_image') {
+          continue;
+        }
+        $image_field = $candidate->get($_field_definition->getName());
+        if (!$image_field->isEmpty()) {
+          return $image_field;
+        }
+      }
+      // If we didn't find an image, but we did find more potential parents,
+      // repeat to see if we can find something up the reference chain.
+      if (!empty($_parent_candidates)) {
+        foreach ($_parent_candidates as $_parent_candidate) {
+          $_parent_image = $this->getParentImage($_parent_candidate);
+          if ($_parent_image) {
+            return $_parent_image;
+          }
+        }
+      }
+    }
   }
 
 }

@@ -81,8 +81,7 @@ class AdminContentBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       }
     }
 
-    if (in_array($node->bundle(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES)) {
-      $section = $node->get('field_entity_reference')->entity;
+    if (in_array($node->bundle(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES) && $section = $node->get('field_entity_reference')->entity) {
       $breadcrumb->addLink(Link::createFromRoute($this->t('Sections'), 'view.content.page_sections'));
       if ($section->hasField('field_base_object')) {
         $base_object_type = $section->get('field_base_object')->entity->bundle();
