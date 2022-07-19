@@ -3,7 +3,9 @@
 namespace Drupal\ghi_subpages\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Render\BubbleableMetadata;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\ghi_subpages\SubpageTrait;
@@ -61,6 +63,9 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       return [];
     }
     $node = $contexts['node']->getContextValue();
+    if (!$node || !$node instanceof NodeInterface) {
+      return NULL;
+    }
     if ($node && $node->bundle() == 'global_section') {
       // Don't show the subpage navigation on nodes of type global section.
       return NULL;
@@ -71,8 +76,12 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       return NULL;
     }
 
-    $output = [];
-    $cache_tags = [];
+    $output = [
+      '#cache' => [
+        'tags' => $this->getCacheTags(),
+      ],
+    ];
+    $cache_tags = $node->getCacheTags();
 
     // Get parent if needed.
     $base_entity = $this->getBaseTypeNode($node);
@@ -124,7 +133,14 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       'node' => $node,
       'base_entity' => $base_entity,
     ];
-    $this->moduleHandler->alter('subpage_navigation_links', $tabs, $context);
+    $this->moduleHandler->alter('subpage_navigation_links', $tabs, $context, $cache_tags);
+    if (empty($tabs)) {
+      return NULL;
+    }
+    foreach ($tabs as $tab) {
+      $meta_data = BubbleableMetadata::createFromRenderArray($tab);
+      $cache_tags = Cache::mergeTags($cache_tags, $meta_data->getCacheTags());
+    }
 
     $output['entity_navigation'] = [
       '#theme' => 'item_list',
@@ -146,6 +162,7 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       ],
     ];
 
+    $output['#cache']['tags'] = Cache::mergeTags($output['#cache']['tags'], $cache_tags);
     return $output;
   }
 

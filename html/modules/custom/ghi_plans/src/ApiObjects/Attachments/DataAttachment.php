@@ -614,7 +614,7 @@ class DataAttachment extends AttachmentBase {
       return $this->getCurrentMeasurement();
     }
     if ($reporting_period) {
-      $measurements = $this->getMeasurements();
+      $measurements = $this->getMeasurements() ?? [];
       foreach ($measurements as $measurement) {
         if ($measurement->getReportingPeriodId() == $reporting_period) {
           return $measurement;

@@ -5,6 +5,7 @@
  * Contains hook implementations for the GHI plan clusters module.
  */
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_plan_clusters\PlanClusterManager;
@@ -55,11 +56,23 @@ function ghi_plan_clusters_subpage_navigation_links_alter(&$links, array $contex
   $wrapper_attributes = [
     'class' => [],
   ];
+
+  $cache_tags = [];
+
+  $cluster_links = [];
   foreach ($plan_clusters as $plan_cluster) {
-    $cluster_link = $plan_cluster->toLink(NULL)->toRenderable();
+    // We merge the cache cags even if the cluster node is not available, as
+    // that might change.
+    $cache_tags = Cache::mergeTags($cache_tags, $plan_cluster->getCacheTags());
+
+    // Check if the page should be visible.
     if (!$plan_cluster->access('view')) {
       continue;
     }
+
+    // Build the link render array.
+    $cluster_link = $plan_cluster->toLink(NULL)->toRenderable();
+
     if (!$plan_cluster->isPublished()) {
       $cluster_link['#attributes']['class'][] = 'node--unpublished';
     }
@@ -69,6 +82,11 @@ function ghi_plan_clusters_subpage_navigation_links_alter(&$links, array $contex
     }
     $cluster_links[] = $cluster_link;
   }
+
+  if (empty($cluster_links)) {
+    return;
+  }
+
   $links[] = [
     '#type' => 'container',
     '#attributes' => $wrapper_attributes,
@@ -79,6 +97,9 @@ function ghi_plan_clusters_subpage_navigation_links_alter(&$links, array $contex
       '#theme' => 'item_list',
       '#items' => $cluster_links,
       '#gin_lb_theme_suggestions' => FALSE,
+    ],
+    '#cache' => [
+      'tags' => $cache_tags,
     ],
   ];
 }
