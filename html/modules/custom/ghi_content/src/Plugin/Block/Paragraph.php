@@ -78,11 +78,13 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
    * @param bool $preview
    *   Whether this is a preview of the paragraph or not. The main reason this
    *   is needed is for proper footnote support.
+   * @param bool $internal_preview
+   *   Whether this is an internal preview for the paragraph selection.
    *
    * @return array
    *   The full render array for this paragraph block.
    */
-  private function buildParagraph(RemoteParagraphInterface $paragraph, $title = NULL, $preview = FALSE) {
+  private function buildParagraph(RemoteParagraphInterface $paragraph, $title = NULL, $preview = FALSE, $internal_preview = FALSE) {
 
     // Add GHO specific theme components.
     $theme_components = $this->getThemeComponents($paragraph);
@@ -137,9 +139,11 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
         'data-paragraph-id' => $paragraph->getId(),
       ] + $block_attributes,
       'content' => [
-        '#type' => 'markup',
-        '#markup' => Markup::create($rendered),
-        '#view_mode' => 'full',
+        [
+          '#type' => 'markup',
+          '#markup' => Markup::create($rendered),
+          '#view_mode' => 'full',
+        ],
       ],
       '#wrapper_attributes' => $wrapper_attributes,
     ];
@@ -158,6 +162,18 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
     $build['content']['#attached'] = [
       'library' => $theme_components,
     ];
+
+    if (!$internal_preview && $this->shouldLinkToArticlePage()) {
+      $article_node = $this->getArticlePage();
+      $link = $article_node->toLink($this->t('Read more'));
+      $link->getUrl()->setOptions([
+        'attributes' => [
+          'class' => ['cd-button', 'read-more'],
+        ],
+      ]);
+      $build['content'][] = $link->toRenderable();
+    }
+
     return $build;
   }
 
@@ -209,6 +225,7 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
       'paragraph' => [
         'paragraph_id' => NULL,
         'title' => NULL,
+        'link_to_article' => FALSE,
       ],
     ];
   }
@@ -284,6 +301,7 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
     $conf = $this->getBlockConfig();
 
     $article = $this->getArticle();
+    $article_node = $this->getArticlePage();
     $paragraph = $this->getParagraph();
     $form['article_summary'] = [
       '#type' => 'item',
@@ -298,12 +316,20 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
       '#default_value' => !empty($conf['paragraph']['title']) ? $conf['paragraph']['title'] : NULL,
     ];
 
+    $form['link_to_article'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Add a link to the article page.'),
+      '#description' => $this->t('The link will only be added if the article page exists and is accessible to the user.'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'link_to_article'),
+      '#access' => !$article_node || $article_node->id() != $this->getPageNode()->id(),
+    ];
+
     $options = [];
     $theme_components = [];
     foreach ($article->getParagraphs() as $_paragraph) {
       // We need to fully prerender the paragraph so that things like footnotes
       // are handled correctly.
-      $build = $this->buildParagraph($_paragraph, NULL, TRUE);
+      $build = $this->buildParagraph($_paragraph, NULL, TRUE, TRUE);
       $options[$_paragraph->getId()] = $this->renderer->render($build);
       $theme_components += array_merge($theme_components, $this->getThemeComponents($_paragraph));
     }
@@ -358,8 +384,8 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
     if (!$article || empty($conf['paragraph']['paragraph_id'])) {
       return;
     }
-    // Make sure wa are always having an array, as this is the way that the
-    // markup_select form element provides it's value.
+    // Make sure we have an array, as this is the way that the markup_select
+    // form element provides it's value.
     $paragraph_id = (array) $conf['paragraph']['paragraph_id'];
     return $article->getParagraph(reset($paragraph_id));
   }
@@ -375,6 +401,39 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
    */
   public function lockArticle() {
     return $this->getArticle() && !empty($this->configuration['lock_article']);
+  }
+
+  /**
+   * Get the article page associated to the configured source article.
+   *
+   * @return \Drupal\node\NodeInterface|null
+   *   A node object.s
+   */
+  private function getArticlePage() {
+    $article = $this->getArticle();
+    if (!$article) {
+      return NULL;
+    }
+    return $this->articleManager->loadNodeForRemoteArticle($article);
+  }
+
+  /**
+   * See if a paragraph block should have a "Read more" link.
+   *
+   * @return bool
+   *   TRUE if the article page can be linked to, FALSE otherwhise.
+   */
+  private function shouldLinkToArticlePage() {
+    $conf = $this->getBlockConfig();
+    if (empty($conf['paragraph']['link_to_article'])) {
+      return FALSE;
+    }
+    $article_node = $this->getArticlePage();
+    if (!$article_node || !$article_node->access('view')) {
+      return FALSE;
+    }
+    $page_node = $this->getPageNode();
+    return $article_node->id() != $page_node->id();
   }
 
   /**
