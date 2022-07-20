@@ -15,6 +15,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_subpages\SubpageTrait;
+use Drupal\taxonomy\Entity\Term;
 
 /**
  * Provides a 'SectionsByTerm' block.
@@ -91,7 +92,6 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
       if (empty($section_nodes)) {
         continue;
       }
-
       $term_build = [
         '#markup' => new FormattableMarkup('<span>@term_label</span>', [
           '@term_label' => $terms[$term_id]->label(),
@@ -160,6 +160,9 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
     $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadByProperties([
       'vid' => $vocabulary_id,
     ]);
+    uasort($terms, function (Term $term_1, Term $term_2) {
+      return $term_1->getWeight() - $term_2->getWeight();
+    });
     return $terms ?? [];
   }
 
