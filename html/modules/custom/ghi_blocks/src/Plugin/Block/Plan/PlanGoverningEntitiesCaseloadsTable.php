@@ -222,12 +222,11 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
         continue;
       }
 
-      $section = $this->sectionManager->loadSectionForBaseObject($base_object);
       $subpage_node = $this->subpageManager->loadSubpageForBaseObject($base_object);
 
       // Clusters are displayed if they are either published, or the element is
       // configured to also display unpublished clusters.
-      if ($section && !$section->access('view') && empty($conf['base']['include_unpublished_clusters'])) {
+      if ($subpage_node && !$subpage_node->access('view') && empty($conf['base']['include_unpublished_clusters'])) {
         continue;
       }
 
@@ -243,7 +242,6 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       // Add the entity and the node object to the context array.
       $context['base_object'] = $base_object;
       $context['context_node'] = $subpage_node;
-      $context['section_node'] = $section;
       $context['entity'] = $entity;
 
       // Add another row as a group header for clusters with multiple plan

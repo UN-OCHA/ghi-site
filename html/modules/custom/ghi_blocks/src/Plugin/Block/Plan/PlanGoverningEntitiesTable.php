@@ -220,12 +220,10 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       }
 
       // Set the context.
-      $section = $this->sectionManager->loadSectionForBaseObject($base_object);
       $subpage_node = $this->subpageManager->loadSubpageForBaseObject($base_object);
 
       $context['base_object'] = $base_object;
       $context['context_node'] = $subpage_node;
-      $context['section_node'] = $section;
       $context['entity'] = $entity;
 
       $row = [];
