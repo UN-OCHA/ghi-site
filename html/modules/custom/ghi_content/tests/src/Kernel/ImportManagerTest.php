@@ -46,6 +46,7 @@ class ImportManagerTest extends KernelTestBase {
     'ghi_content',
     'ghi_form_elements',
     'ghi_sections',
+    'ghi_subpages',
   ];
 
   const BUNDLE = 'page';
