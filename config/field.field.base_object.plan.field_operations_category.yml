@@ -1,0 +1,29 @@
+uuid: b150c24e-bc79-4a41-9d26-dde18daf6e02
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_operations_category
+    - ghi_base_objects.base_object_type.plan
+    - taxonomy.vocabulary.operations_category
+id: base_object.plan.field_operations_category
+field_name: field_operations_category
+entity_type: base_object
+bundle: plan
+label: 'Operations category'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      operations_category: operations_category
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

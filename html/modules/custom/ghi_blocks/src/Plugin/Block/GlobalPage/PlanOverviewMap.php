@@ -15,7 +15,6 @@ use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanOverviewMap' block.
@@ -39,25 +38,6 @@ class PlanOverviewMap extends GHIBlockBase {
   use PlanFootnoteTrait;
 
   const DEFAULT_DISCLAIMER = 'The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations.';
-
-  /**
-   * The section manager.
-   *
-   * @var \Drupal\ghi_sections\SectionManager
-   */
-  protected $sectionManager;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $instance */
-    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-
-    // Set our own properties.
-    $instance->sectionManager = $container->get('ghi_sections.manager');
-    return $instance;
-  }
 
   /**
    * {@inheritdoc}

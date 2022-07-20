@@ -214,14 +214,18 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
 
     $rows = [];
     foreach ($entities as $entity) {
-      if (!array_key_exists($entity->id(), $objects)) {
+      $base_object = $objects[$entity->id] ?? NULL;
+      if (!$base_object) {
         continue;
       }
 
-      // Add the entity and the node object to the context array.
-      $base_object = $objects[$entity->id];
+      // Set the context.
+      $section = $this->sectionManager->loadSectionForBaseObject($base_object);
+      $subpage_node = $this->subpageManager->loadSubpageForBaseObject($base_object);
+
       $context['base_object'] = $base_object;
-      $context['context_node'] = $base_object && $base_object->bundle() != 'plan' ? $base_object : NULL;
+      $context['context_node'] = $subpage_node;
+      $context['section_node'] = $section;
       $context['entity'] = $entity;
 
       $row = [];

@@ -4,4 +4,4 @@ status: true
 dependencies: {  }
 id: governing_entity
 label: 'Governing entity'
-hasYear: null
+hasYear: true

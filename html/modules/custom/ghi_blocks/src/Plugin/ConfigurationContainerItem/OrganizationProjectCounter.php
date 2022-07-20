@@ -97,10 +97,10 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
     if (!$project_query) {
       return NULL;
     }
-    $context_node = $this->getContextValue('context_node');
+    $base_object = $this->getContextValue('base_object');
     $organization = $this->getContextValue('organization');
 
-    return $project_query->getOrganizationProjects($organization, $context_node);
+    return $project_query->getOrganizationProjects($organization, $base_object);
   }
 
   /**
@@ -213,8 +213,8 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
     parent::setContext($context);
 
     // Also set cluster context if the current page is a plan entity.
-    $context_node = $context['context_node'] ?? NULL;
-    if ($context_node && $context_node->bundle() == 'plan_entity' && $this->projectSearchQuery) {
+    $base_object = $context['base_object'] ?? NULL;
+    if ($base_object && $base_object->bundle() == 'plan_entity' && $this->projectSearchQuery) {
       $cluster_ids = PlanStructureHelper::getPlanEntityStructure($this->planEntitiesQuery->getData());
       $this->projectSearchQuery->setFilterByClusterIds($cluster_ids);
     }

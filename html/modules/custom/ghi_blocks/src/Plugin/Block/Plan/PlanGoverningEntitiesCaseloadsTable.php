@@ -212,16 +212,18 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
 
     // Sort the entities by name.
     usort($entities, function ($a, $b) {
-      return strnatcasecmp($a->name, $b->name);
+      return strnatcasecmp($a->getEntityName(), $b->getEntityName());
     });
 
     $rows = [];
     foreach ($entities as $entity) {
-      if (!array_key_exists($entity->id, $objects)) {
+      $base_object = $objects[$entity->id] ?? NULL;
+      if (!$base_object) {
         continue;
       }
-      $base_object = $objects[$entity->id];
-      $section = !$base_object->needsYear() ? $this->sectionManager->loadSectionForBaseObject($base_object) : NULL;
+
+      $section = $this->sectionManager->loadSectionForBaseObject($base_object);
+      $subpage_node = $this->subpageManager->loadSubpageForBaseObject($base_object);
 
       // Clusters are displayed if they are either published, or the element is
       // configured to also display unpublished clusters.
@@ -240,7 +242,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
 
       // Add the entity and the node object to the context array.
       $context['base_object'] = $base_object;
-      $context['context_node'] = $base_object && $base_object->bundle() != 'plan' ? $base_object : NULL;
+      $context['context_node'] = $subpage_node;
       $context['section_node'] = $section;
       $context['entity'] = $entity;
 

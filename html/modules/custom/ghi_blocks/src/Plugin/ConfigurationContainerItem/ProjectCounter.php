@@ -203,13 +203,13 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    *   The number of project related items of the given type.
    */
   private function getValueForDataType($data_type, PlanProjectSearchQuery $project_query) {
-    $context_node = $this->getContextValue('context_node');
+    $base_object = $this->getContextValue('base_object');
     switch ($data_type) {
       case 'projects_count':
-        return $project_query->getProjectCount($context_node);
+        return $project_query->getProjectCount($base_object);
 
       case 'organizations_count':
-        return $project_query->getOrganizationCount($context_node);
+        return $project_query->getOrganizationCount($base_object);
     }
   }
 
@@ -224,26 +224,27 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
   private function getPopover() {
     $project_query = $this->initializeQuery();
     $data_type = $data_type ?? $this->get('data_type');
-    $context_node = $this->getContextValue('context_node');
+    $entity = $this->getContextValue('entity');
+    $base_object = $this->getContextValue('base_object');
 
     $fts_link = NULL;
     $link_title = $this->t('For more details, view on <img src="@logo_url" />', [
       '@logo_url' => ThemeHelper::getUriToFtsIcon(),
     ]);
-    $needs_fts_link = $context_node->bundle() == 'governing_entity';
+    $needs_fts_link = $base_object->bundle() == 'governing_entity';
 
     $popover_content = NULL;
     switch ($data_type) {
       case 'projects_count':
-        $objects = $project_query->getProjects($context_node);
+        $objects = $project_query->getProjects($base_object);
         $popover_content = !empty($objects) ? $this->getProjectPopoverContent($objects) : NULL;
-        $fts_link = $needs_fts_link ? self::buildFtsLink($link_title, $this->getContextValue('plan_object'), 'projects', $context_node) : NULL;
+        $fts_link = $needs_fts_link ? self::buildFtsLink($link_title, $this->getContextValue('plan_object'), 'projects', $base_object) : NULL;
         break;
 
       case 'organizations_count':
-        $objects = $project_query->getOrganizations($context_node);
+        $objects = $project_query->getOrganizations($base_object);
         $popover_content = !empty($objects) ? $this->getOrganizationPopoverContent($objects) : NULL;
-        $fts_link = $needs_fts_link ? self::buildFtsLink($link_title, $this->getContextValue('plan_object'), 'recipients', $context_node) : NULL;
+        $fts_link = $needs_fts_link ? self::buildFtsLink($link_title, $this->getContextValue('plan_object'), 'recipients', $base_object) : NULL;
         break;
     }
 
@@ -251,12 +252,8 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
 
-    $entity = $this->getContextValue('entity');
     // Get the icon if there is any.
-    $icon = NULL;
-    if ($entity && !empty($entity->icon)) {
-      $icon = $this->iconQuery->getIconEmbedCode($entity->icon);
-    }
+    $icon = !empty($entity->icon) ? $this->iconQuery->getIconEmbedCode($entity->icon) : NULL;
 
     return [
       '#theme' => 'hpc_popover',

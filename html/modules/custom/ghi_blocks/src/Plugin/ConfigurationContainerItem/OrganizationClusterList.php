@@ -81,11 +81,11 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
    *   An array of cluste objects.
    */
   private function getClusters() {
-    $context_node = $this->getContextValue('context_node');
+    $base_object = $this->getContextValue('base_object');
     $organization = $this->getContextValue('organization');
     $clusters_by_organizations = &drupal_static(__FUNCTION__, NULL);
     if ($clusters_by_organizations === NULL) {
-      $clusters_by_organizations = $this->projectSearchQuery->getClustersByOrganization($context_node);
+      $clusters_by_organizations = $this->projectSearchQuery->getClustersByOrganization($base_object);
     }
     return $clusters_by_organizations[$organization->id] ?? NULL;
   }
