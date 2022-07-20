@@ -8,6 +8,7 @@ dependencies:
     - field.field.base_object.plan.field_description
     - field.field.base_object.plan.field_footnotes
     - field.field.base_object.plan.field_max_admin_level
+    - field.field.base_object.plan.field_operations_category
     - field.field.base_object.plan.field_original_id
     - field.field.base_object.plan.field_plan_caseload
     - field.field.base_object.plan.field_plan_costing
@@ -66,6 +67,14 @@ content:
       prefix_suffix: true
     third_party_settings: {  }
     weight: 11
+    region: content
+  field_operations_category:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 12
     region: content
   field_original_id:
     type: number_integer

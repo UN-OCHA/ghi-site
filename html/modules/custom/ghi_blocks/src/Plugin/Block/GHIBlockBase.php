@@ -108,6 +108,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
   protected $sectionManager;
 
   /**
+   * The section manager.
+   *
+   * @var \Drupal\ghi_subpages\SubpageManager
+   */
+  protected $subpageManager;
+
+  /**
    * The selection criteria argument service.
    *
    * @var \Drupal\ghi_blocks\LayoutBuilder\SelectionCriteriaArgument
@@ -162,6 +169,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $instance->endpointQueryManager = $container->get('plugin.manager.endpoint_query_manager');
     $instance->configurationContainerItemManager = $container->get('plugin.manager.configuration_container_item_manager');
     $instance->sectionManager = $container->get('ghi_sections.manager');
+    $instance->subpageManager = $container->get('ghi_subpages.manager');
     $instance->selectionCriteriaArgument = $container->get('ghi_blocks.layout_builder_edit_page.selection_criteria_argument');
     $instance->moduleHandler = $container->get('module_handler');
     $instance->controllerResolver = $container->get('controller_resolver');

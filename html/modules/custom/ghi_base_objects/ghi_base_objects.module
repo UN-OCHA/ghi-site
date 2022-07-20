@@ -6,11 +6,15 @@
  */
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
+use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\ghi_base_objects\Form\BaseObjectForm;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\migrate\MigrateSkipRowException;
 use Drupal\migrate\Plugin\MigrateSourceInterface;
@@ -98,6 +102,34 @@ function ghi_base_objects_theme_suggestions_base_object(array $variables) {
   $suggestions[] = 'base_object__' . $entity->id();
   $suggestions[] = 'base_object__' . $entity->id() . '__' . $sanitized_view_mode;
   return $suggestions;
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function ghi_base_objects_form_alter(&$form, FormStateInterface &$form_state, $form_id) {
+  if (CommonHelper::isAjaxRequest()) {
+    return;
+  }
+  if (!$form_state->getFormObject() instanceof BaseObjectForm) {
+    return;
+  }
+
+  // Disable all form elements except the listed ones.
+  $allow_editing = [
+    'form_id',
+    'form_build_id',
+    'form_token',
+    'field_content',
+    'status',
+  ];
+  foreach (Element::children($form) as $element_key) {
+    if (in_array($element_key, $allow_editing)) {
+      continue;
+    }
+    $form[$element_key]['#disabled'] = 'disabled';
+  }
+  \Drupal::messenger()->addWarning(t('Most of the data in this form is imported automatically from the HPC API and cannot be changed here.'));
 }
 
 /**
