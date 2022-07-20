@@ -4,7 +4,6 @@ namespace Drupal\ghi_subpages\Controller;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\ghi_subpages\SubpageTrait;
 use Drupal\node\Access\NodeAddAccessCheck;
 use Drupal\node\NodeInterface;
@@ -74,7 +73,7 @@ class SubpagesAdminController extends ControllerBase {
    *   The access result.
    */
   public function nodeCreateAccess(NodeTypeInterface $node_type) {
-    if (in_array($node_type->id(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES)) {
+    if ($this->isSubpageType($node_type) && $node_type->id() != 'document') {
       // We don't want subpages to be created manually, as this process is
       // automatic whenever a base page is created.
       return AccessResult::forbidden();

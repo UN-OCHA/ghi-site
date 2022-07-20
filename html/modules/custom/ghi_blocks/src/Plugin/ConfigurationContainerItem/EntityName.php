@@ -71,10 +71,7 @@ class EntityName extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getRenderArray() {
-    /** @var \Drupal\node\NodeInterface $context_node */
-    $context_node = $this->getContextValue('context_node');
-    /** @var \Drupal\node\NodeInterface $section_node */
-    $section_node = $this->getContextValue('section_node');
+    /** @var \Drupal\ghi_base_objects\ApiObjects\BaseObjectInterface $entity */
     $entity = $this->getContextValue('entity');
     if (!$entity) {
       return NULL;
@@ -88,10 +85,10 @@ class EntityName extends ConfigurationContainerItemPluginBase {
     $markup = [
       '#markup' => Markup::create($icon_embed . '<span class="name">' . $entity_name . '</span>'),
     ];
-    if ($section_node && $section_node->access('view')) {
-      return Link::fromTextAndUrl($markup, $section_node->toUrl())->toRenderable();
-    }
-    elseif ($context_node && $context_node instanceof NodeInterface && $context_node->access('view')) {
+
+    /** @var \Drupal\node\NodeInterface $context_node */
+    $context_node = $this->getContextValue('context_node');
+    if ($context_node && $context_node instanceof NodeInterface && $context_node->access('view')) {
       return Link::fromTextAndUrl($markup, $context_node->toUrl())->toRenderable();
     }
     else {
