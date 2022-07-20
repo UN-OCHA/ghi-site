@@ -1,8 +1,0 @@
-uuid: 9a435b2c-bbc4-490c-80c7-7a697540ddbd
-langcode: en
-status: true
-dependencies: {  }
-id: operations-menu
-label: 'Operations menu'
-description: 'Links to operations menu that show in a mega menu'
-locked: false
