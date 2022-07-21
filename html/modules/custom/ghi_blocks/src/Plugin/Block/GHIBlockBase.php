@@ -1316,6 +1316,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $form_state->set(['storage', $current_subform], $values);
     }
 
+    // @todo The following does not always work on the first submit of the
+    // subform, e.g. for the Paragraph block plugin.
     $subforms = $form_state->get('block')->getSubforms();
     $requested_subform = array_key_exists('#next_step', $triggering_element) ? $triggering_element['#next_step'] : end($parents);
     if (array_key_exists($requested_subform, $subforms) && $form_state->get('block')->canShowSubform($element, $form_state, $requested_subform)) {

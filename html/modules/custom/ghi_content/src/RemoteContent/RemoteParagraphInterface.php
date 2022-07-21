@@ -48,6 +48,14 @@ interface RemoteParagraphInterface {
   public function getTypeLabel();
 
   /**
+   * Get the promoted status of the paragraph.
+   *
+   * @return bool
+   *   The promoted status.
+   */
+  public function getPromoted();
+
+  /**
    * Get the rendered content of the paragraph.
    *
    * @return string

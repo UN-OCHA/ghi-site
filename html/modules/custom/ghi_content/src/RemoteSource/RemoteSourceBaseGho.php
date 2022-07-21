@@ -37,6 +37,7 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
       'uuid',
       'type',
       'typeLabel',
+      'promoted',
       'rendered',
     ];
     $fields['thumbnail'] = [
@@ -70,6 +71,7 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
       'uuid',
       'type',
       'typeLabel',
+      'promoted',
       'rendered',
     ];
     $paragraph_data = $this->fetchParagraphData($id, $fields);

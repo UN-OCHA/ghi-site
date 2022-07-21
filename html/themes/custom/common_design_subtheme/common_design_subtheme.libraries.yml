@@ -147,3 +147,7 @@ gho-sub-article:
       components/gho-sub-article/gho-sub-article.css: {}
   dependencies:
     - common_design_subtheme/gho-appeals-tags
+gho-promoted-paragraph:
+  css:
+    theme:
+      components/gho-promoted-paragraph/gho-promoted-paragraph.css: {}
