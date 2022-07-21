@@ -132,6 +132,10 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
       }
     }
 
+    if ($paragraph->getPromoted()) {
+      $block_attributes['class'][] = 'gho-paragraph-promoted';
+    }
+
     $build = [
       '#type' => 'container',
       '#title' => $title,
@@ -192,6 +196,9 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
     if ($paragraph->getType() == 'bottom_figure_row') {
       $theme_components[] = 'common_design_subtheme/gho-needs-and-requirements';
     }
+    if ($paragraph->getPromoted()) {
+      $theme_components[] = 'common_design_subtheme/gho-promoted-paragraph';
+    }
     if ($paragraph->getType() == 'sub_article') {
       // Find the paragraph types used in the sub article and add the
       // components for those too.
@@ -203,6 +210,11 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
         if ($type == 'bottom-figure-row') {
           $theme_components[] = 'common_design_subtheme/gho-needs-and-requirements';
         }
+      }
+      $matches = [];
+      preg_match_all('/gho-paragraph-promoted/', $paragraph->getRendered(), $matches);
+      if (!empty($matches)) {
+        $theme_components[] = 'common_design_subtheme/gho-promoted-paragraph';
       }
     }
     return $theme_components;
