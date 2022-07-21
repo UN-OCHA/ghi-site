@@ -115,14 +115,14 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
           return strpos($class, 'gho-') === 0;
         }) : [];
 
-        // Set new classes specific to out system.
+        // Set new classes specific to our system.
         $block_attributes['class'] = array_map(function ($class) {
           return $this->getPluginId() . '--' . $class;
         }, $gho_classes);
 
         // Special logic for bottom figure rows to assure that styles are also
         // applied during preview.
-        if ($preview && in_array('gho-bottom-figure-row', $classes)) {
+        if (($preview || $internal_preview) && in_array('gho-bottom-figure-row', $classes)) {
           $block_attributes['class'][] = 'gho-bottom-figure-row';
         }
 
@@ -132,8 +132,21 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
       }
     }
 
-    if ($paragraph->getPromoted()) {
+    if ($internal_preview) {
+      // Make sure we have gho specific classes available during internal
+      // previews, e.g. in the paragraph selection form.
+      $block_attributes['class'] = array_merge($block_attributes['class'], $gho_classes);
+    }
+
+    if (!$internal_preview && $this->isPromoted()) {
+      // Mark the paragraph as being promoted if not in internal preview.
       $block_attributes['class'][] = 'gho-paragraph-promoted';
+    }
+    if (!$this->isPromoted()) {
+      // If the paragraph is not be promoted, make sure to remove the
+      // respective class from both the block classes and the wrapper.
+      $block_attributes['class'] = array_diff($block_attributes['class'], ['gho-paragraph-promoted']);
+      $wrapper_attributes['class'] = array_diff($wrapper_attributes['class'], ['gho-paragraph-promoted']);
     }
 
     $build = [
@@ -155,7 +168,7 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
     if ($this->moduleHandler->moduleExists('gho_footnotes')) {
       // Make sure to add the gho-footnotes component.
       $theme_components[] = 'common_design_subtheme/gho-footnotes';
-      if ($preview) {
+      if ($preview || $internal_preview) {
         $build['content']['#post_render'][] = [
           static::class,
           'preparePreviewParagraph',
@@ -238,6 +251,7 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
         'paragraph_id' => NULL,
         'title' => NULL,
         'link_to_article' => FALSE,
+        'promoted' => FALSE,
       ],
     ];
   }
@@ -313,7 +327,6 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
     $conf = $this->getBlockConfig();
 
     $article = $this->getArticle();
-    $article_node = $this->getArticlePage();
     $paragraph = $this->getParagraph();
     $form['article_summary'] = [
       '#type' => 'item',
@@ -333,7 +346,14 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
       '#title' => $this->t('Add a link to the article page.'),
       '#description' => $this->t('The link will only be added if the article page exists and is accessible to the user.'),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'link_to_article'),
-      '#access' => !$article_node || $article_node->id() != $this->getPageNode()->id(),
+      '#access' => !$this->displayedOnArticlePage(),
+    ];
+    $form['promoted'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Mark as promoted.'),
+      '#description' => $this->t('Mark the paragraph as promoted, which will make it visually highlighted.'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'promoted'),
+      '#access' => !$this->displayedOnArticlePage(),
     ];
 
     $options = [];
@@ -444,8 +464,40 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
     if (!$article_node || !$article_node->access('view')) {
       return FALSE;
     }
-    $page_node = $this->getPageNode();
-    return $article_node->id() != $page_node->id();
+    return !$this->displayedOnArticlePage();
+  }
+
+  /**
+   * See if the paragraph is promoted.
+   *
+   * @return bool
+   *   TRUE if promoted, FALSE otherwise.
+   */
+  private function isPromoted() {
+    // Display paragraph on its article page.
+    if ($this->displayedOnArticlePage()) {
+      $paragraph = $this->getParagraph();
+      return $paragraph && $paragraph->getPromoted();
+    }
+    else {
+      // Outside the article page, we rely on what is configured.
+      $conf = $this->getBlockConfig();
+      return !empty($conf['paragraph']['promoted']);
+    }
+  }
+
+  /**
+   * See if the paragraph is displayed on the article page where it originates.
+   *
+   * @return bool
+   *   TRUE if displayed on its article page, FALSE otherwise.
+   */
+  private function displayedOnArticlePage() {
+    $article_page = $this->getArticlePage();
+    if (!$article_page) {
+      return FALSE;
+    }
+    return $this->getArticlePage()->id() == $this->getPageNode()->id();
   }
 
   /**

@@ -1,6 +1,13 @@
 .ghi-block-paragraph {
 
-  .block-content > a.read-more {
-    margin-top: 2rem;
+  .block-content {
+
+    & > a.read-more {
+      margin-top: 2rem;
+    }
+
+    &.gho-paragraph-promoted {
+      background-color: inherit;
+    }
   }
 }
