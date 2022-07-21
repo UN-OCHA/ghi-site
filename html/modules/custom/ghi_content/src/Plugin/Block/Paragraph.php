@@ -35,6 +35,11 @@ use Drupal\gho_footnotes\GhoFootnotes;
 class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface, MultiStepFormBlockInterface, TrustedCallbackInterface {
 
   /**
+   * The CSS class used for promoted paragraphs. This comes from the NCMS.
+   */
+  const PROMOTED_CLASS = 'gho-paragraph-promoted';
+
+  /**
    * {@inheritdoc}
    */
   public function getAutomaticBlockTitle() {
@@ -140,13 +145,13 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
 
     if (!$internal_preview && $this->isPromoted()) {
       // Mark the paragraph as being promoted if not in internal preview.
-      $block_attributes['class'][] = 'gho-paragraph-promoted';
+      $block_attributes['class'][] = self::PROMOTED_CLASS;
     }
     if (!$this->isPromoted()) {
       // If the paragraph is not be promoted, make sure to remove the
       // respective class from both the block classes and the wrapper.
-      $block_attributes['class'] = array_diff($block_attributes['class'], ['gho-paragraph-promoted']);
-      $wrapper_attributes['class'] = array_diff($wrapper_attributes['class'], ['gho-paragraph-promoted']);
+      $block_attributes['class'] = array_diff($block_attributes['class'], [self::PROMOTED_CLASS]);
+      $wrapper_attributes['class'] = array_diff($wrapper_attributes['class'], [self::PROMOTED_CLASS]);
     }
 
     $build = [
@@ -163,6 +168,7 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
         ],
       ],
       '#wrapper_attributes' => $wrapper_attributes,
+      '#full_width' => $this->isPromoted(),
     ];
 
     if ($this->moduleHandler->moduleExists('gho_footnotes')) {
@@ -188,7 +194,15 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
           'class' => ['cd-button', 'read-more'],
         ],
       ]);
-      $build['content'][] = $link->toRenderable();
+      // We need to embed the link inside a container, because we need a block
+      // level element to which we can apply the content-width class.
+      $build['content'][] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['content-width'],
+        ],
+        0 => $link->toRenderable(),
+      ];
     }
 
     return $build;

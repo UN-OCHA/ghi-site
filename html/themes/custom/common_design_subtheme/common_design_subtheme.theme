@@ -19,6 +19,7 @@ function common_design_subtheme_theme_registry_alter(&$theme_registry) {
   // Set some defaults for number formatting.
   $theme_registry['hpc_currency']['variables']['use_abbreviation'] = FALSE;
   $theme_registry['hpc_amount']['variables']['use_abbreviation'] = FALSE;
+  // Defaults for tables and to make those settings available.
   $theme_registry['table']['variables']['sortable'] = FALSE;
   $theme_registry['table']['variables']['progress_groups'] = FALSE;
   $theme_registry['table']['variables']['autosort'] = FALSE;
@@ -106,7 +107,10 @@ function common_design_subtheme_preprocess_block(&$variables) {
     'subpage_navigation',
   ];
 
-  if (!in_array($variables['plugin_id'], $content_width_blocks)) {
+  // Some blocks are white-listed here to always use the content-width class,
+  // others can declare themselves to use that class by setting the #full_width
+  // property. One example of the latter is a promoted paragraph block.
+  if (!in_array($variables['plugin_id'], $content_width_blocks) && empty($variables['content']['#full_width'])) {
     $variables['attributes']['class'][] = 'content-width';
   }
 }

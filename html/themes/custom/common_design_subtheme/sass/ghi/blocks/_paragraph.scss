@@ -2,12 +2,20 @@
 
   .block-content {
 
-    & > a.read-more {
+    & > div > a.read-more {
       margin-top: 2rem;
     }
 
     &.gho-paragraph-promoted {
-      background-color: inherit;
+      background-color: transparent;
+    }
+  }
+
+  &.gho-paragraph-promoted {
+    background-color: var(--cd-primary-background-color);
+
+    &::before {
+      border-left: 4px solid var(--cd-primary-color);
     }
   }
 }
