@@ -7,8 +7,20 @@
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\ghi_sections\Entity\GlobalSection;
+use Drupal\ghi_sections\Entity\Section;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function ghi_sections_entity_bundle_info_alter(array &$bundles) {
+  $bundles['node']['section']['class'] = Section::class;
+  $bundles['node']['section']['label'] = t('Section');
+  $bundles['node']['global_section']['class'] = GlobalSection::class;
+  $bundles['node']['global_section']['label'] = t('Global section');
+}
 
 /**
  * Implements hook_preprocess_page_title().
@@ -19,8 +31,13 @@ function ghi_sections_preprocess_page_title(&$variables) {
   if ($is_admin_route || !$node instanceof NodeInterface) {
     return;
   }
-  if ($node->bundle() == 'global_section' && \Drupal::routeMatch()->getRouteName() == 'entity.node.canonical') {
-    $variables['title'] = NULL;
+  if (\Drupal::routeMatch()->getRouteName() == 'entity.node.canonical') {
+    if ($node instanceof GlobalSection) {
+      $variables['title'] = NULL;
+    }
+    if ($node instanceof Section) {
+      $variables['title'] = $node->getPageTitle();
+    }
   }
 }
 

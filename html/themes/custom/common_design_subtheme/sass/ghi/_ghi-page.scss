@@ -11,8 +11,12 @@
       padding-left: var(--cd-container-padding);
 
       .cd-page-title {
-        margin: 1rem 0;
+        margin: 2rem 0;
         padding: 0;
+
+        sup {
+          font-size: var(--cd-font-size--large);
+        }
       }
 
       @media (min-width: 768px) {
@@ -20,11 +24,6 @@
         padding-right: var(--cd-container-padding-xlarge);
         padding-left: var(--cd-container-padding-xlarge);
       }
-    }
-
-    &.block-wrapper--subpagenavigation .block-wrapper__inner {
-      padding-top: 1rem;
-      padding-bottom: 1rem;
     }
   }
 

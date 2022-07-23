@@ -1,0 +1,22 @@
+uuid: daaa9a04-05ae-4c10-91ba-79e671a115d9
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.plan_cluster
+id: node.plan_cluster.status
+field_name: status
+entity_type: node
+bundle: plan_cluster
+label: Published
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

@@ -12,7 +12,7 @@ entity_type: node
 bundle: plan_cluster
 label: Team
 description: 'The team responsible for this plan cluster page.'
-required: true
+required: false
 translatable: true
 default_value: {  }
 default_value_callback: ''

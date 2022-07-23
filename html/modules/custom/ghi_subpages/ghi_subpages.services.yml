@@ -1,7 +1,7 @@
 services:
   ghi_subpages.manager:
     class: Drupal\ghi_subpages\SubpageManager
-    arguments: ['@entity_type.manager', '@ghi_sections.manager', '@renderer', '@current_user', '@messenger']
+    arguments: ['@module_handler', '@entity_type.manager', '@ghi_sections.manager', '@renderer', '@current_user', '@messenger']
   ghi_subpages.route_subscriber:
     class: Drupal\ghi_subpages\EventSubscriber\RouteSubscriber
     tags:

@@ -1,0 +1,49 @@
+.block-wrapper--sectionswitcher {
+  float: right;
+  margin: 2rem 0;
+  border: 0 !important;
+
+  .section-switcher-wrapper {
+    position: relative;
+
+    button {
+      padding: 0.8rem 1.5rem;
+      text-transform: uppercase;
+      color: var(--cd-default-text-color);
+      border: 0;
+      background-color: var(--cd-ocha-yellow);
+      font-size: var(--cd-font-size--small);
+      font-weight: bold;
+
+      svg {
+        fill: var(--cd-default-text-color);
+      }
+    }
+
+    .cd-dropdown {
+      position: absolute;
+      right: 0;
+      background-color: var(--cd-default-background-color);
+
+      ul {
+        margin: 0;
+        padding: 0;
+
+        li {
+          padding: 0.8rem 1.5rem;
+          list-style-type: none;
+          white-space: nowrap;
+          font-weight: bold;
+
+          a,
+          a:hover,
+          a:focus {
+            text-decoration: none;
+            color: var(--hpc-dark-brown);
+            font-weight: normal;
+          }
+        }
+      }
+    }
+  }
+}

@@ -10,7 +10,7 @@ use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_sections\SectionManager;
-use Drupal\ghi_subpages\Helpers\SubpageHelper;
+use Drupal\ghi_subpages\SubpageManager;
 use Drupal\node\NodeInterface;
 
 /**
@@ -42,7 +42,7 @@ class AdminContentBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     $allowed_bundles = array_merge([
       ArticleManager::ARTICLE_BUNDLE,
       'document',
-    ], SectionManager::SECTION_BUNDLES, SubpageHelper::SUPPORTED_SUBPAGE_TYPES);
+    ], SectionManager::SECTION_BUNDLES, SubpageManager::SUPPORTED_SUBPAGE_TYPES);
     return ($node instanceof NodeInterface && in_array($node->bundle(), $allowed_bundles));
   }
 
@@ -81,7 +81,7 @@ class AdminContentBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       }
     }
 
-    if (in_array($node->bundle(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES) && $section = $node->get('field_entity_reference')->entity) {
+    if (in_array($node->bundle(), SubpageManager::SUPPORTED_SUBPAGE_TYPES) && $section = $node->get('field_entity_reference')->entity) {
       $breadcrumb->addLink(Link::createFromRoute($this->t('Sections'), 'view.content.page_sections'));
       if ($section->hasField('field_base_object')) {
         $base_object_type = $section->get('field_base_object')->entity->bundle();

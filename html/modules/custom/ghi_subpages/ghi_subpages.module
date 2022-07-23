@@ -6,13 +6,13 @@
  */
 
 use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_subpages\Controller\SubpagesAdminController;
 use Drupal\ghi_subpages\Element\LayoutBuilderSectionLock;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
+use Drupal\ghi_subpages\SubpageManager;
 use Drupal\node\NodeInterface;
 
 /**
@@ -38,7 +38,7 @@ function ghi_subpages_section_post_create(NodeInterface $section_node) {
   }
 
   // Load all subpages and save them again to make sure they have proper paths.
-  $subpages = SubpageHelper::getSubpagesForBaseNode($section_node);
+  $subpages = SubpageHelper::loadSubpagesForBaseNode($section_node);
   foreach ($subpages as $subpage) {
     $subpage->save();
   }
@@ -55,7 +55,7 @@ function ghi_subpages_entity_update(EntityInterface $entity) {
 
   if (!$entity->isPublished()) {
     // Load all subpages and make sure that those are unpublished too.
-    $subpages = SubpageHelper::getSubpagesForBaseNode($entity);
+    $subpages = SubpageHelper::loadSubpagesForBaseNode($entity);
 
     if (!empty($subpages)) {
       foreach ($subpages as $subpage) {
@@ -95,7 +95,7 @@ function ghi_subpages_entity_access(EntityInterface $entity, $operation, Account
   if (!$entity instanceof NodeInterface) {
     return AccessResult::neutral();
   }
-  $node_types = SubpageHelper::SUPPORTED_SUBPAGE_TYPES + [
+  $node_types = SubpageManager::SUPPORTED_SUBPAGE_TYPES + [
     'plan_entity',
     'governing_entity',
   ];
@@ -188,13 +188,8 @@ function ghi_subpages_preprocess_page_title(&$variables) {
   if (!$node instanceof NodeInterface) {
     return;
   }
-  if (SubpageHelper::isBaseTypeNode($node)) {
-    if ($node->hasField('field_entity_reference') && $node->field_entity_reference->entity instanceof ContentEntityInterface) {
-      $variables['title'] = $node->field_entity_reference->entity->getTitle();
-    }
-  }
   if (SubpageHelper::isSubpageTypeNode($node) && $section = SubpageHelper::getBaseTypeNode($node)) {
-    $variables['title'] = $section->label();
+    $variables['title'] = $section->getPageTitle();
   }
 }
 

@@ -8,10 +8,19 @@
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plan_clusters\PlanClusterManager;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\node\NodeInterface;
 use Drupal\node\NodeTypeInterface;
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function ghi_plan_clusters_entity_bundle_info_alter(array &$bundles) {
+  $bundles['node']['plan_cluster']['class'] = PlanCluster::class;
+  $bundles['node']['plan_cluster']['label'] = t('Plan cluster');
+}
 
 /**
  * Implements hook_form_FORM_ID_alter().

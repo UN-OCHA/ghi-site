@@ -2,7 +2,7 @@
 
 namespace Drupal\ghi_sections;
 
-use Drupal\ghi_subpages\Helpers\SubpageHelper;
+use Drupal\ghi_subpages\SubpageManager;
 use Drupal\node\NodeInterface;
 
 /**
@@ -36,7 +36,7 @@ trait SectionTrait {
     if (in_array($node->bundle(), SectionManager::SECTION_BUNDLES)) {
       return $node;
     }
-    if ($node->hasField('field_entity_reference') && in_array($node->bundle(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES)) {
+    if ($node->hasField('field_entity_reference') && in_array($node->bundle(), SubpageManager::SUPPORTED_SUBPAGE_TYPES)) {
       return $node->get('field_entity_reference')->entity;
     }
   }

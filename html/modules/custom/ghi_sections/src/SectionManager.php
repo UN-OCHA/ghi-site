@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\ghi_base_objects\Traits\ShortNameTrait;
 use Drupal\hpc_common\Helpers\StringHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\taxonomy\TermInterface;
@@ -17,6 +18,7 @@ use Drupal\taxonomy\TermInterface;
 class SectionManager {
 
   use DependencySerializationTrait;
+  use ShortNameTrait;
 
   /**
    * The machine name of the bundle to use for articles.

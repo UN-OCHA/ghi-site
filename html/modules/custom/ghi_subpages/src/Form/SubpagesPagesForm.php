@@ -11,7 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
-use Drupal\ghi_subpages\Helpers\SubpageHelper;
+use Drupal\ghi_subpages\SubpageManager;
 use Drupal\ghi_subpages\SubpageTrait;
 use Drupal\node\NodeInterface;
 use Drupal\publishcontent\Access\PublishContentAccess;
@@ -67,15 +67,23 @@ class SubpagesPagesForm extends FormBase {
   protected $moduleHandler;
 
   /**
+   * The section manager.
+   *
+   * @var \Drupal\ghi_subpages\SubpageManager
+   */
+  protected $subpageManager;
+
+  /**
    * Constructs a SubpagesPages form.
    */
-  public function __construct(DateFormatter $date_formatter, EntityTypeManagerInterface $entity_type_manager, PublishContentAccess $publish_content_access, AccountProxyInterface $user, CsrfTokenGenerator $csrf_token, ModuleHandlerInterface $module_handler) {
+  public function __construct(DateFormatter $date_formatter, EntityTypeManagerInterface $entity_type_manager, PublishContentAccess $publish_content_access, AccountProxyInterface $user, CsrfTokenGenerator $csrf_token, ModuleHandlerInterface $module_handler, SubpageManager $subpage_manager) {
     $this->dateFormatter = $date_formatter;
     $this->entityTypeManager = $entity_type_manager;
     $this->publishContentAccess = $publish_content_access;
     $this->currentUser = $user;
     $this->csrfToken = $csrf_token;
     $this->moduleHandler = $module_handler;
+    $this->subpageManager = $subpage_manager;
   }
 
   /**
@@ -89,6 +97,7 @@ class SubpagesPagesForm extends FormBase {
       $container->get('current_user'),
       $container->get('csrf_token'),
       $container->get('module_handler'),
+      $container->get('ghi_subpages.manager')
     );
   }
 
@@ -127,7 +136,7 @@ class SubpagesPagesForm extends FormBase {
 
     // First create a table with the subpage types directly supported by this
     // module.
-    foreach (SubpageHelper::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
+    foreach (SubpageManager::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
       $subpages = $this->entityTypeManager->getStorage('node')->loadByProperties([
         'type' => $subpage_type,
         'field_entity_reference' => $node->id(),
@@ -177,12 +186,12 @@ class SubpagesPagesForm extends FormBase {
     // Now show one table per additional subpage type.
     $node_types = $this->entityTypeManager->getStorage('node_type')->loadMultiple();
     foreach ($node_types as $node_type) {
-      if (in_array($node_type->id(), SubpageHelper::SUPPORTED_SUBPAGE_TYPES) || !SubpageHelper::isSubpageType($node_type)) {
+      if ($this->subpageManager->isStandardSubpageType($node_type) || !$this->subpageManager->isSubpageType($node_type)) {
         continue;
       }
 
       /** @var \Drupal\node\NodeInterface[] $subpage_nodes */
-      $subpage_nodes = SubpageHelper::getCustomSubpagesForBaseNode($node, $node_type);
+      $subpage_nodes = $this->subpageManager->getCustomSubpagesForBaseNode($node, $node_type);
       if (empty($subpage_nodes)) {
         continue;
       }
