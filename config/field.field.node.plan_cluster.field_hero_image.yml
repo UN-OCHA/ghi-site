@@ -17,7 +17,7 @@ required: false
 translatable: true
 default_value:
   -
-    source: none
+    source: inherit
     settings:
       hpc_webcontent_file_attachment: ''
       smugmug_api:
@@ -25,7 +25,7 @@ default_value:
         search:
           text: ''
           keywords: ''
-          image_id: jdsGDPb-0
+          image_id: ''
         currently_selected:
           preview: ''
 default_value_callback: ''

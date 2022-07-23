@@ -3,6 +3,7 @@
 namespace Drupal\ghi_subpages;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -12,6 +13,13 @@ use Drupal\ghi_sections\SectionManager;
  * Base manager service class..
  */
 abstract class BaseObjectSubpageManager {
+
+  /**
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
+  protected $moduleHandler;
 
   /**
    * The entity type manager service.
@@ -28,7 +36,7 @@ abstract class BaseObjectSubpageManager {
   protected $sectionManager;
 
   /**
-   * The entity type manager service.
+   * The renderer service.
    *
    * @var \Drupal\Core\Render\RendererInterface
    */
@@ -51,7 +59,8 @@ abstract class BaseObjectSubpageManager {
   /**
    * Constructs a document manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, SectionManager $section_manager, RendererInterface $renderer, AccountInterface $current_user, MessengerInterface $messenger) {
+  public function __construct(ModuleHandler $module_handler, EntityTypeManagerInterface $entity_type_manager, SectionManager $section_manager, RendererInterface $renderer, AccountInterface $current_user, MessengerInterface $messenger) {
+    $this->moduleHandler = $module_handler;
     $this->entityTypeManager = $entity_type_manager;
     $this->sectionManager = $section_manager;
     $this->renderer = $renderer;

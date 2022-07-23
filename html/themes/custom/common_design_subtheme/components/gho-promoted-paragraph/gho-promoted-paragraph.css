@@ -3,7 +3,7 @@
   z-index: 1;
   padding-top: 1rem;
   padding-bottom: 1rem;
-  background-color: #f1f1f1;;
+  background-color: #f1f1f1;
 }
 .gho-paragraph-promoted::before {
   position: absolute;
@@ -16,7 +16,7 @@
   content: "";
   background-color: inherit;
 
-     /* @include tablet {
+  /* @include tablet {
        right: calc(-4rem - 2px);
        left: calc(-4rem - 2px);
        border: 1px solid var(--cd-default-border-color);

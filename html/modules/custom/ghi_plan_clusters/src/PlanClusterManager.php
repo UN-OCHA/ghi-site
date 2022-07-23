@@ -185,7 +185,7 @@ class PlanClusterManager extends BaseObjectSubpageManager {
       return NULL;
     }
     $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
-    if (!$base_object || $base_object->bundle() != 'governing_entity') {
+    if (!$base_object || !$base_object->hasField('field_plan') || $base_object->get('field_plan')->isEmpty()) {
       // We only support plan sections for now.
       return NULL;
     }

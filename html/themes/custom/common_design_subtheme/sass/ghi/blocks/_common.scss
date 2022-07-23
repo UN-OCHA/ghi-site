@@ -2,68 +2,6 @@
 // GHI: Blocks common definitions
 //——————————————————————————————————————————————————————————————————————————————
 
-.block-subpage-navigation {
-  ul.links--entity-navigation {
-    display: flex;
-    margin: 0;
-    padding: 0;
-    gap: 2rem;
-
-    li {
-      list-style-type: none;
-
-      a {
-        text-decoration: none;
-        color: var(--hpc-dark-brown);
-
-        &.active {
-          // This is for links.
-          font-weight: bold;
-        }
-      }
-
-      &.expandable {
-        position: relative;
-
-        &.active > button[data-cd-toggler] {
-          // This is for the expandable buttons.
-          font-weight: bold;
-        }
-
-        > button[data-cd-toggler] {
-          padding: 0;
-          border: 0;
-          background-color: transparent;
-
-          svg.cd-dropdown__icon {
-            fill: var(--hpc-dark-brown);
-          }
-        }
-
-        > div[data-cd-hidden=false] {
-          position: absolute;
-          z-index: 1;
-          left: -0.5rem;
-          display: flex;
-          flex-direction: column;
-          padding: 0.5rem;
-          background-color: var(--cd-white);
-
-          a {
-            white-space: nowrap;
-          }
-        }
-      }
-    }
-  }
-}
-
-.block-subpage-title {
-  h2 {
-    margin: 3rem 0;
-  }
-}
-
 .ghi-block,
 .ghi-block.ui-state-drop {
   margin-top: 4.5rem;

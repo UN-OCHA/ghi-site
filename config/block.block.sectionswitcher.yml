@@ -1,23 +1,23 @@
-uuid: 5fe3247d-b8ee-461e-b3ad-c22511becc80
+uuid: c8ac315a-e0ee-42f4-93b0-8f6a3374d55b
 langcode: en
 status: true
 dependencies:
   module:
-    - ghi_subpages
+    - ghi_blocks
     - node
   theme:
     - common_design_subtheme
-id: subpagenavigation
+id: sectionswitcher
 theme: common_design_subtheme
 region: page_title
-weight: -3
+weight: -5
 provider: null
-plugin: subpage_navigation
+plugin: section_switcher
 settings:
-  id: subpage_navigation
-  label: 'Subpage navigation'
+  id: section_switcher
+  label: 'Section switcher'
   label_display: '0'
-  provider: ghi_subpages
+  provider: ghi_sections
   context_mapping:
     node: '@node.node_route_context:node'
 visibility:

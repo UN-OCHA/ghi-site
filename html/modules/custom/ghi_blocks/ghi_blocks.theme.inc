@@ -186,7 +186,7 @@ function ghi_blocks_build_document_download_link(array $document, $language = NU
 }
 
 /**
- * Render an ajax switcher element.
+ * Preprocess an ajax switcher element.
  *
  * @see \Drupal\ghi_blocks\Form\AjaxSwitcherForm
  * @see \Drupal\ghi_blocks\Controller\AjaxBlockController
@@ -200,4 +200,34 @@ function ghi_blocks_preprocess_ajax_switcher(&$variables) {
   $query = $variables['query'];
   $default_value = $variables['default_value'];
   $variables['ajax_switcher'] = \Drupal::formBuilder()->getForm('\Drupal\ghi_blocks\Form\AjaxSwitcherForm', $element_key, $plugin_id, $block_uuid, $options, $default_value, $uri, $query);
+}
+
+/**
+ * Preprocess a section switcher element.
+ *
+ * @see \Drupal\ghi_blocks\Plugin\Block\Menu\SectionSwitcher
+ */
+function ghi_blocks_preprocess_section_switcher(&$variables) {
+  $sections = $variables['sections'];
+  $current_section = $variables['current_section'];
+  /** @var \Drupal\ghi_sections\SectionManager $section_manager */
+  $section_manager = \Drupal::service('ghi_sections.manager');
+  $options = [];
+
+  foreach ($sections as $section) {
+    $label = $section->label();
+    if ($section->hasField('field_base_object')) {
+      $base_object = $section->get('field_base_object')->entity;
+      $label = $section_manager->getShortName($base_object, TRUE, TRUE) ?? $label;
+    }
+    $option_value = $section->toLink($label)->toRenderable();
+    if ($current_section->id() == $section->id()) {
+      $option_value = ['#markup' => $label];
+    }
+    $options[$section->get('field_base_object')->entity->id()] = $option_value;
+  }
+  $variables['item_list'] = [
+    '#theme' => 'item_list',
+    '#items' => $options,
+  ];
 }

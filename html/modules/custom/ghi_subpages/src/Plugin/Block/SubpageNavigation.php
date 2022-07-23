@@ -8,6 +8,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
+use Drupal\ghi_subpages\SubpageManager;
 use Drupal\ghi_subpages\SubpageTrait;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\node\NodeInterface;
@@ -99,7 +100,7 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       0 => $overview_link,
     ];
 
-    foreach (SubpageHelper::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
+    foreach (SubpageManager::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
       $matching_subpages = $this->entityTypeManager->getStorage('node')->loadByProperties([
         'type' => $subpage_type,
         'field_entity_reference' => $base_entity->id(),
@@ -124,6 +125,7 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       $link = $subpage->toLink(NULL)->toRenderable();
       if ($node->id() == $subpage->id()) {
         $link['#attributes']['class'][] = 'active';
+        $link['#wrapper_attributes']['class'][] = 'active';
       }
       $tabs[] = $link;
     }
@@ -157,7 +159,6 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       // This is important to make the template suggestions logic work in
       // common_design_subtheme.theme.
       '#context' => [
-        'plugin_type' => 'subpage_navigation',
         'plugin_id' => $this->getPluginId(),
       ],
     ];

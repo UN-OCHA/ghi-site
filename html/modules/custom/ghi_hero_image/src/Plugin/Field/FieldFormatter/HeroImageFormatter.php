@@ -9,6 +9,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\responsive_image\Plugin\Field\FieldFormatter\ResponsiveImageFormatter;
@@ -121,8 +122,13 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
         $image_urls = $image_id ? $this->smugmugImage->getImageSizes($image_id) : NULL;
         $image_url = $image_urls['X3LargeImageUrl'] ?? NULL;
       }
-      if ($item->source == 'inherit' && $parent_image = $this->getParentImage($entity)) {
-        return $parent_image->view();
+      if ($item->source == 'inherit') {
+        if ($entity instanceof SubpageNodeInterface && $parent_image = $entity->getParentNode()->getImage()) {
+          return $parent_image->view();
+        }
+        elseif ($parent_image = $this->getParentImage($entity)) {
+          return $parent_image->view();
+        }
       }
     }
 
