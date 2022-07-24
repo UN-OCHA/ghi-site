@@ -9,6 +9,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_subpages\SubpageManager;
@@ -105,7 +106,7 @@ class SubpagesPagesForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'ghi_subpages_admin_form';
+    return 'ghi_subpages_admin_views_form';
   }
 
   /**
@@ -158,7 +159,7 @@ class SubpagesPagesForm extends FormBase {
         $row[] = $this->dateFormatter->format($subpage->getCreatedTime(), 'custom', 'F j, Y h:ia');
         $row[] = $this->dateFormatter->format($subpage->getChangedTime(), 'custom', 'F j, Y h:ia');
         $row[] = $this->getOperationLinks($subpage, $node);
-
+        $rows[$subpage->id()] = $row;
       }
       elseif (empty($subpages)) {
         $row[] = $subpage_type_label;
@@ -166,9 +167,8 @@ class SubpagesPagesForm extends FormBase {
         $row[] = '';
         $row[] = '';
         $row[] = '';
+        $rows[] = $row;
       }
-
-      $rows[] = $row;
     }
 
     $form['subpages_header'] = [
@@ -176,10 +176,10 @@ class SubpagesPagesForm extends FormBase {
       '#tag' => 'h2',
       '#value' => $this->t('Standard subpages'),
     ];
-    $form['subpages'] = [
-      '#type' => 'table',
+    $form['subpages_standard'] = [
+      '#type' => 'tableselect',
       '#header' => $header,
-      '#rows' => $rows,
+      '#options' => $rows,
       '#empty' => $this->t('No subpages exist for this item.'),
     ];
 
@@ -215,22 +215,48 @@ class SubpagesPagesForm extends FormBase {
         $row[] = $this->dateFormatter->format($subpage_node->getCreatedTime(), 'custom', 'F j, Y h:ia');
         $row[] = $this->dateFormatter->format($subpage_node->getChangedTime(), 'custom', 'F j, Y h:ia');
         $row[] = $this->getOperationLinks($subpage_node, $node);
-        $rows[] = $row;
+        $rows[$subpage_node->id()] = $row;
       }
-      $form['subpages_' . $node->id() . '_header'] = [
+      $form['subpages_' . $node_type->id() . '_header'] = [
         '#type' => 'html_tag',
         '#tag' => 'h2',
         '#value' => $this->t('@label subpages', [
           '@label' => $node_type->label(),
         ]),
       ];
-      $form['subpages_' . $node->id()] = [
-        '#type' => 'table',
+      $form['subpages_' . $node_type->id()] = [
+        '#type' => 'tableselect',
         '#header' => $header,
-        '#rows' => $rows,
+        '#options' => $rows,
         '#empty' => $this->t('No subpages exist for this item.'),
       ];
     }
+
+    // Build the bulk form. This is mainly done on a way to be compatible with
+    // the gin theme, see gin_form_alter() and gin/styles/base/_views.scss.
+    $form['#prefix'] = Markup::create('<div class="view-content"><div class="views-form">');
+    $form['#suffix'] = Markup::create('</div></div>');
+    $form['header'] = [
+      '#type' => 'container',
+      '#id' => 'edit-header',
+      'subpages_bulk_form' => [
+        '#type' => 'container',
+        '#id' => 'edit-node-bulk-form',
+        'action' => [
+          '#type' => 'select',
+          '#title' => $this->t('Action'),
+          '#options' => $this->getBulkFormActions(),
+        ],
+        'actions' => [
+          '#type' => 'actions',
+          'submit' => [
+            '#type' => 'submit',
+            '#name' => 'bulk_submit',
+            '#value' => $this->t('Apply to selected items'),
+          ],
+        ],
+      ],
+    ];
 
     return $form;
   }
@@ -239,6 +265,36 @@ class SubpagesPagesForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    if ($form_state->getTriggeringElement()['#name'] != 'bulk_submit') {
+      return;
+    }
+    $action = $form_state->getValue('action');
+    if (!array_key_exists($action, $this->getBulkFormActions())) {
+      return;
+    }
+    $values = $form_state->getValues();
+    $node_ids = [];
+    foreach ($values as $key => $subpages_values) {
+      if (strpos($key, 'subpages_') !== 0) {
+        continue;
+      }
+      $node_ids = $node_ids + array_filter($subpages_values);
+    }
+    if (empty($node_ids)) {
+      return;
+    }
+    /** @var \Drupal\node\NodeInterface[] $nodes */
+    $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple(array_keys($node_ids));
+    foreach ($nodes as $node) {
+      if ($action == 'publish') {
+        $node->setPublished();
+      }
+      if ($action == 'unpublish') {
+        $node->setUnpublished();
+      }
+      $node->save();
+    }
+
   }
 
   /**
@@ -297,6 +353,19 @@ class SubpagesPagesForm extends FormBase {
           ],
         ],
       ],
+    ];
+  }
+
+  /**
+   * Get the bulk form actions.
+   *
+   * @return array
+   *   An array of action key - label pairs.
+   */
+  private function getBulkFormActions() {
+    return [
+      'publish' => $this->t('Publish'),
+      'unpublish' => $this->t('Unpublish'),
     ];
   }
 
