@@ -67,7 +67,7 @@ class CarouselItem extends FormElement {
   }
 
   /**
-   * Process the usage year form element.
+   * Process the carousel item form element.
    *
    * This is called during form build. Note that it is not possible to store
    * any arbitrary data inside the form_state object.

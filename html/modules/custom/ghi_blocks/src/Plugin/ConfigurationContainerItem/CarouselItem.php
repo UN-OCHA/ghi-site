@@ -8,7 +8,7 @@ use Drupal\file\Entity\File;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 
 /**
- * Provides an entity counter item for configuration containers.
+ * Provides a carousel item for configuration containers.
  *
  * @ConfigurationContainerItem(
  *   id = "carousel_item",

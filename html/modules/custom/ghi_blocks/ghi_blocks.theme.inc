@@ -10,8 +10,7 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
-use Drupal\file\Entity\File;
-use Drupal\ghi_blocks\Plugin\Block\Generic\DocumentLinks;
+use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\DocumentLink;
 
 /**
  * Preprocess the document link box template.
@@ -25,18 +24,7 @@ function ghi_blocks_preprocess_document_link_box(&$variables) {
   $document = $variables['document']['#document'];
 
   // Add the truncated title.
-  $variables['title'] = Unicode::truncate($document['title'], DocumentLinks::TITLE_MAX_LENGTH, TRUE, TRUE);
-
-  // Get the thumbnail if any.
-  $variables['thumbnail'] = NULL;
-  if (!empty($document['thumbnail']) && $thumbnail_file = File::load(reset($document['thumbnail']))) {
-    /** @var \Drupal\file\Entity\File $thumbnail_file */
-    $variables['thumbnail'] = [
-      '#theme' => 'image_style',
-      '#style_name' => 'document_link_thumbnail',
-      '#uri' => $thumbnail_file->getFileUri(),
-    ];
-  }
+  $variables['title'] = Unicode::truncate($document['title'], DocumentLink::TITLE_MAX_LENGTH, TRUE, TRUE);
 
   // Get the document date.
   $timestamp = strtotime($document['date']);
@@ -47,15 +35,18 @@ function ghi_blocks_preprocess_document_link_box(&$variables) {
   // Go about the new approach only if "file_details" is not empty.
   if (!empty($document['file_details'])) {
     $variables['download_links'] = [];
-    foreach ($document['file_details'] as $value) {
+    foreach ($document['file_details'] as $language => $value) {
       if (empty($value['target_url'])) {
+        continue;
+      }
+      if (!empty($value['disabled'])) {
         continue;
       }
       // Get the file type.
       $filetype = !empty($value['filetype']) ? $value['filetype'] : pathinfo($value['target_url'], PATHINFO_EXTENSION);
       $filetypes[] = $filetype;
 
-      $variables['download_links'][] = ghi_blocks_build_document_download_link($value, $value['language']);
+      $variables['download_links'][] = ghi_blocks_build_document_download_link($value, $language);
     }
   }
   // Else stick with the previous way of getting data.
@@ -72,7 +63,7 @@ function ghi_blocks_preprocess_document_link_box(&$variables) {
   // be sure, we check again here.
   $shared_filetype = count(array_unique($filetypes)) == 1 ? reset($filetypes) : NULL;
   $variables['filetype'] = $shared_filetype ? strtoupper($shared_filetype) : NULL;
-  $variables['button_title'] = t('Download @filetype', ['@filetype' => $shared_filetype]);
+  $variables['button_title'] = t('Download @filetype', ['@filetype' => strtoupper($shared_filetype)]);
   if ($shared_filetype && strtolower($shared_filetype) == 'html') {
     $variables['button_title'] = t('Visit external site');
   }
@@ -170,11 +161,11 @@ function ghi_blocks_build_document_download_link(array $document, $language = NU
   }
 
   // Link title.
-  $link_title = implode(' | ', [
+  $link_title = implode(' | ', array_filter([
     $language ?: 'English',
     strtoupper($filetype),
     $filesize,
-  ]);
+  ]));
 
   // Prepare the download link.
   return Link::fromTextAndUrl($link_title, Url::fromUri($document['target_url'], [
