@@ -19,6 +19,9 @@ class Section extends Node implements SectionNodeInterface {
    */
   public function label() {
     $label = parent::label();
+    if ($this->isAdminPage()) {
+      return $label;
+    }
     $base_object = $this->get('field_base_object')->entity;
     return $this->getShortName($base_object, TRUE) ?? $label;
   }
@@ -42,6 +45,16 @@ class Section extends Node implements SectionNodeInterface {
    */
   public function getImage() {
     return $this->get('field_hero_image');
+  }
+
+  /**
+   * See if the current page is an admin page.
+   *
+   * @return bool
+   *   TRUE if the current page is an admin page, FALSE otherwise.
+   */
+  private static function isAdminPage() {
+    return \Drupal::service('router.admin_context')->isAdminRoute();
   }
 
 }
