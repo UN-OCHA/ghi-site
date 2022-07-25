@@ -5,8 +5,6 @@ namespace Drupal\Tests\ghi_form_elements\Unit;
 use Drupal\Tests\UnitTestCase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 
-require_once 'html/modules/dev/debug_tools/debug_tools.log.inc';
-
 /**
  * @covers Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup
  */

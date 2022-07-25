@@ -15,4 +15,5 @@
 .tab-navigation-wrapper .tab-navigation.active {
   padding-bottom: calc(1rem - 2px);
   border-bottom: 2px solid var(--cd-ocha-yellow);
+  font-weight: bold;
 }

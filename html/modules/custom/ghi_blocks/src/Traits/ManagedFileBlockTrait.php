@@ -6,7 +6,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\file\Entity\File;
 
 /**
- * Trait with common helpers to get inliny with GIN LB styles..
+ * Trait to help manage files uploaded in layout builder blocks.
  */
 trait ManagedFileBlockTrait {
 

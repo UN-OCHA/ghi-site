@@ -5,7 +5,6 @@
 
     li {
       display: flex;
-      height: 420px;
       margin: 0 0 1rem 0;
       list-style-type: none;
       vertical-align: top;
@@ -14,70 +13,47 @@
         position: relative;
         width: 100%;
         padding: 2rem;
-        text-align: center;
-        color: var(--cd-white);
-        background-color: var(--cd-ocha-blue);
+        background-color: var(--cd-primary-background-color);
 
         .title-wrapper {
-          display: flex;
-          height: 3rem;
 
           .title {
             display: inline-block;
-            align-self: center;
             width: 100%;
-            margin-bottom: 0.3rem;
-            text-transform: uppercase;
+            margin: 0;
+            padding: 0;
             font-size: var(--cd-font-size--medium);
-            font-weight: medium;
-            line-height: 1.8rem;
+            font-weight: bold;
           }
         }
 
-        .thumbnail {
-          position: absolute;
-          top: calc(50% - 110px);
-          left: calc(50% - 78px);
-          overflow: hidden;
-          width: 156px;
-          height: 220px;
-          margin: 0 auto;
-        }
-
         .buttons {
-          position: absolute;
+          position: relative;
           z-index: 1;
-          bottom: 1.5rem;
-          left: 0;
           width: 100%;
-          text-align: center;
+          margin-bottom: 2rem;
 
           button {
-            min-width: 60%;
-            padding: 0.2rem 1rem;
-            text-transform: uppercase;
-            color: var(--cd-ocha-blue);
+            padding: 0;
+            color: var(--cd-default-text-color);
             border: 0;
-            border-radius: 3px;
-            background-color: var(--cd-white);
-            font-size: var(--cd-font-size--small);
+            background-color: transparent;
+            font-size: var(--cd-font-size--default);
 
             svg {
-              fill: var(--cd-ocha-blue);
+              fill: var(--cd-default-text-color);
             }
           }
 
           .cd-dropdown {
             position: absolute;
-            width: 100%;
-            text-align: center;
+            // width: 100%;
 
             div {
               display: inline-block;
               width: auto;
-              min-width: 60%;
               padding: 0.2rem;
-              border: 1px solid var(--cd-ocha-blue);
+              border: 1px solid var(--cd-default-border-color);
               border-radius: 3px;
               background-color: var(--cd-white);
 
@@ -85,19 +61,22 @@
                 display: block;
                 padding: 0.1rem;
                 text-decoration: none;
-                text-transform: uppercase;
                 font-size: var(--cd-font-size--tiny);
               }
             }
           }
         }
         .meta {
-          position: absolute;
-          bottom: 5rem;
-          left: 0;
-          width: 100%;
-          text-align: center;
+          margin-top: 1rem;
           font-size: var(--cd-font-size--tiny);
+
+          &:before {
+            display: block;
+            width: 15%;
+            padding-top: 1.5rem;
+            content: " ";
+            border-top: 4px solid var(--cd-ocha-yellow);
+          }
         }
       }
 
@@ -115,7 +94,7 @@
       @include tablet {
         // When there is 1 item.
         &:only-child {
-          flex: 0 1 33%;
+          flex: 0 1 50%;
           padding: 0;
         }
 
@@ -135,7 +114,7 @@
         // When there are 3 items.
         &:nth-last-child(n+3),
         &:nth-last-child(n+3) ~ li {
-          flex: 0 1 33%;
+          flex: 0 1 50%;
           padding: 0 0.25rem;
           &:first-child {
             padding: 0 0.5rem 0 0;

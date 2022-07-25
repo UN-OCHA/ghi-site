@@ -6,7 +6,7 @@ use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
- * Helper trait for classes using a configuration container.
+ * Helper trait for classes using a groupable configuration container.
  */
 trait ConfigurationContainerGroup {
 
