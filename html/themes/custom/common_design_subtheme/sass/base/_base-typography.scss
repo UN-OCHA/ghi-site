@@ -10,3 +10,8 @@ a {
     color: var(--cd-primary-color);
   }
 }
+
+input::placeholder {
+  font-size: 80%;
+  font-style: italic;
+}

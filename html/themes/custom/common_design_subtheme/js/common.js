@@ -4,10 +4,13 @@
 
   Drupal.CommonDesignSubtheme.SoftLimit = {};
   Drupal.CommonDesignSubtheme.SoftLimit.applyLimit = function($table) {
+    if ($table.hasClass('expanded')) {
+      return;
+    }
     let soft_limit = $table.data('soft-limit');
     let $rows = $table.find('> tbody > tr');
     if ($rows.length <= soft_limit) {
-      return false;
+      return;
     }
     $rows.each(function () {
       $(this).show();
@@ -32,6 +35,7 @@
     $button.on('click', function (e) {
       $table.find('tr:hidden').slideDown();
       $(this).hide();
+      $table.toggleClass('expanded');
       e.preventDefault();
     });
     $table.after($button);
@@ -89,6 +93,19 @@
             Drupal.CommonDesignSubtheme.SoftLimit.applyLimit($table);
           });
         }
+
+        // Update the list when search is used.
+        $table.on('tableReset', function () {
+          if ($table.parent().find('a.expand-table').length) {
+            $table.parent().find('a.expand-table').show();
+          }
+          Drupal.CommonDesignSubtheme.SoftLimit.applyLimit($table);
+        });
+        $table.on('tableFiltered', function () {
+          if ($table.parent().find('a.expand-table:visible').length) {
+            $table.parent().find('a.expand-table:visible').hide();
+          }
+        });
       });
     }
 

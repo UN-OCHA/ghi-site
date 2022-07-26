@@ -24,7 +24,16 @@ sorttable:
   js:
     js/sorttable.js: {}
 
-table-progress-indicator:
+ghi-table-search:
+  js:
+    components/ghi-table-search/ghi-table-search.js: {}
+  css:
+    theme:
+      components/ghi-table-search/ghi-table-search.css: {}
+  dependencies:
+    - core/jquery.ui
+
+ghi-table-progress-indicator:
   css:
     theme:
       components/ghi-table-progress-indicator/ghi-table-progress-indicator.css: {}
