@@ -25,6 +25,14 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'document-link-box',
     ],
+    'document_link_button' => [
+      'variables' => [
+        'button_label' => NULL,
+        'document' => NULL,
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'document-link-button',
+    ],
     'link_carousel' => [
       'variables' => [
         'items' => [],
@@ -99,6 +107,15 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       ],
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'ajax-switcher',
+    ],
+    'section_switcher' => [
+      'variables' => [
+        'title' => NULL,
+        'sections' => [],
+        'current_section' => NULL,
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'section-switcher',
     ],
   ];
 }

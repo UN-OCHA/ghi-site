@@ -17,7 +17,7 @@ use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
 use Drupal\node\NodeInterface;
 
 /**
- * Provides an 'External Widget' block.
+ * Provides a 'Document link' block.
  *
  * @Block(
  *  id = "generic_document_links",
