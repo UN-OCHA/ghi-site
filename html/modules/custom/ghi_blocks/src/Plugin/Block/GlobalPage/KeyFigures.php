@@ -146,7 +146,9 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Op
    */
   protected function getConfigurationDefaults() {
     return [
-      'items' => [],
+      'key_figures' => [
+        'items' => [],
+      ],
     ];
   }
 

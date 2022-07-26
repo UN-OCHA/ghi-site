@@ -13,10 +13,12 @@ a.cd-button {
   }
 
   &.expand-table,
-  &.read-more {
+  &.read-more,
+  &.external {
     position: relative;
     max-width: fit-content;
     padding-right: 2.5rem;
+    color: var(--cd-default-text-color);
 
     &:before {
       position: absolute;
@@ -33,5 +35,8 @@ a.cd-button {
   }
   &.read-more:before {
     background-image: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/arrow_forward/default/20px.svg");
+  }
+  &.external:before {
+    background-image: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/open_in_new/default/20px.svg");
   }
 }

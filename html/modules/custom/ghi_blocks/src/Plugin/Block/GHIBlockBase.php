@@ -322,8 +322,37 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   TRUE if a title can be shown, FALSE otherwise.
    */
   public function hasDefaultTitle() {
+    return !empty($this->getDefaultTitle());
+  }
+
+  /**
+   * Get the default title.
+   *
+   * @return string
+   *   The default title if one is set in the plugin definition.
+   */
+  public function getDefaultTitle() {
     $plugin_definition = $this->getPluginDefinition();
-    return array_key_exists('default_title', $plugin_definition) && !empty($plugin_definition['default_title']);
+    return $plugin_definition['default_title'] ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function label() {
+    $label = parent::label();
+    $plugin_configuration = $this->getConfiguration();
+    $configured_label = $plugin_configuration['label'] ?? NULL;
+    if ($this instanceof AutomaticTitleBlockInterface) {
+      return $this->getAutomaticBlockTitle();
+    }
+    elseif ($this instanceof OptionalTitleBlockInterface) {
+      return $configured_label;
+    }
+    elseif ($this instanceof OverrideDefaultTitleBlockInterface) {
+      return $configured_label ?: $this->getDefaultTitle();
+    }
+    return $label;
   }
 
   /**
@@ -354,15 +383,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Handle the title display.
     // @todo This is confusing and needs cleanup.
     if ($this->shouldDisplayTitle()) {
-      if ($this instanceof AutomaticTitleBlockInterface) {
-        $build['#title'] = $this->getAutomaticBlockTitle();
-        $plugin_configuration['label_display'] = TRUE;
-      }
-      elseif ($this instanceof OptionalTitleBlockInterface) {
-        $build['#title'] = $plugin_configuration['label'] ?? NULL;
-      }
-      elseif ($this instanceof OverrideDefaultTitleBlockInterface) {
-        $build['#title'] = $plugin_configuration['label'] ?? NULL;
+      $build['#title'] = $this->label();
+      if ($this instanceof AutomaticTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface) {
         $plugin_configuration['label_display'] = TRUE;
       }
       elseif (!empty($build_content['#title'])) {
@@ -370,18 +392,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
         unset($build_content['#title']);
       }
 
-      if (empty($plugin_configuration['label']) && $this->hasDefaultTitle()) {
-        $plugin_definition = $this->getPluginDefinition();
-        $build['#title'] = $plugin_definition['default_title'];
-        $plugin_configuration['label_display'] = TRUE;
-      }
-
-      if (!empty($plugin_configuration['label_display']) && !array_key_exists('#title', $build)) {
-        $build += [
-          '#title' => $this->label(),
-        ];
-      }
-      elseif (empty($plugin_configuration['label_display']) && array_key_exists('#title', $build)) {
+      if (empty($plugin_configuration['label_display'])) {
         unset($build['#title']);
       }
     }
@@ -792,7 +803,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $this->configuration['label'] = NestedArray::getValue($temporary_settings, array_filter([
         $label_subkey,
         'label',
-      ]));
+      ])) ?? $this->label();
       $this->configuration['label_display'] = NestedArray::getValue($temporary_settings, array_filter([
         $label_subkey,
         'label_display',
