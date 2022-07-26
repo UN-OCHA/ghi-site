@@ -46,6 +46,7 @@ class DocumentLink extends FormElement {
         [$class, 'elementSubmit'],
       ],
       '#theme_wrappers' => ['form_element'],
+      '#date' => TRUE,
     ];
   }
 
@@ -88,6 +89,7 @@ class DocumentLink extends FormElement {
       '#type' => 'date',
       '#title' => t('Date'),
       '#default_value' => $element['#default_value']['date'] ?? NULL,
+      '#access' => $element['#date'],
     ];
 
     $element['table_caption'] = [
@@ -184,7 +186,8 @@ class DocumentLink extends FormElement {
       $filename = $target_url;
       $ext = pathinfo($filename, PATHINFO_EXTENSION);
       $mime_type = reset($content_type);
-      $file_type = end(explode('/', $mime_type));
+      $mime_type_parts = explode('/', $mime_type);
+      $file_type = end($mime_type_parts);
       if (strlen($file_type) > 4 || strpos($file_type, '.')) {
         // Prevent file types like
         // vnd.openxmlformats-officedocument.spreadsheetml.sheet.

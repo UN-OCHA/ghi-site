@@ -1,3 +1,4 @@
+// Link that looks like a button.
 a.cd-button {
   padding: 0.8rem 1.5rem;
   text-transform: uppercase;
@@ -38,5 +39,47 @@ a.cd-button {
   }
   &.external:before {
     background-image: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/open_in_new/default/20px.svg");
+  }
+}
+
+// A button that looks like a button.
+button.cd-dropdown__btn {
+  padding: 0.8rem 1.5rem;
+  text-transform: uppercase;
+  color: var(--cd-default-text-color);
+  border: 0;
+  background-color: var(--cd-ocha-yellow);
+
+  svg.cd-icon {
+    fill: var(--cd-default-text-color);
+  }
+
+  &:before {
+    position: absolute;
+    top: calc(50% - 10px);
+    left: 1rem;
+    padding: 10px;
+    content: "";
+    background-repeat: no-repeat;
+  }
+}
+
+button.cd-dropdown__btn + .cd-dropdown {
+  position: absolute;
+
+  div {
+    display: inline-block;
+    width: auto;
+    padding: 0.2rem;
+    border: 1px solid var(--cd-default-border-color);
+    border-radius: 3px;
+    background-color: var(--cd-white);
+
+    a {
+      display: block;
+      padding: 0.1rem;
+      text-decoration: none;
+      font-size: var(--cd-font-size--tiny);
+    }
   }
 }

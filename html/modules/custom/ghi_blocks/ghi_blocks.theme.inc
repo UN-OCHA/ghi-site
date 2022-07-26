@@ -36,10 +36,7 @@ function ghi_blocks_preprocess_document_link_box(&$variables) {
   if (!empty($document['file_details'])) {
     $variables['download_links'] = [];
     foreach ($document['file_details'] as $language => $value) {
-      if (empty($value['target_url'])) {
-        continue;
-      }
-      if (!empty($value['disabled'])) {
+      if (empty($value['target_url']) || !empty($value['disabled'])) {
         continue;
       }
       // Get the file type.
@@ -70,6 +67,26 @@ function ghi_blocks_preprocess_document_link_box(&$variables) {
 
   // Create meta.
   $variables['meta'] = $date ?? NULL;
+}
+
+/**
+ * Preprocess the document link button template.
+ */
+function ghi_blocks_preprocess_document_link_button(&$variables) {
+
+  // Get the document data.
+  $document = $variables['document'];
+
+  // Go about the new approach only if "file_details" is not empty.
+  if (!empty($document['file_details'])) {
+    $variables['download_links'] = [];
+    foreach ($document['file_details'] as $language => $value) {
+      if (empty($value['target_url']) || !empty($value['disabled'])) {
+        continue;
+      }
+      $variables['download_links'][] = ghi_blocks_build_document_download_link($value, $language);
+    }
+  }
 }
 
 /**

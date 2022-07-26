@@ -35,34 +35,15 @@
 
           button {
             padding: 0;
+            text-transform: none;
             color: var(--cd-default-text-color);
-            border: 0;
             background-color: transparent;
             font-size: var(--cd-font-size--default);
-
-            svg {
-              fill: var(--cd-default-text-color);
-            }
           }
 
           .cd-dropdown {
-            position: absolute;
-            // width: 100%;
-
-            div {
-              display: inline-block;
-              width: auto;
-              padding: 0.2rem;
-              border: 1px solid var(--cd-default-border-color);
-              border-radius: 3px;
-              background-color: var(--cd-white);
-
-              a {
-                display: block;
-                padding: 0.1rem;
-                text-decoration: none;
-                font-size: var(--cd-font-size--tiny);
-              }
+            div a {
+              font-size: var(--cd-font-size--tiny);
             }
           }
         }
