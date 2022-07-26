@@ -1,4 +1,4 @@
-.ghi-block-home-plan-table {
+.ghi-block-global-plan-table {
   table {
     tbody {
       td[data-column="name"] {
@@ -41,7 +41,7 @@
   }
 }
 
-.ghi-block-global-plan-overview-map + .ghi-block-home-plan-table {
+.ghi-block-global-plan-overview-map + .ghi-block-global-plan-table {
 
   /**
    * Bleed the background only.
