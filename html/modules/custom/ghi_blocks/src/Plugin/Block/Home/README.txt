@@ -1,1 +1,0 @@
-The plugins in this directory should be moved to the GlobalPage namespace.

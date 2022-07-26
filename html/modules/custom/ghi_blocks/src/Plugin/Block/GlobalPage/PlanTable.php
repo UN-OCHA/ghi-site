@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ghi_blocks\Plugin\Block\Home;
+namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
@@ -17,9 +17,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Provides a 'PlanTable' block.
  *
  * @Block(
- *  id = "home_plan_table",
+ *  id = "global_plan_table",
  *  admin_label = @Translation("Plan table"),
- *  category = @Translation("Homepage"),
+ *  category = @Translation("Global"),
  *  data_sources = {
  *    "plans" = "plan_overview_query",
  *  },
