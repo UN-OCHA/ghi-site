@@ -21,6 +21,7 @@ function common_design_subtheme_theme_registry_alter(&$theme_registry) {
   $theme_registry['hpc_amount']['variables']['use_abbreviation'] = FALSE;
   // Defaults for tables and to make those settings available.
   $theme_registry['table']['variables']['sortable'] = FALSE;
+  $theme_registry['table']['variables']['searchable'] = FALSE;
   $theme_registry['table']['variables']['progress_groups'] = FALSE;
   $theme_registry['table']['variables']['autosort'] = FALSE;
   $theme_registry['table']['variables']['soft_limit'] = FALSE;
@@ -243,6 +244,13 @@ function common_design_subtheme_preprocess_table(&$vars) {
     $attributes['class'][] = Html::getClass('autosort');
   }
 
+  // Searchable.
+  $searchable = !empty($vars['searchable']);
+  if ($searchable) {
+    $attributes['class'][] = Html::getClass('searchable');
+    $attached['library'][] = 'common_design_subtheme/ghi-table-search';
+  }
+
   // Soft limits.
   if (!empty($vars['soft_limit'])) {
     $attributes['class'][] = Html::getClass('soft_limit');
@@ -317,7 +325,7 @@ function common_design_subtheme_preprocess_table(&$vars) {
   }
 
   if (!empty($progress_groups)) {
-    $attached['library'][] = 'common_design_subtheme/table-progress-indicator';
+    $attached['library'][] = 'common_design_subtheme/ghi-table-progress-indicator';
     foreach ($progress_groups as $group => $items) {
       $max = max(array_map(function ($item) {
         return $item['value'];

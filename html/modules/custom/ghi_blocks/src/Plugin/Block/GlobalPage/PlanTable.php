@@ -67,6 +67,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
       '#header' => $table_data['header'],
       '#rows' => $table_data['rows'],
       '#sortable' => TRUE,
+      '#searchable' => TRUE,
       '#autosort' => FALSE,
       '#wrapper_attributes' => [
         'class' => ['plan-table'],
