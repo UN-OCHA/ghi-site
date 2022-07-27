@@ -38,7 +38,7 @@
   {% if options.alignment == 'horizontal' %}
     {% for row in items %}
       {% for column in row.content %}
-        <div {{ column.attributes.addClass(item_classes) }}
+        <div {{ column.attributes.addClass(item_classes) }}>
           {{- column.content -}}
         </div>
       {% endfor %}
@@ -46,7 +46,7 @@
   {% else %}
     {% for column in items %}
       {% for row in column.content %}
-        <div {{ row.attributes.addClass(item_classes) }}
+        <div {{ row.attributes.addClass(item_classes) }}>
           {{- row.content -}}
         </div>
       {% endfor %}
