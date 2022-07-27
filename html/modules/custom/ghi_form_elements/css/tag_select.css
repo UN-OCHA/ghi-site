@@ -1,3 +1,13 @@
+.form-type--tag_selection .glb-form-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+}
+.form-type--tag_selection .glb-form-checkboxes .glb-form-type--checkbox {
+  margin-top: .5em !important;
+  margin-bottom: .5em !important;
+  min-width: 15%;
+}
+
 .form-type--tag_selection .preview-wrapper .label {
   font-weight: bold;
 }

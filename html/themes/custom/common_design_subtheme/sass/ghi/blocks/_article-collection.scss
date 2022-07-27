@@ -1,15 +1,14 @@
+.article-collection {
+  margin-top: 2rem;
+}
+
 .article-collection-cards {
 
   .ghi-grid-item {
     padding: 0;
 
     &.featured {
-      color: var(--cd-white);
       background-color: var(--cd-primary-color);
-
-      a {
-        color: var(--cd-white);
-      }
     }
 
     .field--type-image {

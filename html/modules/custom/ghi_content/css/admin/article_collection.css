@@ -1,22 +1,17 @@
-form.article-collection [data-drupal-selector="edit-articles"] .form-type--tag_selection .glb-form-checkboxes {
-  display: flex;
-  flex-wrap: wrap;
-}
-form.article-collection [data-drupal-selector="edit-articles"] .form-type--tag_selection .glb-form-checkboxes .glb-form-type--checkbox {
-  margin-top: .5em !important;
-  margin-bottom: .5em !important;
-  min-width: 15%;
-}
-
-form.article-collection [data-drupal-selector="edit-display-type"] .form-boolean-group,
-form.article-collection [data-drupal-selector="edit-display-cards-populate"] .form-boolean-group {
+form.article-collection .form-boolean-group,
+form.article-collection .form-boolean-group,
+.article-selection-form .form-boolean-group,
+.article-selection-form .form-boolean-group {
   display: flex;
 }
-form.article-collection [data-drupal-selector="edit-display-type"] .form-boolean-group > div,
-form.article-collection [data-drupal-selector="edit-display-cards-populate"] .form-boolean-group > div {
+form.article-collection .form-boolean-group > div,
+form.article-collection .form-boolean-group > div,
+.article-selection-form .form-boolean-group > div,
+.article-selection-form .form-boolean-group > div {
   margin-right: 1rem;
 }
 
-form.article-collection .form-type--entity_preview_select .description {
+form.article-collection .form-type--entity_preview_select .description,
+.article-selection-form .form-type--entity_preview_select .description {
   margin-bottom: 1rem;
 }

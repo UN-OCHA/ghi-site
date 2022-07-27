@@ -410,7 +410,8 @@ class ArticleManager extends BaseContentManager {
   public function getNodePreviews(array $articles, $view_mode) {
     $previews = [];
     foreach ($articles as $article) {
-      $previews[$article->id()] = $this->renderer->render($this->entityTypeManager->getViewBuilder('node')->view($article, $view_mode));
+      $build = $this->entityTypeManager->getViewBuilder('node')->view($article, $view_mode);
+      $previews[$article->id()] = $this->renderer->render($build);
     }
     return $previews;
   }

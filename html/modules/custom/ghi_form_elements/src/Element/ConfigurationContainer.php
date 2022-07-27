@@ -10,9 +10,11 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
+use Drupal\ghi_form_elements\ConfigurationContainerItemCustomActionsInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
+use Drupal\hpc_common\Helpers\StringHelper;
 
 /**
  * Provides a configuration container element.
@@ -78,6 +80,15 @@ class ConfigurationContainer extends FormElement {
     if (end($parents) == 'actions') {
       // Remove the actions key from the parents.
       array_pop($parents);
+    }
+
+    if (!empty($triggering_element['#custom_action'])) {
+      array_pop($parents);
+      $id = array_pop($parents);
+      $form_state->set('mode', 'custom_action');
+      $form_state->set('custom_action', $action);
+      $form_state->set('edit_item', $id);
+      return;
     }
 
     $new_mode = NULL;
@@ -164,6 +175,12 @@ class ConfigurationContainer extends FormElement {
           $index = self::getItemIndexById($items, $id);
           $items[$index]['config']['filter'] = $values['filter_config'];
         }
+        elseif ($mode == 'custom_action') {
+          $id = $form_state->get('edit_item');
+          $custom_action = $form_state->get('custom_action');
+          $index = self::getItemIndexById($items, $id);
+          $items[$index]['config'][$custom_action] = $values[$custom_action];
+        }
 
         // Switch to list mode.
         $new_mode = 'list';
@@ -229,6 +246,7 @@ class ConfigurationContainer extends FormElement {
       // Cleanup state.
       $form_state->set('current_item_type', NULL);
       $form_state->set('edit_item', NULL);
+      $form_state->set('custom_action', NULL);
     }
 
     // Rebuild the form.
@@ -332,6 +350,11 @@ class ConfigurationContainer extends FormElement {
     if ($mode == 'edit_item_filter') {
       self::buildItemFilterConfig($element, $form_state, $form_state->get('edit_item'));
     }
+
+    if ($mode == 'custom_action') {
+      self::buildItemCustomActionForm($element, $form_state, $form_state->get('edit_item'), $form_state->get('custom_action'));
+    }
+
     unset($element['#description']);
     $element['#wrapper_attributes']['class'][] = Html::getClass($mode . '-view');
     return $element;
@@ -637,6 +660,21 @@ class ConfigurationContainer extends FormElement {
           'wrapper' => $wrapper_id,
         ],
       ];
+    }
+    if ($item_type instanceof ConfigurationContainerItemCustomActionsInterface) {
+      foreach ($item_type->getCustomActions() as $element_key => $label) {
+        $operations[$element_key] = [
+          '#type' => 'submit',
+          '#value' => $label,
+          '#name' => 'custom-action--' . $element_key . '--' . $key,
+          '#custom_action' => $element_key,
+          '#ajax' => [
+            'event' => 'click',
+            'callback' => [static::class, 'updateAjax'],
+            'wrapper' => $wrapper_id,
+          ],
+        ];
+      }
     }
     $operations['remove'] = [
       '#type' => 'submit',
@@ -1013,6 +1051,90 @@ class ConfigurationContainer extends FormElement {
   }
 
   /**
+   * Build the filter form part for item configuration.
+   *
+   * @param array $element
+   *   The form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state interface.
+   * @param int $id
+   *   Id to specifiy the item for which the filter is to be configured.
+   * @param string $custom_action
+   *   The custom action form to build.
+   */
+  public static function buildItemCustomActionForm(array &$element, FormStateInterface $form_state, $id, $custom_action) {
+    $wrapper_id = self::getWrapperId($element);
+
+    $items = $form_state->get('items');
+    $item = self::getItemById($items, $id);
+    $item_type = self::getItemTypeInstance($item, $element);
+
+    $element['custom_config'] = [
+      '#type' => 'container',
+      'actions' => [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => [
+            'actions-wrapper',
+          ],
+        ],
+        '#parents' => array_merge($element['#parents'], [
+          'custom_config',
+          'actions',
+        ]),
+        '#array_parents' => array_merge($element['#array_parents'], [
+          'custom_config',
+          'actions',
+        ]),
+      ],
+    ];
+
+    $callback = StringHelper::makeCamelCase($custom_action, FALSE);
+    if (method_exists($item_type, $callback)) {
+      $element['custom_config']['#attributes'] = [
+        'class' => Html::getClass($custom_action),
+      ];
+      $element['custom_config'][$custom_action] = [
+        '#parents' => array_merge($element['#parents'], [
+          'custom_config',
+          $custom_action,
+        ]),
+        '#array_parents' => array_merge($element['#array_parents'], [
+          'custom_config',
+          $custom_action,
+        ]),
+      ];
+      $element['custom_config'][$custom_action] = $item_type->$callback($element['custom_config'][$custom_action], $form_state);
+    }
+
+    $element['custom_config']['actions']['submit_item'] = [
+      '#type' => 'submit',
+      '#value' => t('Save'),
+      '#name' => 'custom-config-submit',
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+    ];
+
+    $element['custom_config']['actions']['cancel'] = [
+      '#type' => 'submit',
+      '#value' => t('Cancel'),
+      '#name' => 'custom-config-cancel',
+      '#limit_validation_errors' => [],
+      // This is important to prevent form errors. Note that elementSubmit()
+      // is still run for this button.
+      '#submit' => [],
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+    ];
+  }
+
+  /**
    * Prerender callback.
    */
   public static function preRenderConfigurationContainer(array $element) {
@@ -1150,7 +1272,10 @@ class ConfigurationContainer extends FormElement {
     $form_subset = NestedArray::getValue($form, self::$elementParentsFormKey);
     $submit_button_selector = '[data-drupal-selector="edit-actions-submit"]';
     $preview_selector = '[data-drupal-selector="edit-actions-subforms-preview"]';
-    if (array_key_exists('item_config', $form_subset)) {
+    $item_config = array_key_exists('item_config', $form_subset);
+    $filter_config = array_key_exists('filter_config', $form_subset);
+    $custom_config = array_key_exists('custom_config', $form_subset);
+    if ($item_config || $filter_config || $custom_config) {
       // Disable the main submit button on the block config form.
       $method = 'attr';
       $args = ['disabled', 'disabled'];

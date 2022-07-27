@@ -347,7 +347,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       return $this->getAutomaticBlockTitle();
     }
     elseif ($this instanceof OptionalTitleBlockInterface) {
-      return $configured_label;
+      return $configured_label != '<none>' ? $configured_label : '';
     }
     elseif ($this instanceof OverrideDefaultTitleBlockInterface) {
       return $configured_label ?: $this->getDefaultTitle();
@@ -762,12 +762,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
         $temporary_settings = $this->getTemporarySettings($form_state);
         if ($this instanceof MultiStepFormBlockInterface) {
+          $configured_label = $temporary_settings[$this->getTitleSubform()]['label'] ?? NULL;
           if ($this instanceof OptionalTitleBlockInterface) {
-            $form['container']['label']['#default_value'] = $temporary_settings[$this->getTitleSubform()]['label'] ?? NULL;
-            $form['container']['label_display']['#default_value'] = !empty($form['container']['label']['#default_value']);
+            $form['container']['label']['#default_value'] = $configured_label ?? '<none>';
+            $form['container']['label_display']['#default_value'] = !empty($configured_label);
           }
           else {
-            $form['container']['label']['#default_value'] = $temporary_settings[$this->getTitleSubform()]['label'] ?? $this->label();
+            $form['container']['label']['#default_value'] = $configured_label ?? $this->label();
             $form['container']['label_display']['#default_value'] = $temporary_settings[$this->getTitleSubform()]['label_display'] ?? $this->configuration['label_display'];
           }
         }
@@ -965,6 +966,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       if ($this instanceof OptionalTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface) {
         // This label field is optional and the display toggle can be hidden.
         // Display status will be determined based on the presence of a title.
+        $settings_form['label']['#default_value'] = $settings_form['label']['#default_value'] == '<none>' ? '' : $settings_form['label']['#default_value'];
         $settings_form['label']['#required'] = FALSE;
         $settings_form['label']['#description'] = $this->t('You can set a title for this element. Leave empty to not use a title.');
         $settings_form['label_display']['#access'] = FALSE;
@@ -1112,6 +1114,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $title_form_key,
       'label_display',
     ]));
+
+    if ($this instanceof OptionalTitleBlockInterface && empty($this->configuration['label'])) {
+      $this->configuration['label'] = '<none>';
+    }
+    if ($this instanceof OverrideDefaultTitleBlockInterface && empty($this->configuration['label'])) {
+      $this->configuration['label'] = $this->getDefaultTitle();
+    }
 
     // Remove traces of preview.
     unset($this->configuration['is_preview']);

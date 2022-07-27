@@ -63,7 +63,7 @@ class TagSelect extends FormElement {
    * {@inheritdoc}
    */
   public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
-    if ($input !== NULL) {
+    if (is_array($input)) {
       // Make sure input is returned as normal during item configuration.
       if (!array_key_exists('tag_op', $input) || $input['tag_op'] === NULL) {
         $input['tag_op'] = 'OR';
@@ -83,14 +83,14 @@ class TagSelect extends FormElement {
   public static function processTagSelect(array &$element, FormStateInterface $form_state) {
 
     // Get a name that let's us identify this element.
-    $name = implode('-', array_merge(['edit'], $element['#parents']));
+    $name = Html::getUniqueId(implode('-', array_merge(['edit'], $element['#parents'])));
 
     $element['#wrapper_attributes']['data-drupal-selector'] = $name;
     $element['tag_ids'] = [
       '#type' => 'checkboxes',
       '#title' => $element['#title'],
       '#options' => $element['#tags'],
-      '#default_value' => $element['#default_value']['tag_ids'],
+      '#default_value' => $element['#default_value']['tag_ids'] ?? [],
     ];
     unset($element['#title']);
 
@@ -110,12 +110,12 @@ class TagSelect extends FormElement {
       '#title' => t('Require all selected tags'),
       '#return_value' => 'AND',
       '#wrapper_attributes' => ['data-drupal-selector' => 'tag_op'],
-      '#default_value' => $element['#default_value']['tag_op'],
+      '#default_value' => $element['#default_value']['tag_op'] ?? FALSE,
     ];
 
     $element['tag_content_selected'] = [
       '#type' => 'hidden',
-      '#default_value' => implode(',', (array) $element['#default_value']['tag_content_selected']),
+      '#default_value' => implode(',', $element['#default_value']['tag_content_selected'] ?? []),
       '#attributes' => ['class' => Html::getClass('selected_items')],
     ];
 
