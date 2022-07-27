@@ -3,7 +3,7 @@
  *
  */
 
-(function ($, Drupal, drupalSettings) {
+(function ($, Drupal) {
 
   Drupal.TagSelectPreview = {
     checkboxSelector: 'fieldset input[type="checkbox"]:not(:disabled)',
@@ -18,10 +18,9 @@
     $wrapper.find('input.selected-items').val(selected.join());
   };
 
-  Drupal.TagSelectPreview.updateSummary = function(key, $wrapper) {
+  Drupal.TagSelectPreview.updateSummary = function(tag_select, $wrapper) {
 
     // Get the tag select configuration.
-    let tag_select = drupalSettings.tag_select[key];
     let ids_by_tag = tag_select.ids_by_tag;
     let previews = tag_select.previews;
     let select_preview_items = tag_select.select_preview_items;
@@ -119,16 +118,17 @@
 
       for (key in settings.tag_select) {
         $wrapper = $('[data-drupal-selector="' + key + '"]');
-        Drupal.TagSelectPreview.updateSummary(key, $wrapper);
+        let tag_select = settings.tag_select[key];
+        Drupal.TagSelectPreview.updateSummary(tag_select, $wrapper);
         $(Drupal.TagSelectPreview.checkboxSelector, $wrapper).once().bind('change', function() {
-          Drupal.TagSelectPreview.updateSummary(key, $wrapper);
+          Drupal.TagSelectPreview.updateSummary(tag_select, $wrapper);
         });
         $(Drupal.TagSelectPreview.logicToggleSelector, $wrapper).once().bind('change', function() {
-          Drupal.TagSelectPreview.updateSummary(key, $wrapper);
+          Drupal.TagSelectPreview.updateSummary(tag_select, $wrapper);
         });
       }
 
     }
   }
 
-})(jQuery, Drupal, drupalSettings);
+})(jQuery, Drupal);

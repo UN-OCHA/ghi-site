@@ -173,7 +173,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Op
     $form['items'] = [
       '#type' => 'configuration_container',
       '#title' => $this->t('Configured key figures'),
-      '#title_display' => 'invisble',
+      '#title_display' => 'invisible',
       '#description' => $this->t('You can add multiple grouped key figures. Each group will show as a separate tab in the frontend. Items not added to any group will not display in the frontend. A single group will not display in the frontend.'),
       '#item_type_label' => $this->t('Key figure'),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'items'),
