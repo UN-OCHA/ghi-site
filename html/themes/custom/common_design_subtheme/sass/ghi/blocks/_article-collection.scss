@@ -1,18 +1,25 @@
-.article-collection {
-  margin-top: 2rem;
-}
+.ghi-block-article-collection {
 
-.article-collection-cards {
+  .block-content > a.external {
+    margin-top: 2rem;
+  }
 
-  .ghi-grid-item {
-    padding: 0;
+  .article-collection {
+    margin-top: 2rem;
+  }
 
-    &.featured {
-      background-color: var(--cd-primary-color);
-    }
+  .article-collection-cards {
 
-    .field--type-image {
-      width: 100%;
+    .ghi-grid-item {
+      padding: 0;
+
+      &.featured {
+        background-color: var(--cd-primary-color);
+      }
+
+      .field--type-image {
+        width: 100%;
+      }
     }
   }
 }
