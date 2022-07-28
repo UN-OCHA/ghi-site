@@ -16,6 +16,7 @@
     {% for key, item in tabs %}
       <div data-tab-index="{{ key }}" class="tab-details">
         {{ item.items }}
+        {{ item.link }}
       </div>
     {% endfor %}
   </div>

@@ -224,7 +224,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
         continue;
       }
 
-      /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
+      /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemGroupInterface $group_item */
       $group_item = $this->getItemTypePluginForColumn($group, $context);
 
       foreach ($group['children'] as $item) {
@@ -241,7 +241,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
       if (empty($rendered)) {
         continue;
       }
-      $tabs[] = [
+      $tab = [
         'title' => [
           '#markup' => $group_item->getLabel(),
         ],
@@ -260,6 +260,16 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
           ],
         ],
       ];
+      if ($group_item->hasLink()) {
+        $link = $group_item->getLink();
+        $link->getUrl()->setOptions([
+          'attributes' => [
+            'class' => ['cd-button', 'external'],
+          ],
+        ]);
+        $tab['link'] = $link->toRenderable();
+      }
+      $tabs[] = $tab;
     }
 
     return $tabs ? [
@@ -329,7 +339,9 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
    */
   public function getAllowedItemTypes() {
     $item_types = [
-      'item_group' => [],
+      'item_group' => [
+        'link' => TRUE,
+      ],
       'funding_data' => [
         'item_types' => [
           'funding_totals',

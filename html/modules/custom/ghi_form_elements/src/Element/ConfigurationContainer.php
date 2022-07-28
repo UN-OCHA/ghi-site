@@ -121,6 +121,14 @@ class ConfigurationContainer extends FormElement {
 
         // Switch to edit mode.
         $new_mode = 'edit_item';
+
+        // Check if this is a group.
+        $items = $form_state->get('items');
+        $item = self::getItemById($items, $id);
+        $item_type = self::getItemTypeInstance($item, $element);
+        if ($item_type->isGroupItem()) {
+          $new_mode = 'edit_group';
+        }
         break;
 
       case 'submit_group':
