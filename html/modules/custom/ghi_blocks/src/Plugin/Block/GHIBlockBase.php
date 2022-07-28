@@ -245,7 +245,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
         continue;
       }
       $context_value = $context->getContextValue();
-
       if (is_scalar($context_value)) {
         // Arguments like "year".
         $query_handler->setPlaceholder($context_key, $context->getContextValue());
@@ -255,6 +254,12 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $original_id = $context_value->get('field_original_id')->value;
         if ($original_id && is_scalar($original_id)) {
           $query_handler->setPlaceholder($context_key . '_id', $original_id);
+        }
+        if ($context_value->hasField('field_plan')) {
+          $plan_id = $context_value->get('field_plan')->entity->get('field_original_id')->value ?? NULL;
+          if ($plan_id) {
+            $query_handler->setPlaceholder('plan_id', $plan_id);
+          }
         }
       }
     }
@@ -1571,6 +1576,12 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $this->getContexts();
     if ($this->hasContext('plan')) {
       return $this->getContext('plan')->getContextValue();
+    }
+    if ($this->hasContext('plan_cluster')) {
+      $plan_cluster = $this->getContext('plan_cluster')->getContextValue();
+      if ($plan_cluster && $plan_cluster->hasField('field_plan')) {
+        return $plan_cluster->get('field_plan')->entity;
+      }
     }
     return NULL;
   }

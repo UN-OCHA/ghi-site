@@ -48,6 +48,7 @@ third_party_settings:
       - 'Lists (Views)'
       - Menus
       - 'Narrative Content'
+      - 'Plan cluster elements'
       - 'Plan elements'
       - 'Social Auth'
       - Subpage

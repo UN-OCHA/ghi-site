@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ghi_blocks\Plugin\Block\Plan;
+namespace Drupal\ghi_blocks\Plugin\Block\PlanCluster;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
@@ -9,12 +9,12 @@ use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\node\NodeInterface;
 
 /**
- * Provides a 'PlanWebcontentText' block.
+ * Provides a 'PlanClusterHeader' block.
  *
  * @Block(
- *  id = "plan_webcontent_text",
- *  admin_label = @Translation("Web Content Text"),
- *  category = @Translation("Plan elements"),
+ *  id = "plan_cluster_header",
+ *  admin_label = @Translation("Plan Cluster Header"),
+ *  category = @Translation("Plan cluster elements"),
  *  data_sources = {
  *    "entities" = "plan_entities_query",
  *    "attachment" = "attachment_query",
@@ -22,11 +22,11 @@ use Drupal\node\NodeInterface;
  *  title = false,
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
+ *    "plan_cluster" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "governing_entity" })
  *   }
  * )
  */
-class PlanWebcontentText extends GHIBlockBase implements SyncableBlockInterface {
+class PlanClusterHeader extends GHIBlockBase implements SyncableBlockInterface {
 
   /**
    * {@inheritdoc}
@@ -47,23 +47,47 @@ class PlanWebcontentText extends GHIBlockBase implements SyncableBlockInterface 
   public function buildContent() {
     // Retrieve the attachments.
     $conf = $this->getBlockConfig();
-    if (empty($conf['attachment_id'])) {
+
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $attachment_query */
+    $attachment_query = $this->getQueryHandler('attachment');
+    $attachment = !empty($conf['attachment_id']) ? $attachment_query->getAttachment($conf['attachment_id']) : NULL;
+
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $plan_entities_query */
+    $plan_entities_query = $this->getQueryHandler('entities');
+    $contacts = $plan_entities_query->getContactAttachments($this->getCurrentBaseObject());
+
+    if (!$contacts && !$attachment) {
       return;
     }
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
-    $query = $this->getQueryHandler('attachment');
-    $attachment = $query->getAttachment($conf['attachment_id']);
-
     $build = [
       '#type' => 'container',
-      'content' => [
-        [
-          '#type' => 'markup',
-          '#markup' => Markup::create($attachment->content),
-        ],
-      ],
     ];
+
+    if ($contacts) {
+      $build[] = [
+        '#theme' => 'plan_cluster_contacts',
+        '#contacts' => $contacts,
+      ];
+    }
+
+    if ($attachment) {
+      $build[] = [
+        'attachment' => [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#attributes' => [
+            'class' => [
+              'cluster-description',
+            ],
+          ],
+          'content' => [
+            '#type' => 'markup',
+            '#markup' => Markup::create($attachment->content),
+          ],
+        ],
+      ];
+    }
     return $build;
   }
 
@@ -88,7 +112,7 @@ class PlanWebcontentText extends GHIBlockBase implements SyncableBlockInterface 
     // Retrieve the attachments.
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
     $query = $this->getQueryHandler('entities');
-    $attachments = $this->getCurrentPlanObject() ? $query->getWebContentTextAttachments($this->getCurrentPlanObject()) : NULL;
+    $attachments = $this->getCurrentPlanObject() ? $query->getWebContentTextAttachments($this->getCurrentBaseObject()) : NULL;
 
     if (!empty($attachments)) {
       foreach ($attachments as $attachment) {

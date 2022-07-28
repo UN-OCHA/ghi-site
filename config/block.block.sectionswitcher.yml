@@ -10,7 +10,7 @@ dependencies:
 id: sectionswitcher
 theme: common_design_subtheme
 region: page_title
-weight: -5
+weight: -4
 provider: null
 plugin: section_switcher
 settings:

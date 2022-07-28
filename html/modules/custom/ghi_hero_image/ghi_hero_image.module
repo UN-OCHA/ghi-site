@@ -16,7 +16,7 @@ use Drupal\node\NodeInterface;
  * This code assumes that there is a page_title region in the theme.
  */
 function ghi_hero_image_preprocess_page(&$variables) {
-  $region_name = 'page_title';
+  $region_name = 'page_image';
   if (!array_key_exists($region_name, $variables['page'])) {
     return;
   }

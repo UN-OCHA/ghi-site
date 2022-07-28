@@ -16,7 +16,9 @@ regions:
   header_logo: Header logo
   header_navigation: Header navigation
   highlighted: Highlighted
+  page_image: Page image
   page_title: Page title
+  page_navigation: Page navigation
   content: Content
   sidebar_first: First sidebar
   sidebar_second: Second sidebar

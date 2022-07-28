@@ -63,7 +63,7 @@ class PlanWebcontentFile extends GHIBlockBase {
    * {@inheritdoc}
    */
   public function getConfigForm(array $form, FormStateInterface $form_state) {
-    $file_options = [];
+    $options = [];
 
     // Retrieve the attachments.
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
@@ -72,7 +72,7 @@ class PlanWebcontentFile extends GHIBlockBase {
 
     if (!empty($attachments)) {
       foreach ($attachments as $attachment) {
-        $file_options[$attachment->id] = [
+        $options[$attachment->id] = [
           'id' => $attachment->id,
           'title' => $attachment->title,
           'file_name' => $attachment->file_name,
@@ -106,15 +106,11 @@ class PlanWebcontentFile extends GHIBlockBase {
       '#tree' => TRUE,
       '#header' => $table_header,
       '#validated' => TRUE,
-      '#options' => $file_options,
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'attachment_id'),
+      '#options' => $options,
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'attachment_id') ?? array_key_first($options),
       '#multiple' => FALSE,
-      '#empty' => $this->t('There are no images yet.'),
+      '#empty' => $this->t('There are no file attachments yet.'),
       '#required' => TRUE,
-      '#ajax' => [
-        'event' => 'change',
-        'callback' => [$this, 'updateAjax'],
-      ],
     ];
     return $form;
   }

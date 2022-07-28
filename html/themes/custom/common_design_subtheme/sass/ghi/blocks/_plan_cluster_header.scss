@@ -1,0 +1,17 @@
+.ghi-block-plan-cluster-header {
+
+  .cluster-header-contacts {
+    float: right;
+    padding: 1rem;
+    background-color: var(--cd-default-background-color);
+
+    h3 {
+      margin-top: 0;
+      font-size: var(--cd-font-size--medium);
+    }
+
+    .cluster-header-contacts-item {
+      font-size: var(--cd-font-size--default);
+    }
+  }
+}
