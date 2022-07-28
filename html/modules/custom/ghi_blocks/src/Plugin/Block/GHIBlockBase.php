@@ -358,6 +358,18 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * {@inheritdoc}
    */
+  public function getPreviewFallbackString() {
+    $label = parent::label();
+    if ($label == '<none>') {
+      $definition = $this->getPluginDefinition();
+      $label = (string) $definition['admin_label'];
+    }
+    return $this->t('"@block" block', ['@block' => $label]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function build() {
     $plugin_configuration = $this->getConfiguration();
 
@@ -942,6 +954,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Disable all of the default settings elements. We will handle them.
     $form['admin_label']['#access'] = FALSE;
     $form['admin_label']['#value'] = (string) $plugin_definition['admin_label'];
+    $form['label']['#default_value'] = $form['label']['#default_value'] ?: '<none>';
     $form['label']['#access'] = FALSE;
     $form['label']['#required'] = FALSE;
     $form['label_display']['#access'] = FALSE;
@@ -967,6 +980,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
         // This label field is optional and the display toggle can be hidden.
         // Display status will be determined based on the presence of a title.
         $settings_form['label']['#default_value'] = $settings_form['label']['#default_value'] == '<none>' ? '' : $settings_form['label']['#default_value'];
+        $settings_form['label']['#value'] = $settings_form['label']['#default_value'];
         $settings_form['label']['#required'] = FALSE;
         $settings_form['label']['#description'] = $this->t('You can set a title for this element. Leave empty to not use a title.');
         $settings_form['label_display']['#access'] = FALSE;
@@ -977,6 +991,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       if ($this instanceof OverrideDefaultTitleBlockInterface || $this->hasDefaultTitle()) {
         // This block plugin provides a default title, so the label field is
         // optional and the display toggle can be hidden.
+        $settings_form['label']['#default_value'] = $settings_form['label']['#default_value'] == '<none>' ? '' : $settings_form['label']['#default_value'];
         $settings_form['label']['#required'] = FALSE;
         $settings_form['label']['#description'] = $this->t('Leave empty to use the default title %default_title.', [
           '%default_title' => $plugin_definition['default_title'],

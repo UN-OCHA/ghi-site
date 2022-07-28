@@ -108,12 +108,6 @@ third_party_settings:
     entity_view_mode_restriction:
       allowed_layouts:
         - layout_onecol
-      blacklisted_blocks: {  }
-      whitelisted_blocks:
-        'Narrative Content':
-          - paragraph
-          - related_articles
-          - related_sections
       restricted_categories:
         - 'Chaos Tools'
         - 'Content fields'
@@ -130,6 +124,12 @@ third_party_settings:
         - Subpage
         - System
         - core
+      blacklisted_blocks: {  }
+      whitelisted_blocks:
+        'Narrative Content':
+          - paragraph
+          - related_articles
+          - related_sections
   layout_builder_ipe:
     enabled: 1
 id: node.article.default
