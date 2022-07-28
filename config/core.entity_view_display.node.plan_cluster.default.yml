@@ -44,7 +44,6 @@ third_party_settings:
       - 'Generic elements'
       - Global
       - HID
-      - Homepage
       - 'Inline blocks'
       - 'Lists (Views)'
       - Menus
@@ -56,6 +55,23 @@ third_party_settings:
       - core
     entity_view_mode_restriction:
       allowed_layouts: {  }
+      denylisted_blocks: {  }
+      allowlisted_blocks: {  }
+      restricted_categories:
+        - 'Chaos Tools'
+        - 'Content fields'
+        - 'Country elements'
+        - 'Custom block types'
+        - Forms
+        - Global
+        - HID
+        - 'Inline blocks'
+        - 'Lists (Views)'
+        - Menus
+        - 'Social Auth'
+        - Subpage
+        - System
+        - core
       blacklisted_blocks:
         'Plan elements':
           - plan_entity_types
@@ -67,21 +83,6 @@ third_party_settings:
           - article_collection
           - paragraph
           - related_articles
-      restricted_categories:
-        - 'Chaos Tools'
-        - 'Content fields'
-        - 'Country elements'
-        - 'Custom block types'
-        - Forms
-        - Global
-        - HID
-        - Homepage
-        - 'Lists (Views)'
-        - Menus
-        - 'Social Auth'
-        - Subpage
-        - System
-        - core
 id: node.plan_cluster.default
 targetEntityType: node
 bundle: plan_cluster
