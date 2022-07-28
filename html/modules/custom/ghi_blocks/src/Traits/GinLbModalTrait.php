@@ -23,6 +23,9 @@ trait GinLbModalTrait {
     $form['description']['#attributes']['class'][] = 'canvas-form__settings';
     $form['actions']['#type'] = 'container';
     $form['actions']['#attributes']['class'][] = 'canvas-form__actions';
+    $form['actions']['#gin_lb_form'] = TRUE;
+    $form['#gin_lb_form'] = TRUE;
+    $form['#after_build'][] = 'gin_lb_after_build';
   }
 
 }
