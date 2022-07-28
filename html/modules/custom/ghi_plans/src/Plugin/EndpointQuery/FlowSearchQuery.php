@@ -29,8 +29,7 @@ class FlowSearchQuery extends EndpointQueryBase {
    *   The result set.
    */
   public function search(array $arguments) {
-    $this->setEndpointArguments($arguments);
-    $data = $this->getData();
+    $data = $this->getData($arguments);
     if (empty($data)) {
       return NULL;
     }
@@ -44,7 +43,7 @@ class FlowSearchQuery extends EndpointQueryBase {
    *   Whether the current search query is grouped.
    */
   private function isGrouped() {
-    return !empty($this->getEndpointArgument('groupby'));
+    return !empty($this->endpointQuery->getEndpointArgument('groupby'));
   }
 
   /**
