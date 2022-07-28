@@ -1,17 +1,23 @@
 .ghi-block-global-key-figures,
 .ghi-block-plan-headline-figures {
 
-  .key-figures {
-    margin-bottom: 0;
-    padding-top: 1rem;
-    padding-bottom: 0;
+  .tab-details {
+    .key-figures {
+      margin-bottom: 0;
+      padding-top: 1rem;
+      padding-bottom: 0;
 
-    .cd-figure-list__label {
-      font-weight: normal;
+      .cd-figure-list__label {
+        font-weight: normal;
+      }
+
+      .cd-figure-list__value {
+        color: var(--cd-default-text-color);
+      }
     }
 
-    .cd-figure-list__value {
-      color: var(--cd-default-text-color);
+    & > a.external {
+      margin-top: 2rem;
     }
   }
 }

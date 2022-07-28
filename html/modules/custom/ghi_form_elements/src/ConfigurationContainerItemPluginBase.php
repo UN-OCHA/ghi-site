@@ -491,7 +491,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    * {@inheritdoc}
    */
   public function isGroupItem() {
-    return FALSE;
+    return $this instanceof ConfigurationContainerItemGroupInterface;
   }
 
 }

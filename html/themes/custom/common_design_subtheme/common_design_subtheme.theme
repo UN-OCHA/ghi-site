@@ -117,6 +117,7 @@ function common_design_subtheme_preprocess_block(&$variables) {
     'system_menu_block:operations-menu',
     'system_menu_block:account',
     'subpage_navigation',
+    'system_main_block',
   ];
 
   // Some blocks are white-listed here to always use the content-width class,
