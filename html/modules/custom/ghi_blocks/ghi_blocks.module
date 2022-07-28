@@ -163,9 +163,8 @@ function ghi_blocks_preprocess_block(&$variables) {
     return;
   }
 
-  // Set the title if needed.
-  if ($block->shouldDisplayTitle() && array_key_exists('#title', $variables['content'])) {
-    $variables['label'] = $variables['content']['#title'];
+  if ($variables['label'] == '<none>') {
+    $variables['label'] = $block->label();
   }
 
   // Provide a support for block download links.
@@ -285,6 +284,7 @@ function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $fo
     'layout_builder_revert_overrides',
   ];
   if (in_array($form_id, $confirm_forms)) {
+    /** @var \Drupal\ghi_blocks\LayoutBuilder\LayoutBuilderFormAlter $layout_builder_form_alter */
     $layout_builder_form_alter = \Drupal::service('ghi_blocks.layout_builder_form_alter');
     $layout_builder_form_alter->alterConfirmationForm($form, $form_state);
   }
