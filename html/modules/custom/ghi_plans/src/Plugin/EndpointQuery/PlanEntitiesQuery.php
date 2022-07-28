@@ -201,6 +201,23 @@ class PlanEntitiesQuery extends EndpointQueryBase {
   }
 
   /**
+   * Get contact attachments.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_object
+   *   The current context object.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
+   *   An array of attachment objects for the given context.
+   */
+  public function getContactAttachments(ContentEntityInterface $context_object = NULL) {
+    $attachments = [];
+    foreach ($this->getAttachments($context_object, ['type' => 'contact']) as $attachment) {
+      $attachments[$attachment->id] = AttachmentHelper::processAttachment($attachment);
+    }
+    return $attachments;
+  }
+
+  /**
    * Get webcontent file attachments.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $context_object

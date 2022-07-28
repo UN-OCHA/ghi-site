@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\Helpers;
 
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
+use Drupal\ghi_plans\ApiObjects\Attachments\ContactAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment;
@@ -53,6 +54,9 @@ class AttachmentHelper {
 
       case 'textwebcontent':
         return new TextAttachment($attachment);
+
+      case 'contact':
+        return new ContactAttachment($attachment);
 
       default:
         throw new InvalidTypeException(sprintf('Unknown attachment type: %s', $attachment->type));

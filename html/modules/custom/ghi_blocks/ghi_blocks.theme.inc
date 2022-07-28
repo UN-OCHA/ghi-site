@@ -151,6 +151,17 @@ function ghi_blocks_preprocess_plan_operational_presence_map(&$variables) {
 }
 
 /**
+ * Preprocess a plan cluster contacts block.
+ */
+function ghi_blocks_preprocess_plan_cluster_contacts(&$variables) {
+  $contacts = $variables['contacts']['#contacts'];
+  $variables['contacts'] = [];
+  foreach ($contacts as $contact) {
+    $variables['contacts'][] = $contact->toArray();
+  }
+}
+
+/**
  * Preprocess the sidebar slot item.
  */
 function ghi_blocks_preprocess_sidebar_slot_item(&$variables) {

@@ -268,10 +268,10 @@ function ghi_content_node_predelete(NodeInterface $node) {
  * This is used to add the configured hero image (or a default image) to the
  * page title region.
  *
- * This code assumes that there is a page_title region in the theme.
+ * This code assumes that there is a page_image region in the theme.
  */
 function ghi_content_preprocess_page(&$variables) {
-  $region_name = 'page_title';
+  $region_name = 'page_image';
   if (!array_key_exists($region_name, $variables['page'])) {
     return;
   }

@@ -117,6 +117,11 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'section-switcher',
     ],
+    'plan_cluster_contacts' => [
+      'render element' => 'contacts',
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'plan-cluster-contacts',
+    ],
   ];
 }
 
