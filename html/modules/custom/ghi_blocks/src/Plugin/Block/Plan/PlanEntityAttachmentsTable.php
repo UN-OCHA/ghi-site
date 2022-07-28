@@ -632,7 +632,37 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     $attachments = array_filter($attachments, function ($attachment) {
       return $attachment instanceof DataAttachment;
     });
+    $this->groupAndSortAttachments($attachments);
     return $attachments;
+  }
+
+  /**
+   * Group and sort attachments.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $attachments
+   *   The attachments to group and sort.
+   */
+  private function groupAndSortAttachments(array &$attachments) {
+    // Sort by entity.
+    $entities = [];
+    foreach ($attachments as $attachment) {
+      $source_entity = $attachment->getSourceEntity();
+      $entity_name = $source_entity->getEntityName();
+      if (!array_key_exists($entity_name, $entities)) {
+        $entities[$entity_name] = [];
+      }
+      $entities[$entity_name][] = $attachment;
+    }
+    uksort($entities, function ($name_a, $name_b) {
+      return strnatcmp($name_a, $name_b);
+    });
+    $attachments = [];
+    foreach ($entities as &$entity_attachments) {
+      uasort($entity_attachments, function (DataAttachment $attachment_a, DataAttachment $attachment_b) {
+        return strnatcmp($attachment_a->getTitle(), $attachment_b->getTitle());
+      });
+      $attachments = array_merge($attachments, $entity_attachments);
+    }
   }
 
   /**
