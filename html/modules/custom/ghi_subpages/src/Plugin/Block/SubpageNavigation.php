@@ -100,6 +100,8 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       0 => $overview_link,
     ];
 
+    // First iterate over the default subpages and add links if the user
+    // current has access.
     foreach (SubpageManager::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
       $matching_subpages = $this->entityTypeManager->getStorage('node')->loadByProperties([
         'type' => $subpage_type,
@@ -114,12 +116,6 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       $cache_tags = array_merge($cache_tags, $subpage->getCacheTags());
 
       if (!$subpage->access('view') || (!$this->subpageHasContent($subpage) && !$subpage->access('update'))) {
-        $tabs[] = [
-          '#markup' => $subpage->getTitle(),
-          '#wrapper_attributes' => [
-            'class' => ['disabled'],
-          ],
-        ];
         continue;
       }
       $link = $subpage->toLink(NULL)->toRenderable();

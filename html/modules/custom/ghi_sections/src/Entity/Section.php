@@ -19,7 +19,7 @@ class Section extends Node implements SectionNodeInterface {
    */
   public function label() {
     $label = parent::label();
-    if ($this->isAdminPage()) {
+    if ($this->isAutocompleteRoute() || $this->isAdminPage()) {
       return $label;
     }
     $base_object = $this->get('field_base_object')->entity;
@@ -55,6 +55,17 @@ class Section extends Node implements SectionNodeInterface {
    */
   private static function isAdminPage() {
     return \Drupal::service('router.admin_context')->isAdminRoute();
+  }
+
+  /**
+   * See if the current request is for an entity autocomplete element.
+   *
+   * @return bool
+   *   TRUE if the current request is an autocomplete request, FALSE otherwise.
+   */
+  private static function isAutocompleteRoute() {
+    $route_name = \Drupal::routeMatch()->getRouteName();
+    return $route_name == 'system.entity_autocomplete';
   }
 
 }

@@ -452,3 +452,25 @@ function common_design_subtheme_preprocess_item_list__subpage_navigation(&$varia
     $item['attributes']['class'] = array_merge(['expandable'], $wrapper_attribute);
   }
 }
+
+/**
+ * Preprocess a plan headline figures list.
+ */
+function common_design_subtheme_preprocess_item_list__section_collection(&$variables) {
+  $variables['options'] = [
+    'alignment' => 'horizontal',
+    'columns' => 3,
+  ];
+  $items = [];
+  $subkey = 0;
+  foreach ($variables['items'] as $section_teaser) {
+    $items[$subkey]['content'][] = [
+      'content' => $section_teaser['value'],
+    ];
+    if (count($items[$subkey]) == $variables['options']['columns']) {
+      $subkey++;
+    }
+  }
+
+  $variables['items'] = $items;
+}

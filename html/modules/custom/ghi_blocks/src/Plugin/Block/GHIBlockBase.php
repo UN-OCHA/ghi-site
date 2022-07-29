@@ -338,7 +338,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
    */
   public function getDefaultTitle() {
     $plugin_definition = $this->getPluginDefinition();
-    return $plugin_definition['default_title'] ?? NULL;
+    if (empty($plugin_definition['default_title'])) {
+      return NULL;
+    }
+    return $plugin_definition['default_title'];
   }
 
   /**
@@ -401,17 +404,19 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // @todo This is confusing and needs cleanup.
     if ($this->shouldDisplayTitle()) {
       $build['#title'] = $this->label();
+      $display_label = $this->configuration['label_display'] ?? FALSE;
       if ($this instanceof AutomaticTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface) {
-        $plugin_configuration['label_display'] = TRUE;
+        $display_label = TRUE;
       }
       elseif (!empty($build_content['#title'])) {
         $build['#title'] = $build_content['#title'];
         unset($build_content['#title']);
       }
 
-      if (empty($plugin_configuration['label_display'])) {
+      if (!$display_label) {
         unset($build['#title']);
       }
+      $this->configuration['label_display'] = $display_label;
     }
 
     if (!empty($build_content['#theme']) && $build_content['#theme'] == 'item_list') {

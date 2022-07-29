@@ -592,11 +592,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
   }
 
   /**
-   * Get the allowed item types for this element.
-   *
-   * @return array
-   *   An array with the allowed item types, keyed by the plugin id, with the
-   *   value being an optional configuration array for the plugin.
+   * {@inheritdoc}
    */
   public function getAllowedItemTypes() {
     $item_types = [
