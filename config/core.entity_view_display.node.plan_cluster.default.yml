@@ -50,6 +50,7 @@ third_party_settings:
       - 'Narrative Content'
       - 'Plan cluster elements'
       - 'Plan elements'
+      - Sections
       - 'Social Auth'
       - Subpage
       - System

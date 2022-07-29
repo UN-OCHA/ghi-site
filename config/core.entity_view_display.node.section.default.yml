@@ -37,13 +37,15 @@ third_party_settings:
       - 'Custom block types'
       - Forms
       - 'Generic elements'
+      - Global
       - HID
-      - Homepage
       - 'Inline blocks'
       - 'Lists (Views)'
       - Menus
       - 'Narrative Content'
+      - 'Plan cluster elements'
       - 'Plan elements'
+      - Sections
       - 'Social Auth'
       - Subpage
       - System
@@ -51,16 +53,19 @@ third_party_settings:
     entity_view_mode_restriction:
       allowed_layouts:
         - layout_onecol
+      denylisted_blocks: {  }
+      allowlisted_blocks: {  }
       restricted_categories:
         - 'Chaos Tools'
         - 'Content fields'
         - 'Custom block types'
         - Forms
+        - Global
         - HID
-        - Homepage
         - 'Inline blocks'
         - 'Lists (Views)'
         - Menus
+        - 'Plan cluster elements'
         - 'Social Auth'
         - Subpage
         - System

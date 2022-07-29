@@ -1,0 +1,54 @@
+{{ attach_library('common_design_subtheme/ghi-grid') }}
+
+{%
+  set classes = [
+    options.alignment,
+    'cols-' ~ options.columns,
+    'ghi-grid',
+    'section-collection',
+    'clearfix',
+  ]
+%}
+
+{%
+  set item_classes = [
+    'ghi-grid-item',
+  ]
+%}
+
+{% if options.row_class_default %}
+  {%
+    set row_classes = [
+      'views-row',
+      options.alignment == 'horizontal' ? 'clearfix',
+    ]
+  %}
+{% endif %}
+{% if options.col_class_default %}
+  {%
+    set col_classes = [
+      'views-col',
+      options.alignment == 'vertical' ? 'clearfix',
+    ]
+  %}
+{% endif %}
+
+<div{{ attributes.addClass(classes) }}>
+  {% if options.alignment == 'horizontal' %}
+    {% for row in items %}
+      {% for column in row.content %}
+        <div {{ column.attributes.addClass(item_classes) }}>
+          {{- column.content -}}
+        </div>
+      {% endfor %}
+    {% endfor %}
+  {% else %}
+    {% for column in items %}
+      {% for row in column.content %}
+        <div {{ row.attributes.addClass(item_classes) }}>
+          {{- row.content -}}
+        </div>
+      {% endfor %}
+    {% endfor %}
+  {% endif %}
+</div>

@@ -1,0 +1,18 @@
+.ghi-block-section-collection {
+
+  .block-content > a.external {
+    margin-top: 2rem;
+  }
+
+  .section-collection {
+    margin-top: 2rem;
+
+    .ghi-grid-item {
+      padding: 0;
+
+      .field--type-image {
+        width: 100%;
+      }
+    }
+  }
+}

@@ -878,7 +878,7 @@ class ConfigurationContainer extends FormElement {
     if ($item_type && $form_state->get('mode') != 'select_item_type') {
 
       // Add a description if available.
-      if ($plugin_description = $item_type->getPluginDescription()) {
+      if (count($item_type_options) > 1 && $plugin_description = $item_type->getPluginDescription()) {
         $element['item_config']['description'] = [
           '#type' => 'item',
           '#title' => $item_type->getPluginLabel(),
