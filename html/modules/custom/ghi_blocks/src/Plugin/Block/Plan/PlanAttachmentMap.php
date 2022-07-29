@@ -962,7 +962,7 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
   /**
    * {@inheritdoc}
    */
-  public function canShowSubform($form, FormStateInterface $form_state, $subform_key) {
+  public function canShowSubform(array $form, FormStateInterface $form_state, $subform_key) {
     $conf = $this->getBlockConfig();
     if (empty($conf['attachments']['entity_attachments']['attachments']['attachment_id'])) {
       return $subform_key == 'attachments';

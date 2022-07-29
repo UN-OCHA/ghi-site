@@ -26,6 +26,11 @@
     // This also needs to overwrite any additional margins defined in the
     // common design components.
     margin: 0 !important;
+
+    .block-comment {
+      margin-top: 2rem;
+      font-size: var(--cd-font-size--small);
+    }
   }
 
   & > div.block-links {

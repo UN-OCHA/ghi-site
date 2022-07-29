@@ -589,7 +589,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
   /**
    * {@inheritdoc}
    */
-  public function canShowSubform($form, FormStateInterface $form_state, $subform_key) {
+  public function canShowSubform(array $form, FormStateInterface $form_state, $subform_key) {
     $conf = $this->getBlockConfig();
     if ($subform_key == 'display') {
       return !empty($conf['organizations']['organization_ids']);
