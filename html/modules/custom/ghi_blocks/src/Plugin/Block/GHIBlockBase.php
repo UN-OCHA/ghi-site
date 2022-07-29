@@ -574,7 +574,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * {@inheritdoc}
    */
-  public function canShowSubform($form, FormStateInterface $form_state, $subform_key) {
+  public function canShowSubform(array $form, FormStateInterface $form_state, $subform_key) {
     return TRUE;
   }
 

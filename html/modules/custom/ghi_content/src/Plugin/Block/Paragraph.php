@@ -283,7 +283,7 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
   /**
    * {@inheritdoc}
    */
-  public function canShowSubform($form, FormStateInterface $form_state, $subform_key) {
+  public function canShowSubform(array $form, FormStateInterface $form_state, $subform_key) {
     if ($subform_key == 'paragraph') {
       return $this->getArticle() && $this->getArticle() instanceof RemoteArticleInterface;
     }

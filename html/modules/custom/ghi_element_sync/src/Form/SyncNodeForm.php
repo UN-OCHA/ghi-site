@@ -50,21 +50,6 @@ class SyncNodeForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
     $form['#node'] = $node;
 
-    $form['sync_all'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Sync all elements'),
-    ];
-
-    $form['sync_selected'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Sync selected elements'),
-    ];
-
-    $form['remove_synced'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Remove all sync elements'),
-    ];
-
     $header = [
       'source_type' => $this->t('Source type'),
       'plugin' => $this->t('Plugin'),
@@ -99,6 +84,25 @@ class SyncNodeForm extends FormBase {
       ]));
       $form['sync_elements']['#disabled'] = TRUE;
     }
+
+    $form['actions'] = ['#type' => 'actions'];
+    $form['actions']['sync_all'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Sync all elements'),
+      '#disabled' => !empty($form['sync_elements']['#disabled']),
+    ];
+
+    $form['actions']['sync_selected'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Sync selected elements'),
+      '#disabled' => !empty($form['sync_elements']['#disabled']),
+    ];
+
+    $form['actions']['remove_synced'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Remove all sync elements'),
+      '#disabled' => !empty($form['sync_elements']['#disabled']),
+    ];
 
     return $form;
   }

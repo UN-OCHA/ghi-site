@@ -5,7 +5,9 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
+use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
@@ -22,13 +24,25 @@ use Drupal\node\NodeInterface;
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
  *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
+ *  },
+ *  config_forms = {
+ *    "key_figures" = {
+ *      "title" = @Translation("Key figures"),
+ *      "callback" = "keyFiguresForm",
+ *      "base_form" = TRUE
+ *    },
+ *    "display" = {
+ *      "title" = @Translation("Display"),
+ *      "callback" = "displayForm"
+ *    }
  *  }
  * )
  */
-class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlockInterface, SyncableBlockInterface, ContainerFactoryPluginInterface {
+class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, SyncableBlockInterface, ContainerFactoryPluginInterface {
 
   use ConfigurationContainerTrait;
   use ConfigurationContainerGroup;
+  use BlockCommentTrait;
 
   const MAX_ITEMS = 20;
 
@@ -195,7 +209,12 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
       'label' => '',
       'label_display' => FALSE,
       'hpc' => [
-        'items' => $items,
+        'key_figures' => [
+          'items' => $items,
+        ],
+        'display' => [
+          'comment' => NULL,
+        ],
       ],
     ];
   }
@@ -206,7 +225,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
   public function buildContent() {
     $conf = $this->getBlockConfig();
 
-    $items = $this->getConfiguredItems($conf['items']);
+    $items = $this->getConfiguredItems($conf['key_figures']['items'] ?? []);
     if (empty($items)) {
       return;
     }
@@ -272,10 +291,20 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
       $tabs[] = $tab;
     }
 
-    return $tabs ? [
+    if (empty($tabs)) {
+      return;
+    }
+
+    $build = [];
+    $build[] = [
       '#theme' => 'tab_container',
       '#tabs' => $tabs,
-    ] : NULL;
+    ];
+    $comment = $this->buildBlockCommentRenderArray($conf['display']['comment'] ?? NULL);
+    if ($comment) {
+      $build[] = $comment;
+    }
+    return $build;
   }
 
   /**
@@ -286,14 +315,26 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
    */
   protected function getConfigurationDefaults() {
     return [
-      'items' => [],
+      'key_figures' => [
+        'items' => [],
+      ],
+      'display' => [
+        'comment' => NULL,
+      ],
     ];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getConfigForm(array $form, FormStateInterface $form_state) {
+  public function getDefaultSubform($is_new = FALSE) {
+    return 'key_figures';
+  }
+
+  /**
+   * Show the key figures form.
+   */
+  public function keyFiguresForm(array $form, FormStateInterface $form_state) {
 
     $form['items'] = [
       '#type' => 'configuration_container',
@@ -312,6 +353,14 @@ class PlanHeadlineFigures extends GHIBlockBase implements ConfigurableTableBlock
       '#max_items' => self::MAX_ITEMS,
       '#groups' => TRUE,
     ];
+    return $form;
+  }
+
+  /**
+   * Show the display form.
+   */
+  public function displayForm(array $form, FormStateInterface $form_state) {
+    $form['comment'] = $this->buildBlockCommentFormElement($this->getDefaultFormValueFromFormState($form_state, 'comment'));
     return $form;
   }
 
