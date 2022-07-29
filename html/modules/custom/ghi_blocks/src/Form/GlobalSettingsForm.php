@@ -41,7 +41,7 @@ class GlobalSettingsForm extends ConfigFormBase {
     $homepage_years = $this->getHomepageYears(FALSE);
 
     // Define the tabs and set the default one. If an editor submits the form,
-    // we want that to see the same page as before the submission to make it
+    // we want them to see the same page as before the submission to make it
     // easier to keep the context.
     $form['tabs'] = [
       '#type' => 'vertical_tabs',
