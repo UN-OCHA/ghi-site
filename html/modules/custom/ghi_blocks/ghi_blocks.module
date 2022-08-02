@@ -126,9 +126,33 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
 }
 
 /**
+ * Implements hook_module_implements_alter().
+ */
+function ghi_blocks_module_implements_alter(&$implementations, $hook) {
+  switch ($hook) {
+    // Move our hook_entity_type_alter() implementation to the end of the list.
+    case 'plugin_filter_block_alter':
+      $group = $implementations['ghi_blocks'];
+      unset($implementations['ghi_blocks']);
+      $implementations['ghi_blocks'] = $group;
+      break;
+  }
+}
+
+/**
  * Implements hook_plugin_filter_TYPE__CONSUMER_alter().
  */
 function ghi_blocks_plugin_filter_block__layout_builder_alter(&$definitions) {
+  $current_user = \Drupal::currentUser();
+  if (!$current_user->hasPermission('use inline blocks')) {
+    // Unset all inline blocks.
+    foreach (array_keys($definitions) as $key) {
+      if (strpos($key, 'inline_block:') !== 0) {
+        continue;
+      }
+      unset($definitions[$key]);
+    }
+  }
   // @codingStandardsIgnoreStart
   // @todo Check if this could actually be useful.
   // $definitions = array_filter($definitions, function ($definition) {

@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.node.section.field_base_object
     - field.field.node.section.field_hero_image
+    - field.field.node.section.field_summary
     - field.field.node.section.field_tags
     - field.field.node.section.field_team
     - field.field.node.section.field_year
@@ -16,6 +17,7 @@ dependencies:
     - layout_builder_ipe
     - layout_builder_restrictions
     - layout_discovery
+    - text
     - user
 third_party_settings:
   layout_builder:
@@ -27,7 +29,22 @@ third_party_settings:
         layout_settings:
           label: Content
           context_mapping: {  }
-        components: {  }
+        components:
+          ab0fdf28-fae6-4e2f-9f8e-6bfbb26bf237:
+            uuid: ab0fdf28-fae6-4e2f-9f8e-6bfbb26bf237
+            region: content
+            configuration:
+              id: 'field_block:node:section:field_summary'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: text_default
+                label: above
+                settings: {  }
+                third_party_settings: {  }
+            weight: 0
+            additional: {  }
         third_party_settings: {  }
   layout_builder_restrictions:
     allowed_block_categories:
@@ -54,15 +71,15 @@ third_party_settings:
       allowed_layouts:
         - layout_onecol
       denylisted_blocks: {  }
-      allowlisted_blocks: {  }
+      allowlisted_blocks:
+        'Inline blocks':
+          - 'inline_block:basic'
       restricted_categories:
         - 'Chaos Tools'
         - 'Content fields'
-        - 'Custom block types'
         - Forms
         - Global
         - HID
-        - 'Inline blocks'
         - 'Lists (Views)'
         - Menus
         - 'Plan cluster elements'
@@ -93,6 +110,13 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: 106
+    region: content
+  field_summary:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 108
     region: content
   field_tags:
     type: entity_reference_label
