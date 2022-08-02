@@ -8,7 +8,9 @@
  {{ attachment_select }}
   <div class="plan-attachment-map-wrapper pane-{{ chart_id }} {{ map_type }}">
     {% if map_tabs %}
-      <div class="map-tabs">{{ map_tabs }}</div>
+      <div class="map-tabs">
+        <div class="map-tabs--inner content-width">{{ map_tabs }}</div>
+      </div>
     {% endif %}
     <div {{ attributes.addClass(map_container_classes) }}">
       {% if legend %}
