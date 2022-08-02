@@ -9,6 +9,7 @@ use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_element_sync\IncompleteElementConfigurationException;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
@@ -50,6 +51,7 @@ use Drupal\node\NodeInterface;
 class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface {
 
   use PlanReportingPeriodTrait;
+  use BlockCommentTrait;
 
   const STYLE_CIRCLE = 'circle';
   const STYLE_DONUT = 'donut';
@@ -179,7 +181,10 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
 
     $attachment_switcher = NULL;
 
-    return [
+    $build = [
+      '#full_width' => TRUE,
+    ];
+    $build[] = [
       '#theme' => 'plan_attachment_map',
       '#chart_id' => $chart_id,
       '#map_tabs' => $map['tabs'] ?? NULL,
@@ -194,8 +199,13 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
           ],
         ],
       ],
-      '#full_width' => TRUE,
     ];
+    $comment = $this->buildBlockCommentRenderArray($conf['map']['common']['comment'] ?? NULL);
+    if ($comment) {
+      $comment['#attributes']['class'][] = 'content-width';
+      $build[] = $comment;
+    }
+    return $build;
   }
 
   /**
@@ -859,6 +869,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
           'default_attachment' => NULL,
           'disclaimer' => NULL,
           'pcodes_enabled' => FALSE,
+          'comment' => NULL,
         ],
         'metric_labels' => [],
       ],
@@ -1059,7 +1070,10 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       '#title' => $this->t('Default attachment'),
       '#description' => $this->t('Please select the attachment that will show by default. If multiple attachments are available to this widget, then the user can select to see data for the other attachments by using a drop-down selector.'),
       '#options' => $attachment_options,
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'default_attachment') ?? array_key_first($attachment_options),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+        'common',
+        'default_attachment',
+      ]) ?? array_key_first($attachment_options),
       '#access' => count($attachments) > 1,
     ];
 
@@ -1068,15 +1082,26 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       '#title' => $this->t('Map disclaimer'),
       '#description' => $this->t('You can override the default map disclaimer for this widget.'),
       '#rows' => 4,
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'disclaimer') ?? self::DEFAULT_DISCLAIMER,
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+        'common',
+        'disclaimer',
+      ]) ?? self::DEFAULT_DISCLAIMER,
     ];
 
     $form['common']['pcodes_enabled'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enable pcodes'),
       '#description' => $this->t('If checked, the map will list pcodes alongside location names and enable pcodes for the location filtering.'),
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'pcodes_enabled') ?? FALSE,
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+        'common',
+        'pcodes_enabled',
+      ]) ?? FALSE,
     ];
+
+    $form['common']['comment'] = $this->buildBlockCommentFormElement($this->getDefaultFormValueFromFormState($form_state, [
+      'common',
+      'comment',
+    ]));
 
     // Allow element-wide override of metric item labels.
     $form['metric_labels'] = [

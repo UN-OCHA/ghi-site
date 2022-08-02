@@ -45,7 +45,7 @@ trait BlockCommentTrait {
       '#type' => 'html_tag',
       '#tag' => 'div',
       '#attributes' => [
-        'class' => 'block-comment',
+        'class' => ['block-comment'],
       ],
       'comment' => [
         '#markup' => Markup::create($value),
