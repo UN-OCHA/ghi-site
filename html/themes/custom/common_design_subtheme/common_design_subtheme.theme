@@ -126,6 +126,12 @@ function common_design_subtheme_preprocess_block(&$variables) {
   if (!in_array($variables['plugin_id'], $content_width_blocks) && empty($variables['content']['#full_width'])) {
     $variables['attributes']['class'][] = 'content-width';
   }
+
+  // Make sure that full width blocks with a title show that title inside the
+  // content area.
+  if (!empty($variables['content']['#full_width']) && !empty($variables['content']['#title'])) {
+    $variables['title_attributes']['class'][] = 'content-width';
+  }
 }
 
 /**
