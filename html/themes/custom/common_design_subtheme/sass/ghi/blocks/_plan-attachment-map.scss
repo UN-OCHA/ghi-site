@@ -82,130 +82,40 @@
     margin-top: 0;
   }
 
-  // .pane-title {
-  //   margin-bottom: 0;
-
-  //   // So long titles don't hide the map tabs.
-  //   @include tablet {
-  //     max-width: 80%;
-  //   }
-
-  //   .collapsed-text {
-
-  //     a.read-more {
-  //       position: relative;
-  //       top: -1rem;
-  //     }
-  //   }
-
-  //   .tooltip.api-url {
-  //     right: -15px;
-  //   }
-  // }
-
-  .pane-sidebar-left {
-    position: relative;
-    width: 19%;
-    min-height: 400px;
-    padding: 1rem;
-    border: 1px solid var(--hpc-border-color);
-
-    div.sidebar-slot-item-wrapper {
-      margin-bottom: 0.5rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--hpc-border-color);
-
-      &.last {
-        border-bottom: none;
-      }
-
-      .sidebar-slot-item-label {
-        position: relative;
-        display: inline-block;
-        width: auto;
-
-        i.tooltip.info {
-          top: 0.1rem;
-        }
-      }
-
-      &.widget-progressbar,
-      &.widget-pie-chart {
-        .sidebar-slot-item-label {
-          float: left;
-          margin-right: 0.6rem;
-        }
-      }
-
-      .sidebar-slot-item-value {
-        font-weight: bold;
-      }
-
-      .sidebar-slot-item-widget {
-        .pie-chart {
-          position: relative;
-          top: 7px;
-          display: block;
-          width: 100%;
-          height: 16px;
-          margin-left: 0;
-          span.number {
-            float: left;
-            margin-right: 10px;
-            font-weight: bold;
-          }
-
-          .hpc-percent-progress-bar-inner {
-            height: 16px;
-            background-color: var(--hpc-orange);
-          }
-        }
-        .hpc-percent-progress-bar-wrapper {
-          position: relative;
-          top: 7px;
-          display: block;
-          width: 100%;
-          height: 16px;
-          margin-left: 0;
-          background-color: var(--hpc-grey);
-
-          .hpc-percent-progress-bar-inner {
-            height: 15px;
-            background-color: var(--hpc-orange);
-          }
-        }
-      }
-    }
-
-    .composed-reference {
-      position: absolute;
-      bottom: 1rem;
-      left: 1rem;
-      margin-bottom: 0;
-    }
-  }
-
   .plan-attachment-map-wrapper {
-    display: flex;
-    justify-content: space-between;
 
     .map-tabs {
-      position: absolute;
-      top: -2rem;
-      right: 0;
-      padding: 0;
-      text-align: right;
+      height: auto;
+      background-color: var(--cd-default-text-color);
 
       ul {
-        margin: 0;
+        display: flex;
+        height: 100%;
+        margin: 0 0 0 1rem;
+        padding: 0;
+        gap: 2rem;
+
+        li {
+          padding: 1rem 0;
+
+          a {
+            text-decoration: none;
+            color: var(--cd-white);
+          }
+
+          &.active {
+            border-bottom: 4px solid var(--cd-ocha-yellow);
+
+            a {
+              text-decoration: none;
+              color: var(--cd-white);
+            }
+          }
+        }
       }
     }
 
     .map-container {
-
-      &.has-sidebar {
-        width: 80%;
-      }
 
       .leaflet-container {
         width: 100%;
@@ -224,6 +134,10 @@
 
   .modal,
   .leaflet-sidebar {
+
+    &.right:not(.visible) {
+      right: -600px;
+    }
 
     .modal-inner {
       overflow-y: auto;

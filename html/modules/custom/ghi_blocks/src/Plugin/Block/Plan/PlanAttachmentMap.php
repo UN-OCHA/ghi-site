@@ -6,12 +6,10 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
-use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_element_sync\IncompleteElementConfigurationException;
-use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
@@ -41,10 +39,6 @@ use Drupal\node\NodeInterface;
  *      "title" = @Translation("Attachments"),
  *      "callback" = "attachmentsForm"
  *    },
- *    "sidebar" = {
- *      "title" = @Translation("Sidebar"),
- *      "callback" = "sidebarForm"
- *    },
  *    "map" = {
  *      "title" = @Translation("Map"),
  *      "callback" = "mapForm",
@@ -53,9 +47,8 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface {
+class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface {
 
-  use ConfigurationContainerTrait;
   use PlanReportingPeriodTrait;
 
   const STYLE_CIRCLE = 'circle';
@@ -107,60 +100,6 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
       throw new IncompleteElementConfigurationException('Incomplete configuration for "plan_attachment_map"');
     }
 
-    $columns = [];
-    // Define a transition map.
-    $transition_map = [
-      'data_point' => [
-        'target' => 'data_point',
-      ],
-      'data_point_single' => [
-        'target' => 'data_point',
-      ],
-      'data_point_calculated_progressbar' => [
-        'target' => 'data_point',
-      ],
-    ];
-
-    foreach ($config->sidebar_slots as $incoming_item) {
-      $source_type = !empty($incoming_item->element) ? $incoming_item->element : NULL;
-      if (!$source_type || !array_key_exists($source_type, $transition_map)) {
-        continue;
-      }
-      // Apply generic config based on the transition map.
-      $transition_definition = $transition_map[$source_type];
-      $item = [
-        'item_type' => $transition_definition['target'],
-        'config' => [
-          'label' => property_exists($incoming_item, 'label') ? $incoming_item->label : NULL,
-        ],
-      ];
-      if (array_key_exists('config', $transition_definition)) {
-        $item['config'] += $transition_definition['config'];
-      }
-
-      // Do special processing for individual item types.
-      $value = property_exists($incoming_item, 'value') ? $incoming_item->value : NULL;
-      if ($value === NULL) {
-        continue;
-      }
-      switch ($transition_definition['target']) {
-
-        case 'data_point':
-          $value->data_points[0] = $value->data_point_1;
-          $value->data_points[1] = $value->data_point_2;
-          $value->widget = $value->mini_widget;
-          unset($value->data_point_1);
-          unset($value->data_point_2);
-          unset($value->mini_widget);
-          $item['config']['data_point'] = (array) $value;
-          break;
-
-        default:
-          break;
-      }
-      $columns[] = $item;
-    }
-
     $entity_id = is_array($entity_id) ? array_filter(array_values($entity_id)) : (array) $entity_id;
     $attachment_id = is_array($attachment_id) ? array_filter(array_values($attachment_id)) : (array) $attachment_id;
     return [
@@ -179,9 +118,6 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
               'attachment_id' => array_combine($attachment_id, $attachment_id),
             ],
           ],
-        ],
-        'sidebar' => [
-          'slots' => $columns,
         ],
         'map' => [
           'appearance' => [
@@ -246,7 +182,6 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
     return [
       '#theme' => 'plan_attachment_map',
       '#chart_id' => $chart_id,
-      '#sidebar' => $this->getSidebar(),
       '#map_tabs' => $map['tabs'] ?? NULL,
       '#map_type' => $map_style,
       '#attachment_switcher' => $attachment_switcher,
@@ -259,6 +194,7 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
           ],
         ],
       ],
+      '#full_width' => TRUE,
     ];
   }
 
@@ -885,33 +821,6 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
   }
 
   /**
-   * Get the sidebar items.
-   *
-   * @return array
-   *   Array with a render array for each item.
-   */
-  private function getSidebar() {
-    $sidebar = [];
-    $conf = $this->getBlockConfig();
-    $context = [
-      'attachment' => $this->getDefaultAttachment(),
-      'plan_object' => $this->getCurrentPlanObject(),
-    ];
-    foreach ($conf['sidebar']['slots'] as $item) {
-
-      /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
-      $item_type = $this->getItemTypePluginForColumn($item, $context);
-
-      $sidebar[] = [
-        '#theme' => 'sidebar_slot_item',
-        '#label' => $item_type->getLabel(),
-        '#value' => $item_type->getRenderArray(),
-      ];
-    }
-    return $sidebar;
-  }
-
-  /**
    * Returns generic default configuration for block plugins.
    *
    * @return array
@@ -930,9 +839,6 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
             'attachment_id' => NULL,
           ],
         ],
-      ],
-      'sidebar' => [
-        'slots' => [],
       ],
       'map' => [
         'appearance' => [
@@ -978,9 +884,6 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
     if (empty($conf['attachments']['entity_attachments']['attachments']['attachment_id'])) {
       return 'attachments';
     }
-    if (empty($conf['sidebar']['slots'])) {
-      return 'sidebar';
-    }
     return 'map';
   }
 
@@ -1002,28 +905,6 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
       '#attachment_options' => [
         'attachment_prototypes',
       ],
-    ];
-    return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function sidebarForm(array $form, FormStateInterface $form_state) {
-    $default_value = $this->getDefaultFormValueFromFormState($form_state, 'slots') ?? [];
-    $form['slots'] = [
-      '#type' => 'configuration_container',
-      '#title' => $this->t('Configured sidebar slots'),
-      '#title_display' => 'invisible',
-      '#item_type_label' => $this->t('Slot'),
-      '#default_value' => $default_value,
-      '#allowed_item_types' => $this->getAllowedItemTypes(),
-      '#preview' => [
-        'columns' => [
-          'label' => $this->t('Label'),
-        ],
-      ],
-      '#element_context' => $this->getBlockContext(),
     ];
     return $form;
   }
@@ -1312,39 +1193,6 @@ class PlanAttachmentMap extends GHIBlockBase implements ConfigurableTableBlockIn
       'context_node' => $this->getPageNode(),
       'attachment_prototype' => $this->getAttachmentPrototype(),
     ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getAllowedItemTypes() {
-    $attachment_prototype = $this->getAttachmentPrototype();
-    $item_types = [
-      'data_point' => [
-        'label' => $this->t('Generic data point'),
-        'attachment_prototype' => $attachment_prototype,
-      ],
-      'data_point_single' => [
-        'item_type_base' => 'data_point',
-        'label' => $this->t('Single value'),
-        'attachment_prototype' => $attachment_prototype,
-        'presets' => [
-          'processing' => 'single',
-        ],
-      ],
-      'data_point_calculated_progressbar' => [
-        'item_type_base' => 'data_point',
-        'label' => $this->t('Calculated value with progress bar'),
-        'attachment_prototype' => $attachment_prototype,
-        'presets' => [
-          'processing' => 'calculated',
-          'calculation' => 'percentage',
-          'formatting' => 'auto',
-          'widget' => 'progressbar',
-        ],
-      ],
-    ];
-    return $item_types;
   }
 
 }

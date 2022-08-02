@@ -1,16 +1,12 @@
 {%
   set map_container_classes = [
-    'map-container',
-    sidebar ? 'has-sidebar',
+    'map-container'
   ]
 %}
 
 <div class="{{ outer_classes }}">
  {{ attachment_select }}
   <div class="plan-attachment-map-wrapper pane-{{ chart_id }} {{ map_type }}">
-    {% if sidebar %}
-      <div class="pane-sidebar-left">{{ sidebar }}</div>
-    {% endif %}
     {% if map_tabs %}
       <div class="map-tabs">{{ map_tabs }}</div>
     {% endif %}
