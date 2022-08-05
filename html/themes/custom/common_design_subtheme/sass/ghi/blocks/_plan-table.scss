@@ -119,8 +119,12 @@
       }
     }
 
-    &.block-comment:before {
-      border-bottom: 0;
+    &.block-comment {
+      margin-top: 2rem;
+
+      &:before {
+        border-bottom: 0;
+      }
     }
   }
 }
