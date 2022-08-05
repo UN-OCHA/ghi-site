@@ -203,7 +203,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $comment = $this->buildBlockCommentRenderArray($conf['map']['common']['comment'] ?? NULL);
     if ($comment) {
       $comment['#attributes']['class'][] = 'content-width';
-      $build[] = $comment;
+      $build['comment'] = $comment;
     }
     return $build;
   }

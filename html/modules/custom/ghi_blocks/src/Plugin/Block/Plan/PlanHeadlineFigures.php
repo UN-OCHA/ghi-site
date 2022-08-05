@@ -302,7 +302,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
     ];
     $comment = $this->buildBlockCommentRenderArray($conf['display']['comment'] ?? NULL);
     if ($comment) {
-      $build[] = $comment;
+      $build['comment'] = $comment;
     }
     return $build;
   }
