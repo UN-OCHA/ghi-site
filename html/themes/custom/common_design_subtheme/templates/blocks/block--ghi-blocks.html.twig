@@ -45,6 +45,10 @@
     {{ content }}
   {% endblock %}
 
+  {% if comment %}
+    {{ comment }}
+  {% endif %}
+
   {% if download_links %}
     <div class="block-links">
       {% if download_links %}

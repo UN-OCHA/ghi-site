@@ -26,20 +26,21 @@
     // This also needs to overwrite any additional margins defined in the
     // common design components.
     margin: 0 !important;
+  }
 
-    .block-comment {
-      margin-top: 2rem;
-      font-size: var(--cd-font-size--small);
-    }
+  & > div.block-comment {
+    padding: 1rem 0;
+    text-align: justify;
+    font-size: var(--cd-font-size--small);
   }
 
   & > div.block-links {
     display: flex;
     justify-content: space-between;
-    margin-top: 2rem;
     padding: 1rem 0;
     border-top: 1px solid var(--cd-default-border-color);
     border-bottom: 1px solid var(--cd-default-border-color);
+    font-size: var(--cd-font-size--small);
 
     a {
       text-decoration: none;
@@ -76,7 +77,7 @@
       a {
         position: relative;
         top: 2px;
-        font-size: 1.3rem;
+        font-size: var(--cd-font-size--base);
       }
 
       button[data-toggle="popover"] {

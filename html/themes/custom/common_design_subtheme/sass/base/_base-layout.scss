@@ -62,7 +62,7 @@
     /* Prevent double indentation as can happen with embedded paragraphs from
      * a remote source. */
     .content-width .content-width {
-      padding-right: 0 important;
+      padding-right: 0 !important;
       padding-left: 0 !important;
     }
 

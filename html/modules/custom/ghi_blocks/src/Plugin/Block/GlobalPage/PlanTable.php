@@ -6,6 +6,7 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
@@ -34,6 +35,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
   use GlobalSettingsTrait;
   use PlanFootnoteTrait;
   use TableSoftLimitTrait;
+  use BlockCommentTrait;
 
   /**
    * The section manager.
@@ -62,7 +64,9 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
     if ($table_data === NULL) {
       return NULL;
     }
-    return [
+
+    $build = [];
+    $build[] = [
       '#theme' => 'table',
       '#header' => $table_data['header'],
       '#rows' => $table_data['rows'],
@@ -78,6 +82,13 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
       ],
       '#soft_limit' => $this->getBlockConfig()['table']['soft_limit'] ?? 0,
     ];
+    $conf = $this->getBlockConfig();
+    $comment = $this->buildBlockCommentRenderArray($conf['table']['comment'] ?? NULL);
+    if ($comment) {
+      $comment['#attributes']['class'][] = 'content-width';
+      $build['comment'] = $comment;
+    }
+    return $build;
   }
 
   /**
@@ -297,6 +308,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
         'funding_progress' => TRUE,
         'total_funding' => FALSE,
         'fts_icon' => TRUE,
+        'comment' => NULL,
       ],
     ];
   }
@@ -416,6 +428,10 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
       '#description' => $this->t('Check this to show icons for "Tracked on FTS".'),
       '#disabled' => TRUE,
     ];
+    $form['table']['comment'] = $this->buildBlockCommentFormElement($this->getDefaultFormValueFromFormState($form_state, [
+      'table',
+      'comment',
+    ]));
     $form['table']['soft_limit'] = $this->buildSoftLimitFormElement($this->getDefaultFormValueFromFormState($form_state, [
       'table',
       'soft_limit',

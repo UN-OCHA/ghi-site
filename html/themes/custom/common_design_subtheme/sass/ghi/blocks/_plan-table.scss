@@ -52,6 +52,10 @@
   padding-bottom: 0;
   background-color: var(--cd-default-background-color);
 
+  .block-content {
+    margin-bottom: 2rem !important;
+  }
+
   &:before {
     position: absolute;
     z-index: -1;
@@ -76,6 +80,7 @@
     }
   }
 
+  .block-comment,
   .block-links {
     /**
     * Bleed the background only.
@@ -111,6 +116,14 @@
           right: 0;
           left: 0;
         }
+      }
+    }
+
+    &.block-comment {
+      margin-top: 2rem;
+
+      &:before {
+        border-bottom: 0;
       }
     }
   }

@@ -132,6 +132,10 @@ function common_design_subtheme_preprocess_block(&$variables) {
   if (!empty($variables['content']['#full_width']) && !empty($variables['content']['#title'])) {
     $variables['title_attributes']['class'][] = 'content-width';
   }
+  if (array_key_exists('comment', $variables['content']) && !empty($variables['content']['comment'])) {
+    $variables['comment'] = $variables['content']['comment'];
+    unset($variables['content']['comment']);
+  }
 }
 
 /**

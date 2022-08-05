@@ -13,6 +13,10 @@
     // First make sure we have an id for the table.
     $table.uniqueId();
 
+    if ($table.parent().find('input.table-search-input').length > 0) {
+      return;
+    }
+
     // Create search field.
     let $search_field = Drupal.TableSearch.createSearchField($table);
     $search_field.on('input propertychange', function () {
