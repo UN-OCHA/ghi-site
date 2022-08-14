@@ -16,46 +16,29 @@ use Drupal\ghi_subpages\SubpageManager;
 use Drupal\node\NodeInterface;
 
 /**
- * Implements hook_entity_insert().
- */
-function ghi_subpages_entity_insert(EntityInterface $entity) {
-  if (!$entity instanceof NodeInterface || !SubpageHelper::isBaseTypeNode($entity)) {
-    return;
-  }
-  SubpageHelper::assureSubpagesForBaseNode($entity);
-}
-
-/**
- * Implements hook_section_post_create().
+ * Implements hook_section_post_save().
  *
  * Go over all created subpages for a node and save it again, to fix an issue
  * with the generation of url alias for subpages, if the pattern uses the
  * section's url alias as one of their tokens.
  */
-function ghi_subpages_section_post_create(NodeInterface $section_node) {
+function ghi_subpages_section_post_save(NodeInterface $section_node) {
   if (!SubpageHelper::isBaseTypeNode($section_node)) {
     return;
   }
+
+  // Make sure all subpages exist.
+  SubpageHelper::assureSubpagesForBaseNode($section_node);
 
   // Load all subpages and save them again to make sure they have proper paths.
   $subpages = SubpageHelper::loadSubpagesForBaseNode($section_node);
   foreach ($subpages as $subpage) {
     $subpage->save();
   }
-}
 
-/**
- * Implements hook_entity_update().
- */
-function ghi_subpages_entity_update(EntityInterface $entity) {
-  if (!$entity instanceof NodeInterface || !SubpageHelper::isBaseTypeNode($entity)) {
-    return;
-  }
-  SubpageHelper::assureSubpagesForBaseNode($entity);
-
-  if (!$entity->isPublished()) {
+  if (!$section_node->isPublished()) {
     // Load all subpages and make sure that those are unpublished too.
-    $subpages = SubpageHelper::loadSubpagesForBaseNode($entity);
+    $subpages = SubpageHelper::loadSubpagesForBaseNode($section_node);
 
     if (!empty($subpages)) {
       foreach ($subpages as $subpage) {

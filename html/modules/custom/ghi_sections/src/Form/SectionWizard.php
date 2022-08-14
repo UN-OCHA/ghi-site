@@ -260,14 +260,6 @@ class SectionWizard extends WizardBase {
       ]));
     }
 
-    // Due to the way that the pathauto module works, the alias generation for
-    // the subpages is not finished at this point. This is because at the time
-    // when each subpage gets created and it's alias build, the section alias
-    // itself has not been build, so that token replacements are not fully
-    // available. To fix this, we invoke a custom hook that lets the
-    // GHI Subpages module react just after a section has been fully build.
-    $this->moduleHandler->invokeAll('section_post_create', [$section]);
-
     $form_state->setRedirectUrl($section->toUrl());
   }
 
