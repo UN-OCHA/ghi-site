@@ -7,6 +7,7 @@ dependencies:
     - node.type.global_section
     - node.type.news_story
     - node.type.page
+    - node.type.plan_cluster
     - node.type.population
     - node.type.profile
     - node.type.risk_index
@@ -39,6 +40,7 @@ permissions:
   - 'delete section revisions'
   - 'edit any financials content'
   - 'edit any global_section content'
+  - 'edit any plan_cluster content'
   - 'edit any population content'
   - 'edit any profile content'
   - 'edit any risk_index content'
@@ -47,6 +49,7 @@ permissions:
   - 'edit own global_section content'
   - 'edit own news_story content'
   - 'edit own page content'
+  - 'edit own plan_cluster content'
   - 'edit own population content'
   - 'edit own profile content'
   - 'edit own risk_index content'
@@ -80,6 +83,7 @@ permissions:
   - 'revert global_section revisions'
   - 'revert news_story revisions'
   - 'revert page revisions'
+  - 'revert plan_cluster revisions'
   - 'revert population revisions'
   - 'revert profile revisions'
   - 'revert risk_index revisions'
@@ -114,6 +118,7 @@ permissions:
   - 'view news_story revisions'
   - 'view own unpublished content'
   - 'view page revisions'
+  - 'view plan_cluster revisions'
   - 'view population revisions'
   - 'view profile revisions'
   - 'view risk_index revisions'

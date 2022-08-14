@@ -57,7 +57,9 @@
           background-color: var(--cd-default-background-color);
 
           a {
+            padding: 0.25rem 0;
             white-space: nowrap;
+            font-size: var(--cd-font-size--default);
           }
         }
       }
