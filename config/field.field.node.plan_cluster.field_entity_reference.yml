@@ -1,0 +1,29 @@
+uuid: cf0e59ca-bc13-4d55-80af-87dd0f6afa24
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_entity_reference
+    - node.type.plan_cluster
+    - node.type.section
+id: node.plan_cluster.field_entity_reference
+field_name: field_entity_reference
+entity_type: node
+bundle: plan_cluster
+label: Section
+description: 'The section that this plan cluster page belongs to. This is set automatically based on the governing entity object associated to this cluster page.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      section: section
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference
