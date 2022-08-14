@@ -72,7 +72,7 @@ class HeroImageWidget extends WidgetBase {
     $source_options = array_filter([
       'none' => $this->t('No image'),
       'inherit' => $this->t('Inherit from referenced content (not always possible)'),
-      'hpc_webcontent_file_attachment' => $this->t('HPC Webcontent File Attachment'),
+      'hpc_webcontent_file_attachment' => $plan_object ? $this->t('HPC Webcontent File Attachment') : NULL,
       'smugmug_api' => $smugmug_ocha ? $this->t('Smugmug: @user', ['@user' => $smugmug_ocha['Name']]) : NULL,
     ]);
 
