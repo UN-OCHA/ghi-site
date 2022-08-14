@@ -2,6 +2,7 @@
 
   .section-switcher-wrapper {
     position: relative;
+    z-index: 1;
 
     button {
       padding: 0.8rem 1.5rem;
@@ -30,6 +31,7 @@
           padding: 0.8rem 1.5rem;
           list-style-type: none;
           white-space: nowrap;
+          font-size: var(--cd-font-size--default);
           font-weight: bold;
 
           a,

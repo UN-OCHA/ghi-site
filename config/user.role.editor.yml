@@ -7,6 +7,7 @@ dependencies:
     - core.entity_view_display.node.document.default
     - core.entity_view_display.node.financials.default
     - core.entity_view_display.node.global_section.default
+    - core.entity_view_display.node.plan_cluster.default
     - core.entity_view_display.node.population.default
     - core.entity_view_display.node.profile.default
     - core.entity_view_display.node.risk_index.default
@@ -42,6 +43,7 @@ permissions:
   - 'configure editable document node layout overrides'
   - 'configure editable financials node layout overrides'
   - 'configure editable global_section node layout overrides'
+  - 'configure editable plan_cluster node layout overrides'
   - 'configure editable population node layout overrides'
   - 'configure editable profile node layout overrides'
   - 'configure editable risk_index node layout overrides'
@@ -79,6 +81,7 @@ permissions:
   - 'use layout builder ipe on editable document node layout overrides'
   - 'use layout builder ipe on editable financials node layout overrides'
   - 'use layout builder ipe on editable global_section node layout overrides'
+  - 'use layout builder ipe on editable plan_cluster node layout overrides'
   - 'use layout builder ipe on editable population node layout overrides'
   - 'use layout builder ipe on editable profile node layout overrides'
   - 'use layout builder ipe on editable risk_index node layout overrides'
