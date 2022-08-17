@@ -21,8 +21,8 @@ trait BlockCommentTrait {
   public function buildBlockCommentFormElement($default_value) {
     return [
       '#type' => 'textarea',
-      '#title' => $this->t('Block comment'),
-      '#description' => $this->t('You can optionally enter a comment that will be displayed directly under this page element.'),
+      '#title' => $this->t('Footnote'),
+      '#description' => $this->t('You can optionally enter a footnote that will be displayed directly under this page element.'),
       '#rows' => 5,
       '#default_value' => $default_value,
     ];
@@ -48,7 +48,14 @@ trait BlockCommentTrait {
         'class' => ['block-comment'],
       ],
       'comment' => [
-        '#markup' => Markup::create($value),
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#attributes' => [
+          'class' => ['block-comment-inner'],
+        ],
+        [
+          '#markup' => Markup::create($value),
+        ],
       ],
     ];
   }

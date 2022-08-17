@@ -2,6 +2,10 @@
 .region-page-navigation {
   border-bottom: 1px solid var(--cd-default-border-color);
 
+  &.region-page-navigation {
+    border-bottom: 1px solid var(--cd-white);
+  }
+
   &.region-page-title .region-wrapper-inner,
   &.region-page-navigation .block-wrapper__inner {
     max-width: calc(var(--content-width) + 24px);

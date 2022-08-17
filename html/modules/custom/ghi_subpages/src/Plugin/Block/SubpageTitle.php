@@ -30,18 +30,19 @@ class SubpageTitle extends BlockBase {
     }
     /** @var \Drupal\node\NodeInterface $node */
     $node = $contexts['node']->getContextValue();
+    $title = NULL;
     if (SubpageHelper::isSubpageTypeNode($node)) {
-      return [
-        '#markup' => new FormattableMarkup('<h2>@title</h2>', [
-          '@title' => $node->getTitle(),
-        ]),
-      ];
+      $title = $node->getTitle();
     }
     elseif (SubpageHelper::isBaseTypeNode($node) && SubpageHelper::getSectionOverviewLabel($node)) {
+      $title = SubpageHelper::getSectionOverviewLabel($node);
+    }
+    if ($title) {
       return [
-        '#markup' => new FormattableMarkup('<h2>@title</h2>', [
-          '@title' => SubpageHelper::getSectionOverviewLabel($node),
+        '#markup' => new FormattableMarkup('<h2 class="content-width">@title</h2>', [
+          '@title' => $title,
         ]),
+        '#full_width' => TRUE,
       ];
     }
   }
