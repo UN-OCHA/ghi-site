@@ -1,6 +1,10 @@
 .ghi-block-paragraph {
   position: relative;
 
+  #main-content.has-subpage-title .layout__region &.gho-paragraph-promoted:first-child {
+    margin-top: 2rem;
+  }
+
   .block-content {
 
     & > div > a.read-more {
@@ -22,9 +26,14 @@
 
     &::before {
       position: absolute;
+      left: 0;
       height: 100%;
       content: "";
       border-left: 4px solid var(--cd-primary-color);
+
+      #layout-builder & {
+        height: calc(100% - 2rem);
+      }
     }
   }
 }
