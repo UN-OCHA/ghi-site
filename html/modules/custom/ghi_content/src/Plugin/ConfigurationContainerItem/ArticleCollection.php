@@ -24,7 +24,7 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
   use SectionTrait;
 
   const MAX_FEATURE_COUNT = 2;
-  const CARD_LIMIT = 9;
+  const CARD_LIMIT = 15;
   const CARD_COUNT_DEFAULT = 6;
   const DISPLAY_TYPE_CARDS = 'cards';
   const DISPLAY_TYPE_TABLE = 'table';
@@ -389,7 +389,18 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
     ];
     if ($display_type == self::DISPLAY_TYPE_CARDS) {
       $card_options = $this->getCardPopulateOptions();
-      $summary_items[] = $card_options[$this->config['display_form']['cards']['populate'] ?? self::DISPLAY_CARD_POPULATE_AUTO];
+      $populate_method = $this->config['display_form']['cards']['populate'] ?? self::DISPLAY_CARD_POPULATE_AUTO;
+      $item = $card_options[$populate_method];
+      if ($populate_method == self::DISPLAY_CARD_POPULATE_AUTO) {
+        $count = $this->config['display_form']['cards']['count'] ?? self::CARD_COUNT_DEFAULT;
+        $item .= ' (' . $count . ')';
+      }
+      if ($populate_method == self::DISPLAY_CARD_POPULATE_MANUAL) {
+        $selected = $this->config['display_form']['cards']['select']['selected'];
+        $count = !empty($selected) ? count($selected) : $this->t('up to @count', ['@count' => self::CARD_LIMIT]);
+        $item .= ' (' . $count . ')';
+      }
+      $summary_items[] = $item;
     }
     return implode(', ', $summary_items);
   }
