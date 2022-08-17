@@ -6,8 +6,8 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Security\TrustedCallbackInterface;
-use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\gho_footnotes\GhoFootnotes;
@@ -32,7 +32,7 @@ use Drupal\gho_footnotes\GhoFootnotes;
  *  }
  * )
  */
-class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface, MultiStepFormBlockInterface, TrustedCallbackInterface {
+class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface, MultiStepFormBlockInterface, TrustedCallbackInterface {
 
   /**
    * The CSS class used for promoted paragraphs. This comes from the NCMS.
@@ -42,9 +42,8 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
   /**
    * {@inheritdoc}
    */
-  public function getAutomaticBlockTitle() {
-    $conf = $this->getBlockConfig();
-    return $conf['paragraph']['title'] ?? NULL;
+  public function getTitleSubform() {
+    return 'paragraph';
   }
 
   /**
@@ -294,8 +293,6 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
    * Select article form.
    */
   public function articleSelectForm(array $form, FormStateInterface $form_state) {
-    $wrapper_id = Html::getId('form-wrapper-ghi-block-config');
-
     $form['article'] = [
       '#type' => 'remote_article',
       '#default_value' => $this->getArticle(),
@@ -305,10 +302,10 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
     $form['select_article'] = [
       '#type' => 'submit',
       '#value' => $this->t('Select this article'),
-      '#element_submit' => [get_class($this) . '::articleSelectSubmit'],
+      '#element_submit' => [get_class($this) . '::ajaxMultiStepSubmit'],
       '#ajax' => [
         'callback' => [$this, 'navigateFormStep'],
-        'wrapper' => $wrapper_id,
+        'wrapper' => $this->getContainerWrapper(),
         'effect' => 'fade',
         'method' => 'replace',
         'parents' => ['settings', 'container'],
@@ -320,40 +317,19 @@ class Paragraph extends ContentBlockBase implements AutomaticTitleBlockInterface
   }
 
   /**
-   * Submit callback for the "Select article" button.
-   *
-   * @param array $form
-   *   The form array.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state.
-   *
-   * @return \Drupal\Core\Ajax\AjaxResponse
-   *   An ajax response.
-   */
-  public static function articleSelectSubmit(array $form, FormStateInterface $form_state) {
-    return self::ajaxMultiStepSubmit($form, $form_state);
-  }
-
-  /**
    * Paragraph config form.
    */
   public function paragraphForm(array $form, FormStateInterface $form_state) {
-    $conf = $this->getBlockConfig();
-
     $article = $this->getArticle();
     $paragraph = $this->getParagraph();
     $form['article_summary'] = [
       '#type' => 'item',
       '#title' => $this->lockArticle() ? $this->t('Article (locked)') : $this->t('Selected article'),
       '#markup' => $article->getSource()->getPluginLabel() . ': ' . $article->getTitle(),
+      '#weight' => -2,
     ];
 
-    $form['title'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Title'),
-      '#description' => $this->t('Give this paragraph an optional title.'),
-      '#default_value' => !empty($conf['paragraph']['title']) ? $conf['paragraph']['title'] : NULL,
-    ];
+    $form['label']['#weight'] = -1;
 
     $form['link_to_article'] = [
       '#type' => 'checkbox',
