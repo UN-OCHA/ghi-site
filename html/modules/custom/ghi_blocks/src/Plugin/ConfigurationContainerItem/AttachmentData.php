@@ -42,50 +42,31 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
 
     $configuration = $this->getPluginConfiguration();
 
-    $attachment_select = $this->getSubmittedValue($element, $form_state, 'attachment', $form_state->get('attachment'));
+    // Get the submitted values if any.
+    $attachment_select = $this->getSubmittedValue($element, $form_state, 'attachment');
     $data_point = $this->getSubmittedValue($element, $form_state, 'data_point');
 
-    $element['attachment'] = [
-      '#type' => 'attachment_select',
-      '#default_value' => $attachment_select,
-      '#element_context' => $this->getContext(),
-      '#weight' => 1,
-    ];
-
-    $element['submit_attachment'] = [
-      '#type' => 'button',
-      '#value' => $this->t('Use selected attachment'),
-      '#name' => 'submit-attachment',
-      '#ajax' => [
-        'event' => 'click',
-        'callback' => [static::class, 'updateAjax'],
-        'wrapper' => $this->wrapperId,
-      ],
-      '#weight' => 2,
-    ];
-
+    // See what triggered the current form build.
     $trigger = $form_state->getTriggeringElement() ? (string) end($form_state->getTriggeringElement()['#parents']) : NULL;
     $triggered_by_change_request = $trigger == 'change_attachment';
 
+    // Load an attachment if already selected.
     $attachment = NULL;
     if (!empty($attachment_select['attachment_id'])) {
-      $attachment = $this->attachmentQuery->getAttachment($attachment_select['attachment_id']);
+      $attachment_id = is_array($attachment_select['attachment_id']) ? reset($attachment_select['attachment_id']) : $attachment_select['attachment_id'];
+      $attachment = $this->attachmentQuery->getAttachment($attachment_id);
+      $attachment_select['attachment_id'] = $attachment_id;
     }
 
-    $element['label']['#access'] = !empty($attachment) && !$triggered_by_change_request;
-    if ($attachment) {
+    // See if we are in attachment select mode (or in data point configuration
+    // mode).
+    $attachment_select_mode = empty($attachment) || $triggered_by_change_request;
+
+    if (!$attachment_select_mode) {
       $form_state->set('attachment', $attachment_select);
-      $element['attachment']['#hidden'] = TRUE;
-
       $element['attachment_summary'] = [
-        '#markup' => Markup::create('<h3>' . $this->t('Selected attachment: %attachment', ['%attachment' => $attachment->composed_reference]) . '</h3>'),
-        '#weight' => -1,
+        '#markup' => Markup::create('<strong>' . $this->t('Selected attachment: %attachment', ['%attachment' => $attachment->composed_reference]) . '</strong>'),
       ];
-
-      if (!$triggered_by_change_request) {
-        $element['submit_attachment']['#attributes']['class'][] = 'visually-hidden';
-      }
-
       $element['change_attachment'] = [
         '#type' => 'button',
         '#value' => $this->t('Change attachment'),
@@ -95,29 +76,64 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
           'callback' => [static::class, 'updateAjax'],
           'wrapper' => $this->wrapperId,
         ],
-        '#weight' => 3,
+        '#attributes' => [
+          'class' => ['button-small'],
+        ],
       ];
-      if ($triggered_by_change_request) {
-        $element['change_attachment']['#disabled'] = TRUE;
-        $element['change_attachment']['#attributes']['class'][] = 'visually-hidden';
-      }
+    }
 
+    $element['attachment'] = [
+      '#type' => 'attachment_select',
+      '#default_value' => $attachment_select,
+      '#element_context' => $this->getContext(),
+      '#available_options' => [
+        'entity_types' => TRUE,
+        'attachment_prototypes' => TRUE,
+      ],
+      '#hidden' => !$attachment_select_mode,
+    ];
+
+    $element['actions'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => array_filter([
+          !$attachment_select_mode ? 'visually-hidden' : NULL,
+          'second-level-actions-wrapper',
+          'attachment-select-actions-wrapper',
+        ]),
+      ],
+    ];
+
+    // @todo We need a cancel option here too.
+    $element['actions']['submit_attachment'] = [
+      '#type' => 'button',
+      '#value' => $this->t('Use selected attachment'),
+      '#name' => 'submit-attachment',
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $this->wrapperId,
+      ],
+      '#attributes' => [
+        'class' => array_filter([!$attachment_select_mode ? 'visually-hidden' : NULL]),
+      ],
+    ];
+
+    $element['label']['#access'] = !$attachment_select_mode;
+    if ($attachment) {
       $element['label']['#weight'] = 4;
-
       $element['data_point'] = [
         '#type' => 'data_point',
         '#element_context' => $this->getContext(),
         '#attachment' => $attachment,
         '#default_value' => $data_point,
         '#weight' => 5,
+        '#hidden' => $attachment_select_mode,
       ];
       if (array_key_exists('data_point', $configuration) && is_array($configuration['data_point'])) {
         foreach ($configuration['data_point'] as $config_key => $config_value) {
           $element['data_point']['#' . $config_key] = $config_value;
         }
-      }
-      if ($triggered_by_change_request) {
-        $element['data_point']['#hidden'] = TRUE;
       }
     }
 
@@ -149,6 +165,8 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     if (!$attachment_id || !$data_point_conf) {
       return NULL;
     }
+    // Cast this to a scalar if necessary.
+    $attachment_id = is_array($attachment_id) ? array_key_first($attachment_id) : $attachment_id;
     $attachment = $this->attachmentQuery->getAttachment($attachment_id);
     if (!$attachment) {
       return NULL;

@@ -91,6 +91,13 @@ trait AjaxElementTrait {
     $triggering_element = $form_state->getTriggeringElement();
     $wrapper_id = $triggering_element['#ajax']['wrapper'];
     $form_subset = NestedArray::getValue($form, self::$elementParentsFormKey);
+    if (empty($form_subset) && !empty($triggering_element['#next_step'])) {
+      // Support for buttons inside multistep forms, that can submit to a
+      // different subform. In that case, the original element parents will
+      // point to a subform that is no longer there. Let's try level higher and
+      // see if that gives us a form.
+      $form_subset = NestedArray::getValue($form, array_slice(self::$elementParentsFormKey, 0, -1));
+    }
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand('#' . $wrapper_id, $form_subset));
 

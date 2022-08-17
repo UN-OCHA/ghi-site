@@ -101,8 +101,8 @@ class DataPoint extends FormElement {
       'processing' => !empty($values['processing']) ? $values['processing'] : array_key_first(DataPointHelper::getProcessingOptions()),
       'calculation' => !empty($values['calculation']) ? $values['calculation'] : NULL,
       'data_points' => [
-        0 => array_key_exists(0, $values['data_points']) ? $values['data_points'][0] : array_key_first($attachment_prototype->fields),
-        1 => array_key_exists(1, $values['data_points']) ? $values['data_points'][1] : NULL,
+        0 => array_key_exists('data_points', $values) && array_key_exists(0, $values['data_points']) ? $values['data_points'][0] : array_key_first($attachment_prototype->fields),
+        1 => array_key_exists('data_points', $values) && array_key_exists(1, $values['data_points']) ? $values['data_points'][1] : NULL,
       ],
       'formatting' => !empty($values['formatting']) ? $values['formatting'] : array_key_first(DataPointHelper::getFormattingOptions()),
       'widget' => !empty($values['widget']) ? $values['widget'] : 'none',

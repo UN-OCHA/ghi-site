@@ -686,6 +686,16 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
+   * Get the wrapper id for the config container.
+   *
+   * @return string
+   *   An id string.
+   */
+  protected function getContainerWrapper() {
+    return Html::getId('form-wrapper-ghi-block-config');
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function blockForm($form, FormStateInterface $form_state) {
@@ -749,7 +759,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $form['#parents'] = [];
     $form['#array_parents'] = [];
 
-    $wrapper_id = Html::getId('form-wrapper-ghi-block-config');
+    $wrapper_id = $this->getContainerWrapper();
 
     // Set the parents and array parents.
     $array_parents = array_merge($form['#array_parents'], [

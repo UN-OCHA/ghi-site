@@ -114,9 +114,11 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
               'entity_ids' => array_combine($entity_id, $entity_id),
             ],
             'attachments' => [
-              'entity_type' => $config->attachment_select->entity_type,
-              'attachment_type' => $config->attachment_select->attachment_type,
-              'attachment_prototype' => $config->attachment_select->attachment_prototype ?? NULL,
+              'filter' => [
+                'entity_type' => $config->attachment_select->entity_type,
+                'attachment_type' => $config->attachment_select->attachment_type,
+                'attachment_prototype' => $config->attachment_select->attachment_prototype ?? NULL,
+              ],
               'attachment_id' => array_combine($attachment_id, $attachment_id),
             ],
           ],
@@ -844,8 +846,11 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
             'entity_ids' => NULL,
           ],
           'attachments' => [
-            'entity_type' => NULL,
-            'attachment_type' => NULL,
+            'filter' => [
+              'entity_type' => NULL,
+              'attachment_type' => NULL,
+              'attachment_prototype' => NULL,
+            ],
             'attachment_id' => NULL,
           ],
         ],
@@ -914,8 +919,10 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'entity_attachments'),
       '#element_context' => $this->getBlockContext(),
       '#attachment_options' => [
-        'attachment_prototypes',
+        'attachment_prototypes' => TRUE,
       ],
+      '#next_step' => 'map',
+      '#container_wrapper' => $this->getContainerWrapper(),
     ];
     return $form;
   }
@@ -1191,7 +1198,10 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   private function getSelectedAttachments() {
     $conf = $this->getBlockConfig();
     $attachments = [];
-    $attachment_ids = $conf['attachments']['entity_attachments']['attachments']['attachment_id'];
+    $attachment_ids = array_filter($conf['attachments']['entity_attachments']['attachments']['attachment_id'] ?? []);
+    if (empty($attachment_ids)) {
+      return $attachments;
+    }
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
     $query = $this->getQueryHandler('attachment');
     foreach ($attachment_ids as $attachment_id) {

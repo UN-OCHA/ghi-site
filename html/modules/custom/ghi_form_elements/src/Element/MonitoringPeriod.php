@@ -88,13 +88,15 @@ class MonitoringPeriod extends Checkboxes {
       $monitoring_period_options['none'] = t('None (Base metrics)');
     }
 
-    $empty_default = $element['#multiple'] ? ['latest'] : 'latest';
+    $monitoring_period_options = array_reverse($monitoring_period_options, TRUE);
+
+    $empty_default = $element['#multiple'] ? [array_key_first($monitoring_period_options)] : array_key_first($monitoring_period_options);
     if (!$element['#default_value'] && $element['#multiple'] && $element['#default_all']) {
       $empty_default = array_keys($monitoring_period_options);
     }
     $element = [
       '#type' => 'checkboxes',
-      '#options' => array_reverse($monitoring_period_options, TRUE),
+      '#options' => $monitoring_period_options,
       '#default_value' => $element['#default_value'] ?? $empty_default,
       '#multiple' => $element['#multiple'],
     ] + $element;

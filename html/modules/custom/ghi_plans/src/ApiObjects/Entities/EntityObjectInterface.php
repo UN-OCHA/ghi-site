@@ -57,4 +57,20 @@ interface EntityObjectInterface extends ApiObjectInterface {
    */
   public function getTags();
 
+  /**
+   * Get the machine name of an entity type.
+   *
+   * @return string
+   *   The type as a string.
+   */
+  public function getEntityType();
+
+  /**
+   * Get the human readable name of an entity type.
+   *
+   * @return string
+   *   The type as a string.
+   */
+  public function getEntityTypeName();
+
 }

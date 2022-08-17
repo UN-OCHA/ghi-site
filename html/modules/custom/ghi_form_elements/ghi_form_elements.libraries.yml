@@ -15,6 +15,11 @@ entity_select:
     component:
       css/entity_select.css: {}
 
+attachment_select:
+  css:
+    component:
+      css/attachment_select.css: {}
+
 entity_attachment_select:
   css:
     component:
