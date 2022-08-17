@@ -147,4 +147,25 @@ class PlanEntityHelper {
     return $query->getData();
   }
 
+  /**
+   * Check object type names from the API.
+   *
+   * Specifically on attachment objects, the object type is sometimes reported
+   * as plural when it should be singular.
+   *
+   * @param string $type
+   *   The incoming type.
+   *
+   * @return string
+   *   The confirmed string.
+   */
+  public static function checkObjectType($type) {
+    $know_types = [
+      'plans' => 'plan',
+      'planEntities' => 'planEntity',
+      'governingEntities' => 'governingEntity',
+    ];
+    return $know_types[$type] ?? (in_array($type, $know_types) ? $type : NULL);
+  }
+
 }

@@ -5,3 +5,12 @@
   /** Needed to always see the operation links dropbutton content. */
   overflow: visible;
 }
+
+.glb-button.button-small,
+.glb-button.button-small:not(:focus) {
+  font-size: 14px !important;
+  margin: 0 0.5rem !important;
+  padding: calc(0.5em - 1px) calc(0.75em - 1px) !important;
+  border: 1px solid var(--colorGinPrimary) !important;
+  border-radius: 4px !important;
+}

@@ -90,18 +90,18 @@ class EntityAttachmentSelect extends FormElement {
 
     $values = NestedArray::mergeDeepArray([
       (array) $element['#default_value'],
-      // ['entities' => $form_state->get('entities')],
       (array) $form_state->getValue($element['#parents']),
     ], TRUE);
-
     $defaults = [
       'entities' => [
         'entity_ids' => array_filter($values['entities']['entity_ids'] ?? []),
       ],
       'attachments' => [
-        'entity_type' => $values['attachments']['entity_type'] ?? NULL,
-        'attachment_type' => $values['attachments']['attachment_type'] ?? NULL,
-        'attachment_prototype' => $values['attachments']['attachment_prototype'] ?? NULL,
+        'filter' => [
+          'entity_type' => $values['attachments']['filter']['entity_type'] ?? NULL,
+          'attachment_type' => $values['attachments']['filter']['attachment_type'] ?? NULL,
+          'attachment_prototype' => $values['attachments']['filter']['attachment_prototype'] ?? NULL,
+        ],
         'attachment_id' => array_filter($values['attachments']['attachment_id'] ?? []),
       ],
     ];
@@ -109,33 +109,29 @@ class EntityAttachmentSelect extends FormElement {
     $form_state->set('entities', $defaults['entities']);
     $triggering_element = $form_state->getTriggeringElement();
     $action = $triggering_element ? end($form_state->getTriggeringElement()['#parents']) : NULL;
-    $allowed_actions = [
-      'select_entities',
-      'change_entities',
-      'select_attachments',
+    $actions_map = [
+      'select_entities' => 'select_attachments',
+      'change_entities' => 'select_entities',
+      'select_attachments' => 'select_attachments',
     ];
-    $current_action = $form_state->get('current_action');
 
-    if ($action && in_array($action, $allowed_actions)) {
-      if ($action == 'change_entities') {
-        $current_action = 'select_entities';
-      }
-      if ($action == 'select_entities') {
-        $current_action = 'select_attachments';
-      }
-      if ($action == 'select_attachments') {
-        $current_action = 'select_attachments';
-      }
+    $current_action = $values['current_action'];
+    if ($action && array_key_exists($action, $actions_map)) {
+      $current_action = $actions_map[$action];
     }
     if (empty($current_action)) {
       $current_action = empty($defaults['entities']['entity_ids']) ? 'select_entities' : 'select_attachments';
     }
 
-    $form_state->set('current_action', $current_action);
+    $element['current_action'] = [
+      '#type' => 'hidden',
+      '#value' => $current_action,
+    ];
 
     $element['entities'] = [
       '#type' => 'entity_select',
       '#title' => t('Entity selection'),
+      '#title_display' => 'invisible',
       '#default_value' => $defaults['entities'],
       '#multiple' => TRUE,
       '#element_context' => $element['#element_context'],
@@ -145,10 +141,14 @@ class EntityAttachmentSelect extends FormElement {
     if ($current_action != 'select_entities') {
       $element['entities']['#hidden'] = TRUE;
     }
+    else {
+      $form_state->set('modal_title', $element['entities']['#title']);
+    }
 
     $element['attachments'] = [
       '#type' => 'attachment_select',
       '#title' => t('Attachment selection'),
+      '#title_display' => 'invisible',
       '#default_value' => $defaults['attachments'],
       '#multiple' => TRUE,
       '#element_context' => $element['#element_context'],
@@ -158,6 +158,9 @@ class EntityAttachmentSelect extends FormElement {
     ];
     if ($current_action != 'select_attachments') {
       $element['attachments']['#hidden'] = TRUE;
+    }
+    else {
+      $form_state->set('modal_title', $element['attachments']['#title']);
     }
 
     $element['actions'] = [
@@ -206,6 +209,12 @@ class EntityAttachmentSelect extends FormElement {
         'class' => [$current_action != 'select_attachments' ? 'visually-hidden' : NULL],
       ],
     ];
+    if (!empty($element['#next_step']) && !empty($element['#container_wrapper'])) {
+      // If this element is part of a multistep form, we support that this
+      // button might lead to a different subform.
+      $element['actions']['select_attachments']['#next_step'] = $element['#next_step'];
+      $element['actions']['select_attachments']['#ajax']['wrapper'] = $element['#container_wrapper'];
+    }
 
     return $element;
   }

@@ -477,7 +477,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'entity_attachments'),
       '#element_context' => $this->getBlockContext(),
       '#attachment_options' => [
-        0 => 'attachment_prototypes',
+        'attachment_prototypes' => TRUE,
         'attachment_types' => ['indicator'],
       ],
       '#attachment_type' => 'indicator',

@@ -49,4 +49,19 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
     return array_map('strtolower', $this->tags);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityType() {
+    return lcfirst((new \ReflectionClass($this))->getShortName());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityTypeName() {
+    $pieces = preg_split('/(?=[A-Z])/', $this->getEntityType());
+    return ucfirst(strtolower(implode(' ', $pieces)));
+  }
+
 }

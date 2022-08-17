@@ -86,7 +86,6 @@ class WebcontentFileSelect extends FormElement {
     $submitted_values = array_filter((array) $form_state->getValue($element['#parents']));
     $values = $submitted_values + (array) $element['#default_value'];
     $default_attachment = !empty($values['attachment_id']) ? $values['attachment_id'] : ($element['#default_value'] ?? (count($attachments) ? array_key_first($attachments) : NULL));
-
     $element['attachment_id'] = [
       '#type' => 'tableselect',
       '#tree' => TRUE,

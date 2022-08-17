@@ -9,7 +9,7 @@ use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
- * Provides an entity counter item for configuration containers.
+ * Provides a plan overview data item for configuration containers.
  *
  * @ConfigurationContainerItem(
  *   id = "plan_overview_data",

@@ -162,7 +162,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    * @param array $filter
    *   Optional array for filtering the attachments.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
    *   An array of attachment objects for the given context.
    */
   public function getDataAttachments(ContentEntityInterface $context_object = NULL, array $filter = NULL) {

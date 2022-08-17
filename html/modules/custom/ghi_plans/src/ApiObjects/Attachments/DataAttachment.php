@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
+use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
@@ -40,7 +41,7 @@ class DataAttachment extends AttachmentBase {
       'id' => $attachment->id,
       'type' => strtolower($attachment->type),
       'source' => (object) [
-        'entity_type' => $attachment->objectType ?? NULL,
+        'entity_type' => PlanEntityHelper::checkObjectType($attachment->objectType ?? NULL),
         'entity_id' => $attachment->objectId ?? NULL,
         'plan_id' => $attachment->planId ?? NULL,
       ],

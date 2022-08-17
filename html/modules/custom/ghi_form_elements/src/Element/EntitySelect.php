@@ -43,7 +43,6 @@ class EntitySelect extends FormElement {
         [$class, 'elementSubmit'],
       ],
       '#theme_wrappers' => ['form_element'],
-
       '#multiple' => TRUE,
       '#disabled' => FALSE,
       '#summary_only' => FALSE,
@@ -71,7 +70,7 @@ class EntitySelect extends FormElement {
    * {@inheritdoc}
    */
   public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
-    if ($input !== NULL) {
+    if (!empty($input)) {
       // Make sure input is returned as normal during item configuration.
       if (!empty($element['#include_main_plan'])) {
         $context = $element['#element_context'];

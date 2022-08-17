@@ -25,7 +25,7 @@ class AttachmentPrototype extends ApiObjectBase {
         }, $prototype->value->metrics),
         array_map(function ($item) {
           return $item->name->en;
-        }, $prototype->value->measureFields)
+        }, $prototype->value->measureFields ?? [])
       ),
     ];
   }

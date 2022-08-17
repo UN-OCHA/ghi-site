@@ -1,16 +1,11 @@
-.form-type--attachment_select {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
 .form-type--attachment_select > label,
 .form-type--attachment_select > table {
   width: 100%
 }
-.form-type--attachment_select > .js-form-type-select {
-  width: auto;
-  margin-right: 1rem;
+
+.form-type--attachment_select .filter-container {
+  display: flex;
+  gap: 1rem;
 }
 
 .form-type--attachment_select > table thead th {
