@@ -303,6 +303,16 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
+   * Set the form state for the current block instance.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   */
+  public function setFormState(FormStateInterface $form_state) {
+    $this->formState = $form_state;
+  }
+
+  /**
    * Check if the block should display it's title.
    *
    * @return bool
@@ -704,11 +714,93 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * {@inheritdoc}
    */
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    $form = parent::buildConfigurationForm($form, $form_state);
+
+    $plugin_definition = $this->getPluginDefinition();
+
+    // Disable all of the default settings elements. We will handle them.
+    $form['admin_label']['#access'] = FALSE;
+    $form['admin_label']['#value'] = (string) $plugin_definition['admin_label'];
+    $form['label']['#default_value'] = $form['label']['#default_value'] ?: '<none>';
+    $form['label']['#access'] = FALSE;
+    $form['label']['#required'] = FALSE;
+    $form['label_display']['#access'] = FALSE;
+    $form['context_mapping']['#access'] = FALSE;
+
+    $settings_form = &$form['container'];
+
+    $settings_form['context_mapping']['#access'] = $form_state->get('current_subform') == self::CONTEXTS_FORM_KEY;
+
+    // Now manipulate the default settings elements according to our needs.
+    if (array_key_exists('label', $settings_form)) {
+      if ($this instanceof AutomaticTitleBlockInterface) {
+        // This block plugin provides an automatic title, se we can safely hide
+        // both the label field and the display checkbox.
+        $settings_form['label']['#access'] = FALSE;
+        $settings_form['label']['#required'] = FALSE;
+        $settings_form['label_display']['#access'] = FALSE;
+        $settings_form['label_display']['#value'] = TRUE;
+        $settings_form['label_display']['#default_value'] = TRUE;
+      }
+
+      if ($this instanceof OptionalTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface) {
+        // This label field is optional and the display toggle can be hidden.
+        // Display status will be determined based on the presence of a title.
+        $settings_form['label']['#default_value'] = $settings_form['label']['#default_value'] == '<none>' ? '' : $settings_form['label']['#default_value'];
+        $settings_form['label']['#value'] = $settings_form['label']['#default_value'];
+        $settings_form['label']['#required'] = FALSE;
+        $settings_form['label']['#description'] = $this->t('You can set a title for this element. Leave empty to not use a title.');
+        $settings_form['label_display']['#access'] = FALSE;
+        $settings_form['label_display']['#value'] = TRUE;
+        $settings_form['label_display']['#default_value'] = TRUE;
+      }
+
+      if ($this instanceof OverrideDefaultTitleBlockInterface || $this->hasDefaultTitle()) {
+        // This block plugin provides a default title, so the label field is
+        // optional and the display toggle can be hidden.
+        $settings_form['label']['#default_value'] = $settings_form['label']['#default_value'] == '<none>' ? '' : $settings_form['label']['#default_value'];
+        $settings_form['label']['#required'] = FALSE;
+        $settings_form['label']['#description'] = $this->t('Leave empty to use the default title %default_title.', [
+          '%default_title' => $plugin_definition['default_title'],
+        ]);
+        $settings_form['label_display']['#access'] = FALSE;
+      }
+
+      if (!$this->shouldDisplayTitle()) {
+        // This block plugin never shows a title, so we can hide the fields and
+        // set the values directly.
+        $settings_form['label']['#access'] = FALSE;
+        $settings_form['label']['#value'] = (string) $plugin_definition['admin_label'];
+        $settings_form['label_display']['#access'] = FALSE;
+        $settings_form['label_display']['#value'] = FALSE;
+      }
+    }
+
+    if (array_key_exists('year', $form['context_mapping']) && $form['context_mapping']['year']['#type'] == 'select') {
+      $form['context_mapping']['year']['#access'] = FALSE;
+      $form['context_mapping']['year']['#value'] = array_key_first($form['context_mapping']['year']['#options']);
+    }
+
+    if (array_key_exists('node', $form['context_mapping']) && array_key_exists('#options', $form['context_mapping']['node'])) {
+      $options = array_keys($form['context_mapping']['node']['#options']);
+      $options = array_filter($options);
+      if (count($options) == 1) {
+        $form['context_mapping']['node']['#access'] = FALSE;
+        $form['context_mapping']['node']['#value'] = reset($options);
+      }
+    }
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function blockForm($form, FormStateInterface $form_state) {
     parent::blockForm($form, $form_state);
 
     $form_state->set('block', $this);
-    $this->formState = $form_state;
+    $this->setFormState($form_state);
 
     // Not sure why, but the preview toggles value is not available in the
     // blockElementSubmit callback, so we have to catch this here.
@@ -765,8 +857,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $form['#parents'] = [];
     $form['#array_parents'] = [];
 
-    $wrapper_id = $this->getContainerWrapper();
-
     // Set the parents and array parents.
     $array_parents = array_merge($form['#array_parents'], [
       'settings',
@@ -787,7 +877,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       // Drupal\block\BlockForm::form for where that comes from.
       '#array_parents' => $array_parents,
       '#attributes' => [
-        'id' => $wrapper_id,
+        'id' => $this->getContainerWrapper(),
         'class' => [Html::getClass('hpc-form-wrapper')],
       ],
     ];
@@ -830,9 +920,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
       // Exclude buttons from submission values.
       $this->addButtonsToCleanValueKeys($form['container'], $form_state, $form['container']['#parents']);
-
-      // Add after build callback for label handling.
-      $form['#after_build'][] = [$this, 'blockFormAfterBuild'];
     }
     else {
       // Show a preview area.
@@ -958,97 +1045,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $this->addButtonsToCleanValueKeys($element, $form_state, array_merge($parents, [$element_key]));
       }
     }
-  }
-
-  /**
-   * After build callback for the block form.
-   *
-   * Remove the admin label input and handle blocks that should not have a
-   * block.
-   *
-   * @param array $form
-   *   The form array.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state object.
-   *
-   * @return array
-   *   The updated form array.
-   */
-  public function blockFormAfterBuild(array $form, FormStateInterface $form_state) {
-    $plugin_definition = $this->getPluginDefinition();
-
-    // Disable all of the default settings elements. We will handle them.
-    $form['admin_label']['#access'] = FALSE;
-    $form['admin_label']['#value'] = (string) $plugin_definition['admin_label'];
-    $form['label']['#default_value'] = $form['label']['#default_value'] ?: '<none>';
-    $form['label']['#access'] = FALSE;
-    $form['label']['#required'] = FALSE;
-    $form['label_display']['#access'] = FALSE;
-    $form['context_mapping']['#access'] = FALSE;
-
-    $settings_form = &$form['container'];
-
-    $settings_form['context_mapping']['#access'] = $form_state->get('current_subform') == self::CONTEXTS_FORM_KEY;
-
-    // Now manipulate the default settings elements according to our needs.
-    if (array_key_exists('label', $settings_form)) {
-      if ($this instanceof AutomaticTitleBlockInterface) {
-        // This block plugin provides an automatic title, se we can safely hide
-        // both the label field and the display checkbox.
-        $settings_form['label']['#access'] = FALSE;
-        $settings_form['label']['#required'] = FALSE;
-        $settings_form['label_display']['#access'] = FALSE;
-        $settings_form['label_display']['#value'] = TRUE;
-        $settings_form['label_display']['#default_value'] = TRUE;
-      }
-
-      if ($this instanceof OptionalTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface) {
-        // This label field is optional and the display toggle can be hidden.
-        // Display status will be determined based on the presence of a title.
-        $settings_form['label']['#default_value'] = $settings_form['label']['#default_value'] == '<none>' ? '' : $settings_form['label']['#default_value'];
-        $settings_form['label']['#value'] = $settings_form['label']['#default_value'];
-        $settings_form['label']['#required'] = FALSE;
-        $settings_form['label']['#description'] = $this->t('You can set a title for this element. Leave empty to not use a title.');
-        $settings_form['label_display']['#access'] = FALSE;
-        $settings_form['label_display']['#value'] = TRUE;
-        $settings_form['label_display']['#default_value'] = TRUE;
-      }
-
-      if ($this instanceof OverrideDefaultTitleBlockInterface || $this->hasDefaultTitle()) {
-        // This block plugin provides a default title, so the label field is
-        // optional and the display toggle can be hidden.
-        $settings_form['label']['#default_value'] = $settings_form['label']['#default_value'] == '<none>' ? '' : $settings_form['label']['#default_value'];
-        $settings_form['label']['#required'] = FALSE;
-        $settings_form['label']['#description'] = $this->t('Leave empty to use the default title %default_title.', [
-          '%default_title' => $plugin_definition['default_title'],
-        ]);
-        $settings_form['label_display']['#access'] = FALSE;
-      }
-
-      if (!$this->shouldDisplayTitle()) {
-        // This block plugin never shows a title, so we can hide the fields and
-        // set the values directly.
-        $settings_form['label']['#access'] = FALSE;
-        $settings_form['label']['#value'] = (string) $plugin_definition['admin_label'];
-        $settings_form['label_display']['#access'] = FALSE;
-        $settings_form['label_display']['#value'] = FALSE;
-      }
-    }
-
-    if (array_key_exists('year', $form['context_mapping']) && $form['context_mapping']['year']['#type'] == 'select') {
-      $form['context_mapping']['year']['#access'] = FALSE;
-      $form['context_mapping']['year']['#value'] = array_key_first($form['context_mapping']['year']['#options']);
-    }
-
-    if (array_key_exists('node', $form['context_mapping']) && array_key_exists('#options', $form['context_mapping']['node'])) {
-      $options = array_keys($form['context_mapping']['node']['#options']);
-      $options = array_filter($options);
-      if (count($options) == 1) {
-        $form['context_mapping']['node']['#access'] = FALSE;
-        $form['context_mapping']['node']['#value'] = reset($options);
-      }
-    }
-    return $form;
   }
 
   /**
@@ -1246,7 +1242,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $form['settings']['container']['context_mapping'] = $form['settings']['context_mapping'];
     }
 
-    $this->formState = $form_state;
+    $this->setFormState($form_state);
     $this->setElementValidateOnAjaxElements($form['settings']['container']);
 
     // Assemble the subform buttons.
@@ -1377,11 +1373,14 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $form_state->set(['storage', $current_subform], $values);
     }
 
-    // @todo The following does not always work on the first submit of the
-    // subform, e.g. for the Paragraph block plugin.
-    $subforms = $form_state->get('block')->getSubforms();
+    $block_instance = $form_state->get('block');
+    // Setting the form state is important, so that the block instance knows
+    // the current state. Without this the checks in canShowSubform can lead to
+    // wrong results.
+    $block_instance->setFormState($form_state);
+    $subforms = $block_instance->getSubforms();
     $requested_subform = array_key_exists('#next_step', $triggering_element) ? $triggering_element['#next_step'] : end($parents);
-    if (array_key_exists($requested_subform, $subforms) && $form_state->get('block')->canShowSubform($element, $form_state, $requested_subform)) {
+    if (array_key_exists($requested_subform, $subforms) && $block_instance->canShowSubform($element, $form_state, $requested_subform)) {
       // Update the current subform.
       $form_state->set('current_subform', $requested_subform);
     }
@@ -1438,8 +1437,17 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $parents = $triggering_element['#ajax']['parents'];
     $wrapper = $triggering_element['#ajax']['wrapper'];
 
+    $form_subset = NestedArray::getValue($form, $parents);
+    if (empty($form_subset) && !empty($triggering_element['#next_step'])) {
+      // Support for buttons inside multistep forms, that can submit to a
+      // different subform. In that case, the original element parents will
+      // point to a subform that is no longer there. Let's try level higher and
+      // see if that gives us a form.
+      $form_subset = NestedArray::getValue($form, array_slice($parents, 0, -1));
+    }
+
     $response = new AjaxResponse();
-    $response->addCommand(new ReplaceCommand('#' . $wrapper, NestedArray::getValue($form, $parents)));
+    $response->addCommand(new ReplaceCommand('#' . $wrapper, $form_subset));
 
     // And also update the custom subform buttons as they might be disabled.
     $button_wrapper = $form['actions']['subforms']['#attributes']['id'];

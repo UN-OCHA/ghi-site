@@ -68,10 +68,12 @@ class SectionCollection extends GHIBlockBase implements ConfigurableTableBlockIn
       $group_item = $this->getItemTypePluginForColumn($group, $context);
 
       foreach ($group['children'] as $item) {
-
         /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
         $item_type = $this->getItemTypePluginForColumn($item, $context);
         $_build = $item_type->getRenderArray();
+        if (empty($_build)) {
+          continue;
+        }
         $rendered[] = $_build;
         $cache_tags = Cache::mergeTags($cache_tags, $_build['#cache']['tags'] ?? []);
       }
