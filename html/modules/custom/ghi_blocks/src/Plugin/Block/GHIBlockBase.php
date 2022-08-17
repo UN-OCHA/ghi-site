@@ -423,8 +423,14 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $build_content['#context']['plugin_id'] = $this->getPluginId();
     }
 
-    // Add the build content as a child.
-    $build += $build_content;
+    // Add the build content as a child. We make sure that the final $build
+    // always has proper element children instead of direct render arrays.
+    if (!count(Element::children($build_content))) {
+      $build[] = $build_content;
+    }
+    else {
+      $build += $build_content;
+    }
 
     // Add some classes for styling.
     $build['#attributes']['id'] = Html::getId('block-' . $this->getUuid());

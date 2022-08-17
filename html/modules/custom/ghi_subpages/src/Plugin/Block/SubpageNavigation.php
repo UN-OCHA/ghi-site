@@ -94,6 +94,7 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
     $overview_link = $base_entity->toLink($this->t('Overview'))->toRenderable();
     if ($node->id() == $base_entity->id()) {
       $overview_link['#attributes']['class'][] = 'active';
+      $overview_link['#wrapper_attributes']['class'][] = 'active';
     }
 
     $tabs = [

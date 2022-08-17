@@ -21,11 +21,20 @@
     opacity: 0.5;
   }
 
+  .layout__region--content > &.block:first-child {
+    &.block-highlighted:not(.content-width) {
+      background-color: var(--cd-primary-background-color);
+    }
+  }
+
   & > div.block-content {
     position: relative;
     // This also needs to overwrite any additional margins defined in the
     // common design components.
-    margin: 0 !important;
+
+    &:not(.content-width) {
+      margin: 0 !important;
+    }
   }
 
   & > div.block-comment {

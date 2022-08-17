@@ -120,6 +120,23 @@ function common_design_subtheme_preprocess_block(&$variables) {
     'system_main_block',
   ];
 
+  $region = $variables['content']['#region'] ?? NULL;
+  $processed_regions = &drupal_static(__FUNCTION__, []);
+  if (empty($variables['is_front']) && $region && !array_key_exists($region, $processed_regions) && !empty($variables['content']['#block_instance'])) {
+    if (empty($variables['content']['#full_width'])) {
+      // This is the first block in this region and we want to highlight it.
+      if (!empty($variables['content']['#theme_wrappers']['container'])) {
+        $variables['content']['#theme_wrappers']['container']['#attributes']['class'][] = 'content-width';
+      }
+      foreach (Element::children($variables['content']) as $key) {
+        $variables['content'][$key]['#attributes']['class'][] = 'content-width';
+      }
+      $variables['content']['#full_width'] = TRUE;
+    }
+    $variables['attributes']['class'][] = 'block-highlighted';
+    $processed_regions[$region] = TRUE;
+  }
+
   // Some blocks are white-listed here to always use the content-width class,
   // others can declare themselves to use that class by setting the #full_width
   // property. One example of the latter is a promoted paragraph block.
@@ -132,6 +149,8 @@ function common_design_subtheme_preprocess_block(&$variables) {
   if (!empty($variables['content']['#full_width']) && !empty($variables['content']['#title'])) {
     $variables['title_attributes']['class'][] = 'content-width';
   }
+
+  // Move the comments in place.
   if (array_key_exists('comment', $variables['content']) && !empty($variables['content']['comment'])) {
     $variables['comment'] = $variables['content']['comment'];
     unset($variables['content']['comment']);
