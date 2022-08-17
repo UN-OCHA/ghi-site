@@ -11,12 +11,4 @@
       background-repeat: no-repeat;
     }
   }
-
-  button + .cd-dropdown {
-    position: absolute;
-
-    div a {
-      font-size: var(--cd-font-size--base);
-    }
-  }
 }
