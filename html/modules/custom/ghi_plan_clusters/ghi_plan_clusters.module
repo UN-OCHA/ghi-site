@@ -132,7 +132,7 @@ function ghi_plan_clusters_section_post_save(NodeInterface $section_node) {
   $plan_cluster_manager->assureSubpagesForBaseNode($section_node);
 
   // Load all subpages and save them again to make sure they have proper paths.
-  $subpages = $plan_cluster_manager->loadNodesForSection($section_node);
+  $subpages = $plan_cluster_manager->loadNodesForSection($section_node) ?? [];
   foreach ($subpages as $subpage) {
     $subpage->save();
   }
