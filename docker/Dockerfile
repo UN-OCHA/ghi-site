@@ -18,7 +18,7 @@ RUN rm -rf ./vendor && \
 
 # Copy settings to default site location after creating it.
 RUN mkdir -m 0775 -p html/sites/default && \
-    cp -a docker/settings.php docker/services.yml html/sites/default
+    cp -a docker/settings.php docker/services.yml docker/memcache.services.yml html/sites/default
 
 ################################################################################
 
