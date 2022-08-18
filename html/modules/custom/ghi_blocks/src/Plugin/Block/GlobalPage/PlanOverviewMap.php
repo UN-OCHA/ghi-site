@@ -63,6 +63,9 @@ class PlanOverviewMap extends GHIBlockBase {
           ],
         ],
       ],
+      '#cache' => [
+        'tags' => $map['cache_tags'],
+      ],
     ];
   }
 
@@ -121,6 +124,7 @@ class PlanOverviewMap extends GHIBlockBase {
       'data' => [],
       'tabs' => [],
       'settings' => [],
+      'cache_tags' => [],
     ];
 
     // Prepare object data per per plan.
@@ -148,6 +152,9 @@ class PlanOverviewMap extends GHIBlockBase {
         $footnotes[$plan->id()] = $this->getFootnotesForPlanBaseobject($plan_entity);
       }
       $section = $plan_entity ? $this->sectionManager->loadSectionForBaseObject($plan_entity) : NULL;
+      if ($section) {
+        $map['cache_tags'] = Cache::mergeTags($map['cache_tags'], $section->getCacheTags());
+      }
 
       $country_objects[] = (object) [
         'plan_id' => $plan->id(),

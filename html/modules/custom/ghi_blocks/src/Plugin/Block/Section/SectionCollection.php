@@ -70,12 +70,13 @@ class SectionCollection extends GHIBlockBase implements ConfigurableTableBlockIn
       foreach ($group['children'] as $item) {
         /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
         $item_type = $this->getItemTypePluginForColumn($item, $context);
+        $cache_tags = Cache::mergeTags($cache_tags, $item_type->getCacheTags() ?? []);
         $_build = $item_type->getRenderArray();
         if (empty($_build)) {
           continue;
         }
         $rendered[] = $_build;
-        $cache_tags = Cache::mergeTags($cache_tags, $_build['#cache']['tags'] ?? []);
+
       }
       if (empty($rendered)) {
         continue;
@@ -105,13 +106,14 @@ class SectionCollection extends GHIBlockBase implements ConfigurableTableBlockIn
       return NULL;
     }
 
-    $build = [];
-    $build[] = [
-      '#theme' => 'tab_container',
-      '#tabs' => $tabs,
+    $build = [
       '#cache' => [
         'tags' => $cache_tags,
       ],
+    ];
+    $build[] = [
+      '#theme' => 'tab_container',
+      '#tabs' => $tabs,
     ];
     return $build;
   }

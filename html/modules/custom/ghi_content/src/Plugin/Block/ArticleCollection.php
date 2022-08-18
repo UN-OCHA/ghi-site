@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_content\Plugin\Block;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
@@ -49,11 +50,13 @@ class ArticleCollection extends GHIBlockBase implements MultiStepFormBlockInterf
       return NULL;
     }
 
+    $cache_tags = [];
     $tabs = [];
     foreach ($items as $item) {
 
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
       $item_type = $this->getItemTypePluginForColumn($item, $context);
+      $cache_tags = Cache::mergeTags($cache_tags, $item_type->getCacheTags() ?? []);
       $rendered = $item_type->getRenderArray();
       if (empty($rendered)) {
         continue;
@@ -76,13 +79,22 @@ class ArticleCollection extends GHIBlockBase implements MultiStepFormBlockInterf
       ]);
     }
 
-    return $tabs ? array_filter([
-      [
+    $build = [
+      '#cache' => [
+        'tags' => $cache_tags,
+      ],
+    ];
+
+    if ($tabs) {
+      $build[] = [
         '#theme' => 'tab_container',
         '#tabs' => $tabs,
-      ],
-      $link ? $link->toRenderable() : NULL,
-    ]) : NULL;
+      ];
+      if ($link) {
+        $build[] = $link->toRenderable();
+      }
+    }
+    return $build;
   }
 
   /**

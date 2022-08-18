@@ -84,4 +84,13 @@ class SectionTeaser extends ConfigurationContainerItemPluginBase {
     return $build;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    $value = $this->getValue();
+    $entity = $this->entityTypeManager->getStorage('node')->load($value);
+    return $entity ? $entity->getCacheTags() : [];
+  }
+
 }

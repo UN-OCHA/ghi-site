@@ -495,7 +495,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
       'contexts' => Cache::mergeContexts($this->getCacheContexts(), $build_content['#cache']['contexts'] ?? []),
       'tags' => Cache::mergeTags($this->getCacheTags(), $build_content['#cache']['tags'] ?? []),
     ];
-
     return $build;
   }
 
