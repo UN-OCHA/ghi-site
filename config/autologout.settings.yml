@@ -1,7 +1,7 @@
 _core:
   default_config_hash: kwGGKvKSU7cPTEgTMWrbW0o9Jwe6FSDmpgdUWmIXCdg
 enabled: true
-timeout: 1800
+timeout: 3600
 max_timeout: 172800
 padding: 60
 logout_regardless_of_activity: false
@@ -14,11 +14,11 @@ message: 'Your session is about to expire. Do you want to reset it?'
 inactivity_message: 'You have been logged out due to inactivity.'
 inactivity_message_type: status
 modal_width: 450
-enforce_admin: false
+enforce_admin: true
 jstimer_format: '%hours%:%mins%:%secs%'
 jstimer_js_load_option: false
-use_alt_logout_method: true
-use_watchdog: true
+use_alt_logout_method: false
+use_watchdog: false
 dialog_title: 'Humanitarian Action Alert'
 disable_buttons: false
 yes_button: ''

@@ -15,6 +15,9 @@
       "Issue #3086234: PhpSpreadsheet support (PHPOffice/PHPExcel deprecated)": "https://www.drupal.org/files/issues/2019-10-07/3086234-phpspreadsheet-support-3.patch",
       "Issue #2839576: Add additional alter hook": "https://www.drupal.org/files/issues/2839576-php-excel-new-hook-1-7.x-3.11.patch"
     },
+    "drupal/autologout": {
+      "Issue #3214958: Autologout triggered in background tab, no indication in other open tabs": "https://git.drupalcode.org/project/autologout/-/merge_requests/6.diff"
+    },
     "drupal/gin": {
       "Issue #3291643: Change query selector for form actions": "https://www.drupal.org/files/issues/2022-07-26/3291643-3.0-beta5-10.patch"
     },
