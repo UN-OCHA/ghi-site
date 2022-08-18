@@ -160,10 +160,10 @@ class ArrayHelper {
       $a_value = !empty($a[$order]) ? $a[$order] : 0;
       $b_value = !empty($b[$order]) ? $b[$order] : 0;
       if ($sort == EndpointQuery::SORT_ASC) {
-        return $a_value > $b_value;
+        return $a_value - $b_value;
       }
       if ($sort == EndpointQuery::SORT_DESC) {
-        return $a_value < $b_value;
+        return $a_value - $b_value;
       }
     });
   }
@@ -212,10 +212,10 @@ class ArrayHelper {
       $a_value = $a_funding > 0 ? $a_funding / $total : 0;
       $b_value = $b_funding > 0 ? $b_funding / $total : 0;
       if ($sort == EndpointQuery::SORT_ASC) {
-        return $a_value > $b_value;
+        return $a_value <=> $b_value;
       }
       if ($sort == EndpointQuery::SORT_DESC) {
-        return $a_value < $b_value;
+        return $a_value <=> $b_value;
       }
     });
   }
@@ -436,10 +436,10 @@ class ArrayHelper {
       $a_value = $callback($a) ?? NULL;
       $b_value = $callback($b) ?? NULL;
       if ($sort == EndpointQuery::SORT_ASC) {
-        return $sort_type == SORT_NUMERIC ? $a_value > $b_value : strcasecmp($a_value, $b_value);
+        return $sort_type == SORT_NUMERIC ? $a_value - $b_value : strcasecmp($a_value, $b_value);
       }
       if ($sort == EndpointQuery::SORT_DESC) {
-        return $sort_type == SORT_NUMERIC ? $a_value < $b_value : strcasecmp($b_value, $a_value);
+        return $sort_type == SORT_NUMERIC ? $a_value - $b_value : strcasecmp($b_value, $a_value);
       }
     });
   }
@@ -486,10 +486,10 @@ class ArrayHelper {
       $a_value = method_exists($a, $property) ? ($a->$property() ?? 0) : (!empty($a->$property) ? $a->$property : 0);
       $b_value = method_exists($b, $property) ? ($b->$property() ?? 0) : (!empty($b->$property) ? $b->$property : 0);
       if ($sort == EndpointQuery::SORT_ASC) {
-        return $a_value > $b_value;
+        return $a_value <=> $b_value;
       }
       if ($sort == EndpointQuery::SORT_DESC) {
-        return $a_value < $b_value;
+        return $a_value <=> $b_value;
       }
     });
   }
