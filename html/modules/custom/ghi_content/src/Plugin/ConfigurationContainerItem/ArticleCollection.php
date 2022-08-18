@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_content\Plugin\ConfigurationContainerItem;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemCustomActionsInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
@@ -313,11 +314,13 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
    *
    * @param int $limit
    *   An optional limit.
+   * @param bool $published
+   *   Whether to restrict to published nodes. Defaults to TRUE.
    *
    * @return \Drupal\Core\Entity\EntityInterface[]|null
    *   An array of entity objects indexed by their ids.
    */
-  private function getArticles($limit = NULL) {
+  private function getArticles($limit = NULL, $published = TRUE) {
     $section = $this->getContextValue('section');
     $tag_ids = $this->getApplicableTagIds();
     if (empty($tag_ids)) {
@@ -325,7 +328,7 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
     }
     $tag_conjunction = $this->getTagConjunction();
     if ($section || $tag_ids) {
-      return $this->articleManager->loadNodesForTags($tag_ids, $section, $tag_conjunction, $limit);
+      return $this->articleManager->loadNodesForTags($tag_ids, $section, $tag_conjunction, $limit, $published);
     }
     return $this->articleManager->loadAllNodes($limit);
   }
@@ -403,6 +406,18 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
       $summary_items[] = $item;
     }
     return implode(', ', $summary_items);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    $articles = $this->getArticles(NULL, FALSE) ?? [];
+    $cache_tags = [];
+    foreach ($articles as $article) {
+      $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTags());
+    }
+    return $cache_tags;
   }
 
 }

@@ -195,4 +195,9 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
    */
   public function isGroupItem();
 
+  /**
+   * Get the cache tags for this item.
+   */
+  public function getCacheTags();
+
 }

@@ -11,6 +11,7 @@ use Drupal\Core\Access\AccessResultForbidden;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Template\Attribute;
+use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 
 /**
  * Implements hook_theme_registry_alter().
@@ -111,7 +112,7 @@ function common_design_subtheme_preprocess_region(&$variables) {
  * Implements hook_preprocess_block().
  */
 function common_design_subtheme_preprocess_block(&$variables) {
-  $content_width_blocks = [
+  $full_width_blocks = [
     'generic_link_carousel',
     'global_plan_overview_map',
     'system_menu_block:operations-menu',
@@ -120,10 +121,28 @@ function common_design_subtheme_preprocess_block(&$variables) {
     'system_main_block',
   ];
 
+  // On some node types, we want to auto highlight (full-width background) the
+  // first block in the content region. But only if that block is not already a
+  // full-width block.
+  $is_front = $variables['is_front'] ?? FALSE;
+  $full_width_block = in_array($variables['plugin_id'], $full_width_blocks) || !empty($variables['content']['#full_width']);
   $region = $variables['content']['#region'] ?? NULL;
+  $block_instance = $variables['content']['#block_instance'] ?? NULL;
+  $ghi_block = $block_instance && $block_instance instanceof GHIBlockBase;
   $processed_regions = &drupal_static(__FUNCTION__, []);
-  if (empty($variables['is_front']) && $region && !array_key_exists($region, $processed_regions) && !empty($variables['content']['#block_instance'])) {
-    if (empty($variables['content']['#full_width'])) {
+  if (!$is_front && $region && !array_key_exists($region, $processed_regions) && $ghi_block) {
+    $page_node = $block_instance->getPageNode();
+    $qualified_bundles = [
+      'section',
+      'global_section',
+      'profile',
+      'population',
+      'financials',
+      'risk_index',
+    ];
+    $is_qualified_node = $page_node && in_array($page_node->bundle(), $qualified_bundles);
+    $is_layout_builder = $block_instance->isLayoutBuilder();
+    if (!$full_width_block && !$is_layout_builder && $is_qualified_node) {
       // This is the first block in this region and we want to highlight it.
       if (!empty($variables['content']['#theme_wrappers']['container'])) {
         $variables['content']['#theme_wrappers']['container']['#attributes']['class'][] = 'content-width';
@@ -132,15 +151,16 @@ function common_design_subtheme_preprocess_block(&$variables) {
         $variables['content'][$key]['#attributes']['class'][] = 'content-width';
       }
       $variables['content']['#full_width'] = TRUE;
+      $variables['attributes']['class'][] = 'block-highlighted';
     }
-    $variables['attributes']['class'][] = 'block-highlighted';
     $processed_regions[$region] = TRUE;
   }
 
   // Some blocks are white-listed here to always use the content-width class,
   // others can declare themselves to use that class by setting the #full_width
   // property. One example of the latter is a promoted paragraph block.
-  if (!in_array($variables['plugin_id'], $content_width_blocks) && empty($variables['content']['#full_width'])) {
+  $content_width_block = !in_array($variables['plugin_id'], $full_width_blocks) && empty($variables['content']['#full_width']);
+  if ($content_width_block) {
     $variables['attributes']['class'][] = 'content-width';
   }
 

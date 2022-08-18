@@ -65,7 +65,11 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
       return NULL;
     }
 
-    $build = [];
+    $build = [
+      '#cache' => [
+        'tags' => $table_data['cache_tags'],
+      ],
+    ];
     $build[] = [
       '#theme' => 'table',
       '#header' => $table_data['header'],
@@ -77,9 +81,6 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
         'class' => ['plan-table'],
       ],
       '#progress_groups' => TRUE,
-      '#cache' => [
-        'tags' => $table_data['cache_tags'],
-      ],
       '#soft_limit' => $this->getBlockConfig()['table']['soft_limit'] ?? 0,
     ];
     $conf = $this->getBlockConfig();
@@ -241,7 +242,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
     }
 
     $this->applyTableConfiguration($header, $rows);
-    $this->applyGlobalConfigurationTable($header, $rows, $year, $plans);
+    $this->applyGlobalConfigurationTable($header, $rows, $cache_tags, $year, $plans);
 
     if (empty($rows)) {
       return NULL;

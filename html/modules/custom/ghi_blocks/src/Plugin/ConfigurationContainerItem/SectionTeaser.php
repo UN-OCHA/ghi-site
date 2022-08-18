@@ -38,6 +38,8 @@ class SectionTeaser extends ConfigurationContainerItemPluginBase {
    */
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
+    $entity_id = $this->config['value'] ?? NULL;
+    $entity = $entity_id ? $this->entityTypeManager->getStorage('node')->load($entity_id) : NULL;
 
     // This doesn't need a title.
     $element['label']['#access'] = FALSE;
@@ -51,7 +53,7 @@ class SectionTeaser extends ConfigurationContainerItemPluginBase {
       '#selection_settings' => [
         'target_bundles' => ['section'],
       ],
-      '#default_value' => array_key_exists('value', $this->config) ? $this->config['value'] : NULL,
+      '#default_value' => $entity,
     ];
     return $element;
   }
@@ -62,7 +64,7 @@ class SectionTeaser extends ConfigurationContainerItemPluginBase {
   public function getLabel() {
     $value = $this->getValue();
     $entity = $this->entityTypeManager->getStorage('node')->load($value);
-    return $entity ? $entity->label() : NULL;
+    return $entity ? $entity->label() : $this->t('<em>Unavailable</em>');
   }
 
   /**
@@ -80,6 +82,15 @@ class SectionTeaser extends ConfigurationContainerItemPluginBase {
       'tags' => $entity->getCacheTags(),
     ];
     return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    $value = $this->getValue();
+    $entity = $this->entityTypeManager->getStorage('node')->load($value);
+    return $entity ? $entity->getCacheTags() : [];
   }
 
 }

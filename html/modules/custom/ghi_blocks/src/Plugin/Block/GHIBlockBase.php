@@ -495,7 +495,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
       'contexts' => Cache::mergeContexts($this->getCacheContexts(), $build_content['#cache']['contexts'] ?? []),
       'tags' => Cache::mergeTags($this->getCacheTags(), $build_content['#cache']['tags'] ?? []),
     ];
-
     return $build;
   }
 
@@ -957,115 +956,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
-   * Check if a block is set to be hidden.
-   *
-   * @return bool
-   *   TRUE if hidden, FALSE otherwise.
-   */
-  public function isHidden() {
-    return !empty($this->configuration['visibility_status']) && $this->configuration['visibility_status'] == 'hidden';
-  }
-
-  /**
-   * Check if a block is currently in preview.
-   *
-   * This can be either because it's previewed as part of the block
-   * configuration, or because it's displayed in the Layout Builder interface,
-   * which is some kind of preview too.
-   *
-   * @return bool
-   *   TRUE if considered preview, FALSE otherwise.
-   */
-  protected function isPreview() {
-    return $this->isConfigurationPreview() || $this->isLayoutBuilder();
-  }
-
-  /**
-   * Check if a block is currently viewed inside the LayoutBuilder interface.
-   *
-   * @return bool
-   *   TRUE if considered layout builder, FALSE otherwise.
-   */
-  protected function isLayoutBuilder() {
-    return $this->routeMatch->getParameter('section_storage') instanceof SectionStorageBase;
-  }
-
-  /**
-   * Check if a block is currently previewed in the configuration modal.
-   *
-   * @return bool
-   *   TRUE if considered configuration preview, FALSE otherwise.
-   */
-  protected function isConfigurationPreview() {
-    return !empty($this->configuration['is_preview']);
-  }
-
-  /**
-   * Set the plugin contexts during form processing.
-   *
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state object.
-   */
-  private function setFormContexts(FormStateInterface $form_state) {
-    // Provide context so that data can be retrieved.
-    $build_info = $form_state->getBuildInfo();
-    if (!empty($build_info['args']) && $build_info['args'][0] instanceof OverridesSectionStorage) {
-      $section_storage = $build_info['args'][0];
-      if ($section_storage->getContext('entity')) {
-        try {
-          $this->setContext('layout_builder.entity', $build_info['args'][0]->getContext('entity'));
-        }
-        catch (ContextException $e) {
-          // Fail silently.
-        }
-      }
-    }
-  }
-
-  /**
-   * Add all buttons recursively to the form state's clean value keys.
-   *
-   * This keeps the values array smaller and easier to debug.
-   *
-   * @param array $form
-   *   The form array.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state.
-   * @param array $parents
-   *   An array of parent elements.
-   */
-  protected function addButtonsToCleanValueKeys(array $form, FormStateInterface $form_state, array $parents = []) {
-    $buttons = ['submit', 'button'];
-    foreach (Element::children($form) as $element_key) {
-      $element = $form[$element_key];
-      if (array_key_exists('#type', $element) && in_array($element['#type'], $buttons)) {
-        $form_state->addCleanValueKey(array_merge($parents, [$element_key]));
-      }
-      if (count(Element::children($element)) > 0) {
-        $this->addButtonsToCleanValueKeys($element, $form_state, array_merge($parents, [$element_key]));
-      }
-    }
-  }
-
-  /**
-   * Check if the given form state originates in a preview submit action.
-   *
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   Form state interface.
-   *
-   * @return bool
-   *   TRUE if the form state has been created by a preview action, FALSE
-   *   otherwise.
-   */
-  public function isPreviewSubmit(FormStateInterface $form_state) {
-    $current_subform = $form_state->get('current_subform');
-    $triggering_element = $form_state->getTriggeringElement();
-    $action = end($triggering_element['#parents']);
-    $values = $form_state->getValues();
-    return $action == 'preview' && !array_key_exists($current_subform, $values);
-  }
-
-  /**
    * Element validate callback.
    *
    * @param array $element
@@ -1176,6 +1066,115 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     // Make sure that we have a UUID.
     $this->configuration['uuid'] = $this->getUuid();
+  }
+
+  /**
+   * Check if a block is set to be hidden.
+   *
+   * @return bool
+   *   TRUE if hidden, FALSE otherwise.
+   */
+  public function isHidden() {
+    return !empty($this->configuration['visibility_status']) && $this->configuration['visibility_status'] == 'hidden';
+  }
+
+  /**
+   * Check if a block is currently in preview.
+   *
+   * This can be either because it's previewed as part of the block
+   * configuration, or because it's displayed in the Layout Builder interface,
+   * which is some kind of preview too.
+   *
+   * @return bool
+   *   TRUE if considered preview, FALSE otherwise.
+   */
+  protected function isPreview() {
+    return $this->isConfigurationPreview() || $this->isLayoutBuilder();
+  }
+
+  /**
+   * Check if a block is currently viewed inside the LayoutBuilder interface.
+   *
+   * @return bool
+   *   TRUE if considered layout builder, FALSE otherwise.
+   */
+  public function isLayoutBuilder() {
+    return $this->routeMatch->getParameter('section_storage') instanceof SectionStorageBase;
+  }
+
+  /**
+   * Check if a block is currently previewed in the configuration modal.
+   *
+   * @return bool
+   *   TRUE if considered configuration preview, FALSE otherwise.
+   */
+  protected function isConfigurationPreview() {
+    return !empty($this->configuration['is_preview']);
+  }
+
+  /**
+   * Set the plugin contexts during form processing.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   */
+  private function setFormContexts(FormStateInterface $form_state) {
+    // Provide context so that data can be retrieved.
+    $build_info = $form_state->getBuildInfo();
+    if (!empty($build_info['args']) && $build_info['args'][0] instanceof OverridesSectionStorage) {
+      $section_storage = $build_info['args'][0];
+      if ($section_storage->getContext('entity')) {
+        try {
+          $this->setContext('layout_builder.entity', $build_info['args'][0]->getContext('entity'));
+        }
+        catch (ContextException $e) {
+          // Fail silently.
+        }
+      }
+    }
+  }
+
+  /**
+   * Add all buttons recursively to the form state's clean value keys.
+   *
+   * This keeps the values array smaller and easier to debug.
+   *
+   * @param array $form
+   *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param array $parents
+   *   An array of parent elements.
+   */
+  protected function addButtonsToCleanValueKeys(array $form, FormStateInterface $form_state, array $parents = []) {
+    $buttons = ['submit', 'button'];
+    foreach (Element::children($form) as $element_key) {
+      $element = $form[$element_key];
+      if (array_key_exists('#type', $element) && in_array($element['#type'], $buttons)) {
+        $form_state->addCleanValueKey(array_merge($parents, [$element_key]));
+      }
+      if (count(Element::children($element)) > 0) {
+        $this->addButtonsToCleanValueKeys($element, $form_state, array_merge($parents, [$element_key]));
+      }
+    }
+  }
+
+  /**
+   * Check if the given form state originates in a preview submit action.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state interface.
+   *
+   * @return bool
+   *   TRUE if the form state has been created by a preview action, FALSE
+   *   otherwise.
+   */
+  public function isPreviewSubmit(FormStateInterface $form_state) {
+    $current_subform = $form_state->get('current_subform');
+    $triggering_element = $form_state->getTriggeringElement();
+    $action = end($triggering_element['#parents']);
+    $values = $form_state->getValues();
+    return $action == 'preview' && !array_key_exists($current_subform, $values);
   }
 
   /**

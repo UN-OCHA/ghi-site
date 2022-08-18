@@ -494,4 +494,11 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
     return $this instanceof ConfigurationContainerItemGroupInterface;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    return [];
+  }
+
 }

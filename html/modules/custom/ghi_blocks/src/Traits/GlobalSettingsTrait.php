@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Traits;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
@@ -122,12 +123,15 @@ trait GlobalSettingsTrait {
    *   The build header array.
    * @param array $rows
    *   The build table rows.
+   * @param array $cache_tags
+   *   The cache tags array that will be filled with the cache tags of existing
+   *   section nodes.
    * @param int $year
    *   The year for which the configuration should be applied.
    * @param \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[] $plans
    *   An array of plan objects.
    */
-  private function applyGlobalConfigurationTable(array &$header, array &$rows, $year, array $plans) {
+  private function applyGlobalConfigurationTable(array &$header, array &$rows, array &$cache_tags, $year, array $plans) {
     $config = $this->getYearConfig($year);
 
     if (empty($config['caseload_reached'])) {
@@ -189,14 +193,18 @@ trait GlobalSettingsTrait {
 
     // Link to existing sections if possible.
     $section_manager = $this->getSectionManager();
-    $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans, $section_manager) {
+    $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans, $section_manager, &$cache_tags) {
       /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
       $plan = $plans[$plan_id];
       if (!$plan || !$plan->getEntity()) {
         return $row;
       }
       $section = $section_manager->loadSectionForBaseObject($plan->getEntity());
-      if (!$section || !$section->isPublished()) {
+      if (!$section) {
+        return $row;
+      }
+      $cache_tags = Cache::mergeTags($cache_tags, $section->getCacheTags());
+      if (!$section->isPublished()) {
         return $row;
       }
       $row['name']['data'][0] = $section->toLink($row['name']['data'][0]['#markup'])->toRenderable();
