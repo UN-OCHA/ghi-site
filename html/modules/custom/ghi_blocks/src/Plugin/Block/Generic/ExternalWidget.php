@@ -79,9 +79,17 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
       return;
     }
 
+    // Limit to what's been setup.
+    $widgets = array_slice($widgets, 0, $conf['select_number']);
+
     $iframes = [];
     foreach ($widgets as $widget) {
-      $widget_url = $widget['widget_url'];
+      $widget_url = $widget['widget_url'] ?? NULL;
+      if (empty($widget_url)) {
+        // Nothing here.
+        continue;
+      }
+
       $url = parse_url($widget_url);
       if (strpos($url['host'], 'humdata.org') !== FALSE) {
         // Special handling of HDX quick charts.
@@ -181,7 +189,7 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
 
     $default_widgets = array_values($this->getDefaultFormValueFromFormState($form_state, 'widgets'));
     for ($i = 1; $i <= self::MAX_ITEMS; $i++) {
-      $default = $default_widgets[$i - 1];
+      $default = $default_widgets[$i - 1] ?? [];
       $state_conditions = [];
       for ($j = $i; $j <= self::MAX_ITEMS; $j++) {
         $state_conditions[] = [
@@ -270,13 +278,14 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
    * Validate handler for portlet configuration form.
    */
   public function blockValidate($form, FormStateInterface $form_state) {
-    if ($this->isPreviewSubmit($form_state)) {
+    $allowed_hosts = $this->getAllowedHosts();
+    $values = $form_state->getValue($form_state->get('current_subform')) ?? [];
+    $subform = $form['container'];
+
+    if (!array_key_exists('select_number', $values)) {
+      // This is probably a block submit originating from the preview screen.
       return;
     }
-
-    $allowed_hosts = $this->getAllowedHosts();
-    $values = $form_state->getValue($form_state->get('current_subform'));
-    $subform = $form['container'];
 
     // Normal form submission.
     for ($i = 1; $i <= $values['select_number']; $i++) {
