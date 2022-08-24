@@ -157,7 +157,7 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
   private function getFiles() {
     $conf = $this->getBlockConfig();
     $files = [];
-    foreach ($conf['items'] as $item) {
+    foreach ($conf['items'] ?? [] as $item) {
       $item_type = $item['item_type'] ?? NULL;
       if (!$item_type || $item_type !== 'carousel_item') {
         continue;

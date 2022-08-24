@@ -11,6 +11,10 @@
 
   .block-content {
     margin-top: 2rem;
+
+    body.layout-builder-ipe-editing & {
+      padding-top: 1.5rem;
+    }
   }
 
   .overlay {

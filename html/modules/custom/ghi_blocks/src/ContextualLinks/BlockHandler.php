@@ -80,9 +80,8 @@ class BlockHandler implements ContainerInjectionInterface {
     [$entity_type_id, $id] = explode('.', $route_parameters['section_storage']);
     $uuid = $route_parameters['uuid'];
     $delta = $route_parameters['delta'];
-
     $entity = $this->entityTypeManager->getStorage($entity_type_id)->load($id);
-    $section_storage = $this->getSectionStorageForEntity($entity);
+    $section_storage = $this->getSectionStorageForEntity($entity, 'default');
     $section_storage = $this->layoutTempstoreRepository->get($section_storage);
 
     $component_keys = array_keys($section_storage->getSection($delta)->getComponents());
@@ -105,11 +104,20 @@ class BlockHandler implements ContainerInjectionInterface {
       ],
     ];
     $metadata = [
-      'operations' => 'update:remove:hide:unhide',
+      'operations' => 'update:remove:hide:unhide:show_config',
       'langcode' => 'en',
     ];
 
     $links['layout_builder_block_remove']['title'] = $this->t('Remove');
+
+    $links['layout_builder_block_show_config'] = [
+      'route_name' => 'ghi_blocks.show_block_config',
+      'route_parameters' => $route_parameters,
+      'title' => $this->t('Show config'),
+      'weight' => NULL,
+      'localized_options' => $localized_options,
+      'metadata' => $metadata,
+    ];
 
     $links['layout_builder_block_hide'] = [
       'route_name' => 'ghi_blocks.hide_block',
@@ -133,6 +141,7 @@ class BlockHandler implements ContainerInjectionInterface {
       'layout_builder_block_update',
       'layout_builder_block_hide',
       'layout_builder_block_unhide',
+      'layout_builder_block_show_config',
       'layout_builder_block_remove',
     ];
     $_links = [];

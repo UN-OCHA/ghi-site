@@ -35,6 +35,13 @@ class RouteSubscriber extends RouteSubscriberBase {
       $wizard_route->setDefault('_form', '\Drupal\ghi_sections\Form\GlobalSectionWizard');
       $wizard_route->setDefault('node_type', 'global_section');
       $collection->add('ghi_sections.wizard.global_section', $wizard_route);
+
+      $wizard_route = clone $route;
+      $wizard_route->setPath('node/add/homepage');
+      $wizard_route->setRequirement('_entity_create_access', 'node:homepage');
+      $wizard_route->setDefault('_form', '\Drupal\ghi_sections\Form\HomepageSectionWizard');
+      $wizard_route->setDefault('node_type', 'homepage');
+      $collection->add('ghi_sections.wizard.homepage', $wizard_route);
     }
   }
 

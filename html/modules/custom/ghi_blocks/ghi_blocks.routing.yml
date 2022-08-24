@@ -12,11 +12,12 @@ ghi_blocks.load_block:
     _controller: 'Drupal\ghi_blocks\Controller\AjaxBlockController::loadBlock'
   requirements:
     _permission: 'access content'
-  parameters:
-      plugin_id:
-        type: string
-      block_uuid:
-        type: string
+  options:
+    parameters:
+        plugin_id:
+          type: string
+        block_uuid:
+          type: string
 
 ghi_blocks.global_config:
   path: '/admin/config/ghi/global-settings'
@@ -27,6 +28,31 @@ ghi_blocks.global_config:
     _admin_route: TRUE
   requirements:
     _permission: 'administer ghi global config'
+
+ghi_blocks.import_block:
+  path: '/layout_builder/import/block/{section_storage_type}/{section_storage}/{delta}/{region}'
+  defaults:
+    _form: '\Drupal\ghi_blocks\Form\ImportBlockForm'
+    _title: 'Import block'
+  requirements:
+    _layout_builder_access: 'view'
+  options:
+    _admin_route: TRUE
+    parameters:
+      section_storage:
+        layout_builder_tempstore: TRUE
+
+ghi_blocks.show_block_config:
+  path: '/layout_builder/show_config/block/{section_storage_type}/{section_storage}/{delta}/{region}/{uuid}'
+  defaults:
+    _form: '\Drupal\ghi_blocks\LayoutBuilder\ShowBlockConfigForm'
+  requirements:
+    _layout_builder_access: 'view'
+  options:
+    _admin_route: TRUE
+    parameters:
+      section_storage:
+        layout_builder_tempstore: TRUE
 
 ghi_blocks.hide_block:
   path: '/layout_builder/hide/block/{section_storage_type}/{section_storage}/{delta}/{region}/{uuid}'
@@ -39,6 +65,7 @@ ghi_blocks.hide_block:
     parameters:
       section_storage:
         layout_builder_tempstore: TRUE
+
 ghi_blocks.unhide_block:
   path: '/layout_builder/unhide/block/{section_storage_type}/{section_storage}/{delta}/{region}/{uuid}'
   defaults:

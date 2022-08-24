@@ -183,3 +183,8 @@ form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions in
   margin-left: 0;
   margin-right: 0;
 }
+
+#layout-builder-modal form.glb-canvas-form .glb-canvas-form__actions > a {
+  display: inline-block;
+  padding: 1rem;
+}

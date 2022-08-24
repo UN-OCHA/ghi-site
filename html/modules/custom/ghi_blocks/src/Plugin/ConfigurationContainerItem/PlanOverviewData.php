@@ -309,10 +309,10 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
    */
   private function getType($type = NULL) {
     if ($type === NULL) {
-      $type = $this->config['type'] ?? $this->config['type'];
+      $type = $this->config['type'] ?? NULL;
     }
     $types = $this->getTypes();
-    return array_key_exists($type, $types) ? $types[$type] : NULL;
+    return $type && array_key_exists($type, $types) ? $types[$type] : NULL;
   }
 
 }

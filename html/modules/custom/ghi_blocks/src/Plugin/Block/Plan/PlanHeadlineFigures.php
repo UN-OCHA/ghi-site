@@ -335,7 +335,6 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
    * Show the key figures form.
    */
   public function keyFiguresForm(array $form, FormStateInterface $form_state) {
-
     $form['items'] = [
       '#type' => 'configuration_container',
       '#title' => $this->t('Configured headline figures'),

@@ -60,33 +60,6 @@ function common_design_subtheme_theme_suggestions_item_list_alter(array &$sugges
 }
 
 /**
- * Implements hook_preprocess_html().
- */
-function common_design_subtheme_preprocess_html(&$vars) {
-  // Add a new render array to page_bottom so the icons
-  // get added to the page.
-  if (!array_key_exists('page_image', $vars['page'])) {
-    $vars['page']['page_image'] = [
-      "#theme_wrappers" => [
-        0 => "region",
-      ],
-      "#region" => "page_image",
-    ];
-  }
-
-  // SVG sprite
-  // Get the contents of the SVG sprite.
-  $icons = file_get_contents(drupal_get_path('theme', 'common_design_subtheme') . '/img/icons/ghi-icons-sprite.svg');
-
-  // Add a new render array to page_bottom so the icons
-  // get added to the page.
-  $vars['page_bottom']['hpc_icons'] = [
-    '#type' => 'inline_template',
-    '#template' => '<span class="hidden">' . $icons . '</span>',
-  ];
-}
-
-/**
  * Implements hook_preprocess_region().
  *
  * Unset blocks that don't have any content besides or only HTML comments.
@@ -134,7 +107,6 @@ function common_design_subtheme_preprocess_block(&$variables) {
     $page_node = $block_instance->getPageNode();
     $qualified_bundles = [
       'section',
-      'global_section',
       'profile',
       'population',
       'financials',
