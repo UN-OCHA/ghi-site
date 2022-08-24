@@ -3,8 +3,10 @@ langcode: en
 status: true
 dependencies:
   config:
+    - core.entity_view_display.node.homepage.default
     - node.type.financials
     - node.type.global_section
+    - node.type.homepage
     - node.type.news_story
     - node.type.page
     - node.type.plan_cluster
@@ -15,10 +17,13 @@ dependencies:
   module:
     - contextual
     - ghi_content
+    - layout_builder
+    - layout_builder_ipe
     - node
     - publishcontent
     - system
     - toolbar
+    - view_unpublished
 id: rpm_administrator
 label: 'rpm administrator'
 weight: -5
@@ -30,16 +35,29 @@ permissions:
   - 'access remote content'
   - 'access toolbar'
   - 'administer nodes'
+  - 'configure all homepage node layout overrides'
+  - 'configure editable homepage node layout overrides'
+  - 'create global_section content'
+  - 'create homepage content'
   - 'create news_story content'
   - 'create page content'
   - 'create section content'
+  - 'delete any global_section content'
+  - 'delete any homepage content'
   - 'delete any news_story content'
   - 'delete any section content'
+  - 'delete global_section revisions'
+  - 'delete homepage revisions'
+  - 'delete own global_section content'
+  - 'delete own homepage content'
   - 'delete own news_story content'
   - 'delete own section content'
   - 'delete section revisions'
   - 'edit any financials content'
   - 'edit any global_section content'
+  - 'edit any homepage content'
+  - 'edit any news_story content'
+  - 'edit any page content'
   - 'edit any plan_cluster content'
   - 'edit any population content'
   - 'edit any profile content'
@@ -47,6 +65,7 @@ permissions:
   - 'edit any section content'
   - 'edit own financials content'
   - 'edit own global_section content'
+  - 'edit own homepage content'
   - 'edit own news_story content'
   - 'edit own page content'
   - 'edit own plan_cluster content'
@@ -56,8 +75,10 @@ permissions:
   - 'edit own section content'
   - 'publish any node type financials'
   - 'publish any node type global_section'
+  - 'publish any node type homepage'
   - 'publish any node type news_story'
   - 'publish any node type page'
+  - 'publish any node type plan_cluster'
   - 'publish any node type population'
   - 'publish any node type profile'
   - 'publish any node type risk_index'
@@ -65,22 +86,27 @@ permissions:
   - 'publish editable content'
   - 'publish editable node type financials'
   - 'publish editable node type global_section'
+  - 'publish editable node type homepage'
   - 'publish editable node type news_story'
   - 'publish editable node type page'
+  - 'publish editable node type plan_cluster'
   - 'publish editable node type population'
   - 'publish editable node type profile'
   - 'publish editable node type risk_index'
   - 'publish editable node type section'
   - 'publish own node type financials'
   - 'publish own node type global_section'
+  - 'publish own node type homepage'
   - 'publish own node type news_story'
   - 'publish own node type page'
+  - 'publish own node type plan_cluster'
   - 'publish own node type population'
   - 'publish own node type profile'
   - 'publish own node type risk_index'
   - 'publish own node type section'
   - 'revert financials revisions'
   - 'revert global_section revisions'
+  - 'revert homepage revisions'
   - 'revert news_story revisions'
   - 'revert page revisions'
   - 'revert plan_cluster revisions'
@@ -90,8 +116,10 @@ permissions:
   - 'revert section revisions'
   - 'unpublish any node type financials'
   - 'unpublish any node type global_section'
+  - 'unpublish any node type homepage'
   - 'unpublish any node type news_story'
   - 'unpublish any node type page'
+  - 'unpublish any node type plan_cluster'
   - 'unpublish any node type population'
   - 'unpublish any node type profile'
   - 'unpublish any node type risk_index'
@@ -99,22 +127,29 @@ permissions:
   - 'unpublish editable content'
   - 'unpublish editable node type financials'
   - 'unpublish editable node type global_section'
+  - 'unpublish editable node type homepage'
   - 'unpublish editable node type news_story'
   - 'unpublish editable node type page'
+  - 'unpublish editable node type plan_cluster'
   - 'unpublish editable node type population'
   - 'unpublish editable node type profile'
   - 'unpublish editable node type risk_index'
   - 'unpublish editable node type section'
   - 'unpublish own node type financials'
   - 'unpublish own node type global_section'
+  - 'unpublish own node type homepage'
   - 'unpublish own node type news_story'
   - 'unpublish own node type page'
+  - 'unpublish own node type plan_cluster'
   - 'unpublish own node type population'
   - 'unpublish own node type profile'
   - 'unpublish own node type risk_index'
   - 'unpublish own node type section'
+  - 'use layout builder ipe on editable homepage node layout overrides'
+  - 'view any unpublished homepage content'
   - 'view financials revisions'
   - 'view global_section revisions'
+  - 'view homepage revisions'
   - 'view news_story revisions'
   - 'view own unpublished content'
   - 'view page revisions'

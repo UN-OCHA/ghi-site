@@ -244,6 +244,8 @@ function ghi_blocks_link_alter(&$variables) {
   $allowed_routes = [
     'layout_builder.choose_block',
     'layout_builder.remove_block',
+    'ghi_blocks.import_block',
+    'ghi_blocks.show_block_config',
     'ghi_blocks.hide_block',
     'ghi_blocks.unhide_block',
   ];
@@ -271,7 +273,7 @@ function ghi_blocks_link_alter(&$variables) {
  * Implements hook_form_alter().
  */
 function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
-  if (strpos($form_id, 'layout_builder_form')) {
+  if (strpos($form_id, 'layout_builder_form') || $form_id == 'layout_builder_import_block') {
     $form['#attached']['library'][] = 'system/admin';
     $form['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
     $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
@@ -329,6 +331,18 @@ function ghi_blocks_form_layout_builder_update_block_alter(array &$form, FormSta
   [$section_storage, $delta, , $uuid] = $form_state->getBuildInfo()['args'];
   $component = $section_storage->getSection($delta)->getComponent($uuid);
   $plugin = $component->getPlugin();
+  if (!$plugin instanceof GHIBlockBase) {
+    return;
+  }
+  $plugin->blockFormAlter($form, $form_state);
+}
+
+/**
+ * Implements hook_FORM_ID_alter().
+ */
+function ghi_blocks_form_layout_builder_import_block_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $component = $form_state->get('layout_builder__component') ?? NULL;
+  $plugin = $component ? $component->getPlugin() : NULL;
   if (!$plugin instanceof GHIBlockBase) {
     return;
   }

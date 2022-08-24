@@ -65,13 +65,18 @@
       }
 
       &.layout-builder-block-update a:after {
-        -webkit-mask-image: icon("edit-section");
-        mask-image: icon("edit-section");
+        -webkit-mask-image: icon("config");
+        mask-image: icon("config");
       }
 
       &.layout-builder-block-remove a:after {
         -webkit-mask-image: icon("remove-section");
         mask-image: icon("remove-section");
+      }
+
+      &.layout-builder-block-show-config a:after {
+        -webkit-mask-image: icon("list");
+        mask-image: icon("list");
       }
 
       &.layout-builder-block-hide a:after {

@@ -35,7 +35,6 @@ trait BasicObjectTypeCreationTrait {
       'hasYear' => FALSE,
     ];
 
-    /** @var \Drupal\media\MediaTypeInterface $media_type */
     $base_object_type = BaseObjectType::create($values);
 
     $this->assertSame(SAVED_NEW, $base_object_type->save());

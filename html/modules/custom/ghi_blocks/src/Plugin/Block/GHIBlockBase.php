@@ -21,6 +21,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_blocks\Form\ImportBlockForm;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
@@ -285,7 +286,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * @return array
    *   An array with configuration options specific to a block plugin instance.
    */
-  protected function getBlockConfig() {
+  public function getBlockConfig() {
     if ($this->formState) {
       return $this->getTemporarySettings($this->formState);
     }
@@ -1315,7 +1316,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       ],
     ];
 
-    if ($form_state->getBuildInfo()['callback_object'] instanceof AddBlockForm) {
+    if ($form_state->getBuildInfo()['callback_object'] instanceof AddBlockForm || $form_state->getBuildInfo()['callback_object'] instanceof ImportBlockForm) {
       // For the add block form, make this a link back to the block browser.
       $form['actions']['cancel']['#url'] = Url::fromRoute('layout_builder.choose_block', $this->routeMatch->getRawParameters()->all());
       $form['actions']['cancel']['#attributes']['class'][] = 'use-ajax';

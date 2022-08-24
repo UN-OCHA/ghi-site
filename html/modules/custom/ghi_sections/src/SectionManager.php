@@ -23,7 +23,7 @@ class SectionManager {
   /**
    * The machine name of the bundle to use for articles.
    */
-  const SECTION_BUNDLES = ['section', 'global_section'];
+  const SECTION_BUNDLES = ['section', 'global_section', 'homepage'];
 
   /**
    * The entity type manager service.

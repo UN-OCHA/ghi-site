@@ -83,7 +83,7 @@ class BlockHandler implements ContainerInjectionInterface {
     $delta = $route_parameters['delta'];
 
     $entity = $this->entityTypeManager->getStorage($entity_type_id)->load($id);
-    $section_storage = $this->getSectionStorageForEntity($entity);
+    $section_storage = $this->getSectionStorageForEntity($entity, 'default');
     $section_storage = $this->layoutTempstoreRepository->get($section_storage);
 
     $component_keys = array_keys($section_storage->getSection($delta)->getComponents());

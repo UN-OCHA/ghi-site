@@ -18,6 +18,16 @@ class GlobalSectionWizard extends WizardBase {
   }
 
   /**
+   * Define the node bundle for this wizard.
+   *
+   * @return string
+   *   The bundle id used for new nodes created using this wizard.
+   */
+  protected function getBundle() {
+    return 'global_section';
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
@@ -64,7 +74,7 @@ class GlobalSectionWizard extends WizardBase {
       '#disabled' => $step > 0,
     ];
 
-    $tags = $this->getEntityReferenceFieldItemList('global_section', 'field_tags', $form_state->getValue('tags') ?? []);
+    $tags = $this->getEntityReferenceFieldItemList($this->getBundle(), 'field_tags', $form_state->getValue('tags') ?? []);
 
     // Add the team selector.
     $form['tags'] = [
@@ -142,40 +152,13 @@ class GlobalSectionWizard extends WizardBase {
       $form['actions']['submit'] = [
         '#type' => 'submit',
         '#button_type' => 'primary',
-        '#value' => $this->t('Create global section'),
+        '#value' => $this->t('Create @type', [
+          '@type' => $this->entityTypeManager->getStorage('node_type')->load($this->getBundle())->label(),
+        ]),
       ];
     }
 
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    parent::validateForm($form, $form_state);
-
-    $values = array_intersect_key($form_state->getValues(), array_flip([
-      'year',
-      'tags',
-      'team',
-      'title',
-    ]));
-
-    $action = self::getActionFromFormState($form_state);
-
-    if ($action != 'back' && $form_state->get('step') > 0) {
-      $properties = [
-        'type' => 'global_section',
-        'field_year' => $values['year'],
-      ];
-      $sections = $this->entityTypeManager->getStorage('node')->loadByProperties($properties);
-      if (count($sections)) {
-        $form_state->setErrorByName('year', $this->t('A global section based on year <em>@year</em> already exists.', [
-          '@year' => $values['year'],
-        ]));
-      }
-    }
   }
 
   /**
@@ -194,7 +177,7 @@ class GlobalSectionWizard extends WizardBase {
 
     // Create and save the section.
     $global_section = $this->entityTypeManager->getStorage('node')->create([
-      'type' => 'global_section',
+      'type' => $this->getBundle(),
       'title' => $values['title'],
       'uid' => $this->currentUser()->id(),
       'status' => FALSE,

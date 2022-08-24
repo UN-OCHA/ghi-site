@@ -6,6 +6,7 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\ghi_sections\Entity\GlobalSection;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\ghi_subpages\SubpageManager;
@@ -67,7 +68,7 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
     if (!$node || !$node instanceof NodeInterface) {
       return NULL;
     }
-    if ($node && $node->bundle() == 'global_section') {
+    if ($node && $node instanceof GlobalSection) {
       // Don't show the subpage navigation on nodes of type global section.
       return NULL;
     }

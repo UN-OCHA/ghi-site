@@ -1,0 +1,17 @@
+uuid: 87a7765b-3741-4d95-9cb2-29dd212e2cdd
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: Homepage
+type: homepage
+description: 'A homepage is a special type of a global section page, that can serve as the sites homepage. Each page needs to have a distinct year.'
+help: ''
+new_revision: true
+preview_mode: 0
+display_submitted: false
