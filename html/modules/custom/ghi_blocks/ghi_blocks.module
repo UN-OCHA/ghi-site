@@ -382,6 +382,9 @@ function ghi_blocks_page_attachments(array &$attachments) {
  */
 function ghi_blocks_is_layout_builder_route() {
   $route_name = \Drupal::routeMatch()->getRouteName();
+  if (!$route_name) {
+    return FALSE;
+  }
   if ($route_name == 'layout_builder_ipe.entity.edit' || preg_match('/^(layout_builder\.([^.]+\.)?)/', $route_name)) {
     return TRUE;
   }

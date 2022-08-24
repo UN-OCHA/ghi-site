@@ -239,11 +239,13 @@ function ghi_blocks_preprocess_section_switcher(&$variables) {
       $base_object = $section->get('field_base_object')->entity;
       $label = $section_manager->getShortName($base_object, TRUE, TRUE) ?? $label;
     }
-    $option_value = $section->toLink($label)->toRenderable();
     if ($current_section->id() == $section->id()) {
       $option_value = ['#markup' => $label];
     }
-    $options[$section->get('field_base_object')->entity->id()] = $option_value;
+    else {
+      $option_value = $section->toLink($label)->toRenderable();
+    }
+    $options[] = $option_value;
   }
   $variables['item_list'] = [
     '#theme' => 'item_list',

@@ -17,7 +17,7 @@ settings:
   id: section_switcher
   label: 'Section switcher'
   label_display: '0'
-  provider: ghi_sections
+  provider: ghi_blocks
   context_mapping:
     node: '@node.node_route_context:node'
 visibility:
@@ -29,7 +29,6 @@ visibility:
     bundles:
       document: document
       financials: financials
-      global_section: global_section
       plan_cluster: plan_cluster
       population: population
       profile: profile
