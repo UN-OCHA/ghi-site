@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\ContextualLinks;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
@@ -11,7 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 
 /**
- * Sync element service class.
+ * Block handler service class.
  */
 class BlockHandler implements ContainerInjectionInterface {
 
@@ -33,11 +34,19 @@ class BlockHandler implements ContainerInjectionInterface {
   protected $layoutTempstoreRepository;
 
   /**
+   * The user account service.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
+
+  /**
    * Public constructor.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, LayoutTempstoreRepositoryInterface $layout_tempstore_repository, AccountInterface $account) {
     $this->entityTypeManager = $entity_type_manager;
     $this->layoutTempstoreRepository = $layout_tempstore_repository;
+    $this->currentUser = $account;
   }
 
   /**
@@ -47,6 +56,7 @@ class BlockHandler implements ContainerInjectionInterface {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('layout_builder.tempstore_repository'),
+      $container->get('current_user'),
     );
   }
 
@@ -110,14 +120,16 @@ class BlockHandler implements ContainerInjectionInterface {
 
     $links['layout_builder_block_remove']['title'] = $this->t('Remove');
 
-    $links['layout_builder_block_show_config'] = [
-      'route_name' => 'ghi_blocks.show_block_config',
-      'route_parameters' => $route_parameters,
-      'title' => $this->t('Show config'),
-      'weight' => NULL,
-      'localized_options' => $localized_options,
-      'metadata' => $metadata,
-    ];
+    if ($this->currentUser->hasPermission('show block configuration code')) {
+      $links['layout_builder_block_show_config'] = [
+        'route_name' => 'ghi_blocks.show_block_config',
+        'route_parameters' => $route_parameters,
+        'title' => $this->t('Show config'),
+        'weight' => NULL,
+        'localized_options' => $localized_options,
+        'metadata' => $metadata,
+      ];
+    }
 
     $links['layout_builder_block_hide'] = [
       'route_name' => 'ghi_blocks.hide_block',
