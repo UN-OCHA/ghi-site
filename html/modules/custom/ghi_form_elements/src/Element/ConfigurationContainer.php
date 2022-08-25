@@ -135,8 +135,12 @@ class ConfigurationContainer extends FormElement {
         $mode = $form_state->get('mode');
         $values = $form_state->getValue($parents);
         if ($mode == 'add_group') {
+          // Get the highest used id.
+          $max_id = max(array_map(function ($_item) {
+            return $_item['id'];
+          }, $items));
           $items[] = [
-            'id' => count($items),
+            'id' => $max_id + 1,
             'item_type' => 'item_group',
             'config' => $values['plugin_config'],
             'weight' => 0,
@@ -165,8 +169,12 @@ class ConfigurationContainer extends FormElement {
             $last_group = end($groups);
             $pid = $last_group['id'] ?? NULL;
           }
+          // Get the highest used id.
+          $max_id = max(array_map(function ($_item) {
+            return $_item['id'];
+          }, $items));
           $items[] = [
-            'id' => count($items),
+            'id' => $max_id + 1,
             'item_type' => $values['item_type'],
             'config' => $values['plugin_config'],
             'weight' => 0,
