@@ -136,9 +136,9 @@ class ConfigurationContainer extends FormElement {
         $values = $form_state->getValue($parents);
         if ($mode == 'add_group') {
           // Get the highest used id.
-          $max_id = max(array_map(function ($_item) {
+          $max_id = count($items) ? max(array_map(function ($_item) {
             return $_item['id'];
-          }, $items));
+          }, $items)) : 0;
           $items[] = [
             'id' => $max_id + 1,
             'item_type' => 'item_group',
@@ -170,9 +170,9 @@ class ConfigurationContainer extends FormElement {
             $pid = $last_group['id'] ?? NULL;
           }
           // Get the highest used id.
-          $max_id = max(array_map(function ($_item) {
+          $max_id = count($items) ? max(array_map(function ($_item) {
             return $_item['id'];
-          }, $items));
+          }, $items)) : 0;
           $items[] = [
             'id' => $max_id + 1,
             'item_type' => $values['item_type'],

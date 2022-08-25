@@ -474,18 +474,19 @@ class PlanOverviewMap extends GHIBlockBase {
           'status',
         ]) ?? TRUE,
       ];
+      $default_plan = $this->getDefaultFormValueFromFormState($form_state, [
+        'plans',
+        'plan_select',
+        'countries',
+        $country_id,
+        'plan',
+      ]);
       $form['plans']['plan_select']['countries'][$country_id]['plan'] = [
         '#type' => 'radios',
         '#title' => $country['name'],
         '#title_display' => 'invisible',
         '#options' => $country['plans'],
-        '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-          'plans',
-          'plan_select',
-          'countries',
-          $country_id,
-          'plan',
-        ]) ?? array_key_first($country['plans']),
+        '#default_value' => $default_plan !== NULL && in_array($default_plan, $country['plans']) ? $default_plan : array_key_first($country['plans']),
         '#states' => [
           'visible' => [
             ':input[name="basic[plans][plan_select][countries][' . $country_id . '][status]"]' => ['checked' => TRUE],
