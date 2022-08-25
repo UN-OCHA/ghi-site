@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\RenderElement;
 use Drupal\Core\Render\Element\VerticalTabs;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
@@ -23,6 +24,23 @@ class LayoutBuilderBrowserEventSubscriber implements EventSubscriberInterface {
 
   use VerticalTabsTrait;
   use StringTranslationTrait;
+
+  /**
+   * The user account service.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
+
+  /**
+   * Constructs a LayoutBuilderBrowserEventSubscriber object.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user account service.
+   */
+  public function __construct(AccountInterface $account) {
+    $this->currentUser = $account;
+  }
 
   /**
    * Display the block categories as vertical tabs.
@@ -77,48 +95,50 @@ class LayoutBuilderBrowserEventSubscriber implements EventSubscriberInterface {
           RenderElement::processGroup($form['block_categories'][$element_key], $form_state, $complete_form);
         }
 
-        $form['block_categories']['import'] = [
-          '#type' => 'details',
-          '#title' => $this->t('Import'),
-          '#attributes' => [
-            'class' => [
-              0 => 'js-layout-builder-category',
-            ],
-          ],
-          '#id' => Html::getId('import'),
-          '#parents' => [
-            'block_categories',
-            'import',
-          ],
-          '#open' => TRUE,
-          '#group' => 'tabs',
-        ];
-        RenderElement::processGroup($form['block_categories']['import'], $form_state, $complete_form);
-
-        $route_params = $request->attributes->get('_route_params');
-        $form['block_categories']['import']['links'] = [
-          '#theme' => 'links',
-          '#links' => [
-            [
-              'title' => $this->t('Import from code'),
-              'url' => Url::fromRoute('ghi_blocks.import_block', [
-                'section_storage_type' => $route_params['section_storage_type'],
-                'section_storage' => $route_params['section_storage']->getStorageId(),
-                'delta' => $route_params['delta'],
-                'region' => $route_params['region'],
-              ], [
-                'query' => array_filter([
-                  'position' => $request->query->get('position') ?? NULL,
-                ]),
-              ]),
-              'attributes' => [
-                'class' => ['use-ajax', 'js-layout-builder-block-link'],
-                'data-dialog-type' => 'dialog',
-                'data-dialog-renderer' => 'off_canvas',
+        if ($this->currentUser->hasPermission('import block from configuration code')) {
+          $form['block_categories']['import'] = [
+            '#type' => 'details',
+            '#title' => $this->t('Import'),
+            '#attributes' => [
+              'class' => [
+                0 => 'js-layout-builder-category',
               ],
             ],
-          ],
-        ];
+            '#id' => Html::getId('import'),
+            '#parents' => [
+              'block_categories',
+              'import',
+            ],
+            '#open' => TRUE,
+            '#group' => 'tabs',
+          ];
+          RenderElement::processGroup($form['block_categories']['import'], $form_state, $complete_form);
+
+          $route_params = $request->attributes->get('_route_params');
+          $form['block_categories']['import']['links'] = [
+            '#theme' => 'links',
+            '#links' => [
+              [
+                'title' => $this->t('Import from code'),
+                'url' => Url::fromRoute('ghi_blocks.import_block', [
+                  'section_storage_type' => $route_params['section_storage_type'],
+                  'section_storage' => $route_params['section_storage']->getStorageId(),
+                  'delta' => $route_params['delta'],
+                  'region' => $route_params['region'],
+                ], [
+                  'query' => array_filter([
+                    'position' => $request->query->get('position') ?? NULL,
+                  ]),
+                ]),
+                'attributes' => [
+                  'class' => ['use-ajax', 'js-layout-builder-block-link'],
+                  'data-dialog-type' => 'dialog',
+                  'data-dialog-renderer' => 'off_canvas',
+                ],
+              ],
+            ],
+          ];
+        }
 
         // Replace the original render array with our newly built.
         $build['block_categories'] = $form;

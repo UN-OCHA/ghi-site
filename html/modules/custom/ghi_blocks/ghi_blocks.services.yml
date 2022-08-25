@@ -9,12 +9,12 @@ services:
       - { name: event_subscriber }
   ghi_blocks.contextual_links.block_handler:
     class: Drupal\ghi_blocks\ContextualLinks\BlockHandler
-    arguments: ['@entity_type.manager', '@layout_builder.tempstore_repository']
+    arguments: ['@entity_type.manager', '@layout_builder.tempstore_repository', '@current_user']
   ghi_blocks.layout_builder_form_alter:
     class: Drupal\ghi_blocks\LayoutBuilder\LayoutBuilderFormAlter
     arguments: ['@form_builder']
   ghi_blocks.layout_builder_browser_alter:
     class: Drupal\ghi_blocks\EventSubscriber\LayoutBuilderBrowserEventSubscriber
-    arguments: []
+    arguments: ['@current_user']
     tags:
       - { name: event_subscriber }
