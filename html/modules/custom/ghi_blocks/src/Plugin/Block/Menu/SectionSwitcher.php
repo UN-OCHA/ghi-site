@@ -6,6 +6,7 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
 use Drupal\ghi_sections\Entity\GlobalSection;
+use Drupal\ghi_sections\Entity\Homepage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -146,8 +147,8 @@ class SectionSwitcher extends BlockBase implements ContainerFactoryPluginInterfa
     /** @var \Drupal\node\NodeInterface $node */
     $node = $contexts['node']->getContextValue();
     $section_node = $this->subpageManager->getBaseTypeNode($node);
-    // Let's not handle global sections for the moment.
-    if ($section_node instanceof GlobalSection) {
+    // Let's not handle global sections that are not homepages for the moment.
+    if ($section_node instanceof GlobalSection && !$section_node instanceof Homepage) {
       return NULL;
     }
     return $section_node;

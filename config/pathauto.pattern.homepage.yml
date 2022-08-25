@@ -1,0 +1,22 @@
+uuid: 97f76070-fa86-4df3-9e22-0f5859855f3d
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: homepage
+label: Homepage
+type: 'canonical_entities:node'
+pattern: '/overview/[node:field_year:value]'
+selection_criteria:
+  ee0906d8-c513-49c0-af26-33c0280e7bf7:
+    id: 'entity_bundle:node'
+    negate: false
+    uuid: ee0906d8-c513-49c0-af26-33c0280e7bf7
+    context_mapping:
+      node: node
+    bundles:
+      homepage: homepage
+selection_logic: and
+weight: -5
+relationships: {  }
