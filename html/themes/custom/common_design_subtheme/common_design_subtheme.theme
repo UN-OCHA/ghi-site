@@ -401,20 +401,6 @@ function common_design_subtheme_preprocess_table(&$vars) {
 }
 
 /**
- * Preprocess an hpc progress bar to attach our library.
- */
-function common_design_subtheme_preprocess_hpc_progress_bar(array &$variables) {
-  $variables['#attached']['library'][] = 'common_design_subtheme/ghi-progress-bar';
-}
-
-/**
- * Preprocess an hpc pic chart to attach our library.
- */
-function common_design_subtheme_preprocess_hpc_pie_chart(array &$variables) {
-  $variables['#attached']['library'][] = 'common_design_subtheme/ghi-pie-chart';
-}
-
-/**
  * Preprocess a plan headline figures list.
  */
 function common_design_subtheme_preprocess_item_list__key_figures(&$variables) {

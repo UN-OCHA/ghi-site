@@ -37,6 +37,11 @@
           font-size: var(--cd-font-size--tiny);
         }
       }
+
+      td[data-column="status"] {
+        display: flex;
+        justify-content: space-between;
+      }
     }
   }
 }

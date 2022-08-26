@@ -13,7 +13,7 @@ dependencies:
     - field.field.base_object.plan.field_plan_caseload
     - field.field.base_object.plan.field_plan_costing
     - field.field.base_object.plan.field_plan_document_link
-    - field.field.base_object.plan.field_plan_status_string
+    - field.field.base_object.plan.field_plan_status
     - field.field.base_object.plan.field_plan_type
     - field.field.base_object.plan.field_plan_version_tag
     - field.field.base_object.plan.field_restricted
@@ -72,6 +72,7 @@ third_party_settings:
         - field_short_name
         - field_operations_category
         - field_plan_caseload
+        - field_plan_status
         - field_plan_status_string
         - field_plan_document_link
         - field_decimal_format
@@ -144,7 +145,7 @@ content:
     third_party_settings: {  }
   field_decimal_format:
     type: options_select
-    weight: 11
+    weight: 12
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -164,7 +165,7 @@ content:
     third_party_settings: {  }
   field_max_admin_level:
     type: number
-    weight: 12
+    weight: 13
     region: content
     settings:
       placeholder: ''
@@ -200,19 +201,18 @@ content:
     third_party_settings: {  }
   field_plan_document_link:
     type: link_default
-    weight: 10
+    weight: 11
     region: content
     settings:
       placeholder_url: ''
       placeholder_title: ''
     third_party_settings: {  }
-  field_plan_status_string:
-    type: string_textfield
+  field_plan_status:
+    type: boolean_checkbox
     weight: 9
     region: content
     settings:
-      size: 60
-      placeholder: ''
+      display_label: false
     third_party_settings: {  }
   field_plan_type:
     type: entity_reference_autocomplete

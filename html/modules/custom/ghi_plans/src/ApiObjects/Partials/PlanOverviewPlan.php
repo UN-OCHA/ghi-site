@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\ApiObjects\Partials;
 
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
@@ -41,6 +42,17 @@ class PlanOverviewPlan extends BaseObject {
    */
   public function getBundle() {
     return 'plan';
+  }
+
+  /**
+   * Get the base object entity corresponding to this API object.
+   *
+   * @return \Drupal\ghi_plans\Entity\Plan
+   *   The plan entity.
+   */
+  public function getEntity() {
+    $entity = parent::getEntity();
+    return $entity instanceof Plan ? $entity : NULL;
   }
 
   /**

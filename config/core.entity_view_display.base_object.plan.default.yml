@@ -13,7 +13,7 @@ dependencies:
     - field.field.base_object.plan.field_plan_caseload
     - field.field.base_object.plan.field_plan_costing
     - field.field.base_object.plan.field_plan_document_link
-    - field.field.base_object.plan.field_plan_status_string
+    - field.field.base_object.plan.field_plan_status
     - field.field.base_object.plan.field_plan_type
     - field.field.base_object.plan.field_plan_version_tag
     - field.field.base_object.plan.field_restricted
@@ -112,13 +112,15 @@ content:
     third_party_settings: {  }
     weight: 8
     region: content
-  field_plan_status_string:
-    type: string
+  field_plan_status:
+    type: boolean
     label: above
     settings:
-      link_to_entity: false
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
     third_party_settings: {  }
-    weight: 7
+    weight: 13
     region: content
   field_plan_type:
     type: entity_reference_label

@@ -4,7 +4,6 @@ namespace Drupal\ghi_blocks\Traits;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
-use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
 use Drupal\ghi_sections\SectionManager;
@@ -134,33 +133,6 @@ trait GlobalSettingsTrait {
   private function applyGlobalConfigurationTable(array &$header, array &$rows, array &$cache_tags, $year, array $plans) {
     $config = $this->getYearConfig($year);
 
-    if (empty($config['caseload_reached'])) {
-      // Hide the reached column.
-      unset($header['reached']);
-      $rows = array_map(function ($row) {
-        unset($row['reached']);
-        return $row;
-      }, $rows);
-    }
-
-    if (empty($config['caseload_expected_reach'])) {
-      // Hide the expected reach column.
-      unset($header['expected_reach']);
-      $rows = array_map(function ($row) {
-        unset($row['expected_reach']);
-        return $row;
-      }, $rows);
-    }
-
-    if (empty($config['plan_downloads'])) {
-      // Hide the document downloads column.
-      unset($header['document']);
-      $rows = array_map(function ($row) {
-        unset($row['document']);
-        return $row;
-      }, $rows);
-    }
-
     // First make sure the name column is using the array notation so that we
     // have common ground to work on.
     $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) {
@@ -211,24 +183,6 @@ trait GlobalSettingsTrait {
       return $row;
     }, $rows);
 
-    if (!empty($config['plan_status_text'])) {
-      // Add a plan status text if available.
-      $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
-        /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
-        $plan = $plans[$plan_id];
-        if (!$plan || !$plan->getEntity() || !$plan->getEntity()->hasField('field_plan_status_string')) {
-          return $row;
-        }
-        $plan_status_text = $plan->getEntity()->get('field_plan_status_string')->value ?? NULL;
-        if ($plan_status_text) {
-          $row['name']['data'][] = [
-            '#markup' => Markup::create('<span class="plan-status"> (' . $plan_status_text . ')</span>'),
-          ];
-        }
-        return $row;
-      }, $rows);
-    }
-
     if (!empty($config['plan_type_icons'])) {
       // Add plan type icons to plan name column.
       unset($header['type']);
@@ -239,7 +193,6 @@ trait GlobalSettingsTrait {
         if (!$plan) {
           return $row;
         }
-        $name = $row['name'];
         $row['name']['data'][] = [
           '#theme' => 'hpc_tooltip',
           '#tooltip' => $plan->getTypeName(),
@@ -252,6 +205,52 @@ trait GlobalSettingsTrait {
         ];
         return $row;
       }, $rows);
+    }
+
+    // Handle optional caseload columns.
+    if (empty($config['caseload_reached'])) {
+      // Hide the reached column.
+      unset($header['reached']);
+      $rows = array_map(function ($row) {
+        unset($row['reached']);
+        return $row;
+      }, $rows);
+    }
+
+    if (empty($config['caseload_expected_reach'])) {
+      // Hide the expected reach column.
+      unset($header['expected_reach']);
+      $rows = array_map(function ($row) {
+        unset($row['expected_reach']);
+        return $row;
+      }, $rows);
+    }
+
+    // Plan status and document downloads are handled together.
+    if (empty($config['plan_status'])) {
+      // Hide the plan status column.
+      $rows = array_map(function ($row) {
+        unset($row['status']['data']['plan_status']);
+        return $row;
+      }, $rows);
+    }
+    if (empty($config['plan_downloads'])) {
+      // Hide the document downloads column.
+      $rows = array_map(function ($row) {
+        unset($row['status']['data']['document']);
+        if (array_key_exists('document', $row)) {
+          // This is set if the table is downloaded.
+          unset($row['document']);
+        }
+        return $row;
+      }, $rows);
+    }
+    $status_items = array_filter(array_map(function ($row) {
+      $columns = array_filter($row['status']['data']);
+      return empty($columns) ? NULL : $columns;
+    }, $rows));
+    if (empty($status_items)) {
+      unset($header['status']);
     }
 
   }
@@ -277,17 +276,12 @@ trait GlobalSettingsTrait {
    */
   private function getCheckboxOptions() {
     return [
-      'caseload_reached' => [
-        '#title' => $this->t('Show reached values'),
-        '#description' => $this->t('Check to show reached values on global pages.'),
-      ],
-      'caseload_expected_reach' => [
-        '#title' => $this->t('Show expected reached values'),
-        '#description' => $this->t('Check to show expected reached values on global pages.'),
-      ],
-      'plan_downloads' => [
-        '#title' => $this->t('Enable plan document downloads on the homepage'),
-        '#description' => $this->t('Check to enable plan document downloads on global pages.'),
+      'sort_by_plan_type' => [
+        '#title' => $this->t('Sort by plan type'),
+        '#description' => $this->t('If checked, the table will be sorted first by the plan type, then by the plan name. Plan type order is: <em>@plan_types</em>. This order can be changed on the  <a href="@plan_type_url">Plan type taxonnomy page</a>.', [
+          '@plan_types' => implode(', ', array_values($this->getAvailablePlanTypes())),
+          '@plan_type_url' => Url::fromRoute('entity.taxonomy_vocabulary.overview_form', ['taxonomy_vocabulary' => 'plan_type'])->toString(),
+        ]),
       ],
       'plan_short_names' => [
         '#title' => $this->t('Use plan short names'),
@@ -297,20 +291,25 @@ trait GlobalSettingsTrait {
         '#title' => $this->t('Show plan type icons'),
         '#description' => $this->t('If checked, icon-like flags will be added to the plan name column of plan tables on global pages. The label text is an automatically generated uppercased abbreviation based on the plan type initials, e.g. <em>Flash appeal</em> becomes <em>FA</em>.'),
       ],
-      'sort_by_plan_type' => [
-        '#title' => $this->t('Sort by plan type'),
-        '#description' => $this->t('If checked, the table will be sorted first by the plan type, then by the plan name. Plan type order is: <em>@plan_types</em>. This order can be changed on the  <a href="@plan_type_url">Plan type taxonnomy page</a>.', [
-          '@plan_types' => implode(', ', array_values($this->getAvailablePlanTypes())),
-          '@plan_type_url' => Url::fromRoute('entity.taxonomy_vocabulary.overview_form', ['taxonomy_vocabulary' => 'plan_type'])->toString(),
-        ]),
-      ],
       'use_latest_plan_data' => [
         '#title' => $this->t('Use latest plan data'),
         '#description' => $this->t('Check if the plan data for this homepage year should be retrieved using the argument <em>version=latest</em>. This only affects logged-in users.'),
       ],
-      'plan_status_text' => [
+      'caseload_reached' => [
+        '#title' => $this->t('Show reached values'),
+        '#description' => $this->t('Check to show reached values on global pages.'),
+      ],
+      'caseload_expected_reach' => [
+        '#title' => $this->t('Show expected reached values'),
+        '#description' => $this->t('Check to show expected reached values on global pages.'),
+      ],
+      'plan_status' => [
         '#title' => $this->t('Show plan status'),
-        '#description' => $this->t('Check to include the plan status text in plan tables on global pages.'),
+        '#description' => $this->t('Check to include the plan status in plan tables on global pages.'),
+      ],
+      'plan_downloads' => [
+        '#title' => $this->t('Enable plan document downloads on the homepage'),
+        '#description' => $this->t('Check to enable plan document downloads on global pages.'),
       ],
     ];
   }

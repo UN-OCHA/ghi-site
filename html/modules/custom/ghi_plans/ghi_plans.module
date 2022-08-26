@@ -9,7 +9,16 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_common\Helpers\CommonHelper;
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function ghi_plans_entity_bundle_info_alter(array &$bundles) {
+  $bundles['base_object']['plan']['class'] = Plan::class;
+  $bundles['base_object']['plan']['label'] = t('Plan');
+}
 
 /**
  * Implements hook_page_attachments().
@@ -86,7 +95,7 @@ function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterf
     'field_max_admin_level',
     'field_plan_caseload',
     'field_plan_document_link',
-    'field_plan_status_string',
+    'field_plan_status',
     'field_short_name',
     'field_operations_category',
     'field_footnotes',

@@ -1,0 +1,23 @@
+uuid: dcf359f0-a5ba-4d5d-8fe6-aff2e82fdfd8
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_plan_status
+    - ghi_base_objects.base_object_type.plan
+id: base_object.plan.field_plan_status
+field_name: field_plan_status
+entity_type: base_object
+bundle: plan
+label: 'Plan status'
+description: 'Plan status flag specific to this site. If checked, this plan will show as published in various places on this site, e.g. with a green indicator in the plan overview table on global section pages (depending on the specific configuration).'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: Published
+  off_label: Unpublished
+field_type: boolean
