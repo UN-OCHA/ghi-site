@@ -62,7 +62,7 @@ class GlobalSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $homepage_years = $this->getHomepageYears(FALSE);
+    $homepage_years = $this->getHomepageYears();
     if (!$homepage_years) {
       return $form;
     }
@@ -133,13 +133,10 @@ class GlobalSettingsForm extends ConfigFormBase {
   /**
    * Get the available homepage years.
    *
-   * @param bool $published_only
-   *   Whether to include only published years.
-   *
    * @return array|null
    *   An array of years as keys and values.
    */
-  public function getHomepageYears($published_only = TRUE) {
+  public function getHomepageYears() {
     $years = [];
     $properties = [
       'type' => 'homepage',
