@@ -56,6 +56,11 @@ class LayoutBuilderBrowserEventSubscriber implements EventSubscriberInterface {
         $form_state = new FormState();
         $complete_form = [];
         $form = [];
+        $form['category_header'] = [
+          '#type' => 'html_tag',
+          '#tag' => 'h5',
+          '#value' => $this->t('Choose a block type from the following categories:'),
+        ];
         $form['tabs'] = [
           '#type' => 'vertical_tabs',
           '#parents' => ['tabs'],
@@ -72,12 +77,14 @@ class LayoutBuilderBrowserEventSubscriber implements EventSubscriberInterface {
           return str_replace('-', '_', Html::getClass($category));
         }, $categories);
 
-        // Default tab is the first one.
-        $form['tabs']['#default_tab'] = reset($categories);
-
         // Let the tab element set itself up.
         VerticalTabs::processVerticalTabs($form['tabs'], $form_state, $complete_form);
         RenderElement::processGroup($form['tabs']['group'], $form_state, $complete_form);
+
+        // Default tab is the first one. We have to set #value instead of the
+        // #default_value, because this is not a real form and the normal form
+        // processing doesn't work.
+        $form['tabs']['tabs__active_tab']['#value'] = Html::getClass($request->query->get('block_category') ?? reset($categories));
 
         // Now go over the block categories, add some required properties and
         // run the process callback.
@@ -85,60 +92,99 @@ class LayoutBuilderBrowserEventSubscriber implements EventSubscriberInterface {
         foreach ($categories as $build_key => $element_key) {
           $form['block_categories'][$element_key] = $form['block_categories'][$build_key];
           unset($form['block_categories'][$build_key]);
-
           $form['block_categories'][$element_key]['#group'] = 'tabs';
           $form['block_categories'][$element_key]['#id'] = Html::getId($element_key);
           $form['block_categories'][$element_key]['#parents'] = [
             'block_categories',
             $element_key,
           ];
+
+          // Go over all links and add the current block category, so that we
+          // can get back here if the user cancels the upcoming block
+          // configuration dialog.
+          foreach ($form['block_categories'][$element_key]['links']['#links'] ?? [] as &$link) {
+            /** @var \Drupal\Core\Url $url */
+            $url = &$link['url'];
+            $url_options = $url->getOptions();
+            $url_options['query'] = $url_options['query'] ?? [];
+            $url_options['query'] += ['block_category' => $element_key];
+            $url->setOptions($url_options);
+          }
+
           RenderElement::processGroup($form['block_categories'][$element_key], $form_state, $complete_form);
         }
 
-        if ($this->currentUser->hasPermission('import block from configuration code')) {
-          $form['block_categories']['import'] = [
-            '#type' => 'details',
-            '#title' => $this->t('Import'),
-            '#attributes' => [
-              'class' => [
-                0 => 'js-layout-builder-category',
-              ],
+        // Add a section for admin specific links.
+        $form['block_categories']['admin'] = [
+          '#type' => 'details',
+          '#title' => $this->t('Admin restricted'),
+          '#attributes' => [
+            'class' => [
+              0 => 'js-layout-builder-category',
             ],
-            '#id' => Html::getId('import'),
-            '#parents' => [
-              'block_categories',
-              'import',
-            ],
-            '#open' => TRUE,
-            '#group' => 'tabs',
-          ];
-          RenderElement::processGroup($form['block_categories']['import'], $form_state, $complete_form);
-
-          $route_params = $request->attributes->get('_route_params');
-          $form['block_categories']['import']['links'] = [
+          ],
+          '#id' => Html::getId('admin'),
+          '#parents' => [
+            'block_categories',
+            'admin',
+          ],
+          '#group' => 'tabs',
+          'links' => [
             '#theme' => 'links',
-            '#links' => [
-              [
-                'title' => $this->t('Import from code'),
-                'url' => Url::fromRoute('ghi_blocks.import_block', [
-                  'section_storage_type' => $route_params['section_storage_type'],
-                  'section_storage' => $route_params['section_storage']->getStorageId(),
-                  'delta' => $route_params['delta'],
-                  'region' => $route_params['region'],
-                ], [
-                  'query' => array_filter([
-                    'position' => $request->query->get('position') ?? NULL,
-                  ]),
-                ]),
-                'attributes' => [
-                  'class' => ['use-ajax', 'js-layout-builder-block-link'],
-                  'data-dialog-type' => 'dialog',
-                  'data-dialog-renderer' => 'off_canvas',
-                ],
-              ],
+            '#links' => [],
+          ],
+        ];
+        RenderElement::processGroup($form['block_categories']['admin'], $form_state, $complete_form);
+
+        if ($this->currentUser->hasPermission('import block from configuration code')) {
+          $route_params = $request->attributes->get('_route_params');
+          $form['block_categories']['admin']['links']['#links'][] = [
+            'title' => $this->t('Import from code'),
+            'url' => Url::fromRoute('ghi_blocks.import_block', [
+              'section_storage_type' => $route_params['section_storage_type'],
+              'section_storage' => $route_params['section_storage']->getStorageId(),
+              'delta' => $route_params['delta'],
+              'region' => $route_params['region'],
+            ], [
+              'query' => array_filter([
+                'position' => $request->query->get('position') ?? NULL,
+                'block_category' => 'admin',
+              ]),
+            ]),
+            'attributes' => [
+              'class' => ['use-ajax', 'js-layout-builder-block-link'],
+              'data-dialog-type' => 'dialog',
+              'data-dialog-renderer' => 'off_canvas',
             ],
           ];
         }
+
+        if (array_key_exists('add_block', $build) && !empty($build['add_block']['#access'])) {
+          /** @var \Drupal\Core\Url $url */
+          $url = $build['add_block']['#url'];
+          $url_options = $url->getOptions();
+          $url_options['query'] = $url_options['query'] ?? [];
+          $url_options['query'] += array_filter([
+            'position' => $request->query->get('position') ?? NULL,
+            'block_category' => 'admin',
+          ]);
+          $url->setOptions($url_options);
+          $form['block_categories']['admin']['links']['#links'][] = [
+            'title' => $this->t('Generic HTML'),
+            'url' => $url,
+            'attributes' => [
+              'class' => ['use-ajax', 'js-layout-builder-block-link'],
+              'data-dialog-type' => 'dialog',
+              'data-dialog-renderer' => 'off_canvas',
+            ],
+          ];
+          $build['add_block']['#access'] = FALSE;
+        }
+
+        if (empty($form['block_categories']['admin']['links']['#links'])) {
+          $form['block_categories']['admin']['#access'] = FALSE;
+        }
+        $this->processVerticalTabs($form, $form_state);
 
         // Replace the original render array with our newly built.
         $build['block_categories'] = $form;

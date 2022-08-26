@@ -3,6 +3,6 @@ langcode: en
 status: true
 dependencies: {  }
 id: basic
-label: Basic
-revision: null
-description: null
+label: 'Generic HTML'
+revision: 0
+description: 'Enter text/HTML content using a WYSIWYG editor.'

@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.node.section.field_base_object
     - field.field.node.section.field_hero_image
+    - field.field.node.section.field_summary
     - field.field.node.section.field_tags
     - field.field.node.section.field_team
     - field.field.node.section.field_year
@@ -13,6 +14,7 @@ dependencies:
   module:
     - ghi_hero_image
     - path
+    - text
 id: node.section.default
 targetEntityType: node
 bundle: section
@@ -39,6 +41,14 @@ content:
     weight: 13
     region: content
     settings: {  }
+    third_party_settings: {  }
+  field_summary:
+    type: text_textarea
+    weight: 26
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
     third_party_settings: {  }
   field_tags:
     type: entity_reference_autocomplete_tags

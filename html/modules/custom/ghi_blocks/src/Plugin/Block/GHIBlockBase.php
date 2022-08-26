@@ -1309,16 +1309,16 @@ abstract class GHIBlockBase extends HPCBlockBase {
           'dialog-cancel',
         ],
       ],
-      '#options' => [
-        'query' => [
-          'position' => $this->requestStack->getCurrentRequest()->query->get('position'),
-        ],
-      ],
     ];
 
     if ($form_state->getBuildInfo()['callback_object'] instanceof AddBlockForm || $form_state->getBuildInfo()['callback_object'] instanceof ImportBlockForm) {
       // For the add block form, make this a link back to the block browser.
-      $form['actions']['cancel']['#url'] = Url::fromRoute('layout_builder.choose_block', $this->routeMatch->getRawParameters()->all());
+      $form['actions']['cancel']['#url'] = Url::fromRoute('layout_builder.choose_block', $this->routeMatch->getRawParameters()->all(), [
+        'query' => array_filter([
+          'position' => $this->requestStack->getCurrentRequest()->query->get('position') ?? NULL,
+          'block_category' => $this->requestStack->getCurrentRequest()->query->get('block_category') ?? NULL,
+        ]),
+      ]);
       $form['actions']['cancel']['#attributes']['class'][] = 'use-ajax';
     }
 

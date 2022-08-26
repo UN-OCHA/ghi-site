@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\GinLbModalTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\layout_builder\Plugin\Block\InlineBlock;
 use Drupal\layout_builder\SectionStorageInterface;
 
 /**
@@ -30,8 +31,8 @@ class ShowBlockConfigForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL, $delta = NULL, $region = NULL, $uuid = NULL) {
     $component = $section_storage->getSection($delta)->getComponent($uuid);
     $plugin = $component->getPlugin();
-    if (!$plugin instanceof GHIBlockBase) {
-      return $this->t('No data available');
+    if (!$plugin instanceof GHIBlockBase && !$plugin instanceof InlineBlock) {
+      throw new \InvalidArgumentException(sprintf('Unsupported plugin type "%s".', $plugin->getPluginId()));
     }
 
     $form['#title'] = $this->t('Block configuration for @plugin', [

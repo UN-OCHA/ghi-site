@@ -1,0 +1,21 @@
+uuid: c204417b-6587-4319-9e66-75b582143553
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_summary
+    - node.type.section
+  module:
+    - text
+id: node.section.field_summary
+field_name: field_summary
+entity_type: node
+bundle: section
+label: 'Summary text'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: text_long

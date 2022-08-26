@@ -8,3 +8,6 @@ show block configuration code:
 import block from configuration code:
   title: 'Import block from configuration code'
   description: 'Allow to import a block by pasting the configuration code.'
+use inline blocks:
+  title: 'Use inline blocks'
+  description: 'Allow to use inline blocks with custom HTML.'

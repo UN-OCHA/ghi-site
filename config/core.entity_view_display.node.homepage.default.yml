@@ -38,7 +38,9 @@ third_party_settings:
     entity_view_mode_restriction:
       allowed_layouts: {  }
       denylisted_blocks: {  }
-      allowlisted_blocks: {  }
+      allowlisted_blocks:
+        'Inline blocks':
+          - 'inline_block:basic'
       restricted_categories:
         - 'Chaos Tools'
         - 'Content fields'
@@ -46,7 +48,6 @@ third_party_settings:
         - 'Custom block types'
         - Forms
         - HID
-        - 'Inline blocks'
         - 'Lists (Views)'
         - Menus
         - 'Plan cluster elements'

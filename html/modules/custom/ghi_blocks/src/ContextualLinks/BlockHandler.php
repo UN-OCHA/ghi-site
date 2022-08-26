@@ -10,6 +10,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
+use Drupal\layout_builder\Plugin\Block\InlineBlock;
 
 /**
  * Block handler service class.
@@ -101,7 +102,7 @@ class BlockHandler implements ContainerInjectionInterface {
     }
     $component = $section_storage->getSection($delta)->getComponent($uuid);
     $plugin = $component->getPlugin();
-    if (!$plugin || !$plugin instanceof GHIBlockBase) {
+    if (!$plugin || !($plugin instanceof GHIBlockBase || $plugin instanceof InlineBlock)) {
       // Plugin not found or not the right one.
       return;
     }

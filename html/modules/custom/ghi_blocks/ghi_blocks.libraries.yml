@@ -1,43 +1,36 @@
 gin:
-  version: VERSION
   css:
     component:
       css/gin.css: {}
 layout_builder_modal_admin:
-  version: VERSION
   css:
     component:
       css/layout_builder_modal_admin.css: {}
   js:
     js/layout_builder_modal_admin.js: {}
 layout_builder_gin:
-  version: VERSION
   css:
     component:
       css/layout_builder_gin.css:
         weight: 1001
 throbber:
-  version: VERSION
   js:
     js/throbber.js: {}
   css:
     component:
       css/throbber.css: {}
 link_carousel:
-  version: VERSION
   css:
     component:
       css/link_carousel.css: {}
 # ajax_reload:
-#   version: VERSION
+
 #   js:
 #     js/ajax_reload.js: {}
 block.preview:
-  version: VERSION
   js:
     js/block.preview.js: {}
 theme:
-  version: VERSION
   js:
     js/theme.js: {}
 d3:
@@ -78,7 +71,6 @@ leaflet.sidebar:
       /libraries/leaflet-sidebar/src/L.Control.Sidebar.css: {}
 
 map.base:
-  version: VERSION
   js:
     js/map/map.search_control.js: {}
   dependencies:
@@ -92,7 +84,6 @@ map.base:
     - ghi_blocks/leaflet.sidebar
 
 map:
-  version: VERSION
   js:
     js/map/map.circle.js: {}
     js/map/map.donut.js: {}
@@ -101,21 +92,18 @@ map:
     - ghi_blocks/map.base
 
 map.plan:
-  version: VERSION
   js:
     js/map/map.plan.js: {}
   dependencies:
     - ghi_blocks/map
 
 map.plan_overview:
-  version: VERSION
   js:
     js/map/map.plan_overview.js: {}
   dependencies:
     - ghi_blocks/map
 
 map.chloropleth:
-  version: VERSION
   js:
     js/map/map.chloropleth.js: {}
   dependencies:
