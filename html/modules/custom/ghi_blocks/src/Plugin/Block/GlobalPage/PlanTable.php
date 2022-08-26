@@ -95,10 +95,13 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
   /**
    * Build a table representation of the plan data.
    *
+   * @param bool $export
+   *   Whether the table should be build for export or for display.
+   *
    * @return array
    *   A render array for a table.
    */
-  public function buildTableData() {
+  public function buildTableData($export = FALSE) {
     $plans = $this->getPlans();
     if (empty($plans)) {
       return NULL;
@@ -136,8 +139,18 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
         'data' => $this->t('Coverage'),
         'data-column-type' => 'amount',
       ],
-      'document' => ['data' => '', 'sortable' => FALSE],
+      'status' => [
+        'data' => $this->t('Status'),
+        'data-column-type' => 'status',
+        'sortable' => FALSE,
+      ],
     ];
+    if ($export) {
+      $header['document'] = [
+        'data' => $this->t('Document'),
+        'data-column-type' => 'document',
+      ];
+    }
 
     $cache_tags = [];
     $rows = [];
@@ -149,7 +162,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
       }
 
       $footnotes = $plan_entity ? $this->getFootnotesForPlanBaseobject($plan_entity) : NULL;
-      $document_uri = $plan_entity ? $plan_entity->get('field_plan_document_link')->uri : NULL;
+      $document_uri = $plan_entity ? ($plan_entity->get('field_plan_document_link')->uri ?? NULL) : NULL;
 
       $rows[$plan->id()] = [
         'name' => [
@@ -235,10 +248,32 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
           'data-raw-value' => $plan->getCoverage($plan),
           'data-column-type' => 'amount',
         ],
-        'document' => [
-          'data' => $document_uri ? DownloadHelper::getDownloadIcon($document_uri) : NULL,
+        'status' => [
+          'data' => array_filter([
+            'plan_status' => [
+              '#theme' => 'plan_status',
+              '#plan_entity' => $plan_entity,
+            ],
+            'document' => $document_uri ? [
+              '#type' => 'html_tag',
+              '#tag' => 'span',
+              '#attributes' => [
+                'data-toggle' => 'tooltip',
+                'data-tippy-content' => $this->t('Download @type document', [
+                  '@type' => $plan->getTypeShortName(),
+                ]),
+              ],
+              'content' => DownloadHelper::getDownloadIcon($document_uri),
+            ] : NULL,
+          ]),
+          'data-raw-value' => $plan_entity->getPlanStatusLabel(),
         ],
       ];
+      if ($export) {
+        $rows[$plan->id()]['document'] = [
+          'data' => $document_uri,
+        ];
+      }
     }
 
     $this->applyTableConfiguration($header, $rows);
@@ -599,7 +634,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
    * {@inheritdoc}
    */
   public function buildDownloadData() {
-    return $this->buildTableData();
+    return $this->buildTableData(TRUE);
   }
 
 }

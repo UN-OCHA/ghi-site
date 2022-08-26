@@ -19,7 +19,7 @@ class DownloadHelper {
    *   The string or markup interface for a download icon.
    */
   public static function getDownloadIconMarkup() {
-    return Markup::create('<svg class="icon icon--download"><use xlink:href="#download"></use></svg>');
+    return Markup::create('<span class="download-icon"></span>');
   }
 
   /**

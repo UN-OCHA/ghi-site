@@ -4,6 +4,14 @@
   height: 1rem;
 }
 
+.download-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-image: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/download/default/20px.svg");
+  background-repeat: no-repeat;
+}
+
 // In tables.
 tbody td {
   &[data-sort-type="numeric"] {

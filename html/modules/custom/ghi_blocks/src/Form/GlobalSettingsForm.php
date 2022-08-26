@@ -2,13 +2,14 @@
 
 namespace Drupal\ghi_blocks\Form;
 
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
-use Drupal\hpc_common\Plugin\Condition\PageParameterCondition;
-use Drupal\page_manager\Entity\Page;
-use Drupal\page_manager_publishable_variants\Plugin\Condition\VariantPublishedCondition;
+use Drupal\ghi_sections\Entity\Homepage;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Global settings form.
@@ -17,6 +18,29 @@ class GlobalSettingsForm extends ConfigFormBase {
 
   use GlobalSettingsTrait;
   use VerticalTabsTrait;
+
+  /**
+   * The entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * Constructs a document create form.
+   */
+  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
+    $this->entityTypeManager = $entity_type_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('entity_type.manager'),
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -38,7 +62,10 @@ class GlobalSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $homepage_years = $this->getHomepageYears(FALSE);
+    $homepage_years = $this->getHomepageYears();
+    if (!$homepage_years) {
+      return $form;
+    }
 
     // Define the tabs and set the default one. If an editor submits the form,
     // we want them to see the same page as before the submission to make it
@@ -91,6 +118,10 @@ class GlobalSettingsForm extends ConfigFormBase {
     $year_values = $form_state->getValue('years');
     $config = $this->config($this->getConfigKey());
     foreach ($year_values as $year => $year_config) {
+      if ($year_config != $config->get($year) && $homepage = $this->getHomepageForYear($year)) {
+        // Also invalidate the cache for this specific homepage.
+        Cache::invalidateTags($homepage->getCacheTags());
+      }
       $config->set($year, $year_config);
       $config->save();
     }
@@ -102,48 +133,42 @@ class GlobalSettingsForm extends ConfigFormBase {
   /**
    * Get the available homepage years.
    *
-   * @param bool $published_only
-   *   Whether to include only published years.
-   *
-   * @return array
+   * @return array|null
    *   An array of years as keys and values.
    */
-  public function getHomepageYears($published_only = TRUE) {
+  public function getHomepageYears() {
     $years = [];
-    $homepage = Page::load('homepage');
-
-    /** @var Drupal\page_manager_publishable_variants\Plugin\Condition\VariantPublishedCondition $access_condition */
-    $published_variants_condition = NULL;
-    foreach ($homepage->getAccessConditions() as $access_condition) {
-      if (!$access_condition instanceof VariantPublishedCondition) {
-        continue;
-      }
-      $published_variants_condition = $access_condition;
+    $properties = [
+      'type' => 'homepage',
+    ];
+    $homepages = $this->entityTypeManager->getStorage('node')->loadByProperties($properties);
+    if (empty($homepages)) {
+      return NULL;
     }
-
-    foreach ($homepage->getVariants() as $variant) {
-      if ($published_only && $published_variants_condition && !$published_variants_condition->hasAccess($variant->id())) {
-        continue;
-      }
-
-      $plugin_collection = $variant->getPluginCollections();
-
-      $selection_criteria = $plugin_collection['selection_criteria'];
-      foreach ($selection_criteria as $selection_criteria) {
-        if (!$selection_criteria instanceof PageParameterCondition) {
-          continue;
-        }
-        /** @var \Drupal\hpc_common\Plugin\Condition\PageParameterCondition $selection_criteria */
-        $configuration = $selection_criteria->getConfiguration();
-        if ($configuration['parameter'] == 'year') {
-          // Gotcha.
-          $years[] = $configuration['value'];
-        }
-      }
-    }
+    $years = array_map(function (Homepage $homepage) {
+      return $homepage->getYear();
+    }, $homepages);
     asort($years);
     $years = array_reverse($years, TRUE);
     return array_combine($years, $years);
+  }
+
+  /**
+   * Get the homepage node for the given year.
+   *
+   * @param int $year
+   *   The year.
+   *
+   * @return \Drupal\ghi_sections\Entity\Homepage
+   *   The homepage node object.
+   */
+  public function getHomepageForYear($year) {
+    $properties = [
+      'type' => 'homepage',
+      'field_year' => $year,
+    ];
+    $homepages = $this->entityTypeManager->getStorage('node')->loadByProperties($properties);
+    return count($homepages) == 1 ? reset($homepages) : NULL;
   }
 
 }

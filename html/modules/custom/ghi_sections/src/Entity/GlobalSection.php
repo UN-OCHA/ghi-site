@@ -25,6 +25,16 @@ class GlobalSection extends Node implements SectionNodeInterface {
   }
 
   /**
+   * Get the year associated to the section.
+   *
+   * @return int
+   *   The year.
+   */
+  public function getYear() {
+    return $this->get('field_year')->value;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {

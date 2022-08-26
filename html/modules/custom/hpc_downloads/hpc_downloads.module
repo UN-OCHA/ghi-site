@@ -371,9 +371,12 @@ function hpc_downloads_phpexcel_export($op, &$data, $phpexcel, $options, $column
       // Make full-cell urls clickable.
       if (strpos($cell_value, 'http') === 0 && UrlHelper::isValid($cell_value, TRUE) && strlen($cell_value) <= 845) {
         $cell->getHyperlink()->setUrl($cell_value);
-        $cell->setValue(t('View this on @site_name', [
-          '@site_name' => \Drupal::config('system.site')->get('name'),
-        ]));
+        if (strpos($cell_value, \Drupal::request()->getSchemeAndHttpHost()) !== FALSE) {
+          // Files hosted on this domain get a special treatment.
+          $cell->setValue(t('View this on @site_name', [
+            '@site_name' => \Drupal::config('system.site')->get('name'),
+          ]));
+        }
         $cell->getStyle()->getFont()->setUnderline(TRUE);
         $cell->getStyle()->getFont()->getColor()->setRGB('0000FF');
       }

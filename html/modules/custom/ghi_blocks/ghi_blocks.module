@@ -86,15 +86,6 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'plan-operational-presence-map',
     ],
-    'sidebar_slot_item' => [
-      'variables' => [
-        'label' => NULL,
-        'value' => NULL,
-        'tooltip' => NULL,
-      ],
-      'file' => 'ghi_blocks.theme.inc',
-      'template' => 'sidebar-slot-item',
-    ],
     'ajax_switcher' => [
       'variables' => [
         'options' => NULL,
@@ -122,6 +113,11 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'render element' => 'contacts',
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'plan-cluster-contacts',
+    ],
+    'plan_status' => [
+      'render element' => 'plan_entity',
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'plan-status',
     ],
   ];
 }

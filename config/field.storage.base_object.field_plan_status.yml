@@ -1,17 +1,14 @@
-uuid: 9b6fcf0b-c3fa-4443-b3e0-6f6a02b6b4ac
+uuid: 8615cbb3-fc62-44d7-b48e-0f3ad7f25031
 langcode: en
 status: true
 dependencies:
   module:
     - ghi_base_objects
-id: base_object.field_plan_status_string
-field_name: field_plan_status_string
+id: base_object.field_plan_status
+field_name: field_plan_status
 entity_type: base_object
-type: string
-settings:
-  max_length: 255
-  case_sensitive: false
-  is_ascii: false
+type: boolean
+settings: {  }
 module: core
 locked: false
 cardinality: 1
