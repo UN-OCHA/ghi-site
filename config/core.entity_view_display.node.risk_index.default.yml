@@ -47,11 +47,14 @@ third_party_settings:
       - 'Social Auth'
       - Subpage
       - System
+      - User
       - core
     entity_view_mode_restriction:
       allowed_layouts: {  }
       denylisted_blocks: {  }
-      allowlisted_blocks: {  }
+      allowlisted_blocks:
+        'Inline blocks':
+          - 'inline_block:basic'
       restricted_categories:
         - 'Chaos Tools'
         - 'Content fields'
@@ -59,13 +62,13 @@ third_party_settings:
         - Forms
         - Global
         - HID
-        - 'Inline blocks'
         - 'Lists (Views)'
         - Menus
         - 'Plan cluster elements'
         - 'Social Auth'
         - Subpage
         - System
+        - User
         - core
       blacklisted_blocks: {  }
       whitelisted_blocks:

@@ -65,37 +65,14 @@ input[type="checkbox"][disabled="disabled"]:not(:checked) {
 }
 
 /**
- * Show the block selection in the modal as 3 columns.
+ * Modifications to the block selection dialog.
  */
-.layout-builder-ipe-editing #layout-builder-modal .block-categories {
-  display: flex;
-  flex-wrap: wrap;
-}
-.layout-builder-ipe-editing #layout-builder-modal .block-categories .glb-claro-details {
-  margin-right: 0 !important;
-  margin-left: 0 !important;
-  width: 33%;
-  min-width: 350px;
-  flex-grow: 5;
+ #layout-builder-modal .vertical-tabs .glb-claro-details.js-layout-builder-category {
   border-top: 0 !important;
-  border-bottom: 0 !important;
-}
-.layout-builder-ipe-editing #layout-builder-modal .block-categories .glb-claro-details__wrapper {
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-}
-.layout-builder-ipe-editing #layout-builder-modal .block-categories .glb-list {
-  width: 100%;
-}
-.layout-builder-ipe-editing #layout-builder-modal .block-categories .glb-list li {
-  position: relative;
-}
-.layout-builder-ipe-editing #layout-builder-modal .block-categories .glb-list li .ajax-progress-throbber {
-  position: absolute;
-  top: 0.4rem;
-  right: -0.6rem;
-  background-color: white !important;
-}
+ }
+ #layout-builder-modal .vertical-tabs .glb-claro-details.js-layout-builder-category ul li a.js-layout-builder-block-link {
+  padding-right: 2rem !important;
+ }
 
 /**
  * Improve display of error messages.

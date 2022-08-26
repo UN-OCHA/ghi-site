@@ -12,6 +12,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Controller\BaseObjectReferenceController;
 use Drupal\ghi_blocks\Controller\LayoutBuilderBlockController;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\layout_builder\Plugin\Block\InlineBlock;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\node\NodeInterface;
 
@@ -132,9 +133,10 @@ function ghi_blocks_module_implements_alter(&$implementations, $hook) {
   switch ($hook) {
     // Move our hook_entity_type_alter() implementation to the end of the list.
     case 'plugin_filter_block_alter':
-      $group = $implementations['ghi_blocks'];
-      unset($implementations['ghi_blocks']);
-      $implementations['ghi_blocks'] = $group;
+      if ($group = $implementations['ghi_blocks'] ?? NULL) {
+        unset($implementations['ghi_blocks']);
+        $implementations['ghi_blocks'] = $group;
+      }
       break;
   }
 }
@@ -342,10 +344,15 @@ function ghi_blocks_form_node_form_alter(array &$form, FormStateInterface $form_
 function ghi_blocks_form_layout_builder_add_block_alter(array &$form, FormStateInterface $form_state, $form_id) {
   $component = $form_state->get('layout_builder__component');
   $plugin = $component->getPlugin();
-  if (!$plugin instanceof GHIBlockBase) {
-    return;
+  if ($plugin instanceof GHIBlockBase) {
+    $plugin->blockFormAlter($form, $form_state);
   }
-  $plugin->blockFormAlter($form, $form_state);
+  if ($plugin instanceof InlineBlock) {
+    /** @var \Drupal\ghi_blocks\LayoutBuilder\LayoutBuilderFormAlter $layout_builder_form_alter */
+    $layout_builder_form_alter = \Drupal::service('ghi_blocks.layout_builder_form_alter');
+    $layout_builder_form_alter->alterInlineBlockForm($form, $form_state);
+  }
+
 }
 
 /**
@@ -355,10 +362,15 @@ function ghi_blocks_form_layout_builder_update_block_alter(array &$form, FormSta
   [$section_storage, $delta, , $uuid] = $form_state->getBuildInfo()['args'];
   $component = $section_storage->getSection($delta)->getComponent($uuid);
   $plugin = $component->getPlugin();
-  if (!$plugin instanceof GHIBlockBase) {
-    return;
+  if ($plugin instanceof GHIBlockBase) {
+    $plugin->blockFormAlter($form, $form_state);
   }
-  $plugin->blockFormAlter($form, $form_state);
+  if ($plugin instanceof InlineBlock) {
+    /** @var \Drupal\ghi_blocks\LayoutBuilder\LayoutBuilderFormAlter $layout_builder_form_alter */
+    $layout_builder_form_alter = \Drupal::service('ghi_blocks.layout_builder_form_alter');
+    $layout_builder_form_alter->alterInlineBlockForm($form, $form_state);
+  }
+
 }
 
 /**

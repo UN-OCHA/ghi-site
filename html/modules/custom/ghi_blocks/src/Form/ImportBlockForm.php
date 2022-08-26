@@ -7,6 +7,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\ghi_blocks\Traits\GinLbModalTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\layout_builder\Form\ConfigureBlockFormBase;
@@ -30,7 +31,6 @@ class ImportBlockForm extends ConfigureBlockFormBase {
    */
   const STEPS = [
     'import',
-    // 'confirm',
     'add_block',
   ];
 
@@ -129,6 +129,27 @@ class ImportBlockForm extends ConfigureBlockFormBase {
       $form['actions']['import']['#ajax']['callback'] = '::ajaxSubmit';
       $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);
     }
+
+    // Add a cancel link.
+    $form['actions']['cancel'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Cancel'),
+      '#url' => Url::fromRoute('layout_builder.choose_block', \Drupal::routeMatch()->getRawParameters()->all()),
+      '#weight' => -1,
+      '#attributes' => [
+        'class' => [
+          'dialog-cancel',
+          'use-ajax',
+        ],
+      ],
+      '#options' => [
+        'query' => [
+          'position' => \Drupal::requestStack()->getCurrentRequest()->query->get('position'),
+          'block_category' => \Drupal::requestStack()->getCurrentRequest()->query->get('block_category'),
+        ],
+      ],
+    ];
+
     return $form;
   }
 
