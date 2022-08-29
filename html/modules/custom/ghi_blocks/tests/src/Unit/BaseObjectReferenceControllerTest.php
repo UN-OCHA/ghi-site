@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\layout_builder\Unit;
+namespace Drupal\Tests\ghi_blocks\Unit;
 
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_blocks\Controller\BaseObjectReferenceController;

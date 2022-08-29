@@ -133,6 +133,22 @@ function ghi_base_objects_form_alter(&$form, FormStateInterface &$form_state, $f
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Add the description to administrative term listings of plan type terms, so
+ * that the 2 "Other" types can be told apart.
+ */
+function ghi_base_objects_form_taxonomy_overview_terms_alter(&$form, FormStateInterface &$form_state) {
+  foreach (Element::children($form['terms']) as $key) {
+    /** @var \Drupal\taxonomy\Entity\Term $term */
+    $term = $form['terms'][$key]['#term'];
+    if (!empty($term->getDescription())) {
+      $form['terms'][$key]['term']['#title'] .= ' (' . $term->getDescription() . ')';
+    }
+  }
+}
+
+/**
  * Implements hook_migrate_MIGRATE_ID_prepare_row().
  */
 function ghi_base_objects_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {

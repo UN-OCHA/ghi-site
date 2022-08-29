@@ -364,8 +364,8 @@ function common_design_subtheme_preprocess_table(&$vars) {
         return $item['value'];
       }, $items));
       foreach ($items as $progress_item) {
-        $row = $progress_item['row'];
-        $column = $progress_item['column'];
+        $row_key = $progress_item['row'];
+        $column_key = $progress_item['column'];
         $value = $progress_item['value'];
         $progress = 100 / $max * $value;
         $progress_attributes = new Attribute([
@@ -374,10 +374,10 @@ function common_design_subtheme_preprocess_table(&$vars) {
           'data-progress' => $progress,
           'style' => 'width: ' . $progress . '%',
         ]);
-        if (!is_array($vars['rows'][$row]) || !is_array($vars['rows'][$row]['cells'][$column])) {
+        if (!is_array($vars['rows'][$row_key]) || !is_array($vars['rows'][$row_key]['cells'][$column_key])) {
           continue;
         }
-        $content = &$vars['rows'][$row]['cells'][$column]['content'];
+        $content = &$vars['rows'][$row_key]['cells'][$column_key]['content'];
         if (empty(Element::children($content))) {
           $content = [$content];
         }
