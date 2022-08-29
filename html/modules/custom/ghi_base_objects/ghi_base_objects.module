@@ -15,7 +15,6 @@ use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
-use Drupal\hpc_common\Helpers\StringHelper;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\migrate\MigrateSkipRowException;
 use Drupal\migrate\Plugin\MigrateSourceInterface;
