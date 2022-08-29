@@ -11,7 +11,7 @@ use Drupal\hpc_common\Helpers\StringHelper;
 trait ShortNameTrait {
 
   /**
-   * Get the property options for footnotes.
+   * Get a shortname for a base object.
    *
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
    *   The base object.

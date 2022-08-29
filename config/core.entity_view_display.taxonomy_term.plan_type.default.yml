@@ -4,7 +4,6 @@ status: true
 dependencies:
   config:
     - field.field.taxonomy_term.plan_type.field_included_in_totals
-    - field.field.taxonomy_term.plan_type.field_long_name
     - field.field.taxonomy_term.plan_type.field_original_id
     - taxonomy.vocabulary.plan_type
   module:
@@ -30,14 +29,6 @@ content:
       format_custom_true: ''
     third_party_settings: {  }
     weight: 2
-    region: content
-  field_long_name:
-    type: string
-    label: above
-    settings:
-      link_to_entity: false
-    third_party_settings: {  }
-    weight: 0
     region: content
   field_original_id:
     type: number_integer

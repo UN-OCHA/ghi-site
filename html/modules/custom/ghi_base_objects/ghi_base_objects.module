@@ -15,6 +15,7 @@ use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
+use Drupal\hpc_common\Helpers\StringHelper;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\migrate\MigrateSkipRowException;
 use Drupal\migrate\Plugin\MigrateSourceInterface;
@@ -130,6 +131,22 @@ function ghi_base_objects_form_alter(&$form, FormStateInterface &$form_state, $f
     $form[$element_key]['#disabled'] = 'disabled';
   }
   \Drupal::messenger()->addWarning(t('Most of the data in this form is imported automatically from the HPC API and cannot be changed here.'));
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Add the description to administrative term listings of plan type terms, so
+ * that the 2 "Other" types can be told apart.
+ */
+function ghi_base_objects_form_taxonomy_overview_terms_alter(&$form, FormStateInterface &$form_state) {
+  foreach (Element::children($form['terms']) as $key) {
+    /** @var \Drupal\taxonomy\Entity\Term $term */
+    $term = $form['terms'][$key]['#term'];
+    if (!empty($term->getDescription())) {
+      $form['terms'][$key]['term']['#title'] .= ' (' . $term->getDescription() . ')';
+    }
+  }
 }
 
 /**

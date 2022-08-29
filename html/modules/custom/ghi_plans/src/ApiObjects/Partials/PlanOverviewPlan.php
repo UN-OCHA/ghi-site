@@ -91,7 +91,7 @@ class PlanOverviewPlan extends BaseObject {
    * @return string
    *   The plan type name.
    */
-  public function getTypeName() {
+  public function getOriginalTypeName() {
     return $this->getTypeProperty('name');
   }
 
@@ -101,7 +101,23 @@ class PlanOverviewPlan extends BaseObject {
    * @return string
    *   The plan type name.
    */
+  public function getTypeName() {
+    if ($this->isType('Other') && !$this->isTypeIncluded()) {
+      return $this->t('Non Humanitarian Response Plan');
+    }
+    return $this->getOriginalTypeName();
+  }
+
+  /**
+   * Get the type of a plan.
+   *
+   * @return string
+   *   The plan type name.
+   */
   public function getTypeShortName() {
+    if ($this->isType('Other') && !$this->isTypeIncluded()) {
+      return $this->t('Non-HRP');
+    }
     return StringHelper::getAbbreviation($this->getTypeName());
   }
 
@@ -115,10 +131,11 @@ class PlanOverviewPlan extends BaseObject {
    *   TRUE if the plan is of the given type, FALSE otherwise.
    */
   public function isType($type_name) {
-    if (empty($this->getTypeName())) {
+    $name = $this->getOriginalTypeName();
+    if (empty($name)) {
       return FALSE;
     }
-    return $this->getTypeName() == $type_name;
+    return $name == $type_name;
   }
 
   /**

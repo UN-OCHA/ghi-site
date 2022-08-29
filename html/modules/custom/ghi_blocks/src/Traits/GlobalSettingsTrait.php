@@ -9,6 +9,7 @@ use Drupal\ghi_plans\Traits\PlanTypeTrait;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\hpc_common\Helpers\TaxonomyHelper;
 
 /**
  * Trait for global settings.
@@ -77,22 +78,30 @@ trait GlobalSettingsTrait {
     if (!empty($config['sort_by_plan_type'])) {
       // Sort everything first by plan type, then by plan name.
       $type_order = $this->getAvailablePlanTypes();
+      $plan_types = TaxonomyHelper::loadMultipleTermsByVocabulary('plan_type');
+
       $grouped_plans = [];
-      foreach ($type_order as $plan_type) {
+      foreach ($type_order as $plan_type_tid => $plan_type) {
+        $plan_type_term = $plan_types[$plan_type_tid] ?? NULL;
+        if (!$plan_type_term) {
+          continue;
+        }
+        $included_in_totals = $plan_type_term->get('field_included_in_totals')->value;
         // Create a list of all plans for this plan type.
         foreach ($plans as $plan) {
-          if (!$plan->isType($plan_type)) {
+          if (!$plan->isType($plan_type) || $plan->isTypeIncluded() != $included_in_totals) {
             continue;
           }
-          if (empty($grouped_plans[strtolower($plan_type)])) {
-            $grouped_plans[strtolower($plan_type)] = [];
+          $plan_type_key = strtolower($plan->getTypeName());
+          if (empty($grouped_plans[$plan_type_key])) {
+            $grouped_plans[$plan_type_key] = [];
           }
-          $grouped_plans[strtolower($plan_type)][] = $plan;
+          $grouped_plans[$plan_type_key][] = $plan;
         }
         // And sort it by plan name.
-        if (!empty($grouped_plans[strtolower($plan_type)])) {
+        if (!empty($grouped_plans[$plan_type_key])) {
           $use_shortname = $config['plan_short_names'] ?? FALSE;
-          ArrayHelper::sortObjectsByCallback($grouped_plans[strtolower($plan_type)], function ($item) use ($use_shortname) {
+          ArrayHelper::sortObjectsByCallback($grouped_plans[$plan_type_key], function ($item) use ($use_shortname) {
             return $use_shortname ? $item->getShortName() : $item->getName();
           }, EndpointQuery::SORT_ASC, SORT_STRING);
         }
