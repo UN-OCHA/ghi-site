@@ -24,7 +24,13 @@ class PNG {
    * Call snap service to generate document.
    */
   private static function generateDocument($url, $options) {
-    return ocha_snap($url, $options);
+    try {
+      $response = ocha_snap($url, $options);
+      return $response;
+    }
+    catch (\Exception $e) {
+      return NULL;
+    }
   }
 
   /**
