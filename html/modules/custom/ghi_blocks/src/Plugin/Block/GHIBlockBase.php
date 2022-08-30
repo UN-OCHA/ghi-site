@@ -506,6 +506,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $cache_contexts = parent::getCacheContexts();
     $cache_contexts = Cache::mergeContexts($cache_contexts, [
       'url.path',
+      'url.query_args',
       'user',
     ]);
     return $cache_contexts;

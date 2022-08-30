@@ -281,7 +281,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   }
 
   /**
-   * Get the URI for current page.
+   * {@inheritdoc}
    */
   public function getCurrentUri() {
     if ($this->currentUri === NULL) {
@@ -309,7 +309,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   }
 
   /**
-   * Get the UUID for this block if available.
+   * {@inheritdoc}
    */
   public function getUuid() {
     $plugin_configuration = $this->getConfiguration();

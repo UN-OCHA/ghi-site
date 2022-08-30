@@ -100,6 +100,9 @@ class DownloadDialogPlugin {
         'download_source_type' => $download_source->getType(),
         'download_type' => $download_type,
       ]),
+      '#attributes' => [
+        'data-block-uuid' => $download_source->getPlugin()->getUuid(),
+      ],
       '#options' => [
         'query' => $options,
         'attributes' => [

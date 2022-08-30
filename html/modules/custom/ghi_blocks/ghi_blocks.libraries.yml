@@ -23,10 +23,9 @@ link_carousel:
   css:
     component:
       css/link_carousel.css: {}
-# ajax_reload:
-
-#   js:
-#     js/ajax_reload.js: {}
+block.settings:
+  js:
+    js/block.settings.js: {}
 block.preview:
   js:
     js/block.preview.js: {}
