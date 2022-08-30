@@ -34,13 +34,13 @@
   height: 1.75rem;
   margin: -0.875rem;
   content: "";
-  border: 3px solid var(--colorGinPrimary) !important;
+  border: 3px solid var(--cd-primary-color) !important;
   border-right: 3px dotted transparent !important;
   border-radius: 50%;
   background: var(--colorGinLayerBackground) !important;
   color: var(--colorGinText) !important;
-  -webkit-animation: gin-throbber 0.75s linear infinite;
-  animation: gin-throbber 0.75s linear infinite;
+  -webkit-animation: ghi-throbber 0.75s linear infinite;
+  animation: ghi-throbber 0.75s linear infinite;
   z-index: 1;
 }
 
@@ -58,4 +58,13 @@
   opacity: 0.2;
   background-color: white;
   pointer-events: all;
+}
+
+@keyframes ghi-throbber {
+  0% {
+    transform: rotateZ(0);
+  }
+  100% {
+    transform: rotateZ(360deg);
+  }
 }
