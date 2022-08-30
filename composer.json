@@ -90,8 +90,8 @@
         "drupal/memcache": "^2.4",
         "drupal/menu_item_extras": "^2.16",
         "drupal/metatag": "^1.16",
-        "drupal/migrate_plus": "^5.1",
-        "drupal/migrate_tools": "^5.0",
+        "drupal/migrate_plus": "^6.0",
+        "drupal/migrate_tools": "^6.0",
         "drupal/multiple_fields_remove_button": "^1.0@alpha",
         "drupal/page_manager": "^4.0@beta",
         "drupal/pathauto": "^1.8",
@@ -118,6 +118,7 @@
         "oomphinc/composer-installers-extender": "^2.0",
         "phpoffice/phpspreadsheet": "^1.19",
         "unocha/common_design": "^v7.0.1",
+        "unocha/ocha_snap": "^8.3",
         "wieni/wmbert": "^1.11"
     },
     "require-dev": {

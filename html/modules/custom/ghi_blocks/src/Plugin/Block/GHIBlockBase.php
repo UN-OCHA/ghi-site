@@ -1705,16 +1705,18 @@ abstract class GHIBlockBase extends HPCBlockBase {
   public function getAvailableDownloadTypes() {
     $download_types = [];
     // PNG downloads.
-    if ($this instanceof HPCDownloadPNGInterface) {
-      $download_types += [
-        HPCDownloadPluginInterface::DOWNLOAD_TYPE_PNG => $this->t('Download PNG'),
-      ];
-    }
-    // PDF downloads.
-    if ($this instanceof HPCDownloadPDFInterface) {
-      $download_types += [
-        HPCDownloadPluginInterface::DOWNLOAD_TYPE_PDF => $this->t('Download PDF'),
-      ];
+    if ($this->moduleHandler->moduleExists('ocha_snap')) {
+      if ($this instanceof HPCDownloadPNGInterface) {
+        $download_types += [
+          HPCDownloadPluginInterface::DOWNLOAD_TYPE_PNG => $this->t('Download PNG'),
+        ];
+      }
+      // PDF downloads.
+      if ($this instanceof HPCDownloadPDFInterface) {
+        $download_types += [
+          HPCDownloadPluginInterface::DOWNLOAD_TYPE_PDF => $this->t('Download PDF'),
+        ];
+      }
     }
     // Excel downloads.
     if ($this instanceof HPCDownloadExcelInterface) {

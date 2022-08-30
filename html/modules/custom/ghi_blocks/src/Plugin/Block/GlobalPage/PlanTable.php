@@ -12,6 +12,7 @@ use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -30,7 +31,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  }
  * )
  */
-class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
+class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use GlobalSettingsTrait;
   use PlanFootnoteTrait;
@@ -250,10 +251,10 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
         ],
         'status' => [
           'data' => array_filter([
-            'plan_status' => [
+            'plan_status' => $plan_entity ? [
               '#theme' => 'plan_status',
               '#plan_entity' => $plan_entity,
-            ],
+            ] : NULL,
             'document' => $document_uri ? [
               '#type' => 'html_tag',
               '#tag' => 'span',
@@ -266,7 +267,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface {
               'content' => DownloadHelper::getDownloadIcon($document_uri),
             ] : NULL,
           ]),
-          'data-raw-value' => $plan_entity->getPlanStatusLabel(),
+          'data-raw-value' => $plan_entity ? $plan_entity->getPlanStatusLabel() : '',
         ],
       ];
       if ($export) {

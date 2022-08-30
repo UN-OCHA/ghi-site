@@ -113,6 +113,7 @@ class DownloadController extends ControllerBase {
     $dialog_options = $request->request->get('dialogOptions', []);
     $title = !empty($dialog_options['title']) ? $dialog_options['title'] : $this->t('Data download');
     unset($dialog_options['title']);
+    $dialog_options['dialogClass'] = 'download-dialog';
 
     $build = $download_source->buildDialog();
     $ajax_response = new AjaxResponse();

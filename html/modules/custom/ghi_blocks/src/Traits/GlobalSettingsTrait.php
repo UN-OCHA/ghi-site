@@ -87,12 +87,13 @@ trait GlobalSettingsTrait {
           continue;
         }
         $included_in_totals = $plan_type_term->get('field_included_in_totals')->value;
+        $plan_type_key = $this->getPlanTypeName($plan_type, $included_in_totals);
+
         // Create a list of all plans for this plan type.
         foreach ($plans as $plan) {
           if (!$plan->isType($plan_type) || $plan->isTypeIncluded() != $included_in_totals) {
             continue;
           }
-          $plan_type_key = strtolower($plan->getTypeName());
           if (empty($grouped_plans[$plan_type_key])) {
             $grouped_plans[$plan_type_key] = [];
           }

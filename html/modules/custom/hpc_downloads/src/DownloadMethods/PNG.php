@@ -34,8 +34,8 @@ class PNG {
     // Prepare params to be passed to Snap Service.
     $query_params = [
       'output' => 'png',
-      'logo' => 'fts',
-      'selector' => '.panel-pane.block-' . $options['block_uuid'],
+      'logo' => 'ghi',
+      'selector' => '.block-' . $options['block_uuid'],
       'width' => 1280,
     ];
 

@@ -5,9 +5,9 @@ namespace Drupal\ghi_plans\ApiObjects\Partials;
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
+use Drupal\ghi_plans\Traits\PlanTypeTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
-use Drupal\hpc_common\Helpers\StringHelper;
 
 /**
  * Abstraction class for a plan partial object.
@@ -19,6 +19,7 @@ use Drupal\hpc_common\Helpers\StringHelper;
 class PlanOverviewPlan extends BaseObject {
 
   use PlanReportingPeriodTrait;
+  use PlanTypeTrait;
 
   /**
    * Map the raw data.
@@ -102,10 +103,7 @@ class PlanOverviewPlan extends BaseObject {
    *   The plan type name.
    */
   public function getTypeName() {
-    if ($this->isType('Other') && !$this->isTypeIncluded()) {
-      return $this->t('Non Humanitarian Response Plan');
-    }
-    return $this->getOriginalTypeName();
+    return $this->getPlanTypeName($this->getOriginalTypeName(), $this->isTypeIncluded());
   }
 
   /**
@@ -115,10 +113,7 @@ class PlanOverviewPlan extends BaseObject {
    *   The plan type name.
    */
   public function getTypeShortName() {
-    if ($this->isType('Other') && !$this->isTypeIncluded()) {
-      return $this->t('Non-HRP');
-    }
-    return StringHelper::getAbbreviation($this->getTypeName());
+    return $this->getPlanTypeShortName($this->getOriginalTypeName(), $this->isTypeIncluded());
   }
 
   /**

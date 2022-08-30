@@ -76,7 +76,7 @@ class ViewsQueryBatchedSource extends DownloadSourceBase implements HPCBatchedDo
         '#type' => 'container',
         '#children' => $links,
       ],
-      '#attached' => ['libraries' => ['hpc_downloads']],
+      '#attached' => ['libraries' => ['hpc_downloads/hpc_downloads']],
       '#attributes' => ['class' => [Html::getClass($this->getType())]],
     ];
     return !empty($links) ? $build : NULL;

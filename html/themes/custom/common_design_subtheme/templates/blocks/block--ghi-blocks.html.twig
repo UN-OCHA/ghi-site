@@ -36,6 +36,9 @@
 {{ attach_library('common_design/cd-block-title') }}
 
 <div{{ attributes.addClass(classes) }}>
+  {% if snap_png_header %}
+    {{ snap_png_header }}
+  {% endif %}
   {{ title_prefix }}
   {% if label %}
     <h2{{ title_attributes.addClass('cd-block-title') }}>{{ label }}</h2>
