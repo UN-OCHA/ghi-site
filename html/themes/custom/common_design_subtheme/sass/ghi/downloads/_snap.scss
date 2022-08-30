@@ -2,3 +2,85 @@
 .snap-png-header {
   display: none;
 }
+
+// CSS for Snap Service PNG creation.
+html.snap--png {
+
+  .snap-png-header {
+    position: relative;
+    display: block;
+    width: 100%;
+    color: var(--cd-default-text-color);
+    background-color: var(--cd-white);
+
+    &:before {
+      position: absolute;
+      z-index: -1;
+      top: -1rem;
+      right: calc(-7rem - 2px);
+      bottom: 0;
+      left: calc(-7rem - 2px);
+      height: calc(100% + 1rem);
+      content: "";
+      border-top: 1px solid var(--cd-default-border-color);
+      border-bottom: 1px solid var(--cd-default-border-color);
+      background-color: inherit;
+    }
+  }
+
+  .block-links,
+  .table-search-input-wrapper,
+  a.expand-table {
+    display: none !important;
+  }
+
+  table tbody tr {
+    display: table-row !important;
+  }
+
+  .header {
+    width: 100%;
+  }
+
+  .caption-wrapper {
+    float: left;
+    width: 70%;
+  }
+
+  .caption {
+    margin-top: 2rem;
+    color: var(--cd-default-text-color);
+    font-size: var(--cd-font-size--2xbase);
+    line-height: 1.4rem;
+  }
+
+  .link {
+    color: var(--cd-default-text-color) !important;
+    font-size: var(--cd-font-size--tiny);
+  }
+
+  .logo {
+    float: right;
+    width: 30%;
+    padding-top: 2rem;
+    text-align: right;
+  }
+
+  .title-wrapper {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--cd-default-border-color);
+    font-size: 18px;
+  }
+
+  .title {
+    float: left;
+    width: 80%;
+  }
+
+  .date {
+    float: right;
+    width: 20%;
+    text-align: right;
+  }
+}

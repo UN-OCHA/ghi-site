@@ -50,11 +50,28 @@
     background: var(--cd-white) !important;
 
     .hpc-download-dialog-wrapper {
+      font-size: var(--cd-font-size--small);
 
-      .hpc-download-dialog-content > div {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
+      .hpc-download-dialog-content {
+
+        p {
+          margin: 0;
+          line-height: 1.2rem;
+        }
+
+        // The download type selection.
+        & > div {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+      }
+
+      .hpc-download-dialog-footer {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid gray;
+        line-height: 1.2rem;
       }
     }
   }
