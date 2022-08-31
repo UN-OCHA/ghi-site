@@ -29,7 +29,7 @@ html.snap--png {
   }
 
   .block-links,
-  .table-search-input-wrapper {
+  .table-search-input-wrapper.empty {
     display: none !important;
   }
 
@@ -50,6 +50,7 @@ html.snap--png {
   }
 
   .link {
+    text-decoration: none;
     color: var(--cd-default-text-color) !important;
     font-size: var(--cd-font-size--tiny);
   }

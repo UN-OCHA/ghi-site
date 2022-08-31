@@ -2,7 +2,8 @@ hpc_downloads.download_dialog:
   path: '/download/dialog/{download_source_type}'
   defaults:
     _controller: 'Drupal\hpc_downloads\Controller\DownloadController::showDialog'
-  parameters:
+  options:
+    parameters:
       download_source_type:
         type: string
   requirements:
@@ -11,7 +12,8 @@ hpc_downloads.initiate:
   path: '/download/initiate/{download_source_type}/{download_type}'
   defaults:
     _controller: 'Drupal\hpc_downloads\Controller\DownloadController::initiate'
-  parameters:
+  options:
+    parameters:
       download_source_type:
         type: string
       download_type:
@@ -24,7 +26,8 @@ hpc_downloads.check:
     _controller: 'Drupal\hpc_downloads\Controller\DownloadController::check'
   requirements:
     _permission: 'access content'
-  parameters:
+  options:
+    parameters:
       id:
         type: integer
 hpc_downloads.abort:
@@ -33,7 +36,8 @@ hpc_downloads.abort:
     _controller: 'Drupal\hpc_downloads\Controller\DownloadController::abort'
   requirements:
     _permission: 'access content'
-  parameters:
+  options:
+    parameters:
       id:
         type: integer
 hpc_downloads.download:
@@ -42,7 +46,8 @@ hpc_downloads.download:
     _controller: 'Drupal\hpc_downloads\Controller\DownloadController::download'
   requirements:
     _permission: 'access content'
-  parameters:
+  options:
+    parameters:
       id:
         type: integer
 hpc_downloads.config:
@@ -80,6 +85,7 @@ hpc_downloads.reports.download_records.view:
     _title: 'Download record'
   requirements:
     _permission: 'administer site configuration'
-  parameters:
+  options:
+    parameters:
       id:
         type: integer

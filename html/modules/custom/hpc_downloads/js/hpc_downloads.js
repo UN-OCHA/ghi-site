@@ -7,27 +7,46 @@
 
   Drupal.behaviors.HpcDownloads = {
     attach: function (context, settings) {
-
-      $('.hpc-download-dialog-content a.btn-download', context).once('hpc-download-buttons-processed').each(function() {
-        block_id = $(this).attr('data-block-uuid');
-        if (Drupal.hasOwnProperty('GhiBlockSettings') && Drupal.GhiBlockSettings.hasOwnProperty(block_id)) {
-          let block_settings = Drupal.GhiBlockSettings[block_id];
-          var href = $(this).attr('href');
+      $('.hpc-download-dialog-content a.btn-download', context).once('hpc-download-buttons-processed').click(function (e) {
+        Drupal.HpcDownloads.download_status = 'starting';
+        if (!$(this).parents('.hpc-download-dialog-wrapper').hasClass('views-query-batched')) {
+          // Non-batched downloads don't have a progress bar and can live with
+          // a simple text message.
+          Drupal.HpcDownloads.setModalContent(Drupal.t('The download process has been started. Please note that generating the download file may take a few moments.'));
+          Drupal.HpcDownloads.setModalFooter(Drupal.t('Preparing download'));
         }
-        $(this).click(function (e) {
-          Drupal.HpcDownloads.download_status = 'starting';
-          if (!$(this).parents('.hpc-download-dialog-wrapper').hasClass('views-query-batched')) {
-            // Non-batched downloads don't have a progress bar and can live with
-            // a simple text message.
-            Drupal.HpcDownloads.setModalContent(Drupal.t('The download process has been started. Please note that generating the download file may take a few moments.'));
-            Drupal.HpcDownloads.setModalFooter(Drupal.t('Preparing download'));
-          }
-          else {
-            // Batched processes have a progressbar that appears quickly, so we
-            // don't want to put a text message in between that will be gone too
-            // fast. So we display a throbber which will be replaced by the
-            // progress bar.
-            Drupal.HpcDownloads.setModalContent('<span class="throbber"></span>');
+        else {
+          // Batched processes have a progressbar that appears quickly, so we
+          // don't want to put a text message in between that will be gone too
+          // fast. So we display a throbber which will be replaced by the
+          // progress bar.
+          Drupal.HpcDownloads.setModalContent('<span class="throbber"></span>');
+        }
+      });
+
+      $(document).on('ghi-url-updated', function(event, url) {
+        $('a.link--download-dialog').each(function () {
+          // This is the new URI for the page.
+          let uri = new URL(url);
+
+          // This represents a link to a download dialog button, for which we
+          // want to (a) update the href attribute and (b) update the ajax
+          // target in Drupals AJAX system.
+          let link_url = new URL(Drupal.url.toAbsolute($(this).attr('href')));
+          link_url.searchParams.set('uri', uri.pathname + uri.search + uri.hash);
+
+          // Do (a).
+          let href = link_url.toString();
+          $(this).attr('href', href);
+
+          // Do (b).
+          for (var i = 0; i < Drupal.ajax.instances.length; i++) {
+            if (!Drupal.ajax.instances[i] || !Drupal.ajax.instances[i].hasOwnProperty('element')) {
+              continue;
+            }
+            if (Drupal.ajax.instances[i].element == $(this)[0]) {
+              Drupal.ajax.instances[i].options.url = href + '&_wrapper_format=drupal_ajax';
+            }
           }
         });
       });

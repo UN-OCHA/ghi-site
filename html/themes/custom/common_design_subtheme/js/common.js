@@ -40,13 +40,7 @@
       // See if this table is part of a block, in which case we want to trigger
       // an event that the frontend settings for the block have been changed.
       if ($table.parents('.ghi-block').length > 0) {
-        block = $table.parents('.ghi-block')[0];
-        $(document).trigger('ghi-block-setting', {
-          block_selector: $(block).attr('id'),
-          settings: {
-            soft_limit: 'expanded',
-          }
-        });
+        Drupal.GhiBlockSettings.setBlockSettingForElement($table, 'soft_limit', 'expanded');
       }
 
       e.preventDefault();
@@ -101,12 +95,10 @@
           if (context != document) {
             return;
           }
-
           // First apply settings according to what the url requests.
-          let block = $(this).parents('.ghi-block')[0] || null;
-          let block_id = block ? $(block).attr('id') : null;
-          let block_table_sort = Drupal.GhiBlockSettings.getBlockSetting(block_id, 'sort');
+          let block_table_sort = Drupal.GhiBlockSettings.getBlockSettingForElement(this, 'sort');
           if (block_table_sort) {
+            let block_id = $(this).parents('.ghi-block').attr('id');
             let column_selector = '#' + block_id + ' table.sortable th:nth-child(' + (block_table_sort.column + 1) + ')';
             let column = $(column_selector).get(0);
             sorttable.innerSortFunction.apply(column, []);
@@ -119,15 +111,12 @@
           $(this).find('> thead th:not(.sorttable_nosort)').once('sortable-events').on('click', function () {
             // See if this table is part of a block, in which case we want to trigger
             // an event that the frontend settings for the block have been changed.
-            block = $(this).parents('.ghi-block')[0];
-            $(document).trigger('ghi-block-setting', {
-              block_selector: $(block).attr('id'),
-              settings: {
-                sort: {
-                  column: $(this).index(),
-                  dir: $(this).hasClass('sorttable-sorted-reverse') ? 'desc' : 'asc',
-                }
-              }
+            if ($(this).parents('.ghi-block').length == 0) {
+              return;
+            }
+            Drupal.GhiBlockSettings.setBlockSettingForElement(this, 'sort', {
+              column: $(this).index(),
+              dir: $(this).hasClass('sorttable-sorted-reverse') ? 'desc' : 'asc',
             });
           });
         });
@@ -136,10 +125,8 @@
 
       $('table.soft-limit', context).once('soft-limit-table').each(function() {
         let $table = $(this);
-        // Check if we have settings for this block in the URL.
-        let block = $(this).parents('.ghi-block')[0] || null;
-        let block_id = block ? $(block).attr('id') : null;
-        let block_soft_limit = block_id ? Drupal.GhiBlockSettings.getBlockSetting(block_id, 'soft_limit') : null;
+        // Check if we have settings for this block element in the URL.
+        let block_soft_limit = Drupal.GhiBlockSettings.getBlockSettingForElement(this, 'soft_limit');
         if (block_soft_limit != 'expanded') {
 
           Drupal.CommonDesignSubtheme.SoftLimit.addExpandButton($table);

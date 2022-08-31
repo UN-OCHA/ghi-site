@@ -367,7 +367,6 @@ class DownloadController extends ControllerBase {
         $uri = RequestHelper::getQueryArgument('uri', $arguments);
         $plugin_id = RequestHelper::getQueryArgument('plugin_id', $arguments);
         $block_uuid = RequestHelper::getQueryArgument('block_uuid', $arguments);
-
         $plugin = BlockHelper::getBlockInstance($uri, $plugin_id, $block_uuid);
         break;
 

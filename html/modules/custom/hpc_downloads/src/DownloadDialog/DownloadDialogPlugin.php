@@ -103,6 +103,9 @@ class DownloadDialogPlugin {
       '#attributes' => [
         'data-block-uuid' => $download_source->getPlugin()->getUuid(),
       ],
+      '#cache' => [
+        'contexts' => $download_source->getPlugin()->getCacheContexts(),
+      ],
       '#options' => [
         'query' => $options,
         'attributes' => [
