@@ -25,7 +25,7 @@ class PNG {
    */
   private static function generateDocument($url, $options) {
     try {
-      $response = ocha_snap($url, $options);
+      $response = ocha_snap_generate($url, $options);
       return $response;
     }
     catch (\Exception $e) {
