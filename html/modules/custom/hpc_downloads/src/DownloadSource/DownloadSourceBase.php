@@ -17,7 +17,7 @@ abstract class DownloadSourceBase implements HPCDownloadSourceInterface {
   /**
    * The plugin for a download source.
    *
-   * @var mixed
+   * @var \Drupal\hpc_common\Plugin\HPCPluginInterface
    */
   protected $plugin;
 
@@ -39,39 +39,39 @@ abstract class DownloadSourceBase implements HPCDownloadSourceInterface {
   }
 
   /**
-   * Build the download dialog.
+   * {@inheritdoc}
    */
   abstract public function buildDialog();
 
   /**
-   * Get the download type to use.
+   * {@inheritdoc}
    *
    * @see DownnloadController::getPluginFromRequest()
    */
   abstract public function getType();
 
   /**
-   * Get the download dialog options.
+   * {@inheritdoc}
    */
   abstract public function getDialogOptions();
 
   /**
-   * Get the download data.
+   * {@inheritdoc}
    */
   abstract public function getData();
 
   /**
-   * Get the download meta data.
+   * {@inheritdoc}
    */
   abstract public function getMetaData();
 
   /**
-   * Get the download file name.
+   * {@inheritdoc}
    */
   abstract public function getDownloadFileName($type);
 
   /**
-   * Get the plugin that is providing the data.
+   * {@inheritdoc}
    */
   public function getPlugin() {
     return $this->plugin;
@@ -99,7 +99,7 @@ abstract class DownloadSourceBase implements HPCDownloadSourceInterface {
   }
 
   /**
-   * Get the download method to use.
+   * {@inheritdoc}
    */
   public function getDownloadMethod() {
     return $this->downloadMethod;

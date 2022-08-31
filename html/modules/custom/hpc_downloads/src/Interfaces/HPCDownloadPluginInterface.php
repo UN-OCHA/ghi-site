@@ -30,11 +30,17 @@ interface HPCDownloadPluginInterface extends HPCPluginInterface {
 
   /**
    * Get the caption used in downloads.
+   *
+   * @return string
+   *   The caption as a string.
    */
   public function getDownloadCaption();
 
   /**
    * Get the source of the download.
+   *
+   * @return \Drupal\hpc_downloads\Interfaces\HPCDownloadSourceInterface
+   *   The download source.
    */
   public function getDownloadSource();
 

@@ -506,6 +506,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $cache_contexts = parent::getCacheContexts();
     $cache_contexts = Cache::mergeContexts($cache_contexts, [
       'url.path',
+      'url.query_args',
       'user',
     ]);
     return $cache_contexts;
@@ -1705,16 +1706,18 @@ abstract class GHIBlockBase extends HPCBlockBase {
   public function getAvailableDownloadTypes() {
     $download_types = [];
     // PNG downloads.
-    if ($this instanceof HPCDownloadPNGInterface) {
-      $download_types += [
-        HPCDownloadPluginInterface::DOWNLOAD_TYPE_PNG => $this->t('Download PNG'),
-      ];
-    }
-    // PDF downloads.
-    if ($this instanceof HPCDownloadPDFInterface) {
-      $download_types += [
-        HPCDownloadPluginInterface::DOWNLOAD_TYPE_PDF => $this->t('Download PDF'),
-      ];
+    if ($this->moduleHandler->moduleExists('ocha_snap')) {
+      if ($this instanceof HPCDownloadPNGInterface) {
+        $download_types += [
+          HPCDownloadPluginInterface::DOWNLOAD_TYPE_PNG => $this->t('Download PNG'),
+        ];
+      }
+      // PDF downloads.
+      if ($this instanceof HPCDownloadPDFInterface) {
+        $download_types += [
+          HPCDownloadPluginInterface::DOWNLOAD_TYPE_PDF => $this->t('Download PDF'),
+        ];
+      }
     }
     // Excel downloads.
     if ($this instanceof HPCDownloadExcelInterface) {
@@ -1729,7 +1732,27 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * {@inheritdoc}
    */
   public function getDownloadCaption() {
-    return $this->label();
+    $page_title = $this->getPageTitle();
+    if ($page_title) {
+      return $page_title;
+    }
+
+    // Fallback if the page title can't be retrieved at this point.
+    $entity = $this->getCurrentBaseEntity();
+    $page_arguments = $this->getPageArguments();
+    $year = !empty($page_arguments['year']) ? $page_arguments['year'] : NULL;
+
+    // Get the title of an entity.
+    $entity_title = $entity ? $entity->label() : NULL;
+    // And add the year if necessary. The logic here is to add the year if it
+    // doesn't yet appear in the entity title itself.
+    $year = $year && (!$entity_title || strpos($entity_title, $year) === FALSE) ? $year : NULL;
+
+    $page_title = implode(' ', array_filter([
+      $entity_title,
+      $year,
+    ]));
+    return $page_title;
   }
 
   /**

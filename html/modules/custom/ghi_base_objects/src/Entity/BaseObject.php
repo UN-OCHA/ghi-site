@@ -25,7 +25,8 @@ use Drupal\Core\Entity\EntityTypeInterface;
  *       "default" = "Drupal\ghi_base_objects\Form\BaseObjectForm",
  *       "add" = "Drupal\ghi_base_objects\Form\BaseObjectForm",
  *       "edit" = "Drupal\ghi_base_objects\Form\BaseObjectForm",
- *       "delete" = "Drupal\ghi_base_objects\Form\BaseObjectDeleteForm",
+ *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm",
+ *       "delete-multiple-confirm" = "Drupal\Core\Entity\Form\DeleteMultipleForm",
  *     },
  *     "route_provider" = {
  *       "html" = "Drupal\ghi_base_objects\BaseObjectHtmlRouteProvider",
@@ -49,6 +50,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
  *     "add-form" = "/admin/content/base-objects/add/{base_object_type}",
  *     "edit-form" = "/admin/content/base-objects/{base_object}/edit",
  *     "delete-form" = "/admin/content/base-objects/{base_object}/delete",
+ *     "delete-multiple-form" = "/admin/content/base-object/delete",
  *   },
  *   bundle_entity_type = "base_object_type",
  *   field_ui_base_route = "entity.base_object_type.edit_form"

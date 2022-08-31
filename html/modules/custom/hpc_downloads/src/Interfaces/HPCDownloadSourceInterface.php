@@ -9,6 +9,9 @@ interface HPCDownloadSourceInterface {
 
   /**
    * Get the plugin to use for retrieving the download data.
+   *
+   * @return \Drupal\hpc_common\Plugin\HPCPluginInterface
+   *   The plugin.
    */
   public function getPlugin();
 

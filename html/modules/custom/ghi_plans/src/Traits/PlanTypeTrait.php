@@ -2,12 +2,16 @@
 
 namespace Drupal\ghi_plans\Traits;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\hpc_common\Helpers\StringHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 
 /**
  * Trait to help with plan types.
  */
 trait PlanTypeTrait {
+
+  use StringTranslationTrait;
 
   /**
    * Get the available plan types.
@@ -59,6 +63,50 @@ trait PlanTypeTrait {
       return $term;
     }
     return NULL;
+  }
+
+  /**
+   * Get the plan type name.
+   *
+   * This is only used to override one specific plan type "Other", because
+   * there are 2 plan types with identical names and they only differ in the
+   * includeTotals flag.
+   *
+   * @param string $name
+   *   The original name of the plan type.
+   * @param bool $include_totals
+   *   Whether the plan type has the includeTotals flag set.
+   *
+   * @return string
+   *   A name for the given plan type name.
+   */
+  public function getPlanTypeName($name, $include_totals) {
+    if (strtolower($name) == 'other' && !$include_totals) {
+      return (string) $this->t('Non Humanitarian Response Plan');
+    }
+    return $name;
+  }
+
+  /**
+   * Get the plan type short name.
+   *
+   * This is only used to override one specific plan type "Other", because
+   * there are 2 plan types with identical names and they only differ in the
+   * includeTotals flag.
+   *
+   * @param string $name
+   *   The original name of the plan type.
+   * @param bool $include_totals
+   *   Whether the plan type has the includeTotals flag set.
+   *
+   * @return string
+   *   A short name for the given plan type name.
+   */
+  public function getPlanTypeShortName($name, $include_totals) {
+    if (strtolower($name) == 'other' && !$include_totals) {
+      return (string) $this->t('Non-HRP');
+    }
+    return StringHelper::getAbbreviation($this->getPlanTypeName($name, $include_totals));
   }
 
 }

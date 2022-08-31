@@ -50,7 +50,10 @@ class BlockSource extends DownloadSourceBase {
         '#type' => 'container',
         '#children' => $links,
       ],
-      '#attached' => ['libraries' => ['hpc_downloads']],
+      '#attached' => ['libraries' => ['hpc_downloads/hpc_downloads']],
+      '#cache' => [
+        'contexts' => $this->plugin->getCacheContexts(),
+      ],
     ];
     return !empty($links) ? $build : NULL;
   }

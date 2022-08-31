@@ -3,9 +3,11 @@
 <div class="snap-png-header">
     <div class="header">
         <div class="caption-wrapper">
-            <p class="caption"><strong>{{ caption }}</strong>
-            <br />
-            <span class="link">{{ link }}</span></p>
+            <p class="caption">
+              <strong>{{ caption }}</strong>
+              <br />
+              <a href={{ link_href }} class="link">{{ link_label }}</a>
+            </p>
         </div>
         <img class="logo" src="{{ logo }}" alt="FTS Public" height="30" width="30" />
         <br style="clear: both;">

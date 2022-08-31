@@ -1,21 +1,27 @@
 article.node--view-mode-grid {
+  display: flex;
+  flex-direction: column;
   height: 100%;
   border: 1px solid var(--cd-default-border-color);
 
   .cd-teaser__image {
     max-width: unset;
     margin-top: 0;
+    margin-bottom: 0;
   }
 
   .cd-teaser__container {
-    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0 1rem;
 
     a {
       text-decoration: none;
     }
 
     .cd-teaser__description {
-      margin-top: 2rem;
+      min-height: 7rem;
       padding-top: 1rem;
 
       &:before {

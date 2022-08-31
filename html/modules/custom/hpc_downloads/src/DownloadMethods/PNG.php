@@ -24,7 +24,13 @@ class PNG {
    * Call snap service to generate document.
    */
   private static function generateDocument($url, $options) {
-    return ocha_snap($url, $options);
+    try {
+      $response = ocha_snap_generate($url, $options);
+      return $response;
+    }
+    catch (\Exception $e) {
+      return NULL;
+    }
   }
 
   /**
@@ -34,8 +40,8 @@ class PNG {
     // Prepare params to be passed to Snap Service.
     $query_params = [
       'output' => 'png',
-      'logo' => 'fts',
-      'selector' => '.panel-pane.block-' . $options['block_uuid'],
+      'logo' => 'ghi',
+      'selector' => '.block-' . $options['block_uuid'],
       'width' => 1280,
     ];
 

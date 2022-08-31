@@ -113,6 +113,7 @@ class DownloadController extends ControllerBase {
     $dialog_options = $request->request->get('dialogOptions', []);
     $title = !empty($dialog_options['title']) ? $dialog_options['title'] : $this->t('Data download');
     unset($dialog_options['title']);
+    $dialog_options['dialogClass'] = 'download-dialog';
 
     $build = $download_source->buildDialog();
     $ajax_response = new AjaxResponse();
@@ -366,7 +367,6 @@ class DownloadController extends ControllerBase {
         $uri = RequestHelper::getQueryArgument('uri', $arguments);
         $plugin_id = RequestHelper::getQueryArgument('plugin_id', $arguments);
         $block_uuid = RequestHelper::getQueryArgument('block_uuid', $arguments);
-
         $plugin = BlockHelper::getBlockInstance($uri, $plugin_id, $block_uuid);
         break;
 
