@@ -4,7 +4,8 @@
   // GHI colors.
   --cd-ocha-orange: #fecb00; // rgb(254, 203, 0)
   --cd-ocha-orange--dark: #feba00;
-  --cd-ocha-yellow: rgb(254, 221, 89);
+  --cd-ocha-yellow: rgb(254, 216, 61);
+  --cd-ocha-yellow--light: rgb(248, 236, 180);
   --cd-primary-color: var(--cd-ocha-orange);
   --cd-primary-color--dark: var(--cd-ocha-orange--dark);
   --cd-widget-color--light: var(--cd-grey--light);
@@ -22,6 +23,10 @@
   --green: #62b445;
   --hpc-border-color: #e1e1e1;
   --cd-font-size--extra-tiny: 0.625rem;      /* 10px */
+  --ghi-progress-color-fg: var(--cd-ocha-yellow);
+  --ghi-progress-color-bg: var(--cd-ocha-yellow--light);
+  --ghi-status-color-unpublished: var(--cd-primary-color);
+  --ghi-status-color-published: rgb(171, 234, 58);
 }
 
 //——————————————————————————————————————————————————————————————————————————————

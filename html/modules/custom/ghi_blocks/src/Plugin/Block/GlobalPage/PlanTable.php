@@ -138,7 +138,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       ],
       'coverage' => [
         'data' => $this->t('Coverage'),
-        'data-column-type' => 'amount',
+        'data-column-type' => 'percentage',
       ],
       'status' => [
         'data' => $this->t('Status'),
@@ -247,7 +247,8 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
             '#ratio' => $plan->getCoverage($plan) / 100,
           ],
           'data-raw-value' => $plan->getCoverage($plan),
-          'data-column-type' => 'amount',
+          'data-column-type' => 'percentage',
+          'data-progress-group' => 'coverage',
         ],
         'status' => [
           'data' => array_filter([

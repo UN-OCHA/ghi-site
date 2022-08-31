@@ -360,7 +360,9 @@ function common_design_subtheme_preprocess_table(&$vars) {
   if (!empty($progress_groups)) {
     $attached['library'][] = 'common_design_subtheme/ghi-table-progress-indicator';
     foreach ($progress_groups as $group => $items) {
-      $max = max(array_map(function ($item) {
+      // Calculate the max value to compare each item in this group against.
+      // For coverage grups this is always 100 as they show percentage values.
+      $max = $group == 'coverage' ? 100 : max(array_map(function ($item) {
         return $item['value'];
       }, $items));
       foreach ($items as $progress_item) {
@@ -368,6 +370,7 @@ function common_design_subtheme_preprocess_table(&$vars) {
         $column_key = $progress_item['column'];
         $value = $progress_item['value'];
         $progress = 100 / $max * $value;
+        $progress = $progress > 100 ? 100 : $progress;
         $progress_attributes = new Attribute([
           'data-progress-group' => $group,
           'data-progress-value' => $value,
