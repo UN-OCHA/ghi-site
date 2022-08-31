@@ -1,12 +1,18 @@
 // Link that looks like a button.
 .cd-button,
+.btn--download,
 .ghi-download__btn {
   padding: 0.8rem 1.5rem;
+  text-decoration: none;
   text-transform: uppercase;
-  color: var(--cd-default-text-color);
+  color: var(--cd-default-text-color) !important;
   background-color: var(--cd-ocha-yellow);
   font-size: var(--cd-font-size--small);
   font-weight: bold;
+
+  &.btn--centered {
+    text-align: center;
+  }
 
   &:hover,
   &:focus {
@@ -44,7 +50,8 @@
 }
 
 // A button that looks like a button.
-button.ghi-download__btn {
+button.ghi-download__btn,
+button.btn--download {
   transition: background-color 0.6s ease-out, color 0.6s ease-out;
   text-align: center;
   border: 0;
@@ -68,7 +75,8 @@ button.ghi-download__btn {
   }
 }
 
-button.ghi-download__btn + .cd-dropdown {
+button.ghi-download__btn + .cd-dropdown,
+button.btn--download + .cd-dropdown {
   position: absolute;
 
   div {

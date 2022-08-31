@@ -111,9 +111,8 @@ class DownloadDialogPlugin {
         'attributes' => [
           'class' => [
             'use-ajax',
-            'btn',
-            'btn--fullwidth',
-            'btn-download',
+            'btn--download',
+            'btn--centered',
             'download-' . $download_type,
           ],
           'data-dialog-type' => 'modal',
