@@ -4,10 +4,10 @@
   border-radius: 50%;
 
   &.unpublished {
-    background-color: var(--cd-primary-color);
+    background-color: var(--ghi-status-color-unpublished);
   }
 
   &.published {
-    background-color: var(--cd-green);
+    background-color: var(--ghi-status-color-published);
   }
 }
