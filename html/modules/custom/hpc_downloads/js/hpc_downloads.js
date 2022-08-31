@@ -7,13 +7,16 @@
 
   Drupal.behaviors.HpcDownloads = {
     attach: function (context, settings) {
-      $('.hpc-download-dialog-content a.btn-download', context).once('hpc-download-buttons-processed').click(function (e) {
+      $('.hpc-download-dialog-content a.btn--download', context).once('hpc-download-buttons-processed').click(function (e) {
         Drupal.HpcDownloads.download_status = 'starting';
         if (!$(this).parents('.hpc-download-dialog-wrapper').hasClass('views-query-batched')) {
           // Non-batched downloads don't have a progress bar and can live with
           // a simple text message.
           Drupal.HpcDownloads.setModalContent(Drupal.t('The download process has been started. Please note that generating the download file may take a few moments.'));
           Drupal.HpcDownloads.setModalFooter(Drupal.t('Preparing download'));
+          // Hide the throbber, as it's obfoscating the text and the progress
+          // is explained.
+          $('.ajax-progress-throbber').hide();
         }
         else {
           // Batched processes have a progressbar that appears quickly, so we
