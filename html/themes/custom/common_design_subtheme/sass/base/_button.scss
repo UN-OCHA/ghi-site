@@ -38,6 +38,10 @@
     }
   }
 
+  &.expand-table {
+    margin-bottom: 2rem;
+  }
+
   &.expand-table:before {
     background-image: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/arrow_downward/default/20px.svg");
   }
