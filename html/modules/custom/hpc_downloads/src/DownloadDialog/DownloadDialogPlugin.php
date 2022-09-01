@@ -46,7 +46,7 @@ class DownloadDialogPlugin {
     $classes[] = 'link--download-dialog';
 
     $link_options = $download_source->getDialogOptions();
-    $dialog_title = !empty($title) ? $title : $this->t('Data download');
+    $dialog_title = !empty($title) ? $title : $this->t('Downloads');
 
     $link_url = Url::fromRoute('hpc_downloads.download_dialog', ['download_source_type' => $download_source->getType()]);
     $link_url->setOptions([
