@@ -78,7 +78,7 @@ class DownloadDialogViews implements TrustedCallbackInterface {
         // we don't have access to $this.
         'data-dialog-options' => Json::encode([
           'width' => 400,
-          'title' => t('Data download'),
+          'title' => t('Downloads'),
         ]),
       ],
       'query' => array_filter($link_options),
