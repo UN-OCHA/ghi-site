@@ -240,14 +240,14 @@ trait GlobalSettingsTrait {
     if (empty($config['plan_status'])) {
       // Hide the plan status column.
       $rows = array_map(function ($row) {
-        unset($row['status']['data']['wrapper']['content']['plan_status']);
+        unset($row['status']['data']['content']['plan_status']);
         return $row;
       }, $rows);
     }
     if (empty($config['plan_downloads'])) {
       // Hide the document downloads column.
       $rows = array_map(function ($row) {
-        unset($row['status']['data']['wrapper']['content']['document']);
+        unset($row['status']['data']['content']['document']);
         if (array_key_exists('document', $row)) {
           // This is set if the table is downloaded.
           unset($row['document']);
@@ -256,7 +256,7 @@ trait GlobalSettingsTrait {
       }, $rows);
     }
     $status_items = array_filter(array_map(function ($row) {
-      $columns = array_filter($row['status']['data']);
+      $columns = array_filter($row['status']['data']['content']);
       return empty($columns) ? NULL : $columns;
     }, $rows));
     if (empty($status_items)) {
