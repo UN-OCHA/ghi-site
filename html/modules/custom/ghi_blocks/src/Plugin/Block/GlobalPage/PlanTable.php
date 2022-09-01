@@ -251,23 +251,28 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data-progress-group' => 'coverage',
         ],
         'status' => [
-          'data' => array_filter([
-            'plan_status' => $plan_entity ? [
-              '#theme' => 'plan_status',
-              '#plan_entity' => $plan_entity,
-            ] : NULL,
-            'document' => $document_uri ? [
-              '#type' => 'html_tag',
-              '#tag' => 'span',
-              '#attributes' => [
-                'data-toggle' => 'tooltip',
-                'data-tippy-content' => $this->t('Download the @type document', [
-                  '@type' => strtolower($plan->getTypeShortName()) == 'other' ? $this->t('plan') : $plan->getTypeShortName(),
-                ]),
-              ],
-              'content' => DownloadHelper::getDownloadIcon($document_uri),
-            ] : NULL,
-          ]),
+          'data' => [
+            'wrapper' => [
+              '#type' => 'container',
+              'content' => array_filter([
+                'plan_status' => $plan_entity ? [
+                  '#theme' => 'plan_status',
+                  '#plan_entity' => $plan_entity,
+                ] : NULL,
+                'document' => $document_uri ? [
+                  '#type' => 'html_tag',
+                  '#tag' => 'span',
+                  '#attributes' => [
+                    'data-toggle' => 'tooltip',
+                    'data-tippy-content' => $this->t('Download the @type document', [
+                      '@type' => strtolower($plan->getTypeShortName()) == 'other' ? $this->t('plan') : $plan->getTypeShortName(),
+                    ]),
+                  ],
+                  'content' => DownloadHelper::getDownloadIcon($document_uri),
+                ] : NULL,
+              ]),
+            ],
+          ],
           'data-raw-value' => $plan_entity ? $plan_entity->getPlanStatusLabel() : '',
         ],
       ];

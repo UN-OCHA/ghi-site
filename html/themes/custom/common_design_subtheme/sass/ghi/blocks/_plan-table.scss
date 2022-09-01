@@ -31,14 +31,9 @@
             background-color: rgb(119, 119, 119);
           }
         }
-
-        .plan-status {
-          color: var(--cd-orange);
-          font-size: var(--cd-font-size--tiny);
-        }
       }
 
-      td[data-column="status"] {
+      td[data-column="status"] > div {
         display: flex;
         justify-content: space-between;
       }
@@ -56,10 +51,6 @@
   margin-top: -1rem;
   padding-bottom: 0;
   background-color: var(--cd-default-background-color);
-
-  .block-content {
-    margin-bottom: 2rem !important;
-  }
 
   &:before {
     position: absolute;
