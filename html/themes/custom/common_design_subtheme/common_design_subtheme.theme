@@ -420,15 +420,6 @@ function common_design_subtheme_preprocess_item_list__key_figures(&$variables) {
 }
 
 /**
- * Preprocess a plan headline figures list.
- */
-function common_design_subtheme_preprocess_item_list__plan_entity_types(&$variables) {
-  // Limit to 3 items in a row.
-  $count = count($variables['items']);
-  $variables['cols'] = $count == 4 ? 2 : 3;
-}
-
-/**
  * Preprocess a subpage navigation list.
  */
 function common_design_subtheme_preprocess_item_list__subpage_navigation(&$variables) {
