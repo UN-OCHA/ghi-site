@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_common\Helpers\StringHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\taxonomy\TermInterface;
@@ -116,6 +117,12 @@ class SectionManager {
     }
     $section->field_team = $values['team'];
     $section->field_tags = $tags;
+    if ($base_object instanceof Plan) {
+      // Make sure that plan sections have a chance to display their image.
+      $section->field_hero_image = [
+        'source' => 'hpc_webcontent_file_attachment',
+      ];
+    }
     $status = $section->save();
     return $status && $section ? $section : FALSE;
   }
