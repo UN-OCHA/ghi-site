@@ -106,7 +106,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
 
     // Render the individual items.
     $rendered_items = array_map(function ($item) {
-      return Markup::create('<p class="entity-type-title">' . $item['id'] . '</p>' . $item['description']);
+      return Markup::create('<p class="label">' . $item['id'] . '</p><p class="description">' . $item['description'] . '</p>');
     }, $items);
     $count = count($rendered_items);
 
@@ -117,8 +117,6 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
         'class' => ['plan-entity-types', $count >= 5 ? 'up-5' : 'up-' . $count],
       ],
       '#gin_lb_theme_suggestions' => FALSE,
-      '#prefix' => '<div class="entity-type-description">',
-      '#suffix' => '</div>',
     ];
   }
 

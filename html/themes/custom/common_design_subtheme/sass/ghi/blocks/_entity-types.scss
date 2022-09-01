@@ -1,15 +1,31 @@
 .ghi-block-plan-entity-types {
 
-  .cd-grid > div {
-    padding: 1rem;
-  }
+  .item-list--entity-types {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 
-  .entity-type-title {
-    float: left;
-    margin: 0 0.5rem 0;
-    padding: 0;
-    font-size: 3.8rem;
-    font-weight: normal;
-    line-height: 3.3rem;
+    & > div {
+      display: flex;
+      gap: 2rem;
+      padding: 2rem 1rem;
+      background-color: var(--cd-primary-background-color);
+
+      p {
+        align-self: center;
+        margin: 0;
+        padding: 0;
+      }
+
+      .label {
+        white-space: nowrap;
+        font-size: var(--cd-font-size--2xlarge);
+        font-weight: bold;
+      }
+
+      .description {
+        font-size: var(--cd-font-size--default);
+      }
+    }
   }
 }
