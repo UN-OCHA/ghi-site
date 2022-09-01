@@ -154,10 +154,8 @@ function ghi_blocks_preprocess_plan_operational_presence_map(&$variables) {
  * Preprocess a plan cluster contacts block.
  */
 function ghi_blocks_preprocess_plan_cluster_contacts(&$variables) {
-  $contacts = $variables['contacts']['#contacts'];
-  $variables['contacts'] = [];
-  foreach ($contacts as $contact) {
-    $variables['contacts'][] = $contact->toArray();
+  foreach ($variables['contacts'] as $key => $contact) {
+    $variables['contacts'][$key] = $contact->toArray();
   }
 }
 
