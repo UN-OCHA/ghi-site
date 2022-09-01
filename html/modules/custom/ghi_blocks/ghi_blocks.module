@@ -110,7 +110,10 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'template' => 'section-switcher',
     ],
     'plan_cluster_contacts' => [
-      'render element' => 'contacts',
+      'variables' => [
+        'contacts' => [],
+        'show_email' => FALSE,
+      ],
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'plan-cluster-contacts',
     ],

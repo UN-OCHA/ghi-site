@@ -112,6 +112,7 @@ form.layout-builder-configure-block.glb-canvas-form,
 }
 form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__settings {
   position: static;
+  padding-top: 0.5rem;
 }
 form.layout-builder-configure-block.glb-canvas-form details.glb-claro-details {
   margin-top: 1rem;
