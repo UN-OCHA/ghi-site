@@ -1032,8 +1032,10 @@ display:
             document: document
             financials: financials
             global_section: global_section
+            homepage: homepage
             news_story: news_story
             page: page
+            plan_cluster: plan_cluster
             population: population
             profile: profile
             risk_index: risk_index
@@ -3756,7 +3758,7 @@ display:
       path: admin/content/homepages
       menu:
         type: tab
-        title: 'Global sections'
+        title: Homepages
         description: ''
         weight: -8
         expanded: false
