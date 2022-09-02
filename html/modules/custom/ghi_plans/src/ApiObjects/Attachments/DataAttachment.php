@@ -590,7 +590,7 @@ class DataAttachment extends AttachmentBase {
     ArrayHelper::sortObjectsByNumericProperty($measurements, 'planReportingPeriodId', EndpointQuery::SORT_DESC);
     return array_map(function ($measurement) {
       return new Measurement($measurement);
-    }, $measurements);
+    }, array_values($measurements));
   }
 
   /**
@@ -601,7 +601,7 @@ class DataAttachment extends AttachmentBase {
    */
   protected function getCurrentMeasurement() {
     $measurements = $this->getMeasurements();
-    return $measurements ? reset($measurements) : NULL;
+    return $measurements ? end($measurements) : NULL;
   }
 
   /**
