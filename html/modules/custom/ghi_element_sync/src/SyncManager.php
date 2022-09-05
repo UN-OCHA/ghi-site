@@ -10,6 +10,8 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Messenger\MessengerTrait;
+use Drupal\Core\Plugin\Context\ContextHandlerInterface;
+use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
@@ -81,6 +83,13 @@ class SyncManager implements ContainerInjectionInterface {
   protected $currentUser;
 
   /**
+   * The plugin context handler.
+   *
+   * @var \Drupal\Core\Plugin\Context\ContextHandlerInterface
+   */
+  protected $contextHandler;
+
+  /**
    * Layout tempstore repository.
    *
    * @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface
@@ -90,13 +99,14 @@ class SyncManager implements ContainerInjectionInterface {
   /**
    * Public constructor.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, BlockManagerInterface $block_manager, Client $http_client, UuidInterface $uuid, TimeInterface $time, AccountProxyInterface $user, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
+  public function __construct(ConfigFactoryInterface $config_factory, BlockManagerInterface $block_manager, Client $http_client, UuidInterface $uuid, TimeInterface $time, AccountProxyInterface $user, ContextHandlerInterface $context_handler, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
     $this->config = $config_factory;
     $this->blockManager = $block_manager;
     $this->httpClient = $http_client;
     $this->uuidGenerator = $uuid;
     $this->time = $time;
     $this->currentUser = $user;
+    $this->contextHandler = $context_handler;
     $this->layoutTempstoreRepository = $layout_tempstore_repository;
   }
 
@@ -111,6 +121,7 @@ class SyncManager implements ContainerInjectionInterface {
       $container->get('uuid'),
       $container->get('datetime.time'),
       $container->get('current_user'),
+      $container->get('context.handler'),
       $container->get('layout_builder.tempstore_repository')
     );
   }
@@ -239,18 +250,26 @@ class SyncManager implements ContainerInjectionInterface {
         if ($source_uuids !== NULL && !in_array($element->uuid, $source_uuids)) {
           continue;
         }
+        // Setup the context mapping.
         $definition = $this->getCorrespondingPluginDefintionForElement($element);
         $context_mapping = [
           'context_mapping' => array_intersect_key([
             'node' => 'layout_builder.entity',
           ], $definition['context_definitions']),
         ];
+        // And make sure that base objects are mapped too.
         $base_objects = BaseObjectHelper::getBaseObjectsFromNode($node);
         foreach ($base_objects as $_base_object) {
-          if (!array_key_exists($_base_object->bundle(), $definition['context_definitions'])) {
-            continue;
+          $contexts = [
+            EntityContext::fromEntity($_base_object),
+          ];
+          foreach ($definition['context_definitions'] as $context_key => $context_definition) {
+            $matching_contexts = $this->contextHandler->getMatchingContexts($contexts, $context_definition);
+            if (empty($matching_contexts)) {
+              continue;
+            }
+            $context_mapping['context_mapping'][$context_key] = $_base_object->getUniqueIdentifier();
           }
-          $context_mapping['context_mapping'][$_base_object->bundle()] = $_base_object->bundle() . '--' . $_base_object->getSourceId();
         }
 
         try {
