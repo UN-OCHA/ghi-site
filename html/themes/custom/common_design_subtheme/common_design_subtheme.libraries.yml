@@ -87,18 +87,32 @@ datawrapper-responsive-iframe:
   header: true
   js:
     js/datawrapper-responsive-iframe.js: {}
-gho-appeals-tags:
-  css:
-    theme:
-      components/gho-appeals-tags/gho-appeals-tags.css: {}
 gho-achievement:
   css:
     theme:
       components/gho-achievement/gho-achievement.css: {}
+gho-appeals-tags:
+  css:
+    theme:
+      components/gho-appeals-tags/gho-appeals-tags.css: {}
+gho-article-list:
+  css:
+    theme:
+      components/gho-article-list/gho-article-list.css: {}
+gho-aside:
+  css:
+    theme:
+      components/gho-aside/gho-aside.css: {}
+  dependencies:
+    - common_design_subtheme/gho-caption
 gho-bottom-figure-row:
   css:
     theme:
       components/gho-bottom-figure-row/gho-bottom-figure-row.css: {}
+gho-caption:
+  css:
+    theme:
+      components/gho-caption/gho-caption.css: {}
 gho-facts-and-figures:
   css:
     theme:
@@ -133,31 +147,21 @@ gho-photo-gallery:
       components/gho-photo-gallery/gho-photo-gallery.css: {}
   dependencies:
     - common_design_subtheme/gho-aside
+gho-promoted-paragraph:
+  css:
+    theme:
+      components/gho-promoted-paragraph/gho-promoted-paragraph.css: {}
 gho-related-articles:
   css:
     theme:
       components/gho-related-articles/gho-related-articles.css: {}
-gho-text:
-  css:
-    theme:
-      components/gho-text/gho-text.css: {}
-gho-caption:
-  css:
-    theme:
-      components/gho-caption/gho-caption.css: {}
-gho-aside:
-  css:
-    theme:
-      components/gho-aside/gho-aside.css: {}
-  dependencies:
-    - common_design_subtheme/gho-caption
 gho-sub-article:
   css:
     theme:
       components/gho-sub-article/gho-sub-article.css: {}
   dependencies:
     - common_design_subtheme/gho-appeals-tags
-gho-promoted-paragraph:
+gho-text:
   css:
     theme:
-      components/gho-promoted-paragraph/gho-promoted-paragraph.css: {}
+      components/gho-text/gho-text.css: {}

@@ -1,0 +1,69 @@
+.gho-article-list {
+  margin-top: 4.5rem;
+}
+
+.gho-article-list__title {
+  margin: 0 0 1.5rem 0;
+  color: #1f1f1f;
+  font-size: 1.3125rem;
+  font-weight: 700;
+  line-height: 1.5rem;
+}
+
+.gho-article-list__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gho-article-list__list__item {
+  margin: 0;
+  padding: 0;
+  border: 1px solid #d8d8d8;
+  border-width: 1px 0 1px 0;
+}
+.gho-article-list__list__item + .gho-article-list__list__item {
+  border-width: 0 0 1px 0;
+}
+
+.gho-article-list-link {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 1.25rem 0;
+  text-decoration: none;
+  color: #1f1f1f;
+}
+.gho-article-list-link:hover,
+.gho-article-list-link:focus,
+.gho-article-list-link:active {
+  text-decoration: underline;
+}
+
+.gho-article-list-link__title {
+  flex: 1 1 auto;
+  font-size: 1rem;
+  line-height: 1.75rem;
+}
+
+@media (min-width: 768px) {
+  .gho-article-list-link__title {
+    font-size: 1.125rem;
+    line-height: 2rem;
+  }
+}
+
+.gho-article-list-link__arrow.cd-icon {
+  display: block;
+  flex: 0 0 auto;
+  width: 0.625rem;
+  height: 0.625rem;
+  margin: 0 0.25rem 0 1rem;
+  /* @todo should this be the same color as the links or use the UN blue? */
+  fill: #3a90d2; /* UN blue */
+}
+
+[dir="rtl"] .gho-article-list-link__arrow {
+  margin: 0 1rem 0 0.25rem;
+  transform: scale(-1, 1);
+}

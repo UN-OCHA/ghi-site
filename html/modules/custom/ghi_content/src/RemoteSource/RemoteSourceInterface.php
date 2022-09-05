@@ -6,6 +6,7 @@ use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 
 /**
  * Interface class for remote sources.
@@ -128,6 +129,18 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    *   A file contents.
    */
   public function getFileContent($uri);
+
+  /**
+   * Get a map with links to replace.
+   *
+   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface $paragraph
+   *   The remote paragraph object for which to create the link map.
+   *
+   * @return array
+   *   An array of link url strings, key is the original link in the rendered
+   *   source, value is a valid url string in the local system.
+   */
+  public function getLinkMap(RemoteParagraphInterface $paragraph);
 
   /**
    * Get the import source for a remote system.

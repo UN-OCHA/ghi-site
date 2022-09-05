@@ -63,4 +63,12 @@ interface RemoteParagraphInterface {
    */
   public function getRendered();
 
+  /**
+   * Get the configuration of the paragraph.
+   *
+   * @return object
+   *   The paragraph configuration.
+   */
+  public function getConfiguration();
+
 }

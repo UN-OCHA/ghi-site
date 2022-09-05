@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_content\RemoteContent\Gho\RemoteArticle;
 use Drupal\ghi_content\RemoteContent\Gho\RemoteParagraph;
+use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\ghi_content\RemoteResponse\RemoteResponse;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\ClientException;
@@ -39,6 +40,7 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
       'typeLabel',
       'promoted',
       'rendered',
+      'configuration',
     ];
     $fields['thumbnail'] = [
       'imageUrl',
@@ -73,6 +75,7 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
       'typeLabel',
       'promoted',
       'rendered',
+      'configuration',
     ];
     $paragraph_data = $this->fetchParagraphData($id, $fields);
     return new RemoteParagraph($paragraph_data, $this);
@@ -320,6 +323,32 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
     }
     $context = stream_context_create($options);
     return file_get_contents($uri, FALSE, $context);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLinkMap(RemoteParagraphInterface $paragraph) {
+    $link_map = [];
+    if ($paragraph->getType() == 'article_list') {
+      foreach ($paragraph->getConfiguration()['links'] ?? [] as $link_item) {
+        // Look up the referenced item. We only support canoncical entity links
+        // for the moment.
+        if ($link_item['route_name'] == 'entity.node.canonical') {
+          $node_id = $link_item['route_parameters']['node'] ?? NULL;
+          $referenced_article = $node_id ? $paragraph->getSource()->getArticle($node_id) : NULL;
+          $article_node = $referenced_article ? $this->articleManager->loadNodeForRemoteArticle($referenced_article) : NULL;
+          if ($article_node && $article_node->access('view')) {
+            $link_map[$link_item['alias']] = $article_node->toUrl()->toString();
+          }
+        }
+      }
+      if (!empty($link_map)) {
+        uksort($link_map, 'strlen');
+        $link_map = array_reverse($link_map, TRUE);
+      }
+    }
+    return $link_map;
   }
 
   /**
