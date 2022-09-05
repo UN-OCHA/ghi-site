@@ -132,9 +132,26 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
 
         $wrapper_attributes['class'] = $gho_classes;
         $attributes->getNamedItem('class')->nodeValue = implode(' ', array_diff($classes, $gho_classes));
-        $rendered = trim(Html::serialize($dom));
       }
     }
+
+    // See if there are links to be replaced.
+    $links = $dom->getElementsByTagName('a') ?? [];
+    if (!empty($links)) {
+      $link_map = $paragraph->getSource()->getLinkMap($paragraph);
+      foreach ($links as $link) {
+        $href = $link->attributes->getNamedItem('href')->value;
+        if (array_key_exists($href, $link_map)) {
+          $link->attributes->getNamedItem('href')->value = $link_map[$href];
+        }
+        elseif (strpos($href, '/') === 0) {
+          $link->parentNode->removeChild($link);
+        }
+      }
+    }
+
+    // Make sure to update the rendered string.
+    $rendered = trim(Html::serialize($dom));
 
     if ($internal_preview) {
       // Make sure we have gho specific classes available during internal

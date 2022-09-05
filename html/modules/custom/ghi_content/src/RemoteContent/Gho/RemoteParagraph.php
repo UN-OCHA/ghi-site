@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_content\RemoteContent\Gho;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 
@@ -79,6 +80,13 @@ class RemoteParagraph implements RemoteParagraphInterface {
    */
   public function getRendered() {
     return $this->getSource()->changeRessourceLinks($this->data->rendered);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfiguration() {
+    return Yaml::decode($this->data->configuration);
   }
 
 }
