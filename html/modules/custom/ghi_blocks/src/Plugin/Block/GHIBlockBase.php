@@ -749,7 +749,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
         // This label field is optional and the display toggle can be hidden.
         // Display status will be determined based on the presence of a title.
         $settings_form['label']['#default_value'] = $settings_form['label']['#default_value'] == '<none>' ? '' : $settings_form['label']['#default_value'];
-        $settings_form['label']['#value'] = $settings_form['label']['#default_value'];
         $settings_form['label']['#required'] = FALSE;
         $settings_form['label']['#description'] = $this->t('You can set a title for this element. Leave empty to not use a title.');
         $settings_form['label_display']['#access'] = FALSE;
