@@ -10,6 +10,7 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
 
 /**
  * Provides a 'ArticleCollectio' block.
