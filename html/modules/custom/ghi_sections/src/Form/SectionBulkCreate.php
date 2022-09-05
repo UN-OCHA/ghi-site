@@ -163,6 +163,7 @@ class SectionBulkCreate extends FormBase {
         $sync_bundle,
         [],
         TRUE,
+        TRUE,
         !$form_state->getValue('recreate'),
         FALSE,
       ]);
