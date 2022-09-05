@@ -27,7 +27,7 @@ class SectionCreateBatch {
     if (!isset($context['sandbox']['section_manager'])) {
       $context['sandbox']['section_manager'] = $section_manager;
 
-      // The basic query to retrieve node ids.
+      // The basic query to retrieve base object ids.
       $query = \Drupal::entityQuery('base_object')
         ->condition('type', $bundle, 'IN');
 

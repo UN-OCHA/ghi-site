@@ -1,5 +1,10 @@
+entity.node.sync_metadata:
+  route_name: ghi_element_sync.node.sync_metadata
+  base_route: entity.node.canonical
+  title: Sync page metadata
+  weight: 199
 entity.node.sync_elements:
   route_name: ghi_element_sync.node.sync
   base_route: entity.node.canonical
-  title: Sync elements
+  title: Sync page elements
   weight: 200

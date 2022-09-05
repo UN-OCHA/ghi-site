@@ -141,11 +141,9 @@ class SectionManager {
     switch ($base_object->bundle()) {
       case 'plan':
         $shortname = $base_object->get('field_short_name')->value;
-        if (!$shortname) {
-          // If there is no shortname we don't process this for the time being.
-          return $tags;
+        if ($shortname) {
+          $tags[] = $shortname;
         }
-        $tags[] = $shortname;
         $tags[] = $base_object->get('field_year')->value;
         $tags[] = StringHelper::getAbbreviation($base_object->get('field_plan_type')->entity->label());
         break;

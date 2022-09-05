@@ -13,6 +13,7 @@ use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -115,6 +116,45 @@ class SyncManager implements ContainerInjectionInterface {
   }
 
   /**
+   * Get a map that relates remote metadata with local field information.
+   *
+   * @return array
+   *   A map array for metadata fields.
+   */
+  public function getMetadataFieldMap($metadata) {
+    $map = [
+      'shortname' => [
+        'field' => 'field_short_name',
+        'property' => 'value',
+      ],
+      'default_caseload' => [
+        'field' => 'field_plan_caseload',
+        'property' => 'attachment_id',
+      ],
+      'document_link' => [
+        'field' => 'field_plan_document_link',
+        'property' => 'url',
+      ],
+      'max_admin_level' => [
+        'field' => 'field_max_admin_level',
+        'property' => 'value',
+      ],
+      'decimal_format' => [
+        'field' => 'field_decimal_format',
+        'property' => 'value',
+      ],
+    ];
+    $map['footnotes'] = [
+      'field' => 'field_footnotes',
+      'properties' => [],
+    ];
+    foreach (array_keys((array) $metadata->footnotes ?? []) as $property) {
+      $map['footnotes']['properties'][] = $property;
+    }
+    return $map;
+  }
+
+  /**
    * Sync a node form a remote source.
    *
    * @param \Drupal\node\NodeInterface $node
@@ -123,6 +163,10 @@ class SyncManager implements ContainerInjectionInterface {
    *   Optionally limit to specific source uuids.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
+   * @param bool $sync_elements
+   *   Whether elements should be synced.
+   * @param bool $sync_metadata
+   *   Whether metadata should be synced.
    * @param bool $revisions
    *   Whether new revisions should be created.
    * @param bool $cleanup
@@ -134,7 +178,7 @@ class SyncManager implements ContainerInjectionInterface {
    * @throws SyncException
    *   When an error occurs.
    */
-  public function syncNode(NodeInterface $node, array $source_uuids = NULL, MessengerInterface $messenger = NULL, $revisions = FALSE, $cleanup = FALSE) {
+  public function syncNode(NodeInterface $node, array $source_uuids = NULL, MessengerInterface $messenger = NULL, $sync_elements = TRUE, $sync_metadata = TRUE, $revisions = FALSE, $cleanup = FALSE) {
     if ($messenger === NULL) {
       $messenger = $this->messenger();
     }
@@ -144,6 +188,7 @@ class SyncManager implements ContainerInjectionInterface {
       return FALSE;
     }
 
+    $remote_data = $this->getRemoteConfigurations($node);
     $sections = $this->getNodeSections($node);
     $delta = 0;
 
@@ -153,61 +198,96 @@ class SyncManager implements ContainerInjectionInterface {
       }
     }
 
-    foreach ($this->getRemoteConfigurations($node) as $element) {
-      if (!$this->isSyncable($element)) {
-        continue;
-      }
-      if ($source_uuids !== NULL && !in_array($element->uuid, $source_uuids)) {
-        continue;
-      }
-      $definition = $this->getCorrespondingPluginDefintionForElement($element);
-      $context_mapping = [
-        'context_mapping' => array_intersect_key([
-          'node' => 'layout_builder.entity',
-        ], $definition['context_definitions']),
-      ];
-      $base_objects = BaseObjectHelper::getBaseObjectsFromNode($node);
-      foreach ($base_objects as $_base_object) {
-        if (!array_key_exists($_base_object->bundle(), $definition['context_definitions'])) {
-          continue;
-        }
-        $context_mapping['context_mapping'][$_base_object->bundle()] = $_base_object->bundle() . '--' . $_base_object->getSourceId();
-      }
-
-      try {
-        $mapped_config = $this->getMappedConfig($element, $node);
-      }
-      catch (IncompleteElementConfigurationException $e) {
-        continue;
-      }
-      $existing_component = $this->getExistingSyncedComponent($node, $element);
-      if ($existing_component) {
-        // Update an existing component.
-        $configuration = $mapped_config + $context_mapping + $existing_component->get('configuration');
-        $existing_component->setConfiguration($configuration);
-        $messenger->addMessage($this->t('Updated %plugin_title', [
-          '%plugin_title' => $definition['admin_label'],
-        ]), $messenger::TYPE_STATUS, TRUE);
+    // For base objects of type plan, we also support the syncing of metadata.
+    if ($base_object instanceof Plan && $sync_metadata) {
+      $metadata = $remote_data->metadata;
+      if ($metadata->status) {
+        $node->setPublished();
       }
       else {
-        // Append a new component.
-        $messenger->addMessage($this->t('Added %plugin_title', [
-          '%plugin_title' => $definition['admin_label'],
-        ]), $messenger::TYPE_STATUS, TRUE);
-        $config = array_filter([
-          'id' => $definition['id'],
-          'provider' => $definition['provider'],
-          'data_sources' => $definition['data_sources'] ?? NULL,
-          'sync' => [
-            'source_uuid' => $element->uuid,
-          ],
-        ]) + $context_mapping;
-        $config += $mapped_config;
-
-        $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
-        $sections[$delta]->appendComponent($component);
+        $node->setUnpublished();
+      }
+      $field_map = $this->getMetadataFieldMap($metadata);
+      foreach ($field_map as $remote_property => $local_def) {
+        if ($remote_property == 'footnotes') {
+          $base_object->field_footnotes = [];
+          foreach ($local_def['properties'] as $footnote_property) {
+            $base_object->field_footnotes[] = [
+              'property' => $footnote_property,
+              'footnote' => $metadata->{$remote_property}->{$footnote_property} ?? NULL,
+            ];
+          }
+        }
+        else {
+          $base_object->{$local_def['field']}->{$local_def['property']} = $metadata->{$remote_property};
+        }
       }
 
+      // @codingStandardsIgnoreStart
+      // $base_object->?? = $metadata->plan_version;
+      // $base_object->?? = $metadata->status_string;
+      // $base_object->?? = $metadata->prevent_fts_link;
+      // @codingStandardsIgnoreEnd
+      $base_object->save();
+    }
+
+    if ($sync_elements) {
+      foreach ($remote_data->elements ?? [] as $element) {
+        if (!$this->isSyncable($element)) {
+          continue;
+        }
+        if ($source_uuids !== NULL && !in_array($element->uuid, $source_uuids)) {
+          continue;
+        }
+        $definition = $this->getCorrespondingPluginDefintionForElement($element);
+        $context_mapping = [
+          'context_mapping' => array_intersect_key([
+            'node' => 'layout_builder.entity',
+          ], $definition['context_definitions']),
+        ];
+        $base_objects = BaseObjectHelper::getBaseObjectsFromNode($node);
+        foreach ($base_objects as $_base_object) {
+          if (!array_key_exists($_base_object->bundle(), $definition['context_definitions'])) {
+            continue;
+          }
+          $context_mapping['context_mapping'][$_base_object->bundle()] = $_base_object->bundle() . '--' . $_base_object->getSourceId();
+        }
+
+        try {
+          $mapped_config = $this->getMappedConfig($element, $node);
+        }
+        catch (IncompleteElementConfigurationException $e) {
+          continue;
+        }
+        $existing_component = $this->getExistingSyncedComponent($node, $element);
+        if ($existing_component) {
+          // Update an existing component.
+          $configuration = $mapped_config + $context_mapping + $existing_component->get('configuration');
+          $existing_component->setConfiguration($configuration);
+          $messenger->addMessage($this->t('Updated %plugin_title', [
+            '%plugin_title' => $definition['admin_label'],
+          ]), $messenger::TYPE_STATUS, TRUE);
+        }
+        else {
+          // Append a new component.
+          $messenger->addMessage($this->t('Added %plugin_title', [
+            '%plugin_title' => $definition['admin_label'],
+          ]), $messenger::TYPE_STATUS, TRUE);
+          $config = array_filter([
+            'id' => $definition['id'],
+            'provider' => $definition['provider'],
+            'data_sources' => $definition['data_sources'] ?? NULL,
+            'sync' => [
+              'source_uuid' => $element->uuid,
+            ],
+          ]) + $context_mapping;
+          $config += $mapped_config;
+
+          $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
+          $sections[$delta]->appendComponent($component);
+        }
+
+      }
     }
 
     $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
@@ -242,10 +322,11 @@ class SyncManager implements ContainerInjectionInterface {
       return FALSE;
     }
 
+    $remote_data = $this->getRemoteConfigurations($node);
     $sections = $this->getNodeSections($node);
     $delta = 0;
 
-    foreach ($this->getRemoteConfigurations($node) as $element) {
+    foreach ($remote_data->elements ?? [] as $element) {
       if (!$this->isSyncable($element)) {
         continue;
       }
@@ -273,8 +354,12 @@ class SyncManager implements ContainerInjectionInterface {
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
    *
-   * @return object[]
-   *   An array of element configuration objects from the remote.
+   * @return object
+   *   A configuration objects from the remote.
+   *
+   * @throws \Drupal\ghi_element_sync\SyncException
+   *   Thrown when the remote source can't be reached or does not respond
+   *   correctly.
    */
   public function getRemoteConfigurations(NodeInterface $node) {
     $settings = $this->getSettings();
@@ -325,11 +410,11 @@ class SyncManager implements ContainerInjectionInterface {
     if (empty($data->status)) {
       throw new SyncException('Error: Access key misconfigured or object not valid');
     }
-    if (empty($data->elements)) {
+    if (empty($data)) {
       // No error, but nothing to do either.
       return [];
     }
-    return $data->elements;
+    return $data;
   }
 
   /**
