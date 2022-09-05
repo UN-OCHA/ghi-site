@@ -133,7 +133,7 @@ class SyncManager implements ContainerInjectionInterface {
       ],
       'document_link' => [
         'field' => 'field_plan_document_link',
-        'property' => 'url',
+        'property' => 'uri',
       ],
       'max_admin_level' => [
         'field' => 'field_max_admin_level',
