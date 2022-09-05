@@ -125,7 +125,7 @@ class BlockHandler implements ContainerInjectionInterface {
       $links['layout_builder_block_show_config'] = [
         'route_name' => 'ghi_blocks.show_block_config',
         'route_parameters' => $route_parameters,
-        'title' => $this->t('Show config'),
+        'title' => $this->t('Export config'),
         'weight' => NULL,
         'localized_options' => $localized_options,
         'metadata' => $metadata,
