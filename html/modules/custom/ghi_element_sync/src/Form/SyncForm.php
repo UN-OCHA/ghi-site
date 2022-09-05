@@ -111,11 +111,11 @@ class SyncForm extends FormBase {
       ],
     ];
 
-    $form['revisions'] = [
+    $form['sync_elements'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Create new revisions'),
-      '#description' => $this->t('Check this if new revisions should be created.'),
-      '#default_value' => FALSE,
+      '#title' => $this->t('Sync elements'),
+      '#description' => $this->t('Sync all page elements.'),
+      '#default_value' => TRUE,
     ];
 
     $form['cleanup'] = [
@@ -123,11 +123,30 @@ class SyncForm extends FormBase {
       '#title' => $this->t('Cleanup any existing elements'),
       '#description' => $this->t('Check this if existing elements should be removed before synching from remote.'),
       '#default_value' => FALSE,
+      '#states' => [
+        'visible' => [
+          ':input[name="sync_elements"]' => ['checked' => TRUE],
+        ],
+      ],
     ];
 
-    $form['sync_elements'] = [
+    $form['sync_metadata'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Sync metadata'),
+      '#description' => $this->t('Sync additional metadata for qualified base objects, e.g. plan status, shortname, etc... Only plan base objects are currently supported.'),
+      '#default_value' => TRUE,
+    ];
+
+    $form['revisions'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Create new revisions'),
+      '#description' => $this->t('Check this if new revisions should be created.'),
+      '#default_value' => FALSE,
+    ];
+
+    $form['submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Sync all elements'),
+      '#value' => $this->t('Start sync process'),
     ];
     return $form;
   }
@@ -147,6 +166,8 @@ class SyncForm extends FormBase {
     $limit = $form_state->getValue('limit');
     $bundle = $this->bundles;
     $id = NULL;
+    $sync_elements = $form_state->getValue('sync_elements');
+    $sync_metadata = $form_state->getValue('sync_metadata');
     $revisions = $form_state->getValue('revisions');
     $cleanup = $form_state->getValue('cleanup');
 
@@ -166,6 +187,8 @@ class SyncForm extends FormBase {
       $this->syncManager,
       $bundle,
       (array) $id,
+      $sync_elements,
+      $sync_metadata,
       $revisions,
       $cleanup,
     ]);

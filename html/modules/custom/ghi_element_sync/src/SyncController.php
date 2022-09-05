@@ -65,8 +65,24 @@ class SyncController extends ControllerBase {
    * @return string
    *   The page title.
    */
-  public function syncFormTitle(NodeInterface $node) {
+  public function syncElementsFormTitle(NodeInterface $node) {
     return $this->t('Sync elements for <em>@title: @type page</em>', [
+      '@title' => $node->label(),
+      '@type' => $node->type->entity->label(),
+    ]);
+  }
+
+  /**
+   * Title callback for the sync node form.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   *
+   * @return string
+   *   The page title.
+   */
+  public function syncMetadataFormTitle(NodeInterface $node) {
+    return $this->t('Sync metadata for <em>@title: @type page</em>', [
       '@title' => $node->label(),
       '@type' => $node->type->entity->label(),
     ]);

@@ -9,6 +9,7 @@ use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
 use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
@@ -183,7 +184,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $cluster_restrict = $cluster_restrict ?: ($this->get('cluster_restrict') ?: NULL);
 
     $value = NULL;
-    if ($entity) {
+    if ($entity && $entity instanceof ApiObjectInterface) {
       return $this->planClusterSummaryQuery->getClusterPropertyById($entity->id(), $property, 0);
     }
     if ($plan_object && !$cluster_context) {
