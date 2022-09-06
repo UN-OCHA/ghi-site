@@ -8,6 +8,7 @@ use Drupal\ghi_content\RemoteContent\Gho\RemoteArticle;
 use Drupal\ghi_content\RemoteContent\Gho\RemoteParagraph;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\ghi_content\RemoteResponse\RemoteResponse;
+use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ServerException;
@@ -16,6 +17,8 @@ use GuzzleHttp\Exception\ServerException;
  * GHO specific remote source base class.
  */
 abstract class RemoteSourceBaseGho extends RemoteSourceBase {
+
+  use SimpleCacheTrait;
 
   /**
    * {@inheritdoc}
@@ -134,14 +137,23 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
 
     $cookies = ['gho_access' => $this->getRemoteAccessKey()];
     $jar = CookieJar::fromArray($cookies, parse_url($this->getRemoteBaseUrl(), PHP_URL_HOST));
+    $post_args = [
+      'body' => $body,
+      'headers' => $headers,
+      'cookies' => $jar,
+    ];
 
+    // See if we have a cached version already for this request.
+    $cache_key = $this->getCacheKey(['url' => $this->getRemoteEndpointUrl()] + $post_args);
+    if ($response = $this->cache($cache_key)) {
+      // If we have a cached version, use that.
+      return $response;
+    }
+
+    // Otherwise send the query.
     $response = new RemoteResponse();
     try {
-      $result = $this->httpClient->post($this->getRemoteEndpointUrl(), [
-        'body' => $body,
-        'headers' => $headers,
-        'cookies' => $jar,
-      ]);
+      $result = $this->httpClient->post($this->getRemoteEndpointUrl(), $post_args);
     }
     catch (ClientException $e) {
       $response->setCode($e->getCode());
@@ -164,6 +176,8 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
     catch (\Exception $e) {
       // Just catch it for the moment.
     }
+    // Store the response in the cache.
+    $this->cache($cache_key, $response);
     return $response;
   }
 
