@@ -57,7 +57,7 @@ function hpc_downloads_theme($existing, $type, $theme, $path) {
         'caption' => NULL,
         'link' => NULL,
         'date' => NULL,
-
+        'site_name' => NULL,
       ],
     ] + $common,
     'hpc_download_pdf_footer' => [
@@ -72,6 +72,7 @@ function hpc_downloads_theme($existing, $type, $theme, $path) {
         'link' => NULL,
         'date' => NULL,
         'logo' => NULL,
+        'site_name' => NULL,
       ],
     ] + $common,
   ];
@@ -107,6 +108,7 @@ function hpc_downloads_preprocess_block(&$vars) {
       '#link' => Url::fromUserInput($block_instance->getCurrentUri())->setAbsolute()->toString(),
       '#date' => date('d-M-Y'),
       '#logo' => hpc_downloads_get_logo_path(FALSE),
+      '#site_name' => \Drupal::config('system.site')->get('name'),
     ];
   }
 }
@@ -170,7 +172,7 @@ function hpc_downloads_excel_get_column_identifier($column_index) {
 }
 
 /**
- * Add the FTS logo to the given XLS sheet.
+ * Add a logo to the given XLS sheet.
  *
  * @param \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet
  *   The worksheet object where the logo should be added.
@@ -184,10 +186,12 @@ function hpc_downloads_excel_add_logo_to_xls_sheet(Worksheet $sheet) {
   $image_height = $size[1];
   $image_height_points = SharedDrawing::pixelsToPoints($image_height);
 
+  $site_name = \Drupal::config('system.site')->get('name');
+
   // Create the image.
   $image_object = new Drawing();
-  $image_object->setName('FTS logo');
-  $image_object->setDescription('FTS logo');
+  $image_object->setName(sprintf('%s logo', [$site_name]));
+  $image_object->setDescription(sprintf('%s logo', [$site_name]));
   $image_object->setPath($logo);
   $image_object->setCoordinates('A1');
   $image_object->setResizeProportional(FALSE);
@@ -231,11 +235,11 @@ function hpc_downloads_phpexcel_export($op, &$data, $phpexcel, $options, $column
   ini_set('memory_limit', '512M');
 
   // Static helper variable to remember rows that we have to merge.
-  $merged_rows = &drupal_static('FTS_PHPEXCEL_MERGED_ROWS', []);
+  $merged_rows = &drupal_static('HPC_DOWNLOADS_PHPEXCEL_MERGED_ROWS', []);
   // .. and borders that we want to draw.
-  $borders = &drupal_static('FTS_PHPEXCEL_BORDERS', []);
+  $borders = &drupal_static('HPC_DOWNLOADS_PHPEXCEL_BORDERS', []);
   // .. and cells we want to highlight.
-  $highlights = &drupal_static('FTS_PHPEXCEL_HIGHLIGHTS', []);
+  $highlights = &drupal_static('HPC_DOWNLOADS_PHPEXCEL_HIGHLIGHTS', []);
 
   $format_map = [
     'percentage' => NumberFormat::FORMAT_PERCENTAGE_00,

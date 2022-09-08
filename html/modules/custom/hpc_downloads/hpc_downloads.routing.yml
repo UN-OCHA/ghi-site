@@ -61,7 +61,7 @@ system.admin_reports_hpc_downloads:
   path: '/admin/reports/hpc-downloads'
   defaults:
     _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
-    _title: 'FTS'
+    _title: 'HPC'
   requirements:
     _permission: 'access administration pages'
 hpc_downloads.reports.download_files:

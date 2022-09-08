@@ -25,6 +25,13 @@ class ConfigForm extends ConfigFormBase {
     $form = parent::buildForm($form, $form_state);
     $config = $this->config('hpc_downloads.settings');
 
+    $form['logo_pdf'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Logo identifier PDF'),
+      '#description' => $this->t('The OCHA snap service that creates PDF downloads, can include a logo in the PDF. This logo must be added to the snap service itself and is identified by a string. If a logo id is set that is not known to the snap service, the downloads will fail'),
+      '#default_value' => $config->get('logo_pdf'),
+    ];
+
     $form['logo_path'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Path'),

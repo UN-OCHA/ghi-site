@@ -22,4 +22,4 @@ services:
     ports:
       - "8444:8442"
     environment:
-      - ALLOWED_HOSTNAMES=ghi-site.docksal
+      - ALLOWED_HOSTNAMES=ghi-site,docksal,ghi-site.docksal,ghi-site.docksal.site
