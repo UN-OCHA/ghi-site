@@ -73,9 +73,6 @@ class DownloadDialogViews implements TrustedCallbackInterface {
       'attributes' => [
         'class' => array_merge(['use-ajax'], (is_array($classes) ? $classes : [])),
         'data-dialog-type' => 'modal',
-        // This whole thing gets called from fts_views.module file, function
-        // fts_views_preprocess_views_view__plan_code_list_for_iati and hence
-        // we don't have access to $this.
         'data-dialog-options' => Json::encode([
           'width' => 400,
           'title' => t('Downloads'),

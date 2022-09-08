@@ -375,7 +375,7 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
    *   The number of articles.
    */
   public function getArticleCount() {
-    return count($this->getArticles());
+    return count($this->getArticles() ?? []);
   }
 
   /**

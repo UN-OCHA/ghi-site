@@ -89,15 +89,16 @@ class PDF {
       '#caption' => $options['caption'],
       '#link' => $options['url'],
       '#date' => date('d-M-Y'),
+      '#site_name' => \Drupal::config('system.site')->get('name'),
     ], TRUE, FALSE);
 
     // Prepare params to be passed to Snap Service.
-    $query_params = [
+    $query_params = array_filter([
       'url' => $options['url'],
       'output' => 'pdf',
-      'logo' => 'fts',
+      'logo' => \Drupal::config('hpc_downloads.settings')->get('logo_pdf'),
       'pdfHeader' => $pdf_header,
-    ];
+    ]);
 
     // Set the pdfMarginTop based on header region length.
     // This is no sure shot formula to calculate the value of pdfMarginTop and
