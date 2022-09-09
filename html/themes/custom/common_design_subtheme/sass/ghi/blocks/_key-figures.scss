@@ -23,6 +23,10 @@
 
       .cd-figure-list__value {
         color: var(--cd-default-text-color);
+
+        .material-icon {
+          font-size: var(--cd-font-size--large);
+        }
       }
     }
 
