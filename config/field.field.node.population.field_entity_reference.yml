@@ -10,7 +10,7 @@ id: node.population.field_entity_reference
 field_name: field_entity_reference
 entity_type: node
 bundle: population
-label: 'Entity Reference'
+label: Section
 description: ''
 required: false
 translatable: true

@@ -10,7 +10,7 @@ id: node.profile.field_entity_reference
 field_name: field_entity_reference
 entity_type: node
 bundle: profile
-label: 'Entity Reference'
+label: Section
 description: ''
 required: false
 translatable: false
