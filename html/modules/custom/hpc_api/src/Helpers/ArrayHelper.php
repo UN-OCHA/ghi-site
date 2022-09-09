@@ -32,10 +32,10 @@ class ArrayHelper {
         $obj = (object) $item;
 
         foreach ($properties as $i => $p) {
-          if (count($properties) == ($i + 1) && !is_array($value) && $obj->{$p} != $value) {
+          if (count($properties) == ($i + 1) && !is_array($value) && ($obj->{$p} ?? NULL) != $value) {
             $found = FALSE;
           }
-          elseif (count($properties) == ($i + 1) && is_array($value) && !in_array($obj->{$p}, $value)) {
+          elseif (count($properties) == ($i + 1) && is_array($value) && !in_array(($obj->{$p} ?? NULL), $value)) {
             $found = FALSE;
           }
 
