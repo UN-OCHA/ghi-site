@@ -19,6 +19,7 @@ function ghi_user_link_alter(&$variables) {
   if (!$url->isRouted() || $url->getRouteName() != 'user.logout') {
     return;
   }
+  // See if we can provide a destination argument.
   $logout_redirect = ghi_user_get_logout_redirect_service();
   $redirect_url = $logout_redirect->getRedirectUrl();
   if ($redirect_url) {
@@ -36,20 +37,24 @@ function ghi_user_preprocess_menu(&$variables, $hook) {
   if ($hook != 'menu__account' || !array_key_exists('user.logout', $variables['items'])) {
     return;
   }
+
+  // First make sure that this menu is cached taking the destination into
+  // consideration.
+  $url = $variables['items']['user.logout']['url'];
+  $variables['#cache']['contexts'][] = 'url.query_args:destination';
+  $current_url = \Drupal::request();
+  /** @var \Drupal\Core\Render\RendererInterface $renderer */
+  $renderer = \Drupal::service('renderer');
+  $renderer->addCacheableDependency($variables, $current_url);
+
+  // Then see if we can provide a destination argument.
   $logout_redirect = ghi_user_get_logout_redirect_service();
   $redirect_url = $logout_redirect->getRedirectUrl();
   if ($redirect_url) {
     /** @var \Drupal\Core\Url $url */
-    $url = $variables['items']['user.logout']['url'];
     $query = $url->getOption('query') ?? [];
     $query['destination'] = $redirect_url->toString();
     $url->setOption('query', $query);
-
-    $variables['#cache']['contexts'][] = 'url.query_args:destination';
-
-    /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
-    $renderer->addCacheableDependency($variables, $url);
   }
 }
 
