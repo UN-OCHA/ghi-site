@@ -1,0 +1,4 @@
+services:
+  ghi_user.logout_redirect:
+    class: Drupal\ghi_user\LogoutRedirect
+    arguments: ['@request_stack', '@path.matcher', '@entity_type.manager', '@config.factory']
