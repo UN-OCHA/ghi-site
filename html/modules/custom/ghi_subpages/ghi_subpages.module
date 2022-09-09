@@ -23,6 +23,11 @@ function ghi_subpages_entity_bundle_info_alter(array &$bundles) {
   $subpage_types = SubpageHelper::getSubpageTypes();
   foreach ($subpage_types as $subpage_type) {
     $bundles['node'][$subpage_type]['class'] = SubpageNode::class;
+    // This is a bit strange. During the execution of tests based on
+    // Drupal\Tests\BrowserTest, the label property is not set.
+    // To work around this we add this fallback that derives the label from the
+    // machine name.
+    $bundles['node'][$subpage_type]['label'] = $bundles['node'][$subpage_type]['label'] ?? ucfirst(str_replace('_', ' ', $subpage_type));
   }
 }
 
