@@ -277,7 +277,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
 
     $context = $this->getContext();
     $plan_object = $context['plan_object'];
-    $plan_id = $plan_object->field_original_id->value;
+    $plan_id = $plan_object->get('field_original_id')->value;
 
     // Extract the actually used cluster from the funding and requirements data.
     $search_results = $this->flowSearchQuery->search([
@@ -286,6 +286,9 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     ]);
 
     $cluster_ids = $this->getClusterIdsByClusterRestrict($cluster_restrict, $search_results, $this->clusterQuery);
+    if (empty($cluster_ids)) {
+      return NULL;
+    }
     $data = $this->flowSearchQuery->getFundingDataByClusterIds($search_results, $cluster_ids);
     return array_key_exists($data_type['property'], $data) ? $data[$data_type['property']] : NULL;
   }

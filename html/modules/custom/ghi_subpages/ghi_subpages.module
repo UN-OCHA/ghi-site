@@ -11,9 +11,25 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_subpages\Controller\SubpagesAdminController;
 use Drupal\ghi_subpages\Element\LayoutBuilderSectionLock;
+use Drupal\ghi_subpages\Entity\SubpageNode;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\ghi_subpages\SubpageManager;
 use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function ghi_subpages_entity_bundle_info_alter(array &$bundles) {
+  $subpage_types = SubpageHelper::getSubpageTypes();
+  foreach ($subpage_types as $subpage_type) {
+    $bundles['node'][$subpage_type]['class'] = SubpageNode::class;
+    // This is a bit strange. During the execution of tests based on
+    // Drupal\Tests\BrowserTest, the label property is not set.
+    // To work around this we add this fallback that derives the label from the
+    // machine name.
+    $bundles['node'][$subpage_type]['label'] = $bundles['node'][$subpage_type]['label'] ?? ucfirst(str_replace('_', ' ', $subpage_type));
+  }
+}
 
 /**
  * Implements hook_section_post_save().

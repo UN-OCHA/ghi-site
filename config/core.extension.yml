@@ -46,6 +46,7 @@ module:
   ghi_sections: 0
   ghi_subpages: 0
   ghi_teams: 0
+  ghi_user: 0
   gho_footnotes: 0
   gin_lb: 0
   gin_toolbar: 0

@@ -8,7 +8,7 @@ use Drupal\node\Entity\Node;
 /**
  * Base class for subpage nodes.
  */
-abstract class SubpageNode extends Node implements SubpageNodeInterface {
+class SubpageNode extends Node implements SubpageNodeInterface {
 
   /**
    * Get the parent node.

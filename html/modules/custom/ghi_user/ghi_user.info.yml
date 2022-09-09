@@ -1,0 +1,9 @@
+name: GHI User
+description: Provide user logic specific to GHI.
+package: GHI
+
+type: module
+core_version_requirement: ^8 || ^9
+
+dependencies:
+  - ghi_subpages:ghi_subpages

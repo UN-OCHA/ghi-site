@@ -180,9 +180,22 @@ class SectionSwitcher extends BlockBase implements ContainerFactoryPluginInterfa
       if (!$section_candidate->access('view')) {
         continue;
       }
-      $options[$section_candidate->get('field_base_object')->entity->id()] = $section_candidate;
+      $options[$section_candidate->get('field_base_object')->entity->get('field_original_id')->value] = $section_candidate;
     }
-    ksort($options);
+
+    // Sort the options.
+    if ($base_object->hasField('field_year')) {
+      // If the base object has a year field, use that for sorting.
+      usort($options, function ($section_a, $section_b) {
+        $year_a = $section_a->get('field_base_object')->entity->get('field_year')->value;
+        $year_b = $section_b->get('field_base_object')->entity->get('field_year')->value;
+        return $year_a - $year_b;
+      });
+    }
+    else {
+      // Otherwise just use the base objects original id as a best guess.
+      ksort($options);
+    }
     return array_reverse($options);
   }
 

@@ -13,7 +13,7 @@ use Drupal\hpc_common\Helpers\ArrayHelper;
  *   label = @Translation("Flow search query"),
  *   endpoint = {
  *     "public" = "fts/flow/custom-search",
- *     "version" = "v2"
+ *     "version" = "v1"
  *   }
  * )
  */
@@ -29,7 +29,7 @@ class FlowSearchQuery extends EndpointQueryBase {
    *   The result set.
    */
   public function search(array $arguments) {
-    $data = $this->getData($arguments);
+    $data = $this->getData([], $arguments);
     if (empty($data)) {
       return NULL;
     }
