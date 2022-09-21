@@ -69,7 +69,12 @@ class LogoutRedirect {
    *   The redirect url or NULL if not applicable.
    */
   public function getRedirectUrl() {
-    $current_url = Url::createFromRequest($this->request);
+    try {
+      $current_url = Url::createFromRequest($this->request);
+    }
+    catch (\Exception $e) {
+      return NULL;
+    }
     if ($this->pathMatcher->isFrontPage() || $current_url->toString() == $this->config->get('page.front')) {
       // Redirect to front page is the default. We need to double check because
       // PathMather::isFrontPage() will return false if the frontpage is set to

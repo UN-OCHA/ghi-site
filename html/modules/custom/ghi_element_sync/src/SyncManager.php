@@ -209,8 +209,9 @@ class SyncManager implements ContainerInjectionInterface {
       }
     }
 
-    // For base objects of type plan, we also support the syncing of metadata.
-    if ($base_object instanceof Plan && $sync_metadata) {
+    // For base objects of type plan or governing_entity, we also support the
+    // syncing of metadata.
+    if (($base_object instanceof Plan || $base_object->bundle() == 'governing_entity') && $sync_metadata) {
       $metadata = $remote_data->metadata;
       if ($metadata->status) {
         $node->setPublished();
@@ -218,19 +219,23 @@ class SyncManager implements ContainerInjectionInterface {
       else {
         $node->setUnpublished();
       }
-      $field_map = $this->getMetadataFieldMap($metadata);
-      foreach ($field_map as $remote_property => $local_def) {
-        if ($remote_property == 'footnotes') {
-          $base_object->field_footnotes = [];
-          foreach ($local_def['properties'] as $footnote_property) {
-            $base_object->field_footnotes[] = [
-              'property' => $footnote_property,
-              'footnote' => $metadata->{$remote_property}->{$footnote_property} ?? NULL,
-            ];
+      // GVE only sync the publication status, plans also a couple of
+      // additional fields.
+      if ($base_object instanceof Plan) {
+        $field_map = $this->getMetadataFieldMap($metadata);
+        foreach ($field_map as $remote_property => $local_def) {
+          if ($remote_property == 'footnotes') {
+            $base_object->field_footnotes = [];
+            foreach ($local_def['properties'] as $footnote_property) {
+              $base_object->field_footnotes[] = [
+                'property' => $footnote_property,
+                'footnote' => $metadata->{$remote_property}->{$footnote_property} ?? NULL,
+              ];
+            }
           }
-        }
-        else {
-          $base_object->{$local_def['field']}->{$local_def['property']} = $metadata->{$remote_property};
+          else {
+            $base_object->{$local_def['field']}->{$local_def['property']} = $metadata->{$remote_property};
+          }
         }
       }
 

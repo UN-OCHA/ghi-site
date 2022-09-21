@@ -9,6 +9,7 @@ use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_base_objects\Traits\FootnotePropertyTrait;
 use Drupal\ghi_element_sync\SyncException;
 use Drupal\ghi_element_sync\SyncManager;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -90,36 +91,39 @@ class SyncMetadataNodeForm extends FormBase {
       '#options' => [],
     ];
 
+    $remote_status = $metadata->status ?? NULL;
     $form['properties']['#rows'][] = [
       'property' => $this->t('Status'),
-      'remote_value' => $metadata->status == 1 ? $this->t('Published') : $this->t('Unpublished'),
+      'remote_value' => $remote_status === NULL ? $this->t('Unknown') : ($remote_status == 1 ? $this->t('Published') : $this->t('Unpublished')),
       'local_value' => $node->isPublished() ? $this->t('Published') : $this->t('Unpublished'),
-      'status' => (bool) $metadata->status == $node->isPublished() ? $this->t('In sync') : $this->t('Changed'),
+      'status' => (bool) $remote_status == $node->isPublished() ? $this->t('In sync') : $this->t('Changed'),
     ];
 
-    $field_map = $this->syncManager->getMetadataFieldMap($metadata);
-    foreach ($field_map as $remote_property => $local_def) {
-      if ($remote_property == 'footnotes') {
-        foreach ($local_def['properties'] as $footnote_property) {
-          $remote_value = $metadata->{$remote_property}->{$footnote_property} ?? NULL;
-          $local_value = $this->getFootnoteFromItemList($base_object->{$local_def['field']} ?? NULL, $footnote_property);
+    if ($base_object instanceof Plan) {
+      $field_map = $this->syncManager->getMetadataFieldMap($metadata);
+      foreach ($field_map as $remote_property => $local_def) {
+        if ($remote_property == 'footnotes') {
+          foreach ($local_def['properties'] as $footnote_property) {
+            $remote_value = $metadata->{$remote_property}->{$footnote_property} ?? NULL;
+            $local_value = $this->getFootnoteFromItemList($base_object->{$local_def['field']} ?? NULL, $footnote_property);
+            $form['properties']['#rows'][] = [
+              'property' => $base_object_fields[$local_def['field']]->getLabel() . ':' . $footnote_property,
+              'remote_value' => $remote_value,
+              'local_value' => $local_value,
+              'status' => $remote_value == $local_value ? $this->t('In sync') : $this->t('Changed'),
+            ];
+          }
+        }
+        else {
+          $remote_value = $metadata->{$remote_property} ?? NULL;
+          $local_value = $base_object->{$local_def['field']}->{$local_def['property']} ?? NULL;
           $form['properties']['#rows'][] = [
-            'property' => $base_object_fields[$local_def['field']]->getLabel() . ':' . $footnote_property,
+            'property' => $base_object_fields[$local_def['field']]->getLabel(),
             'remote_value' => $remote_value,
             'local_value' => $local_value,
             'status' => $remote_value == $local_value ? $this->t('In sync') : $this->t('Changed'),
           ];
         }
-      }
-      else {
-        $remote_value = $metadata->{$remote_property} ?? NULL;
-        $local_value = $base_object->{$local_def['field']}->{$local_def['property']} ?? NULL;
-        $form['properties']['#rows'][] = [
-          'property' => $base_object_fields[$local_def['field']]->getLabel(),
-          'remote_value' => $remote_value,
-          'local_value' => $local_value,
-          'status' => $remote_value == $local_value ? $this->t('In sync') : $this->t('Changed'),
-        ];
       }
     }
 
