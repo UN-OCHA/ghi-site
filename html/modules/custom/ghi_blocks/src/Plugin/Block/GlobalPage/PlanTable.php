@@ -165,7 +165,8 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       // Setup the PiN values.
       $in_need = $plan->getCaseloadValue('inNeed');
       $target = $plan->getCaseloadValue('target');
-      $reached = $plan->getCaseloadValue('reached', 'Reached');
+      // Look for "reached" but allow to fallback to "measure". See HPC-6044.
+      $reached = $plan->getCaseloadValue('reached', 'Reached') ?? $plan->getCaseloadValue('measure', 'Measure');
       $reached_percent = !empty($reached) && !empty($target) ? 100 / $target * $reached : NULL;
       $expected_reached = $plan->getCaseloadValue('expectedReach', 'Expected Reach');
 
@@ -231,9 +232,11 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data-progress-group' => 'people',
         ],
         'reached' => [
-          'data' => [
+          'data' => $reached_percent ? [
             '#theme' => 'hpc_percent',
             '#ratio' => $reached_percent / 100,
+          ] : [
+            '#markup' => $this->t('Pending'),
           ],
           'data-raw-value' => $reached_percent,
           'data-column-type' => 'percentage',
