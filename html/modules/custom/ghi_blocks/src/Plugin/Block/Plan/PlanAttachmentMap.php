@@ -553,7 +553,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       'donut_whole_segment_default' => (int) $conf['whole_segment_default'],
       'donut_partial_segments' => array_values(array_intersect($available_metric_items, $donut_partial_segments)),
       'donut_partial_segment_default' => (int) $conf['partial_segment_default'],
-      'donut_monitoring_periods' => array_values(array_filter($conf['monitoring_period'], function ($item) use ($reporting_periods) {
+      'donut_monitoring_periods' => array_values(array_filter($conf['monitoring_period']->monitoring_period, function ($item) use ($reporting_periods) {
         return $item != 'latest' && $item != 'none' && array_key_exists($item, $reporting_periods);
       })),
       'donut_display_value' => $conf['display_value'] ?? 'percentage',
@@ -811,7 +811,8 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   private function getConfiguredReportingPeriods() {
     $conf = $this->getBlockConfig();
     $map_style = $conf['map']['appearance']['style'];
-    $configured_reporting_periods = array_filter($conf['map']['appearance'][$map_style]['monitoring_period']);
+    d($conf['map']['appearance'][$map_style]['monitoring_period']);
+    $configured_reporting_periods = array_filter($conf['map']['appearance'][$map_style]['monitoring_period']->monitoring_period);
     if (empty($configured_reporting_periods)) {
       return [];
     }
