@@ -547,13 +547,14 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     }, $conf['partial_segments']));
     $available_metric_items = array_keys($this->getDefaultAttachment()->getMetricFields());
     $reporting_periods = $this->getReportingPeriods($this->getCurrentPlanId(), TRUE);
+    $configured_monitoring_periods = is_object($conf['monitoring_period']) ? $conf['monitoring_period']->monitoring_period : $conf['monitoring_period'];
 
     $map_style_config = [
       'donut_whole_segments' => array_values(array_intersect($available_metric_items, $donut_whole_segments)),
       'donut_whole_segment_default' => (int) $conf['whole_segment_default'],
       'donut_partial_segments' => array_values(array_intersect($available_metric_items, $donut_partial_segments)),
       'donut_partial_segment_default' => (int) $conf['partial_segment_default'],
-      'donut_monitoring_periods' => array_values(array_filter($conf['monitoring_period']->monitoring_period, function ($item) use ($reporting_periods) {
+      'donut_monitoring_periods' => array_values(array_filter($configured_monitoring_periods, function ($item) use ($reporting_periods) {
         return $item != 'latest' && $item != 'none' && array_key_exists($item, $reporting_periods);
       })),
       'donut_display_value' => $conf['display_value'] ?? 'percentage',
@@ -811,8 +812,9 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   private function getConfiguredReportingPeriods() {
     $conf = $this->getBlockConfig();
     $map_style = $conf['map']['appearance']['style'];
-    d($conf['map']['appearance'][$map_style]['monitoring_period']);
-    $configured_reporting_periods = array_filter($conf['map']['appearance'][$map_style]['monitoring_period']->monitoring_period);
+    $monitoring_periods = $conf['map']['appearance'][$map_style]['monitoring_period'];
+    $monitoring_periods = is_object($monitoring_periods) ? $monitoring_periods->monitoring_period : $monitoring_periods;
+    $configured_reporting_periods = array_filter($monitoring_periods);
     if (empty($configured_reporting_periods)) {
       return [];
     }
