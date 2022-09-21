@@ -126,7 +126,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       ],
       'reached' => [
         'data' => $this->t('Reached'),
-        'data-column-type' => 'amount',
+        'data-column-type' => 'percentage',
       ],
       'requirements' => [
         'data' => $this->t('Requirements'),
@@ -162,6 +162,22 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         $cache_tags = Cache::mergeTags($cache_tags, $plan_entity->getCacheTags());
       }
 
+      // Setup the PiN values.
+      $in_need = $plan->getCaseloadValue('inNeed');
+      $target = $plan->getCaseloadValue('target');
+      $reached = $plan->getCaseloadValue('reached', 'Reached');
+      $reached_percent = !empty($reached) && !empty($target) ? 100 / $target * $reached : NULL;
+      $expected_reached = $plan->getCaseloadValue('expectedReach', 'Expected Reach');
+
+      // Setup the financial values.
+      $requirements = $plan->getRequirements($plan);
+      $funding = $plan->getFunding($plan);
+      $coverage = $plan->getCoverage($plan);
+
+      // Setup number formatting.
+      $decimals = 1;
+
+      // Setup footnotes and document links.
       $footnotes = $plan_entity ? $this->getFootnotesForPlanBaseobject($plan_entity) : NULL;
       $document_uri = $plan_entity ? ($plan_entity->get('field_plan_document_link')->uri ?? NULL) : NULL;
 
@@ -179,11 +195,12 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data' => [
             [
               '#theme' => 'hpc_amount',
-              '#amount' => $plan->getCaseloadValue('inNeed'),
+              '#amount' => $in_need,
+              '#decimals' => $decimals,
             ],
             $this->buildFootnoteTooltip($footnotes, 'in_need'),
           ],
-          'data-raw-value' => $plan->getCaseloadValue('inNeed'),
+          'data-raw-value' => $in_need,
           'data-column-type' => 'amount',
           'data-progress-group' => 'people',
         ],
@@ -191,11 +208,12 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data' => [
             [
               '#theme' => 'hpc_amount',
-              '#amount' => $plan->getCaseloadValue('target'),
+              '#amount' => $target,
+              '#decimals' => $decimals,
             ],
             $this->buildFootnoteTooltip($footnotes, 'target'),
           ],
-          'data-raw-value' => $plan->getCaseloadValue('target'),
+          'data-raw-value' => $target,
           'data-column-type' => 'amount',
           'data-progress-group' => 'people',
         ],
@@ -203,50 +221,51 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data' => [
             [
               '#theme' => 'hpc_amount',
-              '#amount' => $plan->getCaseloadValue('expectedReach', 'Expected Reach'),
+              '#amount' => $expected_reached,
+              '#decimals' => $decimals,
             ],
             $this->buildFootnoteTooltip($footnotes, 'estimated_reach'),
           ],
-          'data-raw-value' => $plan->getCaseloadValue('expectedReach', 'Expected Reach'),
+          'data-raw-value' => $expected_reached,
           'data-column-type' => 'amount',
           'data-progress-group' => 'people',
         ],
         'reached' => [
           'data' => [
-            '#theme' => 'hpc_amount',
-            '#amount' => $plan->getCaseloadValue('reached', 'Reached'),
+            '#theme' => 'hpc_percent',
+            '#ratio' => $reached_percent / 100,
           ],
-          'data-raw-value' => $plan->getCaseloadValue('reached', 'Reached'),
-          'data-column-type' => 'amount',
+          'data-raw-value' => $reached_percent,
+          'data-column-type' => 'percentage',
           'data-progress-group' => 'people',
         ],
         'requirements' => [
           'data' => [
             [
               '#theme' => 'hpc_currency',
-              '#value' => $plan->getRequirements($plan),
+              '#value' => $requirements,
             ],
             $this->buildFootnoteTooltip($footnotes, 'requirements'),
           ],
-          'data-raw-value' => $plan->getRequirements($plan),
+          'data-raw-value' => $requirements,
           'data-column-type' => 'amount',
           'data-progress-group' => 'financial',
         ],
         'funding' => [
           'data' => [
             '#theme' => 'hpc_currency',
-            '#value' => $plan->getFunding($plan),
+            '#value' => $funding,
           ],
-          'data-raw-value' => $plan->getFunding($plan),
+          'data-raw-value' => $funding,
           'data-column-type' => 'amount',
           'data-progress-group' => 'financial',
         ],
         'coverage' => [
           'data' => [
             '#theme' => 'hpc_percent',
-            '#ratio' => $plan->getCoverage($plan) / 100,
+            '#ratio' => $coverage / 100,
           ],
-          'data-raw-value' => $plan->getCoverage($plan),
+          'data-raw-value' => $coverage,
           'data-column-type' => 'percentage',
           'data-progress-group' => 'coverage',
         ],
