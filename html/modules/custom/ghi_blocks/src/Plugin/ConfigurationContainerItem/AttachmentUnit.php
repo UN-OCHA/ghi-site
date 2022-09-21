@@ -38,7 +38,7 @@ class AttachmentUnit extends ConfigurationContainerItemPluginBase {
     if (!$attachment || !$attachment instanceof AttachmentInterface) {
       return NULL;
     }
-    return $attachment->unit->label;
+    return $attachment->unit->label ?? NULL;
   }
 
 }
