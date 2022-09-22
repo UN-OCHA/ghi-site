@@ -14,6 +14,9 @@ class AttachmentPrototype extends ApiObjectBase {
    */
   protected function map() {
     $prototype = $this->getRawData();
+    $measurement_fields = array_map(function ($item) {
+      return $item->name->en;
+    }, $prototype->value->measureFields ?? []);
     return (object) [
       'id' => $prototype->id,
       'name' => $prototype->value->name->en,
@@ -23,10 +26,9 @@ class AttachmentPrototype extends ApiObjectBase {
         array_map(function ($item) {
           return $item->name->en;
         }, $prototype->value->metrics),
-        array_map(function ($item) {
-          return $item->name->en;
-        }, $prototype->value->measureFields ?? [])
+        $measurement_fields
       ),
+      'measurement_fields' => $measurement_fields,
     ];
   }
 
@@ -35,6 +37,19 @@ class AttachmentPrototype extends ApiObjectBase {
    */
   public function getFields() {
     return $this->fields;
+  }
+
+  /**
+   * Get the fields that represent measurement metrics.
+   *
+   * @return string[]
+   *   An array of metric names.
+   */
+  public function getMeasurementMetricFields() {
+    $measurements = $this->measurement_fields;
+    return array_filter($this->fields, function ($field) use ($measurements) {
+      return in_array($field, $measurements);
+    });
   }
 
 }

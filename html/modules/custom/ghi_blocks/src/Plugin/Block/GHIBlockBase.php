@@ -1598,7 +1598,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * Get a plan id for the current page context.
    *
-   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
+   * @return \Drupal\ghi_plans\Entity\Plan|null
    *   A plan object if it can be found.
    */
   public function getCurrentPlanObject() {
@@ -1634,7 +1634,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     if (!$plan_object) {
       return NULL;
     }
-    return $plan_object->field_original_id->value;
+    return $plan_object->getSourceId();
   }
 
   /**

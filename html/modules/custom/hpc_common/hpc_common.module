@@ -92,6 +92,23 @@ function hpc_common_theme($existing, $type, $theme, $path) {
       ],
       'template' => 'hpc-pie-chart',
     ] + $common,
+    'hpc_sparkline' => [
+      'variables' => [
+        'data' => NULL,
+        'baseline_value' => NULL,
+        'labels' => NULL,
+        'baseline_label' => NULL,
+        'tooltips' => NULL,
+      ],
+      'template' => 'hpc-sparkline',
+    ] + $common,
+    'hpc_sparkline_tooltip' => [
+      'variables' => [
+        'title' => NULL,
+        'items' => NULL,
+      ],
+      'template' => 'hpc-sparkline-tooltip',
+    ] + $common,
     'hpc_autoformat_value' => [
       'variables' => [
         'value' => NULL,

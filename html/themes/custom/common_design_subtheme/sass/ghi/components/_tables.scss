@@ -78,7 +78,7 @@
       }
 
       td:first-child.subrow {
-        padding-left: 2.5rem;
+        padding-left: 2rem;
       }
 
       td.data-point--widget-pie-chart {
@@ -100,6 +100,11 @@
         .hpc-progress-bar-wrapper {
           margin-left: 5px;
         }
+      }
+
+      td.spark-line-chart span.sparkline {
+        display: inline-block;
+        width: 100%;
       }
     }
   }

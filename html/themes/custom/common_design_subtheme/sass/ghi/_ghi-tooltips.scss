@@ -23,3 +23,43 @@
     }
   }
 }
+
+.d3-sparkline-tooltip {
+  .tippy-box {
+    top: -0.5rem;
+
+    .tippy-content {
+      margin-bottom: -1rem;
+
+      .hpc-sparkline-tooltip {
+        .title {
+          text-align: left;
+        }
+
+        .items {
+          margin-top: 0.5rem;
+
+          .item-wrapper {
+            display: flex;
+
+            .label {
+              width: 50%;
+              text-align: left;
+              color: var(--cd-white);
+              font-size: 100%;
+              line-height: inherit;
+            }
+            .value {
+              width: 50%;
+              text-align: right;
+            }
+          }
+        }
+      }
+    }
+
+    .tippy-arrow::before {
+      left: 45%;
+    }
+  }
+}

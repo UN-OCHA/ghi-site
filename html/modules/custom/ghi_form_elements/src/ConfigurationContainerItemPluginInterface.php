@@ -83,9 +83,17 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
   public function getRenderArray();
 
   /**
-   * Get a representation fo the value that can be used for sorting.
+   * Get a representation of the value that can be used for sorting.
    */
   public function getSortableValue();
+
+  /**
+   * Get the column type.
+   *
+   * @return string
+   *   The column type as a string.
+   */
+  public function getColumnType();
 
   /**
    * Get the classes of an item.

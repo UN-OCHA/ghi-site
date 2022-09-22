@@ -76,6 +76,7 @@ class LayoutBuilderBrowserEventSubscriber implements EventSubscriberInterface {
           // This turns "Generic Elements" into "generic_elements".
           return str_replace('-', '_', Html::getClass($category));
         }, $categories);
+        $form['tabs']['#default_tab'] = Html::getClass($request->query->get('block_category') ?? reset($categories));
 
         // Let the tab element set itself up.
         VerticalTabs::processVerticalTabs($form['tabs'], $form_state, $complete_form);

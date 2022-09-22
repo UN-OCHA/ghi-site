@@ -181,6 +181,13 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
+  public function getColumnType() {
+    return static::ITEM_TYPE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getClasses() {
     $classes = [
       Html::getClass($this->getPluginId()),

@@ -73,6 +73,9 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       'data_point_calculated_pie_chart' => [
         'target' => 'data_point',
       ],
+      'spark_line_chart' => [
+        'target' => 'spark_line_chart',
+      ],
       'data_point_monitoring_period' => [
         'target' => 'monitoring_period',
       ],
@@ -107,11 +110,19 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
         case 'data_point':
           $value->data_points[0] = $value->data_point_1;
           $value->data_points[1] = $value->data_point_2;
-          $value->widget = $value->mini_widget;
+          // $value->widget = $value->mini_widget;
           unset($value->data_point_1);
           unset($value->data_point_2);
           unset($value->mini_widget);
           $item['config']['data_point'] = (array) $value;
+          break;
+
+        case 'spark_line_chart':
+          $item['config']['data_point'] = $value->data_point->data_point_1;
+          $item['config']['monitoring_periods'] = $value->monitoring_periods;
+          $item['config']['show_baseline'] = $value->show_baseline;
+          $item['config']['baseline'] = $value->baseline->data_point_1;
+          $item['config']['include_latest_period'] = $value->include_latest_period;
           break;
 
         case 'monitoring_period':
@@ -151,6 +162,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       '#theme' => 'table',
       '#header' => $table_data['header'],
       '#rows' => $table_data['rows'],
+      '#progress_groups' => TRUE,
     ];
   }
 
@@ -322,8 +334,9 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
           'data-value' => $item_type->getValue(),
           'data-raw-value' => $item_type->getSortableValue(),
           'data-sort-type' => $item_type::SORT_TYPE,
-          'data-column-type' => $item_type::ITEM_TYPE,
+          'data-column-type' => $item_type->getColumnType(),
           'class' => $item_type->getClasses(),
+          'data-progress-group' => $item_type->getColumnType() == 'percentage' ? 'percentage' : NULL,
         ];
       }
     }
@@ -591,6 +604,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
         'label' => $this->t('Data point'),
         'attachment_prototype' => $this->getAttachmentPrototype(),
       ],
+      'spark_line_chart' => [],
       'monitoring_period' => [],
     ];
     return $item_types;

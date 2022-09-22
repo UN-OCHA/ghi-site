@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "94768b0c067db020c324dcb81ce4f616",
+    "content-hash": "380a79f992b074763d766203770e3db0",
     "packages": [
         {
             "name": "alchemy/zippy",
@@ -12373,6 +12373,15 @@
                 "source": "https://github.com/UN-OCHA/common_design/tree/v7.0.1"
             },
             "time": "2022-04-26T07:53:53+00:00"
+        },
+        {
+            "name": "unocha/d3-sparkline",
+            "version": "2.0.3",
+            "dist": {
+                "type": "zip",
+                "url": "https://github.com/UN-OCHA/d3-sparkline/archive/refs/tags/v2.0.3.zip"
+            },
+            "type": "drupal-library"
         },
         {
             "name": "unocha/ocha_snap",

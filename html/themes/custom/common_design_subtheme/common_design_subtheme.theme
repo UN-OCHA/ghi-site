@@ -342,7 +342,7 @@ function common_design_subtheme_preprocess_table(&$vars) {
         if ($progress_indicators && $attribute->hasAttribute('data-progress-group') && $attribute->hasAttribute('data-raw-value')) {
           $progress_group = $attribute->offsetGet('data-progress-group')->value();
           $raw_value = $attribute->offsetGet('data-raw-value')->value();
-          if (empty($raw_value)) {
+          if (empty($progress_group) || empty($raw_value)) {
             continue;
           }
           if (!array_key_exists($progress_group, $progress_groups)) {

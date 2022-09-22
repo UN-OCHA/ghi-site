@@ -227,7 +227,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $attachment = $this->getDefaultAttachment();
     $plan_base_object = $this->getCurrentPlanObject();
     $plan_id = $this->getCurrentPlanId();
-    $decimal_format = $plan_base_object->get('field_decimal_format')->value;
+    $decimal_format = $plan_base_object->getDecimalFormat();
     $reporting_periods = $this->getReportingPeriods($plan_id);
     $reporting_period = $this->getCurrentReportingPeriod();
     $configured_reporting_periods = $this->getConfiguredReportingPeriods();
@@ -344,7 +344,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $attachment = $this->getDefaultAttachment();
     $plan_base_object = $this->getCurrentPlanObject();
     $plan_id = $this->getCurrentPlanId();
-    $decimal_format = $plan_base_object->get('field_decimal_format')->value;
+    $decimal_format = $plan_base_object->getDecimalFormat();
     $reporting_periods = $this->getReportingPeriods($plan_id);
     $reporting_period = $this->getCurrentReportingPeriod();
     $configured_reporting_periods = $this->getConfiguredReportingPeriods();

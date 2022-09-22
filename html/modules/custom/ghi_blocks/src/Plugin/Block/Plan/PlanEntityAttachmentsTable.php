@@ -141,6 +141,9 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       'data_point_calculated_pie_chart' => [
         'target' => 'data_point',
       ],
+      'spark_line_chart' => [
+        'target' => 'spark_line_chart',
+      ],
       'data_point_monitoring_period' => [
         'target' => 'monitoring_period',
       ],
@@ -173,11 +176,19 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
         case 'data_point':
           $value->data_points[0] = $value->data_point_1;
           $value->data_points[1] = $value->data_point_2;
-          $value->widget = $value->mini_widget;
+          // $value->widget = $value->mini_widget;
           unset($value->data_point_1);
           unset($value->data_point_2);
           unset($value->mini_widget);
           $item['config']['data_point'] = (array) $value;
+          break;
+
+        case 'spark_line_chart':
+          $item['config']['data_point'] = $value->data_point->data_point_1;
+          $item['config']['monitoring_periods'] = $value->monitoring_periods;
+          $item['config']['show_baseline'] = $value->show_baseline;
+          $item['config']['baseline'] = $value->baseline->data_point_1;
+          $item['config']['include_latest_period'] = $value->include_latest_period;
           break;
 
         default:
@@ -238,6 +249,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
         '#header' => $table_data['header'],
         '#rows' => $table_data['rows'],
         '#sortable' => $is_grouped,
+        '#progress_groups' => TRUE,
       ],
     ];
   }
@@ -334,9 +346,10 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
           'data-value' => $item_type->getValue(),
           'data-raw-value' => $item_type->getSortableValue(),
           'data-sort-type' => $item_type::SORT_TYPE,
-          'data-column-type' => $item_type::ITEM_TYPE,
+          'data-column-type' => $item_type->getColumnType(),
           'class' => $item_type->getClasses(),
           'export_value' => $item_type->getSortableValue(),
+          'data-progress-group' => $item_type->getColumnType() == 'percentage' ? 'percentage' : NULL,
         ];
 
         // Update the skip row flag. Make it lazy, only check the item type if

@@ -13,45 +13,57 @@
             "type": "composer",
             "url": "https://packages.drupal.org/8",
             "exclude": [
-              "drupal/phpexcel"
+                "drupal/phpexcel"
             ]
         },
         {
-          "type": "composer",
-          "url": "https://asset-packagist.org",
-          "exclude": [
-            "drupal/phpexcel"
-          ]
+            "type": "composer",
+            "url": "https://asset-packagist.org",
+            "exclude": [
+                "drupal/phpexcel"
+            ]
         },
         {
-          "type": "package",
-          "package": {
-            "name": "zenorocha/clipboard.js",
-            "type": "drupal-library",
-            "version": "2.0.4",
-            "dist": {
-              "type": "zip",
-              "url": "https://codeload.github.com/zenorocha/clipboard.js/zip/v2.0.4"
+            "type": "package",
+            "package": {
+                "name": "zenorocha/clipboard.js",
+                "type": "drupal-library",
+                "version": "2.0.4",
+                "dist": {
+                    "type": "zip",
+                    "url": "https://codeload.github.com/zenorocha/clipboard.js/zip/v2.0.4"
+                }
             }
-          }
         },
         {
-          "type": "git",
-          "url": "https://git.drupalcode.org/issue/phpexcel-3148435.git"
+            "type": "git",
+            "url": "https://git.drupalcode.org/issue/phpexcel-3148435.git"
         },
         {
-          "type": "package",
-          "package": {
-              "name": "drupal/tippy",
-              "version": "1.0",
-              "type":"drupal-module",
-              "source": {
-                  "url": "https://github.com/rpc5102/tippy.js-drupal",
-                  "type": "git",
-                  "reference": "master"
-              }
-          }
-      }
+            "type": "package",
+            "package": {
+                "name": "drupal/tippy",
+                "version": "1.0",
+                "type":"drupal-module",
+                "source": {
+                    "url": "https://github.com/rpc5102/tippy.js-drupal",
+                    "type": "git",
+                    "reference": "master"
+                }
+            }
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "unocha/d3-sparkline",
+                "type": "drupal-library",
+                "version": "2.0.3",
+                "dist": {
+                    "type": "zip",
+                    "url": "https://github.com/UN-OCHA/d3-sparkline/archive/refs/tags/v2.0.3.zip"
+                }
+            }
+        }
     ],
     "require": {
         "composer/installers": "^1.9",
@@ -118,6 +130,7 @@
         "oomphinc/composer-installers-extender": "^2.0",
         "phpoffice/phpspreadsheet": "^1.19",
         "unocha/common_design": "^v7.0.1",
+        "unocha/d3-sparkline": "^2.0",
         "unocha/ocha_snap": "^8.3",
         "wieni/wmbert": "^1.11"
     },
