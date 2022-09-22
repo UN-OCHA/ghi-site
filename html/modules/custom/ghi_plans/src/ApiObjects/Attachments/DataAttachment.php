@@ -602,6 +602,9 @@ class DataAttachment extends AttachmentBase {
   protected function getCurrentMeasurement() {
     // Get all measurements.
     $measurements = $this->getMeasurements();
+    if (empty($measurements)) {
+      return NULL;
+    }
     // Limit this to the published measurements.
     $latest_published_period_id = $this->getLatestPublishedReportingPeriod($this->getPlanId());
     $measurements = array_filter($measurements, function ($measurement) use ($latest_published_period_id) {
