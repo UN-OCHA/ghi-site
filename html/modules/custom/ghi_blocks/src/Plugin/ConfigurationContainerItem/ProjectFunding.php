@@ -124,8 +124,10 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
    */
   public function getRenderArray() {
     $data_type = $data_type ?? $this->get('data_type');
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
+    $plan_object = $this->getContextValue('plan_object');
     $additional_theme_options = [
-      'decimal_format' => $this->getContextValue('plan_object')->field_decimal_format->value,
+      'decimal_format' => $plan_object->getDecimalFormat(),
     ];
     $build = [];
     switch ($data_type) {

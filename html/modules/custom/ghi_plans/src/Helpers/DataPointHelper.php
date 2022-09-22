@@ -39,6 +39,25 @@ class DataPointHelper {
   }
 
   /**
+   * Get the values for all reporting periods of a data point.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
+   *   The attachment object.
+   * @param array $data_point_conf
+   *   The data point configuration.
+   *
+   * @return mixed[]
+   *   The data point values, extracted from the attachment according to the
+   *   given configuration.
+   *
+   * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
+   */
+  public static function getValuesForAllReportingPeriods(DataAttachment $attachment, array $data_point_conf) {
+    // @todo Implement this.
+    return [];
+  }
+
+  /**
    * Get a formatted value for a data point.
    *
    * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
@@ -200,9 +219,9 @@ class DataPointHelper {
    * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
    */
   private static function formatAsWidget($attachment, array $data_point_conf) {
-    $value = self::getValue($attachment, $data_point_conf);
     switch ($data_point_conf['widget']) {
       case 'progressbar':
+        $value = self::getValue($attachment, $data_point_conf);
         $widget = [
           '#theme' => 'hpc_progress_bar',
           '#ratio' => $value,
@@ -210,6 +229,7 @@ class DataPointHelper {
         break;
 
       case 'pie_chart':
+        $value = self::getValue($attachment, $data_point_conf);
         $widget = [
           '#theme' => 'hpc_pie_chart',
           '#ratio' => $value,

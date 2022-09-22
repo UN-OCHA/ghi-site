@@ -55,7 +55,7 @@ trait PlanReportingPeriodTrait {
    *   The plan id.
    *
    * @return int
-   *   The if of the latest published reporting period.
+   *   The id of the latest published reporting period.
    */
   public static function getLatestPublishedReportingPeriod($plan_id) {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanBasicQuery $query */

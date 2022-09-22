@@ -481,9 +481,9 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    *   Either 'comma', 'point' or NULL.
    */
   private function getDecimalFormat() {
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
     $plan_object = $this->getContextValue('plan_object');
-    $decimal_format = $plan_object ? $plan_object->get('field_decimal_format')->value : NULL;
-    return $decimal_format;
+    return $plan_object ? $plan_object->getDecimalFormat() : NULL;
   }
 
 }

@@ -600,8 +600,14 @@ class DataAttachment extends AttachmentBase {
    *   The measurement object or NULL.
    */
   protected function getCurrentMeasurement() {
+    // Get all measurements.
     $measurements = $this->getMeasurements();
-    return $measurements ? end($measurements) : NULL;
+    // Limit this to the published measurements.
+    $latest_published_period_id = $this->getLatestPublishedReportingPeriod($this->getPlanId());
+    $measurements = array_filter($measurements, function ($measurement) use ($latest_published_period_id) {
+      return $measurement->reporting_period <= $latest_published_period_id;
+    });
+    return !empty($measurements) ? end($measurements) : NULL;
   }
 
   /**
@@ -623,6 +629,22 @@ class DataAttachment extends AttachmentBase {
       }
     }
     return NULL;
+  }
+
+  /**
+   * Get a metric from the measurement specified by the reporting period.
+   *
+   * @param int $data_point
+   *   The data point index.
+   * @param int $reporting_period
+   *   The id of the reporting period.
+   *
+   * @return int|float|null
+   *   The value of the metric for the specified reporting period.
+   */
+  public function getMeasurementMetricValue($data_point, $reporting_period) {
+    $measurement = $this->getMeasurementByReportingPeriod($reporting_period);
+    return $measurement->totals[$data_point]?->value ?? 0;
   }
 
   /**

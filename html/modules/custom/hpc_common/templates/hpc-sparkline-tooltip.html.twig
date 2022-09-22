@@ -1,0 +1,11 @@
+<div class="hpc-sparkline-tooltip">
+  <div class="title">{{ title }}</div>
+  <div class="items">
+    {% for key, item in items %}
+      <div class="item-wrapper">
+        <span class="label">{{ item.label }}</span>
+        <span class="value">{{ item.value }}</span>
+      </div>
+    {% endfor %}
+  </div>
+</div>

@@ -43,10 +43,9 @@ function ghi_plans_preprocess_page(array &$variables) {
   $node = $variables['node'] ?? NULL;
   /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
   $base_object = $node ? BaseObjectHelper::getBaseObjectFromNode($node) : NULL;
-  if ($base_object && $base_object->bundle() == 'plan') {
-    $decimal_format = $base_object->get('field_decimal_format')->value;
+  if ($base_object && $base_object instanceof Plan) {
     $variables['#attached']['drupalSettings']['plan_settings'] = [
-      'decimal_format' => $decimal_format,
+      'decimal_format' => $base_object->getDecimalFormat(),
     ];
   }
 }

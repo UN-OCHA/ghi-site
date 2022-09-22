@@ -34,10 +34,6 @@ block.preview:
 theme:
   js:
     js/theme.js: {}
-d3:
-  version: 3.0.0
-  js:
-    /libraries/d3/dist/d3.min.js: {}
 leaflet:
   version: 0.7.3
   js:
@@ -76,8 +72,8 @@ map.base:
     js/map/map.search_control.js: {}
   dependencies:
     - hpc_common/tooltip
+    - hpc_common/d3
     - ghi_blocks/theme
-    - ghi_blocks/d3
     - ghi_blocks/leaflet
     - ghi_blocks/leaflet.d3svgoverlay
     - ghi_blocks/leaflet.modal

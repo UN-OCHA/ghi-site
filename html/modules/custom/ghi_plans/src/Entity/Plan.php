@@ -24,4 +24,14 @@ class Plan extends BaseObject {
     return $plan_status->value ? $field_definition->getSetting('on_label') : $field_definition->getSetting('off_label');
   }
 
+  /**
+   * Get the decimal format to use for number formatting.
+   *
+   * @return string|null
+   *   Either 'comma', 'point' or NULL.
+   */
+  public function getDecimalFormat() {
+    return $this->get('field_decimal_format')->value ?? NULL;
+  }
+
 }

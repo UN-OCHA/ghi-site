@@ -89,11 +89,22 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
+  public function getColumnType() {
+    if ($this->get('data_point')['formatting'] == 'percent') {
+      return 'percentage';
+    }
+    return parent::getColumnType();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getClasses() {
     $classes = parent::getClasses();
 
     $data_point_conf = $this->get('data_point');
-    if ($data_point_conf['widget'] != 'none') {
+    $widget = $data_point_conf['widget'] ?? NULL;
+    if (!empty($widget) && $widget != 'none') {
       $classes[] = Html::getClass($this->getPluginId() . '--widget');
       $classes[] = Html::getClass($this->getPluginId() . '--widget-' . $data_point_conf['widget']);
     }
@@ -108,13 +119,14 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   private function getAttachmentObject() {
     $attachment = $this->getContextValue('attachment');
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
     $plan_object = $this->getContextValue('plan_object') ?? NULL;
     $configuration = $this->getPluginConfiguration();
     $data_point_conf = $this->get('data_point');
     if (!$attachment || !$data_point_conf) {
       return NULL;
     }
-    $data_point_conf['decimal_format'] = $plan_object ? $plan_object->get('field_decimal_format')->value : NULL;
+    $data_point_conf['decimal_format'] = $plan_object ? $plan_object->getDecimalFormat() : NULL;
     $attachment->data_point_conf = $data_point_conf + ($configuration['presets'] ?? []);
     return $attachment;
   }

@@ -239,6 +239,25 @@ function hpc_common_preprocess_hpc_pie_chart(array &$vars) {
 }
 
 /**
+ * Theme a sparkline chart.
+ */
+function hpc_common_preprocess_hpc_sparkline(&$vars) {
+  $vars['#attached']['library'][] = 'hpc_common/sparkline';
+  $data = $vars['data'] ?? [];
+  $tooltips = $vars['tooltips'] ?? [];
+  $baseline_value = $vars['baseline_value'];
+
+  $wrapper_attributes = new Attribute();
+  $wrapper_attributes->addClass('hpc-pie-chart-wrapper');
+  $wrapper_attributes->setAttribute('data-values', implode(',', $data));
+  $wrapper_attributes->setAttribute('data-tooltips', implode('|', $tooltips));
+  if ($baseline_value) {
+    $wrapper_attributes->setAttribute('data-baseline', $baseline_value);
+  }
+  $vars['wrapper_attributes'] = $wrapper_attributes;
+}
+
+/**
  * Preprocess a tooltip.
  */
 function hpc_common_preprocess_hpc_tooltip(array &$vars) {

@@ -29,17 +29,23 @@ class MeasurementQuery extends EndpointQueryBase implements ContainerFactoryPlug
    *
    * @param int $attachment_id
    *   The attachment id to query.
+   * @param bool $disaggregation
+   *   Whether to fetch disaggregation data or not.
    *
    * @return array
    *   An array of unprocessed measurement objects.
    */
-  public function getUnprocessedMeasurements($attachment_id) {
+  public function getUnprocessedMeasurements($attachment_id, $disaggregation = FALSE) {
+    $endpoint_args = [];
+    if (!$disaggregation) {
+      $endpoint_args['disaggregation'] = 'false';
+    }
     if ($this->isAutenticatedEndpoint) {
-      $data = $this->getData([], ['attachmentId' => $attachment_id]);
+      $data = $this->getData([], ['attachmentId' => $attachment_id] + $endpoint_args);
       return $data;
     }
     else {
-      $data = $this->getData(['attachment_id' => $attachment_id]);
+      $data = $this->getData(['attachment_id' => $attachment_id], $endpoint_args);
       return $data->measurements ?? [];
     }
   }

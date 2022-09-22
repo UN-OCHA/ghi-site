@@ -1,3 +1,7 @@
+d3:
+  version: 3.0.0
+  js:
+    /libraries/d3/dist/d3.min.js: {}
 icon:
   css:
     theme:
@@ -5,6 +9,8 @@ icon:
 tooltip:
   js:
     js/tooltip.js: {}
+  dependencies:
+    - tippy/tippy.js
 popover:
   css:
     theme:
@@ -14,3 +20,10 @@ popover:
 toggle:
   js:
     js/toggle.js: {}
+sparkline:
+  js:
+    /libraries/d3-sparkline/d3-sparkline.js: {}
+    js/sparkline.js: {}
+  dependencies:
+    - hpc_common/d3
+    - tippy/tippy.js
