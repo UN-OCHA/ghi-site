@@ -154,6 +154,11 @@ class SyncManager implements ContainerInjectionInterface {
         'field' => 'field_decimal_format',
         'property' => 'value',
       ],
+      'status_string' => [
+        'field' => 'field_plan_status',
+        'property' => 'value',
+        'callback' => [Plan::class, 'mapPlanStatus'],
+      ],
     ];
     $map['footnotes'] = [
       'field' => 'field_footnotes',
@@ -234,14 +239,17 @@ class SyncManager implements ContainerInjectionInterface {
             }
           }
           else {
-            $base_object->{$local_def['field']}->{$local_def['property']} = $metadata->{$remote_property};
+            $value = $metadata->{$remote_property};
+            if (!empty($value) && !empty($local_def['callback'])) {
+              $value = $local_def['callback']($value);
+            }
+            $base_object->{$local_def['field']}->{$local_def['property']} = $value;
           }
         }
       }
 
       // @codingStandardsIgnoreStart
       // $base_object->?? = $metadata->plan_version;
-      // $base_object->?? = $metadata->status_string;
       // $base_object->?? = $metadata->prevent_fts_link;
       // @codingStandardsIgnoreEnd
       $base_object->save();

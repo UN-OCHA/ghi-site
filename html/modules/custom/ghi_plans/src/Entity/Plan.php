@@ -25,6 +25,24 @@ class Plan extends BaseObject {
   }
 
   /**
+   * Map an status string value to a boolean.
+   *
+   * This basically maps "published" to TRUE and everything else to FALSE.
+   *
+   * @param string $value
+   *   The incoming value.
+   *
+   * @return bool
+   *   The resulting status.
+   */
+  public static function mapPlanStatus($value) {
+    if (strtolower($value) == 'published') {
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
    * Get the decimal format to use for number formatting.
    *
    * @return string|null
