@@ -17,22 +17,19 @@
       margin-bottom: 0;
     }
 
-    th.cd-table--amount,
-    td.cd-table--amount {
-      text-align: left;
-    }
-
     th,
     td {
       padding: 1.5rem 2rem 1.5rem 0;
 
-      &:last-child {
-        padding-right: 0;
+      &.entity-name,
+      &.cd-table--amount,
+      &.cd-table--percentage {
+        text-align: left;
+        white-space: nowrap;
       }
 
-      &.entity-name,
-      &.cd-table--amount {
-        white-space: nowrap;
+      &:last-child {
+        padding-right: 0;
       }
     }
 
