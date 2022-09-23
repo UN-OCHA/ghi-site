@@ -14,6 +14,7 @@ use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\node\NodeInterface;
 
 /**
@@ -46,7 +47,7 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, HPCDownloadExcelInterface {
+class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;

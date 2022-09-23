@@ -46,6 +46,13 @@
     }
   }
 
+  &.block-global-plan-table > div.block-content,
+  &.block-plan-entity-attachments-table > div.block-content,
+  &.block-plan-governing-entities-table > div.block-content,
+  &.block-plan-governing-entities-caseloads-table > div.block-content {
+    overflow-x: auto;
+  }
+
   & > div.block-comment {
     padding: 1rem 0;
     text-align: justify;
