@@ -60,7 +60,7 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
       ];
     }
     return [
-      'label' => '',
+      'label' => $config->widget_label ?? '',
       'label_display' => TRUE,
       'hpc' => $mapped_config,
     ];
