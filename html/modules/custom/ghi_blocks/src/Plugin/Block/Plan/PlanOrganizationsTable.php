@@ -145,6 +145,9 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
    */
   public function buildContent() {
     $table_data = $this->buildTableData();
+    if (empty($table_data)) {
+      return NULL;
+    }
     return [
       '#theme' => 'table',
       '#header' => $table_data['header'],
