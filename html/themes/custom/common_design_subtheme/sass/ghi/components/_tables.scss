@@ -98,9 +98,18 @@
         }
       }
 
-      td.spark-line-chart span.sparkline {
-        display: inline-block;
-        width: 100%;
+      td.spark-line-chart {
+        width: 10rem;
+        padding: 0 0.25rem 0 0;
+
+        span.sparkline {
+          display: inline-block;
+          width: 100%;
+
+          svg circle {
+            fill: transparent;
+          }
+        }
       }
     }
   }
