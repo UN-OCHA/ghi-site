@@ -96,6 +96,7 @@ function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterf
     'field_plan_document_link',
     'field_plan_status',
     'field_short_name',
+    'field_link_to_fts',
     'field_operations_category',
     'field_footnotes',
   ];

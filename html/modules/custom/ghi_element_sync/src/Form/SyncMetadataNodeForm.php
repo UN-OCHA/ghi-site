@@ -64,6 +64,7 @@ class SyncMetadataNodeForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
     $form['#node'] = $node;
+    $form['#attached']['library'] = ['ghi_element_sync/sync_metadata_form'];
 
     try {
       $remote_data = $this->syncManager->getRemoteConfigurations($node);
@@ -116,11 +117,19 @@ class SyncMetadataNodeForm extends FormBase {
         }
         else {
           $remote_value = $metadata->{$remote_property} ?? NULL;
+          if ($remote_value !== NULL && !empty($local_def['callback'])) {
+            $remote_value = $local_def['callback']($remote_value);
+          }
           $local_value = $base_object->{$local_def['field']}->{$local_def['property']} ?? NULL;
+
+          $field = $base_object_fields[$local_def['field']];
+          $is_boolean = $field->getItemDefinition()->getDataType() == 'field_item:boolean';
+          $field_settings = $field->getSettings();
+
           $form['properties']['#rows'][] = [
             'property' => $base_object_fields[$local_def['field']]->getLabel(),
-            'remote_value' => $remote_value,
-            'local_value' => $local_value,
+            'remote_value' => $is_boolean ? ($remote_value ? $field_settings['on_label'] : $field_settings['off_label']) : $remote_value,
+            'local_value' => $is_boolean ? ($local_value ? $field_settings['on_label'] : $field_settings['off_label']) : $local_value,
             'status' => $remote_value == $local_value ? $this->t('In sync') : $this->t('Changed'),
           ];
         }

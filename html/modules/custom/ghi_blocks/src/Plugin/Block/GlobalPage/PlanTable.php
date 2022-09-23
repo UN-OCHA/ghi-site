@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
+use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
@@ -37,6 +38,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
   use PlanFootnoteTrait;
   use TableSoftLimitTrait;
   use BlockCommentTrait;
+  use FtsLinkTrait;
 
   /**
    * The section manager.
@@ -181,6 +183,42 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       // Setup footnotes and document links.
       $footnotes = $plan_entity ? $this->getFootnotesForPlanBaseobject($plan_entity) : NULL;
       $document_uri = $plan_entity ? ($plan_entity->get('field_plan_document_link')->uri ?? NULL) : NULL;
+      $link_to_fts = $plan_entity ? $plan_entity->canLinkToFts() : FALSE;
+
+      // Setup the column values.
+      $value_in_need = [
+        '#theme' => 'hpc_amount',
+        '#amount' => $in_need,
+        '#decimals' => $decimals,
+      ];
+      $value_targeted = [
+        '#theme' => 'hpc_amount',
+        '#amount' => $target,
+        '#decimals' => $decimals,
+      ];
+      $value_expected_reach = [
+        '#theme' => 'hpc_amount',
+        '#amount' => $expected_reached,
+        '#decimals' => $decimals,
+      ];
+      $value_reached = $reached_percent ? [
+        '#theme' => 'hpc_percent',
+        '#ratio' => $reached_percent / 100,
+      ] : [
+        '#markup' => $this->t('Pending'),
+      ];
+      $value_requirements = [
+        '#theme' => 'hpc_currency',
+        '#value' => $requirements,
+      ];
+      $value_funding = [
+        '#theme' => 'hpc_currency',
+        '#value' => $funding,
+      ];
+      $value_coverage = [
+        '#theme' => 'hpc_percent',
+        '#ratio' => $coverage / 100,
+      ];
 
       $rows[$plan->id()] = [
         'name' => [
@@ -194,11 +232,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'type' => $plan->getTypeShortName(),
         'inneed' => [
           'data' => [
-            [
-              '#theme' => 'hpc_amount',
-              '#amount' => $in_need,
-              '#decimals' => $decimals,
-            ],
+            $value_in_need,
             $this->buildFootnoteTooltip($footnotes, 'in_need'),
           ],
           'data-raw-value' => $in_need,
@@ -207,11 +241,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         ],
         'targeted' => [
           'data' => [
-            [
-              '#theme' => 'hpc_amount',
-              '#amount' => $target,
-              '#decimals' => $decimals,
-            ],
+            $value_targeted,
             $this->buildFootnoteTooltip($footnotes, 'target'),
           ],
           'data-raw-value' => $target,
@@ -220,11 +250,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         ],
         'expected_reach' => [
           'data' => [
-            [
-              '#theme' => 'hpc_amount',
-              '#amount' => $expected_reached,
-              '#decimals' => $decimals,
-            ],
+            $value_expected_reach,
             $this->buildFootnoteTooltip($footnotes, 'estimated_reach'),
           ],
           'data-raw-value' => $expected_reached,
@@ -232,22 +258,14 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data-progress-group' => 'people',
         ],
         'reached' => [
-          'data' => $reached_percent ? [
-            '#theme' => 'hpc_percent',
-            '#ratio' => $reached_percent / 100,
-          ] : [
-            '#markup' => $this->t('Pending'),
-          ],
+          'data' => $value_reached,
           'data-raw-value' => $reached_percent,
           'data-column-type' => 'percentage',
           'data-progress-group' => 'people',
         ],
         'requirements' => [
           'data' => [
-            [
-              '#theme' => 'hpc_currency',
-              '#value' => $requirements,
-            ],
+            $link_to_fts ? self::buildFtsLink($value_requirements, $plan_entity, 'summary') : $value_requirements,
             $this->buildFootnoteTooltip($footnotes, 'requirements'),
           ],
           'data-raw-value' => $requirements,
@@ -255,19 +273,13 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data-progress-group' => 'financial',
         ],
         'funding' => [
-          'data' => [
-            '#theme' => 'hpc_currency',
-            '#value' => $funding,
-          ],
+          'data' => $link_to_fts ? self::buildFtsLink($value_funding, $plan_entity, 'summary') : $value_funding,
           'data-raw-value' => $funding,
           'data-column-type' => 'amount',
           'data-progress-group' => 'financial',
         ],
         'coverage' => [
-          'data' => [
-            '#theme' => 'hpc_percent',
-            '#ratio' => $coverage / 100,
-          ],
+          'data' => $link_to_fts ? self::buildFtsLink($value_coverage, $plan_entity, 'summary') : $value_coverage,
           'data-raw-value' => $coverage,
           'data-column-type' => 'percentage',
           'data-progress-group' => 'coverage',
@@ -349,7 +361,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
 
     if (empty($table_config['fts_icon'])) {
       $rows = array_map(function ($row) {
-
+        // @todo Seomthing should happen here.
         return $row;
       }, $rows);
     }

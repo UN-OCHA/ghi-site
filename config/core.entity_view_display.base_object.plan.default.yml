@@ -7,6 +7,7 @@ dependencies:
     - field.field.base_object.plan.field_decimal_format
     - field.field.base_object.plan.field_description
     - field.field.base_object.plan.field_footnotes
+    - field.field.base_object.plan.field_link_to_fts
     - field.field.base_object.plan.field_max_admin_level
     - field.field.base_object.plan.field_operations_category
     - field.field.base_object.plan.field_original_id
@@ -58,6 +59,16 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: 10
+    region: content
+  field_link_to_fts:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 14
     region: content
   field_max_admin_level:
     type: number_integer

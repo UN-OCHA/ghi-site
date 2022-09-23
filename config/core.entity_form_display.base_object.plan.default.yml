@@ -7,6 +7,7 @@ dependencies:
     - field.field.base_object.plan.field_decimal_format
     - field.field.base_object.plan.field_description
     - field.field.base_object.plan.field_footnotes
+    - field.field.base_object.plan.field_link_to_fts
     - field.field.base_object.plan.field_max_admin_level
     - field.field.base_object.plan.field_operations_category
     - field.field.base_object.plan.field_original_id
@@ -73,10 +74,10 @@ third_party_settings:
         - field_operations_category
         - field_plan_caseload
         - field_plan_status
-        - field_plan_status_string
         - field_plan_document_link
         - field_decimal_format
         - field_max_admin_level
+        - field_link_to_fts
       label: Settings
       region: content
       parent_name: group_tabs
@@ -145,7 +146,7 @@ content:
     third_party_settings: {  }
   field_decimal_format:
     type: options_select
-    weight: 12
+    weight: 11
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -163,9 +164,16 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
+  field_link_to_fts:
+    type: boolean_checkbox
+    weight: 13
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
   field_max_admin_level:
     type: number
-    weight: 13
+    weight: 12
     region: content
     settings:
       placeholder: ''
@@ -201,7 +209,7 @@ content:
     third_party_settings: {  }
   field_plan_document_link:
     type: link_default
-    weight: 11
+    weight: 10
     region: content
     settings:
       placeholder_url: ''

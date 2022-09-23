@@ -1,16 +1,3 @@
-# ghi_plans.node.plan_settings:
-#   path: '/node/{node}/hpc/plan-settings'
-#   defaults:
-#     _form: '\Drupal\ghi_plans\Form\PlanSettingsForm'
-#     _title_callback: '\Drupal\ghi_plans\Controller\PlanAdminController::planSettingsTitle'
-#   options:
-#     parameters:
-#       node:
-#         type: entity:node
-#     _admin_route: TRUE
-#   requirements:
-#     _custom_access: '\Drupal\ghi_plans\Controller\PlanAdminController::access'
-#     _permission: 'administer site configuration'
 ghi_plans.base_object.plan_structure:
   path: '/admin/content/base-objects/{base_object}/plan-structure'
   defaults:
