@@ -1,0 +1,4 @@
+sync_metadata_form:
+  css:
+    component:
+      css/sync_metadata_form.css: {}

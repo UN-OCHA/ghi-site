@@ -37,6 +37,10 @@
         display: flex;
         justify-content: space-between;
       }
+
+      td a.fts-plan-link {
+        text-decoration: none;
+      }
     }
   }
 }

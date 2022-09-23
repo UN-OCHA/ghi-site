@@ -159,6 +159,11 @@ class SyncManager implements ContainerInjectionInterface {
         'property' => 'value',
         'callback' => [Plan::class, 'mapPlanStatus'],
       ],
+      'prevent_fts_link' => [
+        'field' => 'field_link_to_fts',
+        'property' => 'value',
+        'callback' => [Plan::class, 'mapFtsLink'],
+      ],
     ];
     $map['footnotes'] = [
       'field' => 'field_footnotes',
@@ -239,8 +244,8 @@ class SyncManager implements ContainerInjectionInterface {
             }
           }
           else {
-            $value = $metadata->{$remote_property};
-            if (!empty($value) && !empty($local_def['callback'])) {
+            $value = $metadata->{$remote_property} ?? NULL;
+            if ($value !== NULL && !empty($local_def['callback'])) {
               $value = $local_def['callback']($value);
             }
             $base_object->{$local_def['field']}->{$local_def['property']} = $value;
