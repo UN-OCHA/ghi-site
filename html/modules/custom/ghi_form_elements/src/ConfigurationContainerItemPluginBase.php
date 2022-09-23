@@ -10,7 +10,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
-use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_api\Query\EndpointQueryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -48,6 +47,13 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   protected $wrapperId;
 
   /**
+   * The entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * The manager class for endpoint query plugins.
    *
    * @var \Drupal\hpc_api\Query\EndpointQueryManager
@@ -57,22 +63,15 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->endpointQueryManager = $endpoint_query_manager;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
+    $instance = new static(
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('plugin.manager.endpoint_query_manager'),
     );
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->endpointQueryManager = $container->get('plugin.manager.endpoint_query_manager');
+    return $instance;
   }
 
   /**

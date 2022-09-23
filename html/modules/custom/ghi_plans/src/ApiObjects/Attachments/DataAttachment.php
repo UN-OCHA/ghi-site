@@ -58,6 +58,7 @@ class DataAttachment extends AttachmentBase {
       ] : NULL,
       'monitoring_period' => $period ?? NULL,
       'fields' => $prototype->fields,
+      'field_types' => $prototype->field_types,
       'measurement_fields' => $measurement_fields ? array_map(function ($field) {
         return $field->name->en;
       }, $measurement_fields) : [],

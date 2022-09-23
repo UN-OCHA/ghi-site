@@ -8,7 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\hpc_api\Query\EndpointQueryManager;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an entity counter item for configuration containers.
@@ -46,11 +46,11 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $endpoint_query_manager);
-
-    $this->iconQuery = $this->endpointQueryManager->createInstance('icon_query');
-    $this->planEntitiesQuery = $this->endpointQueryManager->createInstance('plan_entities_query');
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
+    $instance->planEntitiesQuery = $instance->endpointQueryManager->createInstance('plan_entities_query');
+    return $instance;
   }
 
   /**

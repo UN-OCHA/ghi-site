@@ -8,10 +8,11 @@ use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
+use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
-use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_common\Helpers\ThemeHelper;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an funding data item for configuration containers.
@@ -34,6 +35,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   use ConfigurationItemClusterRestrictTrait;
   use ConfigurationItemValuePreviewTrait;
   use FtsLinkTrait;
+  use PlanFootnoteTrait;
 
   /**
    * The funding query.
@@ -73,13 +75,13 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $endpoint_query_manager);
-
-    $this->fundingSummaryQuery = $this->endpointQueryManager->createInstance('plan_funding_summary_query');
-    $this->planClusterSummaryQuery = $this->endpointQueryManager->createInstance('plan_funding_cluster_query');
-    $this->flowSearchQuery = $this->endpointQueryManager->createInstance('flow_search_query');
-    $this->clusterQuery = $this->endpointQueryManager->createInstance('cluster_query');
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->fundingSummaryQuery = $instance->endpointQueryManager->createInstance('plan_funding_summary_query');
+    $instance->planClusterSummaryQuery = $instance->endpointQueryManager->createInstance('plan_funding_cluster_query');
+    $instance->flowSearchQuery = $instance->endpointQueryManager->createInstance('flow_search_query');
+    $instance->clusterQuery = $instance->endpointQueryManager->createInstance('cluster_query');
+    return $instance;
   }
 
   /**
@@ -222,18 +224,25 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       'decimal_format' => $plan_object->getDecimalFormat(),
     ] + $theme_options);
 
-    if (!$this->needsFtsLink()) {
-      return $rendered;
+    // See if we need to add a footnote.
+    $footnote = NULL;
+    if (array_key_exists('footnote_property', $data_type)) {
+      $footnotes = $plan_object ? $this->getFootnotesForPlanBaseobject($plan_object) : NULL;
+      $footnote = $this->buildFootnoteTooltip($footnotes, $data_type['footnote_property']);
     }
 
     // If this needs an FTS link, lets build and add that.
-    $link_icon = ThemeHelper::themeFtsIcon();
-    $fts_link = $this->needsFtsLink() ? self::buildFtsLink($link_icon, $this->getContextValue('plan_object'), 'flows', $this->getContextValue('base_object')) : NULL;
+    $fts_link = NULL;
+    if ($this->needsFtsLink()) {
+      $link_icon = ThemeHelper::themeFtsIcon();
+      $fts_link = $this->needsFtsLink() ? self::buildFtsLink($link_icon, $this->getContextValue('plan_object'), 'flows', $this->getContextValue('base_object')) : NULL;
+    }
 
     return [
       '#type' => 'container',
       0 => $rendered,
-      1 => $fts_link,
+      1 => $footnote,
+      2 => $fts_link,
     ];
   }
 
@@ -377,6 +386,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'current_requirements',
+        'footnote_property' => 'requirements',
         // @todo Add support for inclusion of original requirements as a
         // tooltip.
       ],

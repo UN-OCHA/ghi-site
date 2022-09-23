@@ -6,7 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\DataPointHelper;
-use Drupal\hpc_api\Query\EndpointQueryManager;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an attachment data item for configuration containers.
@@ -29,9 +29,10 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $endpoint_query_manager);
-    $this->attachmentQuery = $endpoint_query_manager->createInstance('attachment_query');
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->attachmentQuery = $instance->endpointQueryManager->createInstance('attachment_query');
+    return $instance;
   }
 
   /**

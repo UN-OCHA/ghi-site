@@ -7,7 +7,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\Template\Attribute;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\hpc_api\Query\EndpointQueryManager;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a cluster list item for configuration containers.
@@ -43,11 +43,11 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $endpoint_query_manager);
-
-    $this->projectSearchQuery = $this->endpointQueryManager->createInstance('plan_project_search_query');
-    $this->iconQuery = $this->endpointQueryManager->createInstance('icon_query');
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->projectSearchQuery = $instance->endpointQueryManager->createInstance('plan_project_search_query');
+    $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
+    return $instance;
   }
 
   /**

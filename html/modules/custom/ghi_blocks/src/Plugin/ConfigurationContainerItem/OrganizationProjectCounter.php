@@ -9,8 +9,8 @@ use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
-use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides project based counter items for configuration containers.
@@ -59,13 +59,13 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $endpoint_query_manager);
-
-    $this->planEntitiesQuery = $this->endpointQueryManager->createInstance('plan_entities_query');
-    $this->projectSearchQuery = $this->endpointQueryManager->createInstance('plan_project_search_query');
-    $this->flowSearchQuery = $this->endpointQueryManager->createInstance('flow_search_query');
-    $this->clusterQuery = $this->endpointQueryManager->createInstance('cluster_query');
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->planEntitiesQuery = $instance->endpointQueryManager->createInstance('plan_entities_query');
+    $instance->projectSearchQuery = $instance->endpointQueryManager->createInstance('plan_project_search_query');
+    $instance->flowSearchQuery = $instance->endpointQueryManager->createInstance('flow_search_query');
+    $instance->clusterQuery = $instance->endpointQueryManager->createInstance('cluster_query');
+    return $instance;
   }
 
   /**
