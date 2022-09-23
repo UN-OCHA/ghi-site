@@ -21,6 +21,19 @@ class StringHelper {
   }
 
   /**
+   * Turn a camelcase string to an underscore separated string.
+   *
+   * @param string $string
+   *   The input string.
+   *
+   * @return string
+   *   The output string.
+   */
+  public static function camelCaseToUnderscoreCase($string) {
+    return strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $string));
+  }
+
+  /**
    * Get an abbreviation for a string.
    */
   public static function getAbbreviation($string) {

@@ -6,8 +6,8 @@ use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
-use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an entity name item for configuration containers.
@@ -34,10 +34,10 @@ class EntityName extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $endpoint_query_manager);
-
-    $this->iconQuery = $this->endpointQueryManager->createInstance('icon_query');
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
+    return $instance;
   }
 
   /**

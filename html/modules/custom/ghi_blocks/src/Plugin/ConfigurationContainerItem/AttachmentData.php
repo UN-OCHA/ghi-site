@@ -4,9 +4,11 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Helpers\DataPointHelper;
-use Drupal\hpc_api\Query\EndpointQueryManager;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an attachment data item for configuration containers.
@@ -19,6 +21,8 @@ use Drupal\hpc_api\Query\EndpointQueryManager;
  */
 class AttachmentData extends ConfigurationContainerItemPluginBase {
 
+  use PlanFootnoteTrait;
+
   /**
    * The attachment query.
    *
@@ -29,9 +33,10 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQueryManager $endpoint_query_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $endpoint_query_manager);
-    $this->attachmentQuery = $endpoint_query_manager->createInstance('attachment_query');
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->attachmentQuery = $instance->endpointQueryManager->createInstance('attachment_query');
+    return $instance;
   }
 
   /**
@@ -153,11 +158,27 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
    */
   public function getRenderArray() {
     $attachment = $this->getAttachmentObject();
-    return $attachment ? DataPointHelper::formatValue($attachment, $attachment->data_point_conf) : NULL;
+    if (!$attachment) {
+      return NULL;
+    }
+
+    $plan = $this->getPlanObject($attachment);
+    $build = [
+      '#type' => 'container',
+    ];
+    $build[] = DataPointHelper::formatValue($attachment, $attachment->data_point_conf);
+    $footnotes = $plan ? $this->getFootnotesForPlanBaseobject($plan) : NULL;
+
+    $data_point_index = $attachment->data_point_conf['data_points'][0];
+    $build[] = $this->buildFootnoteTooltip($footnotes, $attachment->field_types[$data_point_index]);
+    return $build;
   }
 
   /**
    * Get the attachment object for this item.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment|null
+   *   The attachment object.
    */
   private function getAttachmentObject() {
     $attachment_id = $this->get(['attachment', 'attachment_id']);
@@ -173,6 +194,24 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     }
     $attachment->data_point_conf = $data_point_conf;
     return $attachment;
+  }
+
+  /**
+   * Get the plan object for the given attachment.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
+   *   The attachment object.
+   *
+   * @return \Drupal\ghi_plans\Entity\Plan|null
+   *   The plan object.
+   */
+  private function getPlanObject(DataAttachment $attachment) {
+    $plan_id = $attachment->getPlanId();
+    $plan_entities = $plan_id ? $this->entityTypeManager->getStorage('base_object')->loadByProperties([
+      'type' => 'plan',
+      'field_original_id' => $plan_id,
+    ]) : [];
+    return count($plan_entities) == 1 ? reset($plan_entities) : NULL;
   }
 
 }

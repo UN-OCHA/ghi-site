@@ -40,19 +40,11 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
   protected $articleManager;
 
   /**
-   * The entity type manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->articleManager = $container->get('ghi_content.manager.article');
-    $instance->entityTypeManager = $container->get('entity_type.manager');
     return $instance;
   }
 

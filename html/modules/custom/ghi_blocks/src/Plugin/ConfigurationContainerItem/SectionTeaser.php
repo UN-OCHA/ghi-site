@@ -4,7 +4,6 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a section teaser item for configuration containers.
@@ -16,22 +15,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class SectionTeaser extends ConfigurationContainerItemPluginBase {
-
-  /**
-   * The entity type manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->entityTypeManager = $container->get('entity_type.manager');
-    return $instance;
-  }
 
   /**
    * {@inheritdoc}
