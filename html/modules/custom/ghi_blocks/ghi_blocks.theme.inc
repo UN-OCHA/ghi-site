@@ -248,9 +248,5 @@ function ghi_blocks_preprocess_section_switcher(&$variables) {
  * Preprocess a plan status element.
  */
 function ghi_blocks_preprocess_plan_status(&$variables) {
-  /** @var \Drupal\ghi_plans\Entity\Plan $plan */
-  $plan = $variables['plan_entity']['#plan_entity'];
-  $label = $plan->getPlanStatusLabel();
-  $variables['status'] = strtolower($label);
-  $variables['status_label'] = $label;
+  $variables['status'] = Html::getClass($variables['status']);
 }

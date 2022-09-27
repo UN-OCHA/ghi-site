@@ -46,6 +46,16 @@ class PlanOverviewPlan extends BaseObject {
   }
 
   /**
+   * Get the plan status if an entity is available.
+   *
+   * @return string|null
+   *   The plan status as a human readable string, or NULL.
+   */
+  public function getPlanStatus() {
+    return $this->getEntity()?->getPlanStatusLabel() ?? NULL;
+  }
+
+  /**
    * Get the base object entity corresponding to this API object.
    *
    * @return \Drupal\ghi_plans\Entity\Plan

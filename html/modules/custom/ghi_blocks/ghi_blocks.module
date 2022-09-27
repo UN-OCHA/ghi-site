@@ -118,7 +118,10 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'template' => 'plan-cluster-contacts',
     ],
     'plan_status' => [
-      'render element' => 'plan_entity',
+      'variables' => [
+        'status' => NULL,
+        'status_label' => NULL,
+      ],
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'plan-status',
     ],

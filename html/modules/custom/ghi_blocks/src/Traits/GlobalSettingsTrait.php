@@ -163,7 +163,7 @@ trait GlobalSettingsTrait {
       // Replace plan name with short name if available.
       $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
         /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
-        $plan = $plans[$plan_id];
+        $plan = $plans[$plan_id] ?? NULL;
         if (!$plan) {
           return $row;
         }
@@ -177,7 +177,7 @@ trait GlobalSettingsTrait {
     $section_manager = $this->getSectionManager();
     $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans, $section_manager, &$cache_tags) {
       /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
-      $plan = $plans[$plan_id];
+      $plan = $plans[$plan_id] ?? NULL;
       if (!$plan || !$plan->getEntity()) {
         return $row;
       }
@@ -198,7 +198,7 @@ trait GlobalSettingsTrait {
       unset($header['type']);
       $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
         /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
-        $plan = $plans[$plan_id];
+        $plan = $plans[$plan_id] ?? NULL;
         unset($row['type']);
         if (!$plan) {
           return $row;
@@ -256,7 +256,7 @@ trait GlobalSettingsTrait {
       }, $rows);
     }
     $status_items = array_filter(array_map(function ($row) {
-      $columns = array_filter($row['status']['data']['content']);
+      $columns = array_filter($row['status']['data']['content'] ?? []);
       return empty($columns) ? NULL : $columns;
     }, $rows));
     if (empty($status_items)) {
