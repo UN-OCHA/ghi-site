@@ -103,6 +103,13 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   protected $entityTypeManager;
 
   /**
+   * The entity field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManager
+   */
+  protected $entityFieldManager;
+
+  /**
    * The file system service.
    *
    * @var \Drupal\Core\File\FileSystemInterface
@@ -121,6 +128,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     $instance->keyValueFactory = $container->get('keyvalue');
     $instance->endpointQuery = $container->get('hpc_api.endpoint_query');
     $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->entityFieldManager = $container->get('entity_field.manager');
     $instance->fileSystem = $container->get('file_system');
 
     // Mostly used to support meta data in downloads.

@@ -11,6 +11,9 @@ use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
+use Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock;
+use Drupal\hpc_common\Helpers\FieldHelper;
+use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
@@ -170,6 +173,9 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       // Look for "reached" but allow to fallback to "measure". See HPC-6044.
       $reached = $plan->getCaseloadValue('reached', 'Reached') ?? $plan->getCaseloadValue('measure', 'Measure');
       $reached_percent = !empty($reached) && !empty($target) ? 100 / $target * $reached : NULL;
+      if ($plan instanceof PlanOverviewPlanMock) {
+        $reached_percent = ((float) $plan->getCaseloadValue('reached_percent')) * 100;
+      }
       $expected_reached = $plan->getCaseloadValue('expectedReach', 'Expected Reach');
 
       // Setup the financial values.
@@ -182,8 +188,14 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
 
       // Setup footnotes and document links.
       $footnotes = $plan_entity ? $this->getFootnotesForPlanBaseobject($plan_entity) : NULL;
+      if ($footnotes === NULL && $plan instanceof PlanOverviewPlanMock) {
+        $footnotes = (object) [
+          'requirements' => $plan->getRequirementsFootnote(),
+        ];
+      }
       $document_uri = $plan_entity ? ($plan_entity->get('field_plan_document_link')->uri ?? NULL) : NULL;
       $link_to_fts = $plan_entity ? $plan_entity->canLinkToFts() : FALSE;
+      $plan_status = $plan->getPlanStatus();
 
       // Setup the column values.
       $value_in_need = [
@@ -288,9 +300,10 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data' => [
             '#type' => 'container',
             'content' => array_filter([
-              'plan_status' => $plan_entity ? [
+              'plan_status' => $plan_status ? [
                 '#theme' => 'plan_status',
-                '#plan_entity' => $plan_entity,
+                '#status' => strtolower($plan_status),
+                '#status_label' => $plan_status,
               ] : NULL,
               'document' => $document_uri ? [
                 '#type' => 'html_tag',
@@ -327,6 +340,26 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       'rows' => $rows,
       'cache_tags' => $cache_tags,
     ];
+  }
+
+  /**
+   * Get the custom plan rows if configured.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock
+   *   An array of mocked plan overview response objects.
+   */
+  private function getCustomPlanRows() {
+    $conf = $this->getBlockConfig();
+    $custom_rows = $conf['custom_rows']['rows'] ?? [];
+    $custom_rows = array_filter($custom_rows, function ($row) {
+      return !empty($row['plan_name']);
+    });
+    if (!empty($custom_rows)) {
+      foreach ($custom_rows as $key => $custom_row) {
+        $custom_rows[$key] = new PlanOverviewPlanMock((object) $custom_row);
+      }
+    }
+    return $custom_rows;
   }
 
   /**
@@ -384,6 +417,9 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'total_funding' => FALSE,
         'fts_icon' => TRUE,
         'comment' => NULL,
+      ],
+      'custom_rows' => [
+        'rows' => [],
       ],
     ];
   }
@@ -512,6 +548,70 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       'soft_limit',
     ]));
 
+    $tooltip_full_amount = ThemeHelper::render([
+      '#theme' => 'hpc_tooltip',
+      '#tooltip' => $this->t('Enter full integers without any number formatting, e.g. 1000000.'),
+    ], FALSE);
+    $tooltip_full_decimal = ThemeHelper::render([
+      '#theme' => 'hpc_tooltip',
+      '#tooltip' => $this->t('Enter decimals between 0 and 1, using a point as the decimal separator, e.g. 0.4.'),
+    ], FALSE);
+    $plan_types = $this->getAvailablePlanTypes(TRUE);
+    $plan_status_options = FieldHelper::getBooleanFieldOptions('base_object', 'plan', 'field_plan_status');
+
+    $form['custom_rows'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Custom rows'),
+      '#description' => $this->t('You can add custom rows that will be displayed as part of the plan table.'),
+      '#tree' => TRUE,
+      '#group' => 'tabs',
+    ];
+    $form['custom_rows']['rows'] = [
+      '#type' => 'custom_table_rows',
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+        'custom_rows',
+        'rows',
+      ]),
+      '#columns' => [
+        'plan_name' => $this->t('Plan name'),
+        'plan_type' => [
+          '#type' => 'select',
+          '#title' => $this->t('Plan type'),
+          '#options' => $plan_types,
+        ],
+        'plan_status' => [
+          '#type' => 'select',
+          '#title' => $this->t('Plan status'),
+          '#options' => $plan_status_options,
+        ],
+        'people_in_need' => $this->t('In Need'),
+        'people_target' => $this->t('Targeted'),
+        'estimated_reached' => $this->t('Estimated Reach'),
+        'people_reached_percent' => $this->t('% Reached'),
+        'total_funding' => $this->t('Funding'),
+        'total_requirements' => $this->t('Required'),
+        'funding_progress' => $this->t('Coverage'),
+        'required_footnote' => [
+          '#type' => 'textarea',
+          '#title' => $this->t('Required footnote'),
+        ],
+      ],
+      '#column_tooltips' => [
+        'people_in_need' => $tooltip_full_amount,
+        'people_target' => $tooltip_full_amount,
+        'estimated_reached' => $tooltip_full_amount,
+        'people_reached_percent' => $tooltip_full_decimal,
+        'total_funding' => $tooltip_full_amount,
+        'total_requirements' => $tooltip_full_amount,
+        'funding_progress' => $tooltip_full_decimal,
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="basic[plans][include]"]' => ['value' => 'hrp_status'],
+        ],
+      ],
+    ];
+
     // @codingStandardsIgnoreStart
     // $global_plan_options = hpc_entities_get_available_global_plan_options();
     // $include_global_plan_default = $this->getDefaultFormValueFromFormState($form_state, ['global_plan', 'global_plan']) ?: FALSE;
@@ -596,6 +696,10 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
    */
   private function getPlans() {
     $plans = $this->getPlanQuery()->getPlans();
+    $custom_rows = $this->getCustomPlanRows();
+    if (!empty($custom_rows)) {
+      $plans = array_merge($plans, $custom_rows);
+    }
     if (empty($plans)) {
       return $plans;
     }

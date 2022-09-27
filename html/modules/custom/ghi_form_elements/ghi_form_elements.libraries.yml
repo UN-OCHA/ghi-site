@@ -10,6 +10,11 @@ states_regex:
   js:
     js/states.regex.js: {}
 
+custom_table_rows:
+  css:
+    component:
+      css/custom_table_rows.css: {}
+
 entity_select:
   css:
     component:
