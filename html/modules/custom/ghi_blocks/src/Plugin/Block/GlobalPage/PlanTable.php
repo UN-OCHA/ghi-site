@@ -198,15 +198,19 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       $plan_status = $plan->getPlanStatus();
 
       // Setup the column values.
-      $value_in_need = [
+      $value_in_need = $in_need ? [
         '#theme' => 'hpc_amount',
         '#amount' => $in_need,
         '#decimals' => $decimals,
+      ] : [
+        '#markup' => '-',
       ];
-      $value_targeted = [
+      $value_targeted = $target ? [
         '#theme' => 'hpc_amount',
         '#amount' => $target,
         '#decimals' => $decimals,
+      ] : [
+        '#markup' => '-',
       ];
       $value_expected_reach = [
         '#theme' => 'hpc_amount',
