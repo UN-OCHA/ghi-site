@@ -137,7 +137,8 @@ class CustomTableRows extends FormElement {
    */
   public static function processCustomTableRows(array &$element, FormStateInterface $form_state) {
     $element['#attached']['library'] = ['ghi_form_elements/custom_table_rows'];
-    $current_row = $form_state->get('current_row');
+    $current_row = $form_state->get('current_row') ?? NULL;
+    $edit_row = is_int($current_row) || $current_row === 'new';
 
     $wrapper_id = self::getWrapperId($element);
     $element['#prefix'] = '<div id="' . $wrapper_id . '">';
@@ -150,11 +151,12 @@ class CustomTableRows extends FormElement {
     else {
       $table_rows = $form_state->get('rows');
     }
+    $sortable = !$edit_row && !empty($table_rows);
 
     // Build the table header.
     $table_header = [];
     $table_header = ['columns' => 'Columns'];
-    if ($current_row === NULL) {
+    if ($sortable) {
       $table_header = array_merge($table_header, [
         'id' => [
           'data' => t('Id'),
@@ -170,7 +172,7 @@ class CustomTableRows extends FormElement {
       '#caption' => $element['#description'] ?? NULL,
       '#header' => $table_header,
       '#empty' => t('Nothing has been added yet'),
-      '#tabledrag' => $current_row === NULL ? [
+      '#tabledrag' => $sortable ? [
         [
           'action' => 'order',
           'relationship' => 'sibling',
@@ -190,14 +192,16 @@ class CustomTableRows extends FormElement {
         $element['rows'][$i] = self::buildTableRow($element, $form_state, $table_row, $i);
       }
     }
-    elseif ($current_row !== 'new') {
-      $row_index = $current_row;
-      $element['rows'][$row_index] = self::buildTableRow($element, $form_state, $table_rows[$row_index], $row_index, TRUE);
+    elseif ($edit_row) {
+      if (is_int($current_row)) {
+        $row_index = $current_row;
+        $element['rows'][$row_index] = self::buildTableRow($element, $form_state, $table_rows[$row_index], $row_index, TRUE);
+      }
+      elseif ($current_row === 'new') {
+        $element['rows'][count($table_rows)] = self::buildTableRow($element, $form_state, NULL, 'new', TRUE);
+      }
     }
-    elseif ($current_row === 'new') {
-      $element['rows'][count($table_rows)] = self::buildTableRow($element, $form_state, NULL, 'new', TRUE);
-    }
-    if ($current_row === NULL) {
+    if (!$edit_row) {
       $element['actions']['add'] = [
         '#type' => 'submit',
         '#value' => t('Add new row'),
