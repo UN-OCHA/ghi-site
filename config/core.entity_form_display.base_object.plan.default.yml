@@ -19,6 +19,7 @@ dependencies:
     - field.field.base_object.plan.field_plan_version_tag
     - field.field.base_object.plan.field_restricted
     - field.field.base_object.plan.field_short_name
+    - field.field.base_object.plan.field_visible_on_global_pages
     - field.field.base_object.plan.field_year
     - ghi_base_objects.base_object_type.plan
   module:
@@ -78,6 +79,7 @@ third_party_settings:
         - field_decimal_format
         - field_max_admin_level
         - field_link_to_fts
+        - field_visible_on_global_pages
       label: Settings
       region: content
       parent_name: group_tabs
@@ -254,6 +256,13 @@ content:
     settings:
       size: 60
       placeholder: ''
+    third_party_settings: {  }
+  field_visible_on_global_pages:
+    type: boolean_checkbox
+    weight: 14
+    region: content
+    settings:
+      display_label: true
     third_party_settings: {  }
   field_year:
     type: number

@@ -91,14 +91,15 @@ function ghi_plans_form_alter(&$form, FormStateInterface &$form_state, $form_id)
 function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterface &$form_state) {
   $allow_fields = [
     'field_decimal_format',
+    'field_footnotes',
+    'field_link_to_fts',
     'field_max_admin_level',
+    'field_operations_category',
     'field_plan_caseload',
     'field_plan_document_link',
     'field_plan_status',
     'field_short_name',
-    'field_link_to_fts',
-    'field_operations_category',
-    'field_footnotes',
+    'field_visible_on_global_pages',
   ];
   foreach (Element::children($form) as $element_key) {
     if (!in_array($element_key, $allow_fields) && $form[$element_key]['#type'] != 'actions') {

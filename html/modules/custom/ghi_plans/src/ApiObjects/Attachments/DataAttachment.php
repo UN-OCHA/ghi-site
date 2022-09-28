@@ -692,7 +692,7 @@ class DataAttachment extends AttachmentBase {
    *   An attachment prototype object.
    */
   protected static function fetchPrototypeForAttachment($attachment) {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query_handler */
     $query_handler = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('attachment_prototype_query');
     return $query_handler->getPrototypeByPlanAndId($attachment->planId, $attachment->attachmentPrototypeId);
   }

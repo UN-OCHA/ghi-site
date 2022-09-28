@@ -19,6 +19,7 @@ dependencies:
     - field.field.base_object.plan.field_plan_version_tag
     - field.field.base_object.plan.field_restricted
     - field.field.base_object.plan.field_short_name
+    - field.field.base_object.plan.field_visible_on_global_pages
     - field.field.base_object.plan.field_year
     - ghi_base_objects.base_object_type.plan
   module:
@@ -166,6 +167,16 @@ content:
       link_to_entity: false
     third_party_settings: {  }
     weight: 6
+    region: content
+  field_visible_on_global_pages:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 15
     region: content
   field_year:
     type: number_integer
