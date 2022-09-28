@@ -164,6 +164,10 @@ class SyncManager implements ContainerInjectionInterface {
         'property' => 'value',
         'callback' => [Plan::class, 'mapFtsLink'],
       ],
+      'visible_on_homepage' => [
+        'field' => 'field_visible_on_global_pages',
+        'property' => 'value',
+      ],
     ];
     $map['footnotes'] = [
       'field' => 'field_footnotes',

@@ -44,6 +44,9 @@ class PlanOverviewQuery extends EndpointQueryBase {
       $this->plans[$plan->id()] = $plan;
     }
 
+    // Filter by visibility settings.
+    $this->filterPlansByVisibilityOnGlobalPages($this->plans);
+
     uasort($this->plans, function ($a, $b) {
       return strnatcmp($a->name, $b->name);
     });
@@ -133,13 +136,44 @@ class PlanOverviewQuery extends EndpointQueryBase {
         'field_original_id' => array_keys($plans),
       ]);
     if (empty($result)) {
-      return $result;
+      return $caseload_overrides;
     }
     foreach ($result as $plan) {
+      /** @var \Drupal\ghi_plans\Entity\Plan $plan */
       $attachment_id = $plan->field_plan_caseload->attachment_id;
-      $caseload_overrides[$plan->field_original_id->value] = $attachment_id !== NULL ? (int) $attachment_id : NULL;
+      $caseload_overrides[$plan->getSourceId()] = $attachment_id !== NULL ? (int) $attachment_id : NULL;
     }
     return array_filter($caseload_overrides);
+  }
+
+  /**
+   * Filter the given list of plans by global visibility settings.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[] $plans
+   *   An array of plan objects.
+   */
+  private function filterPlansByVisibilityOnGlobalPages(array &$plans) {
+    if (empty($plans)) {
+      return;
+    }
+    $result = \Drupal::entityTypeManager()
+      ->getStorage('base_object')
+      ->loadByProperties([
+        'type' => 'plan',
+        'field_original_id' => array_keys($plans),
+        'field_visible_on_global_pages' => 1,
+      ]);
+    if (empty($result)) {
+      $plans = [];
+      return;
+    }
+    $plan_ids = array_map(function ($plan_entity) {
+      /** @var \Drupal\ghi_plans\Entity\Plan $plan_entity */
+      return $plan_entity->getSourceId();
+    }, $result);
+    $plans = array_filter($plans, function ($plan) use ($plan_ids) {
+      return in_array($plan->id, $plan_ids);
+    });
   }
 
 }

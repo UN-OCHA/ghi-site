@@ -77,7 +77,10 @@ function ghi_sections_form_node_section_edit_form_alter(&$form, FormStateInterfa
   // change it.
   $form['field_base_object']['#disabled'] = TRUE;
   $form['field_base_object']['widget'][0]['target_id']['#title'] .= ': ' . $object->type->entity->label();
-  $form['field_base_object']['widget'][0]['target_id']['#description'] = t('The base object cannot be changed after the initial creation of a section.');
+  $form['field_base_object']['widget'][0]['target_id']['#description'] = t('The base object cannot be changed after the initial creation of a section. <a href="@base_object_edit_url" target="_blank">Edit @label</a>', [
+    '@base_object_edit_url' => $object->toUrl('edit-form')->toString(),
+    '@label' => $object->label(),
+  ]);
 
   // Also disable the year field. Beeing able to change it would at least need
   // another validation for duplication of base object - year combinations, as
