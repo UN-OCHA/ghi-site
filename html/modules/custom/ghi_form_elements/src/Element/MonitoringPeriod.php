@@ -124,7 +124,7 @@ class MonitoringPeriod extends Checkboxes {
    *   An array of options for the monitoring periods.
    */
   public static function getReportingPeriodOptions($plan_id) {
-    $monitoring_periods = self::getReportingPeriods($plan_id);
+    $monitoring_periods = self::getReportingPeriods($plan_id, TRUE);
     return array_map(function ($period) {
       return ThemeHelper::render([
         '#theme' => 'hpc_reporting_period',

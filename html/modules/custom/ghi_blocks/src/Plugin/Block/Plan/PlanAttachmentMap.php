@@ -301,21 +301,54 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       // Display a variant drop-down for measurement metrics if variants are
       // present and if there this more than 1.
       if (!empty($item['variants']) && count($item['variants']) > 1 && $attachment->isMeasurementField($item['metric']->name->en)) {
-        $variant_selector = '';
         $variant_options = [];
         foreach ($item['variants'] as $variant_id => $variant) {
-          $variant_options[] = '<li data-variant-tab-label="' . $variant['tab_label'] . '" data-variant-id="' . $variant_id . '">' . $variant['label'] . '</li>';
+          $variant_options[] = [
+            '#type' => 'html_tag',
+            '#tag' => 'a',
+            '#attributes' => [
+              'data-variant-tab-label' => $variant['tab_label'],
+              'data-variant-id' => $variant_id,
+            ],
+            [
+              '#markup' => Markup::create($variant['label']),
+            ],
+          ];
         }
         $first_variant = reset($item['variants']);
-        $variant_selector = '<ul class="dropdown-menu">' . implode('', $variant_options) . '</ul>';
         $map['tabs']['#items'][] = [
-          '#markup' => Markup::create('<div class="dropdown"><a href="#" class="map-tab" data-map-index="' . $key . '">' . $item['label'] . '<span class="period-number">&nbsp#' . $first_variant['tab_label'] . '</span>' . '</a><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><svg class="icon icon--arrow-down"><use xlink:href="#arrow-down"></use></svg></a>' . $variant_selector . "</div>"),
+          [
+            '#type' => 'html_tag',
+            '#tag' => 'a',
+            '#attributes' => [
+              'class' => ['map-tab'],
+              'data-map-index' => $key,
+            ],
+            [
+              '#markup' => Markup::create($item['label']),
+            ],
+          ],
+          [
+            '#theme' => 'ghi_dropdown',
+            '#toggle_label' => '#' . $first_variant['tab_label'],
+            '#options' => $variant_options,
+          ],
         ];
       }
       else {
         // Otherwhise just display a tab link.
         $map['tabs']['#items'][] = [
-          '#markup' => Markup::create('<a href="#" class="map-tab" data-map-index="' . $key . '">' . $item['label'] . '</a>'),
+          [
+            '#type' => 'html_tag',
+            '#tag' => 'a',
+            '#attributes' => [
+              'class' => ['map-tab'],
+              'data-map-index' => $key,
+            ],
+            [
+              '#markup' => Markup::create($item['label']),
+            ],
+          ],
         ];
       }
     }

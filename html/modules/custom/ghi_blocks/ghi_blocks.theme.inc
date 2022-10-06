@@ -250,3 +250,10 @@ function ghi_blocks_preprocess_section_switcher(&$variables) {
 function ghi_blocks_preprocess_plan_status(&$variables) {
   $variables['status'] = Html::getClass($variables['status']);
 }
+
+/**
+ * Preprocess a dropdown element.
+ */
+function ghi_blocks_preprocess_ghi_dropdown(&$variables) {
+  $variables['dropdown_id'] = Html::getUniqueId('ghi-dropdown');
+}

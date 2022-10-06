@@ -53,6 +53,29 @@
   }
 }
 
+// A button that should not look like a button.
+.ghi-dropdown__btn {
+  color: inherit !important;
+  border: 0;
+  background-color: transparent;
+  font-size: inherit;
+
+  & + div.cd-dropdown {
+    position: absolute;
+    border: 1px solid var(--cd-default-border-color);
+    background-color: var(--cd-white);
+
+    & > div.ghi-dropdown--content {
+      display: flex;
+      flex-direction: column;
+
+      a {
+        color: var(--cd-default-text-color);
+      }
+    }
+  }
+}
+
 // A button that looks like a button.
 button.ghi-download__btn,
 button.btn--download {
@@ -80,7 +103,8 @@ button.btn--download {
 }
 
 button.ghi-download__btn + .cd-dropdown,
-button.btn--download + .cd-dropdown {
+button.btn--download + .cd-dropdown,
+button.ghi-dropdown__btn + .cd-dropdown {
   position: absolute;
 
   div {

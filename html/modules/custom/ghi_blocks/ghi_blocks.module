@@ -126,6 +126,15 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'plan-status',
     ],
+    'ghi_dropdown' => [
+      'variables' => [
+        'label' => NULL,
+        'toggle_label' => NULL,
+        'options' => [],
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'dropdown',
+    ],
   ];
 }
 

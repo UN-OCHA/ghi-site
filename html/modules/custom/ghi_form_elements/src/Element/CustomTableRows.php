@@ -110,7 +110,7 @@ class CustomTableRows extends FormElement {
         // Sort the stored rows according to the submitted weights.
         $rows = $form_state->get('rows');
         uksort($rows, function ($key1, $key2) use ($weights) {
-          return $weights[$key1] > $weights[$key2] ? 1 : -1;
+          return $weights[$key1] - $weights[$key2];
         });
         // Update the stored rows.
         $form_state->set('rows', array_values($rows));

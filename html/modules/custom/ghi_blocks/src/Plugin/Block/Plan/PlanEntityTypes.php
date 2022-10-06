@@ -313,7 +313,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
       }
     }
     uksort($options, function ($ref_code_a, $ref_code_b) use ($weight) {
-      return $weight[$ref_code_a] > $weight[$ref_code_b];
+      return $weight[$ref_code_a] - $weight[$ref_code_b];
     });
     return $options;
   }

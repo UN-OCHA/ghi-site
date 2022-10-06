@@ -278,68 +278,61 @@
   }
 
   .map-tabs {
-    height: 2rem;
+    height: auto;
+    background-color: var(--cd-default-text-color);
 
     ul {
+      display: flex;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      gap: 2rem;
       list-style-type: none;
 
       li {
-        display: inline-block;
-        margin: 0;
-        padding: 0 10px 0 10px;
-        border-right: 1px solid var(--hpc-brown);
-        line-height: 14px;
+        position: relative;
+        height: 2.5rem;
+        padding: 0.5rem 0;
+        color: var(--cd-white);
+        font-size: var(--cd-font-size--small);
 
         a {
-          color: var(--cd-default-text-color);
-          font-size: var(--cd-font-size--small);
-          font-weight: 400;
+          cursor: pointer;
+          text-decoration: none;
+          color: var(--cd-white);
+          font-size: inherit;
         }
 
-        &.active a {
-          color: var(--cd-primary-color);
-        }
+        .ghi-dropdown__btn + div.cd-dropdown {
+          position: absolute;
+          z-index: 101;
+          top: 2.5rem;
+          left: -0.3rem;
+          border-top: 0;
 
-        &:first-child {
-          padding-left: 0;
-        }
+          div.ghi-dropdown--content {
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            border-top: 0;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
 
-        &:last-child {
-          padding-right: 0;
-          border-right: none;
-        }
-
-        .dropdown {
-          .icon--arrow-down {
-            fill: var(--hpc-brown);
-            margin-left: 5px;
-          }
-
-          ul.dropdown-menu {
-            z-index: map-get($zindex, dropdown-over-modals);
-            top: 150%;
-            right: 0;
-            left: auto;
-
-            li {
-              width: 100%;
-              padding: 0.5rem;
-              text-align: right;
+            a {
+              display: inline-block;
+              padding: 0.3rem;
               white-space: nowrap;
-              border-right: none;
 
               &:hover {
                 cursor: pointer;
-                background: #d5d5d5;
-              }
-              &.active {
-                color: var(--cd-primary-color);
+                background-color: var(--cd-ocha-yellow);
               }
             }
           }
         }
-        &.active .dropdown .icon {
-          fill: var(--cd-primary-color);
+
+        &.active {
+          border-bottom: 4px solid var(--cd-ocha-yellow);
         }
       }
     }
@@ -347,50 +340,6 @@
 
   .donut {
     margin-top: 0.5rem;
-
-    .map-tabs {
-      margin-bottom: 0.5rem;
-
-      ul {
-        margin: 0;
-
-        li {
-          display: inline-block;
-          margin: 0;
-          margin-right: 0.5rem;
-          padding: 0.5rem 1rem;
-          border-right: none;
-          background-color: var(--cd-grey--light);
-          line-height: 14px;
-
-          a {
-            text-decoration: none;
-            text-transform: uppercase;
-            color: var(--cd-default-text-color);
-            font-size: var(--cd-font-size--small);
-            font-weight: 600;
-          }
-
-          &.active {
-            background-color: var(--cd-primary-color);
-          }
-          &:last-child {
-            margin-right: 0;
-            border-right: none;
-          }
-
-          a.mobile {
-            display: none;
-          }
-        }
-      }
-
-      .download-link-wrapper {
-        position: relative;
-        display: inline-block;
-        margin-top: 0.2rem;
-      }
-    }
 
     .map-legend {
       position: absolute;
