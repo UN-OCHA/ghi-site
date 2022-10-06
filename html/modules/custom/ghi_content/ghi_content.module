@@ -73,7 +73,7 @@ function ghi_content_theme($existing, $type, $theme, $path) {
  */
 function ghi_content_batch_alter(&$batch) {
   $targeted_callback = '\Drupal\migrate_tools\MigrateBatchExecutable::batchProcessImport';
-  $targeted_migration = 'articles_gho';
+  $targeted_migration = 'articles_hpc_content_module';
   $current_set = $batch['current_set'];
   $operations = &$batch['sets'][$current_set]['operations'];
   $callback = $operations[0][0] ?? NULL;
@@ -372,7 +372,7 @@ function ghi_content_local_actions_render_alter(&$data, $route_appears) {
     }
 
     $migrate_last_imported_store = \Drupal::keyValue('migrate_last_imported');
-    $last_imported = $migrate_last_imported_store->get('articles_gho');
+    $last_imported = $migrate_last_imported_store->get('articles_hpc_content_module');
     $last_imported = $last_imported ? intval($last_imported / 1000) : NULL;
 
     /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */

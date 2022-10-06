@@ -24,7 +24,7 @@ use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
  * @code
  * $form['my_element'] = [
  *  '#type' => 'remote_article_autocomplete',
- *  '#remote_source' => 'gho_ncms',
+ *  '#remote_source' => 'hpc_content_module',
  *  '#default_value' => $article,
  * ];
  * @endcode
