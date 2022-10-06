@@ -510,7 +510,7 @@ class ImportManager implements ContainerInjectionInterface {
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
    *
-   * @return array
+   * @return \Drupal\layout_builder\Section[]|null
    *   An array of layout builder sections.
    */
   private function getNodeSections(NodeInterface $node) {

@@ -2,22 +2,22 @@
 
 namespace Drupal\ghi_content_test\Plugin\RemoteSource;
 
-use Drupal\ghi_content\RemoteSource\RemoteSourceBaseGho;
-use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\ghi_content\RemoteContent\Gho\RemoteArticle;
+use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
+use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
+use Drupal\ghi_content\RemoteSource\RemoteSourceBaseHpcContentModule;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides a remote source for the GHO NCMS.
+ * Mocks a remote source for the HPC Content Module.
  *
  * @RemoteSource(
- *   id = "gho_ncms_test",
- *   label = @Translation("GHO NCMS (for tests)"),
- *   description = @Translation("Import data directly from the GHO NCMS website."),
+ *   id = "hpc_content_module_test",
+ *   label = @Translation("HPC Content Module (for tests)"),
+ *   description = @Translation("Import data directly from the HPC Content Module."),
  * )
  */
-class GhoNcmsTest extends RemoteSourceBaseGho implements RemoteSourceInterface, ContainerFactoryPluginInterface {
+class HpcContentModuleTest extends RemoteSourceBaseHpcContentModule implements RemoteSourceInterface, ContainerFactoryPluginInterface {
 
   /**
    * The extension path resolver.

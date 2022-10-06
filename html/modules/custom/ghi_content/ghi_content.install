@@ -8,6 +8,7 @@
 use Drupal\Core\File\FileSystem;
 use Drupal\Core\Utility\UpdateException;
 use Drupal\ghi_content\ContentManager\ArticleManager;
+use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 
 /**
  * Create thumbnail directory for articles.
@@ -18,5 +19,93 @@ function ghi_content_update_9001(&$sandbox) {
   $directory = ArticleManager::THUMBNAIL_DIRECTORY;
   if (!$file_system->prepareDirectory($directory, FileSystem::CREATE_DIRECTORY)) {
     throw new UpdateException('Directory not created');
+  }
+}
+
+/**
+ * Update remote sources config object.
+ */
+function ghi_content_update_9002(&$sandbox) {
+  $config = \Drupal::configFactory()->getEditable('ghi_content.remote_sources');
+  $configured_remote_sources = $config->getRawData();
+  if (array_key_exists('gho_ncms', $configured_remote_sources)) {
+    $configured_remote_sources['hpc_content_module'] = $configured_remote_sources['gho_ncms'];
+    unset($configured_remote_sources['gho_ncms']);
+    $config->setData($configured_remote_sources);
+    $config->save(TRUE);
+  }
+}
+
+/**
+ * Update remote source for articles.
+ */
+function ghi_content_update_9003(&$sandbox) {
+  /** @var \Drupal\node\NodeInterface[] $articles */
+  $articles = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+    'type' => 'article',
+    'field_remote_article.remote_source' => 'gho_ncms',
+  ]);
+  foreach ($articles as $article) {
+    $article->get('field_remote_article')->remote_source = 'hpc_content_module';
+    $article->save();
+  }
+  return t('Updated remote sources for @count articles', [
+    '@count' => count($articles),
+  ]);
+}
+
+/**
+ * Update remote source for paragraph components.
+ */
+function ghi_content_update_9004(&$sandbox) {
+  $count = 0;
+  /** @var \Drupal\node\NodeInterface[] $nodes */
+  $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple();
+  foreach ($nodes as $node) {
+    if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+      continue;
+    }
+    $sections = $node->get(OverridesSectionStorage::FIELD_NAME)->getValue();
+    if (empty($sections)) {
+      continue;
+    }
+    /** @var \Drupal\layout_builder\Section $section */
+    $section = &$sections[0]['section'];
+    $components = $section->getComponents();
+    if (empty($components)) {
+      continue;
+    }
+    foreach ($components as $component) {
+      if ($component->getPluginId() !== 'paragraph') {
+        continue;
+      }
+      $configuration = $component->get('configuration');
+      if ($configuration['hpc']['article_select']['article']['remote_source'] != 'gho_ncms') {
+        continue;
+      }
+      $configuration['hpc']['article_select']['article']['remote_source'] = 'hpc_content_module';
+      $component->setConfiguration($configuration);
+    }
+    $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+    $node->save();
+    $count++;
+  }
+  return t('Updated remote sources for @count nodes', [
+    '@count' => $count,
+  ]);
+}
+
+/**
+ * Rename migration tables to account for changed migration id.
+ */
+function ghi_content_update_9005(&$sandbox) {
+  $table_map = [
+    'migrate_map_articles_gho' => 'migrate_map_articles_hpc_content_module',
+    'migrate_message_articles_gho' => 'migrate_message_articles_hpc_content_module',
+  ];
+  foreach ($table_map as $current_name => $new_name) {
+    if (\Drupal::database()->schema()->tableExists($current_name)) {
+      \Drupal::database()->schema()->renameTable($current_name, $new_name);
+    }
   }
 }

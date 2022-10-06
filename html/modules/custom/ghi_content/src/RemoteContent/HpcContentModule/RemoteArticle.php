@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ghi_content\RemoteContent\Gho;
+namespace Drupal\ghi_content\RemoteContent\HpcContentModule;
 
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_content\RemoteContent\RemoteArticleBase;

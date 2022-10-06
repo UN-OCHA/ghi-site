@@ -1,11 +1,11 @@
-id: articles_gho
-label: Articles from the GHO NCMS backend
+id: articles_hpc_content_module
+label: Articles from the HPC Content Module backend
 migration_group: ncms
 migration_tags:
   - 'NCMS'
 source:
   track_changes: true
-  remote_source: gho_ncms
+  remote_source: hpc_content_module
   fields:
     -
       name: id
@@ -44,7 +44,7 @@ process:
     source: updated
   field_remote_article/remote_source:
     plugin: default_value
-    default_value: gho_ncms
+    default_value: hpc_content_module
   field_remote_article/article_id: id
 destination:
   plugin: 'entity:node'

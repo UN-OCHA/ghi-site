@@ -5,7 +5,7 @@ namespace Drupal\Tests\ghi_content\Kernel;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\ghi_content\Import\ImportManager;
-use Drupal\ghi_content\RemoteContent\Gho\RemoteArticle;
+use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Section;
@@ -101,7 +101,7 @@ class ImportManagerTest extends KernelTestBase {
     ]);
 
     // Mock the remote source.
-    $remote_source = $this->createMock('Drupal\ghi_content\Plugin\RemoteSource\GhoNcms');
+    $remote_source = $this->createMock('Drupal\ghi_content\Plugin\RemoteSource\HpcContentModule');
 
     // Mock the article to be imported.
     $article = new RemoteArticle((object) [
@@ -178,7 +178,7 @@ class ImportManagerTest extends KernelTestBase {
     ]);
 
     // Mock the remote source.
-    $remote_source = $this->createMock('Drupal\ghi_content\Plugin\RemoteSource\GhoNcms');
+    $remote_source = $this->createMock('Drupal\ghi_content\Plugin\RemoteSource\HpcContentModule');
 
     // Mock the article to be imported.
     $article = new RemoteArticle((object) [

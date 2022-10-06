@@ -12,7 +12,7 @@ use Drupal\Core\Render\Element\Select;
  * @code
  * $form['my_element'] = [
  *  '#type' => 'remote_source',
- *  '#default_value' => 'gho_ncms',
+ *  '#default_value' => 'hpc_content_module',
  * ];
  * @endcode
  *

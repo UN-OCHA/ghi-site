@@ -4,8 +4,8 @@ namespace Drupal\ghi_content\RemoteSource;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\ghi_content\RemoteContent\Gho\RemoteArticle;
-use Drupal\ghi_content\RemoteContent\Gho\RemoteParagraph;
+use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
+use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteParagraph;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\ghi_content\RemoteResponse\RemoteResponse;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
@@ -14,9 +14,9 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ServerException;
 
 /**
- * GHO specific remote source base class.
+ * HPC Content Module specific remote source base class.
  */
-abstract class RemoteSourceBaseGho extends RemoteSourceBase {
+abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
 
   use SimpleCacheTrait;
 
@@ -135,7 +135,7 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
       $headers['hid-user'] = $hid_user_id;
     }
 
-    $cookies = ['gho_access' => $this->getRemoteAccessKey()];
+    $cookies = ['access_key' => $this->getRemoteAccessKey()];
     $jar = CookieJar::fromArray($cookies, parse_url($this->getRemoteBaseUrl(), PHP_URL_HOST));
     $post_args = [
       'body' => $body,
@@ -312,6 +312,16 @@ abstract class RemoteSourceBaseGho extends RemoteSourceBase {
     ];
 
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfiguration(array $configuration) {
+    if (empty($configuration['access_key']) && !empty($this->getRemoteAccessKey())) {
+      $configuration['access_key'] = $this->getRemoteAccessKey();
+    }
+    parent::setConfiguration($configuration);
   }
 
   /**

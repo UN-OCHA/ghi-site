@@ -190,7 +190,7 @@ class ArticleListController extends ControllerBase {
     // @todo Make this work with more than a single migration. One way to do
     // this, would be to fetch all definitions and then filter by the source
     // plugin used (RemoteSourceGraphQL).
-    $migration = $this->migrationPluginManager->createInstance('articles_gho');
+    $migration = $this->migrationPluginManager->createInstance('articles_hpc_content_module');
     if (empty($migration)) {
       return [
         '#markup' => $this->t('There was an error processing your request. Please contact an administrator.'),

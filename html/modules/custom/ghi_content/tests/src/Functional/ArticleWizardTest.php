@@ -58,7 +58,7 @@ class ArticleWizardTest extends BrowserTestBase {
    */
   public function testArticleWizard() {
     // Fetch the autocomplete results first.
-    $autocomplete_url = $this->getAbsoluteUrl('/content/remote/gho_ncms_test/search-article');
+    $autocomplete_url = $this->getAbsoluteUrl('/content/remote/hpc_content_module_test/search-article');
     $autocomplete_result = $this->drupalGet($autocomplete_url, [
       'query' => [
         'q' => 'Global',
@@ -77,7 +77,7 @@ class ArticleWizardTest extends BrowserTestBase {
     $this->assertSession()->pageTextNotContains('Select the team that will be responsible for this article.');
     $this->assertSession()->pageTextNotContains('Optional: Change the title for this article.');
 
-    $this->assertSession()->elementExists('css', 'select[data-drupal-selector="edit-source"]')->selectOption('gho_ncms_test');
+    $this->assertSession()->elementExists('css', 'select[data-drupal-selector="edit-source"]')->selectOption('hpc_content_module_test');
     $this->assertSession()->buttonExists('Next')->click();
 
     $this->assertSession()->pageTextContains('Type the title of an article to see suggestions.');
@@ -106,7 +106,7 @@ class ArticleWizardTest extends BrowserTestBase {
   public function testArticleDuplicateRejected() {
 
     // Fetch the autocomplete results first.
-    $autocomplete_url = $this->getAbsoluteUrl('/content/remote/gho_ncms_test/search-article');
+    $autocomplete_url = $this->getAbsoluteUrl('/content/remote/hpc_content_module_test/search-article');
     $autocomplete_result = $this->drupalGet($autocomplete_url, [
       'query' => [
         'q' => 'Global',
@@ -122,7 +122,7 @@ class ArticleWizardTest extends BrowserTestBase {
       'title' => $data[0]['label'],
       ArticleManager::REMOTE_ARTICLE_FIELD => [
         0 => [
-          'remote_source' => 'gho_ncms_test',
+          'remote_source' => 'hpc_content_module_test',
           'article_id' => 1,
         ],
       ],
@@ -130,7 +130,7 @@ class ArticleWizardTest extends BrowserTestBase {
 
     $this->drupalGet('/node/add/article');
 
-    $this->assertSession()->elementExists('css', 'select[data-drupal-selector="edit-source"]')->selectOption('gho_ncms_test');
+    $this->assertSession()->elementExists('css', 'select[data-drupal-selector="edit-source"]')->selectOption('hpc_content_module_test');
     $this->assertSession()->buttonExists('Next')->click();
 
     $this->getSession()->getPage()->fillField('article', $data[0]['value']);
