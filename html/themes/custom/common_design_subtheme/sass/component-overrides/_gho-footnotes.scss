@@ -1,0 +1,17 @@
+#main-content {
+  .gho-footnote-list__wrapper[data-visible] {
+    width: calc(100% + 68px);
+    padding: 1rem 0 1rem 114px;
+    transform: translateX(-114px);
+  }
+  [dir="rtl"] .gho-footnote-list__wrapper[data-visible] {
+    padding: 1rem 114px 1rem 0;
+    transform: translateX(114px);
+  }
+
+  @media screen and (max-width: 768px) {
+    .gho-footnote-list__wrapper[data-visible] {
+      width: calc(100% + 102px);
+    }
+  }
+}
