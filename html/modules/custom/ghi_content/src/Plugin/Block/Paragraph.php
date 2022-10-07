@@ -202,7 +202,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
       'library' => $theme_components,
     ];
 
-    if (!$internal_preview && $this->shouldLinkToArticlePage()) {
+    if (!$internal_preview && $this->canLinkToArticlePage()) {
       $article_node = $this->getArticlePage();
       $link = $article_node->toLink($this->t('Read more'));
       $link->getUrl()->setOptions([
@@ -218,6 +218,13 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
           'class' => ['content-width'],
         ],
         0 => $link->toRenderable(),
+      ];
+    }
+
+    if ($this->shouldLinkToArticlePage()) {
+      $article_node = $this->getArticlePage();
+      $build['#cache'] = [
+        'tags' => $article_node->getCacheTags(),
       ];
     }
 
@@ -460,11 +467,24 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
    * See if a paragraph block should have a "Read more" link.
    *
    * @return bool
-   *   TRUE if the article page can be linked to, FALSE otherwhise.
+   *   TRUE if the article page should be linked to, FALSE otherwhise.
    */
   private function shouldLinkToArticlePage() {
     $conf = $this->getBlockConfig();
-    if (empty($conf['paragraph']['link_to_article'])) {
+    return !empty($conf['paragraph']['link_to_article']);
+  }
+
+  /**
+   * See if a paragraph block can have a "Read more" link.
+   *
+   * This depends on configuration (whether the paragraph should have a link)
+   * and the publication status of the linked article.
+   *
+   * @return bool
+   *   TRUE if the article page can be linked to, FALSE otherwhise.
+   */
+  private function canLinkToArticlePage() {
+    if (!$this->shouldLinkToArticlePage()) {
       return FALSE;
     }
     $article_node = $this->getArticlePage();
