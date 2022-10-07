@@ -50,6 +50,7 @@ class DocumentLink extends ConfigurationContainerItemPluginBase {
     $element['value'] = [
       '#type' => 'document_link',
       '#default_value' => array_key_exists('value', $this->config) ? $this->config['value'] : NULL,
+      '#unique_filetype' => FALSE,
     ];
 
     return $element;
