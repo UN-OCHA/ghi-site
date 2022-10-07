@@ -2,9 +2,11 @@
 
 namespace Drupal\ghi_blocks\Element;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Render\Element\FormElement;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
 
@@ -47,6 +49,9 @@ class DocumentLink extends FormElement {
       ],
       '#theme_wrappers' => ['form_element'],
       '#date' => TRUE,
+      // Whether to impose a unique file type for the different language
+      // specific document links.
+      '#unique_filetype' => FALSE,
     ];
   }
 
@@ -84,6 +89,16 @@ class DocumentLink extends FormElement {
    * any arbitrary data inside the form_state object.
    */
   public static function processDocumentLink(array &$element, FormStateInterface $form_state) {
+    $form_state->set('file_types', []);
+
+    // Define hidden table fields. These are fields that are filled in
+    // automatically by the validate handler once the url has been
+    // analysed.
+    $hidden_fields = [
+      'filetype',
+      'mimetype',
+      'filesize',
+    ];
 
     $element['date'] = [
       '#type' => 'date',
@@ -92,9 +107,14 @@ class DocumentLink extends FormElement {
       '#access' => $element['#date'],
     ];
 
+    $caption_lines = [t('Enter one link target per supported language. You can also temporarily disable some links.')];
+    if (!empty($element['#unique_filetype'])) {
+      $caption_lines[] = t('All urls must reference resources of the same file type.');
+    }
+
     $element['table_caption'] = [
       '#type' => 'markup',
-      '#markup' => t('Enter one link target per supported language. You can also temporarily disable some links.'),
+      '#markup' => Markup::create('<p>' . implode('<br />', $caption_lines) . '</p>'),
     ];
 
     $element['file_details'] = [
@@ -103,7 +123,10 @@ class DocumentLink extends FormElement {
       '#header' => [
         t('Language'),
         t('Url'),
-        t('Disabled'),
+        [
+          'data' => t('Disabled'),
+          'colspan' => count($hidden_fields) + 1,
+        ],
       ],
     ];
 
@@ -115,11 +138,10 @@ class DocumentLink extends FormElement {
       ];
       $element['file_details'][$key]['target_url'] = [
         '#type' => 'textfield',
-        '#title' => t('Target URL for @language', [
+        '#title' => t('URL for @language', [
           '@language' => $label,
         ]),
         '#title_display' => 'invisible',
-        // '#description' => t('Specify where the document is located'),
         '#default_value' => $details['target_url'] ?? NULL,
         '#maxlength' => 512,
         '#element_validate' => [
@@ -133,6 +155,15 @@ class DocumentLink extends FormElement {
         '#title_display' => 'invisible',
         '#default_value' => $details['disabled'] ?? NULL,
       ];
+      foreach ($hidden_fields as $hidden_field) {
+        $element['file_details'][$key][$hidden_field] = [
+          '#type' => 'hidden',
+          '#default_value' => $details[$hidden_field] ?? NULL,
+          '#wrapper_attributes' => [
+            'class' => 'hidden',
+          ],
+        ];
+      }
     }
     return $element;
   }
@@ -172,51 +203,61 @@ class DocumentLink extends FormElement {
       // Just fail silently.
     }
     if (!$response || $response->getStatusCode() !== 200) {
-      $form_state->setError($element, t('Failed to retrieve file information for <em>Target URL</em>.'));
+      $form_state->setError($element, t('Failed to retrieve information for the entered <em>URL</em>.'));
       return;
     }
-    $content_length = $response->getHeader('Content-Length') ?? NULL;
-    $content_type = $response->getHeader(('Content-Type')) ?? [];
 
-    $file_size = reset($content_length);
-    if (empty($file_size)) {
-      $form_state->setError($element, t('The <em>Target URL</em> field does not seem to contain a valid reference.'));
+    $content_type = $response->getHeader(('Content-Type')) ?? [];
+    $content_type = reset($content_type);
+    $content_length = $response->getHeader('Content-Length') ?? [];
+    $content_length = reset($content_length);
+
+    if (empty($content_type) || empty($content_length)) {
+      $form_state->setError($element, t('The entered <em>URL</em> does not seem to reference a valid resource.'));
+      return;
+    }
+
+    $is_webpage = strpos($content_type, 'text/html') !== FALSE;
+    if ($is_webpage) {
+      $file_type = 'html';
+      $mime_type = 'text/html';
     }
     else {
       $filename = $target_url;
-      $ext = pathinfo($filename, PATHINFO_EXTENSION);
-      $mime_type = reset($content_type);
+      $mime_type = $content_type;
       $mime_type_parts = explode('/', $mime_type);
       $file_type = end($mime_type_parts);
       if (strlen($file_type) > 4 || strpos($file_type, '.')) {
         // Prevent file types like
         // vnd.openxmlformats-officedocument.spreadsheetml.sheet.
-        $file_type = $ext;
+        $file_type = pathinfo($filename, PATHINFO_EXTENSION);
       }
-
-      // Check that all files in this document group have the same type.
-      if (!empty($file_ext_array) && !in_array($file_type, $file_ext_array)) {
-        $form_state->setError($element, t('The <em>Target URL</em> must use the same file type for all the Document details.'));
-      }
-
-      if (!$ext || !$mime_type) {
-        $form_state->setError($element, t('The <em>Target URL</em> does not seem to represent a valid document.'));
-      }
-
-      // @codingStandardsIgnoreStart
-      // $document['file_details'][$index]['filesize'] = $file_size;
-      // $document['file_details'][$index]['mimetype'] = $mime_type;
-      // $document['file_details'][$index]['filetype'] = $file_type;
-
-      // $form_state->setValue([
-      //   $form_state->get('current_subform'),
-      //   'documents',
-      //   $key,
-      // ], $document);
-      // @codingStandardsIgnoreEnd
-
-      $file_ext_array[] = $file_type;
     }
+
+    if (!$file_type || !$mime_type) {
+      $form_state->setError($element, t('The entered <em>URL</em> does not seem to represent a valid document.'));
+    }
+
+    // Check if all files in this document group have the same type.
+    $array_parents = $element['#array_parents'];
+    array_pop($array_parents);
+    array_pop($array_parents);
+    array_pop($array_parents);
+    $parent_element = NestedArray::getValue($form, $array_parents);
+    if (!empty($parent_element['#unique_filetype'])) {
+      $file_ext_array = $form_state->get('file_types');
+      if (!empty($file_ext_array) && !in_array($file_type, $file_ext_array)) {
+        $form_state->setError($element, t('All entered values for <em>URL</em> must reference resources of the same type.'));
+      }
+      $file_ext_array[] = $file_type;
+      $form_state->set('file_types', $file_ext_array);
+    }
+
+    $file_detail_parents = $element['#parents'];
+    array_pop($file_detail_parents);
+    $form_state->setValue(array_merge($file_detail_parents, ['filetype']), $file_type);
+    $form_state->setValue(array_merge($file_detail_parents, ['mimetype']), $mime_type);
+    $form_state->setValue(array_merge($file_detail_parents, ['filesize']), $content_length);
   }
 
 }

@@ -55,12 +55,13 @@ function ghi_blocks_preprocess_document_link_box(&$variables) {
     $variables['download_links'][] = ghi_blocks_build_document_download_link($document);
   }
 
-  // Create download dropdown text. All files should be of the same type as
-  // that is imposed by the validation logic in DocumentLink.php, but just to
-  // be sure, we check again here.
+  // Create download dropdown text. The files might be all of the same type but
+  // it's not guaranteed. It depends on how the 'document_link' form element is
+  // setup, which handles the link validation. So to be sure, we check again
+  // here.
   $shared_filetype = count(array_unique($filetypes)) == 1 ? reset($filetypes) : NULL;
   $variables['filetype'] = $shared_filetype ? strtoupper($shared_filetype) : NULL;
-  $variables['button_title'] = t('Download @filetype', ['@filetype' => strtoupper($shared_filetype)]);
+  $variables['button_title'] = t('Download @filetype', ['@filetype' => $shared_filetype ? strtoupper($shared_filetype) : NULL]);
   if ($shared_filetype && strtolower($shared_filetype) == 'html') {
     $variables['button_title'] = t('Visit external site');
   }
