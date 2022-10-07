@@ -29,6 +29,8 @@ class DocumentLink extends FormElement {
     '普通话' => '普通话',
   ];
 
+  const MAX_FILES = 6;
+
   /**
    * {@inheritdoc}
    */
@@ -123,6 +125,7 @@ class DocumentLink extends FormElement {
       '#header' => [
         t('Language'),
         t('Url'),
+        t('Short label'),
         [
           'data' => t('Disabled'),
           'colspan' => count($hidden_fields) + 1,
@@ -130,17 +133,20 @@ class DocumentLink extends FormElement {
       ],
     ];
 
-    foreach (self::LANGUAGES as $key => $label) {
+    for ($key = 0; $key < self::MAX_FILES; $key++) {
       $details = $element['#default_value']['file_details'][$key] ?? NULL;
       $element['file_details'][$key] = [];
       $element['file_details'][$key]['language'] = [
-        '#markup' => $label,
+        // '#markup' => $label,
+        '#type' => 'select',
+        '#title' => t('Language'),
+        '#title_display' => 'invisible',
+        '#options' => array_merge([NULL => t('Select')], self::LANGUAGES),
+        '#default_value' => $details['language'] ?? NULL,
       ];
       $element['file_details'][$key]['target_url'] = [
         '#type' => 'textfield',
-        '#title' => t('URL for @language', [
-          '@language' => $label,
-        ]),
+        '#title' => t('URL'),
         '#title_display' => 'invisible',
         '#default_value' => $details['target_url'] ?? NULL,
         '#maxlength' => 512,
@@ -148,6 +154,13 @@ class DocumentLink extends FormElement {
           [LinkWidget::class, 'validateUriElement'],
           [static::class, 'validateLink'],
         ],
+      ];
+      $element['file_details'][$key]['label'] = [
+        '#type' => 'textfield',
+        '#title' => t('Short label'),
+        '#title_display' => 'invisible',
+        '#default_value' => $details['label'] ?? NULL,
+        '#maxlength' => 24,
       ];
       $element['file_details'][$key]['disabled'] = [
         '#type' => 'checkbox',

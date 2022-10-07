@@ -35,10 +35,11 @@ function ghi_blocks_preprocess_document_link_box(&$variables) {
   // Go about the new approach only if "file_details" is not empty.
   if (!empty($document['file_details'])) {
     $variables['download_links'] = [];
-    foreach ($document['file_details'] as $language => $value) {
-      if (empty($value['target_url']) || !empty($value['disabled'])) {
+    foreach ($document['file_details'] as $value) {
+      if (empty($value['language']) || empty($value['target_url']) || !empty($value['disabled'])) {
         continue;
       }
+      $language = $value['language'];
       // Get the file type.
       $filetype = !empty($value['filetype']) ? $value['filetype'] : pathinfo($value['target_url'], PATHINFO_EXTENSION);
       $filetypes[] = $filetype;
@@ -180,9 +181,12 @@ function ghi_blocks_build_document_download_link(array $document, $language = NU
     $filesize = format_size($document['filesize']);
   }
 
+  $label = $document['label'] ?? NULL;
+
   // Link title.
   $link_title = implode(' | ', array_filter([
-    $language ?: 'English',
+    $language ?: t('English'),
+    $label,
     strtoupper($filetype),
     $filesize,
   ]));

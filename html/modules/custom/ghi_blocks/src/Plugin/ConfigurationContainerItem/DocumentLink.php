@@ -89,9 +89,12 @@ class DocumentLink extends ConfigurationContainerItemPluginBase {
    */
   public function getConfiguredLanguages() {
     $document = $this->config['value'];
-    $languages = array_keys(array_filter($document['file_details'], function ($details) {
-      return !empty($details['target_url']);
-    }));
+    $files = array_filter($document['file_details'], function ($details) {
+      return !empty($details['language']) && !empty($details['target_url']);
+    });
+    $languages = array_unique(array_map(function ($details) {
+      return $details['language'];
+    }, $files));
     return implode(', ', $languages);
   }
 

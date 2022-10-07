@@ -67,7 +67,8 @@ class DocumentLinks extends GHIBlockBase implements MultiStepFormBlockInterface,
 
       if (!property_exists($document, 'file_details')) {
         $item['file_details'] = [
-          array_key_first(DocumentLink::LANGUAGES) => [
+          0 => [
+            'language' => DocumentLink::LANGUAGES,
             'target_url' => $document->target_url,
             'disabled' => FALSE,
             'filesize' => $document->filesize,
@@ -79,10 +80,7 @@ class DocumentLinks extends GHIBlockBase implements MultiStepFormBlockInterface,
       else {
         $item['file_details'] = [];
         foreach ($document->file_details as $details) {
-          $details = (array) $details;
-          $language = $details['language'];
-          unset($details['language']);
-          $item['file_details'][$language] = $details;
+          $item['file_details'][] = (array) $details;
         }
       }
 
