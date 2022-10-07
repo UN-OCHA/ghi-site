@@ -239,7 +239,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     if ($paragraph->getType() == 'bottom_figure_row') {
       $theme_components[] = 'common_design_subtheme/gho-needs-and-requirements';
     }
-    if ($paragraph->getPromoted()) {
+    if ($paragraph->getPromoted() || $this->isPromoted()) {
       $theme_components[] = 'common_design_subtheme/gho-promoted-paragraph';
     }
     if ($paragraph->getType() == 'sub_article') {
