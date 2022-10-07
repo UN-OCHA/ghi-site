@@ -286,7 +286,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     }
 
     uksort($entity_prototype_options, function ($prototype_id_a, $prototype_id_b) use ($weight) {
-      return $weight[$prototype_id_a] > $weight[$prototype_id_b];
+      return $weight[$prototype_id_a] - $weight[$prototype_id_b];
     });
     return $entity_prototype_options;
   }
