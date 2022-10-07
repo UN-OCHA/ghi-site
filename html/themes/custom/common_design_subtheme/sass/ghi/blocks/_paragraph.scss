@@ -1,8 +1,8 @@
 .ghi-block-paragraph {
   position: relative;
 
-  #main-content.has-subpage-title .layout__region &.gho-paragraph-promoted:first-child {
-    margin-top: 2rem;
+  .cd-block-title {
+    margin-top: 4.5rem;
   }
 
   .block-content {
@@ -20,7 +20,7 @@
     background-color: var(--cd-primary-background-color);
 
     .block-content {
-      padding-top: 3rem;
+      padding-top: 0;
       padding-bottom: 3rem;
     }
 
