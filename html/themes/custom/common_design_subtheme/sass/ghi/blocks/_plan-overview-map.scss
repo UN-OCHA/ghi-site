@@ -49,20 +49,6 @@
     margin-bottom: 1rem;
     padding: 0 0.5rem;
 
-    .map-tabs {
-      position: absolute;
-      top: -2.5rem;
-      right: 0;
-      display: inline-block;
-      text-align: right;
-
-      @include max-width(sm) {
-        ul {
-          display: inline-block;
-        }
-      }
-    }
-
     .leaflet-container {
       position: relative;
       min-height: 400px;

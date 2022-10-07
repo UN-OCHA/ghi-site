@@ -251,7 +251,7 @@ class PlanOverviewMap extends GHIBlockBase {
         'legend' => $tab['legend'],
       ];
 
-      $map['tabs'][] = Markup::create('<a href="#" class="map-tab desktop" data-map-index="' . $key . '">' . $tab['label'] . '</a><a href="#" class="map-tab mobile" data-map-index="' . $key . '"><svg class="icon icon--' . $tab['icon'] . '"><use xlink:href="#' . $tab['icon'] . '"></use></svg></a>');
+      $map['tabs'][] = Markup::create('<a href="#" class="map-tab" data-map-index="' . $key . '">' . $tab['label'] . '</a>');
     }
 
     $map['settings'] = [

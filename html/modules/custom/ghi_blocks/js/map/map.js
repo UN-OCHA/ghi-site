@@ -492,10 +492,10 @@
     }
 
     $(state.map_container_class + ' .map-tabs a.map-tab').click(function(e) {
-      if ($(this).parents('li').hasClass('active') && $(this).parent('.dropdown').length > 0) {
+      if ($(this).parents('li').hasClass('active') && $(this).parent('li').find('button.ghi-dropdown__btn').length > 0) {
         // If a map tab is already active and there is a dropdown for variants,
         // open that instead.
-        let dropdown_toggle = $(this).parent('.dropdown').find('a.dropdown-toggle');
+        let dropdown_toggle = $(this).parent('li').find('button.ghi-dropdown__btn');
         if (dropdown_toggle) {
           e.stopPropagation();
           $(dropdown_toggle).click();
@@ -507,8 +507,8 @@
       e.preventDefault();
     });
 
-    $(state.map_container_class + ' .map-tabs ul.dropdown-menu li').click(function(e) {
-      let parent_index = $(this).parents('.dropdown').find('a.map-tab').data('map-index');
+    $(state.map_container_class + ' .map-tabs div.ghi-dropdown--content a').click(function(e) {
+      let parent_index = $(this).parents('li').find('a.map-tab').data('map-index');
       Drupal.hpc_map.switchVariant(map_id, parent_index, $(this).data('variant-id'));
       e.preventDefault();
     });
@@ -544,7 +544,7 @@
     $('a[data-map-index="' + state.index + '"] .period-number').remove();
     if (state.variant_id && Drupal.hpc_map.dataHasVariant(state.tab_data, state.variant_id)) {
       locations = Object.values(state.tab_data.variants[state.variant_id].locations);
-      $('a[data-map-index="' + state.index + '"]').append('<span class="period-number">&nbsp;#' + state.tab_data.variants[state.variant_id].tab_label + '</span>');
+      $('a[data-map-index="' + state.index + '"] + .variant-toggle').find('button .ghi-dropdown__btn-label').html('#' + state.tab_data.variants[state.variant_id].tab_label);
     }
 
     // If we have donut segments, update the totals per location and the radius
@@ -895,14 +895,14 @@
   // Switch to a different map tab.
   Drupal.hpc_map.switchTab = function (map_id, index) {
     var state = Drupal.hpc_map.getMapState(map_id);
-    $(state.map_container_class + ' .map-tabs ul:not(".dropdown-menu") > li').removeClass('active');
+    $(state.map_container_class + ' .map-tabs ul > li').removeClass('active');
     $(state.map_container_class + ' .map-tabs a[data-map-index="' + index + '"]').parents('li').addClass('active');
     state.index = index;
     state.tab_data = state.hasOwnProperty('data') && state.data.hasOwnProperty(index) ? state.data[index] : null;
 
     // Check if the variant needs to be changed too.
-    let variant_dropdown = $(state.map_container_class + ' .map-tabs a[data-map-index="' + index + '"]').parent('.dropdown');
-    let variant_id = variant_dropdown ? $(variant_dropdown).find('li:first-child').data('variant-id') : null;
+    let variant_dropdown = $(state.map_container_class + ' .map-tabs a[data-map-index="' + index + '"]').parent('li').find('.cd-dropdown');
+    let variant_id = variant_dropdown ? $(variant_dropdown).find('a:first-child').data('variant-id') : null;
     if (variant_id != null && state.tab_data && state.variant_id == null && variant_dropdown) {
       Drupal.hpc_map.switchVariant(map_id, index, variant_id);
       return;
@@ -946,8 +946,8 @@
     var state = Drupal.hpc_map.getMapState(map_id);
 
     // Mark the variant as active.
-    $(state.map_container_class + ' .map-tabs li .dropdown-menu li').removeClass('active');
-    $(state.map_container_class + ' .map-tabs a[data-map-index="' + index + '"]').parent('.dropdown').find('li[data-variant-id="' + variant_id + '"]').addClass('active');
+    $(state.map_container_class + ' .map-tabs li .cd-dropdown a').removeClass('active');
+    $(state.map_container_class + ' .map-tabs a[data-map-index="' + index + '"]').parent('li').find('.cd-dropdown').find('a[data-variant-id="' + variant_id + '"]').addClass('active');
 
     // And set the variant for the state.
     state.variant_id = variant_id;

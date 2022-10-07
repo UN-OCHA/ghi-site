@@ -84,37 +84,6 @@
 
   .plan-attachment-map-wrapper {
 
-    .map-tabs {
-      height: auto;
-      background-color: var(--cd-default-text-color);
-
-      ul {
-        display: flex;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        gap: 2rem;
-
-        li {
-          padding: 1rem 0;
-
-          a {
-            text-decoration: none;
-            color: var(--cd-white);
-          }
-
-          &.active {
-            border-bottom: 4px solid var(--cd-ocha-yellow);
-
-            a {
-              text-decoration: none;
-              color: var(--cd-white);
-            }
-          }
-        }
-      }
-    }
-
     .map-container {
 
       .leaflet-container {

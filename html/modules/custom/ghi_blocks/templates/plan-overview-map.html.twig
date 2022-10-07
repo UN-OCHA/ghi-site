@@ -8,8 +8,8 @@
   <div class="plan-overview-map-wrapper pane-{{ chart_id }} {{ map_type }}">
     <div {{ attributes.addClass(map_container_classes) }}">
       {% if map_tabs %}
-        <div class="map-tabs map-tabs-btn">
-          {{ map_tabs }}
+        <div class="map-tabs">
+          <div class="map-tabs--inner content-width">{{ map_tabs }}</div>
         </div>
       {% endif %}
       <div id="{{ chart_id }}">
