@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
 use Drupal\hpc_api\Query\EndpointQueryBase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a query plugin for plan overview data.
@@ -21,6 +22,13 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
 class PlanOverviewQuery extends EndpointQueryBase {
 
   /**
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
    * The fetched and processed plans.
    *
    * @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[]
@@ -28,11 +36,29 @@ class PlanOverviewQuery extends EndpointQueryBase {
   private $plans = NULL;
 
   /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->moduleHandler = $container->get('module_handler');
+    return $instance;
+  }
+
+  /**
    * Retrieve plan data.
    */
   private function retrievePlans() {
     $this->plans = [];
-    $data = $this->getData();
+    $query_args = [];
+
+    $placeholders = $this->getPlaceholders();
+    $year = $placeholders['year'] ?? NULL;
+    if ($year) {
+      // See if we should use the latest plan data.
+      $this->moduleHandler->alter('plan_overview_query_arguments', $query_args, $year);
+    }
+
+    $data = $this->getData([], $query_args);
 
     if (empty($data) || empty($data->plans)) {
       return;
@@ -88,7 +114,7 @@ class PlanOverviewQuery extends EndpointQueryBase {
     // the total GHO people in need and people targeted can be calculated by
     // summing these plans caseload values where the planType has the property
     // includeTotals = true from this endpoint:
-    // https://api.hpc.tools/v2/plan/overview/{year}?version=latest
+    // https://api.hpc.tools/v2/plan/overview/{year}
     if (!empty($plans)) {
       foreach ($plans as $plan) {
         // Include plans where the planType has includeTotals=true.

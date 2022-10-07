@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Controller\BaseObjectReferenceController;
 use Drupal\ghi_blocks\Controller\LayoutBuilderBlockController;
+use Drupal\ghi_blocks\Helpers\GlobalSettingsHelper;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\layout_builder\Plugin\Block\InlineBlock;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -440,4 +441,17 @@ function ghi_blocks_is_layout_builder_route() {
  */
 function ghi_blocks_gin_lb_is_layout_builder_route_alter(&$gin_lb_is_layout_builder_route, $context) {
   $gin_lb_is_layout_builder_route = ghi_blocks_is_layout_builder_route();
+}
+
+/**
+ * Implements hook_plan_overview_query_arguments_alter().
+ */
+function ghi_blocks_plan_overview_query_arguments_alter(array &$query_args, $year) {
+  if (!\Drupal::currentUser()->isAuthenticated()) {
+    return;
+  }
+  $config = GlobalSettingsHelper::getConfig($year);
+  if (!empty($config['use_latest_plan_data'])) {
+    $query_args['version'] = 'latest';
+  }
 }
