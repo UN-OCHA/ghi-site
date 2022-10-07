@@ -94,11 +94,6 @@ class GlobalSettingsForm extends ConfigFormBase {
           '#default_value' => $year_config[$key] ?? NULL,
         ] + $def;
       }
-
-      foreach ($this->getDisabledCheckboxes() as $key) {
-        $form['years'][$year][$key]['#disabled'] = TRUE;
-        $form['years'][$year][$key]['#description'] .= '<br />' . $this->t('Note: This field is disabled because the underlying feature has not been implemented yet.');
-      }
     }
 
     $form['submit'] = [

@@ -27,7 +27,7 @@ trait GlobalSettingsTrait {
    * @return string
    *   The config key.
    */
-  public function getConfigKey() {
+  public static function getConfigKey() {
     return 'ghi_blocks.global_settings';
   }
 
@@ -263,18 +263,6 @@ trait GlobalSettingsTrait {
       unset($header['status']);
     }
 
-  }
-
-  /**
-   * Get disabled checkboxes.
-   *
-   * @return array
-   *   An array with the form element keys that should be disabled.
-   */
-  private function getDisabledCheckboxes() {
-    return [
-      'use_latest_plan_data',
-    ];
   }
 
   /**
