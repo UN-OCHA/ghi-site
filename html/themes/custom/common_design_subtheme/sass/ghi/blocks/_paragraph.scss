@@ -30,10 +30,6 @@
       height: 100%;
       content: "";
       border-left: 4px solid var(--cd-primary-color);
-
-      #layout-builder & {
-        height: calc(100% - 2rem);
-      }
     }
   }
 }
