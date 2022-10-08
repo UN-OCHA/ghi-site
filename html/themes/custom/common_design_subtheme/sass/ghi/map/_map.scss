@@ -299,7 +299,7 @@
         a {
           cursor: pointer;
           text-decoration: none;
-          color: var(--cd-white);
+          color: var(--cd-white) !important;
           font-size: inherit;
         }
 
@@ -322,6 +322,7 @@
               display: inline-block;
               padding: 0.3rem;
               white-space: nowrap;
+              color: var(--cd-default-text-color) !important;
 
               &:hover {
                 cursor: pointer;
