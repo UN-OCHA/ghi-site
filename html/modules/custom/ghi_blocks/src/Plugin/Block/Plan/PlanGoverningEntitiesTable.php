@@ -226,13 +226,18 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
 
       $row = [];
       $skip_row = FALSE;
-      foreach ($columns as $column) {
+      foreach ($columns as $key => $column) {
 
         /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
         $item_type = $this->getItemTypePluginForColumn($column, $context);
 
-        $column_type = $item_type->getColumnType();
-        $progress_group = $column_type == 'percentage' ? 'coverage' : ($column_type == 'amount' ? $column['item_type'] : NULL);
+        $progress_group = NULL;
+        if ($item_type->getColumnType() == 'percentage') {
+          $progress_group = 'percentage';
+        }
+        elseif ($item_type->getColumnType() == 'amount') {
+          $progress_group = 'amount-' . $key;
+        }
 
         // Then add the value to the row.
         $row[] = [
@@ -240,7 +245,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
           'data-value' => $item_type->getValue(),
           'data-raw-value' => $item_type->getSortableValue(),
           'data-sort-type' => $item_type::SORT_TYPE,
-          'data-column-type' => $column_type,
+          'data-column-type' => $item_type->getColumnType(),
           'class' => $item_type->getClasses(),
           'data-progress-group' => $progress_group,
         ];
