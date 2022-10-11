@@ -298,7 +298,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   private function buildTableRow(array $columns, array $context, array $limit_item_types = [], $grouped_attachments = FALSE) {
     $attachment = $context['attachment'];
     $row = [];
-    foreach ($columns as $column) {
+    foreach ($columns as $key => $column) {
 
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
       $item_type = $this->getItemTypePluginForColumn($column, $context);
@@ -311,6 +311,14 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       if ($item_type->checkFilter() === FALSE) {
         // Leave early.
         return FALSE;
+      }
+
+      $progress_group = NULL;
+      if ($item_type->getColumnType() == 'percentage') {
+        $progress_group = 'percentage';
+      }
+      elseif ($item_type->getColumnType() == 'amount') {
+        $progress_group = 'amount-' . $key;
       }
 
       if ($grouped_attachments && $item_type->getPluginId() == 'entity_name') {
@@ -336,7 +344,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
           'data-sort-type' => $item_type::SORT_TYPE,
           'data-column-type' => $item_type->getColumnType(),
           'class' => $item_type->getClasses(),
-          'data-progress-group' => $item_type->getColumnType() == 'percentage' ? 'percentage' : NULL,
+          'data-progress-group' => $progress_group,
         ];
       }
     }
