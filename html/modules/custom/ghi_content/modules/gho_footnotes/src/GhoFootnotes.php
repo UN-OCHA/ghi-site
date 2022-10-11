@@ -26,7 +26,7 @@ class GhoFootnotes implements TrustedCallbackInterface {
     $dom = Html::load($html);
 
     $accumulator = [];
-    $accumulated = $build['#view_mode'] !== 'preview';
+    $accumulated = ($build['#view_mode'] ?? NULL) !== 'preview';
 
     // Process the texts with footnotes.
     foreach (iterator_to_array($dom->getElementsByTagName('gho-footnotes-text')) as $node) {
