@@ -105,7 +105,7 @@ trait ConfigurationContainerTrait {
         'data' => $item_type->getLabel(),
         'data-sort-type' => $item_type::SORT_TYPE,
         'data-sort-order' => count($header) == 0 ? 'ASC' : '',
-        'data-column-type' => $item_type::ITEM_TYPE,
+        'data-column-type' => $item_type->getColumnType(),
       ];
     }
     return $header;

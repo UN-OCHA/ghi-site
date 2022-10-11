@@ -67,10 +67,6 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       'governing_entity_name' => [
         'target' => 'entity_name',
       ],
-      'plan_entities_counter' => [
-        'target' => 'entity_counter',
-        'config' => ['entity_type' => 'plan'],
-      ],
       'partners_counter' => [
         'target' => 'project_counter',
         'config' => ['data_type' => 'organizations_count'],
@@ -93,7 +89,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       ],
       'funding_coverage' => [
         'target' => 'funding_data',
-        'config' => ['data_type' => 'funding_progress_bar'],
+        'config' => ['data_type' => 'funding_coverage'],
       ],
       'funding_gap' => [
         'target' => 'funding_data',
@@ -172,6 +168,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       '#rows' => $table_data['rows'],
       '#sortable' => TRUE,
       '#soft_limit' => $this->getBlockConfig()['display']['soft_limit'] ?? 0,
+      '#progress_groups' => TRUE,
     ];
   }
 
@@ -234,14 +231,18 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
         /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
         $item_type = $this->getItemTypePluginForColumn($column, $context);
 
+        $column_type = $item_type->getColumnType();
+        $progress_group = $column_type == 'percentage' ? 'coverage' : ($column_type == 'amount' ? $column['item_type'] : NULL);
+
         // Then add the value to the row.
         $row[] = [
           'data' => $item_type->getRenderArray(),
           'data-value' => $item_type->getValue(),
           'data-raw-value' => $item_type->getSortableValue(),
           'data-sort-type' => $item_type::SORT_TYPE,
-          'data-column-type' => $item_type::ITEM_TYPE,
+          'data-column-type' => $column_type,
           'class' => $item_type->getClasses(),
+          'data-progress-group' => $progress_group,
         ];
 
         // Update the skip row flag. Make it lazy, only check the item type if
@@ -284,7 +285,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
               ]),
               'data-raw-value' => $not_reported_label,
               'data-sort-type' => $item_type::SORT_TYPE,
-              'data-column-type' => $item_type::ITEM_TYPE,
+              'data-column-type' => $item_type->getColumnType(),
             ];
           }
           elseif ($item_type->getPluginId() == 'funding_data' && $item_type->get('data_type') == 'funding_totals') {
@@ -294,7 +295,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
               'data-value' => $item_type->getValue(),
               'data-raw-value' => $item_type->getSortableValue(),
               'data-sort-type' => $item_type::SORT_TYPE,
-              'data-column-type' => $item_type::ITEM_TYPE,
+              'data-column-type' => $item_type->getColumnType(),
               'class' => $item_type->getClasses(),
             ];
           }
@@ -304,7 +305,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
               'data-value' => 0,
               'data-raw-value' => 0,
               'data-sort-type' => $item_type::SORT_TYPE,
-              'data-column-type' => $item_type::ITEM_TYPE,
+              'data-column-type' => $item_type->getColumnType(),
               'class' => array_merge($item_type->getClasses(), [
                 'not-reported',
                 'empty',
@@ -339,7 +340,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
             ]),
             'data-raw-value' => $not_reported_label,
             'data-sort-type' => $item_type::SORT_TYPE,
-            'data-column-type' => $item_type::ITEM_TYPE,
+            'data-column-type' => $item_type->getColumnType(),
           ];
         }
         elseif ($item_type->getPluginId() == 'funding_data' && $item_type->get('data_type') == 'funding_totals') {
@@ -351,7 +352,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
             'data-value' => $item_type->getValue(),
             'data-raw-value' => $item_type->getSortableValue(),
             'data-sort-type' => $item_type::SORT_TYPE,
-            'data-column-type' => $item_type::ITEM_TYPE,
+            'data-column-type' => $item_type->getColumnType(),
             'class' => $item_type->getClasses(),
           ];
         }
@@ -361,7 +362,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
             'data-value' => 0,
             'data-raw-value' => 0,
             'data-sort-type' => $item_type::SORT_TYPE,
-            'data-column-type' => $item_type::ITEM_TYPE,
+            'data-column-type' => $item_type->getColumnType(),
             'class' => array_merge($item_type->getClasses(), [
               'shared-funding',
               'empty',
@@ -565,10 +566,6 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       'entity_name' => [],
       'funding_data' => [
         'cluster_restrict' => FALSE,
-        'value_preview' => FALSE,
-      ],
-      'entity_counter' => [
-        'entity_type' => 'plan',
         'value_preview' => FALSE,
       ],
       'project_counter' => [

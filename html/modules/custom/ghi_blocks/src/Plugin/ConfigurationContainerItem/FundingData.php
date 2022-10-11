@@ -275,6 +275,13 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getColumnType() {
+    return $this->get('data_type') == 'funding_coverage' ? 'percentage' : parent::getColumnType();
+  }
+
+  /**
    * Get a value using the configured cluster restrict.
    *
    * @param array $data_type

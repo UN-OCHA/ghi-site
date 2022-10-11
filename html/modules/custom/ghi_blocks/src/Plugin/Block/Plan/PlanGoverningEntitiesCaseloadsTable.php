@@ -111,7 +111,6 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
         case 'data_point':
           $value->data_points[0] = $value->data_point_1;
           $value->data_points[1] = $value->data_point_2;
-          // $value->widget = $value->mini_widget;
           unset($value->data_point_1);
           unset($value->data_point_2);
           unset($value->mini_widget);
@@ -201,7 +200,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
         'data' => $item_type->getLabel(),
         'data-sort-type' => $item_type::SORT_TYPE,
         'data-sort-order' => count($header) == 0 ? 'ASC' : '',
-        'data-column-type' => $item_type::ITEM_TYPE,
+        'data-column-type' => $item_type->getColumnType(),
       ];
     }
 
@@ -324,7 +323,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
           'data-value' => $attachment->description,
           'data-raw-value' => $attachment->description,
           'data-sort-type' => $item_type::SORT_TYPE,
-          'data-column-type' => $item_type::ITEM_TYPE,
+          'data-column-type' => $item_type->getColumnType(),
           'class' => array_merge($item_type->getClasses(), ['subrow']),
         ];
       }
