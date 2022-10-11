@@ -18,7 +18,7 @@ class AttachmentUnit extends ConfigurationContainerItemPluginBase {
 
   const SORT_TYPE = 'alfa';
   const DATA_TYPE = 'string';
-  const ITEM_TYPE = 'name';
+  const ITEM_TYPE = 'unit';
 
   /**
    * Get a default label.
