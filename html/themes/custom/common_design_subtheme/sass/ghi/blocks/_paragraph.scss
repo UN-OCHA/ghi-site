@@ -1,11 +1,11 @@
 .ghi-block-paragraph {
   position: relative;
 
-  .cd-block-title {
-    margin-top: 4.5rem;
-  }
-
   .block-content {
+
+    &.gho-text {
+      margin-top: 0;
+    }
 
     & > div > a.read-more {
       margin-top: 2rem;
@@ -16,7 +16,12 @@
     }
   }
 
+  &.block-highlighted {
+    padding-top: 3rem !important;
+  }
+
   &.gho-paragraph-promoted {
+    padding-top: 3rem !important;
     background-color: var(--cd-primary-background-color);
 
     .block-content {
