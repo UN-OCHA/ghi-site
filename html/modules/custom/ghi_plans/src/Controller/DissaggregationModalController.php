@@ -140,13 +140,17 @@ class DissaggregationModalController extends ControllerBase {
     $disaggregated_data = $attachment->getDisaggregatedData($reporting_period, TRUE, TRUE, TRUE);
     if (empty($disaggregated_data[$metric])) {
       return [
-        '#markup' => $this->t('We did not find the requested information. If you think that this ann error, please get in touch.'),
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#value' => $this->t('We did not find the requested information. If you think that this ann error, please get in touch.'),
       ];
     }
 
     if (empty($disaggregated_data[$metric]['locations'])) {
       return [
-        '#markup' => $this->t('We could not find suitable information to display here.'),
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#value' => $this->t('We could not find suitable information to display here.'),
       ];
     }
 
