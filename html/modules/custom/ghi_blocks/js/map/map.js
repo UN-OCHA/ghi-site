@@ -662,8 +662,9 @@
 
   // Retrieve the map state for the given element.
   Drupal.hpc_map.getMapStateFromContainedElement = function(element) {
-    var map_id = Drupal.hpc_map.getMapIdFromContainedElement(element);
-    return Drupal.hpc_map.getMapState(map_id);
+    var contained_element = element.nodeName == 'use' ? Drupal.hpc_map.getElementFromUseElement(element) : $(element);
+    var map_id = Drupal.hpc_map.getMapIdFromContainedElement(contained_element);
+    return map_id ? Drupal.hpc_map.getMapState(map_id) : null;
   }
 
   // Get a dom element based on the given data object.
@@ -682,26 +683,32 @@
 
   // Get a location data object from the HTML element or on of its childs.
   Drupal.hpc_map.getLocationObjectFromContainedElement = function(element) {
-    if ($(element).attr('location-id')) {
-      var state = Drupal.hpc_map.getMapStateFromContainedElement(element);
-      return Drupal.hpc_map.getLocationDataById(state, $(element).attr('location-id'));
+    var contained_element = element.nodeName == 'use' ? Drupal.hpc_map.getElementFromUseElement(element) : $(element);
+    if (location_id = $(contained_element).attr('location-id')) {
+      var state = Drupal.hpc_map.getMapStateFromContainedElement(contained_element);
+      return Drupal.hpc_map.getLocationDataById(state, location_id);
     }
-    let parents = $(element).parents('svg[location-id]');
+    let parents = $(contained_element).parents('svg[location-id]');
     return parents.length ? d3.select(parents[0]).data()[0].object : null;
   }
 
   // Get a dom element for the given use element.
   Drupal.hpc_map.getElementFromUseElement = function(element) {
-    var state = Drupal.hpc_map.getMapStateFromContainedElement(element);
-    let location_id = $(element).attr('location-id');
-    let elements = $('#' + state.map_id).find('svg[location-id=' + location_id + '],circle[location-id=' + location_id + ']');
-    return elements.length ? elements[0] : null;
+    if (element.nodeName != 'use') {
+      return;
+    }
+    let element_id = $(element).attr('href');
+    return $(element_id).length ? $(element_id)[0] : null;
   }
 
   // Get a location data object from an HTML <use> element.
   Drupal.hpc_map.getLocationObjectFromUseElement = function(element) {
+    let svg_element = Drupal.hpc_map.getElementFromUseElement(element);
+    if (!svg_element) {
+      return null;
+    }
     var state = Drupal.hpc_map.getMapStateFromContainedElement(element);
-    let location_id = $(element).attr('location-id');
+    let location_id = $(svg_element).attr('location-id');
     return Drupal.hpc_map.getLocationDataById(state, location_id);
   }
 
@@ -738,7 +745,8 @@
   // implementation class.
   Drupal.hpc_map.focusLocation = function(element, state, focus_state) {
     focus_state = typeof focus_state == 'undefined' ? 1 : focus_state;
-    let object = Drupal.hpc_map.getLocationObjectFromContainedElement(element);
+    let contained_element = element.nodeName == 'use' ? Drupal.hpc_map.getElementFromUseElement(element) : element;
+    let object = Drupal.hpc_map.getLocationObjectFromContainedElement(contained_element);
     if (!object || (focus_state && state.focused_location && object.location_id == state.focused_location.location_id)) {
       return;
     }
@@ -750,23 +758,23 @@
         Drupal.hpc_map.focusLocation(el, state, 0);
       });
       state.focused_location = object;
-      $(element).attr('data-map-focus', '1');
+      $(contained_element).attr('data-map-focus', '1');
     }
     else {
       state.focused_location = null;
-      $(element).removeAttr('data-map-focus');
+      $(contained_element).removeAttr('data-map-focus');
     }
 
     // Hand off to the appropriate handler.
     if (state.options.map_style == 'circle') {
-      Drupal.hpc_map_circle.focusLocation(element, focus_state);
+      Drupal.hpc_map_circle.focusLocation(contained_element, focus_state);
     }
     if (state.options.map_style == 'donut') {
-      Drupal.hpc_map_donut.focusLocation(element, focus_state, state.locationOverlay.projection.scale);
+      Drupal.hpc_map_donut.focusLocation(contained_element, focus_state, state.locationOverlay.projection.scale);
     }
 
     if (focus_state) {
-      Drupal.hpc_map.moveLocationToFront(element);
+      Drupal.hpc_map.moveLocationToFront(contained_element);
     }
     else if (state.active_location) {
       let active_element = Drupal.hpc_map.getElementFromDataObject(state.active_location, state);
