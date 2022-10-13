@@ -35,6 +35,7 @@ class EntityName extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\EntityName $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
     return $instance;

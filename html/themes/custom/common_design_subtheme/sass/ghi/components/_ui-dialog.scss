@@ -1,8 +1,66 @@
-.ui-dialog .ui-dialog-title {
-  margin-top: 0 !important;
-}
+.ui-dialog {
 
-.ui-dialog.ajax-block-error .ui-dialog-content {
-  margin-top: 2rem;
-  margin-bottom: 2rem;
+  .ui-dialog-title {
+    margin-top: 0 !important;
+
+    .cluster-icon {
+      display: inline-block;
+      width: 1rem;
+      margin-right: 0.5rem;
+      color: white;
+
+      svg * {
+        fill: var(--cd-white);
+      }
+    }
+  }
+
+  &.ajax-block-error .ui-dialog-content {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  &.ghi-modal-dialog {
+
+    .ui-dialog-titlebar {
+      border-bottom: 1px solid var(--cd-default-text-color);
+      background: var(--cd-white) !important;
+
+      .ui-button-icon {
+        background-color: var(--cd-default-text-color) !important;
+      }
+
+      .ui-dialog-title {
+        color: var(--cd-default-text-color) !important;
+
+        .cluster-icon {
+          display: inline-block;
+          width: 1rem;
+          margin-right: 1rem;
+          color: white;
+
+          svg * {
+            fill: var(--cd-default-text-color);
+          }
+        }
+
+        .title-additional-info {
+          float: right;
+          margin-right: 3rem;
+        }
+      }
+    }
+
+    .ui-dialog-content {
+      border-bottom-right-radius: var(--ginBorderLarge);
+      border-bottom-left-radius: var(--ginBorderLarge);
+
+      .cd-table {
+        th {
+          color: var(--cd-default-text-color);
+          background-color: inherit;
+        }
+      }
+    }
+  }
 }

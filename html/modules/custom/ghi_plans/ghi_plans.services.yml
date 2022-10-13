@@ -2,3 +2,9 @@ services:
   ghi_plans.measurement_search_query:
     parent: hpc_api.endpoint_query
     class: Drupal\ghi_plans\Query\MeasurementSearchQuery
+  attachment_converter:
+    class: Drupal\ghi_plans\ParamConverter\AttachmentConverter
+    arguments: ['@plugin.manager.endpoint_query_manager']
+    tags:
+      - { name: paramconverter }
+    lazy: true

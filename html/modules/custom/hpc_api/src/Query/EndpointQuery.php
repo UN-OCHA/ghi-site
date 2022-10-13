@@ -244,7 +244,6 @@ class EndpointQuery {
       $headers['Authorization'] = $this->authHeader;
     }
     elseif ($this->authMethod == self::AUTH_METHOD_BASIC) {
-
       $username = $config->get('auth_username');
       if ($username) {
         $password = $config->get('auth_password');
@@ -390,7 +389,7 @@ class EndpointQuery {
 
     // Mark this as a backend call so it's not being cached as a public query.
     if ($this->authMethod == self::AUTH_METHOD_API_KEY) {
-      $this->endpointArgs['fts_public_backend'] = 1;
+      $this->endpointArgs['hpc_backend'] = 1;
     }
 
     $start = microtime(TRUE);
@@ -398,7 +397,7 @@ class EndpointQuery {
       $response = $this->httpClient->get($this->getFullEndpointUrl(), [
         'headers' => $headers,
         'timeout' => $this->configService->get('timeout', 30),
-          // @todo Check if we are the only ones whoe need this.
+          // @todo Check if we are the only ones who need this.
         'chunk_size_read' => 32768,
       ]);
     }
@@ -432,9 +431,8 @@ class EndpointQuery {
    */
   public function getCacheKey() {
     $args = $this->getEndpointArguments();
-    unset($args['fts_public_backend']);
-    $auth_method = $this->getAuthMethod() == self::AUTH_METHOD_NONE ? 'public' : $this->getAuthMethod();
-    $cache_key = 'hpc_api_request_' . $auth_method . '_' . urlencode($this->getEndpointUrl());
+    unset($args['hpc_backend']);
+    $cache_key = 'hpc_api_request_' . $this->getAuthMethod() . '_' . urlencode($this->getEndpointUrl());
     if (!empty($args)) {
       ksort($args);
       $cache_key .= '__' . urlencode(print_r($args, TRUE));
@@ -548,7 +546,7 @@ class EndpointQuery {
    * @codeCoverageIgnore
    */
   public function setEndpointArguments($endpoint_arguments) {
-    $this->endpointArgs = $endpoint_arguments;
+    $this->endpointArgs = $endpoint_arguments + $this->endpointArgs;
   }
 
   /**
@@ -590,7 +588,6 @@ class EndpointQuery {
     if (!in_array($auth_method, $allowed_methods)) {
       return FALSE;
     }
-
     $this->authMethod = $auth_method;
     return TRUE;
   }

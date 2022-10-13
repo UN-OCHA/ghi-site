@@ -18,6 +18,7 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
 function hpc_common_preprocess_hpc_autoformat_value(array &$vars) {
   $value = $vars['value'];
   $unit_type = !empty($vars['unit_type']) ? $vars['unit_type'] : 'amount';
+
   $unit_defaults = $vars['unit_defaults'];
   $decimal_format = !empty($vars['decimal_format']) ? $vars['decimal_format'] : ThemeHelper::DECIMALS_POINT;
 

@@ -75,6 +75,7 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
       $this->endpointQuery->setEndpoint($endpoint_api_key);
     }
     else {
+      $this->endpointQuery->setAuthMethod(EndpointQuery::AUTH_METHOD_BASIC);
       $this->endpointQuery->setEndpoint($this->isAutenticatedEndpoint ? $endpoint_authenticated : $endpoint_public);
     }
 
@@ -125,12 +126,9 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
    * {@inheritdoc}
    */
   public function getData(array $placeholders = [], array $query_args = []) {
-    if (!empty($placeholders)) {
-      $this->endpointQuery->setPlaceholders($placeholders);
-    }
-    if (!empty($query_args)) {
-      $this->endpointQuery->setEndpointArguments($query_args);
-    }
+    $this->endpointQuery->setPlaceholders($placeholders);
+    $this->endpointQuery->setEndpointArguments($query_args);
+
     if ($this->isAutenticatedEndpoint) {
       $hid_access_token = $this->getHidAccessToken();
       if ($hid_access_token) {
@@ -138,7 +136,10 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
       }
     }
     // Cache the result in memory.
-    $cache_key = $this->getCacheKey(['endpoint' => $this->getFullEndpointUrl()]);
+    $cache_key = $this->getCacheKey([
+      'endpoint' => $this->getFullEndpointUrl(),
+      'auth_method' => $this->endpointQuery->getAuthMethod(),
+    ]);
     if (!$this->cache($cache_key)) {
       $this->cache($cache_key, $this->endpointQuery->getData());
     }
