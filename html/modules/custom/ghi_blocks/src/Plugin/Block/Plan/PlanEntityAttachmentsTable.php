@@ -347,6 +347,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
           'data-raw-value' => $item_type->getSortableValue(),
           'data-sort-type' => $item_type::SORT_TYPE,
           'data-column-type' => $item_type->getColumnType(),
+          'data-content' => $item_type->getLabel(),
           'class' => $item_type->getClasses(),
           'export_value' => $item_type->getSortableValue(),
           'data-progress-group' => $item_type->getColumnType() == 'percentage' ? 'percentage' : NULL,

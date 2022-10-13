@@ -22,6 +22,10 @@
       vertical-align: middle;
     }
   }
+
+  td.project-counter & {
+    min-width: 20rem;
+  }
 }
 
 .d3-sparkline-tooltip {
