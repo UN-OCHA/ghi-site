@@ -332,6 +332,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
           'data-raw-value' => $attachment->description,
           'data-sort-type' => $item_type::SORT_TYPE,
           'data-column-type' => $item_type->getColumnType(),
+          'data-content' => $item_type->getLabel(),
           'class' => array_merge($item_type->getClasses(), ['subrow']),
         ];
       }
@@ -343,6 +344,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
           'data-raw-value' => $item_type->getSortableValue(),
           'data-sort-type' => $item_type::SORT_TYPE,
           'data-column-type' => $item_type->getColumnType(),
+          'data-content' => $item_type->getLabel(),
           'class' => $item_type->getClasses(),
           'data-progress-group' => $progress_group,
         ];

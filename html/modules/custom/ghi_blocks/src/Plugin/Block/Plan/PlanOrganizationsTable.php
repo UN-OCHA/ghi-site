@@ -196,6 +196,7 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
           'data-raw-value' => $item_type->getSortableValue(),
           'data-sort-type' => $item_type::SORT_TYPE,
           'data-column-type' => $item_type->getColumnType(),
+          'data-content' => $item_type->getLabel(),
           'class' => $item_type->getClasses(),
           'export_value' => $item_type->getSortableValue(),
         ];
