@@ -611,6 +611,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       'data_point' => [
         'label' => $this->t('Data point'),
         'attachment_prototype' => $this->getAttachmentPrototype(),
+        'disaggregation_modal' => TRUE,
       ],
       'spark_line_chart' => [],
       'monitoring_period' => [],

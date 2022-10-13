@@ -19,4 +19,18 @@ ghi_plans.plan_autocomplete:
   requirements:
     _access: 'TRUE'
   options:
-    no_cache: 'TRUE'
+    no_cache: TRUE
+ghi_plans.modal_content.dissaggregation:
+  path: '/modal-content/disaggregation/{attachment}/{metric}/{reporting_period}'
+  defaults:
+    _controller: '\Drupal\ghi_plans\Controller\DissaggregationModalController::loadDisaggregationModalData'
+    _format: json
+    reporting_period: 'latest'
+  requirements:
+    _access: 'TRUE'
+  options:
+    parameters:
+      attachment:
+        type: attachment
+      metric:
+        type: integer

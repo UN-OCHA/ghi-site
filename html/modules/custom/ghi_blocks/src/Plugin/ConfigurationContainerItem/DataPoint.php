@@ -2,9 +2,13 @@
 
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Helpers\DataPointHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -84,7 +88,59 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   public function getRenderArray() {
     $attachment = $this->getAttachmentObject();
-    return $attachment ? DataPointHelper::formatValue($attachment, $attachment->data_point_conf) : NULL;
+    if (!$attachment) {
+      return NULL;
+    }
+    $config = $this->getPluginConfiguration();
+    $build = DataPointHelper::formatValue($attachment, $attachment->data_point_conf);
+    if (!empty($config['disaggregation_modal']) && $this->canShowDisaggregatedData($attachment)) {
+      $data_point = $this->get('data_point')['data_points'][0];
+      $link_url = Url::fromRoute('ghi_plans.modal_content.dissaggregation', [
+        'attachment' => $attachment->id(),
+        'metric' => $data_point,
+        'reporting_period' => $attachment->getLatestPublishedReportingPeriod($attachment->getPlanId()) ?? 'latest',
+      ]);
+      $metrics = $attachment->getMetricFields();
+      $link_url->setOptions([
+        'attributes' => [
+          'class' => ['use-ajax', 'disaggregation-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => Json::encode([
+            'width' => '80%',
+            'title' => $metrics[$data_point],
+            'classes' => [
+              'ui-dialog' => 'disaggregation-modal ghi-modal-dialog',
+            ],
+          ]),
+          'rel' => 'nofollow',
+        ],
+      ]);
+      $text = [
+        '#theme' => 'hpc_icon',
+        '#icon' => 'table_view',
+        '#tag' => 'span',
+      ];
+      $link = Link::fromTextAndUrl($text, $link_url);
+      $modal_link = [
+        '#theme' => 'hpc_modal_link',
+        '#link' => $link->toRenderable(),
+      ];
+      $build[] = $modal_link;
+    }
+    return $build;
+  }
+
+  /**
+   * Whether the given attachment can show disaggregated data.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
+   *   The attachment object.
+   *
+   * @return bool
+   *   TRUE if the attachment can show disaggregated data, FALSE otherwise.
+   */
+  public function canShowDisaggregatedData(DataAttachment $attachment) {
+    return $this->getValue() && $attachment->hasDisaggregatedData() && $attachment->data_point_conf['processing'] == 'single';
   }
 
   /**
@@ -117,6 +173,9 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
 
   /**
    * Get the attachment object for this item.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment
+   *   The attachment object.
    */
   private function getAttachmentObject() {
     $attachment = $this->getContextValue('attachment');

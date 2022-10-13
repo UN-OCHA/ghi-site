@@ -14,9 +14,9 @@ use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
-use Drupal\hpc_api\Helpers\ApiEntityHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanOperationalPresenceMap' block.
@@ -54,6 +54,25 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
   use FtsLinkTrait;
 
   const DEFAULT_DISCLAIMER = 'The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations.';
+
+  /**
+   * The icon query.
+   *
+   * @var \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery
+   */
+  public $iconQuery;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $instance */
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+
+    // Set our own properties.
+    $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -347,7 +366,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
           foreach ($object->clusters as $cluster) {
             if (empty($clusters[$cluster->id])) {
               $clusters[$cluster->id] = [
-                'icon' => ApiEntityHelper::getIconEmbedCode($cluster->icon),
+                'icon' => $this->iconQuery->getIconEmbedCode($cluster->icon),
                 'name' => $cluster->name,
                 'organizations' => [],
               ];
@@ -395,7 +414,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
           return strnatcmp($a->name, $b->name);
         });
         foreach ($objects as $object) {
-          $icon = ApiEntityHelper::getIconEmbedCode($object->icon);
+          $icon = $this->iconQuery->getIconEmbedCode($object->icon);
           $content .= '<div class="cluster-wrapper"><div class="cluster-icon-wrapper">' . $icon . '</div>' . $object->name;
           $content .= '</div>';
         }
@@ -410,7 +429,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
           foreach ($object->clusters as $cluster) {
             if (empty($clusters[$cluster->id])) {
               $clusters[$cluster->id] = [
-                'icon' => ApiEntityHelper::getIconEmbedCode($cluster->icon),
+                'icon' => $this->iconQuery->getIconEmbedCode($cluster->icon),
                 'name' => $cluster->name,
                 'projects' => [],
               ];

@@ -63,6 +63,7 @@ class DataAttachment extends AttachmentBase {
         return $field->name->en;
       }, $measurement_fields) : [],
       'totals' => $attachment->attachmentVersion->value->metrics->values->totals,
+      'has_disaggregated_data' => !empty($attachment->attachmentVersion->hasDisaggregatedData),
       'disaggregated' => $attachment->attachmentVersion->value->metrics->values->disaggregated ?? NULL,
     ];
 
@@ -141,8 +142,11 @@ class DataAttachment extends AttachmentBase {
 
   /**
    * Get the type of unit for an attachment.
+   *
+   * @return string
+   *   The unit type as a string.
    */
-  private function getUnitType() {
+  public function getUnitType() {
     return $this->unit ? $this->unit->type : NULL;
   }
 
@@ -178,6 +182,16 @@ class DataAttachment extends AttachmentBase {
       $plan_id = $attachment_data->attachmentPrototype->planId;
     }
     return $plan_id;
+  }
+
+  /**
+   * See if the API thinks that this attachment can have disaggregated data.
+   *
+   * @return bool
+   *   TRUE if disaggregated data can be fetched, FALSE otherwise.
+   */
+  public function hasDisaggregatedData() {
+    return (bool) $this->has_disaggregated_data;
   }
 
   /**
@@ -371,6 +385,33 @@ class DataAttachment extends AttachmentBase {
     }
 
     return $this->cache($cache_key, $disaggregated_data);
+  }
+
+  /**
+   * Retrieve the categories used in the disaggregation.
+   *
+   * @param int|string $reporting_period
+   *   Either the id of a period, or the string latest.
+   * @param int $property_index
+   *   The index of the metric property.
+   * @param bool $filter_empty_locations
+   *   Whether to exclude empty locations.
+   * @param bool $filter_empty_categories
+   *   Whether to exclude empty categories.
+   *
+   * @return array
+   *   Array with a list of category objects as retrieved from the API.
+   */
+  public function getDisaggregatedCategories($reporting_period, $property_index, $filter_empty_locations = FALSE, $filter_empty_categories = FALSE) {
+    $disaggregated_data = $this->getDisaggregatedData($reporting_period, $filter_empty_locations, $filter_empty_categories);
+    $locations = $disaggregated_data[$property_index]['locations'];
+    $first_location = reset($locations);
+    if (empty($first_location['categories'])) {
+      return FALSE;
+    }
+    return array_map(function ($item) {
+      return $item['name'];
+    }, $first_location['categories']);
   }
 
   /**
@@ -600,7 +641,7 @@ class DataAttachment extends AttachmentBase {
    * @return \Drupal\ghi_plans\ApiObjects\Measurements\Measurement|null
    *   The measurement object or NULL.
    */
-  protected function getCurrentMeasurement() {
+  public function getCurrentMeasurement() {
     // Get all measurements.
     $measurements = $this->getMeasurements();
     if (empty($measurements)) {

@@ -111,6 +111,15 @@
           }
         }
       }
+
+      div.modal-link {
+        display: inline-block;
+        vertical-align: middle;
+
+        a {
+          text-decoration: none;
+        }
+      }
     }
   }
 }

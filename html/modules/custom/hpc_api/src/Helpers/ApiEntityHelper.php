@@ -3,7 +3,6 @@
 namespace Drupal\hpc_api\Helpers;
 
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\File\FileSystem;
 
 /**
  * Helper class to handle entity objects from the HPC API.
@@ -373,56 +372,6 @@ class ApiEntityHelper {
     });
 
     return $entities;
-  }
-
-  /**
-   * Retrieve svg icon code.
-   *
-   * @param string $icon
-   *   The icon identifier.
-   *
-   * @return string|null
-   *   A string representation of the SVG icon, or NULL if no icon is there.
-   */
-  public static function getIconEmbedCode($icon) {
-    if (empty($icon) || $icon == 'blank_icon') {
-      return NULL;
-    }
-    $svgs = &drupal_static(__FUNCTION__, []);
-    if (empty($svgs[$icon])) {
-
-      /** @var \Drupal\hpc_api\Query\EndpointQuery $endpoint_query */
-      $endpoint_query = \Drupal::service('hpc_api.endpoint_query');
-      /** @var \Drupal\Core\File\FileSystem $file_system */
-      $file_system = \Drupal::service('file_system');
-      /** @var \Drupal\Component\Datetime\TimeInterface $time */
-      $time = \Drupal::service('datetime.time');
-
-      $svg_content = NULL;
-      // Check if we have a local copy that is not older than 1 day.
-      $icon_dir = 'public://cluster-icons';
-      $icon_path_local = $icon_dir . '/' . $icon;
-      if (file_exists($icon_path_local) && filemtime($file_system->realpath($icon_path_local)) > $time->getRequestTime() - 24 * 60 * 60) {
-        $svg_content = file_get_contents($icon_path_local);
-      }
-      if (empty($svg_content)) {
-        $endpoint_query->setArguments([
-          'endpoint' => 'icon/' . $icon,
-          'api_version' => 'v2',
-        ]);
-        $svg_data = $endpoint_query->getData();
-        $svg_content = $svg_data ? $svg_data->svg : NULL;
-        if ($svg_content && $file_system->prepareDirectory($icon_dir, FileSystem::CREATE_DIRECTORY | FileSystem::MODIFY_PERMISSIONS)) {
-          file_put_contents($icon_path_local, $svg_content);
-        }
-      }
-      if (empty($svg_content)) {
-        return NULL;
-      }
-      $svg = '<div class="cluster-icon">' . $svg_content . '</div>';
-      $svgs[$icon] = $svg;
-    }
-    return !empty($svgs[$icon]) ? $svgs[$icon] : NULL;
   }
 
 }
