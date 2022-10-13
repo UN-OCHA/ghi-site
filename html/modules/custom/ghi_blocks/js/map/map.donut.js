@@ -132,7 +132,6 @@
       Drupal.hpc_map_donut.redrawElementWithState(element, true);
     }
     else {
-
       if (map_state.options.popup_style == 'sidebar' && map_state.active_location) {
         // Check if the sidebar is currently open and showing the element that
         // should be unfocused.
@@ -482,8 +481,14 @@
     // Add event listeners.
     sel.selectAll('#' + map_id + ' svg').on('click', function(event, d) {
       var state = Drupal.hpc_map.getMapStateFromContainedElement(this);
-      Drupal.hpc_map.setActiveLocation(this, d.object, state);
-      Drupal.hpc_map.showPopup(d.object, state);
+      if (!d && event.srcElement) {
+        location_object = Drupal.hpc_map.getLocationObjectFromUseElement(event.srcElement);
+      }
+      else {
+        location_object = d.object;
+      }
+      Drupal.hpc_map.setActiveLocation(this, location_object, state);
+      Drupal.hpc_map.showPopup(location_object, state);
     })
     .on('mouseenter', function() {
       let map_state = Drupal.hpc_map.getMapStateFromContainedElement(this);
