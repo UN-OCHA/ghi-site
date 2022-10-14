@@ -479,10 +479,10 @@
     }
 
     // Add event listeners.
-    sel.selectAll('#' + map_id + ' svg').on('click', function(event, d) {
+    sel.selectAll('#' + map_id + ' svg[location-id], #' + map_id + ' use').on('click', function(event, d) {
       var state = Drupal.hpc_map.getMapStateFromContainedElement(this);
-      if (!d && event.srcElement) {
-        location_object = Drupal.hpc_map.getLocationObjectFromUseElement(event.srcElement);
+      if (!d && event.target) {
+        location_object = Drupal.hpc_map.getLocationObjectFromUseElement(event.target);
       }
       else {
         location_object = d.object;
