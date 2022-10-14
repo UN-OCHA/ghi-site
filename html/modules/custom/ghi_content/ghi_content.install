@@ -11,6 +11,29 @@ use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 
 /**
+ * Implements hook_requirements().
+ */
+function ghi_content_requirements($phase) {
+  $requirements = [];
+  if ($phase == 'runtime') {
+    $remote_sources = \Drupal::config('ghi_content.remote_sources')->get();
+    foreach ($remote_sources as $key => $config) {
+      /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source */
+      $remote_source = \Drupal::service('plugin.manager.remote_source')->createInstance($key);
+      $connection_status = $remote_source->checkConnection();
+      $requirements['ghi_content_remote_source_' . $key] = [
+        'title' => $remote_source->getPluginLabel(),
+        'severity' => $connection_status ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+        'value' => $connection_status ? t('Success') : t('Failed'),
+        'description' => $connection_status ? t('Connection to the remote source successful.') : t('Connection to the remote source failed.'),
+      ];
+
+    }
+  }
+  return $requirements;
+}
+
+/**
  * Create thumbnail directory for articles.
  */
 function ghi_content_update_9001(&$sandbox) {
