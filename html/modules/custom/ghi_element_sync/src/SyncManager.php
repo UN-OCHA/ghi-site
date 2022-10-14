@@ -390,48 +390,25 @@ class SyncManager implements ContainerInjectionInterface {
   }
 
   /**
-   * Get all element configurations from the remote.
+   * Send a query to the remote instance.
    *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node object.
+   * @param array|string $args
+   *   An array of arguments that will be added to the base url.
    *
-   * @return object
-   *   A configuration objects from the remote.
+   * @return mixed
+   *   The data received from the remote.
    *
-   * @throws \Drupal\ghi_element_sync\SyncException
-   *   Thrown when the remote source can't be reached or does not respond
-   *   correctly.
+   * @see self::getRequestUrl()
    */
-  public function getRemoteConfigurations(NodeInterface $node) {
+  public function sendRemoteQuery($args) {
     $settings = $this->getSettings();
-
-    $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
-
-    $original_id = $base_object->field_original_id->value;
-    $bundle = $base_object->bundle();
-
     if (empty($settings->get('sync_source'))) {
       throw new SyncException('Error: Source is not configured');
     }
-    $source_url = rtrim($settings->get('sync_source'), '/');
-    $url = $source_url . '/admin/hpc/plan-elements/export/' . $original_id . '/' . $bundle . '?time=' . microtime(TRUE);
-
-    $headers = [];
-    $basic_auth = $settings->get('basic_auth');
-    if ($basic_auth && !empty($basic_auth['user']) && !empty($basic_auth['pass'])) {
-      $headers['Authorization'] = 'Basic ' . base64_encode($basic_auth['user'] . ':' . $basic_auth['pass']);
-    }
-
-    $cookies = [
-      'ghi_access' => $settings->get('access_key'),
-    ];
-    $jar = CookieJar::fromArray($cookies, parse_url($settings->get('sync_source'), PHP_URL_HOST));
 
     try {
-      $response = $this->httpClient->request('GET', $url, [
-        'headers' => $headers,
-        'cookies' => $jar,
-      ]);
+      $args = (array) $args;
+      $response = $this->httpClient->request('GET', $this->getRequestUrl($args), $this->getRequestOptions());
     }
     catch (\Exception $e) {
       throw new SyncException($e->getMessage());
@@ -451,6 +428,43 @@ class SyncManager implements ContainerInjectionInterface {
     if (empty($data->status)) {
       throw new SyncException('Error: Access key misconfigured or object not valid');
     }
+    return $data;
+  }
+
+  /**
+   * Check the connection to the configured source for plan element sync.
+   *
+   * @return bool
+   *   TRUE if a connection can be established, FALSE otherwise.
+   */
+  public function checkConnection() {
+    try {
+      $this->sendRemoteQuery('status');
+    }
+    catch (SyncException $e) {
+      return FALSE;
+    }
+    return TRUE;
+  }
+
+  /**
+   * Get all element configurations from the remote.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   *
+   * @return object
+   *   A configuration objects from the remote.
+   *
+   * @throws \Drupal\ghi_element_sync\SyncException
+   *   Thrown when the remote source can't be reached or does not respond
+   *   correctly.
+   */
+  public function getRemoteConfigurations(NodeInterface $node) {
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
+    $original_id = $base_object->field_original_id->value;
+    $bundle = $base_object->bundle();
+    $data = $this->sendRemoteQuery([$original_id, $bundle]);
     if (empty($data)) {
       // No error, but nothing to do either.
       return [];
@@ -665,6 +679,47 @@ class SyncManager implements ContainerInjectionInterface {
    */
   public function getSyncSourceUrl() {
     return $this->getSettings()->get('sync_source');
+  }
+
+  /**
+   * Get the request url for a remote query.
+   *
+   * @param array $args
+   *   The args that will be added to the plan elements export endpoint.
+   *
+   * @return string
+   *   The request url as a string.
+   */
+  public function getRequestUrl(array $args) {
+    $source_url = rtrim($this->getSyncSourceUrl(), '/');
+    return $source_url . '/admin/hpc/plan-elements/export/' . implode('/', $args) . '?time=' . microtime(TRUE);
+  }
+
+  /**
+   * Get the request options.
+   *
+   * This includes authentication headers and an secret cookie for additional
+   * authentication.
+   *
+   * @return array
+   *   An array of headers.
+   */
+  public function getRequestOptions() {
+    $headers = [];
+    $settings = $this->getSettings();
+    $basic_auth = $settings->get('basic_auth');
+    if ($basic_auth && !empty($basic_auth['user']) && !empty($basic_auth['pass'])) {
+      $headers['Authorization'] = 'Basic ' . base64_encode($basic_auth['user'] . ':' . $basic_auth['pass']);
+    }
+
+    $cookies = [
+      'access_key' => $settings->get('access_key'),
+    ];
+    $jar = CookieJar::fromArray($cookies, parse_url($settings->get('sync_source'), PHP_URL_HOST));
+    return [
+      'headers' => $headers,
+      'cookies' => $jar,
+    ];
   }
 
   /**
