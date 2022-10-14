@@ -30,6 +30,21 @@
 
   // Border styles for ui dialogs.
   --ghi-ui-dialog-border-radius: 1rem;
+
+  // Duplicate some color definitions from the GIN admin theme.
+  //
+  // This is by far the easiest way right now to style the messages, which get
+  // 'toastified' by gin_lb, but uses variables from the GIN theme that are not
+  // available for non-logged-users.
+  // From GIN theme for warnings.
+  --colorGinWarningLight: #efcf64;
+  --colorGinWarningBackground: #605328;
+  // From GIN theme for errors.
+  --colorGinDangerLight: #f39b9d;
+  --colorGinDangerBackground: #583333;
+  // From GIN theme for status messages.
+  --colorGinGreenLight: #32cea4;
+  --colorGinGreenBackground: #145242;
 }
 
 //——————————————————————————————————————————————————————————————————————————————

@@ -1,5 +1,7 @@
+{% spaceless %}
 {% if markup_element is not empty %}
   <{{ markup_element }} class="{{ class }}">{{ output }}</{{ markup_element }}>
 {% else %}
   {{ output }}
 {% endif %}
+{% endspaceless %}
