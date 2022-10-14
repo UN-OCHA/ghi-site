@@ -235,7 +235,8 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $fts_link = NULL;
     if ($this->needsFtsLink()) {
       $link_icon = ThemeHelper::themeFtsIcon();
-      $fts_link = $this->needsFtsLink() ? self::buildFtsLink($link_icon, $this->getContextValue('plan_object'), 'flows', $this->getContextValue('base_object')) : NULL;
+
+      $fts_link = $this->needsFtsLink() ? self::buildFtsLink($link_icon, $this->getContextValue('plan_object'), $data_type['fts_link_target'], $this->getContextValue('base_object')) : NULL;
     }
 
     return [
@@ -262,7 +263,8 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       return FALSE;
     }
     // All items except the progress bar can have links to FTS.
-    return $this->get('data_type') != 'funding_progress_bar';
+    $data_type = $this->getDataType();
+    return !empty($data_type['fts_link_target']);
   }
 
   /**
@@ -344,6 +346,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         'cluster_restrict' => TRUE,
         'property' => 'total_funding',
         'scale' => 'auto',
+        'fts_link_target' => 'flows',
       ],
       'outside_funding' => [
         'title' => $this->t('Funded outside HRP'),
@@ -394,6 +397,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         'cluster_restrict' => TRUE,
         'property' => 'current_requirements',
         'footnote_property' => 'requirements',
+        'fts_link_target' => 'clusters',
         // @todo Add support for inclusion of original requirements as a
         // tooltip.
       ],

@@ -25,20 +25,20 @@ function hpc_common_preprocess_hpc_autoformat_value(array &$vars) {
   switch ($unit_type) {
     case 'percentage':
       // Using percentage formating.
-      $vars['output'] = [
+      $vars['output'] = ThemeHelper::render([
         '#theme' => 'hpc_percent',
         '#ratio' => $value / 100,
         '#decimal_format' => $decimal_format,
-      ] + (!empty($unit_defaults['percentage']) ? $unit_defaults['percentage'] : []);
+      ] + (!empty($unit_defaults['percentage']) ? $unit_defaults['percentage'] : []));
       break;
 
     case 'amount':
       // Using amount formating.
-      $vars['output'] = [
+      $vars['output'] = ThemeHelper::render([
         '#theme' => 'hpc_amount',
         '#amount' => $value,
         '#decimal_format' => $decimal_format,
-      ] + (!empty($unit_defaults['amount']) ? $unit_defaults['amount'] : []);
+      ] + (!empty($unit_defaults['amount']) ? $unit_defaults['amount'] : []));
       break;
   }
 }
@@ -168,7 +168,7 @@ function hpc_common_preprocess_hpc_amount(array &$vars) {
     $output .= $export ? $suffix : $space . '<span class="suffix">' . $suffix . '</span>';
   }
 
-  $vars['output'] = Markup::create($output);
+  $vars['output'] = Markup::create(trim($output));
   $vars['class'] = implode(' ', ['number', 'amount']);
   $vars['attributes'] = ['data-value' => $amount];
 }
@@ -197,7 +197,7 @@ function hpc_common_preprocess_hpc_percent(array &$vars) {
   $formatted = number_format($percent, $precision, $dec_point, $thousands_sep);
   $suffix = $export ? '%' : '<span class="suffix">%</span>';
 
-  $vars['output'] = Markup::create($formatted . $suffix);
+  $vars['output'] = Markup::create(trim($formatted . $suffix));
   $vars['class'] = implode(' ', ['number', 'percent']);
   $vars['attributes'] = ['data-value' => $percent];
 }
@@ -376,7 +376,7 @@ function hpc_common_preprocess_hpc_reporting_period(array &$vars) {
     // Same year and month for both start and end date.
     $start_date_formatted = gmdate($format_date_short, $start_date);
   }
-  $vars['output'] = new FormattableMarkup($format_string, [
+  $vars['output'] = new FormattableMarkup(trim($format_string), [
     '@period_number' => $period_number,
     '@date_range' => $start_date_formatted . ' - ' . $end_date_formatted,
   ]);
