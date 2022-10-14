@@ -437,11 +437,14 @@ class SyncManager implements ContainerInjectionInterface {
    * @return bool
    *   TRUE if a connection can be established, FALSE otherwise.
    */
-  public function checkConnection() {
+  public function checkConnection($bubble_exception = FALSE) {
     try {
       $this->sendRemoteQuery('status');
     }
     catch (SyncException $e) {
+      if ($bubble_exception) {
+        throw $e;
+      }
       return FALSE;
     }
     return TRUE;

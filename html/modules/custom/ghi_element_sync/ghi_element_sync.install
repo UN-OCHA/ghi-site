@@ -16,14 +16,20 @@ function ghi_element_sync_requirements($phase) {
     /** @var \Drupal\ghi_element_sync\SyncManager $sync_manager */
     $sync_manager = \Drupal::service('ghi_element_sync.sync_elements');
     $connection_status = FALSE;
-    $status_label = t('Connection to @url successful.', [
+    $status_label = t('Connection to <em>@url</em> successful.', [
       '@url' => $sync_manager->getSyncSourceUrl(),
     ]);
     try {
-      $connection_status = $sync_manager->checkConnection();
+      $connection_status = $sync_manager->checkConnection(TRUE);
+      if (!$connection_status) {
+        $status_label = t('Connection to <em>@url</em> failed', [
+          '@url' => $sync_manager->getSyncSourceUrl(),
+        ]);
+      }
     }
     catch (SyncException $e) {
-      $status_label = t('Connection to @url failed: @message', [
+      $connection_status = FALSE;
+      $status_label = t('Connection to <em>@url</em> failed: @message', [
         '@url' => $sync_manager->getSyncSourceUrl(),
         '@message' => $e->getMessage(),
       ]);

@@ -107,6 +107,14 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
   public function saveConfiguration();
 
   /**
+   * Get the full url to the endpoint of the remote source.
+   *
+   * @return string
+   *   The remote url as a string.
+   */
+  public function getRemoteEndpointUrl();
+
+  /**
    * Get the url to a content item.
    *
    * @param int $id
