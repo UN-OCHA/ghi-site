@@ -231,9 +231,9 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   }
 
   /**
-   * Get the full url to the endpoint of the remote source.
+   * {@inheritdoc}
    */
-  private function getRemoteEndpointUrl() {
+  public function getRemoteEndpointUrl() {
     return $this->getRemoteBaseUrl() . '/' . $this->getRemoteEndpoint();
   }
 
