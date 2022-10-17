@@ -83,7 +83,7 @@ class PlanEntityHelper {
    * @param int $entity_id
    *   The plan entity id for which to retrieve the data.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity
    *   The plan entity object.
    */
   public static function getPlanEntity($entity_id) {
@@ -108,7 +108,7 @@ class PlanEntityHelper {
    * @param int $entity_id
    *   The plan entity id for which to retrieve the data.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity
    *   The governing entity object.
    */
   public static function getGoverningEntity($entity_id) {

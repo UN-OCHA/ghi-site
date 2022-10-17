@@ -18,6 +18,8 @@ use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
+use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\node\NodeInterface;
 
@@ -64,9 +66,6 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
 
   const TABLE_TYPE_GROUPED = 'grouped';
   const TABLE_TYPE_FLAT = 'flat';
-
-  const TABLE_GROUP_SELECTOR_FIRST_LEVEL = 'first_level';
-  const TABLE_GROUP_SELECTOR_HIERARCHY = 'hierarchy';
 
   /**
    * Flag to indicate if this is an export context.
@@ -221,7 +220,6 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
         ],
         'display' => [
           'table_type' => $config->table_type ?? self::TABLE_TYPE_GROUPED,
-          'group_selector' => $config->group_selector ?? self::TABLE_GROUP_SELECTOR_FIRST_LEVEL,
           'default_entity' => $config->default_entity ?? reset($entity_id),
         ],
       ],
@@ -269,8 +267,24 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       // Data exports should always be un-grouped.
       return FALSE;
     }
-    $entities = $this->getCurrentEntityOptions();
+    $entities = $this->getCurrentEntities();
     return count($entities) > 1;
+  }
+
+  /**
+   * Get the current entity object.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface|null
+   *   The entity object.
+   */
+  private function getCurrentEntity() {
+    $entity_id = $this->getCurrentEntityId();
+    if (!$entity_id) {
+      return NULL;
+    }
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $query */
+    $query = $this->getQueryHandler('entity');
+    return $query->getEntity('planEntity', $entity_id) ?? $query->getEntity('governingEntity', $entity_id);
   }
 
   /**
@@ -280,12 +294,21 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
    *   The entity id.
    */
   private function getCurrentEntityId() {
-    $entity_options = $this->getCurrentEntityOptions();
+    $entity_ids = [];
+    if (!$this->isGroupedTable()) {
+      $entity_ids = array_keys($this->getCurrentEntityOptionsFlat());
+    }
+    else {
+      $grouped_entities = $this->getCurrentEntityOptionsGrouped();
+      foreach ($grouped_entities as $grouped_entity) {
+        $entity_ids = array_merge($entity_ids, array_keys($grouped_entity));
+      }
+    }
     $entity_id = $this->requestStack->getCurrentRequest()->request->get('entity_id');
-    if ($entity_id && array_key_exists($entity_id, $entity_options)) {
+    if ($entity_id && in_array($entity_id, $entity_ids)) {
       return $entity_id;
     }
-    return array_key_first($entity_options);
+    return reset($entity_ids);
   }
 
   /**
@@ -311,7 +334,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
 
     $context = $this->getBlockContext();
     $current_entity_id = NULL;
-    $entity_id_options = array_keys($this->getCurrentEntityOptions());
+    $entity_id_options = array_keys($this->getCurrentEntityOptionsFlat());
 
     $rows = [];
     foreach ($attachments as $attachment) {
@@ -325,7 +348,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
           [
             'data' => new FormattableMarkup('@composed_reference: @description', [
               '@composed_reference' => $entity->composed_reference,
-              '@description' => $entity->description,
+              '@description' => $entity->description ?? '',
             ]),
             'colspan' => count($columns),
             'class' => 'group-name',
@@ -383,29 +406,76 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     $entity_id = $this->getCurrentEntityId();
     $attachments = array_filter($attachments, function (DataAttachment $attachment) use ($entity_id) {
       $entity = $attachment->getSourceEntity();
-      return $entity && $entity->id() == $entity_id;
+      if (!$entity) {
+        return NULL;
+      }
+      if ($entity->id() == $entity_id) {
+        return TRUE;
+      }
+      if ($entity instanceof PlanEntity) {
+        return in_array($entity_id, $entity->getParentIds());
+      }
+      return NULL;
     });
     return $attachments;
   }
 
   /**
-   * Get the entity options from the given set of attachments.
+   * Get the entities from the current set of attachments.
+   *
+   * @return array
+   *   An array of entity objects keyed by the entity id.
+   */
+  private function getCurrentEntities() {
+    $attachments = $this->getSelectedAttachments();
+    $entities = [];
+    foreach ($attachments as $attachment) {
+      $entity = $attachment->getSourceEntity();
+      $entities[$entity->id()] = $entity;
+    }
+    return $entities;
+  }
+
+  /**
+   * Get the grouped entity options from the current set of attachments.
+   *
+   * @return array
+   *   Grouped options array, key is the entity id, value is the entity name.
+   */
+  private function getCurrentEntityOptionsGrouped() {
+    $entities = $this->getCurrentEntities();
+    $entity_options = [];
+    foreach ($entities as $entity) {
+      if ($entity instanceof PlanEntity) {
+        if ($parent_id = $entity->getMainLevelParentId()) {
+          $parent_entity = PlanEntityHelper::getPlanEntity($parent_id);
+          $parent_entity_name = $parent_entity->getEntityName();
+          $group_name = $parent_entity->getGroupName();
+          $entity_options[$group_name] = $entity_options[$group_name] ?? [];
+          $entity_options[$group_name][$parent_entity->id()] = $parent_entity_name;
+          ksort($entity_options[$group_name]);
+        }
+      }
+      else {
+        $entity_name = $entity->getEntityName();
+        $entity_options[$entity_name] = $entity_options[$entity_name] ?? [];
+        $entity_options[$entity_name][$entity->id()] = $entity->getEntityName();
+        ksort($entity_options[$entity_name]);
+      }
+    }
+    return $entity_options;
+  }
+
+  /**
+   * Get the entity options from the current set of attachments.
    *
    * @return array
    *   Options array, key is the entity id, value is the entity name.
    */
-  private function getCurrentEntityOptions() {
-    $attachments = $this->getSelectedAttachments();
-    $first_level = ($this->getBlockConfig()['display']['group_selector'] ?? self::TABLE_GROUP_SELECTOR_FIRST_LEVEL) == self::TABLE_GROUP_SELECTOR_FIRST_LEVEL;
-    $entity_options = [];
-    foreach ($attachments as $attachment) {
-      $entity = $attachment->getSourceEntity();
-      if ($first_level && !empty($entity->getChildren())) {
-        continue;
-      }
-      $entity_options[$entity->id()] = $entity->getEntityName();
-    }
-    return $entity_options;
+  private function getCurrentEntityOptionsFlat() {
+    return array_map(function ($entity) {
+      return $entity->getEntityName();
+    }, $this->getCurrentEntities());
   }
 
   /**
@@ -416,9 +486,8 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
    */
   private function getEntitySwitcher() {
     // Get the attachments and configured columns.
-    $entity_options = $this->getCurrentEntityOptions();
-    $attachments = $this->getAttachmentsForCurrentEntity();
-    $entity_description = reset($attachments)->getSourceEntity()->description ?? NULL;
+    $entity_options = $this->getCurrentEntityOptionsGrouped();
+    $entity_description = $this->getCurrentEntity()->description ?? NULL;
     return [
       '#type' => 'container',
       [
@@ -462,7 +531,6 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       ],
       'display' => [
         'table_type' => self::TABLE_TYPE_GROUPED,
-        'group_selector' => self::TABLE_GROUP_SELECTOR_FIRST_LEVEL,
         'default_entity' => NULL,
       ],
     ];
@@ -554,27 +622,12 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       $form['table_type']['#disabled'] = TRUE;
       $form['table_type']['#description'] .= ' ' . $this->t('<em>Note: This has been disabled because the selected attachments have different attachment prototypes.</em>');
     }
-    $form['group_selector'] = [
-      '#type' => 'radios',
-      '#title' => $this->t('Group selector'),
-      '#description' => $this->t('Choose the type of group selector to use.'),
-      '#options' => [
-        self::TABLE_GROUP_SELECTOR_FIRST_LEVEL => $this->t('Show only first level groups'),
-        self::TABLE_GROUP_SELECTOR_HIERARCHY => $this->t('Show full entity hierarchy in selector'),
-      ],
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'group_selector') ?? self::TABLE_GROUP_SELECTOR_FIRST_LEVEL,
-      '#states' => [
-        'visible' => [
-          ':input[name="' . $table_type_selector . '"]' => ['value' => self::TABLE_TYPE_GROUPED],
-        ],
-      ],
-    ];
 
     $form['default_entity'] = [
       '#type' => 'select',
       '#title' => $this->t('Default entity'),
       '#description' => $this->t('Please select the entity that will show by default. If multiple entities are available to this widget, then the user can select to see data for the other entities by using a drop-down selector.'),
-      '#options' => $this->getCurrentEntityOptions(),
+      '#options' => $this->getCurrentEntityOptionsFlat(),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'default_entity') ?? NULL,
       '#states' => [
         'visible' => [
@@ -617,6 +670,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       'data_point' => [
         'label' => $this->t('Data point'),
         'attachment_prototype' => $this->getAttachmentPrototype($this->getSelectedAttachments()),
+        'disaggregation_modal' => TRUE,
       ],
       'monitoring_period' => [],
     ];
