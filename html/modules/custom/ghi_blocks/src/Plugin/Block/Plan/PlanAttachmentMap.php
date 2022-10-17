@@ -1128,7 +1128,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
         'common',
         'disclaimer',
-      ]) ?? self::DEFAULT_DISCLAIMER,
+      ]) ?? '',
     ];
 
     $form['common']['pcodes_enabled'] = [

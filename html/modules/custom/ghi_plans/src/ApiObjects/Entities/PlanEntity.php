@@ -67,6 +67,37 @@ class PlanEntity extends EntityObjectBase {
   }
 
   /**
+   * Get the parent ids of an entity.
+   *
+   * @return int[]
+   *   The ids of the parents.
+   */
+  public function getParentIds() {
+    $entity = $this->getRawData();
+    $entity_version = $this->getEntityVersion($entity);
+    if (empty($entity_version->value->support)) {
+      return [];
+    }
+    $first_ref = reset($entity_version->value->support);
+    if (property_exists($first_ref, 'planEntityIds') && !empty($first_ref->planEntityIds)) {
+      return $first_ref->planEntityIds;
+    }
+    if (property_exists($entity, 'parentId')) {
+      return [$entity->parentId];
+    }
+  }
+
+  /**
+   * Get the name of the hierarchical group that this entity belongs to.
+   *
+   * @return string
+   *   The group name, e.g. "Strategic Objectives".
+   */
+  public function getGroupName() {
+    return $this->group_name;
+  }
+
+  /**
    * Get the main level parent id.
    *
    * @return int
@@ -75,7 +106,7 @@ class PlanEntity extends EntityObjectBase {
   public function getMainLevelParentId() {
     $entity = $this->getRawData();
     $entity_version = $this->getEntityVersion($entity);
-    if (!in_array($entity->entityPrototype->refCode, ApiEntityHelper::MAIN_LEVEL_PLE_REF_CODES) || empty($entity_version->value->support)) {
+    if (in_array($entity->entityPrototype->refCode, ApiEntityHelper::MAIN_LEVEL_PLE_REF_CODES) || empty($entity_version->value->support)) {
       return NULL;
     }
     return reset(reset($entity_version->value->support)->planEntityIds);

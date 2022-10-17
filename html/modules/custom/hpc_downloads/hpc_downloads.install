@@ -48,8 +48,8 @@ function hpc_downloads_requirements($phase) {
     $download_subdirectories = [
       'pdf' => t('PDF'),
       'png' => t('PNG'),
-      'xls' => t('XlS'),
-      'xlsx' => t('XlSX'),
+      'xls' => t('XLS'),
+      'xlsx' => t('XLSX'),
     ];
 
     foreach ($download_subdirectories as $directory => $label) {
