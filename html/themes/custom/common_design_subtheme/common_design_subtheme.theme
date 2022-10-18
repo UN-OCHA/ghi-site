@@ -129,6 +129,9 @@ function common_design_subtheme_preprocess_block(&$variables) {
     $processed_regions[$region] = TRUE;
   }
 
+  // Make the full width status available in the template.
+  $variables['full_width'] = !empty($variables['content']['#full_width']);
+
   // Some blocks are white-listed here to always use the content-width class,
   // others can declare themselves to use that class by setting the #full_width
   // property. One example of the latter is a promoted paragraph block.

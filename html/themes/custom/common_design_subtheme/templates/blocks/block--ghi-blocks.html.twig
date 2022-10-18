@@ -54,16 +54,18 @@
 
   {% if download_links %}
     <div class="block-links">
-      {% if download_links %}
-        <div class="block-download-links">
-          {{ download_links }}
-        </div>
-      {% endif %}
-      {% if icons %}
-        <div class="block-admin-links">
-          {{ icons }}
-        </div>
-      {% endif %}
+      <div class="block-links--inner {% if full_width %}content-width{% endif %}">
+        {% if download_links %}
+          <div class="block-download-links">
+            {{ download_links }}
+          </div>
+        {% endif %}
+        {% if icons %}
+          <div class="block-admin-links">
+            {{ icons }}
+          </div>
+        {% endif %}
+      </div>
     </div>
   {% endif %}
 
