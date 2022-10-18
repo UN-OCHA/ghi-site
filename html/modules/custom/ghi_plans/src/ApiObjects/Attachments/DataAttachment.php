@@ -181,6 +181,9 @@ class DataAttachment extends AttachmentBase {
     elseif (!empty($attachment_data->attachmentPrototype->planId)) {
       $plan_id = $attachment_data->attachmentPrototype->planId;
     }
+    elseif (!empty($attachment_data->measurements) && !empty($attachment_data->measurements[0]?->attachment?->planId)) {
+      $plan_id = $attachment_data->measurements[0]?->attachment?->planId;
+    }
     return $plan_id;
   }
 

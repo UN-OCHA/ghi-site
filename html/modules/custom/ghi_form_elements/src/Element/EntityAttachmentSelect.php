@@ -115,7 +115,7 @@ class EntityAttachmentSelect extends FormElement {
       'select_attachments' => 'select_attachments',
     ];
 
-    $current_action = $values['current_action'];
+    $current_action = $values['current_action'] ?? NULL;
     if ($action && array_key_exists($action, $actions_map)) {
       $current_action = $actions_map[$action];
     }

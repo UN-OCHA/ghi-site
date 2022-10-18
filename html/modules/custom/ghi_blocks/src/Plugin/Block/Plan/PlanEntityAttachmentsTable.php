@@ -96,14 +96,21 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       }
     }
     $entity_id = $config->entity_select->entity_id;
-    $attachment_id = $config->attachment_select->attachment_id ?? NULL;
+    $attachment_ids = array_values($config->attachment_select->attachment_id ?? []);
     $id_format = $config->id_format ?? 'custom_id_prefixed_refcode';
 
     // Sanity check to prevent importing of misconfigured elements.
-    if ($attachment_id && $plan_id) {
+    if ($attachment_ids && $plan_id) {
+      // Get the attachments. Imported configs can contain items like
+      // 'group_XXXX' as the first configured attachment id. We need to catch
+      // that to prevent errors.
+      $attachment_id = is_array($attachment_ids) ? $attachment_ids[0] : $attachment_ids;
+      if (!is_int($attachment_id)) {
+        $attachment_id = $attachment_ids[1];
+      }
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $attachment_query */
       $attachment_query = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('attachment_query');
-      $attachment = $attachment_query->getAttachment(is_array($attachment_id) ? reset($attachment_id) : $attachment_id);
+      $attachment = $attachment_query->getAttachment($attachment_id);
       if (!$attachment || !$attachment instanceof DataAttachment) {
         $attachment_id = NULL;
       }
@@ -197,7 +204,10 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     }
 
     $entity_id = is_array($entity_id) ? array_filter(array_values($entity_id)) : (array) $entity_id;
-    $attachment_id = is_array($attachment_id) ? array_filter(array_values($attachment_id)) : (array) $attachment_id;
+    $attachment_ids = is_array($attachment_ids) ? array_filter(array_values($attachment_ids)) : (array) $attachment_ids;
+    $attachment_ids = array_filter($attachment_ids, function ($attachment_id) {
+      return is_int($attachment_id);
+    });
     return [
       'label' => property_exists($config, 'widget_title') ? $config->widget_title : NULL,
       'label_display' => TRUE,
@@ -211,7 +221,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
               'entity_type' => $config->attachment_select->entity_type ?? NULL,
               'attachment_type' => $config->attachment_select->attachment_type,
               'attachment_prototype' => $config->attachment_select->attachment_prototype ?? NULL,
-              'attachment_id' => array_combine($attachment_id, $attachment_id),
+              'attachment_id' => array_combine($attachment_ids, $attachment_ids),
             ],
           ],
         ],
@@ -455,6 +465,12 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
           $entity_options[$group_name][$parent_entity->id()] = $parent_entity_name;
           ksort($entity_options[$group_name]);
         }
+        else {
+          $group_name = $entity->getGroupName();
+          $entity_options[$group_name] = $entity_options[$group_name] ?? [];
+          $entity_options[$group_name][$entity->id()] = $entity->getEntityName();
+          ksort($entity_options[$group_name]);
+        }
       }
       else {
         $entity_name = $entity->getEntityName();
@@ -522,7 +538,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
           'attachments' => [
             'entity_type' => NULL,
             'attachment_type' => NULL,
-            'attachment_id' => [],
+            'attachment_id' => NULL,
           ],
         ],
       ],

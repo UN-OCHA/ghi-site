@@ -16,6 +16,7 @@ use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\node\NodeInterface;
 
 /**
@@ -48,7 +49,7 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface {
+class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface {
 
   use PlanReportingPeriodTrait;
   use BlockCommentTrait;

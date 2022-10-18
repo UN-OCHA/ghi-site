@@ -51,65 +51,68 @@
   }
 
   & > div.block-links {
-    display: flex;
-    justify-content: space-between;
     padding: 1rem 0;
     border-top: 1px solid var(--cd-default-border-color);
     border-bottom: 1px solid var(--cd-default-border-color);
     font-size: var(--cd-font-size--small);
 
-    a {
-      text-decoration: none;
-      line-height: 1rem;
-    }
+    & > div.block-links--inner {
+      display: flex;
+      justify-content: space-between;
 
-    .block-download-links .download-item {
+      a {
+        text-decoration: none;
+        line-height: 1rem;
+      }
 
-      a.link--download-dialog {
-        position: relative;
-        padding-left: 1.5rem;
+      .block-download-links .download-item {
 
-        &:before {
-          position: absolute;
-          top: calc(50% - 10px);
-          left: 0;
-          padding: 10px;
-          content: "";
-          background: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/download/default/20px.svg") no-repeat;
+        a.link--download-dialog {
+          position: relative;
+          padding-left: 1.5rem;
+
+          &:before {
+            position: absolute;
+            top: calc(50% - 10px);
+            left: 0;
+            padding: 10px;
+            content: "";
+            background: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/download/default/20px.svg") no-repeat;
+          }
+        }
+
+        a:hover,
+        a:focus {
+          color: var(--cd-default-text-color);
         }
       }
 
-      a:hover,
-      a:focus {
-        color: var(--cd-default-text-color);
-      }
-    }
+      .block-admin-links {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
 
-    .block-admin-links {
-      display: flex;
-      align-items: baseline;
-      gap: 0.5rem;
+        a {
+          position: relative;
+          top: 2px;
+          font-size: var(--cd-font-size--base);
+        }
 
-      a {
-        position: relative;
-        top: 2px;
-        font-size: var(--cd-font-size--base);
-      }
-
-      button[data-toggle="popover"] {
-        position: relative;
-        top: -1px;
-        padding: 0;
-        transition: none;
-        color: inherit;
-        border: 0;
-        background-color: inherit;
-
-        &:hover,
-        &:focus {
-          color: var(--cd-primary-color--dark);
+        button[data-toggle="popover"] {
+          position: relative;
+          top: -1px;
+          padding: 0;
+          transition: none;
+          color: inherit;
           border: 0;
-          outline: 0;
+          background-color: inherit;
+
+          &:hover,
+          &:focus {
+            color: var(--cd-primary-color--dark);
+            border: 0;
+            outline: 0;
+          }
         }
       }
     }

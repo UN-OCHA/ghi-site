@@ -187,7 +187,6 @@ class AttachmentSelect extends FormElement {
       'entity_id' => $element['#entity_ids'] ?? NULL,
       'entity_type' => $element['#entity_type'] ?? NULL,
       'type' => $element['#attachment_type'] ?? NULL,
-      'prototype_id' => $element['#available_options']['attachment_prototypes'] ?? NULL,
     ]);
 
     // Get the attachments.
@@ -209,9 +208,6 @@ class AttachmentSelect extends FormElement {
 
     if (!empty($context['plan_object'])) {
       $entity_type_options = array_merge(['plan' => (string) t('Plan')], $entity_type_options);
-    }
-    if (empty($defaults['entity_type']) && count($entity_type_options)) {
-      $defaults['entity_type'] = array_key_first($entity_type_options);
     }
 
     // Build the filter to limit attachments to the ones available using the
