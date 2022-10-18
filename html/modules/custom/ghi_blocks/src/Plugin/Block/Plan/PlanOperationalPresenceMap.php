@@ -214,7 +214,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
 
       $map_data['locations'][] = clone $location_data;
     }
-    return $map_data;
+    return !empty($map_data['locations']) ? $map_data : NULL;
   }
 
   /**
