@@ -476,7 +476,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       $link_title = $this->t('For more details, view on <img src="@logo_url" />', [
         '@logo_url' => ThemeHelper::getUriToFtsIcon(),
       ]);
-      $fts_link = ThemeHelper::render(self::buildFtsLink($link_title, $this->getCurrentPlanObject(), $data_page, $this->getCurrentBaseObject()));
+      $fts_link = self::buildFtsLink($link_title, $this->getCurrentPlanObject(), $data_page, $this->getCurrentBaseObject());
     }
 
     $object_count_label_map = [
@@ -497,7 +497,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
         '@admin_level' => $location->admin_level,
       ]),
       'title' => $location->location_name,
-      'content' => $fts_link . $content,
+      'content' => ThemeHelper::render($fts_link, FALSE) . $content,
       'object_count_label' => $object_count_label_map[$selected_view],
     ];
     return $modal_content;
