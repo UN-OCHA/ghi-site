@@ -150,6 +150,7 @@ function common_design_subtheme_preprocess_block(&$variables) {
   if (array_key_exists('comment', $variables['content']) && !empty($variables['content']['comment'])) {
     $variables['comment'] = $variables['content']['comment'];
     unset($variables['content']['comment']);
+    $variables['attributes']['class'][] = 'has-comment';
   }
 }
 

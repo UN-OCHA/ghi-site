@@ -23,7 +23,7 @@ ghi_plans.plan_autocomplete:
 ghi_plans.modal_content.dissaggregation:
   path: '/modal-content/disaggregation/{attachment}/{metric}/{reporting_period}'
   defaults:
-    _controller: '\Drupal\ghi_plans\Controller\DissaggregationModalController::loadDisaggregationModalData'
+    _controller: '\Drupal\ghi_plans\Controller\DisaggregationModalController::loadDisaggregationModalData'
     _format: json
     reporting_period: 'latest'
   requirements:

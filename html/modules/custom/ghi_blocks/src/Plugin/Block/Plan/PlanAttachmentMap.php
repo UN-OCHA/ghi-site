@@ -72,7 +72,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $plan_id = $plan ? $plan->get('field_original_id')->value : NULL;
 
     if (!property_exists($config, 'entity_select')) {
-      if (($config->entity_type ?? NULL) == 'overview' && $base_object = BaseObjectHelper::getBaseObjectFromNode($node)) {
+      if ($base_object = BaseObjectHelper::getBaseObjectFromNode($node)) {
         $entity_id = BaseObjectHelper::getOriginalIdFromEntity($base_object);
         $config->entity_select = (object) [
           'entity_id' => [
