@@ -14,7 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Controller for disaggregation modals.
  */
-class DissaggregationModalController extends ControllerBase {
+class DisaggregationModalController extends ControllerBase {
 
   /**
    * The icon query.
