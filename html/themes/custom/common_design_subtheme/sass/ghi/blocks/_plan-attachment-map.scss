@@ -77,9 +77,17 @@
     }
   }
 
-  .download-link-wrapper {
-    top: -2rem;
-    margin-top: 0;
+  div.block-links {
+    .download-link-wrapper {
+      top: -2rem;
+      margin-top: 0;
+    }
+  }
+
+  &:not(.has-comment) {
+    div.block-links {
+      border-top: 0;
+    }
   }
 
   .plan-attachment-map-wrapper {
@@ -122,23 +130,29 @@
       margin-bottom: 0.5rem;
       tbody {
         border-top: none;
-      }
-      tr {
-        margin-bottom: 8px;
-        vertical-align: top;
 
-        td {
-          padding: 0;
-          text-align: right;
-          color: var(--hpc-brown);
-          border: none;
-          background: none;
-          font-size: var(--cd-font-size--small);
-          font-weight: 600;
+        tr {
+          margin-bottom: 8px;
+          vertical-align: top;
+          border-bottom: 1px solid var(--cd-default-border-color);
 
-          &:first-child {
-            text-align: left;
-            font-weight: 400;
+          &:last-child {
+            border-bottom: 0;
+          }
+
+          td {
+            padding: 0;
+            text-align: right;
+            color: var(--hpc-brown);
+            border: none;
+            background: none;
+            font-size: var(--cd-font-size--small);
+            font-weight: 600;
+
+            &:first-child {
+              text-align: left;
+              font-weight: 400;
+            }
           }
         }
       }

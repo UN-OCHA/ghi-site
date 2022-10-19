@@ -71,6 +71,10 @@
 
       tr {
         border-bottom: 1px solid var(--cd-default-border-color);
+
+        &:last-child {
+          border-bottom: 0;
+        }
       }
 
       td:first-child.subrow {
