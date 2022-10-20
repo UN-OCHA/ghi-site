@@ -16,6 +16,7 @@ use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -49,7 +50,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  }
  * )
  */
-class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface {
+class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface {
 
   use OrganizationsBlockTrait;
   use FtsLinkTrait;

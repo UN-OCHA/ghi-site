@@ -38,9 +38,11 @@
 
         &:focus,
         &:hover {
+          color: var(--colorGinPrimary) !important;
           box-shadow: none;
         }
 
+        &:focus:after,
         &:hover:after {
           z-index: -1;
           content: "";

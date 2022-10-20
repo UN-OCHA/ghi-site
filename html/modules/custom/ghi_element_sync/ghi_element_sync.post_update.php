@@ -12,6 +12,11 @@ use Drupal\node\Entity\Node;
  * General purpose function to update all page elements.
  */
 function ghi_element_sync_update_page_elements(&$sandbox) {
+  $run = &drupal_static(__FUNCTION__, FALSE);
+  if ($run) {
+    return t('skipping');
+  }
+
   if (!isset($sandbox['sync_manager'])) {
     $sandbox['sync_manager'] = \Drupal::service('ghi_element_sync.sync_elements');
 
@@ -49,6 +54,7 @@ function ghi_element_sync_update_page_elements(&$sandbox) {
 
   $sandbox['#finished'] = ($sandbox['total'] - count($sandbox['node_ids'])) / $sandbox['total'];
   if ($sandbox['#finished'] === 1) {
+    $run = TRUE;
     return t('Processed @processed nodes, skipped @skipped of a total of @total nodes.', [
       '@processed' => $sandbox['results']['processed'],
       '@skipped' => $sandbox['results']['skipped'],

@@ -354,8 +354,8 @@ class DataPointHelper {
    *   given configuration.
    */
   private static function getCalculatedValue(DataAttachment $attachment, array $data_point_conf) {
-    $value_1 = self::getValueForDataPoint($attachment, $data_point_conf, 0);
-    $value_2 = self::getValueForDataPoint($attachment, $data_point_conf, 1);
+    $value_1 = (float) self::getValueForDataPoint($attachment, $data_point_conf, 0);
+    $value_2 = (float) self::getValueForDataPoint($attachment, $data_point_conf, 1);
 
     switch ($data_point_conf['calculation']) {
       case 'addition':
