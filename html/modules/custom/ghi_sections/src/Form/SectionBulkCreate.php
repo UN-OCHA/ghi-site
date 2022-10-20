@@ -111,11 +111,27 @@ class SectionBulkCreate extends FormBase {
       '#description' => $this->t('Check this if existing sections should be recreated.'),
     ];
 
+    $form['reset'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Reset'),
+      '#description' => $this->t('Check this if existing sections should be reset to their initial state (empty page).'),
+    ];
+
     if ($this->moduleHandler->moduleExists('ghi_element_sync')) {
       $form['sync_elements'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Sync elements'),
         '#description' => $this->t('Check this if elements should be synced from Hum Insights.'),
+      ];
+      $form['sync_elements_cleanup'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Cleanup any existing elements'),
+        '#description' => $this->t('Check this if existing elements should be removed before synching from remote.'),
+        '#states' => [
+          'visible' => [
+            ':input[name="sync_elements"]' => ['checked' => TRUE],
+          ],
+        ],
       ];
     }
 
@@ -148,6 +164,7 @@ class SectionBulkCreate extends FormBase {
       $bundle,
       $form_state->getValue('team'),
       $form_state->getValue('recreate'),
+      $form_state->getValue('reset'),
     ]);
 
     $sync_elements = $form_state->hasValue('sync_elements') && $form_state->getValue('sync_elements');
@@ -165,7 +182,7 @@ class SectionBulkCreate extends FormBase {
         TRUE,
         TRUE,
         !$form_state->getValue('recreate'),
-        FALSE,
+        $form_state->getValue('sync_elements_cleanup') ?? FALSE,
       ]);
     }
 

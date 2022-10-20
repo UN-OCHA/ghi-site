@@ -2,20 +2,12 @@
 // --------------------------------------------------
 
 .ghi-block-global-key-figures + .ghi-block-global-plan-overview-map {
-  margin-top: -2em;
+  margin-top: 0;
 }
 
 .ghi-block-global-plan-overview-map {
   position: relative;
   clear: both;
-
-  .block-content {
-    margin-top: 2rem;
-
-    body.layout-builder-ipe-editing & {
-      padding-top: 1.5rem;
-    }
-  }
 
   .overlay {
     position: absolute;
@@ -24,26 +16,6 @@
     width: 100%;
     opacity: 0.25;
   }
-
-  // .pane-title-wrapper {
-  //   padding-top: 0px;
-  //   min-height: 50px;
-  //   @include tablet {
-  //     padding-top: 10px;
-  //   }
-
-  //   .pane-title, h2.pane-title {
-  //     border-bottom: none;
-  //     display: inline-block;
-  //     padding-bottom: 0;
-  //     margin-bottom: 0.5rem;
-  //     float: left;
-  //     margin-right: 0px;
-  //     @media (min-width: 450px) {
-  //       margin-right: 10px;
-  //     }
-  //   }
-  // }
 
   .map-container {
     margin-bottom: 1rem;

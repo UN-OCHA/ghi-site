@@ -31,7 +31,7 @@ class DataAttachment extends AttachmentBase {
   protected function map() {
     $attachment = $this->getRawData();
     $metrics = $this->getMetrics();
-    $unit = property_exists($metrics, 'unit') && property_exists($metrics->unit, 'object') ? $metrics->unit->object : NULL;
+    $unit = $metrics && is_object($metrics) && property_exists($metrics, 'unit') ? $metrics->unit?->object : NULL;
     $prototype = $this->getPrototypeData();
     $period = $this->fetchReportingPeriodForAttachment();
     $measurement_fields = $metrics->measureFields ?? [];
@@ -219,7 +219,7 @@ class DataAttachment extends AttachmentBase {
     if (!$plan_id) {
       return FALSE;
     }
-    $reporting_periods = self::getReportingPeriods($plan_id, TRUE);
+    $reporting_periods = self::getPlanReportingPeriods($plan_id, TRUE);
     if (empty($reporting_periods)) {
       return FALSE;
     }
@@ -724,6 +724,20 @@ class DataAttachment extends AttachmentBase {
     }
 
     return $prototype;
+  }
+
+  /**
+   * Get a single specified reporting period object.
+   *
+   * @param int $period_id
+   *   The reporting period id.
+   *
+   * @return object
+   *   A reporting period object.
+   */
+  public function getReportingPeriod($period_id) {
+    $plan_id = $this->getPlanId();
+    return $plan_id ? self::getPlanReportingPeriod($plan_id, $period_id) : NULL;
   }
 
   /**

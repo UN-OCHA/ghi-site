@@ -54,7 +54,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
       '#default_value' => $this->getSubmittedValue($element, $form_state, 'data_point'),
     ];
     $element['monitoring_periods'] = [
-      '#type' => 'monitoring_period',
+      '#type' => 'monitoring_periods',
       '#title' => $this->t('Monitoring periods'),
       '#default_value' => $this->getSubmittedValue($element, $form_state, 'monitoring_periods'),
       '#multiple' => TRUE,
@@ -106,10 +106,12 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     $attachment->data_point_conf = [
       'processing' => 'single',
       'calculation' => 'substraction',
-      'monitoring_period' => end($monitoring_periods),
       'data_points' => [
-        0 => $this->get('data_point'),
-        1 => 0,
+        0 => [
+          'index' => $this->get('data_point'),
+          'monitoring_period' => end($monitoring_periods),
+        ],
+        1 => ['index' => 0],
       ],
       'formatting' => 'auto',
       'widget' => 'none',
@@ -137,7 +139,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     $decimal_format = $plan_object->getDecimalFormat();
 
     // Get the monitoring periods.
-    $reporting_periods = $attachment->getReportingPeriods($plan_object->getSourceId(), TRUE);
+    $reporting_periods = $attachment->getPlanReportingPeriods($plan_object->getSourceId(), TRUE);
     $last_reporting_period = end($reporting_periods);
 
     // Create the data / label arrays for all configured monitoring periods.

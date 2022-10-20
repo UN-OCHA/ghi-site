@@ -81,7 +81,7 @@ class DataPointHelper {
     else {
       $build[] = self::formatAsWidget($attachment, $data_point_conf);
     }
-    if (self::isMeasurement($attachment, $data_point_conf) && $monitoring_period = self::formatMonitoringPeriod($attachment, 'icon')) {
+    if (self::isMeasurement($attachment, $data_point_conf) && $monitoring_period = self::formatMonitoringPeriod($attachment, 'icon', $data_point_conf)) {
       $build[] = $monitoring_period;
     }
     return $build;
@@ -100,14 +100,17 @@ class DataPointHelper {
    *   otherwise.
    */
   private static function isMeasurement(DataAttachment $attachment, array $data_point_conf) {
+    $data_points = $data_point_conf['data_points'];
+    $data_point_1 = $data_points[0]['index'];
+    $data_point_2 = $data_points[1]['index'];
     switch ($data_point_conf['processing']) {
       case 'single':
-        $field = $attachment->fields[$data_point_conf['data_points'][0]];
+        $field = $attachment->fields[$data_point_1];
         return $attachment->isMeasurementField($field);
 
       case 'calculated':
-        $field_1 = $attachment->fields[$data_point_conf['data_points'][0]];
-        $field_2 = $attachment->fields[$data_point_conf['data_points'][1]];
+        $field_1 = $attachment->fields[$data_point_1];
+        $field_2 = $attachment->fields[$data_point_2];
         return $attachment->isMeasurementField($field_1) || $attachment->isMeasurementField($field_2);
 
     }
@@ -117,7 +120,7 @@ class DataPointHelper {
   /**
    * Get a formatted text value for a data point.
    *
-   * @param object $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
    *   The attachment object.
    * @param array $data_point_conf
    *   The data point configuration.
@@ -128,7 +131,7 @@ class DataPointHelper {
    *
    * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
    */
-  private static function formatAsText($attachment, array $data_point_conf) {
+  private static function formatAsText(DataAttachment $attachment, array $data_point_conf) {
     $value = self::getValue($attachment, $data_point_conf);
     if ($value === NULL && $data_point_conf['formatting'] != 'percent') {
       return [
@@ -205,7 +208,7 @@ class DataPointHelper {
   /**
    * Get a formatted widget for a data point.
    *
-   * @param object $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
    *   The attachment object.
    * @param array $data_point_conf
    *   The data point configuration.
@@ -216,7 +219,7 @@ class DataPointHelper {
    *
    * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
    */
-  private static function formatAsWidget($attachment, array $data_point_conf) {
+  private static function formatAsWidget(DataAttachment $attachment, array $data_point_conf) {
     switch ($data_point_conf['widget']) {
       case 'progressbar':
         $value = self::getValue($attachment, $data_point_conf);
@@ -244,16 +247,20 @@ class DataPointHelper {
   /**
    * Get a formatted monitoring period for the attachment object.
    *
-   * @param object $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
    *   The attachment object.
    * @param string $display_type
    *   The display type, either "icon" or "text".
+   * @param array $data_point_conf
+   *   Optional: The data point configuration to extract the monitoring period.
    *
    * @return array|null
    *   A build array or NULL.
    */
-  public static function formatMonitoringPeriod($attachment, $display_type) {
-    if (!$attachment->monitoring_period) {
+  public static function formatMonitoringPeriod(DataAttachment $attachment, $display_type, array $data_point_conf = NULL) {
+    $monitoring_period_id = $data_point_conf['data_points'][0]['monitoring_period'] ?? NULL;
+    $monitoring_period = $monitoring_period_id ? $attachment->getReportingPeriod($monitoring_period_id) : $attachment->monitoring_period;
+    if (!$monitoring_period) {
       return NULL;
     }
     switch ($display_type) {
@@ -262,7 +269,7 @@ class DataPointHelper {
           '#theme' => 'hpc_tooltip',
           '#tooltip' => ThemeHelper::render([
             '#theme' => 'hpc_reporting_period',
-            '#reporting_period' => $attachment->monitoring_period,
+            '#reporting_period' => $monitoring_period,
           ], FALSE),
           '#class' => 'monitoring period',
           '#tag_content' => [
@@ -276,7 +283,7 @@ class DataPointHelper {
       case 'text':
         $build = [
           '#theme' => 'hpc_reporting_period',
-          '#reporting_period' => $attachment->monitoring_period,
+          '#reporting_period' => $monitoring_period,
         ];
         break;
     }
@@ -284,9 +291,44 @@ class DataPointHelper {
   }
 
   /**
+   * Get a specific value for a data point.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
+   *   The attachment object.
+   * @param array $data_point_conf
+   *   The data point configuration.
+   * @param int $index
+   *   The index of the data point, either 0 or 1.
+   *
+   * @return mixed
+   *   The data point value, extracted from the attachment according to the
+   *   given configuration.
+   */
+  private static function getValueForDataPoint(DataAttachment $attachment, array $data_point_conf, $index = 0) {
+    $data_point = $data_point_conf['data_points'][$index] ?? NULL;
+    if (!$data_point) {
+      return NULL;
+    }
+    $data_point_index = $data_point['index'];
+    $monitoring_period = $data_point['monitoring_period'] ?? NULL;
+    if ($monitoring_period) {
+      $value = $attachment->getMeasurementMetricValue($data_point_index, $monitoring_period);
+    }
+    if (!$monitoring_period || (!$value && !self::isMeasurement($attachment, $data_point_conf))) {
+      // If a monitoring period has been specified but there is no value,
+      // that's either because a measurement is not yet available or because
+      // there is an issue with the data in RPM, where the metric values
+      // haven't been copied over to the measurements. That last issue is why
+      // we do this check.
+      $value = $attachment->values[$data_point_index];
+    }
+    return $value;
+  }
+
+  /**
    * Get a single value for a data point.
    *
-   * @param object $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
    *   The attachment object.
    * @param array $data_point_conf
    *   The data point configuration.
@@ -295,15 +337,14 @@ class DataPointHelper {
    *   The data point value, extracted from the attachment according to the
    *   given configuration.
    */
-  private static function getSingleValue($attachment, array $data_point_conf) {
-    $value = $attachment->values[$data_point_conf['data_points'][0]];
-    return $value;
+  private static function getSingleValue(DataAttachment $attachment, array $data_point_conf) {
+    return self::getValueForDataPoint($attachment, $data_point_conf, 0);
   }
 
   /**
    * Get the calculated value for a data point.
    *
-   * @param object $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
    *   The attachment object.
    * @param array $data_point_conf
    *   The data point configuration.
@@ -312,9 +353,9 @@ class DataPointHelper {
    *   The data point value, extracted from the attachment according to the
    *   given configuration.
    */
-  private static function getCalculatedValue($attachment, array $data_point_conf) {
-    $value_1 = $attachment->values[$data_point_conf['data_points'][0]];
-    $value_2 = $attachment->values[$data_point_conf['data_points'][1]];
+  private static function getCalculatedValue(DataAttachment $attachment, array $data_point_conf) {
+    $value_1 = self::getValueForDataPoint($attachment, $data_point_conf, 0);
+    $value_2 = self::getValueForDataPoint($attachment, $data_point_conf, 1);
 
     switch ($data_point_conf['calculation']) {
       case 'addition':

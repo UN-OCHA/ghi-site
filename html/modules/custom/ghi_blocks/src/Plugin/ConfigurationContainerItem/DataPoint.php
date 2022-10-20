@@ -44,8 +44,8 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
-
     $attachment = $this->getContextValue('attachment');
+    $plan_object = $this->getContextValue('plan_object');
     $configuration = $this->getPluginConfiguration();
 
     $data_point = $this->getSubmittedValue($element, $form_state, 'data_point');
@@ -55,6 +55,8 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
       '#element_context' => $this->getContext(),
       '#attachment' => $attachment,
       '#attachment_prototype' => $configuration['attachment_prototype'],
+      '#plan_object' => $plan_object,
+      '#select_monitoring_period' => $configuration['select_monitoring_period'],
       '#default_value' => $data_point,
       '#weight' => 5,
     ] + ($configuration['presets'] ?? []);
@@ -68,11 +70,11 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   public function getDefaultLabel() {
     $attachment = $this->getContextValue('attachment');
     if ($attachment) {
-      return $attachment->fields[$this->get('data_point')['data_points'][0]];
+      return $attachment->fields[$this->get('data_point')['data_points'][0]['index']];
     }
     $attachment_prototype = $this->getContextValue('attachment_prototype');
     $fields = array_merge($attachment_prototype->fields ?? []);
-    return $fields[$this->get('data_point')['data_points'][0]];
+    return $fields[$this->get('data_point')['data_points'][0]['index']];
   }
 
   /**
@@ -94,7 +96,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     $config = $this->getPluginConfiguration();
     $build = DataPointHelper::formatValue($attachment, $attachment->data_point_conf);
     if (!empty($config['disaggregation_modal']) && $this->canShowDisaggregatedData($attachment)) {
-      $data_point = $this->get('data_point')['data_points'][0];
+      $data_point = $this->get('data_point')['data_points'][0]['index'];
       $link_url = Url::fromRoute('ghi_plans.modal_content.dissaggregation', [
         'attachment' => $attachment->id(),
         'metric' => $data_point,

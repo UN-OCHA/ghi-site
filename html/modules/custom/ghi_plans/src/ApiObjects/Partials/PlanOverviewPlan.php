@@ -384,7 +384,7 @@ class PlanOverviewPlan extends BaseObject {
     if (!$period_id) {
       return NULL;
     }
-    return $this->getReportingPeriod($this->id(), $period_id);
+    return $this->getPlanReportingPeriod($this->id(), $period_id);
   }
 
   /**

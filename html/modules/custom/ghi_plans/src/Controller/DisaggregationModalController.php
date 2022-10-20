@@ -55,7 +55,7 @@ class DisaggregationModalController extends ControllerBase {
     if ($attachment->isMeasurementField($metrics[$metric])) {
       $title .= ThemeHelper::render([
         '#theme' => 'hpc_reporting_period',
-        '#reporting_period' => $attachment->getReportingPeriod($attachment->getPlanId(), $reporting_period),
+        '#reporting_period' => $attachment->getReportingPeriod($reporting_period),
         '#format_string' => '<span class="title-additional-info">Monitoring period @period_number: @date_range</span>',
       ], FALSE);
     }

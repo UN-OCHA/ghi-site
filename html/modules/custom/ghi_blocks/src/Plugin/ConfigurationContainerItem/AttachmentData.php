@@ -129,8 +129,8 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
       $element['label']['#weight'] = 4;
       $element['data_point'] = [
         '#type' => 'data_point',
-        '#element_context' => $this->getContext(),
         '#attachment' => $attachment,
+        '#plan_object' => $this->getContextValue('plan_object'),
         '#default_value' => $data_point,
         '#weight' => 5,
         '#hidden' => $attachment_select_mode,
@@ -169,7 +169,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     $build[] = DataPointHelper::formatValue($attachment, $attachment->data_point_conf);
     $footnotes = $plan ? $this->getFootnotesForPlanBaseobject($plan) : NULL;
 
-    $data_point_index = $attachment->data_point_conf['data_points'][0];
+    $data_point_index = $attachment->data_point_conf['data_points'][0]['index'];
     $build[] = $this->buildFootnoteTooltip($footnotes, $attachment->field_types[$data_point_index]);
     return $build;
   }

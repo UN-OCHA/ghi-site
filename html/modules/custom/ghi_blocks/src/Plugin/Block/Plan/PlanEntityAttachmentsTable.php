@@ -78,7 +78,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
    * {@inheritdoc}
    */
   public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
-    $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($node, 'plan');
     $plan = $base_object && $base_object->bundle() == 'plan' ? $base_object : NULL;
     $plan_id = $plan ? $plan->get('field_original_id')->value : NULL;
 
@@ -98,7 +98,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     $entity_id = $config->entity_select->entity_id;
     $attachment_ids = array_values($config->attachment_select->attachment_id ?? []);
     $id_format = $config->id_format ?? 'custom_id_prefixed_refcode';
-
+    $configuration_check = FALSE;
     // Sanity check to prevent importing of misconfigured elements.
     if ($attachment_ids && $plan_id) {
       // Get the attachments. Imported configs can contain items like
@@ -111,14 +111,9 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $attachment_query */
       $attachment_query = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('attachment_query');
       $attachment = $attachment_query->getAttachment($attachment_id);
-      if (!$attachment || !$attachment instanceof DataAttachment) {
-        $attachment_id = NULL;
-      }
-      elseif ($attachment && $attachment->getPlanId() != $plan_id) {
-        $attachment_id = NULL;
-      }
+      $configuration_check = $attachment && $attachment instanceof DataAttachment && $attachment->getPlanId() == $plan_id;
     }
-    if (!$attachment_id) {
+    if (!$configuration_check) {
       throw new IncompleteElementConfigurationException('Incomplete configuration for "plan_attachment_map"');
     }
 
@@ -180,11 +175,18 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       switch ($transition_definition['target']) {
 
         case 'data_point':
-          $value->data_points[0] = $value->data_point_1;
-          $value->data_points[1] = $value->data_point_2;
-          // $value->widget = $value->mini_widget;
+          $value->data_points[0] = [
+            'index' => $value->data_point_1,
+            'monitoring_period' => $value->monitoring_period_1 ?? 'latest',
+          ];
+          $value->data_points[1] = [
+            'index' => $value->data_point_2,
+            'monitoring_period' => $value->monitoring_period_2 ?? 'latest',
+          ];
           unset($value->data_point_1);
           unset($value->data_point_2);
+          unset($value->monitoring_period_1);
+          unset($value->monitoring_period_2);
           unset($value->mini_widget);
           $item['config']['data_point'] = (array) $value;
           break;
@@ -687,6 +689,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
         'label' => $this->t('Data point'),
         'attachment_prototype' => $this->getAttachmentPrototype($this->getSelectedAttachments()),
         'disaggregation_modal' => TRUE,
+        'select_monitoring_period' => TRUE,
       ],
       'monitoring_period' => [],
     ];

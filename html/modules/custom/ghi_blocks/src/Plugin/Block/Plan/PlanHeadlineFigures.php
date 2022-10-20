@@ -191,8 +191,14 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
             'processing' => $value->data_point->processing,
             'calculation' => $value->data_point->calculation,
             'data_points' => [
-              0 => $value->data_point->data_point_1,
-              1 => $value->data_point->data_point_2,
+              0 => [
+                'index' => $value->data_point->data_point_1,
+                'monitoring_period' => $value->data_point->monitoring_period_1 ?? 'latest',
+              ],
+              1 => [
+                'index' => $value->data_point->data_point_2,
+                'monitoring_period' => $value->data_point->monitoring_period_2 ?? 'latest',
+              ],
             ],
             'formatting' => $value->data_point->formatting,
             'widget' => $value->data_point->mini_widget,
@@ -409,6 +415,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
         ],
         'data_point' => [
           'widget' => FALSE,
+          'select_monitoring_period' => TRUE,
         ],
       ],
       'label_value' => [],
