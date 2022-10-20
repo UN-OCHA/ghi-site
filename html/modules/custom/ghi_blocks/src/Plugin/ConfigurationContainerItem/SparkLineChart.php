@@ -19,6 +19,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class SparkLineChart extends ConfigurationContainerItemPluginBase {
 
+  const ITEM_TYPE = 'chart';
+
   /**
    * The attachment query.
    *

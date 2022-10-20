@@ -201,7 +201,6 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
               ],
             ],
             'formatting' => $value->data_point->formatting,
-            'widget' => $value->data_point->mini_widget,
           ];
           break;
 
