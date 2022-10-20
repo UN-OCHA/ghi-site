@@ -9,7 +9,7 @@ use Drupal\ghi_base_objects\Entity\BaseObjectType;
  *
  * This trait is meant to be used only by test classes.
  */
-trait BasicObjectTypeCreationTrait {
+trait BaseObjectTypeCreationTrait {
 
   /**
    * Create a base object type.
