@@ -389,7 +389,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
     $element['value'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Value'),
-      '#default_value' => array_key_exists('value', $filter_config) ? $filter_config['value'] : NULL,
+      '#default_value' => is_array($filter_config) && array_key_exists('value', $filter_config) ? $filter_config['value'] : NULL,
       '#states' => [
         'invisible' => [
           ':input[name="' . FormElementHelper::getStateSelector($element, ['op']) . '"]' => [
