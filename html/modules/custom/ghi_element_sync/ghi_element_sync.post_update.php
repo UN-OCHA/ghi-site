@@ -9,9 +9,9 @@ use Drupal\ghi_element_sync\SyncException;
 use Drupal\node\Entity\Node;
 
 /**
- * Update all pages after data structure changes to data points.
+ * General purpose function to update all page elements.
  */
-function ghi_element_sync_post_update_sync_elements_0001(&$sandbox) {
+function ghi_element_sync_update_page_elements(&$sandbox) {
   if (!isset($sandbox['sync_manager'])) {
     $sandbox['sync_manager'] = \Drupal::service('ghi_element_sync.sync_elements');
 
@@ -55,5 +55,18 @@ function ghi_element_sync_post_update_sync_elements_0001(&$sandbox) {
       '@total' => $sandbox['results']['total'],
     ]);
   }
+}
 
+/**
+ * Update all pages after data structure changes to data points.
+ */
+function ghi_element_sync_post_update_sync_elements_0001(&$sandbox) {
+  return ghi_element_sync_update_page_elements($sandbox);
+}
+
+/**
+ * Update all pages after config map update for plan headline figures.
+ */
+function ghi_element_sync_post_update_sync_elements_0002(&$sandbox) {
+  return ghi_element_sync_update_page_elements($sandbox);
 }
