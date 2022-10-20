@@ -28,10 +28,10 @@ class SyncBatch {
    *   Whether new revisions should be created.
    * @param bool $cleanup
    *   Whether existing elements should be cleaned up first.
-   * @param array $context
-   *   The batch context.
+   * @param array|\DrushBatchContext $context
+   *   An associative array or DrushBatchContext.
    */
-  public static function process(SyncManager $sync_manager, array $bundle, array $ids, $sync_elements, $sync_metadata, $revisions, $cleanup, array &$context) {
+  public static function process(SyncManager $sync_manager, array $bundle, array $ids, $sync_elements, $sync_metadata, $revisions, $cleanup, &$context) {
     if (!isset($context['sandbox']['sync_manager'])) {
       $context['sandbox']['sync_manager'] = $sync_manager;
 

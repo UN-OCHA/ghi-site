@@ -31,7 +31,7 @@ class DataAttachment extends AttachmentBase {
   protected function map() {
     $attachment = $this->getRawData();
     $metrics = $this->getMetrics();
-    $unit = $metrics && is_object($metrics) && property_exists($metrics, 'unit') ? $metrics->unit?->object : NULL;
+    $unit = $metrics && is_object($metrics) && property_exists($metrics, 'unit') ? ($metrics->unit->object ?? NULL) : NULL;
     $prototype = $this->getPrototypeData();
     $period = $this->fetchReportingPeriodForAttachment();
     $measurement_fields = $metrics->measureFields ?? [];
@@ -48,7 +48,7 @@ class DataAttachment extends AttachmentBase {
       'custom_id' => $attachment->attachmentVersion->value->customId ?? ($attachment->customReference ?? NULL),
       'custom_id_prefixed_refcode' => end($references),
       'composed_reference' => $attachment->composedReference,
-      'description' => $attachment->attachmentVersion->value->description,
+      'description' => $attachment->attachmentVersion->value->description ?? NULL,
       'values' => $this->extractValues(),
       'prototype' => $prototype,
       'unit' => $unit ? (object) [

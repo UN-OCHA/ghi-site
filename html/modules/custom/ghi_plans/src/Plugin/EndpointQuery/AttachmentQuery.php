@@ -35,6 +35,9 @@ class AttachmentQuery extends EndpointQueryBase implements ContainerFactoryPlugi
    *   The processed attachment object.
    */
   public function getAttachment($attachment_id) {
+    if (is_string($attachment_id) && strpos($attachment_id, 'group_') === 0) {
+      return NULL;
+    }
     $data = $this->getData(['attachment_id' => $attachment_id]);
     if (empty($data)) {
       return NULL;
