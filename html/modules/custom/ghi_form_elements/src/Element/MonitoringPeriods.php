@@ -4,7 +4,7 @@ namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\Select;
+use Drupal\Core\Render\Element\Checkboxes;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_common\Helpers\ThemeHelper;
@@ -12,9 +12,9 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
 /**
  * Provides a monitoring period form element.
  *
- * @FormElement("monitoring_period")
+ * @FormElement("monitoring_periods")
  */
-class MonitoringPeriod extends Select {
+class MonitoringPeriods extends Checkboxes {
 
   use AjaxElementTrait;
   use PlanReportingPeriodTrait;
@@ -30,26 +30,24 @@ class MonitoringPeriod extends Select {
       '#input' => TRUE,
       '#tree' => TRUE,
       '#plan_id' => NULL,
-      '#sort_options' => FALSE,
-      '#sort_start' => NULL,
+      '#multiple' => FALSE,
       '#include_latest' => TRUE,
       '#include_none' => FALSE,
       '#default_all' => FALSE,
       '#process' => [
-        [$class, 'processMonitoringPeriod'],
-        [$class, 'processSelect'],
+        [$class, 'processMonitoringPeriods'],
+        [$class, 'processCheckboxes'],
         [$class, 'processAjaxForm'],
         [$class, 'processGroup'],
       ],
       '#pre_render' => [
-        [$class, 'preRenderMonitoringPeriod'],
-        [$class, 'preRenderSelect'],
+        [$class, 'preRenderMonitoringPeriods'],
+        [$class, 'preRenderCompositeFormElement'],
         [$class, 'preRenderGroup'],
       ],
       '#element_submit' => [
         [$class, 'elementSubmit'],
       ],
-      '#theme' => $info['#theme'],
       '#theme_wrappers' => $info['#theme_wrappers'],
     ];
   }
@@ -76,7 +74,7 @@ class MonitoringPeriod extends Select {
    * This is called during form build. Note that it is not possible to store
    * any arbitrary data inside the form_state object.
    */
-  public static function processMonitoringPeriod(array &$element, FormStateInterface $form_state) {
+  public static function processMonitoringPeriods(array &$element, FormStateInterface $form_state) {
     $wrapper_id = self::getWrapperId($element);
     $element['#prefix'] = '<div id="' . $wrapper_id . '">';
     $element['#suffix'] = '</div>';
@@ -97,9 +95,8 @@ class MonitoringPeriod extends Select {
     if (!$element['#default_value'] && $element['#multiple'] && $element['#default_all']) {
       $empty_default = array_keys($monitoring_period_options);
     }
-
     $element = [
-      '#type' => 'select',
+      '#type' => 'checkboxes',
       '#options' => $monitoring_period_options,
       '#default_value' => $element['#default_value'] ?? $empty_default,
       '#multiple' => $element['#multiple'],
@@ -110,7 +107,7 @@ class MonitoringPeriod extends Select {
   /**
    * Prerender callback.
    */
-  public static function preRenderMonitoringPeriod(array $element) {
+  public static function preRenderMonitoringPeriods(array $element) {
     $element['#attributes']['type'] = 'monitoring_period';
     Element::setAttributes($element, ['id', 'name', 'value']);
     // Sets the necessary attributes, such as the error class for validation.

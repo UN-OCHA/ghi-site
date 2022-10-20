@@ -1,3 +1,10 @@
+.form-type--data_point .data-points-wrapper > div {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
 .form-type--data_point select {
   width: auto;
 }

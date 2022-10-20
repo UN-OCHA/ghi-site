@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
@@ -166,7 +167,7 @@ class PlanOverviewMap extends GHIBlockBase {
           'funding_progress' => $plan->getCoverage(),
         ],
         'caseload' => (object) [
-          'total_population' => $plan->getCaseloadValue('total_population'),
+          'total_population' => $plan->getCaseloadValue('totalPopulation'),
           'target' => $target,
           'in_need' => $in_need,
           'estimated_reach' => $plan->getCaseloadValue('expectedReach'),
@@ -187,6 +188,7 @@ class PlanOverviewMap extends GHIBlockBase {
         'location_name' => $object->location->name,
         'latLng' => $object->location->latLng,
         'caseload' => [
+          $object->caseload->total_population,
           $object->caseload->in_need,
           $object->caseload->target,
         ],
@@ -635,7 +637,11 @@ class PlanOverviewMap extends GHIBlockBase {
           'plans' => [],
         ];
       }
-      $countries[$plan_country->id]['plans'][$plan->id()] = $plan->getName();
+      $countries[$plan_country->id]['plans'][$plan->id()] = new FormattableMarkup('@plan_name (@plan_type, @plan_status)', [
+        '@plan_name' => $plan->getName(),
+        '@plan_type' => $plan->getTypeShortName(),
+        '@plan_status' => $plan->getPlanStatus(),
+      ]);
     }
     ArrayHelper::sortArrayByStringKey($countries, 'name', EndpointQuery::SORT_ASC);
     return $countries;

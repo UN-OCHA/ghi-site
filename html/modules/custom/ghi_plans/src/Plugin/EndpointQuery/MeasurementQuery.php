@@ -36,6 +36,9 @@ class MeasurementQuery extends EndpointQueryBase implements ContainerFactoryPlug
    *   An array of unprocessed measurement objects.
    */
   public function getUnprocessedMeasurements($attachment_id, $disaggregation = FALSE) {
+    if (is_string($attachment_id) && strpos($attachment_id, 'group_') === 0) {
+      return [];
+    }
     $endpoint_args = [];
     if (!$disaggregation) {
       $endpoint_args['disaggregation'] = 'false';

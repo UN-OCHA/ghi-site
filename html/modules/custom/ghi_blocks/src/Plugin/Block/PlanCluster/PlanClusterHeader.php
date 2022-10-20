@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_element_sync\IncompleteElementConfigurationException;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\node\NodeInterface;
 
@@ -44,6 +45,9 @@ class PlanClusterHeader extends GHIBlockBase implements MultiStepFormBlockInterf
    * {@inheritdoc}
    */
   public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
+    if (empty($config->attachment_id)) {
+      throw new IncompleteElementConfigurationException('Incomplete configuration for "plan_cluster_header"');
+    }
     return [
       'label' => '',
       'label_display' => FALSE,

@@ -18,8 +18,8 @@ trait PlanReportingPeriodTrait {
    * @return object
    *   A reporting period object.
    */
-  public static function getReportingPeriod($plan_id, $period_id) {
-    $periods = self::getReportingPeriods($plan_id, FALSE);
+  public static function getPlanReportingPeriod($plan_id, $period_id) {
+    $periods = self::getPlanReportingPeriods($plan_id, FALSE);
     return array_key_exists($period_id, $periods) ? $periods[$period_id] : NULL;
   }
 
@@ -34,7 +34,7 @@ trait PlanReportingPeriodTrait {
    * @return objects[]
    *   An array of monitoring period objects.
    */
-  public static function getReportingPeriods($plan_id, $limit_to_published = FALSE) {
+  public static function getPlanReportingPeriods($plan_id, $limit_to_published = FALSE) {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanReportingPeriodsQuery $query */
     $query = self::getEndpointQueryManager()->createInstance('plan_reporting_periods_query');
     $query->setPlaceholder('plan_id', $plan_id);

@@ -187,6 +187,8 @@ trait GlobalSettingsTrait {
       }
       $cache_tags = Cache::mergeTags($cache_tags, $section->getCacheTags());
       if (!$section->isPublished()) {
+        // Hide document link if section is not published.
+        $row['status']['data']['content']['document'] = NULL;
         return $row;
       }
       $row['name']['data'][0] = $section->toLink($row['name']['data'][0]['#markup'])->toRenderable();

@@ -11,14 +11,17 @@ use Drupal\ghi_base_objects\Traits\ShortNameTrait;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_common\Helpers\StringHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
+use Drupal\layout_builder\LayoutEntityHelperTrait;
+use Drupal\node\NodeInterface;
 use Drupal\taxonomy\TermInterface;
 
 /**
- * Sync element service class.
+ * Section manager service class.
  */
 class SectionManager {
 
   use DependencySerializationTrait;
+  use LayoutEntityHelperTrait;
   use ShortNameTrait;
 
   /**
@@ -83,6 +86,23 @@ class SectionManager {
   }
 
   /**
+   * Reset a section.
+   *
+   * This basically empties the section storage to remove any configured
+   * layout.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The section node.
+   */
+  public function resetSection(NodeInterface $node) {
+    $section_storage = $this->getSectionStorageForEntity($node);
+    if ($section_storage) {
+      $section_storage->removeAllSections();
+      $section_storage->save();
+    }
+  }
+
+  /**
    * Create a section node for the given base object.
    *
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
@@ -92,7 +112,7 @@ class SectionManager {
    *   initial values. Most of them can be inferred from the base object if not
    *   explicitly given.
    *
-   * @return \Drupal\Core\Entity\EntityInterface|bool
+   * @return \Drupal\node\NodeInterface|bool
    *   Either the created section entity, or boolean FALSE.
    */
   public function createSectionForBaseObject(BaseObjectInterface $base_object, array $values) {

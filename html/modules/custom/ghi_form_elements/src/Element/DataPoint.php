@@ -43,6 +43,8 @@ class DataPoint extends FormElement {
       '#theme_wrappers' => ['form_element'],
       '#attachment' => NULL,
       '#attachment_prototype' => NULL,
+      '#plan_object' => NULL,
+      '#select_monitoring_period' => FALSE,
       '#widget' => TRUE,
       '#hidden' => FALSE,
       '#disabled_empty_fields' => TRUE,
@@ -86,6 +88,7 @@ class DataPoint extends FormElement {
    */
   public static function processDataPoint(array &$element, FormStateInterface $form_state) {
     $attachment = $element['#attachment'];
+    $plan_object = $element['#plan_object'] ?? NULL;
     $attachment_prototype = $attachment ? $attachment->prototype : $element['#attachment_prototype'];
     if (empty($attachment) && empty($attachment_prototype)) {
       return $element;
@@ -142,36 +145,69 @@ class DataPoint extends FormElement {
 
     $element['data_points'] = [
       '#type' => 'container',
-    ];
-    $element['data_points'][0] = [
-      '#type' => 'select',
-      '#title' => t('Data point'),
-      '#options' => $data_point_options,
-      // '#name' => 'data-point-0',
-      '#default_value' => $defaults['data_points'][0],
-      '#ajax' => [
-        'event' => 'change',
-        'callback' => [static::class, 'updateAjax'],
-        'wrapper' => $wrapper_id,
+      '#attributes' => [
+        'class' => ['data-points-wrapper'],
       ],
     ];
+    $element['data_points'][0] = [
+      '#type' => 'container',
+    ];
     $element['data_points'][1] = [
-      '#type' => 'select',
-      '#title' => t('Data point (2)'),
-      '#options' => $data_point_options,
-      // '#name' => 'data-point-1',
-      '#default_value' => $defaults['data_points'][1],
+      '#type' => 'container',
       '#states' => [
         'visible' => [
           'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
         ],
       ],
+    ];
+    $element['data_points'][0]['index'] = [
+      '#type' => 'select',
+      '#title' => t('Data point'),
+      '#options' => $data_point_options,
+      '#default_value' => $defaults['data_points'][0]['index'],
       '#ajax' => [
         'event' => 'change',
         'callback' => [static::class, 'updateAjax'],
         'wrapper' => $wrapper_id,
       ],
     ];
+    if (!empty($element['#select_monitoring_period'])) {
+      $element['data_points'][0]['monitoring_period'] = [
+        '#type' => 'monitoring_period',
+        '#title' => t('Monitoring period'),
+        '#default_value' => $defaults['data_points'][0]['monitoring_period'] ?? NULL,
+        '#plan_id' => $plan_object->getSourceId(),
+        '#ajax' => [
+          'event' => 'change',
+          'callback' => [static::class, 'updateAjax'],
+          'wrapper' => $wrapper_id,
+        ],
+      ];
+    }
+    $element['data_points'][1]['index'] = [
+      '#type' => 'select',
+      '#title' => t('Data point (2)'),
+      '#options' => $data_point_options,
+      '#default_value' => $defaults['data_points'][1]['index'],
+      '#ajax' => [
+        'event' => 'change',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+    ];
+    if (!empty($element['#select_monitoring_period'])) {
+      $element['data_points'][1]['monitoring_period'] = [
+        '#type' => 'monitoring_period',
+        '#title' => t('Monitoring period (2)'),
+        '#default_value' => $defaults['data_points'][1]['monitoring_period'] ?? NULL,
+        '#plan_id' => $plan_object->getSourceId(),
+        '#ajax' => [
+          'event' => 'change',
+          'callback' => [static::class, 'updateAjax'],
+          'wrapper' => $wrapper_id,
+        ],
+      ];
+    }
 
     $element['formatting'] = [
       '#type' => 'select',
@@ -204,7 +240,7 @@ class DataPoint extends FormElement {
       $element['value_preview'] = [
         '#type' => 'item',
         '#title' => t('Value preview'),
-        '#markup' => ThemeHelper::render($build),
+        '#markup' => ThemeHelper::render($build, FALSE),
         '#access' => empty($element['#hidden']),
       ];
     }

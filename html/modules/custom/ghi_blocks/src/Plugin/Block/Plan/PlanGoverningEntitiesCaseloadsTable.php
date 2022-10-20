@@ -109,10 +109,18 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       switch ($transition_definition['target']) {
 
         case 'data_point':
-          $value->data_points[0] = $value->data_point_1;
-          $value->data_points[1] = $value->data_point_2;
+          $value->data_points[0] = [
+            'index' => $value->data_point_1,
+            'monitoring_period' => $value->monitoring_period_1 ?? 'latest',
+          ];
+          $value->data_points[1] = [
+            'index' => $value->data_point_2,
+            'monitoring_period' => $value->monitoring_period_2 ?? 'latest',
+          ];
           unset($value->data_point_1);
           unset($value->data_point_2);
+          unset($value->monitoring_period_1);
+          unset($value->monitoring_period_2);
           unset($value->mini_widget);
           $item['config']['data_point'] = (array) $value;
           break;

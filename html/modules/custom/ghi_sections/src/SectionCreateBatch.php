@@ -20,10 +20,12 @@ class SectionCreateBatch {
    *   The id of the team term object.
    * @param bool $recreate
    *   Whether to recreate existing sections.
+   * @param bool $reset
+   *   Whether to reset existing sections.
    * @param array $context
    *   The batch context.
    */
-  public static function process(SectionManager $section_manager, array $bundle, $team, $recreate, array &$context) {
+  public static function process(SectionManager $section_manager, array $bundle, $team, $recreate, $reset, array &$context) {
     if (!isset($context['sandbox']['section_manager'])) {
       $context['sandbox']['section_manager'] = $section_manager;
 
@@ -50,6 +52,10 @@ class SectionCreateBatch {
     $section = $section_manager->loadSectionForBaseObject($base_object);
 
     $messenger = \Drupal::messenger();
+
+    if ($section && $reset) {
+      $section_manager->resetSection($section);
+    }
 
     if (!$section || $recreate) {
       if ($section) {

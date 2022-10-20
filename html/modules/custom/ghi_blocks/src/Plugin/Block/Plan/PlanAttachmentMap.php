@@ -67,7 +67,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    * {@inheritdoc}
    */
   public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
-    $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($node, 'plan');
     $plan = $base_object && $base_object->bundle() == 'plan' ? $base_object : NULL;
     $plan_id = $plan ? $plan->get('field_original_id')->value : NULL;
 
@@ -229,7 +229,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $plan_base_object = $this->getCurrentPlanObject();
     $plan_id = $this->getCurrentPlanId();
     $decimal_format = $plan_base_object->getDecimalFormat();
-    $reporting_periods = $this->getReportingPeriods($plan_id);
+    $reporting_periods = $this->getPlanReportingPeriods($plan_id);
     $reporting_period = $this->getCurrentReportingPeriod();
     $configured_reporting_periods = $this->getConfiguredReportingPeriods();
 
@@ -379,7 +379,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $plan_base_object = $this->getCurrentPlanObject();
     $plan_id = $this->getCurrentPlanId();
     $decimal_format = $plan_base_object->getDecimalFormat();
-    $reporting_periods = $this->getReportingPeriods($plan_id);
+    $reporting_periods = $this->getPlanReportingPeriods($plan_id);
     $reporting_period = $this->getCurrentReportingPeriod();
     $configured_reporting_periods = $this->getConfiguredReportingPeriods();
 
@@ -580,7 +580,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       return (int) $item;
     }, $conf['partial_segments']));
     $available_metric_items = array_keys($this->getDefaultAttachment()->getMetricFields());
-    $reporting_periods = $this->getReportingPeriods($this->getCurrentPlanId(), TRUE);
+    $reporting_periods = $this->getPlanReportingPeriods($this->getCurrentPlanId(), TRUE);
     $configured_monitoring_periods = is_object($conf['monitoring_period']) ? $conf['monitoring_period']->monitoring_period : $conf['monitoring_period'];
 
     $map_style_config = [
@@ -641,7 +641,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   private function getCurrentReportingPeriod() {
     $plan_id = $this->getCurrentPlanId();
     $configured_reporting_periods = $this->getConfiguredReportingPeriods();
-    $reporting_periods = $this->getReportingPeriods($plan_id);
+    $reporting_periods = $this->getPlanReportingPeriods($plan_id);
     $reporting_period = reset($configured_reporting_periods);
     if ($reporting_period == 'latest' && !empty($reporting_periods)) {
       if ($latest_published_reporting_period = self::getLatestPublishedReportingPeriod($plan_id)) {
@@ -853,7 +853,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       return [];
     }
     $plan_id = $this->getCurrentPlanId();
-    $reporting_periods = $this->getReportingPeriods($plan_id, TRUE);
+    $reporting_periods = $this->getPlanReportingPeriods($plan_id, TRUE);
     if (empty($reporting_periods)) {
       return [];
     }
@@ -1003,7 +1003,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       ],
     ];
     $form['appearance'][self::STYLE_CIRCLE]['monitoring_period'] = [
-      '#type' => 'monitoring_period',
+      '#type' => 'monitoring_periods',
       '#title' => $this->t('Monitoring period'),
       '#description' => $this->t('The monitoring period that should be used for data displayed in the map. If you select multiple monitoring periods, these will be made available as a drop-down on each measurement metric. Note that depending on the available data per attachment, some monitoring periods will be hidden if there is not enough data for a display in the map.'),
       '#plan_id' => $this->getCurrentPlanId(),
@@ -1070,7 +1070,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       ]) ?? array_key_first($attachment->getMeasurementMetricFields()),
     ];
     $form['appearance'][self::STYLE_DONUT]['monitoring_period'] = [
-      '#type' => 'monitoring_period',
+      '#type' => 'monitoring_periods',
       '#title' => $this->t('Monitoring periods'),
       '#plan_id' => $this->getCurrentPlanId(),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [

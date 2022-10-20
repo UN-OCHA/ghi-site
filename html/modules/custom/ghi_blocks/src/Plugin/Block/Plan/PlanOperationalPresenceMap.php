@@ -10,6 +10,7 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_blocks\Traits\OrganizationsBlockTrait;
+use Drupal\ghi_element_sync\IncompleteElementConfigurationException;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster;
@@ -78,6 +79,9 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
    * {@inheritdoc}
    */
   public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
+    if (empty($config->organization_ids)) {
+      throw new IncompleteElementConfigurationException('Incomplete configuration for "plan_operational_presence_map"');
+    }
     return [
       'label' => property_exists($config, 'widget_title') ? $config->widget_title : NULL,
       'label_display' => TRUE,
