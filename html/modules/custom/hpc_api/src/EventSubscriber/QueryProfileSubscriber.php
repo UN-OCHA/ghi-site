@@ -2,11 +2,10 @@
 
 namespace Drupal\hpc_api\EventSubscriber;
 
+use Drupal\hpc_api\Helpers\QueryHelper;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\HttpKernel\Event\PostResponseEvent;
-
-use Drupal\hpc_api\Helpers\QueryHelper;
+use Symfony\Component\HttpKernel\Event\TerminateEvent;
 
 /**
  * Dump profiling information at the end of a request.
@@ -35,10 +34,10 @@ class QueryProfileSubscriber implements EventSubscriberInterface {
   /**
    * Dump the call times tgether with memory usage.
    *
-   * @param \Symfony\Component\HttpKernel\Event\PostResponseEvent $event
+   * @param \Symfony\Component\HttpKernel\Event\TerminateEvent $event
    *   The post response event.
    */
-  public function logQueryProfileForRequest(PostResponseEvent $event) {
+  public function logQueryProfileForRequest(TerminateEvent $event) {
     if (!$this->debugLogger || !is_object($this->debugLogger) || !method_exists($this->debugLogger, 'toFile')) {
       return NULL;
     }

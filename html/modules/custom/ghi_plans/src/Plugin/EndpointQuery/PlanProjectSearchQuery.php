@@ -49,7 +49,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    */
   public function getData(array $placeholders = [], array $query_args = []) {
     $placeholders = array_merge($placeholders, $this->getPlaceholders());
-    $cache_key = $this->getCacheKey($placeholders);
+    $cache_key = $this->getCacheKey($placeholders + $query_args);
     if ($cached_data = $this->cache($cache_key)) {
       return $cached_data;
     }
@@ -107,10 +107,11 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
       if (!$project->published) {
         continue;
       }
-      if (empty($project->organizations)) {
+      $project_organizations = $project->getOrganizations();
+      if (empty($project_organizations)) {
         continue;
       }
-      $organization_ids = array_keys($project->organizations);
+      $organization_ids = array_keys($project_organizations);
       if (in_array($organization->id, $organization_ids)) {
         $organization_projects[$project->id] = $project;
       }
@@ -139,7 +140,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
       if (empty($project->clusters)) {
         continue;
       }
-      $organization_ids = array_keys($project->organizations);
+      $organization_ids = array_keys($project->getOrganizations());
       if (in_array($organization->id, $organization_ids)) {
         $organization_clusters += $project->clusters;
       }
@@ -171,10 +172,11 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
       if (!$project->published) {
         continue;
       }
-      if (empty($project->organizations)) {
+      $project_organizations = $project->getOrganizations();
+      if (empty($project_organizations)) {
         continue;
       }
-      foreach ($project->organizations as $organization) {
+      foreach ($project_organizations as $organization) {
         if (!empty($organizations[$organization->id])) {
           continue;
         }
@@ -186,7 +188,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
   }
 
   /**
-   * Get the projects in the context of the given node.
+   * Get the projects in the context of the given base object.
    *
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
    *   The context base object.
@@ -250,10 +252,11 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
     }
     $clusters = [];
     foreach ($projects as $project) {
-      if (empty($project->organizations)) {
+      $project_organizations = $project->getOrganizations();
+      if (empty($project_organizations)) {
         continue;
       }
-      foreach ($project->organizations as $organization) {
+      foreach ($project_organizations as $organization) {
         if (empty($clusters[$organization->id])) {
           $clusters[$organization->id] = [];
         }
@@ -286,10 +289,11 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
     }
     $organization_projects = [];
     foreach ($projects as $project) {
-      if (empty($project->organizations)) {
+      $project_organizations = $project->getOrganizations();
+      if (empty($project_organizations)) {
         continue;
       }
-      foreach ($project->organizations as $organization) {
+      foreach ($project_organizations as $organization) {
         if (empty($organization_projects[$organization->id])) {
           $organization_projects[$organization->id] = [];
         }
