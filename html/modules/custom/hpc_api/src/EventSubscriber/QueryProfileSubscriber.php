@@ -46,7 +46,7 @@ class QueryProfileSubscriber implements EventSubscriberInterface {
     if (empty($call_times)) {
       return;
     }
-
+    arsort($call_times);
     $this->debugLogger->toFile($call_times);
   }
 

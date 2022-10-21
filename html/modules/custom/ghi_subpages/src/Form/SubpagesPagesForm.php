@@ -106,6 +106,8 @@ class SubpagesPagesForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
+    // Have "views_form" in here will improve the styling of this form if the
+    // GIN theme is used. See gin_form_alter().
     return 'ghi_subpages_admin_views_form';
   }
 

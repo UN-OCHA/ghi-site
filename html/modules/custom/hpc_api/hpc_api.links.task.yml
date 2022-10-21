@@ -1,0 +1,11 @@
+# Base object tasks definition
+
+hpc_file_report.data_source:
+  route_name: hpc_api.reports.files.data_source
+  base_route: hpc_api.reports.files
+  title: 'Data source files'
+
+hpc_file_report.icons:
+  route_name: hpc_api.reports.files.icons
+  base_route: hpc_api.reports.files
+  title: 'Icon files'
