@@ -156,6 +156,13 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
   /**
    * {@inheritdoc}
    */
+  public function getPlaceholder($key) {
+    return $this->endpointQuery->getPlaceholder($key);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPlaceholders() {
     return $this->endpointQuery->getPlaceholders();
   }

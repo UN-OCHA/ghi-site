@@ -8,6 +8,7 @@ use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
+use Drupal\ghi_plans\Traits\PlanVersionArgument;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\hpc_api\Query\EndpointQueryBase;
@@ -35,8 +36,19 @@ use Drupal\hpc_api\Traits\SimpleCacheTrait;
 class PlanEntitiesQuery extends EndpointQueryBase {
 
   use AttachmentFilterTrait;
+  use PlanVersionArgument;
   use SimpleCacheTrait;
   use StringTranslationTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getData(array $placeholders = [], array $query_args = []) {
+    if ($plan_id = $this->getPlaceholder('plan_id')) {
+      $query_args['version'] = $this->getPlanVersionArgumentForPlanId($plan_id);
+    }
+    return parent::getData($placeholders, $query_args);
+  }
 
   /**
    * Get all attachments.
@@ -62,6 +74,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
     if ($attachments) {
       return $attachments;
     }
+
     $data = $this->getData();
 
     if (empty($data)) {

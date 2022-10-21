@@ -154,6 +154,10 @@ class SyncManager implements ContainerInjectionInterface {
         'field' => 'field_decimal_format',
         'property' => 'value',
       ],
+      'plan_version' => [
+        'field' => 'field_plan_version_argument',
+        'property' => 'value',
+      ],
       'status_string' => [
         'field' => 'field_plan_status',
         'property' => 'value',

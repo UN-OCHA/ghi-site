@@ -8,7 +8,7 @@ namespace Drupal\hpc_api\Traits;
 trait SimpleCacheTrait {
 
   /**
-   * Build a cache from an associative array.
+   * Build a cache key from an associative array.
    *
    * @param array $array
    *   The input array.
