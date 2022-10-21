@@ -368,7 +368,9 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
         }
       }
       if (!empty($link_map)) {
-        uksort($link_map, 'strlen');
+        uksort($link_map, function ($_a, $_b) {
+          return strlen($_a) - strlen($_b);
+        });
         $link_map = array_reverse($link_map, TRUE);
       }
     }
