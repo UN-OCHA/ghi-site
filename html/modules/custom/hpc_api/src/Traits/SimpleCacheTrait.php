@@ -44,6 +44,7 @@ trait SimpleCacheTrait {
     if ($data === NULL && $reset === TRUE) {
       // Clear the cached data as requested.
       unset($cache_store[$cache_key]);
+      self::cacheBackend()->delete($cache_key);
       return NULL;
     }
     elseif ($data === NULL) {
@@ -51,12 +52,24 @@ trait SimpleCacheTrait {
       if (array_key_exists($cache_key, $cache_store)) {
         return $cache_store[$cache_key];
       }
-      return NULL;
+      $cache = self::cacheBackend()->get($cache_key);
+      return $cache ? $cache->data : NULL;
     }
 
-    // Also store it in the static cache.
+    // Store data in the cache.
     $cache_store[$cache_key] = $data;
+    self::cacheBackend()->set($cache_key, $data);
     return $cache_store[$cache_key];
+  }
+
+  /**
+   * Get the cache backend.
+   *
+   * @return \Drupal\Core\Cache\CacheBackendInterface
+   *   A cache object.
+   */
+  private static function cacheBackend() {
+    return \Drupal::cache();
   }
 
 }

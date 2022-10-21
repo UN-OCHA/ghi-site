@@ -42,10 +42,10 @@ class LocationsQuery extends EndpointQueryBase {
    * @return object
    *   An unprocessed response object from the API.
    */
-  private function getCountryLocationData($country_id, $max_level = self::MAX_LEVEL, $include_expired = TRUE) {
+  private function getCountryLocationData($country_id, $max_level = NULL, $include_expired = TRUE) {
     $this->setPlaceholder('country_id', $country_id);
     $this->endpointQuery->setEndpointArguments(array_filter([
-      'maxLevel' => $max_level,
+      'maxLevel' => $max_level ?? self::MAX_LEVEL,
       'includeExpired' => $include_expired ? 'true' : NULL,
     ]));
     $data = $this->getData();

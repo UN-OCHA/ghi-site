@@ -1,4 +1,4 @@
-# Base object routing definition
+# Base object tasks definition
 
 entity.base_object.canonical:
   route_name: entity.base_object.canonical
