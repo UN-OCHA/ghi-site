@@ -1,0 +1,27 @@
+uuid: 145c32d7-91dc-4058-9367-a7fd368e6f4d
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+    - options
+id: base_object.field_plan_version_argument
+field_name: field_plan_version_argument
+entity_type: base_object
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: current
+      label: current
+    -
+      value: latest
+      label: latest
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
