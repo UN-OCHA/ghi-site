@@ -3,6 +3,8 @@
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\Traits\PlanVersionArgument;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 
 /**
@@ -24,31 +26,31 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  */
 class MeasurementQuery extends EndpointQueryBase implements ContainerFactoryPluginInterface {
 
+  use PlanVersionArgument;
+
   /**
-   * Get an attachment by id.
+   * Get the unprocessed measurements for the given attachment.
    *
-   * @param int $attachment_id
-   *   The attachment id to query.
+   * @param Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
+   *   The attachment to query.
    * @param bool $disaggregation
    *   Whether to fetch disaggregation data or not.
    *
    * @return array
    *   An array of unprocessed measurement objects.
    */
-  public function getUnprocessedMeasurements($attachment_id, $disaggregation = FALSE) {
-    if (is_string($attachment_id) && strpos($attachment_id, 'group_') === 0) {
-      return [];
-    }
+  public function getUnprocessedMeasurements(DataAttachment $attachment, $disaggregation = FALSE) {
     $endpoint_args = [];
     if (!$disaggregation) {
       $endpoint_args['disaggregation'] = 'false';
     }
     if ($this->isAutenticatedEndpoint) {
-      $data = $this->getData([], ['attachmentId' => $attachment_id] + $endpoint_args);
+      $endpoint_args['version'] = $this->getPlanVersionArgumentForPlanId($attachment->getPlanId());
+      $data = $this->getData([], ['attachmentId' => $attachment->id()] + $endpoint_args);
       return $data;
     }
     else {
-      $data = $this->getData(['attachment_id' => $attachment_id], $endpoint_args);
+      $data = $this->getData(['attachment_id' => $attachment->id()], $endpoint_args);
       return $data->measurements ?? [];
     }
   }

@@ -621,7 +621,7 @@ class DataAttachment extends AttachmentBase {
     if (!property_exists($attachment, 'measurements')) {
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\MeasurementQuery $measurements_query */
       $measurements_query = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('measurement_query');
-      $measurements = $measurements_query->getUnprocessedMeasurements($attachment->id);
+      $measurements = $measurements_query->getUnprocessedMeasurements($this);
       $attachment->measurements = $measurements;
       $this->setRawData($attachment);
       $this->updateMap();

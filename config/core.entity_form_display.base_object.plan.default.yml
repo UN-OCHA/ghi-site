@@ -16,6 +16,7 @@ dependencies:
     - field.field.base_object.plan.field_plan_document_link
     - field.field.base_object.plan.field_plan_status
     - field.field.base_object.plan.field_plan_type
+    - field.field.base_object.plan.field_plan_version_argument
     - field.field.base_object.plan.field_plan_version_tag
     - field.field.base_object.plan.field_restricted
     - field.field.base_object.plan.field_short_name
@@ -73,6 +74,7 @@ third_party_settings:
       children:
         - field_short_name
         - field_operations_category
+        - field_plan_version_argument
         - field_plan_caseload
         - field_plan_status
         - field_plan_document_link
@@ -148,7 +150,7 @@ content:
     third_party_settings: {  }
   field_decimal_format:
     type: options_select
-    weight: 11
+    weight: 12
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -168,14 +170,14 @@ content:
     third_party_settings: {  }
   field_link_to_fts:
     type: boolean_checkbox
-    weight: 13
+    weight: 14
     region: content
     settings:
       display_label: true
     third_party_settings: {  }
   field_max_admin_level:
     type: number
-    weight: 12
+    weight: 13
     region: content
     settings:
       placeholder: ''
@@ -195,7 +197,7 @@ content:
     third_party_settings: {  }
   field_plan_caseload:
     type: ghi_plans_plan_caseload
-    weight: 8
+    weight: 9
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -211,7 +213,7 @@ content:
     third_party_settings: {  }
   field_plan_document_link:
     type: link_default
-    weight: 10
+    weight: 11
     region: content
     settings:
       placeholder_url: ''
@@ -219,7 +221,7 @@ content:
     third_party_settings: {  }
   field_plan_status:
     type: boolean_checkbox
-    weight: 9
+    weight: 10
     region: content
     settings:
       display_label: false
@@ -233,6 +235,12 @@ content:
       match_limit: 10
       size: 60
       placeholder: ''
+    third_party_settings: {  }
+  field_plan_version_argument:
+    type: options_select
+    weight: 8
+    region: content
+    settings: {  }
     third_party_settings: {  }
   field_plan_version_tag:
     type: string_textfield
@@ -259,7 +267,7 @@ content:
     third_party_settings: {  }
   field_visible_on_global_pages:
     type: boolean_checkbox
-    weight: 14
+    weight: 15
     region: content
     settings:
       display_label: true

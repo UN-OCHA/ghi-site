@@ -500,7 +500,7 @@ class EndpointQuery {
    *   A string representing the full url, including protocol and query string.
    */
   public function getFullEndpointUrl() {
-    $endpoint_url = $this->getBaseUrl() . '/' . $this->substitutePlaceholders($this->getEndpointUrl());
+    $endpoint_url = $this->getBaseUrl() . '/' . $this->getEndpointUrl();
     $query = array_map(function ($item) {
       return $this->substitutePlaceholders($item);
     }, $this->getEndpointArguments());
@@ -622,6 +622,14 @@ class EndpointQuery {
    */
   public function setPlaceholders($placeholders) {
     $this->placeholders = $placeholders + $this->placeholders;
+  }
+
+  /**
+   * Retrieve a specific placeholder value.
+   */
+  public function getPlaceholder($key) {
+    $placeholders = $this->getPlaceholders();
+    return $placeholders[$key] ?? NULL;
   }
 
   /**

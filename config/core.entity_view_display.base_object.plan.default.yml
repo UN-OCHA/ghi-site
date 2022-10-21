@@ -16,6 +16,7 @@ dependencies:
     - field.field.base_object.plan.field_plan_document_link
     - field.field.base_object.plan.field_plan_status
     - field.field.base_object.plan.field_plan_type
+    - field.field.base_object.plan.field_plan_version_argument
     - field.field.base_object.plan.field_plan_version_tag
     - field.field.base_object.plan.field_restricted
     - field.field.base_object.plan.field_short_name
@@ -141,6 +142,13 @@ content:
       link: true
     third_party_settings: {  }
     weight: -3
+    region: content
+  field_plan_version_argument:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 16
     region: content
   field_plan_version_tag:
     type: string
