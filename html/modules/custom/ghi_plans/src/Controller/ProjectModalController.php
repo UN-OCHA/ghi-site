@@ -39,7 +39,7 @@ class ProjectModalController extends ControllerBase {
   }
 
   /**
-   * Build a project table for display in a modal window.
+   * Build a project table.
    *
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
    *   The base object.
@@ -50,12 +50,12 @@ class ProjectModalController extends ControllerBase {
   public function buildProjectTable(BaseObjectInterface $base_object) {
     $project_search_query = $this->getProjectSearchQuery($base_object);
     $projects = $project_search_query->getProjects($base_object);
-    $build = $this->getProjectPopoverContent($projects, $this->getDecimalFormat($base_object));
+    $build = $this->getProjectTable($projects, $this->getDecimalFormat($base_object));
     return $build;
   }
 
   /**
-   * Build an organization list for display in a modal window.
+   * Build an organization list.
    *
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
    *   The base object.
@@ -78,7 +78,26 @@ class ProjectModalController extends ControllerBase {
       ];
     }
 
-    $build[] = $this->getOrganizationPopoverContent($organizations);
+    $build[] = $this->getOrganizationList($organizations);
+    return $build;
+  }
+
+  /**
+   * Build a project table for an organization.
+   *
+   * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
+   *   The base object.
+   * @param int $organization_id
+   *   The id of the organization for which to display the projects.
+   *
+   * @return array
+   *   A render array.
+   */
+  public function buildOrganizationProjectTable(BaseObjectInterface $base_object, $organization_id) {
+    $organization = $this->getOrganization($organization_id);
+    $project_search_query = $this->getProjectSearchQuery($base_object);
+    $projects = $project_search_query->getOrganizationProjects($organization, $base_object);
+    $build = $this->getOrganizationProjectTable($projects, $this->getDecimalFormat($base_object));
     return $build;
   }
 
@@ -93,7 +112,7 @@ class ProjectModalController extends ControllerBase {
    * @return array
    *   A render array.
    */
-  private function getProjectPopoverContent(array $projects, $decimal_format = NULL) {
+  private function getProjectTable(array $projects, $decimal_format = NULL) {
     $header = [
       $this->t('Project code'),
       $this->t('Project name'),
@@ -146,6 +165,49 @@ class ProjectModalController extends ControllerBase {
   }
 
   /**
+   * Get the popover content for project items.
+   *
+   * @param array $projects
+   *   The projects to include in the table.
+   *
+   * @return array
+   *   A render array.
+   */
+  private function getOrganizationProjectTable(array $projects) {
+    $header = [
+      $this->t('Project code'),
+      $this->t('Project name'),
+      $this->t('Requirements'),
+    ];
+
+    $rows = [];
+    foreach ($projects as $project) {
+      $row = [];
+      $row[] = [
+        'data' => [
+          '#type' => 'link',
+          '#title' => $project->version_code,
+          '#url' => Url::fromUri('https://projects.hpc.tools/project/' . $project->id . '/view'),
+        ],
+      ];
+      $row[] = $project->name;
+      $row[] = [
+        'data' => [
+          '#theme' => 'hpc_currency',
+          '#value' => $project->requirements,
+        ],
+      ];
+      $rows[] = $row;
+    }
+
+    return [
+      '#theme' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+    ];
+  }
+
+  /**
    * Get the popover content for oragnization items.
    *
    * @param \Drupal\ghi_plans\ApiObjects\Organization[] $organizations
@@ -154,7 +216,7 @@ class ProjectModalController extends ControllerBase {
    * @return array
    *   A table render array.
    */
-  private function getOrganizationPopoverContent(array $organizations) {
+  private function getOrganizationList(array $organizations) {
     $links = $this->getOrganizationLinks($organizations);
     $popover_content = [
       '#theme' => 'item_list',
@@ -228,6 +290,21 @@ class ProjectModalController extends ControllerBase {
       $project_search_query->setFilterByClusterIds([$base_object->getSourceId()]);
     }
     return $project_search_query;
+  }
+
+  /**
+   * Load an organization object.
+   *
+   * @param int $organization_id
+   *   The id of the organization.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Organization|null
+   *   The organization object or NULL.
+   */
+  private function getOrganization($organization_id) {
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\OrganizationQuery $organization_query */
+    $organization_query = $this->endpointQueryManager->createInstance('organization_query');
+    return $organization_query->getOrganization($organization_id) ?? NULL;
   }
 
 }

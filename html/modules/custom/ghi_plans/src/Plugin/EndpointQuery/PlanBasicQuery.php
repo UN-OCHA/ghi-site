@@ -9,7 +9,7 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
- * Provides a query plugin for plan entities.
+ * Provides a query plugin for basic plan data.
  *
  * @EndpointQuery(
  *   id = "plan_basic_query",
