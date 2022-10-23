@@ -170,6 +170,9 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
     $modal_link = [
       '#theme' => 'hpc_modal_link',
       '#link' => $link->toRenderable(),
+      '#tooltip' => $this->t('Click to see detailed data for <em>@column_label</em>.', [
+        '@column_label' => $this->getLabel(),
+      ]),
     ];
     return $modal_link;
   }
