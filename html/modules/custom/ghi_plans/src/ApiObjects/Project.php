@@ -4,11 +4,14 @@ namespace Drupal\ghi_plans\ApiObjects;
 
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster;
+use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
  * Abstraction class for API project objects.
  */
 class Project extends BaseObject {
+
+  use SimpleCacheTrait;
 
   /**
    * Map the raw data.
@@ -36,7 +39,7 @@ class Project extends BaseObject {
       'cluster_ids' => $cluster_ids,
       'clusters' => $clusters,
       'global_clusters' => $data->globalClusters ?? [],
-      'organizations' => $this->getOrganizations(),
+      // 'organizations' => $this->getOrganizations(),
       'published' => !empty($data->currentPublishedVersionId),
       'requirements' => $data->currentRequestedFunds,
       'location_ids' => $data->locationIds->ids ?? [],
@@ -52,9 +55,15 @@ class Project extends BaseObject {
    * @return array
    *   An array of processed organization objects.
    */
-  private function getOrganizations() {
-    $processed_organizations = [];
+  public function getOrganizations() {
+    $cache_key = $this->getCacheKey(['project_id' => $this->id()]);
+    $processed_organizations = $this->cache($cache_key);
+    if ($processed_organizations) {
+      return $processed_organizations;
+    }
+
     $data = $this->getRawData();
+    $processed_organizations = [];
     // First find the organizations. There are 2 ways.
     $project_organizations = !empty($data->organizations) ? $data->organizations : [];
     if (property_exists($data, 'projectVersions')) {
@@ -71,6 +80,7 @@ class Project extends BaseObject {
       }
       $processed_organizations[$organization->id] = new Organization($organization);
     }
+    $this->cache($cache_key, $processed_organizations);
     return $processed_organizations;
   }
 

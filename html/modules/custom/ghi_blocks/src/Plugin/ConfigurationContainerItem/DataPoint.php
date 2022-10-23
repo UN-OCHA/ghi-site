@@ -126,6 +126,9 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
       $modal_link = [
         '#theme' => 'hpc_modal_link',
         '#link' => $link->toRenderable(),
+        '#tooltip' => $this->t('Click to see disaggregated data for <em>$metrics[$data_point]</em>.', [
+          '@column_label' => $this->getLabel(),
+        ]),
       ];
       $build[] = $modal_link;
     }

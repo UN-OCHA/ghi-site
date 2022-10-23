@@ -24,6 +24,19 @@
       .cd-figure-list__value {
         color: var(--cd-default-text-color);
 
+        & > div {
+          display: flex;
+          gap: 0.5rem;
+
+          span.suffix {
+            margin-left: -0.5rem;
+          }
+
+          a {
+            text-decoration: none;
+          }
+        }
+
         i[data-toggle="tooltip"] {
           vertical-align: top;
         }

@@ -2,8 +2,9 @@
 
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Render\Markup;
+use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
@@ -97,10 +98,9 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
     if (!$project_query) {
       return NULL;
     }
-    $base_object = $this->getContextValue('base_object');
+    $plan_object = $this->getContextValue('plan_object');
     $organization = $this->getContextValue('organization');
-
-    return $project_query->getOrganizationProjects($organization, $base_object);
+    return $project_query->getOrganizationProjects($organization, $plan_object);
   }
 
   /**
@@ -114,81 +114,67 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getRenderArray() {
-    $popover = $this->getPopover();
-    if (!$popover) {
+    $modal_link = $this->getModalLink();
+    if (!$modal_link) {
       return parent::getRenderArray();
     }
     return [
       '#type' => 'container',
       0 => parent::getRenderArray(),
-      1 => $popover,
+      1 => $modal_link,
     ];
   }
 
   /**
-   * Get a popover for the current value.
+   * Get a modal link for the current value.
    *
-   * Those are either projects or organizations.
+   * Those are either projects or organizations modals.
    *
    * @return array|null
-   *   An render array for the popover.
+   *   An render array for the modal link.
    */
-  private function getPopover() {
+  private function getModalLink() {
+    $plan_object = $this->getContextValue('plan_object');
     $organization = $this->getContextValue('organization');
-    $popover_content = $this->getProjectPopoverContent($this->getProjects());
-    return [
-      '#theme' => 'hpc_popover',
-      '#title' => Markup::create('<span class="name">' . $organization->name . '</span>'),
-      '#content' => [
-        $popover_content,
+
+    $route_name = 'ghi_plans.modal_content.organization_projects';
+    $width = '80%';
+
+    $link_url = Url::fromRoute($route_name, [
+      'organization_id' => $organization->id(),
+      'base_object' => $plan_object->id(),
+    ]);
+    $link_url->setOptions([
+      'attributes' => [
+        'class' => ['use-ajax', 'project-count-modal'],
+        'data-dialog-type' => 'modal',
+        'data-dialog-options' => Json::encode([
+          'width' => $width,
+          'title' => $this->t('@organization: Projects', [
+            '@organization' => $organization->getName(),
+          ]),
+          'classes' => [
+            'ui-dialog' => 'project-count-modal ghi-modal-dialog',
+          ],
+        ]),
+        'rel' => 'nofollow',
       ],
-      '#class' => 'project-data project-data-popover',
-      '#material_icon' => 'table_view',
-      '#disabled' => empty($popover_content),
-    ];
-  }
+    ]);
 
-  /**
-   * Get the popover content for project items.
-   *
-   * @param array $projects
-   *   The projects to include in the table.
-   *
-   * @return array
-   *   A render array.
-   */
-  private function getProjectPopoverContent(array $projects) {
-    $header = [
-      $this->t('Project code'),
-      $this->t('Project name'),
-      $this->t('Requirements'),
+    $text = [
+      '#theme' => 'hpc_icon',
+      '#icon' => 'table_view',
+      '#tag' => 'span',
     ];
-
-    $rows = [];
-    foreach ($projects as $project) {
-      $row = [];
-      $row[] = [
-        'data' => [
-          '#type' => 'link',
-          '#title' => $project->version_code,
-          '#url' => Url::fromUri('https://projects.hpc.tools/project/' . $project->id . '/view'),
-        ],
-      ];
-      $row[] = $project->name;
-      $row[] = [
-        'data' => [
-          '#theme' => 'hpc_currency',
-          '#value' => $project->requirements,
-        ],
-      ];
-      $rows[] = $row;
-    }
-
-    return [
-      '#theme' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
+    $link = Link::fromTextAndUrl($text, $link_url);
+    $modal_link = [
+      '#theme' => 'hpc_modal_link',
+      '#link' => $link->toRenderable(),
+      '#tooltip' => $this->t('Click to see detailed data for <em>@column_label</em>.', [
+        '@column_label' => $this->getLabel(),
+      ]),
     ];
+    return $modal_link;
   }
 
   /**
@@ -239,7 +225,6 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
       'planid' => $plan_id,
       'groupby' => 'cluster',
     ]);
-
     return $this->getClusterIdsByClusterRestrict($cluster_restrict, $search_results, $this->clusterQuery);
   }
 

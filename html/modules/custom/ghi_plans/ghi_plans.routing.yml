@@ -34,3 +34,38 @@ ghi_plans.modal_content.dissaggregation:
         type: attachment
       metric:
         type: integer
+ghi_plans.modal_content.projects:
+  path: '/modal-content/projects/{base_object}'
+  defaults:
+    _controller: '\Drupal\ghi_plans\Controller\ProjectModalController::buildProjectTable'
+    _format: json
+  requirements:
+    _access: 'TRUE'
+  options:
+    parameters:
+      base_object:
+        type: entity:base_object
+ghi_plans.modal_content.organizations:
+  path: '/modal-content/organizations/{base_object}'
+  defaults:
+    _controller: '\Drupal\ghi_plans\Controller\ProjectModalController::buildOrganizationList'
+    _format: json
+  requirements:
+    _access: 'TRUE'
+  options:
+    parameters:
+      base_object:
+        type: entity:base_object
+ghi_plans.modal_content.organization_projects:
+  path: '/modal-content/organization-projects/{base_object}/{organization_id}'
+  defaults:
+    _controller: '\Drupal\ghi_plans\Controller\ProjectModalController::buildOrganizationProjectTable'
+    _format: json
+  requirements:
+    _access: 'TRUE'
+  options:
+    parameters:
+      base_object:
+        type: entity:base_object
+      organization:
+        type: integer

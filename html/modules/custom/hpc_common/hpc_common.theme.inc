@@ -394,3 +394,20 @@ function hpc_common_preprocess_hpc_toggle(array &$vars) {
     '@target_selector' => $target_selector,
   ]);
 }
+
+/**
+ * Preprocess function for a modal link.
+ */
+function hpc_common_preprocess_hpc_modal_link(array &$vars) {
+  if (!empty($vars['tooltip'])) {
+    $vars['output'] = [
+      '#theme' => 'hpc_tooltip',
+      '#tooltip' => $vars['tooltip'],
+      '#class' => 'modal-tooltip',
+      '#tag_content' => [
+        '#theme' => 'hpc_modal_link',
+        '#link' => $vars['link'],
+      ],
+    ];
+  }
+}

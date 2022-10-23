@@ -2,11 +2,11 @@
 
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
-use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\FtsLinkTrait;
@@ -15,7 +15,6 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
-use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -171,14 +170,14 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getRenderArray() {
-    $popover = $this->getPopover();
-    if (!$popover) {
+    $modal_link = $this->getModalLink();
+    if (!$modal_link) {
       return parent::getRenderArray();
     }
     return [
       '#type' => 'container',
       0 => parent::getRenderArray(),
-      1 => $popover,
+      1 => $modal_link,
     ];
   }
 
@@ -214,155 +213,64 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
   }
 
   /**
-   * Get a popover for the current value.
+   * Get a modal link for the current value.
    *
-   * Those are either projects or organizations.
+   * Those are either projects or organizations modals.
    *
    * @return array|null
-   *   An render array for the popover.
+   *   An render array for the modal link.
    */
-  private function getPopover() {
-    $project_query = $this->initializeQuery();
+  private function getModalLink() {
     $data_type = $data_type ?? $this->get('data_type');
-    $entity = $this->getContextValue('entity');
     $base_object = $this->getContextValue('base_object');
-
-    $fts_link = NULL;
-    $link_title = $this->t('For more details, view on <img src="@logo_url" />', [
-      '@logo_url' => ThemeHelper::getUriToFtsIcon(),
-    ]);
-    $needs_fts_link = $base_object->bundle() == 'governing_entity';
-
-    $popover_content = NULL;
+    $context_node = $this->getContextValue('context_node');
     switch ($data_type) {
       case 'projects_count':
-        $objects = $project_query->getProjects($base_object);
-        $popover_content = !empty($objects) ? $this->getProjectPopoverContent($objects) : NULL;
-        $fts_link = $needs_fts_link ? self::buildFtsLink($link_title, $this->getContextValue('plan_object'), 'projects', $base_object) : NULL;
+        $route_name = 'ghi_plans.modal_content.projects';
+        $width = '80%';
         break;
 
       case 'organizations_count':
-        $objects = $project_query->getOrganizations($base_object);
-        $popover_content = !empty($objects) ? $this->getOrganizationPopoverContent($objects) : NULL;
-        $fts_link = $needs_fts_link ? self::buildFtsLink($link_title, $this->getContextValue('plan_object'), 'recipients', $base_object) : NULL;
+        $route_name = 'ghi_plans.modal_content.organizations';
+        $width = '50%';
         break;
     }
 
-    if ($popover_content === NULL) {
-      return NULL;
-    }
-
-    // Get the icon if there is any.
-    $icon = !empty($entity->icon) ? $this->iconQuery->getIconEmbedCode($entity->icon) : NULL;
-
-    return [
-      '#theme' => 'hpc_popover',
-      '#title' => Markup::create($icon . '<span class="name">' . $this->getLabel() . '</span>'),
-      '#content' => [
-        $fts_link,
-        $popover_content,
+    $link_url = Url::fromRoute($route_name, [
+      'base_object' => $base_object->id(),
+    ]);
+    $link_url->setOptions([
+      'attributes' => [
+        'class' => ['use-ajax', 'project-count-modal'],
+        'data-dialog-type' => 'modal',
+        'data-dialog-options' => Json::encode([
+          'width' => $width,
+          'title' => $this->t('@entity_label: @column_label', [
+            '@entity_label' => $context_node->label(),
+            '@column_label' => $this->getLabel(),
+          ]),
+          'classes' => [
+            'ui-dialog' => 'project-count-modal ghi-modal-dialog',
+          ],
+        ]),
+        'rel' => 'nofollow',
       ],
-      '#class' => 'project-data project-data-popover',
-      '#material_icon' => 'table_view',
-      '#disabled' => empty($popover_content),
+    ]);
+
+    $text = [
+      '#theme' => 'hpc_icon',
+      '#icon' => 'table_view',
+      '#tag' => 'span',
     ];
-  }
-
-  /**
-   * Get the popover content for project items.
-   *
-   * @param array $projects
-   *   The projects to include in the table.
-   *
-   * @return array
-   *   A render array.
-   */
-  private function getProjectPopoverContent(array $projects) {
-    $decimal_format = $this->getDecimalFormat();
-    $header = [
-      $this->t('Project code'),
-      $this->t('Project name'),
-      $this->t('Organizations'),
-      $this->t('Project Target'),
-      $this->t('Requirements'),
+    $link = Link::fromTextAndUrl($text, $link_url);
+    $modal_link = [
+      '#theme' => 'hpc_modal_link',
+      '#link' => $link->toRenderable(),
+      '#tooltip' => $this->t('Click to see detailed data for <em>@column_label</em>.', [
+        '@column_label' => $this->getLabel(),
+      ]),
     ];
-
-    $rows = [];
-    foreach ($projects as $project) {
-      $row = [];
-      $row[] = [
-        'data' => [
-          '#type' => 'link',
-          '#title' => $project->version_code,
-          '#url' => Url::fromUri('https://projects.hpc.tools/project/' . $project->id . '/view'),
-        ],
-      ];
-      $row[] = $project->name;
-      $row[] = [
-        'data' => [
-          '#theme' => 'item_list',
-          '#items' => $this->getOrganizationLinks($project->organizations),
-          '#gin_lb_theme_suggestions' => FALSE,
-        ],
-      ];
-      $row[] = [
-        'data' => [
-          '#theme' => 'hpc_amount',
-          '#amount' => $project->target,
-          '#scale' => 'full',
-          '#decimal_format' => $decimal_format,
-        ],
-      ];
-      $row[] = [
-        'data' => [
-          '#theme' => 'hpc_currency',
-          '#value' => $project->requirements,
-          '#decimal_format' => $decimal_format,
-        ],
-      ];
-      $rows[] = $row;
-    }
-
-    return [
-      '#theme' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-    ];
-  }
-
-  /**
-   * Get the popover content for oragnization items.
-   *
-   * @param array $organizations
-   *   The organizations to include in the table.
-   *
-   * @return array
-   *   A table render array.
-   */
-  private function getOrganizationPopoverContent(array $organizations) {
-    $links = $this->getOrganizationLinks($organizations);
-    $popover_content = [
-      '#theme' => 'item_list',
-      '#items' => $links,
-      '#list_type' => 'ol',
-      '#gin_lb_theme_suggestions' => FALSE,
-    ];
-    return $popover_content;
-  }
-
-  /**
-   * Get organization links when available.
-   *
-   * @param array $objects
-   *   The organization objects.
-   *
-   * @return array
-   *   An array of organization links, or their names if no url is set.
-   */
-  private function getOrganizationLinks(array $objects) {
-    return array_values(array_map(function ($object) {
-      return $object->url ? Link::fromTextAndUrl($object->name, Url::fromUri($object->url)) : $object->name;
-    }, $objects));
+    return $modal_link;
   }
 
   /**
@@ -384,8 +292,8 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
 
+    // @todo Why is this needed?
     $cluster_restrict = $cluster_restrict ?? $this->get('cluster_restrict');
-
     if (!empty($cluster_restrict) && $cluster_ids = $this->getClusterIdsForConfig($cluster_restrict)) {
       $project_query->setFilterByClusterIds($cluster_ids);
     }
@@ -472,18 +380,6 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
     // one of the valid ones.
     $term = TaxonomyHelper::getTermById($plan_object->field_plan_costing->target_id, 'plan_costing');
     return $term ? in_array($term->field_plan_costing_code->value, $valid_type_codes) : FALSE;
-  }
-
-  /**
-   * Get the decimal format to use for number formatting.
-   *
-   * @return string|null
-   *   Either 'comma', 'point' or NULL.
-   */
-  private function getDecimalFormat() {
-    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
-    $plan_object = $this->getContextValue('plan_object');
-    return $plan_object ? $plan_object->getDecimalFormat() : NULL;
   }
 
 }

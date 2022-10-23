@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
+use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 
 /**
@@ -179,23 +180,24 @@ class PlanProjectFundingQuery extends EndpointQueryBase {
   /**
    * Filter the projects array for the given organization.
    *
-   * @param object $projects
+   * @param \Drupal\ghi_plans\ApiObjects\Project[] $projects
    *   The projects to filter.
-   * @param object $organization
-   *   The organizations to filter for.
+   * @param \Drupal\ghi_plans\ApiObjects\Organization $organization
+   *   The organization to filter for.
    *
    * @return object[]
    *   The filtered projects array.
    */
-  private function filterProjectsToOrganization($projects, $organization) {
+  private function filterProjectsToOrganization(array $projects, Organization $organization) {
     $filtered_projects = [];
     foreach ($projects as $project) {
-      if (empty($project->organizations)) {
+      $project_organizations = $project->getOrganizations();
+      if (empty($project_organizations)) {
         continue;
       }
       $organization_ids = array_map(function ($_organization) {
         return $_organization->id;
-      }, $project->organizations);
+      }, $project_organizations);
 
       if (in_array($organization->id, $organization_ids)) {
         $filtered_projects[] = $project;
