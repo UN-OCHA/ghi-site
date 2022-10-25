@@ -14,7 +14,7 @@ class HideBlockForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getDescription() {
-    return $this->t("The block will be kept with it's current configuration, but it will be hidden from public display. The block can be enabled again at any time.");
+    return $this->t("The block will be kept with it's current configuration, but it will be hidden from public display. The block can be enabled again any time.");
   }
 
   /**

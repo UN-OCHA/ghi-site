@@ -56,7 +56,7 @@ class AttachmentQuery extends EndpointQueryBase implements ContainerFactoryPlugi
       return NULL;
     }
 
-    return AttachmentHelper::processAttachment($data);
+    return AttachmentHelper::processAttachment((object) $data);
   }
 
   /**

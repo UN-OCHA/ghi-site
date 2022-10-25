@@ -57,6 +57,12 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
 
   const DEFAULT_DISCLAIMER = 'The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations.';
 
+  const DEFAULT_VIEWS = [
+    'organization' => 'organization',
+    'cluster' => 'cluster',
+    'project' => 'project',
+  ];
+
   /**
    * The icon query.
    *
@@ -214,7 +220,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       $geo_data->properties->object_count = count($_objects);
 
       $location_data->object_count = count($_objects);
-      $location_data->modal_content = $this->prepareModalContent($location_data, $_objects, $selected_view);
+      $location_data->modal_content = $this->prepareModalContent($_location, $_objects, $selected_view);
       $location_data->geojson = json_encode($geo_data);
 
       $map_data['locations'][] = clone $location_data;
@@ -233,36 +239,45 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
    *   An array of objects for display in the map.
    */
   private function getMapObjects($selected_view) {
-    $objects = [];
+    $objects = &drupal_static(__FUNCTION__, []);
+    if (array_key_exists($selected_view, $objects)) {
+      return $objects[$selected_view];
+    }
 
-    switch ($this->getSelectedView()) {
+    switch ($selected_view) {
       case 'organization':
         $organizations = $this->getConfiguredOrganizations();
-        $objects = array_map(function (Organization $organization) {
-          $projects = $this->getOrganizationProjects($organization);
-          $clusters = $this->getOrganizationClusters($organization);
+        // Build a list of organizations with clusters and locations_ids.
+        $organization_projects = $this->getProjectsByOrganization();
+        $objects = array_map(function (Organization $organization) use ($organization_projects) {
+          /** @var \Drupal\ghi_plans\ApiObjects\Project[] $projects */
+          $projects = $organization_projects[$organization->id()] ?? [];
           $location_ids = [];
+          $clusters = [];
           foreach ($projects as $project) {
             $location_ids = array_merge($location_ids, $project->location_ids);
+            $clusters = array_merge($clusters, $project->getClusters());
           }
           $location_ids = array_unique($location_ids);
-          return (object) ($organization->toArray() + [
-            'clusters' => $clusters,
-            'location_ids' => $location_ids,
-          ]);
+          $organization->clusters = $clusters;
+          $organization->location_ids = $location_ids;
+          return $organization;
         }, $organizations);
         break;
 
       case 'cluster':
         $objects = [];
         $organizations = $this->getConfiguredOrganizations();
+        $organization_projects = $this->getProjectsByOrganization();
+        // Build a list of clusters with location_ids.
         foreach ($organizations as $organization) {
-          $projects = $this->getOrganizationProjects($organization);
+          /** @var \Drupal\ghi_plans\ApiObjects\Project[] $projects */
+          $projects = $organization_projects[$organization->id()] ?? [];
           foreach ($projects as $project) {
-            if (empty($project->global_clusters)) {
+            if (empty($project->getClusters())) {
               continue;
             }
-            foreach ($project->clusters as $cluster) {
+            foreach ($project->getClusters() as $cluster) {
               $_cluster = (object) $cluster->toArray();
               $_cluster->location_ids = $project->location_ids;
               $objects[$_cluster->id] = $_cluster;
@@ -274,12 +289,15 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       case 'project':
         $objects = [];
         $organizations = $this->getConfiguredOrganizations();
+        $organization_projects = $this->getProjectsByOrganization();
+        // Build a list of projects.
         foreach ($organizations as $organization) {
-          $projects = $this->getOrganizationProjects($organization);
+          /** @var \Drupal\ghi_plans\ApiObjects\Project[] $projects */
+          $projects = $organization_projects[$organization->id()] ?? [];
           if (empty($projects)) {
             continue;
           }
-          $objects += $projects;
+          $objects = array_merge($objects, $projects);
         }
         break;
     }
@@ -289,6 +307,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       return count($item->location_ids) > 0;
     });
 
+    $objects[$selected_view] = $filtered_objects;
     return $filtered_objects;
   }
 
@@ -323,16 +342,14 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
         }
         $object_data = clone $object;
         unset($object_data->location_ids);
-        $objects_by_location[$location_id][$object->id] = (object) [
-          'id' => $object_data->id,
-          'name' => $object_data->name,
-        ];
+        $objects_by_location[$location_id][$object->id] = $object_data;
+
         $optional_properties = [
           'icon',
           'code',
           'objective',
           'clusters',
-          'location_ids',
+          // 'location_ids',
           'organization_ids',
         ];
         foreach ($optional_properties as $optional_property) {
@@ -365,10 +382,11 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
         // Group organizations by clusters.
         $clusters = [];
         foreach ($objects as $object) {
-          if (empty($object->clusters)) {
+          $object_clusters = $this->getClustersByOrganizationAndLocation($object, $location);
+          if (empty($object_clusters)) {
             continue;
           }
-          foreach ($object->clusters as $cluster) {
+          foreach ($object_clusters as $cluster) {
             if (empty($clusters[$cluster->id])) {
               $clusters[$cluster->id] = [
                 'icon' => $this->iconQuery->getIconEmbedCode($cluster->icon),
@@ -383,11 +401,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
           return !empty($item['organizations']);
         });
 
-        $cluster_toggle = ThemeHelper::render([
-          '#theme' => 'hpc_toggle',
-          '#parent_selector' => '.cluster-wrapper',
-          '#target_selector' => '.organizations-wrapper',
-        ], FALSE);
+        $cluster_toggle = $this->getClusterToggle('.organizations-wrapper');
 
         $content = '<div class="title">' . $this->t('@type_label (@count)', [
           '@type_label' => $this->getEntityGroupLabel('governing_entities', 'label'),
@@ -428,10 +442,10 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
         // Group projects by clusters.
         $clusters = [];
         foreach ($objects as $object) {
-          if (empty($object->clusters)) {
+          if (empty($object->getClusters())) {
             continue;
           }
-          foreach ($object->clusters as $cluster) {
+          foreach ($object->getClusters() as $cluster) {
             if (empty($clusters[$cluster->id])) {
               $clusters[$cluster->id] = [
                 'icon' => $this->iconQuery->getIconEmbedCode($cluster->icon),
@@ -446,11 +460,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
           return !empty($item['projects']);
         });
 
-        $cluster_toggle = ThemeHelper::render([
-          '#theme' => 'hpc_toggle',
-          '#parent_selector' => '.cluster-wrapper',
-          '#target_selector' => '.projects-wrapper',
-        ]);
+        $cluster_toggle = $this->getClusterToggle('.projects-wrapper');
 
         $content = '<div class="title">' . $this->t('Clusters (@count)', ['@count' => count($clusters)]) . '</div>';
         uasort($clusters, function ($a, $b) {
@@ -509,6 +519,26 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
   }
 
   /**
+   * Get the cluster toggle markup.
+   *
+   * Prevent repeated rendering.
+   *
+   * @return string
+   *   The rendered markup for a cluster toggle.
+   */
+  private function getClusterToggle($target_selector) {
+    $cluster_toggle = &drupal_static(__FUNCTION__, []);
+    if (!array_key_exists($target_selector, $cluster_toggle)) {
+      $cluster_toggle[$target_selector] = ThemeHelper::render([
+        '#theme' => 'hpc_toggle',
+        '#parent_selector' => '.cluster-wrapper',
+        '#target_selector' => $target_selector,
+      ], FALSE);
+    }
+    return $cluster_toggle[$target_selector];
+  }
+
+  /**
    * Get the view switcher.
    *
    * @param string $selected_view
@@ -518,10 +548,14 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
    *   A render array for the view switcher.
    */
   private function getViewSwitcher($selected_view) {
+    $available_views = $this->getAvailableViews();
+    if (count($available_views) <= 1) {
+      return NULL;
+    }
     return [
       '#theme' => 'ajax_switcher',
       '#element_key' => 'view',
-      '#options' => $this->getViewOptions(),
+      '#options' => $available_views,
       '#default_value' => $selected_view,
       '#wrapper_id' => Html::getId('block-' . $this->getUuid()),
       '#plugin_id' => $this->getPluginId(),
@@ -552,7 +586,8 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       // We want the projects to be grouped by cluster.
       $object_options = [];
       foreach ($objects as $object) {
-        foreach ($object->clusters ?? [] as $cluster) {
+        /** @var \Drupal\ghi_plans\ApiObjects\Project $object */
+        foreach ($object->getClusters() ?? [] as $cluster) {
           if (empty($object_options[$cluster->name])) {
             $object_options[$cluster->name] = [];
           }
@@ -598,13 +633,9 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
         'organization_ids' => NULL,
       ],
       'display' => [
-        'available_views' => [
-          'organization' => 'organization',
-          'cluster' => 'cluster',
-          'project' => 'project',
-        ],
+        'available_views' => [],
         'default_view' => NULL,
-        'disclaimer' => self::DEFAULT_DISCLAIMER,
+        'disclaimer' => NULL,
         'pcodes_enabled' => FALSE,
       ],
     ];
@@ -711,7 +742,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       '#title' => $this->t('Available views'),
       '#options' => $view_options,
       '#required' => TRUE,
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'available_views') ?? self::DEFAULT_DISCLAIMER,
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'available_views') ?? self::DEFAULT_VIEWS,
     ];
 
     $form['default_view'] = [
@@ -719,7 +750,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       '#title' => $this->t('Default view'),
       '#description' => '',
       '#options' => $view_options,
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'default_view') ?? self::DEFAULT_DISCLAIMER,
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'default_view') ?? array_key_first($view_options),
     ];
 
     $form['disclaimer'] = [
@@ -727,7 +758,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       '#title' => $this->t('Map disclaimer'),
       '#description' => $this->t('You can override the default map disclaimer for this widget.'),
       '#rows' => 4,
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'disclaimer') ?? self::DEFAULT_DISCLAIMER,
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'disclaimer') ?? '',
     ];
 
     $form['pcodes_enabled'] = [
@@ -772,10 +803,15 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
    * Retrieve the label for a group of plan entities in the structure.
    */
   private function getEntityGroupLabel($group, $property = 'label_singular') {
-    $plan_object = $this->getCurrentPlanObject();
-    $ple_structure = PlanStructureHelper::getRpmPlanStructure($plan_object);
-    $gve_item = reset($ple_structure[$group]);
-    return $gve_item->$property;
+    $group_labels = &drupal_static(__FUNCTION__, []);
+    $key = $group . '--' . $property;
+    if (!array_key_exists($key, $group_labels)) {
+      $plan_object = $this->getCurrentPlanObject();
+      $ple_structure = PlanStructureHelper::getRpmPlanStructure($plan_object);
+      $gve_item = reset($ple_structure[$group]);
+      $group_labels[$key] = $gve_item->$property;
+    }
+    return $group_labels[$key];
   }
 
   /**

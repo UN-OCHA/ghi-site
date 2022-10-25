@@ -573,6 +573,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       'funding_data' => [
         'cluster_restrict' => FALSE,
         'value_preview' => FALSE,
+        'fts_link' => FALSE,
       ],
       'project_counter' => [
         'access' => [

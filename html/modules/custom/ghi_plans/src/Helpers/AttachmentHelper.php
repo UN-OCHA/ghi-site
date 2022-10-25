@@ -43,7 +43,7 @@ class AttachmentHelper {
    * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
    *   For unsupported attachment types, an Exception is thrown.
    */
-  public static function processAttachment($attachment) {
+  public static function processAttachment(object $attachment) {
     switch (strtolower($attachment->type)) {
       case 'caseload':
       case 'indicator':

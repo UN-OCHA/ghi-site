@@ -3,6 +3,8 @@
 namespace Drupal\ghi_blocks\Traits;
 
 use Drupal\ghi_plans\ApiObjects\Organization;
+use Drupal\ghi_plans\ApiObjects\Project;
+use Drupal\hpc_api\ApiObjects\Location;
 
 /**
  * Helper trait for block plugins showing organization data.
@@ -75,6 +77,53 @@ trait OrganizationsBlockTrait {
       $clusters[$organization->id] = $query->getOrganizationClusters($organization, $plan_object);
     }
     return $clusters[$organization->id];
+  }
+
+  /**
+   * Get the projects grouped by organization.
+   *
+   * @return array[]
+   *   An array of arrays. First level key is the organization id, second level
+   *   key the project id and the value is a project object.
+   */
+  private function getProjectsByOrganization() {
+    $query = $this->getProjectSearchQuery();
+    return $query->getProjectsByOrganization();
+  }
+
+  /**
+   * Get the clusters grouped by organization.
+   *
+   * @return array[]
+   *   An array of arrays. First level key is the organization id, second level
+   *   key the cluster id and the value is a cluster object.
+   */
+  private function getClustersByOrganization() {
+    $query = $this->getProjectSearchQuery();
+    return $query->getClustersByOrganization();
+  }
+
+  /**
+   * Get the clusters that are valid for the given organization and location.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Organization $organization
+   *   The organization.
+   * @param \Drupal\hpc_api\ApiObjects\Location $location
+   *   The location.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster[]
+   *   An array of project cluster objects.
+   */
+  private function getClustersByOrganizationAndLocation(Organization $organization, Location $location) {
+    $projects = $this->getOrganizationProjects($organization);
+    $projects = array_filter($projects, function (Project $project) use ($location) {
+      return in_array($location->id(), $project->location_ids);
+    });
+    $clusters = [];
+    foreach ($projects as $project) {
+      $clusters = array_merge($clusters, $project->getClusters());
+    }
+    return $clusters;
   }
 
   /**
