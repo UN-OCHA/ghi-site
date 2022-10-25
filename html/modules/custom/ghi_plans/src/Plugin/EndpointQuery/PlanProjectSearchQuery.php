@@ -11,6 +11,7 @@ use Drupal\hpc_api\Traits\SimpleCacheTrait;
 /**
  * Provides a query plugin for project search.
  *
+ * @codingStandardsIgnoreStart
  * @EndpointQuery(
  *   id = "plan_project_search_query",
  *   label = @Translation("Plan project search query"),
@@ -26,6 +27,7 @@ use Drupal\hpc_api\Traits\SimpleCacheTrait;
  *     }
  *   }
  * )
+ * @codingStandardsIgnoreEnd
  */
 class PlanProjectSearchQuery extends EndpointQueryBase {
 
