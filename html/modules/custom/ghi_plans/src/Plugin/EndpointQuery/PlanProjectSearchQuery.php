@@ -3,12 +3,15 @@
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\ApiObjects\Project;
 use Drupal\hpc_api\Query\EndpointQueryBase;
+use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
  * Provides a query plugin for project search.
  *
+ * @codingStandardsIgnoreStart
  * @EndpointQuery(
  *   id = "plan_project_search_query",
  *   label = @Translation("Plan project search query"),
@@ -18,14 +21,17 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  *     "query" = {
  *       "planIds" = "{plan_id}",
  *       "latest" = "true",
- *       "excludeFields" = "plans,workflowStatusOptions,locations",
- *       "includeFields" = "locationIds,planEntityIds",
+ *       "excludeFields" = "plans,workflowStatusOptions,locations,targets,planEntityIds",
+ *       "includeFields" = "locationIds",
  *       "limit" = "1000",
  *     }
  *   }
  * )
+ * @codingStandardsIgnoreEnd
  */
 class PlanProjectSearchQuery extends EndpointQueryBase {
+
+  use SimpleCacheTrait;
 
   /**
    * A list of cluster ids to be used as filters.
@@ -71,8 +77,16 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    *   The number of projects.
    */
   public function getProjectCount(BaseObjectInterface $base_object = NULL) {
-    $projects = $this->getProjects($base_object);
-    return count($projects);
+    $cache_key = $this->getCacheKey(array_filter([
+      'plan_id' => $this->getPlaceholder('plan_id'),
+      'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
+    ]));
+    if ($project_count = $this->cache($cache_key)) {
+      return $project_count;
+    }
+    $project_count = count($this->getProjects($base_object));
+    $this->cache($cache_key, $project_count);
+    return $project_count;
   }
 
   /**
@@ -85,14 +99,22 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    *   The number of organizations.
    */
   public function getOrganizationCount(BaseObjectInterface $base_object = NULL) {
-    $organizations = $this->getOrganizations($base_object);
-    return count($organizations);
+    $cache_key = $this->getCacheKey(array_filter([
+      'plan_id' => $this->getPlaceholder('plan_id'),
+      'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
+    ]));
+    if ($organization_count = $this->cache($cache_key)) {
+      return $organization_count;
+    }
+    $organization_count = count($this->getOrganizations($base_object));
+    $this->cache($cache_key, $organization_count);
+    return $organization_count;
   }
 
   /**
    * Get the projects for an organization.
    *
-   * @param object $organization
+   * @param \Drupal\ghi_plans\ApiObjects\Organization $organization
    *   The organization for which to look up the projects.
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
    *   The context base object.
@@ -100,22 +122,27 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Project[]
    *   An array of project objects for the given organization.
    */
-  public function getOrganizationProjects($organization, BaseObjectInterface $base_object = NULL) {
+  public function getOrganizationProjects(Organization $organization, BaseObjectInterface $base_object = NULL) {
+    $cache_key = $this->getCacheKey(array_filter([
+      'plan_id' => $this->getPlaceholder('plan_id'),
+      'organization' => $organization->id(),
+      'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
+    ]));
+    if ($organization_projects = $this->cache($cache_key)) {
+      return $organization_projects;
+    }
+
     $projects = $this->getProjects($base_object);
     $organization_projects = [];
     foreach ($projects as $project) {
       if (!$project->published) {
         continue;
       }
-      $project_organizations = $project->getOrganizations();
-      if (empty($project_organizations)) {
-        continue;
-      }
-      $organization_ids = array_keys($project_organizations);
-      if (in_array($organization->id, $organization_ids)) {
+      if ($project->hasOrganization($organization)) {
         $organization_projects[$project->id] = $project;
       }
     }
+    $this->cache($cache_key, $organization_projects);
     return $organization_projects;
   }
 
@@ -131,6 +158,14 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    *   An array of cluster objects for the given organization.
    */
   public function getOrganizationClusters($organization, BaseObjectInterface $base_object = NULL) {
+    $cache_key = $this->getCacheKey(array_filter([
+      'plan_id' => $this->getPlaceholder('plan_id'),
+      'organization' => $organization->id(),
+      'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
+    ]));
+    if ($organization_clusters = $this->cache($cache_key)) {
+      return $organization_clusters;
+    }
     $projects = $this->getProjects($base_object);
     $organization_clusters = [];
     foreach ($projects as $project) {
@@ -142,9 +177,10 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
       }
       $organization_ids = array_keys($project->getOrganizations());
       if (in_array($organization->id, $organization_ids)) {
-        $organization_clusters += $project->clusters;
+        $organization_clusters = array_merge($organization_clusters, $project->clusters);
       }
     }
+    $this->cache($cache_key, $organization_clusters);
     return $organization_clusters;
   }
 
@@ -161,6 +197,14 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    *   An array of organization objects.
    */
   public function getOrganizations(BaseObjectInterface $base_object = NULL, array $projects = NULL) {
+    $cache_key = $this->getCacheKey(array_filter([
+      'plan_id' => $this->getPlaceholder('plan_id'),
+      'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
+    ]));
+    if ($organizations = $this->cache($cache_key)) {
+      return $organizations;
+    }
+
     if (empty($projects)) {
       $projects = $this->getProjects($base_object);
     }
@@ -184,6 +228,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
 
       }
     }
+    $this->cache($cache_key, $organizations);
     return $organizations;
   }
 
@@ -198,7 +243,16 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Project[]
    *   An array of project objects.
    */
-  public function getProjects(BaseObjectInterface $base_object = NULL, $filter_unpublished = FALSE) {
+  public function getProjects(BaseObjectInterface $base_object = NULL, $filter_unpublished = TRUE) {
+    $cache_key = $this->getCacheKey(array_filter([
+      'plan_id' => $this->getPlaceholder('plan_id'),
+      'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
+      'filter_unpublished' => $filter_unpublished ? 'true' : 'false',
+    ]));
+    if ($projects = $this->cache($cache_key)) {
+      return $projects;
+    }
+
     $data = $this->getData();
     if (empty($data) || !is_object($data)) {
       return [];
@@ -206,6 +260,11 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
 
     $projects = [];
     foreach ($data->results as $project) {
+      if ($filter_unpublished && empty($project->currentPublishedVersionId)) {
+        // Filter out unpublished projects.
+        // Do this early to save ressources.
+        continue;
+      }
       $projects[] = new Project($project);
     }
 
@@ -222,14 +281,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
         return count(array_intersect($cluster_ids, $item->cluster_ids));
       });
     }
-
-    // Filter out unpublished projects.
-    if ($filter_unpublished) {
-      $projects = array_filter($projects, function ($project) {
-        return !empty($project->published);
-      });
-    }
-
+    $this->cache($cache_key, $projects);
     return $projects;
   }
 
@@ -247,6 +299,14 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    *   the API.
    */
   public function getClustersByOrganization(BaseObjectInterface $base_object = NULL, array $projects = NULL) {
+    $cache_key = $this->getCacheKey(array_filter([
+      'plan_id' => $this->getPlaceholder('plan_id'),
+      'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
+    ]));
+    if ($clusters = $this->cache($cache_key)) {
+      return $clusters;
+    }
+
     if (empty($projects)) {
       $projects = $this->getProjects($base_object);
     }
@@ -268,6 +328,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
         }
       }
     }
+    $this->cache($cache_key, $clusters);
     return $clusters;
   }
 

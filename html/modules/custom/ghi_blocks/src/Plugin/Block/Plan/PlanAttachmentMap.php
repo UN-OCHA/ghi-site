@@ -230,6 +230,13 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $plan_id = $this->getCurrentPlanId();
     $decimal_format = $plan_base_object->getDecimalFormat();
     $reporting_periods = $this->getPlanReportingPeriods($plan_id);
+    $reporting_periods_rendered = array_map(function ($reporting_period) {
+      return ThemeHelper::render([
+        '#theme' => 'hpc_reporting_period',
+        '#reporting_period' => $reporting_period,
+        '#format_string' => 'Monitoring period #@period_number: @date_range',
+      ]);
+    }, $reporting_periods);
     $reporting_period = $this->getCurrentReportingPeriod();
     $configured_reporting_periods = $this->getConfiguredReportingPeriods();
 
@@ -285,10 +292,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
             }
             $metric_map_data = $this->prepareMetricItemMapData($metric_index, $metric_item, $decimal_format, $period_data['reporting_period']);
             $map['data'][$metric_map_key]['variants'][$reporting_period_id] = [
-              'label' => ThemeHelper::theme('hpc_reporting_period', [
-                '#reporting_period' => $period_data['reporting_period'],
-                '#format_string' => 'Monitoring period #@period_number: @date_range',
-              ]),
+              'label' => $reporting_periods_rendered[$reporting_period_id],
               'tab_label' => $period_data['reporting_period']->periodNumber,
               'locations' => $metric_map_data['location_data'],
               'modal_contents' => $metric_map_data['modal_contents'],
@@ -380,6 +384,13 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $plan_id = $this->getCurrentPlanId();
     $decimal_format = $plan_base_object->getDecimalFormat();
     $reporting_periods = $this->getPlanReportingPeriods($plan_id);
+    $reporting_periods_rendered = array_map(function ($reporting_period) {
+      return ThemeHelper::render([
+        '#theme' => 'hpc_reporting_period',
+        '#reporting_period' => $reporting_period,
+        '#format_string' => '#@period_number: @date_range',
+      ]);
+    }, $reporting_periods);
     $reporting_period = $this->getCurrentReportingPeriod();
     $configured_reporting_periods = $this->getConfiguredReportingPeriods();
 
@@ -455,10 +466,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
           if (empty($map['data']['attachment']['measurements'][$reporting_period])) {
             $map['data']['attachment']['measurements'][$reporting_period] = [
               'id' => $reporting_period,
-              'reporting_period' => ThemeHelper::theme('hpc_reporting_period', [
-                '#reporting_period' => $reporting_periods[$reporting_period],
-                '#format_string' => '#@period_number: @date_range',
-              ]),
+              'reporting_period' => $reporting_periods_rendered[$reporting_period],
               'locations' => [],
             ];
           }
@@ -751,7 +759,8 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     foreach ($location['categories'] as $category) {
       $row = [
         ucfirst($category['name']),
-        ThemeHelper::theme('hpc_autoformat_value', [
+        ThemeHelper::render([
+          '#theme' => 'hpc_autoformat_value',
           '#value' => $category['data'],
           '#unit_type' => $unit_type,
           '#unit_defaults' => $unit_defaults,

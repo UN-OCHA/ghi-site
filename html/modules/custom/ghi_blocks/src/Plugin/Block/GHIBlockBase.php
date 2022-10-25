@@ -27,6 +27,7 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
+use Drupal\hpc_api\Helpers\ProfileHelper;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\hpc_downloads\DownloadSource\BlockSource;
@@ -406,7 +407,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
 
     // Otherwise build the full block. First get the actual block content.
+    $profile_key = ProfileHelper::profileStart(static::class . ':buildContent');
     $build_content = $this->buildContent();
+    ProfileHelper::profileEnd($profile_key);
     if (!$build_content) {
       return $build_content ?? [];
     }

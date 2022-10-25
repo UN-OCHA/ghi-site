@@ -78,7 +78,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
     $data = $this->getData();
 
     if (empty($data)) {
-      return NULL;
+      return [];
     }
     $attachments = [];
 

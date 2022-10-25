@@ -102,14 +102,13 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
         'metric' => $data_point,
         'reporting_period' => $attachment->getLatestPublishedReportingPeriod($attachment->getPlanId()) ?? 'latest',
       ]);
-      $metrics = $attachment->getMetricFields();
       $link_url->setOptions([
         'attributes' => [
           'class' => ['use-ajax', 'disaggregation-modal'],
           'data-dialog-type' => 'modal',
           'data-dialog-options' => Json::encode([
             'width' => '80%',
-            'title' => $metrics[$data_point],
+            'title' => (string) $this->getLabel(),
             'classes' => [
               'ui-dialog' => 'disaggregation-modal ghi-modal-dialog',
             ],
@@ -126,7 +125,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
       $modal_link = [
         '#theme' => 'hpc_modal_link',
         '#link' => $link->toRenderable(),
-        '#tooltip' => $this->t('Click to see disaggregated data for <em>$metrics[$data_point]</em>.', [
+        '#tooltip' => $this->t('Click to see disaggregated data for <em>@column_label</em>.', [
           '@column_label' => $this->getLabel(),
         ]),
       ];

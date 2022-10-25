@@ -38,8 +38,7 @@ class Project extends BaseObject {
       'version_code' => $data->versionCode,
       'cluster_ids' => $cluster_ids,
       'clusters' => $clusters,
-      'global_clusters' => $data->globalClusters ?? [],
-      // 'organizations' => $this->getOrganizations(),
+      // 'global_clusters' => $data->globalClusters ?? [],
       'published' => !empty($data->currentPublishedVersionId),
       'requirements' => $data->currentRequestedFunds,
       'location_ids' => $data->locationIds->ids ?? [],
@@ -82,6 +81,31 @@ class Project extends BaseObject {
     }
     $this->cache($cache_key, $processed_organizations);
     return $processed_organizations;
+  }
+
+  /**
+   * Get the project clusters.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster[]
+   *   An array of clusters for this project.
+   */
+  public function getClusters() {
+    return $this->clusters;
+  }
+
+  /**
+   * Check if this project has the given organization.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Organization $organization
+   *   The organization to check for.
+   *
+   * @return bool
+   *   TRUE if the current project lists the given organization, FALSE
+   *   otherwise.
+   */
+  public function hasOrganization(Organization $organization) {
+    $organizations = $this->getOrganizations();
+    return array_key_exists($organization->id, $organizations);
   }
 
 }

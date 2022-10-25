@@ -232,6 +232,7 @@ class ImportBlockForm extends ConfigureBlockFormBase {
     $action = end($form_state->getTriggeringElement()['#parents']);
     if ($action == 'submit') {
       parent::submitForm($form, $form_state);
+      /** @var \Drupal\layout_builder_ipe\LayoutBuilder\LayoutBuilderUi $layout_builder_ui */
       $layout_builder_ui = \Drupal::service('layout_builder_ipe.layout_builder_ui');
       $layout_builder_ui->blockFormSubmit($form, $form_state);
       return;

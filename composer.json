@@ -139,6 +139,7 @@
         "drupal/core-dev": "^9.3",
         "drupal/devel": "^4.1",
         "drupal/stage_file_proxy": "^1.2",
+        "drupal/xhprof": "^1.0@beta",
         "drupal/yaml_content": "^1.0@alpha",
         "phpcompatibility/php-compatibility": "^9.3",
         "phpmd/phpmd": "^2.9",

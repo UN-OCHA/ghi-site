@@ -171,7 +171,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    */
   public function getRenderArray() {
     $modal_link = $this->getModalLink();
-    if (!$modal_link) {
+    if (!$modal_link || empty($this->getValue())) {
       return parent::getRenderArray();
     }
     return [
