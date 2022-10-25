@@ -418,8 +418,8 @@ class EndpointQuery {
       $this->killSwitch->trigger();
     }
 
-    $end = microtime(TRUE);
-    QueryHelper::endpointCallTimeStorage($this->getFullEndpointUrl(), $end - $start);
+    // Keep stats.
+    QueryHelper::endpointCallTimeStorage($this->getFullEndpointUrl(), microtime(TRUE) - $start);
 
     return $response;
   }
