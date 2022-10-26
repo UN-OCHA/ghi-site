@@ -17,12 +17,16 @@ trait SimpleCacheTrait {
    *   A cache key string.
    */
   public static function getCacheKey(array $array) {
+    // First sort the incoming arguments.
     ksort($array);
-    array_unshift($array, [
-      'class' => get_called_class(),
-      'method' => debug_backtrace(!DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'],
-    ]);
-    return http_build_query($array);
+    // Then get information about the caller.
+    $called_class = array_key_last(array_flip(explode('\\', get_called_class())));
+    $called_method = debug_backtrace(!DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'];
+    $caller = $called_class . ':' . $called_method;
+    // And finally, turn the array into a string, clean that up and encode to
+    // limit character size.
+    $cache_key = $caller . ':' . sha1(urldecode(http_build_query($array)));
+    return $cache_key;
   }
 
   /**
