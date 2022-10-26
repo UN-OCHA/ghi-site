@@ -21,7 +21,7 @@ use Drupal\hpc_api\Traits\SimpleCacheTrait;
  *     "query" = {
  *       "planIds" = "{plan_id}",
  *       "latest" = "true",
- *       "excludeFields" = "plans,workflowStatusOptions,locations,targets,planEntityIds",
+ *       "excludeFields" = "plans,workflowStatusOptions,locations,planEntityIds",
  *       "includeFields" = "locationIds",
  *       "limit" = "1000",
  *     }
