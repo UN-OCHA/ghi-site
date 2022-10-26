@@ -64,6 +64,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
     if (empty($data) || !is_object($data) || !property_exists($data, 'results')) {
       return [];
     }
+    $this->cache($cache_key, $data);
     return $data;
   }
 
