@@ -4,6 +4,7 @@ namespace Drupal\hpc_api\Query;
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
@@ -16,6 +17,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPluginInterface, ContainerFactoryPluginInterface {
 
   use SimpleCacheTrait;
+  use DependencySerializationTrait;
 
   /**
    * The endpoint query service.

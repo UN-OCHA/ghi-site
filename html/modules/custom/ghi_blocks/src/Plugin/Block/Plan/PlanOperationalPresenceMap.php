@@ -552,10 +552,13 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     if (count($available_views) <= 1) {
       return NULL;
     }
+    $view_options = $this->getViewOptions();
     return [
       '#theme' => 'ajax_switcher',
       '#element_key' => 'view',
-      '#options' => $available_views,
+      '#options' => array_map(function ($view) use ($view_options) {
+        return $view_options[$view];
+      }, $available_views),
       '#default_value' => $selected_view,
       '#wrapper_id' => Html::getId('block-' . $this->getUuid()),
       '#plugin_id' => $this->getPluginId(),
