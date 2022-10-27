@@ -2,10 +2,35 @@
 :root {
 
   // GHI colors.
+
+  // Primary colors.
+  --ghi-yellow: #fed83d;
+  --ghi-grey--dark: #4d4d4d;
+
+  // Dropdown menu background Hero background?
+  --ghi-yellow--light: #fffbec;
+
+  // Chart percentage background.
+  --ghi-yellow--light-chart: #f8ecb4;
+
+  // Separator line with background.
+  --ghi-grey: #dfdede;
+
+  // Separator line.
+  --ghi-grey--light: #eee;
+
+  // Card/search button/map zoom tool/popup frame outlines.
+  --ghi-grey--medium: #ccc;
+
+  // Background.
+  --ghi-grey--background: #f5f5f5;
+
+  // Button hover.
+  --ghi-orange-dark: #feba00;
+
+  // Work-in-progress-colors, to be replaced with the official colors above.
   --cd-ocha-orange: #fecb00; // rgb(254, 203, 0)
-  --cd-ocha-orange--dark: #feba00;
-  --cd-ocha-yellow: rgb(254, 216, 61);
-  --cd-ocha-yellow--light: rgb(248, 236, 180);
+  --cd-ocha-orange--dark: var(--ghi-orange-dark);
   --cd-primary-color: var(--cd-ocha-orange);
   --cd-primary-color--dark: var(--cd-ocha-orange--dark);
   --cd-widget-color--light: var(--cd-grey--light);
@@ -23,8 +48,8 @@
   --green: #62b445;
   --hpc-border-color: #e1e1e1;
   --cd-font-size--extra-tiny: 0.625rem;      /* 10px */
-  --ghi-progress-color-fg: var(--cd-ocha-yellow);
-  --ghi-progress-color-bg: var(--cd-ocha-yellow--light);
+  --ghi-progress-color-fg: var(--ghi-yellow);
+  --ghi-progress-color-bg: var(--ghi-yellow--light-chart);
   --ghi-status-color-unpublished: var(--cd-primary-color);
   --ghi-status-color-published: rgb(171, 234, 58);
 
@@ -51,7 +76,7 @@
 // Implementation colours (for the common design).
 //——————————————————————————————————————————————————————————————————————————————
 
-$implementation-primary: var(--cd-ocha-yellow);
+$implementation-primary: var(--ghi-yellow);
 $implementation-primary-dark: $cd-primary;
 $implementation-secondary: $cd-blue--bright;
 $implementation-highlight: $cd-highlight-red;

@@ -14,6 +14,6 @@
 
 .tab-navigation-wrapper .tab-navigation.active {
   padding-bottom: calc(1rem - 2px);
-  border-bottom: 3px solid var(--cd-ocha-yellow);
+  border-bottom: 3px solid var(--ghi-yellow);
   font-weight: bold;
 }

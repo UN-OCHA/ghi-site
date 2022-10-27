@@ -46,21 +46,50 @@
         border-bottom: 1px solid var(--cd-default-border-color);
         background: transparent;
         font-size: var(--cd-font-size--small);
-
-        &.sorttable-sorted,
-        &.sorttable-sorted-reverse {
-          padding-right: 0;
-
-          & > span {
-            display: inline-block;
-            width: 2rem;
-            color: var(--cd-primary-color);
-          }
-        }
       }
     }
     &.sortable th {
       cursor: pointer;
+
+      &.sorttable-sorted,
+      &.sorttable-sorted-reverse {
+        padding-right: 0;
+
+        & > span {
+          display: inline-block;
+          width: 2rem;
+          color: var(--cd-primary-color);
+        }
+      }
+
+      // Customize display of the sort indicators of sorttable.js
+      &:not(.sorttable-nosort)::after,
+      &.sorttable-sorted::after,
+      &.sorttable-sorted-reverse::after {
+        position: relative;
+        top: 4px;
+        left: 5px;
+        display: inline-block;
+        width: 11px;
+        height: 19px;
+        content: " ";
+        background-size: contain;
+      }
+
+      &:not(.sorttable-sorted):not(.sorttable-sorted-reverse):not(.sorttable-nosort):after {
+        background-image: url("../img/table/ghi_sorting.svg");
+      }
+      &.sorttable-sorted:after {
+        background-image: url("../img/table/ghi_sorting_up.svg");
+      }
+      &.sorttable-sorted-reverse:after {
+        background-image: url("../img/table/ghi_sorting_down.svg");
+      }
+      #sorttable-sortfwdind,
+      #sorttable-sortrevind {
+        // Hide the default sort indicators of sorttable.js
+        display: none;
+      }
 
       &.sorttable-nosort {
         cursor: initial;
