@@ -326,14 +326,14 @@
 
               &:hover {
                 cursor: pointer;
-                background-color: var(--cd-ocha-yellow);
+                background-color: var(--ghi-yellow);
               }
             }
           }
         }
 
         &.active {
-          border-bottom: 4px solid var(--cd-ocha-yellow);
+          border-bottom: 4px solid var(--ghi-yellow);
         }
       }
     }

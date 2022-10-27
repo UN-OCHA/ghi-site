@@ -126,7 +126,7 @@ $cd-site-header-height: 80px;
 
 // Colour palette
 $cd-ocha-orange: var(--cd-ocha-orange);
-$cd-ocha-orange: var(--cd-ocha-orange--dark);
+$cd-ocha-orange--dark: var(--cd-ocha-orange--dark);
 $cd-ocha-blue: var(--cd-ocha-blue);
 $cd-blue--dark: var(--cd-blue--dark);
 $cd-blue--bright: var(--cd-blue--bright);
@@ -230,7 +230,7 @@ $zindex: (
 // Implementation colours
 //——————————————————————————————————————————————————————————————————————————————
 
-$implementation-primary: var(--cd-ocha-yellow);
+$implementation-primary: var(--ghi-yellow);
 $implementation-primary-dark: $cd-primary;
 $implementation-secondary: $cd-blue--bright;
-$implementation-highlight: var(--cd-ocha-yellow);
+$implementation-highlight: var(--ghi-yellow);
