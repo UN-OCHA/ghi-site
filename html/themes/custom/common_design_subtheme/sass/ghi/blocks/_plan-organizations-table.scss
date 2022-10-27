@@ -1,0 +1,12 @@
+.ghi-block-plan-organizations-table {
+
+  tbody td.entity-name {
+    white-space: unset !important;
+  }
+
+  @include tablet {
+    thead th.cd-table--name {
+      min-width: 200px;
+    }
+  }
+}

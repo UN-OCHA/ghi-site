@@ -240,16 +240,9 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
         }
 
         // Then add the value to the row.
-        $row[] = [
-          'data' => $item_type->getRenderArray(),
-          'data-value' => $item_type->getValue(),
-          'data-raw-value' => $item_type->getSortableValue(),
-          'data-sort-type' => $item_type::SORT_TYPE,
-          'data-column-type' => $item_type->getColumnType(),
-          'data-content' => $item_type->getLabel(),
-          'class' => $item_type->getClasses(),
-          'data-progress-group' => $progress_group,
-        ];
+        $cell = $item_type->getTableCell();
+        $cell['data-progress-group'] = $progress_group;
+        $row[] = $cell;
 
         // Update the skip row flag. Make it lazy, only check the item type if
         // it still makes a difference.
@@ -296,14 +289,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
           }
           elseif ($item_type->getPluginId() == 'funding_data' && $item_type->get('data_type') == 'funding_totals') {
             // Add the funding.
-            $row[] = [
-              'data' => $item_type->getRenderArray(),
-              'data-value' => $item_type->getValue(),
-              'data-raw-value' => $item_type->getSortableValue(),
-              'data-sort-type' => $item_type::SORT_TYPE,
-              'data-column-type' => $item_type->getColumnType(),
-              'class' => $item_type->getClasses(),
-            ];
+            $row[] = $item_type->getTableCell();
           }
           else {
             $row[] = [
@@ -353,14 +339,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
           /** @var \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\FundingData $item_type */
           $item_type->disableFtsLink();
           // Add the funding.
-          $row[] = [
-            'data' => $item_type->getRenderArray(),
-            'data-value' => $item_type->getValue(),
-            'data-raw-value' => $item_type->getSortableValue(),
-            'data-sort-type' => $item_type::SORT_TYPE,
-            'data-column-type' => $item_type->getColumnType(),
-            'class' => $item_type->getClasses(),
-          ];
+          $row[] = $item_type->getTableCell();
         }
         else {
           $row[] = [

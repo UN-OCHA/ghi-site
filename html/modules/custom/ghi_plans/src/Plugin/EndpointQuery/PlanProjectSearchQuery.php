@@ -5,6 +5,7 @@ namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\ApiObjects\Project;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
@@ -54,12 +55,14 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    * {@inheritdoc}
    */
   public function getData(array $placeholders = [], array $query_args = []) {
-    $placeholders = array_merge($placeholders, $this->getPlaceholders());
+    $placeholders += $this->getPlaceholders();
     $cache_key = $this->getCacheKey($placeholders + $query_args);
     if ($cached_data = $this->cache($cache_key)) {
       return $cached_data;
     }
-
+    if (!$this->getPlaceholder('plan_id') || empty($placeholders['plan_id'])) {
+      return NULL;
+    }
     $data = parent::getData($placeholders, $query_args);
     if (empty($data) || !is_object($data) || !property_exists($data, 'results')) {
       return [];
@@ -269,7 +272,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
       $projects[] = new Project($project);
     }
 
-    if (!empty($base_object) && $base_object->bundle() == 'governing_entity') {
+    if (!empty($base_object) && $base_object instanceof GoverningEntity) {
       $context_original_id = $base_object->get('field_original_id')->value;
       $projects = array_filter($projects, function ($item) use ($context_original_id) {
         return in_array($context_original_id, $item->cluster_ids);

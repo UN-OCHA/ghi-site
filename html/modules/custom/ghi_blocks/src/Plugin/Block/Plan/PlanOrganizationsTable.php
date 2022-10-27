@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\ProjectFunding;
 use Drupal\ghi_blocks\Traits\OrganizationsBlockTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
@@ -154,6 +155,7 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
       '#header' => $table_data['header'],
       '#rows' => $table_data['rows'],
       '#sortable' => TRUE,
+      '#progress_groups' => TRUE,
       '#soft_limit' => $this->getBlockConfig()['display']['soft_limit'] ?? 0,
     ];
   }
@@ -189,17 +191,15 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
         /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
         $item_type = $this->getItemTypePluginForColumn($column, $context);
 
+        $progress_group = NULL;
+        if ($item_type instanceof ProjectFunding) {
+          $progress_group = $item_type->get('data_type') == 'coverage' ? 'percentage' : $item_type->get('data_type');
+        }
+
         // Then add the value to the row.
-        $row[] = [
-          'data' => $item_type->getRenderArray(),
-          'data-value' => $item_type->getValue(),
-          'data-raw-value' => $item_type->getSortableValue(),
-          'data-sort-type' => $item_type::SORT_TYPE,
-          'data-column-type' => $item_type->getColumnType(),
-          'data-content' => $item_type->getLabel(),
-          'class' => $item_type->getClasses(),
-          'export_value' => $item_type->getSortableValue(),
-        ];
+        $cell = $item_type->getTableCell();
+        $cell['data-progress-group'] = $progress_group;
+        $row[] = $cell;
 
         // Update the skip row flag. Make it lazy, only check the item type if
         // it still makes a difference.

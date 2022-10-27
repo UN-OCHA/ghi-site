@@ -15,6 +15,7 @@ use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
@@ -229,7 +230,7 @@ class SyncManager implements ContainerInjectionInterface {
 
     // For base objects of type plan or governing_entity, we also support the
     // syncing of metadata.
-    if (($base_object instanceof Plan || $base_object->bundle() == 'governing_entity') && $sync_metadata) {
+    if (($base_object instanceof Plan || $base_object instanceof GoverningEntity) && $sync_metadata) {
       $metadata = $remote_data->metadata;
       if ($metadata->status) {
         $node->setPublished();

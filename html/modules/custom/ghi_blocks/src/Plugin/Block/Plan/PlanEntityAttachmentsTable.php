@@ -376,17 +376,9 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
         $item_type = $this->getItemTypePluginForColumn($column, $context);
 
         // Then add the value to the row.
-        $row[] = [
-          'data' => $item_type->getRenderArray(),
-          'data-value' => $item_type->getValue(),
-          'data-raw-value' => $item_type->getSortableValue(),
-          'data-sort-type' => $item_type::SORT_TYPE,
-          'data-column-type' => $item_type->getColumnType(),
-          'data-content' => $item_type->getLabel(),
-          'class' => $item_type->getClasses(),
-          'export_value' => $item_type->getSortableValue(),
-          'data-progress-group' => $item_type->getColumnType() == 'percentage' ? 'percentage' : NULL,
-        ];
+        $cell = $item_type->getTableCell();
+        $cell['data-progress-group'] = $item_type->getColumnType() == 'percentage' ? 'percentage' : NULL;
+        $row[] = $cell;
 
         // Update the skip row flag. Make it lazy, only check the item type if
         // it still makes a difference.
