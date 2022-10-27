@@ -29,7 +29,7 @@
     &.block-highlighted:not(.content-width) {
       margin-top: 0;
       padding-top: 4.5rem;
-      background-color: var(--cd-primary-background-color);
+      background-color: var(--ghi-primary-background-color);
     }
   }
 
@@ -83,7 +83,7 @@
 
         a:hover,
         a:focus {
-          color: var(--cd-default-text-color);
+          color: var(--ghi-default-text-color);
         }
       }
 

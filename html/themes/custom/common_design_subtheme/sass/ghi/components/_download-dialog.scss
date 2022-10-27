@@ -7,10 +7,10 @@
     padding: 1rem !important;
     border-top-left-radius: inherit !important;
     border-top-right-radius: inherit !important;
-    background-color: var(--cd-primary-background-color) !important;
+    background-color: var(--ghi-primary-background-color) !important;
 
     .ui-dialog-title {
-      color: var(--cd-default-text-color) !important;
+      color: var(--ghi-default-text-color) !important;
     }
 
     button.ui-dialog-titlebar-close {
@@ -29,7 +29,7 @@
         height: 100%;
         margin: 0;
         transform: none;
-        background-color: var(--cd-default-text-color) !important;
+        background-color: var(--ghi-default-text-color) !important;
         -webkit-mask-image: url("../../../contrib/gin/dist/media/sprite.svg#close-view");
         mask-image: url("../../../contrib/gin/dist/media/sprite.svg#close-view");
         -webkit-mask-size: 24px 24px;
@@ -44,7 +44,7 @@
 
   #drupal-modal {
     padding: 1rem !important;
-    color: var(--cd-default-text-color) !important;
+    color: var(--ghi-default-text-color) !important;
     border-bottom-right-radius: inherit;
     border-bottom-left-radius: inherit;
     background: var(--cd-white) !important;

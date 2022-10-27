@@ -16,6 +16,7 @@ use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
+use Drupal\hpc_downloads\Helpers\DownloadHelper;
 
 /**
  * Provides a 'PlanOverviewMap' block.
@@ -158,7 +159,11 @@ class PlanOverviewMap extends GHIBlockBase {
       }
 
       $country_objects[] = (object) [
+        'plan' => $plan,
         'plan_id' => $plan->id(),
+        'plan_type' => $plan->getTypeName(),
+        'plan_status' => $plan->getPlanStatus(),
+        'plan_document' => $plan->getPlanDocumentUri(),
         'title' => $section && $section->isPublished() ? $section->toLink($location->name)->toString() : $location->name,
         'location' => $location,
         'funding' => (object) [
@@ -196,10 +201,13 @@ class PlanOverviewMap extends GHIBlockBase {
           $object->funding->total_requirements,
           $object->funding->total_funding,
         ],
+        'plan_status' => $object->plan_status,
+        'plan_document' => $object->plan_document,
       ];
       $modal_contents[(string) $object->location->id] = [
         'location_id' => $object->location->id,
         'title' => $object->title,
+        'tag_line' => $object->plan_type,
         'html' => $this->buildCountryModal($object, !empty($footnotes[$plan_id]) ? $footnotes[$plan_id] : NULL),
       ];
       $locations[] = $location;
@@ -283,6 +291,11 @@ class PlanOverviewMap extends GHIBlockBase {
    *   The content of the modal.
    */
   private function buildCountryModal($data, $footnotes = NULL) {
+    /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
+    $plan = $data->plan;
+    $plan_status = $plan->getPlanStatus();
+    $document_uri = $plan->getPlanDocumentUri();
+
     $common_theme_args = [
       'decimals' => 1,
       'use_abbreviation' => FALSE,
@@ -294,7 +307,7 @@ class PlanOverviewMap extends GHIBlockBase {
         'value' => CommonHelper::renderValue($data->caseload->total_population, 'amount', 'hpc_amount', $common_theme_args),
       ],
       'inneed' => [
-        'label' => $this->t('In Need') . $this->getRenderedFootnoteTooltip($footnotes, 'in_need'),
+        'label' => $this->t('In need') . $this->getRenderedFootnoteTooltip($footnotes, 'in_need'),
         'value' => CommonHelper::renderValue($data->caseload->in_need, 'amount', 'hpc_amount', $common_theme_args),
       ],
       'target' => [
@@ -305,7 +318,7 @@ class PlanOverviewMap extends GHIBlockBase {
       // "reached" values are mutually exclusive in the modal.
       // @see plan-overview-map-modal.tpl.php
       'estimated_reach' => [
-        'label' => $this->t('Est. Reach') . $this->getRenderedFootnoteTooltip($footnotes, 'estimated_reach'),
+        'label' => $this->t('Est. reach') . $this->getRenderedFootnoteTooltip($footnotes, 'estimated_reach'),
         'value' => CommonHelper::renderValue($data->caseload->estimated_reach, 'amount', 'hpc_amount', $common_theme_args),
       ],
       'reached' => [
@@ -330,15 +343,35 @@ class PlanOverviewMap extends GHIBlockBase {
         'value' => CommonHelper::renderValue($data->funding->total_requirements, 'value', 'hpc_currency', $common_theme_args),
       ],
       'funding_progress' => [
-        'label' => $this->t('Coverage <strong>@value</strong>', [
-          '@value' => ThemeHelper::theme('hpc_percent', [
-            '#percent' => $data->funding->funding_progress,
-          ]),
-        ]),
-        'value' => ThemeHelper::theme('hpc_progress_bar', [
+        'label' => $this->t('Coverage'),
+        'value' => ThemeHelper::render([
+          '#theme' => 'hpc_percent',
           '#percent' => $data->funding->funding_progress,
-          '#hide_value' => TRUE,
-        ], TRUE, FALSE),
+        ]),
+      ],
+      'plan_status' => [
+        'label' => $this->t('Status'),
+        'value' => $plan_status ? ThemeHelper::render([
+          '#type' => 'container',
+          'content' => array_filter([
+            'plan_status' => $plan_status ? [
+              '#theme' => 'plan_status',
+              '#status' => strtolower($plan_status),
+              '#status_label' => $plan_status,
+            ] : NULL,
+            'document' => $document_uri ? [
+              '#type' => 'html_tag',
+              '#tag' => 'span',
+              '#attributes' => [
+                'data-toggle' => 'tooltip',
+                'data-tippy-content' => $this->t('Download the @type document', [
+                  '@type' => strtolower($plan->getTypeShortName()) == 'other' ? $this->t('plan') : $plan->getTypeShortName(),
+                ]),
+              ],
+              'content' => DownloadHelper::getDownloadIcon($document_uri),
+            ] : NULL,
+          ]),
+        ]) : NULL,
       ],
     ];
 

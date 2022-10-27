@@ -55,7 +55,7 @@ svg.icon {
     height: 0.5rem;
     cursor: pointer;
     pointer-events: all;
-    fill: var(--cd-default-text-color);
+    fill: var(--ghi-default-text-color);
   }
   .toggle.open & {
     transform: rotate(180deg);

@@ -1078,7 +1078,7 @@
 
       // Also for donut style maps, if the second segment contains a
       // measurement, we want to show the monitoring period for that.
-      if (state.options.map_style == 'donut' && state.data[state.index].measurement_metrics.indexOf(state.active_donut_segments[1]) != -1) {
+      if (state.options.map_style == 'donut' && typeof state.data[state.index].measurement_metrics != 'undefined' && state.data[state.index].measurement_metrics.indexOf(state.active_donut_segments[1]) != -1) {
         let measurements = state.data[state.index].measurements;
         if (measurements && measurements.hasOwnProperty(state.active_monitoring_period)) {
           let period_item = $('<div></div>')
@@ -1125,6 +1125,7 @@
         }
       });
     }
+    Drupal.attachBehaviors(state.sidebar._container);
   }
 
   // Show a modal window with data about the location.
@@ -1167,6 +1168,7 @@
     return {
       location_data: location_data,
       title: location_data.title,
+      tag_line: location_data.tag_line,
       monitoring_period: monitoring_period,
       content: content,
       next: next_index !== null ? current_locations[next_index] : null,
@@ -1175,6 +1177,7 @@
       current_index: current_index + 1,
       template: [
         '<div class="title">{title}</div>',
+        '<div class="tag-line">{tag_line}</div>',
         '<div class="content">{content}</div>',
         '<div class="subcontent">{monitoring_period}</div>',
       ].join(''),

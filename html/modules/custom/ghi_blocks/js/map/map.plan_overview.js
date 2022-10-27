@@ -19,7 +19,8 @@
           donut_opts: {
             min_radius_text: 16,
             circle_opacity: 1,
-          }
+          },
+          popup_style: 'sidebar',
         };
         if (typeof map_config.map_style != 'undefined') {
           options.map_style = map_config.map_style;
@@ -39,14 +40,6 @@
           };
         }
         Drupal.hpc_map.init(map_config.id, map_config.json, options);
-
-        // $('.year-selector-wrapper select').change(function() {
-        //   var new_year = $(this).val();
-        //   var site_front = Drupal.map_config.homepage_map_site_front;
-        //   var target = 'overview/' + new_year;
-        //   target = site_front && site_front == target ? '' : target
-        //   window.location = Drupal.map_config.basePath + target;
-        // });
       }
     }
   }

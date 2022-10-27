@@ -7,9 +7,9 @@
   Drupal.hpc_map_circle.config = {
     // Scales used to determine color.
     colors: [
-      root_styles.getPropertyValue('--cd-default-text-color'), // Data points with data.
-      root_styles.getPropertyValue('--cd-default-border-color'), // Data points without data.
-      root_styles.getPropertyValue('--cd-primary-color'), // Highlights.
+      root_styles.getPropertyValue('--ghi-default-text-color'), // Data points with data.
+      root_styles.getPropertyValue('--ghi-default-border-color'), // Data points without data.
+      root_styles.getPropertyValue('--ghi-primary-color'), // Highlights.
     ],
     attrs: {
       'stroke': '#fff',

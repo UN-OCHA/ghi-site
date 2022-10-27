@@ -3,6 +3,10 @@
   height: 1rem;
   border-radius: 50%;
 
+  &.plan-status-header-icon {
+    background-color: var(--ghi-default-text-color);
+  }
+
   &.unpublished {
     background-color: var(--ghi-status-color-unpublished);
   }

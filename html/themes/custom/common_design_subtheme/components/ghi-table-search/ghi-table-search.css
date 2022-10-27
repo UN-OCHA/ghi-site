@@ -16,7 +16,7 @@
   left: 0.5rem;
   padding: 10px;
   content: "";
-  color: var(--cd-default-text-color);
+  color: var(--ghi-default-text-color);
   background-image: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/search/default/20px.svg");
   background-repeat: no-repeat;
 }

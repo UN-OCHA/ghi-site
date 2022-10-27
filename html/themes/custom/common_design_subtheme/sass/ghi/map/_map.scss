@@ -54,8 +54,9 @@
 
           .modal-header {
             height: auto;
+            margin-bottom: 1rem;
             padding: 1rem 1rem 0.5rem 1rem;
-            color: var(--cd-default-text-color);
+            color: var(--ghi-default-text-color);
             border: none;
             font: inherit;
 
@@ -75,14 +76,14 @@
           }
         }
         .map-plan-card-container {
-          min-width: 250px;
+          width: 375px;
 
           .modal-header {
             .navigation {
               position: relative;
               left: -0.5rem;
               display: flex;
-              color: var(--cd-default-text-color);
+              color: var(--ghi-default-text-color);
               font-size: var(--cd-font-size--tiny);
               line-height: 24px;
 
@@ -125,7 +126,7 @@
             }
 
             div.monitoring-period {
-              color: var(--cd-default-text-color);
+              color: var(--ghi-default-text-color);
               font-size: var(--cd-font-size--small);
             }
 
@@ -279,7 +280,7 @@
 
   .map-tabs {
     height: auto;
-    background-color: var(--cd-default-text-color);
+    background-color: var(--ghi-default-text-color);
 
     ul {
       display: flex;
@@ -322,7 +323,7 @@
               display: inline-block;
               padding: 0.3rem;
               white-space: nowrap;
-              color: var(--cd-default-text-color) !important;
+              color: var(--ghi-default-text-color) !important;
 
               &:hover {
                 cursor: pointer;
@@ -368,7 +369,7 @@
             border-radius: 50%;
           }
           .legend-label {
-            color: var(--cd-default-text-color);
+            color: var(--ghi-default-text-color);
             font-size: var(--cd-font-size--tiny);
           }
 
