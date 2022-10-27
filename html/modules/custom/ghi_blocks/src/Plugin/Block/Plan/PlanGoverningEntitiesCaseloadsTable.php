@@ -346,16 +346,9 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       }
       else {
         // Then add the value to the row.
-        $row[] = [
-          'data' => $item_type->getRenderArray(),
-          'data-value' => $item_type->getValue(),
-          'data-raw-value' => $item_type->getSortableValue(),
-          'data-sort-type' => $item_type::SORT_TYPE,
-          'data-column-type' => $item_type->getColumnType(),
-          'data-content' => $item_type->getLabel(),
-          'class' => $item_type->getClasses(),
-          'data-progress-group' => $progress_group,
-        ];
+        $cell = $item_type->getTableCell();
+        $cell['data-progress-group'] = $progress_group;
+        $row[] = $cell;
       }
     }
     return $row;

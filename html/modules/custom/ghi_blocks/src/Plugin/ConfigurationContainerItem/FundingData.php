@@ -10,6 +10,7 @@ use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -179,7 +180,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $entity = $this->getContextValue('entity');
     $plan_object = $this->getContextValue('plan_object');
     $base_object = $this->getContextValue('base_object');
-    $cluster_context = $base_object && $base_object->bundle() == 'governing_entity' ? $base_object : NULL;
+    $cluster_context = $base_object && $base_object instanceof GoverningEntity ? $base_object : NULL;
 
     $data_type = $this->getDataType($data_type_key ?: $this->get('data_type'));
     $property = $data_type['property'];

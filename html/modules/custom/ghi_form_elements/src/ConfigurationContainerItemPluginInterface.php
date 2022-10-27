@@ -83,6 +83,14 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
   public function getRenderArray();
 
   /**
+   * Get an array representing a table cell.
+   *
+   * @return array
+   *   Return table cell array.
+   */
+  public function getTableCell();
+
+  /**
    * Get a representation of the value that can be used for sorting.
    */
   public function getSortableValue();

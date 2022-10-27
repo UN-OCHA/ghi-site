@@ -106,6 +106,6 @@ map.chloropleth:
   dependencies:
     - ghi_blocks/map.base
 
-disaggregation_modal:
+modal:
   js:
-    js/modal.disaggregation.js: {}
+    js/modal.js: {}

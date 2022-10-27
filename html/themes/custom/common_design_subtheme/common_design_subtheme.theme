@@ -304,6 +304,7 @@ function common_design_subtheme_preprocess_table(&$vars) {
 
   $vars['attributes'] = array_key_exists('attributes', $vars) ? NestedArray::mergeDeep($vars['attributes'], $attributes) : $attributes;
 
+  // Process the header.
   foreach ($vars['header'] as &$header) {
     $attribute = is_array($header) && array_key_exists('attributes', $header) ? $header['attributes'] : NULL;
     if (!$attribute) {
@@ -319,6 +320,7 @@ function common_design_subtheme_preprocess_table(&$vars) {
     }
   }
 
+  // Process the rows.
   if (!empty($vars['rows'])) {
     foreach ($vars['rows'] as $row_key => &$row) {
       foreach ($row['cells'] as $column_name => &$column) {
@@ -357,6 +359,26 @@ function common_design_subtheme_preprocess_table(&$vars) {
             'column' => $column_name,
             'value' => $raw_value,
           ];
+        }
+      }
+    }
+  }
+
+  // Process the foter the same as the header.
+  if (!empty($vars['footer'])) {
+    foreach ($vars['footer'] as $row_key => &$row) {
+      foreach ($row['cells'] as $column_name => &$column) {
+        $attribute = is_array($column) && array_key_exists('attributes', $column) ? $column['attributes'] : NULL;
+        if (!$attribute) {
+          continue;
+        }
+        if ($attribute->hasAttribute('data-column-type')) {
+          $attributes = $attribute->toArray();
+          $attribute->addClass('cd-table--' . $attributes['data-column-type']);
+        }
+        if ($sortable && $attribute->hasAttribute('sortable') && $attribute['sortable']->value() === FALSE) {
+          $attribute->addClass('sorttable_nosort');
+          $attribute->removeAttribute('sortable');
         }
       }
     }

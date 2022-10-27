@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
@@ -125,7 +126,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
         }, $entity->attachments);
         $attachments = array_merge($attachments, $entity_attachments);
       }
-      if ($context_object->bundle() == 'governing_entity' && $plan_entities = $this->getPlanEntities($context_object)) {
+      if ($context_object instanceof GoverningEntity && $plan_entities = $this->getPlanEntities($context_object)) {
         // This is a governing entity, so we must also look for child elements.
         foreach ($plan_entities as $plan_entity) {
           $entity_attachments = array_map(function ($attachment) use ($plan_entity) {

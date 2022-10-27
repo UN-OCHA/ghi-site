@@ -55,7 +55,7 @@
           height: 100%;
           margin: 0;
           transform: none;
-          background-color: var(--cd-default-text-color) !important;
+          background-color: var(--cd-primary-color) !important;
           -webkit-mask-image: url("/themes/contrib/gin/dist/media/sprite.svg#close-view");
           mask-image: url("/themes/contrib/gin/dist/media/sprite.svg#close-view");
           -webkit-mask-size: 24px 24px;
@@ -64,6 +64,7 @@
           mask-repeat: no-repeat;
           -webkit-mask-position: center center;
           mask-position: center center;
+          background-image: none;
         }
       }
 
@@ -95,12 +96,39 @@
       border-bottom-right-radius: var(--ghi-ui-dialog-border-radius);
       border-bottom-left-radius: var(--ghi-ui-dialog-border-radius);
 
+      a {
+        color: var(--cd-default-text-color);
+
+        &.fts-link {
+          display: inline-block;
+          margin-bottom: 0.5rem;
+
+          img {
+            height: 20px;
+            vertical-align: middle;
+          }
+        }
+      }
+
       .cd-table {
         margin-bottom: 0;
 
         th {
+          white-space: nowrap;
           color: var(--cd-default-text-color);
           background-color: inherit;
+        }
+
+        th,
+        td,
+        td a {
+          color: var(--cd-default-text-color);
+          font-size: var(--cd-font-size--small);
+        }
+
+        tr.totals-row,
+        tfoot tr {
+          background-color: var(--cd-default-background-color);
         }
       }
     }

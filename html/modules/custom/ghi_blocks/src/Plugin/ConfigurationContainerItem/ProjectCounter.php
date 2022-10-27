@@ -232,7 +232,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
 
       case 'organizations_count':
         $route_name = 'ghi_plans.modal_content.organizations';
-        $width = '50%';
+        $width = '40%';
         break;
     }
 

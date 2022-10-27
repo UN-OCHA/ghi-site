@@ -50,7 +50,7 @@ class DisaggregationModalController extends ControllerBase {
     if ($icon && $icon_embed = $this->iconQuery->getIconEmbedCode($icon)) {
       $title = $icon_embed;
     }
-    $title .= $metrics[$metric];
+    $title .= $entity->getEntityName() . ' | ' . $metrics[$metric];
 
     if ($attachment->isMeasurementField($metrics[$metric])) {
       $title .= ThemeHelper::render([
@@ -64,7 +64,7 @@ class DisaggregationModalController extends ControllerBase {
   }
 
   /**
-   * Load JSON data for a disaggregation modal window.
+   * Load content for a disaggregation modal window.
    *
    * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
    *   The attachment object.
@@ -73,8 +73,8 @@ class DisaggregationModalController extends ControllerBase {
    * @param int $reporting_period
    *   The reporting period id for which to retrieve the data.
    *
-   * @return \Symfony\Component\HttpFoundation\JsonResponse
-   *   A response object.
+   * @return array
+   *   A render array.
    */
   public function loadDisaggregationModalData(DataAttachment $attachment, $metric, $reporting_period) {
     $cid = implode('-', [
@@ -95,9 +95,9 @@ class DisaggregationModalController extends ControllerBase {
     return [
       '#type' => 'container',
       '#attached' => [
-        'library' => ['ghi_blocks/disaggregation_modal'],
+        'library' => ['ghi_blocks/modal'],
         'drupalSettings' => [
-          'disaggregation_modal_title' => $this->modalTitle($attachment, $metric, $reporting_period),
+          'ghi_modal_title' => $this->modalTitle($attachment, $metric, $reporting_period),
         ],
       ],
       'content' => $build,
@@ -120,7 +120,6 @@ class DisaggregationModalController extends ControllerBase {
   private function buildDisaggregationModalContent(DataAttachment $attachment, $metric, $reporting_period) {
 
     $unit_type = $attachment->getUnitType();
-
     $unit_defaults = [
       'amount' => [
         '#scale' => 'full',
@@ -160,14 +159,23 @@ class DisaggregationModalController extends ControllerBase {
 
     // Build the table.
     $header = [
-      $this->t('Location'),
+      [
+        'data' => $this->t('Location'),
+        'data-sort-type' => 'alfa',
+        'data-sort-order' => 'ASC',
+        'data-column-type' => 'string',
+      ],
     ];
     if (!empty($categories)) {
       foreach ($categories as $category) {
-        $header[] = $category;
+        $header[] = [
+          'data' => $category,
+          'data-sort-type' => 'numeric',
+          'data-column-type' => 'amount',
+        ];
       }
     }
-    if (empty($categories)) {
+    else {
       $header[] = $this->t('Totals');
     }
 
@@ -193,7 +201,8 @@ class DisaggregationModalController extends ControllerBase {
       }
 
       if (!empty($location['categories'])) {
-        foreach ($location['categories'] as $category) {
+        foreach ($location['categories'] as $key => $category) {
+          $totals[$key] = ($totals[$key] ?: 0) + ($category['data'] ?: 0);
           $row[] = [
             'data' => [
               '#theme' => 'hpc_autoformat_value',
@@ -202,6 +211,9 @@ class DisaggregationModalController extends ControllerBase {
               '#unit_defaults' => $unit_defaults,
               '#decimal_format' => $decimal_format,
             ],
+            'sorttable_customkey' => $category['data'],
+            'data-sort-type' => 'numeric',
+            'data-column-type' => 'amount',
           ];
         }
       }
@@ -217,18 +229,54 @@ class DisaggregationModalController extends ControllerBase {
             '#unit_defaults' => $unit_defaults,
             '#decimal_format' => $decimal_format,
           ],
+          'sorttable_customkey' => $location['total'],
+          'data-sort-type' => 'numeric',
+          'data-column-type' => 'amount',
         ];
-        $totals[] = $location['total'];
+        $totals[0] = ($totals[0] ?? 0) + $location['total'];
       }
 
       $rows[] = $row;
+    }
+
+    $total_rows = [
+      'data' => [
+        $this->t('Total'),
+      ],
+      'class' => 'totals-row',
+    ];
+    if (!empty($location['categories'])) {
+      foreach ($location['categories'] as $key => $category) {
+        $total_rows['data'][] = [
+          'data' => [
+            '#theme' => 'hpc_amount',
+            '#amount' => $totals[$key],
+            '#scale' => 'full',
+            '#decimal_format' => $decimal_format,
+          ],
+          'data-column-type' => 'amount',
+        ];
+      }
+    }
+    else {
+      $total_rows['data'][] = [
+        'data' => [
+          '#theme' => 'hpc_amount',
+          '#amount' => $totals[0],
+          '#scale' => 'full',
+          '#decimal_format' => $decimal_format,
+        ],
+        'data-column-type' => 'amount',
+      ];
     }
 
     return [
       '#theme' => 'table',
       '#header' => $header,
       '#rows' => $rows,
+      '#footer' => $total_rows,
       '#empty' => $this->t('We could not find suitable information to display here.'),
+      '#sortable' => TRUE,
     ];
   }
 

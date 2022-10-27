@@ -4,8 +4,11 @@ namespace Drupal\ghi_plans\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Link;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\ghi_blocks\Traits\FtsLinkTrait;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -14,6 +17,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Controller for project related modals.
  */
 class ProjectModalController extends ControllerBase {
+
+  use FtsLinkTrait;
 
   /**
    * The endpoint query manager.
@@ -39,6 +44,56 @@ class ProjectModalController extends ControllerBase {
   }
 
   /**
+   * Get the title for the modal.
+   *
+   * This will prefix the build title with the base object label (and icon).
+   *
+   * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
+   *   The base object.
+   * @param string $build_title
+   *   A title for the build.
+   */
+  private function modalTitleBaseObject(BaseObjectInterface $base_object, $build_title) {
+    if ($base_object instanceof GoverningEntity && $icon = $base_object->getIconEmbedCode()) {
+      $title = $icon;
+    }
+    $title .= $base_object->label();
+    return Markup::create($title . ' | ' . $build_title);
+  }
+
+  /**
+   * Enhance the build array.
+   *
+   * @param array $_build
+   *   The original build array.
+   * @param string $title
+   *   A title for the build.
+   * @param string $caption
+   *   An optional caption to add before the actual build.
+   *
+   * @return array
+   *   A render array.
+   */
+  private function returnBuild(array $_build, $title, $caption = NULL) {
+    $build = [
+      '#type' => 'container',
+    ];
+
+    if ($caption) {
+      $build[] = $caption;
+    }
+    $build[] = $_build;
+
+    $build['#attached'] = [
+      'library' => ['ghi_blocks/modal'],
+      'drupalSettings' => [
+        'ghi_modal_title' => $title,
+      ],
+    ];
+    return $build;
+  }
+
+  /**
    * Build a project table.
    *
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
@@ -51,7 +106,7 @@ class ProjectModalController extends ControllerBase {
     $project_search_query = $this->getProjectSearchQuery($base_object);
     $projects = $project_search_query->getProjects($base_object);
     $build = $this->getProjectTable($projects, $this->getDecimalFormat($base_object));
-    return $build;
+    return $this->returnBuild($build, $this->modalTitleBaseObject($base_object, $this->t('Projects')));
   }
 
   /**
@@ -66,20 +121,15 @@ class ProjectModalController extends ControllerBase {
   public function buildOrganizationList(BaseObjectInterface $base_object) {
     $project_search_query = $this->getProjectSearchQuery($base_object);
     $organizations = $project_search_query->getOrganizations($base_object);
-    $build = [
-      '#type' => 'container',
-    ];
-    $needs_fts_link = $base_object->bundle() == 'governing_entity';
-    if ($needs_fts_link) {
-      $build[] = [
-        '#markup' => $this->t('For more details, view on <img src="@logo_url" />', [
-          '@logo_url' => ThemeHelper::getUriToFtsIcon(),
-        ]),
-      ];
+    $build = $this->getOrganizationList($organizations);
+    $fts_link = NULL;
+    if ($base_object instanceof GoverningEntity) {
+      $link_title = $this->t('For more details, view on <img src="@logo_url" />', [
+        '@logo_url' => ThemeHelper::getUriToFtsIcon(),
+      ]);
+      $fts_link = self::buildFtsLink($link_title, $this->getPlanObject($base_object), 'recipients', $base_object);
     }
-
-    $build[] = $this->getOrganizationList($organizations);
-    return $build;
+    return $this->returnBuild($build, $this->modalTitleBaseObject($base_object, $this->t('Organizations')), $fts_link);
   }
 
   /**
@@ -98,7 +148,8 @@ class ProjectModalController extends ControllerBase {
     $project_search_query = $this->getProjectSearchQuery($base_object);
     $projects = $project_search_query->getOrganizationProjects($organization, $base_object);
     $build = $this->getOrganizationProjectTable($projects, $this->getDecimalFormat($base_object));
-    return $build;
+    $title = $organization->getName() . ' | ' . $this->t('Projects');
+    return $this->returnBuild($build, $title);
   }
 
   /**
@@ -114,30 +165,70 @@ class ProjectModalController extends ControllerBase {
    */
   private function getProjectTable(array $projects, $decimal_format = NULL) {
     $header = [
-      $this->t('Project code'),
-      $this->t('Project name'),
-      $this->t('Organizations'),
-      $this->t('Project Target'),
-      $this->t('Requirements'),
+      [
+        'data' => $this->t('Project code'),
+        'data-sort-type' => 'alfa',
+        'data-sort-order' => 'ASC',
+        'data-column-type' => 'string',
+      ],
+      [
+        'data' => $this->t('Project name'),
+        'data-sort-type' => 'alfa',
+        'data-column-type' => 'string',
+      ],
+      [
+        'data' => $this->t('Organizations'),
+        'data-sort-type' => 'alfa',
+        'data-column-type' => 'string',
+      ],
+      [
+        'data' => $this->t('Project Target'),
+        'data-sort-type' => 'numeric',
+        'data-column-type' => 'amount',
+      ],
+      [
+        'data' => $this->t('Requirements'),
+        'data-sort-type' => 'numeric',
+        'data-column-type' => 'amount',
+      ],
     ];
+
+    $totals = [
+      'targets' => 0,
+      'requirements' => 0,
+    ];
+    $organization_ids_unique = [];
 
     $rows = [];
     foreach ($projects as $project) {
+      $organinizations = $project->getOrganizations();
+      $organization_ids_unique = array_unique(array_merge($organization_ids_unique, array_keys($organinizations)));
+
+      $totals['targets'] += $project->target ?? 0;
+      $totals['requirements'] += $project->requirements ?? 0;
+
       $row = [];
       $row[] = [
         'data' => [
           '#type' => 'link',
           '#title' => $project->version_code,
           '#url' => Url::fromUri('https://projects.hpc.tools/project/' . $project->id . '/view'),
+          '#attributes' => [
+            'target' => '_blank',
+          ],
         ],
+        'sorttable_customkey' => $project->version_code,
+        'data-sort-type' => 'alfa',
+        'data-column-type' => 'string',
       ];
       $row[] = $project->name;
       $row[] = [
         'data' => [
-          '#theme' => 'item_list',
-          '#items' => $this->getOrganizationLinks($project->getOrganizations()),
-          '#gin_lb_theme_suggestions' => FALSE,
+          '#markup' => Markup::create(implode(' | ', $this->getOrganizationLinks($organinizations))),
         ],
+        'sorttable_customkey' => implode(' | ', $this->getOrganizationNames($organinizations)),
+        'data-sort-type' => 'alfa',
+        'data-column-type' => 'string',
       ];
       $row[] = [
         'data' => [
@@ -146,21 +237,58 @@ class ProjectModalController extends ControllerBase {
           '#scale' => 'full',
           '#decimal_format' => $decimal_format,
         ],
+        'sorttable_customkey' => $project->target,
+        'data-sort-type' => 'numeric',
+        'data-column-type' => 'amount',
       ];
       $row[] = [
         'data' => [
           '#theme' => 'hpc_currency',
           '#value' => $project->requirements,
+          '#scale' => 'full',
           '#decimal_format' => $decimal_format,
         ],
+        'sorttable_customkey' => $project->requirements,
+        'data-sort-type' => 'numeric',
+        'data-column-type' => 'amount',
       ];
       $rows[] = $row;
     }
 
+    $total_rows = [];
+    $total_rows[] = [
+      'data' => [
+        $this->t('Total'),
+        NULL,
+        count($organization_ids_unique),
+        [
+          'data' => [
+            '#theme' => 'hpc_amount',
+            '#amount' => $totals['targets'],
+            '#scale' => 'full',
+            '#decimal_format' => $decimal_format,
+          ],
+          'data-column-type' => 'amount',
+        ],
+        [
+          'data' => [
+            '#theme' => 'hpc_currency',
+            '#value' => $totals['requirements'],
+            '#scale' => 'full',
+            '#decimal_format' => $decimal_format,
+          ],
+          'data-column-type' => 'amount',
+        ],
+      ],
+      'class' => 'totals-row',
+    ];
+
     return [
       '#theme' => 'table',
       '#header' => $header,
+      '#footer' => $total_rows,
       '#rows' => $rows,
+      '#sortable' => TRUE,
     ];
   }
 
@@ -169,25 +297,35 @@ class ProjectModalController extends ControllerBase {
    *
    * @param array $projects
    *   The projects to include in the table.
+   * @param string|null $decimal_format
+   *   The decimal format to use.
    *
    * @return array
    *   A render array.
    */
-  private function getOrganizationProjectTable(array $projects) {
+  private function getOrganizationProjectTable(array $projects, $decimal_format) {
     $header = [
       $this->t('Project code'),
       $this->t('Project name'),
       $this->t('Requirements'),
     ];
 
+    $totals = [
+      'requirements' => 0,
+    ];
+
     $rows = [];
     foreach ($projects as $project) {
+      $totals['requirements'] += $project->requirements ?? 0;
       $row = [];
       $row[] = [
         'data' => [
           '#type' => 'link',
           '#title' => $project->version_code,
           '#url' => Url::fromUri('https://projects.hpc.tools/project/' . $project->id . '/view'),
+          '#attributes' => [
+            'target' => '_blank',
+          ],
         ],
       ];
       $row[] = $project->name;
@@ -195,15 +333,40 @@ class ProjectModalController extends ControllerBase {
         'data' => [
           '#theme' => 'hpc_currency',
           '#value' => $project->requirements,
+          '#scale' => 'full',
+          '#decimal_format' => $decimal_format,
         ],
+        'sorttable_customkey' => $project->requirements,
+        'data-sort-type' => 'numeric',
+        'data-column-type' => 'amount',
       ];
       $rows[] = $row;
     }
+
+    $total_rows = [];
+    $total_rows[] = [
+      'data' => [
+        $this->t('Total'),
+        NULL,
+        [
+          'data' => [
+            '#theme' => 'hpc_currency',
+            '#value' => $totals['requirements'],
+            '#scale' => 'full',
+            '#decimal_format' => $decimal_format,
+          ],
+          'data-column-type' => 'amount',
+        ],
+      ],
+      'class' => 'totals-row',
+    ];
 
     return [
       '#theme' => 'table',
       '#header' => $header,
       '#rows' => $rows,
+      '#footer' => $total_rows,
+      '#sortable' => TRUE,
     ];
   }
 
@@ -233,12 +396,32 @@ class ProjectModalController extends ControllerBase {
    * @param \Drupal\ghi_plans\ApiObjects\Organization[] $objects
    *   The organization objects.
    *
-   * @return array
+   * @return \Drupal\Core\Link[]|string[]
    *   An array of organization links, or their names if no url is set.
    */
   private function getOrganizationLinks(array $objects) {
+    $link_options = [
+      'attributes' => [
+        'target' => '_blank',
+      ],
+    ];
+    return array_values(array_map(function ($object) use ($link_options) {
+      return $object->url ? Link::fromTextAndUrl($object->name, Url::fromUri($object->url, $link_options))->toString() : $object->name;
+    }, $objects));
+  }
+
+  /**
+   * Get organization names when available.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Organization[] $objects
+   *   The organization objects.
+   *
+   * @return string[]
+   *   An array of organization names.
+   */
+  private function getOrganizationNames(array $objects) {
     return array_values(array_map(function ($object) {
-      return $object->url ? Link::fromTextAndUrl($object->name, Url::fromUri($object->url)) : $object->name;
+      return $object->name;
     }, $objects));
   }
 
@@ -284,9 +467,10 @@ class ProjectModalController extends ControllerBase {
    */
   private function getProjectSearchQuery(BaseObjectInterface $base_object) {
     $plan_object = $this->getPlanObject($base_object);
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery $project_search_query */
     $project_search_query = $this->endpointQueryManager->createInstance('plan_project_search_query');
-    $project_search_query->getData(['plan_id' => $plan_object->getSourceId()]);
-    if ($base_object->bundle() == 'governing_entity') {
+    $project_search_query->setPlaceholder('plan_id', $plan_object->getSourceId());
+    if ($base_object instanceof GoverningEntity) {
       $project_search_query->setFilterByClusterIds([$base_object->getSourceId()]);
     }
     return $project_search_query;

@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Traits;
 
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 
 /**
@@ -31,7 +32,7 @@ trait FtsLinkTrait {
     $plan_id = $plan->getSourceId();
     $query_args = [];
 
-    if (!empty($base_object) && is_object($base_object) && $base_object->bundle() == 'governing_entity') {
+    if (!empty($base_object) && is_object($base_object) && $base_object instanceof GoverningEntity) {
       // Cluster context.
       $cluster_id = $base_object->getSourceId();
       $cluster_query = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('cluster_query');

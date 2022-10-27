@@ -173,6 +173,22 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
+  public function getTableCell() {
+    return [
+      'data' => $this->getRenderArray(),
+      'data-value' => $this->getValue(),
+      'data-raw-value' => $this->getSortableValue(),
+      'data-sort-type' => $this::SORT_TYPE,
+      'data-column-type' => $this->getColumnType(),
+      'data-content' => $this->getLabel(),
+      'class' => $this->getClasses(),
+      'export_value' => $this->getSortableValue(),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getSortableValue() {
     return $this->getValue();
   }
@@ -281,32 +297,6 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
       }
       $value = $property->getValue($this);
       if (!is_object($value) || !$value instanceof EndpointQueryPluginInterface) {
-        continue;
-      }
-      $query_handlers[] = $value;
-    }
-    return $query_handlers;
-  }
-
-  /**
-   * Retrieve the query handlers defined for a configuration item plugin.
-   *
-   * @param string $class
-   *   A class name to look for.
-   *
-   * @return \Drupal\hpc_api\Query\EndpointQuery[]
-   *   An array of EndpointQuery objects used by a plugin.
-   */
-  protected function getQueryHandler($class) {
-    $query_handlers = [];
-    $reflect = new \ReflectionClass($this);
-    $properties = $reflect->getProperties();
-    foreach ($properties as $property) {
-      if (!$property->isPublic()) {
-        continue;
-      }
-      $value = $property->getValue($this);
-      if (!is_object($value) || !$value instanceof $class) {
         continue;
       }
       $query_handlers[] = $value;
