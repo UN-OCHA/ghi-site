@@ -69,7 +69,7 @@
       }
 
       .ui-dialog-title {
-        color: var(--cd-default-text-color) !important;
+        color: var(--ghi-default-text-color) !important;
 
         .cluster-icon {
           display: inline-block;
@@ -78,7 +78,7 @@
           color: white;
 
           svg * {
-            fill: var(--cd-default-text-color);
+            fill: var(--ghi-default-text-color);
           }
         }
 
@@ -97,7 +97,7 @@
       border-bottom-left-radius: var(--ghi-ui-dialog-border-radius);
 
       a {
-        color: var(--cd-default-text-color);
+        color: var(--ghi-default-text-color);
 
         &.fts-link {
           display: inline-block;
@@ -115,14 +115,14 @@
 
         th {
           white-space: nowrap;
-          color: var(--cd-default-text-color);
+          color: var(--ghi-default-text-color);
           background-color: inherit;
         }
 
         th,
         td,
         td a {
-          color: var(--cd-default-text-color);
+          color: var(--ghi-default-text-color);
           font-size: var(--cd-font-size--small);
         }
 

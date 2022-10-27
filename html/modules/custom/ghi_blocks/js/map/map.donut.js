@@ -6,8 +6,8 @@
 
   Drupal.hpc_map_donut.config = {
     colors: [
-      root_styles.getPropertyValue('--cd-widget-color--dark'), // Darker for the first segment.
-      root_styles.getPropertyValue('--cd-widget-color--light'), // Lighter for the first segment.
+      root_styles.getPropertyValue('--ghi-widget-color--dark'), // Darker for the first segment.
+      root_styles.getPropertyValue('--ghi-widget-color--light'), // Lighter for the first segment.
     ],
     empty_color: '#919191',
     donut_attrs: {

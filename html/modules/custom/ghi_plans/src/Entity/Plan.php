@@ -25,6 +25,16 @@ class Plan extends BaseObject {
   }
 
   /**
+   * Get the document uri.
+   *
+   * @return string|null
+   *   A uri to the document for the plan.
+   */
+  public function getDocumentUri() {
+    return $this->get('field_plan_document_link')->value ?? NULL;
+  }
+
+  /**
    * Get the decimal format to use for number formatting.
    *
    * @return string|null

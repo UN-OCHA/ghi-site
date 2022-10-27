@@ -31,12 +31,18 @@
   // Work-in-progress-colors, to be replaced with the official colors above.
   --cd-ocha-orange: #fecb00; // rgb(254, 203, 0)
   --cd-ocha-orange--dark: var(--ghi-orange-dark);
-  --cd-primary-color: var(--cd-ocha-orange);
+  --cd-primary-color: var(--ghi-yellow);
   --cd-primary-color--dark: var(--cd-ocha-orange--dark);
-  --cd-widget-color--light: var(--cd-grey--light);
-  --cd-widget-color--dark: var(--cd-primary-color--dark);
-  --cd-primary-background-color: #faf9f5;
   --cd-tag--color: #9e9e9e;
+
+  // GHI Semantic color definitions
+  --ghi-default-text-color: var(--ghi-grey--dark);
+  --ghi-default-border-color: var(--ghi-grey--light);
+  --ghi-default-border-color-background: var(--ghi-grey);
+  --ghi-default-background-color: var(--ghi-grey--background);
+  --ghi-primary-background-color: var(--ghi-yellow--light);
+  --ghi-widget-color--light: var(--cd-grey--light);
+  --ghi-widget-color--dark: var(--ghi-orange-dark);
 
   // Legacy Hum Insight colors.
   --hpc-brown: #464646;

@@ -193,9 +193,10 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'requirements' => $plan->getRequirementsFootnote(),
         ];
       }
-      $document_uri = $plan_entity ? ($plan_entity->get('field_plan_document_link')->uri ?? NULL) : NULL;
+
       $link_to_fts = $plan_entity ? $plan_entity->canLinkToFts() : FALSE;
       $plan_status = $plan->getPlanStatus();
+      $document_uri = $plan->getPlanDocumentUri();
 
       // Setup the column values.
       $value_in_need = $in_need ? [

@@ -94,7 +94,7 @@
       color: '#026CB6',
       dashArray: '',
     },
-    colors: Drupal.hpc_map_chloropleth.interpolateColors("rgb(255, 255, 255)", Drupal.hpc_map_chloropleth.convertToRGB(root_styles.getPropertyValue('--cd-widget-color--dark')), 6),
+    colors: Drupal.hpc_map_chloropleth.interpolateColors("rgb(255, 255, 255)", Drupal.hpc_map_chloropleth.convertToRGB(root_styles.getPropertyValue('--ghi-widget-color--dark')), 6),
     modal: {
       wrapperTemplate: [
         '<div class="{OVERLAY_CLS}"></div>',

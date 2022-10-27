@@ -10,7 +10,7 @@ html.snap--png {
     position: relative;
     display: block;
     width: 100%;
-    color: var(--cd-default-text-color);
+    color: var(--ghi-default-text-color);
     background-color: var(--cd-white);
 
     &:before {
@@ -45,14 +45,14 @@ html.snap--png {
 
   .caption {
     margin-top: 2rem;
-    color: var(--cd-default-text-color);
+    color: var(--ghi-default-text-color);
     font-size: var(--cd-font-size--2xbase);
     line-height: 1.4rem;
   }
 
   .link {
     text-decoration: none;
-    color: var(--cd-default-text-color) !important;
+    color: var(--ghi-default-text-color) !important;
     font-size: var(--cd-font-size--tiny);
   }
 

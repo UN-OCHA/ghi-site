@@ -47,6 +47,19 @@
           }
         }
 
+        .modal-header {
+          .title {
+            margin-bottom: 0;
+            color: var(--ghi-default-text-color);
+            font-size: var(--cd-font-size--base);
+            font-weight: bold;
+
+            a {
+              color: var(--ghi-default-text-color);
+            }
+          }
+        }
+
         .modal-content {
           .modal-inner {
             padding: 1.2rem 1.6rem 0.5rem 1.4rem;
@@ -55,26 +68,19 @@
           strong {
             font-weight: bold;
           }
-          .title {
-            margin-bottom: 0;
-            color: var(--hpc-orange);
-            font-size: var(--cd-font-size--base);
-            font-weight: bold;
 
-            a {
-              color: var(--hpc-orange);
-            }
-          }
           .section-wrapper {
-            margin-bottom: 10px;
-            padding-top: 10px;
-            border-bottom: 1px solid var(--hpc-border-color);
+            margin-bottom: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--ghi-default-border-color);
 
             .section-header {
-              margin-bottom: 1.2rem;
+              display: flex;
+              align-items: baseline;
+              margin-bottom: 0;
               text-transform: uppercase;
               font-size: var(--cd-font-size--small);
-              font-weight: bold;
+              font-weight: 700;
               line-height: 16px;
 
               .material-icons {
@@ -94,18 +100,8 @@
             }
 
             .section-row {
-              width: 100%;
-              margin-bottom: 1rem;
-              cursor: text;
-
-              .section-row-item {
-                float: left;
-                width: 50%;
-
-                &:nth-child(2) {
-                  padding-left: 0.5rem;
-                }
-              }
+              display: flex;
+              justify-content: space-between;
 
               .label {
                 position: relative;
@@ -144,12 +140,6 @@
               .note {
                 font-size: var(--cd-font-size--tiny);
               }
-            }
-
-            &.last {
-              margin-bottom: 0;
-              padding-bottom: 0;
-              border: none;
             }
           }
         }

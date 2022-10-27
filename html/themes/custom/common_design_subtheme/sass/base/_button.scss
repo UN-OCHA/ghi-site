@@ -5,7 +5,7 @@
   padding: 0.8rem 1.5rem;
   text-decoration: none;
   text-transform: uppercase;
-  color: var(--cd-default-text-color) !important;
+  color: var(--ghi-default-text-color) !important;
   background-color: var(--ghi-yellow);
   font-size: var(--cd-font-size--small);
   font-weight: bold;
@@ -16,7 +16,7 @@
 
   &:hover,
   &:focus {
-    color: var(--cd-default-text-color);
+    color: var(--ghi-default-text-color);
     background-color: var(--cd-ocha-orange);
   }
 
@@ -26,7 +26,7 @@
     position: relative;
     max-width: fit-content;
     padding-right: 2.5rem;
-    color: var(--cd-default-text-color);
+    color: var(--ghi-default-text-color);
 
     &:before {
       position: absolute;
@@ -70,7 +70,7 @@
       flex-direction: column;
 
       a {
-        color: var(--cd-default-text-color);
+        color: var(--ghi-default-text-color);
       }
     }
   }
@@ -89,7 +89,7 @@ button.btn--download {
   -webkit-appearance: none;
 
   svg.cd-icon {
-    fill: var(--cd-default-text-color);
+    fill: var(--ghi-default-text-color);
   }
 
   &:before {

@@ -56,6 +56,16 @@ class PlanOverviewPlan extends BaseObject {
   }
 
   /**
+   * Get the plan document uri if an entity is available.
+   *
+   * @return string|null
+   *   The plan document uri, or NULL.
+   */
+  public function getPlanDocumentUri() {
+    return $this->getEntity()?->getDocumentUri() ?? NULL;
+  }
+
+  /**
    * Get the base object entity corresponding to this API object.
    *
    * @return \Drupal\ghi_plans\Entity\Plan
