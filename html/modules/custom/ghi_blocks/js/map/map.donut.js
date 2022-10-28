@@ -79,8 +79,8 @@
     sorted_plan_types = ['HRP', 'FA', 'Other'];
     plan_types = sorted_plan_types.filter(v => plan_types.includes(v));
 
+    var legend_items = [];
     if (map_id.indexOf('plan-overview-map') === 0) {
-      var legend_items = [];
       for (plan_type of plan_types) {
         legend_items.push({
           'label': '% ' + plan_type + ' ' + state.tab_data.legend[1],
