@@ -74,34 +74,10 @@
             padding-top: 1rem;
             border-top: 1px solid var(--ghi-default-border-color);
 
-            .section-header {
-              display: flex;
-              align-items: baseline;
-              margin-bottom: 0;
-              text-transform: uppercase;
-              font-size: var(--cd-font-size--small);
-              font-weight: 700;
-              line-height: 16px;
-
-              .material-icons {
-                float: left;
-                margin-right: 10px;
-
-                &.attach-money {
-                  margin-right: 0;
-                  margin-left: -5px;
-                }
-              }
-
-              span {
-                display: block;
-                padding-top: 5px;
-              }
-            }
-
             .section-row {
               display: flex;
               justify-content: space-between;
+              width: 100%;
 
               .label {
                 position: relative;
@@ -139,6 +115,25 @@
               }
               .note {
                 font-size: var(--cd-font-size--tiny);
+              }
+
+              &.section-row-plan-status {
+                margin: 4px 0 4px 4px;
+
+                .label {
+                  display: flex;
+                  gap: 0.5rem;
+                  font-weight: bold;
+                }
+
+                .value {
+                  text-transform: none;
+
+                  & > div {
+                    display: flex;
+                    gap: 0.5rem;
+                  }
+                }
               }
             }
           }

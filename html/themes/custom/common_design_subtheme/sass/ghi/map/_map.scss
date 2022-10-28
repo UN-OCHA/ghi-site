@@ -118,11 +118,19 @@
 
           .modal-content {
 
-            div.section-header span {
-              position: relative;
-              top: -0.4rem;
-              left: 0.5rem;
-              display: inline-block;
+            div.section-header {
+              display: flex;
+              gap: 0.5rem;
+              align-items: center;
+              margin-bottom: 0;
+              text-transform: uppercase;
+              font-size: var(--cd-font-size--small);
+              font-weight: 700;
+              line-height: 16px;
+
+              span {
+                display: inline-block;
+              }
             }
 
             div.monitoring-period {

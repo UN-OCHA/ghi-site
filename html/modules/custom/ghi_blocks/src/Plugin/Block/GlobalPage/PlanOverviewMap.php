@@ -351,11 +351,12 @@ class PlanOverviewMap extends GHIBlockBase {
       ],
       'plan_status' => [
         'label' => $this->t('Status'),
-        'value' => $plan_status ? ThemeHelper::render([
+        'value' => $plan_status || $document_uri ? ThemeHelper::render([
           '#type' => 'container',
           'content' => array_filter([
             'plan_status' => $plan_status ? [
               '#theme' => 'plan_status',
+              '#compact' => FALSE,
               '#status' => strtolower($plan_status),
               '#status_label' => $plan_status,
             ] : NULL,
@@ -371,7 +372,7 @@ class PlanOverviewMap extends GHIBlockBase {
               'content' => DownloadHelper::getDownloadIcon($document_uri),
             ] : NULL,
           ]),
-        ]) : NULL,
+        ], FALSE) : NULL,
       ],
     ];
 
@@ -383,9 +384,11 @@ class PlanOverviewMap extends GHIBlockBase {
       unset($items['reached']);
     }
 
-    return Markup::create(ThemeHelper::theme('plan_overview_map_modal', [
+    $build = [
+      '#theme' => 'plan_overview_map_modal',
       '#items' => $items,
-    ], TRUE, FALSE));
+    ];
+    return Markup::create(ThemeHelper::render($build, FALSE));
   }
 
   /**
