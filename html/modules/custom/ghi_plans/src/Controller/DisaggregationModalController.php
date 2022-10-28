@@ -206,7 +206,7 @@ class DisaggregationModalController extends ControllerBase {
 
       if (!empty($location['categories'])) {
         foreach ($location['categories'] as $key => $category) {
-          $totals[$key] = ($totals[$key] ?: 0) + ($category['data'] ?: 0);
+          $totals[$key] = ((int) $totals[$key] ?: 0) + ((int) $category['data'] ?: 0);
           $row[] = [
             'data' => [
               '#theme' => 'hpc_autoformat_value',
