@@ -26,6 +26,7 @@ function common_design_subtheme_theme_registry_alter(&$theme_registry) {
   $theme_registry['table']['variables']['progress_groups'] = FALSE;
   $theme_registry['table']['variables']['autosort'] = FALSE;
   $theme_registry['table']['variables']['soft_limit'] = FALSE;
+  $theme_registry['table']['variables']['sticky_rows'] = FALSE;
 }
 
 /**
@@ -302,6 +303,23 @@ function common_design_subtheme_preprocess_table(&$vars) {
     $attributes['class'][] = Html::getClass('has-progress-indicator');
   }
 
+  if (!empty($vars['sticky_rows'])) {
+    $pseudo_table = [
+      'rows' => $vars['sticky_rows'],
+    ];
+    template_preprocess_table($pseudo_table);
+    foreach ($pseudo_table['rows'] as $row_key => &$row) {
+      $attribute = is_array($row) && array_key_exists('attributes', $row) ? $row['attributes'] : NULL;
+      if (!$attribute) {
+        continue;
+      }
+      $attribute->addClass('sticky-row');
+    }
+    $vars['rows'] = array_merge($pseudo_table['rows'], $vars['rows']);
+    $attributes['sortable-row-offset'] = count($vars['sticky_rows']);
+    $attributes['class'][] = 'has-totals-row';
+  }
+
   $vars['attributes'] = array_key_exists('attributes', $vars) ? NestedArray::mergeDeep($vars['attributes'], $attributes) : $attributes;
 
   // Process the header.
@@ -364,7 +382,7 @@ function common_design_subtheme_preprocess_table(&$vars) {
     }
   }
 
-  // Process the foter the same as the header.
+  // Process the footer the same as the header.
   if (!empty($vars['footer'])) {
     foreach ($vars['footer'] as $row_key => &$row) {
       foreach ($row['cells'] as $column_name => &$column) {

@@ -286,7 +286,7 @@ class ProjectModalController extends ControllerBase {
     return [
       '#theme' => 'table',
       '#header' => $header,
-      '#footer' => $total_rows,
+      '#sticky_rows' => $total_rows,
       '#rows' => $rows,
       '#sortable' => TRUE,
     ];
@@ -365,7 +365,7 @@ class ProjectModalController extends ControllerBase {
       '#theme' => 'table',
       '#header' => $header,
       '#rows' => $rows,
-      '#footer' => $total_rows,
+      '#sticky_rows' => $total_rows,
       '#sortable' => TRUE,
     ];
   }
