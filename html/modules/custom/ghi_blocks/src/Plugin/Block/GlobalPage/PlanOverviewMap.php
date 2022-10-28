@@ -109,6 +109,7 @@ class PlanOverviewMap extends GHIBlockBase {
           0 => $this->t('People in need'),
           1 => $this->t('People targeted'),
         ],
+        'legend_caption' => $this->t('Donut size represents the population'),
       ],
       'funding' => [
         'group' => 'funding',
@@ -118,6 +119,7 @@ class PlanOverviewMap extends GHIBlockBase {
           0 => $this->t('Requirements'),
           1 => $this->t('Funding'),
         ],
+        'legend_caption' => $this->t('Donut size represents the requirements'),
       ],
     ];
 
@@ -160,10 +162,6 @@ class PlanOverviewMap extends GHIBlockBase {
 
       $country_objects[] = (object) [
         'plan' => $plan,
-        'plan_id' => $plan->id(),
-        'plan_type' => $plan->getTypeName(),
-        'plan_status' => $plan->getPlanStatus(),
-        'plan_document' => $plan->getPlanDocumentUri(),
         'title' => $section && $section->isPublished() ? $section->toLink($location->name)->toString() : $location->name,
         'location' => $location,
         'funding' => (object) [
@@ -187,7 +185,9 @@ class PlanOverviewMap extends GHIBlockBase {
     $locations = [];
     $modal_contents = [];
     foreach ($country_objects as $object) {
-      $plan_id = $object->plan_id;
+      /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
+      $plan = $object->plan;
+      $plan_id = $plan->id();
       $location = [
         'location_id' => $object->location->id,
         'location_name' => $object->location->name,
@@ -201,13 +201,12 @@ class PlanOverviewMap extends GHIBlockBase {
           $object->funding->total_requirements,
           $object->funding->total_funding,
         ],
-        'plan_status' => $object->plan_status,
-        'plan_document' => $object->plan_document,
+        'plan_type' => $plan->getTypeShortName(),
       ];
       $modal_contents[(string) $object->location->id] = [
         'location_id' => $object->location->id,
         'title' => $object->title,
-        'tag_line' => $object->plan_type,
+        'tag_line' => $plan->getTypeName(),
         'html' => $this->buildCountryModal($object, !empty($footnotes[$plan_id]) ? $footnotes[$plan_id] : NULL),
       ];
       $locations[] = $location;
@@ -259,6 +258,7 @@ class PlanOverviewMap extends GHIBlockBase {
         'locations' => $locations,
         'modal_contents' => $modal_contents,
         'legend' => $tab['legend'],
+        'legend_caption' => $tab['legend_caption'],
       ];
 
       $map['tabs'][] = Markup::create('<a href="#" class="map-tab" data-map-index="' . $key . '">' . $tab['label'] . '</a>');
@@ -307,19 +307,19 @@ class PlanOverviewMap extends GHIBlockBase {
         'value' => CommonHelper::renderValue($data->caseload->total_population, 'amount', 'hpc_amount', $common_theme_args),
       ],
       'inneed' => [
-        'label' => $this->t('In need') . $this->getRenderedFootnoteTooltip($footnotes, 'in_need'),
-        'value' => CommonHelper::renderValue($data->caseload->in_need, 'amount', 'hpc_amount', $common_theme_args),
+        'label' => $this->t('In need'),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'in_need') . CommonHelper::renderValue($data->caseload->in_need, 'amount', 'hpc_amount', $common_theme_args),
       ],
       'target' => [
-        'label' => $this->t('Targeted') . $this->getRenderedFootnoteTooltip($footnotes, 'target'),
-        'value' => CommonHelper::renderValue($data->caseload->target, 'amount', 'hpc_amount', $common_theme_args),
+        'label' => $this->t('Targeted'),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'target') . CommonHelper::renderValue($data->caseload->target, 'amount', 'hpc_amount', $common_theme_args),
       ],
       // Note that due to space restrictions, the "estimated reach" and
       // "reached" values are mutually exclusive in the modal.
       // @see plan-overview-map-modal.tpl.php
       'estimated_reach' => [
-        'label' => $this->t('Est. reach') . $this->getRenderedFootnoteTooltip($footnotes, 'estimated_reach'),
-        'value' => CommonHelper::renderValue($data->caseload->estimated_reach, 'amount', 'hpc_amount', $common_theme_args),
+        'label' => $this->t('Est. reach'),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'estimated_reach') . CommonHelper::renderValue($data->caseload->estimated_reach, 'amount', 'hpc_amount', $common_theme_args),
       ],
       'reached' => [
         'label' => $this->t('Reached') . (!empty($data->reporting_period) ? ThemeHelper::render([
@@ -339,8 +339,12 @@ class PlanOverviewMap extends GHIBlockBase {
         'value' => CommonHelper::renderValue($data->caseload->reached_percent, 'ratio', 'hpc_percent'),
       ],
       'funding_required' => [
-        'label' => (new TranslatableMarkup('Required <span class="suffix-light">USD</span>')) . $this->getRenderedFootnoteTooltip($footnotes, 'requirements'),
-        'value' => CommonHelper::renderValue($data->funding->total_requirements, 'value', 'hpc_currency', $common_theme_args),
+        'label' => (new TranslatableMarkup('Requirements')),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'requirements') . CommonHelper::renderValue($data->funding->total_requirements, 'value', 'hpc_currency', $common_theme_args),
+      ],
+      'funding_received' => [
+        'label' => (new TranslatableMarkup('Funding')),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'total_funding') . CommonHelper::renderValue($data->funding->total_funding, 'value', 'hpc_currency', $common_theme_args),
       ],
       'funding_progress' => [
         'label' => $this->t('Coverage'),
@@ -351,11 +355,12 @@ class PlanOverviewMap extends GHIBlockBase {
       ],
       'plan_status' => [
         'label' => $this->t('Status'),
-        'value' => $plan_status ? ThemeHelper::render([
+        'value' => $plan_status || $document_uri ? ThemeHelper::render([
           '#type' => 'container',
           'content' => array_filter([
             'plan_status' => $plan_status ? [
               '#theme' => 'plan_status',
+              '#compact' => FALSE,
               '#status' => strtolower($plan_status),
               '#status_label' => $plan_status,
             ] : NULL,
@@ -371,7 +376,7 @@ class PlanOverviewMap extends GHIBlockBase {
               'content' => DownloadHelper::getDownloadIcon($document_uri),
             ] : NULL,
           ]),
-        ]) : NULL,
+        ], FALSE) : NULL,
       ],
     ];
 
@@ -383,9 +388,11 @@ class PlanOverviewMap extends GHIBlockBase {
       unset($items['reached']);
     }
 
-    return Markup::create(ThemeHelper::theme('plan_overview_map_modal', [
+    $build = [
+      '#theme' => 'plan_overview_map_modal',
       '#items' => $items,
-    ], TRUE, FALSE));
+    ];
+    return Markup::create(ThemeHelper::render($build, FALSE));
   }
 
   /**

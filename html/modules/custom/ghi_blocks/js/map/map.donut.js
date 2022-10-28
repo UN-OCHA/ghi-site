@@ -61,7 +61,6 @@
   Drupal.hpc_map_donut.updateLegend = function(state) {
     let map_id = state.map_id;
     let colors = Drupal.hpc_map_donut.config.colors;
-    let map_style_config = state.options.map_style_config;
 
     // Remove old legend items.
     d3.select('#' + map_id + '-legend ul')
@@ -70,12 +69,44 @@
       .exit()
       .remove();
 
+    let dedicated_plan_types = ['hrp', 'fa'];
+    let plan_types = $('#' + map_id + ' .leaflet-overlay-pane svg[plan-type]').map(function() {
+      let plan_type = $(this).attr('plan-type');
+      return dedicated_plan_types.indexOf(plan_type) != -1 ? plan_type.toUpperCase() : Drupal.t('Other');
+    }).toArray().filter(function (value, index, self) {
+      return self.indexOf(value) === index;
+    });
+    sorted_plan_types = ['HRP', 'FA', 'Other'];
+    plan_types = sorted_plan_types.filter(v => plan_types.includes(v));
+
     var legend_items = [];
-    for (segment_index of state.active_donut_segments) {
-      if (!state.tab_data.legend.hasOwnProperty(segment_index)) {
-        continue;
+    if (map_id.indexOf('plan-overview-map') === 0) {
+      for (plan_type of plan_types) {
+        legend_items.push({
+          'label': '% ' + plan_type + ' ' + state.tab_data.legend[1],
+          'type': plan_type.toLowerCase(),
+        });
       }
-      legend_items.push(state.tab_data.legend[segment_index]);
+    }
+    else {
+      for (segment_index of state.active_donut_segments) {
+        if (!state.tab_data.legend.hasOwnProperty(segment_index)) {
+          continue;
+        }
+        legend_items.push({
+          'label': state.tab_data.legend[segment_index],
+        });
+      }
+    }
+
+    // Set the legend caption.
+    console.log(state.tab_data);
+    if (state.tab_data.legend_caption) {
+      let legend_caption = $('#' + map_id + '-legend div.legend-caption');
+      if (!legend_caption.length) {
+        $('#' + map_id + '-legend').prepend($('<div>').addClass('legend-caption'));
+      }
+      $('#' + map_id + '-legend div.legend-caption').text(state.tab_data.legend_caption);
     }
 
     // Add new legend items.
@@ -88,14 +119,21 @@
 
     // Build new legend items.
     items.each(function(d, i) {
+
       d3.select(this)
         .append('div')
         .style('background-color', colors[colors.length - 1 - i])
-        .attr('class', 'legend-icon');
+        .attr('class', function() {
+          let classes = [
+            'legend-icon',
+            d.type ? 'legend-icon-' + d.type : null,
+          ].filter((el) => el !== null);
+          return classes.join(' ');
+        });
       d3.select(this)
         .append('div')
         .attr('class', 'legend-label')
-        .text(d);
+        .text(d.label);
     });
   }
 
@@ -339,6 +377,7 @@
             .attr('stroke', 'transparent')
             .attr('location-id', d => d.object.location_id)
             .attr('location-name', d => d.object.location_name)
+            .attr('plan-type', d => d.object.plan_type ? d.object.plan_type.toLowerCase() : '')
             .attr('x', d => d.x)
             .attr('y', d => d.y)
             .attr('id', d => map_id + '--' + d.object.location_id)

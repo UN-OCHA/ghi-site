@@ -35,14 +35,20 @@
   --cd-primary-color--dark: var(--cd-ocha-orange--dark);
   --cd-tag--color: #9e9e9e;
 
-  // GHI Semantic color definitions
+  // GHI Semantic color definitions.
   --ghi-default-text-color: var(--ghi-grey--dark);
   --ghi-default-border-color: var(--ghi-grey--light);
   --ghi-default-border-color-background: var(--ghi-grey);
   --ghi-default-background-color: var(--ghi-grey--background);
   --ghi-primary-background-color: var(--ghi-yellow--light);
-  --ghi-widget-color--light: var(--cd-grey--light);
+  --ghi-widget-color--light: var(--ghi-grey--light);
   --ghi-widget-color--dark: var(--ghi-orange-dark);
+  --ghi-progress-color-fg: var(--ghi-yellow);
+  --ghi-progress-color-bg: var(--ghi-yellow--light-chart);
+  --ghi-status-color-unpublished: var(--cd-primary-color);
+  --ghi-status-color-published: #abea3a;
+  --ghi-primary-button-color: var(--ghi-yellow);
+  --ghi-primary-button-color-hover: var(--ghi-orange-dark);
 
   // Legacy Hum Insight colors.
   --hpc-brown: #464646;
@@ -54,10 +60,6 @@
   --green: #62b445;
   --hpc-border-color: #e1e1e1;
   --cd-font-size--extra-tiny: 0.625rem;      /* 10px */
-  --ghi-progress-color-fg: var(--ghi-yellow);
-  --ghi-progress-color-bg: var(--ghi-yellow--light-chart);
-  --ghi-status-color-unpublished: var(--cd-primary-color);
-  --ghi-status-color-published: rgb(171, 234, 58);
 
   // Border styles for ui dialogs.
   --ghi-ui-dialog-border-radius: 1rem;

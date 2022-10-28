@@ -120,6 +120,7 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
     ],
     'plan_status' => [
       'variables' => [
+        'compact' => TRUE,
         'status' => NULL,
         'status_label' => NULL,
       ],
