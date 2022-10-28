@@ -109,6 +109,7 @@ class PlanOverviewMap extends GHIBlockBase {
           0 => $this->t('People in need'),
           1 => $this->t('People targeted'),
         ],
+        'legend_caption' => $this->t('Donut size represents the population'),
       ],
       'funding' => [
         'group' => 'funding',
@@ -118,6 +119,7 @@ class PlanOverviewMap extends GHIBlockBase {
           0 => $this->t('Requirements'),
           1 => $this->t('Funding'),
         ],
+        'legend_caption' => $this->t('Donut size represents the requirements'),
       ],
     ];
 
@@ -199,6 +201,7 @@ class PlanOverviewMap extends GHIBlockBase {
           $object->funding->total_requirements,
           $object->funding->total_funding,
         ],
+        'plan_type' => $plan->getTypeShortName(),
       ];
       $modal_contents[(string) $object->location->id] = [
         'location_id' => $object->location->id,
@@ -255,6 +258,7 @@ class PlanOverviewMap extends GHIBlockBase {
         'locations' => $locations,
         'modal_contents' => $modal_contents,
         'legend' => $tab['legend'],
+        'legend_caption' => $tab['legend_caption'],
       ];
 
       $map['tabs'][] = Markup::create('<a href="#" class="map-tab" data-map-index="' . $key . '">' . $tab['label'] . '</a>');
@@ -303,19 +307,19 @@ class PlanOverviewMap extends GHIBlockBase {
         'value' => CommonHelper::renderValue($data->caseload->total_population, 'amount', 'hpc_amount', $common_theme_args),
       ],
       'inneed' => [
-        'label' => $this->t('In need') . $this->getRenderedFootnoteTooltip($footnotes, 'in_need'),
-        'value' => CommonHelper::renderValue($data->caseload->in_need, 'amount', 'hpc_amount', $common_theme_args),
+        'label' => $this->t('In need'),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'in_need') . CommonHelper::renderValue($data->caseload->in_need, 'amount', 'hpc_amount', $common_theme_args),
       ],
       'target' => [
-        'label' => $this->t('Targeted') . $this->getRenderedFootnoteTooltip($footnotes, 'target'),
-        'value' => CommonHelper::renderValue($data->caseload->target, 'amount', 'hpc_amount', $common_theme_args),
+        'label' => $this->t('Targeted'),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'target') . CommonHelper::renderValue($data->caseload->target, 'amount', 'hpc_amount', $common_theme_args),
       ],
       // Note that due to space restrictions, the "estimated reach" and
       // "reached" values are mutually exclusive in the modal.
       // @see plan-overview-map-modal.tpl.php
       'estimated_reach' => [
-        'label' => $this->t('Est. reach') . $this->getRenderedFootnoteTooltip($footnotes, 'estimated_reach'),
-        'value' => CommonHelper::renderValue($data->caseload->estimated_reach, 'amount', 'hpc_amount', $common_theme_args),
+        'label' => $this->t('Est. reach'),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'estimated_reach') . CommonHelper::renderValue($data->caseload->estimated_reach, 'amount', 'hpc_amount', $common_theme_args),
       ],
       'reached' => [
         'label' => $this->t('Reached') . (!empty($data->reporting_period) ? ThemeHelper::render([
@@ -335,8 +339,12 @@ class PlanOverviewMap extends GHIBlockBase {
         'value' => CommonHelper::renderValue($data->caseload->reached_percent, 'ratio', 'hpc_percent'),
       ],
       'funding_required' => [
-        'label' => (new TranslatableMarkup('Required <span class="suffix-light">USD</span>')) . $this->getRenderedFootnoteTooltip($footnotes, 'requirements'),
-        'value' => CommonHelper::renderValue($data->funding->total_requirements, 'value', 'hpc_currency', $common_theme_args),
+        'label' => (new TranslatableMarkup('Requirements')),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'requirements') . CommonHelper::renderValue($data->funding->total_requirements, 'value', 'hpc_currency', $common_theme_args),
+      ],
+      'funding_received' => [
+        'label' => (new TranslatableMarkup('Funding')),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'total_funding') . CommonHelper::renderValue($data->funding->total_funding, 'value', 'hpc_currency', $common_theme_args),
       ],
       'funding_progress' => [
         'label' => $this->t('Coverage'),

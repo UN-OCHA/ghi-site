@@ -54,7 +54,7 @@
 
           .modal-header {
             height: auto;
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
             padding: 1rem 1rem 0.5rem 1rem;
             color: var(--ghi-default-text-color);
             border: none;
@@ -360,13 +360,19 @@
       z-index: 90;
       top: 1rem;
       right: 1rem;
+      padding: 0.5rem;
+      background: var(--cd-white);
+
+      .legend-caption {
+        margin: 0 0 0.5rem 0;
+        font-size: var(--cd-font-size--tiny);
+      }
 
       ul {
         display: flex;
         margin: 0;
-        padding: 0.5rem;
+        padding: 0;
         border-radius: 3px;
-        background: rgba(255, 255, 255, 0.7);
 
         li.legend-item {
           display: flex;
