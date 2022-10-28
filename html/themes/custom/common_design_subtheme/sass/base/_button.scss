@@ -6,7 +6,7 @@
   text-decoration: none;
   text-transform: uppercase;
   color: var(--ghi-default-text-color) !important;
-  background-color: var(--ghi-yellow);
+  background-color: var(--ghi-primary-button-color);
   font-size: var(--cd-font-size--small);
   font-weight: bold;
 
@@ -17,7 +17,7 @@
   &:hover,
   &:focus {
     color: var(--ghi-default-text-color);
-    background-color: var(--cd-ocha-orange);
+    background-color: var(--ghi-primary-button-color-hover);
   }
 
   &.expand-table,

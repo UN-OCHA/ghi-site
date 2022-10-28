@@ -50,14 +50,14 @@
           position: absolute;
           z-index: 1;
           top: 4rem;
-          left: -0.5rem;
+          left: -1.5rem;
           display: flex;
           flex-direction: column;
-          padding: 0.5rem;
-          background-color: var(--cd-default-background-color);
+          padding: 0.5rem 1.5rem;
+          background-color: var(--ghi-primary-background-color);
 
           a {
-            padding: 0.25rem 0;
+            padding: 0.5rem 0;
             white-space: nowrap;
             font-size: var(--cd-font-size--default);
           }
