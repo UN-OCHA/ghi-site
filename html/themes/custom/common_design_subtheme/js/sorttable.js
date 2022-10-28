@@ -57,6 +57,9 @@ sorttable = {
 
     if (table.tHead.rows.length != 1) return; // can't cope with two header rows
 
+    // Allow row offset to keep some row always on top.
+    row_offset = table.getAttribute('sortable-row-offset') || 0;
+
     // Sorttable v1 put rows with a class of "sortbottom" at the bottom (as
     // "total" rows, for example). This is B&R, since what you're supposed
     // to do is put them in a tfoot. So, if there are sortbottom rows,
@@ -99,7 +102,7 @@ sorttable = {
           if (this.className.search(/\bsorttable-sorted-reverse\b/) != -1) {
             // if we're already sorted by this column in reverse, just
             // re-reverse the table, which is quicker
-            sorttable.reverse(this.sorttable_tbody);
+            sorttable.reverse(this.sorttable_tbody, table);
             this.className = this.className.replace('sorttable-sorted-reverse',
                                                     'sorttable-sorted');
             this.removeChild(document.getElementById('sorttable-sortrevind'));
@@ -113,7 +116,7 @@ sorttable = {
           if (this.className.search(/\bsorttable-sorted\b/) != -1) {
             // if we're already sorted by this column, just
             // reverse the table, which is quicker
-            sorttable.reverse(this.sorttable_tbody);
+            sorttable.reverse(this.sorttable_tbody, table);
             this.className = this.className.replace('sorttable-sorted',
                                                     'sorttable-sorted-reverse');
             this.removeChild(document.getElementById('sorttable-sortfwdind'));
@@ -150,7 +153,7 @@ sorttable = {
           row_array = [];
           col = this.sorttable_columnindex;
           rows = this.sorttable_tbody.rows;
-          for (var j=0; j<rows.length; j++) {
+          for (var j=row_offset; j<rows.length; j++) {
             row_array[row_array.length] = [sorttable.getInnerText(rows[j].cells[col]), rows[j]];
           }
           /* If you want a stable sort, uncomment the following line */
@@ -177,7 +180,9 @@ sorttable = {
   guessType: function(table, column) {
     // guess the type of a column based on its first non-blank row
     sortfn = sorttable.sort_alpha;
-    for (var i=0; i<table.tBodies[0].rows.length; i++) {
+    // Allow row offset to keep some row always on top.
+    row_offset = table.getAttribute('sortable-row-offset') || 0;
+    for (var i=row_offset; i<table.tBodies[0].rows.length; i++) {
       text = sorttable.getInnerText(table.tBodies[0].rows[i].cells[column]);
       if (text != '') {
         if (text.match(/^-?[�$�]?[\d,.]+%?$/)) {
@@ -254,10 +259,12 @@ sorttable = {
     }
   },
 
-  reverse: function(tbody) {
+  reverse: function(tbody, table) {
+    // Allow row offset to keep some row always on top.
+    row_offset = table.getAttribute('sortable-row-offset') || 0;
     // reverse the rows in a tbody
     newrows = [];
-    for (var i=0; i<tbody.rows.length; i++) {
+    for (var i=row_offset; i<tbody.rows.length; i++) {
       newrows[newrows.length] = tbody.rows[i];
     }
     for (var i=newrows.length-1; i>=0; i--) {

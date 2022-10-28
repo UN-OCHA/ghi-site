@@ -176,7 +176,11 @@ class DisaggregationModalController extends ControllerBase {
       }
     }
     else {
-      $header[] = $this->t('Totals');
+      $header[] = [
+        'data' => $this->t('Totals'),
+        'data-sort-type' => 'numeric',
+        'data-column-type' => 'amount',
+      ];
     }
 
     // Go over the data and create the table rows.
@@ -239,7 +243,7 @@ class DisaggregationModalController extends ControllerBase {
       $rows[] = $row;
     }
 
-    $total_rows = [
+    $total_row = [
       'data' => [
         $this->t('Total'),
       ],
@@ -247,7 +251,7 @@ class DisaggregationModalController extends ControllerBase {
     ];
     if (!empty($location['categories'])) {
       foreach ($location['categories'] as $key => $category) {
-        $total_rows['data'][] = [
+        $total_row['data'][] = [
           'data' => [
             '#theme' => 'hpc_amount',
             '#amount' => $totals[$key],
@@ -259,7 +263,7 @@ class DisaggregationModalController extends ControllerBase {
       }
     }
     else {
-      $total_rows['data'][] = [
+      $total_row['data'][] = [
         'data' => [
           '#theme' => 'hpc_amount',
           '#amount' => $totals[0],
@@ -274,7 +278,7 @@ class DisaggregationModalController extends ControllerBase {
       '#theme' => 'table',
       '#header' => $header,
       '#rows' => $rows,
-      '#footer' => $total_rows,
+      '#sticky_rows' => [$total_row],
       '#empty' => $this->t('We could not find suitable information to display here.'),
       '#sortable' => TRUE,
     ];

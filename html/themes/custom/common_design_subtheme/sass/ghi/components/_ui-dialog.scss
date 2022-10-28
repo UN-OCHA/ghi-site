@@ -109,28 +109,6 @@
           }
         }
       }
-
-      .cd-table {
-        margin-bottom: 0;
-
-        th {
-          white-space: nowrap;
-          color: var(--ghi-default-text-color);
-          background-color: inherit;
-        }
-
-        th,
-        td,
-        td a {
-          color: var(--ghi-default-text-color);
-          font-size: var(--cd-font-size--small);
-        }
-
-        tr.totals-row,
-        tfoot tr {
-          background-color: var(--cd-default-background-color);
-        }
-      }
     }
   }
 }
