@@ -105,7 +105,11 @@
 
             div.title {
               font-size: var(--cd-font-size--base);
-              font-weight: bold;
+              font-weight: 700;
+            }
+            div.tag-line {
+              font-size: var(--cd-font-size--tiny);
+              font-weight: 400;
             }
             div.admin-area {
               padding-bottom: 0.5rem;

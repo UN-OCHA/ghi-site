@@ -113,6 +113,10 @@
       if (vars.title) {
         header.append($('<div></div>').addClass('title').html(vars.title)); // Creates title div.
       }
+      // Add the title.
+      if (vars.tag_line) {
+        header.append($('<div></div>').addClass('tag-line').html(vars.tag_line)); // Creates tag line div.
+      }
       // Add the admin area.
       if (vars.location_data && typeof vars.location_data.admin_level != 'undefined') {
 

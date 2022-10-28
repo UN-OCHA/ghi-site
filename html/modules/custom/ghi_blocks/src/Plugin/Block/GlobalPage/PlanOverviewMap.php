@@ -160,10 +160,6 @@ class PlanOverviewMap extends GHIBlockBase {
 
       $country_objects[] = (object) [
         'plan' => $plan,
-        'plan_id' => $plan->id(),
-        'plan_type' => $plan->getTypeName(),
-        'plan_status' => $plan->getPlanStatus(),
-        'plan_document' => $plan->getPlanDocumentUri(),
         'title' => $section && $section->isPublished() ? $section->toLink($location->name)->toString() : $location->name,
         'location' => $location,
         'funding' => (object) [
@@ -187,7 +183,9 @@ class PlanOverviewMap extends GHIBlockBase {
     $locations = [];
     $modal_contents = [];
     foreach ($country_objects as $object) {
-      $plan_id = $object->plan_id;
+      /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
+      $plan = $object->plan;
+      $plan_id = $plan->id();
       $location = [
         'location_id' => $object->location->id,
         'location_name' => $object->location->name,
@@ -201,13 +199,11 @@ class PlanOverviewMap extends GHIBlockBase {
           $object->funding->total_requirements,
           $object->funding->total_funding,
         ],
-        'plan_status' => $object->plan_status,
-        'plan_document' => $object->plan_document,
       ];
       $modal_contents[(string) $object->location->id] = [
         'location_id' => $object->location->id,
         'title' => $object->title,
-        'tag_line' => $object->plan_type,
+        'tag_line' => $plan->getTypeName(),
         'html' => $this->buildCountryModal($object, !empty($footnotes[$plan_id]) ? $footnotes[$plan_id] : NULL),
       ];
       $locations[] = $location;
