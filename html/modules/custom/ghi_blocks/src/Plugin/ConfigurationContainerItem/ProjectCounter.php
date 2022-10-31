@@ -224,6 +224,9 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
     $data_type = $data_type ?? $this->get('data_type');
     $base_object = $this->getContextValue('base_object');
     $context_node = $this->getContextValue('context_node');
+    if (!$context_node) {
+      return NULL;
+    }
     switch ($data_type) {
       case 'projects_count':
         $route_name = 'ghi_plans.modal_content.projects';
