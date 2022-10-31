@@ -307,7 +307,11 @@ class ProjectModalController extends ControllerBase {
     $header = [
       $this->t('Project code'),
       $this->t('Project name'),
-      $this->t('Requirements'),
+      [
+        'data' => $this->t('Requirements'),
+        'data-sort-type' => 'numeric',
+        'data-column-type' => 'amount',
+      ],
     ];
 
     $totals = [

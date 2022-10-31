@@ -222,11 +222,10 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    */
   private function getModalLink() {
     $data_type = $data_type ?? $this->get('data_type');
+    /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
     $base_object = $this->getContextValue('base_object');
     $context_node = $this->getContextValue('context_node');
-    if (!$context_node) {
-      return NULL;
-    }
+
     switch ($data_type) {
       case 'projects_count':
         $route_name = 'ghi_plans.modal_content.projects';
@@ -249,7 +248,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
         'data-dialog-options' => Json::encode([
           'width' => $width,
           'title' => $this->t('@entity_label: @column_label', [
-            '@entity_label' => $context_node->label(),
+            '@entity_label' => $context_node ? $context_node->label() : $base_object->getName(),
             '@column_label' => $this->getLabel(),
           ]),
           'classes' => [
@@ -289,11 +288,6 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
     $project_query->setPlaceholder('plan_id', $plan_object->get('field_original_id')->value);
-
-    $context_node = $this->getContextValue('context_node');
-    if (!$context_node) {
-      return NULL;
-    }
 
     // @todo Why is this needed?
     $cluster_restrict = $cluster_restrict ?? $this->get('cluster_restrict');
