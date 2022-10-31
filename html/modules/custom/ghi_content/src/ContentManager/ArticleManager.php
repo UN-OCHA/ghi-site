@@ -28,7 +28,7 @@ class ArticleManager extends BaseContentManager {
   /**
    * Default mode for new directories. See self::chmod().
    */
-  const THUMBNAIL_DIRECTORY = 'public://thumbnails/article';
+  const IMAGE_DIRECTORY = 'public://article-images';
 
   /**
    * The machine name of the bundle to use for articles.

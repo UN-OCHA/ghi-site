@@ -135,3 +135,18 @@ function ghi_content_update_9005(&$sandbox) {
     }
   }
 }
+
+/**
+ * Change image directory for articles.
+ */
+function ghi_content_update_9006(&$sandbox) {
+  /** @var \Drupal\Core\File\FileSystem $file_system */
+  $file_system = \Drupal::service('file_system');
+  $directory = ArticleManager::IMAGE_DIRECTORY;
+  if (!$file_system->prepareDirectory($directory, FileSystem::CREATE_DIRECTORY)) {
+    throw new UpdateException('Directory not created');
+  }
+
+  // And delete the previous directory.
+  $file_system->deleteRecursive('public://thumbnails');
+}

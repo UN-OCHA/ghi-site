@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_content\RemoteContent\HpcContentModule;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_content\RemoteContent\RemoteArticleBase;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
@@ -71,7 +72,49 @@ class RemoteArticle extends RemoteArticleBase {
    * {@inheritdoc}
    */
   public function getImageUri() {
-    return $this->data->thumbnail->imageUrl ?? NULL;
+    return $this->data->image->imageUrl ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getImageCredits() {
+    return $this->data->image->credits ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getImageCaption() {
+    return $this->data->imageCaption ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getImageCaptionPlain() {
+    $caption = $this->getImageCaption();
+    if (!$caption) {
+      return NULL;
+    }
+    return implode(', ', array_filter([
+      $caption->location,
+      $caption->text,
+    ]));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getImageCaptionMarkup() {
+    $caption = $this->getImageCaption();
+    if (!$caption) {
+      return NULL;
+    }
+    return new FormattableMarkup('<div class="image-caption"><div class="location">@location</div><div class="text">@text</div></div>', [
+      '@location' => $caption->location,
+      '@text' => $caption->text,
+    ]);
   }
 
   /**

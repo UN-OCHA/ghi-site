@@ -45,8 +45,13 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'rendered',
       'configuration',
     ];
-    $fields['thumbnail'] = [
+    $fields['image'] = [
+      'credits',
       'imageUrl',
+    ];
+    $fields['imageCaption'] = [
+      'location',
+      'text',
     ];
     $article_data = $this->fetchArticleData($id, $fields);
     return $article_data ? new RemoteArticle($article_data, $this) : NULL;

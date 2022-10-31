@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_content\Import;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -145,16 +146,17 @@ class ImportManager implements ContainerInjectionInterface {
       return FALSE;
     }
     $message = NULL;
-    $thumbnail_url = $article->getImageUri();
-    if (!empty($thumbnail_url)) {
-      $thumbnail_name = basename($thumbnail_url);
-      $data = $article->getSource()->getFileContent($thumbnail_url);
-      $file = $this->fileRepository->writeData($data, ArticleManager::THUMBNAIL_DIRECTORY . '/' . $thumbnail_name, FileSystem::EXISTS_RENAME);
+    $image_url = $article->getImageUri();
+    if (!empty($image_url)) {
+      $caption = $article->getImageCaptionPlain();
+      $image_name = basename($image_url);
+      $data = $article->getSource()->getFileContent($image_url);
+      $file = $this->fileRepository->writeData($data, ArticleManager::IMAGE_DIRECTORY . '/' . $image_name, FileSystem::EXISTS_REPLACE);
       $update = !$node->get($field_name)->isEmpty();
       $node->get($field_name)->setValue([
         'target_id' => $file->id(),
-        'alt' => $node->getTitle(),
-        'title' => $node->getTitle(),
+        'alt' => $caption ? Unicode::truncate($caption, 512, TRUE, TRUE) : $node->getTitle(),
+        'title' => NULL,
       ]);
       $message = $update ? $this->t('Updated image') : $this->t('Imported image');
     }

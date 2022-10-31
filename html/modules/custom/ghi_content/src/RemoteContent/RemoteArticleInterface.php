@@ -67,6 +67,38 @@ interface RemoteArticleInterface {
   public function getImageUri();
 
   /**
+   * Get the articles header images credits.
+   *
+   * @return string
+   *   The credits for the image.
+   */
+  public function getImageCredits();
+
+  /**
+   * Get the articles header images caption.
+   *
+   * @return object
+   *   The caption object for the image.
+   */
+  public function getImageCaption();
+
+  /**
+   * Get the articles header images caption as plain text.
+   *
+   * @return string
+   *   The caption for the image.
+   */
+  public function getImageCaptionPlain();
+
+  /**
+   * Get the articles header images caption as markup.
+   *
+   * @return \Drupal\Component\Render\MarkupInterface
+   *   The markup for an image caption.
+   */
+  public function getImageCaptionMarkup();
+
+  /**
    * Get a paragraph by id.
    *
    * @param int $id
