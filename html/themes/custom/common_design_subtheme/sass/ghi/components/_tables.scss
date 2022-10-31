@@ -1,208 +1,218 @@
 #main-content,
 .layout-builder-configure-block div[data-block-preview],
 .ghi-modal-dialog {
-  table.ghi-table {
-    font-size: var(--cd-font-size--default);
 
-    &.soft-limit {
-      margin-bottom: 2rem;
-    }
+  .table-wrapper {
+    overflow-x: auto;
+    max-width: calc(100vw - 1rem - 2 * var(--cd-container-padding)) !important;
 
-    &.soft-limit + a.expand-table {
-      display: block;
-      margin-right: auto;
-      margin-left: auto;
-    }
+    table.ghi-table {
+      font-size: var(--cd-font-size--default);
 
-    .ghi-block & {
-      margin-bottom: 0;
-    }
-
-    th,
-    td {
-      padding: 1.5rem 2rem 1.5rem 0;
-
-      &.entity-name,
-      &.cd-table--amount,
-      &.cd-table--percentage {
-        text-align: left;
-        white-space: nowrap;
+      &.soft-limit {
+        margin-bottom: 2rem;
       }
 
-      &:last-child {
-        padding-right: 0;
+      &.soft-limit + a.expand-table {
+        display: block;
+        margin-right: auto;
+        margin-left: auto;
       }
-    }
 
-    &.cd-table--responsive td:before {
-      top: 1.5rem;
-      font-size: inherit;
-    }
-
-    thead {
-      th {
-        white-space: nowrap;
-        text-transform: uppercase;
-        color: var(--ghi-default-text-color);
-        border-bottom: 1px solid var(--cd-default-border-color);
-        background: transparent;
-        font-size: var(--cd-font-size--small);
+      .ghi-block & {
+        margin-bottom: 0;
       }
-    }
-    &.sortable th {
-      cursor: pointer;
 
-      &.sorttable-sorted,
-      &.sorttable-sorted-reverse {
-        padding-right: 0;
+      th,
+      td {
+        padding: 1.5rem 2rem 1.5rem 0;
 
-        & > span {
-          display: inline-block;
-          width: 2rem;
-          color: var(--cd-primary-color);
+        &.entity-name,
+        &.cd-table--amount,
+        &.cd-table--percentage {
+          text-align: left;
+          white-space: nowrap;
         }
-      }
-
-      // Customize display of the sort indicators of sorttable.js
-      &:not(.sorttable-nosort)::after,
-      &.sorttable-sorted::after,
-      &.sorttable-sorted-reverse::after {
-        position: relative;
-        top: 4px;
-        left: 5px;
-        display: inline-block;
-        width: 11px;
-        height: 19px;
-        content: " ";
-        background-size: contain;
-      }
-
-      &:not(.sorttable-sorted):not(.sorttable-sorted-reverse):not(.sorttable-nosort):after {
-        background-image: url("../img/table/ghi_sorting.svg");
-      }
-      &.sorttable-sorted:after {
-        background-image: url("../img/table/ghi_sorting_up.svg");
-      }
-      &.sorttable-sorted-reverse:after {
-        background-image: url("../img/table/ghi_sorting_down.svg");
-      }
-      #sorttable-sortfwdind,
-      #sorttable-sortrevind {
-        // Hide the default sort indicators of sorttable.js
-        display: none;
-      }
-
-      &.sorttable-nosort {
-        cursor: initial;
-      }
-    }
-
-    tbody {
-
-      tr {
-        border-bottom: 1px solid var(--cd-default-border-color);
 
         &:last-child {
-          border-bottom: 0;
+          padding-right: 0;
         }
       }
 
-      td:first-child.subrow {
-        padding-left: 2rem;
+      &.cd-table--responsive td:before {
+        top: 1.5rem;
+        font-size: inherit;
       }
 
-      td.data-point--widget-pie-chart {
-        white-space: nowrap;
-
-        .hpc-pie-chart-wrapper {
-          display: inline-flex;
-          width: auto;
-          height: 100%;
-          margin-left: 5px;
-          aspect-ratio: 1 / 1;
-          vertical-align: middle;
+      thead {
+        th {
+          white-space: nowrap;
+          text-transform: uppercase;
+          color: var(--ghi-default-text-color);
+          border-bottom: 1px solid var(--cd-default-border-color);
+          background: transparent;
+          font-size: var(--cd-font-size--small);
         }
       }
+      &.sortable th {
+        cursor: pointer;
 
-      td.data-point--widget-progressbar {
-        white-space: nowrap;
+        &.sorttable-sorted,
+        &.sorttable-sorted-reverse {
+          padding-right: 0;
 
-        .hpc-progress-bar-wrapper {
-          margin-left: 5px;
+          & > span {
+            display: inline-block;
+            width: 2rem;
+            color: var(--cd-primary-color);
+          }
         }
-      }
 
-      td.spark-line-chart {
-        width: 10rem;
-        padding: 0.5rem 0.25rem 0.5rem 0;
-
-        span.sparkline {
+        // Customize display of the sort indicators of sorttable.js
+        &:not(.sorttable-nosort)::after,
+        &.sorttable-sorted::after,
+        &.sorttable-sorted-reverse::after {
+          position: relative;
+          top: 4px;
+          left: 5px;
           display: inline-block;
-          width: 100%;
+          width: 11px;
+          height: 19px;
+          content: " ";
+          background-size: contain;
+        }
 
-          svg circle {
-            fill: transparent;
+        &:not(.sorttable-sorted):not(.sorttable-sorted-reverse):not(.sorttable-nosort):after {
+          background-image: url("../img/table/ghi_sorting.svg");
+        }
+        &.sorttable-sorted:after {
+          background-image: url("../img/table/ghi_sorting_up.svg");
+        }
+        &.sorttable-sorted-reverse:after {
+          background-image: url("../img/table/ghi_sorting_down.svg");
+        }
+        #sorttable-sortfwdind,
+        #sorttable-sortrevind {
+          // Hide the default sort indicators of sorttable.js
+          display: none;
+        }
+
+        &.sorttable-nosort {
+          cursor: initial;
+        }
+      }
+
+      tbody {
+
+        tr {
+          border-bottom: 1px solid var(--cd-default-border-color);
+
+          &:last-child {
+            border-bottom: 0;
+          }
+        }
+
+        td:first-child.subrow {
+          padding-left: 2rem;
+        }
+
+        td.data-point--widget-pie-chart {
+          white-space: nowrap;
+
+          .hpc-pie-chart-wrapper {
+            display: inline-flex;
+            width: auto;
+            height: 100%;
+            margin-left: 5px;
+            aspect-ratio: 1 / 1;
+            vertical-align: middle;
+          }
+        }
+
+        td.data-point--widget-progressbar {
+          white-space: nowrap;
+
+          .hpc-progress-bar-wrapper {
+            margin-left: 5px;
+          }
+        }
+
+        td.spark-line-chart {
+          width: 10rem;
+          padding: 0.5rem 0.25rem 0.5rem 0;
+
+          span.sparkline {
+            display: inline-block;
+            width: 100%;
+
+            svg circle {
+              fill: transparent;
+            }
+          }
+        }
+
+        div.modal-link {
+          display: inline-block;
+          vertical-align: middle;
+
+          a {
+            text-decoration: none;
           }
         }
       }
+    }
 
-      div.modal-link {
-        display: inline-block;
-        vertical-align: middle;
-
-        a {
-          text-decoration: none;
-        }
-      }
+    @media (min-width: 768px) {
+      max-width: calc(100vw - 1rem - 2 * var(--cd-container-padding-xlarge)) !important;
     }
   }
-}
 
-.ghi-modal-dialog {
-  table.ghi-table {
-    margin-bottom: 0;
+  .ghi-modal-dialog {
+    table.ghi-table {
+      margin-bottom: 0;
 
-    th {
-      white-space: nowrap;
-      color: var(--ghi-default-text-color);
-      background-color: inherit;
-    }
-
-    &.has-totals-row th {
-      border-bottom: 0;
-    }
-
-    th,
-    td,
-    td a {
-      color: var(--ghi-default-text-color);
-      font-size: var(--cd-font-size--small);
-    }
-
-    th:first-child,
-    td:first-child {
-      padding-left: 0.5rem;
-    }
-
-    th:last-child,
-    td:last-child {
-      padding-right: 0.5rem;
-    }
-
-    th,
-    td {
-      &.cd-table--amount {
-        text-align: right;
+      th {
+        white-space: nowrap;
+        color: var(--ghi-default-text-color);
+        background-color: inherit;
       }
-    }
 
-    tr.totals-row,
-    tfoot tr {
-      border-bottom: 0;
-      background-color: var(--cd-default-background-color);
+      &.has-totals-row th {
+        border-bottom: 0;
+      }
 
+      th,
+      td,
+      td a {
+        color: var(--ghi-default-text-color);
+        font-size: var(--cd-font-size--small);
+      }
+
+      th:first-child,
+      td:first-child {
+        padding-left: 0.5rem;
+      }
+
+      th:last-child,
+      td:last-child {
+        padding-right: 0.5rem;
+      }
+
+      th,
       td {
-        font-weight: 700;
+        &.cd-table--amount {
+          text-align: right;
+        }
+      }
+
+      tr.totals-row,
+      tfoot tr {
+        border-bottom: 0;
+        background-color: var(--cd-default-background-color);
+
+        td {
+          font-weight: 700;
+        }
       }
     }
   }
