@@ -45,8 +45,13 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'rendered',
       'configuration',
     ];
-    $fields['thumbnail'] = [
+    $fields['image'] = [
+      'credits',
       'imageUrl',
+    ];
+    $fields['imageCaption'] = [
+      'location',
+      'text',
     ];
     $article_data = $this->fetchArticleData($id, $fields);
     return $article_data ? new RemoteArticle($article_data, $this) : NULL;
@@ -145,7 +150,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
 
     // See if we have a cached version already for this request.
     $cache_key = $this->getCacheKey(['url' => $this->getRemoteEndpointUrl()] + $post_args);
-    if ($response = $this->cache($cache_key)) {
+    if (!$this->disableCache && $response = $this->cache($cache_key)) {
       // If we have a cached version, use that.
       return $response;
     }
@@ -381,6 +386,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
    * {@inheritdoc}
    */
   public function importSource(array $tags = NULL) {
+    $this->disableCache();
     $query = '{
       articleExport ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
         count

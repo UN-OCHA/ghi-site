@@ -75,4 +75,45 @@ class ArrayHelper extends ApiArrayHelper {
     return $array;
   }
 
+  /**
+   * Sort a multidimensional array (array of arrays) by keys.
+   *
+   * @param array $array
+   *   The input array.
+   */
+  public static function sortMultiDimensionalArrayByKeys(array &$array) {
+    $is_assoc = array_keys($array) !== range(0, count($array) - 1);
+    if ($is_assoc) {
+      ksort($array);
+    }
+    else {
+      asort($array);
+    }
+    foreach ($array as &$a) {
+      if (is_array($a)) {
+        self::sortMultiDimensionalArrayByKeys($a);
+      }
+    }
+  }
+
+  /**
+   * Reduce an array by removing empty items.
+   *
+   * @param array $array
+   *   The input array.
+   */
+  public static function reduceArray(array &$array) {
+    foreach ($array as $key => &$a) {
+      if (is_array($a)) {
+        if (empty($a)) {
+          unset($array[$key]);
+        }
+        else {
+          self::reduceArray($a);
+        }
+      }
+    }
+    $array = array_filter($array);
+  }
+
 }

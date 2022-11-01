@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_content\Import;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -145,16 +146,17 @@ class ImportManager implements ContainerInjectionInterface {
       return FALSE;
     }
     $message = NULL;
-    $thumbnail_url = $article->getImageUri();
-    if (!empty($thumbnail_url)) {
-      $thumbnail_name = basename($thumbnail_url);
-      $data = $article->getSource()->getFileContent($thumbnail_url);
-      $file = $this->fileRepository->writeData($data, ArticleManager::THUMBNAIL_DIRECTORY . '/' . $thumbnail_name, FileSystem::EXISTS_RENAME);
+    $image_url = $article->getImageUri();
+    if (!empty($image_url)) {
+      $caption = $article->getImageCaptionPlain();
+      $image_name = basename($image_url);
+      $data = $article->getSource()->getFileContent($image_url);
+      $file = $this->fileRepository->writeData($data, ArticleManager::IMAGE_DIRECTORY . '/' . $image_name, FileSystem::EXISTS_REPLACE);
       $update = !$node->get($field_name)->isEmpty();
       $node->get($field_name)->setValue([
         'target_id' => $file->id(),
-        'alt' => $node->getTitle(),
-        'title' => $node->getTitle(),
+        'alt' => $caption ? Unicode::truncate($caption, 512, TRUE, TRUE) : $node->getTitle(),
+        'title' => NULL,
       ]);
       $message = $update ? $this->t('Updated image') : $this->t('Imported image');
     }
@@ -188,7 +190,7 @@ class ImportManager implements ContainerInjectionInterface {
     }
     $update = !$node->get($field_name)->isEmpty();
     $node->get($field_name)->setValue([
-      'value' => $article->getSummary(),
+      'value' => (string) $article->getSummary(),
       'format' => 'html_text',
     ]);
 
@@ -299,7 +301,9 @@ class ImportManager implements ContainerInjectionInterface {
         // Not a paragraph, ignore.
         continue;
       }
-      if ($component->getPlugin()->getArticle() != $article) {
+      /** @var \Drupal\ghi_content\Plugin\Block\Paragraph */
+      $plugin = $component->getPlugin();
+      if (!$plugin->getArticle() || $plugin->getArticle()->getId() != $article->getId()) {
         // Only remove pragraphs from the same article. This allows to add more
         // paragraphs from different articles.
         // @todo Good idea?
@@ -310,8 +314,6 @@ class ImportManager implements ContainerInjectionInterface {
       }
       $sections[$delta]->removeComponent($component->getUuid());
     }
-
-    $this->layoutManagerDiscardChanges($node, $messenger);
 
     $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
 
@@ -435,8 +437,6 @@ class ImportManager implements ContainerInjectionInterface {
     $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
     $sections[$delta]->appendComponent($component);
 
-    $this->layoutManagerDiscardChanges($node, $messenger);
-
     $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
 
     if ($messenger !== NULL && count($messages)) {
@@ -513,7 +513,7 @@ class ImportManager implements ContainerInjectionInterface {
    * @return \Drupal\layout_builder\Section[]|null
    *   An array of layout builder sections.
    */
-  private function getNodeSections(NodeInterface $node) {
+  public function getNodeSections(NodeInterface $node) {
     $section_storage = $this->getSectionStorageForEntity($node);
     if (!$section_storage) {
       return NULL;
@@ -530,7 +530,7 @@ class ImportManager implements ContainerInjectionInterface {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    */
-  private function layoutManagerDiscardChanges(NodeInterface $node, MessengerInterface $messenger = NULL) {
+  public function layoutManagerDiscardChanges(NodeInterface $node, MessengerInterface $messenger = NULL) {
     $section_storage = $this->getSectionStorageForEntity($node);
     // @todo See if the view mode can be retrieved somehow.
     $section_storage->setContextValue('view_mode', 'default');
@@ -538,6 +538,51 @@ class ImportManager implements ContainerInjectionInterface {
     if ($messenger !== NULL) {
       $messenger->addMessage($this->t('Cleared layout builder temporary storage'));
     }
+  }
+
+  /**
+   * Get the UUIDs of the local paragraphs.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The local node object.
+   *
+   * @return string[]
+   *   An array of uuids, sorted alphabetically.
+   */
+  public function getLocalArticleParagraphUuids(NodeInterface $node) {
+    $uuids = [];
+    $definition = $this->getParagraphPluginDefintion();
+    $sections = $this->getNodeSections($node);
+    foreach ($sections[0]->getComponents() as $component) {
+      if ($component->getPluginId() != $definition['id']) {
+        continue;
+      }
+      $configuration = $component->get('configuration');
+      if (empty($configuration['sync']) || empty($configuration['sync']['source_uuid'])) {
+        continue;
+      }
+      $uuids[] = $configuration['sync']['source_uuid'];
+    }
+    sort($uuids);
+    return $uuids;
+  }
+
+  /**
+   * Get the UUIDs of the remote paragraphs.
+   *
+   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $article
+   *   The remote article object.
+   *
+   * @return string[]
+   *   An array of uuids, sorted alphabetically.
+   */
+  public function getRemoteArticleParagraphUuids(RemoteArticleInterface $article) {
+    $uuids = [];
+    foreach ($article->getParagraphs() as $paragraph) {
+      $uuids[] = $paragraph->getUuid();
+    }
+    sort($uuids);
+    return $uuids;
   }
 
 }

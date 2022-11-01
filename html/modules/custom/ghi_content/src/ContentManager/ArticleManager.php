@@ -11,6 +11,7 @@ use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\ghi_sections\SectionTrait;
+use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\migrate\MigrateExecutable;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Plugin\MigrationPluginManager;
@@ -28,7 +29,7 @@ class ArticleManager extends BaseContentManager {
   /**
    * Default mode for new directories. See self::chmod().
    */
-  const THUMBNAIL_DIRECTORY = 'public://thumbnails/article';
+  const IMAGE_DIRECTORY = 'public://article-images';
 
   /**
    * The machine name of the bundle to use for articles.
@@ -132,11 +133,13 @@ class ArticleManager extends BaseContentManager {
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node entity.
+   * @param bool $refresh
+   *   Wether to retrieve fresh data.
    *
    * @return \Drupal\ghi_content\RemoteContent\RemoteArticleInterface|null
    *   The remote article object if found.
    */
-  public function loadArticleForNode(NodeInterface $node) {
+  public function loadArticleForNode(NodeInterface $node, $refresh = FALSE) {
     $remote_field = self::REMOTE_ARTICLE_FIELD;
     if (!$node->hasField($remote_field)) {
       return;
@@ -147,6 +150,9 @@ class ArticleManager extends BaseContentManager {
 
     /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source_instance */
     $remote_source_instance = $this->remoteSourceManager->createInstance($remote_source);
+    if ($refresh) {
+      $remote_source_instance->disableCache();
+    }
     return $remote_source_instance->getArticle($article_id);
   }
 
@@ -491,12 +497,14 @@ class ArticleManager extends BaseContentManager {
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
+   * @param bool $dry_run
+   *   Whether the update should actually modify data.
    *
    * @see ghi_content_node_presave()
    */
-  public function updateNodeFromRemote(NodeInterface $node) {
+  public function updateNodeFromRemote(NodeInterface $node, $dry_run = FALSE) {
     $remote_field = self::REMOTE_ARTICLE_FIELD;
-    $article = $this->loadArticleForNode($node);
+    $article = $this->loadArticleForNode($node, TRUE);
     if (!$article) {
       return;
     }
@@ -527,6 +535,10 @@ class ArticleManager extends BaseContentManager {
     if ($node->isNew()) {
       $this->importManager->setupRelatedArticlesElement($node, $article);
     }
+
+    if (!$dry_run) {
+      $this->importManager->layoutManagerDiscardChanges($node, NULL);
+    }
   }
 
   /**
@@ -546,31 +558,45 @@ class ArticleManager extends BaseContentManager {
       return NULL;
     }
 
-    $migrate_executable = new MigrateExecutable($migration);
+    // First load the original unchanged node as this function is called from a
+    // form_alter hook and some of the widgets tinker with the field structure
+    // to support their needs. For comparison we need to use the node object as
+    // it's currently stored in the database.
+    $original_node = $this->entityTypeManager->getStorage('node')->loadUnchanged($node->id());
 
-    /** @var \Drupal\ghi_content\Plugin\migrate\source\RemoteSourceGraphQL $source */
-    $source = $migration->getSourcePlugin();
-    $source_id = $migration->getIdMap()->lookupSourceId(['nid' => $node->id()]);
+    // First get the local data.
+    $local_data = $this->normalizeArticleNodeData($original_node);
+    $local_data['paragraphs'] = $this->importManager->getLocalArticleParagraphUuids($original_node);
 
-    $source_iterator = $source->initializeIterator();
-    $source_iterator->rewind();
-    foreach ($source_iterator as $row_data) {
-      $row = new Row($row_data + $migration->getSourceConfiguration(), $source->getIds());
-      if ($source_id != $row->getSourceIdValues()) {
-        continue;
-      }
-      $migrate_executable->processRow($row);
-      $id_map = $migration->getIdMap()->getRowBySource($row->getSourceIdValues());
-      if (!$id_map) {
-        continue;
-      }
-      $row->setIdMap($id_map);
-      $row->rehash();
-      if ($row->changed()) {
-        return FALSE;
-      }
-    }
-    return TRUE;
+    // The get the remote data by pretending to do an update on the node.
+    $updated_node = clone $original_node;
+    $this->updateNodeFromRemote($updated_node, TRUE);
+    $article = $this->loadArticleForNode($original_node, TRUE);
+
+    $remote_data = $this->normalizeArticleNodeData($updated_node);
+    $remote_data['paragraphs'] = $this->importManager->getRemoteArticleParagraphUuids($article);
+
+    // Calculate the checksums and compare.
+    $local_checksum = md5(str_replace('"', '', json_encode($local_data)));
+    $remote_checksum = md5(str_replace('"', '', json_encode($remote_data)));
+    return $local_checksum === $remote_checksum;
+  }
+
+  /**
+   * Normalize an article node for comparision between local and remote data.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object to normalize.
+   *
+   * @return array
+   *   A normalized array based on the given node object.
+   */
+  private function normalizeArticleNodeData(NodeInterface $node) {
+    $data = $node->toArray();
+    unset($data['changed']);
+    ArrayHelper::sortMultiDimensionalArrayByKeys($data);
+    ArrayHelper::reduceArray($data);
+    return $data;
   }
 
   /**

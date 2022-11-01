@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_content\RemoteContent\HpcContentModule;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_content\RemoteContent\RemoteArticleBase;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
@@ -10,13 +11,6 @@ use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
  * Defines a RemoteArticle object.
  */
 class RemoteArticle extends RemoteArticleBase {
-
-  /**
-   * Raw article data from the remote source.
-   *
-   * @var mixed
-   */
-  private $data;
 
   /**
    * Array of paragraphs, keyed by their id.
@@ -29,8 +23,7 @@ class RemoteArticle extends RemoteArticleBase {
    * Construct a new RemoteArticle object.
    */
   public function __construct($data, RemoteSourceInterface $source) {
-    $this->data = $data;
-    $this->source = $source;
+    parent::__construct($data, $source);
     $this->paragraphs = [];
     if (!empty($this->data->content)) {
       foreach ($this->data->content as $paragraph) {
@@ -71,7 +64,49 @@ class RemoteArticle extends RemoteArticleBase {
    * {@inheritdoc}
    */
   public function getImageUri() {
-    return $this->data->thumbnail->imageUrl ?? NULL;
+    return $this->data->image->imageUrl ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getImageCredits() {
+    return $this->data->image->credits ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getImageCaption() {
+    return $this->data->imageCaption ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getImageCaptionPlain() {
+    $caption = $this->getImageCaption();
+    if (!$caption) {
+      return NULL;
+    }
+    return implode(', ', array_filter([
+      $caption->location,
+      $caption->text,
+    ]));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getImageCaptionMarkup() {
+    $caption = $this->getImageCaption();
+    if (!$caption) {
+      return NULL;
+    }
+    return new FormattableMarkup('<div class="image-caption"><div class="location">@location</div><div class="text">@text</div></div>', [
+      '@location' => $caption->location,
+      '@text' => $caption->text,
+    ]);
   }
 
   /**

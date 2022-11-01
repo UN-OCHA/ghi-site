@@ -161,4 +161,12 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    */
   public function importSource(array $tags = NULL);
 
+  /**
+   * Disable the cache.
+   *
+   * @param bool $status
+   *   TRUE to disable the cache, FALSE to use the cache.
+   */
+  public function disableCache($status = TRUE);
+
 }
