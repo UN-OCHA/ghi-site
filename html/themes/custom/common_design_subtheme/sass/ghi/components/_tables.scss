@@ -25,13 +25,17 @@
 
       th,
       td {
-        padding: 1.5rem 2rem 1.5rem 0;
+        padding: 1.5rem 2rem;
 
         &.entity-name,
         &.cd-table--amount,
         &.cd-table--percentage {
           text-align: left;
           white-space: nowrap;
+        }
+
+        &:first-child {
+          padding-left: 0;
         }
 
         &:last-child {
@@ -57,9 +61,11 @@
       &.sortable th {
         cursor: pointer;
 
+        &:not(.sorttable-nosort),
         &.sorttable-sorted,
         &.sorttable-sorted-reverse {
-          padding-right: 0;
+          // Make room for the sortable icon.
+          padding-right: 5px;
 
           & > span {
             display: inline-block;
