@@ -82,7 +82,7 @@
           if (context != document) {
             sorttable.makeSortable(this);
           }
-          column = $('th:not(.sorttable_nosort):first-child', this).get(0);
+          column = $('th:not(.sorttable-nosort):first-child', this).get(0);
           if (column) {
             sorttable.innerSortFunction.apply(column, []);
           }
@@ -108,7 +108,7 @@
           }
 
           // Then make sure that we capture and store sorting activity.
-          $(this).find('> thead th:not(.sorttable_nosort)').once('sortable-events').on('click', function () {
+          $(this).find('> thead th:not(.sorttable-nosort)').once('sortable-events').on('click', function () {
             // See if this table is part of a block, in which case we want to trigger
             // an event that the frontend settings for the block have been changed.
             if ($(this).parents('.ghi-block').length == 0) {

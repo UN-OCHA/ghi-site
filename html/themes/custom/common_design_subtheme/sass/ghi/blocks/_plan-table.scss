@@ -66,18 +66,6 @@
     height: 100%;
     content: "";
     background-color: inherit;
-
-    @include tablet {
-      right: calc(-4rem - 2px);
-      left: calc(-4rem - 2px);
-      border: 1px solid var(--ghi-default-border-color-background);
-      border-top: 0;
-
-      #layout-builder & {
-        right: 0;
-        left: 0;
-      }
-    }
   }
 
   .block-comment,
@@ -109,8 +97,8 @@
       background-color: inherit;
 
       @include tablet {
-        right: calc(-7rem - 2px);
-        left: calc(-7rem - 2px);
+        right: calc(-3rem);
+        left: calc(-3rem);
 
         #layout-builder & {
           right: 0;
