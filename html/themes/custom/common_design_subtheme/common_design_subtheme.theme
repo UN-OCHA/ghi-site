@@ -333,7 +333,7 @@ function common_design_subtheme_preprocess_table(&$vars) {
       $attribute->addClass('cd-table--' . $attributes['data-column-type']);
     }
     if ($sortable && $attribute->hasAttribute('sortable') && $attribute['sortable']->value() === FALSE) {
-      $attribute->addClass('sorttable_nosort');
+      $attribute->addClass('sorttable-nosort');
       $attribute->removeAttribute('sortable');
     }
   }
@@ -395,7 +395,7 @@ function common_design_subtheme_preprocess_table(&$vars) {
           $attribute->addClass('cd-table--' . $attributes['data-column-type']);
         }
         if ($sortable && $attribute->hasAttribute('sortable') && $attribute['sortable']->value() === FALSE) {
-          $attribute->addClass('sorttable_nosort');
+          $attribute->addClass('sorttable-nosort');
           $attribute->removeAttribute('sortable');
         }
       }
