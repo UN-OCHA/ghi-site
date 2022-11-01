@@ -161,7 +161,8 @@ function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateIn
 
   /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
   $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
-  $article_in_sync = $article_manager->isUpToDateWithRemote($node);
+  $article = $article_manager->loadArticleForNode($node);
+  $article_in_sync = $article ? $article_manager->isUpToDateWithRemote($node) : NULL;
 
   $form['remote_article_info'] = [
     '#type' => 'details',
@@ -177,7 +178,11 @@ function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateIn
     '#weight' => 1,
   ];
 
-  if (!$article_in_sync) {
+  if (!$article) {
+    $form['remote_article_info']['status']['#title'] = t('Deleted');
+    $form['remote_article_info']['status']['#markup'] = '<p>' . t('The source of this article page has been removed on the remote system.') . '</p>';
+  }
+  elseif (!$article_in_sync) {
     $form['remote_article_info']['status']['#title'] = t('Outdated');
     $form['remote_article_info']['status']['#markup'] = '<p>' . t('The source of this article page has changed on the remote system. It will be automatically updated the next time that the article import will run. To apply the changes immediately use the button below.') . '</p>';
 
@@ -189,30 +194,32 @@ function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateIn
     ];
   }
 
-  /** @var \Drupal\Core\Routing\RedirectDestinationInterface $redirect_destination */
-  $redirect_destination = \Drupal::service('redirect.destination');
-  $queryParams = \Drupal::request()->query->all();
-  $redirect_url = Url::fromRouteMatch(\Drupal::routeMatch());
-  if (!empty($queryParams)) {
-    $redirect_url->setOption('query', $queryParams);
+  if ($article) {
+    /** @var \Drupal\Core\Routing\RedirectDestinationInterface $redirect_destination */
+    $redirect_destination = \Drupal::service('redirect.destination');
+    $queryParams = \Drupal::request()->query->all();
+    $redirect_url = Url::fromRouteMatch(\Drupal::routeMatch());
+    if (!empty($queryParams)) {
+      $redirect_url->setOption('query', $queryParams);
+    }
+    $redirect_destination->set($redirect_url->toString());
+    $form['remote_article_info']['link_label'] = [
+      '#type' => 'item',
+      '#title' => t('Go to remote system'),
+      '#weight' => 3,
+    ];
+    $view_builder = \Drupal::entityTypeManager()->getViewBuilder('node');
+    $form['remote_article_info']['link'] = $view_builder->viewField($node->get($remote_field), [
+      'label' => 'hidden',
+      'type' => 'ghi_remote_article_source_link',
+      'settings' => [
+        'link_label' => t('Edit this article on the remote system'),
+        'link_to_edit' => TRUE,
+        'include_publisher_destination' => TRUE,
+      ],
+    ]);
+    $form['remote_article_info']['link']['#weight'] = 4;
   }
-  $redirect_destination->set($redirect_url->toString());
-  $form['remote_article_info']['link_label'] = [
-    '#type' => 'item',
-    '#title' => t('Go to remote system'),
-    '#weight' => 3,
-  ];
-  $view_builder = \Drupal::entityTypeManager()->getViewBuilder('node');
-  $form['remote_article_info']['link'] = $view_builder->viewField($node->get($remote_field), [
-    'label' => 'hidden',
-    'type' => 'ghi_remote_article_source_link',
-    'settings' => [
-      'link_label' => t('Edit this article on the remote system'),
-      'link_to_edit' => TRUE,
-      'include_publisher_destination' => TRUE,
-    ],
-  ]);
-  $form['remote_article_info']['link']['#weight'] = 4;
   $form['#attached']['library'][] = 'ghi_content/admin.article_edit';
 }
 
