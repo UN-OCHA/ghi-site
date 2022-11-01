@@ -140,7 +140,10 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     if (!empty($links)) {
       $link_map = $paragraph->getSource()->getLinkMap($paragraph);
       foreach ($links as $link) {
-        $href = $link->attributes->getNamedItem('href')->value;
+        $href = $link->attributes->getNamedItem('href')?->value ?? NULL;
+        if (!$href) {
+          continue;
+        }
         if (array_key_exists($href, $link_map)) {
           $link->attributes->getNamedItem('href')->value = $link_map[$href];
         }
