@@ -558,14 +558,20 @@ class ArticleManager extends BaseContentManager {
       return NULL;
     }
 
-    // First get the local data.
-    $local_data = $this->normalizeArticleNodeData($node);
-    $local_data['paragraphs'] = $this->importManager->getLocalArticleParagraphUuids($node);
+    // First load the original unchanged node as this function is called from a
+    // form_alter hook and some of the widgets tinker with the field structure
+    // to support their needs. For comparison we need to use the node object as
+    // it's currently stored in the database.
+    $original_node = $this->entityTypeManager->getStorage('node')->loadUnchanged($node->id());
 
-    // The get the remote data.
-    $updated_node = clone $node;
+    // First get the local data.
+    $local_data = $this->normalizeArticleNodeData($original_node);
+    $local_data['paragraphs'] = $this->importManager->getLocalArticleParagraphUuids($original_node);
+
+    // The get the remote data by pretending to do an update on the node.
+    $updated_node = clone $original_node;
     $this->updateNodeFromRemote($updated_node, TRUE);
-    $article = $this->loadArticleForNode($node, TRUE);
+    $article = $this->loadArticleForNode($original_node, TRUE);
 
     $remote_data = $this->normalizeArticleNodeData($updated_node);
     $remote_data['paragraphs'] = $this->importManager->getRemoteArticleParagraphUuids($article);

@@ -303,7 +303,7 @@ class ImportManager implements ContainerInjectionInterface {
       }
       /** @var \Drupal\ghi_content\Plugin\Block\Paragraph */
       $plugin = $component->getPlugin();
-      if ($plugin->getArticle()->getId() != $article->getId()) {
+      if (!$plugin->getArticle() || $plugin->getArticle()->getId() != $article->getId()) {
         // Only remove pragraphs from the same article. This allows to add more
         // paragraphs from different articles.
         // @todo Good idea?
