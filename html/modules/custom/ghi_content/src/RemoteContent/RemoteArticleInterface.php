@@ -8,6 +8,14 @@ namespace Drupal\ghi_content\RemoteContent;
 interface RemoteArticleInterface {
 
   /**
+   * Get the raw data of the article.
+   *
+   * @return array
+   *   The raw data for the article.
+   */
+  public function getRawData();
+
+  /**
    * Get the source of the article.
    *
    * @return \Drupal\ghi_content\RemoteSource\RemoteSourceInterface
@@ -45,8 +53,8 @@ interface RemoteArticleInterface {
   /**
    * Get the updated time of the article.
    *
-   * @return string
-   *   A datetime string.
+   * @return int
+   *   A timestamp.
    */
   public function getUpdated();
 

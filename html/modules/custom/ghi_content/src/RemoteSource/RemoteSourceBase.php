@@ -58,6 +58,14 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
   protected $articleManager;
 
   /**
+   * Flag to disable the cache when retrieving article data.
+   *
+   * @var bool
+   *   TRUE if the cache should disabled, FALSE to use the cache if available.
+   */
+  protected $disableCache;
+
+  /**
    * Constructs a new remote source object.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, ClientInterface $http_client, RequestStack $request, ConfigFactoryInterface $config_factory, HidUserData $hid_user_data, ArticleManager $article_manager) {
@@ -67,6 +75,9 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
     $this->configFactory = $config_factory;
     $this->hidUserData = $hid_user_data;
     $this->articleManager = $article_manager;
+
+    // Set some flags.
+    $this->disableCache = FALSE;
 
     // Init the configuration based on stored values.
     $config = $this->configFactory->get('ghi_content.remote_sources')->get($this->getPluginId());
@@ -153,6 +164,13 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
    */
   public function getLinkMap(RemoteParagraphInterface $paragraph) {
     return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function disableCache($status = TRUE) {
+    $this->disableCache = $status;
   }
 
 }

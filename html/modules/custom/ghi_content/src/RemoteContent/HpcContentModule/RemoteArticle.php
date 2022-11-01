@@ -13,13 +13,6 @@ use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 class RemoteArticle extends RemoteArticleBase {
 
   /**
-   * Raw article data from the remote source.
-   *
-   * @var mixed
-   */
-  private $data;
-
-  /**
    * Array of paragraphs, keyed by their id.
    *
    * @var object[]
@@ -30,8 +23,7 @@ class RemoteArticle extends RemoteArticleBase {
    * Construct a new RemoteArticle object.
    */
   public function __construct($data, RemoteSourceInterface $source) {
-    $this->data = $data;
-    $this->source = $source;
+    parent::__construct($data, $source);
     $this->paragraphs = [];
     if (!empty($this->data->content)) {
       foreach ($this->data->content as $paragraph) {
