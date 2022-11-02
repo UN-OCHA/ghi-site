@@ -167,11 +167,31 @@ class SectionSwitcher extends BlockBase implements ContainerFactoryPluginInterfa
     if (!$base_object || !$base_object->hasField('field_country') || $base_object->get('field_country')->isEmpty()) {
       return $options;
     }
-    $country = $base_object->get('field_country')->entity;
+
+    // Get the list of all countries associated with this object.
+    $country_ids = array_map(function ($country) {
+      return $country->id();
+    }, $base_object->get('field_country')->referencedEntities());
+
+    // Find other object candidates that have at least one of these countries
+    // associated.
     $base_object_candidates = $this->entityTypeManager->getStorage($base_object->getEntityTypeId())->loadByProperties([
       'type' => $base_object->bundle(),
-      'field_country' => $country->id(),
+      'field_country' => $country_ids,
     ]);
+
+    // The filter out the ones that don't share the full set of countries.
+    $base_object_candidates = array_filter($base_object_candidates, function ($base_object_candidate) use ($country_ids) {
+      $candidate_country_ids = array_map(function ($country) {
+        return $country->id();
+      }, $base_object_candidate->get('field_country')->referencedEntities());
+      return empty(array_diff($country_ids, $candidate_country_ids)) && count($candidate_country_ids) == count($country_ids);
+    });
+    if (empty($base_object_candidates)) {
+      return $options;
+    }
+
+    // Then load the sections associated to these objects.
     $section_candidates = $this->entityTypeManager->getStorage($section_node->getEntityTypeId())->loadByProperties([
       'type' => $section_node->bundle(),
       'field_base_object' => array_keys($base_object_candidates),

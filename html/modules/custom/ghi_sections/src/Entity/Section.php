@@ -2,8 +2,8 @@
 
 namespace Drupal\ghi_sections\Entity;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
@@ -34,10 +34,7 @@ class Section extends Node implements SectionNodeInterface {
   public function getPageTitle() {
     $base_object = BaseObjectHelper::getBaseObjectFromNode($this);
     if (!$base_object->needsYear()) {
-      return new FormattableMarkup('@label <sup>@year</sup>', [
-        '@label' => $this->label(),
-        '@year' => $base_object->get('field_year')->value,
-      ]);
+      return $this->label();
     }
     return $this->label();
   }
@@ -45,11 +42,11 @@ class Section extends Node implements SectionNodeInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPageSubTitle() {
+  public function getPageTitleMetaData() {
     $base_object = BaseObjectHelper::getBaseObjectFromNode($this);
     $meta_data = $base_object instanceof BaseObjectMetaDataInterface ? $base_object->getPageTitleMetaData() : NULL;
     if (!empty($meta_data)) {
-      return implode(' | ', $meta_data);
+      return Markup::create(implode(' | ', $meta_data));
     }
     return NULL;
   }

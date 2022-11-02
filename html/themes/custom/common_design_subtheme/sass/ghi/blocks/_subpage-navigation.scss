@@ -42,7 +42,7 @@
           background-color: transparent;
 
           svg.cd-dropdown__icon {
-            fill: var(--hpc-dark-brown);
+            fill: var(--ghi-primary-button-color);
           }
         }
 
@@ -60,6 +60,10 @@
             padding: 0.5rem 0;
             white-space: nowrap;
             font-size: var(--cd-font-size--default);
+
+            &:hover {
+              color: var(--ghi-primary-button-color-hover);
+            }
           }
         }
       }

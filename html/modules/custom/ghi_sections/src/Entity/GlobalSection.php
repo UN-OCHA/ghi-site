@@ -20,7 +20,7 @@ class GlobalSection extends Node implements SectionNodeInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPageSubTitle() {
+  public function getPageTitleMetaData() {
     return NULL;
   }
 
