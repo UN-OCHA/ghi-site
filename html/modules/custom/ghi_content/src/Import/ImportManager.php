@@ -185,7 +185,7 @@ class ImportManager implements ContainerInjectionInterface {
    *   An optional messenger to use for result messages.
    */
   public function importSummary(NodeInterface $node, RemoteArticleInterface $article, $field_name = 'field_summary', MessengerInterface $messenger = NULL) {
-    if (!$node->hasField($field_name)) {
+    if (!$node->hasField($field_name) || empty($article->getSummary())) {
       return FALSE;
     }
     $update = !$node->get($field_name)->isEmpty();
