@@ -96,6 +96,10 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     // Get the rendered paragraph.
     $rendered = $paragraph->getRendered();
 
+    $full_width_paragraph_types = [
+      'story',
+    ];
+
     // Move gho specific paragraph classes to the block wrapper attributes, so
     // that CSS logic that targets subsequent elements can be applied.
     $wrapper_attributes = [];
@@ -173,6 +177,10 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
       $wrapper_attributes['class'] = array_diff($wrapper_attributes['class'], [self::PROMOTED_CLASS]);
     }
 
+    // See if this paragraph should render as a full-width block.
+    $full_width_paragraph = in_array($paragraph->getType(), $full_width_paragraph_types);
+    $full_width = $full_width_paragraph || $this->isPromoted();
+
     $build = [
       '#type' => 'container',
       '#title' => $title,
@@ -187,7 +195,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
         ],
       ],
       '#wrapper_attributes' => $wrapper_attributes,
-      '#full_width' => $this->isPromoted(),
+      '#full_width' => $full_width,
     ];
 
     if ($this->moduleHandler->moduleExists('gho_footnotes')) {
@@ -251,6 +259,10 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     }
     if ($paragraph->getPromoted() || $this->isPromoted()) {
       $theme_components[] = 'common_design_subtheme/gho-promoted-paragraph';
+    }
+    if ($paragraph->getType() == 'story') {
+      // Stories always use the gho-aside component.
+      $theme_components[] = 'common_design_subtheme/gho-aside';
     }
     if ($paragraph->getType() == 'sub_article') {
       // Find the paragraph types used in the sub article and add the

@@ -3,7 +3,8 @@
 
   .block-content {
 
-    &.gho-text {
+    &.gho-text,
+    &.gho-aside {
       margin-top: 0;
     }
 
