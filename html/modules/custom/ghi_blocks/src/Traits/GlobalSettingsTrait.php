@@ -143,21 +143,31 @@ trait GlobalSettingsTrait {
   private function applyGlobalConfigurationTable(array &$header, array &$rows, array &$cache_tags, $year, array $plans) {
     $config = $this->getYearConfig($year);
 
-    // First make sure the name column is using the array notation so that we
+    // First make sure specific columns are using the array notation so that we
     // have common ground to work on.
-    $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) {
-      if (is_array($row['name'])) {
-        return $row;
+    $columns = ['name', 'type'];
+    $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($columns) {
+      foreach ($columns as $column) {
+        if (!is_array($row[$column])) {
+          $row[$column] = ['data' => [0 => ['#markup' => $row[$column]]]];
+        }
       }
-      $row['name'] = [
-        'data' => [
-          [
-            '#markup' => $row['name'],
-          ],
-        ],
-      ];
       return $row;
     }, $rows);
+
+    if (!empty($config['plan_type_label_overrides'])) {
+      // Replace plan name with short name if available.
+      $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
+        /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
+        $plan = $plans[$plan_id] ?? NULL;
+        if (!$plan) {
+          return $row;
+        }
+        $row['type']['data'][0]['#markup'] = $plan->getTypeShortName(TRUE);
+        $row['type']['data-value'] = $plan->getTypeShortName(TRUE);
+        return $row;
+      }, $rows);
+    }
 
     if (!empty($config['plan_short_names'])) {
       // Replace plan name with short name if available.
@@ -198,7 +208,8 @@ trait GlobalSettingsTrait {
     if (!empty($config['plan_type_icons'])) {
       // Add plan type icons to plan name column.
       unset($header['type']);
-      $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
+      $plan_type_short_name = !empty($config['plan_type_label_overrides']);
+      $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans, $plan_type_short_name) {
         /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
         $plan = $plans[$plan_id] ?? NULL;
         unset($row['type']);
@@ -207,12 +218,12 @@ trait GlobalSettingsTrait {
         }
         $row['name']['data'][] = [
           '#theme' => 'hpc_tooltip',
-          '#tooltip' => $plan->getTypeName(),
+          '#tooltip' => $plan->getTypeName($plan_type_short_name),
           '#tag' => 'span',
-          '#tag_content' => $plan->getTypeShortName(),
+          '#tag_content' => $plan->getTypeShortName($plan_type_short_name),
           '#class' => [
             'plan-type-icon',
-            Html::getClass('plan-type-' . $plan->getTypeShortName()),
+            Html::getClass('plan-type-' . $plan->getTypeShortName($plan_type_short_name)),
           ],
         ];
         return $row;
@@ -282,6 +293,10 @@ trait GlobalSettingsTrait {
           '@plan_types' => implode(', ', array_values($this->getAvailablePlanTypes())),
           '@plan_type_url' => Url::fromRoute('entity.taxonomy_vocabulary.overview_form', ['taxonomy_vocabulary' => 'plan_type'])->toString(),
         ]),
+      ],
+      'plan_type_label_overrides' => [
+        '#title' => $this->t('Use plan type label overrides'),
+        '#description' => $this->t('Check if the label overrides for the plan types should be displayed if available. These can be set on the plan base object entities.'),
       ],
       'plan_short_names' => [
         '#title' => $this->t('Use plan short names'),

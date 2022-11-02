@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Batch\BatchBuilder;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -314,11 +315,38 @@ function ghi_content_preprocess_page(&$variables) {
     // Don't show default images in the page view.
     return;
   }
-  // Get the image for the current page.
-  $image = $image_field->view();
-  if ($image) {
+
+  // Go through some trouble to show a responsive image here.
+  $repsonsive_image_style_id = 'hero';
+  $repsonsive_image_style_storage = \Drupal::service('entity_type.manager')->getStorage('responsive_image_style');
+  $image_style_storage = \Drupal::service('entity_type.manager')->getStorage('image_style');
+
+  // Collect cache tags to be added for each item in the field.
+  $responsive_image_style = $repsonsive_image_style_storage->load($repsonsive_image_style_id);
+  $image_styles_to_load = [];
+  $cache_tags = [];
+  if ($responsive_image_style) {
+    $cache_tags = Cache::mergeTags($cache_tags, $responsive_image_style->getCacheTags());
+    $image_styles_to_load = $responsive_image_style->getImageStyleIds();
+  }
+
+  $image_styles = $image_style_storage->loadMultiple($image_styles_to_load);
+  foreach ($image_styles as $image_style) {
+    $cache_tags = Cache::mergeTags($cache_tags, $image_style->getCacheTags());
+  }
+
+  $image_build = [
+    '#theme' => $responsive_image_style ? 'imagecache_external_responsive' : 'image',
+    '#uri' => $image_field->entity->getFileUri(),
+    '#responsive_image_style_id' => $responsive_image_style ? $responsive_image_style->id() : NULL,
+    '#attributes' => [
+      'style' => 'width: 100%',
+    ],
+  ];
+
+  if ($image_build) {
     $image['#label_display'] = 'hidden';
-    $variables['page'][$region_name] = ['hero_image' => $image] + $variables['page'][$region_name];
+    $variables['page'][$region_name] = ['hero_image' => $image_build] + $variables['page'][$region_name];
   }
 
 }

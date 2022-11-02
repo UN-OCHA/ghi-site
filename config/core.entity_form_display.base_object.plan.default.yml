@@ -16,6 +16,7 @@ dependencies:
     - field.field.base_object.plan.field_plan_document_link
     - field.field.base_object.plan.field_plan_status
     - field.field.base_object.plan.field_plan_type
+    - field.field.base_object.plan.field_plan_type_label_override
     - field.field.base_object.plan.field_plan_version_argument
     - field.field.base_object.plan.field_plan_version_tag
     - field.field.base_object.plan.field_restricted
@@ -78,6 +79,7 @@ third_party_settings:
         - field_plan_caseload
         - field_plan_status
         - field_plan_document_link
+        - field_plan_type_label_override
         - field_decimal_format
         - field_max_admin_level
         - field_link_to_fts
@@ -150,7 +152,7 @@ content:
     third_party_settings: {  }
   field_decimal_format:
     type: options_select
-    weight: 12
+    weight: 13
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -170,14 +172,14 @@ content:
     third_party_settings: {  }
   field_link_to_fts:
     type: boolean_checkbox
-    weight: 14
+    weight: 15
     region: content
     settings:
       display_label: true
     third_party_settings: {  }
   field_max_admin_level:
     type: number
-    weight: 13
+    weight: 14
     region: content
     settings:
       placeholder: ''
@@ -236,6 +238,14 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+  field_plan_type_label_override:
+    type: string_textfield
+    weight: 12
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
   field_plan_version_argument:
     type: options_select
     weight: 8
@@ -267,7 +277,7 @@ content:
     third_party_settings: {  }
   field_visible_on_global_pages:
     type: boolean_checkbox
-    weight: 15
+    weight: 16
     region: content
     settings:
       display_label: true

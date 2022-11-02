@@ -53,6 +53,7 @@ function ghi_sections_preprocess_page_title(&$variables) {
     }
     if ($node instanceof Section) {
       $variables['title'] = $node->getPageTitle();
+      $variables['subtitle'] = $node->getPageSubTitle();
     }
   }
 }

@@ -71,6 +71,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
     $repsonsive_image_style_id = $this->getSetting('responsive_image_style') ?: 'hero';
 
     // Collect cache tags to be added for each item in the field.
+    /** @var \Drupal\responsive_image\Entity\ResponsiveImageStyle $responsive_image_style */
     $responsive_image_style = $this->responsiveImageStyleStorage->load($repsonsive_image_style_id);
     $image_styles_to_load = [];
     $cache_tags = [];
@@ -79,6 +80,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
       $image_styles_to_load = $responsive_image_style->getImageStyleIds();
     }
 
+    /** @var \Drupal\image\Entity\ImageStyle[] $image_styles */
     $image_styles = $this->imageStyleStorage->loadMultiple($image_styles_to_load);
     foreach ($image_styles as $image_style) {
       $cache_tags = Cache::mergeTags($cache_tags, $image_style->getCacheTags());

@@ -30,60 +30,7 @@ third_party_settings:
         layout_settings:
           label: Content
           context_mapping: {  }
-        components:
-          427cf39f-edf6-45ee-8c5e-f22fd99f6e1a:
-            uuid: 427cf39f-edf6-45ee-8c5e-f22fd99f6e1a
-            region: content
-            configuration:
-              id: 'field_block:node:article:field_base_objects'
-              label_display: '0'
-              context_mapping:
-                entity: layout_builder.entity
-              formatter:
-                type: entity_reference_label
-                label: above
-                settings:
-                  link: true
-                third_party_settings: {  }
-            weight: 0
-            additional: {  }
-          2a159b57-2c25-4982-81ff-0c38bd7e544a:
-            uuid: 2a159b57-2c25-4982-81ff-0c38bd7e544a
-            region: content
-            configuration:
-              id: 'field_block:node:article:field_display_hero_image'
-              label_display: '0'
-              context_mapping:
-                entity: layout_builder.entity
-              formatter:
-                type: boolean
-                label: above
-                settings:
-                  format: default
-                  format_custom_false: ''
-                  format_custom_true: ''
-                third_party_settings: {  }
-            weight: 1
-            additional: {  }
-          59b1ab01-e47c-46fc-9770-e0ef3a83850e:
-            uuid: 59b1ab01-e47c-46fc-9770-e0ef3a83850e
-            region: content
-            configuration:
-              id: 'field_block:node:article:field_image'
-              label_display: '0'
-              context_mapping:
-                entity: layout_builder.entity
-              formatter:
-                type: image
-                label: above
-                settings:
-                  image_link: ''
-                  image_style: ''
-                  image_loading:
-                    attribute: lazy
-                third_party_settings: {  }
-            weight: 2
-            additional: {  }
+        components: {  }
         third_party_settings: {  }
   layout_builder_restrictions:
     allowed_block_categories:

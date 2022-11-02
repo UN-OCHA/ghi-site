@@ -189,6 +189,7 @@ function ghi_subpages_preprocess_page_title(&$variables) {
   }
   if (SubpageHelper::isSubpageTypeNode($node) && $section = SubpageHelper::getBaseTypeNode($node)) {
     $variables['title'] = $section->getPageTitle();
+    $variables['subtitle'] = $section->getPageSubTitle();
   }
 }
 
