@@ -5,6 +5,7 @@
   .table-wrapper {
     overflow-x: auto;
     max-width: calc(100vw - 1rem - 2 * var(--cd-container-padding)) !important;
+    margin-right: -5px;
 
     table.ghi-table {
       font-size: var(--cd-font-size--default);

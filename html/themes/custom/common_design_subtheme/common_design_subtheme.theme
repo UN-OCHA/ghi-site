@@ -27,7 +27,6 @@ function common_design_subtheme_theme_registry_alter(&$theme_registry) {
   $theme_registry['table']['variables']['autosort'] = FALSE;
   $theme_registry['table']['variables']['soft_limit'] = FALSE;
   $theme_registry['table']['variables']['sticky_rows'] = FALSE;
-  $theme_registry['page_title']['variables']['subtitle'] = FALSE;
 }
 
 /**
@@ -67,7 +66,11 @@ function common_design_subtheme_theme_suggestions_item_list_alter(array &$sugges
  * Unset blocks that don't have any content besides or only HTML comments.
  */
 function common_design_subtheme_preprocess_region(&$variables) {
-  if ($variables['region'] == 'page_title' && !empty($variables['elements'])) {
+  $regions = [
+    'page_title',
+    'page_subtitle',
+  ];
+  if (in_array($variables['region'], $regions) && !empty($variables['elements'])) {
     foreach (Element::children($variables['elements']) as $key) {
       $block = $variables['elements'][$key];
       if (!array_key_exists('#markup', $block)) {
@@ -79,6 +82,11 @@ function common_design_subtheme_preprocess_region(&$variables) {
       if (empty(trim(preg_replace('/<!--(.|\s)*?-->/', '', $block['#markup'])))) {
         unset($variables['elements'][$key]);
       }
+    }
+
+    if (!count(Element::children($variables['elements']))) {
+      // If the region is effectively empty, don't display it.
+      $variables['elements'] = NULL;
     }
   }
 }

@@ -1,23 +1,23 @@
-uuid: c8ac315a-e0ee-42f4-93b0-8f6a3374d55b
+uuid: 6cbeb508-ab9a-4377-9977-e5515af5f374
 langcode: en
 status: true
 dependencies:
   module:
-    - ghi_blocks
+    - ghi_sections
     - node
   theme:
     - common_design_subtheme
-id: sectionswitcher
+id: sectionmetadata
 theme: common_design_subtheme
-region: page_title
+region: page_subtitle
 weight: -6
 provider: null
-plugin: section_switcher
+plugin: section_meta_data
 settings:
-  id: section_switcher
-  label: 'Section switcher'
+  id: section_meta_data
+  label: 'Section meta data'
   label_display: '0'
-  provider: ghi_blocks
+  provider: ghi_sections
   context_mapping:
     node: '@node.node_route_context:node'
 visibility:
@@ -27,8 +27,8 @@ visibility:
     context_mapping:
       node: '@node.node_route_context:node'
     bundles:
-      document: document
       financials: financials
+      global_section: global_section
       plan_cluster: plan_cluster
       population: population
       profile: profile

@@ -18,6 +18,7 @@ regions:
   highlighted: Highlighted
   page_image: Page image
   page_title: Page title
+  page_subtitle: Page subtitle
   page_navigation: Page navigation
   content: Content
   sidebar_first: First sidebar

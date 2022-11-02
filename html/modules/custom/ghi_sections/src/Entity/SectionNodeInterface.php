@@ -23,7 +23,7 @@ interface SectionNodeInterface extends NodeInterface {
    * @return \Drupal\Component\Render\MarkupInterface
    *   The markup object for the subtitel.
    */
-  public function getPageSubTitle();
+  public function getPageTitleMetaData();
 
   /**
    * Get the image field for the node.

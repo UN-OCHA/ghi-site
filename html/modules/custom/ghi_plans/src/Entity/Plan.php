@@ -4,11 +4,14 @@ namespace Drupal\ghi_plans\Entity;
 
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
+use Drupal\ghi_plans\Traits\PlanTypeTrait;
 
 /**
  * Bundle class for plan base objects.
  */
 class Plan extends BaseObject implements BaseObjectMetaDataInterface {
+
+  use PlanTypeTrait;
 
   /**
    * {@inheritdoc}
@@ -21,18 +24,46 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
+   * Get the plan year.
+   *
+   * @return string
+   *   The plan year.
+   */
+  public function getYear() {
+    return $this->get('field_year')->value;
+  }
+
+  /**
    * Get the plan type.
+   *
+   * @param bool $override
+   *   Whether the overridden label can be used if it's available.
    *
    * @return string
    *   The label of the plan type.
    */
-  public function getPlanTypeLabel() {
+  public function getPlanTypeLabel($override = TRUE) {
     $plan_type_label_override = $this->get('field_plan_type_label_override')->value;
-    if (!empty($plan_type_label_override)) {
+    if ($override && !empty($plan_type_label_override)) {
       return $plan_type_label_override;
     }
     $plan_type = $this->get('field_plan_type')?->entity ?? NULL;
     return $plan_type ? $plan_type->label() : NULL;
+  }
+
+  /**
+   * Get the short version of the plan type label.
+   *
+   * @param bool $override
+   *   Whether the overridden label can be used if it's available.
+   *
+   * @return string
+   *   The short label of the plan type.
+   */
+  public function getPlanTypeShortLabel($override = TRUE) {
+    $plan_type = $this->get('field_plan_type')?->entity ?? NULL;
+    $included_in_totals = $plan_type ? $plan_type->get('field_included_in_totals')->value : FALSE;
+    return $this->getPlanTypeShortName($this->getPlanTypeLabel($override), $included_in_totals);
   }
 
   /**

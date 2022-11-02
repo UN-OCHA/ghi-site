@@ -11,6 +11,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\DocumentLink;
+use Drupal\ghi_plans\Entity\Plan;
 
 /**
  * Preprocess the document link box template.
@@ -224,21 +225,43 @@ function ghi_blocks_preprocess_section_switcher(&$variables) {
   /** @var \Drupal\ghi_sections\SectionManager $section_manager */
   $section_manager = \Drupal::service('ghi_sections.manager');
   $options = [];
+  $labels = [];
+  $label_additions = [];
 
-  foreach ($sections as $section) {
+  foreach ($sections as $key => $section) {
     $label = $section->label();
+    $label_additions[$key] = NULL;
     if ($section->hasField('field_base_object')) {
       $base_object = $section->get('field_base_object')->entity;
-      $label = $section_manager->getShortName($base_object, TRUE, TRUE) ?? $label;
+      if ($base_object instanceof Plan) {
+        $label = $base_object->getYear();
+        $label_additions[$key] = $base_object->getPlanTypeShortLabel(FALSE);
+      }
+      elseif (!$base_object->type->needsYear && $base_object->hasField('field_year')) {
+        $label = $base_object->get('field_year')->value;
+      }
+      else {
+        $label = $section_manager->getShortName($base_object, TRUE, TRUE) ?? $label;
+      }
+      $labels[$key] = $label;
+    }
+  }
+  foreach ($sections as $key => $section) {
+    $label = $labels[$key];
+    if (count(array_keys($labels, $label)) > 1 && !empty($label_additions[$key])) {
+      // We need to add an additional element to distinguish non-unique labels.
+      $label .= ' (' . $label_additions[$key] . ')';
     }
     if ($current_section->id() == $section->id()) {
       $option_value = ['#markup' => $label];
+      $variables['title'] = $label;
     }
     else {
       $option_value = $section->toLink($label)->toRenderable();
     }
-    $options[] = $option_value;
+    $options[$key] = $option_value;
   }
+
   $variables['item_list'] = [
     '#theme' => 'item_list',
     '#items' => $options,
