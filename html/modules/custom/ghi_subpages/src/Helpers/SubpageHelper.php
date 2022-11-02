@@ -171,7 +171,7 @@ class SubpageHelper {
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
    *
-   * @return \Drupal\node\NodeInterface|null
+   * @return \Drupal\ghi_sections\Entity\SectionNodeInterface|null
    *   The base type node if found.
    */
   public static function getBaseTypeNode(NodeInterface $node) {

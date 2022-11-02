@@ -20,6 +20,13 @@ class GlobalSection extends Node implements SectionNodeInterface {
   /**
    * {@inheritdoc}
    */
+  public function getPageSubTitle() {
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getImage() {
     return $this->get('field_hero_image');
   }

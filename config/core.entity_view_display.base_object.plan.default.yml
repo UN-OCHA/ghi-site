@@ -16,6 +16,7 @@ dependencies:
     - field.field.base_object.plan.field_plan_document_link
     - field.field.base_object.plan.field_plan_status
     - field.field.base_object.plan.field_plan_type
+    - field.field.base_object.plan.field_plan_type_label_override
     - field.field.base_object.plan.field_plan_version_argument
     - field.field.base_object.plan.field_plan_version_tag
     - field.field.base_object.plan.field_restricted
@@ -142,6 +143,14 @@ content:
       link: true
     third_party_settings: {  }
     weight: -3
+    region: content
+  field_plan_type_label_override:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 17
     region: content
   field_plan_version_argument:
     type: list_default

@@ -27,6 +27,7 @@ function common_design_subtheme_theme_registry_alter(&$theme_registry) {
   $theme_registry['table']['variables']['autosort'] = FALSE;
   $theme_registry['table']['variables']['soft_limit'] = FALSE;
   $theme_registry['table']['variables']['sticky_rows'] = FALSE;
+  $theme_registry['page_title']['variables']['subtitle'] = FALSE;
 }
 
 /**
@@ -89,6 +90,7 @@ function common_design_subtheme_preprocess_block(&$variables) {
   $full_width_blocks = [
     'generic_link_carousel',
     'global_plan_overview_map',
+    'global_plan_table',
     'system_menu_block:operations-menu',
     'system_menu_block:account',
     'subpage_navigation',
@@ -131,7 +133,7 @@ function common_design_subtheme_preprocess_block(&$variables) {
   }
 
   // Make the full width status available in the template.
-  $variables['full_width'] = !empty($variables['content']['#full_width']);
+  $variables['full_width'] = !empty($variables['content']['#full_width']) || $full_width_block;
 
   // Some blocks are white-listed here to always use the content-width class,
   // others can declare themselves to use that class by setting the #full_width

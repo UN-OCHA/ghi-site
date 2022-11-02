@@ -75,6 +75,9 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       '#cache' => [
         'tags' => $table_data['cache_tags'],
       ],
+      '#wrapper_attributes' => [
+        'class' => ['content-width'],
+      ],
     ];
     $build[] = [
       '#theme' => 'table',

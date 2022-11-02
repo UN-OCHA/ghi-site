@@ -29,22 +29,7 @@ third_party_settings:
         layout_settings:
           label: Content
           context_mapping: {  }
-        components:
-          ab0fdf28-fae6-4e2f-9f8e-6bfbb26bf237:
-            uuid: ab0fdf28-fae6-4e2f-9f8e-6bfbb26bf237
-            region: content
-            configuration:
-              id: 'field_block:node:section:field_summary'
-              label_display: '0'
-              context_mapping:
-                entity: layout_builder.entity
-              formatter:
-                type: text_default
-                label: above
-                settings: {  }
-                third_party_settings: {  }
-            weight: 0
-            additional: {  }
+        components: {  }
         third_party_settings: {  }
   layout_builder_restrictions:
     allowed_block_categories:

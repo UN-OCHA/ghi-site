@@ -34,5 +34,15 @@
     sup {
       font-size: var(--cd-font-size--large);
     }
+
+    &.has-subtitle {
+      margin-bottom: 1rem;
+    }
+  }
+
+  .page-subtitle {
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+    font-size: var(--cd-font-size--small);
   }
 }

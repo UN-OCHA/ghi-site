@@ -185,7 +185,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $attachment_switcher = NULL;
 
     $build = [
-      '#full_width' => TRUE,
+      '#full_width' => FALSE,
     ];
     $build[] = [
       '#theme' => 'plan_attachment_map',

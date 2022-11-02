@@ -3,11 +3,37 @@
 namespace Drupal\ghi_plans\Entity;
 
 use Drupal\ghi_base_objects\Entity\BaseObject;
+use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
 
 /**
  * Bundle class for plan base objects.
  */
-class Plan extends BaseObject {
+class Plan extends BaseObject implements BaseObjectMetaDataInterface {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPageTitleMetaData() {
+    return array_filter([
+      $this->getPlanTypeLabel(),
+      $this->getPlanStatusLabel(),
+    ]);
+  }
+
+  /**
+   * Get the plan type.
+   *
+   * @return string
+   *   The label of the plan type.
+   */
+  public function getPlanTypeLabel() {
+    $plan_type_label_override = $this->get('field_plan_type_label_override')->value;
+    if (!empty($plan_type_label_override)) {
+      return $plan_type_label_override;
+    }
+    $plan_type = $this->get('field_plan_type')?->entity ?? NULL;
+    return $plan_type ? $plan_type->label() : NULL;
+  }
 
   /**
    * Get the plan status label.

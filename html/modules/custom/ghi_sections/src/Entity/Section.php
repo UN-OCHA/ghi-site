@@ -4,6 +4,7 @@ namespace Drupal\ghi_sections\Entity;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
 use Drupal\node\Entity\Node;
@@ -24,7 +25,7 @@ class Section extends Node implements SectionNodeInterface {
       return $label;
     }
     $base_object = $this->get('field_base_object')->entity;
-    return $this->getShortName($base_object, TRUE) ?? $label;
+    return $this->getShortName($base_object) ?? $label;
   }
 
   /**
@@ -39,6 +40,18 @@ class Section extends Node implements SectionNodeInterface {
       ]);
     }
     return $this->label();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPageSubTitle() {
+    $base_object = BaseObjectHelper::getBaseObjectFromNode($this);
+    $meta_data = $base_object instanceof BaseObjectMetaDataInterface ? $base_object->getPageTitleMetaData() : NULL;
+    if (!empty($meta_data)) {
+      return implode(' | ', $meta_data);
+    }
+    return NULL;
   }
 
   /**

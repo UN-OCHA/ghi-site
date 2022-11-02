@@ -112,7 +112,10 @@ class PlanOverviewPlan extends BaseObject {
    * @return string
    *   The plan type name.
    */
-  public function getOriginalTypeName() {
+  public function getOriginalTypeName($fetch_from_entity = FALSE) {
+    if ($fetch_from_entity && $plan = $this->getEntity()) {
+      return $plan->getPlanTypeLabel();
+    }
     return $this->getTypeProperty('name');
   }
 
@@ -122,8 +125,8 @@ class PlanOverviewPlan extends BaseObject {
    * @return string
    *   The plan type name.
    */
-  public function getTypeName() {
-    return $this->getPlanTypeName($this->getOriginalTypeName(), $this->isTypeIncluded());
+  public function getTypeName($fetch_from_entity = FALSE) {
+    return $this->getPlanTypeName($this->getOriginalTypeName($fetch_from_entity), $this->isTypeIncluded());
   }
 
   /**
@@ -132,8 +135,8 @@ class PlanOverviewPlan extends BaseObject {
    * @return string
    *   The plan type name.
    */
-  public function getTypeShortName() {
-    return $this->getPlanTypeShortName($this->getOriginalTypeName(), $this->isTypeIncluded());
+  public function getTypeShortName($fetch_from_entity = FALSE) {
+    return $this->getPlanTypeShortName($this->getOriginalTypeName($fetch_from_entity), $this->isTypeIncluded());
   }
 
   /**
