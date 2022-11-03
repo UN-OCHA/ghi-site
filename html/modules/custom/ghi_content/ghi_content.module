@@ -335,15 +335,17 @@ function ghi_content_preprocess_page(&$variables) {
     $cache_tags = Cache::mergeTags($cache_tags, $image_style->getCacheTags());
   }
 
+  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
+  $article_manager = \Drupal::service('ghi_content.manager.article');
+  $article = $article_manager->loadArticleForNode($node);
+
   $image_build = [
-    '#theme' => $responsive_image_style ? 'imagecache_external_responsive' : 'image',
-    '#uri' => $image_field->entity->getFileUri(),
-    '#responsive_image_style_id' => $responsive_image_style ? $responsive_image_style->id() : NULL,
-    '#attributes' => [
-      'style' => 'width: 100%',
-      'alt' => $image_field->alt,
-      'title' => $image_field->title,
-    ],
+    '#theme' => 'ghi_image',
+    '#responsive_image_style' => $responsive_image_style,
+    '#url' => $image_field->entity->getFileUri(),
+    '#caption' => $article->getImageCaptionMarkup(TRUE),
+    '#alt' => $image_field->alt,
+    '#title' => $image_field->title,
   ];
 
   if ($image_build) {

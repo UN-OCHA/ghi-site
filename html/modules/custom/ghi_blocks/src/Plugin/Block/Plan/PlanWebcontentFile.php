@@ -39,11 +39,13 @@ class PlanWebcontentFile extends GHIBlockBase {
 
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
     $query = $this->getQueryHandler('attachment');
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment $attachment */
     $attachment = $query->getAttachment($conf['attachment_id']);
     return [
-      '#theme' => 'imagecache_external',
-      '#style_name' => 'wide',
-      '#uri' => $attachment->url,
+      '#theme' => 'ghi_image',
+      '#url' => $attachment->getUrl(),
+      '#credit' => $attachment->getCredit(),
+      '#style' => 'wide',
     ];
   }
 

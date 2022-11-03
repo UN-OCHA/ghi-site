@@ -99,49 +99,52 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
     }
 
     $image_url = NULL;
-    if ($items->isEmpty() && $attachments = $this->getPlanWebContentAttachments($items)) {
-      // If there is noting configured but we managed to get hold of some
-      // webcontent attachments, just use the first one.
-      $attachment = reset($attachments);
-      $image_url = $attachment->url;
+    $credit = NULL;
+
+    $item = !$items->isEmpty() ? (object) $items->get(0)->getValue() ?? NULL : NULL;
+    $item_source = $item ? $item->source : NULL;
+    $item_settings = $item ? $item->settings[$item_source] : [];
+
+    if (!$item_source && $attachments = $this->getPlanWebContentAttachments($items)) {
+      $item_source = 'hpc_webcontent_file_attachment';
     }
-    elseif (!$items->isEmpty()) {
-      // Otherwise see what's been setup.
-      $item = (object) $items->get(0)->getValue();
-      if ($item->source == 'hpc_webcontent_file_attachment') {
+
+    switch ($item_source) {
+      case 'hpc_webcontent_file_attachment':
         // Find the right attachment based on the configuration, or fallback to
         // the first available attachment.
         $attachments = $this->getPlanWebContentAttachments($items);
-        $attachment = $attachments ? reset($attachments) : NULL;
-        $attachment_id = $item->settings[$item->source]['attachment_id'] ?? array_key_first($attachments);
+        $attachment_id = $item_settings['attachment_id'] ?? array_key_first($attachments);
         if ($attachment_id && !empty($attachments[$attachment_id])) {
+          /** @var \Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment $attachment */
           $attachment = $attachments[$attachment_id];
-          $image_url = $attachment->url;
+          $image_url = $attachment->getUrl();
+          $credit = $attachment->getCredit();
         }
-      }
-      if ($item->source == 'smugmug_api') {
-        $image_id = $item->settings[$item->source]['image_id'] ?? NULL;
+        break;
+
+      case 'smugmug_api':
+        $image_id = $item_settings['image_id'] ?? NULL;
         $image_urls = $image_id ? $this->smugmugImage->getImageSizes($image_id) : NULL;
         $image_url = $image_urls['X3LargeImageUrl'] ?? NULL;
-      }
-      if ($item->source == 'inherit') {
+        break;
+
+      case 'inherit':
         if ($entity instanceof SubpageNodeInterface && $parent_image = $entity->getParentNode()->getImage()) {
           return $parent_image->view();
         }
         elseif ($parent_image = $this->getParentImage($entity)) {
           return $parent_image->view();
         }
-      }
+        break;
     }
 
     if ($image_url) {
       $image_build = [
-        '#theme' => $responsive_image_style ? 'imagecache_external_responsive' : 'image',
-        '#uri' => $image_url,
-        '#responsive_image_style_id' => $responsive_image_style ? $responsive_image_style->id() : NULL,
-        '#attributes' => [
-          'style' => 'width: 100%',
-        ],
+        '#theme' => 'ghi_image',
+        '#responsive_image_style' => $responsive_image_style,
+        '#url' => $image_url,
+        '#credit' => $credit,
       ];
 
       if (isset($link_file)) {
@@ -166,7 +169,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
    * @param \Drupal\Core\Field\FieldItemListInterface $items
    *   The field values to be rendered.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment[]
    *   An array of attachment objects.
    */
   private function getPlanWebContentAttachments(FieldItemListInterface $items) {

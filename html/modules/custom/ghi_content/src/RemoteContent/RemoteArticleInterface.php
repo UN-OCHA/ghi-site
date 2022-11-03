@@ -101,10 +101,13 @@ interface RemoteArticleInterface {
   /**
    * Get the articles header images caption as markup.
    *
+   * @param bool $add_credits
+   *   Flag indicating if the credits should be added to the end of the text.
+   *
    * @return \Drupal\Component\Render\MarkupInterface
    *   The markup for an image caption.
    */
-  public function getImageCaptionMarkup();
+  public function getImageCaptionMarkup($add_credits = FALSE);
 
   /**
    * Get a paragraph by id.
