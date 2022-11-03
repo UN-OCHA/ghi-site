@@ -118,9 +118,9 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
       $item_source = 'hpc_webcontent_file_attachment';
     }
 
-    $item_settings = $item && $item_source ? $item->settings[$item_source] : [];
     switch ($item_source) {
       case 'hpc_webcontent_file_attachment':
+        $item_settings = $item ? $item->settings[$item_source] : [];
         // Find the right attachment based on the configuration, or fallback to
         // the first available attachment.
         $attachments = $this->getPlanWebContentAttachments($items);
@@ -134,17 +134,22 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
         break;
 
       case 'smugmug_api':
+        $item_settings = $item ? $item->settings[$item_source] : [];
         $image_id = $item_settings['image_id'] ?? NULL;
         $image_urls = $image_id ? $this->smugmugImage->getImageSizes($image_id) : NULL;
         $image_url = $image_urls['X3LargeImageUrl'] ?? NULL;
         break;
 
       case 'inherit':
+        $build_settings = [
+          'label' => 'hidden',
+          'settings' => $this->getSettings(),
+        ];
         if ($entity instanceof SubpageNodeInterface && $parent_image = $entity->getParentNode()->getImage()) {
-          return $parent_image->view();
+          return $parent_image->view($build_settings);
         }
         elseif ($parent_image = $this->getParentImage($entity)) {
-          return $parent_image->view();
+          return $parent_image->view($build_settings);
         }
         break;
     }
