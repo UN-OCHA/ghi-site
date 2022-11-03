@@ -261,7 +261,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
 
     $text = [
       '#theme' => 'hpc_icon',
-      '#icon' => 'table_view',
+      '#icon' => 'view_list',
       '#tag' => 'span',
     ];
     $link = Link::fromTextAndUrl($text, $link_url);

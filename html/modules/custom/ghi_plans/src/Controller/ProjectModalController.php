@@ -185,11 +185,13 @@ class ProjectModalController extends ControllerBase {
         'data' => $this->t('Project Target'),
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
+        'data-formatting' => 'numeric-full',
       ],
       [
         'data' => $this->t('Requirements'),
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
+        'data-formatting' => 'numeric-full',
       ],
     ];
 
@@ -311,6 +313,7 @@ class ProjectModalController extends ControllerBase {
         'data' => $this->t('Requirements'),
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
+        'data-formatting' => 'numeric-full',
       ],
     ];
 
