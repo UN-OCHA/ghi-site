@@ -120,7 +120,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
 
     switch ($item_source) {
       case 'hpc_webcontent_file_attachment':
-        $item_settings = $item ? $item->settings[$item_source] : [];
+        $item_settings = $item && property_exists($item, 'settings') && is_array($item->settings) ? $item->settings[$item_source] : [];
         // Find the right attachment based on the configuration, or fallback to
         // the first available attachment.
         $attachments = $this->getPlanWebContentAttachments($items);
@@ -134,7 +134,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
         break;
 
       case 'smugmug_api':
-        $item_settings = $item ? $item->settings[$item_source] : [];
+        $item_settings = $item && property_exists($item, 'settings') && is_array($item->settings) ? $item->settings[$item_source] : [];
         $image_id = $item_settings['image_id'] ?? NULL;
         $image_urls = $image_id ? $this->smugmugImage->getImageSizes($image_id) : NULL;
         $image_url = $image_urls['X3LargeImageUrl'] ?? NULL;
