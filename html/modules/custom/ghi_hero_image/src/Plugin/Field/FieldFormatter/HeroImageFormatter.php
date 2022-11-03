@@ -52,6 +52,15 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
   /**
    * {@inheritdoc}
    */
+  public static function defaultSettings() {
+    return [
+      'include_credits' => FALSE,
+    ] + parent::defaultSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function prepareView(array $entities_items) {
     // This is only here to prevent EntityReferenceFormatterBase::prepareView()
     // to create errors, as this hero image field is not an actual reference
@@ -68,6 +77,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
     // only works for plan sections.
     $element = [];
 
+    $include_credits = $this->getSetting('include_credits');
     $repsonsive_image_style_id = $this->getSetting('responsive_image_style') ?: 'hero';
 
     // Collect cache tags to be added for each item in the field.
@@ -144,7 +154,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
         '#theme' => 'ghi_image',
         '#responsive_image_style' => $responsive_image_style,
         '#url' => $image_url,
-        '#credit' => $credit,
+        '#credit' => $include_credits ? $credit : NULL,
       ];
 
       if (isset($link_file)) {
