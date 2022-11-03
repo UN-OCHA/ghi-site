@@ -98,14 +98,21 @@ class RemoteArticle extends RemoteArticleBase {
   /**
    * {@inheritdoc}
    */
-  public function getImageCaptionMarkup() {
+  public function getImageCaptionMarkup($add_credits = FALSE) {
     $caption = $this->getImageCaption();
     if (!$caption) {
       return NULL;
     }
-    return new FormattableMarkup('<div class="image-caption"><div class="location">@location</div><div class="text">@text</div></div>', [
+    $caption_text = $caption->text;
+    if ($add_credits && $credits = $this->getImageCredits()) {
+      $caption_text = new FormattableMarkup('@text <span class="credits">@credits</span>', [
+        '@text' => $caption->text,
+        '@credits' => $credits,
+      ]);
+    }
+    return new FormattableMarkup('<h6 class="location">@location</h6><p class="text">@text</p>', [
       '@location' => $caption->location,
-      '@text' => $caption->text,
+      '@text' => $caption_text,
     ]);
   }
 

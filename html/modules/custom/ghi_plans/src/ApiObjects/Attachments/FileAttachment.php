@@ -18,6 +18,7 @@ class FileAttachment extends AttachmentBase {
       'url' => $attachment->attachmentVersion->value->file->url,
       'title' => $attachment->attachmentVersion->value->file->title ?? '',
       'file_name' => $attachment->attachmentVersion->value->name ?? '',
+      'credit' => $attachment->attachmentVersion->value->credit ?? '',
     ];
   }
 
@@ -26,6 +27,20 @@ class FileAttachment extends AttachmentBase {
    */
   public function getTitle() {
     return $this->title;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getUrl() {
+    return $this->url;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCredit() {
+    return $this->credit;
   }
 
 }

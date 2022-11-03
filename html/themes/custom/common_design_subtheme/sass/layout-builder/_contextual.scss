@@ -1,12 +1,17 @@
 #layout-builder .contextual-region.layout-builder-block,
 #layout-builder .contextual-region.layout-builder-block.focus {
   margin-top: 4.5rem;
-  padding: 1rem;
+  padding: 2rem !important;
   border-radius: 2px;
   outline-width: 1px !important;
   outline-style: solid !important;
   outline-color: var(--colorGinFormElementBorder);
   outline-offset: 0;
+
+  &.content-width {
+    padding-right: 2rem !important;
+    padding-left: 2rem !important;
+  }
 }
 
 #layout-builder .contextual-region.layout-builder-block .contextual {
@@ -17,8 +22,10 @@
 
   & > ul.contextual-links {
     top: -2.5rem !important;
+    right: 2rem;
     display: flex;
     flex-direction: row-reverse;
+    padding: 0.5em 0;
     background: none;
     background-color: transparent !important;
     box-shadow: none !important;

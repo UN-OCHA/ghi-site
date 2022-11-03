@@ -1,0 +1,55 @@
+.ghi-image-wrapper {
+  position: relative;
+
+  div.image-caption-wrapper,
+  div.image-credit-wrapper {
+    position: absolute;
+    right: 0;
+    bottom: 1rem;
+    left: 0;
+    height: 1rem;
+    text-align: right;
+  }
+
+  div.image-caption-wrapper {
+    div.image-caption {
+      position: absolute;
+      right: 1.9rem;
+      bottom: 1rem;
+      display: inline-block;
+      max-width: 400px;
+      padding: 1rem 2rem;
+      text-align: left;
+      color: var(--ghi-default-text-color);
+      background-color: var(--cd-white);
+      font-size: var(--cd-font-size--tiny);
+
+      .location {
+        margin: 0 0 0.5rem 0;
+        font-size: var(--cd-font-size--tiny);
+        font-weight: 700;
+      }
+
+      p {
+        margin: 0;
+
+        .credits {
+          font-style: italic;
+        }
+      }
+    }
+  }
+
+  div.image-credit-wrapper {
+    div.image-credit {
+      position: absolute;
+      right: 1.9rem;
+      bottom: 1rem;
+      display: inline-block;
+      padding: 0.1rem 0.5rem;
+      color: var(--cd-white);
+      background-color: var(--cd-black);
+      font-size: var(--cd-font-size--tiny);
+    }
+  }
+}

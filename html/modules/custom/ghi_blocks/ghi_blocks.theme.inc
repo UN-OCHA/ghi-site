@@ -281,3 +281,22 @@ function ghi_blocks_preprocess_plan_status(&$variables) {
 function ghi_blocks_preprocess_ghi_dropdown(&$variables) {
   $variables['dropdown_id'] = Html::getUniqueId('ghi-dropdown');
 }
+
+/**
+ * Preprocess an image element.
+ */
+function ghi_blocks_preprocess_ghi_image(&$variables) {
+  $style = $variables['style'] ?? NULL;
+  $responsive_image_style = $variables['responsive_image_style'] ?? NULL;
+  $variables['image'] = [
+    '#theme' => $responsive_image_style ? 'imagecache_external_responsive' : ($style ? 'imagecache_external' : 'image'),
+    '#uri' => $variables['url'],
+    '#style_name' => $style,
+    '#responsive_image_style_id' => $responsive_image_style ? $responsive_image_style->id() : NULL,
+    '#attributes' => array_filter([
+      'style' => 'width: 100%',
+      'alt' => $variables['alt'],
+      'title' => $variables['title'],
+    ]),
+  ];
+}
