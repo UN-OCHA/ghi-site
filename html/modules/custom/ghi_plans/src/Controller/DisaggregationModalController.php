@@ -172,6 +172,7 @@ class DisaggregationModalController extends ControllerBase {
           'data' => $category,
           'data-sort-type' => 'numeric',
           'data-column-type' => 'amount',
+          'data-formatting' => 'numeric-full',
         ];
       }
     }
@@ -180,6 +181,7 @@ class DisaggregationModalController extends ControllerBase {
         'data' => $this->t('Totals'),
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
+        'data-formatting' => 'numeric-full',
       ];
     }
 
@@ -218,6 +220,7 @@ class DisaggregationModalController extends ControllerBase {
             'sorttable_customkey' => $category['data'],
             'data-sort-type' => 'numeric',
             'data-column-type' => 'amount',
+            'data-formatting' => 'numeric-full',
           ];
         }
       }
@@ -236,6 +239,7 @@ class DisaggregationModalController extends ControllerBase {
           'sorttable_customkey' => $location['total'],
           'data-sort-type' => 'numeric',
           'data-column-type' => 'amount',
+          'data-formatting' => 'numeric-full',
         ];
         $totals[0] = ($totals[0] ?? 0) + $location['total'];
       }
