@@ -57,6 +57,7 @@ function ghi_hero_image_preprocess_page(&$variables) {
     'settings' => [
       'responsive_image_style' => 'hero',
       'image_link' => NULL,
+      'include_credits' => TRUE,
     ],
   ]);
   if ($hero_image) {
