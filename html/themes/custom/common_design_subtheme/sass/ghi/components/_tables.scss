@@ -35,6 +35,10 @@
           white-space: nowrap;
         }
 
+        &[data-formatting="numeric-full"] {
+          text-align: right;
+        }
+
         &:first-child {
           padding-left: 0;
         }
@@ -173,53 +177,49 @@
       max-width: calc(100vw - 1rem - 2 * var(--cd-container-padding-xlarge)) !important;
     }
   }
+}
 
-  .ghi-modal-dialog {
-    table.ghi-table {
-      margin-bottom: 0;
+.ghi-modal-dialog .table-wrapper {
+  table.ghi-table {
+    margin-bottom: 0;
 
-      th {
-        white-space: nowrap;
-        color: var(--ghi-default-text-color);
-        background-color: inherit;
-      }
+    th {
+      white-space: nowrap;
+      color: var(--ghi-default-text-color);
+      background-color: inherit;
+    }
 
-      &.has-totals-row th {
-        border-bottom: 0;
-      }
+    &.has-totals-row th {
+      border-bottom: 0;
+    }
 
-      th,
-      td,
-      td a {
-        color: var(--ghi-default-text-color);
-        font-size: var(--cd-font-size--small);
-      }
+    th,
+    td,
+    td a {
+      color: var(--ghi-default-text-color);
+      font-size: var(--cd-font-size--small);
+    }
 
-      th:first-child,
-      td:first-child {
+    th,
+    td {
+      padding: 1.5rem 0.5rem 1.5rem 2rem;
+
+      &:first-child {
         padding-left: 0.5rem;
       }
 
-      th:last-child,
-      td:last-child {
+      &:last-child {
         padding-right: 0.5rem;
       }
+    }
 
-      th,
+    tr.totals-row,
+    tfoot tr {
+      border-bottom: 0;
+      background-color: var(--cd-default-background-color);
+
       td {
-        &.cd-table--amount {
-          text-align: right;
-        }
-      }
-
-      tr.totals-row,
-      tfoot tr {
-        border-bottom: 0;
-        background-color: var(--cd-default-background-color);
-
-        td {
-          font-weight: 700;
-        }
+        font-weight: 700;
       }
     }
   }

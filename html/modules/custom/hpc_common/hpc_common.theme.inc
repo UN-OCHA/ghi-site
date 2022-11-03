@@ -6,6 +6,7 @@
  */
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Template\Attribute;
 use Drupal\hpc_api\Query\EndpointQuery;
@@ -340,6 +341,7 @@ function hpc_common_preprocess_hpc_icon(array &$vars) {
 
   $attributes = new Attribute();
   $attributes->addClass('material-icon');
+  $attributes->addClass(Html::getClass($vars['icon']));
   if ($vars['tag'] == 'button') {
     $attributes->addClass('cd-button');
     $attributes->addClass('cd-button--icon');

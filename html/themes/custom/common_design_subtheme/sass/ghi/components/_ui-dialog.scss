@@ -25,7 +25,7 @@
     margin: 1rem;
     border: 0 none !important;
     border-radius: var(--ghi-ui-dialog-border-radius);
-    background: var(--cd-white) !important;
+    background: var(--ghi-grey--background) !important;
 
     .ui-dialog-titlebar {
       padding: 24px;
@@ -95,13 +95,14 @@
       border-left: 1px solid var(--cd-default-border-color);
       border-bottom-right-radius: var(--ghi-ui-dialog-border-radius);
       border-bottom-left-radius: var(--ghi-ui-dialog-border-radius);
+      background: var(--cd-white) !important;
 
       a {
         color: var(--ghi-default-text-color);
 
         &.fts-link {
           display: inline-block;
-          margin-bottom: 0.5rem;
+          margin: 1rem;
 
           img {
             height: 20px;
@@ -109,6 +110,20 @@
           }
         }
       }
+
+      ul,
+      ol {
+        padding-inline-start: 2rem;
+
+        li {
+          padding: 0.5rem 0;
+        }
+      }
     }
   }
+}
+
+.ghi-modal-dialog + .ui-widget-overlay {
+  opacity: 0.9;
+  background: var(--ghi-grey--background) !important;
 }

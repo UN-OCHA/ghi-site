@@ -206,7 +206,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
       '#title' => Markup::create($icon . '<span class="name">' . $this->getLabel() . '</span>'),
       '#content' => $popover_content,
       '#class' => 'entity-counter entity-counter-popover',
-      '#material_icon' => 'table_view',
+      '#material_icon' => 'view_list',
       '#disabled' => empty($popover_content),
     ];
   }

@@ -357,6 +357,12 @@ function common_design_subtheme_preprocess_table(&$vars) {
         if (!$attribute) {
           continue;
         }
+
+        $column_content = $column['content'] ?? NULL;
+        if (is_array($column_content) && !empty($column_content['#scale'])) {
+          $attribute->setAttribute('data-formatting', 'numeric-' . $column['content']['#scale']);
+        }
+
         $attribute->setAttribute('data-column', $column_name);
         if ($attribute->hasAttribute('data-column-type')) {
           $attributes = $attribute->toArray();
