@@ -113,12 +113,12 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
 
     $item = !$items->isEmpty() ? (object) $items->get(0)->getValue() ?? NULL : NULL;
     $item_source = $item ? $item->source : NULL;
-    $item_settings = $item ? $item->settings[$item_source] : [];
 
     if (!$item_source && $attachments = $this->getPlanWebContentAttachments($items)) {
       $item_source = 'hpc_webcontent_file_attachment';
     }
 
+    $item_settings = $item && $item_source ? $item->settings[$item_source] : [];
     switch ($item_source) {
       case 'hpc_webcontent_file_attachment':
         // Find the right attachment based on the configuration, or fallback to
