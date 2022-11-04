@@ -322,7 +322,8 @@ class PlanOverviewMap extends GHIBlockBase {
         'value' => $this->getRenderedFootnoteTooltip($footnotes, 'estimated_reach') . CommonHelper::renderValue($data->caseload->estimated_reach, 'amount', 'hpc_amount', $common_theme_args),
       ],
       'reached' => [
-        'label' => $this->t('Reached') . (!empty($data->reporting_period) ? ThemeHelper::render([
+        'label' => $this->t('Reached'),
+        'value' => (!empty($data->reporting_period) ? ThemeHelper::render([
           '#theme' => 'hpc_tooltip',
           '#tooltip' => ThemeHelper::render([
             '#theme' => 'hpc_reporting_period',
@@ -335,8 +336,7 @@ class PlanOverviewMap extends GHIBlockBase {
             '#icon' => 'calendar_today',
             '#tag' => 'span',
           ],
-        ], FALSE) : ''),
-        'value' => CommonHelper::renderValue($data->caseload->reached_percent, 'ratio', 'hpc_percent'),
+        ], FALSE) : '') . CommonHelper::renderValue($data->caseload->reached_percent, 'ratio', 'hpc_percent'),
       ],
       'funding_required' => [
         'label' => (new TranslatableMarkup('Requirements')),
@@ -381,6 +381,15 @@ class PlanOverviewMap extends GHIBlockBase {
     ];
 
     $global_config = $this->getYearConfig($this->getContextValue('year'));
+    if (empty($global_config['funding'])) {
+      unset($items['funding_received']);
+    }
+    if (empty($global_config['requirements'])) {
+      unset($items['funding_required']);
+    }
+    if (empty($global_config['coverage'])) {
+      unset($items['funding_progress']);
+    }
     if (empty($global_config['caseload_expected_reach'])) {
       unset($items['estimated_reach']);
     }

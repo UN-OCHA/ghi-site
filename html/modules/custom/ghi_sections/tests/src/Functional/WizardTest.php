@@ -57,7 +57,8 @@ class WizardTest extends BrowserTestBase {
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextNotContains('No base objects available to create a section.');
     $this->assertSession()->pageTextNotContains('No teams found. You must import teams before sections can be created.');
-    $this->assertSession()->pageTextContains('Select a section type.');
+    $this->assertSession()->pageTextContains('Create Section');
+    $this->assertSession()->fieldExists('Section type');
     $this->assertSession()->buttonExists('Next');
   }
 
@@ -68,7 +69,8 @@ class WizardTest extends BrowserTestBase {
     $this->drupalGet('/node/add/global_section');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextNotContains('No teams found. You must import teams before sections can be created.');
-    $this->assertSession()->pageTextContains('Enter a year for this global section');
+    $this->assertSession()->pageTextContains('Create Global section');
+    $this->assertSession()->fieldExists('Year');
     $this->assertSession()->buttonExists('Next');
   }
 

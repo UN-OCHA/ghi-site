@@ -17,10 +17,7 @@ class HomepageSectionWizard extends GlobalSectionWizard {
   }
 
   /**
-   * Define the node bundle for this wizard.
-   *
-   * @return string
-   *   The bundle id used for new nodes created using this wizard.
+   * {@inheritdoc}
    */
   protected function getBundle() {
     return 'homepage';

@@ -28,24 +28,26 @@
       </div>
     {% endif %}
   </div>
-  <div class="section-wrapper">
-    <div class="section-header">
-      <i class="material-icons attach-money">attach_money</i>
-      <span>{{ 'Funding'|t }}</span>
+  {% if items.funding_required or items.funding_received or items.funding_progress %}
+    <div class="section-wrapper">
+      <div class="section-header">
+        <i class="material-icons attach-money">attach_money</i>
+        <span>{{ 'Funding'|t }}</span>
+      </div>
+      <div class="section-row">
+        <span class="label">{{ items.funding_required.label }}</span>
+        <span class="value">{{ items.funding_required.value }}</span>
+      </div>
+      <div class="section-row">
+        <span class="label">{{ items.funding_received.label }}</span>
+        <span class="value">{{ items.funding_received.value }}</span>
+      </div>
+      <div class="section-row">
+        <span class="label">{{ items.funding_progress.label }}</span>
+        <span class="value">{{ items.funding_progress.value }}</span>
+      </div>
     </div>
-    <div class="section-row">
-      <span class="label">{{ items.funding_required.label }}</span>
-      <span class="value">{{ items.funding_required.value }}</span>
-    </div>
-    <div class="section-row">
-      <span class="label">{{ items.funding_received.label }}</span>
-      <span class="value">{{ items.funding_received.value }}</span>
-    </div>
-    <div class="section-row">
-      <span class="label">{{ items.funding_progress.label }}</span>
-      <span class="value">{{ items.funding_progress.value }}</span>
-    </div>
-  </div>
+  {% endif %}
   {% if items.plan_status.value %}
     <div class="section-wrapper">
       <div class="section-header">
