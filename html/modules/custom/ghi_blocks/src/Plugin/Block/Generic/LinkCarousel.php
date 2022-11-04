@@ -38,6 +38,9 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
       return;
     }
 
+    // Get the responsive image style.
+    $responsive_image_style = $this->entityTypeManager->getStorage('responsive_image_style')->load('hero');
+
     $context = $this->getBlockContext();
     $carousel_items = [];
     foreach ($conf['items'] as $item) {
@@ -66,9 +69,9 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
           '#style_name' => 'link_carousel_thumbnail',
         ],
         'image' => [
-          '#theme' => 'image_style',
-          '#uri' => $file->getFileUri(),
-          '#style_name' => 'wide',
+          '#theme' => 'ghi_image',
+          '#responsive_image_style' => $responsive_image_style,
+          '#url' => $file->getFileUri(),
         ],
         'button' => $link->toRenderable(),
       ];
