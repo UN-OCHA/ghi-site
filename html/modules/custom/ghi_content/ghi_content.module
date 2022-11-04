@@ -343,7 +343,7 @@ function ghi_content_preprocess_page(&$variables) {
     '#theme' => 'ghi_image',
     '#responsive_image_style' => $responsive_image_style,
     '#url' => $image_field->entity->getFileUri(),
-    '#caption' => $article->getImageCaptionMarkup(TRUE),
+    '#caption' => $article ? $article->getImageCaptionMarkup(TRUE) : NULL,
     '#alt' => $image_field->alt,
     '#title' => $image_field->title,
   ];

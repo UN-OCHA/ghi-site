@@ -36,6 +36,16 @@ class ConfigService {
   }
 
   /**
+   * Get the default API version.
+   *
+   * @return string
+   *   The default API version string.
+   */
+  public function logApiErrors() {
+    return $this->configFactory->get('hpc_api.settings')->get('log_api_errors', TRUE);
+  }
+
+  /**
    * Get a config setting by key.
    *
    * Pass through to the config object.
