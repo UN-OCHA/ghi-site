@@ -180,7 +180,7 @@ function ghi_blocks_module_implements_alter(&$implementations, $hook) {
 /**
  * Implements hook_plugin_filter_TYPE__CONSUMER_alter().
  */
-function ghi_blocks_plugin_filter_block__layout_builder_alter(&$definitions) {
+function ghi_blocks_plugin_filter_block__layout_builder_alter(array &$definitions, array $extra) {
   $current_user = \Drupal::currentUser();
   if (!$current_user->hasPermission('use inline blocks')) {
     // Unset all inline blocks.
@@ -191,12 +191,25 @@ function ghi_blocks_plugin_filter_block__layout_builder_alter(&$definitions) {
       unset($definitions[$key]);
     }
   }
-  // @codingStandardsIgnoreStart
-  // @todo Check if this could actually be useful.
-  // $definitions = array_filter($definitions, function ($definition) {
-  //   return in_array($definition['provider'], ['ghi_blocks', 'ghi_content']);
-  // });
-  // @codingStandardsIgnoreEnd
+
+  // Check if this is a page manager context, in which case we want to manually
+  // restrict the available types. On all entity pages this is handled by the
+  // layout_builder_restrictions module per entity bundle.
+  $section_storage = $extra['section_storage'] ?? NULL;
+  $is_page_manager = $section_storage ? $section_storage->getPluginId() == 'page_manager' : FALSE;
+  if ($is_page_manager) {
+    $blacklist = [
+      'global_plan_overview_map',
+      'global_key_figures',
+      'global_plan_table',
+    ];
+    $definitions = array_filter($definitions, function ($definition) use ($blacklist) {
+      if (in_array($definition['id'], $blacklist)) {
+        return FALSE;
+      }
+      return in_array($definition['provider'], ['ghi_blocks', 'ghi_content']);
+    });
+  }
 }
 
 /**

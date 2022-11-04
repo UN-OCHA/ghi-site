@@ -13,5 +13,5 @@ ignored_config_entities:
   - '// Ignore the homepage config.'
   - 'page_manager.page.homepage:access_logic'
   - 'page_manager.page.homepage:access_conditions'
-  - 'page_manager.page_variant.homepage*:variant_settings'
+  - '// page_manager.page_variant.homepage*:variant_settings'
 enable_export_filtering: true

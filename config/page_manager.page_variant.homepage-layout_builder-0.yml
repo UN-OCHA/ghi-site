@@ -16,7 +16,18 @@ variant_settings:
   title_type: manual
   manual_title: ''
   title_from_block: ''
-  sections: null
+  sections:
+    -
+      layout_id: layout_onecol
+      layout_settings:
+        label: Content
+        context_mapping: {  }
+      components: {  }
+      third_party_settings:
+        layout_builder_lock:
+          lock:
+            6: 6
+            7: 7
 page: homepage
 selection_criteria: {  }
 selection_logic: and

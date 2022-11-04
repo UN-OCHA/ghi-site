@@ -86,6 +86,7 @@ permissions:
   - 'administer users'
   - 'administer users roles'
   - 'configure all homepage node layout overrides'
+  - 'configure any layout'
   - 'configure editable article node layout overrides'
   - 'configure editable document node layout overrides'
   - 'configure editable financials node layout overrides'
