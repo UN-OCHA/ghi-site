@@ -8,10 +8,10 @@ third_party_settings:
   menu_ui:
     available_menus: {  }
     parent: ''
-name: Homepage
+name: 'Homepage container'
 type: homepage
-description: 'A homepage is a special type of a global section page, that can serve as the sites homepage. Each page needs to have a distinct year.'
-help: ''
+description: 'A homepage container groups a set of year-specific page elements.'
+help: 'A homepage container allows to assemble a set of year-specific page elements. Published homepage containers are embedded automatically in the sites front page, but are not publicly accessible as standalone pages. There can be only one homepage container per year.'
 new_revision: true
 preview_mode: 0
 display_submitted: false

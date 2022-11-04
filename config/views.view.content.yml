@@ -3157,11 +3157,11 @@ display:
         - 'config:field.storage.node.field_team'
   page_hompages:
     id: page_hompages
-    display_title: Homepages
+    display_title: 'Homepage containers'
     display_plugin: page
     position: 3
     display_options:
-      title: Homepages
+      title: 'Homepage containers'
       fields:
         node_bulk_form:
           id: node_bulk_form
@@ -3755,10 +3755,10 @@ display:
           required: true
       display_description: ''
       display_extenders: {  }
-      path: admin/content/homepages
+      path: admin/content/homepage-containers
       menu:
         type: tab
-        title: Homepages
+        title: 'Homepage containers'
         description: ''
         weight: -8
         expanded: false

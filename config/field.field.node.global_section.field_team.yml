@@ -11,7 +11,7 @@ field_name: field_team
 entity_type: node
 bundle: global_section
 label: Team
-description: 'The team that is responsible for this content item.'
+description: 'Assign a team that is responsible for this global section.'
 required: true
 translatable: true
 default_value: {  }

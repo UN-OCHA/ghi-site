@@ -11,7 +11,7 @@ field_name: field_tags
 entity_type: node
 bundle: homepage
 label: 'Global section tags'
-description: ''
+description: 'Select the tags associated with this homepage container. This controls the content that will be available. Enter multiple tags separated by comma.'
 required: false
 translatable: true
 default_value: {  }
