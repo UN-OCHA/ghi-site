@@ -4,10 +4,8 @@ status: true
 dependencies:
   config:
     - page_manager.page.homepage
-  module:
-    - hpc_common
 id: homepage-layout_builder-1
-label: '2022'
+label: Page
 weight: 0
 variant: layout_builder
 variant_settings:
@@ -99,12 +97,6 @@ variant_settings:
           additional: {  }
       third_party_settings: {  }
 page: homepage
-selection_criteria:
-  -
-    id: page_parameter_condition
-    negate: false
-    context_mapping: {  }
-    parameter: year
-    value: '2022'
+selection_criteria: {  }
 selection_logic: and
 static_context: {  }

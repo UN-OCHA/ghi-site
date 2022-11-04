@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "60aeb96b89a27dea3ba648ae1a48805d",
+    "content-hash": "0be25b902955e97a234721d2ed657337",
     "packages": [
         {
             "name": "alchemy/zippy",
@@ -3788,23 +3788,26 @@
         },
         {
             "name": "drupal/layout_builder_ipe",
-            "version": "dev-1.0.x",
+            "version": "1.0.0-alpha1",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/layout_builder_ipe.git",
-                "reference": "f07cd8c821b2188d6ea9d3028fa7fec2003ffe4c"
+                "reference": "1.0.0-alpha1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/layout_builder_ipe-1.0.0-alpha1.zip",
+                "reference": "1.0.0-alpha1",
+                "shasum": "afd3f439641ae34052735842e8895af0cb4466bd"
             },
             "require": {
                 "drupal/core": "^8 || ^9"
             },
             "type": "drupal-module",
             "extra": {
-                "branch-alias": {
-                    "dev-1.0.x": "1.0.x-dev"
-                },
                 "drupal": {
-                    "version": "1.0.x-dev",
-                    "datestamp": "1661466217",
+                    "version": "1.0.0-alpha1",
+                    "datestamp": "1667512500",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
@@ -17452,7 +17455,7 @@
         "drupal/cer": 15,
         "drupal/gin_lb": 10,
         "drupal/imageapi_optimize_binaries": 15,
-        "drupal/layout_builder_ipe": 20,
+        "drupal/layout_builder_ipe": 15,
         "drupal/multiple_fields_remove_button": 15,
         "drupal/page_manager": 10,
         "drupal/phpexcel": 20,
@@ -17465,5 +17468,5 @@
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }

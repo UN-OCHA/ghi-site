@@ -7,6 +7,7 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 
 use Drupal\hpc_common\Helpers\UserHelper;
+use Prophecy\Argument;
 
 /**
  * @covers Drupal\hpc_common\Helpers\UserHelper
@@ -34,6 +35,8 @@ class UserHelperTest extends UnitTestCase {
       ['authenticated', 'editor'],
       ['authenticated', 'administrator']
     );
+    // Mock hasPermission.
+    $current_user->hasPermission(Argument::any())->willReturn(FALSE);
 
     // Set container.
     $container = new ContainerBuilder();

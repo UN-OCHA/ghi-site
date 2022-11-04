@@ -37,7 +37,9 @@ third_party_settings:
     allowed_block_categories: {  }
     entity_view_mode_restriction:
       allowed_layouts: {  }
-      denylisted_blocks: {  }
+      denylisted_blocks:
+        Global:
+          - global_homepages
       allowlisted_blocks:
         'Inline blocks':
           - 'inline_block:basic'

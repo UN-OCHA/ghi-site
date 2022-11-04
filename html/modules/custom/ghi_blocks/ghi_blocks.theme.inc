@@ -269,6 +269,19 @@ function ghi_blocks_preprocess_section_switcher(&$variables) {
 }
 
 /**
+ * Preprocess a year switcher element.
+ *
+ * @see \Drupal\ghi_blocks\Traits\HomepageBlockTrait::buildHomepageYearSwitcher()
+ */
+function ghi_blocks_preprocess_year_switcher(&$variables) {
+  $variables['title'] = $variables['current_year'];
+  $variables['item_list'] = [
+    '#theme' => 'item_list',
+    '#items' => $variables['years'],
+  ];
+}
+
+/**
  * Preprocess a plan status element.
  */
 function ghi_blocks_preprocess_plan_status(&$variables) {

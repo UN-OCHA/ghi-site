@@ -74,6 +74,10 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
       ];
     }
 
+    if (empty($carousel_items)) {
+      return;
+    }
+
     return [
       '#theme' => 'link_carousel',
       '#items' => $carousel_items,

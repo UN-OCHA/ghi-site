@@ -113,6 +113,15 @@
             outline: 0;
           }
         }
+
+        .tippy-box {
+          .title {
+            padding-bottom: 0;
+          }
+          .block-configuration.content {
+            padding-top: 0;
+          }
+        }
       }
     }
   }
