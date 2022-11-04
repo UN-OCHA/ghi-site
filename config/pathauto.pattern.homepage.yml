@@ -7,12 +7,12 @@ dependencies:
 id: homepage
 label: Homepage
 type: 'canonical_entities:node'
-pattern: '/overview/[node:field_year:value]'
+pattern: '/homepage-container/[node:field_year:value]'
 selection_criteria:
-  ee0906d8-c513-49c0-af26-33c0280e7bf7:
+  119b4b59-863f-4226-b2d4-c1d85a28e944:
     id: 'entity_bundle:node'
     negate: false
-    uuid: ee0906d8-c513-49c0-af26-33c0280e7bf7
+    uuid: 119b4b59-863f-4226-b2d4-c1d85a28e944
     context_mapping:
       node: node
     bundles:

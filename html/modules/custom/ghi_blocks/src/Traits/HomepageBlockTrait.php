@@ -86,13 +86,42 @@ trait HomepageBlockTrait {
     $options = [];
     foreach ($years as $year) {
       $is_active = $year == $current_year;
-      $options[$year] = $is_active ? $year : Link::fromTextAndUrl($year, Url::fromUserInput('/home/' . $year));
+      $options[$year] = $is_active ? $year : Link::fromTextAndUrl($year, $this->getHomepageUrlForYear($year));
     }
     return [
       '#theme' => 'year_switcher',
       '#years' => $options,
       '#current_year' => $current_year ?? array_key_first($options),
     ];
+  }
+
+  /**
+   * Get the homepage url for the given year.
+   *
+   * @param int $year
+   *   The year.
+   *
+   * @return \Drupal\Core\Url
+   *   The url object.
+   */
+  protected function getHomepageUrlForYear($year) {
+    $page = $this->getPageEntity();
+    return Url::fromUserInput(str_replace('{year}', $year, $page->getPath()));
+  }
+
+  /**
+   * Retrieve the page config entity for the homepage.
+   *
+   * @return \Drupal\page_manager\Entity\Page
+   *   The page entity.
+   */
+  private function getPageEntity() {
+    $page = &drupal_static(__FUNCTION__, NULL);
+    if ($page === NULL) {
+      /** @var \Drupal\page_manager\Entity\Page $page */
+      $page = $this->entityTypeManager->getStorage('page')->load('homepage');
+    }
+    return $page;
   }
 
 }

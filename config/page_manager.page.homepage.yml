@@ -4,9 +4,9 @@ status: true
 dependencies: {  }
 id: homepage
 label: Homepage
-description: 'Year specific landing page'
+description: 'The global unique homepage for Humanitarian Action.'
 use_admin_theme: false
-path: '/home/{year}'
+path: '/overview/{year}'
 access_logic: and
 access_conditions: {  }
 parameters:
