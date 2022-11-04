@@ -6,3 +6,4 @@ public_base_path: public/fts
 timeout: 30
 cache_lifetime: 3600
 use_gzip_compression: FALSE
+log_api_errors: TRUE

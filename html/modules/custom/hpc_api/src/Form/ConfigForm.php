@@ -101,6 +101,14 @@ class ConfigForm extends ConfigFormBase {
       '#required' => FALSE,
     ];
 
+    $form['log_api_errors'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Log API errors'),
+      '#description' => $this->t('Check this if you want that errors returned from the API are logged.'),
+      '#default_value' => $config->get('log_api_errors'),
+      '#required' => FALSE,
+    ];
+
     return $form;
   }
 
@@ -118,6 +126,7 @@ class ConfigForm extends ConfigFormBase {
     $config->set('timeout', $form_state->getValue('timeout'));
     $config->set('cache_lifetime', $form_state->getValue('cache_lifetime'));
     $config->set('use_gzip_compression', $form_state->getValue('use_gzip_compression'));
+    $config->set('log_api_errors', $form_state->getValue('log_api_errors'));
     $config->save();
     return parent::submitForm($form, $form_state);
   }

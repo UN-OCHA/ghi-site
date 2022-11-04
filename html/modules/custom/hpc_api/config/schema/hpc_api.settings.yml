@@ -26,3 +26,6 @@ hpc_api.settings:
     use_gzip_compression:
       type: boolean
       label: 'Whether to use gzip compression for API requests'
+    log_api_errors:
+      type: boolean
+      label: 'Whether to log API errors'

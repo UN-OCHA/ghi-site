@@ -651,6 +651,9 @@ class EndpointQuery {
    *   The endpoint url for the failed request.
    */
   public function handleError($response, $endpoint_url) {
+    if (!$this->configService->logApiErrors()) {
+      return;
+    }
     if (empty($response->request) || empty($response->data)) {
       $this->loggerFactory->get(self::LOG_ID)->error('API error, Code: @code, Error: @error for request to @uri', [
         '@code' => $response->getStatusCode(),
