@@ -230,6 +230,36 @@ trait GlobalSettingsTrait {
       }, $rows);
     }
 
+    // Handle optional funding columns.
+    if (empty($config['funding'])) {
+      // Hide the reached column.
+      unset($header['funding']);
+      $rows = array_map(function ($row) {
+        unset($row['funding']);
+        return $row;
+      }, $rows);
+    }
+
+    // Handle optional requirements columns.
+    if (empty($config['requirements'])) {
+      // Hide the reached column.
+      unset($header['requirements']);
+      $rows = array_map(function ($row) {
+        unset($row['requirements']);
+        return $row;
+      }, $rows);
+    }
+
+    // Handle optional coverage columns.
+    if (empty($config['coverage'])) {
+      // Hide the reached column.
+      unset($header['coverage']);
+      $rows = array_map(function ($row) {
+        unset($row['coverage']);
+        return $row;
+      }, $rows);
+    }
+
     // Handle optional caseload columns.
     if (empty($config['caseload_reached'])) {
       // Hide the reached column.
@@ -309,6 +339,18 @@ trait GlobalSettingsTrait {
       'use_latest_plan_data' => [
         '#title' => $this->t('Use latest plan data'),
         '#description' => $this->t('Check if the plan data for this homepage year should be retrieved using the argument <em>version=latest</em>. This only affects logged-in users.'),
+      ],
+      'funding' => [
+        '#title' => $this->t('Show funding values'),
+        '#description' => $this->t('Check to show funding values on global pages.'),
+      ],
+      'requirements' => [
+        '#title' => $this->t('Show requirements values'),
+        '#description' => $this->t('Check to show requirements values on global pages.'),
+      ],
+      'coverage' => [
+        '#title' => $this->t('Show coverage values'),
+        '#description' => $this->t('Check to show coverage values on global pages.'),
       ],
       'caseload_reached' => [
         '#title' => $this->t('Show reached values'),

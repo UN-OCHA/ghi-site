@@ -20,11 +20,15 @@ class SectionWizard extends WizardBase {
   /**
    * {@inheritdoc}
    */
+  protected function getBundle() {
+    return 'section';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
-    self::prepareAjaxForm($form, $form_state);
-    $wrapper_id = self::getWrapperId($form);
-    $form['#prefix'] = '<div id="' . $wrapper_id . '">';
-    $form['#suffix'] = '</div>';
+    $form = parent::buildForm($form, $form_state, $node);
 
     $base_object_types = $this->sectionManager->getAvailableBaseObjectTypes();
     if (!$base_object_types) {
@@ -172,7 +176,7 @@ class SectionWizard extends WizardBase {
         '#ajax' => [
           'event' => 'click',
           'callback' => [static::class, 'updateAjax'],
-          'wrapper' => $wrapper_id,
+          'wrapper' => $this->ajaxWrapperId,
         ],
       ];
     }
@@ -185,7 +189,7 @@ class SectionWizard extends WizardBase {
         '#ajax' => [
           'event' => 'click',
           'callback' => [static::class, 'updateAjax'],
-          'wrapper' => $wrapper_id,
+          'wrapper' => $this->ajaxWrapperId,
         ],
       ];
     }

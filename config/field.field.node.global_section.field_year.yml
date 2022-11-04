@@ -10,7 +10,7 @@ field_name: field_year
 entity_type: node
 bundle: global_section
 label: Year
-description: ''
+description: 'Enter a year for this global section.'
 required: true
 translatable: true
 default_value: {  }

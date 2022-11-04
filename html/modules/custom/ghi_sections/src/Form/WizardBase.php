@@ -11,6 +11,7 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_sections\SectionManager;
+use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -63,6 +64,13 @@ abstract class WizardBase extends FormBase {
   protected $sectionManager;
 
   /**
+   * The wrapper id for ajax.
+   *
+   * @var string
+   */
+  protected $ajaxWrapperId;
+
+  /**
    * Constructs a section create form.
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, TypedDataManagerInterface $typed_data_manager, ModuleHandlerInterface $module_handler, AccountProxyInterface $user, SectionManager $section_manager) {
@@ -86,6 +94,58 @@ abstract class WizardBase extends FormBase {
       $container->get('current_user'),
       $container->get('ghi_sections.manager')
     );
+  }
+
+  /**
+   * Define the node bundle for this wizard.
+   *
+   * @return string
+   *   The bundle id used for new nodes created using this wizard.
+   */
+  abstract protected function getBundle();
+
+  /**
+   * Get the help text for the given field name.
+   *
+   * @param string $field_name
+   *   The field name.
+   *
+   * @return string|null
+   *   The help text or NULL.
+   */
+  protected function getFieldHelp($field_name) {
+    $field_definitions = $this->entityFieldManager->getFieldDefinitions('node', $this->getBundle());
+    /** @var \Drupal\field\FieldConfigInterface $field_config */
+    $field_config = $field_definitions[$field_name] ?? NULL;
+    return $field_config?->getDescription();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
+    self::prepareAjaxForm($form, $form_state);
+    $this->ajaxWrapperId = self::getWrapperId($form);
+    $form['#prefix'] = '<div id="' . $this->ajaxWrapperId . '">';
+    $form['#suffix'] = '</div>';
+
+    /** @var \Drupal\node\NodeTypeInterface $node_type */
+    $node_type = $this->entityTypeManager->getStorage('node_type')->load($this->getBundle());
+    $help = $node_type->getHelp();
+
+    if (!empty($help)) {
+      $form['help'] = [
+        '#theme' => 'status_messages',
+        '#message_list' => [
+          'info' => [$help],
+        ],
+        '#status_headings' => [
+          'info' => $this->t('Help'),
+        ],
+      ];
+    }
+
+    return $form;
   }
 
   /**

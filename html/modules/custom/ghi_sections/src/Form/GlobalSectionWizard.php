@@ -18,10 +18,7 @@ class GlobalSectionWizard extends WizardBase {
   }
 
   /**
-   * Define the node bundle for this wizard.
-   *
-   * @return string
-   *   The bundle id used for new nodes created using this wizard.
+   * {@inheritdoc}
    */
   protected function getBundle() {
     return 'global_section';
@@ -31,10 +28,7 @@ class GlobalSectionWizard extends WizardBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
-    self::prepareAjaxForm($form, $form_state);
-    $wrapper_id = self::getWrapperId($form);
-    $form['#prefix'] = '<div id="' . $wrapper_id . '">';
-    $form['#suffix'] = '</div>';
+    $form = parent::buildForm($form, $form_state, $node);
 
     // Get the team options.
     $team_options = $this->getTeamOptions($form_state);
@@ -68,7 +62,7 @@ class GlobalSectionWizard extends WizardBase {
     $form['year'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Year'),
-      '#description' => $this->t('Enter a year for this global section'),
+      '#description' => $this->getFieldHelp('field_year'),
       '#default_value' => $form_state->getValue('year'),
       '#required' => TRUE,
       '#disabled' => $step > 0,
@@ -80,7 +74,7 @@ class GlobalSectionWizard extends WizardBase {
     $form['tags'] = [
       '#type' => 'entity_autocomplete',
       '#title' => $this->t('Tags'),
-      '#description' => $this->t('Select the tags associated with this global section. This controls the content that will be available. Enter multiple tags separated by comma.'),
+      '#description' => $this->getFieldHelp('field_tags'),
       '#target_type' => 'taxonomy_term',
       '#selection_handler' => 'default',
       '#selection_settings' => [
@@ -102,7 +96,7 @@ class GlobalSectionWizard extends WizardBase {
       '#type' => 'select',
       '#title' => $this->t('Team'),
       '#options' => $team_options,
-      '#description' => $this->t('Select the team that will be responsible for this section.'),
+      '#description' => $this->getFieldHelp('field_team'),
       '#default_value' => $form_state->getValue('team'),
       '#required' => TRUE,
       '#disabled' => $step > array_flip($steps)['team'],
@@ -131,7 +125,7 @@ class GlobalSectionWizard extends WizardBase {
         '#ajax' => [
           'event' => 'click',
           'callback' => [static::class, 'updateAjax'],
-          'wrapper' => $wrapper_id,
+          'wrapper' => $this->ajaxWrapperId,
         ],
       ];
     }
@@ -144,7 +138,7 @@ class GlobalSectionWizard extends WizardBase {
         '#ajax' => [
           'event' => 'click',
           'callback' => [static::class, 'updateAjax'],
-          'wrapper' => $wrapper_id,
+          'wrapper' => $this->ajaxWrapperId,
         ],
       ];
     }
