@@ -1,6 +1,12 @@
-body.path-home #main-content {
+body.path-home #main-content,
+body.path-frontpage #main-content {
   padding-right: 0;
   padding-left: 0;
+
+  .ghi-block:first-child {
+    margin-top: 0;
+    padding-top: 0;
+  }
 }
 .ghi-block-global-homepages {
   & > .cd-block-title {
