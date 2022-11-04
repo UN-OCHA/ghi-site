@@ -1,18 +1,12 @@
 uuid: a5494d2d-8008-409d-8aee-044381fcfae1
 langcode: en
 status: true
-dependencies:
-  module:
-    - page_manager_publishable_variants
+dependencies: {  }
 id: homepage
 label: Homepage
 description: 'Year specific landing page'
 use_admin_theme: false
-path: '/home/{year}'
+path: /home
 access_logic: and
 access_conditions: {  }
-parameters:
-  year:
-    machine_name: year
-    label: Year
-    type: integer
+parameters: {  }

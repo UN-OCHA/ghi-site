@@ -97,6 +97,7 @@ function common_design_subtheme_preprocess_region(&$variables) {
 function common_design_subtheme_preprocess_block(&$variables) {
   $full_width_blocks = [
     'generic_link_carousel',
+    'global_homepages',
     'global_plan_overview_map',
     'global_plan_table',
     'system_menu_block:operations-menu',
@@ -153,7 +154,7 @@ function common_design_subtheme_preprocess_block(&$variables) {
 
   // Make sure that full width blocks with a title show that title inside the
   // content area.
-  if (!empty($variables['content']['#full_width']) && !empty($variables['content']['#title'])) {
+  if (!empty($variables['full_width']) && !empty($variables['content']['#title'])) {
     $variables['title_attributes']['class'][] = 'content-width';
   }
 

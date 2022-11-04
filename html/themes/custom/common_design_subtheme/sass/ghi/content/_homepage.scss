@@ -1,0 +1,21 @@
+body.path-home #main-content {
+  padding-right: 0;
+  padding-left: 0;
+}
+.ghi-block-global-homepages {
+  & > .cd-block-title {
+    margin-bottom: 0.5rem;
+    font-size: var(--cd-font-size--2xbase);
+    font-weight: 700;
+  }
+
+  .ghi-block:first-child {
+    margin-top: 0;
+    padding-top: 0;
+
+    .cd-block-title {
+      font-size: var(--cd-font-size--2xbase);
+      font-weight: 400;
+    }
+  }
+}
