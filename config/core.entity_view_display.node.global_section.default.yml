@@ -40,6 +40,7 @@ third_party_settings:
       - 'Lists (Views)'
       - Menus
       - 'Narrative Content'
+      - Page
       - 'Plan cluster elements'
       - 'Plan elements'
       - Sections
@@ -50,7 +51,9 @@ third_party_settings:
       - core
     entity_view_mode_restriction:
       allowed_layouts: {  }
-      denylisted_blocks: {  }
+      denylisted_blocks:
+        Global:
+          - global_homepages
       allowlisted_blocks:
         'Inline blocks':
           - 'inline_block:basic'
@@ -63,6 +66,7 @@ third_party_settings:
         - HID
         - 'Lists (Views)'
         - Menus
+        - Page
         - 'Plan cluster elements'
         - 'Plan elements'
         - 'Social Auth'

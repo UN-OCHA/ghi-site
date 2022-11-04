@@ -6,7 +6,12 @@ id: homepage
 label: Homepage
 description: 'Year specific landing page'
 use_admin_theme: false
-path: /home
+path: '/home/{year}'
 access_logic: and
 access_conditions: {  }
-parameters: {  }
+parameters:
+  year:
+    machine_name: year
+    label: Year
+    type: integer
+    optional: true

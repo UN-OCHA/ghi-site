@@ -31,7 +31,7 @@ trait PageManagerTrait {
     // Otherwise we might be in the page manager config UI.
     $variant_id = NULL;
     $page_parameters = $route_match->getRawParameters()->all();
-    if (array_key_exists('machine_name', $page_parameters) && array_key_exists('step', $page_parameters)) {
+    if (array_key_exists('machine_name', $page_parameters) && array_key_exists('step', $page_parameters) && strpos($page_parameters['step'], '__')) {
       // The step parameter looks like this and holds the variant id:
       // page_variant__homepage-layout_builder-0__layout_builder
       // The variant id in this case is "homepage-layout_builder-0".

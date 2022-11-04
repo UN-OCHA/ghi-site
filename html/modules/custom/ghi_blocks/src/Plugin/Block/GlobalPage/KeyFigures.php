@@ -3,9 +3,11 @@
 namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\HomepageBlockTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\hpc_common\Helpers\CommonHelper;
@@ -41,6 +43,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Op
 
   use ConfigurationContainerTrait;
   use ConfigurationContainerGroup;
+  use HomepageBlockTrait;
 
   const MAX_ITEMS = 30;
 
@@ -68,6 +71,20 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Op
       'people_target' => $caseload_values['target'],
       'people_reached_percent' => CommonHelper::calculateRatio($caseload_values['reached'], $caseload_values['target']),
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function label() {
+    $label = parent::label();
+    if ($year_switcher = $this->buildHomepageYearSwitcher()) {
+      return [
+        ['#markup' => Markup::create($label)],
+        $year_switcher,
+      ];
+    }
+    return $label;
   }
 
   /**
@@ -132,10 +149,19 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Op
       ];
     }
 
-    return $tabs ? [
+    if (empty($tabs)) {
+      return NULL;
+    }
+    $build = [
       '#theme' => 'tab_container',
       '#tabs' => $tabs,
-    ] : NULL;
+    ];
+    if ($this->buildHomepageYearSwitcher()) {
+      $build['#block_attributes'] = [
+        'class' => ['has-year-switcher'],
+      ];
+    }
+    return $build;
   }
 
   /**
