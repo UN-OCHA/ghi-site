@@ -4,10 +4,8 @@ status: true
 dependencies:
   config:
     - page_manager.page.homepage
-  module:
-    - hpc_common
 id: homepage-layout_builder-0
-label: '2021'
+label: Page
 weight: 0
 variant: layout_builder
 variant_settings:
@@ -16,136 +14,10 @@ variant_settings:
   weight: 0
   uuid: fe47f58a-3387-4071-9d3e-0fb86f602164
   title_type: manual
-  manual_title: 'Global Humanitarian Overview 2021'
+  manual_title: ''
   title_from_block: ''
-  sections:
-    -
-      layout_id: layout_twocol_section
-      layout_settings:
-        label: Header
-        context_mapping: {  }
-        column_widths: 75-25
-      components:
-        3b7bf72f-d416-4285-875f-aaf579bef11f:
-          uuid: 3b7bf72f-d416-4285-875f-aaf579bef11f
-          region: first
-          configuration:
-            id: home_visual_explorer
-            label: 'Visual explorer'
-            label_display: '0'
-            provider: ghi_blocks
-            context_mapping:
-              year: year
-            hpc:
-              label: 'Visual explorer'
-              label_display: 0
-          weight: 0
-          additional: {  }
-        50fb6d32-5a84-4a13-8243-b22cf61d9cec:
-          uuid: 50fb6d32-5a84-4a13-8243-b22cf61d9cec
-          region: second
-          configuration:
-            id: home_id_sheet
-            label: 'ID Sheet'
-            label_display: '0'
-            provider: ghi_blocks
-            context_mapping:
-              year: year
-            hpc:
-              label: 'ID Sheet'
-              label_display: 0
-          weight: 0
-          additional: {  }
-      third_party_settings: {  }
-    -
-      layout_id: layout_twocol_section
-      layout_settings:
-        label: Content
-        context_mapping: {  }
-        column_widths: 25-75
-      components:
-        e266a3c8-1160-46c9-a87f-35e3afdfe0c8:
-          uuid: e266a3c8-1160-46c9-a87f-35e3afdfe0c8
-          region: second
-          configuration:
-            id: generic_external_widget
-            label: 'External Widget'
-            label_display: '0'
-            provider: ghi_blocks
-            context_mapping:
-              year: year
-            hpc:
-              select_number: '2'
-              widgets:
-                -
-                  widget_url: 'https://tools.humdata.org/quickcharts/app/show;url=https%3A%2F%2Fproxy.hxlstandard.org%2Fdata.csv%3Ffilter01%3Dselect%26select-query01-01%3D%2523country%252Bcode%253DG%26url%3Dhttps%253A%252F%252Fdocs.google.com%252Fspreadsheets%252Fd%252F1MArQSVdbLXLaQ8ixUKo9jIjifTCVDDxTJYbGoRuw3Vw%252Fexport%253Fformat%253Dcsv;embeddedSource=undefined;embeddedUrl=undefined;embeddedDate=undefined;embeddedConfig=%7B%22configVersion%22:5,%22bites%22:%5B%7B%22tempShowSaveCancelButtons%22:false,%22ingredient%22:%7B%22aggregateColumn%22:%22%23date%2Byear%22,%22valueColumn%22:%22%23value%2Bfunding%2Btotal%2Busd%22,%22aggregateFunction%22:%22sum%22,%22dateColumn%22:null,%22comparisonValueColumn%22:%22%23value%2Bfunding%2Brequired%2Busd%22,%22comparisonOperator%22:%22%2F%22,%22filters%22:%7B%7D,%22title%22:%22Requirements%20and%20Funding%20by%20Year%22,%22description%22:%22Stacked%20bar%20chart%20comparing%20requirements%20and%20funding%20by%20year%22%7D,%22type%22:%22comparison-chart%22,%22errorMsg%22:null,%22computedProperties%22:%7B%22explainedFiltersMap%22:%7B%7D,%22pieChart%22:false,%22dataTitle%22:%22Response%20plan%20funding%20%28US$%29%22,%22comparisonDataTitle%22:%22Total%20requirements%20%28US$%29%22%7D,%22uiProperties%22:%7B%22swapAxis%22:false,%22showGrid%22:false,%22color%22:%22%23026cb6%22,%22sortingByValue1%22:null,%22sortingByCategory1%22:%22ASC%22,%22stackChart%22:true,%22comparisonColor%22:%22%23f47932%22,%22sortingByValue2%22:null,%22internalColorPattern%22:%5B%22%23026cb6%22,%22%23b3d2e9%22,%22%23f47932%22,%22%23fbd6c1%22,%22%236a3a82%22,%22%23d2c3d9%22%5D,%22limit%22:10,%22description%22:%22%22,%22title%22:%22Requirements%20and%20funding%202011%20-%202021%20%28US$%29%22,%22dataTitle%22:%22Response%20plan%20funding%22,%22comparisonDataTitle%22:%22Total%20requirements%22%7D,%22dataProperties%22:%7B%7D,%22displayCategory%22:%22Charts%22,%22hashCode%22:-280256487%7D%5D,%22cookbookName%22:%22fts%22%7D;embeddedTitle=Quick%20Charts;recipeUrl=https:%2F%2Fraw.githubusercontent.com%2FOCHA-DAP%2Fhxl-recipes%2F1.0.7%2Fcookbook-library.json;sample=false;allowBiteSwitch=false;externalColorPattern=%23026cb6,%23b3d2e9,%23f47932,%23fbd6c1,%236a3a82,%23d2c3d9;allowCustomColor=false;externalCss=https:%2F%2Fhum-insight.info%2Fsites%2Fall%2Fmodules%2Fcustom%2Fhpc_content_panes%2Fcss%2Fquickcharts.css;maxNumberOfValues=10;chartSettings=true;chartShare=true'
-                  process_widget_url: 1
-                  widget_url_skip_validation: 0
-                  widget_height: 350px
-                -
-                  widget_url: 'https://tools.humdata.org/quickcharts/app/show;url=https%3A%2F%2Fproxy.hxlstandard.org%2Fdata.csv%3Ffilter01%3Dselect%26select-query01-01%3D%2523country%252Bcode%253DG%26url%3Dhttps%253A%252F%252Fdocs.google.com%252Fspreadsheets%252Fd%252F1MArQSVdbLXLaQ8ixUKo9jIjifTCVDDxTJYbGoRuw3Vw%252Fexport%253Fformat%253Dcsv;embeddedSource=undefined;embeddedUrl=undefined;embeddedDate=undefined;embeddedConfig=%7B%22configVersion%22%3A5%2C%22bites%22%3A%5B%7B%22tempShowSaveCancelButtons%22%3Afalse%2C%22ingredient%22%3A%7B%22aggregateColumn%22%3Anull%2C%22valueColumn%22%3A%22%23targeted%22%2C%22aggregateFunction%22%3A%22sum%22%2C%22dateColumn%22%3A%22%23date%2Byear%22%2C%22comparisonValueColumn%22%3Anull%2C%22comparisonOperator%22%3Anull%2C%22filters%22%3A%7B%7D%2C%22description%22%3A%22%22%7D%2C%22type%22%3A%22timeseries%22%2C%22errorMsg%22%3Anull%2C%22computedProperties%22%3A%7B%22explainedFiltersMap%22%3A%7B%22remove%20empty%20valued%20rows%22%3A%7B%22filterWith%22%3A%5B%7B%22%23targeted%22%3A%22is%20not%20empty%22%7D%5D%2C%22filterWithout%22%3A%5B%5D%7D%7D%2C%22pieChart%22%3Afalse%2C%22title%22%3A%22Sum%20of%20People%20targeted%20for%20assistance%20by%20Year%22%2C%22dataTitle%22%3A%22People%20targeted%20for%20assistance%22%7D%2C%22uiProperties%22%3A%7B%22swapAxis%22%3Atrue%2C%22showGrid%22%3Afalse%2C%22color%22%3A%22%23f2645a%22%2C%22sortingByValue1%22%3A%22DESC%22%2C%22sortingByCategory1%22%3Anull%2C%22showPoints%22%3Atrue%2C%22showAllDates%22%3Atrue%2C%22dateFormat%22%3A%22%25Y%22%2C%22internalColorPattern%22%3A%5B%22%231ebfb3%22%2C%22%230077ce%22%2C%22%23f2645a%22%2C%22%239C27B0%22%5D%2C%22title%22%3A%22People%20targeted%20for%20assistance%202011%20-%202021%22%7D%2C%22dataProperties%22%3A%7B%7D%2C%22displayCategory%22%3A%22Timeseries%22%2C%22hashCode%22%3A-1121774458%7D%5D%7D;singleWidgetMode=true;embeddedTitle=Quick Charts;recipeUrl=https%3A%2F%2Fraw.githubusercontent.com%2FOCHA-DAP%2Fhxl-recipes%2F1.0.8%2Fcookbook-library.json;externalCss=https:%2F%2Fhum-insight.info%2Fsites%2Fall%2Fmodules%2Fcustom%2Fhpc_content_panes%2Fcss%2Fquickcharts.css;sample=false;chartSettings=true;chartShare=true'
-                  process_widget_url: 1
-                  widget_url_skip_validation: 0
-                  widget_height: 350px
-              label: 'External Widget'
-              label_display: 0
-          weight: 3
-          additional: {  }
-        38d4f79c-0bb3-4cc4-b381-084e85b11a51:
-          uuid: 38d4f79c-0bb3-4cc4-b381-084e85b11a51
-          region: second
-          configuration:
-            id: home_plan_table
-            label: 'Interagency Response Plans 2021'
-            label_display: visible
-            provider: ghi_blocks
-            context_mapping:
-              year: year
-            hpc:
-              plans:
-                include: plan_type
-                hrp_status: rrp
-                plan_types:
-                  - '115'
-                  - 0
-                  - 0
-                  - 0
-                  - 0
-                  - 0
-                hide_unpublished: 0
-                hide_empty_requirements: 0
-              table:
-                funding_progress: 1
-                total_funding: 0
-                fts_icon: true
-              label: 'Interagency Response Plans 2021'
-              label_display: visible
-            data_sources:
-              plans: plan_overview_query
-          weight: 2
-          additional: {  }
-        6dafa99b-f069-4572-a8fd-38ac7b99f050:
-          uuid: 6dafa99b-f069-4572-a8fd-38ac7b99f050
-          region: second
-          configuration:
-            id: 'views_block:featured_sections-block_sections_featured'
-            label: ''
-            label_display: visible
-            provider: views
-            context_mapping:
-              field_year_value: year
-            views_label: ''
-            items_per_page: none
-          weight: 1
-          additional: {  }
-      third_party_settings: {  }
+  sections: null
 page: homepage
-selection_criteria:
-  -
-    id: page_parameter_condition
-    negate: false
-    context_mapping: {  }
-    parameter: year
-    value: '2021'
+selection_criteria: {  }
 selection_logic: and
 static_context: {  }
