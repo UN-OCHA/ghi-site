@@ -13,6 +13,7 @@ use Drupal\ghi_blocks\Controller\BaseObjectReferenceController;
 use Drupal\ghi_blocks\Controller\LayoutBuilderBlockController;
 use Drupal\ghi_blocks\Helpers\GlobalSettingsHelper;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\hpc_common\Helpers\UserHelper;
 use Drupal\layout_builder\Plugin\Block\InlineBlock;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\node\NodeInterface;
@@ -230,7 +231,7 @@ function ghi_blocks_preprocess_block(&$variables) {
     unset($variables['content']['#download_links']);
   }
 
-  if (\Drupal::currentUser()->hasPermission('administer site configuration')) {
+  if (UserHelper::isAdministrator() && array_key_exists('#block_instance', $variables['elements']['content'])) {
     $icons = $block->getAdminIcons();
     $variables['icons'] = array_values($icons);
     if (array_key_exists('api_url', $icons)) {

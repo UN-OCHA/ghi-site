@@ -29,6 +29,7 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\hpc_api\Helpers\ProfileHelper;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\hpc_downloads\DownloadSource\BlockSource;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
@@ -1814,7 +1815,12 @@ abstract class GHIBlockBase extends HPCBlockBase {
       '#class' => 'block-configuration',
     ];
     $block_uuid = $this->getUuid();
-    if (!empty($block_uuid)) {
+    // See if we can get a block instance based on the available information.
+    // If not then we don't want to add the reload link as it wouldn't function
+    // properly anyway. This situation happens when embedding a full node view,
+    // e.g. a homepage node, into a different page.
+    $block_instance = BlockHelper::getBlockInstance($this->getCurrentUri(), $this->getPluginId(), $block_uuid);
+    if (!empty($block_uuid) && $block_instance) {
       $url = Url::fromRoute('ghi_blocks.load_block', [
         'plugin_id' => $this->getPluginId(),
         'block_uuid' => $block_uuid,

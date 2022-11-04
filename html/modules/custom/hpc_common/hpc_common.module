@@ -226,14 +226,15 @@ function hpc_common_preprocess_block(&$vars) {
       return;
     }
     $endpoint_urls = $block_instance->getFullEndpointUrls();
-
-    if (!empty($endpoint_urls)) {
-      $vars['icons'][] = [
+    $icons = $vars['icons'] ?? [];
+    if ((!$icons || empty($icons['api_url'])) && !empty($endpoint_urls)) {
+      $vars['icons']['api_url'] = [
         '#theme' => 'hpc_tooltip',
         '#tooltip' => implode('<br />', $endpoint_urls),
         '#class' => 'api-url',
       ];
       $vars['attributes']['class'][] = 'has-api-url-tooltip';
+      $vars['icons'] = $icons;
     }
   }
 }
