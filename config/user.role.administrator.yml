@@ -42,6 +42,7 @@ dependencies:
     - layout_builder_ipe
     - media
     - node
+    - page_manager
     - page_manager_publishable_variants
     - publishcontent
     - social_api
@@ -75,6 +76,7 @@ permissions:
   - 'administer ghi global config'
   - 'administer menu'
   - 'administer nodes'
+  - 'administer pages'
   - 'administer remote services'
   - 'administer social api authentication'
   - 'administer social api autoposting'

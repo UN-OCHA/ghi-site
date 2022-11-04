@@ -1,8 +1,6 @@
 _core:
   default_config_hash: UVH1aJ4b44UM-VdPVN7hNNuuVqfReJxwfVeDQH1Hvsk
 ignored_config_entities:
-  - '// System settings.'
-  - 'system.site:page:front'
   - '// Smugmug API'
   - 'smugmug_api.settings:api_key'
   - 'smugmug_api.settings:api_secret'
