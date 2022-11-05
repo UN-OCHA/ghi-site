@@ -54,6 +54,12 @@
         $(window).trigger('scroll');
       }
 
+      // For ghi images that can't be found, hide them completely so that the
+      // captions or credits don't display all on their own.
+      $('.ghi-image-wrapper img').on('error', function() {
+        $(this).parents('.ghi-image-wrapper').hide();
+      });
+
       $('select').filter(function () {
         if ($(this).parents('[data-block-preview]').length) {
           return true;
