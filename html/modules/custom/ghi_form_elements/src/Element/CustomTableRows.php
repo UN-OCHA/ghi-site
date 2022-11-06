@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
+use Drupal\node\NodeInterface;
 
 /**
  * Provides a custom table rows element.
@@ -250,6 +251,16 @@ class CustomTableRows extends FormElement {
     ];
     foreach ($columns as $column_key => $column) {
       $default_value = $row_data === NULL ? NULL : ($row_data[$column_key] ?? '');
+      if (is_array($column) && $column['#type'] == 'entity_autocomplete' && $default_value) {
+        // Entity reference widget.
+        if (array_key_exists(0, $default_value) && array_key_exists('target_id', $default_value[0])) {
+          $node = \Drupal::entityTypeManager()->getStorage($column['#target_type'])->load($default_value[0]['target_id']);
+          $default_value = $node ?? NULL;
+        }
+        else {
+          $default_value = NULL;
+        }
+      }
 
       $column_title = is_array($column) ? $column['#title'] : $column;
       if (!empty($tooltip_map[$column_key])) {
@@ -275,6 +286,12 @@ class CustomTableRows extends FormElement {
         $option_types = ['select', 'radios', 'checkboxes'];
         if (in_array($row['columns'][$column_key]['#type'], $option_types)) {
           $value = $row['columns'][$column_key]['#options'][$value];
+        }
+        if ($value instanceof NodeInterface) {
+          $value = $value->label();
+        }
+        else {
+          $value = (string) $value;
         }
         $row['columns'][$column_key] = [
           '#type' => 'item',

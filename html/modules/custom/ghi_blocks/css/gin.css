@@ -14,3 +14,9 @@
   border: 1px solid var(--colorGinPrimary) !important;
   border-radius: 4px !important;
 }
+
+body[data-gin-accent] .dialog-off-canvas-main-canvas form .messages-list .messages.messages--info {
+  color: black;
+  background-color: lightgray;
+  border: 0;
+}

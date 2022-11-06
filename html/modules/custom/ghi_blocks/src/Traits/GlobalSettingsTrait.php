@@ -5,6 +5,7 @@ namespace Drupal\ghi_blocks\Traits;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Url;
+use Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\hpc_api\Query\EndpointQuery;
@@ -174,7 +175,7 @@ trait GlobalSettingsTrait {
       $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
         /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
         $plan = $plans[$plan_id] ?? NULL;
-        if (!$plan) {
+        if (!$plan || $plan instanceof PlanOverviewPlanMock) {
           return $row;
         }
         $row['name']['data'][0]['#markup'] = $plan->getShortName();

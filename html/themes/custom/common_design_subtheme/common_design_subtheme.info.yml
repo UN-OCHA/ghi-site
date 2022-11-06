@@ -16,6 +16,7 @@ regions:
   header_logo: Header logo
   header_navigation: Header navigation
   highlighted: Highlighted
+  help: Help
   page_image: Page image
   page_title: Page title
   page_subtitle: Page subtitle

@@ -12,6 +12,7 @@ use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock;
+use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\FieldHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
@@ -336,7 +337,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       }
     }
 
-    $this->applyTableConfiguration($header, $rows);
+    $this->applyTableConfiguration($header, $rows, $plans);
     $this->applyGlobalConfigurationTable($header, $rows, $cache_tags, $year, $plans);
 
     if (empty($rows)) {
@@ -377,35 +378,34 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
    *   The build header array.
    * @param array $rows
    *   The build table rows.
+   * @param \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[] $plans
+   *   An array of plan objects.
    */
-  private function applyTableConfiguration(array &$header, array &$rows) {
+  private function applyTableConfiguration(array &$header, array &$rows, array $plans) {
     $config = $this->getBlockConfig();
     $table_config = $config['table'] ?? [];
-
-    if (empty($table_config['total_funding'])) {
-      // Hide the funding column.
-      unset($header['funding']);
-      $rows = array_map(function ($row) {
-        unset($row['funding']);
-        return $row;
-      }, $rows);
-    }
-
-    if (empty($table_config['funding_progress'])) {
-      // Hide the coverage column.
-      unset($header['coverage']);
-      $rows = array_map(function ($row) {
-        unset($row['coverage']);
-        return $row;
-      }, $rows);
-    }
-
     if (empty($table_config['fts_icon'])) {
       $rows = array_map(function ($row) {
-        // @todo Seomthing should happen here.
+        // @todo Something should happen here.
         return $row;
       }, $rows);
     }
+
+    // Support links on custom rows (using a mock object).
+    $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
+      /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
+      $plan = $plans[$plan_id] ?? NULL;
+      if (!$plan || !$plan instanceof PlanOverviewPlanMock) {
+        // We only want to setup links for custom rows.
+        return $row;
+      }
+      $plan_link = $plan->toLink();
+      if (!$plan_link) {
+        return $row;
+      }
+      $row['name'] = ['data' => [0 => $plan_link->toRenderable()]];
+      return $row;
+    }, $rows);
   }
 
   /**
@@ -427,6 +427,8 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'comment' => NULL,
       ],
       'custom_rows' => [
+        'replace' => FALSE,
+        'ignore_filters' => TRUE,
         'rows' => [],
       ],
     ];
@@ -574,6 +576,25 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       '#tree' => TRUE,
       '#group' => 'tabs',
     ];
+    $form['custom_rows']['replace'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Replace API plans'),
+      '#description' => $this->t('Check this to discard all plans coming from the API and to use only the rows configured here. Note that this applies only if at least a single row is added below.'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+        'custom_rows',
+        'replace',
+      ]),
+    ];
+    $form['custom_rows']['ignore_filters'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Ignore standard filters'),
+      '#description' => $this->t('Check this to ignore the configured filters (e.g. by plan type or to hide rows with empty requirements.'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+        'custom_rows',
+        'ignore_filters',
+      ]),
+    ];
+
     $form['custom_rows']['rows'] = [
       '#type' => 'custom_table_rows',
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
@@ -582,6 +603,21 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       ]),
       '#columns' => [
         'plan_name' => $this->t('Plan name'),
+        'link' => [
+          '#type' => 'entity_autocomplete',
+          '#title' => $this->t('Link'),
+          '#target_type' => 'node',
+          '#tags' => TRUE,
+          '#selection_handler' => 'views',
+          '#selection_settings' => [
+            'view' => [
+              'view_name' => 'content_autocomplete',
+              'display_name' => 'entity_reference',
+              'arguments' => ['article+section+global_section'],
+            ],
+            'match_operator' => 'CONTAINS',
+          ],
+        ],
         'plan_type' => [
           '#type' => 'select',
           '#title' => $this->t('Plan type'),
@@ -703,33 +739,52 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
    *   Array of plan objects.
    */
   private function getPlans() {
+    $config = $this->getBlockConfig();
+    $defaults = $this->getConfigurationDefaults();
+    $custom_rows_config = $config['custom_rows'] ?? $defaults['custom_rows'];
+    $plans_config = $config['plans'] ?? $defaults['plans'];
+
     $plans = $this->getPlanQuery()->getPlans();
     $custom_rows = $this->getCustomPlanRows();
     if (!empty($custom_rows)) {
-      $plans = array_merge($plans, $custom_rows);
+      if ($custom_rows_config['replace']) {
+        $plans = $custom_rows;
+      }
+      else {
+        $plans = array_merge($plans, $custom_rows);
+      }
     }
     if (empty($plans)) {
       return $plans;
     }
-    $config = $this->getBlockConfig();
+
     $plans_config = $config['plans'] ?? [];
 
     if (empty($plans_config['include']) || $plans_config['include'] == 'hrp_status') {
       if (!empty($plans_config['hrp_status']) && $plans_config['hrp_status'] == 'rrp') {
         // Filter for regional response plans.
-        $plans = array_filter($plans, function ($plan) {
+        $plans = array_filter($plans, function ($plan) use ($custom_rows_config) {
+          if ($custom_rows_config['ignore_filters'] && $plan instanceof PlanOverviewPlanMock) {
+            return TRUE;
+          }
           return $plan->isRrp();
         });
       }
       elseif (!empty($plans_config['hrp_status']) && $plans_config['hrp_status'] == 'nohrp') {
         // Filter for other plans.
-        $plans = array_filter($plans, function ($plan) {
+        $plans = array_filter($plans, function ($plan) use ($custom_rows_config) {
+          if ($custom_rows_config['ignore_filters'] && $plan instanceof PlanOverviewPlanMock) {
+            return TRUE;
+          }
           return $plan->isOther();
         });
       }
       else {
         // Filter for HRPs and Flash appeals.
-        $plans = array_filter($plans, function ($plan) {
+        $plans = array_filter($plans, function ($plan) use ($custom_rows_config) {
+          if ($custom_rows_config['ignore_filters'] && $plan instanceof PlanOverviewPlanMock) {
+            return TRUE;
+          }
           return $plan->isHrp() || $plan->isFlashAppeal();
         });
       }
@@ -737,7 +792,10 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     elseif (!empty($plans_config['plan_types'])) {
       // Filter based on selected plan types.
       $selected_plan_type_tids = array_filter($plans_config['plan_types']);
-      $plans = array_filter($plans, function ($plan) use ($selected_plan_type_tids) {
+      $plans = array_filter($plans, function ($plan) use ($selected_plan_type_tids, $custom_rows_config) {
+        if ($custom_rows_config['ignore_filters'] && $plan instanceof PlanOverviewPlanMock) {
+          return TRUE;
+        }
         $term = $this->getTermObjectByName($plan->getOriginalTypeName(), $plan->isTypeIncluded());
         return $term && in_array($term->id(), $selected_plan_type_tids);
       });
@@ -745,24 +803,25 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
 
     // Filter out plans without requirements.
     if (array_key_exists('hide_empty_requirements', $plans_config) && $plans_config['hide_empty_requirements']) {
-      // Get information about published plans.
-      foreach ($plans as $key => $plan) {
-        if (empty($plan->getRequirements())) {
-          unset($plans[$key]);
+      $plans = array_filter($plans, function ($plan) use ($custom_rows_config) {
+        if ($custom_rows_config['ignore_filters'] && $plan instanceof PlanOverviewPlanMock) {
+          return TRUE;
         }
-      }
+        return !empty($plan->getRequirements());
+      });
     }
 
     // Filter out plans without published sections.
     if (array_key_exists('hide_unpublished', $plans_config) && $plans_config['hide_unpublished']) {
       // Get information about published plans.
-      foreach ($plans as $key => $plan) {
+      $plans = array_filter($plans, function ($plan) use ($custom_rows_config) {
+        if ($custom_rows_config['ignore_filters'] && $plan instanceof PlanOverviewPlanMock) {
+          return TRUE;
+        }
         $plan_base_object = $plan->getEntity();
         $section = $plan_base_object ? $this->sectionManager->loadSectionForBaseObject($plan_base_object) : NULL;
-        if (!$section || !$section->isPublished()) {
-          unset($plans[$key]);
-        }
-      }
+        return $section && $section->isPublished();
+      });
     }
 
     // Apply the global configuration to limit the source data.

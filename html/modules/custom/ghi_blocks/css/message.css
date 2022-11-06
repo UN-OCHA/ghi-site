@@ -1,0 +1,9 @@
+.ghi-message {
+  padding: 0 !important;
+  background-color: var(--ghi-default-background-color);
+  margin: 2rem auto !important;
+}
+.ghi-message p {
+  padding: 1rem 2rem;
+  margin: 0;
+}

@@ -159,6 +159,14 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'ghi-image',
     ],
+    'ghi_message' => [
+      'variables' => [
+        'message' => NULL,
+        'type' => NULL,
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'ghi-message',
+    ],
   ];
 }
 
