@@ -2,6 +2,9 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Mocks;
 
+use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
 use Drupal\hpc_common\Helpers\FieldHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
@@ -26,12 +29,16 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
    */
   protected function map() {
     $data = $this->getRawData();
+    $link = (array) ($data->link ?? []);
     return (object) [
       'id' => md5($data->plan_name),
       'name' => $data->plan_name,
       'funding' => (int) ($data->total_funding ?? 0),
       'requirements' => (int) ($data->total_requirements ?? 0),
       'coverage' => (float) ($data->funding_progress ?? 0) * 100,
+      // We support to pass in a value structure from an entity reference (or
+      // entity_autocomplete for that matter). We assume it's a node reference.
+      'target_node_id' => NestedArray::getValue($link, [0, 'target_id']),
     ];
   }
 
@@ -57,6 +64,24 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
    */
   public function getEntity() {
     return NULL;
+  }
+
+  /**
+   * Get a link associated to this mock object.
+   *
+   * We support to pass in a value structure from an entity reference (or
+   * entity_autocomplete for that matter). We assume it's a node reference.
+   *
+   * @return \Drupal\Core\Link|null
+   *   A link object or NULL.
+   */
+  public function toLink() {
+    if (!$this->target_node_id) {
+      return NULL;
+    }
+    return Link::fromTextAndUrl($this->name, Url::fromRoute('entity.node.canonical', [
+      'node' => $this->target_node_id,
+    ]));
   }
 
   /**

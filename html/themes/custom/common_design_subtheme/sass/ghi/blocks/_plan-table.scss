@@ -2,14 +2,14 @@
   table {
     tbody {
       td[data-column="name"] {
+        display: flex;
+        justify-content: space-between;
+
         .tooltip.plan-type-icon[data-toggle] {
-          position: relative;
-          top: 0.5rem;
-          right: 1rem;
-          float: right;
           width: auto !important;
           min-width: 4rem;
           height: auto !important;
+          max-height: 1.5rem;
           text-align: center;
           color: $cd-white;
           // The default background color for plan type other and unknown

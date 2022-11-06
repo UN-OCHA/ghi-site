@@ -21,6 +21,10 @@ throbber:
       css/throbber.css: {}
   dependencies:
     - core/drupal.ajax
+message:
+  css:
+    component:
+      css/message.css: {}
 link_carousel:
   css:
     component:

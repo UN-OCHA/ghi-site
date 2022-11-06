@@ -25,3 +25,11 @@ body.path-frontpage #main-content {
     }
   }
 }
+
+// For the homepage container pages, which are editor only and show a message
+// on top.
+body.page-node-type-homepage {
+  .ghi-block:first-child {
+    margin-top: 2rem;
+  }
+}

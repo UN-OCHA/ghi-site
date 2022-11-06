@@ -313,3 +313,10 @@ function ghi_blocks_preprocess_ghi_image(&$variables) {
     ]),
   ];
 }
+
+/**
+ * Preprocess a message element.
+ */
+function ghi_blocks_preprocess_ghi_message(&$variables) {
+  $variables['type'] = $variables['type'] ?? 'info';
+}
