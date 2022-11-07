@@ -193,11 +193,14 @@ class PlanOverviewMap extends GHIBlockBase {
         'location_name' => $object->location->name,
         'latLng' => $object->location->latLng,
         'caseload' => [
-          $object->caseload->total_population,
+          // These values are used to construct the donuts, the order here is
+          // important.
           $object->caseload->in_need,
           $object->caseload->target,
         ],
         'funding' => [
+          // These values are used to construct the donuts, the order here is
+          // important.
           $object->funding->total_requirements,
           $object->funding->total_funding,
         ],
