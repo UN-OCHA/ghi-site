@@ -258,6 +258,9 @@ class SyncManager implements ContainerInjectionInterface {
               $value = $local_def['callback']($value);
             }
             $base_object->{$local_def['field']}->{$local_def['property']} = $value;
+            if ($local_def['property'] == 'uri') {
+              $base_object->{$local_def['field']}->options = [];
+            }
           }
         }
       }

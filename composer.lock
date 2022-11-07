@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0be25b902955e97a234721d2ed657337",
+    "content-hash": "676888b2ff0a18a5c3477136c7f08eeb",
     "packages": [
         {
             "name": "alchemy/zippy",
@@ -4758,6 +4758,54 @@
             }
         },
         {
+            "name": "drupal/quicklink",
+            "version": "2.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/quicklink.git",
+                "reference": "2.0.1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/quicklink-2.0.1.zip",
+                "reference": "2.0.1",
+                "shasum": "5f3f4b79e80d58b8337213ad8fe03ded4d5a3ad4"
+            },
+            "require": {
+                "drupal/core": "^8 || ^9"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "2.0.1",
+                    "datestamp": "1652877953",
+                    "security-coverage": {
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "mherchel",
+                    "homepage": "https://www.drupal.org/user/118428"
+                }
+            ],
+            "description": "Installs Quicklink JS library to prefetch linked pages.",
+            "homepage": "https://www.drupal.org/project/quicklink",
+            "keywords": [
+                "Drupal"
+            ],
+            "support": {
+                "source": "https://git.drupalcode.org/project/quicklink",
+                "issues": "https://www.drupal.org/project/issues/quicklink"
+            }
+        },
+        {
             "name": "drupal/rabbit_hole",
             "version": "1.0.0-beta10",
             "source": {
@@ -5513,6 +5561,62 @@
             "support": {
                 "source": "http://cgit.drupalcode.org/viewsreference",
                 "issues": "http://drupal.org/project/issues/viewsreference"
+            }
+        },
+        {
+            "name": "drupal/warmer",
+            "version": "2.0.8",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/warmer.git",
+                "reference": "2.0.8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/warmer-2.0.8.zip",
+                "reference": "2.0.8",
+                "shasum": "3c15c351385ed85979921c0525639a608fed494d"
+            },
+            "require": {
+                "drupal/core": "^8.8 || ^9.0",
+                "php": ">=5.6.0",
+                "vipnytt/sitemapparser": "^1.0"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "2.0.8",
+                    "datestamp": "1664008095",
+                    "security-coverage": {
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
+                    }
+                },
+                "drush": {
+                    "services": {
+                        "drush.services.yml": "^9"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Mateu Aguiló Bosch",
+                    "homepage": "https://www.drupal.org/user/550110",
+                    "email": "mateu@mateuaguilo.com"
+                },
+                {
+                    "name": "slv_",
+                    "homepage": "https://www.drupal.org/user/826088"
+                }
+            ],
+            "description": "Module that provides infrastructure for common cache warming/pre-fetching techniques.",
+            "homepage": "https://www.drupal.org/project/warmer",
+            "support": {
+                "source": "https://git.drupalcode.org/project/warmer"
             }
         },
         {
@@ -12755,6 +12859,68 @@
                 "source": "https://github.com/UN-OCHA/ocha_snap/tree/v8.5.0"
             },
             "time": "2022-09-07T08:46:54+00:00"
+        },
+        {
+            "name": "vipnytt/sitemapparser",
+            "version": "v1.1.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/VIPnytt/SitemapParser.git",
+                "reference": "f05d00702304e35859ea524553a3229f27c00476"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/VIPnytt/SitemapParser/zipball/f05d00702304e35859ea524553a3229f27c00476",
+                "reference": "f05d00702304e35859ea524553a3229f27c00476",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "ext-simplexml": "*",
+                "guzzlehttp/guzzle": "^6.0 || ^7.0",
+                "lib-libxml": "*",
+                "php": "^5.6 || ^7.0 || ^8.0"
+            },
+            "require-dev": {
+                "codeclimate/php-test-reporter": "^0",
+                "phpunit/phpunit": "^5.0 || ^6.0 || ^7.0 || ^8.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "vipnytt\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "VIP nytt",
+                    "email": "vipnytt@gmail.com",
+                    "role": "creator"
+                },
+                {
+                    "name": "Jan-Petter Gundersen",
+                    "email": "europe.jpg@gmail.com",
+                    "role": "developer"
+                }
+            ],
+            "description": "XML Sitemap parser class compliant with the Sitemaps.org protocol.",
+            "homepage": "https://github.com/VIPnytt/SitemapParser",
+            "keywords": [
+                "Sitemap",
+                "parser",
+                "robots.txt",
+                "sitemaps.org",
+                "xml"
+            ],
+            "support": {
+                "issues": "https://github.com/VIPnytt/SitemapParser/issues",
+                "source": "https://github.com/VIPnytt/SitemapParser/tree/v1.1.5"
+            },
+            "time": "2021-10-20T15:06:45+00:00"
         },
         {
             "name": "webflo/drupal-finder",
