@@ -6,6 +6,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Url;
 
 /**
  * Defines the Base object entity.
@@ -59,6 +60,17 @@ use Drupal\Core\Entity\EntityTypeInterface;
 class BaseObject extends ContentEntityBase implements BaseObjectInterface {
 
   use EntityChangedTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function toUrl($rel = 'canonical', array $options = []) {
+    // Prevent linking to the canonical URL.
+    if ($rel == 'canonical') {
+      return Url::fromUri('route:<nolink>')->setOptions($options);
+    }
+    return parent::toUrl($rel, $options);
+  }
 
   /**
    * {@inheritdoc}
