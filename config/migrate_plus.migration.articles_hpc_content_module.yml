@@ -11,6 +11,7 @@ migration_tags:
 migration_group: ncms
 label: 'Articles from the HPC Content Module backend'
 source:
+  plugin: remote_source_graphql
   track_changes: true
   remote_source: hpc_content_module
   fields:
