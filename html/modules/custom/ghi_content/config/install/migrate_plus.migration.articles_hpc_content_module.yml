@@ -4,6 +4,7 @@ migration_group: ncms
 migration_tags:
   - 'NCMS'
 source:
+  plugin: remote_source_graphql
   track_changes: true
   remote_source: hpc_content_module
   fields:
