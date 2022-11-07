@@ -227,6 +227,8 @@ class ImportBlockForm extends ConfigureBlockFormBase {
 
   /**
    * Submit handler for the import form.
+   *
+   * @todo Document what this does.
    */
   public function submitForm(&$form, FormStateInterface $form_state) {
     $action = end($form_state->getTriggeringElement()['#parents']);

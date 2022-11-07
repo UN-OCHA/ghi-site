@@ -82,16 +82,25 @@ class BlockHandler implements ContainerInjectionInterface {
    * @see hook_contextual_links_alter()
    */
   public function alterLinks(array &$links, $group, array $route_parameters) {
-    if (empty($route_parameters['section_storage_type']) || $route_parameters['section_storage_type'] != 'overrides') {
+    $allowed_storage_types = [
+      'overrides',
+      'page_manager',
+    ];
+    if (empty($route_parameters['section_storage_type']) || !in_array($route_parameters['section_storage_type'], $allowed_storage_types)) {
       return;
     }
 
     unset($links['layout_builder_block_move']);
 
-    [$entity_type_id, $id] = explode('.', $route_parameters['section_storage']);
+    if ($route_parameters['section_storage_type'] == 'page_manager') {
+      $entity = $this->entityTypeManager->getStorage('page_variant')->load($route_parameters['section_storage']);
+    }
+    else {
+      [$entity_type_id, $id] = explode('.', $route_parameters['section_storage']);
+      $entity = $this->entityTypeManager->getStorage($entity_type_id)->load($id);
+    }
     $uuid = $route_parameters['uuid'];
     $delta = $route_parameters['delta'];
-    $entity = $this->entityTypeManager->getStorage($entity_type_id)->load($id);
     $section_storage = $this->getSectionStorageForEntity($entity, 'default');
     $section_storage = $this->layoutTempstoreRepository->get($section_storage);
 
