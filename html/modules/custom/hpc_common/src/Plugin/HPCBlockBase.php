@@ -387,7 +387,15 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     elseif (!empty($page_parameters['section_storage'])) {
       // Layout builder editing context.
       $entity = $page_parameters['section_storage']->getContextValue('entity');
-      $this->page = $entity->bundle() . '_' . $entity->getEntityTypeId();
+      if ($entity->bundle() == 'page_variant') {
+        // Page variant.
+        /** @var \Drupal\page_manager\Entity\PageVariant $entity */
+        $this->page = $entity->getPage()->id();
+      }
+      else {
+        // Content entity, e.g. node.
+        $this->page = $entity->bundle() . '_' . $entity->getEntityTypeId();
+      }
     }
     else {
       // No page identified.
