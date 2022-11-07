@@ -100,7 +100,6 @@
     }
 
     // Set the legend caption.
-    console.log(state.tab_data);
     if (state.tab_data.legend_caption) {
       let legend_caption = $('#' + map_id + '-legend div.legend-caption');
       if (!legend_caption.length) {
