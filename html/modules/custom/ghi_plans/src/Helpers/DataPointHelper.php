@@ -105,13 +105,13 @@ class DataPointHelper {
     $data_point_2 = $data_points[1]['index'];
     switch ($data_point_conf['processing']) {
       case 'single':
-        $field = $attachment->fields[$data_point_1];
-        return $attachment->isMeasurementField($field);
+        $field = $attachment->fields[$data_point_1] ?? NULL;
+        return $field ? $attachment->isMeasurementField($field) : FALSE;
 
       case 'calculated':
-        $field_1 = $attachment->fields[$data_point_1];
-        $field_2 = $attachment->fields[$data_point_2];
-        return $attachment->isMeasurementField($field_1) || $attachment->isMeasurementField($field_2);
+        $field_1 = $attachment->fields[$data_point_1] ?? NULL;
+        $field_2 = $attachment->fields[$data_point_2] ?? NULL;
+        return ($field_1 && $attachment->isMeasurementField($field_1)) || ($field_2 && $attachment->isMeasurementField($field_2));
 
     }
     return FALSE;
