@@ -16,6 +16,7 @@ dependencies:
     - node.type.section
   module:
     - contextual
+    - ghi_base_objects
     - ghi_content
     - layout_builder
     - layout_builder_ipe
@@ -34,6 +35,7 @@ permissions:
   - 'access contextual links'
   - 'access remote content'
   - 'access toolbar'
+  - 'administer base object entities'
   - 'administer nodes'
   - 'configure all homepage node layout overrides'
   - 'configure editable homepage node layout overrides'
