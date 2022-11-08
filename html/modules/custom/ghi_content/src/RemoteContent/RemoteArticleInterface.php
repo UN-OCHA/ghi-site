@@ -51,6 +51,14 @@ interface RemoteArticleInterface {
   public function getTitle();
 
   /**
+   * Get the section of the article.
+   *
+   * @return string
+   *   The article section.
+   */
+  public function getSection();
+
+  /**
    * Get the updated time of the article.
    *
    * @return int

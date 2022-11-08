@@ -27,6 +27,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     $fields = [
       'id',
       'title',
+      'section',
       'summary',
       'tags',
       'created',

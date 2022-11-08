@@ -28,8 +28,12 @@
 %}
 {{ attach_library('common_design/cd-page-title') }}
 
-{{ title_prefix }}
+{% if title_prefix %}
+  <span class="title-prefix">{{ title_prefix }}</span>
+{% endif %}
 {% if title %}
   <h1{{ title_attributes.addClass(classes) }}>{{ title }}</h1>
 {% endif %}
-{{ title_suffix }}
+{% if title_suffix %}
+  <span class="title-prefix">{{ title_suffix }}</span>
+{% endif %}
