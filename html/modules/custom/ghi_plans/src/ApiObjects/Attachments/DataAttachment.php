@@ -618,6 +618,9 @@ class DataAttachment extends AttachmentBase {
    */
   public function getMeasurements() {
     $attachment = $this->getRawData();
+    if (!$attachment || !is_object($attachment)) {
+      return NULL;
+    }
     if (!property_exists($attachment, 'measurements')) {
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\MeasurementQuery $measurements_query */
       $measurements_query = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('measurement_query');
