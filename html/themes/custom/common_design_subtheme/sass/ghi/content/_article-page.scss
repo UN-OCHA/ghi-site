@@ -13,8 +13,24 @@ body.page-node-type-article {
       font-weight: 700;
     }
 
-    .title-prefix + .cd-page-title {
+    .cd-page-title {
       margin-top: 1rem;
+      margin-bottom: 1rem;
+    }
+  }
+
+  article.node--view-mode-full {
+
+    footer.node__meta {
+      padding: 1rem 0;
+      border-top: 1px solid var(--ghi-default-border-color);
+      border-bottom: 1px solid var(--ghi-default-border-color);
+
+      .node__submitted {
+        display: flex;
+        gap: 1rem;
+        font-size: var(--cd-font-size--small);
+      }
     }
   }
 }
