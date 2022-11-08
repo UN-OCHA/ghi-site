@@ -85,7 +85,7 @@ function hpc_common_preprocess_hpc_currency(array &$vars) {
     '#use_abbreviation' => $use_abbreviation,
     '#decimals' => $value > $billion ? 2 : ($value > $million / 2 ? 1 : 0),
     '#decimal_format' => $decimal_format,
-  ]));
+  ], TRUE, FALSE));
 }
 
 /**
