@@ -79,6 +79,8 @@ class ThemeHelper {
           '#amount' => $value,
           '#scale' => !empty($options['scale']) ? $options['scale'] : 'auto',
           '#decimal_format' => !empty($options['decimal_format']) ? $options['decimal_format'] : self::DECIMALS_POINT,
+          // If not specified, use the defaults from hpc_common_theme().
+          '#decimals' => !empty($options['decimals']) ? $options['decimals'] : 0,
         ];
 
       case 'hpc_currency':
@@ -87,6 +89,8 @@ class ThemeHelper {
           '#value' => $value,
           '#scale' => !empty($options['scale']) ? $options['scale'] : 'auto',
           '#decimal_format' => !empty($options['decimal_format']) ? $options['decimal_format'] : self::DECIMALS_POINT,
+          // If not specified, use the defaults from hpc_common_theme().
+          '#decimals' => !empty($options['decimals']) ? $options['decimals'] : NULL,
         ];
 
       case 'hpc_percent':

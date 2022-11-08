@@ -155,7 +155,9 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
     $sum = ($sum ?? $this->get('sum')) && !empty($type['allow_sum']);
 
     $theme = $type['theme'] ?? 'hpc_amount';
-    $build = ThemeHelper::getThemeOptions($theme, $this->getValue($type, $use_custom_value, $custom_value, $sum));
+    $build = ThemeHelper::getThemeOptions($theme, $this->getValue($type, $use_custom_value, $custom_value, $sum), [
+      'decimals' => $theme == 'hpc_amount' ? 1 : 2,
+    ]);
     return $build;
   }
 
