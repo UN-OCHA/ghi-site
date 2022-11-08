@@ -15,8 +15,10 @@ use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -98,9 +100,16 @@ class SyncManager implements ContainerInjectionInterface {
   protected $layoutTempstoreRepository;
 
   /**
+   * The manager class for endpoint query plugins.
+   *
+   * @var \Drupal\hpc_api\Query\EndpointQueryManager
+   */
+  protected $endpointQueryManager;
+
+  /**
    * Public constructor.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, BlockManagerInterface $block_manager, Client $http_client, UuidInterface $uuid, TimeInterface $time, AccountProxyInterface $user, ContextHandlerInterface $context_handler, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
+  public function __construct(ConfigFactoryInterface $config_factory, BlockManagerInterface $block_manager, Client $http_client, UuidInterface $uuid, TimeInterface $time, AccountProxyInterface $user, ContextHandlerInterface $context_handler, LayoutTempstoreRepositoryInterface $layout_tempstore_repository, EndpointQueryManager $endpoint_query_manager) {
     $this->config = $config_factory;
     $this->blockManager = $block_manager;
     $this->httpClient = $http_client;
@@ -109,6 +118,7 @@ class SyncManager implements ContainerInjectionInterface {
     $this->currentUser = $user;
     $this->contextHandler = $context_handler;
     $this->layoutTempstoreRepository = $layout_tempstore_repository;
+    $this->endpointQueryManager = $endpoint_query_manager;
   }
 
   /**
@@ -123,7 +133,8 @@ class SyncManager implements ContainerInjectionInterface {
       $container->get('datetime.time'),
       $container->get('current_user'),
       $container->get('context.handler'),
-      $container->get('layout_builder.tempstore_repository')
+      $container->get('layout_builder.tempstore_repository'),
+      $container->get('plugin.manager.endpoint_query_manager'),
     );
   }
 
@@ -238,6 +249,22 @@ class SyncManager implements ContainerInjectionInterface {
       else {
         $node->setUnpublished();
       }
+
+      // Handle the image. Only act if we have something configured on the
+      // remote. Otherwise leave the local setup untouched as we risk to
+      // override local customizations.
+      $remote_hero_image_attachment_id = $this->getRemoteHeroImageAttachmentId($node);
+      if ($remote_hero_image_attachment_id) {
+        $node->get('field_hero_image')->setValue([
+          'source' => 'hpc_webcontent_file_attachment',
+          'settings' => [
+            'hpc_webcontent_file_attachment' => [
+              'attachment_id' => $remote_hero_image_attachment_id,
+            ],
+          ],
+        ]);
+      }
+
       // GVE only sync the publication status, plans also a couple of
       // additional fields.
       if ($base_object instanceof Plan) {
@@ -654,6 +681,72 @@ class SyncManager implements ContainerInjectionInterface {
     }
     $sections = $section_storage->getSections();
     return $sections;
+  }
+
+  /**
+   * Get the hero image attachment id on the remote if available.
+   *
+   * Beause their is no dedicated field on the remote pages that designates a
+   * hero image, we "guess", by looking at the configued page elements on the
+   * remote. If the first element is of type plan_webcontent_file, then we
+   * assume that this is the hero image.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   *
+   * @return int|null
+   *   An attachment id or NULL.
+   */
+  public function getRemoteHeroImageAttachmentId(NodeInterface $node) {
+    $remote_data = $this->getRemoteConfigurations($node);
+    $elements = $remote_data->elements ?? [];
+    $first_element = reset($elements);
+    if ($first_element?->type != 'plan_webcontent_file') {
+      return NULL;
+    }
+    return $first_element?->configuration?->attachment_id;
+  }
+
+  /**
+   * Get the urr of the hero image on the remote if available.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   *
+   * @return string|null
+   *   A url string or NULL.
+   */
+  public function getRemoteHeroImageUrl(NodeInterface $node) {
+    $attachment_id = $this->getRemoteHeroImageAttachmentId($node);
+    if (!$attachment_id) {
+      return NULL;
+    }
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $attachment_query */
+    $attachment_query = $this->endpointQueryManager->createInstance('attachment_query');
+    $attachment = $attachment_query->getAttachment($attachment_id);
+    return $attachment instanceof FileAttachment ? $attachment->getUrl() : NULL;
+  }
+
+  /**
+   * Check if the hero image is in sync.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   *
+   * @return bool
+   *   TRUE if in sync, FALSE otherwise.
+   */
+  public function isHeroImageSynced(NodeInterface $node) {
+    $remote_attachment_id = $this->getRemoteHeroImageAttachmentId($node);
+    $local_hero_image_conf = $node->get('field_hero_image')->get(0)->getValue();
+    $local_source = !empty($local_hero_image_conf['source']) ? $local_hero_image_conf['source'] : NULL;
+    if ($remote_attachment_id && (!$local_source || $local_source != 'hpc_webcontent_file_attachment')) {
+      // If we have a remote id and no local file attachment is configured,
+      // it's out of sync.
+      return FALSE;
+    }
+    $local_attachment_id = $local_hero_image_conf['settings']['hpc_webcontent_file_attachment']['attachment_id'] ?? NULL;
+    return $remote_attachment_id == $local_attachment_id;
   }
 
   /**

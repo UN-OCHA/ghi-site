@@ -3,6 +3,7 @@
 namespace Drupal\ghi_element_sync\Form;
 
 use Drupal\Core\Entity\EntityFieldManager;
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
@@ -28,6 +29,13 @@ class SyncMetadataNodeForm extends FormBase {
   protected $syncManager;
 
   /**
+   * The entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * The entity field manager.
    *
    * @var \Drupal\Core\Entity\EntityFieldManager
@@ -37,8 +45,9 @@ class SyncMetadataNodeForm extends FormBase {
   /**
    * Public constructor.
    */
-  public function __construct(SyncManager $sync_manager, EntityFieldManager $entity_field_manager) {
+  public function __construct(SyncManager $sync_manager, EntityTypeManager $entity_type_manager, EntityFieldManager $entity_field_manager) {
     $this->syncManager = $sync_manager;
+    $this->entityTypeManager = $entity_type_manager;
     $this->entityFieldManager = $entity_field_manager;
   }
 
@@ -48,6 +57,7 @@ class SyncMetadataNodeForm extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('ghi_element_sync.sync_elements'),
+      $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
     );
   }
@@ -98,6 +108,25 @@ class SyncMetadataNodeForm extends FormBase {
       'remote_value' => $remote_status === NULL ? $this->t('Unknown') : ($remote_status == 1 ? $this->t('Published') : $this->t('Unpublished')),
       'local_value' => $node->isPublished() ? $this->t('Published') : $this->t('Unpublished'),
       'status' => (bool) $remote_status == $node->isPublished() ? $this->t('In sync') : $this->t('Changed'),
+    ];
+
+    $remote_hero_image_url = $this->syncManager->getRemoteHeroImageUrl($node);
+    $form['properties']['#rows'][] = [
+      'property' => $this->t('Hero image'),
+      'remote_value' => $remote_hero_image_url ? [
+        'data' => [
+          '#theme' => 'ghi_image',
+          '#url' => $remote_hero_image_url,
+          '#responsive_image_style' => $this->entityTypeManager->getStorage('responsive_image_style')->load('hero'),
+          '#attributes' => [
+            'style' => 'width: 100%',
+          ],
+        ],
+      ] : NULL,
+      'local_value' => [
+        'data' => $node->get('field_hero_image')->view(['label' => 'hidden']),
+      ],
+      'status' => $this->syncManager->isHeroImageSynced($node) ? $this->t('In sync') : $this->t('Changed'),
     ];
 
     if ($base_object instanceof Plan) {
