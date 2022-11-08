@@ -109,7 +109,9 @@ class PlanEntity extends EntityObjectBase {
     if (in_array($entity->entityPrototype->refCode, ApiEntityHelper::MAIN_LEVEL_PLE_REF_CODES) || empty($entity_version->value->support)) {
       return NULL;
     }
-    return reset(reset($entity_version->value->support)->planEntityIds);
+    $support = reset($entity_version->value->support);
+    $plan_entity_ids = $support?->planEntityIds ?? [];
+    return reset($plan_entity_ids);
   }
 
   /**
