@@ -4,7 +4,7 @@ namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
-use Drupal\ghi_content\ContentManager\ArticleManager;
+use Drupal\ghi_content\Entity\Article;
 
 /**
  * Provides an 'RelatedArticles' block.
@@ -129,7 +129,7 @@ class RelatedArticles extends ContentBlockBase implements OptionalTitleBlockInte
   private function getArticles($limit = NULL) {
     $articles = $this->articleManager->loadAllNodes();
     $node = $this->getPageNode();
-    if ($node && $node->bundle() == ArticleManager::ARTICLE_BUNDLE && array_key_exists($node->id(), $articles)) {
+    if ($node && $node instanceof Article && array_key_exists($node->id(), $articles)) {
       unset($articles[$node->id()]);
     }
     return $articles;

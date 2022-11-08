@@ -1,0 +1,20 @@
+body.page-node-type-article {
+
+  .region-page-title {
+    margin-top: 4rem;
+
+    .title-prefix {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      text-transform: uppercase;
+      background-color: var(--ghi-primary-button-color);
+      font-size: var(--cd-font-size--small);
+      font-weight: 700;
+    }
+
+    .title-prefix + .cd-page-title {
+      margin-top: 1rem;
+    }
+  }
+}
