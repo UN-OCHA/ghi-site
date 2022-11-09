@@ -14,7 +14,7 @@ class OverrideEndpointQuery extends EndpointQuery {
    *
    * @codeCoverageIgnore
    */
-  public function cache($data = NULL, $reset = FALSE) {
+  public function cache($cache_key, $data = NULL, $reset = FALSE) {
     return NULL;
   }
 
