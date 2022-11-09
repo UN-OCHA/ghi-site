@@ -527,7 +527,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   private function getGenericEntityName() {
     $context = $this->getBlockContext();
     $plan_structure = PlanStructureHelper::getRpmPlanStructure($context['plan_object']);
-    $first_gve = reset($plan_structure['governing_entities']);
+    $first_gve = !empty($plan_structure['governing_entities']) ? reset($plan_structure['governing_entities']) : NULL;
     return $first_gve ? $first_gve->label_singular : $this->t('Cluster');
   }
 
