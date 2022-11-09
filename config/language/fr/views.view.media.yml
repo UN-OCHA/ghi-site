@@ -6,6 +6,8 @@ display:
     display_options:
       title: Média
       fields:
+        media_bulk_form:
+          action_title: Action
         thumbnail__target_id:
           label: Vignette
         name:
