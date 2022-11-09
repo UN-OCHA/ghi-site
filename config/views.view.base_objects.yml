@@ -426,7 +426,7 @@ display:
       access:
         type: perm
         options:
-          perm: 'edit base object entities'
+          perm: 'administer base object entities'
       cache:
         type: tag
         options: {  }
