@@ -8,6 +8,7 @@ module:
   auto_entitylabel: 0
   autologout: 0
   big_pipe: 0
+  big_pipe_sessionless: 0
   block: 0
   block_content: 0
   breakpoint: 0
@@ -87,6 +88,7 @@ module:
   path_alias: 0
   phpexcel: 0
   publishcontent: 0
+  queue_ui: 0
   rabbit_hole: 0
   responsive_image: 0
   rh_taxonomy: 0
@@ -109,6 +111,8 @@ module:
   views_autocomplete_filters: 0
   views_ui: 0
   viewsreference: 0
+  warmer: 0
+  warmer_cdn: 0
   wmbert: 0
   pathauto: 1
   content_translation: 10
