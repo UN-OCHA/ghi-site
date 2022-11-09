@@ -131,23 +131,25 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
     $this->endpointQuery->setPlaceholders($placeholders);
     $this->endpointQuery->setEndpointArguments($query_args);
 
+    $cache_args = [
+      'endpoint' => $this->getFullEndpointUrl(),
+      'auth_method' => $this->endpointQuery->getAuthMethod(),
+    ];
+
     if ($this->isAutenticatedEndpoint) {
       $hid_access_token = $this->getHidAccessToken();
       if ($hid_access_token) {
-        $this->endpointQuery->setAuthHeader('Bearer ' . $this->hidUserData->getAccessToken($this->user));
+        $this->endpointQuery->setAuthHeader('Bearer ' . $hid_access_token);
+        $cache_args['user'] = $this->hidUserData->getId();
       }
     }
     // Cache the result in memory.
-    $cache_key = $this->getCacheKey([
-      'endpoint' => $this->getFullEndpointUrl(),
-      'auth_method' => $this->endpointQuery->getAuthMethod(),
-    ]);
+    $cache_key = $this->getCacheKey($cache_args);
     if ($data = $this->cache($cache_key)) {
       return $data;
     }
     $data = $this->endpointQuery->getData();
-    $this->cache($cache_key, $data);
-    return $data;
+    return $this->cache($cache_key, $data);
   }
 
   /**

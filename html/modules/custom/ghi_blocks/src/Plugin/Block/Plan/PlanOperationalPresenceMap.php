@@ -211,7 +211,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
         continue;
       }
 
-      $_objects = !empty($objects_by_location[$_location->location_id]) ? $objects_by_location[$_location->location_id] : [];
+      $_objects = $objects_by_location[$_location->location_id] ?? [];
       $location_data = (object) $_location->toArray();
 
       $geo_data->properties->location_id = $_location->location_id;
@@ -811,6 +811,9 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     if (!array_key_exists($key, $group_labels)) {
       $plan_object = $this->getCurrentPlanObject();
       $ple_structure = PlanStructureHelper::getRpmPlanStructure($plan_object);
+      if (empty($ple_structure[$group])) {
+        return NULL;
+      }
       $gve_item = reset($ple_structure[$group]);
       $group_labels[$key] = $gve_item->$property;
     }
