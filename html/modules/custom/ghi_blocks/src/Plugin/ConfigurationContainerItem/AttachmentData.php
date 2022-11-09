@@ -163,10 +163,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     }
 
     $plan = $this->getPlanObject($attachment);
-    $build = [
-      '#type' => 'container',
-    ];
-    $build[] = DataPointHelper::formatValue($attachment, $attachment->data_point_conf);
+    $build = DataPointHelper::formatValue($attachment, $attachment->data_point_conf);
     $footnotes = $plan ? $this->getFootnotesForPlanBaseobject($plan) : NULL;
 
     $data_point_index = $attachment->data_point_conf['data_points'][0]['index'];
