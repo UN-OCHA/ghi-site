@@ -701,10 +701,10 @@ class SyncManager implements ContainerInjectionInterface {
     $remote_data = $this->getRemoteConfigurations($node);
     $elements = $remote_data->elements ?? [];
     $first_element = reset($elements);
-    if ($first_element?->type != 'plan_webcontent_file') {
+    if (!$first_element || $first_element->type != 'plan_webcontent_file') {
       return NULL;
     }
-    return $first_element?->configuration?->attachment_id;
+    return $first_element->configuration?->attachment_id;
   }
 
   /**
@@ -744,6 +744,11 @@ class SyncManager implements ContainerInjectionInterface {
       // If we have a remote id and no local file attachment is configured,
       // it's out of sync.
       return FALSE;
+    }
+    if (empty($local_hero_image_conf['settings']['hpc_webcontent_file_attachment'])) {
+      // No settings for the local hero image means it's using default
+      // fallbacks, so there probably is an image visible, but not sure.
+      return NULL;
     }
     $local_attachment_id = $local_hero_image_conf['settings']['hpc_webcontent_file_attachment']['attachment_id'] ?? NULL;
     return $remote_attachment_id == $local_attachment_id;

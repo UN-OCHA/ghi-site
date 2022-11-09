@@ -111,6 +111,7 @@ class SyncMetadataNodeForm extends FormBase {
     ];
 
     $remote_hero_image_url = $this->syncManager->getRemoteHeroImageUrl($node);
+    $hero_image_sync_state = $this->syncManager->isHeroImageSynced($node);
     $form['properties']['#rows'][] = [
       'property' => $this->t('Hero image'),
       'remote_value' => $remote_hero_image_url ? [
@@ -126,7 +127,7 @@ class SyncMetadataNodeForm extends FormBase {
       'local_value' => [
         'data' => $node->get('field_hero_image')->view(['label' => 'hidden']),
       ],
-      'status' => $this->syncManager->isHeroImageSynced($node) ? $this->t('In sync') : $this->t('Changed'),
+      'status' => $hero_image_sync_state === NULL ? $this->t('Unclear') : ($hero_image_sync_state ? $this->t('In sync') : $this->t('Changed')),
     ];
 
     if ($base_object instanceof Plan) {

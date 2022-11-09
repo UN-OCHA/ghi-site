@@ -17,6 +17,7 @@ dependencies:
   module:
     - contextual
     - ghi_base_objects
+    - ghi_blocks
     - ghi_content
     - layout_builder
     - layout_builder_ipe
@@ -36,6 +37,7 @@ permissions:
   - 'access remote content'
   - 'access toolbar'
   - 'administer base object entities'
+  - 'administer ghi global config'
   - 'administer nodes'
   - 'configure all homepage node layout overrides'
   - 'configure editable homepage node layout overrides'
