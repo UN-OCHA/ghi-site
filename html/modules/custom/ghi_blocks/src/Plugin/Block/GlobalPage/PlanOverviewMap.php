@@ -637,6 +637,9 @@ class PlanOverviewMap extends GHIBlockBase {
     $countries = [];
     foreach ($plans as $plan) {
       $country = $plan->getCountry();
+      if (!$country) {
+        continue;
+      }
       if (!array_key_exists($country->id, $countries)) {
         $countries[$country->id] = [];
       }
@@ -644,7 +647,11 @@ class PlanOverviewMap extends GHIBlockBase {
     }
     $plan_types = $this->getAvailablePlanTypes();
     $plans = array_filter($plans, function ($plan) use ($countries, $plan_types) {
+      /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
       $country = $plan->getCountry();
+      if (!$country) {
+        return TRUE;
+      }
       if (count($countries[$country->id]) <= 1) {
         return TRUE;
       }
