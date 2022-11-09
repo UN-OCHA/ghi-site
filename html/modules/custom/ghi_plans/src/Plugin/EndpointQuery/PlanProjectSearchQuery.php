@@ -56,10 +56,6 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    */
   public function getData(array $placeholders = [], array $query_args = []) {
     $placeholders += $this->getPlaceholders();
-    $cache_key = $this->getCacheKey($placeholders + $query_args);
-    if ($cached_data = $this->cache($cache_key)) {
-      return $cached_data;
-    }
     if (!$this->getPlaceholder('plan_id') || empty($placeholders['plan_id'])) {
       return NULL;
     }
@@ -67,7 +63,6 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
     if (empty($data) || !is_object($data) || !property_exists($data, 'results')) {
       return [];
     }
-    $this->cache($cache_key, $data);
     return $data;
   }
 

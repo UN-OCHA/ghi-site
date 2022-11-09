@@ -14,6 +14,7 @@ use GuzzleHttp\ClientInterface;
 use Psr\Http\Message\ResponseInterface;
 
 use Drupal\hpc_api\Helpers\QueryHelper;
+use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
  * Class representing an endpoint query.
@@ -23,6 +24,7 @@ use Drupal\hpc_api\Helpers\QueryHelper;
 class EndpointQuery {
 
   use DependencySerializationTrait;
+  use SimpleCacheTrait;
 
   const SORT_ASC = 'ASC';
   const SORT_DESC = 'DESC';
@@ -271,9 +273,15 @@ class EndpointQuery {
   public function query() {
     $endpoint_url = $this->getFullEndpointUrl();
 
+    $cache_key = $this->getCacheKey([
+      'endpoint' => $endpoint_url,
+      'auth_method' => $this->getAuthMethod(),
+      'headers' => $this->getAuthHeaders(),
+    ]);
+
     // First check if statically cached data is available. Might come from
     // previous requests.
-    $response = $this->cache();
+    $response = $this->cache($cache_key);
     if (!$response) {
       // No cached data available, so we run the API request.
       $result = $this->sendQuery();
@@ -289,7 +297,7 @@ class EndpointQuery {
       if ($result->getStatusCode() == 200) {
         // Only cache the response, if the call returned successfully.
         $response = (string) $result->getBody();
-        $this->cache($response);
+        $this->cache($cache_key, $response);
       }
     }
 
@@ -302,7 +310,7 @@ class EndpointQuery {
     if ($json === NULL) {
       // Malformed JSON or other reason that the decoding has failed. Reset
       // cache to force a new request on following calls.
-      $this->cache(NULL, TRUE);
+      $this->cache($cache_key, NULL, TRUE);
     }
 
     // Workaround for HPC-1840, until top level contains 'data' again.
@@ -422,58 +430,6 @@ class EndpointQuery {
     QueryHelper::endpointCallTimeStorage($this->getFullEndpointUrl(), microtime(TRUE) - $start);
 
     return $response;
-  }
-
-  /**
-   * Get the cache key for this query.
-   *
-   * @codeCoverageIgnore
-   */
-  public function getCacheKey() {
-    $args = $this->getEndpointArguments();
-    unset($args['hpc_backend']);
-    $cache_key = 'hpc_api_request_' . $this->getAuthMethod() . '_' . urlencode($this->getEndpointUrl());
-    if (!empty($args)) {
-      ksort($args);
-      $cache_key .= '__' . urlencode(print_r($args, TRUE));
-    }
-    return $cache_key;
-  }
-
-  /**
-   * Custom cache storage for API responses.
-   *
-   * @codeCoverageIgnore
-   */
-  public function cache($data = NULL, $reset = FALSE) {
-    $responses = &drupal_static(__FUNCTION__, []);
-    $cache_key = $this->getCacheKey();
-
-    if ($data === NULL && $reset === TRUE) {
-      // Clear the cached data as requested.
-      $this->cache->invalidate($cache_key);
-      unset($responses[$cache_key]);
-      return NULL;
-    }
-    elseif ($data === NULL) {
-      // Retrieve data from static cache.
-      if (isset($responses[$cache_key])) {
-        return $responses[$cache_key];
-      }
-      // Retrieve data from cache backend.
-      $cached_result = $this->cache->get($cache_key);
-      if ($cached_result) {
-        $responses[$cache_key] = $cached_result->data;
-        return $responses[$cache_key];
-      }
-      return NULL;
-    }
-
-    // Store data in the cache with an explicit expiry time, default is 1 hour.
-    $expiration_time = $this->time->getRequestTime() + $this->configService->get('cache_lifetime', 60 * 60);
-    $this->cache->set($cache_key, $data, $expiration_time);
-    // Also store it in the static cache.
-    $responses[$cache_key] = $data;
   }
 
   /**
@@ -636,10 +592,7 @@ class EndpointQuery {
    * Retrieve an array for placeholder substitution.
    */
   public function getPlaceholders() {
-    if (empty($this->placeholders)) {
-      $this->placeholders = [];
-    }
-    return $this->placeholders + ['current_year' => date('Y')];
+    return $this->placeholders ?? [];
   }
 
   /**
