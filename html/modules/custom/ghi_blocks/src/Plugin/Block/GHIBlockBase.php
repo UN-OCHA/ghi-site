@@ -1745,6 +1745,12 @@ abstract class GHIBlockBase extends HPCBlockBase {
       return $page_title;
     }
 
+    if ($this->getPageVariant()) {
+      // We only use page manager on the homepage, so it's safe to assume this
+      // is the homepage. Use the main site title.
+      return $this->configFactory->get('system.site')->get('name');
+    }
+
     // Fallback if the page title can't be retrieved at this point.
     $entity = $this->getCurrentBaseEntity();
     $page_arguments = $this->getPageArguments();

@@ -4,8 +4,10 @@ namespace Drupal\hpc_common\Helpers;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadContainerInterface;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\layout_builder\SectionComponent;
 use Drupal\node\Entity\Node;
 use Drupal\page_manager\Entity\PageVariant;
 
@@ -101,8 +103,9 @@ class BlockHelper {
 
     $block = NULL;
 
-    // We have 2 cases where we support to our blocks:
-    // 1. Page manager pages
+    // We have 2 cases where we support our blocks:
+    // 1. Page manager pages, which might also contain a content container with
+    //    more elements defined in it.
     // 2. Node views that are build by layout_builder.
     if (!empty($page_parameters['page_manager_page']) && !empty($page_parameters['page_manager_page_variant'])) {
       // So this is a page manager page, so we get the page variant object and
@@ -158,7 +161,7 @@ class BlockHelper {
    */
   private static function getBlockInstanceFromPageVariant(PageVariant $page_variant, $plugin_id, $block_uuid) {
     // We load the variant, get the block areas (called collections), look at
-    // the configuration of every panel and search in the blocks that are
+    // the configuration of section and search in the blocks that are
     // configured for this page until we find the block that matches plugin id
     // and block uuid. Then we use the configuration for that block on that
     // page to create an instance of that block using the block manager.
@@ -171,18 +174,36 @@ class BlockHelper {
       return NULL;
     }
     $plugin_configuration = $layout_builder_variant->getConfiguration();
-    if (empty($plugin_configuration['blocks'])) {
+    if (empty($plugin_configuration['sections'])) {
       return NULL;
     }
-    $blocks = $plugin_configuration['blocks'];
-    if (empty($blocks[$block_uuid])) {
-      return NULL;
+    /** @var \Drupal\layout_builder\Section[] $sections */
+    $sections = $plugin_configuration['sections'];
+    $component = self::getComponentFromLayoutBuilderSections($sections, $plugin_id, $block_uuid);
+    if ($component) {
+      return self::instantiateComponentPlugin($component);
     }
-    // Get the config.
-    $block_config = $blocks[$block_uuid];
-    $block_config['uuid'] = $block_uuid;
-    // Create the instance.
-    return self::getBlockManager()->createInstance($plugin_id, $block_config);
+
+    // Otherwise we loop over all components to see if we find one that
+    // implements HPCDownloadContainer interface.
+    foreach ($sections as $section) {
+      $components = $section->getComponents();
+      if (empty($components)) {
+        continue;
+      }
+      foreach ($components as $component) {
+        $plugin = $component->getPlugin();
+        if (!$plugin instanceof HPCDownloadContainerInterface) {
+          continue;
+        }
+
+        if ($block_plugin = $plugin->findContainedPlugin($plugin_id, $block_uuid)) {
+          return $block_plugin;
+        }
+      }
+    }
+
+    return NULL;
   }
 
   /**
@@ -198,7 +219,7 @@ class BlockHelper {
    * @return \Drupal\Core\Block\BlockPluginInterface|null
    *   A block plugin object or NULL.
    */
-  private static function getBlockInstanceFromEntity(ContentEntityInterface $entity, $plugin_id, $block_uuid) {
+  public static function getBlockInstanceFromEntity(ContentEntityInterface $entity, $plugin_id, $block_uuid) {
     $entity = is_object($entity) ? $entity : Node::load($entity);
     $bundle = $entity->bundle();
 
@@ -238,11 +259,24 @@ class BlockHelper {
     if (!$component) {
       return NULL;
     }
+    return self::instantiateComponentPlugin($component);
+  }
+
+  /**
+   * Instantiate the plugin for the given section component.
+   *
+   * @param \Drupal\layout_builder\SectionComponent $component
+   *   The component of the block.
+   *
+   * @return \Drupal\Core\Block\BlockPluginInterface|null
+   *   A block plugin object or NULL.
+   */
+  private static function instantiateComponentPlugin(SectionComponent $component) {
     /** @var \Drupal\Core\Block\BlockPluginInterface $plugin */
     $plugin = $component->getPlugin();
     $block_config = $plugin->getConfiguration();
-    $block_config['uuid'] = $block_uuid;
-    return self::getBlockManager()->createInstance($plugin_id, $block_config);
+    $block_config['uuid'] = $component->getUuid();
+    return self::getBlockManager()->createInstance($component->getPluginId(), $block_config);
   }
 
   /**

@@ -11,6 +11,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\hpc_common\Plugin\Condition\PageParameterCondition;
 use Drupal\hpc_common\Traits\PageManagerTrait;
 use Drupal\node\NodeInterface;
+use Drupal\page_manager\Entity\PageVariant;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -124,7 +125,7 @@ class SectionContextManager {
    */
   private function getSelectionYearFromPageVariant() {
     $page_variant = $this->getCurrentPageVariant($this->requestStack->getCurrentRequest(), $this->routeMatch);
-    if (!$page_variant) {
+    if (!$page_variant instanceof PageVariant) {
       return NULL;
     }
     $plugin_collection = $page_variant->getPluginCollections();

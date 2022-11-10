@@ -144,9 +144,10 @@ function common_design_subtheme_preprocess_block(&$variables) {
   // Make the full width status available in the template.
   $variables['full_width'] = !empty($variables['content']['#full_width']) || $full_width_block;
 
-  // Some blocks are white-listed here to always use the content-width class,
-  // others can declare themselves to use that class by setting the #full_width
-  // property. One example of the latter is a promoted paragraph block.
+  // Some blocks are white-listed here to never use the content-width class,
+  // others can declare themselves as being full width by setting the
+  // #full_width property. One example of the latter is a promoted paragraph
+  // block.
   $content_width_block = !in_array($variables['plugin_id'], $full_width_blocks) && empty($variables['content']['#full_width']);
   if ($content_width_block) {
     $variables['attributes']['class'][] = 'content-width';
