@@ -6,6 +6,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\HomepageBlockTrait;
+use Drupal\hpc_common\Helpers\BlockHelper;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadContainerInterface;
 
 /**
  * Provides a 'Homepages' block.
@@ -20,7 +22,7 @@ use Drupal\ghi_blocks\Traits\HomepageBlockTrait;
  *  },
  * )
  */
-class Homepages extends GHIBlockBase implements OverrideDefaultTitleBlockInterface {
+class Homepages extends GHIBlockBase implements OverrideDefaultTitleBlockInterface, HPCDownloadContainerInterface {
 
   use HomepageBlockTrait;
 
@@ -28,13 +30,37 @@ class Homepages extends GHIBlockBase implements OverrideDefaultTitleBlockInterfa
    * {@inheritdoc}
    */
   public function buildContent() {
-    $homepages = $this->getHomepages();
-    $year = $this->getHomepageYear();
-    if (!array_key_exists($year, $homepages)) {
+    $homepage = $this->getHomepage();
+    if (!$homepage) {
       return [];
     }
-    $build = $this->entityTypeManager->getViewBuilder('node')->view($homepages[$year], 'embed');
+    $build = $this->entityTypeManager->getViewBuilder('node')->view($homepage, 'embed');
     return $build;
+  }
+
+  /**
+   * Get the current homepage container.
+   *
+   * @return \Drupal\node\NodeInterface|null
+   *   The homepage container node.
+   */
+  private function getHomepage() {
+    $homepages = $this->getHomepages();
+    $year = $this->getHomepageYear();
+    return $homepages[$year] ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function findContainedPlugin($plugin_id, $block_uuid) {
+    $homepages = $this->getHomepages();
+    foreach ($homepages as $homepage) {
+      if ($block = BlockHelper::getBlockInstanceFromEntity($homepage, $plugin_id, $block_uuid)) {
+        return $block;
+      }
+    }
+    return NULL;
   }
 
   /**
