@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 
+use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
@@ -59,7 +60,12 @@ class Homepages extends GHIBlockBase implements OverrideDefaultTitleBlockInterfa
       if ($block = BlockHelper::getBlockInstanceFromEntity($homepage, $plugin_id, $block_uuid)) {
         /** @var \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $block */
         if ($block->hasContext('year')) {
-          $block->setContextValue('year', $homepage->getYear());
+          try {
+            $block->setContextValue('year', $homepage->getYear());
+          }
+          catch (ContextException $e) {
+            // Just catch this silently and see later where the issue is.
+          }
         }
         return $block;
       }
