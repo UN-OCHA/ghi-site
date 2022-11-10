@@ -70,25 +70,29 @@ class PlanOverviewQuery extends EndpointQueryBase {
       $plan = new PlanOverviewPlan($plan_object);
       $this->plans[$plan->id()] = $plan;
     }
-
-    // Filter by visibility settings.
-    $this->filterPlansByVisibilityOnGlobalPages($this->plans);
-
-    uasort($this->plans, function ($a, $b) {
-      return strnatcmp($a->name, $b->name);
-    });
   }
 
   /**
    * Get plans.
    *
+   * @param bool $filter
+   *   Whether the plans should be filtered or not.
+   *
    * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[]
    *   An array of plan objects.
    */
-  public function getPlans() {
+  public function getPlans($filter = TRUE) {
     if ($this->plans === NULL) {
       $this->retrievePlans();
     }
+    if ($filter) {
+      // Filter by visibility settings.
+      $this->filterPlansByVisibilityOnGlobalPages($this->plans);
+    }
+
+    uasort($this->plans, function ($a, $b) {
+      return strnatcmp($a->name, $b->name);
+    });
     return $this->plans;
   }
 
@@ -103,7 +107,11 @@ class PlanOverviewQuery extends EndpointQueryBase {
    *   An array keyed by the type and valued by the total sum of that type
    */
   public function getCaseloadTotalValues(array $types) {
-    $plans = $this->getPlans();
+    // Get the plans, but make sure they are not filtered for visibility. The
+    // caseload totals will appear only in the key figures element, where we
+    // want the full GHO figures independently of whether specific plans are
+    // hidden from global pages or not.
+    $plans = $this->getPlans(FALSE);
 
     // Setting up the array keyed by the types and values as 0.
     $caseload_totals = array_fill_keys(array_keys($types), 0);
