@@ -8,14 +8,14 @@ use Drupal\ghi_sections\Entity\Homepage;
 use Drupal\node\NodeInterface;
 
 /**
- * Trait to help manage files uploaded in layout builder blocks.
+ * Trait for homepage blocks.
  */
 trait HomepageBlockTrait {
 
   /**
    * Return the available homepages keyed by year.
    *
-   * @return \Drupal\node\NodeInterface[]
+   * @return \Drupal\ghi_sections\Entity\Homepage[]
    *   An array of nodes.
    */
   protected function getHomepages() {

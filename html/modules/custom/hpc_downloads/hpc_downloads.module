@@ -183,15 +183,18 @@ function hpc_downloads_excel_add_logo_to_xls_sheet(Worksheet $sheet) {
     return FALSE;
   }
   $size = getimagesize($logo);
-  $image_height = $size[1];
+  if (!$size) {
+    return FALSE;
+  }
+  $image_height = $size[1] + 1;
   $image_height_points = SharedDrawing::pixelsToPoints($image_height);
 
   $site_name = \Drupal::config('system.site')->get('name');
 
   // Create the image.
   $image_object = new Drawing();
-  $image_object->setName(sprintf('%s logo', [$site_name]));
-  $image_object->setDescription(sprintf('%s logo', [$site_name]));
+  $image_object->setName(sprintf('%s logo', $site_name));
+  $image_object->setDescription(sprintf('%s logo', $site_name));
   $image_object->setPath($logo);
   $image_object->setCoordinates('A1');
   $image_object->setResizeProportional(FALSE);
@@ -199,15 +202,17 @@ function hpc_downloads_excel_add_logo_to_xls_sheet(Worksheet $sheet) {
   // Add the image to the worksheet.
   $image_object->setWorksheet($sheet);
 
-  // Adapt the row height.
+  // Adapt the row height and width.
   $sheet->getRowDimension(1)->setRowHeight($image_height_points);
+  $sheet->getColumnDimension('A')->setAutoSize(TRUE);
 }
 
 /**
  * Retrieve the url for the theme logo.
  */
 function hpc_downloads_get_logo_path($trim = TRUE, $xls = FALSE) {
-  $logo_path = !$xls ? \Drupal::config('hpc_downloads.settings')->get('logo_path') : \Drupal::config('hpc_downloads.settings')->get('logo_path_xls');
+  $settings_key = $xls ? 'logo_path_xls' : 'logo_path';
+  $logo_path = \Drupal::config('hpc_downloads.settings')->get($settings_key);
   if (!$logo_path) {
     $logo_path = theme_get_setting('logo.url');
   }

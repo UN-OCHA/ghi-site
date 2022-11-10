@@ -8,6 +8,7 @@ use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\FtsLinkTrait;
+use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
@@ -38,6 +39,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
+  use GlobalPlanOverviewBlockTrait;
   use GlobalSettingsTrait;
   use PlanFootnoteTrait;
   use TableSoftLimitTrait;
@@ -250,7 +252,14 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           ],
           'data-value' => $plan->getName(),
         ],
-        'type' => $plan->getTypeShortName(),
+        'type' => [
+          'data' => [
+            [
+              '#markup' => $plan->getTypeShortName(),
+            ],
+          ],
+          'data-value' => $plan->getTypeShortName(),
+        ],
         'inneed' => [
           'data' => [
             $value_in_need,
@@ -828,16 +837,6 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     $this->applyGlobalConfigurationPlans($plans, $this->getContextValue('year'));
 
     return $plans;
-  }
-
-  /**
-   * Get the plan query.
-   *
-   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanOverviewQuery
-   *   The plan query plugin.
-   */
-  private function getPlanQuery() {
-    return $this->getQueryHandler('plans');
   }
 
   /**
