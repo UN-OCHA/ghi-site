@@ -7,6 +7,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
 use Drupal\ghi_blocks\Traits\HomepageBlockTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
@@ -41,6 +42,7 @@ use Drupal\hpc_common\Helpers\CommonHelper;
  */
 class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, OptionalTitleBlockInterface {
 
+  use GlobalPlanOverviewBlockTrait;
   use ConfigurationContainerTrait;
   use ConfigurationContainerGroup;
   use HomepageBlockTrait;
@@ -276,16 +278,6 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Op
       'label_value' => [],
     ];
     return $item_types;
-  }
-
-  /**
-   * Get the plan query.
-   *
-   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanOverviewQuery
-   *   The plan query plugin.
-   */
-  private function getPlanQuery() {
-    return $this->getQueryHandler('plans');
   }
 
 }

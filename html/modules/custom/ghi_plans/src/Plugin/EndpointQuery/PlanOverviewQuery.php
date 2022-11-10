@@ -53,13 +53,14 @@ class PlanOverviewQuery extends EndpointQueryBase {
 
     $placeholders = $this->getPlaceholders();
     $year = $placeholders['year'] ?? NULL;
-    if ($year) {
-      // See if we should use the latest plan data.
-      $this->moduleHandler->alter('plan_overview_query_arguments', $query_args, $year);
+    if (!$year) {
+      return;
     }
 
-    $data = $this->getData([], $query_args);
+    // See if we should use the latest plan data.
+    $this->moduleHandler->alter('plan_overview_query_arguments', $query_args, $year);
 
+    $data = $this->getData(['year' => $year], $query_args);
     if (empty($data) || empty($data->plans)) {
       return;
     }

@@ -1705,7 +1705,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * {@inheritdoc}
    */
   public function getDownloadSource() {
-    return new BlockSource($this);
+    return $this instanceof HPCDownloadPluginInterface ? new BlockSource($this) : NULL;
   }
 
   /**
@@ -1748,7 +1748,11 @@ abstract class GHIBlockBase extends HPCBlockBase {
     if ($this->getPageVariant()) {
       // We only use page manager on the homepage, so it's safe to assume this
       // is the homepage. Use the main site title.
-      return $this->configFactory->get('system.site')->get('name');
+      $page_title = $this->t('@site_name @year', [
+        '@site_name' => $this->configFactory->get('system.site')->get('name'),
+        '@year' => $this->getContextValue('year') ?? '',
+      ]);
+      return $page_title;
     }
 
     // Fallback if the page title can't be retrieved at this point.
@@ -1774,14 +1778,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
    */
   public function buildMetaData() {
     $meta_data = [];
-    $page = $this->getPageNode();
     $meta_data[] = [
       $this->t('Page'),
-      $page->label(),
+      $this->getDownloadCaption(),
     ];
     $meta_data[] = [
       $this->t('Export of'),
-      $this->getDownloadCaption(),
+      $this->label(),
     ];
     $meta_data[] = [
       $this->t('Date'),

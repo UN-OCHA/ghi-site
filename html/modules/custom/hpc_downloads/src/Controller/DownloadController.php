@@ -139,9 +139,9 @@ class DownloadController extends ControllerBase {
     if (!$plugin) {
       return $this->updateDialogContent($this->t('There was an error initiating the download.'), NULL, 'error');
     }
+
     // Set the download source.
     if ($plugin instanceof HPCDownloadPluginInterface) {
-
       $download_source = $plugin->getDownloadSource();
       if (!$download_source->setDownloadMethod($download_type)) {
         return $this->updateDialogContent($this->t('There was an error initiating the download. No suitable download method found for type @type', ['@type' => $download_type]), NULL, 'error');
@@ -149,7 +149,6 @@ class DownloadController extends ControllerBase {
       $download_dialog = $this->pluginDialog;
     }
     elseif ($download_source_type == 'views_executable') {
-
       // The only other download source besides HPCDownloadPlugins that we
       // support are views executables.
       $view_id = $request->query->get('view_id');
@@ -162,6 +161,11 @@ class DownloadController extends ControllerBase {
       $download_source = new ViewsSource($view);
       $download_dialog = $this->viewsDialog;
     }
+
+    if (!$download_source) {
+      return $this->updateDialogContent($this->t('There was an error initiating the download.'), NULL, 'error');
+    }
+
     // Prepare options.
     $options = [
       'download_source' => $download_source_type,

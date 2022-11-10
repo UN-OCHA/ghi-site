@@ -10,6 +10,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
@@ -36,6 +37,7 @@ use Drupal\hpc_downloads\Helpers\DownloadHelper;
  */
 class PlanOverviewMap extends GHIBlockBase {
 
+  use GlobalPlanOverviewBlockTrait;
   use GlobalSettingsTrait;
   use PlanFootnoteTrait;
 
@@ -704,16 +706,6 @@ class PlanOverviewMap extends GHIBlockBase {
     }
     ArrayHelper::sortArrayByStringKey($countries, 'name', EndpointQuery::SORT_ASC);
     return $countries;
-  }
-
-  /**
-   * Get the plan query.
-   *
-   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanOverviewQuery
-   *   The plan query plugin.
-   */
-  private function getPlanQuery() {
-    return $this->getQueryHandler('plans');
   }
 
 }

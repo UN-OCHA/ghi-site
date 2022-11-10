@@ -57,6 +57,10 @@ class Homepages extends GHIBlockBase implements OverrideDefaultTitleBlockInterfa
     $homepages = $this->getHomepages();
     foreach ($homepages as $homepage) {
       if ($block = BlockHelper::getBlockInstanceFromEntity($homepage, $plugin_id, $block_uuid)) {
+        /** @var \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $block */
+        if ($block->hasContext('year')) {
+          $block->setContextValue('year', $homepage->getYear());
+        }
         return $block;
       }
     }
@@ -86,7 +90,7 @@ class Homepages extends GHIBlockBase implements OverrideDefaultTitleBlockInterfa
    */
   protected function getConfigurationDefaults() {
     return [
-      'year' => 2022,
+      'year' => date('Y'),
     ];
   }
 
