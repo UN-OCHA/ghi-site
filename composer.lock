@@ -1621,17 +1621,17 @@
         },
         {
             "name": "drupal/admin_denied",
-            "version": "1.2.0",
+            "version": "1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/admin_denied.git",
-                "reference": "8.x-1.2"
+                "reference": "8.x-1.3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/admin_denied-8.x-1.2.zip",
-                "reference": "8.x-1.2",
-                "shasum": "3cf7186ea16c0dd08b58b3a27cf018b53da3f677"
+                "url": "https://ftp.drupal.org/files/projects/admin_denied-8.x-1.3.zip",
+                "reference": "8.x-1.3",
+                "shasum": "133400906d43a55e8f14ac428b106271e9f19b24"
             },
             "require": {
                 "drupal/core": "^8 || ^9"
@@ -1639,8 +1639,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "8.x-1.2",
-                    "datestamp": "1654054587",
+                    "version": "8.x-1.3",
+                    "datestamp": "1667786705",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -5007,20 +5007,20 @@
         },
         {
             "name": "drupal/redis",
-            "version": "1.5.0",
+            "version": "1.6.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/redis.git",
-                "reference": "8.x-1.5"
+                "reference": "8.x-1.6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/redis-8.x-1.5.zip",
-                "reference": "8.x-1.5",
-                "shasum": "4283333dc2bf405045765b83ca662acc409a6543"
+                "url": "https://ftp.drupal.org/files/projects/redis-8.x-1.6.zip",
+                "reference": "8.x-1.6",
+                "shasum": "9e21a03743030e09a8b98da49c4549bd4b83251a"
             },
             "require": {
-                "drupal/core": "^8.8 || ^9"
+                "drupal/core": "^9.3 || ^10"
             },
             "suggest": {
                 "predis/predis": "^1.1.1"
@@ -5028,8 +5028,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "8.x-1.5",
-                    "datestamp": "1609972488",
+                    "version": "8.x-1.6",
+                    "datestamp": "1667512839",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -8928,16 +8928,16 @@
         },
         {
             "name": "psy/psysh",
-            "version": "v0.11.8",
+            "version": "v0.11.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bobthecow/psysh.git",
-                "reference": "f455acf3645262ae389b10e9beba0c358aa6994e"
+                "reference": "1acec99d6684a54ff92f8b548a4e41b566963778"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bobthecow/psysh/zipball/f455acf3645262ae389b10e9beba0c358aa6994e",
-                "reference": "f455acf3645262ae389b10e9beba0c358aa6994e",
+                "url": "https://api.github.com/repos/bobthecow/psysh/zipball/1acec99d6684a54ff92f8b548a4e41b566963778",
+                "reference": "1acec99d6684a54ff92f8b548a4e41b566963778",
                 "shasum": ""
             },
             "require": {
@@ -8998,9 +8998,9 @@
             ],
             "support": {
                 "issues": "https://github.com/bobthecow/psysh/issues",
-                "source": "https://github.com/bobthecow/psysh/tree/v0.11.8"
+                "source": "https://github.com/bobthecow/psysh/tree/v0.11.9"
             },
-            "time": "2022-07-28T14:25:11+00:00"
+            "time": "2022-11-06T15:29:46+00:00"
         },
         {
             "name": "ralouphie/getallheaders",
@@ -12941,16 +12941,16 @@
         },
         {
             "name": "vipnytt/sitemapparser",
-            "version": "v1.1.5",
+            "version": "v1.1.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/VIPnytt/SitemapParser.git",
-                "reference": "f05d00702304e35859ea524553a3229f27c00476"
+                "reference": "688b46962dca544bbb8c0f486dbab271a8b63f7a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/VIPnytt/SitemapParser/zipball/f05d00702304e35859ea524553a3229f27c00476",
-                "reference": "f05d00702304e35859ea524553a3229f27c00476",
+                "url": "https://api.github.com/repos/VIPnytt/SitemapParser/zipball/688b46962dca544bbb8c0f486dbab271a8b63f7a",
+                "reference": "688b46962dca544bbb8c0f486dbab271a8b63f7a",
                 "shasum": ""
             },
             "require": {
@@ -12997,9 +12997,9 @@
             ],
             "support": {
                 "issues": "https://github.com/VIPnytt/SitemapParser/issues",
-                "source": "https://github.com/VIPnytt/SitemapParser/tree/v1.1.5"
+                "source": "https://github.com/VIPnytt/SitemapParser/tree/v1.1.6"
             },
-            "time": "2021-10-20T15:06:45+00:00"
+            "time": "2022-11-07T21:30:28+00:00"
         },
         {
             "name": "webflo/drupal-finder",
@@ -14603,17 +14603,17 @@
         },
         {
             "name": "drupal/xhprof",
-            "version": "1.0.0-beta5",
+            "version": "1.0.0-beta6",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/XHProf.git",
-                "reference": "8.x-1.0-beta5"
+                "reference": "8.x-1.0-beta6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/xhprof-8.x-1.0-beta5.zip",
-                "reference": "8.x-1.0-beta5",
-                "shasum": "81b590e2c882e846b1e952fe3e351e959c0e706a"
+                "url": "https://ftp.drupal.org/files/projects/xhprof-8.x-1.0-beta6.zip",
+                "reference": "8.x-1.0-beta6",
+                "shasum": "abf6be2bac9a43021b1b88e0bc6251b764d0f8d1"
             },
             "require": {
                 "drupal/core": "^8.7.7 || ^9 || ^10"
@@ -14621,8 +14621,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "8.x-1.0-beta5",
-                    "datestamp": "1666117897",
+                    "version": "8.x-1.0-beta6",
+                    "datestamp": "1667951069",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
@@ -17713,5 +17713,5 @@
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": [],
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }
