@@ -61,8 +61,7 @@ class AjaxBlockController extends ControllerBase implements ContainerInjectionIn
       return $this->sendErrorResponse();
     }
     $build = $block_instance->build();
-    $selector = '.block-' . Html::getClass($block_instance->getPluginId()) . ' .block-content';
-
+    $selector = '.block-' . Html::getClass($block_instance->getPluginId()) . ' > .block-content';
     $ajax_response = new AjaxResponse();
     $ajax_response->addCommand(new ReplaceCommand($selector, $build));
     return $ajax_response;

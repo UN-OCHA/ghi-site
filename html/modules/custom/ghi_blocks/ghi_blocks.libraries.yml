@@ -21,6 +21,11 @@ throbber:
       css/throbber.css: {}
   dependencies:
     - core/drupal.ajax
+homepage.switcher:
+  js:
+    js/homepage.switcher.js: {}
+  dependencies:
+    - core/drupal.ajax
 message:
   css:
     component:

@@ -92,6 +92,9 @@ trait HomepageBlockTrait {
       '#theme' => 'year_switcher',
       '#years' => $options,
       '#current_year' => $current_year ?? array_key_first($options),
+      '#attached' => [
+        'library' => ['ghi_blocks/homepage.switcher'],
+      ],
     ];
   }
 
