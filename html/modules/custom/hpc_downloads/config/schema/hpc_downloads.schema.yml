@@ -14,6 +14,9 @@ hpc_downloads.settings:
     download_lifetime:
       type: integer
       label: 'The lifetime of a generated download file'
-    download_excel_row_segment_size:
+    excel_segment_size:
       type: integer
       label: 'The number of rows generated for each segment'
+    excel_footnotes_as_data_validation_message:
+      type: boolean
+      label: 'Include footnotes via the data validation prompt'

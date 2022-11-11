@@ -6,7 +6,6 @@
  */
 
 use Drupal\Core\File\FileSystem;
-
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
 
 /**
@@ -160,4 +159,14 @@ function hpc_downloads_schema() {
     'primary key' => ['id'],
   ];
   return $schema;
+}
+
+/**
+ * Set default value for new setting.
+ */
+function hpc_downloads_update_9001() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('hpc_downloads.settings');
+  $config->set('excel_footnotes_as_data_validation_message', FALSE);
+  $config->save(TRUE);
 }

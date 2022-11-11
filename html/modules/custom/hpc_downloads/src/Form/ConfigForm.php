@@ -28,7 +28,7 @@ class ConfigForm extends ConfigFormBase {
     $form['logo_pdf'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Logo identifier PDF'),
-      '#description' => $this->t('The OCHA snap service that creates PDF downloads, can include a logo in the PDF. This logo must be added to the snap service itself and is identified by a string. If a logo id is set that is not known to the snap service, the downloads will fail'),
+      '#description' => $this->t('The OCHA snap service that creates PDF downloads, can include a logo in the PDF. This logo must be added to the snap service itself and is identified by a string. If a logo id is set that is not known to the snap service, the downloads will fail.'),
       '#default_value' => $config->get('logo_pdf'),
     ];
 
@@ -58,8 +58,15 @@ class ConfigForm extends ConfigFormBase {
       '#type' => 'number',
       '#min' => 500,
       '#title' => $this->t('Segment size of Excel exports'),
-      '#description' => $this->t('To account for memory and timeout issues, the Excel export data will be split into segments and be written sequentially. You can define the size of each segment here'),
+      '#description' => $this->t('To account for memory and timeout issues, the Excel export data will be split into segments and be written sequentially. You can define the size of each segment here.'),
       '#default_value' => $config->get('excel_segment_size'),
+    ];
+
+    $form['excel_footnotes_as_data_validation_message'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Include footnotes via the data validation prompt'),
+      '#description' => $this->t('Check this if footnotes should not only be included as cell comments (built-in feature), but also via data validation input messages, which will show automatically once a cell is selected in an Excel worksheet.'),
+      '#default_value' => $config->get('excel_footnotes_as_data_validation_message'),
     ];
 
     return $form;
@@ -74,6 +81,7 @@ class ConfigForm extends ConfigFormBase {
     $config->set('logo_path_xls', $form_state->getValue('logo_path_xls'));
     $config->set('download_lifetime', $form_state->getValue('download_lifetime'));
     $config->set('excel_segment_size', $form_state->getValue('download_excel_row_segment_size'));
+    $config->set('excel_footnotes_as_data_validation_message', $form_state->getValue('excel_footnotes_as_data_validation_message'));
     $config->save();
     return parent::submitForm($form, $form_state);
   }
