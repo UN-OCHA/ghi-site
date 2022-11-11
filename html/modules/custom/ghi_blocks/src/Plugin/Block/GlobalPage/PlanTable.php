@@ -268,6 +268,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data-raw-value' => $in_need,
           'data-column-type' => 'amount',
           'data-progress-group' => 'people',
+          'export_commentary' => $this->getFootnoteForProperty($footnotes, 'in_need'),
         ],
         'targeted' => [
           'data' => [
@@ -277,6 +278,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data-raw-value' => $target,
           'data-column-type' => 'amount',
           'data-progress-group' => 'people',
+          'export_commentary' => $this->getFootnoteForProperty($footnotes, 'target'),
         ],
         'expected_reach' => [
           'data' => [
@@ -286,6 +288,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data-raw-value' => $expected_reached,
           'data-column-type' => 'amount',
           'data-progress-group' => 'people',
+          'export_commentary' => $this->getFootnoteForProperty($footnotes, 'estimated_reach'),
         ],
         'reached' => [
           'data' => $value_reached,
@@ -301,6 +304,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data-raw-value' => $requirements,
           'data-column-type' => 'currency',
           'data-progress-group' => 'financial',
+          'export_commentary' => $this->getFootnoteForProperty($footnotes, 'requirements'),
         ],
         'funding' => [
           'data' => $link_to_fts ? self::buildFtsLink($value_funding, $plan_entity, 'summary') : $value_funding,

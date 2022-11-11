@@ -2,4 +2,5 @@ logo_pdf: NULL
 logo_path: NULL
 logo_path_xls: NULL
 download_lifetime: 60
-download_excel_row_segment_size: NULL
+excel_row_segment_size: NULL
+excel_footnotes_as_data_validation_message: FALSE

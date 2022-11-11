@@ -238,6 +238,8 @@ function hpc_downloads_get_named_option_for_sheet_cell($options, $option_name, $
  */
 function hpc_downloads_phpexcel_export($op, &$data, $phpexcel, $options, $column = NULL, $row = NULL) {
   ini_set('memory_limit', '512M');
+  $config = \Drupal::config('hpc_downloads.settings');
+  $use_data_validation_for_footnotes = $config->get('excel_footnotes_as_data_validation_message');
 
   // Static helper variable to remember rows that we have to merge.
   $merged_rows = &drupal_static('HPC_DOWNLOADS_PHPEXCEL_MERGED_ROWS', []);
@@ -568,12 +570,18 @@ function hpc_downloads_phpexcel_export($op, &$data, $phpexcel, $options, $column
               $comment = $sheet->getComment($cell_coordinate);
               $comment->getText()->createTextRun($footnote);
 
-              // Width and height adjustements.
-              $width = (int) (192 / 350 * strlen($footnote) * 1.5);
-              $height = (int) (112 / 350 * strlen($footnote) / 1.1);
+              if ($use_data_validation_for_footnotes) {
+                // Add the comment as a data validation input message that will
+                // show automatically once the cell is selected in Excel.
+                $validation = $sheet->getDataValidation($cell_coordinate);
+                $validation->setPrompt($footnote);
+                $validation->setShowInputMessage(TRUE);
+              }
 
-              $comment->setWidth(($width > 40 ? $width : 40) . 'pt');
-              $comment->setHeight(($height > 20 ? $height : 20) . 'pt');
+              // The height adjustements are probably only necessary for older
+              // excel versions.
+              $comment->setWidth('192pt');
+              $comment->setHeight('112pt');
 
               // Position top and left.
               $column_ids = $sheet->getColumnDimensions();
