@@ -1,0 +1,36 @@
+article.node--view-mode-grid {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--cd-default-border-color);
+
+  .cd-teaser__image {
+    max-width: unset;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .cd-teaser__container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0 1rem;
+
+    a {
+      text-decoration: none;
+    }
+
+    .cd-teaser__description {
+      min-height: 7rem;
+      padding-top: 1rem;
+
+      &:before {
+        display: block;
+        width: 12%;
+        padding-top: 1.5rem;
+        content: " ";
+        border-top: 3px solid var(--ghi-yellow);
+      }
+    }
+  }
+}

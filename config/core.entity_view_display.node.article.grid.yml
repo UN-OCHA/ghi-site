@@ -1,0 +1,101 @@
+uuid: 5ef8a2fa-ddbe-4be0-8b99-f0acf4530625
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.grid
+    - field.field.node.article.field_base_objects
+    - field.field.node.article.field_display_hero_image
+    - field.field.node.article.field_image
+    - field.field.node.article.field_remote_article
+    - field.field.node.article.field_summary
+    - field.field.node.article.field_tags
+    - field.field.node.article.layout_builder__layout
+    - node.type.article
+    - responsive_image.styles.card_hero
+  module:
+    - config_default_responsive_image
+    - layout_builder
+    - layout_builder_ipe
+    - layout_builder_restrictions
+    - user
+third_party_settings:
+  layout_builder:
+    enabled: false
+    allow_custom: false
+  layout_builder_restrictions:
+    allowed_block_categories:
+      - 'Chaos Tools'
+      - 'Content fields'
+      - 'Country elements'
+      - 'Custom block types'
+      - Forms
+      - 'Generic elements'
+      - HID
+      - Homepage
+      - 'Inline blocks'
+      - 'Lists (Views)'
+      - Menus
+      - 'Narrative Content'
+      - 'Plan elements'
+      - 'Social Auth'
+      - Subpage
+      - System
+      - core
+    entity_view_mode_restriction:
+      allowed_layouts:
+        - layout_onecol
+      restricted_categories:
+        - 'Chaos Tools'
+        - 'Content fields'
+        - 'Custom block types'
+        - Forms
+        - HID
+        - 'Inline blocks'
+        - 'Lists (Views)'
+        - Menus
+        - 'Social Auth'
+        - Subpage
+        - System
+        - core
+      blacklisted_blocks: {  }
+      whitelisted_blocks: {  }
+  layout_builder_ipe:
+    enabled: 0
+id: node.article.grid
+targetEntityType: node
+bundle: article
+mode: grid
+content:
+  field_image:
+    type: config_default_responsive_image
+    label: hidden
+    settings:
+      responsive_image_style: card_hero
+      image_link: content
+      default_image:
+        path: /themes/custom/common_design_subtheme/img/default_images/article_image.png
+        use_image_style: '1'
+        alt: ''
+        title: ''
+        width: null
+        height: null
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_tags:
+    type: entity_reference_label
+    label: visually_hidden
+    settings:
+      link: false
+    third_party_settings: {  }
+    weight: 1
+    region: content
+hidden:
+  field_base_objects: true
+  field_display_hero_image: true
+  field_remote_article: true
+  field_summary: true
+  langcode: true
+  layout_builder__layout: true
+  links: true

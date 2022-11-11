@@ -2,6 +2,13 @@ global-styling:
   css:
     theme:
       css/styles.css: {}
+  js:
+    js/common.js: {}
+    js/login_destination.js: {}
+  dependencies:
+    - ghi_blocks/block.settings
+    - common_design_subtheme/sorttable
+    - common_design_subtheme/select2
 
 # CSS custom properties polyfill for IE11.
 # https://jhildenbiddle.github.io/css-vars-ponyfill
@@ -13,8 +20,148 @@ css-vars-ponyfill:
     https://cdn.jsdelivr.net/npm/css-vars-ponyfill@2: { type: external, minified: true, attributes: { nomodule: true } }
     js/cd-css-vars-ponyfill.js: { attributes: { nomodule: true } }
 
-# Customized to allow for non-ID selectors and also debug statements when the
-# conditions to move OCHA Services from Footer to Header are not met.
-cd-ocha-services:
+sorttable:
+  version: 2
   js:
-    js/cd-ocha-services.js: {}
+    js/sorttable.js: {}
+
+ghi-table-search:
+  js:
+    components/ghi-table-search/ghi-table-search.js: {}
+  css:
+    theme:
+      components/ghi-table-search/ghi-table-search.css: {}
+  dependencies:
+    - core/jquery.ui
+
+ghi-table-progress-indicator:
+  css:
+    theme:
+      components/ghi-table-progress-indicator/ghi-table-progress-indicator.css: {}
+
+select2:
+  version: 2
+  js:
+    /libraries/select2/dist/js/select2.min.js: {}
+  css:
+    component:
+      /libraries/select2/dist/css/select2.min.css: {}
+
+# External libraries
+swiper:
+  version: 8.1
+  js:
+    /libraries/swiper/swiper-bundle.min.js: {}
+  css:
+    component:
+      /libraries/swiper/swiper.min.css: {}
+
+# Libraries specific to GHI.
+ghi-grid:
+  css:
+    theme:
+      components/ghi-grid/ghi-grid.css: {}
+ghi-section-teaser:
+  css:
+    theme:
+      components/ghi-section-teaser/ghi-section-teaser.css: {}
+ghi-tab-container:
+  css:
+    theme:
+      components/ghi-tab-container/ghi-tab-container.css: {}
+  js:
+    components/ghi-tab-container/ghi-tab-container.js: {}
+  dependencies:
+    - common_design_subtheme/swiper
+ghi-link-carousel:
+  css:
+    theme:
+      components/ghi-link-carousel/ghi-link-carousel.css: {}
+  js:
+    components/ghi-link-carousel/ghi-link-carousel.js: {}
+  dependencies:
+    - common_design_subtheme/swiper
+
+# Copy libraries from GHO
+datawrapper-responsive-iframe:
+  header: true
+  js:
+    js/datawrapper-responsive-iframe.js: {}
+gho-achievement:
+  css:
+    theme:
+      components/gho-achievement/gho-achievement.css: {}
+gho-appeals-tags:
+  css:
+    theme:
+      components/gho-appeals-tags/gho-appeals-tags.css: {}
+gho-article-list:
+  css:
+    theme:
+      components/gho-article-list/gho-article-list.css: {}
+gho-aside:
+  css:
+    theme:
+      components/gho-aside/gho-aside.css: {}
+  dependencies:
+    - common_design_subtheme/gho-caption
+gho-bottom-figure-row:
+  css:
+    theme:
+      components/gho-bottom-figure-row/gho-bottom-figure-row.css: {}
+gho-caption:
+  css:
+    theme:
+      components/gho-caption/gho-caption.css: {}
+gho-facts-and-figures:
+  css:
+    theme:
+      components/gho-facts-and-figures/gho-facts-and-figures.css: {}
+gho-footnotes:
+  js:
+    components/gho-footnotes/gho-footnotes.js: {}
+  css:
+    theme:
+      components/gho-footnotes/gho-footnotes.css: {}
+gho-further-reading:
+  css:
+    theme:
+      components/gho-further-reading/gho-further-reading.css: {}
+gho-interactive-content:
+  css:
+    theme:
+      components/gho-interactive-content/gho-interactive-content.css: {}
+  dependencies:
+    - common_design_subtheme/datawrapper-responsive-iframe
+gho-needs-and-requirements:
+  css:
+    theme:
+      components/gho-needs-and-requirements/gho-needs-and-requirements.css: {}
+gho-page-node:
+  css:
+    theme:
+      components/gho-page-node/gho-page-node.css: {}
+gho-photo-gallery:
+  css:
+    theme:
+      components/gho-photo-gallery/gho-photo-gallery.css: {}
+  dependencies:
+    - common_design_subtheme/gho-aside
+gho-promoted-paragraph:
+  css:
+    theme:
+      components/gho-promoted-paragraph/gho-promoted-paragraph.css: {}
+gho-related-articles:
+  css:
+    theme:
+      components/gho-related-articles/gho-related-articles.css: {}
+gho-sub-article:
+  css:
+    theme:
+      components/gho-sub-article/gho-sub-article.css: {}
+  dependencies:
+    - common_design_subtheme/gho-appeals-tags
+gho-text:
+  css:
+    theme:
+      components/gho-text/gho-text.css: {}

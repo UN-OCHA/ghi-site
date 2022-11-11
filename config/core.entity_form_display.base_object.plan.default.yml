@@ -1,0 +1,301 @@
+uuid: f7a53267-c856-4f77-adeb-dfd8032a7a72
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.base_object.plan.field_country
+    - field.field.base_object.plan.field_decimal_format
+    - field.field.base_object.plan.field_description
+    - field.field.base_object.plan.field_footnotes
+    - field.field.base_object.plan.field_link_to_fts
+    - field.field.base_object.plan.field_max_admin_level
+    - field.field.base_object.plan.field_operations_category
+    - field.field.base_object.plan.field_original_id
+    - field.field.base_object.plan.field_plan_caseload
+    - field.field.base_object.plan.field_plan_costing
+    - field.field.base_object.plan.field_plan_document_link
+    - field.field.base_object.plan.field_plan_status
+    - field.field.base_object.plan.field_plan_type
+    - field.field.base_object.plan.field_plan_type_label_override
+    - field.field.base_object.plan.field_plan_version_argument
+    - field.field.base_object.plan.field_plan_version_tag
+    - field.field.base_object.plan.field_restricted
+    - field.field.base_object.plan.field_short_name
+    - field.field.base_object.plan.field_visible_on_global_pages
+    - field.field.base_object.plan.field_year
+    - ghi_base_objects.base_object_type.plan
+  module:
+    - field_group
+    - ghi_base_objects
+    - ghi_plans
+    - link
+third_party_settings:
+  field_group:
+    group_plan_properties:
+      children:
+        - field_original_id
+        - field_plan_type
+        - field_plan_version_tag
+        - field_plan_costing
+        - field_year
+        - field_restricted
+        - field_description
+      label: 'Plan Properties'
+      region: content
+      parent_name: group_tabs
+      weight: 3
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        formatter: closed
+        description: ''
+        required_fields: true
+        direction: vertical
+        width_breakpoint: 640
+    group_locations:
+      children:
+        - field_country
+      label: Locations
+      region: content
+      parent_name: group_tabs
+      weight: 4
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        formatter: closed
+        description: ''
+        required_fields: true
+        direction: vertical
+        width_breakpoint: 640
+    group_settings:
+      children:
+        - field_short_name
+        - field_operations_category
+        - field_plan_version_argument
+        - field_plan_caseload
+        - field_plan_status
+        - field_plan_document_link
+        - field_plan_type_label_override
+        - field_decimal_format
+        - field_max_admin_level
+        - field_link_to_fts
+        - field_visible_on_global_pages
+      label: Settings
+      region: content
+      parent_name: group_tabs
+      weight: 2
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        formatter: closed
+        description: ''
+        required_fields: true
+        direction: vertical
+        width_breakpoint: 640
+    group_tabs:
+      children:
+        - group_settings
+        - group_plan_properties
+        - group_locations
+        - group_footnotes
+      label: Tabs
+      region: content
+      parent_name: ''
+      weight: 1
+      format_type: tabs
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        formatter: closed
+        description: ''
+        required_fields: true
+        direction: vertical
+        width_breakpoint: 640
+    group_footnotes:
+      children:
+        - field_footnotes
+      label: Footnotes
+      region: content
+      parent_name: group_tabs
+      weight: 5
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        formatter: closed
+        description: ''
+        required_fields: true
+        direction: vertical
+        width_breakpoint: 640
+id: base_object.plan.default
+targetEntityType: base_object
+bundle: plan
+mode: default
+content:
+  field_country:
+    type: entity_reference_autocomplete
+    weight: 4
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_decimal_format:
+    type: options_select
+    weight: 13
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_description:
+    type: string_textarea
+    weight: 10
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_footnotes:
+    type: ghi_footnotes
+    weight: 11
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_link_to_fts:
+    type: boolean_checkbox
+    weight: 15
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_max_admin_level:
+    type: number
+    weight: 14
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_operations_category:
+    type: options_select
+    weight: 7
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_original_id:
+    type: number
+    weight: 4
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_plan_caseload:
+    type: ghi_plans_plan_caseload
+    weight: 9
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_plan_costing:
+    type: entity_reference_autocomplete
+    weight: 7
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_plan_document_link:
+    type: link_default
+    weight: 11
+    region: content
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
+    third_party_settings: {  }
+  field_plan_status:
+    type: boolean_checkbox
+    weight: 10
+    region: content
+    settings:
+      display_label: false
+    third_party_settings: {  }
+  field_plan_type:
+    type: entity_reference_autocomplete
+    weight: 5
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_plan_type_label_override:
+    type: string_textfield
+    weight: 12
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_plan_version_argument:
+    type: options_select
+    weight: 8
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_plan_version_tag:
+    type: string_textfield
+    weight: 6
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_restricted:
+    type: boolean_checkbox
+    weight: 9
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_short_name:
+    type: string_textfield
+    weight: 6
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_visible_on_global_pages:
+    type: boolean_checkbox
+    weight: 16
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_year:
+    type: number
+    weight: 8
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  langcode: true

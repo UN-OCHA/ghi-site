@@ -1,0 +1,29 @@
+uuid: f3483df8-a239-44be-8f80-20a97b4b3aaf
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_team
+    - node.type.homepage
+    - taxonomy.vocabulary.team
+id: node.homepage.field_team
+field_name: field_team
+entity_type: node
+bundle: homepage
+label: Team
+description: 'Assign a team that is responsible for this homepage container.'
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      team: team
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

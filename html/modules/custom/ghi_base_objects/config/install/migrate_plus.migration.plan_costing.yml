@@ -1,0 +1,44 @@
+id: plan_costing
+label: 'Plan costing categories from the HPC API'
+migration_group: hpc_api_data
+migration_tags:
+  - 'HPC API'
+source:
+  plugin: hpc_api_url
+  data_fetcher_plugin: hpc_api_http
+  data_parser_plugin: hpc_api_endpoint
+  endpoints:
+    -
+      endpoint: fts/category/planCosting
+  item_selector: data
+  fields:
+    -
+      name: original_id
+      label: 'Unique term ID'
+      selector: id
+    -
+      name: name
+      label: Name
+      selector: name
+    -
+      name: code
+      label: Code
+      selector: code
+  ids:
+    original_id:
+      type: integer
+process:
+  name: name
+  field_original_id: original_id
+  field_plan_costing_code: code
+destination:
+  plugin: 'entity:taxonomy_term'
+  default_bundle: plan_costing
+  overwrite_properties:
+    - name
+    - field_plan_costing_code
+migration_dependencies: {  }
+dependencies:
+  enforced:
+    module:
+      - hpc_api

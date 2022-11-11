@@ -1,0 +1,23 @@
+uuid: 1880a2e4-23d1-4f47-b687-3ea113fdbae1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_structural_tag
+    - taxonomy.vocabulary.tags
+id: taxonomy_term.tags.field_structural_tag
+field_name: field_structural_tag
+entity_type: taxonomy_term
+bundle: tags
+label: 'Structural tag'
+description: 'Check this to mark this tag as a "structural tag", which means that it is used to construct site structure in addition to classifying content. The effect is that it will not always be displayed along with the "non-structural tags" (keywords) in places like the meta data section on article pages.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

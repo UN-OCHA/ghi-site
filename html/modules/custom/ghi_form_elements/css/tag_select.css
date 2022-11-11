@@ -1,0 +1,23 @@
+.form-type--tag_selection .glb-form-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+}
+.form-type--tag_selection .glb-form-checkboxes .glb-form-type--checkbox {
+  margin-top: .5em !important;
+  margin-bottom: .5em !important;
+  min-width: 15%;
+}
+
+.form-type--tag_selection .preview-wrapper .label {
+  font-weight: bold;
+}
+.form-type--tag_selection .preview-content > [data-content-id] {
+  padding: 2px;
+}
+.form-type--tag_selection .preview-content > [data-content-id].selected {
+  background-color: #f7d974;
+}
+
+.form-type--tag_selection .preview-content > [data-content-id] > * {
+  zoom: 0.7;
+}

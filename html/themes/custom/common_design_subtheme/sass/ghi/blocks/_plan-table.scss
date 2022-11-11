@@ -1,0 +1,86 @@
+.ghi-block-global-plan-table {
+  table {
+    tbody {
+      td[data-column="name"] {
+        display: flex;
+        justify-content: space-between;
+
+        .tooltip.plan-type-icon[data-toggle] {
+          width: auto !important;
+          min-width: 4rem;
+          height: auto !important;
+          max-height: 1.5rem;
+          text-align: center;
+          color: $cd-white;
+          // The default background color for plan type other and unknown
+          background-color: rgb(135, 207, 173);
+          font-size: var(--cd-font-size--small);
+          font-weight: normal;
+
+          &.plan-type-hrp {
+            background-color: rgb(80, 144, 205);
+          }
+          &.plan-type-fa {
+            background-color: rgb(136, 105, 174);
+          }
+          &.plan-type-rrp {
+            background-color: rgb(230, 103, 81);
+          }
+          &.plan-type-non-hrp {
+            padding: 0 5px;
+            background-color: rgb(119, 119, 119);
+          }
+        }
+      }
+
+      td[data-column="status"] > div {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      td a {
+        word-break: normal;
+
+        &.fts-plan-link {
+          text-decoration: none;
+        }
+      }
+    }
+  }
+}
+
+.ghi-block-global-plan-overview-map + .ghi-block-global-plan-table {
+
+  /**
+   * Bleed the background only.
+   */
+  position: relative;
+  z-index: 1;
+  margin-top: -1rem;
+  padding-bottom: 0;
+  background-color: var(--ghi-default-background-color);
+
+  .block-comment,
+  .block-links {
+    /**
+    * Bleed the background only.
+    */
+    position: relative;
+    z-index: 1;
+    border-top: 0;
+    border-bottom: 0;
+    background-color: var(--cd-white);
+
+    #layout-builder & {
+      background-color: inherit;
+    }
+
+    &.block-comment {
+      margin-top: 2rem;
+
+      &:before {
+        border-bottom: 0;
+      }
+    }
+  }
+}

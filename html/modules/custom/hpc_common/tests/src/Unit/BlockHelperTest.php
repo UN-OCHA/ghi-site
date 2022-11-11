@@ -24,7 +24,7 @@ class BlockHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Mock block manager.
@@ -47,7 +47,7 @@ class BlockHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function tearDown() {
+  protected function tearDown(): void {
     parent::tearDown();
     unset($this->blockHelper);
 

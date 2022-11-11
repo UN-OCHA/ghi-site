@@ -1,0 +1,18 @@
+uuid: c1440eef-d5e6-4da9-a389-35c5a7061649
+langcode: en
+status: true
+dependencies:
+  theme:
+    - common_design_subtheme
+id: pagetitle
+theme: common_design_subtheme
+region: page_title
+weight: -7
+provider: null
+plugin: page_title_block
+settings:
+  id: page_title_block
+  label: 'Page title'
+  label_display: '0'
+  provider: core
+visibility: {  }

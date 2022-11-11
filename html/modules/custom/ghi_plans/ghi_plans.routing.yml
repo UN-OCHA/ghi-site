@@ -1,15 +1,15 @@
-ghi_plans.sync_elements:
-  path: '/node/{node}/hpc/sync-elements'
+ghi_plans.base_object.plan_structure:
+  path: '/admin/content/base-objects/{base_object}/plan-structure'
   defaults:
-    _form: '\Drupal\ghi_plans\Form\ElementSyncForm'
-    _title: 'Sync elements'
+    _controller: '\Drupal\ghi_plans\Controller\PlanStructureController::showPage'
+    _title_callback: '\Drupal\ghi_plans\Controller\PlanAdminController::planStructureTitle'
   options:
     parameters:
-      node:
-        type: entity:node
+      base_object:
+        type: entity:base_object
     _admin_route: TRUE
   requirements:
-    _custom_access: '\Drupal\ghi_plans\Controller\SyncAccessController::accessElementSyncForm'
+    _custom_access: '\Drupal\ghi_plans\Controller\PlanAdminController::access'
     _permission: 'administer site configuration'
 ghi_plans.plan_autocomplete:
   path: '/plan/autocomplete'
@@ -19,4 +19,53 @@ ghi_plans.plan_autocomplete:
   requirements:
     _access: 'TRUE'
   options:
-    no_cache: 'TRUE'
+    no_cache: TRUE
+ghi_plans.modal_content.dissaggregation:
+  path: '/modal-content/disaggregation/{attachment}/{metric}/{reporting_period}'
+  defaults:
+    _controller: '\Drupal\ghi_plans\Controller\DisaggregationModalController::loadDisaggregationModalData'
+    _format: json
+    reporting_period: 'latest'
+  requirements:
+    _access: 'TRUE'
+  options:
+    parameters:
+      attachment:
+        type: attachment
+      metric:
+        type: integer
+ghi_plans.modal_content.projects:
+  path: '/modal-content/projects/{base_object}'
+  defaults:
+    _controller: '\Drupal\ghi_plans\Controller\ProjectModalController::buildProjectTable'
+    _format: json
+  requirements:
+    _access: 'TRUE'
+  options:
+    parameters:
+      base_object:
+        type: entity:base_object
+ghi_plans.modal_content.organizations:
+  path: '/modal-content/organizations/{base_object}'
+  defaults:
+    _controller: '\Drupal\ghi_plans\Controller\ProjectModalController::buildOrganizationList'
+    _format: json
+  requirements:
+    _access: 'TRUE'
+  options:
+    parameters:
+      base_object:
+        type: entity:base_object
+ghi_plans.modal_content.organization_projects:
+  path: '/modal-content/organization-projects/{base_object}/{organization_id}'
+  defaults:
+    _controller: '\Drupal\ghi_plans\Controller\ProjectModalController::buildOrganizationProjectTable'
+    _format: json
+  requirements:
+    _access: 'TRUE'
+  options:
+    parameters:
+      base_object:
+        type: entity:base_object
+      organization:
+        type: integer

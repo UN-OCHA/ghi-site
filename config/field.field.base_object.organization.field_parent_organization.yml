@@ -1,0 +1,28 @@
+uuid: 68c874c0-5a8e-419d-a456-3addaf9fd8de
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_parent_organization
+    - ghi_base_objects.base_object_type.organization
+id: base_object.organization.field_parent_organization
+field_name: field_parent_organization
+entity_type: base_object
+bundle: organization
+label: 'Parent organization'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:base_object'
+  handler_settings:
+    target_bundles:
+      organization: organization
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

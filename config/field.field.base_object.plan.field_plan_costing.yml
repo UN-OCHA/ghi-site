@@ -1,0 +1,29 @@
+uuid: 531ae8db-afb9-44e1-a70b-c43fe857e14a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_plan_costing
+    - ghi_base_objects.base_object_type.plan
+    - taxonomy.vocabulary.plan_costing
+id: base_object.plan.field_plan_costing
+field_name: field_plan_costing
+entity_type: base_object
+bundle: plan
+label: 'Plan costing'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      plan_costing: plan_costing
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

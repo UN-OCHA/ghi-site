@@ -1,0 +1,33 @@
+uuid: ed9f34a2-4b2c-4820-bbeb-ff23d922cc91
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_hero_image
+    - node.type.section
+  module:
+    - ghi_hero_image
+id: node.section.field_hero_image
+field_name: field_hero_image
+entity_type: node
+bundle: section
+label: 'Hero image'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    source: none
+    settings:
+      hpc_webcontent_file_attachment: ''
+      smugmug_api:
+        image_id: ''
+        search:
+          text: ''
+          keywords: ''
+          image_id: ''
+        currently_selected:
+          preview: ''
+default_value_callback: ''
+settings: {  }
+field_type: ghi_hero_image

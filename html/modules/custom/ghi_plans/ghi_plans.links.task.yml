@@ -1,4 +1,15 @@
-entity.node.sync_elements:
-  route_name: ghi_plans.sync_elements
-  base_route: entity.node.canonical
-  title: Sync elements
+entity.base_object.hpc:
+  route_name: ghi_plans.base_object.plan_structure
+  base_route: entity.base_object.canonical
+  title: HPC
+  weight: 100
+entity.base_object.hpc.plan_structure:
+  route_name: ghi_plans.base_object.plan_structure
+  base_route: entity.base_object.canonical
+  parent_id: entity.base_object.hpc
+  title: Plan structure
+# entity.node.hpc.plan_settings:
+#   route_name: ghi_plans.node.plan_settings
+#   base_route: entity.node.canonical
+#   parent_id: entity.node.hpc
+#   title: Plan settings

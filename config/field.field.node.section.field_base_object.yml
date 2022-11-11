@@ -1,0 +1,33 @@
+uuid: 2cc2abbc-2eee-4932-97ca-bab0659be2da
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_base_object
+    - ghi_base_objects.base_object_type.country
+    - ghi_base_objects.base_object_type.organization
+    - ghi_base_objects.base_object_type.plan
+    - node.type.section
+id: node.section.field_base_object
+field_name: field_base_object
+entity_type: node
+bundle: section
+label: 'Base object'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:base_object'
+  handler_settings:
+    target_bundles:
+      country: country
+      organization: organization
+      plan: plan
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: country
+field_type: entity_reference

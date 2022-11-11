@@ -1,0 +1,14 @@
+<div class="{{ outer_classes }}">
+  {% if view_select or object_select %}
+    <div class="select-wrappers">
+      {{ view_select }}
+      {{ object_select }}
+    </div>
+  {% endif %}
+  <div class="plan-operational-presence-map-wrapper pane-{{ chart_id }} pane-{{ chart_class }}">
+    <div class="map-container">
+      <div class="map-legend"></div>
+      <div id="{{ chart_id }}"></div>
+    </div>
+  </div>
+</div>

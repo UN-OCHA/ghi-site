@@ -1,0 +1,17 @@
+uuid: d539a928-9789-4f75-972f-1140356ae095
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: 'Risk index'
+type: risk_index
+description: 'A risk index page for any of the base entities of this site, e.g. for plans, countries, regions, ...'
+help: ''
+new_revision: true
+preview_mode: 0
+display_submitted: false

@@ -1,0 +1,22 @@
+# Base object tasks definition
+
+entity.base_object.canonical:
+  route_name: entity.base_object.canonical
+  base_route: entity.base_object.canonical
+  title: 'View'
+
+entity.base_object.edit_form:
+  route_name: entity.base_object.edit_form
+  base_route: entity.base_object.canonical
+  title: 'Edit'
+
+entity.base_object.delete_form:
+  route_name:  entity.base_object.delete_form
+  base_route:  entity.base_object.canonical
+  title: Delete
+  weight: 10
+
+entity.base_object_type.edit_form:
+  title: 'Edit'
+  route_name: entity.base_object_type.edit_form
+  base_route: entity.base_object_type.edit_form

@@ -1,0 +1,13 @@
+administer ghi global config:
+  title: 'Administer GHI global config'
+  description: 'Allow to access the GHI global administration pages.'
+  restrict access: true
+show block configuration code:
+  title: 'Show block configuration code'
+  description: 'Allow to show the block configuration code.'
+import block from configuration code:
+  title: 'Import block from configuration code'
+  description: 'Allow to import a block by pasting the configuration code.'
+use inline blocks:
+  title: 'Use inline blocks'
+  description: 'Allow to use inline blocks with custom HTML.'

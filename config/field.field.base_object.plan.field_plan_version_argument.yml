@@ -1,0 +1,23 @@
+uuid: fce73d58-ea75-4189-ad21-80593bc45ba4
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_plan_version_argument
+    - ghi_base_objects.base_object_type.plan
+  module:
+    - options
+id: base_object.plan.field_plan_version_argument
+field_name: field_plan_version_argument
+entity_type: base_object
+bundle: plan
+label: 'Plan version argument'
+description: 'The version argument to use when fetching plan data.'
+required: true
+translatable: false
+default_value:
+  -
+    value: current
+default_value_callback: ''
+settings: {  }
+field_type: list_string

@@ -1,6 +1,6 @@
 uuid: 6c8207b5-ac35-4e62-8c17-edeb80c4581e
 langcode: en
-status: true
+status: false
 dependencies:
   theme:
     - common_design_subtheme
@@ -8,15 +8,15 @@ _core:
   default_config_hash: c-06bbElRY5sKmglk74ppgTW93Et4-EJFyNiUZMb8JY
 id: common_design_subtheme_local_tasks
 theme: common_design_subtheme
-region: content
-weight: -20
+region: page_navigation
+weight: -4
 provider: null
 plugin: local_tasks_block
 settings:
   id: local_tasks_block
   label: Tabs
-  provider: core
   label_display: '0'
+  provider: core
   primary: true
   secondary: true
 visibility: {  }

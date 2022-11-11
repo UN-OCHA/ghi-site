@@ -1,0 +1,540 @@
+<?php
+
+/**
+ * @file
+ * Template overrides, preprocess, and hooks for the GHI subtheme.
+ */
+
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Access\AccessResultForbidden;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Render\Markup;
+use Drupal\Core\Template\Attribute;
+use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function common_design_subtheme_theme_registry_alter(&$theme_registry) {
+  // Set some defaults for number formatting.
+  $theme_registry['hpc_currency']['variables']['use_abbreviation'] = FALSE;
+  $theme_registry['hpc_amount']['variables']['use_abbreviation'] = FALSE;
+  // Defaults for tables and to make those settings available.
+  $theme_registry['table']['variables']['sortable'] = FALSE;
+  $theme_registry['table']['variables']['searchable'] = FALSE;
+  $theme_registry['table']['variables']['progress_groups'] = FALSE;
+  $theme_registry['table']['variables']['autosort'] = FALSE;
+  $theme_registry['table']['variables']['soft_limit'] = FALSE;
+  $theme_registry['table']['variables']['sticky_rows'] = FALSE;
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter().
+ *
+ * We need more granularity when Views displays are getting rendered, because
+ * they might be inside a Paragraph type (by way of viewsreference module) and
+ * thus need special treatment which can happen in Twig.
+ *
+ * @see https://api.drupal.org/api/drupal/core%21lib%21Drupal%21Core%21Render%21theme.api.php/function/hook_theme_suggestions_HOOK_alter/8.4.x
+ */
+function common_design_subtheme_theme_suggestions_views_view_alter(&$suggestions, $variables) {
+  $suggestions[] = sprintf('views_view__%s', $variables['view']->id());
+  $suggestions[] = sprintf('views_view__%s__%s', $variables['view']->id(), $variables['view']->current_display);
+}
+
+/**
+ * Implements hook_theme_suggestions_item_list_alter().
+ */
+function common_design_subtheme_theme_suggestions_item_list_alter(array &$suggestions, array $variables, $hook) {
+  $plugin_type = $variables['context']['plugin_type'] ?? NULL;
+  $plugin_id = $variables['context']['plugin_id'] ?? NULL;
+  if ($plugin_type) {
+    $suggestions[] = $hook . '__' . strtr($plugin_type, '-', '_');
+  }
+  if ($plugin_id) {
+    $suggestions[] = $hook . '__' . strtr($plugin_id, '-', '_');
+  }
+  if ($plugin_type && $plugin_id) {
+    $suggestions[] = $hook . '__' . strtr($plugin_type, '-', '_') . '__' . strtr($plugin_id, '-', '_');
+  }
+}
+
+/**
+ * Implements hook_preprocess_region().
+ *
+ * Unset blocks that don't have any content besides or only HTML comments.
+ */
+function common_design_subtheme_preprocess_region(&$variables) {
+  $regions = [
+    'page_title',
+    'page_subtitle',
+  ];
+  if (in_array($variables['region'], $regions) && !empty($variables['elements'])) {
+    foreach (Element::children($variables['elements']) as $key) {
+      $block = $variables['elements'][$key];
+      if (!array_key_exists('#markup', $block)) {
+        continue;
+      }
+      if (empty($block['#markup']) && empty($block['#children'])) {
+        unset($variables['elements'][$key]);
+      }
+      if (empty(trim(preg_replace('/<!--(.|\s)*?-->/', '', $block['#markup'])))) {
+        unset($variables['elements'][$key]);
+      }
+    }
+
+    if (!count(Element::children($variables['elements']))) {
+      // If the region is effectively empty, don't display it.
+      $variables['elements'] = NULL;
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_block().
+ */
+function common_design_subtheme_preprocess_block(&$variables) {
+  $full_width_blocks = [
+    'generic_link_carousel',
+    'global_homepages',
+    'global_plan_overview_map',
+    'global_plan_table',
+    'system_menu_block:operations-menu',
+    'system_menu_block:account',
+    'subpage_navigation',
+    'system_main_block',
+  ];
+
+  // On some node types, we want to auto highlight (full-width background) the
+  // first block in the content region. But only if that block is not already a
+  // full-width block.
+  $is_front = $variables['is_front'] ?? FALSE;
+  $full_width_block = in_array($variables['plugin_id'], $full_width_blocks) || !empty($variables['content']['#full_width']);
+  $region = $variables['content']['#region'] ?? NULL;
+  $block_instance = $variables['content']['#block_instance'] ?? NULL;
+  $ghi_block = $block_instance && $block_instance instanceof GHIBlockBase;
+  $processed_regions = &drupal_static(__FUNCTION__, []);
+  if (!$is_front && $region && !array_key_exists($region, $processed_regions) && $ghi_block) {
+    $page_node = $block_instance->getPageNode();
+    $qualified_bundles = [
+      'section',
+      'profile',
+      'population',
+      'financials',
+      'risk_index',
+      'plan_cluster',
+    ];
+    $is_qualified_node = $page_node && in_array($page_node->bundle(), $qualified_bundles);
+    $is_layout_builder = $block_instance->isLayoutBuilder();
+    if (!$full_width_block && !$is_layout_builder && $is_qualified_node) {
+      // This is the first block in this region and we want to highlight it.
+      if (!empty($variables['content']['#theme_wrappers']['container'])) {
+        $variables['content']['#theme_wrappers']['container']['#attributes']['class'][] = 'content-width';
+      }
+      foreach (Element::children($variables['content']) as $key) {
+        $variables['content'][$key]['#attributes']['class'][] = 'content-width';
+      }
+      $variables['content']['#full_width'] = TRUE;
+      $variables['attributes']['class'][] = 'block-highlighted';
+    }
+    $processed_regions[$region] = TRUE;
+  }
+
+  // Make the full width status available in the template.
+  $variables['full_width'] = !empty($variables['content']['#full_width']) || $full_width_block;
+
+  // Some blocks are white-listed here to never use the content-width class,
+  // others can declare themselves as being full width by setting the
+  // #full_width property. One example of the latter is a promoted paragraph
+  // block.
+  $content_width_block = !in_array($variables['plugin_id'], $full_width_blocks) && empty($variables['content']['#full_width']);
+  if ($content_width_block) {
+    $variables['attributes']['class'][] = 'content-width';
+  }
+
+  // Make sure that full width blocks with a title show that title inside the
+  // content area.
+  if (!empty($variables['full_width']) && !empty($variables['content']['#title'])) {
+    $variables['title_attributes']['class'][] = 'content-width';
+  }
+
+  // Move the comments in place.
+  if (array_key_exists('comment', $variables['content']) && !empty($variables['content']['comment'])) {
+    $variables['comment'] = $variables['content']['comment'];
+    unset($variables['content']['comment']);
+    $variables['attributes']['class'][] = 'has-comment';
+  }
+}
+
+/**
+ * Implements hook_preprocess_menu().
+ */
+function common_design_subtheme_preprocess_menu(&$variables) {
+  if ($variables['menu_name'] == 'main') {
+    // Mark items as using a mega menu.
+    foreach ($variables['items'] as &$item) {
+      $item['mega_menu'] = $item['content']['#view_mode'] == 'default';
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_page().
+ *
+ * Reinstate the title and local task blocks on layout builder pages.
+ *
+ * Background: The common design theme hides the page title and local task
+ * blocks under certain circumstances. Unfortunately this also affects the
+ * layout builder page, which is missing both the page title and the local task
+ * bar.
+ *
+ * @see common_design_preprocess_page()
+ */
+function common_design_subtheme_preprocess_page(&$variables) {
+  // If the node variable is defined then we assume we are on a node page.
+  if (isset($variables['node']) && is_a($variables['node'], '\Drupal\node\NodeInterface')) {
+    // Check if we are on a layout builder page.
+    $route = \Drupal::routeMatch()->getRouteName();
+    if (strpos($route, 'layout_builder.overrides.node') === 0) {
+      // If so, reinstate the blocks.
+      common_design_subtheme_show_hidden_blocks_from_page($variables, [
+        'page_title_block',
+        'local_tasks_block',
+      ]);
+    }
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $variables['node'];
+    if (!$node->isPublished()) {
+      $variables['attributes']['class'][] = 'node--unpublished';
+    }
+  }
+  $variables['#attached']['library'][] = 'common_design_subtheme/gho-page-node';
+
+  $subpage_title = $variables['page']['content']['subpagetitle'] ?? NULL;
+  if ($subpage_title) {
+    $variables['attributes']['class'][] = 'has-subpage-title';
+  }
+}
+
+/**
+ * Show previously hidden blocks on the page.
+ *
+ * @param array $variables
+ *   Page variables as passed to hook_preprocess_page().
+ * @param array $block_ids
+ *   Ids of the blocks to show.
+ *
+ * @see common_design_hide_rendered_blocks_from_page()
+ */
+function common_design_subtheme_show_hidden_blocks_from_page(array &$variables, array $block_ids) {
+  $blocks = common_design_load_theme_blocks($block_ids);
+  if (!empty($blocks)) {
+    foreach ($blocks as $block) {
+      $id = $block->id();
+      $region = $block->getRegion();
+
+      $build = &$variables['page'][$region][$id] ?? NULL;
+      if (!$build) {
+        continue;
+      }
+      if (!array_key_exists('#original_access', $build) || !array_key_exists('#access', $build)) {
+        continue;
+      }
+      $access = $build['#access'] ?? NULL;
+      if (!$access instanceof AccessResultForbidden || $access->getReason() != 'common_design_hide_rendered_blocks_from_page') {
+        continue;
+      }
+      if (!array_key_exists('#lazy_builder', $build)) {
+        // This is just the usual block, so simply update the access property
+        // with it's original value.
+        $build['#access'] = $build['#original_access'];
+        unset($build['#original_access']);
+      }
+      else {
+        // Lazy builder blocks require more attention.
+        $lazy_builder = $build['#lazy_builder'];
+        // We first need to render the block.
+        $rendered_block = call_user_func_array($lazy_builder[0], $lazy_builder[1]);
+        // Then update the access information.
+        $rendered_block['#access'] = $build['#original_access'];
+        // And then replace the original lazy builder block render array with
+        // the one we just built.
+        $build = $rendered_block;
+      }
+    }
+  }
+}
+
+/**
+ * Assure common styling for tables.
+ *
+ * Do this by leveraging as much of the common design as possible.
+ */
+function common_design_subtheme_preprocess_table(&$vars) {
+  $attributes = [
+    'class' => [
+      'ghi-table',
+      'cd-table',
+      'cd-table--responsive',
+    ],
+  ];
+  $attached = [
+    'library' => [
+      'common_design/cd-table',
+      'common_design_subtheme/sorttable',
+    ],
+  ];
+
+  // Sorting.
+  $sortable = !empty($vars['sortable']);
+  if ($sortable) {
+    $attributes['class'][] = Html::getClass('sortable');
+  }
+  if (!empty($vars['autosort'])) {
+    $attributes['class'][] = Html::getClass('autosort');
+  }
+
+  // Searchable.
+  $searchable = !empty($vars['searchable']);
+  if ($searchable) {
+    $attributes['class'][] = Html::getClass('searchable');
+    $attached['library'][] = 'common_design_subtheme/ghi-table-search';
+  }
+
+  // Soft limits.
+  if (!empty($vars['soft_limit'])) {
+    $attributes['class'][] = Html::getClass('soft_limit');
+    $attributes['data-soft-limit'][] = (int) $vars['soft_limit'];
+  }
+
+  // Progress indicators.
+  $progress_indicators = !empty($vars['progress_groups']);
+  $progress_groups = [];
+  if ($progress_indicators) {
+    $attributes['class'][] = Html::getClass('has-progress-indicator');
+  }
+
+  if (!empty($vars['sticky_rows'])) {
+    $pseudo_table = [
+      'rows' => $vars['sticky_rows'],
+    ];
+    template_preprocess_table($pseudo_table);
+    foreach ($pseudo_table['rows'] as $row_key => &$row) {
+      $attribute = is_array($row) && array_key_exists('attributes', $row) ? $row['attributes'] : NULL;
+      if (!$attribute) {
+        continue;
+      }
+      $attribute->addClass('sticky-row');
+    }
+    $vars['rows'] = array_merge($pseudo_table['rows'], $vars['rows']);
+    $attributes['sortable-row-offset'] = count($vars['sticky_rows']);
+    $attributes['class'][] = 'has-totals-row';
+  }
+
+  $vars['attributes'] = array_key_exists('attributes', $vars) ? NestedArray::mergeDeep($vars['attributes'], $attributes) : $attributes;
+
+  // Process the header.
+  foreach ($vars['header'] as &$header) {
+    $attribute = is_array($header) && array_key_exists('attributes', $header) ? $header['attributes'] : NULL;
+    if (!$attribute) {
+      continue;
+    }
+    if ($attribute->hasAttribute('data-column-type')) {
+      $attributes = $attribute->toArray();
+      $attribute->addClass('cd-table--' . $attributes['data-column-type']);
+    }
+    if ($sortable && $attribute->hasAttribute('sortable') && $attribute['sortable']->value() === FALSE) {
+      $attribute->addClass('sorttable-nosort');
+      $attribute->removeAttribute('sortable');
+    }
+  }
+
+  // Process the rows.
+  if (!empty($vars['rows'])) {
+    foreach ($vars['rows'] as $row_key => &$row) {
+      foreach ($row['cells'] as $column_name => &$column) {
+        /** @var \Drupal\Core\Template\Attribute $attribute */
+        $attribute = is_array($column) && array_key_exists('attributes', $column) ? $column['attributes'] : NULL;
+        if (!$attribute) {
+          continue;
+        }
+
+        $column_content = $column['content'] ?? NULL;
+        if (is_array($column_content) && !empty($column_content['#scale'])) {
+          $attribute->setAttribute('data-formatting', 'numeric-' . $column['content']['#scale']);
+        }
+
+        $attribute->setAttribute('data-column', $column_name);
+        if ($attribute->hasAttribute('data-column-type')) {
+          $attributes = $attribute->toArray();
+          $attribute->addClass('cd-table--' . $attributes['data-column-type']);
+        }
+
+        if ($sortable) {
+          if ($attribute->hasAttribute('data-sort-value')) {
+            $attribute->setAttribute('sorttable_customkey', $attribute['data-sort-value']);
+            $attribute->removeAttribute('data-sort-value');
+          }
+          elseif ($attribute->hasAttribute('data-raw-value')) {
+            $attribute->setAttribute('sorttable_customkey', $attribute['data-raw-value']);
+          }
+        }
+
+        if ($progress_indicators && $attribute->hasAttribute('data-progress-group') && $attribute->hasAttribute('data-raw-value')) {
+          $progress_group = $attribute->offsetGet('data-progress-group')->value();
+          $raw_value = $attribute->offsetGet('data-raw-value')->value();
+          if (empty($progress_group) || empty($raw_value)) {
+            continue;
+          }
+          if (!array_key_exists($progress_group, $progress_groups)) {
+            $progress_groups[$progress_group] = [];
+          }
+          $progress_groups[$progress_group][] = [
+            'row' => $row_key,
+            'column' => $column_name,
+            'value' => $raw_value,
+          ];
+        }
+      }
+    }
+  }
+
+  // Process the footer the same as the header.
+  if (!empty($vars['footer'])) {
+    foreach ($vars['footer'] as $row_key => &$row) {
+      foreach ($row['cells'] as $column_name => &$column) {
+        $attribute = is_array($column) && array_key_exists('attributes', $column) ? $column['attributes'] : NULL;
+        if (!$attribute) {
+          continue;
+        }
+        if ($attribute->hasAttribute('data-column-type')) {
+          $attributes = $attribute->toArray();
+          $attribute->addClass('cd-table--' . $attributes['data-column-type']);
+        }
+        if ($sortable && $attribute->hasAttribute('sortable') && $attribute['sortable']->value() === FALSE) {
+          $attribute->addClass('sorttable-nosort');
+          $attribute->removeAttribute('sortable');
+        }
+      }
+    }
+  }
+
+  if (!empty($progress_groups)) {
+    $attached['library'][] = 'common_design_subtheme/ghi-table-progress-indicator';
+    foreach ($progress_groups as $group => $items) {
+      // Calculate the max value to compare each item in this group against.
+      // For coverage grups this is always 100 as they show percentage values.
+      $max = $group == 'coverage' ? 100 : max(array_map(function ($item) {
+        return $item['value'];
+      }, $items));
+      foreach ($items as $progress_item) {
+        $row_key = $progress_item['row'];
+        $column_key = $progress_item['column'];
+        $value = $progress_item['value'];
+        $progress = 100 / $max * $value;
+        $progress = $progress > 100 ? 100 : $progress;
+        $progress_attributes = new Attribute([
+          'data-progress-group' => $group,
+          'data-progress-value' => $value,
+          'data-progress' => $progress,
+          'style' => 'width: ' . $progress . '%',
+        ]);
+        if (!is_array($vars['rows'][$row_key]) || !is_array($vars['rows'][$row_key]['cells'][$column_key])) {
+          continue;
+        }
+        $content = &$vars['rows'][$row_key]['cells'][$column_key]['content'];
+        if (empty(Element::children($content))) {
+          $content = [$content];
+        }
+        $content = [
+          '#type' => 'container',
+          '#attributes' => [
+            'class' => [
+              'value-wrapper',
+            ],
+          ],
+          0 => $content,
+          1 => [
+            '#markup' => Markup::create('<span class="progress-indicator-wrapper"><span class="progress-indicator" ' . $progress_attributes . '></span></span>'),
+          ],
+        ];
+      }
+    }
+  }
+
+  $vars['#attached'] = array_key_exists('#attached', $vars) ? NestedArray::mergeDeep($vars['#attached'], $attached) : $attached;
+}
+
+/**
+ * Preprocess a plan headline figures list.
+ */
+function common_design_subtheme_preprocess_item_list__key_figures(&$variables) {
+  $items = &$variables['items'];
+  $figures = [];
+  foreach ($items as &$item) {
+    $figures[] = [
+      'label' => $item['value']['#title'],
+      'value' => $item['value'][0],
+    ];
+  }
+  $variables['figures'] = $figures;
+}
+
+/**
+ * Preprocess a subpage navigation list.
+ */
+function common_design_subtheme_preprocess_item_list__subpage_navigation(&$variables) {
+  $items = &$variables['items'];
+  foreach ($items as $key => &$item) {
+    if (!array_key_exists(0, $item['value']) || !array_key_exists(1, $item['value'])) {
+      continue;
+    }
+    $children = $item['value'][1]['#items'] ?? [];
+    if (empty($children)) {
+      unset($items[$key]);
+      continue;
+    }
+    $wrapper_attribute = $item['value']['#attributes']['class'] ?? [];
+    $item['value'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#attributes' => [
+        'data-cd-component' => 'cd-dropdown',
+        'data-cd-icon' => 'arrow-down',
+        'id' => Html::getUniqueId('cd-dropdown'),
+        'class' => ['cd-dropdown'],
+        'aria-labelledby' => 'dropdown-title',
+        'data-cd-toggable' => $item['value'][0],
+      ],
+      '#attached' => [
+        'library' => [
+          'common_design/cd-dropdown',
+        ],
+      ],
+    ] + $children;
+    $item['attributes']['class'] = array_merge(['expandable'], $wrapper_attribute);
+  }
+}
+
+/**
+ * Preprocess a plan headline figures list.
+ */
+function common_design_subtheme_preprocess_item_list__section_collection(&$variables) {
+  $variables['options'] = [
+    'alignment' => 'horizontal',
+    'columns' => 3,
+  ];
+  $items = [];
+  $subkey = 0;
+  foreach ($variables['items'] as $section_teaser) {
+    $items[$subkey]['content'][] = [
+      'content' => $section_teaser['value'],
+    ];
+    if (count($items[$subkey]) == $variables['options']['columns']) {
+      $subkey++;
+    }
+  }
+
+  $variables['items'] = $items;
+}

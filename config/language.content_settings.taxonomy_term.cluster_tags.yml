@@ -1,0 +1,11 @@
+uuid: 39813e0d-cc9c-436d-bedf-64227cc142bc
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.cluster_tags
+id: taxonomy_term.cluster_tags
+target_entity_type_id: taxonomy_term
+target_bundle: cluster_tags
+default_langcode: site_default
+language_alterable: false

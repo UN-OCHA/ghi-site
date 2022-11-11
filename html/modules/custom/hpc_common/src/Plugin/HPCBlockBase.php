@@ -4,18 +4,14 @@ namespace Drupal\hpc_common\Plugin;
 
 use Drupal\node\Entity\Node;
 use Drupal\Core\Block\BlockBase;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
-use Drupal\Component\Plugin\PluginHelper;
-use Drupal\Core\KeyValueStore\KeyValueFactory;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Drupal\Core\Routing\Router;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\hpc_common\Helpers\ContextHelper;
+use Drupal\layout_builder\SectionStorageInterface;
+use Drupal\node\NodeInterface;
 
 /**
  * Base class for HPC Block plugins.
@@ -107,43 +103,71 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   protected $entityTypeManager;
 
   /**
-   * {@inheritdoc}
+   * The entity field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManager
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RequestStack $request_stack, Router $router, KeyValueFactory $keyValueFactory, EndpointQuery $endpoint_query, EntityTypeManagerInterface $entity_type_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  protected $entityFieldManager;
 
-    $this->requestStack = $request_stack;
-    $this->router = $router;
-    $this->keyValueFactory = $keyValueFactory;
-    $this->endpointQuery = $endpoint_query;
-    $this->entityTypeManager = $entity_type_manager;
-
-    // Mostly used to support meta data in downloads.
-    $this->setCurrentUri();
-  }
+  /**
+   * The file system service.
+   *
+   * @var \Drupal\Core\File\FileSystemInterface
+   */
+  protected $fileSystem;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('request_stack'),
-      $container->get('router.no_access_checks'),
-      $container->get('keyvalue'),
-      $container->get('hpc_api.endpoint_query'),
-      $container->get('entity_type.manager')
-    );
+    $instance = new static($configuration, $plugin_id, $plugin_definition);
+
+    // Set our own properties.
+    $instance->requestStack = $container->get('request_stack');
+    $instance->router = $container->get('router.no_access_checks');
+    $instance->keyValueFactory = $container->get('keyvalue');
+    $instance->endpointQuery = $container->get('hpc_api.endpoint_query');
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->entityFieldManager = $container->get('entity_field.manager');
+    $instance->fileSystem = $container->get('file_system');
+
+    // Mostly used to support meta data in downloads.
+    $instance->setCurrentUri();
+
+    // Inject context based on node fields.
+    $instance->injectFieldContexts();
+
+    return $instance;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getContextMapping() {
-    $configuration = PluginHelper::isConfigurable($this) ? $this->getConfiguration() : $this->configuration;
-    return isset($configuration['context_mapping']) ? $configuration['context_mapping'] : [];
+    // Get the context mapping that the block has, based on it's stored
+    // configuration.
+    $context_mapping = parent::getContextMapping();
+
+    // And match that with the context definitions that the block plugin
+    // actually declares. This allows for block plugins to remove previously
+    // used context definitions without running into
+    // Drupal\Component\Plugin\Exception\ContextException which results in a
+    // WSOD and is not fixable via the UI.
+    // We do not explicitely check whether new context definitions have been
+    // added, which are not yet stored in the blocks storage, as this should
+    // "only" result in a broken block display, but not in a fatal error.
+    $plugin_definition = $this->getPluginDefinition();
+    $context_definitions = $plugin_definition['context_definitions'] ?? [];
+
+    return array_intersect_key($context_mapping, $context_definitions);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasContext($key) {
+    $contexts = $this->getContexts();
+    return array_key_exists($key, $contexts);
   }
 
   /**
@@ -183,9 +207,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   public function getConfiguration() {
     // Make sure we always use up to data data source information.
     $plugin_definition = $this->getPluginDefinition();
-    if (!empty($plugin_definition['data_sources']) && $plugin_definition['data_sources'] != $this->configuration['data_sources']) {
-      $this->configuration['data_sources'] = $plugin_definition['data_sources'];
-    }
+    $this->configuration['data_sources'] = $plugin_definition['data_sources'] ?? NULL;
     return $this->configuration;
   }
 
@@ -196,6 +218,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     if ($this->injectedFieldContexts) {
       return;
     }
+
     $plugin_definition = $this->getPluginDefinition();
     $field_context_mapping = !empty($plugin_definition['field_context_mapping']) ? $plugin_definition['field_context_mapping'] : NULL;
 
@@ -206,6 +229,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
 
     $node = $this->getNodeFromContexts();
     if (!$node) {
+      $this->injectedFieldContexts = TRUE;
       return;
     }
 
@@ -247,8 +271,11 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    */
   public function setCurrentUri($current_uri = NULL) {
     if ($current_uri === NULL) {
-      $current_path = $this->requestStack->getCurrentRequest()->request->get('currentPath');
-      $uri = $this->requestStack->getCurrentRequest()->request->get('uri');
+      $request = $this->requestStack->getCurrentRequest();
+      // This might come from an IPE or form state context ($_POST).
+      $current_path = $request->request->get('currentPath');
+      // Or from a query argument, i.e. in download contexts.
+      $uri = $request->query->get('uri') ?? $request->query->get('current_uri');
       if (!empty($current_path)) {
         $current_uri = $current_path;
       }
@@ -256,14 +283,14 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
         $current_uri = $uri;
       }
       else {
-        $current_uri = $this->requestStack->getCurrentRequest()->getRequestUri();
+        $current_uri = $request->getRequestUri();
       }
     }
     $this->currentUri = '/' . ltrim($current_uri, '/');
   }
 
   /**
-   * Get the URI for current page.
+   * {@inheritdoc}
    */
   public function getCurrentUri() {
     if ($this->currentUri === NULL) {
@@ -291,22 +318,20 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   }
 
   /**
-   * Set the UUID for this block, but only if not yet set.
-   */
-  public function setUuid($uuid) {
-    $plugin_configuration = $this->getConfiguration();
-    if (empty($plugin_configuration['uuid'])) {
-      $plugin_configuration['uuid'] = $uuid;
-      $this->setConfiguration($plugin_configuration);
-    }
-  }
-
-  /**
-   * Get the UUID for this block if available.
+   * {@inheritdoc}
    */
   public function getUuid() {
     $plugin_configuration = $this->getConfiguration();
-    return !empty($plugin_configuration['uuid']) ? $plugin_configuration['uuid'] : RequestHelper::getQueryArgument('block_uuid');
+    if (!empty($plugin_configuration['uuid'])) {
+      return $plugin_configuration['uuid'];
+    }
+    if ($uuid = RequestHelper::getQueryArgument('block_uuid')) {
+      return $uuid;
+    }
+    if ($this->requestStack) {
+      return $this->requestStack->getCurrentRequest()->attributes->get('uuid');
+    }
+    return NULL;
   }
 
   /**
@@ -323,7 +348,12 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
       $page_parameters = [];
     }
 
-    $page_parameters = $this->router->match($this->getCurrentUri());
+    try {
+      $page_parameters = $this->router->match($this->getCurrentUri());
+    }
+    catch (\Exception $e) {
+      return $page_parameters;
+    }
     $page_parameters = array_filter($page_parameters, function ($key) {
       return $key[0] != '_';
     }, ARRAY_FILTER_USE_KEY);
@@ -343,11 +373,11 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     }
     elseif (!empty($page_parameters['panels_storage_id'])) {
       // Used when in configuration editing context with Panels IPE.
-      list($this->page,) = explode('-', $page_parameters['panels_storage_id'], 2);
+      [$this->page] = explode('-', $page_parameters['panels_storage_id'], 2);
     }
     elseif (!empty($page_parameters['tempstore_id']) && $page_parameters['tempstore_id'] == 'page_manager.page') {
       // Used when configuring using the Panels UI.
-      list($this->page,) = explode('-', $page_parameters['machine_name'], 2);
+      [$this->page] = explode('-', $page_parameters['machine_name'], 2);
     }
     elseif (!empty($page_parameters['node'])) {
       // Node view context.
@@ -358,7 +388,15 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     elseif (!empty($page_parameters['section_storage'])) {
       // Layout builder editing context.
       $entity = $page_parameters['section_storage']->getContextValue('entity');
-      $this->page = $entity->bundle() . '_' . $entity->getEntityTypeId();
+      if ($entity->bundle() == 'page_variant') {
+        // Page variant.
+        /** @var \Drupal\page_manager\Entity\PageVariant $entity */
+        $this->page = $entity->getPage()->id();
+      }
+      else {
+        // Content entity, e.g. node.
+        $this->page = $entity->bundle() . '_' . $entity->getEntityTypeId();
+      }
     }
     else {
       // No page identified.
@@ -391,7 +429,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     }
     elseif (!empty($page_parameters['tempstore_id']) && $page_parameters['tempstore_id'] == 'page_manager.page') {
       // Used when configuring using the Panels UI.
-      $this->pageVariant = explode('-', $page_parameters['machine_name'], 2);
+      $this->pageVariant = explode('-', $page_parameters['machine_name'], 2)[0];
     }
     elseif (!empty($page_parameters['node'])) {
       $this->pageVariant = 'node:' . $page_parameters['node']->bundle();
@@ -454,27 +492,25 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    * Get the specified named argument for the current page.
    */
   protected function getPageArgument($key) {
-    $this->injectFieldContexts();
-    $contexts = $this->getContexts();
-    if (empty($contexts[$key])) {
-      return NULL;
-    }
-    $context = $contexts[$key];
-    return $context->hasContextValue() ? $context->getContextValue() : NULL;
+    $context = $this->hasContext($key) ? $this->getContext($key) : NULL;
+    return $context && $context->hasContextValue() ? $context->getContextValue() : NULL;
   }
 
   /**
    * Get all named arguments for the current page.
    */
   public function getPageArguments() {
-    $this->injectFieldContexts();
     $context_values = [];
 
     foreach ($this->getContexts() as $key => $context) {
       if (!$context->hasContextValue()) {
         continue;
       }
-      $context_values[$key] = $context->getContextValue();
+      $context_value = $context->getContextValue();
+      if (!$context_value || !is_scalar($context_value)) {
+        continue;
+      }
+      $context_values[$key] = $context_value;
     }
     return $context_values;
   }
@@ -492,7 +528,12 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     }
 
     $page_arguments = $this->getAllAvailablePageParameters();
-
+    if (!empty($page_arguments['section_storage']) && $page_arguments['section_storage'] instanceof SectionStorageInterface) {
+      /** @var \Drupal\layout_builder\SectionStorageInterface $section_storage */
+      $section_storage = $page_arguments['section_storage'];
+      $entity = $section_storage->getContextValue('entity');
+      return $entity instanceof NodeInterface ? $entity : NULL;
+    }
     if (!empty($page_arguments['node'])) {
       return $page_arguments['node'];
     }
@@ -506,9 +547,6 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    * {@inheritdoc}
    */
   public function label() {
-    if ($this->configuration['label_display'] !== static::BLOCK_LABEL_VISIBLE) {
-      return;
-    }
     $label = parent::label();
 
     if (empty($this->getPageArguments())) {
@@ -532,6 +570,13 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   /**
    * {@inheritdoc}
    */
+  public function getPreviewFallbackString() {
+    return $this->t('"@block" block', ['@block' => parent::label()]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   abstract public function build();
 
   /**
@@ -541,12 +586,12 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    *   An associative array with the default configuration.
    */
   protected function baseConfigurationDefaults() {
-    if (empty($this->pluginDefinition['data_sources'])) {
-      return parent::baseConfigurationDefaults();
+    $defaults = parent::baseConfigurationDefaults();
+    if (!empty($this->pluginDefinition['data_sources'])) {
+      $defaults['data_sources'] = $this->pluginDefinition['data_sources'];
     }
-    return [
-      'data_sources' => $this->pluginDefinition['data_sources'],
-    ] + parent::baseConfigurationDefaults();
+    $defaults['uuid'] = $this->getUuid();
+    return $defaults;
   }
 
   /**
@@ -595,7 +640,6 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     if (!$query_handler) {
       return FALSE;
     }
-    $query_handler->setPlaceholders($this->getPageArguments());
     if (method_exists($this, 'alterEndpointQuery')) {
       $this->alterEndpointQuery($source_key, $query_handler);
     }
@@ -617,28 +661,6 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    * Get the endpoints used for the block.
    *
    * @return array
-   *   A list of endpoints for a block.
-   */
-  public function getEndpoints() {
-    $endpoints = [];
-    $source_keys = $this->getSourceKeys();
-    if (!empty($source_keys)) {
-      foreach ($source_keys as $source_key) {
-        $query_handler = $this->getQueryHandler($source_key);
-        $query_handler->setPlaceholders($this->getPageArguments());
-        if (method_exists($this, 'alterEndpointQuery')) {
-          $this->alterEndpointQuery($source_key, $query_handler);
-        }
-        $endpoints[] = $query_handler->getEndpointUrl();
-      }
-    }
-    return $endpoints;
-  }
-
-  /**
-   * Get the endpoints used for the block.
-   *
-   * @return array
    *   A list of full endpoint urls for a block.
    */
   public function getFullEndpointUrls() {
@@ -647,7 +669,9 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     if (!empty($source_keys)) {
       foreach ($source_keys as $source_key) {
         $query_handler = $this->getQueryHandler($source_key);
-        $query_handler->setPlaceholders($this->getPageArguments());
+        if (!$query_handler) {
+          continue;
+        }
         if (method_exists($this, 'alterEndpointQuery')) {
           $this->alterEndpointQuery($source_key, $query_handler);
         }

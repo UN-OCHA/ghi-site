@@ -1,0 +1,64 @@
+.block-wrapper--sectionswitcher,
+.ghi-block.has-year-switcher {
+
+  .section-switcher-wrapper {
+    position: relative;
+    z-index: 1;
+
+    button {
+      display: block;
+      padding: 0.5rem 1.2rem;
+      transition: background-color 0.6s ease-out, color 0.6s ease-out;
+      text-transform: uppercase;
+      color: var(--ghi-default-text-color);
+      border: 0;
+      background-color: var(--ghi-primary-button-color);
+      font-size: var(--cd-font-size--small);
+      font-weight: bold;
+
+      &:hover,
+      &:focus {
+        background-color: var(--ghi-primary-button-color-hover);
+      }
+
+      svg {
+        fill: var(--ghi-default-text-color);
+      }
+    }
+
+    .cd-dropdown {
+      position: absolute;
+      left: 0;
+      min-width: 5.25rem;
+      background-color: var(--ghi-primary-background-color);
+
+      ul {
+        margin: 0.5rem 0;
+        padding: 0;
+
+        li {
+          padding: 0.5rem 1.2rem;
+          list-style-type: none;
+          white-space: nowrap;
+          font-size: var(--cd-font-size--small);
+          font-weight: bold;
+
+          a,
+          a:hover,
+          a:focus {
+            text-decoration: none;
+            color: var(--ghi-default-text-color);
+            font-weight: normal;
+          }
+          a:hover {
+            color: var(--ghi-primary-button-color-hover);
+          }
+        }
+      }
+    }
+
+    @include desktop {
+      top: 0.5rem;
+    }
+  }
+}

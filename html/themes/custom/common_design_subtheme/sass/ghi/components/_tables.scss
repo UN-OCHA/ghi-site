@@ -1,0 +1,231 @@
+#main-content,
+.layout-builder-configure-block div[data-block-preview],
+.ghi-modal-dialog {
+
+  .table-wrapper {
+    overflow-x: auto;
+    max-width: calc(100vw - 1rem - 2 * var(--cd-container-padding)) !important;
+    margin-right: -5px;
+
+    table.ghi-table {
+      font-size: var(--cd-font-size--default);
+
+      &.soft-limit {
+        margin-bottom: 2rem;
+      }
+
+      &.soft-limit + a.expand-table {
+        display: block;
+        margin-right: auto;
+        margin-left: auto;
+      }
+
+      .ghi-block & {
+        margin-bottom: 0;
+      }
+
+      th,
+      td {
+        padding: 1.5rem 2rem;
+
+        &.entity-name,
+        &.cd-table--amount,
+        &.cd-table--currency,
+        &.cd-table--percentage {
+          text-align: left;
+          white-space: nowrap;
+        }
+
+        &[data-formatting="numeric-full"] {
+          text-align: right;
+        }
+
+        &:first-child {
+          padding-left: 0;
+        }
+
+        &:last-child {
+          padding-right: 0;
+        }
+      }
+
+      &.cd-table--responsive td:before {
+        top: 1.5rem;
+        font-size: inherit;
+      }
+
+      thead {
+        th {
+          white-space: nowrap;
+          text-transform: uppercase;
+          color: var(--ghi-default-text-color);
+          border-bottom: 1px solid var(--cd-default-border-color);
+          background: transparent;
+          font-size: var(--cd-font-size--small);
+        }
+      }
+      &.sortable th {
+        cursor: pointer;
+
+        &:not(.sorttable-nosort),
+        &.sorttable-sorted,
+        &.sorttable-sorted-reverse {
+          // Make room for the sortable icon.
+          padding-right: 5px;
+
+          & > span {
+            display: inline-block;
+            width: 2rem;
+            color: var(--cd-primary-color);
+          }
+        }
+
+        // Customize display of the sort indicators of sorttable.js
+        &:not(.sorttable-nosort)::after,
+        &.sorttable-sorted::after,
+        &.sorttable-sorted-reverse::after {
+          position: relative;
+          top: 4px;
+          left: 5px;
+          display: inline-block;
+          width: 11px;
+          height: 19px;
+          content: " ";
+          background-size: contain;
+        }
+
+        &:not(.sorttable-sorted):not(.sorttable-sorted-reverse):not(.sorttable-nosort):after {
+          background-image: url("../img/table/ghi_sorting.svg");
+        }
+        &.sorttable-sorted:after {
+          background-image: url("../img/table/ghi_sorting_up.svg");
+        }
+        &.sorttable-sorted-reverse:after {
+          background-image: url("../img/table/ghi_sorting_down.svg");
+        }
+        #sorttable-sortfwdind,
+        #sorttable-sortrevind {
+          // Hide the default sort indicators of sorttable.js
+          display: none;
+        }
+
+        &.sorttable-nosort {
+          cursor: initial;
+        }
+      }
+
+      tbody {
+
+        tr {
+          border-bottom: 1px solid var(--cd-default-border-color);
+
+          &:last-child {
+            border-bottom: 0;
+          }
+        }
+
+        td:first-child.subrow {
+          padding-left: 2rem;
+        }
+
+        td .tooltip {
+          margin-left: 0.3rem;
+        }
+
+        td.data-point--widget-pie-chart {
+          white-space: nowrap;
+
+          .hpc-pie-chart-wrapper {
+            display: inline-flex;
+            width: auto;
+            height: 100%;
+            margin-left: 5px;
+            aspect-ratio: 1 / 1;
+            vertical-align: middle;
+          }
+        }
+
+        td.data-point--widget-progressbar {
+          white-space: nowrap;
+
+          .hpc-progress-bar-wrapper {
+            margin-left: 5px;
+          }
+        }
+
+        td.spark-line-chart {
+          width: 10rem;
+          padding: 0.5rem 0.25rem 0.5rem 0;
+
+          span.sparkline {
+            display: inline-block;
+            width: 100%;
+
+            svg circle {
+              fill: transparent;
+            }
+          }
+        }
+
+        div.modal-link {
+          display: inline-block;
+          vertical-align: middle;
+
+          a {
+            text-decoration: none;
+          }
+        }
+      }
+    }
+
+    @media (min-width: 768px) {
+      max-width: calc(100vw - 1rem - 2 * var(--cd-container-padding-xlarge)) !important;
+    }
+  }
+}
+
+.ghi-modal-dialog .table-wrapper {
+  table.ghi-table {
+    margin-bottom: 0;
+
+    th {
+      white-space: nowrap;
+      color: var(--ghi-default-text-color);
+      background-color: inherit;
+    }
+
+    &.has-totals-row th {
+      border-bottom: 0;
+    }
+
+    th,
+    td,
+    td a {
+      color: var(--ghi-default-text-color);
+      font-size: var(--cd-font-size--small);
+    }
+
+    th,
+    td {
+      padding: 1.5rem 0.5rem 1.5rem 2rem;
+
+      &:first-child {
+        padding-left: 0.5rem;
+      }
+
+      &:last-child {
+        padding-right: 0.5rem;
+      }
+    }
+
+    tr.totals-row,
+    tfoot tr {
+      border-bottom: 0;
+      background-color: var(--cd-default-background-color);
+
+      td {
+        font-weight: 700;
+      }
+    }
+  }
+}

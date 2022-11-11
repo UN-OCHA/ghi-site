@@ -1,0 +1,110 @@
+uuid: 6580e073-0312-4d73-a9d2-540cd5a596ed
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.plan_cluster.field_base_object
+    - field.field.node.plan_cluster.field_entity_reference
+    - field.field.node.plan_cluster.field_hero_image
+    - field.field.node.plan_cluster.field_team
+    - field.field.node.plan_cluster.layout_builder__layout
+    - node.type.plan_cluster
+  module:
+    - ghi_hero_image
+    - path
+id: node.plan_cluster.default
+targetEntityType: node
+bundle: plan_cluster
+mode: default
+content:
+  created:
+    type: datetime_timestamp
+    weight: 3
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_base_object:
+    type: entity_reference_autocomplete
+    weight: 8
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_hero_image:
+    type: ghi_hero_image
+    weight: 10
+    region: content
+    settings:
+      source: null
+      settings:
+        hpc_webcontent_file_attachment: null
+        smugmug_api: null
+    third_party_settings: {  }
+  field_team:
+    type: entity_reference_autocomplete
+    weight: 9
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  langcode:
+    type: language_select
+    weight: 1
+    region: content
+    settings:
+      include_locked: true
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 6
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  promote:
+    type: boolean_checkbox
+    weight: 4
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  status:
+    type: boolean_checkbox
+    weight: 7
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  sticky:
+    type: boolean_checkbox
+    weight: 5
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  title:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  uid:
+    type: entity_reference_autocomplete
+    weight: 2
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  field_entity_reference: true
+  layout_builder__layout: true

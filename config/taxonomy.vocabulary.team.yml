@@ -1,0 +1,8 @@
+uuid: eb09fa84-d273-41dd-9424-8958e476d112
+langcode: en
+status: true
+dependencies: {  }
+name: Team
+vid: team
+description: 'A team can be assigned to a user'
+weight: 0

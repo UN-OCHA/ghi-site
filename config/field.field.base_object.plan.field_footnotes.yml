@@ -1,0 +1,26 @@
+uuid: 1bd5c43c-975e-473a-b397-cead9d658b91
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_footnotes
+    - ghi_base_objects.base_object_type.plan
+  module:
+    - ghi_base_objects
+id: base_object.plan.field_footnotes
+field_name: field_footnotes
+entity_type: base_object
+bundle: plan
+label: Footnotes
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  available_properties:
+    in_need: in_need
+    target: target
+    estimated_reach: estimated_reach
+    requirements: requirements
+field_type: ghi_footnotes

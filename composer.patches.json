@@ -1,7 +1,52 @@
 {
   "patches": {
-      "drupal/core": {
-        "https://www.drupal.org/project/drupal/issues/2820359": "./PATCHES/2820359-element_submit-105.patch"
-      }
+    "drupal/core": {
+      "Issue #2820359: Add #element_submit and #limit_element_submit just like #element_validate and #limit_validation_errors": "./patches/2820359-element_submit-108.patch",
+      "Issue #2895352: Disabling tableselect element options": "https://www.drupal.org/files/issues/2021-12-04/2895352-53.patch",
+      "Issue #3008924: Callers of LayoutEntityHelperTrait::getEntitySections() do not account for the view mode": "./patches/3008924-rerolled-24.patch",
+      "Issue #2902481: Add GROUP_CONCAT aggregate function to views": "https://www.drupal.org/files/issues/2021-07-26/add_group_concat_aggregate-2902481-33.patch",
+      "Issue #151311: More granular and intuitive permissions for the user module": "https://www.drupal.org/files/issues/2021-02-03/split_administer_permissions_151311-61.patch",
+      "Issue #2719797: New option for Views page displays to use the admin theme": "https://www.drupal.org/files/issues/2022-01-17/2719797-137-9.3.x.patch",
+      "Issue #2585169: Unable to alter local actions prior to rendering": "https://git.drupalcode.org/project/drupal/-/merge_requests/744.patch",
+      "Issue #2663316: Broken title in modal dialog when title is a render array": "https://www.drupal.org/files/issues/2019-10-21/2663316-76.drupal.Broken-title-in-modal-dialog-when-title-is-a-render-array.patch",
+      "Issue #3001188: Make it possible to add relationships to layout builder": "./patches/3001188-make-it-possible-to-add-relationships-to-layout-builder.patch",
+      "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch"
+    },
+    "drupal/phpexcel": {
+      "Issue #3086234: PhpSpreadsheet support (PHPOffice/PHPExcel deprecated)": "https://www.drupal.org/files/issues/2019-10-07/3086234-phpspreadsheet-support-3.patch",
+      "Issue #2839576: Add additional alter hook": "https://www.drupal.org/files/issues/2839576-php-excel-new-hook-1-7.x-3.11.patch"
+    },
+    "drupal/autologout": {
+      "Issue #3214958: Autologout triggered in background tab, no indication in other open tabs": "https://git.drupalcode.org/project/autologout/-/merge_requests/6.diff"
+    },
+    "drupal/gin": {
+      "Issue #3291643: Change query selector for form actions": "https://www.drupal.org/files/issues/2022-07-26/3291643-3.0-beta5-10.patch"
+    },
+    "drupal/gin_lb": {
+      "Issue #??: Add alter hook for template suggestions trigger": "./patches/hook_gin_lb_add_suggestions_alter.patch"
+    },
+    "drupal/gin_toolbar": {
+      "Issue #3121440: Add option for node local tasks in toolbar": "https://www.drupal.org/files/issues/2022-02-11/3263805-41.patch"
+    },
+    "drupal/page_manager": {
+      "Issue #3176661: Allow to edit page title when using Layout Builder variant": "https://www.drupal.org/files/issues/2021-08-19/page_manager-lb-title-3176661-8.patch",
+      "Issue #2810329: Page Manager paths should support optional arguments as well": "https://www.drupal.org/files/issues/2020-06-04/page_manager-allow_optional_parameters-2810329-16.patch",
+      "Issue #3263077: PHP 8.1 compatibility fixes for Page Manager": "https://www.drupal.org/files/issues/2022-07-03/page_manager-php_81_deprecation_fixes-3263077.patch"
+    },
+    "drupal/config_ignore": {
+      "Issue #2857247: Support for export filtering via Drush": "https://www.drupal.org/files/issues/2021-08-18/config_ignore_2857247-75.patch"
+    },
+    "drupal/config_default_image": {
+      "Issue #2921908: Provide a 2nd formatter \"Responsive image or default image\"": "https://www.drupal.org/files/issues/2020-06-11/config_default_image-responsive-2921908-5.patch"
+    },
+    "drupal/layout_builder_modal": {
+      "Issue #3127943: Modal not resizing for narrow screens": "https://www.drupal.org/files/issues/2021-10-06/layout_builder_modal-3127943-6.patch"
+    },
+    "drupal/smugmug_api": {
+      "Issue #3285444: Add support for image search": "https://www.drupal.org/files/issues/2022-06-13/3285444-2.patch"
+    },
+    "guzzlehttp/guzzle": {
+      "Issue https://github.com/guzzle/guzzle/issues/3020:": "./patches/guzzle-3020.patch"
+    }
   }
 }

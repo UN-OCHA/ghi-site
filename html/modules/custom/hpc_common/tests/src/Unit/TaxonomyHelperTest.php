@@ -6,6 +6,8 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\taxonomy\TermStorageInterface;
+use Drupal\taxonomy\Entity\Term;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
@@ -46,7 +48,7 @@ class TaxonomyHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Mock term storage.
@@ -65,6 +67,12 @@ class TaxonomyHelperTest extends UnitTestCase {
     $this->taxonomyStorage->expects($this->any())
       ->method('loadTree')
       ->with('test_vocabulary')
+      ->willReturn(array_values($tree));
+
+    // Mock loadMultiple.
+    $this->taxonomyStorage->expects($this->any())
+      ->method('loadMultiple')
+      ->with(array_keys($tree))
       ->willReturn($tree);
 
     // Set container.
@@ -77,7 +85,7 @@ class TaxonomyHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function tearDown() {
+  protected function tearDown(): void {
     parent::tearDown();
     unset($this->taxonomyHelper);
     unset($this->entityTypeManager);
@@ -91,30 +99,35 @@ class TaxonomyHelperTest extends UnitTestCase {
    * Data provider for getParentTermFromChildTermName.
    */
   public function getParentTermFromChildTermNameDataProvider() {
-    // Get mock parent term.
-    $parent_term = $this->getMockTaxonomyTree(1);
+    // Mock term.
+    $term1 = $this->prophesize(Term::class);
+    $term1->getName()->willReturn('Term 1');
+    // Mock term.
+    $term2 = $this->prophesize(Term::class);
+    $term2->getName()->willReturn('Term 2');
 
     return [
-      ['incorrect_child_name', 'test_vocabulary', FALSE],
-      ['Term 2', 'test_vocabulary', $parent_term],
+      [
+        'Term 2',
+        'test_vocabulary',
+        [$term1->reveal(), $term2->reveal()],
+        $term2->reveal(),
+      ],
     ];
   }
 
   /**
-   * Test getting parent term from a child term.
+   * Test you get the parent term correctly from the child term.
    *
    * @group TaxonomyHelper
    * @dataProvider getParentTermFromChildTermNameDataProvider
    */
-  public function testGetParentTermFromChildTermName($child_term_name, $vid, $result) {
-    // Get mock parent term.
-    $parent_term = $this->getMockTaxonomyTree(1);
-
+  public function testGetParentTermFromChildTermName($child_term_name, $vid, $terms, $result) {
     // Mock loadByProperties.
     $this->taxonomyStorage->expects($this->any())
       ->method('loadByProperties')
-      ->with(['name' => 'Term 1'])
-      ->willReturn([$parent_term]);
+      ->with(['vid' => $vid])
+      ->willReturn($terms);
 
     // Get the taxonomyStorage in entityTypeManager.
     $this->entityTypeManager->expects($this->any())
@@ -125,7 +138,13 @@ class TaxonomyHelperTest extends UnitTestCase {
     // Add to container.
     \Drupal::getContainer()->set('entity_type.manager', $this->entityTypeManager);
 
-    $this->assertEquals($result, $this->taxonomyHelper->getParentTermFromChildTermName($child_term_name, $vid));
+    // Message.
+    $message = strtr('The test failed for getParentTermFromChildTermName for child term: @child and vid: @vid', [
+      '@child' => $child_term_name,
+      '@vid' => $vid,
+    ]);
+
+    $this->assertEquals($result, $this->taxonomyHelper->getParentTermFromChildTermName($child_term_name, $vid), $message);
   }
 
   /**
@@ -141,7 +160,7 @@ class TaxonomyHelperTest extends UnitTestCase {
   }
 
   /**
-   * Test loading multiple terms by name.
+   * Test you can load multiple taxonomy terms by name.
    *
    * @group TaxonomyHelper
    * @dataProvider loadMultipleTermsByNameDataProvider
@@ -162,7 +181,13 @@ class TaxonomyHelperTest extends UnitTestCase {
     // Add to container.
     \Drupal::getContainer()->set('entity_type.manager', $this->entityTypeManager);
 
-    $this->assertEquals($result, $this->taxonomyHelper->loadMultipleTermsByName($names, $vid));
+    // Message.
+    $message = strtr('The test failed for loadMultipleTermsByName for names: @names and vid: @vid', [
+      '@names' => print_r($names, TRUE),
+      '@vid' => $vid,
+    ]);
+
+    $this->assertEquals($result, $this->taxonomyHelper->loadMultipleTermsByName($names, $vid), $message);
   }
 
   /**
@@ -178,7 +203,7 @@ class TaxonomyHelperTest extends UnitTestCase {
   }
 
   /**
-   * Test loading multiple terms by a vocabulary.
+   * Test you can load multiple terms by vocabulary id.
    *
    * @group TaxonomyHelper
    * @dataProvider loadMultipleTermsByVocabularyDataProvider
@@ -199,36 +224,47 @@ class TaxonomyHelperTest extends UnitTestCase {
     // Add to container.
     \Drupal::getContainer()->set('entity_type.manager', $this->entityTypeManager);
 
-    $this->assertEquals($result, $this->taxonomyHelper->loadMultipleTermsByVocabulary($vid));
+    // Message.
+    $message = strtr('The test failed for loadMultipleTermsByVocabulary for vid: @vid', [
+      '@vid' => $vid,
+    ]);
+
+    $this->assertEquals($result, $this->taxonomyHelper->loadMultipleTermsByVocabulary($vid), $message);
   }
 
   /**
    * Data provider for getTermIdFromOriginalId.
    */
   public function getTermIdFromOriginalIdDataProvider() {
+    $original_id = '125';
+
+    // Mock field.
+    $field = $this->prophesize(FieldItemListInterface::class);
+    $field->getValue()->willReturn([['value' => $original_id]]);
+    // Mock term.
+    $term = $this->prophesize(Term::class);
+    $term->hasField('field_original_id')->willReturn(TRUE);
+    $term->get('field_original_id')->willReturn($field->reveal());
+    $term->id()->willReturn('10');
+
     return [
-      ['125', 'test_vid', ['10', '20'], NULL],
-      ['125', 'test_vid', ['10'], '10'],
-      ['250', 'fail_vid', [], NULL],
+      [$original_id, 'test_vid', [$term->reveal()], '10'],
+      [$original_id, 'null_vid', [], NULL],
     ];
   }
 
   /**
-   * Test getting term ids from original ids.
+   * Test getting term id from original id.
    *
    * @group TaxonomyHelper
    * @dataProvider getTermIdFromOriginalIdDataProvider
    */
-  public function testGetTermIdFromOriginalId($original_id, $vid, $query_result, $result) {
-    // Mock entityQuery methods.
-    $this->entityQuery->condition('field_original_id', [$original_id], 'IN')->willReturn($this->entityQuery);
-    $this->entityQuery->condition('vid', $vid)->willReturn($this->entityQuery);
-    $this->entityQuery->execute()->willReturn($query_result);
-
-    // Mock getQuery.
+  public function testGetTermIdFromOriginalId($original_id, $vid, $terms, $result) {
+    // Mock loadByProperties.
     $this->taxonomyStorage->expects($this->any())
-      ->method('getQuery')
-      ->willReturn($this->entityQuery->reveal());
+      ->method('loadByProperties')
+      ->with(['vid' => $vid])
+      ->willReturn($terms);
 
     // Get the taxonomyStorage in entityTypeManager.
     $this->entityTypeManager->expects($this->any())
@@ -239,7 +275,13 @@ class TaxonomyHelperTest extends UnitTestCase {
     // Add to container.
     \Drupal::getContainer()->set('entity_type.manager', $this->entityTypeManager);
 
-    $this->assertEquals($result, $this->taxonomyHelper->getTermIdFromOriginalId($original_id, $vid));
+    // Message.
+    $message = strtr('The test failed for getTermIdFromOriginalId for original id: @original_id and vid: @vid', [
+      '@original_id' => $original_id,
+      '@vid' => $vid,
+    ]);
+
+    $this->assertEquals($result, $this->taxonomyHelper->getTermIdFromOriginalId($original_id, $vid), $message);
   }
 
   /**
@@ -253,7 +295,7 @@ class TaxonomyHelperTest extends UnitTestCase {
   }
 
   /**
-   * Test getting term ids by field values.
+   * Test getting term ids from value of a field.
    *
    * @group TaxonomyHelper
    * @dataProvider getTermIdsByFieldValueDataProvider
@@ -278,50 +320,58 @@ class TaxonomyHelperTest extends UnitTestCase {
     // Add to container.
     \Drupal::getContainer()->set('entity_type.manager', $this->entityTypeManager);
 
-    $this->assertEquals($result, $this->taxonomyHelper->getTermIdsByFieldValue($field_name, $value, $vid));
+    // Message.
+    $message = strtr('The test failed for getTermIdsByFieldValue for field name: @field_name, field value: @field_value and vid: @vid', [
+      '@field_name' => $field_name,
+      '@field_value' => $value,
+      '@vid' => $vid,
+    ]);
+
+    $this->assertEquals($result, $this->taxonomyHelper->getTermIdsByFieldValue($field_name, $value, $vid), $message);
   }
 
   /**
    * Get mock response for loadTree.
    */
-  public function getMockTaxonomyTree($tid = NULL) {
-    $term_1 = (object) [
+  public function getMockTaxonomyTree() {
+    $terms = [];
+    $terms[1] = (object) [
       'tid' => 1,
       'name' => 'Term 1',
       'parents' => [],
     ];
 
-    $term_2 = (object) [
+    $terms[2] = (object) [
       'tid' => 2,
       'name' => 'Term 2',
       'parents' => [1],
     ];
 
-    $term_3 = (object) [
+    $terms[3] = (object) [
       'tid' => 3,
       'name' => 'Term 3',
       'parents' => [],
     ];
 
-    $term_4 = (object) [
+    $terms[4] = (object) [
       'tid' => 4,
       'name' => 'Term 4',
       'parents' => [],
     ];
 
-    $term_5 = (object) [
+    $terms[5] = (object) [
       'tid' => 5,
       'name' => 'Term 5',
       'parents' => [4],
     ];
 
-    $term_6 = (object) [
+    $terms[6] = (object) [
       'tid' => 6,
       'name' => 'Term 6',
       'parents' => [4],
     ];
 
-    return !$tid ? [$term_1, $term_2, $term_3, $term_4, $term_5, $term_6] : $term_{$tid};
+    return $terms;
   }
 
 }

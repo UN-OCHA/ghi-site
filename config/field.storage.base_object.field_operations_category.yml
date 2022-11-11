@@ -1,0 +1,20 @@
+uuid: ed8491e3-92e3-4fba-8eba-1ebc274b922d
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+    - taxonomy
+id: base_object.field_operations_category
+field_name: field_operations_category
+entity_type: base_object
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

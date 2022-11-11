@@ -16,8 +16,8 @@ class ContextHelper {
   public static function getNodeFromContexts($contexts) {
     $context_names = [
       'node',
-      'node_from_original_id',
       'layout_builder.entity',
+      'node_from_original_id',
     ];
     $node_context = NULL;
     foreach ($context_names as $context_name) {
@@ -26,7 +26,10 @@ class ContextHelper {
       }
       try {
         $node_context = $contexts[$context_name]->hasContextValue() ? $contexts[$context_name]->getContextValue() : NULL;
-        return is_object($node_context) ? $node_context : ($node_context ? Node::load($node_context) : NULL);
+        $node = is_object($node_context) ? $node_context : ($node_context ? Node::load($node_context) : NULL);
+        if ($node) {
+          return $node;
+        }
       }
       catch (ContextException $e) {
         // Fail silently, we will handle this.

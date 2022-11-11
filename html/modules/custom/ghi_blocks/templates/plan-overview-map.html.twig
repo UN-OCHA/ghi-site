@@ -1,0 +1,20 @@
+{%
+  set map_container_classes = [
+    'map-container',
+  ]
+%}
+
+<div class="{{ outer_classes }}">
+  <div class="plan-overview-map-wrapper pane-{{ chart_id }} {{ map_type }}">
+    <div {{ attributes.addClass(map_container_classes) }}">
+      {% if map_tabs %}
+        <div class="map-tabs">
+          <div class="map-tabs--inner content-width">{{ map_tabs }}</div>
+        </div>
+      {% endif %}
+      <div id="{{ chart_id }}">
+        <div id="{{ chart_id }}-legend" class="map-legend"><ul></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

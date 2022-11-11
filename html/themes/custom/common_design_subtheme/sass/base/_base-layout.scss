@@ -1,0 +1,120 @@
+//——————————————————————————————————————————————————————————————————————————————
+// Base styles
+//——————————————————————————————————————————————————————————————————————————————
+
+// Disable GINs new meta region in the frontend.
+.region-meta--frontend {
+  z-index: 100;
+  display: none;
+}
+
+.layout--twocol-section {
+  .layout__region--first {
+    padding-right: 1rem;
+  }
+
+  &.has-second-region:not(.has-both-regions) {
+    .layout__region--second {
+      margin-left: 25%;
+    }
+  }
+}
+
+.material-icons {
+  display: inline-block;
+  white-space: nowrap;
+  letter-spacing: normal;
+  text-transform: none;
+  word-wrap: normal;
+  direction: ltr;
+  font-family: "Material Icons", sans-serif;
+  font-size: 24px;
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+}
+
+#main-content {
+  position: relative;
+  max-width: var(--cd-max-page-width);
+  padding-top: 0;
+
+  .layout--onecol .layout__region,
+  .region-content {
+
+    & > div:not(.content-width) {
+      max-width: var(--cd-max-page-width);
+    }
+
+    /* Contrain the element with the `content-width` class. The paddings reflect
+     * those that were on the `<main>` element. There is no need to have the 1024px
+     * media query with the 40px padding because 904px + 2 * 40px < 1024px. */
+    & > .content-width {
+      max-width: calc(var(--content-width) + 24px) !important;
+      margin-right: auto !important;
+      margin-left: auto !important;
+      padding-right: var(--cd-container-padding) !important;
+      padding-left: var(--cd-container-padding) !important;
+    }
+
+    /* Prevent double indentation as can happen with embedded paragraphs from
+     * a remote source. */
+    .content-width .content-width {
+      padding-right: 0 !important;
+      padding-left: 0 !important;
+    }
+
+    @media (min-width: 768px) {
+      .content-width {
+        max-width: calc(var(--content-width) + 48px) !important;
+        padding-right: var(--cd-container-padding-xlarge) !important;
+        padding-left: var(--cd-container-padding-xlarge) !important;
+      }
+    }
+  }
+
+  .region-content > form.confirmation.cd-container {
+    margin-top: 4rem;
+    margin-bottom: 4rem;
+  }
+}
+
+/* ------------------------------------------------------------------------------
+ * Editorial indication for unpublished/untranslated entities.
+ *---------------------------------------------------------------------------- */
+.node--unpublished {
+  background-color: unset;
+}
+.user-logged-in main[class*="--unpublished"] {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  outline: 4px dashed  #ffc310;
+}
+
+/* ------------------------------------------------------------------------------
+ * Error pages.
+ *---------------------------------------------------------------------------- */
+body.path-error main .cd-layout-content-wrapper {
+  width: 100%;
+  max-width: var(--cd-max-width);
+  margin-top: 1rem;
+  margin-right: auto;
+  margin-left: auto;
+  padding: 4rem var(--cd-container-padding);
+
+  @include tablet {
+    padding: 0 var(--cd-container-padding-tablet);
+  }
+
+  @include xlarge {
+    padding: 4rem 3rem;
+  }
+}
+
+// Maximum width on full screen for texts, photo galleries etc.
+:root {
+  --content-width: 1220px;
+  --reading-width: 820px;
+}

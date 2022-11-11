@@ -1,0 +1,17 @@
+uuid: 7740af8f-f74e-49f0-83f0-7910644abe7b
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: Financials
+type: financials
+description: 'A financials page for any of the base entities of this site, e.g. for plans, countries, regions, ...'
+help: ''
+new_revision: true
+preview_mode: 0
+display_submitted: false

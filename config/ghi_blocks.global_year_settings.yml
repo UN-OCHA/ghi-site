@@ -1,0 +1,18 @@
+2022:
+  caseload_reached: 1
+  caseload_expected_reach: 1
+  plan_downloads: 0
+  plan_short_names: 0
+  plan_type_icons: 0
+  sort_by_plan_type: 0
+  use_latest_plan_data: 0
+  plan_status_text: 0
+2021:
+  caseload_reached: 0
+  caseload_expected_reach: 0
+  plan_downloads: 0
+  plan_short_names: 0
+  plan_type_icons: 0
+  sort_by_plan_type: 0
+  use_latest_plan_data: 0
+  plan_status_text: 0

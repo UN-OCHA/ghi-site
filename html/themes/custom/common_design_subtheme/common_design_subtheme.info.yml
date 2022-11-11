@@ -3,7 +3,7 @@ type: theme
 description: OCHA Common Design sub theme
 core_version_requirement: ^8.8 || ^9
 base theme: common_design
-logo: 'img/logos/logo.svg'
+logo: 'img/logos/logo-humanitarian-action.svg'
 
 # Defines libraries group in which we can add css/js.
 libraries:
@@ -16,7 +16,11 @@ regions:
   header_logo: Header logo
   header_navigation: Header navigation
   highlighted: Highlighted
+  help: Help
+  page_image: Page image
   page_title: Page title
+  page_subtitle: Page subtitle
+  page_navigation: Page navigation
   content: Content
   sidebar_first: First sidebar
   sidebar_second: Second sidebar
@@ -34,3 +38,7 @@ regions:
 ## Requires Components module
 # components:
 #   namespaces:
+
+# This theme depends on gin_lb for some icons.
+dependencies:
+  - gin_lb:gin_lb

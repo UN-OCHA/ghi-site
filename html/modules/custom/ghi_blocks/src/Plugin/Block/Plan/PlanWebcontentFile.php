@@ -5,80 +5,47 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
-use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\ghi_blocks\Plugin\Block\SyncableBlockInterface;
-use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
  * Provides a 'PlanWebcontentFile' block.
  *
  * @Block(
  *  id = "plan_webcontent_file",
- *  admin_label = @Translation("Plan: Web Content File"),
- *  category = @Translation("Plans"),
+ *  admin_label = @Translation("Web Content File"),
+ *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "data" = {
- *      "arguments" = {
- *        "endpoint" = "public/plan/{plan_id}?content=entities&addPercentageOfTotalTarget=true&version=current",
- *        "api_version" = "v2",
- *      }
- *    }
+ *    "entities" = "plan_entities_query",
+ *    "attachment" = "attachment_query",
  *  },
  *  title = false,
- *  field_context_mapping = {
- *    "year" = "field_plan_year",
- *    "plan_id" = "field_original_id"
- *  },
- *   context_definitions = {
- *     "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
+ *  context_definitions = {
+ *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
+ *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
  *   }
  * )
  */
-class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface {
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function mapConfig($config) {
-    return [
-      'label' => '',
-      'label_display' => FALSE,
-      'hpc' => [
-        'basic' => [
-          'attachment_id' => $config->attachment_id,
-        ],
-      ],
-    ];
-  }
+class PlanWebcontentFile extends GHIBlockBase {
 
   /**
    * {@inheritdoc}
    */
   public function buildContent() {
-    $data = $this->getData();
-    if (empty($data) || empty($data->attachments)) {
+    // Retrieve the attachments.
+    $conf = $this->getBlockConfig();
+    if (empty($conf['attachment_id'])) {
       return;
     }
 
-    $conf = $this->getConfiguration();
-    if (empty($conf['hpc']['basic']['attachment_id'])) {
-      return;
-    }
-
-    $attachment_id = $conf['hpc']['basic']['attachment_id'];
-    $attachments = array_filter($data->attachments, function ($object) use ($attachment_id) {
-      return $object->id == $attachment_id;
-    });
-
-    if (empty($attachments)) {
-      return;
-    }
-    $attachment = reset($attachments);
-
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
+    $query = $this->getQueryHandler('attachment');
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment $attachment */
+    $attachment = $query->getAttachment($conf['attachment_id']);
     return [
-      '#theme' => 'image',
-      '#uri' => $attachment->attachmentVersion->value->file->url,
+      '#theme' => 'ghi_image',
+      '#url' => $attachment->getUrl(),
+      '#credit' => $attachment->getCredit(),
+      '#style' => 'wide',
     ];
   }
 
@@ -88,74 +55,41 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
    * @return array
    *   An associative array with the default configuration.
    */
-  protected function baseConfigurationDefaults() {
+  protected function getConfigurationDefaults() {
     return [
-      'hpc' => [
-        'basic' => ['attachment_id' => NULL],
-      ],
-      'label_display' => FALSE,
-    ] + parent::baseConfigurationDefaults();
+      'attachment_id' => NULL,
+    ];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getSubforms() {
-    return [
-      'basic' => 'basicConfigForm',
-    ];
-  }
+  public function getConfigForm(array $form, FormStateInterface $form_state) {
+    $options = [];
 
-  /**
-   * Form builder for the basic config form.
-   *
-   * @param array $form
-   *   An associative array containing the initial structure of the subform.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
-   *
-   * @return array
-   *   The full form array for this subform.
-   */
-  public function basicConfigForm(array $form, FormStateInterface $form_state) {
-    $file_options = [];
-
-    $plan_data = $this->getData();
-    $attachments = [];
-    if (empty($plan_data->attachments)) {
-      return $attachments;
-    }
-    foreach ($plan_data->attachments as $item) {
-      if (strtolower($item->type) != strtolower('fileWebContent')) {
-        continue;
-      }
-      $attachments[] = $item;
-    }
+    // Retrieve the attachments.
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
+    $query = $this->getQueryHandler('entities');
+    $attachments = $this->getCurrentPlanObject() ? $query->getWebContentFileAttachments($this->getCurrentPlanObject()) : NULL;
 
     if (!empty($attachments)) {
       foreach ($attachments as $attachment) {
-        if (empty($attachment->attachmentVersion->value->file->url)) {
-          continue;
-        }
-        $preview_image = ThemeHelper::theme('image', [
-          '#uri' => $attachment->attachmentVersion->value->file->url,
-          '#attributes' => [
-            'style' => 'height: 100px',
-          ],
-        ], TRUE, FALSE);
-
-        $file_options[$attachment->id] = [
+        $options[$attachment->id] = [
           'id' => $attachment->id,
-          'title' => $attachment->attachmentVersion->value->file->title,
-          'file_name' => $attachment->attachmentVersion->value->name,
-          'file_url' => Link::fromTextAndUrl($attachment->attachmentVersion->value->file->url, Url::fromUri($attachment->attachmentVersion->value->file->url, [
+          'title' => $attachment->title,
+          'file_name' => $attachment->file_name,
+          'file_url' => Link::fromTextAndUrl($attachment->url, Url::fromUri($attachment->url, [
             'external' => TRUE,
             'attributes' => [
               'target' => '_blank',
             ],
           ])),
           'preview' => [
-            '#markup' => Markup::create($preview_image),
+            'data' => [
+              '#theme' => 'imagecache_external',
+              '#style_name' => 'thumbnail',
+              '#uri' => $attachment->url,
+            ],
           ],
         ];
       }
@@ -172,13 +106,12 @@ class PlanWebcontentFile extends GHIBlockBase implements SyncableBlockInterface 
     $form['attachment_id'] = [
       '#type' => 'tableselect',
       '#tree' => TRUE,
-      '#required' => FALSE,
       '#header' => $table_header,
       '#validated' => TRUE,
-      '#options' => $file_options,
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'attachment_id'),
+      '#options' => $options,
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'attachment_id') ?? array_key_first($options),
       '#multiple' => FALSE,
-      '#empty' => $this->t('There are no images yet.'),
+      '#empty' => $this->t('There are no file attachments yet.'),
       '#required' => TRUE,
     ];
     return $form;

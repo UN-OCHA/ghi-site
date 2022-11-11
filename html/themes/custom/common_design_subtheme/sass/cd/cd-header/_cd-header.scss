@@ -2,20 +2,63 @@
 // Common Design: Header
 //——————————————————————————————————————————————————————————————————————————————
 .cd-header button:focus {
-  outline: 3px solid $cd-blue--bright;
+  outline: none;
 }
 
 .cd-global-header {
-  background: $implementation-primary;
-  background-image: linear-gradient(-180deg, $implementation-primary 67%, $implementation-primary-dark 97%);
+  background: var(--cd-grey--lighter);
+  background-image: linear-gradient(-180deg, var(--cd-grey--lighter) 67%, var(--cd-grey--light) 97%);
+
+  svg {
+    fill: var(--ghi-default-text-color) !important;
+  }
+
+  a,
+  * {
+    color: var(--ghi-default-text-color);
+  }
+
+  .menu > li {
+
+    &:last-child {
+      padding-right: 0;
+    }
+
+    a {
+      color: var(--ghi-default-text-color);
+
+      &::after {
+        background: var(--cd-default-border-color);
+      }
+    }
+
+    &:last-child a {
+      padding-right: 0;
+
+      &::after {
+        display: none;
+      }
+    }
+  }
+}
+
+.cd-site-header {
+  border-bottom: 0;
+
+  .cd-nav > .menu > li:last-child {
+    padding-right: 0;
+  }
 }
 
 .cd-site-header__inner {
+  height: $cd-site-header-height;
+
   @supports (display: grid) {
-    grid-template-columns: 52px 1fr;
+    grid-template-rows: $cd-site-header-height;
+    grid-template-columns: 360px 1fr;
 
     @include tablet {
-      grid-template-columns: 186px 1fr;
+      grid-template-columns: 360px 1fr;
     }
   }
 }

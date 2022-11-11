@@ -1,5 +1,9 @@
-<div class="modal-link">
-  <div class="button-wrapper">
-    <div class="modal-link-item">{{ link }}</div>
+{% if output %}
+  {{ output }}
+{% else %}
+  <div class="modal-link">
+    <div class="button-wrapper">
+      <div class="modal-link-item">{{ link }}</div>
+    </div>
   </div>
-</div>
+{% endif %}

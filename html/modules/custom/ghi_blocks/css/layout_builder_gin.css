@@ -1,0 +1,96 @@
+/**
+ * Special styles for the layout builder when used with gin.
+ *
+ * @todo Check if thiss should be moved into the theme as all of this is
+ *   probably frontend related.
+ */
+input[type="checkbox"][disabled="disabled"] {
+  background-color: var(--colorGinDisabled) !important;
+}
+input[type="checkbox"][disabled="disabled"]:not(:checked) {
+  background-image: none !important;
+}
+
+#layout-builder .select2-container--default.select2-container--disabled .select2-selection {
+  background-color: inherit;
+}
+
+#layout-builder .block-content,
+#layout-builder .block-content * {
+  pointer-events : none !important;
+}
+
+#layout-builder .layout-builder__add-section {
+  margin-top: 2rem;
+}
+#layout-builder .layout-builder__add-section:first-child {
+  margin-top: 0;
+}
+#layout-builder .layout-builder__section:after {
+  position: absolute;
+  outline-width: 1px !important;
+  outline-style: solid !important;
+  outline-color: var(--colorGinFormElementBorder);
+  border-radius: 2px;
+  border: 0 !important;
+  width: calc(100% + 2rem);
+  height: 100%;
+  left: -1rem;
+  top: 0;
+  pointer-events: none;
+  content: '' !important;
+}
+#layout-builder .layout-builder__section:hover:after {
+  outline-width: 2px !important;
+  outline-color: var(--colorGinPrimary);
+}
+#layout-builder .layout-builder__section:after {
+  content: none !important;
+}
+
+#layout-builder .layout-builder__section > .layout-builder__link {
+  top: -1.5rem !important;
+  display: block !important;
+  color: var(--colorGinFormElementBorder);
+}
+#layout-builder .layout-builder__section .layout-builder__link--remove {
+  background-color: var(--colorGinFormElementBorder);
+  left: -10px;
+}
+#layout-builder .layout-builder__section .layout-builder__link--configure {
+  left: 10px !important;
+}
+#layout-builder:hover .layout-builder__section:hover .layout-builder__link--configure:after {
+  background-color: var(--colorGinFormElementBorder);
+}
+
+.layout-builder__section:hover:after {
+  border: 0 !important;
+}
+
+.layout-builder__section .layout-builder-block.content-width {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+/**
+ * Modifications to the block selection dialog.
+ */
+ #layout-builder-modal .vertical-tabs .glb-claro-details.js-layout-builder-category {
+  border-top: 0 !important;
+ }
+ #layout-builder-modal .vertical-tabs .glb-claro-details.js-layout-builder-category ul li a.js-layout-builder-block-link {
+  padding-right: 2rem !important;
+ }
+
+/**
+ * Improve display of error messages.
+ */
+.glb-form-item--error-message {
+  color: #d72222;
+  font-size: .79em
+}
+.glb-button.is-disabled {
+  color: var(--colorGinDisabledText) !important;
+  cursor: not-allowed !important;
+}

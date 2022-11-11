@@ -1,0 +1,5 @@
+entity.node.pages:
+  route_name: ghi_subpages.node.pages
+  base_route: entity.node.canonical
+  class: Drupal\ghi_subpages\Plugin\Menu\LocalTask\Subpages
+  weight: 1

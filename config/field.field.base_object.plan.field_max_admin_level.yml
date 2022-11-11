@@ -1,0 +1,25 @@
+uuid: 3eeb0771-312e-47c8-857f-bd70952af861
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_max_admin_level
+    - ghi_base_objects.base_object_type.plan
+id: base_object.plan.field_max_admin_level
+field_name: field_max_admin_level
+entity_type: base_object
+bundle: plan
+label: 'Max admin level'
+description: 'The maximum location admin level to use for this plan.'
+required: true
+translatable: false
+default_value:
+  -
+    value: 3
+default_value_callback: ''
+settings:
+  min: 1
+  max: 5
+  prefix: ''
+  suffix: ''
+field_type: integer

@@ -1,0 +1,5 @@
+ghi_plans.admin.plan_structure:
+  version: VERSION
+  css:
+    component:
+      css/ghi_plans.admin.plan_structure.css: {}

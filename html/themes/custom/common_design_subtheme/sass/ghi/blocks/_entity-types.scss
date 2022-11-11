@@ -1,0 +1,31 @@
+.ghi-block-plan-entity-types {
+
+  .item-list--entity-types {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    & > div {
+      display: flex;
+      gap: 2rem;
+      padding: 2rem 1rem;
+      background-color: var(--ghi-default-background-color);
+
+      p {
+        align-self: center;
+        margin: 0;
+        padding: 0;
+      }
+
+      .label {
+        white-space: nowrap;
+        font-size: var(--cd-font-size--2xlarge);
+        font-weight: bold;
+      }
+
+      .description {
+        font-size: var(--cd-font-size--default);
+      }
+    }
+  }
+}

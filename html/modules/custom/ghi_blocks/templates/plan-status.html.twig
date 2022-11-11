@@ -1,0 +1,6 @@
+{% if compact %}
+  <div class="plan-status {{ status }}" data-toggle="tooltip" data-tippy-content="{{ status_label }}"></div>
+{% else %}
+  <div class="plan-status {{ status }}"></div>
+  {{ status_label }}
+{% endif %}

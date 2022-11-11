@@ -1,0 +1,20 @@
+services:
+  ghi_blocks.layout_builder_edit_page.selection_criteria_argument:
+    class: Drupal\ghi_blocks\LayoutBuilder\SelectionCriteriaArgument
+    arguments: ['@current_route_match', '@request_stack']
+  ghi_blocks.layout_builder.route_subscriber:
+    class: Drupal\ghi_blocks\EventSubscriber\LayoutBuilderRouteSubscriber
+    arguments: ['@ghi_blocks.layout_builder_edit_page.selection_criteria_argument']
+    tags:
+      - { name: event_subscriber }
+  ghi_blocks.contextual_links.block_handler:
+    class: Drupal\ghi_blocks\ContextualLinks\BlockHandler
+    arguments: ['@entity_type.manager', '@layout_builder.tempstore_repository', '@current_user']
+  ghi_blocks.layout_builder_form_alter:
+    class: Drupal\ghi_blocks\LayoutBuilder\LayoutBuilderFormAlter
+    arguments: ['@form_builder']
+  ghi_blocks.layout_builder_browser_alter:
+    class: Drupal\ghi_blocks\EventSubscriber\LayoutBuilderBrowserEventSubscriber
+    arguments: ['@current_user']
+    tags:
+      - { name: event_subscriber }

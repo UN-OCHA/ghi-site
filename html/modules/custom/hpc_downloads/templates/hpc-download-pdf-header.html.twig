@@ -1,0 +1,18 @@
+<!-- -webkit-print-color-adjust: exact has been added in relation to this issue: https://github.com/GoogleChrome/puppeteer/issues/2182 -->
+<style>* {box-sizing: border-box; -webkit-print-color-adjust: exact; font-family: "Roboto", helvetica, arial, sans-serif;}</style>
+<div style="width: 100%; color: #4d4c4d; padding: 0px 20px">
+    <div style="width: 100%;">
+        <div style="width: 80%; float: left;">
+            <p style="font-size: 14px; color: #002856;"><strong>{{ caption }}</strong>
+            <br />
+            <span style="font-size: 9px; color: #4d4c4d !important;">{{ link }}</span></p>
+        </div>
+        <img style="width: 20%; float: right; text-align: right; padding-right: 10px;" src="__LOGO_SRC__" alt="{{ site_name }}" height="40" width="50" />
+        <br style="clear: both;">
+    </div>
+    <div style="width: 100%; background-color: #EDEDEE; font-size: 12px; border: 1px solid #ddd;">
+        <p style="width: 80%; float: left; padding-left: 10px;"><strong>{{ title }}</strong></p>
+        <p style="width: 20%; float: right; text-align: right; padding-right: 10px;"><strong>{{ date }}</strong></p>
+        <br style="clear: both;">
+    </div>
+</div>

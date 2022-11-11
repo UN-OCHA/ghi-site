@@ -1,0 +1,33 @@
+uuid: 67a582e2-a656-4f5c-923d-e2179f7f64df
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_hero_image
+    - node.type.plan_cluster
+  module:
+    - ghi_hero_image
+id: node.plan_cluster.field_hero_image
+field_name: field_hero_image
+entity_type: node
+bundle: plan_cluster
+label: 'Hero image'
+description: 'An optional hero image for this plan cluster page.'
+required: false
+translatable: true
+default_value:
+  -
+    source: inherit
+    settings:
+      hpc_webcontent_file_attachment: ''
+      smugmug_api:
+        image_id: ''
+        search:
+          text: ''
+          keywords: ''
+          image_id: ''
+        currently_selected:
+          preview: ''
+default_value_callback: ''
+settings: {  }
+field_type: ghi_hero_image

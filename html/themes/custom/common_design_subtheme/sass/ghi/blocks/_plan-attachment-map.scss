@@ -1,0 +1,185 @@
+.block-plan-attachment-map {
+
+  .form-type-select {
+    margin: 0;
+
+    .selectric-wrapper {
+      display: inline-block;
+    }
+
+    .selectric {
+      display: inline-block;
+      overflow: visible;
+      white-space: nowrap;
+      border: none;
+      background-color: transparent;
+
+      .label {
+        display: inline-block;
+        height: auto !important;
+        margin: 0;
+        // Covers the SVG to make it seem clickable.
+        padding-right: 24px;
+        white-space: nowrap;
+        color: var(--hpc-orange);
+        background-color: transparent;
+        font-size: var(--cd-font-size--base);
+        font-weight: bold;
+
+        &:after {
+          display: none;
+        }
+      }
+      .icon {
+        position: absolute;
+        top: 13px;
+        right: 6px;
+        width: 12px;
+        height: 12px;
+        fill: var(--hpc-orange);
+      }
+    }
+
+    .selectric-items {
+      position: absolute;
+      z-index: 1;
+      top: 0;
+      left: -19px;
+      width: auto !important;
+      border-radius: 3px;
+      background-color: $cd-white;
+
+      ul li {
+        padding: 8px 18px;
+        white-space: nowrap;
+        border-top: none;
+        border-bottom: none;
+        font-size: var(--cd-font-size--base);
+        font-weight: bold;
+
+        &.selected {
+          color: var(--hpc-orange);
+          background-color: transparent;
+        }
+      }
+
+      ul.selectric-group {
+        li {
+          padding-left: 2rem;
+          font-weight: normal;
+
+          &.selectric-group-label {
+            padding-left: 18px;
+            font-weight: bold;
+          }
+        }
+      }
+    }
+  }
+
+  div.block-links {
+    .download-link-wrapper {
+      top: -2rem;
+      margin-top: 0;
+    }
+  }
+
+  &:not(.has-comment) {
+    div.block-links {
+      border-top: 0;
+    }
+  }
+
+  .plan-attachment-map-wrapper {
+
+    .map-tabs--inner {
+      padding-left: 1rem;
+    }
+
+    .map-container {
+
+      .leaflet-container {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+
+  &.has-attachment-switcher {
+    .map-tabs,
+    .download-link-wrapper {
+      top: 0.3rem;
+      margin-top: 0;
+    }
+  }
+
+  .modal,
+  .leaflet-sidebar {
+
+    &.right:not(.visible) {
+      right: -600px;
+    }
+
+    .modal-inner {
+      overflow-y: auto;
+      max-height: 350px;
+
+      .title {
+        color: var(--hpc-orange);
+        font-size: 1.4rem;
+      }
+    }
+
+    table.plan-attachment-modal-table {
+      margin-bottom: 0.5rem;
+      tbody {
+        border-top: none;
+
+        tr {
+          margin-bottom: 8px;
+          vertical-align: top;
+          border-bottom: 1px solid var(--cd-default-border-color);
+
+          &:last-child {
+            border-bottom: 0;
+          }
+
+          td {
+            padding: 0;
+            text-align: right;
+            color: var(--hpc-brown);
+            border: none;
+            background: none;
+            font-size: var(--cd-font-size--small);
+            font-weight: 600;
+
+            &:first-child {
+              text-align: left;
+              font-weight: 400;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.configuration-container {
+  .pane-plan-attachment-map {
+    .map-wrapper-outer {
+      margin-top: 4rem;
+      .map-tabs {
+        top: 2rem;
+        right: 1rem;
+        margin-right: 0;
+      }
+
+      &.has-attachment-switcher {
+        margin-top: 0;
+        .map-tabs {
+          top: 2.5rem;
+        }
+      }
+    }
+  }
+}

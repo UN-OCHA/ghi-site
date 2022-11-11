@@ -1,0 +1,17 @@
+uuid: a5494d2d-8008-409d-8aee-044381fcfae1
+langcode: en
+status: true
+dependencies: {  }
+id: homepage
+label: Homepage
+description: 'The global unique homepage for Humanitarian Action.'
+use_admin_theme: false
+path: '/overview/{year}'
+access_logic: and
+access_conditions: {  }
+parameters:
+  year:
+    machine_name: year
+    label: Year
+    type: integer
+    optional: true

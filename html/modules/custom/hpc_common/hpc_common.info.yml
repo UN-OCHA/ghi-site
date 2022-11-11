@@ -3,3 +3,7 @@ type: module
 description: 'Common base definitions for HPC features in Drupal 8'
 core_version_requirement: ^8 || ^9
 package: 'HPC'
+dependencies:
+  - drupal:node
+  - hpc_api:hpc_api
+  - tippy:tippy

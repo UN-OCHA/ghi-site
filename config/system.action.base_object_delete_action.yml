@@ -1,0 +1,11 @@
+uuid: b9c25540-b366-45bb-823b-e42174156dcd
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+id: base_object_delete_action
+label: 'Delete base object'
+type: base_object
+plugin: 'entity:delete_action:base_object'
+configuration: {  }

@@ -1,0 +1,118 @@
+/**
+ * Base component styles
+ */
+.gho-further-reading {
+  margin: 6.75rem 0 0 0;
+  color: #1f1f1f;
+}
+
+/**
+ * Title
+ */
+.gho-further-reading__title {
+  max-width: var(--reading-width);
+  margin: 0 0 1.5rem 0;
+  color: #1f1f1f;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.875rem;
+}
+
+@media (min-width: 1024px) {
+  .gho-further-reading__title {
+    font-size: 1.5rem;
+  }
+}
+
+/**
+ * List.
+ */
+.gho-further-reading__list {
+  max-width: var(--reading-width);
+}
+
+/**
+ * Style list of links
+ */
+.gho-further-reading__link {
+  position: relative; /* for SVG @see gho_fields/templates */
+  border-top: 1px solid #d8d8d8;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+/**
+ * Style last link in list
+ */
+.gho-further-reading__link:last-child {
+  border-bottom: 1px solid #d8d8d8;
+}
+
+/**
+ * Actual hyperlink
+ *
+ * It's styled as a block element to allow all aspects of the component to be
+ * clickable: the chevron and authorship line.
+ */
+.gho-further-reading__link a {
+  display: block;
+  padding: 1rem 0 3rem;
+  font-size: inherit;
+  font-weight: 700;
+}
+
+/**
+ * Chevron icon
+ */
+.gho-further-reading__arrow {
+  position: absolute;
+  top: 50%;
+  display: none; /* not visible on skinny screens */
+  transform: translateY(-50%);
+  /* @todo should this be the same color as the links or use the UN blue? */
+  fill: #3a90d2; /* UN blue */
+}
+
+/**
+ * Show chevron once we have room
+ */
+@media screen and (min-width: 576px) {
+  .gho-further-reading__arrow {
+    display: block;
+  }
+}
+
+/**
+ * LTR/RTL customizations
+ */
+[dir="ltr"] .gho-further-reading__arrow {
+  right: 1rem;
+  left: auto;
+}
+[dir="rtl"] .gho-further-reading__arrow {
+  right: auto;
+  left: 1rem;
+  transform: translateY(-50%) scale(-1, 1);
+}
+
+/**
+ * Since the source does weird things with margins, we need to account for lack
+ * of margin-collapse on first link.
+ */
+.gho-further-reading__link:first-child .gho-further-reading__arrow {
+  top: calc(50% + 0.5rem); /* margin-collapse on other links is 1rem so split it in half */
+}
+
+/**
+ * Author / Source
+ */
+.gho-further-reading__link p {
+  /* Move the source close to the link text. This puts the source in the
+   * clicking area of the link at the cost of making it non selectable.
+   * This can be "fixed" by adding `position: relative;` but then it's not
+   * "clickable" anymore.
+   *
+   * Note: if the source is long then when it wraps to multiple lines, it may
+   * not be fully included in the `3rem` space anymore. */
+  margin: -3rem 0 1rem 0;
+}

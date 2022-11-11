@@ -1,0 +1,15 @@
+ghi_base_objects.base_object_type.*:
+  type: config_entity
+  label: 'Base object type config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    hasYear:
+      type: boolean
+      label: 'Has year'
+    uuid:
+      type: string

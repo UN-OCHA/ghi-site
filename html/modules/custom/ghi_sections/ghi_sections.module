@@ -1,0 +1,140 @@
+<?php
+
+/**
+ * @file
+ * Contains hook implementations for the GHI Sections module.
+ */
+
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\ghi_sections\Entity\GlobalSection;
+use Drupal\ghi_sections\Entity\Homepage;
+use Drupal\ghi_sections\Entity\Section;
+use Drupal\layout_builder\SectionStorageInterface;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function ghi_sections_entity_bundle_info_alter(array &$bundles) {
+  $bundles['node']['section']['class'] = Section::class;
+  $bundles['node']['section']['label'] = t('Section');
+  $bundles['node']['global_section']['class'] = GlobalSection::class;
+  $bundles['node']['global_section']['label'] = t('Global section');
+  $bundles['node']['homepage']['class'] = Homepage::class;
+  $bundles['node']['homepage']['label'] = t('Homepage');
+}
+
+/**
+ * Implements hook_entity_bundle_field_info_alter().
+ *
+ * This is used to add a constraint to the homepage node type to guarantee
+ * unique years.
+ */
+function ghi_sections_entity_bundle_field_info_alter(&$fields, EntityTypeInterface $entity_type, $bundle) {
+  if (($entity_type->id() === 'node') && ($bundle === 'homepage') && isset($fields['field_year'])) {
+    $fields['field_year']->addConstraint('UniqueSectionYear', []);
+  }
+}
+
+/**
+ * Implements hook_preprocess_page_title().
+ */
+function ghi_sections_preprocess_page_title(&$variables) {
+  $node = \Drupal::routeMatch()->getParameter('node');
+  $is_admin_route = \Drupal::service('router.admin_context')->isAdminRoute();
+  if ($is_admin_route || !$node instanceof NodeInterface) {
+    return;
+  }
+  if (\Drupal::routeMatch()->getRouteName() == 'entity.node.canonical') {
+    if ($node instanceof GlobalSection) {
+      $variables['title'] = NULL;
+    }
+    if ($node instanceof Section) {
+      $variables['title'] = $node->getPageTitle();
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ghi_sections_form_node_section_edit_form_alter(&$form, FormStateInterface &$form_state) {
+  /** @var \Drupal\node\NodeForm $form_object */
+  $form_object = $form_state->getFormObject();
+  $entity = $form_object->buildEntity($form, $form_state);
+
+  /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $object */
+  $object = $entity->get('field_base_object')->entity;
+
+  // Hide the year field if the object doesn't need it.
+  if ($object instanceof BaseObjectInterface && !$object->needsYear()) {
+    $form['field_year']['#access'] = FALSE;
+  }
+
+  // Always disable the base object field. It's currently not allowed to
+  // change it.
+  $form['field_base_object']['#disabled'] = TRUE;
+  $form['field_base_object']['widget'][0]['target_id']['#title'] .= ': ' . $object->type->entity->label();
+  $form['field_base_object']['widget'][0]['target_id']['#description'] = t('The base object cannot be changed after the initial creation of a section. <a href="@base_object_edit_url" target="_blank">Edit @label</a>', [
+    '@base_object_edit_url' => $object->toUrl('edit-form')->toString(),
+    '@label' => $object->label(),
+  ]);
+
+  // Also disable the year field. Beeing able to change it would at least need
+  // another validation for duplication of base object - year combinations, as
+  // we do them during section creation.
+  $form['field_year']['#disabled'] = TRUE;
+
+  // Restrict access to the team field.
+  if (!\Drupal::currentUser()->hasPermission('administer teams')) {
+    $form['field_team']['#disabled'] = TRUE;
+    $form['field_team']['widget']['#description'] = t('You do not have permission to change the team for this section.');
+  }
+}
+
+/**
+ * Implements hook_layout_builder_view_context_alter().
+ */
+function ghi_sections_layout_builder_view_context_alter(array &$contexts, SectionStorageInterface $section_storage = NULL, $sample = FALSE) {
+  /** @var \Drupal\ghi_sections\SectionContextManager $section_context_manager */
+  $section_context_manager = \Drupal::service('ghi_sections.context_manager');
+
+  $context = NULL;
+  if (isset($contexts['layout_builder.entity']) && $contexts['layout_builder.entity']->hasContextValue()) {
+    $context = $section_context_manager->getYearContextFromEntity($contexts['layout_builder.entity']->getContextValue());
+  }
+  elseif (isset($contexts['entity']) && $contexts['entity']->hasContextValue()) {
+    $context = $section_context_manager->getYearContextFromEntity($contexts['entity']->getContextValue());
+  }
+  elseif (isset($contexts['node']) && $contexts['node']->hasContextValue()) {
+    $context = $section_context_manager->getYearContextFromEntity($contexts['node']->getContextValue());
+  }
+  else {
+    $context = $section_context_manager->getYearContext();
+  }
+
+  if ($context) {
+    $contexts['year'] = $context;
+  }
+}
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function ghi_sections_preprocess_page(&$variables) {
+  $node = $variables['node'] ?? NULL;
+  if (!$node || !$node instanceof Homepage || \Drupal::routeMatch()->getRouteName() != 'entity.node.canonical') {
+    return;
+  }
+
+  $message = [
+    '#theme' => 'ghi_message',
+    '#message' => t("This is the content container for the @year homepage. The content elements setup on this page are embeded automatically on the public homepage for @year and will be wrapped with common elements configured on the homepage. The page that you currently see will never be publicly available on it's own.", [
+      '@year' => $node->getYear(),
+    ]),
+  ];
+
+  $variables['page']['help'] = ['message' => $message];
+}

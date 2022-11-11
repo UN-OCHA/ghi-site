@@ -1,0 +1,69 @@
+uuid: 4fe66de8-401c-44db-b1f2-13088cb9a801
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.base_object.country.field_country_code
+    - field.field.base_object.country.field_latitude
+    - field.field.base_object.country.field_longitude
+    - field.field.base_object.country.field_original_id
+    - field.field.base_object.country.field_place_code
+    - ghi_base_objects.base_object_type.country
+id: base_object.country.default
+targetEntityType: base_object
+bundle: country
+mode: default
+content:
+  field_country_code:
+    type: string_textfield
+    weight: 4
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_latitude:
+    type: number
+    weight: 5
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_longitude:
+    type: number
+    weight: 6
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_original_id:
+    type: number
+    weight: 3
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_place_code:
+    type: string_textfield
+    weight: 7
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  langcode:
+    type: language_select
+    weight: 2
+    region: content
+    settings:
+      include_locked: true
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: -4
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden: {  }

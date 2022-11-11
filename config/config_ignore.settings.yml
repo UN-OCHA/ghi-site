@@ -1,0 +1,19 @@
+_core:
+  default_config_hash: UVH1aJ4b44UM-VdPVN7hNNuuVqfReJxwfVeDQH1Hvsk
+ignored_config_entities:
+  - '// Smugmug API'
+  - 'smugmug_api.settings:api_key'
+  - 'smugmug_api.settings:api_secret'
+  - '// Ignore global settings.'
+  - ghi_blocks.global_settings
+  - '// Ignore connection credentials.'
+  - ghi_content.remote_sources
+  - 'ghi_element_sync.settings:access_key'
+  - 'ghi_element_sync.settings:basic_auth'
+  - '// Ignore the homepage config.'
+  - 'page_manager.page.homepage:access_logic'
+  - 'page_manager.page.homepage:access_conditions'
+  - 'page_manager.page_variant.homepage*:variant_settings.sections.0.components'
+  - '// Ignore cache warmer'
+  - warmer.settings
+enable_export_filtering: true

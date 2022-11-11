@@ -1,0 +1,29 @@
+uuid: f9dbf512-9766-440f-9991-d656d5273330
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.financials.field_entity_reference
+    - field.field.node.financials.field_hero_image
+    - field.field.node.financials.field_team
+    - field.field.node.financials.layout_builder__layout
+    - node.type.financials
+  module:
+    - user
+id: node.financials.teaser
+targetEntityType: node
+bundle: financials
+mode: teaser
+content:
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  field_entity_reference: true
+  field_hero_image: true
+  field_team: true
+  langcode: true
+  layout_builder__layout: true

@@ -1,0 +1,22 @@
+uuid: 0cb023fa-b03f-4d4e-8bb1-01697765bd79
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: risk_index
+label: 'Risk index'
+type: 'canonical_entities:node'
+pattern: '[node:field_entity_reference:entity:url:path]/risk-index'
+selection_criteria:
+  8df65b0f-4bbc-4c78-a908-8efcd2c7b6ad:
+    id: node_type
+    negate: false
+    uuid: 8df65b0f-4bbc-4c78-a908-8efcd2c7b6ad
+    context_mapping:
+      node: node
+    bundles:
+      risk_index: risk_index
+selection_logic: and
+weight: -6
+relationships: {  }

@@ -1,0 +1,10 @@
+_core:
+  default_config_hash: EUme9KS2VfxTESc5BX_gkXaKewmPiO8b-glUb5lg7UM
+sync_source: 'https://hum-insight.info'
+access_key: ''
+basic_auth:
+  user: ''
+  pass: ''
+node_types:
+  - section
+  - plan_cluster

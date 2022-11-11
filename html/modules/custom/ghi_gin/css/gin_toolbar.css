@@ -1,0 +1,5 @@
+/* Fix annoying issues with disappearing elements on iOS. */
+.gin--horizontal-toolbar #toolbar-administration .toolbar-lining,
+.ui-dialog {
+  -webkit-overflow-scrolling: auto !important;
+}

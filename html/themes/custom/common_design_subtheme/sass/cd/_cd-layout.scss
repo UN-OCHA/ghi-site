@@ -1,0 +1,42 @@
+.cd-layout-container {
+  @supports (display: grid) {
+    @include tablet {
+      grid-template-rows: 115px auto 1fr auto;
+      grid-auto-rows: auto;
+    }
+  }
+}
+
+// One sidebar.
+.cd-layout-with-sidebar-first .cd-layout-sidebar-first,
+.cd-layout-with-sidebar-second .cd-layout-sidebar-second {
+  @include desktop {
+    flex-basis: $cd-sidebar-width;
+  }
+}
+
+// Both sidebars, individually control.
+.cd-layout-with-sidebar-both {
+  .cd-layout-sidebar-first {
+    margin-bottom: 1rem;
+
+    @include tablet {
+      flex-basis: $cd-sidebar-width;
+    }
+
+    @include desktop {
+      margin-bottom: 0;
+    }
+  }
+}
+
+// Faux sidebar in Node content.
+// Requires markup in node-full.html.twig.
+.cd-layout-two-col {
+  .cd-layout-sidebar-first {
+    @include desktop {
+      flex-basis: $cd-sidebar-width;
+      margin-top: 0;
+    }
+  }
+}

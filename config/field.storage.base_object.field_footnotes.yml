@@ -1,0 +1,18 @@
+uuid: 0a749aa8-2def-4fef-b6ec-448b8a1df9b4
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+id: base_object.field_footnotes
+field_name: field_footnotes
+entity_type: base_object
+type: ghi_footnotes
+settings: {  }
+module: ghi_base_objects
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

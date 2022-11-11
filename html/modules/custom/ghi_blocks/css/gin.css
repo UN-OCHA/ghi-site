@@ -1,0 +1,22 @@
+.glb-toolbar {
+  z-index: 200 !important;
+}
+.views-element-container .gin-table-scroll-wrapper {
+  /** Needed to always see the operation links dropbutton content. */
+  overflow: visible;
+}
+
+.glb-button.button-small,
+.glb-button.button-small:not(:focus) {
+  font-size: 14px !important;
+  margin: 0 0.5rem !important;
+  padding: calc(0.5em - 1px) calc(0.75em - 1px) !important;
+  border: 1px solid var(--colorGinPrimary) !important;
+  border-radius: 4px !important;
+}
+
+body[data-gin-accent] .dialog-off-canvas-main-canvas form .messages-list .messages.messages--info {
+  color: black;
+  background-color: lightgray;
+  border: 0;
+}

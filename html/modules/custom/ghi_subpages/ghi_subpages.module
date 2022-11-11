@@ -1,0 +1,225 @@
+<?php
+
+/**
+ * @file
+ * Contains hook implementations for the GHI Subpages module.
+ */
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
+use Drupal\ghi_subpages\Controller\SubpagesAdminController;
+use Drupal\ghi_subpages\Element\LayoutBuilderSectionLock;
+use Drupal\ghi_subpages\Entity\SubpageNode;
+use Drupal\ghi_subpages\Helpers\SubpageHelper;
+use Drupal\ghi_subpages\SubpageManager;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function ghi_subpages_entity_bundle_info_alter(array &$bundles) {
+  $subpage_types = SubpageHelper::getSubpageTypes();
+  foreach ($subpage_types as $subpage_type) {
+    $bundles['node'][$subpage_type]['class'] = SubpageNode::class;
+    // This is a bit strange. During the execution of tests based on
+    // Drupal\Tests\BrowserTest, the label property is not set.
+    // To work around this we add this fallback that derives the label from the
+    // machine name.
+    $bundles['node'][$subpage_type]['label'] = $bundles['node'][$subpage_type]['label'] ?? ucfirst(str_replace('_', ' ', $subpage_type));
+  }
+}
+
+/**
+ * Implements hook_section_post_save().
+ *
+ * Go over all created subpages for a node and save it again, to fix an issue
+ * with the generation of url alias for subpages, if the pattern uses the
+ * section's url alias as one of their tokens.
+ */
+function ghi_subpages_section_post_save(NodeInterface $section_node) {
+  if (!SubpageHelper::isBaseTypeNode($section_node)) {
+    return;
+  }
+
+  // Make sure all subpages exist.
+  SubpageHelper::assureSubpagesForBaseNode($section_node);
+
+  // Load all subpages and save them again to make sure they have proper paths.
+  $subpages = SubpageHelper::loadSubpagesForBaseNode($section_node);
+  foreach ($subpages as $subpage) {
+    $subpage->save();
+  }
+
+  if (!$section_node->isPublished()) {
+    // Load all subpages and make sure that those are unpublished too.
+    $subpages = SubpageHelper::loadSubpagesForBaseNode($section_node);
+
+    if (!empty($subpages)) {
+      foreach ($subpages as $subpage) {
+        if (!$subpage->isPublished()) {
+          continue;
+        }
+        /** @var \Drupal\node\Entity\NodeInterface $node_type */
+        $node_type = \Drupal::entityTypeManager()->getStorage('node_type')->load($subpage->getType());
+        $subpage->setUnpublished();
+        $subpage->save();
+
+        \Drupal::messenger()->addStatus(t('Subpage @subpage has been unpublished.', [
+          '@subpage' => $node_type->get('name'),
+        ]));
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function ghi_subpages_entity_delete(EntityInterface $entity) {
+  if (!$entity instanceof NodeInterface || !SubpageHelper::isBaseTypeNode($entity)) {
+    return;
+  }
+  SubpageHelper::deleteSubpagesForBaseNode($entity);
+}
+
+/**
+ * Implements hook_entity_access().
+ *
+ * Check access for full page node views of subpages of the base entities.
+ * Allow access only if the base entity is allowed to be viewed.
+ */
+function ghi_subpages_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  if (!$entity instanceof NodeInterface) {
+    return AccessResult::neutral();
+  }
+  $node_types = SubpageManager::SUPPORTED_SUBPAGE_TYPES + [
+    'plan_entity',
+    'governing_entity',
+  ];
+  $node = $entity;
+  if (!in_array($node->getType(), $node_types)) {
+    // No opinion.
+    return AccessResult::neutral();
+  }
+
+  if ($operation == 'view') {
+    $base_entity = NULL;
+    if ($node->hasField('field_entity_reference')) {
+      /** @var \Drupal\node\NodeInterface $base_entity */
+      $base_entity = $node->field_entity_reference->entity;
+    }
+    elseif ($node->hasField('field_plan')) {
+      /** @var \Drupal\node\NodeInterface $base_entity */
+      $base_entity = $node->field_plan->entity;
+    }
+    if (!$base_entity) {
+      // No opinion.
+      return AccessResult::neutral();
+    }
+    // If no access to the base entity, explicitely deny access to the subpage,
+    // otherwhise follow whatever the node grants permit (neutral).
+    $access_result = $base_entity->access($operation, $account) !== TRUE ? AccessResult::forbidden() : AccessResult::neutral();
+    return $access_result->addCacheableDependency($entity);
+  }
+
+  // No opinion.
+  return AccessResult::neutral();
+}
+
+/**
+ * Implements hook_local_tasks_alter().
+ *
+ * This is used to remove the publish local task coming from the
+ * publishcontent module, if it's configured to not display them. This is
+ * needed because we alter the route requirements and remove a custom
+ * access check which would normally govern the display of the task, in order
+ * to be able to use the direct publish/unpublish link from other parts of the
+ * site.
+ */
+function ghi_subpages_local_tasks_alter(&$local_tasks) {
+  if (!empty($local_tasks['entity.node.publish'])) {
+    $config = \Drupal::configFactory()->get('publishcontent.settings');
+    if (empty($config->get('ui_localtask'))) {
+      unset($local_tasks['entity.node.publish']);
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function ghi_subpages_entity_operation(EntityInterface $entity) {
+  $account = \Drupal::currentUser();
+  if (!$entity instanceof NodeInterface || !SubpageHelper::isBaseTypeNode($entity)) {
+    return;
+  }
+
+  $route_name = "ghi_subpages.node.pages";
+  $route_parameters = [
+    'node' => $entity->id(),
+  ];
+
+  // If current user has access to route, then add the operation link. The
+  // access check will only return TRUE if the bundle is Layout Builder-
+  // enabled, overrides are allowed, and user has necessary permissions.
+  /** @var \Drupal\Core\Access\AccessManagerInterface $access_manager */
+  $access_manager = \Drupal::service('access_manager');
+  if (!$access_manager->checkNamedRoute($route_name, $route_parameters, $account)) {
+    return;
+  }
+
+  return [
+    'subpages' => [
+      'title' => t('Subpages'),
+      'weight' => 50,
+      'url' => Url::fromRoute($route_name, $route_parameters),
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_page_title().
+ */
+function ghi_subpages_preprocess_page_title(&$variables) {
+  $node = \Drupal::routeMatch()->getParameter('node');
+  if (!$node instanceof NodeInterface || \Drupal::routeMatch()->getRouteName() != 'entity.node.canonical') {
+    return;
+  }
+  if (SubpageHelper::isSubpageTypeNode($node) && $section = SubpageHelper::getBaseTypeNode($node)) {
+    $variables['title'] = $section->getPageTitle();
+  }
+}
+
+/**
+ * Implements hook_preprocess_node_add_list().
+ *
+ * Filter the list of content types that are available for manual creation, so
+ * that subpages can not be created individually.
+ * Access is actually already denied via
+ * Drupal\ghi_subpages\EventSubscriber\RouteSubscriber::alterRoutes, which
+ * controls access on the node.add route. For the super admin, this doesn't
+ * filter the list on the node add page itself though.
+ */
+function ghi_subpages_preprocess_node_add_list(&$variables) {
+  $variables['types'] = [];
+  if (!empty($variables['content'])) {
+    $subpages_admin_controller = SubpagesAdminController::create(\Drupal::getContainer());
+    foreach ($variables['content'] as $key => $type) {
+      if ($subpages_admin_controller->nodeCreateAccess($type)->isForbidden()) {
+        unset($variables['content'][$key]);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_lement_info_alter().
+ */
+function ghi_subpages_element_info_alter(array &$types) {
+  $types['layout_builder']['#pre_render'][] = [
+    LayoutBuilderSectionLock::class,
+    'preRenderRestrictSectionConfiguration',
+  ];
+}

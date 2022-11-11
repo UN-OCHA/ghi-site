@@ -75,7 +75,7 @@ class GlobalPlanLinkedPlansWidget extends WidgetBase {
     $elements = parent::formMultipleElements($items, $form, $form_state);
 
     foreach (Element::children($elements) as $key => $element_key) {
-      if (!is_int($element_key)) {
+      if (!is_int($element_key) || !is_array($elements[$element_key]) || !array_key_exists('_weight', $elements[$element_key])) {
         continue;
       }
       $elements[$element_key]['_weight']['#default_value'] = $key - $elements[$element_key]['_weight']['#delta'];
@@ -151,7 +151,7 @@ class GlobalPlanLinkedPlansWidget extends WidgetBase {
       '#type' => 'number',
       '#title' => $this->t('Requirements override'),
       '#min' => 0,
-      '#default_value' => isset($items[$delta]->requirements_override) ? $items[$delta]->requirements_override : '',
+      '#default_value' => $items[$delta]->requirements_override ?? '',
     ];
 
     if ($delta < $this->getMaxItemCount($form, $form_state)) {

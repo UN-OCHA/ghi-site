@@ -1,0 +1,20 @@
+uuid: 4bc42193-d242-4d8e-99fc-01319e14fb5a
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+id: base_object.field_prototype_id
+field_name: field_prototype_id
+entity_type: base_object
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

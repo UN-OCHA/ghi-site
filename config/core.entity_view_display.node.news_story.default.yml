@@ -6,7 +6,7 @@ dependencies:
     - field.field.node.news_story.body
     - field.field.node.news_story.field_display_author
     - field.field.node.news_story.field_image
-    - field.field.node.news_story.field_topics
+    - field.field.node.news_story.field_news_story_tags
     - node.type.news_story
   module:
     - image
@@ -18,41 +18,43 @@ bundle: news_story
 mode: default
 content:
   body:
-    label: hidden
-    weight: 2
     type: text_default
+    label: hidden
     settings: {  }
     third_party_settings: {  }
+    weight: 2
     region: content
   field_display_author:
-    label: hidden
-    weight: 0
     type: string
+    label: hidden
     settings:
       link_to_entity: false
     third_party_settings: {  }
+    weight: 0
     region: content
   field_image:
-    label: hidden
-    weight: 1
     type: image
+    label: hidden
     settings:
       image_link: ''
       image_style: ''
+      image_loading:
+        attribute: lazy
     third_party_settings: {  }
+    weight: 1
     region: content
-  field_topics:
-    label: hidden
-    weight: 3
+  field_news_story_tags:
     type: entity_reference_label
+    label: above
     settings:
       link: true
     third_party_settings: {  }
+    weight: 101
     region: content
   links:
-    weight: 100
     settings: {  }
     third_party_settings: {  }
+    weight: 100
     region: content
 hidden:
   langcode: true

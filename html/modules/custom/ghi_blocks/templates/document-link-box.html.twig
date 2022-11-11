@@ -1,0 +1,23 @@
+{#
+/**
+ * It is important that the dropwdown component is wrapped in another element,
+ * otherwhise the cd-dropdown.js won't create the button.
+ */
+#}
+{{ attach_library('common_design/cd-dropdown') }}
+
+<div class="document-link-box">
+  <div class="title-wrapper">
+    <p class="title">{{ title }}</p>
+  </div>
+  <div class="buttons">
+    <div data-cd-component="ghi-download" data-cd-icon="arrow-down" id="cd-dropdown" class="cd-dropdown" aria-labelledby="dropdown-title" data-cd-toggable="{{ button_title }}">
+      <div>
+        {{ download_links }}
+      </div>
+    </div>
+  </div>
+  <div class="meta">
+    <span>{{ meta }}</span>
+  </div>
+</div>

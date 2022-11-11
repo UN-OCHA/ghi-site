@@ -1,0 +1,19 @@
+uuid: f3037c78-64dc-4868-b486-671713158d3e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_description
+    - ghi_base_objects.base_object_type.plan
+id: base_object.plan.field_description
+field_name: field_description
+entity_type: base_object
+bundle: plan
+label: 'Public comment'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

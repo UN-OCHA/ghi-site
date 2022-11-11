@@ -1,0 +1,16 @@
+{% if contacts %}
+  <div class="cluster-header-contacts">
+    <h3>{{ "Contact"|t }}</h3>
+    {% for key, contact in contacts %}
+      <div class="cluster-header-contacts-item">
+        {{ contact.name }}<br />
+        {% if show_email and contact.mail %}
+          <a href="mailto:{{ contact.mail }}">{{ contact.mail }}</a><br />
+        {% endif %}
+        {% if contact.agency %}
+          {{ contact.agency }}<br />
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}

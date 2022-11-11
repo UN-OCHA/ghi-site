@@ -15,22 +15,26 @@ use Drupal\hpc_api\Helpers\QueryHelper;
  * Clean up import files.
  */
 function hpc_api_cache_flush() {
-  // Delete import files.
-  $import_files = \Drupal::service('file_system')->scanDirectory(QueryHelper::IMPORT_DIR, '/.*\.json/');
+  hpc_api_clear_directory(QueryHelper::IMPORT_DIR, '/.*\.json/');
+}
+
+/**
+ * Delete files in the given directory.
+ *
+ * @param string $dir
+ *   The directory to clear.
+ */
+function hpc_api_clear_directory($dir, $pattern) {
+  /** @var \Drupal\Core\File\FileSystem $file_system */
+  $file_system = \Drupal::service('file_system');
+  $import_files = file_exists($dir) ? $file_system->scanDirectory($dir, $pattern) : [];
   if (empty($import_files)) {
     // Nothing to be done.
     return;
   }
   foreach ($import_files as $import_file) {
-    \Drupal::service('file_system')->delete($import_file->uri);
+    $file_system->delete($import_file->uri);
   }
-}
-
-/**
- * Retrieve the default API version for HPC queries.
- */
-function hpc_api_get_default_api_version() {
-  return \Drupal::config('hpc_api.settings')->get('default_api_version', 'v1');
 }
 
 /**
@@ -40,9 +44,10 @@ function hpc_api_get_default_api_version() {
  *   A fully qualified URL for the public endpoint.
  */
 function hpc_api_get_public_api_search_url($args = []) {
-  $config = \Drupal::config('hpc_api.settings');
+  /** @var \Drupal\hpc_api\ConfigService $config */
+  $config = \Drupal::service('hpc_api.config');
   $api_url = $config->get('url');
-  $api_version = hpc_api_get_default_api_version();
+  $api_version = $config->getDefaultApiVersion();
   $api_base_path = $config->get('public_base_path');
   $endpoint = 'flow';
   $url = $api_url . '/' . $api_version . '/' . $api_base_path . '/' . $endpoint;

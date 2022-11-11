@@ -2,8 +2,7 @@
 
 namespace Drupal\hpc_api\Helpers;
 
-use Drupal\Core\File\FileSystem;
-use Drupal\node\NodeInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
 
 /**
  * Helper class to handle entity objects from the HPC API.
@@ -14,6 +13,17 @@ class ApiEntityHelper {
    * A list of hardcoded root level plan entity ref codes.
    */
   const MAIN_LEVEL_PLE_REF_CODES = ['CQ', 'SO', 'SP'];
+
+  /**
+   * Supported context entity types for plans.
+   *
+   * A list of node bundles that are supported for further context handling of
+   * plan entities.
+   */
+  const SUPPORTED_CONTEXT_ENTITY_TYPES = [
+    'governing_entity',
+    'plan_entity',
+  ];
 
   /**
    * Retrieve the version property of an entity.
@@ -34,10 +44,10 @@ class ApiEntityHelper {
    *
    * @param object $data
    *   A plan data object as retrieved from the API.
-   * @param \Drupal\node\NodeInterface $context_node
-   *   An optional node object that defines the current context. Should be NULL
-   *   when on a plan overview page, but one of plan_entity or governing_entity
-   *   on subpages.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_entity
+   *   An optional entity object that defines the current context. Should be
+   *   NULL when on a plan overview page, but one of plan_entity or
+   *   governing_entity on subpages.
    * @param string $entity_type
    *   The optional type of API entity we are looking for, either plan or
    *   governing.
@@ -47,7 +57,7 @@ class ApiEntityHelper {
    * @return array
    *   An array of entity objects.
    */
-  public static function getMatchingPlanEntities($data, NodeInterface $context_node = NULL, $entity_type = NULL, array $filters = NULL) {
+  public static function getMatchingPlanEntities($data, ContentEntityInterface $context_entity = NULL, $entity_type = NULL, array $filters = NULL) {
 
     if (empty($data->planEntities) && empty($data->governingEntities)) {
       return FALSE;
@@ -66,14 +76,14 @@ class ApiEntityHelper {
     // context.
     $matching_entities = [];
 
-    if (empty($context_node)) {
+    if (empty($context_entity) || !in_array($context_entity->bundle(), self::SUPPORTED_CONTEXT_ENTITY_TYPES)) {
       // Easy, no additional plan context, just get all of them.
       $matching_entities = $entities;
     }
-    elseif ($context_node->bundle() == 'governing_entity') {
+    elseif ($context_entity->bundle() == 'governing_entity') {
       // Context is a governing entity, e.g. a cluster. Lets get the parent to
       // drill down into the hierarchy.
-      $parent_id = $context_node->field_original_id->value;
+      $parent_id = $context_entity->field_original_id->value;
       foreach ($entities as $entity) {
         if ($parent_id !== NULL && (empty($entity->parentId) || $entity->parentId != $parent_id)) {
           continue;
@@ -81,10 +91,10 @@ class ApiEntityHelper {
         $matching_entities[] = $entity;
       }
     }
-    elseif ($context_node->bundle() == 'plan_entity') {
+    elseif ($context_entity->bundle() == 'plan_entity') {
       // Context is a plan entity, e.g. a strategic objective.
-      $entity_prototype_id = $context_node->field_prototype_id->value;
-      $original_id = $context_node->field_original_id->value;
+      $entity_prototype_id = $context_entity->field_prototype_id->value;
+      $original_id = $context_entity->field_original_id->value;
 
       // First extract matching high level entities.
       foreach ($entities as $entity) {
@@ -134,8 +144,8 @@ class ApiEntityHelper {
     }
 
     // Also add the context entity itself to the list of matching entities.
-    if (!empty($context_node) && (empty($entity_type) || $context_node->bundle() == $entity_type . '_entity')) {
-      $original_id = $context_node->field_original_id->value;
+    if (!empty($context_entity) && (empty($entity_type) || $context_entity->bundle() == $entity_type . '_entity')) {
+      $original_id = $context_entity->field_original_id->value;
       $plan_context_entities = self::getPlanEntitiesById($data, [$original_id]);
       $plan_context_entity = !empty($plan_context_entities) ? reset($plan_context_entities) : NULL;
       if ($plan_context_entity && !in_array($plan_context_entity, $matching_entities)) {
@@ -332,7 +342,7 @@ class ApiEntityHelper {
         'type' => $entity_type . '_entity',
         'custom_reference' => $entity_version->customReference,
         'description' => !empty($entity_version->value->description) ? $entity_version->value->description : '',
-        'icon' => !empty($entity_version->value->icon) ? self::getIconEmbedCode($entity_version->value->icon) : NULL,
+        'icon' => !empty($entity_version->value->icon) ? $entity_version->value->icon : NULL,
         'parents' => !empty($entity->parents) ? array_map(function ($item) {
           return $item->parentId;
         }, $entity->parents) : [],
@@ -362,56 +372,6 @@ class ApiEntityHelper {
     });
 
     return $entities;
-  }
-
-  /**
-   * Retrieve svg icon code.
-   *
-   * @param string $icon
-   *   The icon identifier.
-   *
-   * @return string|null
-   *   A string representation of the SVG icon, or NULL if no icon is there.
-   */
-  public static function getIconEmbedCode($icon) {
-    if (empty($icon) || $icon == 'blank_icon') {
-      return NULL;
-    }
-    $svgs = &drupal_static(__FUNCTION__, []);
-    if (empty($svgs[$icon])) {
-
-      /** @var \Drupal\hpc_api\Query\EndpointQuery $endpoint_query */
-      $endpoint_query = \Drupal::service('hpc_api.endpoint_query');
-      /** @var \Drupal\Core\File\FileSystem $file_system */
-      $file_system = \Drupal::service('file_system');
-      /** @var \Drupal\Component\Datetime\TimeInterface $time */
-      $time = \Drupal::service('datetime.time');
-
-      $svg_content = NULL;
-      // Check if we have a local copy that is not older than 1 day.
-      $icon_dir = 'public://cluster-icons';
-      $icon_path_local = $icon_dir . '/' . $icon;
-      if (file_exists($icon_path_local) && filemtime($file_system->realpath($icon_path_local)) > $time->getRequestTime() - 24 * 60 * 60) {
-        $svg_content = file_get_contents($icon_path_local);
-      }
-      if (empty($svg_content)) {
-        $endpoint_query->setArguments([
-          'endpoint' => 'icon/' . $icon,
-          'api_version' => 'v2',
-        ]);
-        $svg_data = $endpoint_query->getData();
-        $svg_content = $svg_data ? $svg_data->svg : NULL;
-        if ($svg_content && $file_system->prepareDirectory($icon_dir, FileSystem::CREATE_DIRECTORY | FileSystem::MODIFY_PERMISSIONS)) {
-          file_put_contents($icon_path_local, $svg_content);
-        }
-      }
-      if (empty($svg_content)) {
-        return NULL;
-      }
-      $svg = '<div class="cluster-icon">' . $svg_content . '</div>';
-      $svgs[$icon] = $svg;
-    }
-    return !empty($svgs[$icon]) ? $svgs[$icon] : NULL;
   }
 
 }

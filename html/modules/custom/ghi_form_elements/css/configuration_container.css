@@ -1,0 +1,93 @@
+.ui-dialog .hpc-form-wrapper .form-type--configuration_container.glb-form-item {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  line-height: 1.5rem;
+}
+.ui-dialog .hpc-form-wrapper input.ajax-enabled:active {
+  opacity: 0.2;
+}
+.ui-dialog .hpc-form-wrapper .ajax-progress-throbber {
+  border: none;
+  background: none;
+  box-shadow: none;
+  position: relative;
+  padding: 0;
+}
+.ui-dialog .hpc-form-wrapper .ajax-progress-throbber:before {
+  top: -0.85rem;
+  left: -3.6rem;
+}
+.ui-dialog .hpc-form-wrapper .ajax-progress-throbber .throbber,
+.ui-dialog .hpc-form-wrapper .ajax-progress-throbber .message {
+  display: none;
+}
+
+.form-type--configuration_container select {
+  width: auto;
+}
+
+.form-type--configuration_container h3 {
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+
+.form-type--configuration_container .tabledrag-toggle-weight-wrapper {
+  display: none;
+}
+
+.form-type--configuration_container table .glb-button {
+  font-size: 0.8rem !important;
+  margin: 0 !important;
+}
+.form-type--configuration_container .actions-wrapper {
+  display: flex;
+  flex-direction: row-reverse;
+  position: absolute;
+  bottom: 0rem;
+  left: 0;
+  z-index: 2;
+  padding: 0 1rem;
+  width: 100%;
+  background-color: var(--colorGinAppBackground);
+}
+
+.form-type--configuration_container table.summary-table {
+  width: 100%;
+}
+
+.form-type--configuration_container table.summary-table > caption {
+  background-color: transparent;
+}
+
+.form-type--configuration_container table.summary-table thead th,
+.form-type--configuration_container table.summary-table tbody tr td {
+  text-align: left;
+}
+.form-type--configuration_container table.summary-table thead th:first-child {
+  padding-left: 1.2rem;
+}
+
+.form-type--configuration_container table.summary-table thead th:last-child,
+.form-type--configuration_container table.summary-table:not(.empty-table) tbody tr td:last-child {
+  text-align: right;
+}
+
+.form-type--configuration_container table.summary-table a.tabledrag-handle .handle {
+  width: auto;
+  height: auto;
+}
+.form-type--configuration_container table.summary-table .draggable.tabledrag-root td {
+  font-weight: bold;
+}
+
+.form-type--configuration_container table.summary-table .operation-buttons {
+  white-space: nowrap;
+}
+
+.form-type--configuration_container input[type="radio"]:checked,
+.form-type--configuration_container input[type="radio"]:checked:hover,
+.form-type--configuration_container input[type="radio"]:checked:active,
+.form-type--configuration_container input[type="radio"]:checked:focus,
+.form-type--configuration_container input[type="radio"]:checked:hover:focus {
+  box-shadow: none !important;
+}

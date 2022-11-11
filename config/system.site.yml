@@ -1,14 +1,15 @@
-uuid: bbcc1eba-da39-4de7-bbe0-7ff4553fb0cc
-name: 'Humanitarian InSight'
-mail: admin@example.com
-slogan: ''
-page:
-  403: /
-  404: /
-  front: /overview/2021
-admin_compact_mode: false
-weight_select_max: 100
-langcode: en
-default_langcode: en
 _core:
   default_config_hash: yXadRE77Va-G6dxhd2kPYapAvbnSvTF6hO4oXiOEynI
+langcode: en
+uuid: bbcc1eba-da39-4de7-bbe0-7ff4553fb0cc
+name: 'Humanitarian Action'
+mail: admin@example.com
+slogan: 'An evidence-based overview of the humanitarian response coordinated by the United Nations'
+page:
+  403: ''
+  404: ''
+  front: /overview
+admin_compact_mode: false
+weight_select_max: 100
+default_langcode: en
+mail_notification: ''

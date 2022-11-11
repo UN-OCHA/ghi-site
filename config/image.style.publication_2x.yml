@@ -1,0 +1,15 @@
+uuid: 2205eadc-f81a-4ce5-b42b-4110026f3afd
+langcode: en
+status: true
+dependencies: {  }
+name: publication_2x
+label: 'Publication 2x'
+effects:
+  726c64ad-908e-4426-9a59-082c8583231f:
+    uuid: 726c64ad-908e-4426-9a59-082c8583231f
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 796
+      height: 146
+      anchor: center-center

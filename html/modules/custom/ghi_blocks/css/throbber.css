@@ -1,0 +1,70 @@
+/**
+ Make the progress throbber for the preview button behave identical for
+ layout builder on page manager pages and node pages.
+ Actually, make all button throbbers behave the same.
+*/
+.ajax-progress.ajax-progress-throbber,
+.ajax-progress.ajax-progress--throbber {
+  position: fixed;
+  z-index: 1260;
+  top: 50%;
+  left: 50%;
+  box-sizing: border-box;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: -1.75rem;
+  border: 1px solid rgba(216, 217, 224, 0.8) !important;
+  border-radius: 3.5rem;
+  background: #fff !important;
+  box-shadow: 0 0.25rem 0.625rem rgb(34 35 48 / 10%) !important;
+  display: inline-flex;
+  align-content: center;
+  vertical-align: middle;
+  white-space: nowrap;
+  line-height: 1.125rem;
+}
+
+.ajax-progress.ajax-progress-throbber:before,
+.ajax-progress__throbber,
+.ajax-progress.ajax-progress-throbber:before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin: -0.875rem;
+  content: "";
+  border: 3px solid var(--cd-primary-color) !important;
+  border-right: 3px dotted transparent !important;
+  border-radius: 50%;
+  background: var(--colorGinLayerBackground) !important;
+  color: var(--colorGinText) !important;
+  -webkit-animation: ghi-throbber 0.75s linear infinite;
+  animation: ghi-throbber 0.75s linear infinite;
+  z-index: 1;
+}
+
+.ajax-progress .message,
+.ajax-progress .ajax-progress__message {
+  display: none;
+}
+
+.ajax-progress .overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.2;
+  background-color: white;
+  pointer-events: all;
+}
+
+@keyframes ghi-throbber {
+  0% {
+    transform: rotateZ(0);
+  }
+  100% {
+    transform: rotateZ(360deg);
+  }
+}

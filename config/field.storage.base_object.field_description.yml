@@ -1,0 +1,19 @@
+uuid: bee9ccb0-1219-444a-90c3-a9ed1f404487
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+id: base_object.field_description
+field_name: field_description
+entity_type: base_object
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

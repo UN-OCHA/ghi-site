@@ -1,0 +1,25 @@
+.ghi-block-article-collection {
+
+  .block-content > a.external {
+    margin-top: 2rem;
+  }
+
+  .article-collection {
+    margin-top: 2rem;
+  }
+
+  .article-collection-cards {
+
+    .ghi-grid-item {
+      padding: 0;
+
+      &.featured {
+        background-color: var(--cd-primary-color);
+      }
+
+      .field--type-image {
+        width: 100%;
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+//——————————————————————————————————————————————————————————————————————————————
+// Typography
+//——————————————————————————————————————————————————————————————————————————————
+
+a {
+  color: var(--ghi-default-text-color);
+
+  &:hover,
+  &:focus {
+    color: var(--ghi-default-text-color);
+  }
+}
+
+input::placeholder {
+  font-size: 80%;
+  font-style: italic;
+}

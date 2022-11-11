@@ -1,0 +1,63 @@
+// In headline figures.
+.fts-icon,
+.cd-figure-list--large .fts-icon {
+  height: 1rem;
+}
+
+.download-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-image: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/download/default/20px.svg");
+  background-repeat: no-repeat;
+}
+
+// In tables.
+tbody td {
+  &[data-sort-type="numeric"] {
+    text-align: right;
+  }
+
+  .fts-icon {
+    height: 1rem;
+    vertical-align: middle;
+  }
+
+  .cluster-icon {
+    float: left;
+    width: 2rem;
+    height: 1rem;
+
+    svg {
+      position: relative;
+      top: 10%;
+      left: 0;
+      width: 1.2rem;
+      height: 1.2rem;
+    }
+  }
+}
+
+// SVG sprite placed before end of body in html.tpl.php
+svg.ghi-icons-sprite {
+  display: none;
+  overflow: hidden;
+}
+
+svg.icon {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  pointer-events: none;
+
+  .toggle & {
+    width: 0.5rem;
+    height: 0.5rem;
+    cursor: pointer;
+    pointer-events: all;
+    fill: var(--ghi-default-text-color);
+  }
+  .toggle.open & {
+    transform: rotate(180deg);
+  }
+}

@@ -1,0 +1,10 @@
+name: GHI Plan Clusters
+description: Provide logic around plan clusters.
+package: GHI
+
+type: module
+core_version_requirement: ^8 || ^9
+
+dependencies:
+  - ghi_subpages:ghi_subpages
+  - ghi_plans:ghi_plans

@@ -2,21 +2,90 @@
 // Common Design: Main Navigation
 //——————————————————————————————————————————————————————————————————————————————
 .cd-nav__btn {
+  height: $cd-site-header-height;
+
   &[aria-expanded] .cd-icon--arrow-down {
     fill: $implementation-highlight;
   }
 
   &[aria-expanded="true"] {
     &::before {
+      bottom: 0;
+      height: 4px;
       background: $implementation-highlight;
     }
   }
 }
 
 .cd-site-header__nav-holder {
+  .cd-nav {
+    a,
+    span,
+    button {
+      display: block;
+      padding: 15px 30px;
+      text-align: left;
+      text-decoration: none;
+      color: $cd-default-text-color;
+
+      & > span {
+        padding: 0;
+      }
+
+      html[dir="rtl"] & {
+        text-align: right;
+      }
+
+      &:hover,
+      &:focus {
+        color: $cd-default-text-color;
+        outline: none; // default browser outline is replaced by background colour change.
+        background: transparent;
+      }
+
+      @supports (display: flex) {
+        display: flex;
+      }
+    }
+
+    button {
+      width: 100%;
+      border: 0 none;
+      background: transparent;
+    }
+
+    // First level.
+    > .menu > .menu-item > a,
+    > .menu > .menu-item > span,
+    > .menu > .menu-item > button {
+      text-transform: none;
+      font-weight: 700;
+
+      @include desktop {
+        padding: 0;
+      }
+    }
+  }
+
+  // Second level.
+  .menu .menu {
+    a:hover {
+      background: transparent;
+    }
+  }
+
+  @include max-width(lg) {
+    // Fix offset for mobile device when toolbar is present.
+    .gin--horizontal-toolbar & .cd-nav[data-cd-hidden="false"] {
+      top: calc(var(--ginHorizontalToolbarOffset) + #{$cd-global-header-height} + #{$cd-site-header-height});
+    }
+  }
+
   // Active trail for mobile menu.
   @include max-width(lg) {
+
     .cd-nav > ul > li {
+
       > a.is-active::before,
       > button.is-active::before {
         background: $implementation-highlight;
@@ -60,27 +129,73 @@
   }
 
   @include desktop {
+    .cd-nav {
+      a,
+      span,
+      button {
+        padding: 5px 15px;
+
+        span {
+          padding: 0;
+        }
+      }
+    }
     .cd-nav > .menu {
       > .menu-item {
-        &.menu-item--active-trail a::before,
-        &.menu-item--active-trail button::before {
-          background: $implementation-highlight;
-        }
+        padding: 0 14px;
 
         > a,
+        > span,
         button {
+          position: relative;
+          display: flex;
+          align-items: center;
+          height: $cd-site-header-height;
+          transition: background 0.3s ease;
+          background: transparent;
+
+          &::before {
+            position: absolute;
+            right: -1px;
+            bottom: 0;
+            left: -1px;
+            width: calc(100% + 2px);
+            height: 4px;
+            content: "";
+            transition: background 0.3s ease;
+            background: transparent;
+          }
+
+          &:hover,
           &.is-active,
           &:focus {
+            background: transparent;
+
             &::before {
               background: $implementation-highlight;
             }
           }
         }
+
+        &.menu-item--active-trail a::before,
+        &.menu-item--active-trail button::before {
+          background: $implementation-highlight;
+        }
       }
 
-      > li > ul {
+      > li > .menu {
+        top: $cd-site-header-height;
+
         a,
         button {
+          &:hover {
+            background: transparent;
+
+            span {
+              border-bottom: 1px solid var(--cd-primary-color);
+            }
+          }
+
           &.is-active {
             border-left: 3px solid $implementation-highlight;
           }

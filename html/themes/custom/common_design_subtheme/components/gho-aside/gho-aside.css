@@ -1,0 +1,39 @@
+.gho-aside {
+  margin-top: 4.5rem;
+}
+.gho-aside * {
+  color: #707070;
+}
+.gho-aside--dark {
+  margin-top: 6.75rem;
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+  background-color: #1f1f1f;
+}
+.gho-aside--dark *,
+.gho-aside--dark a:hover,
+.gho-aside--dark a:focus,
+.gho-aside--dark a:active {
+  color: #fff;
+}
+.gho-aside--dark svg,
+.gho-aside--dark path,
+.gho-aside--dark .cls-1 {
+  fill: #fff;
+}
+.gho-aside--dark .f {
+  fill: #1f1f1f;
+}
+.gho-aside__pre-title {
+  display: block;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+.gho-aside__title {
+  margin-top: 0;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.5rem;
+}

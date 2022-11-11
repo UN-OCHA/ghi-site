@@ -1,0 +1,17 @@
+uuid: 87a7765b-3741-4d95-9cb2-29dd212e2cdd
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: 'Homepage container'
+type: homepage
+description: 'A homepage container groups a set of year-specific page elements.'
+help: 'A homepage container allows to assemble a set of year-specific page elements. Published homepage containers are embedded automatically in the sites front page, but are not publicly accessible as standalone pages. There can be only one homepage container per year.'
+new_revision: true
+preview_mode: 0
+display_submitted: false

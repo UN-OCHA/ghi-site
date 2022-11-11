@@ -1,0 +1,130 @@
+<?php
+
+namespace Drupal\ghi_element_sync\Form;
+
+use Drupal\Core\Entity\EntityFieldManager;
+use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_element_sync\SyncException;
+use Drupal\ghi_element_sync\SyncManager;
+use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * A form for syncing page elements of a specific node from a remote source.
+ */
+class SyncNodeForm extends FormBase {
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\ghi_element_sync\SyncManager
+   */
+  protected $syncManager;
+
+  /**
+   * The entity field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManager
+   */
+  protected $entityFieldManager;
+
+  /**
+   * Public constructor.
+   */
+  public function __construct(SyncManager $sync_manager, EntityFieldManager $entity_field_manager) {
+    $this->syncManager = $sync_manager;
+    $this->entityFieldManager = $entity_field_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('ghi_element_sync.sync_elements'),
+      $container->get('entity_field.manager'),
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId() {
+    return 'ghi_element_sync_node_form';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
+    $form['#node'] = $node;
+
+    try {
+      $remote_data = $this->syncManager->getRemoteConfigurations($node);
+    }
+    catch (SyncException $e) {
+      $this->messenger()->addError($this->t('There was a problem accessing the sync source:<br />@error', [
+        '@error' => $e->getMessage(),
+      ]));
+      $form['sync_elements']['#disabled'] = TRUE;
+    }
+
+    $header = [
+      'source_type' => $this->t('Source type'),
+      'plugin' => $this->t('Plugin'),
+      'syncable' => $this->t('Syncable'),
+      'status' => $this->t('Status'),
+    ];
+
+    $form['sync_element_select'] = [
+      '#type' => 'tableselect',
+      '#header' => $header,
+      '#options' => [],
+    ];
+
+    foreach ($remote_data->elements ?? [] as $element) {
+      $is_syncable = $this->syncManager->isSyncable($element);
+      $has_valid_source = $this->syncManager->hasValidSource($element, $node);
+      $row = [];
+      $row['source_type'] = $element->type;
+      $definition = $this->syncManager->getCorrespondingPluginDefintionForElement($element);
+      $row['plugin'] = $definition ? $definition['admin_label'] : $this->t('Unknown');
+      $row['syncable'] = $is_syncable && $has_valid_source ? $this->t('Syncable') : $this->t('Not syncable');
+      $row['status'] = $this->syncManager->getSyncStatus($element, $node);
+
+      $form['sync_element_select']['#options'][$element->uuid] = $row;
+      $form['sync_element_select'][$element->uuid] = !$is_syncable || !$has_valid_source ? ['#disabled' => TRUE] : NULL;
+    }
+
+    $form['actions'] = ['#type' => 'actions'];
+    $form['actions']['sync_selected'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Sync selected elements'),
+      '#disabled' => !empty($form['sync_elements']['#disabled']),
+    ];
+    $form['actions']['remove_synced'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Remove all sync elements'),
+      '#disabled' => !empty($form['sync_elements']['#disabled']),
+    ];
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    $node = $form['#node'];
+    $selected_source_uuids = array_filter($form_state->getValue('sync_element_select'));
+    $action = end($form_state->getTriggeringElement()['#parents']);
+    if ($action == 'remove_synced') {
+      $this->syncManager->resetNode($node);
+    }
+    else {
+      $this->syncManager->syncNode($node, $action == 'sync_selected' ? $selected_source_uuids : NULL, NULL, TRUE, FALSE);
+    }
+  }
+
+}

@@ -1,0 +1,23 @@
+uuid: 23fe4dd5-9cfc-4800-9ff6-e54576d3c914
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_link_to_fts
+    - ghi_base_objects.base_object_type.plan
+id: base_object.plan.field_link_to_fts
+field_name: field_link_to_fts
+entity_type: base_object
+bundle: plan
+label: 'Link to FTS'
+description: 'Whether this object should show links to relevant pages on FTS. Currently, this only applies to the global plan tables.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'Yes'
+  off_label: 'No'
+field_type: boolean

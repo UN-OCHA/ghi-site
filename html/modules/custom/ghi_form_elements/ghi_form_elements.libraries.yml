@@ -1,0 +1,62 @@
+configuration_container:
+  version: VERSION
+  css:
+    component:
+      css/configuration_container.css: {}
+      css/attachment_select.css: {}
+      css/data_point.css: {}
+
+states_regex:
+  js:
+    js/states.regex.js: {}
+
+custom_table_rows:
+  css:
+    component:
+      css/custom_table_rows.css: {}
+
+entity_select:
+  css:
+    component:
+      css/entity_select.css: {}
+
+attachment_select:
+  css:
+    component:
+      css/attachment_select.css: {}
+
+entity_attachment_select:
+  css:
+    component:
+      css/entity_attachment_select.css: {}
+  dependencies:
+    - ghi_form_elements/entity_select
+
+tag_select.preview:
+  css:
+    component:
+      css/tag_select.css: {}
+  js:
+    js/tag_select.preview.js: {}
+  dependencies:
+    - common_design_subtheme/ghi-grid
+
+entity_preview_select:
+  css:
+    component:
+      css/entity_preview_select.css: {}
+  js:
+    js/entity_preview_select.js: {}
+  dependencies:
+    - core/sortable
+    - common_design_subtheme/ghi-grid
+
+markup_select:
+  css:
+    component:
+      css/markup_select.css: {}
+  js:
+    js/markup_select.js: {}
+  dependencies:
+    - core/sortable
+    - common_design_subtheme/ghi-grid

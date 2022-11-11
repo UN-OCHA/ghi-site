@@ -1,0 +1,91 @@
+uuid: f316fc95-54f8-46ab-bb7a-d58b7c1ccd4f
+langcode: en
+status: false
+dependencies:
+  config:
+    - core.entity_view_mode.node.card
+    - field.field.node.article.field_base_objects
+    - field.field.node.article.field_display_hero_image
+    - field.field.node.article.field_image
+    - field.field.node.article.field_remote_article
+    - field.field.node.article.field_summary
+    - field.field.node.article.field_tags
+    - field.field.node.article.layout_builder__layout
+    - node.type.article
+    - responsive_image.styles.card_hero
+  module:
+    - layout_builder
+    - layout_builder_restrictions
+    - responsive_image
+    - user
+third_party_settings:
+  layout_builder:
+    enabled: false
+    allow_custom: false
+  layout_builder_restrictions:
+    allowed_block_categories:
+      - 'Chaos Tools'
+      - 'Content fields'
+      - 'Country elements'
+      - 'Custom block types'
+      - Forms
+      - 'Generic elements'
+      - HID
+      - Homepage
+      - 'Inline blocks'
+      - 'Lists (Views)'
+      - Menus
+      - 'Narrative Content'
+      - 'Plan elements'
+      - 'Social Auth'
+      - Subpage
+      - System
+      - core
+    entity_view_mode_restriction:
+      allowed_layouts:
+        - layout_onecol
+      restricted_categories:
+        - 'Chaos Tools'
+        - 'Content fields'
+        - 'Custom block types'
+        - Forms
+        - HID
+        - 'Inline blocks'
+        - 'Lists (Views)'
+        - Menus
+        - 'Social Auth'
+        - Subpage
+        - System
+        - core
+      blacklisted_blocks: {  }
+      whitelisted_blocks: {  }
+id: node.article.card
+targetEntityType: node
+bundle: article
+mode: card
+content:
+  field_image:
+    type: responsive_image
+    label: hidden
+    settings:
+      responsive_image_style: card_hero
+      image_link: content
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_tags:
+    type: entity_reference_label
+    label: visually_hidden
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+hidden:
+  field_base_objects: true
+  field_display_hero_image: true
+  field_remote_article: true
+  field_summary: true
+  langcode: true
+  layout_builder__layout: true
+  links: true

@@ -1,0 +1,41 @@
+.ghi-block-paragraph {
+  position: relative;
+
+  .block-content {
+
+    &.gho-text,
+    &.gho-aside {
+      margin-top: 0;
+    }
+
+    & > div > a.read-more {
+      margin-top: 2rem;
+    }
+
+    &.gho-paragraph-promoted {
+      background-color: transparent;
+    }
+  }
+
+  &.block-highlighted {
+    padding-top: 3rem !important;
+  }
+
+  &.gho-paragraph-promoted {
+    padding-top: 3rem !important;
+    background-color: var(--ghi-default-background-color);
+
+    .block-content {
+      padding-top: 0;
+      padding-bottom: 3rem;
+    }
+
+    &::before {
+      position: absolute;
+      left: 0;
+      height: 100%;
+      content: "";
+      border-left: 4px solid var(--cd-primary-color);
+    }
+  }
+}

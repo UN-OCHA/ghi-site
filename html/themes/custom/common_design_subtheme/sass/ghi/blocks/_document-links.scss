@@ -1,0 +1,81 @@
+.ghi-block-generic-document-links .block-content {
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    padding-inline-start: 0;
+    gap: 0.5rem;
+
+    li {
+      display: flex;
+      margin: 0;
+      padding: 0;
+      list-style-type: none;
+      vertical-align: top;
+
+      .document-link-box {
+        position: relative;
+        width: 100%;
+        padding: 2rem;
+        background-color: var(--ghi-default-background-color);
+
+        .title-wrapper {
+
+          .title {
+            display: inline-block;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            font-size: var(--cd-font-size--medium);
+            font-weight: bold;
+          }
+        }
+
+        .buttons {
+          position: relative;
+          z-index: 1;
+          width: 100%;
+          margin-bottom: 2rem;
+
+          button {
+            padding: 0;
+            text-transform: none;
+            color: var(--ghi-default-text-color);
+            background-color: transparent;
+            font-size: var(--cd-font-size--default);
+          }
+
+          .cd-dropdown {
+            div a {
+              font-size: var(--cd-font-size--tiny);
+            }
+          }
+        }
+        .meta {
+          margin-top: 1rem;
+          font-size: var(--cd-font-size--tiny);
+
+          &:before {
+            display: block;
+            width: 15%;
+            padding-top: 1.5rem;
+            content: " ";
+            border-top: 4px solid var(--ghi-yellow);
+          }
+        }
+      }
+
+      @include tablet {
+        flex: 0 1 calc(50% - 0.25rem);
+      }
+    }
+
+    @include tablet {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      gap: 0.5rem;
+    }
+  }
+}

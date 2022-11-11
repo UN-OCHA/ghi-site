@@ -1,0 +1,19 @@
+{#
+/**
+ * @file
+ * Overrides html/themes/contrib/common_design/templates/views/views-view.html.twig
+ *
+ * This is an extremely stripped-down template because the particular Display
+ * gets rendered alongside other Paragraph fields to create one grid of content
+ * despite there being multiple sources for the grid items.
+ *
+ * @see template_preprocess_views_view()
+ */
+#}
+{% if rows %}
+  {{ rows }}
+{% elseif empty %}
+  <div class="view-empty">
+    {{ empty }}
+  </div>
+{% endif %}

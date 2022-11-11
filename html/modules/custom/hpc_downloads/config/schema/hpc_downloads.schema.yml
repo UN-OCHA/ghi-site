@@ -1,0 +1,22 @@
+hpc_downloads.settings:
+  type: config_object
+  label: 'HPC Downloads settings'
+  mapping:
+    logo_pdf:
+      type: string
+      label: 'Logo id for PDF'
+    logo_path:
+      type: string
+      label: 'Path to the logo'
+    logo_path_xls:
+      type: string
+      label: 'Path to the logo for Excel exports'
+    download_lifetime:
+      type: integer
+      label: 'The lifetime of a generated download file'
+    excel_segment_size:
+      type: integer
+      label: 'The number of rows generated for each segment'
+    excel_footnotes_as_data_validation_message:
+      type: boolean
+      label: 'Include footnotes via the data validation prompt'

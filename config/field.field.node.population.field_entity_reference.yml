@@ -1,0 +1,29 @@
+uuid: a33d806b-5ef6-450d-91f2-b45a5a86f192
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_entity_reference
+    - node.type.population
+    - node.type.section
+id: node.population.field_entity_reference
+field_name: field_entity_reference
+entity_type: node
+bundle: population
+label: Section
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      section: section
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: country
+field_type: entity_reference

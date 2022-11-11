@@ -1,0 +1,261 @@
+<?php
+
+/**
+ * @file
+ * Contains ghi_base_objects.module.
+ */
+
+use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContext;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\ghi_base_objects\Form\BaseObjectForm;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\hpc_common\Helpers\CommonHelper;
+use Drupal\layout_builder\SectionStorageInterface;
+use Drupal\migrate\MigrateSkipRowException;
+use Drupal\migrate\Plugin\MigrateSourceInterface;
+use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate\Row;
+
+/**
+ * Implements hook_help().
+ */
+function ghi_base_objects_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the ghi_base_objects module.
+    case 'help.page.ghi_base_objects':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Provides logic and data migration handling for API base objects') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_layout_builder_view_context_alter().
+ */
+function ghi_base_objects_layout_builder_view_context_alter(array &$contexts, SectionStorageInterface $section_storage = NULL, $sample = FALSE) {
+  // See if there is a context.
+  $entity_context = $contexts['layout_builder.entity'] ?? ($contexts['entity'] ?? ($contexts['node'] ?? NULL));
+  if (!$entity_context || !$entity_context->hasContextValue()) {
+    return;
+  }
+  $entity = $entity_context->getContextValue();
+
+  if (!$entity->id() || \Drupal::routeMatch()->getRouteName() == 'entity.entity_view_display.node.default') {
+    // This is the manage display form or some other config form with a sample
+    // entity. We only want to make sure that we provide some dummy context so
+    // that plan elements that depend on a base object can be selected.
+    $types = \Drupal::entityTypeManager()->getStorage('base_object_type')->loadMultiple();
+    foreach ($types as $type) {
+      $entity = \Drupal::service('layout_builder.sample_entity_generator')->get('base_object', $type->id());
+      $context = EntityContext::fromEntity($entity, $type->label());
+      $context->getContextDefinition()->addConstraint('Bundle', $type->getEntityTypeId());
+      $contexts[$type->id()] = $context;
+    }
+  }
+  elseif ($base_objects = BaseObjectHelper::getBaseObjectsFromNode($entity)) {
+    // This is an actual node page.
+    foreach ($base_objects as $base_object) {
+      $context = EntityContext::fromEntity($base_object, $base_object->label());
+      $context->getContextDefinition()->addConstraint('Bundle', $base_object->getEntityTypeId());
+      $contexts[$base_object->getUniqueIdentifier()] = $context;
+    }
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function ghi_base_objects_theme() {
+  $theme = [];
+  $theme['base_object'] = [
+    'render element' => 'elements',
+    'file' => 'base_object.page.inc',
+    'template' => 'base_object',
+  ];
+  $theme['base_object_content_add_list'] = [
+    'render element' => 'content',
+    'variables' => ['content' => NULL],
+    'file' => 'base_object.page.inc',
+  ];
+  return $theme;
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function ghi_base_objects_theme_suggestions_base_object(array $variables) {
+  $suggestions = [];
+  $entity = $variables['elements']['#base_object'];
+  $sanitized_view_mode = strtr($variables['elements']['#view_mode'], '.', '_');
+
+  $suggestions[] = 'base_object__' . $sanitized_view_mode;
+  $suggestions[] = 'base_object__' . $entity->bundle();
+  $suggestions[] = 'base_object__' . $entity->bundle() . '__' . $sanitized_view_mode;
+  $suggestions[] = 'base_object__' . $entity->id();
+  $suggestions[] = 'base_object__' . $entity->id() . '__' . $sanitized_view_mode;
+  return $suggestions;
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function ghi_base_objects_form_alter(&$form, FormStateInterface &$form_state, $form_id) {
+  if (CommonHelper::isAjaxRequest()) {
+    return;
+  }
+  if (!$form_state->getFormObject() instanceof BaseObjectForm) {
+    return;
+  }
+
+  // Disable all form elements except the listed ones.
+  $allow_editing = [
+    'form_id',
+    'form_build_id',
+    'form_token',
+    'field_content',
+    'status',
+  ];
+  foreach (Element::children($form) as $element_key) {
+    if (in_array($element_key, $allow_editing)) {
+      continue;
+    }
+    $form[$element_key]['#disabled'] = 'disabled';
+  }
+  \Drupal::messenger()->addWarning(t('Most of the data in this form is imported automatically from the HPC API and cannot be changed here.'));
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Add the description to administrative term listings of plan type terms, so
+ * that the 2 "Other" types can be told apart.
+ */
+function ghi_base_objects_form_taxonomy_overview_terms_alter(&$form, FormStateInterface &$form_state) {
+  foreach (Element::children($form['terms']) as $key) {
+    /** @var \Drupal\taxonomy\Entity\Term $term */
+    $term = $form['terms'][$key]['#term'];
+    if (!empty($term->getDescription())) {
+      $form['terms'][$key]['term']['#title'] .= ' (' . $term->getDescription() . ')';
+    }
+  }
+}
+
+/**
+ * Implements hook_migrate_MIGRATE_ID_prepare_row().
+ */
+function ghi_base_objects_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
+  $raw_data = (object) $row->getSource()['raw'];
+
+  /** @var \Drupal\hpc_api\Query\EndpointQuery $query */
+  $query = \Drupal::service('hpc_api.endpoint_query');
+
+  $has_published_version = FALSE;
+  $published_version = NULL;
+
+  // Fetching plan data with version=current for plans without a published
+  // version, will result in an empty planVersion property, which will result
+  // in us not being able to fetch the plan name. So we fetch current version
+  // data whenever possible, and if not possible, we fetch the unpublished
+  // version data, but set the plan node to unpublished in Drupal.
+  $plan_tags = $raw_data->planTags;
+
+  if (!empty($plan_tags)) {
+    $published_versions = array_filter($plan_tags, function ($version) {
+      return $version['public'] == TRUE;
+    });
+    if (!empty($published_versions)) {
+      // There can be multiple public plan tags, we want the one with the
+      // highest number.
+      ArrayHelper::sortArray($published_versions, 'name', EndpointQuery::SORT_DESC, SORT_STRING);
+    }
+    $published_version = !empty($published_versions) ? reset($published_versions) : NULL;
+    $has_published_version = $published_version !== NULL;
+  }
+
+  $query->setArguments([
+    'endpoint' => 'plan/' . $raw_data->id,
+    'api_version' => 'v2',
+    'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
+  ]);
+  if ($has_published_version) {
+    // If we have plan version tags, let's fetch the most current one.
+    $query->setEndpointArgument('version', 'current');
+  }
+  $plan_data = $query->getData();
+  if (!$plan_data) {
+    throw new MigrateSkipRowException();
+  }
+
+  $row->setSourceProperty('version_tag', $published_version ? $published_version['name'] : NULL);
+  $row->setSourceProperty('name', !empty($plan_data->planVersion->name) ? $plan_data->planVersion->name : NULL);
+  $row->setSourceProperty('comments', !empty($plan_data->planVersion->comments) ? $plan_data->planVersion->comments : NULL);
+
+  // Parse the categories to retrieve the categories.
+  if (!empty($plan_data->categories)) {
+    // Plan type.
+    $plan_types = array_filter($plan_data->categories, function ($item) {
+      return $item->group == 'planType';
+    });
+    if (!empty($plan_types)) {
+      // There should really be only one.
+      $plan_type = reset($plan_types);
+      $row->setSourceProperty('plan_type_id', $plan_type->id);
+    }
+
+    // Plan costing.
+    $plan_costing = array_filter($plan_data->categories, function ($item) {
+      return $item->group == 'planCosting';
+    });
+    if (!empty($plan_costing)) {
+      // There should really be only one.
+      $plan_costing = reset($plan_costing);
+      $row->setSourceProperty('plan_costing_id', $plan_costing->id);
+    }
+  }
+
+  // Country references.
+  if (!empty($raw_data->locations)) {
+    $countries = array_filter($raw_data->locations, function ($location) {
+      return $location['adminLevel'] == 0;
+    });
+    $row->setSourceProperty('countries', !empty($countries) ? $countries : []);
+  }
+
+  // Then get the year.
+  if (!empty($plan_data->years)) {
+    // There should really be only one.
+    $year = reset($plan_data->years);
+    $row->setSourceProperty('plan_year', $year->year);
+  }
+
+  unset($plan_data);
+}
+
+/**
+ * Implements hook_migrate_prepare_row().
+ */
+function ghi_base_objects_migrate_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
+  if (!in_array($migration->id(), ['plan_entity', 'governing_entity'])) {
+    return;
+  }
+
+  $raw_data = (object) $row->getSource()['raw'];
+  $plan_object = BaseObjectHelper::getBaseObjectFromOriginalId($raw_data->plan_id, 'plan');
+  if (!$plan_object) {
+    // No associated plan node found.
+    throw new MigrateSkipRowException();
+  }
+
+  if (empty($raw_data->name) && !empty($raw_data->description)) {
+    $row->setSourceProperty('name', Unicode::truncate($raw_data->description, 255, TRUE, TRUE));
+  }
+
+}

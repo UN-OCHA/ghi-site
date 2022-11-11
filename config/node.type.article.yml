@@ -1,0 +1,17 @@
+uuid: b6d5dbf8-b14c-49fd-ae00-ffe815c69fb9
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: 'Article page'
+type: article
+description: 'An article page imported from a valid remote content source'
+help: ''
+new_revision: true
+preview_mode: 0
+display_submitted: true

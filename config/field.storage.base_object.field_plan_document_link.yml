@@ -1,0 +1,19 @@
+uuid: 0d7f46d1-207c-42fa-a00d-d27662f8167f
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+    - link
+id: base_object.field_plan_document_link
+field_name: field_plan_document_link
+entity_type: base_object
+type: link
+settings: {  }
+module: link
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

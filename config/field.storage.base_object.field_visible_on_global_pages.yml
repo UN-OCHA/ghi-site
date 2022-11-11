@@ -1,0 +1,18 @@
+uuid: a972cab8-5579-4820-a04d-15aba7eaacbb
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+id: base_object.field_visible_on_global_pages
+field_name: field_visible_on_global_pages
+entity_type: base_object
+type: boolean
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,15 @@
+uuid: 955cf9e7-fc3f-43b8-a89a-088ff6649c9e
+langcode: en
+status: true
+dependencies: {  }
+name: 16x9_double_wide_720
+label: '16x9 double-wide @ 720'
+effects:
+  7ebd10de-76df-4223-a37e-f3f381c045ab:
+    uuid: 7ebd10de-76df-4223-a37e-f3f381c045ab
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 1488
+      height: 405
+      anchor: center-center

@@ -4,9 +4,7 @@ status: true
 dependencies:
   config:
     - core.entity_view_mode.user.featured
-    - field.field.user.user.field_user_about
-    - field.field.user.user.field_user_picture
-    - field.field.user.user.user_picture
+    - field.field.user.user.field_team
   module:
     - user
 id: user.user.featured
@@ -15,12 +13,10 @@ bundle: user
 mode: featured
 content:
   member_for:
-    weight: 5
     settings: {  }
     third_party_settings: {  }
+    weight: 5
     region: content
 hidden:
-  field_user_about: true
-  field_user_picture: true
+  field_team: true
   langcode: true
-  user_picture: true

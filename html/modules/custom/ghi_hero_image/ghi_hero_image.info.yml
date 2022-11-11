@@ -1,0 +1,12 @@
+name: GHI Hero Image
+description: Provide a hero image field.
+package: GHI
+
+type: module
+core_version_requirement: ^8 || ^9
+
+dependencies:
+  - responsive_image:responsive_image
+  - hpc_api:hpc_api
+  - ghi_subpages:ghi_subpages
+  - smugmug_api:smugmug_api

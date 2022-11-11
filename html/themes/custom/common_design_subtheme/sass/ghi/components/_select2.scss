@@ -1,0 +1,103 @@
+.select-wrappers {
+  position: absolute;
+  top: -1.8rem;
+  right: 0;
+  display: inline-block;
+  margin: 0;
+
+  & > div.ajax-switcher-wrapper {
+    display: inline-block;
+
+    & > form {
+      display: inline-block;
+      margin: 0 0 0 1rem;
+    }
+  }
+}
+
+div.ajax-switcher-wrapper {
+
+  & > form {
+    display: inline-block;
+    margin: 0 1rem 0 0;
+
+    .form-item {
+      display: inline-block;
+    }
+
+    .select2,
+    .select2-selection--single {
+      display: inline-block;
+      overflow: visible;
+      width: auto !important;
+      white-space: nowrap;
+      border: none;
+      background-color: transparent;
+
+      .select2-selection__rendered {
+        display: inline-block;
+        height: auto !important;
+        margin: 0;
+        // Covers the SVG to make it seem clickable.
+        padding-right: 24px;
+        padding-left: 0;
+        white-space: nowrap;
+        color: var(--ghi-default-text-color);
+        background-color: transparent;
+        font-size: var(--cd-font-size--small);
+        font-weight: bold;
+
+        &:after {
+          display: none;
+        }
+      }
+      .icon {
+        position: absolute;
+        top: 13px;
+        right: 6px;
+        width: 12px;
+        height: 12px;
+        fill: var(--ghi-default-text-color);
+      }
+    }
+  }
+}
+
+.select2-dropdown {
+
+  &.select2-dropdown--below {
+    border-top: 0.5px solid;
+  }
+
+  .select2-results {
+    width: auto !important;
+    border-radius: 3px;
+    background-color: $cd-white;
+
+    ul li {
+      padding: 8px 18px;
+      white-space: nowrap;
+      border-top: none;
+      border-bottom: none;
+      font-size: var(--cd-font-size--small);
+      font-weight: normal;
+
+      &.select2-results__option--highlighted {
+        color: var(--cd-primary-color);
+        background-color: transparent;
+      }
+    }
+
+    ul.selectric-group {
+      li {
+        padding-left: 2rem;
+        font-weight: normal;
+
+        &.selectric-group-label {
+          padding-left: 18px;
+          font-weight: bold;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+.item-list ul.plan-structure .material-icon {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: normal;
+  font-size: 16px;
+}
+
+.item-list ul.plan-structure,
+.item-list ul.plan-structure ul {
+  margin-left: 0;
+}
+
+.item-list ul.plan-structure li {
+  list-style-type: none;
+  font-weight: normal;
+}
+
+.item-list ul.plan-structure > li {
+  margin-left: 0;
+}
+
+.item-list ul.plan-structure > li > div.item-list > h3 {
+  font-weight: bold;
+}
+
+.item-list ul.plan-structure > li > div.item-list div.item-list h3 {
+  font-size: inherit;
+  font-weight: normal;
+  letter-spacing: inherit;
+  margin: 0;
+}
+
+.item-list ul.plan-structure > li > div.item-list > ul,
+.item-list ul.plan-structure > li > div.item-list > ul > li {
+  margin-left: 0;
+}
+
+.item-list ul.plan-structure > li div.item-list div.item-list ul {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.item-list ul.plan-structure .edit-icon {
+  margin-left: 8px;
+}
+
+.item-list ul.plan-structure .published {
+  color: green;
+}
+.item-list ul.plan-structure .unpublished {
+  color: red;
+}

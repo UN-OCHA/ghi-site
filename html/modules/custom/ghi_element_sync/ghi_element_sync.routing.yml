@@ -1,0 +1,42 @@
+ghi_element_sync.node.sync:
+  path: '/node/{node}/hpc/sync'
+  defaults:
+    _form: '\Drupal\ghi_element_sync\Form\SyncNodeForm'
+    _title_callback: '\Drupal\ghi_element_sync\SyncController::syncElementsFormTitle'
+  options:
+    parameters:
+      node:
+        type: entity:node
+    _admin_route: TRUE
+  requirements:
+    _custom_access: '\Drupal\ghi_element_sync\SyncController::accessElementSyncForm'
+    _permission: 'access element sync'
+ghi_element_sync.node.sync_metadata:
+  path: '/node/{node}/hpc/sync-metadata'
+  defaults:
+    _form: '\Drupal\ghi_element_sync\Form\SyncMetadataNodeForm'
+    _title_callback: '\Drupal\ghi_element_sync\SyncController::syncMetadataFormTitle'
+  options:
+    parameters:
+      node:
+        type: entity:node
+    _admin_route: TRUE
+  requirements:
+    _custom_access: '\Drupal\ghi_element_sync\SyncController::accessElementSyncForm'
+    _permission: 'access element sync'
+ghi_element_sync.sync:
+  path: '/admin/content/sync-elements'
+  defaults:
+    _form: '\Drupal\ghi_element_sync\Form\SyncForm'
+    _title: 'Sync plan elements for all nodes'
+  requirements:
+    _permission: 'access element sync'
+ghi_element_sync.config:
+  path: '/admin/config/services/element-sync'
+  defaults:
+    _form: '\Drupal\ghi_element_sync\Form\ConfigForm'
+    _title: 'Plan element sync'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer element sync'

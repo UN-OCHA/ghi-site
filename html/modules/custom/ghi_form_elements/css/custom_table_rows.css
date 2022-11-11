@@ -1,0 +1,33 @@
+#layout-builder-modal form.glb-canvas-form .form-type--custom_table_rows {
+  overflow-x: auto;
+}
+
+.form-type--custom_table_rows table td > .js-form-wrapper > div {
+  display: inline-block;
+  margin-right: 1rem;
+}
+
+.form-type--custom_table_rows table td > .js-form-wrapper > div svg.icon {
+  height: 0.7rem;
+}
+
+.form-type--custom_table_rows table td a.tabledrag-handle .handle {
+  margin: auto;
+  margin-left: 0.5rem;
+  padding-right: 1rem;
+  padding-left: 1rem;
+}
+
+.form-type--custom_table_rows table td .warning.tabledrag-changed {
+  position: absolute;
+  top: 0;
+  right: 0.5rem;
+}
+
+.form-type--custom_table_rows table td .custom-row-actions {
+  display: flex !important;
+}
+
+.form-type--custom_table_rows table td .custom-row-actions input.form-submit {
+  font-size: 0.75rem !important;
+}

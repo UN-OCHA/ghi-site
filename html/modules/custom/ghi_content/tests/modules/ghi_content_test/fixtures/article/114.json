@@ -1,0 +1,59 @@
+{
+  "article": {
+    "id": 114,
+    "title": "About the Global Humanitarian Overview",
+    "tags": null,
+    "content_space": null,
+    "content": [
+      {
+        "id": 990,
+        "uuid": "eab38a98-ad07-42a3-8f86-90909f86f3d3",
+        "type": "text",
+        "typeLabel": "Text",
+        "rendered": "\n  <div class=\"paragraph paragraph--type--text paragraph--view-mode--default gho-text content-width\">\n          <div class=\"gho-text__text\"><gho-footnotes-text data-id=\"paragraph-990\"><p class=\"highlight\">The Global Humanitarian Overview (GHO) is the world’s most comprehensive, authoritative and evidence-based assessment of humanitarian need. In essence, it is a global snapshot of the current and future trends in humanitarian action for a large-scale resource mobilization effort as well as for exploring opportunities to deliver humanitarian assistance better. </p>\n\n<p>The GHO covers humanitarian needs and operations in different regions and countries whose total number varies every year, and it is usually related to the most acute crises. </p>\n\n<p>The objective of this report is to provide donors, humanitarian workers as well as the general public with an overview of the achievements made in the past year, and also with the challenges still to face in the upcoming one. Besides, it informs about the funds received throughout the year. It is also illustrated with stories depicting how humanitarian aid changes the lives of people in need.</p></gho-footnotes-text></div>\n\n      </div>\n"
+      },
+      {
+        "id": 991,
+        "uuid": "41147bbd-facc-4bd7-965d-c93a4fc2d837",
+        "type": "text",
+        "typeLabel": "Text",
+        "rendered": "\n  <div class=\"paragraph paragraph--type--text paragraph--view-mode--default gho-text content-width\">\n          <div class=\"gho-text__text\"><gho-footnotes-text data-id=\"paragraph-991\"><p class=\"highlight\">How do we get there? </p>\n\n<p>The GHO is the ultimate outcome of a one-year process known as the <a href=\"https://www.humanitarianresponse.info/en/programme-cycle/space\" target=\"_blank\">Humanitarian Programme Cycle</a>.The HPC consists of a set of inter-inked tools to assist the Resident Coordinator/Humanitarian Coordinator (RC/HC) and the Humanitarian Country Team to improve the delivery of humanitarian assistance and protection through better preparing, prioritizing, steering and monitoring the collective response based on evidence.</p>\n\n<p>Since 2018, United Nations agencies and non-governmental organizations have come together to diagnose existing and emerging challenges, and associated solutions, to strengthen HPC-related processes and products. The enhanced HPC package was rolled out in 2019 with a view to improve the relevance and effectiveness of the response, increase the quality and usefulness of needs analysis to inform decision -making, enable more meaningful monitoring of needs and results, and reflect global perspectives from the World Humanitarian Summit and Grand Bargain commitments. </p></gho-footnotes-text></div>\n\n      </div>\n"
+      },
+      {
+        "id": 997,
+        "uuid": "80ccb74e-1be2-4b35-b203-c5173ae1d32f",
+        "type": "photo_gallery",
+        "typeLabel": "Photo Gallery",
+        "rendered": "\n\n  <div class=\"paragraph paragraph--type--photo-gallery paragraph--view-mode--single-column gho-photo-gallery gho-aside gho-photo-gallery--single-column content-width\">\n          <div class=\"gho-photo-gallery__photos\"><div class=\"gho-photo-gallery__photo\">\n  <div class=\"contextual-region media media--type-image media--view-mode-photo-gallery-single-column\">\n  <div data-contextual-id=\"media:media=317:changed=1637602696&amp;langcode=en\" data-contextual-token=\"Z1OY5iS76zsR7tmI1v5KHq8rWARDWQhCO8ycWLxWhW0\"></div>\n            <picture>\n                  <source srcset=\"/sites/default/files/styles/full_width_16_9_100/public/images/DSC02034_0.jpg?itok=M3u-9B0_ 1x, /sites/default/files/styles/full_width_16_9_200/public/images/DSC02034_0.jpg?itok=kIH5uzMk 2x\" media=\"(min-width: 1024px)\" type=\"image/jpeg\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_16_9_90/public/images/DSC02034_0.jpg?itok=RzmU356e 1x, /sites/default/files/styles/full_width_16_9_180/public/images/DSC02034_0.jpg?itok=PCj9Q0AX 2x\" media=\"(min-width: 768px)\" type=\"image/jpeg\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_16_9_66/public/images/DSC02034_0.jpg?itok=4RYS8Dz8 1x, /sites/default/files/styles/full_width_16_9_133/public/images/DSC02034_0.jpg?itok=xJUf2VV7 2x\" media=\"(min-width: 576px)\" type=\"image/jpeg\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_16_9_50/public/images/DSC02034_0.jpg?itok=FKxBv4Xe 1x, /sites/default/files/styles/full_width_16_9_100/public/images/DSC02034_0.jpg?itok=M3u-9B0_ 2x\" media=\"(min-width: 0px)\" type=\"image/jpeg\"/>\n                  <img src=\"/sites/default/files/styles/full_width_16_9_50/public/images/DSC02034_0.jpg?itok=FKxBv4Xe\" alt=\"OCHA\"/>\n\n  </picture>\n\n\n\n  </div>\n\n  </div></div>\n\n      <div class=\"gho-photo-gallery__caption gho-caption gho-caption--formatted\">\n        <p class=\"field--name-field-location gho-caption__location\">Jalalabad, Afghanistan</p>\n\n        <div class=\"gho-caption__text\">\n          <p>A humanitarian worker on an assessment mission exchanges and shakes hands with a local man. </p>\n          <span class=\"gho-caption__credits\">OCHA/Matteo Minasi</span>\n        </div>\n      </div>\n      </div>\n"
+      },
+      {
+        "id": 992,
+        "uuid": "96384369-b25c-42d1-b9ca-684844da35c6",
+        "type": "text",
+        "typeLabel": "Text",
+        "rendered": "\n  <div class=\"paragraph paragraph--type--text paragraph--view-mode--default gho-text content-width\">\n          <div class=\"gho-text__text\"><gho-footnotes-text data-id=\"paragraph-992\"><p class=\"highlight\">How can this be achieved? </p>\n\n<p>Throughout the year, humanitarian actors on the ground assess and analyze humanitarian needs, and then prepare plans to respond to these needs strategically – this is showcased in two essential documents for the HPC: the <a href=\"https://www.humanitarianresponse.info/en/operations/nigeria/humanitarian-need-overview\" target=\"_blank\">Humanitarian Needs Overview</a> (HNO) and the <a href=\"https://www.humanitarianresponse.info/en/operations/nigeria/humanitarian-response-plan#:~:text=The%20Humanitarian%20Response%20Plan%20(HRP,needs%20of%20the%20affected%20population.\" target=\"_blank\">Humanitarian Response Plan</a> (HRP). </p>\n\n<p>The process starts by capturing the scope, the scale and the severity of people’s needs, including their causes and projected evolution, in a given country. With this purpose, humanitarian actors apply the Joint Intersectoral Analysis Framework, which provides a common analytical framework to gather, structure, and synthesize information on the intersectoral needs of populations in crisis. The resulting outcomes are summarized in the HNO. </p>\n\n<p>Needs assessment and analysis provides the evidence base for strategic planning, as well as the baseline information upon which situation and response monitoring rely. The HRP is based on the joint analysis of needs and response options with the goal of developing strategic and operational plans. All <a href=\"https://www.humanitarianresponse.info/en/coordination/clusters/global\" target=\"_blank\">clusters/sectors, </a>such as Food Security, Health, Nutrition, Education, etc., are included in this process providing relevant data and information. </p>\n\n<p>The HRP also serves as a tool to inform advocacy and support fundraising by highlighting the situation and need for the international community, in particular donors. </p></gho-footnotes-text></div>\n\n      </div>\n"
+      },
+      {
+        "id": 993,
+        "uuid": "ae042d3d-d00e-4472-a483-8f1d7e737764",
+        "type": "text",
+        "typeLabel": "Text",
+        "rendered": "\n  <div class=\"paragraph paragraph--type--text paragraph--view-mode--default gho-text content-width\">\n          <div class=\"gho-text__text\"><gho-footnotes-text data-id=\"paragraph-993\"><p class=\"highlight\"><strong>Who is involved? </strong></p>\n\n<p>The implementation of the HPC involves all relevant actors in decisions, adopting a cooperative approach to achieving objectives. It supports and complements the capacity of national actors to respond. While institutional and decision-making arrangements vary, especially at the onset of a crisis, the application of the programme cycle should be an inter-agency process which is: </p>\n\n<ul><li>\n\t<p>Led by a Humanitarian Coordinator (HC) </p>\n\t</li>\n\t<li>\n\t<p>Managed by a Humanitarian Country Team (HCT) </p>\n\t</li>\n\t<li>\n\t<p>Supported by an inter-cluster/sector coordination group and clusters </p>\n\t</li>\n</ul><ul><li>\n\t<p>Inclusive of a broad range of actors, including at the sub-national levels. </p>\n\t</li>\n\t<li>\n\t<p>In support of the national authorities, who have the primary responsibility to affected people. </p>\n\t</li>\n\t<li>\n\t<p>With the participation of the people affected by the crisis</p>\n\t</li>\n</ul></gho-footnotes-text></div>\n\n      </div>\n"
+      },
+      {
+        "id": 994,
+        "uuid": "60e2b9a7-dc98-4b08-a9fe-8648654fe119",
+        "type": "text",
+        "typeLabel": "Text",
+        "rendered": "\n  <div class=\"paragraph paragraph--type--text paragraph--view-mode--default gho-text content-width\">\n          <div class=\"gho-text__text\"><gho-footnotes-text data-id=\"paragraph-994\"><p class=\"highlight\">What is OCHA’s role? </p>\n\n<p>At the country level, the OCHA country office supports the Resident/Humanitarian Coordinator in steering the HPC process, ensuring that relevant data and information are gathered from partners throughout the year. </p>\n\n<p>At the headquarters level, it supports the implementation of the HPC. This includes normative work, technical support, gathering of best practices, capacity-building, and management of monitoring platforms and tools. OCHA is also leading resource mobilization efforts linked to the HPC, such as the GHO launch.[1] </p>\n\n<p> </p></gho-footnotes-text></div>\n\n      </div>\n"
+      },
+      {
+        "id": 999,
+        "uuid": "250f0637-f449-4887-bb3a-1846d8a9ea76",
+        "type": "further_reading",
+        "typeLabel": "Further reading",
+        "rendered": "\n  <div class=\"paragraph paragraph--type--further-reading paragraph--view-mode--default gho-further-reading content-width\">\n          <h2 class=\"gho-further-reading__title\">Further reading</h2>\n      <div class=\"gho-further-reading__list\">\n  <div class=\"gho-further-reading__link\">\n  <a href=\"https://www.unocha.org/sites/unocha/files/OoM_HPC.pdf\" rel=\"nofollow\">Humanitarian Programme Cycle</a>\n    <p><span class=\"visually-hidden\">Source: </span>OCHA</p>\n    <svg class=\"cd-icon cd-icon--arrow-right gho-further-reading__arrow\" width=\"16\" height=\"16\" aria-hidden=\"true\" focusable=\"false\">\n    <use xlink:href=\"#cd-icon--arrow-right\"></use>\n  </svg>\n</div>\n\n  <div class=\"gho-further-reading__link\">\n  <a href=\"https://interagencystandingcommittee.org/system/files/2020-11/IASC%20Reference%20Module%20for%20the%20Implementation%20of%20the%20Humanitarian%20Programme%20Cycle%202015%20%28Version%202%29.pdf\" rel=\"nofollow\">The Implementation of the Humanitarian Programme Cycle</a>\n    <p><span class=\"visually-hidden\">Source: </span>IASC</p>\n    <svg class=\"cd-icon cd-icon--arrow-right gho-further-reading__arrow\" width=\"16\" height=\"16\" aria-hidden=\"true\" focusable=\"false\">\n    <use xlink:href=\"#cd-icon--arrow-right\"></use>\n  </svg>\n</div>\n\n</div>\n\n      </div>\n"
+      }
+    ]
+  }
+}

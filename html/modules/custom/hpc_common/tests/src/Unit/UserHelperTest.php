@@ -7,6 +7,7 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 
 use Drupal\hpc_common\Helpers\UserHelper;
+use Prophecy\Argument;
 
 /**
  * @covers Drupal\hpc_common\Helpers\UserHelper
@@ -14,7 +15,7 @@ use Drupal\hpc_common\Helpers\UserHelper;
 class UserHelperTest extends UnitTestCase {
 
   /**
-   * The user helpder class.
+   * The user helper class.
    *
    * @var \Drupal\hpc_common\Helpers\UserHelper
    */
@@ -23,7 +24,7 @@ class UserHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Mock current user service.
@@ -34,6 +35,8 @@ class UserHelperTest extends UnitTestCase {
       ['authenticated', 'editor'],
       ['authenticated', 'administrator']
     );
+    // Mock hasPermission.
+    $current_user->hasPermission(Argument::any())->willReturn(FALSE);
 
     // Set container.
     $container = new ContainerBuilder();
@@ -46,7 +49,7 @@ class UserHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function tearDown() {
+  protected function tearDown(): void {
     parent::tearDown();
     unset($this->userHelper);
 

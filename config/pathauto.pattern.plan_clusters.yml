@@ -1,0 +1,22 @@
+uuid: ada2a9c4-ad25-4aa0-af1c-7816841ca8e3
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: plan_clusters
+label: 'Plan clusters'
+type: 'canonical_entities:node'
+pattern: '[node:field_entity_reference:entity:url:path]/ge/[node:field_base_object:entity:field_original_id]'
+selection_criteria:
+  92328ccb-ae93-4279-a035-09244e0a3e18:
+    id: node_type
+    negate: false
+    uuid: 92328ccb-ae93-4279-a035-09244e0a3e18
+    context_mapping:
+      node: node
+    bundles:
+      plan_cluster: plan_cluster
+selection_logic: and
+weight: -10
+relationships: {  }

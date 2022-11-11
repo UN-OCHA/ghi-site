@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -28,6 +29,13 @@ class PageParameterCondition extends ConditionPluginBase implements ContainerFac
   protected $tempstore;
 
   /**
+   * The route match.
+   *
+   * @var \Drupal\Core\Routing\RouteMatchInterface
+   */
+  protected $routeMatch;
+
+  /**
    * The request stack.
    *
    * @var \Symfony\Component\HttpFoundation\RequestStack
@@ -37,20 +45,23 @@ class PageParameterCondition extends ConditionPluginBase implements ContainerFac
   /**
    * Constructs a Context condition plugin.
    *
-   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
-   *   The tempstore to use during configurations.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
    *   The plugin_id for the plugin instance.
    * @param array $plugin_definition
    *   The plugin implementation definition.
+   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+   *   The tempstore to use during configurations.
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   The route match.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
    */
-  public function __construct(SharedTempStoreFactory $tempstore, RequestStack $request_stack, array $configuration, $plugin_id, array $plugin_definition) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, SharedTempStoreFactory $tempstore, RouteMatchInterface $route_match, RequestStack $request_stack) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->tempstore = $tempstore;
+    $this->routeMatch = $route_match;
     $this->requestStack = $request_stack;
   }
 
@@ -59,11 +70,13 @@ class PageParameterCondition extends ConditionPluginBase implements ContainerFac
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static(
-      $container->get('tempstore.shared'),
-      $container->get('request_stack'),
       $configuration,
       $plugin_id,
-      $plugin_definition);
+      $plugin_definition,
+      $container->get('tempstore.shared'),
+      $container->get('current_route_match'),
+      $container->get('request_stack')
+    );
   }
 
   /**
@@ -77,7 +90,7 @@ class PageParameterCondition extends ConditionPluginBase implements ContainerFac
    * Get the parameters for the current request.
    */
   private function getParameters() {
-    $route_match = \Drupal::routeMatch();
+    $route_match = $this->routeMatch;
     $machine_name = $route_match->getParameter('machine_name');
     if (!$machine_name) {
       return [];

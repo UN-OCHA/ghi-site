@@ -1,0 +1,14 @@
+.block-generic-document-link-button {
+
+  button {
+    padding: 0.8rem 1.5rem 0.8rem 2.5rem;
+
+    &:before {
+      left: 1rem;
+      padding: 10px;
+      content: "";
+      background-image: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/download/default/20px.svg");
+      background-repeat: no-repeat;
+    }
+  }
+}

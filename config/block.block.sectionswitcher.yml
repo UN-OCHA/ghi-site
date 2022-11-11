@@ -1,0 +1,36 @@
+uuid: c8ac315a-e0ee-42f4-93b0-8f6a3374d55b
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_blocks
+    - node
+  theme:
+    - common_design_subtheme
+id: sectionswitcher
+theme: common_design_subtheme
+region: page_title
+weight: -6
+provider: null
+plugin: section_switcher
+settings:
+  id: section_switcher
+  label: 'Section switcher'
+  label_display: '0'
+  provider: ghi_blocks
+  context_mapping:
+    node: '@node.node_route_context:node'
+visibility:
+  'entity_bundle:node':
+    id: 'entity_bundle:node'
+    negate: false
+    context_mapping:
+      node: '@node.node_route_context:node'
+    bundles:
+      document: document
+      financials: financials
+      plan_cluster: plan_cluster
+      population: population
+      profile: profile
+      risk_index: risk_index
+      section: section

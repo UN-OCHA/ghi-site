@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * @file
+ * Contains update hooks for the GHI Plan Element Sync module.
+ */
+
+use Drupal\ghi_element_sync\SyncException;
+
+/**
+ * Implements hook_requirements().
+ */
+function ghi_element_sync_requirements($phase) {
+  $requirements = [];
+  if ($phase == 'runtime') {
+    /** @var \Drupal\ghi_element_sync\SyncManager $sync_manager */
+    $sync_manager = \Drupal::service('ghi_element_sync.sync_elements');
+    $connection_status = FALSE;
+    $status_label = t('Connection to <em>@url</em> successful.', [
+      '@url' => $sync_manager->getSyncSourceUrl(),
+    ]);
+    try {
+      $connection_status = $sync_manager->checkConnection(TRUE);
+      if (!$connection_status) {
+        $status_label = t('Connection to <em>@url</em> failed', [
+          '@url' => $sync_manager->getSyncSourceUrl(),
+        ]);
+      }
+    }
+    catch (SyncException $e) {
+      $connection_status = FALSE;
+      $status_label = t('Connection to <em>@url</em> failed: @message', [
+        '@url' => $sync_manager->getSyncSourceUrl(),
+        '@message' => $e->getMessage(),
+      ]);
+    }
+    $requirements[''] = [
+      'title' => t('Hum Insight element sync'),
+      'severity' => $connection_status ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+      'value' => $connection_status ? t('Success') : t('Failed'),
+      'description' => $status_label,
+    ];
+  }
+  return $requirements;
+}

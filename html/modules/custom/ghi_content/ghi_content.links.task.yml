@@ -1,0 +1,5 @@
+entity.node.articles:
+  route_name: ghi_content.node.articles
+  base_route: entity.node.canonical
+  class: Drupal\ghi_content\Plugin\Menu\LocalTask\ArticleList
+  weight: 1

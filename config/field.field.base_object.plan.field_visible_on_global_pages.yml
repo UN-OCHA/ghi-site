@@ -1,0 +1,23 @@
+uuid: b305b7ba-83df-483e-bb78-3529d6922db3
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_visible_on_global_pages
+    - ghi_base_objects.base_object_type.plan
+id: base_object.plan.field_visible_on_global_pages
+field_name: field_visible_on_global_pages
+entity_type: base_object
+bundle: plan
+label: 'Visible on global pages'
+description: 'Check this, if this plan object can be shown on global pages, e.g. in plan overview tables or on the plan overview map.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: Visible
+  off_label: Hidden
+field_type: boolean

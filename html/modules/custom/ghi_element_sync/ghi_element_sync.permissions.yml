@@ -1,0 +1,8 @@
+access element sync:
+  title: 'Access element sync'
+  description: 'Allow the use of element synchronization (from Hum Insight).'
+  restrict access: true
+administer element sync:
+  title: 'Administer element sync'
+  description: 'Allow administration of element synchronisation (from Hum Insight).'
+  restrict access: true

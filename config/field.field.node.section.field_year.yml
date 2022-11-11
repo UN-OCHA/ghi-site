@@ -1,0 +1,23 @@
+uuid: 125831e6-b921-472e-9495-9c222d67e246
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_year
+    - node.type.section
+id: node.section.field_year
+field_name: field_year
+entity_type: node
+bundle: section
+label: Year
+description: 'The year that a section should be available for.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 2018
+  max: 2050
+  prefix: ''
+  suffix: ''
+field_type: integer

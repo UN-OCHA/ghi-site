@@ -1,0 +1,222 @@
+<?php
+
+/**
+ * @file
+ * Contains hook implementations for the GHI plan clusters module.
+ */
+
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_plan_clusters\Entity\PlanCluster;
+use Drupal\ghi_plan_clusters\PlanClusterManager;
+use Drupal\ghi_subpages\Helpers\SubpageHelper;
+use Drupal\node\NodeInterface;
+use Drupal\node\NodeTypeInterface;
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function ghi_plan_clusters_entity_bundle_info_alter(array &$bundles) {
+  $bundles['node']['plan_cluster']['class'] = PlanCluster::class;
+  $bundles['node']['plan_cluster']['label'] = t('Plan cluster');
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ghi_plan_clusters_form_node_plan_cluster_edit_form_alter(&$form, FormStateInterface &$form_state) {
+
+  // Restrict access to the team field.
+  if (!\Drupal::currentUser()->hasPermission('administer teams')) {
+    $form['field_team']['#disabled'] = TRUE;
+    $form['field_team']['widget']['#description'] = t('You do not have permission to change the team for this section.');
+  }
+}
+
+/**
+ * Get the plan cluster manager class.
+ *
+ * @return \Drupal\ghi_plan_clusters\PlanClusterManager
+ *   The plan cluster manager service.
+ */
+function ghi_plan_clusters_get_manager_service() {
+  $plan_cluster_manager = \Drupal::service('ghi_plan_clusters.manager');
+  return $plan_cluster_manager;
+}
+
+/**
+ * Implements hook_subpage_navigation_links().
+ */
+function ghi_plan_clusters_subpage_navigation_links_alter(&$links, array $context) {
+  /** @var \Drupal\node\NodeInterface $node */
+  $node = $context['node'];
+
+  /** @var \Drupal\node\NodeInterface $base_entity */
+  $base_entity = $context['base_entity'];
+
+  // Load plan clusters for the base entity.
+  $plan_cluster_manager = ghi_plan_clusters_get_manager_service();
+  $plan_clusters = $plan_cluster_manager->loadNodesForSection($base_entity);
+  if (empty($plan_clusters)) {
+    return;
+  }
+
+  $wrapper_attributes = [
+    'class' => [],
+  ];
+
+  $cache_tags = [];
+
+  $cluster_links = [];
+  foreach ($plan_clusters as $plan_cluster) {
+    // We merge the cache cags even if the cluster node is not available, as
+    // that might change.
+    $cache_tags = Cache::mergeTags($cache_tags, $plan_cluster->getCacheTags());
+
+    // Check if the page should be visible.
+    if (!$plan_cluster->access('view')) {
+      continue;
+    }
+
+    // Build the link render array.
+    $cluster_link = $plan_cluster->toLink(NULL)->toRenderable();
+
+    if (!$plan_cluster->isPublished()) {
+      $cluster_link['#attributes']['class'][] = 'node--unpublished';
+    }
+    if ($node->id() == $plan_cluster->id()) {
+      $cluster_link['#attributes']['class'][] = 'active';
+      $wrapper_attributes['class'][] = 'active';
+    }
+    $cluster_links[] = $cluster_link;
+  }
+
+  if (empty($cluster_links)) {
+    return;
+  }
+
+  $links[] = [
+    '#type' => 'container',
+    '#attributes' => $wrapper_attributes,
+    [
+      '#markup' => t('Clusters'),
+    ],
+    [
+      '#theme' => 'item_list',
+      '#items' => $cluster_links,
+      '#gin_lb_theme_suggestions' => FALSE,
+    ],
+    '#cache' => [
+      'tags' => $cache_tags,
+    ],
+  ];
+}
+
+/**
+ * Implements hook_section_post_save().
+ *
+ * Go over all created subpages for a node and save it again, to fix an issue
+ * with the generation of url alias for subpages, if the pattern uses the
+ * section's url alias as one of their tokens.
+ */
+function ghi_plan_clusters_section_post_save(NodeInterface $section_node) {
+  if (!SubpageHelper::isBaseTypeNode($section_node)) {
+    return;
+  }
+
+  // Load all subpages and save them again to make sure they have proper paths.
+  $plan_cluster_manager = ghi_plan_clusters_get_manager_service();
+
+  // Make sure all subpages exist.
+  $plan_cluster_manager->assureSubpagesForBaseNode($section_node);
+
+  // Load all subpages and save them again to make sure they have proper paths.
+  $subpages = $plan_cluster_manager->loadNodesForSection($section_node) ?? [];
+  foreach ($subpages as $subpage) {
+    $subpage->save();
+  }
+
+  if (!$section_node->isPublished()) {
+    // Load all subpages and make sure that those are unpublished too.
+    $subpages = $plan_cluster_manager->loadNodesForSection($section_node);
+
+    if (!empty($subpages)) {
+      foreach ($subpages as $subpage) {
+        if (!$subpage->isPublished()) {
+          continue;
+        }
+        $subpage->setUnpublished();
+        $subpage->save();
+
+        \Drupal::messenger()->addStatus(t('Cluster subpage @subpage has been unpublished.', [
+          '@subpage' => $subpage->label(),
+        ]));
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ */
+function ghi_plan_clusters_node_presave(EntityInterface $node) {
+  if ($node instanceof PlanCluster) {
+    // Just make sure that this node has a valid reference to a section node.
+    $parent_node = $node->getParentNode();
+    if ($parent_node) {
+      $node->field_entity_reference = [
+        [
+          'target_id' => $node->getParentNode()->id(),
+        ],
+      ];
+    }
+    else {
+      $node->setUnpublished();
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function ghi_plan_clusters_entity_delete(EntityInterface $entity) {
+  if (!$entity instanceof NodeInterface || !SubpageHelper::isBaseTypeNode($entity)) {
+    return;
+  }
+  $plan_cluster_manager = ghi_plan_clusters_get_manager_service();
+  $plan_cluster_manager->deleteSubpagesForBaseNode($entity);
+}
+
+/**
+ * Implements hook_is_subpage_type().
+ */
+function ghi_plan_clusters_is_subpage_type($node_type) {
+  return in_array($node_type, [PlanClusterManager::NODE_BUNDLE_PLAN_CLUSTER]);
+}
+
+/**
+ * Implements hook_custom_subpages_alter().
+ */
+function ghi_plan_clusters_custom_subpages_alter(array &$subpages, NodeInterface $node, NodeTypeInterface $node_type) {
+  if ($node_type->id() != PlanClusterManager::NODE_BUNDLE_PLAN_CLUSTER) {
+    return;
+  }
+  $plan_cluster_manager = ghi_plan_clusters_get_manager_service();
+  $nodes = $plan_cluster_manager->loadNodesForSection($node);
+  if (empty($nodes)) {
+    return;
+  }
+  $subpages += $nodes;
+}
+
+/**
+ * Implements hook_get_base_type_node_alter().
+ */
+function ghi_plan_clusters_get_base_type_node_alter(&$base_type_node, NodeInterface $node) {
+  if ($node->bundle() != PlanClusterManager::NODE_BUNDLE_PLAN_CLUSTER) {
+    return NULL;
+  }
+  $plan_cluster_manager = ghi_plan_clusters_get_manager_service();
+  $base_type_node = $plan_cluster_manager->loadSectionForClusterNode($node);
+}

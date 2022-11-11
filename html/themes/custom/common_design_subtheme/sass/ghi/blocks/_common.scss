@@ -1,0 +1,127 @@
+//——————————————————————————————————————————————————————————————————————————————
+// GHI: Blocks common definitions
+//——————————————————————————————————————————————————————————————————————————————
+
+.ghi-block,
+.ghi-block.ui-state-drop,
+.block-layout-builder,
+.block-layout-builder.ui-state-drop {
+  margin-top: 4.5rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  // Explicitly set the same default line height as for the full document to
+  // prevent errors with previews inside the block configuration modal
+  // (ui-dialog sets a line-height of 1).
+  line-height: 1.5;
+
+  #main-content.has-subpage-title .layout__region &:first-child,
+  body.page-node-type-global-section #main-content .layout__region &:first-child {
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  &.ghi-block--hidden-preview > *:not(.contextual) {
+    opacity: 0.5;
+  }
+
+  .layout__region--content > &.block:first-child {
+    &.block-highlighted:not(.content-width) {
+      margin-top: 0;
+      padding-top: 4.5rem;
+      background-color: var(--ghi-default-background-color);
+    }
+  }
+
+  & > div.block-content {
+    position: relative;
+    // This also needs to overwrite any additional margins defined in the
+    // common design components.
+
+    &:not(.content-width) {
+      margin-right: 0 !important;
+      margin-left: 0 !important;
+    }
+  }
+
+  & > div.block-comment {
+    padding: 1rem 0;
+    text-align: justify;
+    font-size: var(--cd-font-size--small);
+  }
+
+  & > div.block-links {
+    padding: 0.75rem 0;
+    border-top: 1px solid var(--cd-default-border-color);
+    font-size: var(--cd-font-size--small);
+
+    & > div.block-links--inner {
+      display: flex;
+      justify-content: space-between;
+
+      a {
+        text-decoration: none;
+        line-height: 1rem;
+      }
+
+      .block-download-links .download-item {
+
+        a.link--download-dialog {
+          position: relative;
+          padding-left: 1.5rem;
+
+          &:before {
+            position: absolute;
+            top: calc(50% - 10px);
+            left: 0;
+            padding: 10px;
+            content: "";
+            background: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/download/default/20px.svg") no-repeat;
+          }
+        }
+
+        a:hover,
+        a:focus {
+          color: var(--ghi-default-text-color);
+        }
+      }
+
+      .block-admin-links {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+
+        a {
+          position: relative;
+          top: 2px;
+          font-size: var(--cd-font-size--base);
+        }
+
+        button[data-toggle="popover"] {
+          position: relative;
+          top: -1px;
+          padding: 0;
+          transition: none;
+          color: inherit;
+          border: 0;
+          background-color: inherit;
+
+          &:hover,
+          &:focus {
+            color: var(--cd-primary-color--dark);
+            border: 0;
+            outline: 0;
+          }
+        }
+
+        .tippy-box {
+          .title {
+            padding-bottom: 0;
+          }
+          .block-configuration.content {
+            padding-top: 0;
+          }
+        }
+      }
+    }
+  }
+}

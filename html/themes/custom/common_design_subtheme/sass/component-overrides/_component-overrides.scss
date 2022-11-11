@@ -1,0 +1,23 @@
+@import "cd-page-title";
+@import "cd-tag";
+@import "cd-teaser";
+@import "gho-footnotes";
+@import "gho-related-articles";
+
+.preview-content {
+  &.ghi-grid .paragraph--type--bottom-figure-row > * > * {
+    zoom: inherit;
+  }
+  .paragraph.gho-bottom-figure-row {
+    margin-top: 0;
+  }
+}
+
+/* Hide the border when the figures follow a NaR paragraph. */
+.paragraph--gho-needs-and-requirements-paragraph + .paragraph--gho-bottom-figure-row {
+  margin-top: 0;
+
+  .gho-bottom-figure-row::before {
+    content: none;
+  }
+}

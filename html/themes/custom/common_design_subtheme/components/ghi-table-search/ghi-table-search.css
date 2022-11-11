@@ -1,0 +1,22 @@
+.table-search-input-wrapper {
+  position: relative;
+  margin: 0;
+  padding: 0;
+}
+.table-search-input-wrapper .table-search-input {
+  padding: 0.25rem 1rem 0.25rem 2rem;
+  border: 1px solid var(--cd-default-border-color);
+  border-radius: 1rem;
+}
+
+.table-search-input-wrapper:before {
+  position: absolute;
+  z-index: 1;
+  top: calc(50% - 10px);
+  left: 0.5rem;
+  padding: 10px;
+  content: "";
+  color: var(--ghi-default-text-color);
+  background-image: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/search/default/20px.svg");
+  background-repeat: no-repeat;
+}

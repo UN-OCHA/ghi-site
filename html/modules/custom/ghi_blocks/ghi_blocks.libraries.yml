@@ -1,5 +1,120 @@
+gin:
+  css:
+    component:
+      css/gin.css: {}
 layout_builder_modal_admin:
-  version: VERSION
   css:
     component:
       css/layout_builder_modal_admin.css: {}
+  js:
+    js/layout_builder_modal_admin.js: {}
+layout_builder_gin:
+  css:
+    component:
+      css/layout_builder_gin.css:
+        weight: 1001
+throbber:
+  js:
+    js/throbber.js: {}
+  css:
+    component:
+      css/throbber.css: {}
+  dependencies:
+    - core/drupal.ajax
+homepage.switcher:
+  js:
+    js/homepage.switcher.js: {}
+  dependencies:
+    - core/drupal.ajax
+message:
+  css:
+    component:
+      css/message.css: {}
+link_carousel:
+  css:
+    component:
+      css/link_carousel.css: {}
+block.settings:
+  js:
+    js/block.settings.js: {}
+block.preview:
+  js:
+    js/block.preview.js: {}
+theme:
+  js:
+    js/theme.js: {}
+leaflet:
+  version: 0.7.3
+  js:
+    /libraries/leaflet/dist/leaflet.js: {}
+  css:
+    component:
+      /libraries/leaflet/dist/leaflet.css: {}
+leaflet.d3svgoverlay:
+  version: 3.0.0
+  js:
+    js/assets/L.D3SvgOverlay.js: {}
+leaflet.modal:
+  version: 0.2.0
+  js:
+    /libraries/leaflet-modal/dist/L.Modal.min.js: {}
+  css:
+    component:
+      /libraries/leaflet-modal/dist/leaflet.modal.min.css: {}
+leaflet.search:
+  version: 2.9.8
+  js:
+    /libraries/leaflet-search/dist/leaflet-search.src.js: {}
+  css:
+    component:
+      /libraries/leaflet-search/dist/leaflet-search.min.css: {}
+leaflet.sidebar:
+  version: 0.2.2
+  js:
+    /libraries/leaflet-sidebar/src/L.Control.Sidebar.js: {}
+  css:
+    component:
+      /libraries/leaflet-sidebar/src/L.Control.Sidebar.css: {}
+
+map.base:
+  js:
+    js/map/map.search_control.js: {}
+  dependencies:
+    - hpc_common/tooltip
+    - hpc_common/d3
+    - ghi_blocks/theme
+    - ghi_blocks/leaflet
+    - ghi_blocks/leaflet.d3svgoverlay
+    - ghi_blocks/leaflet.modal
+    - ghi_blocks/leaflet.search
+    - ghi_blocks/leaflet.sidebar
+
+map:
+  js:
+    js/map/map.circle.js: {}
+    js/map/map.donut.js: {}
+    js/map/map.js: {}
+  dependencies:
+    - ghi_blocks/map.base
+
+map.plan:
+  js:
+    js/map/map.plan.js: {}
+  dependencies:
+    - ghi_blocks/map
+
+map.plan_overview:
+  js:
+    js/map/map.plan_overview.js: {}
+  dependencies:
+    - ghi_blocks/map
+
+map.chloropleth:
+  js:
+    js/map/map.chloropleth.js: {}
+  dependencies:
+    - ghi_blocks/map.base
+
+modal:
+  js:
+    js/modal.js: {}

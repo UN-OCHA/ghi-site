@@ -1,0 +1,144 @@
+uuid: 9ce72bca-6126-4a6f-b880-0bf66d7c7ef5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.article.field_base_objects
+    - field.field.node.article.field_display_hero_image
+    - field.field.node.article.field_image
+    - field.field.node.article.field_remote_article
+    - field.field.node.article.field_summary
+    - field.field.node.article.field_tags
+    - field.field.node.article.layout_builder__layout
+    - node.type.article
+  module:
+    - ghi_content
+    - image
+    - layout_builder
+    - layout_builder_ipe
+    - layout_builder_restrictions
+    - layout_discovery
+    - text
+    - user
+third_party_settings:
+  layout_builder:
+    enabled: true
+    allow_custom: true
+    sections:
+      -
+        layout_id: layout_onecol
+        layout_settings:
+          label: Content
+          context_mapping: {  }
+        components: {  }
+        third_party_settings: {  }
+  layout_builder_restrictions:
+    allowed_block_categories:
+      - 'Chaos Tools'
+      - 'Content fields'
+      - 'Country elements'
+      - 'Custom block types'
+      - Forms
+      - 'Generic elements'
+      - Global
+      - HID
+      - 'Inline blocks'
+      - 'Lists (Views)'
+      - Menus
+      - 'Narrative Content'
+      - 'Plan cluster elements'
+      - 'Plan elements'
+      - Sections
+      - 'Social Auth'
+      - Subpage
+      - System
+      - core
+    entity_view_mode_restriction:
+      allowed_layouts:
+        - layout_onecol
+      denylisted_blocks: {  }
+      allowlisted_blocks: {  }
+      restricted_categories:
+        - 'Chaos Tools'
+        - 'Content fields'
+        - 'Country elements'
+        - 'Custom block types'
+        - Forms
+        - Global
+        - HID
+        - 'Inline blocks'
+        - 'Lists (Views)'
+        - Menus
+        - 'Plan cluster elements'
+        - 'Social Auth'
+        - Subpage
+        - System
+        - core
+      blacklisted_blocks: {  }
+      whitelisted_blocks:
+        'Narrative Content':
+          - paragraph
+          - related_articles
+          - related_sections
+  layout_builder_ipe:
+    enabled: 1
+id: node.article.default
+targetEntityType: node
+bundle: article
+mode: default
+content:
+  field_base_objects:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  field_display_hero_image:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  field_image:
+    type: image
+    label: above
+    settings:
+      image_link: ''
+      image_style: ''
+      image_loading:
+        attribute: lazy
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_remote_article:
+    type: ghi_remote_article
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_summary:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  field_tags:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 2
+    region: content
+hidden:
+  langcode: true
+  layout_builder__layout: true
+  links: true

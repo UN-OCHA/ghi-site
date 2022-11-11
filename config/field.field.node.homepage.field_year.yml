@@ -1,0 +1,23 @@
+uuid: 85513f64-9424-47fe-86e5-562b6f94872a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_year
+    - node.type.homepage
+id: node.homepage.field_year
+field_name: field_year
+entity_type: node
+bundle: homepage
+label: Year
+description: 'Enter a unique year for this homepage container.'
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 2017
+  max: 2040
+  prefix: ''
+  suffix: ''
+field_type: integer

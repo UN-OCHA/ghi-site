@@ -1,0 +1,22 @@
+uuid: e682a081-92e3-4836-a7da-25a7b5037229
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.global_section
+id: node.global_section.status
+field_name: status
+entity_type: node
+bundle: global_section
+label: Published
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

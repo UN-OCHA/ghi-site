@@ -1,0 +1,57 @@
+id: articles_hpc_content_module
+label: Articles from the HPC Content Module backend
+migration_group: ncms
+migration_tags:
+  - 'NCMS'
+source:
+  plugin: remote_source_graphql
+  track_changes: true
+  remote_source: hpc_content_module
+  fields:
+    -
+      name: id
+      label: 'ID'
+      selector: id
+    -
+      name: title
+      label: 'Title'
+      selector: title
+    -
+      name: created
+      label: 'Created datetime'
+      selector: created
+    -
+      name: updated
+      label: 'Updated datetime'
+      selector: updated
+  ids:
+    id:
+      type: integer
+process:
+  type:
+    plugin: default_value
+    default_value: article
+  title: title
+  status:
+    plugin: default_value
+    default_value: 1
+  created:
+    plugin: callback
+    callable: strtotime
+    source: created
+  changed:
+    plugin: callback
+    callable: strtotime
+    source: updated
+  field_remote_article/remote_source:
+    plugin: default_value
+    default_value: hpc_content_module
+  field_remote_article/article_id: id
+destination:
+  plugin: 'entity:node'
+  overwrite_properties:
+    - title
+    - status
+    - created
+    - changed
+migration_dependencies: {}

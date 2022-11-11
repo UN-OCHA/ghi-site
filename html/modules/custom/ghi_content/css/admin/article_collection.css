@@ -1,0 +1,17 @@
+form.article-collection .form-boolean-group,
+form.article-collection .form-boolean-group,
+.article-selection-form .form-boolean-group,
+.article-selection-form .form-boolean-group {
+  display: flex;
+}
+form.article-collection .form-boolean-group > div,
+form.article-collection .form-boolean-group > div,
+.article-selection-form .form-boolean-group > div,
+.article-selection-form .form-boolean-group > div {
+  margin-right: 1rem;
+}
+
+form.article-collection .form-type--entity_preview_select .description,
+.article-selection-form .form-type--entity_preview_select .description {
+  margin-bottom: 1rem;
+}

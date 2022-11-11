@@ -74,8 +74,14 @@ class RequestHelper {
    */
   public static function getContextsForPath($path) {
     $request = Request::create('/' . ltrim($path, '/'));
+    /** @var \Drupal\Core\Routing\Router $router */
     $router = \Drupal::service('router.no_access_checks');
-    $result = $router->matchRequest($request);
+    try {
+      $result = $router->matchRequest($request);
+    }
+    catch (\Exception $e) {
+      return [];
+    }
     $contexts = [];
     if (empty($result['page_manager_page'])) {
       if (!empty($result['node'])) {
@@ -145,6 +151,7 @@ class RequestHelper {
    *   The extracted contexts.
    */
   public static function getContextsFromFormState(FormStateInterface $form_state) {
+
     $request_stack = \Drupal::service('request_stack');
     $current_path = $request_stack->getCurrentRequest()->request->get('currentPath');
     // Get the build information and setup required variables supporting

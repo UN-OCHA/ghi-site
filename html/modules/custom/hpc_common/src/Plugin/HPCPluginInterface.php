@@ -21,4 +21,9 @@ interface HPCPluginInterface {
    */
   public function getPluginId();
 
+  /**
+   * Get the UUID for this block if available.
+   */
+  public function getUuid();
+
 }

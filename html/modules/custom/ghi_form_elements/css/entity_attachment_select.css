@@ -1,0 +1,9 @@
+.form-type--entity_attachment_select,
+.form-type--entity_attachment_select .form-type--entity_select
+.form-type--entity_attachment_select .form-type--attachment_select {
+  margin-top: 0 !important;
+}
+.form-type--entity_attachment_select .filter-container {
+  display: flex;
+  gap: 1rem;
+}

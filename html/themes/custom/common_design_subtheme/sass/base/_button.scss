@@ -1,0 +1,125 @@
+// Link that looks like a button.
+.cd-button,
+.btn--download,
+.ghi-download__btn {
+  padding: 0.8rem 1.5rem;
+  text-decoration: none;
+  text-transform: uppercase;
+  color: var(--ghi-default-text-color) !important;
+  background-color: var(--ghi-primary-button-color);
+  font-size: var(--cd-font-size--small);
+  font-weight: bold;
+
+  &.btn--centered {
+    text-align: center;
+  }
+
+  &:hover,
+  &:focus {
+    color: var(--ghi-default-text-color);
+    background-color: var(--ghi-primary-button-color-hover);
+  }
+
+  &.expand-table,
+  &.read-more,
+  &.external {
+    position: relative;
+    max-width: fit-content;
+    padding-right: 2.5rem;
+    color: var(--ghi-default-text-color);
+
+    &:before {
+      position: absolute;
+      top: calc(50% - 10px);
+      right: 1rem;
+      padding: 10px;
+      content: "";
+      background-repeat: no-repeat;
+    }
+  }
+
+  &.expand-table {
+    margin-bottom: 2rem;
+  }
+
+  &.expand-table:before {
+    background-image: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/arrow_downward/default/20px.svg");
+  }
+  &.read-more:before {
+    background-image: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/arrow_forward/default/20px.svg");
+  }
+  &.external:before {
+    background-image: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/open_in_new/default/20px.svg");
+  }
+}
+
+// A button that should not look like a button.
+.ghi-dropdown__btn {
+  color: inherit !important;
+  border: 0;
+  background-color: transparent;
+  font-size: inherit;
+
+  & + div.cd-dropdown {
+    position: absolute;
+    border: 1px solid var(--cd-default-border-color);
+    background-color: var(--cd-white);
+
+    & > div.ghi-dropdown--content {
+      display: flex;
+      flex-direction: column;
+
+      a {
+        color: var(--ghi-default-text-color);
+      }
+    }
+  }
+}
+
+// A button that looks like a button.
+button.ghi-download__btn,
+button.btn--download {
+  transition: background-color 0.6s ease-out, color 0.6s ease-out;
+  text-align: center;
+  border: 0;
+  border: 2px solid transparent;
+  border-radius: 3px;
+  box-shadow: none;
+  line-height: 1.15;
+  -webkit-appearance: none;
+
+  svg.cd-icon {
+    fill: var(--ghi-default-text-color);
+  }
+
+  &:before {
+    position: absolute;
+    top: calc(50% - 10px);
+    left: 1rem;
+    padding: 10px;
+    content: "";
+    background-repeat: no-repeat;
+  }
+}
+
+button.ghi-download__btn + .cd-dropdown,
+button.btn--download + .cd-dropdown,
+button.ghi-dropdown__btn + .cd-dropdown {
+  position: absolute;
+
+  div {
+    display: inline-block;
+    width: auto;
+    padding: 0.2rem;
+    border: 1px solid var(--cd-default-border-color);
+    border-radius: 3px;
+    background-color: var(--cd-white);
+
+    a {
+      display: block;
+      padding: 0.1rem;
+      text-decoration: none;
+      font-size: var(--cd-font-size--tiny);
+    }
+  }
+}

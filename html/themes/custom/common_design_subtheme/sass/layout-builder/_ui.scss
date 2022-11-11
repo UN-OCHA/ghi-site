@@ -1,0 +1,9 @@
+.ui-widget-content .layout-builder-configure-block div[data-block-preview] {
+  a {
+    color: var(--ghi-default-text-color);
+  }
+
+  &[data-block-preview="plan_webcontent_file"] {
+    padding: 0;
+  }
+}

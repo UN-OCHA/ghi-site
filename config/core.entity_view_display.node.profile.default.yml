@@ -1,0 +1,115 @@
+uuid: c7b63e4a-2203-4beb-894e-33605f3ae63f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.profile.field_entity_reference
+    - field.field.node.profile.field_hero_image
+    - field.field.node.profile.field_team
+    - field.field.node.profile.layout_builder__layout
+    - node.type.profile
+  module:
+    - ghi_hero_image
+    - layout_builder
+    - layout_builder_ipe
+    - layout_builder_restrictions
+    - layout_discovery
+    - user
+third_party_settings:
+  layout_builder:
+    enabled: true
+    allow_custom: true
+    sections:
+      -
+        layout_id: layout_onecol
+        layout_settings:
+          label: Content
+          context_mapping: {  }
+        components: {  }
+        third_party_settings: {  }
+  layout_builder_restrictions:
+    allowed_block_categories:
+      - 'Chaos Tools'
+      - 'Content fields'
+      - 'Country elements'
+      - 'Custom block types'
+      - Forms
+      - 'Generic elements'
+      - Global
+      - HID
+      - 'Inline blocks'
+      - 'Lists (Views)'
+      - Menus
+      - 'Narrative Content'
+      - 'Plan cluster elements'
+      - 'Plan elements'
+      - Sections
+      - 'Social Auth'
+      - Subpage
+      - System
+      - User
+      - core
+    entity_view_mode_restriction:
+      allowed_layouts: {  }
+      denylisted_blocks: {  }
+      allowlisted_blocks:
+        'Inline blocks':
+          - 'inline_block:basic'
+      restricted_categories:
+        - 'Chaos Tools'
+        - 'Content fields'
+        - 'Custom block types'
+        - Forms
+        - Global
+        - HID
+        - 'Lists (Views)'
+        - Menus
+        - 'Plan cluster elements'
+        - 'Social Auth'
+        - Subpage
+        - System
+        - User
+        - core
+      blacklisted_blocks: {  }
+      whitelisted_blocks:
+        'Narrative Content':
+          - article_collection
+          - paragraph
+  layout_builder_ipe:
+    enabled: 1
+id: node.profile.default
+targetEntityType: node
+bundle: profile
+mode: default
+content:
+  field_entity_reference:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  field_hero_image:
+    type: ghi_hero_image
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 103
+    region: content
+  field_team:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 102
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  langcode: true
+  layout_builder__layout: true

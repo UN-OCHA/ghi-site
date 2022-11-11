@@ -11,6 +11,8 @@ use Drupal\migrate_plus\Plugin\migrate_plus\data_fetcher\Http;
 
 use Drupal\hpc_api\Helpers\QueryHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\migrate_plus\DataFetcherPluginBase;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Retrieve data over an HTTP connection for migration.
@@ -91,7 +93,7 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): DataFetcherPluginBase {
     return new static(
       $configuration,
       $plugin_id,
@@ -103,7 +105,7 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
   /**
    * {@inheritdoc}
    */
-  public function getResponse($url) {
+  public function getResponse($url): ResponseInterface {
     try {
       $options = [
         'headers' => $this->getRequestHeaders(),
@@ -126,7 +128,7 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
   /**
    * {@inheritdoc}
    */
-  public function getResponseContent($url) {
+  public function getResponseContent($url): string {
     $import_file = $this->getImportFileName($url);
     if (!file_exists($import_file)) {
       // If the file does not yet exist, download it.
@@ -287,6 +289,7 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
         'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
         'query_args' => [
           'content' => 'entities',
+          'disaggregation' => 'false',
         ],
       ]);
       if ($has_published_version) {

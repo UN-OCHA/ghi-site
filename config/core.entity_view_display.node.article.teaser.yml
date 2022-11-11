@@ -1,0 +1,48 @@
+uuid: f3bc1d5b-6d69-4841-9888-af19039cbf14
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.article.field_base_objects
+    - field.field.node.article.field_display_hero_image
+    - field.field.node.article.field_image
+    - field.field.node.article.field_remote_article
+    - field.field.node.article.field_summary
+    - field.field.node.article.field_tags
+    - field.field.node.article.layout_builder__layout
+    - node.type.article
+    - responsive_image.styles.card_hero
+  module:
+    - responsive_image
+    - user
+id: node.article.teaser
+targetEntityType: node
+bundle: article
+mode: teaser
+content:
+  field_image:
+    type: responsive_image
+    label: hidden
+    settings:
+      responsive_image_style: card_hero
+      image_link: content
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_tags:
+    type: entity_reference_label
+    label: visually_hidden
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+hidden:
+  field_base_objects: true
+  field_display_hero_image: true
+  field_remote_article: true
+  field_summary: true
+  langcode: true
+  layout_builder__layout: true
+  links: true

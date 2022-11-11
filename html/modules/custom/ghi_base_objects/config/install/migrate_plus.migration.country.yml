@@ -1,0 +1,64 @@
+id: country
+label: Countries from the HPC API
+migration_group: hpc_api_data
+migration_tags:
+  - 'HPC API'
+source:
+  include_raw_data: true
+  track_changes: true
+  endpoints:
+    -
+      endpoint: 'fts/location/autocomplete/%25%25%25?adminLevel=0'
+      api_version: 'v2'
+  item_selector: data
+  fields:
+    -
+      name: original_id
+      label: 'Unique plan ID'
+      selector: id
+    -
+      name: name
+      label: 'Name of the country'
+      selector: name
+    -
+      name: latitude
+      label: 'The latitude of the country'
+      selector: latitude
+    -
+      name: longitude
+      label: 'The longitude of the country'
+      selector: longitude
+    -
+      name: pcode
+      label: 'The pcode of the country'
+      selector: pcode
+    -
+      name: iso3
+      label: 'The iso3 code of the country'
+      selector: iso3
+  ids:
+    original_id:
+      type: integer
+process:
+  type:
+    plugin: default_value
+    default_value: country
+  name: name
+  field_original_id: original_id
+  field_latitude: latitude
+  field_longitude: longitude
+  field_country_code: iso3
+  field_place_code: pcode
+destination:
+  plugin: 'entity:base_object'
+  overwrite_properties:
+    - name
+    - field_latitude
+    - field_longitude
+    - field_country_code
+    - field_place_code
+dependencies:
+  enforced:
+    module:
+      - hpc_api
+migration_dependencies: {}

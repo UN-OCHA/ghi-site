@@ -1,0 +1,10 @@
+uuid: ab54a2c7-5f5b-434d-86e7-a3b498014186
+langcode: en
+status: true
+dependencies: {  }
+id: plan_pages
+label: 'Plan pages'
+enabled: true
+first_field: field_plan_pages
+second_field: field_plan
+bundles: {  }

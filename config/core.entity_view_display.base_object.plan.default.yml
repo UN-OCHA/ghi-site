@@ -1,0 +1,216 @@
+uuid: 7878c7e7-e663-4a1a-99ba-735709fb9aa2
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.base_object.plan.field_country
+    - field.field.base_object.plan.field_decimal_format
+    - field.field.base_object.plan.field_description
+    - field.field.base_object.plan.field_footnotes
+    - field.field.base_object.plan.field_link_to_fts
+    - field.field.base_object.plan.field_max_admin_level
+    - field.field.base_object.plan.field_operations_category
+    - field.field.base_object.plan.field_original_id
+    - field.field.base_object.plan.field_plan_caseload
+    - field.field.base_object.plan.field_plan_costing
+    - field.field.base_object.plan.field_plan_document_link
+    - field.field.base_object.plan.field_plan_status
+    - field.field.base_object.plan.field_plan_type
+    - field.field.base_object.plan.field_plan_type_label_override
+    - field.field.base_object.plan.field_plan_version_argument
+    - field.field.base_object.plan.field_plan_version_tag
+    - field.field.base_object.plan.field_restricted
+    - field.field.base_object.plan.field_short_name
+    - field.field.base_object.plan.field_visible_on_global_pages
+    - field.field.base_object.plan.field_year
+    - ghi_base_objects.base_object_type.plan
+  module:
+    - ghi_base_objects
+    - ghi_plans
+    - link
+    - options
+id: base_object.plan.default
+targetEntityType: base_object
+bundle: plan
+mode: default
+content:
+  field_country:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: -1
+    region: content
+  field_decimal_format:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  field_description:
+    type: basic_string
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_footnotes:
+    type: ghi_footnotes
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 10
+    region: content
+  field_link_to_fts:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 14
+    region: content
+  field_max_admin_level:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 11
+    region: content
+  field_operations_category:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 12
+    region: content
+  field_original_id:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: -2
+    region: content
+  field_plan_caseload:
+    type: ghi_plans_plan_caseload
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 9
+    region: content
+  field_plan_costing:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_plan_document_link:
+    type: link
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: '0'
+      target: _blank
+    third_party_settings: {  }
+    weight: 8
+    region: content
+  field_plan_status:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 13
+    region: content
+  field_plan_type:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: -3
+    region: content
+  field_plan_type_label_override:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 17
+    region: content
+  field_plan_version_argument:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 16
+    region: content
+  field_plan_version_tag:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_restricted:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  field_short_name:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  field_visible_on_global_pages:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 15
+    region: content
+  field_year:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  name:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: -4
+    region: content
+hidden:
+  langcode: true

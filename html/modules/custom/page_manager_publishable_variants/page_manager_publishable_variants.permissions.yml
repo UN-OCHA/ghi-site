@@ -1,0 +1,4 @@
+access unpublished page variants:
+  description: 'Access page variants that are marked as unpublished'
+  title: 'Access unpublished page variants'
+  restrict access: TRUE

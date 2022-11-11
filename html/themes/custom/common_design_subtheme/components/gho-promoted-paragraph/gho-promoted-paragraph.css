@@ -1,0 +1,31 @@
+.gho-paragraph-promoted {
+  position: relative;
+  z-index: 1;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  background-color: #f1f1f1;
+}
+.gho-paragraph-promoted::before {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 100%;
+  content: "";
+  background-color: inherit;
+
+  /* @include tablet {
+       right: calc(-4rem - 2px);
+       left: calc(-4rem - 2px);
+       border: 1px solid var(--cd-default-border-color);
+       border-top: 0;
+
+       #layout-builder & {
+         right: 0;
+         left: 0;
+       }
+     }
+   } */
+}

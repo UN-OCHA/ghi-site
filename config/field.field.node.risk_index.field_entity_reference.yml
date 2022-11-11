@@ -1,0 +1,29 @@
+uuid: fdcb9f70-71c4-444c-b925-da6c43cede01
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_entity_reference
+    - node.type.risk_index
+    - node.type.section
+id: node.risk_index.field_entity_reference
+field_name: field_entity_reference
+entity_type: node
+bundle: risk_index
+label: Section
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      section: section
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

@@ -1,0 +1,15 @@
+uuid: a598af4b-a386-4e65-9b5e-a288a6ca4f49
+langcode: en
+status: true
+dependencies: {  }
+name: publication_3x
+label: 'Publication 3x'
+effects:
+  2ed421c2-75c0-4712-9fb7-ce01f15d1c5b:
+    uuid: 2ed421c2-75c0-4712-9fb7-ce01f15d1c5b
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 1194
+      height: 219
+      anchor: center-center

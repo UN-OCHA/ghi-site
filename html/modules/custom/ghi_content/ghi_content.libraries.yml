@@ -1,0 +1,20 @@
+admin.article_edit:
+  version: VERSION
+  css:
+    component:
+      css/admin/article_edit.css: {}
+admin.article_list:
+  version: VERSION
+  css:
+    component:
+      css/admin/article_list.css: {}
+admin.article_collection:
+  version: VERSION
+  css:
+    component:
+      css/admin/article_collection.css: {}
+admin.related_articles:
+  version: VERSION
+  css:
+    component:
+      css/admin/related_articles.css: {}

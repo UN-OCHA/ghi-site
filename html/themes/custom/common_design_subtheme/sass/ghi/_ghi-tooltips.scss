@@ -1,0 +1,69 @@
+.tooltip {
+  cursor: pointer;
+  vertical-align: middle;
+
+  svg {
+    fill: var(--cd-primary-color);
+  }
+}
+
+.tippy-box .tippy-content {
+
+  & > .content {
+    padding: 0 1rem;
+  }
+
+  a.fts-link {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+
+    img {
+      height: 20px;
+      vertical-align: middle;
+    }
+  }
+
+  td.project-counter & {
+    min-width: 20rem;
+  }
+}
+
+.d3-sparkline-tooltip {
+  .tippy-box {
+    top: -0.5rem;
+
+    .tippy-content {
+      margin-bottom: -1rem;
+
+      .hpc-sparkline-tooltip {
+        .title {
+          text-align: left;
+        }
+
+        .items {
+          margin-top: 0.5rem;
+
+          .item-wrapper {
+            display: flex;
+
+            .label {
+              width: 50%;
+              text-align: left;
+              color: var(--cd-white);
+              font-size: 100%;
+              line-height: inherit;
+            }
+            .value {
+              width: 50%;
+              text-align: right;
+            }
+          }
+        }
+      }
+    }
+
+    .tippy-arrow::before {
+      left: 45%;
+    }
+  }
+}

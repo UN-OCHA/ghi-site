@@ -1,0 +1,446 @@
+diff --git a/core/lib/Drupal/Core/Form/FormState.php b/core/lib/Drupal/Core/Form/FormState.php
+index 8264371c83..d16310f217 100644
+--- a/core/lib/Drupal/Core/Form/FormState.php
++++ b/core/lib/Drupal/Core/Form/FormState.php
+@@ -23,9 +23,9 @@ class FormState implements FormStateInterface {
+   /**
+    * The complete form structure.
+    *
+-   * #process, #after_build, #element_validate, and other handlers being invoked
+-   * on a form element may use this reference to access other information in the
+-   * form the element is contained in.
++   * #process, #after_build, #element_validate, #element_submit and other
++   * handlers being invoked on a form element may use this reference to access
++   * other information in the form the element is contained in.
+    *
+    * @see self::getCompleteForm()
+    *
+diff --git a/core/lib/Drupal/Core/Form/FormSubmitter.php b/core/lib/Drupal/Core/Form/FormSubmitter.php
+index f3260e2fad..9b5086d0a7 100644
+--- a/core/lib/Drupal/Core/Form/FormSubmitter.php
++++ b/core/lib/Drupal/Core/Form/FormSubmitter.php
+@@ -3,6 +3,7 @@
+ namespace Drupal\Core\Form;
+
+ use Drupal\Core\Url;
++use Drupal\Core\Render\Element;
+ use Symfony\Component\HttpFoundation\RedirectResponse;
+ use Symfony\Component\HttpFoundation\RequestStack;
+ use Symfony\Component\HttpFoundation\Response;
+@@ -48,6 +49,9 @@ public function doSubmitForm(&$form, FormStateInterface &$form_state) {
+     }
+
+     // Execute form submit handlers.
++    $triggering_element = $form_state->getTriggeringElement();
++    $limit_element_submit = isset($triggering_element['#limit_element_submit']) && $triggering_element['#limit_element_submit'] !== FALSE ? $triggering_element['#limit_element_submit'] : [];
++    $this->submitFormElement($form, $form_state, $limit_element_submit);
+     $this->executeSubmitHandlers($form, $form_state);
+
+     // If batches were set in the submit handlers, we process them now,
+@@ -86,6 +90,55 @@ public function doSubmitForm(&$form, FormStateInterface &$form_state) {
+     }
+   }
+
++  /**
++   * Performs submission on form elements.
++   *
++   * @param array $elements
++   *   An associative array containing the structure of the form.
++   * @param \Drupal\Core\Form\FormStateInterface $form_state
++   *   The current state of the form.
++   * @param array $limit_element_submit
++   *   An array of form element #array_parents arrays to limit element level
++   *   submitting to.
++   */
++  protected function submitFormElement(array &$elements, FormStateInterface $form_state, $limit_element_submit = []) {
++    // Recurse through all children.
++    foreach (Element::children($elements) as $key) {
++      if (isset($elements[$key]) && is_array($elements[$key])) {
++        $this->submitFormElement($elements[$key], $form_state, $limit_element_submit);
++      }
++    }
++
++    // Call any element-specific submit handlers. These must act on the element
++    // #value data.
++    if (isset($elements['#element_submit']) && (empty($limit_element_submit) || $this->shouldElementBeSubmitted($elements, $limit_element_submit))) {
++      foreach ($elements['#element_submit'] as $callback) {
++        $complete_form = &$form_state->getCompleteForm();
++        call_user_func_array($form_state->prepareCallback($callback), [&$elements, $form_state, &$complete_form]);
++      }
++    }
++  }
++
++  /**
++   * Determines whether #element_submit for a certain element should be triggered.
++   *
++   * @param array $element
++   *   The element itself.
++   * @param array $limit_element_submit
++   *   The array of parents which should be element submitted.
++   *
++   * @return bool
++   */
++  protected function shouldElementBeSubmitted(array $element, array $limit_element_submit) {
++    $array_parents = $element['#array_parents'];
++    foreach ($limit_element_submit as $parents) {
++      if (strpos(implode(':', $array_parents), implode(':', $parents)) === 0) {
++        return TRUE;
++      }
++    }
++    return FALSE;
++  }
++
+   /**
+    * {@inheritdoc}
+    */
+diff --git a/core/lib/Drupal/Core/Render/Element/Button.php b/core/lib/Drupal/Core/Render/Element/Button.php
+index f7404081f0..712f299891 100644
+--- a/core/lib/Drupal/Core/Render/Element/Button.php
++++ b/core/lib/Drupal/Core/Render/Element/Button.php
+@@ -15,6 +15,8 @@
+  * - #limit_validation_errors: An array of form element keys that will block
+  *   form submission when validation for these elements or any child elements
+  *   fails. Specify an empty array to suppress all form validation errors.
++ * - #limit_element_submit: An array of form element #array_parents arrays to
++ *   limit element level submitting to.
+  * - #value: The text to be shown on the button.
+  *
+  *
+@@ -43,6 +45,7 @@ public function getInfo() {
+       '#is_button' => TRUE,
+       '#executes_submit_callback' => FALSE,
+       '#limit_validation_errors' => FALSE,
++      '#limit_element_submit' => FALSE,
+       '#process' => [
+         [$class, 'processButton'],
+         [$class, 'processAjaxForm'],
+diff --git a/core/lib/Drupal/Core/Render/Element/FormElement.php b/core/lib/Drupal/Core/Render/Element/FormElement.php
+index 62fe3c1112..89e1f5ed4f 100644
+--- a/core/lib/Drupal/Core/Render/Element/FormElement.php
++++ b/core/lib/Drupal/Core/Render/Element/FormElement.php
+@@ -42,6 +42,9 @@
+  *   object, it will be filtered for XSS safety.
+  * - #disabled: (bool) If TRUE, the element is shown but does not accept
+  *   user input.
++ * - #element_submit: (array) Array of callables or function names, which
++ *   are called to submit the element. Arguments: $element, $form_state, $form.
++ *   The execution order is bottom to top in the form array.
+  * - #element_validate: (array) Array of callables or function names, which
+  *   are called to validate the input. Arguments: $element, $form_state, $form.
+  * - #field_prefix: (string) Prefix to display before the HTML input element.
+diff --git a/core/lib/Drupal/Core/Render/ElementInfoManagerInterface.php b/core/lib/Drupal/Core/Render/ElementInfoManagerInterface.php
+index 403bd4b73f..52bc9057fc 100644
+--- a/core/lib/Drupal/Core/Render/ElementInfoManagerInterface.php
++++ b/core/lib/Drupal/Core/Render/ElementInfoManagerInterface.php
+@@ -33,8 +33,11 @@ interface ElementInfoManagerInterface extends DiscoveryInterface {
+    *     and $complete_form.
+    *   - #after_build: array of callables taking $element and $form_state.
+    *   - #validate: array of callback functions taking $form and $form_state.
+-   *   - #element_validate: array of callback functions taking $element and
+-   *     $form_state.
++   *   - #element_submit: array of callables or function names, which are
++   *     called to submit the element. Arguments: $element, $form_state, $form.
++   *     The execution order is bottom to top in the form array.
++   *   - #element_validate: array of callback functions taking $element,
++   *     $form_state and the complete form.
+    *   - #pre_render: array of callables taking $element.
+    *   - #post_render: array of callables taking $children and $element.
+    *   - #submit: array of callback functions taking $form and $form_state.
+diff --git a/core/modules/system/tests/modules/form_test/form_test.routing.yml b/core/modules/system/tests/modules/form_test/form_test.routing.yml
+index f58c11cd28..afd8215342 100644
+--- a/core/modules/system/tests/modules/form_test/form_test.routing.yml
++++ b/core/modules/system/tests/modules/form_test/form_test.routing.yml
+@@ -116,6 +116,14 @@ form_test.validate_with_error_suppression:
+   requirements:
+     _access: 'TRUE'
+
++form_test.element_submit_form:
++  path: '/form-test/element-submit'
++  defaults:
++    _form: '\Drupal\form_test\Form\FormTestElementSubmitForm'
++    _title: 'Form element submit handlers test'
++  requirements:
++    _access: 'TRUE'
++
+ form_test.pattern:
+   path: '/form-test/pattern'
+   defaults:
+diff --git a/core/modules/system/tests/modules/form_test/src/Callbacks.php b/core/modules/system/tests/modules/form_test/src/Callbacks.php
+index 4af6f2e704..040bc65acb 100644
+--- a/core/modules/system/tests/modules/form_test/src/Callbacks.php
++++ b/core/modules/system/tests/modules/form_test/src/Callbacks.php
+@@ -45,4 +45,11 @@ public function validateName(&$element, FormStateInterface $form_state) {
+     }
+   }
+
++  /**
++   * Form element submit handler for 'group_1' in form_test_element_submit_form.
++   */
++  public function submitElement(array &$element, FormStateInterface $form_state) {
++    \Drupal::messenger()->addMessage(t('@parents triggered', ['@parents' => implode(':', $element['#parents'])]));
++  }
++
+ }
+diff --git a/core/modules/system/tests/modules/form_test/src/Form/FormTestElementSubmitForm.php b/core/modules/system/tests/modules/form_test/src/Form/FormTestElementSubmitForm.php
+new file mode 100644
+index 0000000000..df7fcc2cd5
+--- /dev/null
++++ b/core/modules/system/tests/modules/form_test/src/Form/FormTestElementSubmitForm.php
+@@ -0,0 +1,123 @@
++<?php
++
++namespace Drupal\form_test\Form;
++
++use Drupal\Core\Form\FormBase;
++use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\Messenger\MessengerInterface;
++use Drupal\form_test\Callbacks;
++use Symfony\Component\DependencyInjection\ContainerInterface;
++
++/**
++ * Form builder for testing \Drupal\Core\Form\FormSubmitter::submitFormElement().
++ *
++ * Services for testing of element level submitting.
++ */
++class FormTestElementSubmitForm extends FormBase {
++
++  /**
++   * The messenger service.
++   *
++   * @var \Drupal\Core\Messenger\MessengerInterface
++   */
++  protected $messenger;
++
++  /**
++   * FormTestElementSubmitForm constructor.
++   *
++   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
++   *   The messenger service.
++   */
++  public function __construct(MessengerInterface $messenger) {
++    $this->messenger = $messenger;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public static function create(ContainerInterface $container) {
++    return new static($container->get('messenger'));
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getFormId() {
++    return 'form_test_element_submit_form';
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function buildForm(array $form, FormStateInterface $form_state) {
++    $object = new Callbacks();
++
++    $form['name'] = [
++      '#type' => 'textfield',
++      '#title' => 'Name',
++      '#default_value' => '',
++      '#element_submit' => [[$object, 'submitElement']],
++    ];
++    $form['group_1'] = [
++      '#type' => 'details',
++      '#tree' => TRUE,
++      '#element_submit' => [[$object, 'submitElement']],
++    ];
++    $form['group_1']['name_1'] = [
++      '#type' => 'textfield',
++      '#title' => 'Name 1',
++      '#default_value' => '',
++      '#element_submit' => [[$object, 'submitElement']],
++    ];
++    $form['group_1']['name_2'] = [
++      '#type' => 'textfield',
++      '#title' => 'Name 2',
++      '#default_value' => '',
++      '#element_submit' => [[$object, 'submitElement']],
++    ];
++    $form['group_1']['submit_1'] = [
++      '#type' => 'submit',
++      '#value' => 'Save group 1',
++      '#limit_element_submit' => [['group_1']],
++      '#submit' => [[$this, 'submitForm1']],
++    ];
++    $form['group_2'] = [
++      '#type' => 'details',
++      '#tree' => TRUE,
++    ];
++    $form['group_2']['name_3'] = [
++      '#type' => 'textfield',
++      '#title' => 'Name 3',
++      '#element_submit' => [[$object, 'submitElement']],
++      '#default_value' => '',
++    ];
++
++    $form['submit'] = [
++      '#type' => 'submit',
++      '#value' => 'Save',
++    ];
++
++    return $form;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function validateForm(array &$form, FormStateInterface $form_state) {
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function submitForm(array &$form, FormStateInterface $form_state) {
++    $this->messenger->addMessage(t('Executed @method.', ['@method' => __METHOD__]));
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function submitForm1(array &$form, FormStateInterface $form_state) {
++    $this->messenger->addMessage(t('Executed @method.', ['@method' => __METHOD__]));
++  }
++
++}
+diff --git a/core/modules/system/tests/src/Functional/Form/ElementSubmitTest.php b/core/modules/system/tests/src/Functional/Form/ElementSubmitTest.php
+new file mode 100644
+index 0000000000..1b621effb2
+--- /dev/null
++++ b/core/modules/system/tests/src/Functional/Form/ElementSubmitTest.php
+@@ -0,0 +1,51 @@
++<?php
++
++namespace Drupal\Tests\system\Functional\Form;
++
++use Drupal\Tests\BrowserTestBase;
++
++/**
++ * Tests element level submitting.
++ *
++ * @group Form
++ *
++ * @see \Drupal\form_test\Form\FormTestElementSubmitForm
++ */
++class ElementSubmitTest extends BrowserTestBase {
++
++  protected $defaultTheme = 'stark';
++
++  /**
++   * {@inheritdoc}
++   */
++  public static $modules = ['form_test'];
++
++  public function testElementSubmit() {
++    // Verify that #element_submit handlers are executed.
++    $this->drupalGet('form-test/element-submit');
++    $edit = [
++      'name' => 'element_submit',
++      'group_1[name_1]' => 'element_submit_1',
++      'group_1[name_2]' => 'element_submit_2',
++      'group_2[name_3]' => 'element_submit_3',
++    ];
++    $this->drupalPostForm(NULL, $edit, 'Save');
++
++    $assert = $this->assertSession();
++    // Make sure the execution order is also right.
++    $assert->pageTextMatches('/name triggered.*group_1:name_1 triggered.*group_1:name_2 triggered.*group_1 triggered.*group_2:name_3 triggered.*Executed Drupal\\\form_test\\\Form\\\FormTestElementSubmitForm::submitForm\./s');
++    $assert->pageTextNotContains('Executed Drupal\form_test\Form\FormTestElementSubmitForm::submitForm1.');
++
++    $edit = [
++      'group_1[name_1]' => 'element_submit_1',
++      'group_1[name_2]' => 'element_submit_2',
++    ];
++    $this->drupalPostForm(NULL, $edit, 'Save group 1');
++
++    $assert->pageTextNotContains('name triggered');
++    $assert->pageTextNotContains('group_2:name_3 triggered');
++    $assert->pageTextMatches('/group_1:name_1.*group_1:name_2.*Executed Drupal\\\form_test\\\Form\\\FormTestElementSubmitForm::submitForm1\./s');
++    $assert->pageTextNotContains('Executed Drupal\form_test\Form\FormTestElementSubmitForm::submitForm.');
++  }
++
++}
+diff --git a/core/modules/system/tests/src/Functional/Form/ValidationTest.php b/core/modules/system/tests/src/Functional/Form/ValidationTest.php
+index 807b1b9109..c2683b5c5d 100644
+--- a/core/modules/system/tests/src/Functional/Form/ValidationTest.php
++++ b/core/modules/system/tests/src/Functional/Form/ValidationTest.php
+@@ -37,6 +37,8 @@ public function testValidate() {
+     $this->submitForm($edit, 'Save');
+     $this->assertSession()->fieldValueEquals('name', '#value changed by #element_validate');
+     $this->assertSession()->pageTextContains('Name value: value changed by setValueForElement() in #element_validate');
++    $this->assertSession()->assertNoText('element_submit triggered');
++    $this->assertSession()->assertNoText('Executed Drupal\form_test\Form\FormTestValidateForm::submitForm.');
+
+     // Verify that #validate handlers can alter the form and submitted
+     // form values.
+@@ -46,6 +48,7 @@ public function testValidate() {
+     $this->submitForm($edit, 'Save');
+     $this->assertSession()->fieldValueEquals('name', '#value changed by #validate');
+     $this->assertSession()->pageTextContains('Name value: value changed by setValueForElement() in #validate');
++    $this->assertNoText('Executed Drupal\form_test\Form\FormTestValidateForm::submitForm.');
+
+     // Verify that #element_validate handlers can make form elements
+     // inaccessible, but values persist.
+diff --git a/core/tests/Drupal/Tests/Core/Form/FormSubmitterTest.php b/core/tests/Drupal/Tests/Core/Form/FormSubmitterTest.php
+index 60a7c04127..032c324a02 100644
+--- a/core/tests/Drupal/Tests/Core/Form/FormSubmitterTest.php
++++ b/core/tests/Drupal/Tests/Core/Form/FormSubmitterTest.php
+@@ -4,6 +4,7 @@
+
+ use Drupal\Core\DependencyInjection\ContainerBuilder;
+ use Drupal\Core\Form\FormState;
++use Drupal\Core\Form\FormStateInterface;
+ use Drupal\Core\Routing\UrlGeneratorInterface;
+ use Drupal\Core\Url;
+ use Drupal\Core\Utility\UnroutedUrlAssemblerInterface;
+@@ -41,6 +42,43 @@ protected function setUp(): void {
+     $this->unroutedUrlAssembler = $this->createMock(UnroutedUrlAssemblerInterface::class);
+   }
+
++  /**
++   * @covers ::doSubmitForm
++   */
++  public function testElementSubmit() {
++    $request_stack = new RequestStack();
++    $request_stack->push(Request::create('/test-path'));
++    $form_submitter = $this->getMockBuilder('Drupal\Core\Form\FormSubmitter')
++      ->setConstructorArgs([$request_stack, $this->urlGenerator])
++      ->setMethods(['batchGet', 'drupalInstallationAttempted', 'executeSubmitHandlers'])
++      ->getMock();
++
++    $form_submitter->expects($this->once())
++      ->method('executeSubmitHandlers');
++    $form_submitter->expects($this->once())
++      ->method('batchGet')
++      ->willReturn(FALSE);
++    $mock = $this->getMockBuilder(\stdClass::class)
++      ->setMethods(['element_submit'])
++      ->getMock();
++    $mock->expects($this->once())
++      ->method('element_submit')
++      ->with($this->isType('array'), $this->isInstanceOf(FormStateInterface::class), $this->isType('array'));
++
++    $form = [];
++    $form['test'] = [
++      '#type' => 'textfield',
++      '#title' => 'Test',
++      '#parents' => ['test'],
++      '#element_submit' => [[$mock, 'element_submit']],
++    ];
++    $form_state = (new FormState())
++      ->setCompleteForm($form)
++      ->setSubmitted()
++      ->disableRedirect();
++    $form_submitter->doSubmitForm($form, $form_state, $this->randomMachineName());
++  }
++
+   /**
+    * @covers ::doSubmitForm
+    */

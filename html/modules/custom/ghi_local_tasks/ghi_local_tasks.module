@@ -1,0 +1,100 @@
+<?php
+
+/**
+ * @file
+ * Improvements for the Drupal local tasks.
+ *
+ * This module depends on gin_toolbar and a patch from the feature requested in
+ * http://drupal.org/node/3121440.
+ */
+
+use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Url;
+use Drupal\ghi_subpages\Helpers\SubpageHelper;
+
+/**
+ * Implements hook_page_attachments().
+ */
+function ghi_local_tasks_page_attachments(array &$attachments) {
+  $attachments['#attached']['library'][] = 'ghi_local_tasks/local_tasks';
+}
+
+/**
+ * Implements hook_local_tasks_alter().
+ */
+function ghi_local_tasks_local_tasks_render_alter(&$data, $route_name, RefinableCacheableDependencyInterface &$cacheability) {
+  if (empty($data['tabs']) || empty($data['tabs'][0])) {
+    return;
+  }
+  if (count(Element::getVisibleChildren($data['tabs'][0])) <= 1) {
+    // Hide the local tasks if there is only a single visible item.
+    unset($data['tabs'][0]);
+  }
+}
+
+/**
+ * Implements hook_link_alter().
+ *
+ * This is used to rename "Local tasks" to something more "in-context".
+ */
+function ghi_local_tasks_link_alter(&$variables) {
+  if (is_object($variables['text']) && !$variables['text'] instanceof MarkupInterface) {
+    return;
+  }
+  if ((string) $variables['text'] != t('Local Tasks')) {
+    return;
+  }
+  /** @var Drupal\Core\Url $url */
+  $url = $variables['url'];
+
+  if (!$url->isRouted()) {
+    return;
+  }
+
+  // Get the title of the current page.
+  /** @var Drupal\Core\Menu\LocalTaskManagerInterface $local_task_manager */
+  $local_task_manager = \Drupal::service('plugin.manager.menu.local_task');
+  $local_tasks = $local_task_manager->getLocalTasksForRoute($url->getRouteName());
+  if (empty($local_tasks) || !array_key_exists(0, $local_tasks)) {
+    return;
+  }
+  $active_title = NULL;
+  foreach ($local_tasks[0] as $local_task) {
+    /** @var Drupal\Core\Menu\LocalTaskInterface $local_task */
+    if ($local_task->getRouteName() == \Drupal::routeMatch()->getRouteName()) {
+      $active_title = $local_task->getTitle();
+    }
+  }
+
+  $route_parameters = $url->getRouteParameters();
+
+  $node_id = $route_parameters['node'] ?? NULL;
+  if (!$node_id) {
+    return;
+  }
+  $node = \Drupal::entityTypeManager()->getStorage('node')->load($node_id);
+  if ($node) {
+    $type = $node->type->entity->label();
+    if (SubpageHelper::isSubpageTypeNode($node) && $base_node = SubpageHelper::getBaseTypeNode($node)) {
+      $variables['text'] = t('@parent_type subpage: @type @active_title', [
+        '@parent_type' => $base_node->type->entity->label(),
+        '@type' => $type,
+        '@active_title' => $active_title ? '- ' . $active_title : NULL,
+      ]);
+    }
+    elseif (SubpageHelper::isBaseTypeNode($node) && $label = SubpageHelper::getSectionOverviewLabel($node)) {
+      $variables['text'] = t('@parent_type: @label @active_title', [
+        '@parent_type' => $node->type->entity->label(),
+        '@label' => $label,
+        '@active_title' => $active_title ? '- ' . $active_title : NULL,
+      ]);
+    }
+    else {
+      $variables['text'] = $type;
+    }
+    // Replace the URL with a dummy that just points to the same page.
+    $variables['url'] = Url::fromRoute('<none>', []);
+  }
+}

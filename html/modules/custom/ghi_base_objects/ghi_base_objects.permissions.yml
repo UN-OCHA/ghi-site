@@ -1,0 +1,8 @@
+administer base object entities:
+  title: 'Administer Base object entities'
+  description: 'Allow to view and edit imported Base object entities.'
+  restrict access: true
+administer base object types:
+  title: 'Administer Base object types'
+  description: 'Allow to view, edit and create Base object types.'
+  restrict access: true

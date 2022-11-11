@@ -1,0 +1,544 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for GHI Content.
+ */
+
+use Drupal\Core\Batch\BatchBuilder;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_content\ContentManager\ArticleManager;
+use Drupal\ghi_content\Controller\MigrationBatchController;
+use Drupal\ghi_content\Entity\Article;
+use Drupal\ghi_sections\SectionManager;
+use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_cron().
+ */
+function ghi_content_cron() {
+
+}
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function ghi_content_entity_bundle_info_alter(array &$bundles) {
+  $bundles['node']['article']['class'] = Article::class;
+  $bundles['node']['article']['label'] = t('Article');
+}
+
+/**
+ * Implements hook_theme().
+ */
+function ghi_content_theme($existing, $type, $theme, $path) {
+  return [
+    'article_collection_cards' => [
+      'variables' => [
+        'articles' => [],
+        'options' => [
+          'alignment' => 'horizontal',
+          'columns' => 3,
+          'featured' => NULL,
+        ],
+      ],
+      'file' => 'ghi_content.theme.inc',
+      'template' => 'article-collection-cards',
+    ],
+    'article_collection_table' => [
+      'variables' => [
+        'articles' => [],
+      ],
+      'file' => 'ghi_content.theme.inc',
+      'template' => 'article-collection-table',
+    ],
+    'related_articles_cards' => [
+      'variables' => [
+        'articles' => [],
+      ],
+      'file' => 'ghi_content.theme.inc',
+      'template' => 'related-articles-cards',
+    ],
+    'related_sections' => [
+      'variables' => [
+        'sections' => [],
+        'options' => [
+          'alignment' => 'horizontal',
+          'columns' => 3,
+        ],
+      ],
+      'file' => 'ghi_content.theme.inc',
+      'template' => 'related-sections',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_batch_alter().
+ */
+function ghi_content_batch_alter(&$batch) {
+  $targeted_callback = '\Drupal\migrate_tools\MigrateBatchExecutable::batchProcessImport';
+  $targeted_migration = 'articles_hpc_content_module';
+  $current_set = $batch['current_set'];
+  $operations = &$batch['sets'][$current_set]['operations'];
+  $callback = $operations[0][0] ?? NULL;
+  $migration_name = $operations[0][1][0] ?? NULL;
+  if ($callback != $targeted_callback || $migration_name != $targeted_migration) {
+    return;
+  }
+  // Add a post-process batch set to article imports to make sure that articles
+  // that are not available on the remote source anymore will get unpublished.
+  $placeholders = [
+    '@name' => $targeted_migration,
+  ];
+  $batch_builder = (new BatchBuilder())
+    ->setTitle(t('Post process @name', $placeholders))
+    ->setInitMessage(t('Start post-processing for @name', $placeholders))
+    ->setProgressMessage(t('Post-processing @name', $placeholders))
+    ->addOperation(
+        [MigrationBatchController::class, 'batchProcessCleanupArticles'],
+        [$operations[0][1][0], $operations[0][1][1]]
+      )
+    ->setFinishCallback([MigrationBatchController::class, 'batchFinished']);
+  batch_set($batch_builder->toArray());
+}
+
+/**
+ * Implements hook_contextual_links_alter().
+ *
+ * Disable contextual links to declutter the interface. If it wouldn't be for
+ * layout builder who needs the contextual links for it's own interface, we
+ * could just disable the module entirely.
+ * See https://www.drupal.org/project/drupal/issues/3042516
+ */
+function ghi_content_contextual_links_alter(array &$links, $group, array $route_parameters) {
+  $allowed_groups = ['layout_builder_block'];
+  if (!in_array($group, $allowed_groups)) {
+    return;
+  }
+  /** @var \Drupal\ghi_content\ContextualLinks\BlockHandler $contextual_links_block_handler */
+  $contextual_links_block_handler = \Drupal::service('ghi_content.contextual_links.block_handler');
+  $contextual_links_block_handler->alterLinks($links, $group, $route_parameters);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Used to disable fields that automatically populated.
+ */
+function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateInterface $form_state) {
+  /** @var \Drupal\node\NodeForm $form_object */
+  $form_object = $form_state->getFormObject();
+  /** @var \Drupal\node\NodeInterface $node */
+  $node = $form_object->getEntity();
+
+  $disable_fields = [
+    'title',
+    'langcode',
+    'field_image',
+    'field_summary',
+    'field_tags',
+  ];
+  foreach ($disable_fields as $field_name) {
+    $form[$field_name]['#disabled'] = TRUE;
+    $form[$field_name]['#attributes']['title'] = t('This field is disabled because it is automatically populated from the remote source.');
+  }
+  // Also disable the remote article field.
+  $remote_field = ArticleManager::REMOTE_ARTICLE_FIELD;
+  $form[$remote_field]['#disabled'] = TRUE;
+  $form[$remote_field]['#attributes']['title'] = t('This field cannot be edited anymore after an article page has been created.');
+
+  $admin_permission = \Drupal::currentUser()->hasPermission('administer content types');
+  $form['meta']['#access'] = $admin_permission;
+  $form['meta']['published']['#access'] = $admin_permission;
+  $form['meta']['author']['#access'] = $admin_permission;
+  $form['author']['#access'] = $admin_permission;
+  $form['changed']['#access'] = $admin_permission;
+  $form['options']['#access'] = $admin_permission;
+
+  // If the hero image control checkbox is NULL (never actively saved), we want
+  // to make sure that it shows as selected, which is the default state for new
+  // articles pages.
+  $display_hero_image = $node->get('field_display_hero_image')->value;
+  if ($display_hero_image === NULL) {
+    $form['field_display_hero_image']['widget']['value']['#default_value'] = TRUE;
+  }
+
+  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
+  $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
+  $article = $article_manager->loadArticleForNode($node);
+  $article_in_sync = $article ? $article_manager->isUpToDateWithRemote($node) : NULL;
+
+  $form['remote_article_info'] = [
+    '#type' => 'details',
+    '#title' => t('Remote article'),
+    '#open' => TRUE,
+    '#group' => 'advanced',
+  ];
+
+  $form['remote_article_info']['status'] = [
+    '#type' => 'item',
+    '#title' => t('Up to date'),
+    '#markup' => '<p>' . t('This article page is up to date with its source content on the remote system.') . '</p>',
+    '#weight' => 1,
+  ];
+
+  if (!$article) {
+    $form['remote_article_info']['status']['#title'] = t('Deleted');
+    $form['remote_article_info']['status']['#markup'] = '<p>' . t('The source of this article page has been removed on the remote system.') . '</p>';
+  }
+  elseif (!$article_in_sync) {
+    $form['remote_article_info']['status']['#title'] = t('Outdated');
+    $form['remote_article_info']['status']['#markup'] = '<p>' . t('The source of this article page has changed on the remote system. It will be automatically updated the next time that the article import will run. To apply the changes immediately use the button below.') . '</p>';
+
+    $form['remote_article_info']['apply_changes'] = [
+      '#type' => 'submit',
+      '#value' => t('Apply changes from remote'),
+      '#submit' => ['ghi_content_form_node_article_edit_form_apply_changes_submit'],
+      '#weight' => 2,
+    ];
+  }
+
+  if ($article) {
+    /** @var \Drupal\Core\Routing\RedirectDestinationInterface $redirect_destination */
+    $redirect_destination = \Drupal::service('redirect.destination');
+    $queryParams = \Drupal::request()->query->all();
+    $redirect_url = Url::fromRouteMatch(\Drupal::routeMatch());
+    if (!empty($queryParams)) {
+      $redirect_url->setOption('query', $queryParams);
+    }
+    $redirect_destination->set($redirect_url->toString());
+    $form['remote_article_info']['link_label'] = [
+      '#type' => 'item',
+      '#title' => t('Go to remote system'),
+      '#weight' => 3,
+    ];
+    $view_builder = \Drupal::entityTypeManager()->getViewBuilder('node');
+    $form['remote_article_info']['link'] = $view_builder->viewField($node->get($remote_field), [
+      'label' => 'hidden',
+      'type' => 'ghi_remote_article_source_link',
+      'settings' => [
+        'link_label' => t('Edit this article on the remote system'),
+        'link_to_edit' => TRUE,
+        'include_publisher_destination' => TRUE,
+      ],
+    ]);
+    $form['remote_article_info']['link']['#weight'] = 4;
+  }
+  $form['#attached']['library'][] = 'ghi_content/admin.article_edit';
+}
+
+/**
+ * Form submit handler for the "Apply changes" button on article forms.
+ *
+ * This just saves the node.
+ */
+function ghi_content_form_node_article_edit_form_apply_changes_submit($form, FormStateInterface $form_state) {
+  /** @var \Drupal\node\NodeForm $form_object */
+  $form_object = $form_state->getFormObject();
+  $node = $form_object->getEntity();
+
+  // Just save the node, this will trigger the update.
+  $node->save();
+
+  // The only thing we need to do after that is to update the migration state,
+  // so that this article is not wrongly treated as changed on the next
+  // migration run.
+  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
+  $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
+  $article_manager->updateMigrationState($node);
+
+  $form_state->setRebuild();
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for node entities.
+ */
+function ghi_content_node_presave(NodeInterface $node) {
+  if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+    // We only process nodes that use layout builder.
+    return;
+  }
+
+  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
+  $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
+  $article_manager->updateNodeFromRemote($node);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_predelete() for node entities.
+ */
+function ghi_content_node_predelete(NodeInterface $node) {
+  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
+  $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
+  $article_manager->cleanupArticleOnDelete($node);
+}
+
+/**
+ * Implements hook_preprocess_page().
+ *
+ * This is used to add the configured hero image (or a default image) to the
+ * page title region.
+ *
+ * This code assumes that there is a page_image region in the theme.
+ */
+function ghi_content_preprocess_page(&$variables) {
+  $region_name = 'page_image';
+  if (!array_key_exists($region_name, $variables['page'])) {
+    return;
+  }
+
+  $request_stack = \Drupal::requestStack();
+  $request = $request_stack->getMasterRequest();
+  /** @var \Drupal\node\Entity\Node $node */
+  $node = $request->attributes->has('node') ? $request->attributes->get('node') : NULL;
+  if (!$node instanceof NodeInterface || !$node->getFieldDefinitions()) {
+    return;
+  }
+
+  if (!$node instanceof Article || !$node->access()) {
+    return;
+  }
+
+  if (!$node->hasField('field_image') || !$node->hasField('field_display_hero_image')) {
+    return;
+  }
+
+  // We want to display the image as a hero image if it's not been
+  // specifically disabled.
+  $display_hero_image = $node->get('field_display_hero_image')->value;
+  $should_display = $display_hero_image == 1 || $display_hero_image === NULL;
+  if (!$should_display) {
+    return;
+  }
+
+  // We do not check if the field has actual values, because we might want to
+  // show a default image.
+  $image_field = $node->get('field_image');
+  if ($image_field->isEmpty()) {
+    // Don't show default images in the page view.
+    return;
+  }
+
+  // Go through some trouble to show a responsive image here.
+  $repsonsive_image_style_id = 'hero';
+  $repsonsive_image_style_storage = \Drupal::service('entity_type.manager')->getStorage('responsive_image_style');
+  $image_style_storage = \Drupal::service('entity_type.manager')->getStorage('image_style');
+
+  // Collect cache tags to be added for each item in the field.
+  $responsive_image_style = $repsonsive_image_style_storage->load($repsonsive_image_style_id);
+  $image_styles_to_load = [];
+  $cache_tags = [];
+  if ($responsive_image_style) {
+    $cache_tags = Cache::mergeTags($cache_tags, $responsive_image_style->getCacheTags());
+    $image_styles_to_load = $responsive_image_style->getImageStyleIds();
+  }
+
+  $image_styles = $image_style_storage->loadMultiple($image_styles_to_load);
+  foreach ($image_styles as $image_style) {
+    $cache_tags = Cache::mergeTags($cache_tags, $image_style->getCacheTags());
+  }
+
+  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
+  $article_manager = \Drupal::service('ghi_content.manager.article');
+  $article = $article_manager->loadArticleForNode($node);
+
+  $image_build = [
+    '#theme' => 'ghi_image',
+    '#responsive_image_style' => $responsive_image_style,
+    '#url' => $image_field->entity->getFileUri(),
+    '#caption' => $article ? $article->getImageCaptionMarkup(TRUE) : NULL,
+    '#alt' => $image_field->alt,
+    '#title' => $image_field->title,
+  ];
+
+  if ($image_build) {
+    $image['#label_display'] = 'hidden';
+    $variables['page'][$region_name] = ['hero_image' => $image_build] + $variables['page'][$region_name];
+  }
+
+}
+
+/**
+ * Implements hook_preprocess_page_title().
+ */
+function ghi_content_preprocess_page_title(&$variables) {
+  $node = \Drupal::routeMatch()->getParameter('node');
+  $is_admin_route = \Drupal::service('router.admin_context')->isAdminRoute();
+  if ($is_admin_route || !$node instanceof Article) {
+    return;
+  }
+  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
+  $article_manager = \Drupal::service('ghi_content.manager.article');
+  if (\Drupal::routeMatch()->getRouteName() == 'entity.node.canonical' && $article = $article_manager->loadArticleForNode($node)) {
+    $variables['title_prefix'] = $article->getSection();
+  }
+}
+
+/**
+ * Implements hook_preprocess_views_view_field().
+ *
+ * This is used to remove the section tags from the tags field in views that
+ * take tag ids as an argument in order to show articles belonging to a
+ * specific section.
+ */
+function ghi_content_preprocess_views_view_field__field_tags(&$variables) {
+  $valid_view_ids = ['articles_by_tags'];
+  /** @var \Drupal\views\ViewExecutable $view */
+  $view = $variables['view'];
+  if (!in_array($view->storage->id(), $valid_view_ids)) {
+    return;
+  }
+
+  /** @var \Drupal\views\ResultRow $row */
+  $row = $variables['row'];
+  /** @var \Drupal\views\Plugin\views\field\EntityField $field */
+  $field = $variables['field'];
+
+  // Get the tags that are specific to each row and remove the term ids passed
+  // in as arguments.
+  $tags = array_diff($field->getValue($row), $view->args);
+
+  // Get the build items from the field and filter it be restricted to these
+  // tags.
+  $items = $field->getItems($row);
+  $items = array_filter($items, function ($item) use ($tags) {
+    return in_array($item['raw']->entity->id(), $tags);
+  });
+
+  // Then render again according to the options set in the view and overwrite
+  // the output.
+  $build = $field->renderItems(array_map(function ($item) {
+    return $item['rendered'];
+  }, $items));
+  $variables['output'] = $build;
+
+}
+
+/**
+ * Implements hook_local_actions_render_alter().
+ *
+ * This depends on https://www.drupal.org/project/drupal/issues/2585169.
+ */
+function ghi_content_local_actions_render_alter(&$data, $route_appears) {
+  $supported_routes = [
+    'ghi_content.article_update',
+    'ghi_content.node.article_update',
+  ];
+  foreach ($data as $link_key => &$element) {
+    if (!in_array($link_key, $supported_routes)) {
+      continue;
+    }
+
+    $migrate_last_imported_store = \Drupal::keyValue('migrate_last_imported');
+    $last_imported = $migrate_last_imported_store->get('articles_hpc_content_module');
+    $last_imported = $last_imported ? intval($last_imported / 1000) : NULL;
+
+    /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
+    $date_formatter = \Drupal::service('date.formatter');
+
+    if ($last_imported) {
+      $element['#link']['title'] = new TranslatableMarkup('@link_title<div class="article-update-info">Last updated: @last_updated ago</div>', [
+        '@link_title' => $element['#link']['title'],
+        '@last_updated' => $date_formatter->formatTimeDiffSince($last_imported),
+      ]);
+      $element['#cache'] = ['max-age' => 0];
+      $element['#attached']['library'][] = 'ghi_content/admin.article_list';
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function ghi_content_entity_operation(EntityInterface $entity) {
+  $account = \Drupal::currentUser();
+  if (!$entity instanceof NodeInterface || !in_array($entity->bundle(), SectionManager::SECTION_BUNDLES)) {
+    return;
+  }
+
+  $route_name = 'ghi_content.node.articles';
+  $route_parameters = [
+    'node' => $entity->id(),
+  ];
+
+  // If current user has access to route, then add the operation link.
+  /** @var \Drupal\Core\Access\AccessManagerInterface $access_manager */
+  $access_manager = \Drupal::service('access_manager');
+  if (!$access_manager->checkNamedRoute($route_name, $route_parameters, $account)) {
+    return;
+  }
+
+  return [
+    'articles' => [
+      'title' => t('Article pages'),
+      'weight' => 50,
+      'url' => Url::fromRoute($route_name, $route_parameters),
+    ],
+  ];
+}
+
+// @codingStandardsIgnoreStart
+// /**
+//  * Implements hook_node_access_records().
+//  *
+//  * The basic logic for the moment is that users with edit access to a section
+//  * should be able to view any articles listed in that section, whether
+//  * published or unpublished.
+//  */
+// function ghi_content_node_access_records(NodeInterface $node) {
+//   $grants = [];
+//   if ($node instanceof Article || $node->isPublished()) {
+//     // Not an article node or already published.
+//     return $grants;
+//   }
+
+//   /** @var \Drupal\ghi_content\ContentManager\ArticleManager */
+//   $article_manager = \Drupal::service('ghi_content.manager.article');
+//   $sections = $article_manager->loadSectionsForNode($node);
+//   if (empty($sections)) {
+//     return $grants;
+//   }
+
+//   // Grant view access to all unpublished articles of a section.
+//   foreach ($sections as $section) {
+//     $grants[] = [
+//       'realm' => 'ghi_content_article_access',
+//       'gid' => $section->id(),
+//       'grant_view' => 1,
+//       'grant_update' => 0,
+//       'grant_delete' => 0,
+//       'priority' => 0,
+//     ];
+//   }
+//   return $grants;
+// }
+
+// /**
+//  * Implements hook_node_grants().
+//  */
+// function ghi_content_node_grants(AccountInterface $account, $op) {
+//   $grants = [];
+//   $grants['ghi_content_article_access'] = [0];
+
+//   $user = User::load($account->id());
+//   if (!$user->hasField('field_team') || $user->get('field_team')->isEmpty()) {
+//     return $grants;
+//   }
+
+//   /** @var \Drupal\ghi_sections\SectionManager */
+//   $section_manager = \Drupal::service('ghi_sections.manager');
+
+//   // Load the available sections for the users team.
+//   $sections = $section_manager->loadSectionsForTeam($user->field_team->entity);
+//   foreach ($sections as $section) {
+//     $grants['ghi_content_article_access'][] = $section->id();
+//   }
+//   return $grants;
+// }
+// @codingStandardsIgnoreEnd
