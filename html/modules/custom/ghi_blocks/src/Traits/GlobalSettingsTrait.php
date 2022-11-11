@@ -358,8 +358,8 @@ trait GlobalSettingsTrait {
         '#description' => $this->t('Check to show reached values on global pages.'),
       ],
       'caseload_expected_reach' => [
-        '#title' => $this->t('Show expected reached values'),
-        '#description' => $this->t('Check to show expected reached values on global pages.'),
+        '#title' => $this->t('Show estimated reached values'),
+        '#description' => $this->t('Check to show estimated reached values on global pages.'),
       ],
       'plan_status' => [
         '#title' => $this->t('Show plan status'),
