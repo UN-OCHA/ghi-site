@@ -45,22 +45,25 @@ class PlanOverviewQuery extends EndpointQueryBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getData(array $placeholders = [], array $query_args = []) {
+    $year = $this->getPlaceholder('year');
+    if (!$year) {
+      return;
+    }
+    $this->moduleHandler->alter('plan_overview_query_arguments', $query_args, $year);
+    return parent::getData($placeholders, $query_args);
+  }
+
+  /**
    * Retrieve plan data.
    */
   private function retrievePlans() {
     $this->plans = [];
     $query_args = [];
 
-    $placeholders = $this->getPlaceholders();
-    $year = $placeholders['year'] ?? NULL;
-    if (!$year) {
-      return;
-    }
-
-    // See if we should use the latest plan data.
-    $this->moduleHandler->alter('plan_overview_query_arguments', $query_args, $year);
-
-    $data = $this->getData(['year' => $year], $query_args);
+    $data = $this->getData([], $query_args);
     if (empty($data) || empty($data->plans)) {
       return;
     }
