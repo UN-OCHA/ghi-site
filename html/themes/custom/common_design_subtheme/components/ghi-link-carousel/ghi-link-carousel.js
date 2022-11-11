@@ -20,6 +20,8 @@
           speed: 400,
           spaceBetween: 100,
           autoHeight: true,
+          a11y: true,
+          keyboard: true,
         });
         // Navidation swiper if necessary.
         let nav_slider = new Swiper($(container).find('.swiper').get(1), {
@@ -46,7 +48,9 @@
               enabled: true,
               spaceBetween: 30,
             }
-          }
+          },
+          a11y: true,
+          keyboard: true,
         });
         // This should not be necessary according to the swiper docs, but when
         // resizing the browser window, the breakpoints do not seem to get
