@@ -141,11 +141,11 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       ],
       'requirements' => [
         'data' => $this->t('Requirements'),
-        'data-column-type' => 'amount',
+        'data-column-type' => 'currency',
       ],
       'funding' => [
         'data' => $this->t('Funding'),
-        'data-column-type' => 'amount',
+        'data-column-type' => 'currency',
       ],
       'coverage' => [
         'data' => $this->t('Coverage'),
@@ -299,13 +299,13 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
             $this->buildFootnoteTooltip($footnotes, 'requirements'),
           ],
           'data-raw-value' => $requirements,
-          'data-column-type' => 'amount',
+          'data-column-type' => 'currency',
           'data-progress-group' => 'financial',
         ],
         'funding' => [
           'data' => $link_to_fts ? self::buildFtsLink($value_funding, $plan_entity, 'summary') : $value_funding,
           'data-raw-value' => $funding,
-          'data-column-type' => 'amount',
+          'data-column-type' => 'currency',
           'data-progress-group' => 'financial',
         ],
         'coverage' => [

@@ -250,7 +250,7 @@ function hpc_downloads_phpexcel_export($op, &$data, $phpexcel, $options, $column
     'percentage' => NumberFormat::FORMAT_PERCENTAGE_00,
     'coverage' => '0.0%',
     'currency' => '"$"#,##0',
-    'amount' => NumberFormat::FORMAT_NUMBER,
+    'amount' => '#,##0',
     'number' => NumberFormat::FORMAT_NUMBER,
   ];
 

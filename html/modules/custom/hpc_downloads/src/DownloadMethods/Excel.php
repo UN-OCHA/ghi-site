@@ -134,6 +134,7 @@ class Excel {
       }
 
       foreach ($cells as $cell_key => $cell) {
+        // Cell data.
         if (is_array($cell) && array_key_exists('export_value', $cell)) {
           // This has been crafted before, so let's use it.
           $build['rows'][$row_key][$cell_key] = $cell['export_value'];
@@ -150,24 +151,38 @@ class Excel {
           $build['rows'][$row_key][$cell_key] = $cell;
         }
 
+        // Footnotes.
         if (is_array($cell) && array_key_exists('export_commentary', $cell) && !empty($cell['export_commentary'])) {
           if (empty($build['footnotes'][$row_key])) {
             $build['footnotes'][$row_key] = [];
           }
           $build['footnotes'][$row_key][$cell_key] = $cell['export_commentary'];
         }
+
+        // Cell formats.
+        $cell_format = NULL;
         if (is_array($cell) && !empty($cell['excel_format'])) {
+          $cell_format = $cell['excel_format'];
+        }
+        elseif (is_array($cell) && array_key_exists('data-column-type', $cell)) {
+          $cell_format = $cell['data-column-type'];
+        }
+        if ($cell_format) {
           if (empty($build['cell_formats'][$row_key])) {
             $build['cell_formats'][$row_key] = [];
           }
-          $build['cell_formats'][$row_key][$cell_key] = $cell['excel_format'];
+          $build['cell_formats'][$row_key][$cell_key] = $cell_format;
         }
+
+        // Cell alignments.
         if (is_array($cell) && !empty($cell['excel_align'])) {
           if (empty($build['cell_align'][$row_key])) {
             $build['cell_align'][$row_key] = [];
           }
           $build['cell_align'][$row_key][$cell_key] = $cell['excel_align'];
         }
+
+        // Colspan.
         if (is_array($cell) && !empty($cell['colspan'])) {
           if (empty($build['colspan'][$row_key])) {
             $build['colspan'][$row_key] = [];
