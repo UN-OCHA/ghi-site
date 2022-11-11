@@ -271,10 +271,11 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    */
   public function setCurrentUri($current_uri = NULL) {
     if ($current_uri === NULL) {
+      $request = $this->requestStack->getCurrentRequest();
       // This might come from an IPE or form state context ($_POST).
-      $current_path = $this->requestStack->getCurrentRequest()->request->get('currentPath');
+      $current_path = $request->request->get('currentPath');
       // Or from a query argument, i.e. in download contexts.
-      $uri = $this->requestStack->getCurrentRequest()->query->get('uri');
+      $uri = $request->query->get('uri') ?? $request->query->get('current_uri');
       if (!empty($current_path)) {
         $current_uri = $current_path;
       }
@@ -282,7 +283,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
         $current_uri = $uri;
       }
       else {
-        $current_uri = $this->requestStack->getCurrentRequest()->getRequestUri();
+        $current_uri = $request->getRequestUri();
       }
     }
     $this->currentUri = '/' . ltrim($current_uri, '/');

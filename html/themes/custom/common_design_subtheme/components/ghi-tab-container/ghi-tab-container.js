@@ -13,8 +13,8 @@
 
   Drupal.behaviors.TabContainer = {
     attach: function (context, settings) {
-      $carousel = $('.tab-container-wrapper', context);
-      $.each($carousel, function(i, container) {
+      $tab_container = $('.tab-container-wrapper', context);
+      $.each($tab_container, function(i, container) {
         Drupal.TabContainer.updateContent(container, 0);
 
         // Make the navigation work.
