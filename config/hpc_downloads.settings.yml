@@ -3,4 +3,5 @@ _core:
 logo_path: ''
 logo_path_xls: themes/custom/common_design_subtheme/img/logos/logo-humanitarian-action-xls.png
 download_lifetime: null
-excel_segment_size: ''
+excel_segment_size: null
+excel_footnotes_as_data_validation_message: false
