@@ -55,6 +55,9 @@ module:
   hpc_common: 0
   hpc_downloads: 0
   image: 0
+  imageapi_optimize: 0
+  imageapi_optimize_webp: 0
+  imageapi_optimize_webp_responsive: 0
   imagecache_external: 0
   imagemagick: 0
   inline_form_errors: 0
@@ -113,7 +116,6 @@ module:
   viewsreference: 0
   warmer: 0
   warmer_cdn: 0
-  webp: 0
   wmbert: 0
   pathauto: 1
   content_translation: 10

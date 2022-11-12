@@ -13,9 +13,4 @@ effects:
       width: 1400
       height: null
       upscale: true
-  a07e625d-8512-4f50-a797-e1c20eb0be45:
-    uuid: a07e625d-8512-4f50-a797-e1c20eb0be45
-    id: image_convert
-    weight: 2
-    data:
-      extension: webp
+pipeline: __default__
