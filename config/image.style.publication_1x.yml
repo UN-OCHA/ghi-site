@@ -13,3 +13,4 @@ effects:
       width: 398
       height: 73
       anchor: center-center
+pipeline: __default__
