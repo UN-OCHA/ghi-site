@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -73,6 +74,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     if ($table_data === NULL) {
       return NULL;
     }
+    $conf = $this->getBlockConfig();
 
     $build = [
       '#cache' => [
@@ -82,6 +84,17 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'class' => ['content-width'],
       ],
     ];
+    if (!empty($conf['table']['top_note'])) {
+      $build[] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['metadata']],
+        0 => [
+          '#markup' => new FormattableMarkup($conf['table']['top_note'], [
+            '@date' => date('d F Y'),
+          ]),
+        ],
+      ];
+    }
     $build[] = [
       '#theme' => 'table',
       '#header' => $table_data['header'],
@@ -95,7 +108,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       '#progress_groups' => TRUE,
       '#soft_limit' => $this->getBlockConfig()['table']['soft_limit'] ?? 0,
     ];
-    $conf = $this->getBlockConfig();
+
     $comment = $this->buildBlockCommentRenderArray($conf['table']['comment'] ?? NULL);
     if ($comment) {
       $comment['#attributes']['class'][] = 'content-width';
@@ -434,8 +447,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'hide_empty_requirements' => FALSE,
       ],
       'table' => [
-        'funding_progress' => TRUE,
-        'total_funding' => FALSE,
+        'top_note' => NULL,
         'fts_icon' => TRUE,
         'comment' => NULL,
       ],
@@ -534,23 +546,14 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       '#tree' => TRUE,
       '#group' => 'tabs',
     ];
-    $form['table']['funding_progress'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Show funding progress column'),
+    $form['table']['top_note'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Top note'),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
         'table',
-        'funding_progress',
+        'top_note',
       ]),
-      '#description' => $this->t('Check this to show the funding progress column.'),
-    ];
-    $form['table']['total_funding'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Show total funding column'),
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'table',
-        'total_funding',
-      ]),
-      '#description' => $this->t('Check this to show the total funding column.'),
+      '#description' => $this->t('You can enter a short text to show on the top right of the table and can include a dynamic date using this form: <em>"Live data updated on @date"</em>. Leave empty to not show any text.'),
     ];
     $form['table']['fts_icon'] = [
       '#type' => 'checkbox',

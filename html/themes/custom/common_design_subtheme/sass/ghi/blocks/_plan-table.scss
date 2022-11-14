@@ -1,4 +1,11 @@
 .ghi-block-global-plan-table {
+  .metadata {
+    width: 100%;
+    margin-top: 1.5rem;
+    margin-bottom: -1.5rem;
+    text-align: right;
+    font-size: var(--cd-font-size--tiny);
+  }
   table {
     tbody {
       td[data-column="name"] {
