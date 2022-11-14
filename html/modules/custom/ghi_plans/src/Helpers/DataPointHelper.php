@@ -72,16 +72,22 @@ class DataPointHelper {
    * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
    */
   public static function formatValue(DataAttachment $attachment, array $data_point_conf) {
+    // Prepare the build.
     $build = [
       '#type' => 'container',
     ];
+    // Create a render array for the actual value.
     if (empty($data_point_conf['widget']) || $data_point_conf['widget'] == 'none') {
       $build[] = self::formatAsText($attachment, $data_point_conf);
     }
     else {
       $build[] = self::formatAsWidget($attachment, $data_point_conf);
     }
-    if (self::isMeasurement($attachment, $data_point_conf) && $monitoring_period = self::formatMonitoringPeriod($attachment, 'icon', $data_point_conf)) {
+    // See if this is a measurement and if we can get a formatted monitoring
+    // period for this data point. If so, we want to add it to the build.
+    $is_measurement = self::isMeasurement($attachment, $data_point_conf);
+    $monitoring_period = $is_measurement ? self::formatMonitoringPeriod($attachment, 'icon', $data_point_conf) : NULL;
+    if ($monitoring_period) {
       $build[] = $monitoring_period;
     }
     return $build;
