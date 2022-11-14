@@ -139,11 +139,15 @@ class DataPointHelper {
    */
   private static function formatAsText(DataAttachment $attachment, array $data_point_conf) {
     $value = self::getValue($attachment, $data_point_conf);
-    if ($value === NULL && $data_point_conf['formatting'] != 'percent') {
+
+    // Handle empty data by just "Pending" or "No data" for everything besides
+    // percentage displays.
+    if (empty($value) && $data_point_conf['formatting'] != 'percent') {
       return [
-        '#markup' => t('Pending'),
+        '#markup' => $attachment->isPendingDataEntry() ? t('Pending') : t('No data'),
       ];
     }
+
     $decimal_format = $data_point_conf['decimal_format'] ?? NULL;
     $rendered_value = NULL;
     switch ($data_point_conf['formatting']) {

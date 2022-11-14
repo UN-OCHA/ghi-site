@@ -164,6 +164,19 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
+   * See if data entry is still pending for this attachment.
+   *
+   * If there is no published reporting period yet, data entry is pending.
+   * See https://humanitarian.atlassian.net/browse/HPC-5949
+   *
+   * @return bool
+   *   TRUE if data entry is still pending, FALSE otherwise.
+   */
+  public function isPendingDataEntry() {
+    return empty($this->getPlanReportingPeriods($this->getPlanId(), TRUE));
+  }
+
+  /**
    * Extract the plan id from an attachment object.
    *
    * @return int
