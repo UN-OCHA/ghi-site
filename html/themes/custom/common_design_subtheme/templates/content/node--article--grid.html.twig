@@ -85,6 +85,7 @@
 {{ attach_library('common_design/cd-read-more') }}
 {{ attach_library('common_design/cd-teaser') }}
 
+{% set unochaDate = node.getCreatedTime|date('j F Y') %}
 <article{{ attributes.addClass(classes).removeAttribute('id') }}>
   {% if content.field_image|render %}
     <div class="cd-teaser__image">
@@ -93,17 +94,22 @@
   {% endif %}
 
   <div class="cd-teaser__container [ cd-flow ]">
-    {{ title_prefix }}
-    {% if label and not page %}
-      <h2{{ title_attributes.addClass('cd-teaser__title') }}>
-        <a href="{{ url }}" rel="bookmark">{{ label }}</a>
-      </h2>
-    {% endif %}
-    {{ title_suffix }}
+    <div class="cd-teaser__title--wrapper">
+      {{ title_prefix }}
+      {% if label and not page %}
+        {{ content.field_chapter }}
+        <h2{{ title_attributes.addClass('cd-teaser__title') }}>
+          <a href="{{ url }}" rel="bookmark">{{ label }}</a>
+        </h2>
+      {% endif %}
+      {{ title_suffix }}
+    </div>
 
     <div class="cd-teaser__description">
       {{ content.field_tags }}
+      <span class="cd-teaser__date">{{ unochaDate }}</span>
     </div>
+
   </div>
-  {{ content|without('field_image', 'field_tags') }}
+  {{ content|without('field_image', 'field_tags', 'field_chapter') }}
 </article>

@@ -5,6 +5,7 @@ dependencies:
   config:
     - core.entity_view_mode.node.grid
     - field.field.node.article.field_base_objects
+    - field.field.node.article.field_chapter
     - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
     - field.field.node.article.field_remote_article
@@ -67,6 +68,14 @@ targetEntityType: node
 bundle: article
 mode: grid
 content:
+  field_chapter:
+    type: string
+    label: visually_hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 2
+    region: content
   field_image:
     type: config_default_responsive_image
     label: hidden
