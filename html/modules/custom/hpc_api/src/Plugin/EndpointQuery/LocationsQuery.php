@@ -27,7 +27,7 @@ class LocationsQuery extends EndpointQueryBase {
   use StringTranslationTrait;
   use SimpleCacheTrait;
 
-  const MAX_LEVEL = 3;
+  const MAX_LEVEL = 5;
 
   /**
    * Get the country locations.

@@ -91,6 +91,7 @@
         "drupal/gin": "^3.0-beta5",
         "drupal/gin_lb": "^1.0@beta",
         "drupal/gin_toolbar": "^1.0",
+        "drupal/google_tag": "^1.5",
         "drupal/imageapi_optimize": "^4.0",
         "drupal/imageapi_optimize_webp": "^2.0@beta",
         "drupal/imagecache_external": "^3.0",
