@@ -66,7 +66,12 @@ class ArrayHelper extends ApiArrayHelper {
   public static function mapObjectsToString(array $array) {
     foreach ($array as $key => $value) {
       if (is_object($value)) {
-        $array[$key] = (string) $value;
+        if ($value instanceof \Stringable) {
+          $array[$key] = (string) $value;
+        }
+        else {
+          $array[$key] = self::mapObjectsToString((array) $value);
+        }
       }
       if (is_array($value)) {
         $array[$key] = self::mapObjectsToString($value);

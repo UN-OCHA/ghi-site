@@ -2,15 +2,16 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
-use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
+use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
  * Abstraction for API data attachment objects.
@@ -302,6 +303,11 @@ class DataAttachment extends AttachmentBase {
       'reporting_period' => $reporting_period,
       'filter_empty_locations' => intval($filter_empty_locations),
       'filter_empty_categories' => intval($filter_empty_categories),
+      // This hash is here to get a better chance of capturing differences of
+      // data for the same attachment id, like when the attachment data is
+      // retrieved by an anonymous user vs a logged-in user, where both might
+      // see different data, depending on their access level.
+      'hash' => md5(Yaml::encode(ArrayHelper::mapObjectsToString([$attachment_data]))),
     ]);
 
     $cached_data = $this->cache($cache_key);
