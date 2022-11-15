@@ -19,6 +19,13 @@ class DataAttachment extends AttachmentBase {
   use SimpleCacheTrait;
 
   /**
+   * The source entity of an attachment.
+   *
+   * @var \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface
+   */
+  private $sourceEntity;
+
+  /**
    * Define the ID that is used for unit objects of type percentage.
    *
    * @todo Should be removed once HPC-5754 is done.
@@ -99,9 +106,12 @@ class DataAttachment extends AttachmentBase {
     if (empty($this->source->entity_type) || $this->source->entity_type == 'plan' || empty($this->source->entity_id)) {
       return NULL;
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $entityQuery */
-    $entityQuery = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('entity_query');
-    return $entityQuery->getEntity($this->source->entity_type, $this->source->entity_id);
+    if (empty($this->sourceEntity)) {
+      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $entityQuery */
+      $entityQuery = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('entity_query');
+      $this->sourceEntity = $entityQuery->getEntity($this->source->entity_type, $this->source->entity_id);
+    }
+    return $this->sourceEntity;
   }
 
   /**
