@@ -10,6 +10,16 @@ use Drupal\ghi_base_objects\Entity\BaseObject;
 class GoverningEntity extends BaseObject {
 
   /**
+   * Get the plan object that this governing entity belongs to.
+   *
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface
+   *   The plan base object.
+   */
+  public function getPlan() {
+    return $this->get('field_plan')->entity ?? NULL;
+  }
+
+  /**
    * Get the icon embed code for the entity.
    *
    * @return string|null
