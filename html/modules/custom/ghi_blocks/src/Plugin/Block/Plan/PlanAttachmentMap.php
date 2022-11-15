@@ -171,6 +171,10 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       $map = $this->buildDonutMap();
     }
 
+    if (empty($map['data'])) {
+      // Nothing to show.
+      return NULL;
+    }
     $map_settings = [
       // If the map data is empty, it is important to set it to NULL, otherwhise
       // the empty array is simply ignored due to the way that Drupal merges the
