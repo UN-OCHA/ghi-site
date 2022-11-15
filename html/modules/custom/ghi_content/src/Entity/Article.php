@@ -13,6 +13,16 @@ use Drupal\node\NodeInterface;
 class Article extends Node implements NodeInterface {
 
   /**
+   * Get the chapter of the article.
+   *
+   * @return string|null
+   *   The chapter as a plain string or NULL.
+   */
+  public function getChapter() {
+    return $this->get('field_chapter')->value ?? NULL;
+  }
+
+  /**
    * Get the tags for display.
    *
    * @param int $limit

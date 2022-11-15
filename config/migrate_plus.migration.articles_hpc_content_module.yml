@@ -24,6 +24,14 @@ source:
       label: Title
       selector: title
     -
+      name: chapter
+      label: Chapter
+      selector: section
+    -
+      name: summary
+      label: Summary
+      selector: summary
+    -
       name: created
       label: 'Created datetime'
       selector: created
@@ -54,11 +62,17 @@ process:
     plugin: default_value
     default_value: hpc_content_module
   field_remote_article/article_id: id
+  field_chapter: section
+  field_summary/value: summary
+  field_summary/format:
+    plugin: default_value
+    default_value: html_text
 destination:
   plugin: 'entity:node'
   overwrite_properties:
     - title
-    - status
+    - field_chapter
+    - field_summary
     - created
     - changed
 migration_dependencies: {  }

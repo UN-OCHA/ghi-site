@@ -1,0 +1,19 @@
+uuid: c9a55f82-6985-4526-bda7-c7addff889f2
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_chapter
+    - node.type.article
+id: node.article.field_chapter
+field_name: field_chapter
+entity_type: node
+bundle: article
+label: Chapter
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

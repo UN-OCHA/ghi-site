@@ -523,9 +523,6 @@ class ArticleManager extends BaseContentManager {
     // Import the image.
     $this->importManager->importImage($node, $article, 'field_image');
 
-    // Import the image.
-    $this->importManager->importSummary($node, $article, 'field_summary');
-
     // Import the paragraphs for the article.
     $this->importManager->importParagraphs($node, $article, [], NULL, $cleanup);
 

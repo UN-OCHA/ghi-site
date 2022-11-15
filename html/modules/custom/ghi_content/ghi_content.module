@@ -141,6 +141,7 @@ function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateIn
     'title',
     'langcode',
     'field_image',
+    'field_chapter',
     'field_summary',
     'field_tags',
   ];
@@ -373,11 +374,7 @@ function ghi_content_preprocess_page_title(&$variables) {
   if ($is_admin_route || !$node instanceof Article) {
     return;
   }
-  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
-  $article_manager = \Drupal::service('ghi_content.manager.article');
-  if (\Drupal::routeMatch()->getRouteName() == 'entity.node.canonical' && $article = $article_manager->loadArticleForNode($node)) {
-    $variables['title_prefix'] = $article->getSection();
-  }
+  $variables['title_prefix'] = $node->getChapter();
 }
 
 /**

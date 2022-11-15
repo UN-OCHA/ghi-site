@@ -20,16 +20,26 @@ article.node--view-mode-grid {
       text-decoration: none;
     }
 
+    .cd-teaser__title--wrapper {
+      font-size: var(--cd-font-size--default);
+    }
+
     .cd-teaser__description {
       min-height: 7rem;
       padding-top: 1rem;
+      padding-bottom: 1rem;
+      line-height: 1.2rem;
 
       &:before {
         display: block;
         width: 12%;
-        padding-top: 1.5rem;
+        padding-top: 1rem;
         content: " ";
         border-top: 3px solid var(--ghi-yellow);
+      }
+
+      .cd-teaser__date {
+        font-size: var(--cd-font-size--small);
       }
     }
   }
