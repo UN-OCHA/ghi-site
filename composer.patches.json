@@ -46,7 +46,8 @@
       "Issue #3285444: Add support for image search": "https://www.drupal.org/files/issues/2022-06-13/3285444-2.patch"
     },
     "drupal/webp": {
-      "Issue #3267138: hash_equals(): Expected $known_string to be a string, null given": "https://www.drupal.org/files/issues/2022-10-25/webp-3267138-17.patch"
+      "Issue #3267138: hash_equals(): Expected $known_string to be a string, null given": "https://www.drupal.org/files/issues/2022-10-25/webp-3267138-17.patch",
+      "Issue #?: Precreate derivatives": "./patches/webp-precreate-derivative.patch"
     },
     "guzzlehttp/guzzle": {
       "Issue https://github.com/guzzle/guzzle/issues/3020:": "./patches/guzzle-3020.patch"
