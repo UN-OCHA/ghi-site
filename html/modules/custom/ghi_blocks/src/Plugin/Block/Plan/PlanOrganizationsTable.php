@@ -353,6 +353,7 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
     return [
       'page_node' => $this->getPageNode(),
       'plan_object' => $this->getCurrentPlanObject(),
+      'base_object' => $this->getCurrentBaseObject(),
       'projects' => $project_search_query->getProjects(),
     ];
   }

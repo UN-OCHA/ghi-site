@@ -98,9 +98,9 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
     if (!$project_query) {
       return NULL;
     }
-    $plan_object = $this->getContextValue('plan_object');
+    $base_object = $this->getContextValue('base_object');
     $organization = $this->getContextValue('organization');
-    return $project_query->getOrganizationProjects($organization, $plan_object);
+    return $project_query->getOrganizationProjects($organization, $base_object);
   }
 
   /**
