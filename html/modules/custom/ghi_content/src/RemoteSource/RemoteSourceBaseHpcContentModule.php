@@ -394,6 +394,8 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
         items {
           id
           title
+          section
+          summary
           created
           updated
         }

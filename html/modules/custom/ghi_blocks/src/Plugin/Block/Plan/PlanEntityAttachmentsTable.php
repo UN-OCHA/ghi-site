@@ -705,7 +705,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     $attachments = $query->getAttachmentsById($attachment_ids);
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) {
-      return $attachment instanceof DataAttachment;
+      return $attachment instanceof DataAttachment && !empty($attachment->getSourceEntity());
     });
     $this->groupAndSortAttachments($attachments);
     return $attachments;

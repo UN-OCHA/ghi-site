@@ -233,7 +233,7 @@ trait GlobalSettingsTrait {
 
     // Handle optional funding columns.
     if (empty($config['funding'])) {
-      // Hide the reached column.
+      // Hide the funding column.
       unset($header['funding']);
       $rows = array_map(function ($row) {
         unset($row['funding']);
@@ -243,7 +243,7 @@ trait GlobalSettingsTrait {
 
     // Handle optional requirements columns.
     if (empty($config['requirements'])) {
-      // Hide the reached column.
+      // Hide the requirements column.
       unset($header['requirements']);
       $rows = array_map(function ($row) {
         unset($row['requirements']);
@@ -253,7 +253,7 @@ trait GlobalSettingsTrait {
 
     // Handle optional coverage columns.
     if (empty($config['coverage'])) {
-      // Hide the reached column.
+      // Hide the coverage column.
       unset($header['coverage']);
       $rows = array_map(function ($row) {
         unset($row['coverage']);

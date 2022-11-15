@@ -14,3 +14,4 @@ effects:
       height: 100
       anchor: center-center
       weight: 0
+pipeline: __default__

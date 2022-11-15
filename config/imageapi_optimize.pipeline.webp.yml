@@ -1,0 +1,7 @@
+uuid: c1b1374f-d03e-46c9-bc56-f9b6bc0bbcc3
+langcode: en
+status: true
+dependencies: {  }
+name: webp
+label: WebP
+processors: {  }

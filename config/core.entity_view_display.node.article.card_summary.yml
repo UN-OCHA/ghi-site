@@ -5,6 +5,7 @@ dependencies:
   config:
     - core.entity_view_mode.node.card_summary
     - field.field.node.article.field_base_objects
+    - field.field.node.article.field_chapter
     - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
     - field.field.node.article.field_remote_article
@@ -99,6 +100,7 @@ content:
     region: content
 hidden:
   field_base_objects: true
+  field_chapter: true
   field_display_hero_image: true
   field_remote_article: true
   field_tags: true

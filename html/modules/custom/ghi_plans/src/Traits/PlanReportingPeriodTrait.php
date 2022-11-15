@@ -19,6 +19,9 @@ trait PlanReportingPeriodTrait {
    *   A reporting period object.
    */
   public static function getPlanReportingPeriod($plan_id, $period_id) {
+    if ($period_id == 'latest') {
+      $period_id = self::getLatestPublishedReportingPeriod($plan_id);
+    }
     $periods = self::getPlanReportingPeriods($plan_id, FALSE);
     return array_key_exists($period_id, $periods) ? $periods[$period_id] : NULL;
   }

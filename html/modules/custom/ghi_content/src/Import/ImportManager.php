@@ -173,34 +173,6 @@ class ImportManager implements ContainerInjectionInterface {
   }
 
   /**
-   * Import the summary text for the node.
-   *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node for which elements should be imported/synced.
-   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $article
-   *   The article object as retrieved from the remote source.
-   * @param string $field_name
-   *   The field name of the target field for the image.
-   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   An optional messenger to use for result messages.
-   */
-  public function importSummary(NodeInterface $node, RemoteArticleInterface $article, $field_name = 'field_summary', MessengerInterface $messenger = NULL) {
-    if (!$node->hasField($field_name) || empty($article->getSummary())) {
-      return FALSE;
-    }
-    $update = !$node->get($field_name)->isEmpty();
-    $node->get($field_name)->setValue([
-      'value' => (string) $article->getSummary(),
-      'format' => 'html_text',
-    ]);
-
-    if ($messenger !== NULL) {
-      $messenger->addMessage($update ? $this->t('Updated summary') : $this->t('Imported summary'));
-    }
-
-  }
-
-  /**
    * Import article paragraphs into a node.
    *
    * @param \Drupal\node\NodeInterface $node

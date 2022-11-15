@@ -55,6 +55,7 @@ module:
   hpc_common: 0
   hpc_downloads: 0
   image: 0
+  imageapi_optimize: 0
   imagecache_external: 0
   imagemagick: 0
   inline_form_errors: 0

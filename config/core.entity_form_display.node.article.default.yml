@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.node.article.field_base_objects
+    - field.field.node.article.field_chapter
     - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
     - field.field.node.article.field_remote_article
@@ -55,9 +56,10 @@ third_party_settings:
     group_remote_article:
       children:
         - field_remote_article
-        - field_tags
         - field_image
+        - field_chapter
         - field_summary
+        - field_tags
       label: 'Remote article'
       region: content
       parent_name: group_tabs
@@ -109,6 +111,14 @@ content:
       disable_drag_and_drop: 0
       wrapper: 0
     third_party_settings: {  }
+  field_chapter:
+    type: string_textfield
+    weight: 12
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
   field_display_hero_image:
     type: boolean_checkbox
     weight: 27
@@ -118,7 +128,7 @@ content:
     third_party_settings: {  }
   field_image:
     type: image_image
-    weight: 12
+    weight: 11
     region: content
     settings:
       progress_indicator: throbber
@@ -140,7 +150,7 @@ content:
     third_party_settings: {  }
   field_tags:
     type: entity_reference_autocomplete_tags
-    weight: 11
+    weight: 14
     region: content
     settings:
       match_operator: CONTAINS
