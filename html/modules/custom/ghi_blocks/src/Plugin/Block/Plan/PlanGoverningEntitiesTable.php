@@ -257,16 +257,18 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       $rows[] = $row;
     }
 
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanClusterSummaryQuery $cluster_query */
+    $cluster_query = $this->getQueryHandler('cluster_summary');
+
     // If configured accordingly, add a "Cluster not specified row".
     if (!empty($conf['base']['include_cluster_not_reported']) && $conf['base']['include_cluster_not_reported']) {
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanClusterSummaryQuery $query */
-      $query = $this->getQueryHandler('cluster_summary');
-      $not_specified_entity = $query->getNotSpecifiedCluster();
+
+      $not_specified_entity = $cluster_query->getNotSpecifiedCluster();
 
       if ($not_specified_entity && !empty($not_specified_entity->total_funding)) {
         $context['base_object'] = NULL;
         $context['context_node'] = NULL;
-        $context['entity'] = $not_specified_entity;
+        $context['raw_data'] = $not_specified_entity;
 
         $row = [];
         foreach ($columns as $column) {
@@ -309,11 +311,11 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       }
     }
 
-    if (!empty($conf['base']['include_shared_funding']) && $conf['base']['include_shared_funding'] && $this->getQueryHandler('cluster_summary')->hasSharedFunding()) {
+    if (!empty($conf['base']['include_shared_funding']) && $conf['base']['include_shared_funding'] && $cluster_query->hasSharedFunding()) {
       $context['base_object'] = NULL;
       $context['context_node'] = NULL;
-      $context['entity'] = (object) [
-        'total_funding' => $this->getQueryHandler('cluster_summary')->getSharedFunding(),
+      $context['raw_data'] = (object) [
+        'total_funding' => $cluster_query->getSharedFunding(),
       ];
 
       $row = [];
