@@ -1225,7 +1225,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     }
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
     $query = $this->getQueryHandler('attachment');
-    $attachment = $query->getAttachment($attachment_id);
+    $attachment = $query->getAttachment($attachment_id, TRUE);
     if (!$attachment || !$attachment instanceof DataAttachment) {
       return NULL;
     }
@@ -1251,7 +1251,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
     $query = $this->getQueryHandler('attachment');
     foreach ($attachment_ids as $attachment_id) {
-      $attachment = $query->getAttachment($attachment_id);
+      $attachment = $query->getAttachment($attachment_id, TRUE);
       if (!$attachment) {
         continue;
       }
