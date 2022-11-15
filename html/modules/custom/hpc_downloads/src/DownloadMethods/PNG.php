@@ -29,6 +29,7 @@ class PNG {
       return $response;
     }
     catch (\Exception $e) {
+      \Drupal::logger('hpc_downloads')->error('Snap: ' . $e->getMessage());
       return NULL;
     }
   }
