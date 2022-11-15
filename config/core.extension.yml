@@ -51,6 +51,7 @@ module:
   gho_footnotes: 0
   gin_lb: 0
   gin_toolbar: 0
+  google_tag: 0
   hpc_api: 0
   hpc_common: 0
   hpc_downloads: 0
