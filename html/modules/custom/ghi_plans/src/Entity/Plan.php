@@ -102,6 +102,16 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
+   * Get the maximum admin level for the plan.
+   *
+   * @return int
+   *   The highest supported admin level.
+   */
+  public function getMaxAdminLevel() {
+    return $this->get('field_max_admin_level')->value;
+  }
+
+  /**
    * Whether this plan can link financial data to FTS.
    *
    * @return bool
