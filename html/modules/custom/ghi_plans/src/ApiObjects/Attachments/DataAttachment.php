@@ -2,8 +2,10 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_api\Helpers\ArrayHelper;
@@ -208,6 +210,18 @@ class DataAttachment extends AttachmentBase {
       $plan_id = $attachment_data->measurements[0]?->attachment?->planId;
     }
     return $plan_id;
+  }
+
+  /**
+   * Get the plan object for this attachment.
+   *
+   * @return \Drupal\ghi_plans\Entity\Plan
+   *   The plan base object.
+   */
+  public function getPlanObject() {
+    $plan_id = $this->getPlanId();
+    $base_object = $plan_id ? BaseObjectHelper::getBaseObjectFromOriginalId($plan_id, 'plan') : NULL;
+    return $base_object && $base_object instanceof Plan ? $base_object : NULL;
   }
 
   /**
@@ -568,10 +582,16 @@ class DataAttachment extends AttachmentBase {
     /** @var \Drupal\hpc_api\Plugin\EndpointQuery\LocationsQuery $locations_query */
     $locations_query = $endpoint_query_manager->createInstance('locations_query');
 
+    // See until which level of detail we should go for the attachment. This is
+    // stored as a configuration option on the plan base object, so let's look
+    // that up.
+    $plan_object = $this->getPlanObject();
+    $max_level = $plan_object ? $plan_object->getMaxAdminLevel() : NULL;
+
     // Then we get the coordinates for all locations that the API knows for this
     // country. The coordinates are keyed by the location id.
     /** @var \Drupal\hpc_api\ApiObjects\Location[] $location_coordinates */
-    $location_coordinates = $country ? $locations_query->getCountryLocations($country) : [];
+    $location_coordinates = $country ? $locations_query->getCountryLocations($country, $max_level) : [];
 
     foreach ($locations as $location_key => $location) {
       $locations[$location_key]->country_id = $country->id;

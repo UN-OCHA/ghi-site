@@ -866,7 +866,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       $country = (object) [
         'id' => $country_id,
       ];
-      $max_admin_level = $plan_object->field_max_admin_level->value;
+      $max_admin_level = $plan_object->getMaxAdminLevel();
       /** @var \Drupal\hpc_api\Plugin\EndpointQuery\LocationsQuery $locations_query */
       $locations_query = $this->getQueryHandler('locations');
       $locations = $locations_query->getCountryLocations($country, $max_admin_level);
