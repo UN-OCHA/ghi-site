@@ -245,7 +245,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $configured_reporting_periods = $this->getConfiguredReportingPeriods();
 
     $disaggregated_data = $attachment->getDisaggregatedData($reporting_period, TRUE);
-
     foreach ($disaggregated_data as $metric_index => $metric_item) {
       if (empty($metric_item['locations'])) {
         continue;
@@ -693,112 +692,66 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    * Prepare the data for full metric item, that includes locations and modals.
    */
   private function prepareMetricItemMapData($metric_index, $metric_item, $decimal_format, $reporting_period = NULL) {
-    $metric_label = $this->getMetricLabel($metric_index);
-    $unit_type = $metric_item['unit_type'];
-    $monitoring_period_rendered = $reporting_period ? ThemeHelper::render([
-      '#theme' => 'hpc_reporting_period',
-      '#reporting_period' => $reporting_period,
-      '#format_string' => 'Monitoring period #@period_number<br>@date_range',
-    ], FALSE) : NULL;
-
     $locations = $metric_item['locations'];
-    $location_data = array_map(function ($location) {
-      return $location['map_data'];
-    }, $locations);
-    $location_data = array_filter($location_data);
 
     // Foreach location, calculate a radius factor that will be used to draw
     // the map circles.
     $total_values = array_map(function ($item) {
       return $item['total'];
-    }, $locations);
+    }, $metric_item['locations']);
 
     // Set the min and max weighing factors for the radius.
     $radius_factor_max = 40;
     $radius_factor_min = 1;
 
+    $metric_label = $this->getMetricLabel($metric_index);
+
+    $location_data = [];
     $modal_contents = [];
-    foreach ($location_data as $key => $location) {
+
+    foreach ($locations as $key => $location) {
+      if (empty($location['map_data'])) {
+        continue;
+      }
+      $location_data[$key] = $location['map_data'];
       $total_value = !empty($location['total']) ? $location['total'] : 0;
       $radius_factor = $total_value > 0 ? ceil($radius_factor_max / max($total_values) * $total_value) : $radius_factor_min;
       $location_data[$key]['radius_factor'] = $radius_factor;
 
-      // Add information about the monitoring period for map cards that
-      // represent measurements.
-      $add_monitoring_period = $metric_item['is_measurement'] && $monitoring_period_rendered ? $monitoring_period_rendered : NULL;
+      $location['categories'] = array_filter($location['categories'], function ($category) {
+        return $category['data'] !== NULL;
+      });
+      // The rendering is fully donw in the client, to save execution time on
+      // plans with a huge number of locations.
+      // See Drupal.hpc_map.planModalContent().
+      $modal_contents[(string) $location['id']] = [
+        'location_id' => $location['id'],
+        'title' => $location['name'],
+        'admin_level' => $location['map_data']['admin_level'],
+        'pcode' => $location['map_data']['pcode'],
+        'total' => $location['total'],
+        'metric_label' => $metric_label,
+        // The categories key is what makes this renderable in the client by
+        // map.js.
+        'categories' => array_map(function ($category) {
+          return (object) [
+            'name' => $category['name'],
+            'value' => $category['data'],
+          ];
+        }, $location['categories']),
 
-      // Now prepare the modal content.
-      $modal_content = $this->prepareModalContentCircle($metric_item['locations'][$key], $metric_label, $unit_type, $decimal_format, $add_monitoring_period);
-
-      // And add it to the other ones.
-      $modal_contents[(string) $location['location_id']] = $modal_content;
+      ];
     }
+
     return [
       'location_data' => $location_data,
       'modal_contents' => $modal_contents,
+      'monitoring_period' => $reporting_period && $metric_item['is_measurement'] ? ThemeHelper::render([
+        '#theme' => 'hpc_reporting_period',
+        '#reporting_period' => $reporting_period,
+        '#format_string' => 'Monitoring period #@period_number<br>@date_range',
+      ], FALSE) : NULL,
     ];
-  }
-
-  /**
-   * Prepare the content for a plan modal window showing disaggregated data.
-   */
-  private function prepareModalContentCircle($location, $metric_label, $unit_type, $decimal_format, $monitoring_period_rendered = NULL) {
-    $modal_content = [
-      'location_id' => $location['id'],
-      'title' => $location['name'],
-      'admin_level' => $location['map_data']['admin_level'],
-      'pcode' => $location['map_data']['pcode'],
-    ];
-
-    $unit_defaults = [
-      'amount' => [
-        '#scale' => 'full',
-      ],
-    ];
-
-    // Build the table.
-    $header = [];
-    $rows = [];
-
-    foreach ($location['categories'] as $category) {
-      $row = [
-        ucfirst($category['name']),
-        ThemeHelper::render([
-          '#theme' => 'hpc_autoformat_value',
-          '#value' => $category['data'],
-          '#unit_type' => $unit_type,
-          '#unit_defaults' => $unit_defaults,
-          '#decimal_format' => $decimal_format,
-        ]),
-      ];
-      $rows[] = $row;
-    }
-
-    // The last part of the data is the totals. As we want that to show up on
-    // the top of the modal, we build this here and then add it to the
-    // beginning of the rows array.
-    $total_value = $location['total'];
-    $total_for_location = [
-      $this->t('Total @property_name', [
-        '@property_name' => strtolower($metric_label),
-      ]),
-      CommonHelper::renderValue($total_value, 'value', 'hpc_autoformat_value', [
-        'unit_type' => 'amount',
-        'unit_defaults' => $unit_defaults,
-        'decimal_format' => $decimal_format,
-      ]),
-    ];
-    array_unshift($rows, $total_for_location);
-
-    // Now build everything together so that the client javascript can theme it
-    // into a table and add the whole to the modal content list.
-    $modal_content['table_data'] = [
-      'header' => $header,
-      'rows' => $rows,
-    ];
-    $modal_content['total_value'] = $total_value;
-    $modal_content['monitoring_period'] = $monitoring_period_rendered;
-    return $modal_content;
   }
 
   /**
@@ -1221,22 +1174,26 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    *   An attachment object.
    */
   private function getDefaultAttachment() {
-    $conf = $this->getBlockConfig();
-    $attachment_ids = $conf['attachments']['entity_attachments']['attachments']['attachment_id'] ?? NULL;
-    $attachment_id = $conf['map']['common']['default_attachment'] ?? ($attachment_ids ? reset($attachment_ids) : NULL);
-    if (!$attachment_id) {
-      return NULL;
+    $default_attachment = &drupal_static(__FUNCTION__, NULL);
+    if (!$default_attachment) {
+      $conf = $this->getBlockConfig();
+      $attachment_ids = $conf['attachments']['entity_attachments']['attachments']['attachment_id'] ?? NULL;
+      $attachment_id = $conf['map']['common']['default_attachment'] ?? ($attachment_ids ? reset($attachment_ids) : NULL);
+      if (!$attachment_id) {
+        return NULL;
+      }
+      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
+      $query = $this->getQueryHandler('attachment');
+      $attachment = $query->getAttachment($attachment_id, TRUE);
+      if (!$attachment || !$attachment instanceof DataAttachment) {
+        return NULL;
+      }
+      if ($attachment->getPlanId() != $this->getCurrentPlanId()) {
+        return NULL;
+      }
+      $default_attachment = $attachment;
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
-    $query = $this->getQueryHandler('attachment');
-    $attachment = $query->getAttachment($attachment_id, TRUE);
-    if (!$attachment || !$attachment instanceof DataAttachment) {
-      return NULL;
-    }
-    if ($attachment->getPlanId() != $this->getCurrentPlanId()) {
-      return NULL;
-    }
-    return $attachment;
+    return $default_attachment;
   }
 
   /**

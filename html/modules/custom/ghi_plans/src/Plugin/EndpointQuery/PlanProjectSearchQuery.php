@@ -248,12 +248,14 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
       'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
       'filter_unpublished' => $filter_unpublished ? 'true' : 'false',
     ]));
-    if ($projects = $this->cache($cache_key)) {
+    $projects = $this->cache($cache_key);
+    if (is_array($projects)) {
       return $projects;
     }
 
     $data = $this->getData();
     if (empty($data) || !is_object($data)) {
+      $this->cache($cache_key, []);
       return [];
     }
 

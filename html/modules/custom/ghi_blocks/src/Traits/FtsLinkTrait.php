@@ -25,7 +25,7 @@ trait FtsLinkTrait {
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
    *   A node object that represents the current context.
    *
-   * @return string
+   * @return array
    *   A fully build HTML link.
    */
   public static function buildFtsLink($label, Plan $plan, $type, BaseObjectInterface $base_object = NULL) {

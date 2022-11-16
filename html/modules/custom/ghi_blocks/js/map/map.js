@@ -744,6 +744,9 @@
   // Focus a location. Wrapper function that hands over to the actual map
   // implementation class.
   Drupal.hpc_map.focusLocation = function(element, state, focus_state) {
+    if (!element) {
+      return;
+    }
     focus_state = typeof focus_state == 'undefined' ? 1 : focus_state;
     let contained_element = element.nodeName == 'use' ? Drupal.hpc_map.getElementFromUseElement(element) : element;
     let object = Drupal.hpc_map.getLocationObjectFromContainedElement(contained_element);
@@ -1142,7 +1145,8 @@
       // The new tab has no data for the currently active location.
       return;
     }
-    var monitoring_period = location_data.monitoring_period ? ('<div class="monitoring-period">' + location_data.monitoring_period + '</div>') : '';
+    var monitoring_period = tab_data.monitoring_period ? ('<div class="monitoring-period">' + tab_data.monitoring_period + '</div>') : '';
+    monitoring_period = location_data.monitoring_period ? ('<div class="monitoring-period">' + location_data.monitoring_period + '</div>') : '';
 
     // Get previous and next items.
     // First clone the locations list.
@@ -1190,20 +1194,41 @@
     var tab_data = state.tab_data;
     var location_id = parseInt(d.location_id);
 
+    var base_data = null;
     if (state.variant_id != null && Drupal.hpc_map.dataHasVariant(tab_data, state.variant_id)) {
-      modal_content = tab_data.variants[state.variant_id].modal_contents[location_id];
+      base_data = tab_data.variants[state.variant_id];
     }
     else if (typeof tab_data.modal_contents[location_id] != 'undefined') {
-      var modal_content = tab_data.modal_contents[location_id];
+      base_data = tab_data;
     }
+    if (!base_data) {
+      return false;
+    }
+    let modal_content = base_data.modal_contents[location_id];
     if (typeof modal_content == 'undefined') {
       return false;
     }
     if (typeof modal_content.table_data != 'undefined') {
+      // Table header and rows are prerendered.
       var table_data = modal_content.table_data;
       return Drupal.theme('table', table_data.header, table_data.rows, {'classes': 'plan-attachment-modal-table'});
     }
+    if (typeof modal_content.categories != 'undefined') {
+      // Categories need to be rendered as a table here.
+      var table_rows = [
+        [Drupal.t('Total !metric_name', {'!metric_name': modal_content.metric_label}), Drupal.theme('amount', modal_content.total)],
+      ];
+      for (cat in modal_content.categories) {
+        category = modal_content.categories[cat];
+        table_rows.push([
+          category.name,
+          Drupal.theme('amount', category.value),
+        ]);
+      }
+      return Drupal.theme('table', [], table_rows, {'classes': 'plan-attachment-modal-table'});
+    }
     if (typeof modal_content.html != 'undefined') {
+      // Full html of the modal is already prepared.
       return modal_content.html;
     }
   }
