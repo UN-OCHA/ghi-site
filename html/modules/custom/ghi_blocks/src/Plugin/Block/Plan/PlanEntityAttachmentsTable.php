@@ -19,7 +19,6 @@ use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
-use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\node\NodeInterface;
@@ -317,7 +316,8 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
         $entity_ids = array_merge($entity_ids, array_keys($grouped_entity));
       }
     }
-    $entity_id = $this->requestStack->getCurrentRequest()->request->get('entity_id');
+    $conf = $this->getBlockConfig();
+    $entity_id = $this->requestStack->getCurrentRequest()->request->get('entity_id') ?? $conf['display']['default_entity'];
     if ($entity_id && in_array($entity_id, $entity_ids)) {
       return $entity_id;
     }
@@ -452,20 +452,26 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     $entity_options = [];
     foreach ($entities as $entity) {
       if ($entity instanceof PlanEntity) {
-        if ($parent_id = $entity->getMainLevelParentId()) {
-          $parent_entity = PlanEntityHelper::getPlanEntity($parent_id);
-          $parent_entity_name = $parent_entity->getEntityName();
-          $group_name = $parent_entity->getGroupName();
-          $entity_options[$group_name] = $entity_options[$group_name] ?? [];
-          $entity_options[$group_name][$parent_entity->id()] = $parent_entity_name;
-          ksort($entity_options[$group_name]);
-        }
-        else {
-          $group_name = $entity->getGroupName();
-          $entity_options[$group_name] = $entity_options[$group_name] ?? [];
-          $entity_options[$group_name][$entity->id()] = $entity->getEntityName();
-          ksort($entity_options[$group_name]);
-        }
+        // @codingStandardsIgnoreStart
+        // if ($parent_id = $entity->getMainLevelParentId()) {
+        //   $parent_entity = PlanEntityHelper::getPlanEntity($parent_id);
+        //   $parent_entity_name = $parent_entity->getEntityName();
+        //   $group_name = $parent_entity->getGroupName();
+        //   $entity_options[$group_name] = $entity_options[$group_name] ?? [];
+        //   $entity_options[$group_name][$parent_entity->id()] = $parent_entity_name;
+        //   ksort($entity_options[$group_name]);
+        // }
+        // else {
+        //   $group_name = $entity->getGroupName();
+        //   $entity_options[$group_name] = $entity_options[$group_name] ?? [];
+        //   $entity_options[$group_name][$entity->id()] = $entity->getEntityName();
+        //   ksort($entity_options[$group_name]);
+        // }
+        // @codingStandardsIgnoreEnd
+        $group_name = $entity->getGroupName();
+        $entity_options[$group_name] = $entity_options[$group_name] ?? [];
+        $entity_options[$group_name][$entity->id()] = $entity->getEntityName();
+        ksort($entity_options[$group_name]);
       }
       else {
         $entity_name = $entity->getEntityName();
@@ -498,14 +504,15 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
   private function getEntitySwitcher() {
     // Get the attachments and configured columns.
     $entity_options = $this->getCurrentEntityOptionsGrouped();
-    $entity_description = $this->getCurrentEntity()->description ?? NULL;
+    $current_entity = $this->getCurrentEntity();
+    $entity_description = $current_entity?->description ?? NULL;
     return [
       '#type' => 'container',
       [
         '#theme' => 'ajax_switcher',
         '#element_key' => 'entity_id',
         '#options' => $entity_options,
-        '#default_value' => $this->getCurrentEntityId(),
+        '#default_value' => $current_entity?->id(),
         '#wrapper_id' => Html::getId('block-' . $this->getUuid()),
         '#plugin_id' => $this->getPluginId(),
         '#block_uuid' => $this->getUuid(),
