@@ -428,7 +428,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
   /**
    * Get the entities from the current set of attachments.
    *
-   * @return array
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
    *   An array of entity objects keyed by the entity id.
    */
   private function getCurrentEntities() {
@@ -438,6 +438,10 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       $entity = $attachment->getSourceEntity();
       $entities[$entity->id()] = $entity;
     }
+    // Sort the entities.
+    uasort($entities, function ($_a, $_b) {
+      return $_a->sort_key - $_b->sort_key;
+    });
     return $entities;
   }
 
