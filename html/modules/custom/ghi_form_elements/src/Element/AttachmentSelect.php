@@ -232,9 +232,11 @@ class AttachmentSelect extends FormElement {
         'type' => $attachment->type,
         'prototype' => $attachment->prototype->name,
         'description' => $attachment->description,
+        'sort_key' => $attachment->getSourceEntity()?->sort_key,
       ];
     }
     ArrayHelper::sortArrayByStringKey($attachment_options, 'composed_reference');
+    ArrayHelper::sortArrayByStringKey($attachment_options, 'sort_key');
 
     // Either show a select with the available options for the entity type, or
     // set a preset value that should come from $element['#entity_type'].
