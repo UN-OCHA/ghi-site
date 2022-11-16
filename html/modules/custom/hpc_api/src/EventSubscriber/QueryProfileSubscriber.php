@@ -62,16 +62,9 @@ class QueryProfileSubscriber implements EventSubscriberInterface {
     if (!$this->debugLogger || !is_object($this->debugLogger) || !method_exists($this->debugLogger, 'toFile')) {
       return NULL;
     }
-    $profile_summary = ProfileHelper::profileSummary();
+    $profile_summary = ProfileHelper::profileSummaryFormatted();
     if (!empty($profile_summary)) {
-      $summary = [];
-      uasort($profile_summary, function ($_a, $_b) {
-        return $_b['memory_usage'] - $_a['memory_usage'];
-      });
-      foreach ($profile_summary as $key => $profile_item) {
-        $summary[] = sprintf('%10s %8.4f %s', (string) format_size($profile_item['memory_usage']), $profile_item['duration'], $key);
-      }
-      $this->debugLogger->toFile($summary);
+      $this->debugLogger->toFile($profile_summary);
     }
   }
 

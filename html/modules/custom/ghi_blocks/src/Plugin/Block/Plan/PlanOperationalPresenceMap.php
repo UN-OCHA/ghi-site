@@ -204,6 +204,16 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       return NULL;
     }
 
+    $fts_link = NULL;
+    if ($selected_view == 'project' || $selected_view == 'organization') {
+      $data_page = $selected_view == 'project' ? 'projects' : 'recipients';
+      $link_title = $this->t('For more details, view on <img src="@logo_url" />', [
+        '@logo_url' => ThemeHelper::getUriToFtsIcon(),
+      ]);
+      $fts_link_build = self::buildFtsLink($link_title, $this->getCurrentPlanObject(), $data_page, $this->getCurrentBaseObject());
+      $fts_link = ThemeHelper::render($fts_link_build, FALSE);
+    }
+
     // Process the GEOJSON files and add in the organization counts.
     foreach ($locations as $_location) {
       $geo_data = $_location->getGeoJson();
@@ -220,7 +230,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       $geo_data->properties->object_count = count($_objects);
 
       $location_data->object_count = count($_objects);
-      $location_data->modal_content = $this->prepareModalContent($_location, $_objects, $selected_view);
+      $location_data->modal_content = $this->prepareModalContent($_location, $_objects, $selected_view, $fts_link);
       $location_data->geojson = json_encode($geo_data);
 
       $map_data['locations'][] = clone $location_data;
@@ -366,7 +376,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
   /**
    * Prepare the content for the modal screens.
    */
-  private function prepareModalContent($location, $objects, $selected_view) {
+  private function prepareModalContent($location, $objects, $selected_view, $fts_link) {
     if (empty($objects)) {
       $empty_map = [
         'organization' => $this->t('There are no organizations in this area'),
@@ -485,15 +495,6 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       }
     }
 
-    $fts_link = NULL;
-    if (!empty($objects) && ($selected_view == 'project' || $selected_view == 'organization')) {
-      $data_page = $selected_view == 'project' ? 'projects' : 'recipients';
-      $link_title = $this->t('For more details, view on <img src="@logo_url" />', [
-        '@logo_url' => ThemeHelper::getUriToFtsIcon(),
-      ]);
-      $fts_link = self::buildFtsLink($link_title, $this->getCurrentPlanObject(), $data_page, $this->getCurrentBaseObject());
-    }
-
     $object_count_label_map = [
       'organization' => $this->t('Organizations: @count', ['@count' => count($objects)]),
       'cluster' => $this->t('@type_label: @count', [
@@ -512,7 +513,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
         '@admin_level' => $location->admin_level,
       ]),
       'title' => $location->location_name,
-      'content' => ThemeHelper::render($fts_link, FALSE) . $content,
+      'content' => (!empty($objects) ? $fts_link : NULL) . $content,
       'object_count_label' => $object_count_label_map[$selected_view],
     ];
     return $modal_content;
@@ -866,7 +867,8 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       $country = (object) [
         'id' => $country_id,
       ];
-      $max_admin_level = $plan_object->getMaxAdminLevel();
+      $max_admin_level = max($plan_object->getMaxAdminLevel(), 3);
+
       /** @var \Drupal\hpc_api\Plugin\EndpointQuery\LocationsQuery $locations_query */
       $locations_query = $this->getQueryHandler('locations');
       $locations = $locations_query->getCountryLocations($country, $max_admin_level);

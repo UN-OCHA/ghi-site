@@ -44,6 +44,24 @@ class ProfileHelper {
   }
 
   /**
+   * Get a formatted profile summary.
+   *
+   * @return array
+   *   An array with one item per started profile.
+   */
+  public static function profileSummaryFormatted() {
+    $profile_summary = self::profile();
+    $summary = [];
+    uasort($profile_summary, function ($_a, $_b) {
+      return $_b['memory_usage'] - $_a['memory_usage'];
+    });
+    foreach ($profile_summary as $key => $profile_item) {
+      $summary[] = sprintf('%10s %8.4f %s', (string) format_size($profile_item['memory_usage']), $profile_item['duration'], $key);
+    }
+    return $summary;
+  }
+
+  /**
    * Profile the given key.
    *
    * @param string $key

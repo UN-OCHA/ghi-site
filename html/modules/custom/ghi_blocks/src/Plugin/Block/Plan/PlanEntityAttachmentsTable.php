@@ -734,21 +734,22 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     $entities = [];
     foreach ($attachments as $attachment) {
       $source_entity = $attachment->getSourceEntity();
-      $entity_name = $source_entity->getEntityName();
-      if (!array_key_exists($entity_name, $entities)) {
-        $entities[$entity_name] = [];
-      }
-      $entities[$entity_name][] = $attachment;
+      $entity_id = $source_entity->id();
+      $entities[$entity_id] = $entities[$entity_id] ?? [
+        'entity' => $source_entity,
+        'attachments' => [],
+      ];
+      $entities[$entity_id]['attachments'][] = $attachment;
     }
-    uksort($entities, function ($name_a, $name_b) {
-      return strnatcmp($name_a, $name_b);
+    uasort($entities, function ($_a, $_b) {
+      return $_a['entity']->sort_key - $_b['entity']->sort_key;
     });
     $attachments = [];
-    foreach ($entities as &$entity_attachments) {
-      uasort($entity_attachments, function (DataAttachment $attachment_a, DataAttachment $attachment_b) {
+    foreach ($entities as $_entity) {
+      uasort($_entity['attachments'], function (DataAttachment $attachment_a, DataAttachment $attachment_b) {
         return strnatcmp($attachment_a->getTitle(), $attachment_b->getTitle());
       });
-      $attachments = array_merge($attachments, $entity_attachments);
+      $attachments = array_merge($attachments, $_entity['attachments']);
     }
   }
 

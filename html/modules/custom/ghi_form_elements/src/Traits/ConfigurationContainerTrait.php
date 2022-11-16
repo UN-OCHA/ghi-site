@@ -72,12 +72,16 @@ trait ConfigurationContainerTrait {
    *   The item type plugin.
    */
   public function getItemTypePluginForColumn(array $column, array $context = NULL) {
-    // Get an instance of the item type plugin for this column, set it's
-    // config and the context.
-    $allowed_items = $this->getAllowedItemTypes();
+    // Check if this item is allowed. Do that lazy as this is called often.
+    $allowed_items = &drupal_static($this->getUuid() . '_' . __FUNCTION__, NULL);
+    if ($allowed_items === NULL) {
+      $allowed_items = $this->getAllowedItemTypes();
+    }
     if ($context === NULL) {
       $context = $this->getBlockContext();
     }
+    // Get an instance of the item type plugin for this column, set it's
+    // config and the context.
     $item_type_plugin = $allowed_items[$column['item_type']]['item_type_base'] ?? $column['item_type'];
 
     /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */

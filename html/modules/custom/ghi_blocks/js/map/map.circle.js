@@ -31,6 +31,9 @@
 
   // Focus a location.
   Drupal.hpc_map_circle.focusLocation = function(element, state) {
+    if (!element) {
+      return;
+    }
     var map_state = Drupal.hpc_map.getMapStateFromContainedElement(element);
     let map_id = map_state.map_id;
     var proj = map_state.locationOverlay.projection,
@@ -180,6 +183,9 @@
     sel.selectAll('use').on('click', function(event) {
       // let element = $(event.target.href.baseVal);
       let element = Drupal.hpc_map.getElementFromUseElement($(event.target.href.baseVal));
+      if (!element) {
+        return;
+      }
       var state = Drupal.hpc_map.getMapStateFromContainedElement(element);
       let d = Drupal.hpc_map.getLocationObjectFromContainedElement(element);
       Drupal.hpc_map.showPopup(d, state);
@@ -187,11 +193,17 @@
     })
     .on("mouseover", function(event) {
       let element = Drupal.hpc_map.getElementFromUseElement($(event.target.href.baseVal));
+      if (!element) {
+        return;
+      }
       Drupal.hpc_map_circle.focusLocation(element, 1);
       $('#' + map_id + ' .map-circle-tooltip').css("display", "");
     })
     .on('mousemove', function(event) {
       let element = Drupal.hpc_map.getElementFromUseElement($(event.target.href.baseVal));
+      if (!element) {
+        return;
+      }
       var state = Drupal.hpc_map.getMapStateFromContainedElement(element);
       let d = Drupal.hpc_map.getLocationObjectFromContainedElement(element);
       var xPosition = event.layerX + 10;
@@ -200,6 +212,9 @@
     })
     .on('mouseout', function(event) {
       let element = Drupal.hpc_map.getElementFromUseElement($(event.target.href.baseVal));
+      if (!element) {
+        return;
+      }
       Drupal.hpc_map_circle.focusLocation(element, 0);
       $('#' + map_id + ' .map-circle-tooltip').css("display", "none");
     });
