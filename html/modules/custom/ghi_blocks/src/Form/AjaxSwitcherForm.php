@@ -29,8 +29,26 @@ class AjaxSwitcherForm extends FormBase {
       'plugin_id' => $plugin_id,
       'block_uuid' => $block_uuid,
     ]) : NULL;
-    if (!array_key_exists($default_value, $options)) {
-      $default_value = NULL;
+
+    // Sanity check.
+    if (!is_array(reset($options))) {
+      // Check a flat list of options.
+      if (!array_key_exists($default_value, $options)) {
+        $default_value = NULL;
+      }
+    }
+    else {
+      // Or check a grouped list of options.
+      $found = FALSE;
+      foreach ($options as $group) {
+        if (array_key_exists($default_value, $group)) {
+          $found = TRUE;
+          continue;
+        }
+      }
+      if (!$found) {
+        $default_value = NULL;
+      }
     }
 
     $form['#gin_lb_form'] = FALSE;
