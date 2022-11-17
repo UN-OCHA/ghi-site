@@ -32,6 +32,10 @@ trait FtsLinkTrait {
     $plan_id = $plan->getSourceId();
     $query_args = [];
 
+    $fts_link_title = t('Link to the @plan_name page in FTS', [
+      '@plan_name' => $plan->label(),
+    ]);
+
     if (!empty($base_object) && is_object($base_object) && $base_object instanceof GoverningEntity) {
       // Cluster context.
       $cluster_id = $base_object->getSourceId();
@@ -53,6 +57,7 @@ trait FtsLinkTrait {
       ]),
       '#attributes' => [
         'target' => '_blank',
+        'title' => $fts_link_title,
         'class' => [
           'fts-link',
           'fts-plan-link',
