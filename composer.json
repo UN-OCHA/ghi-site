@@ -192,7 +192,7 @@
           "DrupalProject\\composer\\ScriptHandler::removeUnnecessaryFiles",
           "git config core.hooksPath git-hooks || true"
       ],
-      "subtheme-prepare": "cd html/themes/custom/common_design_subtheme && npm install",
+      "subtheme-prepare": "cd html/themes/custom/common_design_subtheme && npm install --legacy-peer-deps",
       "subtheme-build": "cd html/themes/custom/common_design_subtheme && npm run sass:build",
       "subtheme-cleanup": "cd html/themes/custom/common_design_subtheme && rm -rf ./node_modules",
       "subtheme": [
