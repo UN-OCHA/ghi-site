@@ -115,6 +115,7 @@ module:
   viewsreference: 0
   warmer: 0
   warmer_cdn: 0
+  webp: 0
   wmbert: 0
   pathauto: 1
   content_translation: 10
