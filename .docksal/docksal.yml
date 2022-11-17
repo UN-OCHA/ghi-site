@@ -15,11 +15,11 @@ services:
       - 5900:5900
 
   snap:
-    image: public.ecr.aws/unocha/tools-snap-service:v3.0.1
+    image: public.ecr.aws/unocha/tools-snap-service:v3.0.4
     mem_limit: 4g
     cpu_quota: 200000
     shm_size: 1G
     ports:
       - "8444:8442"
     environment:
-      - ALLOWED_HOSTNAMES=ghi-site,docksal,ghi-site.docksal,ghi-site.docksal.site
+      - ALLOWED_HOSTNAMES=docksal.site

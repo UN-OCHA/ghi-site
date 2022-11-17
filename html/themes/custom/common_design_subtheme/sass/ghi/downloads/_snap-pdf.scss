@@ -1,0 +1,34 @@
+// Hide Header for Snap PNG for all users.
+.snap-png-header {
+  display: none;
+}
+
+// CSS for Snap Service PNG creation.
+html.snap--pdf {
+
+  // Common elements to hide.
+  #toolbar-administration,
+  .cd-global-header,
+  .cd-site-header__actions,
+  .layout-builder-ipe-actions,
+  .block-wrapper--downloadbutton,
+  .block-links {
+    display: none;
+  }
+
+  // Expandable tables.
+  .table-wrapper table.soft-limit + a.expand-table {
+    display: none !important;
+  }
+  .table-wrapper table.soft-limit tr {
+    display: table-row !important;
+  }
+
+  .table-wrapper .modal-link {
+    display: none !important;
+  }
+
+  .dialog-off-canvas-main-canvas > .cd-layout-container {
+    grid-template-rows: 80px auto 1fr auto;
+  }
+}

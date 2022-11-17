@@ -4,7 +4,6 @@ namespace Drupal\hpc_downloads\DownloadMethods;
 
 use Drupal\Core\Url;
 
-use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_downloads\Helpers\FileHelper;
 use Drupal\hpc_downloads\DownloadRecord;
 
@@ -84,38 +83,17 @@ class PDF {
    * Prepare default parameters.
    */
   private static function prepareOptions($options) {
-    // Prepare header and footer for Snap Service PDF.
-    $pdf_header = ThemeHelper::theme('hpc_download_pdf_header', [
-      '#title' => $options['title'],
-      '#caption' => $options['caption'],
-      '#link' => $options['url'],
-      '#date' => date('d-M-Y'),
-      '#site_name' => \Drupal::config('system.site')->get('name'),
-    ], TRUE, FALSE);
-
     // Prepare params to be passed to Snap Service.
     $query_params = array_filter([
       'url' => $options['url'],
       'output' => 'pdf',
-      'logo' => \Drupal::config('hpc_downloads.settings')->get('logo_pdf'),
-      'pdfHeader' => $pdf_header,
+      'pdfFormat' => 'A2',
+      'cookies' => json_encode(\Drupal::requestStack()->getCurrentRequest()->cookies),
+      'delay' => 2000,
+      'pdfMarginTop' => 2,
+      'pdfMarginBottom' => 2,
+      'pdfMarginUnit' => 'cm',
     ]);
-
-    // Set the pdfMarginTop based on header region length.
-    // This is no sure shot formula to calculate the value of pdfMarginTop and
-    // is all based on trial and error.
-    $header_length = strlen($options['caption']) + strlen($options['url']);
-    $query_params['pdfMarginTop'] = $header_length < 120 ? '160' : ($header_length < 200 ? '200' : '230');
-
-    if (!isset($options['exclude_pdf_footer'])) {
-      $pdf_footer = ThemeHelper::theme('hpc_download_pdf_footer', [
-        '#footer_text' => t('Compiled by OCHA on the basis of reports from donor and recipient organizations.'),
-      ], TRUE, FALSE);
-      $query_params += [
-        'pdfFooter' => $pdf_footer,
-      ];
-    }
-
     return $query_params;
   }
 

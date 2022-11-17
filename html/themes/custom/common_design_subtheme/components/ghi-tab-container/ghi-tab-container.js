@@ -20,8 +20,14 @@
         // Make the navigation work.
         $(container).find('.tab-navigation').on('click', function () {
           target = $(this).data('tab-index');
+          Drupal.GhiBlockSettings.setBlockSettingForElement(container, 'target', target);
           Drupal.TabContainer.updateContent(container, target);
         });
+
+        // See if stored settings are available.
+        if (target = Drupal.GhiBlockSettings.getBlockSettingForElement(container, 'target')) {
+          Drupal.TabContainer.updateContent(container, target);
+        }
       });
     }
   };

@@ -9,7 +9,7 @@ use Drupal\ghi_sections\Entity\Homepage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides a 'SectionSwitcher' block.
+ * Provides a 'SectionMetaData' block.
  *
  * @Block(
  *  id = "section_meta_data",

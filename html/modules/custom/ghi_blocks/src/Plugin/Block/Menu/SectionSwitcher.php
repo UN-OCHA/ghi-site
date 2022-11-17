@@ -64,7 +64,7 @@ class SectionSwitcher extends BlockBase implements ContainerFactoryPluginInterfa
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\ghi_subpages\Plugin\Block\SubpageNavigation $instance */
+    /** @var \Drupal\ghi_blocks\Plugin\Block\Menu\SectionSwitcher $instance */
     $instance = new static($configuration, $plugin_id, $plugin_definition);
     $instance->entityTypeManager = $container->get('entity_type.manager');
     $instance->entityFieldManager = $container->get('entity_field.manager');
