@@ -134,7 +134,7 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
    *   An render array for the modal link.
    */
   private function getModalLink() {
-    $plan_object = $this->getContextValue('plan_object');
+    $base_object = $this->getContextValue('base_object');
     $organization = $this->getContextValue('organization');
 
     $route_name = 'ghi_plans.modal_content.organization_projects';
@@ -142,7 +142,7 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
 
     $link_url = Url::fromRoute($route_name, [
       'organization_id' => $organization->id(),
-      'base_object' => $plan_object->id(),
+      'base_object' => $base_object->id(),
     ]);
     $link_url->setOptions([
       'attributes' => [
