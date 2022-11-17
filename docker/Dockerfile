@@ -13,7 +13,7 @@ RUN rm -rf ./vendor && \
     # @see https://github.com/drupal-composer/drupal-project/issues/282
     composer self-update --2 && \
     COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --prefer-dist && \
-    composer run subtheme || true && \
+    composer run subtheme && \
     COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --no-interaction --prefer-dist
 
 # Copy settings to default site location after creating it.
@@ -54,6 +54,7 @@ COPY --from=builder /srv/www/composer.json /srv/www/composer.json
 COPY --from=builder /srv/www/composer.patches.json /srv/www/composer.patches.json
 COPY --from=builder /srv/www/composer.lock /srv/www/composer.lock
 COPY --from=builder /srv/www/docker/etc/nginx/apps/drupal/fastcgi_drupal.conf /etc/nginx/apps/drupal/fastcgi_drupal.conf
+COPY --from=builder /srv/www/docker/etc/nginx/apps/drupal/drupal.conf /etc/nginx/apps/drupal/drupal.conf
 COPY --from=builder /srv/www/docker/99-elastic-apm-custom.ini /tmp/99-elastic-apm-custom.ini
 
 RUN  curl -L -o /tmp/apm-agent-php_1.6.1_all.apk https://github.com/elastic/apm-agent-php/releases/download/v1.6.1/apm-agent-php_1.6.1_all.apk && \
