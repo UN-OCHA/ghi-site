@@ -17,7 +17,7 @@ abstract class DownloadSourceBase implements HPCDownloadSourceInterface {
   /**
    * The plugin for a download source.
    *
-   * @var \Drupal\hpc_common\Plugin\HPCPluginInterface
+   * @var \Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface
    */
   protected $plugin;
 

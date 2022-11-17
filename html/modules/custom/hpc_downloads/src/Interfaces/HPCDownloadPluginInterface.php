@@ -44,4 +44,12 @@ interface HPCDownloadPluginInterface extends HPCPluginInterface {
    */
   public function getDownloadSource();
 
+  /**
+   * Get the cache contexts for a download.
+   *
+   * @return string[]
+   *   An array of cache context tokens, used to generate a cache ID.
+   */
+  public function getCacheContexts();
+
 }

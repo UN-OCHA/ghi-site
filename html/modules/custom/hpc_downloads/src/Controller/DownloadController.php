@@ -8,6 +8,7 @@ use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Http\RequestStack;
 use Drupal\Core\Url;
 use Drupal\Core\Render\Renderer;
 use Drupal\views\Views;
@@ -31,6 +32,7 @@ use Drupal\hpc_downloads\Ajax\DownloadStatusUpdateCommand;
 use Drupal\hpc_downloads\DownloadDialog\DownloadDialogPlugin;
 use Drupal\hpc_downloads\DownloadDialog\DownloadDialogViews;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadSourceInterface;
+use Drupal\hpc_downloads\NodeDownloadPlugin;
 
 /**
  * Download controller class.
@@ -66,13 +68,21 @@ class DownloadController extends ControllerBase {
   private $renderer;
 
   /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
    * Public constructor.
    */
-  public function __construct(DownloadDialogPlugin $plugin_dialog, DownloadDialogViews $views_dialog, Connection $database, Renderer $renderer) {
+  public function __construct(DownloadDialogPlugin $plugin_dialog, DownloadDialogViews $views_dialog, Connection $database, Renderer $renderer, RequestStack $request_stack) {
     $this->pluginDialog = $plugin_dialog;
     $this->viewsDialog = $views_dialog;
     $this->database = $database;
     $this->renderer = $renderer;
+    $this->requestStack = $request_stack;
   }
 
   /**
@@ -83,7 +93,8 @@ class DownloadController extends ControllerBase {
       $container->get('hpc_downloads.download_dialog_plugin'),
       $container->get('hpc_downloads.download_dialog_views'),
       $container->get('database'),
-      $container->get('renderer')
+      $container->get('renderer'),
+      $container->get('request_stack'),
     );
   }
 
@@ -186,7 +197,7 @@ class DownloadController extends ControllerBase {
       // Filter the query to get only the values that are related to facet
       // filter and table sorting.
       $query = array_filter($options['query'], function ($key) {
-        return in_array($key, ['f', 'order', 'sort']) ? TRUE : FALSE;
+        return in_array($key, ['f', 'order', 'sort', 'bs']) ? TRUE : FALSE;
       }, ARRAY_FILTER_USE_KEY);
 
       $uri = Url::fromUserInput($options['uri'], [
@@ -372,6 +383,12 @@ class DownloadController extends ControllerBase {
         $plugin_id = RequestHelper::getQueryArgument('plugin_id', $arguments);
         $block_uuid = RequestHelper::getQueryArgument('block_uuid', $arguments);
         $plugin = BlockHelper::getBlockInstance($uri, $plugin_id, $block_uuid);
+        break;
+
+      case 'node':
+        $nid = RequestHelper::getQueryArgument('node', $arguments);
+        $node = $this->entityTypeManager()->getStorage('node')->load($nid);
+        $plugin = new NodeDownloadPlugin($node, $this->requestStack);
         break;
 
       case 'views_executable':

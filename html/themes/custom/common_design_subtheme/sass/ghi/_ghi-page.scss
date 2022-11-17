@@ -28,10 +28,23 @@
   display: flex;
   gap: 1rem;
 
+  .block-wrapper--downloadbutton {
+    margin-left: auto;
+
+    a.link--download-dialog {
+      white-space: nowrap;
+    }
+  }
+
   .cd-page-title,
-  .block-section-switcher {
+  .block-section-switcher,
+  .block-download-button {
     margin: 2rem 0;
     padding: 0;
+
+    &.block-download-button {
+      margin-top: 2.2rem;
+    }
 
     &.has-subtitle {
       margin-bottom: 1rem;
