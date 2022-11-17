@@ -1,7 +1,15 @@
 uuid: c1b1374f-d03e-46c9-bc56-f9b6bc0bbcc3
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - webp
 name: webp
 label: WebP
-processors: {  }
+processors:
+  11b8b584-6365-4bf3-9c8e-fc88beb79515:
+    id: webp_webp
+    data:
+      quality: '100'
+    weight: 1
+    uuid: 11b8b584-6365-4bf3-9c8e-fc88beb79515
