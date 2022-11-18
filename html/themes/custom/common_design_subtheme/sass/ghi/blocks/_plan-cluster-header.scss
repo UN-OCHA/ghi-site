@@ -1,14 +1,14 @@
 .ghi-block-plan-cluster-header {
 
   .block-content {
-    padding: 1rem 0;
+    display: flex;
+    justify-content: space-between;
 
     .cluster-header-contacts {
-      float: right;
+      margin-top: -3rem;
       margin-bottom: 2rem;
-      margin-left: 2rem;
+      margin-left: auto;
       padding: 1rem 3rem;
-      background-color: var(--cd-default-background-color);
 
       h3 {
         margin-top: 0;
