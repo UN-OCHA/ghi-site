@@ -3,3 +3,5 @@ services:
     class: Drupal\hpc_downloads\DownloadDialog\DownloadDialogPlugin
   hpc_downloads.download_dialog_views:
     class: Drupal\hpc_downloads\DownloadDialog\DownloadDialogViews
+  hpc_downloads.download_dialog_node:
+    class: Drupal\hpc_downloads\DownloadDialog\DownloadDialogNode

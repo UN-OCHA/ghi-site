@@ -170,15 +170,17 @@ class LayoutBuilderBrowserEventSubscriber implements EventSubscriberInterface {
             'block_category' => 'admin',
           ]);
           $url->setOptions($url_options);
-          $form['block_categories']['admin']['links']['#links'][] = [
-            'title' => $this->t('Generic HTML'),
-            'url' => $url,
-            'attributes' => [
-              'class' => ['use-ajax', 'js-layout-builder-block-link'],
-              'data-dialog-type' => 'dialog',
-              'data-dialog-renderer' => 'off_canvas',
-            ],
-          ];
+          if ($this->currentUser->hasPermission('use inline blocks')) {
+            $form['block_categories']['admin']['links']['#links'][] = [
+              'title' => $this->t('Generic HTML'),
+              'url' => $url,
+              'attributes' => [
+                'class' => ['use-ajax', 'js-layout-builder-block-link'],
+                'data-dialog-type' => 'dialog',
+                'data-dialog-renderer' => 'off_canvas',
+              ],
+            ];
+          }
           $build['add_block']['#access'] = FALSE;
         }
 

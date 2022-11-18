@@ -91,8 +91,8 @@
         "drupal/gin": "^3.0-beta5",
         "drupal/gin_lb": "^1.0@beta",
         "drupal/gin_toolbar": "^1.0",
+        "drupal/google_tag": "^1.5",
         "drupal/imageapi_optimize": "^4.0",
-        "drupal/imageapi_optimize_webp": "^2.0@beta",
         "drupal/imagecache_external": "^3.0",
         "drupal/imagemagick": "^3.3",
         "drupal/layout_builder_ipe": "^1.0@alpha",
@@ -191,7 +191,7 @@
           "DrupalProject\\composer\\ScriptHandler::removeUnnecessaryFiles",
           "git config core.hooksPath git-hooks || true"
       ],
-      "subtheme-prepare": "cd html/themes/custom/common_design_subtheme && npm install",
+      "subtheme-prepare": "cd html/themes/custom/common_design_subtheme && npm install --legacy-peer-deps",
       "subtheme-build": "cd html/themes/custom/common_design_subtheme && npm run sass:build",
       "subtheme-cleanup": "cd html/themes/custom/common_design_subtheme && rm -rf ./node_modules",
       "subtheme": [

@@ -222,7 +222,7 @@
     amount: function(amount, include_prefix) {
       var num = parseInt(amount);
       var prefix = include_prefix ? ' USD' : '';
-      return number_format_si(number, decimals)(num, 0) + prefix;
+      return number_format(num, 0) + prefix;
     },
 
     percent: function(ratio) {
@@ -230,7 +230,7 @@
     },
   });
 
-  function number_format(number, decimals) {
+  number_format = function(number, decimals) {
     var decimal_format = 'point';
     let settings = drupalSettings;
     let plan_settings = settings.hasOwnProperty('plan_settings') ? settings.plan_settings : null;
@@ -258,9 +258,9 @@
         s[1] += new Array(prec - s[1].length + 1).join('0');
     }
     return s.join(dec);
-  }
+  };
 
-  function number_format_si(num, decimals) {
+  number_format_si = function(num, decimals) {
     var si = [
       { value: 1, symbol: "" },
       { value: 1E3, symbol: "k" },

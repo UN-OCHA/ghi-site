@@ -47,6 +47,8 @@ class PlanClusterHeader extends GHIBlockBase implements MultiStepFormBlockInterf
    */
   public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
     $attachment_id = $config->attachment_id ?? NULL;
+    $contacts = NULL;
+
     if (empty($attachment_id)) {
       /** @var \Drupal\ghi_plans\Entity\GoverningEntity $current_base_object */
       $current_base_object = BaseObjectHelper::getBaseObjectFromNode($node);
@@ -56,9 +58,13 @@ class PlanClusterHeader extends GHIBlockBase implements MultiStepFormBlockInterf
         $query->setPlaceholder('plan_id', $current_base_object->getPlan()->getSourceId());
         $attachments = $query->getWebContentTextAttachments($current_base_object) ?? [];
         $attachment_id = array_key_first($attachments);
+
+        // Also get the contacts.
+        $contacts = $query->getContactAttachments($current_base_object);
       }
     }
-    if (empty($attachment_id)) {
+
+    if (empty($attachment_id) && empty($contacts)) {
       throw new IncompleteElementConfigurationException('Incomplete configuration for "plan_cluster_header"');
     }
     return [
@@ -99,14 +105,6 @@ class PlanClusterHeader extends GHIBlockBase implements MultiStepFormBlockInterf
       '#type' => 'container',
     ];
 
-    if ($contacts) {
-      $build[] = [
-        '#theme' => 'plan_cluster_contacts',
-        '#contacts' => $contacts,
-        '#show_email' => $conf['display']['show_email'] ?? FALSE,
-      ];
-    }
-
     if ($attachment) {
       $build[] = [
         'attachment' => [
@@ -124,6 +122,15 @@ class PlanClusterHeader extends GHIBlockBase implements MultiStepFormBlockInterf
         ],
       ];
     }
+
+    if ($contacts) {
+      $build[] = [
+        '#theme' => 'plan_cluster_contacts',
+        '#contacts' => $contacts,
+        '#show_email' => $conf['display']['show_email'] ?? FALSE,
+      ];
+    }
+
     return $build;
   }
 

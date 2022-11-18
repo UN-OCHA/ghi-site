@@ -8,6 +8,11 @@ namespace Drupal\hpc_common\Plugin;
 interface HPCPluginInterface {
 
   /**
+   * Get the plugin label.
+   */
+  public function label();
+
+  /**
    * Get the URI of the current page.
    *
    * Can also be a different page then the current one (e.g. in download

@@ -2,15 +2,16 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
-use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
+use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
  * Abstraction for API data attachment objects.
@@ -110,7 +111,7 @@ class DataAttachment extends AttachmentBase {
     }
     if (empty($this->sourceEntity)) {
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $entityQuery */
-      $entityQuery = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('entity_query');
+      $entityQuery = $this->getEndpointQueryManager()->createInstance('entity_query');
       $this->sourceEntity = $entityQuery->getEntity($this->source->entity_type, $this->source->entity_id);
     }
     return $this->sourceEntity;
@@ -302,6 +303,11 @@ class DataAttachment extends AttachmentBase {
       'reporting_period' => $reporting_period,
       'filter_empty_locations' => intval($filter_empty_locations),
       'filter_empty_categories' => intval($filter_empty_categories),
+      // This hash is here to get a better chance of capturing differences of
+      // data for the same attachment id, like when the attachment data is
+      // retrieved by an anonymous user vs a logged-in user, where both might
+      // see different data, depending on their access level.
+      'hash' => md5(Yaml::encode(ArrayHelper::mapObjectsToString([$attachment_data]))),
     ]);
 
     $cached_data = $this->cache($cache_key);
@@ -463,11 +469,9 @@ class DataAttachment extends AttachmentBase {
       // Nothing to do.
       return;
     }
-    /** @var \Drupal\hpc_api\Query\EndpointQueryManager $endpoint_query_manager */
-    $endpoint_query_manager = \Drupal::service('plugin.manager.endpoint_query_manager');
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $attachment_query */
-    $attachment_query = $endpoint_query_manager->createInstance('attachment_query');
-    $attachment_data = $attachment_query->getAttachmentWithDisaggregatedData($this->id);
+    $attachment_query = $this->getEndpointQueryManager()->createInstance('attachment_query');
+    $attachment_data = $attachment_query->getAttachmentDataWithDisaggregatedData($this->id);
     $this->setRawData($attachment_data);
     $this->updateMap();
   }
@@ -538,10 +542,8 @@ class DataAttachment extends AttachmentBase {
    *   An object with 2 keys: 'id' and 'name'.
    */
   private function getMainCountryFromPlanId($plan_id) {
-    /** @var \Drupal\hpc_api\Query\EndpointQueryManager $endpoint_query_manager */
-    $endpoint_query_manager = \Drupal::service('plugin.manager.endpoint_query_manager');
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanLocationsQuery $plan_locations_query */
-    $plan_locations_query = $endpoint_query_manager->createInstance('plan_locations_query');
+    $plan_locations_query = $this->getEndpointQueryManager()->createInstance('plan_locations_query');
     $plan_locations_query->setPlaceholder('plan_id', $plan_id);
     $country = $plan_locations_query->getCountry();
     return (object) [
@@ -577,10 +579,8 @@ class DataAttachment extends AttachmentBase {
       return (!empty($location->id) || $ignore_missing_location_ids) && (($location->id ?? NULL) != $country->id);
     });
 
-    /** @var \Drupal\hpc_api\Query\EndpointQueryManager $endpoint_query_manager */
-    $endpoint_query_manager = \Drupal::service('plugin.manager.endpoint_query_manager');
     /** @var \Drupal\hpc_api\Plugin\EndpointQuery\LocationsQuery $locations_query */
-    $locations_query = $endpoint_query_manager->createInstance('locations_query');
+    $locations_query = $this->getEndpointQueryManager()->createInstance('locations_query');
 
     // See until which level of detail we should go for the attachment. This is
     // stored as a configuration option on the plan base object, so let's look
@@ -666,8 +666,9 @@ class DataAttachment extends AttachmentBase {
     }
     if (!property_exists($attachment, 'measurements')) {
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\MeasurementQuery $measurements_query */
-      $measurements_query = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('measurement_query');
-      $measurements = $measurements_query->getUnprocessedMeasurements($this);
+      $measurements_query = $this->getEndpointQueryManager()->createInstance('measurement_query');
+      $measurements_query->setPlaceholder('attachment_id', $attachment->id);
+      $measurements = $measurements_query->getUnprocessedMeasurements($this, TRUE);
       $attachment->measurements = $measurements;
       $this->setRawData($attachment);
       $this->updateMap();
@@ -795,9 +796,9 @@ class DataAttachment extends AttachmentBase {
    * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype
    *   An attachment prototype object.
    */
-  protected static function fetchPrototypeForAttachment($attachment) {
+  protected function fetchPrototypeForAttachment($attachment) {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query_handler */
-    $query_handler = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('attachment_prototype_query');
+    $query_handler = $this->getEndpointQueryManager()->createInstance('attachment_prototype_query');
     return $query_handler->getPrototypeByPlanAndId($attachment->planId, $attachment->attachmentPrototypeId);
   }
 
@@ -817,9 +818,19 @@ class DataAttachment extends AttachmentBase {
       return NULL;
     }
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanReportingPeriodsQuery $planReportingPeriodsQuery */
-    $planReportingPeriodsQuery = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('plan_reporting_periods_query');
+    $planReportingPeriodsQuery = $this->getEndpointQueryManager()->createInstance('plan_reporting_periods_query');
     $planReportingPeriodsQuery->setPlaceholder('plan_id', $attachment->planId);
     return $planReportingPeriodsQuery->getReportingPeriod($measurement->getReportingPeriodId());
+  }
+
+  /**
+   * Get the endpoint query manager.
+   *
+   * @return \Drupal\hpc_api\Query\EndpointQueryManager
+   *   The endpoint query manager service.
+   */
+  private static function getEndpointQueryManager() {
+    return \Drupal::service('plugin.manager.endpoint_query_manager');
   }
 
 }

@@ -25,12 +25,16 @@ trait FtsLinkTrait {
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
    *   A node object that represents the current context.
    *
-   * @return string
+   * @return array
    *   A fully build HTML link.
    */
   public static function buildFtsLink($label, Plan $plan, $type, BaseObjectInterface $base_object = NULL) {
     $plan_id = $plan->getSourceId();
     $query_args = [];
+
+    $fts_link_title = t('Link to the @plan_name page in FTS', [
+      '@plan_name' => $plan->label(),
+    ]);
 
     if (!empty($base_object) && is_object($base_object) && $base_object instanceof GoverningEntity) {
       // Cluster context.
@@ -53,6 +57,7 @@ trait FtsLinkTrait {
       ]),
       '#attributes' => [
         'target' => '_blank',
+        'title' => $fts_link_title,
         'class' => [
           'fts-link',
           'fts-plan-link',

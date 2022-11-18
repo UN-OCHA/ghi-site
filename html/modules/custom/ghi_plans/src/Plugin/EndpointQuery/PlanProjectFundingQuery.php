@@ -3,6 +3,8 @@
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\ghi_plans\ApiObjects\Organization;
+use Drupal\ghi_plans\ApiObjects\Project;
+use Drupal\ghi_plans\Traits\ProjectTrait;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 
 /**
@@ -18,6 +20,8 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  * )
  */
 class PlanProjectFundingQuery extends EndpointQueryBase {
+
+  use ProjectTrait;
 
   /**
    * This holds the processed data.
@@ -70,7 +74,7 @@ class PlanProjectFundingQuery extends EndpointQueryBase {
    *
    * @param string $property
    *   The property to retrieve.
-   * @param object $project
+   * @param \Drupal\ghi_plans\ApiObjects\Project $project
    *   The project for which to retrieve the property value.
    * @param mixed $default
    *   A default value.
@@ -78,7 +82,7 @@ class PlanProjectFundingQuery extends EndpointQueryBase {
    * @return mixed
    *   The retrieved property value or a default value.
    */
-  public function getPropertyForProject($property, $project, $default = 0) {
+  public function getPropertyForProject($property, Project $project, $default = 0) {
     if (empty($this->data)) {
       $this->data = $this->getData();
     }
@@ -95,13 +99,13 @@ class PlanProjectFundingQuery extends EndpointQueryBase {
    *   The property to retrieve.
    * @param object $organization
    *   The organizations for which to retrieve the sum of the property value.
-   * @param object $projects
+   * @param \Drupal\ghi_plans\ApiObjects\Project[] $projects
    *   The projects to which the organization can belong.
    *
    * @return mixed
    *   The retrieved property value sum or a default value.
    */
-  public function getSumForOrganization($property, $organization, $projects) {
+  public function getSumForOrganization($property, $organization, array $projects) {
     if (empty($this->data)) {
       $this->data = $this->getData();
     }
@@ -123,13 +127,13 @@ class PlanProjectFundingQuery extends EndpointQueryBase {
    *
    * @param object $organization
    *   The organizations for which to retrieve the sum of the property value.
-   * @param object $projects
+   * @param \Drupal\ghi_plans\ApiObjects\Project[] $projects
    *   The projects to which the organization can belong.
    *
    * @return mixed
    *   The retrieved property value sum or a default value.
    */
-  public function getFundingCoverageForOrganization($organization, $projects) {
+  public function getFundingCoverageForOrganization($organization, array $projects) {
     if (empty($this->data)) {
       $this->data = $this->getData();
     }
@@ -153,13 +157,13 @@ class PlanProjectFundingQuery extends EndpointQueryBase {
    *
    * @param object $organization
    *   The organizations for which to retrieve the sum of the property value.
-   * @param object $projects
+   * @param \Drupal\ghi_plans\ApiObjects\Project[] $projects
    *   The projects to which the organization can belong.
    *
    * @return mixed
    *   The retrieved property value sum or a default value.
    */
-  public function getRequirementsChangesForOrganization($organization, $projects) {
+  public function getRequirementsChangesForOrganization($organization, array $projects) {
     if (empty($this->data)) {
       $this->data = $this->getData();
     }
@@ -189,21 +193,15 @@ class PlanProjectFundingQuery extends EndpointQueryBase {
    *   The filtered projects array.
    */
   private function filterProjectsToOrganization(array $projects, Organization $organization) {
-    $filtered_projects = [];
-    foreach ($projects as $project) {
-      $project_organizations = $project->getOrganizations();
-      if (empty($project_organizations)) {
-        continue;
-      }
-      $organization_ids = array_map(function ($_organization) {
-        return $_organization->id;
-      }, $project_organizations);
-
-      if (in_array($organization->id, $organization_ids)) {
-        $filtered_projects[] = $project;
-      }
+    // The grouping is expensive, especially on plans with a high number of
+    // projects. So we better cache this.
+    // We assume here, that the projects array is the same for every invocation
+    // of this function. If that changes, this code must be updated.
+    $projects_by_organization = &drupal_static(static::class . '::' . __FUNCTION__, NULL);
+    if ($projects_by_organization === NULL) {
+      $projects_by_organization = $this->groupProjectsByOrganization($projects);
     }
-    return $filtered_projects;
+    return $projects_by_organization[$organization->id()] ?? NULL;
   }
 
 }

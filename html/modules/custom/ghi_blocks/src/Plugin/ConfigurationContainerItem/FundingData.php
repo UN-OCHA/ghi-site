@@ -176,14 +176,22 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getValue($data_type_key = NULL, $scale = NULL, $cluster_restrict = NULL) {
+    $data_type = $this->getDataType($data_type_key ?: $this->get('data_type'));
+    $property = $data_type['property'];
+
+    // Allow raw data to be passed in so that callers can take advantage of the
+    // formatting options of this plugin in getRenderArray, without the need to
+    // mock complete objects. Used for example for the funding and
+    // not-specified clusters in the GVE overview tables.
+    $raw_data = $this->getContextValue('raw_data');
+    if (is_object($raw_data) && property_exists($raw_data, $property)) {
+      return $raw_data->$property;
+    }
     /** @var \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface $entity */
     $entity = $this->getContextValue('entity');
     $plan_object = $this->getContextValue('plan_object');
     $base_object = $this->getContextValue('base_object');
     $cluster_context = $base_object && $base_object instanceof GoverningEntity ? $base_object : NULL;
-
-    $data_type = $this->getDataType($data_type_key ?: $this->get('data_type'));
-    $property = $data_type['property'];
     $cluster_restrict = $cluster_restrict ?: ($this->get('cluster_restrict') ?: NULL);
 
     $value = NULL;

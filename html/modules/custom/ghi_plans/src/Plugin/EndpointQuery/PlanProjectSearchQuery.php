@@ -6,6 +6,7 @@ use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\ApiObjects\Project;
 use Drupal\ghi_plans\Entity\GoverningEntity;
+use Drupal\ghi_plans\Traits\ProjectTrait;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
@@ -24,7 +25,7 @@ use Drupal\hpc_api\Traits\SimpleCacheTrait;
  *       "latest" = "true",
  *       "excludeFields" = "plans,workflowStatusOptions,locations,planEntityIds",
  *       "includeFields" = "locationIds",
- *       "limit" = "1000",
+ *       "limit" = "2000",
  *     }
  *   }
  * )
@@ -33,6 +34,7 @@ use Drupal\hpc_api\Traits\SimpleCacheTrait;
 class PlanProjectSearchQuery extends EndpointQueryBase {
 
   use SimpleCacheTrait;
+  use ProjectTrait;
 
   /**
    * A list of cluster ids to be used as filters.
@@ -189,7 +191,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
    *   The context base object.
    * @param \Drupal\ghi_plans\ApiObjects\Project[] $projects
-   *   An optonal array of projects from which the organizations should be
+   *   An optional array of projects from which the organizations should be
    *   extracted.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Organization[]
@@ -248,12 +250,14 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
       'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
       'filter_unpublished' => $filter_unpublished ? 'true' : 'false',
     ]));
-    if ($projects = $this->cache($cache_key)) {
+    $projects = $this->cache($cache_key);
+    if (is_array($projects)) {
       return $projects;
     }
 
     $data = $this->getData();
     if (empty($data) || !is_object($data)) {
+      $this->cache($cache_key, []);
       return [];
     }
 
@@ -290,7 +294,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
    *   The context base object.
    * @param array $projects
-   *   An optonal array of projects from which the clusters will be extracted.
+   *   An optional array of projects from which the clusters will be extracted.
    *
    * @return array[]
    *   An array of arrays. First level key is the organization id, second level
@@ -337,7 +341,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
    *   The context base object.
    * @param \Drupal\ghi_plans\ApiObjects\Project[] $projects
-   *   An optonal array of projects from which the clusters will be extracted.
+   *   An optional array of projects from which the clusters will be extracted.
    *
    * @return array[]
    *   An array of arrays. First level key is the organization id, second level
@@ -347,19 +351,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
     if (empty($projects)) {
       $projects = $this->getProjects($base_object);
     }
-    $organization_projects = [];
-    foreach ($projects as $project) {
-      $project_organizations = $project->getOrganizations();
-      if (empty($project_organizations)) {
-        continue;
-      }
-      foreach ($project_organizations as $organization) {
-        if (empty($organization_projects[$organization->id])) {
-          $organization_projects[$organization->id] = [];
-        }
-        $organization_projects[$organization->id][$project->id] = $project;
-      }
-    }
+    $organization_projects = $this->groupProjectsByOrganization($projects);
     return $organization_projects;
   }
 
@@ -369,7 +361,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
    *   The context base object.
    * @param array $projects
-   *   An optonal array of projects from which the clusters will be extracted.
+   *   An optional array of projects from which the clusters will be extracted.
    *
    * @return array[]
    *   An array of arrays. First level key is the location id, the value is an
