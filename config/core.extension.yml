@@ -14,6 +14,7 @@ module:
   breakpoint: 0
   cer: 0
   ckeditor: 0
+  ckeditor5: 0
   config: 0
   config_default_image: 0
   config_default_responsive_image: 0
@@ -55,6 +56,7 @@ module:
   hpc_api: 0
   hpc_common: 0
   hpc_downloads: 0
+  hpc_security: 0
   image: 0
   imageapi_optimize: 0
   imagecache_external: 0
@@ -94,6 +96,7 @@ module:
   rabbit_hole: 0
   responsive_image: 0
   rh_taxonomy: 0
+  seckit: 0
   settings_tray: 0
   smugmug_api: 0
   social_api: 0

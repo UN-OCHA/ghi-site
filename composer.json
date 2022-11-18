@@ -115,6 +115,7 @@
         "drupal/rabbit_hole": "^1.0@beta",
         "drupal/redirect": "^1.6",
         "drupal/redis": "^1.5",
+        "drupal/seckit": "^2.0",
         "drupal/smugmug_api": "1.x-dev",
         "drupal/social_auth_hid": "^2.6",
         "drupal/tippy": "^1.0",

@@ -1,0 +1,8 @@
+name: 'HPC Security'
+type: module
+description: 'Security features for HPC Drupal sites'
+core_version_requirement: ^8 || ^9
+package: 'HPC'
+
+dependencies:
+- seckit:seckit
