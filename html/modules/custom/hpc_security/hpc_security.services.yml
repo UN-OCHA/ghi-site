@@ -1,0 +1,13 @@
+services:
+  hpc_security.asset.resolver:
+    class: Drupal\hpc_security\Asset\HpcAssetResolver
+    decorates: asset.resolver
+    decoration_priority: 9
+    public: false
+    arguments: ['@hpc_security.asset.resolver.inner']
+  hpc_security.session_configuration:
+    class: Drupal\hpc_security\Session\HpcSessionConfiguration
+    decorates: session_configuration
+    decoration_priority: 9
+    public: false
+    arguments: ['@hpc_security.session_configuration.inner']

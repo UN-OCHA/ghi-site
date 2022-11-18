@@ -1,41 +1,33 @@
-uuid: f4920714-ca0f-402d-abb4-1c82cca0173e
+uuid: 15b3809c-0e70-40f1-9dfb-55c2a916e001
 langcode: en
 status: true
 dependencies:
   config:
     - filter.format.wysiwyg_text
   module:
-    - ckeditor
+    - ckeditor5
 format: wysiwyg_text
-editor: ckeditor
+editor: ckeditor5
 settings:
   toolbar:
-    rows:
-      -
-        -
-          name: Formatting
-          items:
-            - Bold
-            - Italic
-        -
-          name: Links
-          items:
-            - DrupalLink
-            - DrupalUnlink
-        -
-          name: Lists
-          items:
-            - BulletedList
-            - NumberedList
-        -
-          name: Media
-          items:
-            - Blockquote
-        -
-          name: Tools
-          items:
-            - Source
-  plugins: {  }
+    items:
+      - bold
+      - italic
+      - '|'
+      - link
+      - '|'
+      - bulletedList
+      - numberedList
+      - '|'
+      - blockQuote
+      - '|'
+      - sourceEditing
+  plugins:
+    ckeditor5_sourceEditing:
+      allowed_tags: {  }
+    ckeditor5_list:
+      reversed: true
+      startIndex: true
 image_upload:
   status: false
   scheme: public
