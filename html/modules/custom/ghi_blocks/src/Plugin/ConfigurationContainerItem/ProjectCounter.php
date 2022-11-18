@@ -20,8 +20,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides project based counter items for configuration containers.
  *
- * @todo This is still missing support for cluster filters.
- *
  * @ConfigurationContainerItem(
  *   id = "project_counter",
  *   label = @Translation("Project counter"),
