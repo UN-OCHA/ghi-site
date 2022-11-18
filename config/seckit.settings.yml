@@ -6,7 +6,7 @@ seckit_xss:
     vendor-prefix:
       x: false
       webkit: false
-    report-only: false
+    report-only: true
     default-src: '''none'''
     script-src: '''self'' ''unsafe-inline'' https://js-agent.newrelic.com https://static.addtoany.com browser-update.org/update.min.js https://bam.nr-data.net http://cdn.jsdelivr.net/npm/toastify-js https://unpkg.com/@popperjs/core@2 https://unpkg.com/tippy.js@6'
     object-src: '''none'''
