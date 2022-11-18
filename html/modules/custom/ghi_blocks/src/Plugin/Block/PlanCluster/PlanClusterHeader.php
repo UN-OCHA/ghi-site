@@ -99,14 +99,6 @@ class PlanClusterHeader extends GHIBlockBase implements MultiStepFormBlockInterf
       '#type' => 'container',
     ];
 
-    if ($contacts) {
-      $build[] = [
-        '#theme' => 'plan_cluster_contacts',
-        '#contacts' => $contacts,
-        '#show_email' => $conf['display']['show_email'] ?? FALSE,
-      ];
-    }
-
     if ($attachment) {
       $build[] = [
         'attachment' => [
@@ -124,6 +116,15 @@ class PlanClusterHeader extends GHIBlockBase implements MultiStepFormBlockInterf
         ],
       ];
     }
+
+    if ($contacts) {
+      $build[] = [
+        '#theme' => 'plan_cluster_contacts',
+        '#contacts' => $contacts,
+        '#show_email' => $conf['display']['show_email'] ?? FALSE,
+      ];
+    }
+
     return $build;
   }
 
