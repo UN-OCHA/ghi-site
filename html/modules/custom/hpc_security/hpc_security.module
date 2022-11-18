@@ -1,0 +1,284 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations and general purpose functions for HPC Security.
+ */
+
+use Drupal\Core\Render\Markup;
+use Drupal\Core\Site\Settings;
+use Drupal\hpc_security\Element\HpcHtmlPreRender;
+
+/**
+ * Implements hook_element_info_alter().
+ */
+function hpc_security_element_info_alter(array &$info) {
+  if (!hpc_security_sends_csp_header()) {
+    return;
+  }
+  array_unshift($info['html_tag']['#pre_render'], [
+    HpcHtmlPreRender::class,
+    'preRender',
+  ]);
+}
+
+/**
+ * Check if we can use nonces for the Content Security Policy.
+ *
+ * If we don't have a logged in user, we are most probably in a cached context
+ * and nonces can't be used because they have to vary with every request.
+ *
+ * @return bool
+ *   TRUE if nonces can be used, FALSE otherwhise.
+ */
+function hpc_security_can_use_nonce() {
+  return \Drupal::currentUser()->isAuthenticated();
+}
+
+/**
+ * Checks whether a CSP header should be send.
+ *
+ * @return bool
+ *   TRUE if Security Kit is configured to send a CSP header, FALSE otherwhise.
+ */
+function hpc_security_sends_csp_header() {
+  $config = \Drupal::config('seckit.settings');
+  return $config->get('seckit_xss.csp.checkbox');
+}
+
+/**
+ * Get a nounce for CSP validation.
+ *
+ * Only a single nounce will be created per request.
+ *
+ * @return string
+ *   A randomly generated nounce.
+ *
+ * @see hpc_security_seckit_options_alter()
+ * @see hpc_security_js_alter()
+ */
+function hpc_security_get_nonce() {
+  $nonce = &drupal_static(__FUNCTION__, NULL);
+  if ($nonce === NULL) {
+    $length = 32;
+
+    if (function_exists('random_bytes')) {
+      $nonce = bin2hex(random_bytes($length));
+    }
+    elseif (function_exists('mcrypt_create_iv')) {
+      $nonce = bin2hex(mcrypt_create_iv($length, MCRYPT_DEV_URANDOM));
+    }
+    elseif (function_exists('openssl_random_pseudo_bytes')) {
+      $nonce = bin2hex(openssl_random_pseudo_bytes($length));
+    }
+  }
+  return $nonce;
+}
+
+/**
+ * Get a hash for CSP validation.
+ *
+ * @param string $string
+ *   The URL of the file for which the hash should be generated.
+ *
+ * @return string|null
+ *   A randomly generated nounce.
+ */
+function hpc_security_get_hash($string) {
+  if (empty($string)) {
+    return NULL;
+  }
+  return 'sha256-' . base64_encode(hash('sha256', $string, TRUE));
+}
+
+/**
+ * Get a hash for CSP validation.
+ *
+ * @param string $url
+ *   The URL of the file for which the hash should be generated.
+ *
+ * @return string|null
+ *   A randomly generated nounce.
+ */
+function hpc_security_get_hash_from_url($url) {
+  global $base_url;
+  if (empty($url)) {
+    return NULL;
+  }
+  if (strpos($url, 'http') === 0 && strpos($url, $base_url) === FALSE) {
+    // Only do this for local files.
+    return NULL;
+  }
+  $url = str_replace($base_url, '', $url);
+  $url = str_replace(\Drupal::state()->get('system.css_js_query_string'), '', $url);
+  $url = trim($url, '/?');
+
+  if (!file_exists($url)) {
+    return NULL;
+  }
+  return 'sha256-' . base64_encode(hash_file('sha256', $url, TRUE));
+
+}
+
+/**
+ * Store generated hashes.
+ *
+ * @param string $hash
+ *   A hash value to store.
+ *
+ * @return void|array
+ *   Either void or the array with all hashes generated during the current
+ *   request.
+ */
+function hpc_security_hash_store($hash = NULL) {
+  $hashes = &drupal_static(__FUNCTION__, []);
+  if ($hash === NULL) {
+    return $hashes;
+  }
+  $hashes[] = $hash;
+}
+
+/**
+ * Implements hook_seckit_options_alter().
+ *
+ * Make some modifications to the CSP that are not supported by the seckit UI.
+ */
+function hpc_security_seckit_csp_directives_alter(&$directives) {
+
+  // Special rules for GA4, see:
+  // https://developers.google.com/tag-platform/tag-manager/web/csp.
+  $csp_google_script_src = [
+    '*.googletagmanager.com',
+    '*.google-analytics.com',
+  ];
+  $csp_google_img_src = [
+    '*.google-analytics.com',
+    '*.analytics.google.com',
+    '*.googletagmanager.com',
+    '*.g.doubleclick.net',
+  ];
+  $csp_google_connect_src = [
+    '*.google-analytics.com',
+    '*.analytics.google.com',
+    '*.googletagmanager.com',
+    '*.g.doubleclick.net',
+  ];
+
+  $google_supported_domains = file_get_contents('https://www.google.com/supported_domains');
+  if ($google_supported_domains !== FALSE) {
+    $google_tlds = explode("\n", trim($google_supported_domains));
+    foreach ($google_tlds as $google_tld) {
+      $csp_google_img_src[] = '*' . trim($google_tld);
+      $csp_google_connect_src[] = '*' . trim($google_tld);
+    }
+  }
+  $directives['script-src'] .= ' ' . implode(' ', $csp_google_script_src);
+  $directives['img-src'] .= ' ' . implode(' ', $csp_google_img_src);
+  $directives['connect-src'] .= ' ' . implode(' ', $csp_google_connect_src);
+
+  // Ridiculously simple check to see if CSP v3 is supported.
+  if (strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'chrome')) {
+
+    // Add CSP for inline scripts in element attributes, e.g. iframes for
+    // external widgets.
+    $directives['script-src-attr'] = "script-src-attr 'unsafe-inline'";
+
+    if (hpc_security_can_use_nonce()) {
+      // Add the nounce to the script-src rule. This cannot be cached.
+      $directives['script-src'] .= " 'nonce-" . hpc_security_get_nonce() . "' 'strict-dynamic'";
+    }
+    else {
+      // Add the hashes to the script-src rule. This can be cached.
+      $hashes = hpc_security_hash_store();
+      if (!empty($hashes)) {
+        $directives['script-src'] .= " '" . implode("' '", $hashes) . "'";
+      }
+    }
+  }
+  else {
+    // Add the hashes to the script-src rule. This can be cached.
+    $hashes = hpc_security_hash_store();
+    if (!empty($hashes)) {
+      $directives['script-src'] .= " '" . implode("' '", $hashes) . "'";
+    }
+  }
+
+  // Add a rule for the base-uri.
+  $directives['base-uri'] = "base-uri 'self'";
+}
+
+/**
+ * Implements hook_page_attachments().
+ */
+function hpc_security_page_attachments(array &$attachments) {
+  if (!Settings::get('hpc_security_newrelic_browser_snippet', FALSE)) {
+    return;
+  }
+  // Add self hosted new relic javascript snippet as copied from the new relic
+  // app settings page.
+  /** @var \Drupal\Core\Extension\ExtensionPathResolver $extension_resolver */
+  $extension_resolver = \Drupal::service('extension.path.resolver');
+  $new_relic_script = file_get_contents($extension_resolver->getPath('module', 'hpc_security') . '/assets/nr.js');
+  if (!$new_relic_script) {
+    return;
+  }
+  $attachments['#attached']['html_head'][] = [
+    [
+      '#type' => 'html_tag',
+      '#tag' => 'script',
+      '#attributes' => [
+        'type' => 'text/javascript',
+      ],
+      '#value' => Markup::create($new_relic_script),
+    ], 'new-relic-script',
+  ];
+}
+
+/**
+ * Implements hook_page_attachments_alter().
+ */
+function hpc_security_page_attachments_alter(array &$page) {
+  if (!hpc_security_sends_csp_header()) {
+    return;
+  }
+  foreach ($page['#attached']['html_head'] as &$attachment) {
+    if (hpc_security_can_use_nonce()) {
+      hpc_security_set_nonce($attachment[0]);
+    }
+    else {
+      hpc_security_add_hash($attachment[0]);
+    }
+  }
+}
+
+/**
+ * Set a nonce attribute on the given element.
+ */
+function hpc_security_set_nonce(array &$asset) {
+  if (!array_key_exists('#tag', $asset) || $asset['#tag'] != 'script') {
+    return;
+  }
+  $attributes = array_key_exists('#attributes', $asset) ? $asset['#attributes'] : [];
+  $attributes['nonce'] = hpc_security_get_nonce();
+  $asset['#attributes'] = $attributes;
+}
+
+/**
+ * Store a hash for the given element.
+ */
+function hpc_security_add_hash(array &$asset) {
+  if (!array_key_exists('#tag', $asset) || $asset['#tag'] != 'script') {
+    return;
+  }
+  $hash = NULL;
+  $attributes = array_key_exists('#attributes', $asset) ? $asset['#attributes'] : [];
+  if (!empty($attributes['src'])) {
+    $hash = hpc_security_get_hash_from_url($attributes['src']);
+  }
+  elseif (!empty($asset['#value'])) {
+    $hash = hpc_security_get_hash($asset['#value']);
+  }
+  if (!empty($hash)) {
+    hpc_security_hash_store($hash);
+  }
+}
