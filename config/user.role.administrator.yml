@@ -245,7 +245,6 @@ permissions:
   - 'update any media'
   - 'update content translations'
   - 'update media'
-  - 'use inline blocks'
   - 'use layout builder ipe on editable article node layout overrides'
   - 'use layout builder ipe on editable document node layout overrides'
   - 'use layout builder ipe on editable financials node layout overrides'
