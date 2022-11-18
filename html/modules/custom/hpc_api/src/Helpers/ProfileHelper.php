@@ -46,12 +46,18 @@ class ProfileHelper {
   /**
    * Get a formatted profile summary.
    *
+   * @param string $profile_key
+   *   The key to identify a specific profile item.
+   *
    * @return array
    *   An array with one item per started profile.
    */
-  public static function profileSummaryFormatted() {
+  public static function profileSummaryFormatted($profile_key = NULL) {
     $profile_summary = self::profile();
     $summary = [];
+    if ($profile_key !== NULL && array_key_exists($profile_key, $profile_summary)) {
+      $profile_summary = [$profile_key => $profile_summary[$profile_key]];
+    }
     uasort($profile_summary, function ($_a, $_b) {
       return $_b['memory_usage'] - $_a['memory_usage'];
     });
