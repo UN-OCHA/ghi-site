@@ -53,4 +53,23 @@
       font-size: var(--cd-font-size--tiny);
     }
   }
+
+  @include max-width("md") {
+    div.image-caption:not(:hover) {
+      width: 1rem;
+      height: 1rem;
+      padding: 0 !important;
+
+      & > * {
+        display: none;
+      }
+
+      &::after {
+        display: block;
+        content: "i";
+        text-align: center;
+        font-weight: 700;
+      }
+    }
+  }
 }
