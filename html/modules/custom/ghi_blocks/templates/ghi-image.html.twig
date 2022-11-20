@@ -1,8 +1,9 @@
-<div class="ghi-image-wrapper">
+<div class="ghi-image-wrapper" role="img" {% if caption and caption_id %}aria-describedby="{{ caption_id }}{% endif %}">
   {{ image }}
   {% if caption %}
     <div class="image-caption-wrapper">
-      <div class="image-caption">
+      <a class="expand-caption" tabindex="0"></a>
+      <div class="image-caption" id="{{ caption_id }}">
         {{ caption }}
       </div>
     </div>
