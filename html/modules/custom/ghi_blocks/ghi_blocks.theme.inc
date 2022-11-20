@@ -320,6 +320,8 @@ function ghi_blocks_preprocess_ghi_image(&$variables) {
       'title' => $variables['title'],
     ]),
   ];
+  $variables['id'] = Html::getUniqueId('ghi-image');
+  $variables['caption_id'] = Html::getUniqueId('ghi-image-caption');
 }
 
 /**
