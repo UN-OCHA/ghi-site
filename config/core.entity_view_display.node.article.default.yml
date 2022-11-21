@@ -31,23 +31,7 @@ third_party_settings:
         layout_settings:
           label: Content
           context_mapping: {  }
-        components:
-          33d3cddd-b317-4073-8145-ed12c4116ba8:
-            uuid: 33d3cddd-b317-4073-8145-ed12c4116ba8
-            region: content
-            configuration:
-              id: 'field_block:node:article:field_chapter'
-              label_display: '0'
-              context_mapping:
-                entity: layout_builder.entity
-              formatter:
-                type: string
-                label: above
-                settings:
-                  link_to_entity: false
-                third_party_settings: {  }
-            weight: 0
-            additional: {  }
+        components: {  }
         third_party_settings: {  }
   layout_builder_restrictions:
     allowed_block_categories:

@@ -378,6 +378,29 @@ function ghi_content_preprocess_page_title(&$variables) {
 }
 
 /**
+ * Implements hook_preprocess_node().
+ *
+ * Filter out structural tags from the article grid view.
+ */
+function ghi_content_preprocess_field__field_tags(&$variables) {
+  $view_mode = $variables['element']['#view_mode'] ?? NULL;
+  $node = $variables['element']['#object'] ?? NULL;
+  if ($node instanceof Article && $view_mode == 'grid') {
+    $structural_tags = $node->getStructuralTags();
+    $remove_cache_tags = array_map(function ($term) {
+      return 'taxonomy_term:' . $term->id();
+    }, $structural_tags);
+
+    $variables['items'] = array_values(array_filter($variables['items'], function ($item) use ($remove_cache_tags) {
+      if (empty($item['content']['#cache']) || empty($item['content']['#cache']['tags'])) {
+        return TRUE;
+      }
+      return count(array_intersect($item['content']['#cache']['tags'], $remove_cache_tags)) == 0;
+    }));
+  }
+}
+
+/**
  * Implements hook_preprocess_views_view_field().
  *
  * This is used to remove the section tags from the tags field in views that

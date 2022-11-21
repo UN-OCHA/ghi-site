@@ -8,6 +8,7 @@
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResultForbidden;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Template\Attribute;
@@ -174,6 +175,15 @@ function common_design_subtheme_preprocess_menu(&$variables) {
   if ($variables['menu_name'] == 'main') {
     // Mark items as using a mega menu.
     foreach ($variables['items'] as &$item) {
+      $menu_entity = $item['entity'] ?? NULL;
+      if ($menu_entity && $menu_entity instanceof FieldableEntityInterface) {
+        $has_right_border = $menu_entity->hasField('field_right_border') ? $menu_entity->get('field_right_border')->value : NULL;
+        if ($has_right_border) {
+          /** @var \Drupal\Core\Template\Attribute $attributes */
+          $attributes = $item['#item']['attributes'];
+          $attributes->addClass('right-border');
+        }
+      }
       $item['mega_menu'] = $item['content']['#view_mode'] == 'default';
     }
   }
