@@ -15,11 +15,6 @@
       }
 
       & > ul > li {
-        a,
-        span {
-          padding-top: 0;
-          padding-bottom: 0;
-        }
 
         & > span {
           opacity: 0.5;
@@ -68,7 +63,6 @@
                   span {
                     display: inline-block;
                     margin-bottom: 3px;
-                    padding: 0;
 
                     &:focus,
                     &:hover {
@@ -83,6 +77,14 @@
                     border-bottom: 1px solid var(--cd-primary-color);
                   }
                 }
+              }
+            }
+
+            .block-sections-by-term nav[role="navigation"] > ul li {
+
+              span,
+              a {
+                padding: 0;
               }
             }
           }
