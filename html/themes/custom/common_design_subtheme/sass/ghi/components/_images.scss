@@ -4,19 +4,24 @@
   div.image-caption-wrapper,
   div.image-credit-wrapper {
     position: absolute;
+    top: 0;
     right: 0;
-    bottom: 1rem;
+    bottom: 0;
     left: 0;
-    height: 1rem;
+    height: 100%;
     text-align: right;
     opacity: 0.9;
+
+    .link-carousel-wrapper & {
+      max-height: 568px;
+    }
   }
 
   div.image-caption-wrapper {
     div.image-caption {
       position: absolute;
       right: 1.9rem;
-      bottom: 1rem;
+      bottom: 2rem;
       display: inline-block;
       max-width: 400px;
       padding: 1rem 2rem;
@@ -33,25 +38,27 @@
 
       p {
         margin: 0;
+      }
 
-        .credits {
-          font-style: italic;
-        }
+      .credits {
+        font-style: italic;
       }
     }
 
-    @include max-width("md") {
+    // START: Duplicated code blocks, but I didn't see how to do this without.
+    // Always make the cpation collapsed on link caroussels.
+    .link-carousel-wrapper & {
       a.expand-caption {
         position: absolute;
         right: calc(1.9rem + 2px);
-        bottom: calc(1rem + 2px);
+        bottom: calc(2rem + 2px);
         display: inline-block;
-        width: 1rem;
-        height: 1rem;
+        width: 1.5rem;
+        height: 1.5rem;
         padding: 0 !important;
         background-color: var(--cd-white);
         font-size: var(--cd-font-size--small);
-        line-height: 1rem;
+        line-height: 1.5rem;
 
         &:focus,
         &:hover {
@@ -69,10 +76,52 @@
           font-weight: 700;
         }
       }
+      div.image-caption:hover {
+        display: inline-block;
+      }
       div.image-caption {
         display: none;
       }
     }
+
+    // REPEATING this for smaller screens.
+    @include max-width("md") {
+      a.expand-caption {
+        position: absolute;
+        right: calc(1.9rem + 2px);
+        bottom: calc(2rem + 2px);
+        display: inline-block;
+        width: 1.5rem;
+        height: 1.5rem;
+        padding: 0 !important;
+        background-color: var(--cd-white);
+        font-size: var(--cd-font-size--small);
+        line-height: 1.5rem;
+
+        &:focus,
+        &:hover {
+          background-color: var(--cd-primary-color);
+
+          & + .image-caption {
+            display: inline-block;
+          }
+        }
+
+        &::after {
+          display: block;
+          content: "i";
+          text-align: center;
+          font-weight: 700;
+        }
+      }
+      div.image-caption:hover {
+        display: inline-block;
+      }
+      div.image-caption {
+        display: none;
+      }
+    }
+    // END: Duplicated code blocks.
   }
 
   div.image-credit-wrapper {
@@ -82,7 +131,7 @@
     div.image-credit {
       position: absolute;
       right: 1.9rem;
-      bottom: 1rem;
+      bottom: 2rem;
       display: inline-block;
       padding: 0.1rem 0.5rem;
       color: var(--cd-white);

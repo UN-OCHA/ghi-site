@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
@@ -53,6 +54,34 @@ class CarouselItem extends ConfigurationContainerItemPluginBase {
    */
   public function getImage() {
     return File::load(reset($this->config['value']['image']));
+  }
+
+  /**
+   * Get the image credit.
+   *
+   * @return string
+   *   A credit for the image.
+   */
+  public function getImageCredit() {
+    return $this->config['value']['image_credit'] ?? NULL;
+  }
+
+  /**
+   * Get the image caption.
+   *
+   * @return string
+   *   A caption for the image.
+   */
+  public function getImageCaption() {
+    $credit = $this->getImageCredit();
+    $caption = $this->config['value']['image_caption'] ?? NULL;
+    if ($caption && $credit) {
+      return new FormattableMarkup('@text <span class="credits">@credits</span>', [
+        '@text' => $caption,
+        '@credits' => $credit,
+      ]);
+    }
+    return $caption ?? NULL;
   }
 
   /**
