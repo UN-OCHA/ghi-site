@@ -36,45 +36,52 @@
       &.cd-nav {
         position: unset;
 
-        ul.menu li.menu-item .menu-link-contentmain {
-          position: absolute;
-          z-index: 200;
-          left: 0;
-          width: 100%;
-          background-color: var(--cd-default-background-color);
+        ul.menu li.menu-item {
 
-          nav[role="navigation"] > ul {
-            flex-direction: column;
-            max-height: 450px;
-            margin: 2rem 0;
+          &:not(:last-child).right-border {
+            border-right: 1px solid var(--ghi-default-border-color);
+          }
 
-            & > li {
-              max-width: 180px;
+          .menu-link-contentmain {
+            position: absolute;
+            z-index: 200;
+            left: 0;
+            width: 100%;
+            background-color: var(--cd-default-background-color);
 
-              & > span {
-                padding: 0;
-              }
+            nav[role="navigation"] > ul {
+              flex-direction: column;
+              max-height: 450px;
+              margin: 2rem 0;
 
-              & > ul {
-                margin: 0.5rem 0 2rem 0;
+              & > li {
+                max-width: 180px;
 
-                a,
-                span {
-                  display: inline-block;
-                  margin-bottom: 3px;
+                & > span {
                   padding: 0;
-
-                  &:focus,
-                  &:hover {
-                    color: inherit;
-                    background: inherit;
-                  }
                 }
 
-                a:focus,
-                a:hover {
-                  margin-bottom: 2px;
-                  border-bottom: 1px solid var(--cd-primary-color);
+                & > ul {
+                  margin: 0.5rem 0 2rem 0;
+
+                  a,
+                  span {
+                    display: inline-block;
+                    margin-bottom: 3px;
+                    padding: 0;
+
+                    &:focus,
+                    &:hover {
+                      color: inherit;
+                      background: inherit;
+                    }
+                  }
+
+                  a:focus,
+                  a:hover {
+                    margin-bottom: 2px;
+                    border-bottom: 1px solid var(--cd-primary-color);
+                  }
                 }
               }
             }

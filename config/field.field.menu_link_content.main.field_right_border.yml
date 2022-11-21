@@ -1,0 +1,23 @@
+uuid: 88e6d1c1-0301-41ba-bc48-c817ca1cfc35
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.menu_link_content.field_right_border
+    - system.menu.main
+id: menu_link_content.main.field_right_border
+field_name: field_right_border
+entity_type: menu_link_content
+bundle: main
+label: 'Right border'
+description: 'Check to add a right border to this menu item. Only applied to root level menu items in the desktop view of the menu and only if the menu item is not the last one.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

@@ -3,6 +3,9 @@
 //——————————————————————————————————————————————————————————————————————————————
 .cd-ocha-dropdown__link {
   a {
+    &:hover {
+      color: inherit !important;
+    }
     &:focus {
       outline: none;
     }
