@@ -1,0 +1,18 @@
+uuid: c2be837f-2cc3-4703-a532-76df989a3986
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_link_content
+id: menu_link_content.field_right_border
+field_name: field_right_border
+entity_type: menu_link_content
+type: boolean
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
