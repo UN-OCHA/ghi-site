@@ -86,7 +86,7 @@ class RemoteParagraph implements RemoteParagraphInterface {
    * {@inheritdoc}
    */
   public function getConfiguration() {
-    return Yaml::decode($this->data->configuration);
+    return $this->data->configuration ? Yaml::decode($this->data->configuration) : [];
   }
 
 }
