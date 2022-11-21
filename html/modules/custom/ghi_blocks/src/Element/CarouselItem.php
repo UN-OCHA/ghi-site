@@ -92,6 +92,16 @@ class CarouselItem extends FormElement {
       ],
       '#default_value' => $element['#default_value']['image'] ?? NULL,
     ];
+    $element['image_credit'] = [
+      '#type' => 'textfield',
+      '#title' => t('Image credit'),
+      '#default_value' => $element['#default_value']['image_credit'] ?? NULL,
+    ];
+    $element['image_caption'] = [
+      '#type' => 'textfield',
+      '#title' => t('Image caption'),
+      '#default_value' => $element['#default_value']['image_caption'] ?? NULL,
+    ];
     $element['url'] = [
       '#type' => 'path',
       '#title' => t('Url'),
