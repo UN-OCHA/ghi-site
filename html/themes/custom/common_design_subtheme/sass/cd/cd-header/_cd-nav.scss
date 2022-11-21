@@ -74,10 +74,12 @@
 
     li:hover a,
     li:hover a span,
+    a:hover,
+    a:hover span,
     a:focus,
     a:focus span {
       color: var(--cd-ocha-orange--dark);
-      background: var(--ghi-primary-background-color);
+      background: var(--ghi-primary-background-color) !important;
     }
   }
 
