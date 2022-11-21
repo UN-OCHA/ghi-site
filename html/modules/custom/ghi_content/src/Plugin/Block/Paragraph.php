@@ -173,8 +173,8 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     if (!$this->isPromoted()) {
       // If the paragraph is not be promoted, make sure to remove the
       // respective class from both the block classes and the wrapper.
-      $block_attributes['class'] = array_diff($block_attributes['class'], [self::PROMOTED_CLASS]);
-      $wrapper_attributes['class'] = array_diff($wrapper_attributes['class'], [self::PROMOTED_CLASS]);
+      $block_attributes['class'] = array_diff($block_attributes['class'] ?? [], [self::PROMOTED_CLASS]);
+      $wrapper_attributes['class'] = array_diff($wrapper_attributes['class'] ?? [], [self::PROMOTED_CLASS]);
     }
 
     // See if this paragraph should render as a full-width block.
