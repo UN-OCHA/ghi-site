@@ -186,7 +186,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       'map_style' => $map_style,
     ] + $map['settings'];
 
-    $attachment_switcher = NULL;
+    $attachment_switcher = $this->getAttachmentSwitcher();
 
     $build = [
       '#full_width' => FALSE,
@@ -1177,8 +1177,19 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $default_attachment = &drupal_static(__FUNCTION__, NULL);
     if (!$default_attachment) {
       $conf = $this->getBlockConfig();
-      $attachment_ids = $conf['attachments']['entity_attachments']['attachments']['attachment_id'] ?? NULL;
-      $attachment_id = $conf['map']['common']['default_attachment'] ?? ($attachment_ids ? reset($attachment_ids) : NULL);
+      $requested_attachment_id = $this->requestStack->getCurrentRequest()->request->get('attachment_id') ?? NULL;
+      $default_attachment_id = $conf['map']['common']['default_attachment'] ?? NULL;
+      $attachment_ids = $conf['attachments']['entity_attachments']['attachments']['attachment_id'] ?? [];
+      $attachment_id = NULL;
+      if ($requested_attachment_id && in_array($requested_attachment_id, $attachment_ids)) {
+        $attachment_id = $requested_attachment_id;
+      }
+      elseif ($default_attachment_id && in_array($default_attachment_id, $attachment_ids)) {
+        $attachment_id = $default_attachment_id;
+      }
+      elseif (count($attachment_ids)) {
+        $attachment_id = reset($attachment_ids);
+      }
       if (!$attachment_id) {
         return NULL;
       }
@@ -1219,6 +1230,37 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       $attachments[$attachment_id] = $attachment;
     }
     return $attachments;
+  }
+
+  /**
+   * Get the attachment switcher.
+   *
+   * @return array|null
+   *   A render array for the attachment switcher or NULL if not applicable.
+   */
+  private function getAttachmentSwitcher() {
+    // Get the attachments.
+    $attachments = $this->getSelectedAttachments();
+    if (count($attachments) <= 1) {
+      return NULL;
+    }
+    $attachment_options = array_map(function ($attachment) {
+      return $attachment->getDescription();
+    }, $attachments);
+    $current_attachment = $this->getDefaultAttachment();
+    return [
+      '#type' => 'container',
+      [
+        '#theme' => 'ajax_switcher',
+        '#element_key' => 'attachment_id',
+        '#options' => $attachment_options,
+        '#default_value' => $current_attachment?->id(),
+        '#wrapper_id' => Html::getId('block-' . $this->getUuid()),
+        '#plugin_id' => $this->getPluginId(),
+        '#block_uuid' => $this->getUuid(),
+        '#uri' => $this->getCurrentUri(),
+      ],
+    ];
   }
 
   /**
