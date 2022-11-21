@@ -23,6 +23,26 @@ class Article extends Node implements NodeInterface {
   }
 
   /**
+   * Get the structural tags for an article.
+   *
+   * @return \Drupal\taxonomy\TermInterface[]
+   *   An array of term entities.
+   */
+  public function getStructuralTags() {
+    // Get the tags.
+    $tags = $this->get('field_tags')->referencedEntities();
+
+    // Filter out the structural tags.
+    $tags = array_filter($tags, function ($tag) {
+      /** @var \Drupal\taxonomy\TermInterface $tag */
+      $is_structural_tag = (bool) $tag->get('field_structural_tag')?->value ?? FALSE;
+      return $is_structural_tag;
+    });
+
+    return $tags;
+  }
+
+  /**
    * Get the tags for display.
    *
    * @param int $limit
@@ -36,13 +56,16 @@ class Article extends Node implements NodeInterface {
 
     // Get the tags.
     $tags = $this->get('field_tags')->referencedEntities();
+    $structural_tags = $this->getStructuralTags();
+    $structural_tag_ids = array_map(function ($term) {
+      return $term->id();
+    }, $structural_tags);
 
     // Filter out the structural tags.
-    $tags = array_filter($tags, function ($tag) use (&$cache_tags) {
+    $tags = array_filter($tags, function ($tag) use (&$cache_tags, $structural_tag_ids) {
       /** @var \Drupal\taxonomy\TermInterface $tag */
       $cache_tags = Cache::mergeTags($cache_tags, $tag->getCacheTags());
-      $is_structural_tag = (bool) $tag->get('field_structural_tag')?->value ?? FALSE;
-      return !$is_structural_tag;
+      return !in_array($tag->id(), $structural_tag_ids);
     });
 
     // Limit number of tags.
