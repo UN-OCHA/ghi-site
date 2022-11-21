@@ -40,7 +40,7 @@
       &:focus {
         color: $cd-default-text-color;
         outline: none; // default browser outline is replaced by background colour change.
-        background: transparent;
+        background: var(--ghi-primary-background-color);
       }
 
       @supports (display: flex) {
@@ -61,17 +61,23 @@
     > .menu > .menu-item > button {
       text-transform: none;
       font-weight: 700;
-
-      @include desktop {
-        padding: 0;
-      }
     }
   }
 
   // Second level.
   .menu .menu {
-    a:hover {
-      background: transparent;
+    a,
+    span,
+    button {
+      font-weight: normal;
+    }
+
+    li:hover a,
+    li:hover a span,
+    a:focus,
+    a:focus span {
+      color: var(--cd-ocha-orange--dark);
+      background: var(--ghi-primary-background-color);
     }
   }
 
@@ -130,20 +136,8 @@
   }
 
   @include desktop {
-    .cd-nav {
-      a,
-      span,
-      button {
-        padding: 5px 15px;
-
-        span {
-          padding: 0;
-        }
-      }
-    }
     .cd-nav > .menu {
       > .menu-item {
-        padding: 0 14px;
 
         > a,
         > span,
@@ -170,40 +164,25 @@
           &:hover,
           &.is-active,
           &:focus {
-            background: transparent;
+            background: var(--ghi-primary-background-color);
 
             &::before {
-              background: $implementation-highlight;
+              background: var(--cd-primary-color);
             }
           }
         }
 
         &.menu-item--active-trail a::before,
         &.menu-item--active-trail button::before {
-          background: $implementation-highlight;
+          background: var(--cd-primary-color);
         }
       }
 
       > li > .menu {
         top: $cd-site-header-height;
 
-        a,
-        button {
-          &:hover {
-            background: transparent;
-
-            span {
-              border-bottom: 1px solid var(--cd-primary-color);
-            }
-          }
-
-          &.is-active {
-            border-left: 3px solid $implementation-highlight;
-          }
-        }
-
-        > li.menu-item--active-trail .is-active {
-          border-left: 3px solid $implementation-highlight;
+        > li.menu-item--active-trail {
+          border-left: 6px solid var(--cd-primary-color);
         }
       }
     }
