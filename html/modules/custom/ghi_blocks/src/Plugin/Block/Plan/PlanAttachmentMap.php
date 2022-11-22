@@ -84,8 +84,8 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         throw new IncompleteElementConfigurationException('Incomplete configuration for "plan_attachment_map"');
       }
     }
-    $entity_id = $config->entity_select->entity_id;
-    $attachment_id = $config->attachment_select->attachment_id ?? NULL;
+    $entity_id = $config->entity_select?->entity_id ?? NULL;
+    $attachment_id = $config->attachment_select?->attachment_id ?? NULL;
 
     // Sanity check to prevent importing of misconfigured map elements.
     if ($attachment_id && $plan_id) {
@@ -99,9 +99,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         $attachment_id = NULL;
       }
     }
-    if (!$attachment_id) {
-      throw new IncompleteElementConfigurationException('Incomplete configuration for "plan_attachment_map"');
-    }
 
     $entity_id = is_array($entity_id) ? array_filter(array_values($entity_id)) : (array) $entity_id;
     $attachment_id = is_array($attachment_id) ? array_filter(array_values($attachment_id)) : (array) $attachment_id;
@@ -112,15 +109,15 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         'attachments' => [
           'entity_attachments' => [
             'entities' => [
-              'entity_ids' => array_combine($entity_id, $entity_id),
+              'entity_ids' => $entity_id ? array_combine($entity_id, $entity_id) : [],
             ],
             'attachments' => [
               'filter' => [
-                'entity_type' => $config->attachment_select->entity_type,
-                'attachment_type' => $config->attachment_select->attachment_type,
-                'attachment_prototype' => $config->attachment_select->attachment_prototype ?? NULL,
+                'entity_type' => $config->attachment_select?->entity_type,
+                'attachment_type' => $config->attachment_select?->attachment_type,
+                'attachment_prototype' => $config->attachment_select?->attachment_prototype ?? NULL,
               ],
-              'attachment_id' => array_combine($attachment_id, $attachment_id),
+              'attachment_id' => $attachment_id ? array_combine($attachment_id, $attachment_id) : NULL,
             ],
           ],
         ],
