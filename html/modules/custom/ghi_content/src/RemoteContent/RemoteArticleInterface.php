@@ -59,6 +59,14 @@ interface RemoteArticleInterface {
   public function getSection();
 
   /**
+   * Get the created time of the article.
+   *
+   * @return int
+   *   A timestamp.
+   */
+  public function getCreated();
+
+  /**
    * Get the updated time of the article.
    *
    * @return int

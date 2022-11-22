@@ -518,6 +518,7 @@ class ArticleManager extends BaseContentManager {
 
     // Set the base properties.
     $node->setTitle($article->getTitle());
+    $node->setCreatedTime($article->getCreated());
     $node->setChangedTime($article->getUpdated());
 
     // Import the image.
@@ -565,7 +566,7 @@ class ArticleManager extends BaseContentManager {
     $local_data = $this->normalizeArticleNodeData($original_node);
     $local_data['paragraphs'] = $this->importManager->getLocalArticleParagraphUuids($original_node);
 
-    // The get the remote data by pretending to do an update on the node.
+    // Then get the remote data by pretending to do an update on the node.
     $updated_node = clone $original_node;
     $this->updateNodeFromRemote($updated_node, TRUE);
     $article = $this->loadArticleForNode($original_node, TRUE);
