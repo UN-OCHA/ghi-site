@@ -28,6 +28,9 @@
     "drupal/gin_toolbar": {
       "Issue #3121440: Add option for node local tasks in toolbar": "https://www.drupal.org/files/issues/2022-02-11/3263805-41.patch"
     },
+    "drupal/google_tag": {
+      "Issue #3250315: Error during cache rebuild when assets are stored on NFS": "PATCHES/3250315-google-tag-nfs-locks-4.patch": ""A
+    },
     "drupal/page_manager": {
       "Issue #3176661: Allow to edit page title when using Layout Builder variant": "https://www.drupal.org/files/issues/2022-11-15/page_manager-lb-title-3176661-15.patch",
       "Issue #2810329: Page Manager paths should support optional arguments as well": "https://www.drupal.org/files/issues/2022-11-18/page_manager-allow_optional_parameters-2810329-18.patch"
