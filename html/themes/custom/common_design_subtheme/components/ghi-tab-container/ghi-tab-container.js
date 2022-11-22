@@ -18,7 +18,10 @@
         Drupal.TabContainer.updateContent(container, 0);
 
         // Make the navigation work.
-        $(container).find('.tab-navigation').on('click', function () {
+        $(container).find('.tab-navigation').on('click keydown', function (e) {
+          if (e.type == 'keydown' && e.keyCode != 13) {
+            return;
+          }
           target = $(this).data('tab-index');
           Drupal.GhiBlockSettings.setBlockSettingForElement(container, 'target', target);
           Drupal.TabContainer.updateContent(container, target);

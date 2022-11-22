@@ -4,7 +4,7 @@
   {% if tabs|length > 1 %}
     <div class="tab-navigation-wrapper">
       {% for key, item in tabs %}
-        <div data-tab-index="{{ key }}" class="tab-navigation">
+        <div tabindex="0" data-tab-index="{{ key }}" class="tab-navigation">
           <div class="tab-navigation__inner">
             {{ item.title }}
           </div>

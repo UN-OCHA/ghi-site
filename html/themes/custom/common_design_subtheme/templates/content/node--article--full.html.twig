@@ -110,8 +110,10 @@
       <div class="cd-author__content">
         <div{{ author_attributes.addClass('node__submitted', 'content-width') }}>
           <span>{% trans %}Published on {{ unochaDate }}{% endtrans %}</span>
-          <span>|</span>
-          <span>{% trans %}Keywords: {{ keywords }}{% endtrans %}</span>
+          {% if keywords %}
+            <span>|</span>
+            <span>{% trans %}Keywords: {{ keywords }}{% endtrans %}</span>
+          {% endif %}
         </div>
       </div>
     </footer>
