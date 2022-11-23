@@ -230,6 +230,21 @@ function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateIn
       ],
     ]);
     $form['remote_article_info']['link']['#weight'] = 4;
+
+    // Add a way to reset the article.
+    $form['remote_article_reset'] = [
+      '#type' => 'details',
+      '#title' => t('Reset article'),
+      '#description' => t('Reset the content paragraphs to the initial state. This will remove any customizations made to this article page and re-import all content paragraphs in the order defined on the remote system.'),
+      '#open' => FALSE,
+      '#group' => 'advanced',
+    ];
+    $form['remote_article_reset']['reset'] = [
+      '#type' => 'submit',
+      '#value' => t('Reset now'),
+      '#submit' => ['ghi_content_form_node_article_edit_form_reset_submit'],
+      '#weight' => 2,
+    ];
   }
   $form['#attached']['library'][] = 'ghi_content/admin.article_edit';
 }
@@ -252,6 +267,29 @@ function ghi_content_form_node_article_edit_form_apply_changes_submit($form, For
   // migration run.
   /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
   $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
+  $article_manager->updateMigrationState($node);
+
+  $form_state->setRebuild();
+}
+
+/**
+ * Form submit handler for the "Reset article" button on article forms.
+ */
+function ghi_content_form_node_article_edit_form_reset_submit($form, FormStateInterface $form_state) {
+  /** @var \Drupal\node\NodeForm $form_object */
+  $form_object = $form_state->getFormObject();
+  $node = $form_object->getEntity();
+
+  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
+  $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
+  $article_manager->updateNodeFromRemote($node, FALSE, TRUE);
+
+  // Save the node.
+  $node->save();
+
+  // The next thing we need to do after that is to update the migration state,
+  // so that this article is not wrongly treated as changed on the next
+  // migration run.
   $article_manager->updateMigrationState($node);
 
   $form_state->setRebuild();
