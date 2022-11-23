@@ -76,8 +76,12 @@ class SyncMetadataNodeForm extends FormBase {
     $form['#node'] = $node;
     $form['#attached']['library'] = ['ghi_element_sync/sync_metadata_form'];
 
+    $remote_hero_image_url = NULL;
+    $hero_image_sync_state = NULL;
     try {
       $remote_data = $this->syncManager->getRemoteConfigurations($node);
+      $remote_hero_image_url = $this->syncManager->getRemoteHeroImageUrl($node);
+      $hero_image_sync_state = $this->syncManager->isHeroImageSynced($node);
     }
     catch (SyncException $e) {
       $this->messenger()->addError($this->t('There was a problem accessing the sync source:<br />@error', [
@@ -88,7 +92,7 @@ class SyncMetadataNodeForm extends FormBase {
 
     $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
     $base_object_fields = $this->entityFieldManager->getFieldDefinitions($base_object->getEntityTypeId(), $base_object->bundle());
-    $metadata = $remote_data->metadata ?? [];
+    $metadata = $remote_data->metadata ?? (object) [];
     $header = [
       'property' => $this->t('Property'),
       'remote_value' => $this->t('Remote'),
@@ -110,8 +114,6 @@ class SyncMetadataNodeForm extends FormBase {
       'status' => (bool) $remote_status == $node->isPublished() ? $this->t('In sync') : $this->t('Changed'),
     ];
 
-    $remote_hero_image_url = $this->syncManager->getRemoteHeroImageUrl($node);
-    $hero_image_sync_state = $this->syncManager->isHeroImageSynced($node);
     $form['properties']['#rows'][] = [
       'property' => $this->t('Hero image'),
       'remote_value' => $remote_hero_image_url ? [

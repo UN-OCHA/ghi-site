@@ -189,7 +189,7 @@ class SyncManager implements ContainerInjectionInterface {
       'field' => 'field_footnotes',
       'properties' => [],
     ];
-    foreach (array_keys((array) $metadata->footnotes ?? []) as $property) {
+    foreach (array_keys((array) ($metadata->footnotes ?? [])) as $property) {
       $map['footnotes']['properties'][] = $property;
     }
     return $map;
@@ -242,7 +242,7 @@ class SyncManager implements ContainerInjectionInterface {
     // For base objects of type plan or governing_entity, we also support the
     // syncing of metadata.
     if (($base_object instanceof Plan || $base_object instanceof GoverningEntity) && $sync_metadata) {
-      $metadata = $remote_data->metadata;
+      $metadata = $remote_data->metadata ?? (object) [];
       if ($metadata->status) {
         $node->setPublished();
       }
