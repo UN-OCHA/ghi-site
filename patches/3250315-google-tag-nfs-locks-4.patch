@@ -10,7 +10,7 @@ index 80fe83e..4f0264f 100644
 +        return $this->deleteFilesRecursive($directory . '/google_tag');
        }
      }
- 
+
 @@ -266,7 +266,7 @@ class ContainerManager implements ContainerManagerInterface {
      $directory = $container->snippetDirectory();
      $result = TRUE;
@@ -18,12 +18,12 @@ index 80fe83e..4f0264f 100644
 -      $result = $this->fileSystem->deleteRecursive($directory);
 +      $result = $this->deleteFilesRecursive($directory);
      }
- 
+
      $args = ['@count' => count($types), '%container' => $container->get('label')];
 @@ -310,4 +310,35 @@ class ContainerManager implements ContainerManagerInterface {
      return TRUE;
    }
- 
+
 +
 +  /**
 +   * Helper that recursively deletes files under a directory.
@@ -50,7 +50,7 @@ index 80fe83e..4f0264f 100644
 +      return $dir->close();
 +    }
 +    else {
-+      return $this->FileSystem->delete($path);
++      return $this->fileSystem->delete($path);
 +    }
 +    return FALSE;
 +  }
