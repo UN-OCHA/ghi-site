@@ -318,6 +318,9 @@ class DataAttachment extends AttachmentBase {
     // No, so we need to do it now. Extract the base metrics and base data.
     $base_metrics = $this->getBaseMetricTotals($reporting_period);
     $base_data = $this->getBaseData($reporting_period);
+    if (empty($base_data)) {
+      return [];
+    }
 
     // Remove the first row (full country totals, always empty for some reason
     // and not part of the locations array anyway).

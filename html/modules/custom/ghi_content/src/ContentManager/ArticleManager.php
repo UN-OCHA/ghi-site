@@ -499,10 +499,13 @@ class ArticleManager extends BaseContentManager {
    *   The node object.
    * @param bool $dry_run
    *   Whether the update should actually modify data.
+   * @param bool $reset
+   *   Whether article node should be reset to it's original state (as if it
+   *   would be created right now based on the configuration on the remote).
    *
    * @see ghi_content_node_presave()
    */
-  public function updateNodeFromRemote(NodeInterface $node, $dry_run = FALSE) {
+  public function updateNodeFromRemote(NodeInterface $node, $dry_run = FALSE, $reset = FALSE) {
     $remote_field = self::REMOTE_ARTICLE_FIELD;
     $article = $this->loadArticleForNode($node, TRUE);
     if (!$article) {
@@ -514,7 +517,8 @@ class ArticleManager extends BaseContentManager {
     $article_id = $node->get($remote_field)->article_id;
     $remote_source_original = $node->original ? $node->original->get($remote_field)->remote_source : NULL;
     $article_id_original = $node->original ? $node->original->get($remote_field)->article_id : NULL;
-    $cleanup = $remote_source_original && $article_id_original && ($remote_source != $remote_source_original || $article_id != $article_id_original);
+    $changed_article = $remote_source_original && $article_id_original && ($remote_source != $remote_source_original || $article_id != $article_id_original);
+    $cleanup = $reset || $changed_article;
 
     // Set the base properties.
     $node->setTitle($article->getTitle());
