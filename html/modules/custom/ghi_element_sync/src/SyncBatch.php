@@ -54,6 +54,7 @@ class SyncBatch {
       $context['results']['errors'] = [];
     }
 
+    /** @var \Drupal\ghi_element_sync\SyncManager $sync_manager */
     $sync_manager = $context['sandbox']['sync_manager'];
     $node = Node::load(array_shift($context['sandbox']['node_ids']));
 
