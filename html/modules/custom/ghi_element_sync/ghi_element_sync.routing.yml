@@ -30,7 +30,7 @@ ghi_element_sync.sync:
     _form: '\Drupal\ghi_element_sync\Form\SyncForm'
     _title: 'Sync plan elements for all nodes'
   requirements:
-    _permission: 'access element sync'
+    _permission: 'administer element sync'
 ghi_element_sync.config:
   path: '/admin/config/services/element-sync'
   defaults:
