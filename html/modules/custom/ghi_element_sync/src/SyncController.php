@@ -52,6 +52,9 @@ class SyncController extends ControllerBase {
     if (!in_array($node->bundle(), $this->syncManager->getAvailableNodeTypes())) {
       return AccessResult::forbidden();
     }
+    if (!$node->access('update')) {
+      return AccessResult::forbidden();
+    }
     $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
     return AccessResult::allowedIf($base_object && in_array($base_object->bundle(), SyncManager::BASE_OBJECT_TYPES_SUPPORTED));
   }
