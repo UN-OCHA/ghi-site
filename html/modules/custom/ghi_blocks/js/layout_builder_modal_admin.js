@@ -10,7 +10,7 @@
       }
       // Toggle the class depending on the presence of a second level actions
       // wrapper.
-      $action_wrappers = $(context).find('.second-level-actions-wrapper:not(.glb-visually-hidden)');
+      $action_wrappers = $layout_builder_modal.find('.second-level-actions-wrapper:not(.glb-visually-hidden)');
       $layout_builder_modal.toggleClass('has-second-level-actions', $action_wrappers.length > 0);
     }
   }
