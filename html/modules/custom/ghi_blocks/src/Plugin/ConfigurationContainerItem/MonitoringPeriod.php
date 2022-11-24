@@ -20,6 +20,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
 
+  const ITEM_TYPE = 'monitoring_period';
+
   /**
    * The attachment query.
    *
@@ -59,7 +61,11 @@ class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getValue() {
-    $period = $this->getAttachmentObject()->monitoring_period;
+    $attachment = $this->getAttachmentObject();
+    if (!$attachment) {
+      return NULL;
+    }
+    $period = $attachment->monitoring_period;
     return $period ? $period->periodNumber : NULL;
   }
 
@@ -68,6 +74,9 @@ class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
    */
   public function getRenderArray() {
     $attachment = $this->getAttachmentObject();
+    if (!$attachment) {
+      return NULL;
+    }
     return DataPointHelper::formatMonitoringPeriod($attachment, $this->get('display_type'));
   }
 

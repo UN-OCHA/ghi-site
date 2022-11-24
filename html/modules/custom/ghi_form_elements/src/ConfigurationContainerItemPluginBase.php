@@ -175,7 +175,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    */
   public function getTableCell() {
     return [
-      'data' => $this->getRenderArray(),
+      'data' => $this->getRenderArray() ?? ['#markup' => $this->t('n/a')],
       'data-value' => $this->getValue(),
       'data-raw-value' => $this->getSortableValue(),
       'data-sort-type' => $this::SORT_TYPE,
@@ -207,8 +207,12 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
     $classes = [
       Html::getClass($this->getPluginId()),
     ];
-    if (empty($this->getValue())) {
+    $value = $this->getValue();
+    if (empty($value)) {
       $classes[] = 'empty';
+    }
+    if ($value === NULL) {
+      $classes[] = 'not-available';
     }
     return $classes;
   }
