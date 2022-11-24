@@ -74,7 +74,7 @@ abstract class ApiObjectBase implements ApiObjectInterface {
    *   The property value if it's available.
    */
   public function __get($property) {
-    return $this->map?->$property ?? NULL;
+    return $this->map->$property ?? NULL;
   }
 
   /**
@@ -87,7 +87,7 @@ abstract class ApiObjectBase implements ApiObjectInterface {
    *   TRUE if the value is present and not empty, FALSE otherwise.
    */
   public function __isset($property) {
-    return is_object($this->map) && property_exists($this->map, $property) && !empty($this->map->$property);
+    return property_exists($this->map, $property) && !empty($this->map->$property);
   }
 
   /**
