@@ -756,23 +756,16 @@ class DataAttachment extends AttachmentBase {
    *
    * @return object
    *   An object with at least the relevant parts of an attachment prototype.
-   *
-   * @throws \Exception
-   *   If the prototype cannot be inferred.
    */
   protected function getPrototypeData() {
     $attachment = $this->getRawData();
+    $prototype = NULL;
     if (property_exists($attachment, 'attachmentPrototype')) {
       $prototype = new AttachmentPrototype($attachment->attachmentPrototype);
     }
     else {
       $prototype = self::fetchPrototypeForAttachment($attachment);
     }
-
-    if (!$prototype) {
-      throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $attachment->id));
-    }
-
     return $prototype;
   }
 
