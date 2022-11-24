@@ -5,7 +5,7 @@ namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
-use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
 use Drupal\ghi_blocks\Traits\HomepageBlockTrait;
@@ -27,6 +27,7 @@ use Drupal\hpc_common\Helpers\CommonHelper;
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
  *    "year" = @ContextDefinition("integer", label = @Translation("Year"))
  *  },
+ *  default_title = @Translation("Overview"),
  *  config_forms = {
  *    "key_figures" = {
  *      "title" = @Translation("Key figures"),
@@ -40,7 +41,7 @@ use Drupal\hpc_common\Helpers\CommonHelper;
  *  }
  * )
  */
-class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, OptionalTitleBlockInterface {
+class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface {
 
   use GlobalPlanOverviewBlockTrait;
   use ConfigurationContainerTrait;
