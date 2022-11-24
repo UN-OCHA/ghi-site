@@ -104,6 +104,9 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
    */
   public function getValue() {
     $attachment = $this->getAttachmentObject();
+    if (!$attachment) {
+      return NULL;
+    }
     $monitoring_periods = $this->get('monitoring_periods');
     $attachment->data_point_conf = [
       'processing' => 'single',
@@ -128,6 +131,10 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     // Get some context.
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
     $attachment = $this->getAttachmentObject();
+    if (!$attachment) {
+      return NULL;
+    }
+
     /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
     $plan_object = $this->getContextValue('plan_object');
 

@@ -36,6 +36,10 @@
           white-space: nowrap;
         }
 
+        &.not-available {
+          font-style: italic;
+        }
+
         &[data-formatting="numeric-full"] {
           text-align: right;
         }
