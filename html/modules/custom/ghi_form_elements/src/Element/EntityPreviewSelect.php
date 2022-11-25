@@ -164,9 +164,18 @@ class EntityPreviewSelect extends FormElement {
       'allow_featured' => $allow_featured,
       'show_filter' => $element['#show_filter'],
     ];
+
+    // Make sure that the order value is up to date. This means adding new
+    // articles (not present in the last configuration of an element) to the
+    // end of the list and removing articles that are no longer available.
+    $initial_order = (array) $element['#default_value']['order'];
+    $new_entity_ids = array_diff(array_keys($entities), $initial_order);
+    $removed_entity_ids = array_diff($initial_order, array_keys($entities));
+    $default_order = array_merge($initial_order, $new_entity_ids);
+    $default_order = array_diff($default_order, $removed_entity_ids);
     $element['order'] = [
       '#type' => 'hidden',
-      '#default_value' => implode(',', array_filter((array) $element['#default_value']['order'])),
+      '#default_value' => implode(',', array_filter($default_order)),
       '#attributes' => ['class' => Html::getClass('entities_order')],
     ];
     $element['selected'] = [
