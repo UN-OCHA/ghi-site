@@ -76,6 +76,7 @@ permissions:
   - 'administer menu'
   - 'administer nodes'
   - 'administer pages'
+  - 'administer permissions'
   - 'administer social api authentication'
   - 'administer social api autoposting'
   - 'administer social api widgets'
