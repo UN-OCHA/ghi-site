@@ -22,6 +22,8 @@
           autoHeight: true,
           a11y: true,
           keyboard: true,
+          observer: true,
+          observeParents: true,
         });
         // Navidation swiper if necessary.
         let nav_slider = new Swiper($(container).find('.swiper').get(1), {
@@ -57,7 +59,7 @@
         // applied without this.
         $(window).on('resize', function() {
           nav_slider.update();
-      });
+        });
         $(container).addClass('swiper-processed');
 
         Drupal.LinkCarousel.updateContent(container, swiper.activeIndex);

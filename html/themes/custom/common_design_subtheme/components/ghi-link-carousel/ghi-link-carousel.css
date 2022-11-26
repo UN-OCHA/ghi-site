@@ -5,6 +5,7 @@
 
 .link-carousel-wrapper .swiper.main .swiper-wrapper {
   max-height: 568px;
+  min-height: 20vh;
 }
 
 .link-carousel-wrapper .swiper.main .swiper-wrapper .swiper-slide {
