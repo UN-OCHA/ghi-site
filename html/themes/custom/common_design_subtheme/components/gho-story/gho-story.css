@@ -1,0 +1,113 @@
+.gho-story {
+  position: relative;
+  /* Flex-box so we can hoist our social icons up form their low position in the
+     source-order but display them near the top of the Story */
+  display: flex;
+  flex-direction: column;
+}
+.gho-story--teaser {
+  max-width: var(--reading-width);
+}
+.gho-story > * {
+  flex: 0 0 auto;
+}
+
+.gho-story__header {
+  /* This is to be able to display the social links between the header and the
+   * the content on small screens. */
+  order: 0;
+}
+.gho-story--full .gho-story__header {
+  margin-bottom: 1rem;
+}
+
+.gho-story--full .gho-aside__pre-title {
+  display: block;
+  max-width: var(--reading-width);
+  margin-bottom: 1rem;
+  color: #707070;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 1024px) {
+  .gho-story--full .gho-aside__pre-title {
+    margin-bottom: 1.25rem;
+  }
+}
+.gho-story--full .page-title {
+  max-width: var(--reading-width);
+  padding: 0;
+  color: #1f1f1f;
+  border: none;
+  font-size: 1.625rem;
+  font-weight: 700;
+  line-height: 1.75rem;
+}
+
+@media (min-width: 768px) {
+  .gho-story--full .page-title {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+}
+
+.gho-story .field--name-field-media {
+  margin-bottom: 2rem;
+}
+.gho-story .gho-caption {
+  margin: 0;
+}
+
+/* Same font-size/line-height as caption. @see gho-caption */
+.gho-story__source {
+  border-top: 1px solid #d8d8d8;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .gho-story__source {
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+  }
+}
+
+.gho-story .gho-footnote-list + .gho-story__source {
+  margin-top: 0.5rem;
+}
+.gho-story__source__title {
+  margin-top: 0.5rem;
+  font-weight: 700;
+}
+.gho-story__source .item-list {
+  margin: 0.5rem 0 0 0;
+  padding: 0;
+}
+.gho-story__source .item-list li {
+  margin: 0;
+  list-style: none;
+}
+
+.gho-story__content {
+  /* This is to be able to display the social links between the header and the
+   * the content on small screens. */
+  order: 2;
+}
+
+/**
+ * Social links.
+ */
+.gho-story__social-links {
+  /* This is to be able to display the social links between the header and the
+   * the content on small screens. */
+  order: 1;
+  margin: -1rem 0 2rem;
+}
+
+@media (min-width: 576px) {
+  .gho-story__social-links {
+    position: absolute;
+    top: 0;
+    margin: 0;
+  }
+}
