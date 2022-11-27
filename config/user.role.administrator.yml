@@ -44,6 +44,7 @@ dependencies:
     - node
     - page_manager
     - page_manager_publishable_variants
+    - path
     - publishcontent
     - social_api
     - system
@@ -82,6 +83,7 @@ permissions:
   - 'administer social api widgets'
   - 'administer taxonomy'
   - 'administer teams'
+  - 'administer url aliases'
   - 'administer users'
   - 'administer users roles'
   - 'configure all homepage node layout overrides'
@@ -105,6 +107,7 @@ permissions:
   - 'create news_story content'
   - 'create page content'
   - 'create section content'
+  - 'create url aliases'
   - 'delete any global_section content'
   - 'delete any homepage content'
   - 'delete any media'
