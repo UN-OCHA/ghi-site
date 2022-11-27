@@ -155,6 +155,10 @@ gho-related-articles:
   css:
     theme:
       components/gho-related-articles/gho-related-articles.css: {}
+gho-story:
+  css:
+    theme:
+      components/gho-story/gho-story.css: {}
 gho-sub-article:
   css:
     theme:
