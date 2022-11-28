@@ -263,6 +263,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       $context['base_object'] = $base_object;
       $context['context_node'] = $subpage_node;
       $context['entity'] = $entity;
+      $context['attachment'] = NULL;
 
       // Add another row as a group header for clusters with multiple plan
       // caseloads.
@@ -270,10 +271,18 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
         $rows[] = $this->buildTableRow($columns, $context, ['entity_name']);
       }
 
-      foreach ($attachments as $attachment) {
-        $context['attachment'] = $attachment;
-        $rows[] = $this->buildTableRow($columns, $context, [], count($attachments) > 1);
+      if (count($attachments)) {
+        // Add one row per caseload.
+        foreach ($attachments as $attachment) {
+          $context['attachment'] = $attachment;
+          $rows[] = $this->buildTableRow($columns, $context, [], count($attachments) > 1);
+        }
       }
+      elseif (!empty($conf['base']['include_non_caseloads'])) {
+        // Or add an empty row if that's allowed.
+        $rows[] = $this->buildTableRow($columns, $context);
+      }
+
     }
     $rows = array_filter($rows);
 

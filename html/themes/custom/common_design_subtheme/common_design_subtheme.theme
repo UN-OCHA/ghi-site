@@ -103,8 +103,10 @@ function common_design_subtheme_preprocess_block(&$variables) {
     'global_plan_table',
     'system_menu_block:operations-menu',
     'system_menu_block:account',
+    'system_menu_block:footer',
     'subpage_navigation',
     'system_main_block',
+    'paragraph',
   ];
 
   // On some node types, we want to auto highlight (full-width background) the

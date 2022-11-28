@@ -45,7 +45,7 @@ trait FtsLinkTrait {
         $query_args['f'] = ['destinationClusterIdName:' . $cluster->id . ':' . $cluster->name . ''];
       }
     }
-    elseif ($base_object === FALSE) {
+    elseif ($base_object === NULL) {
       $query_args['f'] = ['destinationClusterIdName:!'];
     }
     return [

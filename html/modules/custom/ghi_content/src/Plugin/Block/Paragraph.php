@@ -232,8 +232,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
       ];
     }
 
-    if ($this->shouldLinkToArticlePage()) {
-      $article_node = $this->getArticlePage();
+    if ($this->shouldLinkToArticlePage() && $article_node = $this->getArticlePage()) {
       $build['#cache'] = [
         'tags' => $article_node->getCacheTags(),
       ];

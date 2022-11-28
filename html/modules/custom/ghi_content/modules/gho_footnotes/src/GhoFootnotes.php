@@ -52,7 +52,10 @@ class GhoFootnotes implements TrustedCallbackInterface {
       // Update the footnote references and remove the containing div.
       $node_inner_html = gho_footnotes_update_text($id, $node_inner_html, $references, $footnotes);
       $fragment = $dom->createDocumentFragment();
-      $fragment->appendXml($node_inner_html);
+      // Note that we add a newline here. This is made to prevent a strange
+      // issue with the caption credits, that are sometimes appearing spaceless
+      // after the last paragraph of a text.
+      $fragment->appendXml($node_inner_html . "\n");
       $node->parentNode->replaceChild($fragment, $node);
     }
 

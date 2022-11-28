@@ -770,7 +770,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
         // optional and the display toggle can be hidden.
         $settings_form['label']['#default_value'] = $settings_form['label']['#default_value'] == '<none>' ? '' : $settings_form['label']['#default_value'];
         $settings_form['label']['#required'] = FALSE;
-        $settings_form['label']['#description'] = $this->t('Leave empty to use the default title %default_title.', [
+        $settings_form['label']['#description'] = $this->t('Leave empty to use the default title "%default_title".', [
           '%default_title' => $plugin_definition['default_title'],
         ]);
         $settings_form['label_display']['#access'] = FALSE;
