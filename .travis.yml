@@ -33,6 +33,8 @@ script:
   - docker volume ls
   - docker-compose -p ghi-travis -f .travis/docker-compose.yml down -v
   - docker volume ls
+  - docker images
+  - docker ps -a
 
   # Create the site, redis and mysql containers.
   - docker-compose -p ghi-travis -f .travis/docker-compose.yml up -d -V --force-recreate
