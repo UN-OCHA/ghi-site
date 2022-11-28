@@ -13,7 +13,7 @@ seckit_xss:
     style-src: '''self'' ''unsafe-inline'' fonts.googleapis.com cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css https://fonts.gstatic.com'
     img-src: '''self'' unocha.org hpc.tools content.hpc.tools fts.unocha.org data: api.mapbox.com browser-update.org https://fonts.gstatic.com'
     media-src: ''
-    frame-src: '''self'' https://www.youtube.com https://data.humdata.org https://datawrapper.dwcdn.net'
+    frame-src: '''self'' https://content.hpc.tools https://www.youtube.com https://data.humdata.org https://datawrapper.dwcdn.net'
     frame-ancestors: '''none'''
     child-src: '''self'''
     font-src: '''self'' fonts.gstatic.com data:'
