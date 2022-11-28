@@ -29,6 +29,11 @@ script:
   # Build local image.
   - make
 
+  # OPS-8875 tests
+  docker volume ls
+  docker-compose down -v
+  docker volume ls
+  
   # Create the site, redis and mysql containers.
   - docker-compose -p ghi-travis -f .travis/docker-compose.yml up -d -V --force-recreate
 
