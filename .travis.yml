@@ -28,7 +28,7 @@ script:
 
   # Build local image.
   # - make
-  - docker build --file docker/Dockerfile --rm --force-rm --tag unocha/ghi-site:local .
+  - docker build --file docker/Dockerfile --rm --force-rm --tag unocha/ghi-site:local . || travis_terminate 1;
 
   # Create the site, redis and mysql containers.
   - docker-compose -p ghi-travis -f .travis/docker-compose.yml up -d
