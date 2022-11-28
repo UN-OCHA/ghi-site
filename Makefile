@@ -1,6 +1,7 @@
 # Variables. Yes.
 DOCKER=docker
 DOCKER_BUILDKIT=0
+SHELL=/bin/bash
 
 # The main build recipe.
 build:  clean
