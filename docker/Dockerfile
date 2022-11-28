@@ -12,15 +12,9 @@ RUN rm -rf ./vendor && \
     # Update composer to avoid issues with missing drupal files.
     # @see https://github.com/drupal-composer/drupal-project/issues/282
     composer self-update --2 && \
-    COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --prefer-dist
-
-# Clean up previous npm installation and run new one. Those commands correspond
-# to running `composer sass` but without hitting the PHP timeout.
-RUN cd html/themes/custom/common_design_subtheme && \
-    rm -rf ./node_modules && \
-    npm install && \
-    ./node_modules/.bin/sass sass:build && \
-    rm -rf ./node_modules
+    COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --prefer-dist && \
+    composer run subtheme && \
+    COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --no-interaction --prefer-dist
 
 # Copy settings to default site location after creating it.
 RUN mkdir -m 0775 -p html/sites/default && \
