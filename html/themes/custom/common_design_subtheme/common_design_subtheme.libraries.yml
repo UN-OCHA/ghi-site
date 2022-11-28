@@ -113,6 +113,10 @@ gho-caption:
   css:
     theme:
       components/gho-caption/gho-caption.css: {}
+gho-embed:
+  css:
+    theme:
+      components/gho-embed/gho-embed.css: {}
 gho-facts-and-figures:
   css:
     theme:
