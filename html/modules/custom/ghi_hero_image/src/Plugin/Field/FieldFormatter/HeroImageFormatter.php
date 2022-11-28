@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_hero_image\Plugin\Field\FieldFormatter;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
@@ -110,6 +111,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
 
     $image_url = NULL;
     $credit = NULL;
+    $caption = NULL;
 
     $item = !$items->isEmpty() ? (object) $items->get(0)->getValue() ?? NULL : NULL;
     $item_source = $item ? $item->source : NULL;
@@ -138,6 +140,9 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
         $image_id = $item_settings['image_id'] ?? NULL;
         $image_urls = $image_id ? $this->smugmugImage->getImageSizes($image_id) : NULL;
         $image_url = $image_urls['X3LargeImageUrl'] ?? ($image_urls['LargestImageUrl'] ?? NULL);
+        $image = $this->smugmugImage->getImage($image_id);
+        $caption_format_parents = ['FormattedValues', 'Caption', 'html'];
+        $caption = NestedArray::getValue($image, $caption_format_parents) ?? ($image['Caption'] ?? NULL);
         break;
 
       case 'inherit':
@@ -159,6 +164,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
         '#theme' => 'ghi_image',
         '#responsive_image_style' => $responsive_image_style,
         '#url' => $image_url,
+        '#caption' => $caption ? Markup::create($caption) : NULL,
         '#credit' => $include_credits ? $credit : NULL,
       ];
 
