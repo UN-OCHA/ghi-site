@@ -1,8 +1,0 @@
-uuid: 4cd7728f-b8aa-431c-803e-2b5ea36522bd
-langcode: en
-status: true
-dependencies: {  }
-id: menu-footer-menu
-label: 'Footer menu'
-description: 'The corporate footer menu.'
-locked: false
