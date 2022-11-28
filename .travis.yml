@@ -30,7 +30,7 @@ script:
   - make
 
   # Create the site, redis and mysql containers.
-  - docker-compose -p ghi-travis -f .travis/docker-compose.yml up -d -V
+  - docker-compose -p ghi-travis -f .travis/docker-compose.yml up -d -V --force-recreate
 
   # Dump some information about the created containers.
   - docker ps -a
