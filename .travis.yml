@@ -30,15 +30,8 @@ script:
   # - make
   - docker build --file docker/Dockerfile --rm --force-rm --tag unocha/ghi-site:local .
 
-  # OPS-8875 tests
-  # - docker volume ls
-  # - docker-compose -p ghi-travis -f .travis/docker-compose.yml down -v
-  # - docker volume ls
-  # - docker images
-  # - docker ps -a
-
   # Create the site, redis and mysql containers.
-  - docker-compose -p ghi-travis -f .travis/docker-compose.yml up -d -V --force-recreate
+  - docker-compose -p ghi-travis -f .travis/docker-compose.yml up -d
 
   # Dump some information about the created containers.
   - docker ps -a

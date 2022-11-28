@@ -8,7 +8,7 @@
   /* This reserve some space for the iframe with a 16:9 aspect ratio. */
   padding-bottom: 56.25%;
 }
-.gho-embed-wrapper--4\:3 {
+.gho-embed-wrapper--4-3 {
   padding-bottom: 75%;
 }
 .gho-embed-wrapper iframe {
