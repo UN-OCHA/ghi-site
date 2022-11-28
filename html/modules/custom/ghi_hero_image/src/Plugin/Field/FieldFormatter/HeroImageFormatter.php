@@ -137,7 +137,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
         $item_settings = $item && property_exists($item, 'settings') && is_array($item->settings) ? $item->settings[$item_source] : [];
         $image_id = $item_settings['image_id'] ?? NULL;
         $image_urls = $image_id ? $this->smugmugImage->getImageSizes($image_id) : NULL;
-        $image_url = $image_urls['X3LargeImageUrl'] ?? NULL;
+        $image_url = $image_urls['X3LargeImageUrl'] ?? ($image_urls['LargestImageUrl'] ?? NULL);
         break;
 
       case 'inherit':
