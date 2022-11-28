@@ -13,7 +13,7 @@ RUN rm -rf ./vendor && \
     # @see https://github.com/drupal-composer/drupal-project/issues/282
     composer self-update --2 && \
     COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --prefer-dist && \
-    composer run subtheme && \
+    composer runs subtheme && \
     COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --no-interaction --prefer-dist
 
 # Copy settings to default site location after creating it.
