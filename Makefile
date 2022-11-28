@@ -5,7 +5,7 @@ SHELL=/bin/bash
 
 # The main build recipe.
 build:  clean
-       set -o pipefail && \
+       set -o pipefail
        DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) $(DOCKER) build \
 				--build-arg BRANCH_ENVIRONMENT=$(NODE_ENV) \
 				--build-arg VCS_REF=`git rev-parse --short HEAD` \
