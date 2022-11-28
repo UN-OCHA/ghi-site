@@ -4,6 +4,10 @@ status: true
 dependencies:
   config:
     - page_manager.page.homepage
+  module:
+    - ghi_blocks
+    - ghi_content
+    - layout_discovery
 id: homepage-layout_builder-0
 label: Page
 weight: 0
