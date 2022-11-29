@@ -74,6 +74,18 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
   /**
    * {@inheritdoc}
    */
+  public function label() {
+    $label = parent::label();
+    if (empty($label)) {
+      return $label;
+    }
+    $year = $this->configuration['year'] ?? date('Y');
+    return str_replace('{year}', $year, $label);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function build() {
     $build = [];
 
@@ -119,28 +131,34 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
       }
     }
 
-    $id = Html::getId('section-menu-' . $this->getPluginId());
     $build = [
       '#type' => 'container',
+      '#attributes' => [
+        'class' => [$this->configuration['label_display'] ? Html::getClass('label-visible') : NULL],
+      ],
       0 => [
         '#type' => 'html_tag',
         '#tag' => 'nav',
         '#attributes' => [
           'role' => 'navigation',
-          'aria-labelledby' => $id,
+          'aria-labelledby' => $this->getAriaId(),
           'class' => ['cd-container'],
         ],
-        0 => [
-          '#type' => 'html_tag',
-          '#tag' => 'h2',
-          '#attributes' => ['id' => $id],
-          '#value' => $this->label(),
-        ],
-        1 => $list_build,
+        0 => $list_build,
       ],
     ];
 
     return $build;
+  }
+
+  /**
+   * Get the id used for aria attributes.
+   *
+   * @return string
+   *   An id to be used in aria attributes.
+   */
+  public function getAriaId() {
+    return Html::getId('section-menu-' . $this->getPluginId());
   }
 
   /**
@@ -234,6 +252,16 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
       'reference_field' => NULL,
       'vocabulary_id' => NULL,
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    $form = parent::buildConfigurationForm($form, $form_state);
+    $form['label']['#description'] = $this->t('The title for this block. You can use the following placeholders: {year}');
+    $form['label']['#default_value'] = $this->configuration['label'];
+    return $form;
   }
 
   /**
