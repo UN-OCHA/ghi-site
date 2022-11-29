@@ -108,6 +108,12 @@ class CarouselItem extends FormElement {
       '#default_value' => static::getUriAsDisplayableString($element['#default_value']['url']) ?? NULL,
       '#element_validate' => [[LinkWidget::class, 'validateUriElement']],
     ];
+    $element['button_label'] = [
+      '#type' => 'textfield',
+      '#title' => t('Button label'),
+      '#default_value' => $element['#default_value']['button_label'] ?? NULL,
+      '#description' => t('Optional button label. Leave empty to use a default label.'),
+    ];
     return $element;
   }
 
