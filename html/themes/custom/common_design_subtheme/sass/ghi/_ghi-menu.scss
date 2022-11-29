@@ -1,4 +1,21 @@
 .cd-site-header__nav-holder {
+  z-index: 1001;
+
+  .block-sections-by-term {
+
+    &.label-visible h2 {
+      position: static !important;
+      display: block;
+      clip: auto;
+      width: auto;
+      height: auto;
+      font-size: var(--cd-font-size--base);
+
+      @include max-width(lg) {
+        padding: 15px 30px;
+      }
+    }
+  }
 
   nav[role="navigation"] {
 
@@ -80,11 +97,18 @@
               }
             }
 
-            .block-sections-by-term nav[role="navigation"] > ul li {
+            .block-sections-by-term {
 
-              span,
-              a {
-                padding: 0;
+              &.label-visible h2 {
+                margin-top: 2rem;
+              }
+
+              nav[role="navigation"] > ul li {
+
+                span,
+                a {
+                  padding: 0;
+                }
               }
             }
           }
