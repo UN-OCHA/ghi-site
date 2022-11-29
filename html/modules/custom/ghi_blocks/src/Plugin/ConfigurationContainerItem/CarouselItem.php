@@ -111,6 +111,16 @@ class CarouselItem extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * Get the button label.
+   *
+   * @return string|null
+   *   The button label.
+   */
+  public function getButtonLabel() {
+    return $this->config['value']['button_label'] ?? NULL;
+  }
+
+  /**
    * Get the image as thumbnail.
    *
    * @return array
