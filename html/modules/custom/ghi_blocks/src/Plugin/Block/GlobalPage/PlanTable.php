@@ -429,7 +429,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       if (!$plan_link) {
         return $row;
       }
-      $row['name'] = ['data' => [0 => $plan_link->toRenderable()]];
+      $row['name'] = ['data' => $plan_link->toRenderable()];
       return $row;
     }, $rows);
   }
