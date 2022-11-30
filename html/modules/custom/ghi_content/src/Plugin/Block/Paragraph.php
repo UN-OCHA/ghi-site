@@ -534,11 +534,12 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
    *   TRUE if displayed on its article page, FALSE otherwise.
    */
   private function displayedOnArticlePage() {
+    $page_node = $this->getPageNode();
     $article_page = $this->getArticlePage();
-    if (!$article_page) {
+    if (!$page_node || !$article_page) {
       return FALSE;
     }
-    return $this->getArticlePage()->id() == $this->getPageNode()->id();
+    return $article_page->id() == $page_node->id();
   }
 
   /**
