@@ -354,29 +354,40 @@ function hpc_common_preprocess_hpc_icon(array &$vars) {
  */
 function hpc_common_preprocess_hpc_reporting_period(array &$vars) {
   $reporting_period = $vars['reporting_period'];
+
+  // We want to handle all times as UTC, because that's what we get from the
+  // API.
+  $timezone = new DateTimeZone('UTC');
+
   if (is_array($reporting_period)) {
+    // Handle multiple periods.
     ArrayHelper::sortArrayByNumericKey($reporting_period, 'periodNumber', EndpointQuery::SORT_ASC);
     $first = reset($reporting_period);
     $last = end($reporting_period);
-    $start_date = strtotime($first->startDate);
-    $end_date = strtotime($last->endDate);
+    $start_date_string = $first->startDate;
+    $end_date_string = $last->endDate;
     $period_number = $first != $last ? $first->periodNumber . ' - ' . $last->periodNumber : $first->periodNumber;
   }
   else {
-    $start_date = strtotime($reporting_period->startDate);
-    $end_date = strtotime($reporting_period->endDate);
+    // Handle a single period.
+    $start_date_string = $reporting_period->startDate;
+    $end_date_string = $reporting_period->endDate;
     $period_number = $reporting_period->periodNumber;
   }
+
   $format_string = $vars['format_string'];
   $format_date = 'j M Y';
   $format_date_short = 'j M';
 
-  $start_date_formatted = gmdate($format_date, $start_date);
-  $end_date_formatted = gmdate($format_date, $end_date);
+  $start_date = new DateTime($start_date_string, $timezone);
+  $end_date = new DateTime($end_date_string, $timezone);
 
-  if (gmdate('Y', $start_date) == gmdate('Y', $end_date)) {
+  $start_date_formatted = $start_date->format($format_date);
+  $end_date_formatted = $end_date->format($format_date);
+
+  if ($start_date->format('Y') == $end_date->format('Y')) {
     // Same year and month for both start and end date.
-    $start_date_formatted = gmdate($format_date_short, $start_date);
+    $start_date_formatted = $start_date->format($format_date_short);
   }
   $vars['output'] = new FormattableMarkup(trim($format_string), [
     '@period_number' => $period_number,
