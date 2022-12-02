@@ -88,6 +88,27 @@ class PlanEntity extends EntityObjectBase {
   }
 
   /**
+   * Get the plan entity parents.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[]
+   *   The plan entity parents.
+   */
+  public function getPlanEntityParents() {
+    $entity = $this->getRawData();
+    $entity_version = $this->getEntityVersion($entity);
+    if (empty($entity_version->value->support)) {
+      return [];
+    }
+    $first_ref = reset($entity_version->value->support);
+    if (!property_exists($first_ref, 'planEntityIds') || empty($first_ref->planEntityIds)) {
+      return [];
+    }
+    return array_filter(array_map(function ($entity_id) {
+      return PlanEntityHelper::getPlanEntity($entity_id);
+    }, $first_ref->planEntityIds));
+  }
+
+  /**
    * Get the name of the hierarchical group that this entity belongs to.
    *
    * @return string
