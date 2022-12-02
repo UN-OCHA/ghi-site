@@ -510,7 +510,8 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     $entity_options = $this->getCurrentEntityOptionsGrouped();
     $current_entity = $this->getCurrentEntity();
     $entity_description = $current_entity?->description ?? NULL;
-    return [
+
+    $build = [
       '#type' => 'container',
       [
         '#theme' => 'ajax_switcher',
@@ -526,6 +527,36 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
         '#markup' => Markup::create($entity_description),
       ],
     ];
+    if ($current_entity instanceof PlanEntity && $plan_entity_parents = $current_entity->getPlanEntityParents()) {
+      $contribute_items = array_map(function (PlanEntity $plan_entity) {
+        return [
+          [
+            '#theme' => 'hpc_icon',
+            '#icon' => 'check_circle',
+            '#tag' => 'span',
+          ],
+          [
+            '#markup' => $plan_entity->getEntityName(),
+          ],
+        ];
+      }, $plan_entity_parents);
+      $build[] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['contribution-wrapper'],
+        ],
+        [
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          '#value' => $this->t('Contributes to'),
+        ],
+        [
+          '#theme' => 'item_list',
+          '#items' => $contribute_items,
+        ],
+      ];
+    }
+    return $build;
   }
 
   /**
