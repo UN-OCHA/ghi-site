@@ -694,7 +694,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     // Foreach location, calculate a radius factor that will be used to draw
     // the map circles.
     $total_values = array_map(function ($item) {
-      return $item['total'];
+      return (int) $item['total'];
     }, $metric_item['locations']);
 
     // Set the min and max weighing factors for the radius.
@@ -711,7 +711,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         continue;
       }
       $location_data[$key] = $location['map_data'];
-      $total_value = !empty($location['total']) ? $location['total'] : 0;
+      $total_value = !empty($location['total']) ? (int) $location['total'] : 0;
       $radius_factor = $total_value > 0 ? ceil($radius_factor_max / max($total_values) * $total_value) : $radius_factor_min;
       $location_data[$key]['radius_factor'] = $radius_factor;
 
