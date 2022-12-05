@@ -34,6 +34,9 @@
 .gho-footnote {
   word-wrap: break-word;
 }
+.gho-footnote a {
+  word-break: break-word;
+}
 .gho-footnote:target {
   background-color: #eee;
 }
