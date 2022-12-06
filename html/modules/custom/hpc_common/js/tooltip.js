@@ -27,6 +27,9 @@
       role: 'tooltip',
       interactive: true,
       appendTo: document.body,
+      aria: {
+        expanded: null,
+      },
     });
   }
 
