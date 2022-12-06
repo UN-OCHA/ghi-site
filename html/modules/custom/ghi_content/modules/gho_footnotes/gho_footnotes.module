@@ -219,7 +219,7 @@ function gho_footnotes_generate_footnotes($base_id, $text, array $references, $a
         // The content of the footnote is already rendered HTML. This ensures
         // the markup is preserved and not encoded.
         '#content' => ['#markup' => $content],
-        '#backlinks' => gho_footnotes_get_backlinks($footnote_id, $references[$reference]),
+        '#backlinks' => gho_footnotes_get_backlinks($footnote_id, $references[$reference], $accumulated + $index),
         '#index' => $accumulated + $index + 1,
       ];
     }
@@ -258,18 +258,20 @@ function gho_footnotes_build_footnotes($base_id, array $footnotes, $accumulated 
  *   Footnote id.
  * @param array $references
  *   List of references to the footnote.
+ * @param int $running_index
+ *   The running index for the backlinks.
  *
  * @return array
  *   List of backlinks which are arrays with a target (id of the reference in
  *   the text) and a label.
  */
-function gho_footnotes_get_backlinks($footnote_id, array $references) {
+function gho_footnotes_get_backlinks($footnote_id, array $references, $running_index) {
   $backlinks = [];
-  foreach ($references as $index => $reference) {
+  foreach (array_keys($references) as $index) {
     $backlinks[] = [
       '#theme' => 'gho_footnote_backlink',
       '#target' => $footnote_id . '-reference-' . ($index + 1),
-      '#index' => $index + 1,
+      '#index' => $running_index + $index + 1,
     ];
   }
   return $backlinks;
