@@ -21,9 +21,9 @@
   max-width: var(--reading-width);
   margin: 0;
   padding: 0 1.5rem;
+  counter-reset: gho-footnotes-backlinks;
   font-size: 0.875rem;
   line-height: 1.25rem;
-  counter-reset: gho-footnotes-backlinks;
 }
 /* @todo check if it's also fine to decorate the number like that in Arabic. */
 .gho-footnote-reference span:before {
