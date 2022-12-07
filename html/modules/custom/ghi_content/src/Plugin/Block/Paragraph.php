@@ -68,8 +68,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     if (!$paragraph) {
       return;
     }
-    $conf = $this->getBlockConfig();
-    return $this->buildParagraph($paragraph, $conf['paragraph']['title'], $this->isPreview());
+    return $this->buildParagraph($paragraph, $this->label(), $this->isPreview());
   }
 
   /**
@@ -300,7 +299,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
       ],
       'paragraph' => [
         'paragraph_id' => NULL,
-        'title' => NULL,
+        'label' => NULL,
         'link_to_article' => FALSE,
         'promoted' => FALSE,
       ],
