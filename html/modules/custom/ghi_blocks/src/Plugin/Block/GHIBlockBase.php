@@ -807,10 +807,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $form['context_mapping']['node']['#value'] = reset($options);
       }
     }
-    if (!$settings_form['label_display']['#access']) {
-      $settings_form['label_display']['#type'] = 'hidden';
-      $settings_form['label_display']['#access'] = TRUE;
-    }
     return $form;
   }
 
