@@ -164,7 +164,16 @@ function hpc_security_seckit_csp_directives_alter(&$directives) {
     '*.g.doubleclick.net',
   ];
 
-  $google_supported_domains = file_get_contents('https://www.google.com/supported_domains');
+  // Cache the google domains to prevent unnecessary roundtrips.
+  $google_domains = \Drupal::cache()->get('google_suuported_domains');
+  if (empty($google_domains->data)) {
+    $google_supported_domains = file_get_contents('https://www.google.com/supported_domains');
+    \Drupal::cache()->set('google_suuported_domains', $google_supported_domains);
+  }
+  else {
+    $google_supported_domains = $google_domains->data;
+  }
+
   if ($google_supported_domains !== FALSE) {
     $google_tlds = explode("\n", trim($google_supported_domains));
     foreach ($google_tlds as $google_tld) {

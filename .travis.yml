@@ -27,7 +27,7 @@ script:
   - test ! -d ./html/modules/custom || find -L ./html/modules/custom -iregex '.*\.\(php\|module\|inc\|install\)$' -print0 | xargs -0 -n 1 -P 4 php -l
 
   # Build local image.
-  - make
+  - docker build --file docker/Dockerfile --rm --force-rm --tag unocha/ghi-site:local . || travis_terminate 1;
 
   # Create the site, redis and mysql containers.
   - docker-compose -p ghi-travis -f .travis/docker-compose.yml up -d

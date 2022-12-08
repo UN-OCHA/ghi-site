@@ -3,6 +3,7 @@
 //——————————————————————————————————————————————————————————————————————————————
 .cd-nav__btn {
   height: $cd-site-header-height;
+  white-space: nowrap;
 
   &[aria-expanded] .cd-icon--arrow-down {
     fill: $implementation-highlight;

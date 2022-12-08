@@ -3831,17 +3831,17 @@
         },
         {
             "name": "drupal/layout_builder_ipe",
-            "version": "1.0.0-alpha2",
+            "version": "1.0.0-alpha7",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/layout_builder_ipe.git",
-                "reference": "1.0.0-alpha2"
+                "reference": "1.0.0-alpha7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/layout_builder_ipe-1.0.0-alpha2.zip",
-                "reference": "1.0.0-alpha2",
-                "shasum": "ff04b0978a208a32bbb83c18d126e2008443d05b"
+                "url": "https://ftp.drupal.org/files/projects/layout_builder_ipe-1.0.0-alpha7.zip",
+                "reference": "1.0.0-alpha7",
+                "shasum": "f437eaeb6f2c27b6f2701b249130baa0c6628b68"
             },
             "require": {
                 "drupal/core": "^8 || ^9"
@@ -3849,8 +3849,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "1.0.0-alpha2",
-                    "datestamp": "1667570971",
+                    "version": "1.0.0-alpha7",
+                    "datestamp": "1670434006",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
@@ -17832,5 +17832,5 @@
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }

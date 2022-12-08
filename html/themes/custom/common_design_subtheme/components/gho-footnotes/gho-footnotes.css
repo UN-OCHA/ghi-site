@@ -21,6 +21,7 @@
   max-width: var(--reading-width);
   margin: 0;
   padding: 0 1.5rem;
+  counter-reset: gho-footnotes-backlinks;
   font-size: 0.875rem;
   line-height: 1.25rem;
 }
@@ -34,6 +35,9 @@
 .gho-footnote {
   word-wrap: break-word;
 }
+.gho-footnote a {
+  word-break: break-word;
+}
 .gho-footnote:target {
   background-color: #eee;
 }
@@ -42,7 +46,6 @@
 }
 .gho-footnote__backlinks {
   display: inline;
-  counter-reset: gho-footnotes-backlinks;
   vertical-align: super;
 }
 .gho-footnote-backlink {

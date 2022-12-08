@@ -1,3 +1,5 @@
 disable_layout_page: true
 hide_local_tasks_block: false
 enhance_ui: true
+override_entity_changed_constraint: true
+non_concurrent_editing: true

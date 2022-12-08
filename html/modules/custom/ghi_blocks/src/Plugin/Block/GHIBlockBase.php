@@ -146,6 +146,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
   protected $routeMatch;
 
   /**
+   * The form submitter service.
+   *
+   * @var \Drupal\Core\Form\FormSubmitter
+   */
+  protected $formSubmitter;
+
+  /**
    * Retrieves a configuration object.
    *
    * @param string $name
@@ -177,6 +184,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $instance->moduleHandler = $container->get('module_handler');
     $instance->controllerResolver = $container->get('controller_resolver');
     $instance->routeMatch = $container->get('current_route_match');
+    $instance->formSubmitter = $container->get('form_submitter');
 
     $instance->getContexts();
 
@@ -1339,6 +1347,41 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // elements that might depend on the changed data.
     $this->setElementValidateOnAjaxElements($form['settings']['container']);
     $this->setElementValidateOnAjaxElements($form['actions']['subforms']['preview']);
+
+    // Add our own submit handler, so that we can make sure that the original
+    // block forms submit handlers are only called once the main add/update
+    // button is used.
+    // This allows for a lot of ajax interactions without polluting the layout
+    // builder tempstore with meaningless changes.
+    $form_state->set('original_submit_handlers', $form['#submit']);
+    $form['#submit'] = [
+      [$this, 'submitForm'],
+    ];
+  }
+
+  /**
+   * Custom form submit.
+   *
+   * Only call the forms original submit handlers if this is the main submit
+   * button.
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    $triggering_element = $form_state->getTriggeringElement();
+    $parents = $triggering_element['#parents'];
+    if ($parents == ['actions', 'submit']) {
+      $form['#submit'] = $form_state->get('original_submit_handlers');
+      // If the submit is issued from a preview, the form values are not there
+      // and getTemporarySettings() also returns incomplete data for some
+      // reason. To work around that, we store the current settings separately
+      // on the form state each time they are retrieved.
+      if ($form_state->has('current_settings')) {
+        $values = $form_state->getValues();
+        $values = $form_state->get('current_settings') + $values;
+        $form_state->setValues($values);
+      }
+      // $form_state->setValues()
+      $this->formSubmitter->executeSubmitHandlers($form, $form_state);
+    }
   }
 
   /**
@@ -1535,6 +1578,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $this->setContextMapping($context_mapping);
       }
     }
+    $form_state->set('current_settings', $settings);
     return $settings;
   }
 

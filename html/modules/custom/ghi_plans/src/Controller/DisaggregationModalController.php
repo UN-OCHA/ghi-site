@@ -241,7 +241,7 @@ class DisaggregationModalController extends ControllerBase {
           'data-column-type' => 'amount',
           'data-formatting' => 'numeric-full',
         ];
-        $totals[0] = ($totals[0] ?? 0) + $location['total'];
+        $totals[0] = ($totals[0] ?? 0) + (int) $location['total'];
       }
 
       $rows[] = $row;
