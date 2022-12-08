@@ -198,7 +198,7 @@
   Drupal.hpc_map.init = function (map_id, data, options) {
     let defaults = {
       admin_level_selector : false,
-      mapbox_url: 'https://api.mapbox.com/styles/v1/berliner/cl3o1f4qv002p14qav6jil9tw/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiYmVybGluZXIiLCJhIjoiY2p0ZWtheXZ4MWl3ejQ0b2FxenV3NGNlbSJ9.BHeHnEiQ_uY33hRMmW-HJA',
+      mapbox_url: 'https://api.mapbox.com/styles/v1/reliefweb/clbfjni1x003m15nu67uwtbly/tiles/256/{z}/{x}/{y}?title=view&access_token=pk.eyJ1IjoicmVsaWVmd2ViIiwiYSI6IldYR2ZuV3cifQ.eSPZMZWE6UyLtO0OH_-qrw',
       map_style: 'circle',
       popup_style: 'modal',
       search_enabled: false,
@@ -326,9 +326,7 @@
       state.map = map;
     }
 
-    // TODO: Use a tile provider that is not tight to Kevin Gasks account.
     var layer = L.tileLayer(options.mapbox_url).addTo(map);
-    // var layer = L.tileLayer('https://a.tiles.mapbox.com/styles/v1/reliefweb/cj5jv8kvz0zt32rmlqjhfla7b/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoicmVsaWVmd2ViIiwiYSI6IldYR2ZuV3cifQ.eSPZMZWE6UyLtO0OH_-qrw').addTo(map);
 
     // Add attribution.
     if (typeof options.disclaimer != 'undefined') {
