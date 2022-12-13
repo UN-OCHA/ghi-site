@@ -227,6 +227,17 @@ function common_design_subtheme_preprocess_page(&$variables) {
   if ($subpage_title) {
     $variables['attributes']['class'][] = 'has-subpage-title';
   }
+
+  // Add the SVGs for gho-social-links so we can output them in multiple
+  // templates without having to keep them up to date.
+  /** @var \Drupal\Core\Extension\ExtensionPathResolver $extension_resolver */
+  $extension_resolver = \Drupal::service('extension.path.resolver');
+  $icon_path = $extension_resolver->getPath('theme', 'common_design_subtheme') . '/components/ghi-social-links/img';
+  $variables['icon_twitter'] = file_get_contents($icon_path . '/icon--twitter.svg');
+  $variables['icon_facebook'] = file_get_contents($icon_path . '/icon--facebook.svg');
+  $variables['icon_linkedin'] = file_get_contents($icon_path . '/icon--linkedin.svg');
+  $variables['icon_copyurl'] = file_get_contents($icon_path . '/icon--copyurl.svg');
+  $variables['icon_pdf'] = file_get_contents($icon_path . '/icon--pdf.svg');
 }
 
 /**
