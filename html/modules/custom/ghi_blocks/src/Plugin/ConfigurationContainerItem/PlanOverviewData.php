@@ -31,6 +31,7 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
     $use_custom_value = $this->getSubmittedValue($element, $form_state, 'use_custom_value');
     $custom_value = $this->getSubmittedValue($element, $form_state, 'custom_value');
     $sum = $this->getSubmittedValue($element, $form_state, 'sum');
+    $footnote = $this->getSubmittedValue($element, $form_state, 'footnote');
 
     $type = $this->getType($type_key);
 
@@ -105,7 +106,18 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
       ],
     ];
 
-    $element['value_preview'] = $this->buildValuePreviewFormElement($this->getRenderArray($type, $use_custom_value, $custom_value, $sum));
+    $element['footnote'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Footnote'),
+      '#default_value' => array_key_exists('footnote', $this->config) ? $this->config['footnote'] : NULL,
+      '#ajax' => [
+        'event' => 'change',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $this->wrapperId,
+      ],
+    ];
+
+    $element['value_preview'] = $this->buildValuePreviewFormElement($this->getRenderArray($type, $use_custom_value, $custom_value, $sum, $footnote));
 
     return $element;
   }
@@ -148,16 +160,31 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getRenderArray($type = NULL, $use_custom_value = NULL, $custom_value = NULL, $sum = NULL) {
+  public function getRenderArray($type = NULL, $use_custom_value = NULL, $custom_value = NULL, $sum = NULL, $footnote = NULL) {
     $type = $type ?? $this->getType();
     $use_custom_value = $use_custom_value ?? $this->get('use_custom_value');
     $custom_value = $custom_value ?? $this->get('custom_value');
     $sum = ($sum ?? $this->get('sum')) && !empty($type['allow_sum']);
+    $footnote = $footnote ?? $this->get('footnote');
 
     $theme = $type['theme'] ?? 'hpc_amount';
     $build = ThemeHelper::getThemeOptions($theme, $this->getValue($type, $use_custom_value, $custom_value, $sum), [
       'decimals' => $theme == 'hpc_amount' ? 1 : 2,
     ]);
+
+    if ($footnote) {
+      $build = [
+        '#type' => 'container',
+        0 => $build,
+        1 => [
+          '#theme' => 'hpc_tooltip',
+          '#tooltip' => [
+            '#plain_text' => $footnote,
+          ],
+        ],
+      ];
+    }
+
     return $build;
   }
 

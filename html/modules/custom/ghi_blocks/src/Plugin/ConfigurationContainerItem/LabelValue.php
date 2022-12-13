@@ -36,6 +36,15 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
       '#options' => $formatting_options,
       '#default_value' => array_key_exists('formatting', $this->config) ? $this->config['formatting'] : NULL,
     ];
+
+    if (!empty($this->getPluginConfiguration()['footnote'])) {
+      $element['footnote'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Footnote'),
+        '#default_value' => array_key_exists('footnote', $this->config) ? $this->config['footnote'] : NULL,
+      ];
+    }
+
     return $element;
   }
 
@@ -87,6 +96,20 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
           '#decimal_format' => $decimal_format,
         ];
         break;
+    }
+
+    $footnote = $this->config['footnote'] ?? NULL;
+    if ($footnote) {
+      $rendered_value = [
+        '#type' => 'container',
+        0 => $rendered_value,
+        1 => [
+          '#theme' => 'hpc_tooltip',
+          '#tooltip' => [
+            '#plain_text' => $footnote,
+          ],
+        ],
+      ];
     }
 
     return $rendered_value;

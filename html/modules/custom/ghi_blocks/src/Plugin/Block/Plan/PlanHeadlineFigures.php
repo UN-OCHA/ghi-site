@@ -417,7 +417,9 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
           'select_monitoring_period' => TRUE,
         ],
       ],
-      'label_value' => [],
+      'label_value' => [
+        'footnote' => TRUE,
+      ],
     ];
     return $item_types;
   }
