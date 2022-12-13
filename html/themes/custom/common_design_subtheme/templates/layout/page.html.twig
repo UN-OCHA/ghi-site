@@ -11,10 +11,12 @@
 
       {{ page.page_image }}
 
-      {%
-        include '@common_design_subtheme/content/ghi-social-links.html.twig'
-        with { 'ghoSocialLinksClass': 'ghi-social-links--page' }
-      %}
+      {% if node and node.bundle != 'homepage' %}
+        {%
+          include '@common_design_subtheme/content/ghi-social-links.html.twig'
+          with { 'ghoSocialLinksClass': 'ghi-social-links--page' }
+        %}
+      {% endif %}
 
       {{ page.page_title }}
 
