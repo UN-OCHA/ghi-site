@@ -1,3 +1,4 @@
+{{ attach_library('common_design_subtheme/ghi-social-links') }}
 {% embed '@common_design/layout/page.html.twig' %}
 
   {% block header %}
@@ -9,6 +10,11 @@
     <main role="main" {{ attributes.setAttribute('id', 'main-content').addClass(layout_classes) }}>
 
       {{ page.page_image }}
+
+      {%
+        include '@common_design_subtheme/content/ghi-social-links.html.twig'
+        with { 'ghoSocialLinksClass': 'ghi-social-links--page' }
+      %}
 
       {{ page.page_title }}
 
