@@ -136,8 +136,7 @@
   Drupal.hpc_map_chloropleth.init = function (map_id, data, options) {
     let defaults = {
       admin_level_selector : false,
-      mapbox_url: 'https://api.mapbox.com/styles/v1/kevingask/cjf4hf6cl1c7p2rl9x9k9k1p5/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoia2V2aW5nYXNrIiwiYSI6ImNqYTl6enpxbTBtcTMzMHE5eGc1eGVtOWYifQ.8-OdMNzoKFYd2zNMfjSnqQ',
-
+      mapbox_url: 'https://api.mapbox.com/styles/v1/reliefweb/clboapwyi000714muft627goq/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoicmVsaWVmd2ViIiwiYSI6IldYR2ZuV3cifQ.eSPZMZWE6UyLtO0OH_-qrw',
       map_style: 'circle',
       popup_style: 'modal',
     };
