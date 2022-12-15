@@ -1,0 +1,16 @@
+uuid: 507bcf7e-dbfe-44ec-a3dd-05663f17e995
+langcode: en
+status: true
+dependencies: {  }
+name: 5x2_720
+label: '5x2 @ 720'
+effects:
+  47f6239f-4593-4826-afcf-0dde177c883e:
+    uuid: 47f6239f-4593-4826-afcf-0dde177c883e
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 720
+      height: 288
+      anchor: center-center
+pipeline: __default__

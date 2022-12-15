@@ -1,0 +1,16 @@
+uuid: ab38b9e5-d134-4dfa-919f-06b37e05ab82
+langcode: en
+status: true
+dependencies: {  }
+name: 5x2_1400
+label: '5x2 @ 1400'
+effects:
+  38bde3b6-215b-4a5b-8bb4-10e0e15f819a:
+    uuid: 38bde3b6-215b-4a5b-8bb4-10e0e15f819a
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 1400
+      height: 560
+      anchor: center-center
+pipeline: __default__
