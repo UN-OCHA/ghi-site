@@ -53,7 +53,7 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
     }
 
     // Get the responsive image style.
-    $responsive_image_style = $this->entityTypeManager->getStorage('responsive_image_style')->load('hero');
+    $responsive_image_style = $this->entityTypeManager->getStorage('responsive_image_style')->load('link_carousel');
 
     $context = $this->getBlockContext();
     $carousel_items = [];

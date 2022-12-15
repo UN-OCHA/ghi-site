@@ -19,7 +19,7 @@
         const swiper = new Swiper($(container).find('.swiper').get(0), {
           speed: 400,
           spaceBetween: 100,
-          autoHeight: true,
+          autoHeight: false,
           a11y: true,
           keyboard: true,
           observer: true,

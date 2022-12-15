@@ -1,0 +1,30 @@
+uuid: 4e22f318-c6db-4f06-9ac8-fbb984d0bf40
+langcode: en
+status: true
+dependencies:
+  config:
+    - image.style.5x2_1000
+    - image.style.5x2_1400
+    - image.style.5x2_720
+  theme:
+    - common_design
+id: link_carousel
+label: 'Link carousel'
+image_style_mappings:
+  -
+    image_mapping_type: image_style
+    image_mapping: 5x2_1400
+    breakpoint_id: common_design.xl
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: 5x2_1000
+    breakpoint_id: common_design.md
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: 5x2_720
+    breakpoint_id: common_design.xs
+    multiplier: 1x
+breakpoint_group: common_design
+fallback_image_style: 5x2_720

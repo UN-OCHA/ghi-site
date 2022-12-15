@@ -4,8 +4,8 @@
 }
 
 .link-carousel-wrapper .swiper.main .swiper-wrapper {
-  min-height: 20vh;
-  max-height: 568px;
+  height: auto !important;
+  aspect-ratio: 5 / 2 !important;
 }
 
 .link-carousel-wrapper .swiper.main .swiper-wrapper .swiper-slide {
