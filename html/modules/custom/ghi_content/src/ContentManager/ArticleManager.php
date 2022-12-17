@@ -4,6 +4,7 @@ namespace Drupal\ghi_content\ContentManager;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\Http\RequestStack;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ghi_content\Import\ImportManager;
@@ -63,13 +64,21 @@ class ArticleManager extends BaseContentManager {
   protected $importManager;
 
   /**
+   * The current request.
+   *
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
+  protected $request;
+
+  /**
    * Constructs a document manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer, AccountInterface $current_user, MigrationPluginManager $migration_manager, RemoteSourceManager $remote_source_manager, ImportManager $import_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer, AccountInterface $current_user, MigrationPluginManager $migration_manager, RemoteSourceManager $remote_source_manager, ImportManager $import_manager, RequestStack $request_stack) {
     parent::__construct($entity_type_manager, $renderer, $current_user);
     $this->migrationManager = $migration_manager;
     $this->remoteSourceManager = $remote_source_manager;
     $this->importManager = $import_manager;
+    $this->request = $request_stack->getCurrentRequest();
   }
 
   /**
@@ -541,6 +550,36 @@ class ArticleManager extends BaseContentManager {
     if (!$dry_run) {
       $this->importManager->layoutManagerDiscardChanges($node, NULL);
     }
+  }
+
+  /**
+   * Save an article node programatically.
+   *
+   * Besides saving the node, this does 2 additional things.
+   * 1. It handles the presence of an IPE token, which would prevent updates to
+   *    the layout sections when issued from the node edit form.
+   * 2. It updates the migration status of the node, so that it doesn't get
+   *    wrongly flagged as needing an update.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object.
+   */
+  public function saveArticleNode(NodeInterface $node) {
+    // If the layout builder ipe module is used, we need to remove their token,
+    // otherwhise layout updates (paragraphs) will be reverted before saving
+    // because this action is issued from the node edit form.
+    $ipe_token = $this->request->get('layout_builder_ipe_token');
+    if ($ipe_token) {
+      $this->request->request->remove('layout_builder_ipe_token');
+    }
+
+    // Save the node.
+    $node->save();
+
+    // The next thing we need to do after that is to update the migration state,
+    // so that this article is not wrongly treated as changed on the next
+    // migration run.
+    $this->updateMigrationState($node);
   }
 
   /**
