@@ -259,15 +259,11 @@ function ghi_content_form_node_article_edit_form_apply_changes_submit($form, For
   $form_object = $form_state->getFormObject();
   $node = $form_object->getEntity();
 
-  // Just save the node, this will trigger the update.
-  $node->save();
-
-  // The only thing we need to do after that is to update the migration state,
-  // so that this article is not wrongly treated as changed on the next
-  // migration run.
   /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
   $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
-  $article_manager->updateMigrationState($node);
+
+  // Save the article node, making sure that common logic is applied.
+  $article_manager->saveArticleNode($node);
 
   $form_state->setRebuild();
 }
@@ -282,15 +278,12 @@ function ghi_content_form_node_article_edit_form_reset_submit($form, FormStateIn
 
   /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
   $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
+
+  // Reset the article to it's exact version in the remote system.
   $article_manager->updateNodeFromRemote($node, FALSE, TRUE);
 
-  // Save the node.
-  $node->save();
-
-  // The next thing we need to do after that is to update the migration state,
-  // so that this article is not wrongly treated as changed on the next
-  // migration run.
-  $article_manager->updateMigrationState($node);
+  // Save the article node, making sure that common logic is applied.
+  $article_manager->saveArticleNode($node);
 
   $form_state->setRebuild();
 }
