@@ -20,6 +20,7 @@ module:
   config_default_responsive_image: 0
   config_filter: 0
   config_ignore: 0
+  config_split: 0
   config_translation: 0
   contextual: 0
   ctools: 0
