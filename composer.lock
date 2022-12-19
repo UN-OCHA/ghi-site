@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fb3e48a5ffef68d0982127f8b2db81c9",
+    "content-hash": "645d019e91b5bdb499d147404a35ae28",
     "packages": [
         {
             "name": "alchemy/zippy",
@@ -5844,17 +5844,11 @@
         },
         {
             "name": "drupal/webp",
-            "version": "1.0.0-beta6",
+            "version": "dev-1.x",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/webp.git",
-                "reference": "8.x-1.0-beta6"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/webp-8.x-1.0-beta6.zip",
-                "reference": "8.x-1.0-beta6",
-                "shasum": "8e8edd2f4a407c41724046a09b612c5b9a20f637"
+                "reference": "33fb22624108c6c6d173a20cb001ce09d0ea00d1"
             },
             "require": {
                 "drupal/core": "^8 || ^9",
@@ -5862,12 +5856,15 @@
             },
             "type": "drupal-module",
             "extra": {
+                "branch-alias": {
+                    "dev-1.x": "1.x-dev"
+                },
                 "drupal": {
-                    "version": "8.x-1.0-beta6",
-                    "datestamp": "1642191512",
+                    "version": "8.x-1.0-beta6+4-dev",
+                    "datestamp": "1642247680",
                     "security-coverage": {
                         "status": "not-covered",
-                        "message": "Beta releases are not covered by Drupal security advisories."
+                        "message": "Dev releases are not covered by Drupal security advisories."
                     }
                 }
             },
@@ -17827,7 +17824,7 @@
         "drupal/phpexcel": 20,
         "drupal/rabbit_hole": 10,
         "drupal/smugmug_api": 20,
-        "drupal/webp": 10,
+        "drupal/webp": 20,
         "drupal/xhprof": 10,
         "drupal/yaml_content": 15
     },
@@ -17835,5 +17832,5 @@
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": [],
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }
