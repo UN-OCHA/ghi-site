@@ -13,7 +13,6 @@ use Drupal\ghi_blocks\Controller\BaseObjectReferenceController;
 use Drupal\ghi_blocks\Controller\LayoutBuilderBlockController;
 use Drupal\ghi_blocks\Helpers\GlobalSettingsHelper;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\ghi_blocks\Plugin\Block\ImageProviderBlockInterface;
 use Drupal\hpc_common\Helpers\UserHelper;
 use Drupal\layout_builder\Plugin\Block\InlineBlock;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -512,10 +511,7 @@ function ghi_blocks_plan_overview_query_arguments_alter(array &$query_args, $yea
 }
 
 /**
- * Alter the meta tags for pages that are not of content entities.
- *
- * Used to extract images for social networks from individual block plugins on
- * the front page.
+ * Alter the meta tags for the current page.
  *
  * @param array $metatags
  *   The special meta tags to be added to the page.
@@ -525,35 +521,19 @@ function ghi_blocks_plan_overview_query_arguments_alter(array &$query_args, $yea
  *   'entity' - The entity being processed; passed by reference.
  */
 function ghi_blocks_metatags_alter(array &$metatags, array &$context) {
-  // Exclude meta tags on frontpage.
-  $page_variant = \Drupal::routeMatch()->getParameter('page_manager_page_variant');
-  if (!$page_variant) {
-    return;
-  }
-  // We have a page variant. There should be a link carousel from where we can
-  // extract an image.
-  /** @var \Drupal\page_manager\Entity\PageVariant $page_variant */
-  $plugin_collections = $page_variant->getPluginCollections();
-  $variant_settings = $plugin_collections['variant_settings'];
+  /** @var \Drupal\ghi_blocks\Metatags\Metatags $ghi_metatags */
+  $ghi_metatags = \Drupal::service('ghi_blocks.metatags');
+  $ghi_metatags->alter($metatags, $context);
+}
 
-  /** @var \Drupal\layout_builder\Section $section */
-  $section = $variant_settings->getConfiguration()['sections'][0] ?? [];
-  if (!$section) {
-    return;
-  }
-  foreach ($section->getComponents() as $component) {
-    /** @var \Drupal\layout_builder\SectionComponent $component */
-    $plugin = $component->getPlugin();
-    if (!$plugin instanceof ImageProviderBlockInterface) {
-      continue;
-    }
-    $image_uri = $plugin->provideImageUri();
-    if (!$image_uri) {
-      continue;
-    }
-    $image_url = \Drupal::service('file_url_generator')->generateAbsoluteString($image_uri);
-    $metatags['og_image'] = $image_url;
-    $metatags['twitter_image'] = $image_url;
-    return;
-  }
+/**
+ * Alter the meta tags for any page prior to page attachment.
+ *
+ * @param array $metatag_attachments
+ *   An array of metatag objects to be attached to the current page.
+ */
+function ghi_blocks_metatags_attachments_alter(array &$metatag_attachments) {
+  /** @var \Drupal\ghi_blocks\Metatags\Metatags $ghi_metatags */
+  $ghi_metatags = \Drupal::service('ghi_blocks.metatags');
+  $ghi_metatags->alterAttachments($metatag_attachments);
 }
