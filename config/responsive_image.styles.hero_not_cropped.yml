@@ -1,0 +1,31 @@
+uuid: 8ab0988c-2b3d-45aa-a95b-07de1e858363
+langcode: en
+status: true
+dependencies:
+  config:
+    - image.style.width_1000
+    - image.style.width_1400
+    - image.style.width_480
+    - image.style.width_720
+  theme:
+    - common_design
+id: hero_not_cropped
+label: 'Hero (not cropped)'
+image_style_mappings:
+  -
+    image_mapping_type: image_style
+    image_mapping: width_1400
+    breakpoint_id: common_design.xxl
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: width_1000
+    breakpoint_id: common_design.lg
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: width_720
+    breakpoint_id: common_design.md
+    multiplier: 1x
+breakpoint_group: common_design
+fallback_image_style: width_480

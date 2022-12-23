@@ -1,0 +1,16 @@
+uuid: b52b07ac-502b-40d2-acf0-3b0b9c897cbd
+langcode: en
+status: true
+dependencies: {  }
+name: width_1400
+label: 'Width 1400'
+effects:
+  8e7c4a09-c624-4a96-bef6-70d5fcaee689:
+    uuid: 8e7c4a09-c624-4a96-bef6-70d5fcaee689
+    id: image_scale
+    weight: 1
+    data:
+      width: 1400
+      height: null
+      upscale: true
+pipeline: __default__
