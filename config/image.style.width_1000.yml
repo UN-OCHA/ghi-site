@@ -1,0 +1,16 @@
+uuid: 831e1f02-6ef9-4f95-8b98-60d2de3d3fda
+langcode: en
+status: true
+dependencies: {  }
+name: width_1000
+label: 'Width 1000'
+effects:
+  d3c50a32-5eb0-4f79-a97e-589363d72a9a:
+    uuid: d3c50a32-5eb0-4f79-a97e-589363d72a9a
+    id: image_scale
+    weight: 1
+    data:
+      width: 1000
+      height: null
+      upscale: true
+pipeline: __default__

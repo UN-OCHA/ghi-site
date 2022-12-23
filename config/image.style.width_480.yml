@@ -1,0 +1,16 @@
+uuid: 5663b441-1892-480e-9f7e-fc7283513425
+langcode: en
+status: true
+dependencies: {  }
+name: width_480
+label: 'Width 480'
+effects:
+  e295e7d9-8fd7-4970-8d3c-03b9d0a4b925:
+    uuid: e295e7d9-8fd7-4970-8d3c-03b9d0a4b925
+    id: image_scale
+    weight: 1
+    data:
+      width: 480
+      height: null
+      upscale: true
+pipeline: __default__

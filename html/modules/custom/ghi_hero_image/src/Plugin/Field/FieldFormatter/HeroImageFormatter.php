@@ -56,6 +56,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
   public static function defaultSettings() {
     return [
       'include_credits' => FALSE,
+      'crop_image' => TRUE,
     ] + parent::defaultSettings();
   }
 
