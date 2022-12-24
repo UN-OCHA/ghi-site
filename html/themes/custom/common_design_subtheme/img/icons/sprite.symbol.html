@@ -105,13 +105,13 @@ They might well be outsourced to an external stylesheet of course.
 -->
 
 <style>
- arrow-left-dims { width: 48px; height: 48px; }
- arrow-right-dims { width: 48px; height: 48px; }
- coordination-dims { width: 48px; height: 48px; }
- document-dims { width: 32px; height: 44px; }
- download-dims { width: 48px; height: 48px; }
- ghi-icons-sprite-dims { width: 100px; height: 100px; }
- search-dims { width: 48px; height: 48px; }
+ ghi-icon--arrow-left-dims { width: 48px; height: 48px; }
+ ghi-icon--arrow-right-dims { width: 48px; height: 48px; }
+ ghi-icon--coordination-dims { width: 48px; height: 48px; }
+ ghi-icon--document-dims { width: 32px; height: 44px; }
+ ghi-icon--download-dims { width: 48px; height: 48px; }
+ ghi-icon--pdf-dims { width: 1165.4px; height: 1369.7px; }
+ ghi-icon--search-dims { width: 48px; height: 48px; }
 </style>
 
 <!--
@@ -133,13 +133,13 @@ for further details on how to create this embeddable sprite variant.
 -->
 
 <svg width="0" height="0" style="position:absolute">
-     <symbol viewBox="0 0 48 48" id="arrow-left" xmlns="http://www.w3.org/2000/svg"><path d="M34 48a4 4 0 0 1-2.83-1.17l-20-20a4 4 0 0 1 0-5.66l20-20a4 4 0 0 1 5.66 5.66L19.66 24l17.17 17.17A4 4 0 0 1 34 48Z"/></symbol>
-     <symbol viewBox="0 0 48 48" id="arrow-right" xmlns="http://www.w3.org/2000/svg"><path d="M14 48a4 4 0 0 1-2.83-6.83L28.34 24 11.17 6.83a4 4 0 0 1 5.66-5.66l20 20a4 4 0 0 1 0 5.66l-20 20A4 4 0 0 1 14 48Z"/></symbol>
-     <symbol viewBox="0 0 48 48" id="coordination" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="6"/><path d="M32 18h9a2 2 0 0 0 0-4h-4.172L47.414 3.414A2 2 0 1 0 44.586.586L34 11.172V7a2 2 0 0 0-4 0v9a2 2 0 0 0 2 2ZM11.172 14H7a2 2 0 0 0 0 4h9a2 2 0 0 0 2-2V7a2 2 0 0 0-4 0v4.172L3.414.586A2 2 0 0 0 .586 3.414ZM36.828 34H41a2 2 0 0 0 0-4h-9a2 2 0 0 0-2 2v9a2 2 0 0 0 4 0v-4.172l10.586 10.586a2 2 0 0 0 2.828-2.828ZM16 30H7a2 2 0 0 0 0 4h4.172L.586 44.586a2 2 0 1 0 2.828 2.828L14 36.828V41a2 2 0 0 0 4 0v-9a2 2 0 0 0-2-2Z"/></symbol>
-     <symbol viewBox="0 0 32 44" id="document" xmlns="http://www.w3.org/2000/svg"><path d="M30 0H2a2.006 2.006 0 0 0-2 2v40a2.006 2.006 0 0 0 2 2h19v-7a3.999 3.999 0 0 1 4-4h7V2a2.006 2.006 0 0 0-2-2Zm-4.5 28h-19a1.5 1.5 0 0 1 0-3h19a1.5 1.5 0 0 1 0 3Zm0-8h-19a1.5 1.5 0 0 1 0-3h19a1.5 1.5 0 0 1 0 3Zm0-8h-19a1.5 1.5 0 0 1 0-3h19a1.5 1.5 0 0 1 0 3Z"/><path d="M23 37v7l9-9h-7a2.006 2.006 0 0 0-2 2Z"/></symbol>
-     <symbol viewBox="0 0 48 48" id="download" xmlns="http://www.w3.org/2000/svg"><path d="m7.88 33.12 14 14a3 3 0 0 0 4.24 0l14-14a3 3 0 0 0-4.24-4.24L27 37.76V12a3 3 0 0 0-6 0v25.76l-8.88-8.88a3 3 0 0 0-4.24 4.24Z"/><path d="M45.8 0H2.2A2.37 2.37 0 0 0 0 2.51v9A2.37 2.37 0 0 0 2.2 14H18v-2a6 6 0 0 1 12 0v2h15.8a2.37 2.37 0 0 0 2.2-2.51v-9A2.37 2.37 0 0 0 45.8 0ZM36 9a2 2 0 1 1 2-2 2 2 0 0 1-2 2Zm7 0a2 2 0 1 1 2-2 2 2 0 0 1-2 2Z"/></symbol>
-     <symbol class="fghi-icons-sprite" viewBox="0 0 100 100" id="ghi-icons-sprite" xmlns="http://www.w3.org/2000/svg"><symbol viewBox="0 0 48 48" id="farrow-left" xmlns="http://www.w3.org/2000/svg"><path d="M34 48a4 4 0 0 1-2.83-1.17l-20-20a4 4 0 0 1 0-5.66l20-20a4 4 0 0 1 5.66 5.66L19.66 24l17.17 17.17A4 4 0 0 1 34 48Z"/></symbol><symbol viewBox="0 0 48 48" id="farrow-right" xmlns="http://www.w3.org/2000/svg"><path d="M14 48a4 4 0 0 1-2.83-6.83L28.34 24 11.17 6.83a4 4 0 0 1 5.66-5.66l20 20a4 4 0 0 1 0 5.66l-20 20A4 4 0 0 1 14 48Z"/></symbol><symbol viewBox="0 0 48 48" id="fcoordination" xmlns="http://www.w3.org/2000/svg"><defs><style>.fccls-1,.ffccls-1,.ffdcls-1{fill:#418fde}</style></defs><g id="fcLayer_2" data-name="Layer 2"><g id="fcIcons"><circle class="fccls-1" cx="24" cy="24" r="6"/><path class="fccls-1" d="M32 18h9a2 2 0 0 0 0-4h-4.172L47.414 3.414A2 2 0 1 0 44.586.586L34 11.172V7a2 2 0 0 0-4 0v9a2 2 0 0 0 2 2Zm-20.828-4H7a2 2 0 0 0 0 4h9a2 2 0 0 0 2-2V7a2 2 0 0 0-4 0v4.172L3.414.586A2 2 0 0 0 .586 3.414Zm25.656 20H41a2 2 0 0 0 0-4h-9a2 2 0 0 0-2 2v9a2 2 0 0 0 4 0v-4.172l10.586 10.586a2 2 0 0 0 2.828-2.828ZM16 30H7a2 2 0 0 0 0 4h4.172L.586 44.586a2 2 0 1 0 2.828 2.828L14 36.828V41a2 2 0 0 0 4 0v-9a2 2 0 0 0-2-2Z"/></g></g></symbol><symbol viewBox="0 0 32 44" id="fdocument" xmlns="http://www.w3.org/2000/svg"><path d="M30 0H2a2.006 2.006 0 0 0-2 2v40a2.006 2.006 0 0 0 2 2h19v-7a3.999 3.999 0 0 1 4-4h7V2a2.006 2.006 0 0 0-2-2Zm-4.5 28h-19a1.5 1.5 0 0 1 0-3h19a1.5 1.5 0 0 1 0 3Zm0-8h-19a1.5 1.5 0 0 1 0-3h19a1.5 1.5 0 0 1 0 3Zm0-8h-19a1.5 1.5 0 0 1 0-3h19a1.5 1.5 0 0 1 0 3Z"/><path d="M23 37v7l9-9h-7a2.006 2.006 0 0 0-2 2Z"/></symbol><symbol viewBox="0 0 48 48" id="fdownload" xmlns="http://www.w3.org/2000/svg"><path d="m7.88 33.12 14 14a3 3 0 0 0 4.24 0l14-14a3 3 0 0 0-4.24-4.24L27 37.76V12a3 3 0 0 0-6 0v25.76l-8.88-8.88a3 3 0 0 0-4.24 4.24Z"/><path d="M45.8 0H2.2A2.37 2.37 0 0 0 0 2.51v9A2.37 2.37 0 0 0 2.2 14H18v-2a6 6 0 0 1 12 0v2h15.8a2.37 2.37 0 0 0 2.2-2.51v-9A2.37 2.37 0 0 0 45.8 0ZM36 9a2 2 0 1 1 2-2 2 2 0 0 1-2 2Zm7 0a2 2 0 1 1 2-2 2 2 0 0 1-2 2Z"/></symbol><symbol class="ffghi-icons-sprite" viewBox="0 0 100 100" id="fghi-icons-sprite" xmlns="http://www.w3.org/2000/svg"><symbol viewBox="0 0 48 48" id="ffarrow-left"><path d="M34 48a4 4 0 0 1-2.83-1.17l-20-20a4 4 0 0 1 0-5.66l20-20a4 4 0 0 1 5.66 5.66L19.66 24l17.17 17.17A4 4 0 0 1 34 48Z"/></symbol><symbol viewBox="0 0 48 48" id="ffarrow-right"><path d="M14 48a4 4 0 0 1-2.83-6.83L28.34 24 11.17 6.83a4 4 0 0 1 5.66-5.66l20 20a4 4 0 0 1 0 5.66l-20 20A4 4 0 0 1 14 48Z"/></symbol><symbol viewBox="0 0 48 48" id="ffcoordination"><g id="ffcLayer_2" data-name="Layer 2"><g id="ffcIcons"><circle class="ffccls-1" cx="24" cy="24" r="6"/><path class="ffccls-1" d="M32 18h9a2 2 0 0 0 0-4h-4.172L47.414 3.414A2 2 0 1 0 44.586.586L34 11.172V7a2 2 0 0 0-4 0v9a2 2 0 0 0 2 2Zm-20.828-4H7a2 2 0 0 0 0 4h9a2 2 0 0 0 2-2V7a2 2 0 0 0-4 0v4.172L3.414.586A2 2 0 0 0 .586 3.414Zm25.656 20H41a2 2 0 0 0 0-4h-9a2 2 0 0 0-2 2v9a2 2 0 0 0 4 0v-4.172l10.586 10.586a2 2 0 0 0 2.828-2.828ZM16 30H7a2 2 0 0 0 0 4h4.172L.586 44.586a2 2 0 1 0 2.828 2.828L14 36.828V41a2 2 0 0 0 4 0v-9a2 2 0 0 0-2-2Z"/></g></g></symbol><symbol viewBox="0 0 32 44" id="ffdocument"><g id="ffdLayer_2" data-name="Layer 2"><g id="ffdIcons"><path class="ffdcls-1" d="M30 0H2a2.006 2.006 0 0 0-2 2v40a2.006 2.006 0 0 0 2 2h19v-7a3.999 3.999 0 0 1 4-4h7V2a2.006 2.006 0 0 0-2-2Zm-4.5 28h-19a1.5 1.5 0 0 1 0-3h19a1.5 1.5 0 0 1 0 3Zm0-8h-19a1.5 1.5 0 0 1 0-3h19a1.5 1.5 0 0 1 0 3Zm0-8h-19a1.5 1.5 0 0 1 0-3h19a1.5 1.5 0 0 1 0 3Z"/><path class="ffdcls-1" d="M23 37v7l9-9h-7a2.006 2.006 0 0 0-2 2Z"/></g></g></symbol><symbol viewBox="0 0 48 48" id="ffdownload"><path d="m7.88 33.12 14 14a3 3 0 0 0 4.24 0l14-14a3 3 0 0 0-4.24-4.24L27 37.76V12a3 3 0 0 0-6 0v25.76l-8.88-8.88a3 3 0 0 0-4.24 4.24Z"/><path d="M45.8 0H2.2A2.37 2.37 0 0 0 0 2.51v9A2.37 2.37 0 0 0 2.2 14H18v-2a6 6 0 0 1 12 0v2h15.8a2.37 2.37 0 0 0 2.2-2.51v-9A2.37 2.37 0 0 0 45.8 0ZM36 9a2 2 0 1 1 2-2 2 2 0 0 1-2 2Zm7 0a2 2 0 1 1 2-2 2 2 0 0 1-2 2Z"/></symbol><symbol viewBox="0 0 48 48" id="ffsearch"><path d="M46.829 41.172 38.4 32.744a21.018 21.018 0 1 0-5.657 5.657l8.427 8.427a4 4 0 0 0 5.658-5.656ZM8 21a13 13 0 1 1 22.325 9.046c-.05.045-.106.078-.154.126s-.08.104-.125.154A12.992 12.992 0 0 1 8 21Z"/></symbol></symbol><symbol viewBox="0 0 48 48" id="fsearch" xmlns="http://www.w3.org/2000/svg"><path d="M46.829 41.172 38.4 32.744a21.018 21.018 0 1 0-5.657 5.657l8.427 8.427a4 4 0 0 0 5.658-5.656ZM8 21a13 13 0 1 1 22.325 9.046c-.05.045-.106.078-.154.126s-.08.104-.125.154A12.992 12.992 0 0 1 8 21Z"/></symbol></symbol>
-     <symbol viewBox="0 0 48 48" id="search" xmlns="http://www.w3.org/2000/svg"><path d="M46.829 41.172 38.4 32.744a21.018 21.018 0 1 0-5.657 5.657l8.427 8.427a4 4 0 0 0 5.658-5.656ZM8 21a13 13 0 1 1 22.325 9.046c-.05.045-.106.078-.154.126s-.08.104-.125.154A12.992 12.992 0 0 1 8 21Z"/></symbol>
+     <symbol viewBox="0 0 48 48" id="ghi-icon--arrow-left" xmlns="http://www.w3.org/2000/svg"><path d="M34 48a4 4 0 0 1-2.83-1.17l-20-20a4 4 0 0 1 0-5.66l20-20a4 4 0 0 1 5.66 5.66L19.66 24l17.17 17.17A4 4 0 0 1 34 48Z"/></symbol>
+     <symbol viewBox="0 0 48 48" id="ghi-icon--arrow-right" xmlns="http://www.w3.org/2000/svg"><path d="M14 48a4 4 0 0 1-2.83-6.83L28.34 24 11.17 6.83a4 4 0 0 1 5.66-5.66l20 20a4 4 0 0 1 0 5.66l-20 20A4 4 0 0 1 14 48Z"/></symbol>
+     <symbol viewBox="0 0 48 48" id="ghi-icon--coordination" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="6"/><path d="M32 18h9a2 2 0 0 0 0-4h-4.172L47.414 3.414A2 2 0 1 0 44.586.586L34 11.172V7a2 2 0 0 0-4 0v9a2 2 0 0 0 2 2ZM11.172 14H7a2 2 0 0 0 0 4h9a2 2 0 0 0 2-2V7a2 2 0 0 0-4 0v4.172L3.414.586A2 2 0 0 0 .586 3.414ZM36.828 34H41a2 2 0 0 0 0-4h-9a2 2 0 0 0-2 2v9a2 2 0 0 0 4 0v-4.172l10.586 10.586a2 2 0 0 0 2.828-2.828ZM16 30H7a2 2 0 0 0 0 4h4.172L.586 44.586a2 2 0 1 0 2.828 2.828L14 36.828V41a2 2 0 0 0 4 0v-9a2 2 0 0 0-2-2Z"/></symbol>
+     <symbol viewBox="0 0 32 44" id="ghi-icon--document" xmlns="http://www.w3.org/2000/svg"><path d="M30 0H2a2.006 2.006 0 0 0-2 2v40a2.006 2.006 0 0 0 2 2h19v-7a3.999 3.999 0 0 1 4-4h7V2a2.006 2.006 0 0 0-2-2Zm-4.5 28h-19a1.5 1.5 0 0 1 0-3h19a1.5 1.5 0 0 1 0 3Zm0-8h-19a1.5 1.5 0 0 1 0-3h19a1.5 1.5 0 0 1 0 3Zm0-8h-19a1.5 1.5 0 0 1 0-3h19a1.5 1.5 0 0 1 0 3Z"/><path d="M23 37v7l9-9h-7a2.006 2.006 0 0 0-2 2Z"/></symbol>
+     <symbol viewBox="0 0 48 48" id="ghi-icon--download" xmlns="http://www.w3.org/2000/svg"><path d="m7.88 33.12 14 14a3 3 0 0 0 4.24 0l14-14a3 3 0 0 0-4.24-4.24L27 37.76V12a3 3 0 0 0-6 0v25.76l-8.88-8.88a3 3 0 0 0-4.24 4.24Z"/><path d="M45.8 0H2.2A2.37 2.37 0 0 0 0 2.51v9A2.37 2.37 0 0 0 2.2 14H18v-2a6 6 0 0 1 12 0v2h15.8a2.37 2.37 0 0 0 2.2-2.51v-9A2.37 2.37 0 0 0 45.8 0ZM36 9a2 2 0 1 1 2-2 2 2 0 0 1-2 2Zm7 0a2 2 0 1 1 2-2 2 2 0 0 1-2 2Z"/></symbol>
+     <symbol viewBox="0 0 1165.4 1369.7" style="enable-background:new 0 0 1165.4 1369.7" xml:space="preserve" id="ghi-icon--pdf" xmlns="http://www.w3.org/2000/svg"><path d="M1165.4 364.2V1215c0 49.7-40.4 90.1-90.1 90.1H750.5l49.6-50.4h275.2c21.9 0 39.7-17.8 39.7-39.7V399.4H817.2c-38.5 0-69.9-31.3-69.9-69.9V50.4h-531c-21.9 0-39.7 17.8-39.7 39.7v290.2h-50.4V90.1c0-49.7 40.4-90.1 90.1-90.1h561.3c6.4 0 12.5 2.4 17.2 6.8l362.6 338.9c5.2 4.8 8 11.5 8 18.5zm-949 890.4c-21.9 0-39.7-17.8-39.7-39.7V728.4h-50.4v486.5c0 49.7 40.4 90.1 90.1 90.1h347.4l-49.6-50.4H216.4zM191 497.7c-7.2-4.5-17.9-6.8-32.1-6.8h-23.5V557h24.7c27.9 0 41.8-11.5 41.8-34.5 0-12-3.6-20.3-10.9-24.8zm443 209.5H16.3c-9 0-16.3-7.3-16.3-16.3v-273c0-9 7.3-16.3 16.3-16.3H634c9 0 16.3 7.3 16.3 16.3v273c0 9-7.3 16.3-16.3 16.3zM235 522.5c0-11-1.8-20.3-5.5-27.7-3.7-7.4-8.8-13.5-15.4-18.1-6.6-4.7-14.4-7.9-23.4-9.9-9-1.9-18.7-2.9-29.2-2.9h-59.8v189.8h33.7V584h27.3c10.2 0 19.8-1.2 28.6-3.6 8.8-2.4 16.4-6.2 22.9-11.3 6.5-5.1 11.6-11.6 15.2-19.3 3.8-7.8 5.6-16.9 5.6-27.3zm178.8 35.4c0-31.3-8.1-54.8-24.4-70.5-16.2-15.7-38.9-23.5-67.9-23.5h-50.8v189.8h52.5c14.1 0 26.7-2 37.9-6.1 11.1-4.1 20.6-10.1 28.4-18.1 7.8-8 13.8-18 18-30 4.2-12.1 6.3-26 6.3-41.6zm152.9-94.1H452.1v189.8h33.7v-79.2h69.1V546h-69.1v-53.7h81v-28.5zm-247.5 27.3h-14.8v135.2h14.8c19.3 0 34.2-5.6 44.5-16.7 10.3-11.1 15.5-28.4 15.5-51.8 0-23.2-5.2-40.1-15.7-50.8-10.4-10.5-25.2-15.9-44.3-15.9zM847.5 1152h-90.6V859.8c0-5.5-4.5-10-10-10H567.5c-5.5 0-10 4.5-10 10V1152h-90.6c-8.9 0-13.3 10.7-7.1 17l197.4 200.6L854.6 1169c6.2-6.3 1.7-17-7.1-17z" style="fill:#4d4d4d"/></symbol>
+     <symbol viewBox="0 0 48 48" id="ghi-icon--search" xmlns="http://www.w3.org/2000/svg"><path d="M46.829 41.172 38.4 32.744a21.018 21.018 0 1 0-5.657 5.657l8.427 8.427a4 4 0 0 0 5.658-5.656ZM8 21a13 13 0 1 1 22.325 9.046c-.05.045-.106.078-.154.126s-.08.104-.125.154A12.992 12.992 0 0 1 8 21Z"/></symbol>
 </svg>
 
 <!--
@@ -166,61 +166,61 @@ embedded above. They may be styled via CSS.
             <h3>A) Inline SVG with embedded sprite</h3>
             <ul>
 
-             <li title="arrow-left">
+             <li title="ghi-icon--arrow-left">
                     <div class="icon-box">
-                        <svg class="arrow-left-dims">
-                            <use xlink:href="#arrow-left"></use>
+                        <svg class="ghi-icon--arrow-left-dims">
+                            <use xlink:href="#ghi-icon--arrow-left"></use>
                         </svg>
                     </div>
-                    <h2>arrow-left, </h2>
+                    <h2>ghi-icon--arrow-left, </h2>
                 </li>
-             <li title="arrow-right">
+             <li title="ghi-icon--arrow-right">
                     <div class="icon-box">
-                        <svg class="arrow-right-dims">
-                            <use xlink:href="#arrow-right"></use>
+                        <svg class="ghi-icon--arrow-right-dims">
+                            <use xlink:href="#ghi-icon--arrow-right"></use>
                         </svg>
                     </div>
-                    <h2>arrow-right, </h2>
+                    <h2>ghi-icon--arrow-right, </h2>
                 </li>
-             <li title="coordination">
+             <li title="ghi-icon--coordination">
                     <div class="icon-box">
-                        <svg class="coordination-dims">
-                            <use xlink:href="#coordination"></use>
+                        <svg class="ghi-icon--coordination-dims">
+                            <use xlink:href="#ghi-icon--coordination"></use>
                         </svg>
                     </div>
-                    <h2>coordination, </h2>
+                    <h2>ghi-icon--coordination, </h2>
                 </li>
-             <li title="document">
+             <li title="ghi-icon--document">
                     <div class="icon-box">
-                        <svg class="document-dims">
-                            <use xlink:href="#document"></use>
+                        <svg class="ghi-icon--document-dims">
+                            <use xlink:href="#ghi-icon--document"></use>
                         </svg>
                     </div>
-                    <h2>document, </h2>
+                    <h2>ghi-icon--document, </h2>
                 </li>
-             <li title="download">
+             <li title="ghi-icon--download">
                     <div class="icon-box">
-                        <svg class="download-dims">
-                            <use xlink:href="#download"></use>
+                        <svg class="ghi-icon--download-dims">
+                            <use xlink:href="#ghi-icon--download"></use>
                         </svg>
                     </div>
-                    <h2>download, </h2>
+                    <h2>ghi-icon--download, </h2>
                 </li>
-             <li title="ghi-icons-sprite">
+             <li title="ghi-icon--pdf">
                     <div class="icon-box">
-                        <svg class="ghi-icons-sprite-dims">
-                            <use xlink:href="#ghi-icons-sprite"></use>
+                        <svg class="ghi-icon--pdf-dims">
+                            <use xlink:href="#ghi-icon--pdf"></use>
                         </svg>
                     </div>
-                    <h2>ghi-icons-sprite, </h2>
+                    <h2>ghi-icon--pdf, </h2>
                 </li>
-             <li title="search">
+             <li title="ghi-icon--search">
                     <div class="icon-box">
-                        <svg class="search-dims">
-                            <use xlink:href="#search"></use>
+                        <svg class="ghi-icon--search-dims">
+                            <use xlink:href="#ghi-icon--search"></use>
                         </svg>
                     </div>
-                    <h2>search, </h2>
+                    <h2>ghi-icon--search, </h2>
                 </li>
          </ul>
 
@@ -241,61 +241,61 @@ SVG sprite. They may be styled via CSS.
             <h3>B) Inline SVG with external sprite</h3>
             <ul>
 
-             <li title="arrow-left">
+             <li title="ghi-icon--arrow-left">
                     <div class="icon-box">
-                        <svg class="arrow-left-dims">
-                            <use xlink:href="ghi-icons-sprite.svg#arrow-left"></use>
+                        <svg class="ghi-icon--arrow-left-dims">
+                            <use xlink:href="ghi-icons-sprite.svg#ghi-icon--arrow-left"></use>
                         </svg>
                     </div>
-                    <h2>arrow-left</h2>
+                    <h2>ghi-icon--arrow-left</h2>
                 </li>
-             <li title="arrow-right">
+             <li title="ghi-icon--arrow-right">
                     <div class="icon-box">
-                        <svg class="arrow-right-dims">
-                            <use xlink:href="ghi-icons-sprite.svg#arrow-right"></use>
+                        <svg class="ghi-icon--arrow-right-dims">
+                            <use xlink:href="ghi-icons-sprite.svg#ghi-icon--arrow-right"></use>
                         </svg>
                     </div>
-                    <h2>arrow-right</h2>
+                    <h2>ghi-icon--arrow-right</h2>
                 </li>
-             <li title="coordination">
+             <li title="ghi-icon--coordination">
                     <div class="icon-box">
-                        <svg class="coordination-dims">
-                            <use xlink:href="ghi-icons-sprite.svg#coordination"></use>
+                        <svg class="ghi-icon--coordination-dims">
+                            <use xlink:href="ghi-icons-sprite.svg#ghi-icon--coordination"></use>
                         </svg>
                     </div>
-                    <h2>coordination</h2>
+                    <h2>ghi-icon--coordination</h2>
                 </li>
-             <li title="document">
+             <li title="ghi-icon--document">
                     <div class="icon-box">
-                        <svg class="document-dims">
-                            <use xlink:href="ghi-icons-sprite.svg#document"></use>
+                        <svg class="ghi-icon--document-dims">
+                            <use xlink:href="ghi-icons-sprite.svg#ghi-icon--document"></use>
                         </svg>
                     </div>
-                    <h2>document</h2>
+                    <h2>ghi-icon--document</h2>
                 </li>
-             <li title="download">
+             <li title="ghi-icon--download">
                     <div class="icon-box">
-                        <svg class="download-dims">
-                            <use xlink:href="ghi-icons-sprite.svg#download"></use>
+                        <svg class="ghi-icon--download-dims">
+                            <use xlink:href="ghi-icons-sprite.svg#ghi-icon--download"></use>
                         </svg>
                     </div>
-                    <h2>download</h2>
+                    <h2>ghi-icon--download</h2>
                 </li>
-             <li title="ghi-icons-sprite">
+             <li title="ghi-icon--pdf">
                     <div class="icon-box">
-                        <svg class="ghi-icons-sprite-dims">
-                            <use xlink:href="ghi-icons-sprite.svg#ghi-icons-sprite"></use>
+                        <svg class="ghi-icon--pdf-dims">
+                            <use xlink:href="ghi-icons-sprite.svg#ghi-icon--pdf"></use>
                         </svg>
                     </div>
-                    <h2>ghi-icons-sprite</h2>
+                    <h2>ghi-icon--pdf</h2>
                 </li>
-             <li title="search">
+             <li title="ghi-icon--search">
                     <div class="icon-box">
-                        <svg class="search-dims">
-                            <use xlink:href="ghi-icons-sprite.svg#search"></use>
+                        <svg class="ghi-icon--search-dims">
+                            <use xlink:href="ghi-icons-sprite.svg#ghi-icon--search"></use>
                         </svg>
                     </div>
-                    <h2>search</h2>
+                    <h2>ghi-icon--search</h2>
                 </li>
          </ul>
 
@@ -305,7 +305,7 @@ SVG sprite. They may be styled via CSS.
 
         </section>
         <footer>
-            <p>Generated at Tue, 17 Sep 2024 08:27:59 GMT by <a href="https://github.com/svg-sprite/svg-sprite" target="_blank" rel="noopener noreferrer">svg-sprite</a>.</p>
+            <p>Generated at Thu, 16 Oct 2025 19:43:30 GMT by <a href="https://github.com/svg-sprite/svg-sprite" target="_blank" rel="noopener noreferrer">svg-sprite</a>.</p>
         </footer>
     </body>
 </html>

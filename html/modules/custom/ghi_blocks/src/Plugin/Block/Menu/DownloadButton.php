@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Plugin\Block\Menu;
 
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\hpc_downloads\NodeDownloadPlugin;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -63,8 +64,16 @@ class DownloadButton extends BlockBase implements ContainerFactoryPluginInterfac
       return NULL;
     }
     $node_download_plugin = new NodeDownloadPlugin($node, $this->requestStack);
-    $build = $this->downloadDialog->buildDialogLink($node_download_plugin, $this->t('Download page'));
-    $build['#link']['#attributes']['class'][] = 'cd-button';
+    $build = $this->downloadDialog->buildDialogLink($node_download_plugin, [
+      [
+        '#markup' => Markup::create('<svg class="cd-icon ghi-icon--pdf" aria-hidden="true" focusable="false" width="16" height="16"><use xlink:href="#ghi-icon--pdf"></use></svg>'),
+      ],
+      [
+        '#type' => 'html_tag',
+        '#tag' => 'span',
+        '#value' => $this->t('Download page'),
+      ],
+    ]);
 
     return $build;
   }

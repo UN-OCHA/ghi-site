@@ -204,6 +204,7 @@ function common_design_subtheme_preprocess_block(&$variables) {
     'system_main_block',
     'paragraph',
     'mailing_list_subscribe',
+    'download_button',
   ];
 
   if ($variables['plugin_id'] == 'system_main_block' && str_starts_with(\Drupal::routeMatch()->getRouteName(), 'system.40')) {

@@ -1,0 +1,22 @@
+uuid: e24b3958-9cec-4a52-b7bc-ec49953311d5
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_blocks
+  theme:
+    - common_design_subtheme
+id: downloadbutton
+theme: common_design_subtheme
+region: header_top
+weight: -7
+provider: null
+plugin: download_button
+settings:
+  id: download_button
+  label: 'Download Button'
+  label_display: '0'
+  provider: ghi_blocks
+  context_mapping:
+    node: '@node.node_route_context:node'
+visibility: {  }
