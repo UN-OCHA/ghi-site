@@ -11,7 +11,7 @@ dependencies:
 id: useraccountmenu
 theme: common_design_subtheme
 region: header_top
-weight: 0
+weight: -6
 provider: null
 plugin: 'system_menu_block:account'
 settings:

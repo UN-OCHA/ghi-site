@@ -107,6 +107,7 @@ function common_design_subtheme_preprocess_block(&$variables) {
     'subpage_navigation',
     'system_main_block',
     'paragraph',
+    'download_button',
   ];
 
   // On some node types, we want to auto highlight (full-width background) the

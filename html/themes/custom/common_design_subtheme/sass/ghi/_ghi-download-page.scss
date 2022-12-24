@@ -1,0 +1,37 @@
+.cd-global-header .block-download-button {
+  display: inline-block;
+
+  a.link--download-dialog {
+    display: flex;
+    align-items: center;
+    height: var(--cd-global-header-height);
+    padding: 0 20px;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    svg {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      vertical-align: middle;
+    }
+
+    span {
+      margin-left: 10px;
+    }
+
+    &::after {
+      position: absolute;
+      top: 50%;
+      right: -1px;
+      width: 2px;
+      height: calc(var(--cd-global-header-height)/3);
+      content: "";
+      transform: translateY(-50%);
+      background: var(--cd-default-border-color);
+    }
+  }
+}
