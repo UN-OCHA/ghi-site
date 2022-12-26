@@ -1,4 +1,4 @@
-uuid: e24b3958-9cec-4a52-b7bc-ec49953311d5
+uuid: 6b3c6e56-3d52-4231-8996-b5ec79703e58
 langcode: en
 status: true
 dependencies:
@@ -17,6 +17,4 @@ settings:
   label: 'Download Button'
   label_display: '0'
   provider: ghi_blocks
-  context_mapping:
-    node: '@node.node_route_context:node'
 visibility: {  }
