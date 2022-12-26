@@ -2,27 +2,27 @@
 
 namespace Drupal\hpc_downloads;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\hpc_downloads\DownloadSource\NodeSource;
+use Drupal\hpc_downloads\DownloadSource\EntityPageSource;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPDFInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
-use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Interface declaration for generic HPC downloads.
  */
-class NodeDownloadPlugin implements HPCDownloadPluginInterface, HPCDownloadPDFInterface {
+class EntityPageDownloadPlugin implements HPCDownloadPluginInterface, HPCDownloadPDFInterface {
 
   use StringTranslationTrait;
 
   /**
-   * The node object.
+   * The entity object.
    *
-   * @var \Drupal\node\NodeInterface
+   * @var \Drupal\Core\Entity\EntityInterface
    */
-  protected $node;
+  protected $entity;
 
   /**
    * The request stack.
@@ -34,17 +34,17 @@ class NodeDownloadPlugin implements HPCDownloadPluginInterface, HPCDownloadPDFIn
   /**
    * Public constructor.
    */
-  public function __construct(NodeInterface $node, RequestStack $request_stack) {
-    $this->node = $node;
+  public function __construct(EntityInterface $entity, RequestStack $request_stack) {
+    $this->entity = $entity;
     $this->requestStack = $request_stack;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(NodeInterface $node, ContainerInterface $container) {
+  public static function create(EntityInterface $entity, ContainerInterface $container) {
     return new static(
-      $node,
+      $entity,
       $container->get('request_stack'),
     );
   }
@@ -73,15 +73,22 @@ class NodeDownloadPlugin implements HPCDownloadPluginInterface, HPCDownloadPDFIn
   /**
    * {@inheritdoc}
    */
+  public function getPluginType() {
+    return $this->entity->getEntityTypeId();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPluginId() {
-    return $this->node->id();
+    return $this->entity->id();
   }
 
   /**
    * {@inheritdoc}
    */
   public function getUuid() {
-    return $this->node->uuid();
+    return $this->entity->uuid();
   }
 
   /**
@@ -98,14 +105,14 @@ class NodeDownloadPlugin implements HPCDownloadPluginInterface, HPCDownloadPDFIn
    * {@inheritdoc}
    */
   public function label() {
-    return $this->node->label();
+    return $this->entity->label();
   }
 
   /**
    * {@inheritdoc}
    */
   public function getDownloadCaption() {
-    return $this->node->label();
+    return $this->entity->label();
   }
 
   /**
@@ -126,14 +133,21 @@ class NodeDownloadPlugin implements HPCDownloadPluginInterface, HPCDownloadPDFIn
    * {@inheritdoc}
    */
   public function getDownloadSource() {
-    return new NodeSource($this);
+    return new EntityPageSource($this);
   }
 
   /**
    * {@inheritdoc}
    */
   public function getCacheContexts() {
-    return $this->node->getCacheContexts();
+    return $this->entity->getCacheContexts();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    return $this->entity->getCacheTags();
   }
 
 }
