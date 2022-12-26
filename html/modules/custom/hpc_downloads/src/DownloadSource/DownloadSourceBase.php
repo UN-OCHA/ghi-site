@@ -46,7 +46,7 @@ abstract class DownloadSourceBase implements HPCDownloadSourceInterface {
   /**
    * {@inheritdoc}
    *
-   * @see DownnloadController::getPluginFromRequest()
+   * @see DownloadController::getPluginFromRequest()
    */
   abstract public function getType();
 

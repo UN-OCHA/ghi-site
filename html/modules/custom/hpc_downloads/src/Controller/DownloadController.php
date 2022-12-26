@@ -20,13 +20,13 @@ use Drupal\hpc_downloads\DownloadDialog\DownloadDialogViews;
 use Drupal\hpc_downloads\DownloadMethods\Excel;
 use Drupal\hpc_downloads\DownloadRecord;
 use Drupal\hpc_downloads\DownloadSource\ViewsSource;
+use Drupal\hpc_downloads\EntityPageDownloadPlugin;
 use Drupal\hpc_downloads\Interfaces\HPCBatchedDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelMultipleInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPDFInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadSourceInterface;
-use Drupal\hpc_downloads\NodeDownloadPlugin;
 use Drupal\views\Views;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -386,10 +386,11 @@ class DownloadController extends ControllerBase {
         $plugin = BlockHelper::getBlockInstance($uri, $plugin_id, $block_uuid);
         break;
 
-      case 'node':
-        $nid = RequestHelper::getQueryArgument('node', $arguments);
-        $node = $this->entityTypeManager()->getStorage('node')->load($nid);
-        $plugin = new NodeDownloadPlugin($node, $this->requestStack);
+      case 'entity_page':
+        $entity_type = RequestHelper::getQueryArgument('entity_type', $arguments);
+        $entity_id = RequestHelper::getQueryArgument('entity_id', $arguments);
+        $entity = $this->entityTypeManager()->getStorage($entity_type)->load($entity_id);
+        $plugin = new EntityPageDownloadPlugin($entity, $this->requestStack);
         break;
 
       case 'views_executable':
