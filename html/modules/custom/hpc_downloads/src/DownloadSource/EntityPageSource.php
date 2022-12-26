@@ -20,7 +20,7 @@ class EntityPageSource extends DownloadSourceBase {
    * {@inheritdoc}
    */
   public function getDialogOptions() {
-    /** @var \Drupal\hpc_downloads\EntityPageDownloadPlugin $plugin */
+    /** @var \Drupal\hpc_downloads\DownloadPlugin\EntityPageDownloadPlugin $plugin */
     $plugin = $this->plugin;
     return array_filter([
       'uri' => $plugin->getCurrentUri(),

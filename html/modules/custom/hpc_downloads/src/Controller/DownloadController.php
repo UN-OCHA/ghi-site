@@ -31,7 +31,7 @@ use Drupal\hpc_downloads\Ajax\DownloadObserverCommand;
 use Drupal\hpc_downloads\Ajax\DownloadStatusUpdateCommand;
 use Drupal\hpc_downloads\DownloadDialog\DownloadDialogPlugin;
 use Drupal\hpc_downloads\DownloadDialog\DownloadDialogViews;
-use Drupal\hpc_downloads\EntityPageDownloadPlugin;
+use Drupal\hpc_downloads\DownloadPlugin\EntityPageDownloadPlugin;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadSourceInterface;
 
 /**

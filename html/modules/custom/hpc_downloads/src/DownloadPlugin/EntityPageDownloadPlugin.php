@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\hpc_downloads;
+namespace Drupal\hpc_downloads\DownloadPlugin;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
