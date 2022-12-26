@@ -20,7 +20,7 @@ use Drupal\hpc_downloads\DownloadDialog\DownloadDialogViews;
 use Drupal\hpc_downloads\DownloadMethods\Excel;
 use Drupal\hpc_downloads\DownloadRecord;
 use Drupal\hpc_downloads\DownloadSource\ViewsSource;
-use Drupal\hpc_downloads\EntityPageDownloadPlugin;
+use Drupal\hpc_downloads\DownloadPlugin\EntityPageDownloadPlugin;
 use Drupal\hpc_downloads\Interfaces\HPCBatchedDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelMultipleInterface;

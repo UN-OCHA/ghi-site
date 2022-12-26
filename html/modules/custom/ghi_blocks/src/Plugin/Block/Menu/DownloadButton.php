@@ -3,9 +3,10 @@
 namespace Drupal\ghi_blocks\Plugin\Block\Menu;
 
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\hpc_downloads\EntityPageDownloadPlugin;
+use Drupal\hpc_downloads\DownloadPlugin\EntityPageDownloadPlugin;
 use Drupal\page_manager\Entity\PageVariant;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -61,6 +62,13 @@ class DownloadButton extends BlockBase implements ContainerFactoryPluginInterfac
     if (!$download_plugin) {
       return;
     }
+
+    $cache_contexts = [
+      'url.path',
+      'url.query_args',
+      'user',
+    ];
+
     $build = $this->downloadDialog->buildDialogLink($download_plugin, [
       [
         '#markup' => Markup::create('<svg class="cd-icon ghi-icon--pdf" aria-hidden="true" focusable="false" width="16" height="16"><use xlink:href="#ghi-icon--pdf"></use></svg>'),
@@ -72,7 +80,7 @@ class DownloadButton extends BlockBase implements ContainerFactoryPluginInterfac
       ],
       '#cache' => [
         'tags' => $download_plugin->getCacheTags(),
-        'contexts' => $download_plugin->getCacheContexts(),
+        'contexts' => Cache::mergeContexts($cache_contexts, $download_plugin->getCacheContexts()),
       ],
     ]);
 
@@ -82,8 +90,8 @@ class DownloadButton extends BlockBase implements ContainerFactoryPluginInterfac
   /**
    * Get the download plugin for the current page.
    *
-   * @return \Drupal\hpc_downloads\EntityPageDownloadPlugin
-   *   The download plugin.
+   * @return \Drupal\hpc_downloads\DownloadPlugin\EntityPageDownloadPlugin|null
+   *   The download plugin or NULL if it's not available.
    */
   private function getDownloadPlugin() {
     $entity = $this->routeMatch->getParameter('node') ?? NULL;
