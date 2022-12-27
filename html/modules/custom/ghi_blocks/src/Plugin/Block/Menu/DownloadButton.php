@@ -66,7 +66,6 @@ class DownloadButton extends BlockBase implements ContainerFactoryPluginInterfac
     $cache_contexts = [
       'url.path',
       'url.query_args',
-      'user',
     ];
 
     $build = $this->downloadDialog->buildDialogLink($download_plugin, [
