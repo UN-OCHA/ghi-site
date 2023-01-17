@@ -22,33 +22,61 @@
 
   .tab-details {
     .key-figures {
+      display: flex;
+      flex-wrap: wrap;
+      row-gap: 1rem;
       margin-bottom: 0;
+      margin-left: -1.5rem;
       padding-top: 1rem;
       padding-bottom: 0;
+      padding-left: 0;
+      list-style: none;
+      clip-path: inset(0 0 0 1.5rem);
 
-      .cd-figure-list__label {
-        font-weight: normal;
-      }
+      li {
+        position: relative;
+        flex-basis: auto;
+        flex-grow: 0;
+        padding: 0 1.5rem;
+        border: 0;
 
-      .cd-figure-list__value {
-        color: var(--ghi-default-text-color);
-
-        & > div {
-          display: flex;
-          gap: 0.5rem;
-
-          a {
-            text-decoration: none;
-          }
+        &:first-child {
+          padding-left: 1.5rem;
         }
 
-        i[data-toggle="tooltip"] {
-          vertical-align: top;
+        &::before {
+          position: absolute;
+          left: 0;
+          width: 1px;
+          height: 90%;
+          content: " ";
+          background-color: var(--ghi-default-border-color);
         }
 
-        .material-icon {
-          font-size: var(--cd-font-size--large);
+        .cd-figure-list__label {
           font-weight: normal;
+        }
+
+        .cd-figure-list__value {
+          color: var(--ghi-default-text-color);
+
+          & > div {
+            display: flex;
+            gap: 0.5rem;
+
+            a {
+              text-decoration: none;
+            }
+          }
+
+          i[data-toggle="tooltip"] {
+            vertical-align: top;
+          }
+
+          .material-icon {
+            font-size: var(--cd-font-size--large);
+            font-weight: normal;
+          }
         }
       }
     }
