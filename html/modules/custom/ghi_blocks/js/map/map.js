@@ -517,6 +517,14 @@
     tippy($('.leaflet-control-zoom-out').get(0), {
       content: Drupal.t('Zoom out'),
     });
+
+    // This is necessary to make the map work in PDF downloads, where the paper
+    // size of A2 that we use is apparently causing issues during the map
+    // resizing, resulting in a grey area to the right of the map.
+    setInterval(function() {
+      state.map.invalidateSize();
+    }, 100);
+
   }
 
   Drupal.hpc_map.searchSourceData = function(text, callResponse) {

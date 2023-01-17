@@ -29,7 +29,19 @@ html.snap--pdf {
     display: none !important;
   }
 
-  .dialog-off-canvas-main-canvas > .cd-layout-container {
-    grid-template-rows: 80px auto 1fr auto;
+  .dialog-off-canvas-main-canvas {
+    // Set sizes to A2, which is what is used to print the PDF in order to fit
+    // the content the same way as on a normal sized desktop screen.
+    // @see \Drupal\hpc_downloads\DownloadMethods\PDF::prepareOptions()
+    display: block;
+    width: 1587px;
+    height: 2248px;
+    margin: 0;
+    background: white;
+    box-shadow: none;
+
+    & > .cd-layout-container {
+      grid-template-rows: 80px auto 1fr auto;
+    }
   }
 }
