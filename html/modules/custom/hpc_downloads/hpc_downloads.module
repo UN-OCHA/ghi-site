@@ -61,6 +61,7 @@ function hpc_downloads_theme($existing, $type, $theme, $path) {
     'hpc_download_pdf_footer' => [
       'variables' => [
         'footer_text' => NULL,
+        'date' => NULL,
       ],
     ] + $common,
     'hpc_download_png_header' => [
