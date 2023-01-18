@@ -140,7 +140,14 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
     if ($display_icons) {
       $content = array_map(function ($cluster) {
         return [
-          '#markup' => Markup::create($this->iconQuery->getIconEmbedCode($cluster->value->icon)),
+          0 => [
+            '#type' => 'html_tag',
+            '#tag' => 'span',
+            '#attributes' => [
+              'title' => $cluster->name,
+            ],
+            '#value' => Markup::create($this->iconQuery->getIconEmbedCode($cluster->icon)),
+          ],
         ];
       }, $clusters);
     }
