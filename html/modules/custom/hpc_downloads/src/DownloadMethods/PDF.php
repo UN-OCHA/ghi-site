@@ -3,7 +3,7 @@
 namespace Drupal\hpc_downloads\DownloadMethods;
 
 use Drupal\Core\Url;
-
+use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_downloads\Helpers\FileHelper;
 use Drupal\hpc_downloads\DownloadRecord;
 
@@ -83,6 +83,14 @@ class PDF {
    * Prepare default parameters.
    */
   private static function prepareOptions($options) {
+    /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
+    $date_formatter = \Drupal::service('date.formatter');
+    // Prepare header and footer for Snap Service PDF.
+    $pdf_header = ThemeHelper::theme('hpc_download_pdf_header', [], TRUE, FALSE);
+    $pdf_footer = ThemeHelper::theme('hpc_download_pdf_footer', [
+      '#date' => $date_formatter->format(\Drupal::time()->getRequestTime(), 'custom', 'd/m/Y'),
+    ], TRUE, FALSE);
+
     // Prepare params to be passed to Snap Service.
     $query_params = array_filter([
       'url' => $options['url'],
@@ -93,6 +101,9 @@ class PDF {
       'pdfMarginTop' => 2,
       'pdfMarginBottom' => 2,
       'pdfMarginUnit' => 'cm',
+      'logo' => \Drupal::config('hpc_downloads.settings')->get('logo_pdf') ?? NULL,
+      'pdfHeader' => $pdf_header,
+      'pdfFooter' => $pdf_footer,
     ]);
     return $query_params;
   }
