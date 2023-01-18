@@ -67,5 +67,5 @@ ghi_plans.modal_content.organization_projects:
     parameters:
       base_object:
         type: entity:base_object
-      organization:
+      organization_id:
         type: integer

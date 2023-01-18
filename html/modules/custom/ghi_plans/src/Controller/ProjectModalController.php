@@ -145,6 +145,9 @@ class ProjectModalController extends ControllerBase {
    */
   public function buildOrganizationProjectTable(BaseObjectInterface $base_object, $organization_id) {
     $organization = $this->getOrganization($organization_id);
+    if (!$organization) {
+      return NULL;
+    }
     $project_search_query = $this->getProjectSearchQuery($base_object);
     $projects = $project_search_query->getOrganizationProjects($organization, $base_object);
     $build = $this->getOrganizationProjectTable($projects, $this->getDecimalFormat($base_object));
