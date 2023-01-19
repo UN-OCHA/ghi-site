@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Traits;
 
 use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\ApiObjects\Project;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\hpc_api\ApiObjects\Location;
 
 /**
@@ -127,6 +128,17 @@ trait OrganizationsBlockTrait {
   }
 
   /**
+   * Get the current cluster context.
+   *
+   * @return Drupal\ghi_plans\Entity\GoverningEntity|null
+   *   A governing entity (cluster) or NULL.
+   */
+  private function getClusterContext() {
+    $base_object = $this->getCurrentBaseObject();
+    return $base_object && $base_object instanceof GoverningEntity ? $base_object : NULL;
+  }
+
+  /**
    * Get the project search query.
    *
    * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery
@@ -135,6 +147,9 @@ trait OrganizationsBlockTrait {
   private function getProjectSearchQuery() {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery $query */
     $query = $this->getQueryHandler('project_search');
+    if ($cluster_context = $this->getClusterContext()) {
+      $query->setClusterContext($cluster_context->getSourceId());
+    }
     return $query;
   }
 
