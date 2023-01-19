@@ -294,6 +294,7 @@ function common_design_subtheme_add_social_links_variables(&$variables) {
   $variables['icon_linkedin'] = file_get_contents($icon_path . '/icon--linkedin.svg');
   $variables['icon_copyurl'] = file_get_contents($icon_path . '/icon--copyurl.svg');
   $variables['icon_pdf'] = file_get_contents($icon_path . '/icon--pdf.svg');
+  $variables['current_url'] = \Drupal::request()->getUri();
 }
 
 /**

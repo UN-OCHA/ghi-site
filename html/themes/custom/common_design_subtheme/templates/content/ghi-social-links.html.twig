@@ -4,7 +4,7 @@
 <footer{{ socialAttributes.addClass(classes) }}>
   {% set shareText = label|render|striptags|default(title|render|striptags) %}
   {% set shareMessage = 'Humanitarian Action: '|t ~ shareText %}
-  {% set shareUrl = 'https://humanitarianaction.info' ~ url %}
+  {% set shareUrl = current_url %}
   <div class="ghi-social-links__wrapper content-width">
     <ul>
       <li>
