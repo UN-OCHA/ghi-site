@@ -20,6 +20,11 @@ class DataPoint extends FormElement {
   use AjaxElementTrait;
 
   /**
+   * Global switch for widget support in data points.
+   */
+  const WIDGET_SUPPORT = FALSE;
+
+  /**
    * {@inheritdoc}
    */
   public function getInfo() {
@@ -45,7 +50,7 @@ class DataPoint extends FormElement {
       '#attachment_prototype' => NULL,
       '#plan_object' => NULL,
       '#select_monitoring_period' => FALSE,
-      '#widget' => TRUE,
+      '#widget' => self::WIDGET_SUPPORT,
       '#hidden' => FALSE,
       '#disabled_empty_fields' => TRUE,
       // Preset options.
