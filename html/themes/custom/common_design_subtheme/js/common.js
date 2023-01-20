@@ -76,9 +76,10 @@
       if (typeof sorttable != 'undefined') {
         if (context == document) {
           sorttable.init();
+          $('table.sortable').once('sortable-table');
         }
         else {
-          $('table.sortable', context).once('sortable-once').each(function() {
+          $('table.sortable', context).once('sortable-table').each(function() {
             if (context != document) {
               sorttable.makeSortable(this);
             }
