@@ -8,6 +8,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_form_elements\Element\DataPoint as ElementDataPoint;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Helpers\DataPointHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -70,11 +71,11 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   public function getDefaultLabel() {
     $attachment = $this->getContextValue('attachment');
     if ($attachment) {
-      return $attachment->fields[$this->get('data_point')['data_points'][0]['index']];
+      return $attachment->fields[$this->getDataPointConfig()['data_points'][0]['index']];
     }
     $attachment_prototype = $this->getContextValue('attachment_prototype');
     $fields = array_merge($attachment_prototype->fields ?? []);
-    return $fields[$this->get('data_point')['data_points'][0]['index']];
+    return $fields[$this->getDataPointConfig()['data_points'][0]['index']];
   }
 
   /**
@@ -96,7 +97,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     $config = $this->getPluginConfiguration();
     $build = DataPointHelper::formatValue($attachment, $attachment->data_point_conf);
     if (!empty($config['disaggregation_modal']) && $this->canShowDisaggregatedData($attachment)) {
-      $data_point = $this->get('data_point')['data_points'][0]['index'];
+      $data_point = $this->getDataPointConfig()['data_points'][0]['index'];
       $link_url = Url::fromRoute('ghi_plans.modal_content.dissaggregation', [
         'attachment' => $attachment->id(),
         'metric' => $data_point,
@@ -151,10 +152,24 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getColumnType() {
-    if ($this->get('data_point')['formatting'] == 'percent') {
+    if ($this->getDataPointConfig()['formatting'] == 'percent') {
       return 'percentage';
     }
     return parent::getColumnType();
+  }
+
+  /**
+   * Get the currently configured data point confirguration.
+   *
+   * @return array
+   *   An array containing the data point configuration.
+   */
+  public function getDataPointConfig() {
+    $data_point_conf = $this->get('data_point');
+    if (ElementDataPoint::WIDGET_SUPPORT === FALSE) {
+      $data_point_conf['widget'] = 'none';
+    }
+    return $data_point_conf;
   }
 
   /**
@@ -163,7 +178,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   public function getClasses() {
     $classes = parent::getClasses();
 
-    $data_point_conf = $this->get('data_point');
+    $data_point_conf = $this->getDataPointConfig();
     $widget = $data_point_conf['widget'] ?? NULL;
     if (!empty($widget) && $widget != 'none') {
       $classes[] = Html::getClass($this->getPluginId() . '--widget');
@@ -186,7 +201,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
     $plan_object = $this->getContextValue('plan_object') ?? NULL;
     $configuration = $this->getPluginConfiguration();
-    $data_point_conf = $this->get('data_point');
+    $data_point_conf = $this->getDataPointConfig();
     if (!$attachment || !$data_point_conf) {
       return NULL;
     }
