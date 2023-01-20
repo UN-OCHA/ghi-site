@@ -284,8 +284,8 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
               continue;
             }
             foreach ($project->getClusters() as $cluster) {
-              $_cluster = (object) $cluster->toArray();
-              $_cluster->location_ids = $project->location_ids;
+              $_cluster = $objects[$cluster->id()] ?? (object) $cluster->toArray();
+              $_cluster->location_ids = array_unique(array_merge($_cluster->location_ids ?? [], $project->location_ids));
               $objects[$_cluster->id] = $_cluster;
             }
           }
