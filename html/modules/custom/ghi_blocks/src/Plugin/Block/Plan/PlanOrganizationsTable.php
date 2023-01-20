@@ -383,6 +383,9 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
   public function getBlockContext() {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery $project_search_query */
     $project_search_query = $this->getQueryHandler('project_search');
+    if ($cluster_context = $this->getClusterContext()) {
+      $project_search_query->setClusterContext($cluster_context->getSourceId());
+    }
     return [
       'page_node' => $this->getPageNode(),
       'plan_object' => $this->getCurrentPlanObject(),
