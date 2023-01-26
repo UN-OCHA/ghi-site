@@ -11,13 +11,6 @@
 
       {{ page.page_image }}
 
-      {% if node and node.bundle != 'homepage' %}
-        {%
-          include '@common_design_subtheme/content/ghi-social-links.html.twig'
-          with { 'ghoSocialLinksClass': 'ghi-social-links--page' }
-        %}
-      {% endif %}
-
       {{ page.page_title }}
 
       {{ page.page_subtitle }}

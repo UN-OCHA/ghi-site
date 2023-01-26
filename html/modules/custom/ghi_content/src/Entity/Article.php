@@ -3,7 +3,7 @@
 namespace Drupal\ghi_content\Entity;
 
 use Drupal\Core\Cache\Cache;
-use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 
@@ -49,7 +49,7 @@ class Article extends Node implements NodeInterface {
    *   How many tags to return at most.
    *
    * @return array
-   *   A render array.
+   *   An array of tag names.
    */
   public function getDisplayTags($limit = 6) {
     $cache_tags = [];
@@ -79,12 +79,46 @@ class Article extends Node implements NodeInterface {
     }, $tags);
 
     // And build the render array.
-    return [
-      '#markup' => Markup::create(implode(', ', $tag_names)),
-      '#cache' => [
-        'tags' => $cache_tags,
-      ],
+    return $tag_names;
+  }
+
+  /**
+   * Get the meta data for this article.
+   *
+   * @return array
+   *   An array of metadata items.
+   */
+  public function getPageMetaData() {
+    $metadata = [];
+    $metadata[] = [
+      '#markup' => new TranslatableMarkup('Published on @date', [
+        '@date' => $this->getDateFormatter()->format($this->getCreatedTime(), 'custom', 'j F Y'),
+      ]),
     ];
+    $tags = $this->getDisplayTags();
+    if (!empty($tags)) {
+      $metadata[] = [
+        '#markup' => new TranslatableMarkup('Keywords @keywords', [
+          '@keywords' => implode(', ', $tags),
+        ]),
+      ];
+    }
+    if ($this->isPublished()) {
+      $metadata[] = [
+        '#theme' => 'social_links',
+      ];
+    }
+    return $metadata;
+  }
+
+  /**
+   * Get the date formatter service.
+   *
+   * @return \Drupal\Core\Datetime\DateFormatterInterface
+   *   The date formatter service.
+   */
+  private function getDateFormatter() {
+    return \Drupal::service('date.formatter');
   }
 
 }

@@ -18,10 +18,10 @@ interface SectionNodeInterface extends NodeInterface {
   public function getPageTitle();
 
   /**
-   * Get the page subtitle.
+   * Get the page metadata.
    *
-   * @return \Drupal\Component\Render\MarkupInterface
-   *   The markup object for the subtitel.
+   * @return array
+   *   An array of metadata items.
    */
   public function getPageTitleMetaData();
 
