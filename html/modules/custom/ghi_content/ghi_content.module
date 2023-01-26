@@ -410,6 +410,19 @@ function ghi_content_preprocess_page_title(&$variables) {
 
 /**
  * Implements hook_preprocess_node().
+ */
+function ghi_content_preprocess_node__article(&$variables) {
+  /** @var \Drupal\ghi_content\Entity\Article $node */
+  $node = $variables['node'];
+  $variables['metadata'] = [
+    '#theme' => 'item_list',
+    '#items' => $node->getPageMetaData(),
+    '#full_width' => TRUE,
+  ];
+}
+
+/**
+ * Implements hook_preprocess_node().
  *
  * Filter out structural tags from the article grid view.
  */

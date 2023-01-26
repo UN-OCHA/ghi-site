@@ -15,6 +15,21 @@ use Drupal\Core\Template\Attribute;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 
 /**
+ * Implements hook_theme().
+ */
+function common_design_subtheme_theme($existing, $type, $theme, $path) {
+  return [
+    'social_links' => [
+      'variables' => [
+        'style' => 'inline',
+      ],
+      'template' => 'social-links',
+      'path' => $path . '/templates/social',
+    ],
+  ];
+}
+
+/**
  * Implements hook_theme_registry_alter().
  */
 function common_design_subtheme_theme_registry_alter(&$theme_registry) {
@@ -227,8 +242,32 @@ function common_design_subtheme_preprocess_page(&$variables) {
   if ($subpage_title) {
     $variables['attributes']['class'][] = 'has-subpage-title';
   }
+}
 
-  common_design_subtheme_add_social_links_variables($variables);
+/**
+ * Implements hook_preprocess_node().
+ */
+function common_design_subtheme_preprocess_node__article(&$variables) {
+  $variables['social_links'] = [
+    '#theme' => 'social_links',
+  ];
+}
+
+/**
+ * Implements hook_preprocess_social_links().
+ */
+function common_design_subtheme_preprocess_social_links(&$variables) {
+  // Add the SVGs for gho-social-links so we can output them in multiple
+  // templates without having to keep them up to date.
+  /** @var \Drupal\Core\Extension\ExtensionPathResolver $extension_resolver */
+  $extension_resolver = \Drupal::service('extension.path.resolver');
+  $icon_path = $extension_resolver->getPath('theme', 'common_design_subtheme') . '/components/ghi-social-links/img';
+  $variables['icon_twitter'] = file_get_contents($icon_path . '/icon--twitter.svg');
+  $variables['icon_facebook'] = file_get_contents($icon_path . '/icon--facebook.svg');
+  $variables['icon_linkedin'] = file_get_contents($icon_path . '/icon--linkedin.svg');
+  $variables['icon_copyurl'] = file_get_contents($icon_path . '/icon--copyurl.svg');
+  $variables['icon_pdf'] = file_get_contents($icon_path . '/icon--pdf.svg');
+  $variables['current_url'] = \Drupal::request()->getUri();
 }
 
 /**
@@ -278,23 +317,6 @@ function common_design_subtheme_show_hidden_blocks_from_page(array &$variables, 
       }
     }
   }
-}
-
-/**
- * Add the social links variables.
- */
-function common_design_subtheme_add_social_links_variables(&$variables) {
-  // Add the SVGs for gho-social-links so we can output them in multiple
-  // templates without having to keep them up to date.
-  /** @var \Drupal\Core\Extension\ExtensionPathResolver $extension_resolver */
-  $extension_resolver = \Drupal::service('extension.path.resolver');
-  $icon_path = $extension_resolver->getPath('theme', 'common_design_subtheme') . '/components/ghi-social-links/img';
-  $variables['icon_twitter'] = file_get_contents($icon_path . '/icon--twitter.svg');
-  $variables['icon_facebook'] = file_get_contents($icon_path . '/icon--facebook.svg');
-  $variables['icon_linkedin'] = file_get_contents($icon_path . '/icon--linkedin.svg');
-  $variables['icon_copyurl'] = file_get_contents($icon_path . '/icon--copyurl.svg');
-  $variables['icon_pdf'] = file_get_contents($icon_path . '/icon--pdf.svg');
-  $variables['current_url'] = \Drupal::request()->getUri();
 }
 
 /**

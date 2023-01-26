@@ -1,0 +1,12 @@
+{{ attach_library('common_design_subtheme/ghi-social-links') }}
+{% set classes = ['ghi-social-links', 'ghi-social-links--' ~ style, ghiSocialLinksClass] %}
+{% set socialAttributes = create_attribute() %}
+
+<footer{{ socialAttributes.addClass(classes) }}>
+  <div class="ghi-social-links__wrapper {% if not style == 'inline' %}content-width{% endif %}">
+    {%
+      include '@common_design_subtheme/social/ghi-social-links.html.twig'
+      with { 'ghoSocialLinksClass': 'ghi-social-links--page' }
+    %}
+  </div>
+</footer>
