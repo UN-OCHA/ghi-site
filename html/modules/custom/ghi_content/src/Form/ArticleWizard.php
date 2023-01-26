@@ -105,10 +105,15 @@ class ArticleWizard extends FormBase {
     $form['#prefix'] = '<div id="' . $wrapper_id . '">';
     $form['#suffix'] = '</div>';
 
+    /** @var \Drupal\node\Entity\NodeType $node_type */
+    $node_type = $this->entityTypeManager->getStorage('node_type')->load(ArticleManager::ARTICLE_BUNDLE);
+
     $source_options = $this->getSourceOptions();
     if (empty($source_options)) {
       // Bail out if there are no teams.
-      $this->messenger()->addError($this->t('No remote sources found. You must create at least one remote source before articles can be created.'));
+      $this->messenger()->addError($this->t('No remote sources found. You must create at least one remote source before creating an @type.', [
+        '@type' => $node_type->label(),
+      ]));
       return $form;
     }
 
@@ -116,7 +121,9 @@ class ArticleWizard extends FormBase {
     $team_options = $this->getTeamOptions($form_state);
     if (empty($team_options)) {
       // Bail out if there are no teams.
-      $this->messenger()->addError($this->t('No teams found. You must import teams before articles can be created.'));
+      $this->messenger()->addError($this->t('No teams found. You must import teams before creating an @type.', [
+        '@type' => $node_type->label(),
+      ]));
       return $form;
     }
 
@@ -171,7 +178,9 @@ class ArticleWizard extends FormBase {
       '#type' => 'select',
       '#title' => $this->t('Team'),
       '#options' => $team_options,
-      '#description' => $this->t('Select the team that will be responsible for this article.'),
+      '#description' => $this->t('Select the team that will be responsible for this @type.', [
+        '@type' => $node_type->label(),
+      ]),
       '#default_value' => $form_state->getValue('team'),
       '#required' => TRUE,
       '#disabled' => $step > array_flip($steps)['team'],
@@ -182,7 +191,9 @@ class ArticleWizard extends FormBase {
     $form['title'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Title'),
-      '#description' => $this->t('Optional: Change the title for this article.'),
+      '#description' => $this->t('Optional: Change the title for this @type.', [
+        '@type' => $node_type->label(),
+      ]),
       '#default_value' => $article ? trim($article->getTitle()) : NULL,
       '#required' => TRUE,
       '#size' => 128,
@@ -222,7 +233,9 @@ class ArticleWizard extends FormBase {
       $form['actions']['submit'] = [
         '#type' => 'submit',
         '#button_type' => 'primary',
-        '#value' => $this->t('Create article'),
+        '#value' => $this->t('Create @type', [
+          '@type' => $node_type->label(),
+        ]),
       ];
     }
 
@@ -242,7 +255,8 @@ class ArticleWizard extends FormBase {
     if ($action != 'back' && $form_state->get('step') == 1 && $article) {
       $node = $this->articleManager->loadNodeForRemoteArticle($article);
       if ($node) {
-        $form_state->setErrorByName('article', $this->t('An article page for the selected article already exists: <a href="@url">@title</a>.', [
+        $form_state->setErrorByName('article', $this->t('An @type for the selected article already exists: <a href="@url">@title</a>.', [
+          '@type' => $node->type->entity->label(),
           '@url' => $node->toUrl()->toString(),
           '@title' => $node->label(),
         ]));
@@ -275,8 +289,9 @@ class ArticleWizard extends FormBase {
       ]));
       $form_state->setRedirectUrl($node->toUrl());
     }
-
-    $this->messenger()->addError($this->t('There was processing this form. Please check the logs or contact an administrator'));
+    else {
+      $this->messenger()->addError($this->t('There was an error processing this form. Please check the logs or contact an administrator'));
+    }
   }
 
   /**

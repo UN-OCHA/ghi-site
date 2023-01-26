@@ -95,11 +95,14 @@ class Article extends Node implements NodeInterface {
         '@date' => $this->getDateFormatter()->format($this->getCreatedTime(), 'custom', 'j F Y'),
       ]),
     ];
-    $metadata[] = [
-      '#markup' => new TranslatableMarkup('Keywords @keywords', [
-        '@keywords' => implode(', ', $this->getDisplayTags()),
-      ]),
-    ];
+    $tags = $this->getDisplayTags();
+    if (!empty($tags)) {
+      $metadata[] = [
+        '#markup' => new TranslatableMarkup('Keywords @keywords', [
+          '@keywords' => implode(', ', $tags),
+        ]),
+      ];
+    }
     if ($this->isPublished()) {
       $metadata[] = [
         '#theme' => 'social_links',
