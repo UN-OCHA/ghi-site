@@ -86,6 +86,7 @@ permissions:
   - 'administer url aliases'
   - 'administer user roles'
   - 'administer users'
+  - 'administer users roles'
   - 'configure all homepage node layout overrides'
   - 'configure any layout'
   - 'configure editable article node layout overrides'

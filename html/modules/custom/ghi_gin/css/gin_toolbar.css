@@ -3,3 +3,24 @@
 .ui-dialog {
   -webkit-overflow-scrolling: auto !important;
 }
+.gin--horizontal-toolbar #toolbar-item-administration-tray > nav,
+.gin--horizontal-toolbar #toolbar-item-administration-tray > nav > div > .toolbar-menu,
+.gin--horizontal-toolbar #toolbar-item-administration-tray > nav > div > .toolbar-menu > li {
+  background-color: #4D4D4D !important;
+}
+.gin--horizontal-toolbar #toolbar-item-administration-tray > nav > div > .toolbar-menu > li > a.toolbar-icon {
+  color: white;
+}
+.gin--horizontal-toolbar #toolbar-item-administration-tray > nav > div > .toolbar-menu > li > a.toolbar-icon::before {
+  background-color: white;
+}
+.toolbar .toolbar-bar #toolbar-item-administration-tray .toolbar-icon-admin-toolbar-tools-help.toolbar-icon-default:before {
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+  background-image: url(../assets/toolbar-logo.svg) !important;
+  background-color: transparent !important;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  width: 36px;
+}

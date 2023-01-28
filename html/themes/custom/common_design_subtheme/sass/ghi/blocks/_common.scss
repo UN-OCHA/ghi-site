@@ -29,6 +29,10 @@
 
   &.ghi-block--hidden-preview > *:not(.contextual) {
     opacity: 0.5;
+
+    .hpc-form-wrapper & {
+      opacity: 1;
+    }
   }
 
   .layout__region--content > &.block:first-child {
