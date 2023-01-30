@@ -8,10 +8,12 @@
 .gin--horizontal-toolbar #toolbar-item-administration-tray > nav > div > .toolbar-menu > li {
   background-color: #4D4D4D !important;
 }
-.gin--horizontal-toolbar #toolbar-item-administration-tray > nav > div > .toolbar-menu > li > a.toolbar-icon {
+.gin--horizontal-toolbar #toolbar-item-administration-tray > nav > div > .toolbar-menu > li > a.toolbar-icon,
+.gin--horizontal-toolbar #toolbar-item-administration-tray > nav > div > .toolbar-menu > li > .toolbar-box > a.toolbar-icon {
   color: white;
 }
-.gin--horizontal-toolbar #toolbar-item-administration-tray > nav > div > .toolbar-menu > li > a.toolbar-icon::before {
+.gin--horizontal-toolbar #toolbar-item-administration-tray > nav > div > .toolbar-menu > li > a.toolbar-icon::before,
+.gin--horizontal-toolbar #toolbar-item-administration-tray > nav > div > .toolbar-menu > li > .toolbar-box > a.toolbar-icon::before {
   background-color: white;
 }
 .toolbar .toolbar-bar #toolbar-item-administration-tray .toolbar-icon-admin-toolbar-tools-help.toolbar-icon-default:before {
@@ -23,4 +25,38 @@
   background-repeat: no-repeat;
   background-size: contain;
   width: 36px;
+}
+
+/* Use primary theme color for checkbox toggles. */
+body :not(.glb-form-checkboxes):not(td):not(.media-library-item__click-to-select-checkbox):not(.field-content) > .glb-form-type--checkbox input:checked ~ .glb-checkbox-toggle .glb-checkbox-toggle__inner,
+body :not(.form-checkboxes):not(td):not(.media-library-item__click-to-select-checkbox):not(.field-content) > .form-type--checkbox input:checked ~ .checkbox-toggle .checkbox-toggle__inner {
+  background-color: #fed83d !important;
+}
+
+/* Use primary theme color for radio buttons. */
+body .glb-form-boolean--type-radio,
+body .glb-form-boolean--type-radio:hover {
+  background-image: none;
+  background-color: var(--colorGinLayerBackground);
+  position: relative;
+  top: 0.75rem;
+  float: left;
+  margin-right: 0.5rem;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  width: 21px;
+  height: 21px;
+  border: 1px solid #919297;
+  appearance: none;
+  box-shadow: none;
+}
+body .glb-form-boolean--type-radio:disabled,
+body .glb-form-boolean--type-radio:disabled:hover {
+  box-shadow: inset 0 0 0 5px var(--colorGinDisabled) !important;
+}
+body .glb-form-boolean--type-radio:checked:not(:disabled),
+body .glb-form-boolean--type-radio:checked:not(:disabled):hover,
+body .form-boolean--type-radio:checked:not(:disabled),
+body .form-boolean--type-radio:checked:not(:disabled):hover {
+  box-shadow: inset 0 0 0 5px #fed83d !important;
 }
