@@ -3,12 +3,17 @@
 <!-- Using this project's bootstrap file allows tests in `ExistingSite`,
     `ExistingSiteSelenium2DriverTest`, and `ExistingSiteWebDriverTest`
      to run alongside core's test types. -->
-<phpunit bootstrap="vendor/weitzman/drupal-test-traits/src/bootstrap.php">
+<phpunit bootstrap="vendor/weitzman/drupal-test-traits/src/bootstrap.php"
+         beStrictAboutTestsThatDoNotTestAnything="true"
+         beStrictAboutOutputDuringTests="true"
+         beStrictAboutChangesToGlobalState="true"
+         failOnWarning="true"
+         printerClass="\Drupal\Tests\Listeners\HtmlOutputPrinter">
     <php>
         <env name="DTT_BASE_URL" value="http://ghi-site.docksal.site"/>
         <env name="DTT_API_URL" value="http://chrome:9222"/>
         <env name="DTT_MINK_DRIVER_ARGS" value='["chrome", null, "http://selenium:4444/wd/hub"]'/>
-        <env name="BROWSERTEST_OUTPUT_DIRECTORY" value="/tmp"/>
+        <env name="BROWSERTEST_OUTPUT_DIRECTORY" value="/var/www/html/sites/simpletest/browser_output"/>
         <!-- To disable deprecation testing completely uncomment the next line. -->
         <env name="SYMFONY_DEPRECATIONS_HELPER" value="disabled"/>
         <!-- Specify the default directory screenshots should be placed. -->
