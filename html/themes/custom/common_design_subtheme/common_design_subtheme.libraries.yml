@@ -66,6 +66,9 @@ ghi-grid:
 ghi-header:
   css:
     theme:
+      # The order of these matches the old Sass @import statements so moving the
+      # files might result in CSS cascade changes.
+      components/ghi-header/ghi-dropdowns.css: {}
       components/ghi-header/ghi-header.css: {}
 ghi-section-teaser:
   css:
