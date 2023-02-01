@@ -1,0 +1,47 @@
+/**
+ * HumActions: custom styles
+ */
+.region-header-logo {
+  display: flex;
+}
+
+.region-header-logo .cd-site-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  height: auto;
+  margin: 0 0 0 -1.5rem;
+  padding-left: 0.5rem;
+  text-decoration: none;
+  color: var(--ghi-default-text-color);
+  font-size: var(--cd-font-size--base);
+  font-weight: bold;
+  line-height: 1.3rem;
+}
+
+@media (max-width: 767px) {
+  .region-header-logo .cd-site-logo {
+    margin: 1.2rem 0;
+    background: url("../../img/logos/logo-humanitarian-action.svg") center no-repeat;
+    background: linear-gradient(transparent, transparent), url("../../img/logos/logo-humanitarian-action.svg") center no-repeat;
+    background-position: 0 center;
+  }
+}
+
+@media (min-width: 768px) {
+  .region-header-logo .cd-site-logo img {
+    width: auto;
+    height: 40px;
+  }
+}
+
+.region-header-logo .cd-site-logo:focus {
+  outline: none;
+}
+
+.region-header-logo .cd-site-slogan {
+  margin: 0.7rem 0 0 2rem;
+  line-height: 0.8rem;
+}

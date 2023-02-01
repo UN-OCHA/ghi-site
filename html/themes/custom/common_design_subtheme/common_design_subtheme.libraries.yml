@@ -70,6 +70,7 @@ ghi-header:
       # files might result in CSS cascade changes.
       components/ghi-header/ghi-dropdowns.css: {}
       components/ghi-header/ghi-header.css: {}
+      components/ghi-header/ghi-logo.css: {}
 ghi-section-teaser:
   css:
     theme:
