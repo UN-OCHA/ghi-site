@@ -64,6 +64,7 @@ ghi-cd-overrides:
   dependencies:
     - common_design_subtheme/ghi-header
     - common_design_subtheme/ghi-footer
+    - common_design_subtheme/ghi-other
 
 ghi-header:
   css:
@@ -81,9 +82,12 @@ ghi-header:
 ghi-footer:
   css:
     theme:
-      # The order of these matches the old Sass @import statements so moving the
-      # files might result in CSS cascade changes.
       components/ghi-cd-overrides/ghi-footer/ghi-footer.css: {}
+
+ghi-other:
+  css:
+    theme:
+      components/ghi-cd-overrides/ghi-other/ghi-layout.css: {}
 
 ghi-grid:
   css:

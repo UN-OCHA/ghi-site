@@ -1,0 +1,42 @@
+/**
+ * HumAction: CD Layout customizations
+ */
+
+@supports (display: grid) {
+  @media (min-width: 768px) {
+    .cd-layout-container {
+      grid-template-rows: 115px auto 1fr auto;
+      grid-auto-rows: auto;
+    }
+  }
+}
+
+@media (min-width: 1024px) {
+  .cd-layout-with-sidebar-first .cd-layout-sidebar-first,
+  .cd-layout-with-sidebar-second .cd-layout-sidebar-second {
+    flex-basis: var(--cd-sidebar-width);
+  }
+}
+
+.cd-layout-with-sidebar-both .cd-layout-sidebar-first {
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .cd-layout-with-sidebar-both .cd-layout-sidebar-first {
+    flex-basis: var(--cd-sidebar-width);
+  }
+}
+
+@media (min-width: 1024px) {
+  .cd-layout-with-sidebar-both .cd-layout-sidebar-first {
+    margin-bottom: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cd-layout-two-col .cd-layout-sidebar-first {
+    flex-basis: var(--cd-sidebar-width);
+    margin-top: 0;
+  }
+}
