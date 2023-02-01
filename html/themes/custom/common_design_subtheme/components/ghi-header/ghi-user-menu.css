@@ -1,0 +1,8 @@
+/**
+ * HumAction: User menu customizations
+ */
+.cd-user-menu__item:focus,
+.cd-global-header .menu > li a:focus,
+.cd-global-header .menu > li button:focus {
+  outline: none
+}
