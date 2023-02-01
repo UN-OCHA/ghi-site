@@ -1,0 +1,6 @@
+/**
+ * HumAction: custom styles for main menu
+ */
+.menu--main button[aria-expanded] .cd-icon--arrow-down {
+  fill: var(--brand-highlight);
+}
