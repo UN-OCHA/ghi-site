@@ -70,6 +70,7 @@
   --cd-bumper-space: 1rem;
 
   /* CD Header */
+  --cd-global-header-height: 35px;
   --cd-site-header-height: 80px;
 
   // Adjust this depending on number of rows in .cd-layout-container.
@@ -123,8 +124,6 @@ $cd-sidebar-width: 200px;
 $cd-container-padding: var(--cd-container-padding);
 $cd-container-padding-tablet: var(--cd-container-padding-tablet);
 $cd-container-padding-xlarge: var(--cd-container-padding-xlarge);
-
-$cd-global-header-height: 35px;
 
 // Colour palette
 $cd-ocha-orange: var(--cd-ocha-orange);

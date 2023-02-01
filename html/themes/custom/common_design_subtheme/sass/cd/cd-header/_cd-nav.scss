@@ -87,7 +87,7 @@
   @media (max-width: 1023px) {
     // Fix offset for mobile device when toolbar is present.
     .gin--horizontal-toolbar & .cd-nav[data-cd-hidden="false"] {
-      top: calc(var(--ginHorizontalToolbarOffset) + #{$cd-global-header-height} + #{var(--cd-site-header-height)});
+      top: calc(var(--ginHorizontalToolbarOffset) + var(--cd-global-header-height) + var(--cd-site-header-height));
     }
   }
 
