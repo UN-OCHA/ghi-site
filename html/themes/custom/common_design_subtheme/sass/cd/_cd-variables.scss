@@ -112,6 +112,29 @@
   --cd-font--roboto: "Roboto", helvetica, arial, sans-serif;
   --cd-font--roboto-condensed: "Roboto Condensed", helvetica, arial, sans-serif;
   --cd-font--roboto-slab: "Roboto Slab", helvetica, arial, sans-serif;
+
+  /* z-index */
+  --cd-z-default: 1;
+  --cd-z-hidden: -1;
+  --cd-z-sidebar: 110;
+  --cd-z-sidebar-underlay: 100;
+  --cd-z-main-menu: 199;
+  --cd-z-search: 200;
+  --cd-z-dropdown: 201;
+  --cd-z-skip-link: 1000;
+
+  /**
+   * Breakpoints
+   *
+   * CSS Custom Props cannot be used inside media queries, so this list serves
+   * as a reference only. The actual values (768px, 1024px, etc) are directly
+   * used within media queries.
+   */
+  --cd-bp--sm: 576px;
+  --cd-bp--md: 768px;
+  --cd-bp--lg: 1024px;
+  --cd-bp--xl: 1200px;
+  --cd-bp--xxl: 1400px;
 }
 
 //——————————————————————————————————————————————————————————————————————————————
@@ -185,44 +208,3 @@ $cd-font-size--large: var(--cd-font-size--large);
 $cd-font-size--2xbase: var(--cd-font-size--2xbase);
 $cd-font-size--2xmedium: var(--cd-font-size--2xmedium);
 $cd-font-size--2xlarge: var(--cd-font-size--2xlarge);
-
-//——————————————————————————————————————————————————————————————————————————————
-// Don't use any maps directly. Please refer to `_cd-mixins.scss` partial.
-//——————————————————————————————————————————————————————————————————————————————
-
-//
-// Grid Breakpoints
-//
-$grid-breakpoints: (
-  xs: 0,
-  sm: 576px,
-  md: 768px,
-  lg: 1024px,
-  xl: 1200px,
-  xxl: 1400px
-) !default;
-
-//
-// CD Breakpoints correspond to the following grid breakpoints:
-//
-$cd-breakpoints: (
-  tablet: #{map-get($grid-breakpoints, "md")},
-  desktop: #{map-get($grid-breakpoints, "lg")},
-  xlarge: #{map-get($grid-breakpoints, "xl")},
-  xxlarge: #{map-get($grid-breakpoints, "xxl")}
-);
-
-//——————————————————————————————————————————————————————————————————————————————
-// z-indices
-//——————————————————————————————————————————————————————————————————————————————
-
-$zindex: (
-  default: 1,
-  hidden: -1,
-  sidebar: 110,
-  sidebar-underlay: 100,
-  main-menu: 199,
-  search: 200,
-  dropdown: 201,
-  skip-link: 1000
-);
