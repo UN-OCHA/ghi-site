@@ -73,9 +73,18 @@
   --cd-global-header-height: 35px;
   --cd-site-header-height: 80px;
 
-  // Adjust this depending on number of rows in .cd-layout-container.
-  // This ensures the footer is always the last element.
+  /**
+   * CD Footer
+   *
+   * Adjust this depending on number of rows in .cd-layout-container.
+   * This ensures the footer is always the last element.
+   */
   --cd-footer-row-number: 5;
+
+  /**
+   * CD Layout
+   */
+  --cd-sidebar-width: 200px;
 
   /* From https://brand.unocha.org/d/xEPytAUjC3sH/visual-identity#/basics/colours */
   --cd-red: #cd3a1f;
@@ -142,7 +151,7 @@
 //——————————————————————————————————————————————————————————————————————————————
 $cd-max-body-width: var(--cd-max-body-width);
 $cd-max-width: var(--cd-max-width);
-$cd-sidebar-width: 200px;
+$cd-sidebar-width: var(--cd-sidebar-width);
 
 $cd-container-padding: var(--cd-container-padding);
 $cd-container-padding-tablet: var(--cd-container-padding-tablet);
