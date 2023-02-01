@@ -2,6 +2,7 @@ global-styling:
   css:
     theme:
       css/styles.css: {}
+      css/brand.css: {}
   js:
     js/common.js: {}
     js/login_destination.js: {}
