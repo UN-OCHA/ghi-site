@@ -1,0 +1,70 @@
+/**
+ * HumAction customizations to CD Header.
+ */
+.cd-header button:focus {
+  outline: none;
+}
+
+.cd-global-header {
+  background: var(--cd-grey--lighter);
+  background-image: linear-gradient(-180deg, var(--cd-grey--lighter) 67%, var(--cd-grey--light) 97%);
+}
+
+.cd-global-header .cd-global-header__actions,
+.cd-global-header .cd-global-header__actions > * {
+  background: transparent;
+}
+
+.cd-global-header svg {
+  fill: var(--ghi-default-text-color) !important;
+}
+
+.cd-global-header a,
+.cd-global-header * {
+  color: var(--ghi-default-text-color);
+}
+
+.cd-global-header .menu > li:last-child {
+  padding-right: 0;
+}
+
+.cd-global-header .menu > li a {
+  color: var(--ghi-default-text-color);
+}
+
+.cd-global-header .menu > li a::after {
+  background: var(--cd-default-border-color);
+}
+
+.cd-global-header .menu > li:last-child a {
+  padding-right: 0;
+}
+
+.cd-global-header .menu > li:last-child a::after {
+  display: none;
+}
+
+.cd-site-header {
+  border-bottom: 0;
+}
+
+.cd-site-header .cd-nav > .menu > li:last-child {
+  padding-right: 0;
+}
+
+.cd-site-header__inner {
+  height: 80px;
+}
+
+@supports (display: grid) {
+  .cd-site-header__inner {
+    grid-template-rows: 80px;
+    grid-template-columns: 2fr 1fr;
+  }
+
+  @media (min-width: 768px) {
+    .cd-site-header__inner {
+      grid-template-columns: 260px 1fr;
+    }
+  }
+}
