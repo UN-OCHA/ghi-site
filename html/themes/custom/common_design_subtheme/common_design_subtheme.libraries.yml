@@ -74,6 +74,7 @@ ghi-header:
       components/ghi-header/ghi-menu--main.css: {}
       components/ghi-header/ghi-nav.css: {}
       components/ghi-header/ghi-ocha.css: {}
+      components/ghi-header/ghi-search.css: {}
 ghi-section-teaser:
   css:
     theme:

@@ -1,0 +1,41 @@
+/**
+ * HumAction: CD Header - Search
+ */
+
+.cd-search__btn {
+  color: var(--brand-primary);
+}
+
+.cd-search__btn svg {
+  fill: var(--brand-primary);
+}
+
+.cd-search__btn:hover,
+.cd-search__btn:focus {
+  color: var(--brand-primary--dark);
+}
+
+.cd-search__btn:hover svg,
+.cd-search__btn:focus svg {
+  fill: var(--brand-primary--dark);
+}
+
+.cd-search__btn:focus {
+  color: var(--brand-highlight);
+}
+
+.cd-search__btn:focus svg {
+  fill: var(--brand-highlight);
+}
+
+.cd-search__btn[aria-expanded=true] {
+  color: var(--brand-highlight);
+}
+
+.cd-search__btn[aria-expanded=true] svg {
+  fill: var(--brand-highlight);
+}
+
+.cd-search__submit:focus {
+  background-color: var(--brand-highlight);
+}
