@@ -63,6 +63,7 @@ swiper:
 ghi-cd-overrides:
   dependencies:
     - common_design_subtheme/ghi-header
+    - common_design_subtheme/ghi-footer
 
 ghi-header:
   css:
@@ -76,6 +77,13 @@ ghi-header:
       components/ghi-cd-overrides/ghi-header/ghi-nav.css: {}
       components/ghi-cd-overrides/ghi-header/ghi-ocha.css: {}
       components/ghi-cd-overrides/ghi-header/ghi-search.css: {}
+
+ghi-footer:
+  css:
+    theme:
+      # The order of these matches the old Sass @import statements so moving the
+      # files might result in CSS cascade changes.
+      components/ghi-cd-overrides/ghi-footer/ghi-footer.css: {}
 
 ghi-grid:
   css:

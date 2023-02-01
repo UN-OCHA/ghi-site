@@ -1,0 +1,20 @@
+/**
+ * HumAction: CD Footer custom styles
+ */
+.cd-footer {
+  color: var(--ghi-default-text-color);
+  background: var(--brand-primary);
+}
+
+.cd-footer svg {
+  fill: var(--ghi-default-text-color);
+}
+
+.cd-footer a {
+  color: var(--ghi-default-text-color);
+}
+
+.cd-footer a:focus {
+  color: var(--ghi-default-text-color);
+  outline: 3px solid var(--ghi-default-text-color);
+}
