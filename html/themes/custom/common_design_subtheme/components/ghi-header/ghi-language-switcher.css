@@ -1,0 +1,10 @@
+/**
+ * HumAction: custom language switcher styles
+ */
+.cd-language-switcher__btn:focus {
+  outline: none;
+}
+
+.cd-user-menu__dropdown li a:focus {
+  outline: none;
+}
