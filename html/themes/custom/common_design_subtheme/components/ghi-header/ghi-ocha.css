@@ -1,0 +1,10 @@
+/**
+ * HumAction: OCHA Services
+ */
+.cd-ocha-dropdown__link a:hover {
+  color: inherit !important;
+}
+
+.cd-ocha-dropdown__link a:focus {
+  outline: none;
+}
