@@ -18,24 +18,24 @@
   }
 
   &:focus {
-    color: $implementation-highlight;
+    color: var(--brand-highlight);
 
     svg {
-      fill: $implementation-highlight;
+      fill: var(--brand-highlight);
     }
   }
 
   &[aria-expanded="true"] {
-    color: $implementation-highlight;
+    color: var(--brand-highlight);
 
     svg {
-      fill: $implementation-highlight;
+      fill: var(--brand-highlight);
     }
   }
 }
 
 .cd-search__submit {
   &:focus {
-    background-color: $implementation-highlight;
+    background-color: var(--brand-highlight);
   }
 }

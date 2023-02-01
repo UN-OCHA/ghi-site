@@ -6,14 +6,14 @@
   white-space: nowrap;
 
   &[aria-expanded] .cd-icon--arrow-down {
-    fill: $implementation-highlight;
+    fill: var(--brand-highlight);
   }
 
   &[aria-expanded="true"] {
     &::before {
       bottom: 0;
       height: 4px;
-      background: $implementation-highlight;
+      background: var(--brand-highlight);
     }
   }
 }
@@ -98,7 +98,7 @@
 
       > a.is-active::before,
       > button.is-active::before {
-        background: $implementation-highlight;
+        background: var(--brand-highlight);
       }
 
       // First level menu item with children.
@@ -107,7 +107,8 @@
       &.menu-item--expanded {
         > a.is-active::before,
         > button.is-active::before {
-          background: rgba($implementation-highlight, 0.2);
+          opacity: 0.2;
+          background: var(--brand-highlight);
         }
       }
 
@@ -115,11 +116,12 @@
         a,
         button {
           &::before {
-            background: rgba($implementation-highlight, 0.2);
+            opacity: 0.2;
+            background: var(--brand-highlight);
           }
 
           &.is-active::before {
-            background: $implementation-highlight;
+            background: var(--brand-highlight);
           }
         }
       }
@@ -127,12 +129,13 @@
       > ul > li.menu-item--active-trail {
         a::before,
         button::before {
-          background: rgba($implementation-highlight, 0.6);
+          opacity: 0.6;
+          background: var(--brand-highlight);
         }
 
         a.is-active::before,
         button.is-active::before {
-          background: $implementation-highlight;
+          background: var(--brand-highlight);
         }
       }
     }
