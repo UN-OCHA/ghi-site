@@ -56,10 +56,10 @@
 }
 
 .cd-site-header__inner {
-  height: $cd-site-header-height;
+  height: var(--cd-site-header-height);
 
   @supports (display: grid) {
-    grid-template-rows: $cd-site-header-height;
+    grid-template-rows: var(--cd-site-header-height);
     grid-template-columns: 2fr 1fr;
 
     @media (min-width: 768px) {

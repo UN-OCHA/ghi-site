@@ -69,6 +69,9 @@
   --cd-flow-space: 1rem;
   --cd-bumper-space: 1rem;
 
+  /* CD Header */
+  --cd-site-header-height: 80px;
+
   // Adjust this depending on number of rows in .cd-layout-container.
   // This ensures the footer is always the last element.
   --cd-footer-row-number: 5;
@@ -122,7 +125,6 @@ $cd-container-padding-tablet: var(--cd-container-padding-tablet);
 $cd-container-padding-xlarge: var(--cd-container-padding-xlarge);
 
 $cd-global-header-height: 35px;
-$cd-site-header-height: 80px;
 
 // Colour palette
 $cd-ocha-orange: var(--cd-ocha-orange);

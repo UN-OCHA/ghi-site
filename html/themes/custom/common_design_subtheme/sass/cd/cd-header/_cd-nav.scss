@@ -2,7 +2,7 @@
 // Common Design: Main Navigation
 //——————————————————————————————————————————————————————————————————————————————
 .cd-nav__btn {
-  height: $cd-site-header-height;
+  height: var(--cd-site-header-height);
   white-space: nowrap;
 
   &[aria-expanded] .cd-icon--arrow-down {
@@ -87,7 +87,7 @@
   @media (max-width: 1023px) {
     // Fix offset for mobile device when toolbar is present.
     .gin--horizontal-toolbar & .cd-nav[data-cd-hidden="false"] {
-      top: calc(var(--ginHorizontalToolbarOffset) + #{$cd-global-header-height} + #{$cd-site-header-height});
+      top: calc(var(--ginHorizontalToolbarOffset) + #{$cd-global-header-height} + #{var(--cd-site-header-height)});
     }
   }
 
@@ -151,7 +151,7 @@
           position: relative;
           display: flex;
           align-items: center;
-          height: $cd-site-header-height;
+          height: var(--cd-site-header-height);
           transition: background 0.3s ease;
           background: transparent;
 
@@ -185,7 +185,7 @@
       }
 
       > li > .menu {
-        top: $cd-site-header-height;
+        top: var(--cd-site-header-height);
 
         > li.menu-item--active-trail {
           border-left: 6px solid var(--cd-primary-color);
