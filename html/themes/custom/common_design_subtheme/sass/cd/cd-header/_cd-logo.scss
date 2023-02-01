@@ -33,14 +33,14 @@
     }
 
     // Logo for mobile.
-    @include max-width(md) {
+    @media (max-width: 767px) {
       margin: 1.2rem 0;
       background: url("../../../custom/common_design_subtheme/img/logos/logo-humanitarian-action.svg") center no-repeat;
       background: linear-gradient(transparent, transparent), url("../../../custom/common_design_subtheme/img/logos/logo-humanitarian-action.svg") center no-repeat;
       background-position: 0 center;
     }
 
-    @include min-width(md) {
+    @media (min-width: 768px) {
       img {
         width: auto;
         height: 40px;

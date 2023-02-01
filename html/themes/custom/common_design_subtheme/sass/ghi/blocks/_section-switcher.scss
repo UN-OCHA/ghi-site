@@ -62,7 +62,7 @@
       }
     }
 
-    @include desktop {
+    @media (min-width: 1024px) {
       top: 0.25rem;
     }
   }

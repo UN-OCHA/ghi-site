@@ -85,7 +85,7 @@
     }
 
     // REPEATING this for smaller screens.
-    @include max-width("md") {
+    @media (max-width: 767px) {
       a.expand-caption {
         position: absolute;
         right: calc(1.9rem + 2px);

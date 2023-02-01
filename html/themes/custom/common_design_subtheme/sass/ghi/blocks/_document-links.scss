@@ -65,12 +65,12 @@
         }
       }
 
-      @include tablet {
+      @media (min-width: 768px) {
         flex: 0 1 calc(50% - 0.25rem);
       }
     }
 
-    @include tablet {
+    @media (min-width: 768px) {
       display: flex;
       flex-direction: row;
       flex-wrap: wrap;

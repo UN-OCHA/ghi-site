@@ -84,7 +84,7 @@
     }
   }
 
-  @include max-width(lg) {
+  @media (max-width: 1023px) {
     // Fix offset for mobile device when toolbar is present.
     .gin--horizontal-toolbar & .cd-nav[data-cd-hidden="false"] {
       top: calc(var(--ginHorizontalToolbarOffset) + #{$cd-global-header-height} + #{$cd-site-header-height});
@@ -92,7 +92,7 @@
   }
 
   // Active trail for mobile menu.
-  @include max-width(lg) {
+  @media (max-width: 1023px) {
 
     .cd-nav > ul > li {
 
@@ -138,7 +138,7 @@
     }
   }
 
-  @include desktop {
+  @media (min-width: 1024px) {
     .cd-nav > .menu {
       > .menu-item {
 

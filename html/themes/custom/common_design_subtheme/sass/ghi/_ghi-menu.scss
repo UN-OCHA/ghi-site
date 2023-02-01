@@ -11,7 +11,7 @@
       height: auto;
       font-size: var(--cd-font-size--base);
 
-      @include max-width(lg) {
+      @media (max-width: 1023px) {
         padding: 15px 30px;
       }
     }
@@ -39,12 +39,12 @@
       }
     }
 
-    @include max-width(lg) {
+    @media (max-width: 1023px) {
       margin: 0;
       padding: 0;
     }
 
-    @include desktop {
+    @media (min-width: 1024px) {
       &.cd-nav {
         position: unset;
 

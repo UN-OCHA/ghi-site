@@ -1,6 +1,6 @@
 .cd-layout-container {
   @supports (display: grid) {
-    @include tablet {
+    @media (min-width: 768px) {
       grid-template-rows: 115px auto 1fr auto;
       grid-auto-rows: auto;
     }
@@ -10,7 +10,7 @@
 // One sidebar.
 .cd-layout-with-sidebar-first .cd-layout-sidebar-first,
 .cd-layout-with-sidebar-second .cd-layout-sidebar-second {
-  @include desktop {
+  @media (min-width: 1024px) {
     flex-basis: $cd-sidebar-width;
   }
 }
@@ -20,11 +20,11 @@
   .cd-layout-sidebar-first {
     margin-bottom: 1rem;
 
-    @include tablet {
+    @media (min-width: 768px) {
       flex-basis: $cd-sidebar-width;
     }
 
-    @include desktop {
+    @media (min-width: 1024px) {
       margin-bottom: 0;
     }
   }
@@ -34,7 +34,7 @@
 // Requires markup in node-full.html.twig.
 .cd-layout-two-col {
   .cd-layout-sidebar-first {
-    @include desktop {
+    @media (min-width: 1024px) {
       flex-basis: $cd-sidebar-width;
       margin-top: 0;
     }

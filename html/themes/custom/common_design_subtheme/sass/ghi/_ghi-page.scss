@@ -16,7 +16,7 @@
     padding-right: var(--cd-container-padding);
     padding-left: var(--cd-container-padding);
 
-    @include min-width("md") {
+    @media (min-width: 768px) {
       max-width: calc(var(--content-width) + 48px);
       padding-right: var(--cd-container-padding-xlarge);
       padding-left: var(--cd-container-padding-xlarge);
@@ -53,7 +53,7 @@
     }
   }
 
-  @include max-width("md") {
+  @media (max-width: 767px) {
     margin-top: 2rem !important;
 
     .region-wrapper-inner {

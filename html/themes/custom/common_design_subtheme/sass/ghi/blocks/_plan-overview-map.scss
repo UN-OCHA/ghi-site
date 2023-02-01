@@ -42,7 +42,7 @@
           padding: 0.5rem;
           text-align: center;
 
-          @include max-width(sm) {
+          @media (max-width: 575px) {
             padding-bottom: 0.3rem;
           }
         }
@@ -158,13 +158,13 @@
         }
       }
 
-      @include tablet {
+      @media (min-width: 768px) {
         min-height: 500px;
         border: 0 none;
       }
     }
 
-    @include tablet {
+    @media (min-width: 768px) {
       padding: 0;
     }
   }

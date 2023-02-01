@@ -62,7 +62,7 @@
     grid-template-rows: $cd-site-header-height;
     grid-template-columns: 2fr 1fr;
 
-    @include tablet {
+    @media (min-width: 768px) {
       grid-template-columns: 260px 1fr;
     }
   }

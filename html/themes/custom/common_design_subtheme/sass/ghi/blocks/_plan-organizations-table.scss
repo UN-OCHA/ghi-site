@@ -4,7 +4,7 @@
     white-space: unset !important;
   }
 
-  @include tablet {
+  @media (min-width: 768px) {
     thead th.cd-table--name {
       min-width: 200px;
     }

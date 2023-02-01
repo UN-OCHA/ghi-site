@@ -26,7 +26,7 @@
     }
 
     // So long titles don't hide the map tabs.
-    @include tablet {
+    @media (min-width: 768px) {
       max-width: 80%;
     }
   }

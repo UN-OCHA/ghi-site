@@ -45,7 +45,7 @@
 }
 
 // Start inline search for desktop only.
-@include desktop {
+@media (min-width: 1024px) {
   .cd-search--inline__input {
     &:focus {
       border-bottom: 3px solid $cd-blue--bright;

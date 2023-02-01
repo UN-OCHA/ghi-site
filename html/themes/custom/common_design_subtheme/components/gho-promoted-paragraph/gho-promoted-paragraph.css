@@ -16,7 +16,7 @@
   content: "";
   background-color: inherit;
 
-  /* @include tablet {
+  /* @media (min-width: 768px) {
        right: calc(-4rem - 2px);
        left: calc(-4rem - 2px);
        border: 1px solid var(--cd-default-border-color);

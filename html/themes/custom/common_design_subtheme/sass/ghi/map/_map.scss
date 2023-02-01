@@ -411,7 +411,7 @@
 
   // Map tabs for mobile, make sure this is not applied for downloads. Sigh.
   body:not(.download-type-pdf) {
-    @include max-width(sm) {
+    @media (max-width: 575px) {
       .donut .map-tabs {
         /* Map tabs mobile */
         position: relative;
@@ -473,7 +473,7 @@
       float: right;
       margin-left: 1rem;
 
-      @include max-width(sm) {
+      @media (max-width: 575px) {
         margin-left: 0.5rem;
       }
     }
