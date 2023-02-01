@@ -4,7 +4,7 @@
 
 .cd-search--inline__btn {
   svg {
-    fill: $implementation-primary;
+    fill: var(--brand-primary);
   }
 
   &:hover,

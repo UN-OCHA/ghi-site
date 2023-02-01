@@ -6,5 +6,6 @@
    *
    * In the future the Component library will adhere to these vars as well.
    */
+  --brand-primary: var(--ghi-yellow);
   --brand-highlight: var(--ghi-yellow);
 }
