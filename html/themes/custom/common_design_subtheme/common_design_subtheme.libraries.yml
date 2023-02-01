@@ -10,7 +10,7 @@ global-styling:
     - common_design_subtheme/sorttable
     - common_design_subtheme/select2
     # TODO: for CD v8 this should extend the common_design/cd-header library.
-    - common_design_subtheme/ghi-header
+    - common_design_subtheme/ghi-cd-overrides
 
 # CSS custom properties polyfill for IE11.
 # https://jhildenbiddle.github.io/css-vars-ponyfill
@@ -59,22 +59,27 @@ swiper:
       /libraries/swiper/swiper.min.css: {}
 
 # Libraries specific to GHI.
-ghi-grid:
-  css:
-    theme:
-      components/ghi-grid/ghi-grid.css: {}
+ghi-cd-overrides:
+  dependencies:
+    - common_design_subtheme/ghi-header
+
 ghi-header:
   css:
     theme:
       # The order of these matches the old Sass @import statements so moving the
       # files might result in CSS cascade changes.
-      components/ghi-header/ghi-dropdowns.css: {}
-      components/ghi-header/ghi-header.css: {}
-      components/ghi-header/ghi-logo.css: {}
-      components/ghi-header/ghi-menu--main.css: {}
-      components/ghi-header/ghi-nav.css: {}
-      components/ghi-header/ghi-ocha.css: {}
-      components/ghi-header/ghi-search.css: {}
+      components/ghi-cd-overrides/ghi-header/ghi-dropdowns.css: {}
+      components/ghi-cd-overrides/ghi-header/ghi-header.css: {}
+      components/ghi-cd-overrides/ghi-header/ghi-logo.css: {}
+      components/ghi-cd-overrides/ghi-header/ghi-menu--main.css: {}
+      components/ghi-cd-overrides/ghi-header/ghi-nav.css: {}
+      components/ghi-cd-overrides/ghi-header/ghi-ocha.css: {}
+      components/ghi-cd-overrides/ghi-header/ghi-search.css: {}
+
+ghi-grid:
+  css:
+    theme:
+      components/ghi-grid/ghi-grid.css: {}
 ghi-section-teaser:
   css:
     theme:
