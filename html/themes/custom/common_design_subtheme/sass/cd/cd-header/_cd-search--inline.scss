@@ -9,10 +9,10 @@
 
   &:hover,
   &:focus {
-    color: $implementation-primary-dark;
+    color: var(--brand-primary--dark);
 
     svg {
-      fill: $implementation-primary-dark;
+      fill: var(--brand-primary--dark);
     }
   }
 
@@ -20,7 +20,7 @@
     color: var(--brand-highlight);
 
     svg {
-      fill: $implementation-primary-dark;
+      fill: var(--brand-primary--dark);
     }
   }
 
