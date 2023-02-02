@@ -18,7 +18,7 @@
           height: auto !important;
           max-height: 1.5rem;
           text-align: center;
-          color: $cd-white;
+          color: var(--cd-white);
           // The default background color for plan type other and unknown
           background-color: rgb(135, 207, 173);
           font-size: var(--cd-font-size--small);

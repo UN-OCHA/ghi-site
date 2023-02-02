@@ -19,12 +19,8 @@
 // Material icons
 @import "https://fonts.googleapis.com/icon?family=Material+Icons&display=swap";
 
-//——————————————————————————————————————————————————————————————————————————————
-// Colours
-//——————————————————————————————————————————————————————————————————————————————
 :root {
   /* Color palette */
-
   /* OCHA blue is one colour ramp darker than brand blue */
   --cd-ocha-blue: #1f69b3;
   /* Dark blue is two colour ramps darker than brand blue */
@@ -145,75 +141,3 @@
   --cd-bp--xl: 1200px;
   --cd-bp--xxl: 1400px;
 }
-
-//——————————————————————————————————————————————————————————————————————————————
-// Measurements
-//——————————————————————————————————————————————————————————————————————————————
-$cd-max-body-width: var(--cd-max-body-width);
-$cd-max-width: var(--cd-max-width);
-$cd-sidebar-width: var(--cd-sidebar-width);
-
-$cd-container-padding: var(--cd-container-padding);
-$cd-container-padding-tablet: var(--cd-container-padding-tablet);
-$cd-container-padding-xlarge: var(--cd-container-padding-xlarge);
-
-// Colour palette
-$cd-ocha-orange: var(--cd-ocha-orange);
-$cd-ocha-orange--dark: var(--cd-ocha-orange--dark);
-$cd-ocha-blue: var(--cd-ocha-blue);
-$cd-blue--dark: var(--cd-blue--dark);
-$cd-blue--bright: var(--cd-blue--bright);
-$cd-blue--light: var(--cd-blue--light);
-
-$cd-grey--light: var(--cd-grey--light);
-$cd-grey--mid: var(--cd-grey--mid);
-$cd-grey--dark: var(--cd-grey--dark);
-
-// Default text colour.
-$cd-default-text-color: var(--ghi-default-text-color);
-
-$cd-white: var(--cd-white);
-$cd-black: var(--cd-black);
-
-// Site background colour.
-$cd-blue-grey--dark: var(--cd-blue-grey--dark);
-$cd-blue-grey: var(--cd-blue-grey);
-$cd-blue-grey--light: var(--cd-blue-grey--light);
-
-$cd-highlight-red: var(--cd-highlight-red);
-$cd-contrast-red: var(--cd-contrast-red);
-
-$cd-rgb-ocha-blue: var(--cd-rgb-ocha-blue);
-$cd-rgb-grey--mid: var(--cd-rgb-grey--mid);
-$cd-rgb-grey--dark: var(--cd-rgb-grey--dark);
-$cd-rgb-highlight-red: var(--cd-rgb-highlight-red);
-$cd-rgb-blue-grey--dark: var(--cd-rgb-blue-grey--dark);
-
-// Brand colours
-$cd-primary: var(--cd-primary-color);
-$cd-primary--dark: var(--cd-primary-color--dark);
-
-//——————————————————————————————————————————————————————————————————————————————
-// Fonts
-//——————————————————————————————————————————————————————————————————————————————
-
-$cd-font: var(--cd-font);
-$cd-font--system:  var(--cd-font--system);
-$cd-font--noto: var(--cd-font--noto);
-$cd-font--noto-kufi: var(--cd-font--noto-kufi);
-$cd-font--roboto: var(--cd-font--roboto);
-$cd-font--roboto-condensed: var(--cd-font--roboto-condensed);
-$cd-font--roboto-slab: var(--cd-font--roboto-slab);
-
-//——————————————————————————————————————————————————————————————————————————————
-// Font sizes
-//——————————————————————————————————————————————————————————————————————————————
-
-$cd-font-size--tiny: var(--cd-font-size--tiny);
-$cd-font-size--small: var(--cd-font-size--small);
-$cd-font-size--base: var(--cd-font-size--base);
-$cd-font-size--medium: var(--cd-font-size--medium);
-$cd-font-size--large: var(--cd-font-size--large);
-$cd-font-size--2xbase: var(--cd-font-size--2xbase);
-$cd-font-size--2xmedium: var(--cd-font-size--2xmedium);
-$cd-font-size--2xlarge: var(--cd-font-size--2xlarge);

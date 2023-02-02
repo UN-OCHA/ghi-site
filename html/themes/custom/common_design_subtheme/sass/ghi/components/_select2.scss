@@ -72,7 +72,7 @@ div.ajax-switcher-wrapper {
   .select2-results {
     width: auto !important;
     border-radius: 3px;
-    background-color: $cd-white;
+    background-color: var(--cd-white);
 
     ul li {
       padding: 8px 18px;
