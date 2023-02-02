@@ -29,7 +29,7 @@
   --cd-blue--bright: #82b5e9;
   --cd-blue--light: #d4e5f7;
   --cd-highlight-red: #e56a54;
-  // This shade of red has been selected based on WCAG AAA requirements for contrast.
+  /* This shade has been selected based on WCAG AAA constrast requirements. */
   --cd-contrast-red: #e00000;
   --cd-white: #fff;
   --cd-grey--lighter: #f5f5f5;
@@ -44,8 +44,10 @@
   --cd-blue-grey--dark: #d3dde5;
   --cd-blue-grey--light: #ebf0f4;
 
-  // Colours used with rgba().
-  // https://stackoverflow.com/questions/40010597/how-do-i-apply-opacity-to-a-css-color-variable
+  /**
+   * Colours used with rgba().
+   * https://stackoverflow.com/questions/40010597/how-do-i-apply-opacity-to-a-css-color-variable
+   */
   --cd-rgb-ocha-blue: 2, 108, 182;
   --cd-rgb-grey--mid: 89, 89, 89;
   --cd-rgb-grey--dark: 74, 74, 74;
@@ -107,13 +109,17 @@
   --cd-font: helvetica, arial, sans-serif;
   --cd-font--system: system-ui;
 
-  // Multilingual
-  // https://brand.unocha.org/d/xEPytAUjC3sH/visual-identity#/basics/fonts/multi-language-typefaces-1
+  /**
+   * Multilingual
+   * https://brand.unocha.org/d/xEPytAUjC3sH/visual-identity#/basics/fonts/multi-language-typefaces-1
+   */
   --cd-font--noto: "Noto Sans", sans-serif;
   --cd-font--noto-kufi: "Noto Kufi Arabic", sans-serif;
 
-  // Roboto
-  // https://brand.unocha.org/d/xEPytAUjC3sH/visual-identity#/basics/fonts/advanced-users
+  /**
+   * Roboto
+   * https://brand.unocha.org/d/xEPytAUjC3sH/visual-identity#/basics/fonts/advanced-users
+   */
   --cd-font--roboto: "Roboto", helvetica, arial, sans-serif;
   --cd-font--roboto-condensed: "Roboto Condensed", helvetica, arial, sans-serif;
   --cd-font--roboto-slab: "Roboto Slab", helvetica, arial, sans-serif;
