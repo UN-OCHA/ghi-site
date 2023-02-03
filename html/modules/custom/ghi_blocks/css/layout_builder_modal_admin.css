@@ -135,9 +135,9 @@ form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .glb-form-
   margin-top: 0.5rem !important;
   margin-bottom: 0.5rem !important;
 }
-form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .glb-form-boolean--type-radio {
+/* form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .glb-form-boolean--type-radio {
   box-shadow: none !important;
-}
+} */
 form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions,
 #layout-builder-modal form.glb-canvas-form .glb-canvas-form__actions {
   position: absolute !important;
