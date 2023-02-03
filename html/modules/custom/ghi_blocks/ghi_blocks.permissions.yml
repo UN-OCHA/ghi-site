@@ -2,6 +2,10 @@ administer ghi global config:
   title: 'Administer GHI global config'
   description: 'Allow to access the GHI global administration pages.'
   restrict access: true
+administer ghi map config:
+  title: 'Administer GHI map config'
+  description: 'Allow to access the GHI map administration pages.'
+  restrict access: true
 show block configuration code:
   title: 'Show block configuration code'
   description: 'Allow to show the block configuration code.'

@@ -28,6 +28,15 @@ ghi_blocks.global_config:
     _admin_route: TRUE
   requirements:
     _permission: 'administer ghi global config'
+ghi_blocks.map_config:
+  path: '/admin/config/ghi/map-settings'
+  defaults:
+    _form: '\Drupal\ghi_blocks\Form\MapSettingsForm'
+    _title: 'Map settings'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer ghi map config'
 
 ghi_blocks.import_block:
   path: '/layout_builder/import/block/{section_storage_type}/{section_storage}/{delta}/{region}'
