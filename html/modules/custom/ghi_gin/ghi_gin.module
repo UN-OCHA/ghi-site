@@ -20,3 +20,52 @@ function ghi_gin_preprocess_page(&$variables) {
     $variables['page']['content']['#attached']['library'][] = 'ghi_gin/gin_toolbar';
   }
 }
+
+/**
+ * Implements hook_page_attachments_alter().
+ *
+ * Use the frontend themes favicon also for the backend theme.
+ */
+function ghi_gin_page_attachments_alter(array &$attachments) {
+  $theme = \Drupal::theme()->getActiveTheme();
+  if ($theme->getName() != 'gin') {
+    return;
+  }
+  $frontend_theme = 'common_design_subtheme';
+  /** @var \Drupal\Core\Extension\ThemeHandler $theme_handler */
+  $theme_handler = \Drupal::service('theme_handler');
+  if (!$theme_handler->themeExists($frontend_theme)) {
+    return;
+  }
+  /** @var \Drupal\Core\Extension\ExtensionPathResolver $extension_resolver */
+  $extension_resolver = \Drupal::service('extension.path.resolver');
+  $theme_path = $extension_resolver->getPath('theme', $frontend_theme);
+
+  // Remove the default favicon.
+  foreach ($attachments['#attached']['html_head_link'] as $key => $link) {
+    if (!array_key_exists(0, $link) || !array_key_exists('rel', $link[0])) {
+      continue;
+    }
+    if ($link[0]['rel'] == 'icon') {
+      unset($attachments['#attached']['html_head_link'][$key]);
+    }
+  }
+
+  // Set the new favicons.
+  $attachments['#attached']['html_head_link'][][] = [
+    'rel' => 'apple-touch-icon',
+    'href' => '/' . $theme_path . '/img/apple-touch-icon.png',
+    'sizes' => '180x180',
+    'type' => 'image/png',
+  ];
+  $attachments['#attached']['html_head_link'][][] = [
+    'rel' => 'icon',
+    'href' => '/' . $theme_path . '/img/favicon-32x32.png',
+    'type' => 'image/png',
+  ];
+  $attachments['#attached']['html_head_link'][][] = [
+    'rel' => 'icon',
+    'href' => '/' . $theme_path . '/img/favicon-16x16.png',
+    'type' => 'image/png',
+  ];
+}
