@@ -84,6 +84,7 @@ permissions:
   - 'administer taxonomy'
   - 'administer teams'
   - 'administer url aliases'
+  - 'administer user roles'
   - 'administer users'
   - 'administer users roles'
   - 'configure all homepage node layout overrides'

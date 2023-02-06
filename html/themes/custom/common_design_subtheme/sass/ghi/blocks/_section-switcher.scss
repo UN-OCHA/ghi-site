@@ -1,20 +1,25 @@
 .block-wrapper--sectionswitcher,
 .ghi-block.has-year-switcher {
+  z-index: 1;
 
   .section-switcher-wrapper {
     position: relative;
     z-index: 1;
 
+    .section-switcher-single,
     button {
-      display: block;
+      display: inline-block;
       padding: 0.5rem 1.2rem;
-      transition: background-color 0.6s ease-out, color 0.6s ease-out;
       text-transform: uppercase;
       color: var(--ghi-default-text-color);
       border: 0;
       background-color: var(--ghi-primary-button-color);
       font-size: var(--cd-font-size--small);
       font-weight: bold;
+    }
+
+    button {
+      transition: background-color 0.6s ease-out, color 0.6s ease-out;
 
       &:hover,
       &:focus {
@@ -58,7 +63,7 @@
     }
 
     @include desktop {
-      top: 0.5rem;
+      top: 0.25rem;
     }
   }
 }

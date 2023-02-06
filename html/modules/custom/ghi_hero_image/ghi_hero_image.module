@@ -51,11 +51,14 @@ function ghi_hero_image_preprocess_page(&$variables) {
   // show a default image or the image from a parent node.
   $hero_image_field = $node->get($hero_image_field_definition->getName());
 
+  // See if the image should be cropped.
+  $crop_image = $hero_image_field?->first()?->getValue()['settings']['crop_image'] ?? TRUE;
+
   // Get the hero image for the current page.
   $hero_image = $hero_image_field->view([
     'label' => 'hidden',
     'settings' => [
-      'responsive_image_style' => 'hero',
+      'responsive_image_style' => $crop_image ? 'hero' : 'hero_not_cropped',
       'image_link' => NULL,
       'include_credits' => TRUE,
     ],

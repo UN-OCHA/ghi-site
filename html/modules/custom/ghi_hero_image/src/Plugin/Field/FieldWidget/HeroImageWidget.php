@@ -47,6 +47,7 @@ class HeroImageWidget extends WidgetBase {
       'settings' => [
         'hpc_webcontent_file_attachment' => NULL,
         'smugmug_api' => NULL,
+        'crop_image' => TRUE,
       ],
     ] + parent::defaultSettings();
   }
@@ -112,6 +113,12 @@ class HeroImageWidget extends WidgetBase {
         ],
       ],
       '#smugmug_user_scope' => $smugmug_ocha,
+    ];
+
+    $element['settings']['crop_image'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Crop image'),
+      '#default_value' => $items[$delta]->settings['crop_image'] ?? TRUE,
     ];
 
     return $element;

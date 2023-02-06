@@ -86,8 +86,6 @@
 {{ attach_library('common_design/cd-typography') }}
 {{ attach_library('common_design_subtheme/gho-embed') }}
 
-{% set unochaDate = node.getCreatedTime|date('j F Y') %}
-{% set keywords = node.getDisplayTags|render %}
 <article{{ attributes.addClass(classes) }}>
 
   {{ title_prefix }}
@@ -106,15 +104,11 @@
 
   {{ local_tasks }}
 
-  {% if display_submitted %}
+  {% if display_submitted and metadata %}
     <footer class="node__meta [ cd-bumper ]">
       <div class="cd-author__content">
         <div{{ author_attributes.addClass('node__submitted', 'content-width') }}>
-          <span>{% trans %}Published on {{ unochaDate }}{% endtrans %}</span>
-          {% if keywords %}
-            <span>|</span>
-            <span>{% trans %}Keywords: {{ keywords }}{% endtrans %}</span>
-          {% endif %}
+          {{ metadata }}
         </div>
       </div>
     </footer>

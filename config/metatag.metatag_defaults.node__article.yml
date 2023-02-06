@@ -1,0 +1,13 @@
+uuid: 69f761fd-da49-45e6-84a8-d5852d46fede
+langcode: en
+status: true
+dependencies: {  }
+id: node__article
+label: 'Content: Article'
+tags:
+  image_src: '[node:field_image]'
+  og_image: '[node:field_image]'
+  twitter_cards_donottrack: 'on'
+  twitter_cards_image: '[node:field_image]'
+  twitter_cards_site: '@UNOCHA'
+  twitter_cards_type: summary_large_image

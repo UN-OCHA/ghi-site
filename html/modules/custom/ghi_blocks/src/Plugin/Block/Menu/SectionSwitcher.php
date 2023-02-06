@@ -125,7 +125,7 @@ class SectionSwitcher extends BlockBase implements ContainerFactoryPluginInterfa
       $sections = $this->getSectionsByBaseObjectCountryReference();
     }
 
-    if (count($sections) <= 1) {
+    if (empty($sections)) {
       return NULL;
     }
 

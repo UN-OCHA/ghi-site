@@ -240,8 +240,8 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
    * @param string $entity_type
    *   Can be either "plan" or "governing".
    *
-   * @return array
-   *   An array of entity objects.
+   * @return array|null
+   *   An array of entity objects or NULL.
    */
   private function getEntities($entity_type) {
     $context = $this->getContext();
@@ -276,7 +276,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
   private function getEntityPrototypeOptions($entity_type) {
     $entity_prototype_options = [];
     $weight = [];
-    foreach ($this->getEntities($entity_type) as $entity) {
+    foreach ($this->getEntities($entity_type) ?? [] as $entity) {
       $prototype_id = $entity->entity_prototype_id;
       if (empty($entity_prototype_options[$prototype_id])) {
         $name = $entity->plural_name;

@@ -13,6 +13,9 @@ services:
   ghi_blocks.layout_builder_form_alter:
     class: Drupal\ghi_blocks\LayoutBuilder\LayoutBuilderFormAlter
     arguments: ['@form_builder']
+  ghi_blocks.metatags:
+    class: Drupal\ghi_blocks\Metatags\Metatags
+    arguments: ['@current_route_match', '@theme.manager', '@file_url_generator']
   ghi_blocks.layout_builder_browser_alter:
     class: Drupal\ghi_blocks\EventSubscriber\LayoutBuilderBrowserEventSubscriber
     arguments: ['@current_user']

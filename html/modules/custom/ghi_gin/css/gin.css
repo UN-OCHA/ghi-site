@@ -4,3 +4,11 @@ h1.page-title {
 #updateprogress .progress__description {
   padding-right: 0.3rem;
 }
+body,
+.region-sticky {
+  background-color: #FDFBF7 !important;
+}
+
+table {
+  background-color: white;
+}

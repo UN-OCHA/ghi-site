@@ -9,6 +9,11 @@
   background: var(--cd-grey--lighter);
   background-image: linear-gradient(-180deg, var(--cd-grey--lighter) 67%, var(--cd-grey--light) 97%);
 
+  .cd-global-header__actions,
+  .cd-global-header__actions > * {
+    background: transparent;
+  }
+
   svg {
     fill: var(--ghi-default-text-color) !important;
   }

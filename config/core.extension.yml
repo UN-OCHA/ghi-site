@@ -20,6 +20,7 @@ module:
   config_default_responsive_image: 0
   config_filter: 0
   config_ignore: 0
+  config_split: 0
   config_translation: 0
   contextual: 0
   ctools: 0
@@ -78,6 +79,9 @@ module:
   menu_item_extras: 0
   menu_link_content: 0
   menu_ui: 0
+  metatag: 0
+  metatag_open_graph: 0
+  metatag_twitter_cards: 0
   migrate: 0
   migrate_plus: 0
   migrate_tools: 0

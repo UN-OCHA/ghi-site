@@ -1,0 +1,16 @@
+uuid: 59532397-ba1b-4763-91cf-b81138dbd660
+langcode: en
+status: true
+dependencies: {  }
+name: width_720
+label: 'Width 720'
+effects:
+  829ea623-b98f-466b-a12a-c05cce7773f2:
+    uuid: 829ea623-b98f-466b-a12a-c05cce7773f2
+    id: image_scale
+    weight: 1
+    data:
+      width: 720
+      height: null
+      upscale: true
+pipeline: __default__

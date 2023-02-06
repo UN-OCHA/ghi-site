@@ -726,6 +726,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
         'disaggregation_modal' => TRUE,
         'select_monitoring_period' => TRUE,
       ],
+      'spark_line_chart' => [],
       'monitoring_period' => [],
     ];
     return $item_types;

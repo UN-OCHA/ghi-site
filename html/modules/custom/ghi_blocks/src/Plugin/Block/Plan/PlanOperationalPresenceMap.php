@@ -73,7 +73,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $instance */
+    /** @var \Drupal\ghi_blocks\Plugin\Block\Plan\PlanOperationalPresenceMap $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
     // Set our own properties.
@@ -156,7 +156,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     $available_views = $this->getViewOptions();
     $requested_view = $this->requestStack->getCurrentRequest()->get('view') ?? NULL;
     $default_view = $conf['display']['default_view'] ?? reset($available_views);
-    $selected_view = $requested_view && array_key_exists($requested_view, $available_views) ? $requested_view : $default_view;
+    $selected_view = (string) ($requested_view && array_key_exists($requested_view, $available_views) ? $requested_view : $default_view);
     return $selected_view;
   }
 
@@ -310,7 +310,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
 
     // Filter objects for those with empty locations.
     $filtered_objects = array_filter($objects, function ($item) {
-      return count($item->location_ids) > 0;
+      return $item->location_ids && count($item->location_ids) > 0;
     });
 
     $objects[$selected_view] = $filtered_objects;
@@ -719,15 +719,27 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       }
     }
 
-    $form['select_organizations'] = [
-      '#type' => 'button',
-      '#value' => $this->t('Use selected organizations'),
-      '#name' => 'submit-organizations',
-      '#ajax' => [
-        'event' => 'click',
-        'callback' => [static::class, 'updateAjax'],
-        'wrapper' => $this->wrapperId,
+    $form['actions'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => [
+          'second-level-actions-wrapper',
+        ],
       ],
+    ];
+
+    $form['actions']['select_organizations'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Use selected organizations'),
+      '#element_submit' => [get_class($this) . '::ajaxMultiStepSubmit'],
+      '#ajax' => [
+        'callback' => [$this, 'navigateFormStep'],
+        'wrapper' => $this->getContainerWrapper(),
+        'effect' => 'fade',
+        'method' => 'replace',
+        'parents' => ['settings', 'container'],
+      ],
+      '#next_step' => 'display',
     ];
     return $form;
   }
@@ -742,7 +754,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       '#title' => $this->t('Available views'),
       '#options' => $view_options,
       '#required' => TRUE,
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'available_views') ?? self::DEFAULT_VIEWS,
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'available_views') ?: self::DEFAULT_VIEWS,
     ];
 
     $form['default_view'] = [

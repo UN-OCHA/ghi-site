@@ -9,6 +9,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\file\Entity\File;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Plugin\Block\ImageProviderBlockInterface;
 use Drupal\ghi_blocks\Traits\ManagedFileBlockTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
@@ -24,7 +25,7 @@ use Drupal\hpc_common\Helpers\ArrayHelper;
  *  title = false
  * )
  */
-class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterface {
+class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterface, ImageProviderBlockInterface {
 
   use ConfigurationContainerTrait;
   use ManagedFileBlockTrait;
@@ -32,8 +33,19 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
   /**
    * {@inheritdoc}
    */
-  public function buildContent() {
+  public function provideImageUri() {
+    $build = $this->buildContent();
+    if (empty($build)) {
+      return NULL;
+    }
+    $item = reset($build['#items']);
+    return $item['thumbnail']['#uri'];
+  }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function buildContent() {
     // Get the config.
     $conf = $this->getBlockConfig();
     if (empty($conf['items'])) {
@@ -41,7 +53,7 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
     }
 
     // Get the responsive image style.
-    $responsive_image_style = $this->entityTypeManager->getStorage('responsive_image_style')->load('hero');
+    $responsive_image_style = $this->entityTypeManager->getStorage('responsive_image_style')->load('link_carousel');
 
     $context = $this->getBlockContext();
     $carousel_items = [];

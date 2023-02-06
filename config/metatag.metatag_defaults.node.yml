@@ -1,0 +1,19 @@
+uuid: 1fd63b03-a933-4183-8eea-acfff764ebb6
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: rpwvgyEURXLz_JjgMCrkS1rUv-0k3L79BpO-ReN7fDI
+id: node
+label: Content
+tags:
+  canonical_url: '[node:url]'
+  description: '[node:summary]'
+  image_src: '[node:field_hero_image]'
+  og_image: '[node:field_hero_image]'
+  title: '[node:title] | [site:name]'
+  twitter_cards_donottrack: 'on'
+  twitter_cards_image: '[node:field_hero_image]'
+  twitter_cards_site: '@UNOCHA'
+  twitter_cards_title: '[node:title]'
+  twitter_cards_type: summary_large_image

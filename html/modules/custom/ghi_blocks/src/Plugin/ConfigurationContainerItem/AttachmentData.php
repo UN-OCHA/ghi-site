@@ -167,6 +167,10 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     $footnotes = $plan ? $this->getFootnotesForPlanBaseobject($plan) : NULL;
 
     $data_point_index = $attachment->data_point_conf['data_points'][0]['index'];
+    $property = $attachment->field_types[$data_point_index] ?? NULL;
+    if (!$property) {
+      return NULL;
+    }
     $build[] = $this->buildFootnoteTooltip($footnotes, $attachment->field_types[$data_point_index]);
     return $build;
   }

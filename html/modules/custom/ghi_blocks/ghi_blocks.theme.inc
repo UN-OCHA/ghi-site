@@ -262,10 +262,10 @@ function ghi_blocks_preprocess_section_switcher(&$variables) {
     $options[$key] = $option_value;
   }
 
-  $variables['item_list'] = [
+  $variables['item_list'] = count($options) > 1 ? [
     '#theme' => 'item_list',
     '#items' => $options,
-  ];
+  ] : NULL;
 }
 
 /**

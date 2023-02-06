@@ -330,7 +330,7 @@ class DataPointHelper {
       // there is an issue with the data in RPM, where the metric values
       // haven't been copied over to the measurements. That last issue is why
       // we do this check.
-      $value = $attachment->values[$data_point_index];
+      $value = $attachment->values[$data_point_index] ?? NULL;
     }
     return $value;
   }

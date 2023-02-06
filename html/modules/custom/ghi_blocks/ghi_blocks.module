@@ -509,3 +509,31 @@ function ghi_blocks_plan_overview_query_arguments_alter(array &$query_args, $yea
     $query_args['version'] = 'latest';
   }
 }
+
+/**
+ * Alter the meta tags for the current page.
+ *
+ * @param array $metatags
+ *   The special meta tags to be added to the page.
+ * @param array $context
+ *   The context for the current meta tags being generated. Will contain the
+ *   following:
+ *   'entity' - The entity being processed; passed by reference.
+ */
+function ghi_blocks_metatags_alter(array &$metatags, array &$context) {
+  /** @var \Drupal\ghi_blocks\Metatags\Metatags $ghi_metatags */
+  $ghi_metatags = \Drupal::service('ghi_blocks.metatags');
+  $ghi_metatags->alter($metatags, $context);
+}
+
+/**
+ * Alter the meta tags for any page prior to page attachment.
+ *
+ * @param array $metatag_attachments
+ *   An array of metatag objects to be attached to the current page.
+ */
+function ghi_blocks_metatags_attachments_alter(array &$metatag_attachments) {
+  /** @var \Drupal\ghi_blocks\Metatags\Metatags $ghi_metatags */
+  $ghi_metatags = \Drupal::service('ghi_blocks.metatags');
+  $ghi_metatags->alterAttachments($metatag_attachments);
+}

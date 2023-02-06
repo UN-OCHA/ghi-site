@@ -62,7 +62,8 @@ trait SimpleCacheTrait {
 
     // Store data in the cache.
     $cache_store[$cache_key] = $data;
-    self::cacheBackend()->set($cache_key, $data);
+    $expiration_time = self::getRequestTime() + self::getCacheLifetime();
+    self::cacheBackend()->set($cache_key, $data, $expiration_time);
     return $cache_store[$cache_key];
   }
 
@@ -74,6 +75,26 @@ trait SimpleCacheTrait {
    */
   private static function cacheBackend() {
     return \Drupal::cache();
+  }
+
+  /**
+   * Get the cache lifetime.
+   *
+   * @return int
+   *   The cache lifetime in seconds.
+   */
+  private static function getCacheLifetime() {
+    return \Drupal::config('hpc_api.settings')->get('cache_lifetime');
+  }
+
+  /**
+   * Get the time of the request.
+   *
+   * @return int
+   *   The unix timestamp of the request.
+   */
+  private static function getRequestTime() {
+    return \Drupal::time()->getRequestTime();
   }
 
 }

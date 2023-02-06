@@ -3,10 +3,11 @@ langcode: en
 status: true
 dependencies:
   config:
+    - image.style.16x9_1200
+    - image.style.16x9_1400
     - image.style.16x9_240
     - image.style.16x9_480
     - image.style.16x9_720
-    - image.style.hero_image
   theme:
     - common_design
 id: hero
@@ -14,7 +15,12 @@ label: Hero
 image_style_mappings:
   -
     image_mapping_type: image_style
-    image_mapping: hero_image
+    image_mapping: 16x9_1400
+    breakpoint_id: common_design.xxl
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: 16x9_1200
     breakpoint_id: common_design.xl
     multiplier: 1x
   -

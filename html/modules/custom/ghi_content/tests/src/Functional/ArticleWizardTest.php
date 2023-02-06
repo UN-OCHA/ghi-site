@@ -71,11 +71,11 @@ class ArticleWizardTest extends BrowserTestBase {
 
     $this->drupalGet('/node/add/article');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextNotContains('No remote sources found. You must create at least one remote source before articles can be created.');
-    $this->assertSession()->pageTextNotContains('No teams found. You must import teams before sections can be created.');
+    $this->assertSession()->pageTextNotContains('No remote sources found. You must create at least one remote source before creating an Article page.');
+    $this->assertSession()->pageTextNotContains('No teams found. You must import teams before creating an Article page.');
     $this->assertSession()->pageTextNotContains('Type the title of an article to see suggestions.');
-    $this->assertSession()->pageTextNotContains('Select the team that will be responsible for this article.');
-    $this->assertSession()->pageTextNotContains('Optional: Change the title for this article.');
+    $this->assertSession()->pageTextNotContains('Select the team that will be responsible for this Article page.');
+    $this->assertSession()->pageTextNotContains('Optional: Change the title for this article page.');
 
     $this->assertSession()->elementExists('css', 'select[data-drupal-selector="edit-source"]')->selectOption('hpc_content_module_test');
     $this->assertSession()->buttonExists('Next')->click();
@@ -89,15 +89,15 @@ class ArticleWizardTest extends BrowserTestBase {
     $this->getSession()->getPage()->fillField('article', $data[0]['value']);
     $this->assertSession()->buttonExists('Next')->click();
 
-    $this->assertSession()->pageTextContains('Select the team that will be responsible for this article.');
+    $this->assertSession()->pageTextContains('Select the team that will be responsible for this Article page.');
     $this->assertSession()->elementExists('css', 'select[data-drupal-selector="edit-team"]');
     $this->assertSession()->buttonExists('Next')->click();
 
-    $this->assertSession()->pageTextContains('Optional: Change the title for this article.');
+    $this->assertSession()->pageTextContains('Optional: Change the title for this Article page.');
     $this->assertSession()->elementExists('css', 'input[data-drupal-selector="edit-title"]');
-    $this->assertSession()->buttonExists('Create article')->click();
+    $this->assertSession()->buttonExists('Create Article page')->click();
 
-    $this->assertSession()->pageTextContains('Created Article for ' . $data[0]['label']);
+    $this->assertSession()->pageTextContains('Created Article page for ' . $data[0]['label']);
   }
 
   /**
@@ -166,7 +166,7 @@ class ArticleWizardTest extends BrowserTestBase {
   private function setupContent() {
     $this->drupalCreateContentType([
       'type' => ArticleManager::ARTICLE_BUNDLE,
-      'name' => 'Article',
+      'name' => 'Article page',
     ]);
     $this->createField('node', ArticleManager::ARTICLE_BUNDLE, 'ghi_remote_article', ArticleManager::REMOTE_ARTICLE_FIELD, 'Remote Article');
 
@@ -185,6 +185,7 @@ class ArticleWizardTest extends BrowserTestBase {
       'name' => $this->randomMachineName(),
       'vid' => 'team',
     ])->save();
+    $this->createEntityReferenceField('node', ArticleManager::ARTICLE_BUNDLE, 'field_tags', 'Tags', 'taxonomy_term');
   }
 
 }

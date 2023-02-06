@@ -28,6 +28,7 @@
   .region-wrapper-inner {
     display: flex;
     gap: 1rem;
+    margin: 2rem 0 0;
 
     .block-wrapper--downloadbutton {
       margin-left: auto;
@@ -40,7 +41,6 @@
     .cd-page-title,
     .block-section-switcher,
     .block-download-button {
-      margin: 2rem 0;
       padding: 0;
 
       &.block-download-button {

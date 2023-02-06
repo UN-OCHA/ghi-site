@@ -3,7 +3,6 @@
 namespace Drupal\ghi_sections\Entity;
 
 use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Render\Markup;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
@@ -45,10 +44,7 @@ class Section extends Node implements SectionNodeInterface {
   public function getPageTitleMetaData() {
     $base_object = BaseObjectHelper::getBaseObjectFromNode($this);
     $meta_data = $base_object instanceof BaseObjectMetaDataInterface ? $base_object->getPageTitleMetaData() : NULL;
-    if (!empty($meta_data)) {
-      return Markup::create(implode(' | ', $meta_data));
-    }
-    return NULL;
+    return $meta_data;
   }
 
   /**

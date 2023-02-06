@@ -1,0 +1,16 @@
+uuid: 67c402c3-fb15-4689-ba7e-6b7ffd15ea5c
+langcode: en
+status: true
+dependencies: {  }
+name: 5x2_1000
+label: '5x2 @ 1000'
+effects:
+  bae38aaf-b90f-49b5-9ede-3d5dacdfd483:
+    uuid: bae38aaf-b90f-49b5-9ede-3d5dacdfd483
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 1000
+      height: 400
+      anchor: center-center
+pipeline: __default__

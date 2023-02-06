@@ -257,6 +257,17 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
    */
   public function organizationsForm(array $form, FormStateInterface $form_state) {
     $organization_options = $this->getAvailableOrganizationOptions();
+
+    $header_text = $this->t('Found @count organizations with projects.', [
+      '@count' => count($organization_options),
+    ]);
+    $form['organization_ids_header'] = [
+      '#type' => 'markup',
+      '#markup' => $header_text,
+      '#prefix' => '<div>',
+      '#suffix' => '</div><br />',
+    ];
+
     $form['organization_ids'] = [
       '#type' => 'tableselect',
       '#header' => [
@@ -266,6 +277,28 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
       '#options' => $organization_options,
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'organization_ids') ?: [],
       '#empty' => $this->t('No organizations found.'),
+    ];
+
+    $form['actions'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => [
+          'second-level-actions-wrapper',
+        ],
+      ],
+    ];
+    $form['actions']['select_organizations'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Use selected organizations'),
+      '#element_submit' => [get_class($this) . '::ajaxMultiStepSubmit'],
+      '#ajax' => [
+        'callback' => [$this, 'navigateFormStep'],
+        'wrapper' => $this->getContainerWrapper(),
+        'effect' => 'fade',
+        'method' => 'replace',
+        'parents' => ['settings', 'container'],
+      ],
+      '#next_step' => 'table',
     ];
     return $form;
   }
@@ -350,6 +383,9 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
   public function getBlockContext() {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery $project_search_query */
     $project_search_query = $this->getQueryHandler('project_search');
+    if ($cluster_context = $this->getClusterContext()) {
+      $project_search_query->setClusterContext($cluster_context->getSourceId());
+    }
     return [
       'page_node' => $this->getPageNode(),
       'plan_object' => $this->getCurrentPlanObject(),
