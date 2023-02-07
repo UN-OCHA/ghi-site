@@ -4,6 +4,7 @@
 .cd-footer {
   color: var(--ghi-default-text-color);
   background: var(--brand-primary);
+  font-family: var(--cd-font--roboto);
 }
 
 .cd-footer svg {

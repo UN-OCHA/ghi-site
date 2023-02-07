@@ -1,6 +1,10 @@
 /**
  * HumAction customizations to CD Header.
  */
+.cd-header {
+  font-family: var(--cd-font--roboto);
+}
+
 .cd-header button:focus {
   outline: none;
 }
