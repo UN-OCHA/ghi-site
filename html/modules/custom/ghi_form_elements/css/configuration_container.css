@@ -84,10 +84,10 @@
   white-space: nowrap;
 }
 
-.form-type--configuration_container input[type="radio"]:checked,
+/* .form-type--configuration_container input[type="radio"]:checked,
 .form-type--configuration_container input[type="radio"]:checked:hover,
 .form-type--configuration_container input[type="radio"]:checked:active,
 .form-type--configuration_container input[type="radio"]:checked:focus,
 .form-type--configuration_container input[type="radio"]:checked:hover:focus {
   box-shadow: none !important;
-}
+} */
