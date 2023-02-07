@@ -137,7 +137,7 @@
   Drupal.hpc_map_chloropleth.init = function (map_id, data, options) {
     let defaults = {
       admin_level_selector : false,
-      mapbox_url: 'styles/v1/reliefweb/clboapwyi000714muft627goq/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoicmVsaWVmd2ViIiwiYSI6IldYR2ZuV3cifQ.eSPZMZWE6UyLtO0OH_-qrw',
+      mapbox_url: 'styles/v1/reliefweb/clboapwyi000714muft627goq/tiles/256/{z}/{x}/{y}?access_token=token',
       mapbox_proxy: false,
       map_style: 'circle',
       popup_style: 'modal',

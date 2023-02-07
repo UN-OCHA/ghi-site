@@ -40,3 +40,5 @@ buildlog.txt
 .phpunit.result.cache
 /phpunit.xml
 ###< symfony/phpunit-bridge ###
+
+.docksal/*-local.env

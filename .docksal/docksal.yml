@@ -4,6 +4,9 @@ services:
   cli:
     environment:
       - COMPOSER_MEMORY_LIMIT=-1
+  web:
+    environment:
+      - MAPBOX_TOKEN
   browser:
     hostname: browser
     image: selenium/standalone-chrome-debug:3.141.59
