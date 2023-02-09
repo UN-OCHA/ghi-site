@@ -9,6 +9,16 @@ global-styling:
     - ghi_blocks/block.settings
     - common_design_subtheme/sorttable
     - common_design_subtheme/select2
+    # This is not technically a dependency, but on pages that have no visible
+    # element using cd-tables, but at least one hidden, not having this already
+    # loaded breaks the frontend customization feature. The reason seems to be,
+    # that the polyfill is only loaded in IE and ignored in all other browsers,
+    # and the logic that loads the dependencies during an ajax call, can't
+    # finish the promise to load all dependencies.
+    # So the easy solution is to just include it in every page, so that the
+    # ajax process doesn't need to require it again.
+    # @see /core/misc/ajax.js add_js method for where that promise is setup.
+    - common_design/array-from-polyfill
 
 # CSS custom properties polyfill for IE11.
 # https://jhildenbiddle.github.io/css-vars-ponyfill
