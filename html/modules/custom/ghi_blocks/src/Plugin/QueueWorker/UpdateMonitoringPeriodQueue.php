@@ -90,12 +90,16 @@ final class UpdateMonitoringPeriodQueue extends QueueWorkerBase implements Conta
       $configuration = $component->toArray()['configuration'];
       switch ($component->getPluginId()) {
         case 'plan_headline_figures':
-          $this->updateConfigurationItems($configuration['hpc']['key_figures']['items'], $changed);
+          if (!empty($configuration['hpc']['key_figures']['items'] ?? [])) {
+            $this->updateConfigurationItems($configuration['hpc']['key_figures']['items'], $changed);
+          }
           break;
 
         case 'plan_entity_attachments_table':
         case 'plan_governing_entities_caseloads_table':
-          $this->updateConfigurationItems($configuration['hpc']['table']['columns'], $changed);
+          if (!empty($configuration['hpc']['table']['columns'] ?? [])) {
+            $this->updateConfigurationItems($configuration['hpc']['table']['columns'], $changed);
+          }
           break;
       }
       $component->setConfiguration($configuration);
