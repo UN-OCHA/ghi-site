@@ -9,3 +9,8 @@ ghi_blocks.config.global:
   route_name: ghi_blocks.global_config
   description: 'Configure global settings per year'
   parent: system.admin_config_ghi
+ghi_blocks.config.map:
+  title: 'Map settings'
+  route_name: ghi_blocks.map_config
+  description: 'Configure map settings'
+  parent: system.admin_config_ghi

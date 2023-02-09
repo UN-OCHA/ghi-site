@@ -1,4 +1,4 @@
-(function ($, Drupal) {
+(function ($, Drupal, drupalSettings) {
 
   Drupal.hpc_map = Drupal.hpc_map || {};
   Drupal.hpc_map.states = Drupal.hpc_map.states || {};
@@ -198,7 +198,8 @@
   Drupal.hpc_map.init = function (map_id, data, options) {
     let defaults = {
       admin_level_selector : false,
-      mapbox_url: 'https://api.mapbox.com/styles/v1/reliefweb/clbfjni1x003m15nu67uwtbly/tiles/256/{z}/{x}/{y}?title=view&access_token=pk.eyJ1IjoicmVsaWVmd2ViIiwiYSI6IldYR2ZuV3cifQ.eSPZMZWE6UyLtO0OH_-qrw',
+      mapbox_url: 'styles/v1/reliefweb/clbfjni1x003m15nu67uwtbly/tiles/256/{z}/{x}/{y}?title=view&access_token=token',
+      mapbox_proxy: drupalSettings.ghi_maps?.mapbox_proxy ?? false,
       map_style: 'circle',
       popup_style: 'modal',
       search_enabled: false,
@@ -326,7 +327,11 @@
       state.map = map;
     }
 
-    var layer = L.tileLayer(options.mapbox_url).addTo(map);
+    let mapbox_url = 'https://api.mapbox.com/' + options.mapbox_url;
+    if (options.mapbox_proxy) {
+      mapbox_url = window.location.origin + '/mapbox/' + options.mapbox_url;
+    }
+    var layer = L.tileLayer(mapbox_url).addTo(map);
 
     // Add attribution.
     if (typeof options.disclaimer != 'undefined') {
@@ -1493,4 +1498,4 @@
     };
   }
 
-})(jQuery, Drupal);
+})(jQuery, Drupal, drupalSettings);

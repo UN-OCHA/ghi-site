@@ -17,7 +17,6 @@
         }
         var options = {
           admin_level_selector: true,
-          mapbox_url: 'https://api.mapbox.com/styles/v1/reliefweb/clbfjni1x003m15nu67uwtbly/tiles/256/{z}/{x}/{y}?title=view&access_token=pk.eyJ1IjoicmVsaWVmd2ViIiwiYSI6IldYR2ZuV3cifQ.eSPZMZWE6UyLtO0OH_-qrw',
           popup_style: 'sidebar',
           search_enabled: true,
           search_options: {

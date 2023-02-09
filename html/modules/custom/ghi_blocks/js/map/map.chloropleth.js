@@ -20,6 +20,7 @@
           admin_level_selector: true,
           popup_style: 'sidebar',
           search_enabled: true,
+          mapbox_proxy: settings.ghi_maps?.mapbox_proxy ?? false,
         };
         if (typeof map_config.pcodes_enabled != 'undefined') {
           options.pcodes_enabled = map_config.pcodes_enabled;
@@ -136,7 +137,8 @@
   Drupal.hpc_map_chloropleth.init = function (map_id, data, options) {
     let defaults = {
       admin_level_selector : false,
-      mapbox_url: 'https://api.mapbox.com/styles/v1/reliefweb/clboapwyi000714muft627goq/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoicmVsaWVmd2ViIiwiYSI6IldYR2ZuV3cifQ.eSPZMZWE6UyLtO0OH_-qrw',
+      mapbox_url: 'styles/v1/reliefweb/clboapwyi000714muft627goq/tiles/256/{z}/{x}/{y}?access_token=token',
+      mapbox_proxy: false,
       map_style: 'circle',
       popup_style: 'modal',
     };
@@ -357,8 +359,11 @@
     Drupal.hpc_map_chloropleth.buildMap(state);
     state.map.fitBounds(state.geojson.getBounds());
 
-    // TODO: Use a tile provider that is not tight to Kevin Gasks account.
-    var layer = L.tileLayer(options.mapbox_url).addTo(state.map);
+    let mapbox_url = 'https://api.mapbox.com/' + options.mapbox_url;
+    if (options.mapbox_proxy) {
+      mapbox_url = window.location.origin + '/mapbox/' + options.mapbox_url;
+    }
+    var layer = L.tileLayer(mapbox_url).addTo(state.map);
 
     // Add attribution.
     if (typeof options.disclaimer != 'undefined') {
