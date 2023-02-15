@@ -130,7 +130,7 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
    */
   public function getResponseContent($url): string {
     $import_file = $this->getImportFileName($url);
-    if (!file_exists($import_file)) {
+    if (!file_exists($import_file) || PHP_SAPI === 'cli') {
       // If the file does not yet exist, download it.
       $this->downloadSource($url);
     }
