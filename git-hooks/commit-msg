@@ -2,7 +2,7 @@
 #
 # Validate the commit message. A commit will be aborted if
 # - the commit message is empty
-# - the last part of the branch name starts with "GHI-" but the commit message
+# - the last part of the branch name starts with "HPC-" but the commit message
 #	  does not start with that last part of the branch name
 #
 # Convention for commit messages:
@@ -22,8 +22,8 @@ fi
 BRANCH_PATH=$(git symbolic-ref -q HEAD)
 BRANCH_NAME=${BRANCH_PATH##*/}
 
-# Only act on branch names that are prefixed with GHI-
-if [[ "$BRANCH_NAME" == "GHI-"* ]]; then
+# Only act on branch names that are prefixed with HPC-
+if [[ "$BRANCH_NAME" == "HPC-"* ]]; then
 	if grep -qE "^Merge" "$1"; then
 		# Do nothing if commit message starts with "Merge".
 		exit 0
