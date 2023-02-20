@@ -1,7 +1,7 @@
 # Base object listing
 base_object.collection:
   title: 'Base objects'
-  route_name: view.base_objects.plans
+  route_name: view.base_objects.plan
   description: 'List base object entities'
   parent: system.admin_content
   weight: 10
