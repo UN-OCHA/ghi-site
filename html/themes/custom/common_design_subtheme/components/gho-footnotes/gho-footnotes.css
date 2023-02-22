@@ -25,6 +25,9 @@
   font-size: 0.875rem;
   line-height: 1.25rem;
 }
+.gho-footnote-list__list .gho-footnote span.gho-footnote__content > p {
+  display: inline;
+}
 /* @todo check if it's also fine to decorate the number like that in Arabic. */
 .gho-footnote-reference span:before {
   content: "[";

@@ -5,10 +5,10 @@
   Drupal.LinkCarousel.updateContent = function(container, index) {
     // Show the new content box.
     $(container).find('.slide-details').hide();
-    $(container).find('.slide-details[data-slide-index="' + index + '"').show();
+    $(container).find('.slide-details[data-slide-index="' + index + '"]').show();
     // Mark the current navigation item as active.
     $(container).find('.slide-navigation').removeClass('active');
-    $(container).find('.slide-navigation[data-slide-index="' + index + '"').addClass('active');
+    $(container).find('.slide-navigation[data-slide-index="' + index + '"]').addClass('active');
   }
 
   Drupal.behaviors.LinkCarousel = {

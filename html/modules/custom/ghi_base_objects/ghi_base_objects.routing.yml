@@ -13,3 +13,16 @@ entity.base_objects.delete_multiple_form:
     entity_type_id: 'base_object'
   requirements:
     _entity_delete_multiple_access: 'base_object'
+
+entity.base_objects.migrate:
+  path: '/admin/content/base-objects/{base_object_type}/migrate'
+  defaults:
+    _controller: '\Drupal\ghi_base_objects\Controller\BaseObjectMigrateController::updateBaseObjects'
+    _title: 'Update base objects'
+  requirements:
+    _custom_access: '\Drupal\ghi_base_objects\Controller\BaseObjectMigrateController::access'
+  options:
+    parameters:
+      base_object_type:
+        type: entity:base_object_type
+    _admin_route: TRUE

@@ -8,3 +8,12 @@ entity.base_object_type.add_form:
   title: 'Add Base object type'
   appears_on:
     - entity.base_object_type.collection
+ghi_base_objects.base_object_update:
+  route_name: entity.base_objects.migrate
+  title: Update base objects
+  appears_on:
+    - view.base_objects.plan
+    - view.base_objects.country
+    - view.base_objects.organization
+    - view.base_objects.governing_entity
+  class: '\Drupal\ghi_base_objects\Plugin\Menu\LocalAction\BaseObjectsUpdateLocalAction'

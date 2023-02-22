@@ -665,8 +665,8 @@ display:
         - user.permissions
       tags:
         - 'config:field.storage.base_object.field_original_id'
-  countries:
-    id: countries
+  country:
+    id: country
     display_title: Countries
     display_plugin: page
     position: 2
@@ -851,194 +851,8 @@ display:
         - user.permissions
       tags:
         - 'config:field.storage.base_object.field_original_id'
-  organisations:
-    id: organisations
-    display_title: Organizations
-    display_plugin: page
-    position: 2
-    display_options:
-      enabled: true
-      title: Organizations
-      filters:
-        field_original_id_value:
-          id: field_original_id_value
-          table: base_object__field_original_id
-          field: field_original_id_value
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: numeric
-          operator: '='
-          value:
-            min: ''
-            max: ''
-            value: ''
-          group: 1
-          exposed: true
-          expose:
-            operator_id: field_original_id_value_op
-            label: 'Original ID'
-            description: ''
-            use_operator: false
-            operator: field_original_id_value_op
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: original_id
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-              rpm_administrator: '0'
-              plan_lead: '0'
-              cluster_lead: '0'
-            min_placeholder: ''
-            max_placeholder: ''
-            placeholder: ''
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-        name:
-          id: name
-          table: base_object
-          field: name
-          relationship: none
-          group_type: group
-          admin_label: ''
-          entity_type: base_object
-          entity_field: name
-          plugin_id: string
-          operator: contains
-          value: ''
-          group: 1
-          exposed: true
-          expose:
-            operator_id: name_op
-            label: Name
-            description: ''
-            use_operator: false
-            operator: name_op
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: name
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-              rpm_administrator: '0'
-              plan_lead: '0'
-              cluster_lead: '0'
-            placeholder: ''
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-        type:
-          id: type
-          table: base_object
-          field: type
-          relationship: none
-          group_type: group
-          admin_label: ''
-          entity_type: base_object
-          entity_field: type
-          plugin_id: bundle
-          operator: in
-          value:
-            organization: organization
-          group: 1
-          exposed: false
-          expose:
-            operator_id: type_op
-            label: Type
-            description: ''
-            use_operator: false
-            operator: type_op
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: type
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-              rpm_administrator: '0'
-              plan_lead: '0'
-              cluster_lead: '0'
-            reduce: false
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-      filter_groups:
-        operator: AND
-        groups:
-          1: AND
-      defaults:
-        title: false
-        filters: false
-        filter_groups: false
-      display_description: ''
-      display_extenders: {  }
-      path: admin/content/base-objects/organizations
-      menu:
-        type: tab
-        title: Organizations
-        description: ''
-        weight: 4
-        expanded: false
-        menu_name: admin
-        parent: entity.base_object.collection
-        context: '0'
-      tab_options:
-        type: none
-        title: ''
-        description: ''
-        weight: 0
-    cache_metadata:
-      max-age: 0
-      contexts:
-        - 'languages:language_content'
-        - 'languages:language_interface'
-        - url
-        - url.query_args
-        - user.permissions
-      tags:
-        - 'config:field.storage.base_object.field_original_id'
-  page_1:
-    id: page_1
+  governing_entity:
+    id: governing_entity
     display_title: 'Governing entities'
     display_plugin: page
     position: 4
@@ -1723,8 +1537,194 @@ display:
         - user.permissions
       tags:
         - 'config:field.storage.base_object.field_original_id'
-  plans:
-    id: plans
+  organization:
+    id: organization
+    display_title: Organizations
+    display_plugin: page
+    position: 2
+    display_options:
+      enabled: true
+      title: Organizations
+      filters:
+        field_original_id_value:
+          id: field_original_id_value
+          table: base_object__field_original_id
+          field: field_original_id_value
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: numeric
+          operator: '='
+          value:
+            min: ''
+            max: ''
+            value: ''
+          group: 1
+          exposed: true
+          expose:
+            operator_id: field_original_id_value_op
+            label: 'Original ID'
+            description: ''
+            use_operator: false
+            operator: field_original_id_value_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: original_id
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              administrator: '0'
+              rpm_administrator: '0'
+              plan_lead: '0'
+              cluster_lead: '0'
+            min_placeholder: ''
+            max_placeholder: ''
+            placeholder: ''
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+        name:
+          id: name
+          table: base_object
+          field: name
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: base_object
+          entity_field: name
+          plugin_id: string
+          operator: contains
+          value: ''
+          group: 1
+          exposed: true
+          expose:
+            operator_id: name_op
+            label: Name
+            description: ''
+            use_operator: false
+            operator: name_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: name
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              administrator: '0'
+              rpm_administrator: '0'
+              plan_lead: '0'
+              cluster_lead: '0'
+            placeholder: ''
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+        type:
+          id: type
+          table: base_object
+          field: type
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: base_object
+          entity_field: type
+          plugin_id: bundle
+          operator: in
+          value:
+            organization: organization
+          group: 1
+          exposed: false
+          expose:
+            operator_id: type_op
+            label: Type
+            description: ''
+            use_operator: false
+            operator: type_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: type
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              administrator: '0'
+              rpm_administrator: '0'
+              plan_lead: '0'
+              cluster_lead: '0'
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+      filter_groups:
+        operator: AND
+        groups:
+          1: AND
+      defaults:
+        title: false
+        filters: false
+        filter_groups: false
+      display_description: ''
+      display_extenders: {  }
+      path: admin/content/base-objects/organizations
+      menu:
+        type: tab
+        title: Organizations
+        description: ''
+        weight: 4
+        expanded: false
+        menu_name: admin
+        parent: entity.base_object.collection
+        context: '0'
+      tab_options:
+        type: none
+        title: ''
+        description: ''
+        weight: 0
+    cache_metadata:
+      max-age: 0
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - url
+        - url.query_args
+        - user.permissions
+      tags:
+        - 'config:field.storage.base_object.field_original_id'
+  plan:
+    id: plan
     display_title: Plans
     display_plugin: page
     position: 1

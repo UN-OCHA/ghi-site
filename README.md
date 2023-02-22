@@ -10,7 +10,31 @@ CONTENTS OF THIS FILE
 SETUP
 -----
 
-Tbc.
+Humanitarian Action (GHI) uses docksal which is a web-development environment
+based on docker.
+
+Install docksal: https://docksal.io/installation
+
+You will need to create a local environment file in the _./.docksal_ folder and
+adjust it to match your local requirements.
+
+    touch ./.docksal/docksal-local.env
+
+You add a port mapping for MySQL to use a specific port:
+
+    MYSQL_PORT_MAPPING='3312:3306'
+
+In order for the mapbox-based maps to work, an access token must be set:
+
+    MAPBOX_TOKEN="THE MAPBOX ACCESS TOKEN"
+
+For docksal to run, you will need to stop the apache service on your system.
+
+Once the above steps are complete, from the project root, run:
+
+    fin init
+
+This should set the stack up and running.
 
 
 CONFIGURATION AND FEATURES

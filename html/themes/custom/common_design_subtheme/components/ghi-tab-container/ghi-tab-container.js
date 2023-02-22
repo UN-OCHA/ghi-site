@@ -5,10 +5,10 @@
   Drupal.TabContainer.updateContent = function(container, index) {
     // Show the new content box.
     $(container).find('.tab-details').hide();
-    $(container).find('.tab-details[data-tab-index="' + index + '"').show();
+    $(container).find('.tab-details[data-tab-index="' + index + '"]').show();
     // Mark the current navigation item as active.
     $(container).find('.tab-navigation').removeClass('active');
-    $(container).find('.tab-navigation[data-tab-index="' + index + '"').addClass('active');
+    $(container).find('.tab-navigation[data-tab-index="' + index + '"]').addClass('active');
   }
 
   Drupal.behaviors.TabContainer = {
