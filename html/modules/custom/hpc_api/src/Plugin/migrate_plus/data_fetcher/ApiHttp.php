@@ -291,7 +291,9 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
           'content' => 'entities',
           'disaggregation' => 'false',
         ],
+        'cache' => FALSE,
       ]);
+
       if ($has_published_version) {
         // If we have a public plan version, let's fetch it's entities.
         $this->endpointQuery->setEndpointArgument('version', 'current');
