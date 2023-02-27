@@ -70,7 +70,7 @@ class PlanOverviewMap extends GHIBlockBase {
         ],
       ],
       '#cache' => [
-        'tags' => $map['cache_tags'],
+        'tags' => Cache::mergeTags($map['cache_tags'], $this->getMapConfigCacheTags()),
       ],
     ];
   }

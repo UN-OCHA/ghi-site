@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
@@ -149,6 +150,9 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
             $chart_id => $map_settings,
           ],
         ],
+      ],
+      '#cache' => [
+        'tags' => Cache::mergeTags($this->getCurrentBaseObject()->getCacheTags(), $this->getMapConfigCacheTags()),
       ],
     ];
   }
