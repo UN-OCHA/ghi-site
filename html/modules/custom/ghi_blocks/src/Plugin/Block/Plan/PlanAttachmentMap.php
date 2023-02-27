@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
@@ -205,6 +206,9 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
             $chart_id => $map_settings,
           ],
         ],
+      ],
+      '#cache' => [
+        'tags' => Cache::mergeTags($this->getCurrentBaseObject()->getCacheTags(), $this->getMapConfigCacheTags()),
       ],
     ];
     $comment = $this->buildBlockCommentRenderArray($conf['map']['common']['comment'] ?? NULL);

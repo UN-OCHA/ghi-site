@@ -30,6 +30,18 @@ trait GlobalMapTrait {
   }
 
   /**
+   * Get the cache tags for the global map config.
+   *
+   * @return array
+   *   An array of relevant cache tags.
+   */
+  public function getMapConfigCacheTags() {
+    return [
+      'config:ghi_blocks.map_settings',
+    ];
+  }
+
+  /**
    * Get the global map settings.
    *
    * @see \Drupal\ghi_blocks\Form\MapSettingsForm
