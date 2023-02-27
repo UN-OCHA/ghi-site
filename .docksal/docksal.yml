@@ -4,6 +4,7 @@ services:
   cli:
     environment:
       - COMPOSER_MEMORY_LIMIT=-1
+      - MAPBOX_TOKEN
   web:
     environment:
       - MAPBOX_TOKEN

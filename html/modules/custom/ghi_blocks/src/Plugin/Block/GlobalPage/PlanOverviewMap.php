@@ -10,6 +10,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
@@ -40,6 +41,7 @@ class PlanOverviewMap extends GHIBlockBase {
   use GlobalPlanOverviewBlockTrait;
   use GlobalSettingsTrait;
   use PlanFootnoteTrait;
+  use GlobalMapTrait;
 
   const DEFAULT_DISCLAIMER = 'The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations.';
 
@@ -272,6 +274,7 @@ class PlanOverviewMap extends GHIBlockBase {
     $map['settings'] = [
       'json' => !empty($map['data']) ? $map['data'] : NULL,
       'id' => $chart_id,
+      'map_tiles_url' => $this->getStaticTilesUrlTemplate(),
       'map_style' => 'donut',
       'map_style_config' => [
         'donut_whole_segments' => [0],

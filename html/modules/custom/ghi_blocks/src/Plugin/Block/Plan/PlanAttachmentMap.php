@@ -10,6 +10,7 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
+use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 use Drupal\ghi_element_sync\IncompleteElementConfigurationException;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
@@ -53,6 +54,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
 
   use PlanReportingPeriodTrait;
   use BlockCommentTrait;
+  use GlobalMapTrait;
 
   const STYLE_CIRCLE = 'circle';
   const STYLE_DONUT = 'donut';
@@ -178,6 +180,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       // given settings into the existing ones.
       'json' => !empty($map['data']) ? $map['data'] : NULL,
       'id' => $chart_id,
+      'map_tiles_url' => $this->getStaticTilesUrlTemplate(),
       'disclaimer' => $conf['map']['common']['disclaimer'] ?? self::DEFAULT_DISCLAIMER,
       'pcodes_enabled' => $conf['map']['common']['pcodes_enabled'] ?? TRUE,
       'map_style' => $map_style,

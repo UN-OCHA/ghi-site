@@ -20,7 +20,7 @@
           admin_level_selector: true,
           popup_style: 'sidebar',
           search_enabled: true,
-          mapbox_proxy: settings.ghi_maps?.mapbox_proxy ?? false,
+          map_tiles_url: map_config.map_tiles_url,
         };
         if (typeof map_config.pcodes_enabled != 'undefined') {
           options.pcodes_enabled = map_config.pcodes_enabled;
@@ -137,8 +137,6 @@
   Drupal.hpc_map_chloropleth.init = function (map_id, data, options) {
     let defaults = {
       admin_level_selector : false,
-      mapbox_url: 'styles/v1/reliefweb/clboapwyi000714muft627goq/tiles/256/{z}/{x}/{y}?access_token=token',
-      mapbox_proxy: false,
       map_style: 'circle',
       popup_style: 'modal',
     };
@@ -150,7 +148,7 @@
     state.active_area = null;
     Drupal.hpc_map_chloropleth.states[map_id] = state;
 
-    if (!$('#' + state.map_id).length) {
+    if (!$('#' + state.map_id).length || typeof options.map_tiles_url == 'undefined') {
       return;
     }
     state.map_container_class = '.map-wrapper-' + map_id;
@@ -359,11 +357,7 @@
     Drupal.hpc_map_chloropleth.buildMap(state);
     state.map.fitBounds(state.geojson.getBounds());
 
-    let mapbox_url = 'https://api.mapbox.com/' + options.mapbox_url;
-    if (options.mapbox_proxy) {
-      mapbox_url = window.location.origin + '/mapbox/' + options.mapbox_url;
-    }
-    var layer = L.tileLayer(mapbox_url).addTo(state.map);
+    var layer = L.tileLayer(options.map_tiles_url).addTo(state.map);
 
     // Add attribution.
     if (typeof options.disclaimer != 'undefined') {
