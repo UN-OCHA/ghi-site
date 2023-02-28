@@ -84,14 +84,12 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
 
     $iframes = [];
     foreach ($widgets as $widget) {
-      $widget_url = $widget['widget_url'] ?? NULL;
-      if (empty($widget_url)) {
+      if (empty($widget['widget_url'] ?? NULL)) {
         // Nothing here.
         continue;
       }
-
-      $url = parse_url($widget_url);
-      if (strpos($url['host'], 'humdata.org') !== FALSE) {
+      $host = parse_url($widget['widget_url'], PHP_URL_HOST);
+      if (strpos($host, 'humdata.org') !== FALSE) {
         // Special handling of HDX quick charts.
         $widget = $this->processWidget($widget);
       }
@@ -219,7 +217,7 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
           '@first_supported' => implode(', ', array_slice($allowed_hosts, 0, -1)),
           '@last_supported' => end($allowed_hosts),
         ]),
-        '#default_value' => $default['widget_url'] ?? NULL,
+        '#default_value' => trim($default['widget_url'] ?? ''),
         '#maxlength' => 8096,
         '#states' => [
           'required' => $state_conditions,
@@ -363,7 +361,7 @@ class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
       $widget_url .= ';' . $key . '=' . $value;
     }
 
-    $widget_conf['widget_url'] = $widget_url;
+    $widget_conf['widget_url'] = trim($widget_url);
 
     return $widget_conf;
   }
