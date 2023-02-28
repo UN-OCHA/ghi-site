@@ -38,11 +38,19 @@ trait SimpleCacheTrait {
    *   The data to store.
    * @param bool $reset
    *   Whether to reset the cache.
+   * @param bool $cache_base_time
+   *   The base time to use for the cache. If set, cached data created before
+   *   will not be used. This can be used for example in data migrations, where
+   *   we want to use cache, but we also want to be sure that the actual import
+   *   data is up to date. Instead of clearing the cache for the whole site, we
+   *   can simply use the start time of the migration as the base time, and
+   *   only retrieve data once for every API call made during the data migration
+   *   process.
    *
    * @return mixed|void
    *   Either the stored data or nothing.
    */
-  public function cache($cache_key, $data = NULL, $reset = FALSE) {
+  public function cache($cache_key, $data = NULL, $reset = FALSE, $cache_base_time = NULL) {
     $cache_store = &drupal_static(__FUNCTION__, []);
 
     if ($data === NULL && $reset === TRUE) {
@@ -57,7 +65,12 @@ trait SimpleCacheTrait {
         return $cache_store[$cache_key];
       }
       $cache = self::cacheBackend()->get($cache_key);
-      return $cache ? $cache->data : NULL;
+      if (!$cache || $cache_base_time && $cache_base_time > $cache->created) {
+        // Cache is too old, so we renew.
+        return NULL;
+
+      }
+      return $cache->data;
     }
 
     // Store data in the cache.

@@ -59,6 +59,16 @@ class EndpointQuery {
   protected $useCache;
 
   /**
+   * The cache base time as a timestamp.
+   *
+   * If set, cached data created before this time will not be used. This is
+   * useful in batch contexts.
+   *
+   * @var int
+   */
+  protected $cacheBaseTime;
+
+  /**
    * The cache kill switch service.
    *
    * @var \Drupal\Core\PageCache\ResponsePolicy\KillSwitch
@@ -164,6 +174,7 @@ class EndpointQuery {
     $this->endpointUrl = NULL;
     $this->endpointArgs = [];
     $this->useCache = TRUE;
+    $this->cacheBaseTime = NULL;
     $this->orderBy = NULL;
     $this->sort = self::SORT_ASC;
     $this->sortMethod = self::SORT_METHOD_NUMERIC;
@@ -187,7 +198,8 @@ class EndpointQuery {
     $this->sort = !empty($arguments['sort']) ? $arguments['sort'] : self::SORT_ASC;
     $this->sortMethod = !empty($arguments['sort_method']) ? $arguments['sort_method'] : self::SORT_METHOD_NUMERIC;
     $this->setAuthMethod(!empty($arguments['auth_method']) ? $arguments['auth_method'] : self::AUTH_METHOD_BASIC);
-    $this->setUseCache(array_key_exists('cache', $arguments) ? (bool) $arguments['cache'] : $this->usesCache());
+    $this->setUseCache(array_key_exists('cache', $arguments) ? (bool) $arguments['cache'] : $this->useCache());
+    $this->setCacheBaseTime(array_key_exists('cache_base_time', $arguments) ? (int) $arguments['cache_base_time'] : 0);
   }
 
   /**
@@ -206,8 +218,28 @@ class EndpointQuery {
    * @return bool
    *   TRUE if cache should be used (default) or FALSE otherwise.
    */
-  public function usesCache() {
+  public function useCache() {
     return $this->useCache ?? TRUE;
+  }
+
+  /**
+   * Set the cache base time.
+   *
+   * @param int $timestamp
+   *   The base timestamp for using the cache.
+   */
+  public function setCacheBaseTime($timestamp) {
+    $this->cacheBaseTime = $timestamp;
+  }
+
+  /**
+   * Get the cache base time.
+   *
+   * @return int
+   *   The base time for cache entries.
+   */
+  public function getCacheBaseTime() {
+    return $this->cacheBaseTime ?? NULL;
   }
 
   /**
@@ -301,7 +333,7 @@ class EndpointQuery {
 
     // First check if statically cached data is available. Might come from
     // previous requests.
-    if (!$this->usesCache() || !($response = $this->cache($cache_key))) {
+    if (!$this->useCache() || !($response = $this->cache($cache_key, NULL, FALSE, $this->getCacheBaseTime()))) {
       // No cached data available, so we run the API request.
       $result = $this->sendQuery();
       if (empty($result) || !$result instanceof ResponseInterface) {
