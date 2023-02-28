@@ -13,15 +13,12 @@ migration_tags:
 migration_group: hpc_api_data
 label: 'Organizations from the HPC API'
 source:
-  plugin: hpc_api_url
-  data_fetcher_plugin: hpc_api_http
-  data_parser_plugin: hpc_api_endpoint
   track_changes: true
   include_raw_data: true
   new_structure: true
   endpoints:
     -
-      endpoint: 'fts/organization?organizationTypeName[]=Government&organizationTypeName[]=Inter-governmental&organizationTypeName[]=Pooled%20fund&limit=500'
+      endpoint: 'fts/organization?organizationTypeName[]=Governments&organizationTypeName[]=Pooled%20Funds&organizationTypeName[]=Other%20Multilateral%20Organizations&limit=500'
       api_version: v2
   item_selector: data
   fields:

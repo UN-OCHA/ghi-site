@@ -6,14 +6,16 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectType;
+use Drupal\ghi_base_objects\Migrate\BaseObjectMigrateBatchExecutable;
+use Drupal\hpc_api\Helpers\QueryHelper;
 use Drupal\migrate\MigrateMessage;
+use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
-use Drupal\migrate_tools\MigrateBatchExecutable;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
- * Controller class for manual migration of base objects from teh HCP API.
+ * Controller class for manual migration of base objects from the HCP API.
  *
  * This assumes the presence of backend views for each base object type,
  * follwing this naming convention: view.base_objects.BASE_OBJECT_TYPE, for
@@ -93,6 +95,7 @@ class BaseObjectMigrateController extends ControllerBase {
   private function runBaseObjectMigration(BaseObjectType $base_object_type, $redirect) {
     // This assumes that there is a migration with the same id as the base
     // object type.
+    /** @var \Drupal\migrate\Plugin\MigrationInterface $migration */
     $migration = $this->migrationPluginManager->createInstance($base_object_type->id());
     if (empty($migration)) {
       return [
@@ -103,12 +106,52 @@ class BaseObjectMigrateController extends ControllerBase {
       // 'force' => 1,
       'update' => 1,
     ];
-    $executable = new MigrateBatchExecutable($migration, new MigrateMessage(), $options);
+
+    // Clear the import files.
+    $this->clearMigrationSourceFiles($migration);
+
+    $executable = new BaseObjectMigrateBatchExecutable($migration, new MigrateMessage(), $options);
     $executable->batchImport();
     batch_process($redirect);
     $batch = batch_get();
     $url = $batch['url'];
     return new RedirectResponse($url->toString());
+  }
+
+  /**
+   * Clear the local migration source files.
+   *
+   * @param \Drupal\migrate\Plugin\MigrationInterface $migration
+   *   The migration for which to clear the local file cache.
+   */
+  private function clearMigrationSourceFiles(MigrationInterface $migration) {
+    foreach ($this->getAffectedMigrationIds([$migration]) as $migration_id) {
+      hpc_api_clear_directory(QueryHelper::IMPORT_DIR, '/' . $migration_id . '__.*\.json/');
+    }
+  }
+
+  /**
+   * Get the migration ids for all affected migrations.
+   *
+   * @param \Drupal\migrate\Plugin\MigrationInterface[] $migrations
+   *   The migrations.
+   *
+   * @return string[]
+   *   An array migration ids.
+   */
+  private function getAffectedMigrationIds(array $migrations) {
+    $required_dependencies = [];
+
+    foreach ($migrations as $migration) {
+      $required_dependencies[] = $migration->id();
+      $dependencies = $migration->getMigrationDependencies();
+      if (empty($dependencies['required'])) {
+        continue;
+      }
+      $required_migrations = $this->migrationPluginManager->createInstances($dependencies['required']);
+      $required_dependencies = array_merge($required_dependencies, $this->getAffectedMigrationIds($required_migrations));
+    }
+    return $required_dependencies;
   }
 
 }
