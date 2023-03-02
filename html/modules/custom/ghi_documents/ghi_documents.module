@@ -10,6 +10,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\ghi_documents\DocumentManager;
+use Drupal\ghi_sections\Entity\GlobalSection;
 
 /**
  * Implements hook_form_FORM_ID_alter().
@@ -32,6 +33,12 @@ function ghi_documents_subpage_navigation_links_alter(&$links, array $context, a
 
   /** @var \Drupal\node\NodeInterface $base_entity */
   $base_entity = $context['base_entity'];
+
+  if ($node->bundle() == DocumentManager::DOCUMENT_BUNDLE && $base_entity instanceof GlobalSection) {
+    // Document subpages of global sections, shouldn't have any navigation
+    // links for the moment.
+    $links = [];
+  }
 
   // Load documents for the base entity.
   /** @var \Drupal\ghi_documents\DocumentManager $document_manager */
