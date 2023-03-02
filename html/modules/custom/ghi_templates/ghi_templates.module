@@ -1,0 +1,76 @@
+<?php
+
+/**
+ * @file
+ * Contains hook implementations for the GHI Templates module.
+ */
+
+use Drupal\Component\Serialization\Json;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Url;
+use Drupal\layout_builder\SectionStorageInterface;
+
+/**
+ * Implements hook_entity_view_alter().
+ *
+ * This adds additional links to the IPE action section.
+ */
+function ghi_templates_layout_builder_ipe_links_alter(array &$links, SectionStorageInterface $section_storage, EntityInterface $entity) {
+  if (!$entity instanceof ContentEntityInterface) {
+    // We only support this for content entites.
+    return;
+  }
+  $config = \Drupal::config('layout_builder_modal.settings');
+  $attributes = [
+    'class' => [
+      'use-ajax',
+    ],
+    'data-dialog-type' => 'dialog',
+    'data-dialog-options' => Json::encode([
+      'width' => $config->get('modal_width'),
+      'height' => $config->get('modal_height'),
+      'target' => 'layout-builder-modal',
+      'autoResize' => $config->get('modal_autoresize'),
+      'modal' => TRUE,
+    ]),
+  ];
+  $route_params = [
+    'section_storage_type' => $section_storage->getStorageType(),
+    'section_storage' => $section_storage->getStorageId(),
+  ];
+
+  $template_links = [];
+  $url_export = Url::fromRoute('ghi_templates.entity.page_config.export', $route_params);
+  $url_import = Url::fromRoute('ghi_templates.entity.page_config.import', $route_params + [
+    'entity' => $entity->id(),
+    'entity_type' => $entity->getEntityTypeId(),
+  ]);
+
+  if ($url_export->access()) {
+    $template_links['export'] = [
+      'title' => t('Export'),
+      'url' => $url_export,
+      'attributes' => $attributes,
+    ];
+  }
+  if ($url_import->access()) {
+    $template_links['import'] = [
+      'title' => t('Import'),
+      'url' => $url_import,
+      'attributes' => $attributes,
+    ];
+  }
+
+  if (count($template_links)) {
+    $links['template'] = [
+      '#type' => 'dropbutton',
+      '#links' => $template_links,
+      '#attached' => [
+        'library' => [
+          'ghi_templates/import_page',
+        ],
+      ],
+    ];
+  }
+}

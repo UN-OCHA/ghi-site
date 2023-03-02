@@ -38,6 +38,7 @@ dependencies:
     - ghi_content
     - ghi_element_sync
     - ghi_teams
+    - ghi_templates
     - layout_builder
     - layout_builder_ipe
     - media
@@ -150,6 +151,7 @@ permissions:
   - 'edit own risk_index content'
   - 'edit own section content'
   - 'import block from configuration code'
+  - 'import page layout configuration code'
   - 'publish any content'
   - 'publish any node type article'
   - 'publish any node type document'
@@ -199,6 +201,7 @@ permissions:
   - 'revert risk_index revisions'
   - 'revert section revisions'
   - 'show block configuration code'
+  - 'show page layout configuration code'
   - 'translate any entity'
   - 'translate editable entities'
   - 'translate financials node'

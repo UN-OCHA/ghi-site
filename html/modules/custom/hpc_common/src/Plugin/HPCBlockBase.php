@@ -531,7 +531,8 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     if (!empty($page_arguments['section_storage']) && $page_arguments['section_storage'] instanceof SectionStorageInterface) {
       /** @var \Drupal\layout_builder\SectionStorageInterface $section_storage */
       $section_storage = $page_arguments['section_storage'];
-      $entity = $section_storage->getContextValue('entity');
+      $section_contexts = array_keys($section_storage->getContexts());
+      $entity = in_array('entity', $section_contexts) ? $section_storage->getContextValue('entity') : NULL;
       return $entity instanceof NodeInterface ? $entity : NULL;
     }
     if (!empty($page_arguments['node'])) {
