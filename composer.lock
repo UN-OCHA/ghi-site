@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "33381a48b0887979c6a2978edd65ec05",
+    "content-hash": "ffcdd8899bd69255d127505ed299e4e3",
     "packages": [
         {
             "name": "alchemy/zippy",
@@ -3831,26 +3831,23 @@
         },
         {
             "name": "drupal/layout_builder_ipe",
-            "version": "1.0.0-beta3",
+            "version": "dev-1.0.x",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/layout_builder_ipe.git",
-                "reference": "1.0.0-beta3"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/layout_builder_ipe-1.0.0-beta3.zip",
-                "reference": "1.0.0-beta3",
-                "shasum": "8414602144bb81eb096d3ff502f57164fc2fc887"
+                "reference": "25c4f6ab79534447424a80147df67b50ae20ea8d"
             },
             "require": {
                 "drupal/core": "^9.2 || ^10"
             },
             "type": "drupal-module",
             "extra": {
+                "branch-alias": {
+                    "dev-1.0.x": "1.0.x-dev"
+                },
                 "drupal": {
-                    "version": "1.0.0-beta3",
-                    "datestamp": "1677790664",
+                    "version": "1.0.0-beta3+1-dev",
+                    "datestamp": "1677798802",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
@@ -17820,7 +17817,7 @@
         "drupal/auto_entitylabel": 10,
         "drupal/cer": 15,
         "drupal/gin_lb": 10,
-        "drupal/layout_builder_ipe": 15,
+        "drupal/layout_builder_ipe": 20,
         "drupal/multiple_fields_remove_button": 15,
         "drupal/page_manager": 10,
         "drupal/phpexcel": 20,
