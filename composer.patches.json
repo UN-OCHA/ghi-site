@@ -34,6 +34,9 @@
       "Issue #3176661: Allow to edit page title when using Layout Builder variant": "https://www.drupal.org/files/issues/2022-11-15/page_manager-lb-title-3176661-15.patch",
       "Issue #2810329: Page Manager paths should support optional arguments as well": "https://www.drupal.org/files/issues/2022-11-18/page_manager-allow_optional_parameters-2810329-18.patch"
     },
+    "drupal/publishcontent": {
+      "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions": "https://www.drupal.org/files/issues/2020-07-22/2820867-7-permissions-for-bulk-operations.patch"
+    },
     "drupal/seckit": {
       "Issue #2844205: Provide hook_seckit_options_alter() D8": "https://www.drupal.org/files/issues/2021-09-13/2844205-alter-csp-directives-10.patch"
     },
