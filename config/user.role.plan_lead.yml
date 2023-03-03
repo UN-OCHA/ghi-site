@@ -10,8 +10,8 @@ dependencies:
     - publishcontent
     - system
 id: plan_lead
-label: 'plan lead'
-weight: -4
+label: 'Plan lead'
+weight: -3
 is_admin: null
 permissions:
   - 'access remote content'
