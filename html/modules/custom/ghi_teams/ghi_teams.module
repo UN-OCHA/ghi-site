@@ -5,6 +5,7 @@
  * Contains hook implementations for the GHI teams module.
  */
 
+use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
@@ -91,4 +92,52 @@ function ghi_teams_node_grants(AccountInterface $account, $op) {
 function ghi_teams_form_user_form_alter(&$form, FormStateInterface $form_state) {
   $user = \Drupal::currentUser();
   $form['field_team']['#access'] = $user->hasPermission('administer teams');
+}
+
+/**
+ * Implements hook_FORM_ID_alter().
+ *
+ * Restrict access to field_team to users with proper permission.
+ */
+function ghi_teams_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $form_object = method_exists($form_state, 'getEntity') ? $form_state->getEntity() : NULL;
+  if (!$form_object || !$form_object instanceof EntityPublishedInterface) {
+    return;
+  }
+}
+
+/**
+ * Implements hook_preprocess_views_view().
+ */
+function ghi_teams_preprocess_views_view(&$variables) {
+  $view = $variables['view'];
+  if ($view->storage->id() != 'teams') {
+    return;
+  }
+  $variables['#attached']['library'][] = 'ghi_teams/gin';
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ *
+ * Deny access to publishing nodes if the current user has no permission to do
+ * so. This should have been done already by the publishcontent module, but
+ * apparently it doesn't work.
+ */
+function ghi_teams_form_node_form_alter(&$form, FormStateInterface $form_state) {
+  $config = \Drupal::config('publishcontent.settings');
+  if (empty($form['status'])) {
+    return;
+  }
+  $user = \Drupal::currentUser();
+  $node = $form_state->getFormObject()->getEntity();
+
+  /** @var \Drupal\publishcontent\Access\PublishContentAccess $publish_content_access */
+  $publish_content_access = \Drupal::service('publishcontent.access');
+  if ($node && !$publish_content_access->access($user, $node)->isAllowed()) {
+    $form['status']['#disabled'] = TRUE;
+    $form['status']['widget']['value']['#attributes']['title'] = t('You can not change the @published status.', [
+      '@published' => $config->get('publish_text_value'),
+    ]);
+  }
 }

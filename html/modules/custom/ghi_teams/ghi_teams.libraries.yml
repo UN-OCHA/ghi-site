@@ -1,0 +1,5 @@
+gin:
+  version: VERSION
+  css:
+    component:
+      css/gin.css: {}

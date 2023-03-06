@@ -25,10 +25,17 @@ class ApiUrl extends Url {
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration) {
+    $source_configuration = $migration->getSourceConfiguration();
+    $cache_base_time = $source_configuration['cache_base_time'] ?? NULL;
+    $configuration['cache_base_time'] = $cache_base_time;
+    $configuration['cache_prefix'] = $migration->id();
+
     $this->endpoints = $configuration['endpoints'];
     foreach ($this->endpoints as $endpoint) {
+      /** @var \Drupal\hpc_api\Query\EndpointQuery */
       $query_handler = \Drupal::service('hpc_api.endpoint_query');
       $query_handler->setArguments(is_array($endpoint) ? $endpoint : ['endpoint' => $endpoint]);
+      $query_handler->setCacheBaseTime($cache_base_time);
       $configuration['urls'][] = $query_handler->getFullEndpointUrl();
       $configuration['auth_headers'] = $query_handler->getAuthHeaders();
     }

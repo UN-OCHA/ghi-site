@@ -17,13 +17,13 @@
         }
         var options = {
           admin_level_selector: true,
-          mapbox_url: 'https://api.mapbox.com/styles/v1/reliefweb/clbfjni1x003m15nu67uwtbly/tiles/256/{z}/{x}/{y}?title=view&access_token=pk.eyJ1IjoicmVsaWVmd2ViIiwiYSI6IldYR2ZuV3cifQ.eSPZMZWE6UyLtO0OH_-qrw',
           popup_style: 'sidebar',
           search_enabled: true,
           search_options: {
             placeholder: Drupal.t('Filter by location name'),
             empty_message: Drupal.t('Be sure to enter a location name within the current response plan.'),
-          }
+          },
+          map_tiles_url: map_config.map_tiles_url,
         };
         if (typeof map_config.pcodes_enabled != 'undefined') {
           options.pcodes_enabled = map_config.pcodes_enabled;

@@ -75,7 +75,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     }
     $attachment_prototype = $this->getContextValue('attachment_prototype');
     $fields = array_merge($attachment_prototype->fields ?? []);
-    return $fields[$this->getDataPointConfig()['data_points'][0]['index']];
+    return $fields[$this->getDataPointConfig()['data_points'][0]['index']] ?? NULL;
   }
 
   /**

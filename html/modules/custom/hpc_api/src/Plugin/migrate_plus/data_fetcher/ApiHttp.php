@@ -79,6 +79,13 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
   private $processEntities;
 
   /**
+   * Cache prefix for local files.
+   *
+   * @var string
+   */
+  private $cachePrefix;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQuery $endpoint_query) {
@@ -87,6 +94,7 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
     $this->newStructure = !empty($configuration['new_structure']);
     $this->filter = !empty($configuration['filter']) ? $configuration['filter'] : NULL;
     $this->processEntities = !empty($configuration['process_entities']) ? $configuration['process_entities'] : NULL;
+    $this->cachePrefix = $configuration['cache_prefix'] ?? NULL;
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
 
@@ -130,7 +138,7 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
    */
   public function getResponseContent($url): string {
     $import_file = $this->getImportFileName($url);
-    if (!file_exists($import_file)) {
+    if (!file_exists($import_file) || PHP_SAPI === 'cli') {
       // If the file does not yet exist, download it.
       $this->downloadSource($url);
     }
@@ -152,7 +160,7 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
     $_url = str_replace('?', '_', $_url);
     $_url = str_replace('&', '_', $_url);
     $file_name = $_url . '.json';
-    return rtrim(QueryHelper::IMPORT_DIR, '/') . '/' . $file_name;
+    return rtrim(QueryHelper::IMPORT_DIR, '/') . '/' . ($this->cachePrefix ? $this->cachePrefix . '__' : '') . $file_name;
   }
 
   /**
@@ -273,6 +281,16 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
       return $entities;
     }
 
+    $endpoint_args = [
+      'api_version' => 'v2',
+      'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
+      'query_args' => [
+        'content' => 'entities',
+        'disaggregation' => 'false',
+      ],
+      'cache_base_time' => $this->configuration['cache_base_time'] ?? NULL,
+    ];
+
     ini_set('memory_limit', '512M');
     foreach ($data as $item) {
       $has_published_version = FALSE;
@@ -283,15 +301,9 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
         $has_published_version = !empty($published_versions);
       }
 
-      $this->endpointQuery->setArguments([
-        'endpoint' => 'plan/' . $item['id'],
-        'api_version' => 'v2',
-        'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
-        'query_args' => [
-          'content' => 'entities',
-          'disaggregation' => 'false',
-        ],
-      ]);
+      $this->endpointQuery->setArguments($endpoint_args);
+      $this->endpointQuery->setEndpoint('plan/' . $item['id']);
+
       if ($has_published_version) {
         // If we have a public plan version, let's fetch it's entities.
         $this->endpointQuery->setEndpointArgument('version', 'current');

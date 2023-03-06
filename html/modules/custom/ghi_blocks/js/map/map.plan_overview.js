@@ -21,6 +21,7 @@
             circle_opacity: 1,
           },
           popup_style: 'sidebar',
+          map_tiles_url: map_config.map_tiles_url,
         };
         if (typeof map_config.map_style != 'undefined') {
           options.map_style = map_config.map_style;

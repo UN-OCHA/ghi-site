@@ -8,8 +8,12 @@
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plan_clusters\PlanClusterManager;
+use Drupal\ghi_plans\Entity\GoverningEntity;
+use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_sections\SectionManager;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\node\NodeInterface;
 use Drupal\node\NodeTypeInterface;
@@ -158,6 +162,32 @@ function ghi_plan_clusters_section_post_save(NodeInterface $section_node) {
 }
 
 /**
+ * Implements hook_ENTITY_TYPE_insert().
+ */
+function ghi_plan_clusters_base_object_insert(BaseObject $base_object) {
+  if ($base_object->bundle() != PlanClusterManager::BASE_OBJECT_BUNDLE_GOVERNING_ENTITY) {
+    // We act only on cluster base objects.
+    return;
+  }
+  /** @var \Drupal\ghi_base_objects\ApiObjects\BaseObjectInterface $plan_object */
+  $plan_object = $base_object->get('field_plan')->entity;
+  if (!$plan_object || !$plan_object instanceof Plan) {
+    // Bail if there is no plan base object associated to the cluster object.
+    return;
+  }
+  // Load all sections which reference the plan object.
+  $sections = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+    'type' => SectionManager::SECTION_BUNDLES,
+    'field_base_object' => $plan_object->id(),
+  ]);
+  if (!empty($sections)) {
+    foreach ($sections as $section) {
+      $section->save();
+    }
+  }
+}
+
+/**
  * Implements hook_ENTITY_TYPE_presave().
  */
 function ghi_plan_clusters_node_presave(EntityInterface $node) {
@@ -181,11 +211,18 @@ function ghi_plan_clusters_node_presave(EntityInterface $node) {
  * Implements hook_entity_delete().
  */
 function ghi_plan_clusters_entity_delete(EntityInterface $entity) {
-  if (!$entity instanceof NodeInterface || !SubpageHelper::isBaseTypeNode($entity)) {
-    return;
-  }
   $plan_cluster_manager = ghi_plan_clusters_get_manager_service();
-  $plan_cluster_manager->deleteSubpagesForBaseNode($entity);
+  if ($entity instanceof NodeInterface && SubpageHelper::isBaseTypeNode($entity)) {
+    // Delete cluster subpages for this base node.
+    $plan_cluster_manager->deleteSubpagesForBaseNode($entity);
+  }
+  if ($entity instanceof GoverningEntity) {
+    // Delete the cluster page for this governing entity base object.
+    $cluster_subpage = $plan_cluster_manager->loadClusterSubpageForBaseObject($entity);
+    if ($cluster_subpage) {
+      $cluster_subpage->delete();
+    }
+  }
 }
 
 /**
