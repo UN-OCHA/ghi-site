@@ -5,6 +5,7 @@ dependencies:
   config:
     - node.type.document
     - node.type.financials
+    - node.type.global_section
     - node.type.plan_cluster
     - node.type.population
     - node.type.profile
@@ -14,6 +15,7 @@ dependencies:
     - taxonomy.vocabulary.team
   module:
     - ghi_base_objects
+    - ghi_teams
     - node
     - taxonomy
     - user
@@ -1003,6 +1005,7 @@ display:
           plugin_id: bundle
           operator: in
           value:
+            global_section: global_section
             section: section
           group: 1
           exposed: false
@@ -1589,7 +1592,7 @@ display:
           group_type: group
           admin_label: Section
           plugin_id: standard
-          required: true
+          required: false
         field_base_object:
           id: field_base_object
           table: node__field_base_object
@@ -1598,7 +1601,7 @@ display:
           group_type: group
           admin_label: 'Base object'
           plugin_id: standard
-          required: true
+          required: false
       display_description: ''
       display_extenders: {  }
       block_description: 'Teams: Subpages'
@@ -1687,16 +1690,15 @@ display:
           separator: ', '
           field_api_classes: false
           convert_spaces: false
-        name_1:
-          id: name_1
-          table: users_field_data
-          field: name
-          relationship: reverse__user__field_team
-          group_type: count_distinct
+        team_member_count:
+          id: team_member_count
+          table: taxonomy_term_data
+          field: team_member_count
+          relationship: none
+          group_type: group
           admin_label: ''
-          entity_type: user
-          entity_field: name
-          plugin_id: field
+          entity_type: taxonomy_term
+          plugin_id: team_member_count
           label: Members
           exclude: false
           alter:
@@ -1738,37 +1740,15 @@ display:
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          click_sort_column: value
-          type: user_name
-          settings:
-            link_to_entity: true
-          group_column: null
-          group_columns: null
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-          set_precision: false
-          precision: 0
-          decimal: .
-          format_plural: 0
-          format_plural_string: !!binary MQNAY291bnQ=
-          prefix: ''
-          suffix: ''
-        title_1:
-          id: title_1
-          table: node_field_data
-          field: title
-          relationship: reverse__node__field_team
-          group_type: count_distinct
+        team_section_count:
+          id: team_section_count
+          table: taxonomy_term_data
+          field: team_section_count
+          relationship: none
+          group_type: group
           admin_label: ''
-          entity_type: node
-          entity_field: title
-          plugin_id: field
+          entity_type: taxonomy_term
+          plugin_id: team_section_count
           label: Sections
           exclude: false
           alter:
@@ -1810,37 +1790,15 @@ display:
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          click_sort_column: value
-          type: string
-          settings:
-            link_to_entity: false
-          group_column: null
-          group_columns: null
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-          set_precision: false
-          precision: 0
-          decimal: .
-          format_plural: 0
-          format_plural_string: !!binary MQNAY291bnQ=
-          prefix: ''
-          suffix: ''
-        title:
-          id: title
-          table: node_field_data
-          field: title
-          relationship: field_entity_reference
-          group_type: count_distinct
+        team_subpage_count:
+          id: team_subpage_count
+          table: taxonomy_term_data
+          field: team_subpage_count
+          relationship: none
+          group_type: group
           admin_label: ''
-          entity_type: node
-          entity_field: title
-          plugin_id: field
+          entity_type: taxonomy_term
+          plugin_id: team_subpage_count
           label: Subpages
           exclude: false
           alter:
@@ -1882,27 +1840,6 @@ display:
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          click_sort_column: value
-          type: string
-          settings:
-            link_to_entity: true
-          group_column: null
-          group_columns: null
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-          set_precision: false
-          precision: 0
-          decimal: .
-          format_plural: 0
-          format_plural_string: !!binary MQNAY291bnQ=
-          prefix: ''
-          suffix: ''
       empty:
         area:
           id: area
@@ -1965,37 +1902,8 @@ display:
         fields: false
         filters: false
         filter_groups: false
-      relationships:
-        reverse__user__field_team:
-          id: reverse__user__field_team
-          table: taxonomy_term_field_data
-          field: reverse__user__field_team
-          relationship: none
-          group_type: group
-          admin_label: Users
-          entity_type: taxonomy_term
-          plugin_id: entity_reverse
-          required: false
-        reverse__node__field_team:
-          id: reverse__node__field_team
-          table: taxonomy_term_field_data
-          field: reverse__node__field_team
-          relationship: none
-          group_type: group
-          admin_label: Section
-          entity_type: taxonomy_term
-          plugin_id: entity_reverse
-          required: false
-        field_entity_reference:
-          id: field_entity_reference
-          table: node__field_entity_reference
-          field: field_entity_reference
-          relationship: reverse__node__field_team
-          group_type: group
-          admin_label: Subpage
-          plugin_id: standard
-          required: false
-      group_by: true
+      relationships: {  }
+      group_by: false
       display_description: ''
       display_extenders: {  }
       path: admin/people/teams
