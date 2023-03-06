@@ -2871,11 +2871,9 @@ display:
           hide_alter_empty: true
           destination: true
       access:
-        type: role
+        type: perm
         options:
-          role:
-            administrator: administrator
-            global_editor: global_editor
+          perm: 'administer nodes'
       filters:
         title:
           id: title
@@ -3236,7 +3234,7 @@ display:
         - url.query_args
         - user
         - 'user.node_grants:view'
-        - user.roles
+        - user.permissions
       tags:
         - 'config:field.storage.node.field_tags'
         - 'config:field.storage.node.field_team'
