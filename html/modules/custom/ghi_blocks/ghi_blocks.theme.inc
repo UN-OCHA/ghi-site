@@ -92,19 +92,9 @@ function ghi_blocks_preprocess_document_link_button(&$variables) {
 }
 
 /**
- * Add the global map settings.
- *
- * @see \Drupal\ghi_blocks\Form\MapSettingsForm
- */
-function ghi_blocks_add_global_map_settings(&$variables) {
-  $variables['#attached']['drupalSettings']['ghi_maps'] = \Drupal::config('ghi_blocks.map_settings')->get();
-}
-
-/**
  * Preprocess a plan attachment map.
  */
 function ghi_blocks_preprocess_plan_overview_map(&$variables) {
-  ghi_blocks_add_global_map_settings($variables);
   $outer_classes = [
     'map-wrapper-outer',
     'map-wrapper-' . $variables['chart_id'],
@@ -132,7 +122,6 @@ function ghi_blocks_preprocess_plan_overview_map_modal(&$variables) {
  * Preprocess a plan attachment map.
  */
 function ghi_blocks_preprocess_plan_attachment_map(&$variables) {
-  ghi_blocks_add_global_map_settings($variables);
   $outer_classes = [
     'map-wrapper-outer',
     'map-wrapper-' . $variables['chart_id'],
@@ -148,7 +137,6 @@ function ghi_blocks_preprocess_plan_attachment_map(&$variables) {
  * Preprocess a plan attachment map.
  */
 function ghi_blocks_preprocess_plan_operational_presence_map(&$variables) {
-  ghi_blocks_add_global_map_settings($variables);
   $outer_classes = [
     'map-wrapper-outer',
     'map-wrapper-' . $variables['chart_id'],

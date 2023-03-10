@@ -27,6 +27,7 @@ dependencies:
     - node.type.profile
     - node.type.risk_index
     - node.type.section
+    - taxonomy.vocabulary.team
   module:
     - auto_entitylabel
     - content_translation
@@ -36,8 +37,8 @@ dependencies:
     - ghi_base_objects
     - ghi_blocks
     - ghi_content
-    - ghi_element_sync
     - ghi_teams
+    - ghi_templates
     - layout_builder
     - layout_builder_ipe
     - media
@@ -52,7 +53,7 @@ dependencies:
     - toolbar
     - view_unpublished
 id: administrator
-label: administrator
+label: Administrator
 weight: -8
 is_admin: null
 permissions:
@@ -60,7 +61,6 @@ permissions:
   - 'access content'
   - 'access content overview'
   - 'access contextual links'
-  - 'access element sync'
   - 'access files overview'
   - 'access media overview'
   - 'access remote content'
@@ -108,6 +108,7 @@ permissions:
   - 'create news_story content'
   - 'create page content'
   - 'create section content'
+  - 'create terms in team'
   - 'create url aliases'
   - 'delete any global_section content'
   - 'delete any homepage content'
@@ -115,15 +116,13 @@ permissions:
   - 'delete any news_story content'
   - 'delete any section content'
   - 'delete content translations'
-  - 'delete global_section revisions'
-  - 'delete homepage revisions'
   - 'delete media'
   - 'delete own document content'
   - 'delete own global_section content'
   - 'delete own homepage content'
   - 'delete own news_story content'
   - 'delete own section content'
-  - 'delete section revisions'
+  - 'delete terms in team'
   - 'edit any article content'
   - 'edit any document content'
   - 'edit any financials content'
@@ -149,7 +148,9 @@ permissions:
   - 'edit own profile content'
   - 'edit own risk_index content'
   - 'edit own section content'
+  - 'edit terms in team'
   - 'import block from configuration code'
+  - 'import page layout configuration code'
   - 'publish any content'
   - 'publish any node type article'
   - 'publish any node type document'
@@ -188,6 +189,8 @@ permissions:
   - 'publish own node type profile'
   - 'publish own node type risk_index'
   - 'publish own node type section'
+  - 'revert article revisions'
+  - 'revert document revisions'
   - 'revert financials revisions'
   - 'revert global_section revisions'
   - 'revert homepage revisions'
@@ -199,6 +202,7 @@ permissions:
   - 'revert risk_index revisions'
   - 'revert section revisions'
   - 'show block configuration code'
+  - 'show page layout configuration code'
   - 'translate any entity'
   - 'translate editable entities'
   - 'translate financials node'
@@ -275,6 +279,8 @@ permissions:
   - 'view any unpublished profile content'
   - 'view any unpublished risk_index content'
   - 'view any unpublished section content'
+  - 'view article revisions'
+  - 'view document revisions'
   - 'view financials revisions'
   - 'view global_section revisions'
   - 'view homepage revisions'

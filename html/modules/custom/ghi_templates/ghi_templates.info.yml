@@ -1,0 +1,12 @@
+name: GHI Templates
+description: Provide templating for GHI layout builder pages.
+package: GHI
+
+type: module
+core_version_requirement: ^8 || ^9
+
+dependencies:
+  - drupal:layout_builder
+  - layout_builder_ipe:layout_builder_ipe
+  - layout_builder_modal:layout_builder_modal
+  - ghi_blocks:ghi_blocks

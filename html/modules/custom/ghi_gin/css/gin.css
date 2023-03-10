@@ -12,3 +12,12 @@ body,
 table {
   background-color: white;
 }
+
+.layout--twocol-section.layout--twocol-section--50-50 {
+  gap: 1rem;
+  justify-content: space-between;
+}
+.layout--twocol-section.layout--twocol-section--50-50 > .layout__region--first,
+.layout--twocol-section.layout--twocol-section--50-50 > .layout__region--second {
+  flex: 0 1 calc(50% - 0.5rem) !important;
+}

@@ -4,11 +4,13 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\FtsLinkTrait;
+use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 use Drupal\ghi_blocks\Traits\OrganizationsBlockTrait;
 use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_plans\ApiObjects\Organization;
@@ -53,6 +55,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
 
   use OrganizationsBlockTrait;
   use FtsLinkTrait;
+  use GlobalMapTrait;
 
   const DEFAULT_DISCLAIMER = 'The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations.';
 
@@ -61,6 +64,11 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     'cluster' => 'cluster',
     'project' => 'project',
   ];
+
+  /**
+   * The style id from the reliefweb mapbox account.
+   */
+  const MAP_STYLE_ID = 'clboapwyi000714muft627goq';
 
   /**
    * The icon query.
@@ -124,6 +132,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       // Drupal merges the given settings into the existing ones.
       'json' => $map_data,
       'id' => $chart_id,
+      'map_tiles_url' => $this->getStaticTilesUrlTemplate(self::MAP_STYLE_ID),
       'disclaimer' => $conf['display']['disclaimer'] ?? self::DEFAULT_DISCLAIMER,
       'pcodes_enabled' => $conf['display']['pcodes_enabled'] ?? TRUE,
     ];
@@ -141,6 +150,9 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
             $chart_id => $map_settings,
           ],
         ],
+      ],
+      '#cache' => [
+        'tags' => Cache::mergeTags($this->getCurrentBaseObject()->getCacheTags(), $this->getMapConfigCacheTags()),
       ],
     ];
   }

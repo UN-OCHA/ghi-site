@@ -208,7 +208,7 @@ class SubpagesPagesForm extends FormBase {
       $rows = [];
       foreach ($subpage_nodes as $subpage_node) {
         /** @var \Drupal\taxonomy\Entity\Term $subpage_team */
-        $subpage_team = !$subpage->field_team->isEmpty() ? $subpage->field_team->entity : NULL;
+        $subpage_team = !$subpage_node->field_team->isEmpty() ? $subpage_node->field_team->entity : NULL;
 
         $row = [];
         $row[] = $subpage_node->toLink();
@@ -234,31 +234,34 @@ class SubpagesPagesForm extends FormBase {
       ];
     }
 
-    // Build the bulk form. This is mainly done on a way to be compatible with
-    // the gin theme, see gin_form_alter() and gin/styles/base/_views.scss.
-    $form['#prefix'] = Markup::create('<div class="view-content"><div class="views-form">');
-    $form['#suffix'] = Markup::create('</div></div>');
-    $form['header'] = [
-      '#type' => 'container',
-      '#id' => 'edit-header',
-      'subpages_bulk_form' => [
+    $bulk_form_actions = $this->getBulkFormActions();
+    if (!empty($bulk_form_actions)) {
+      // Build the bulk form. This is mainly done in a way to be compatible with
+      // the gin theme, see gin_form_alter() and gin/styles/base/_views.scss.
+      $form['#prefix'] = Markup::create('<div class="view-content"><div class="views-form">');
+      $form['#suffix'] = Markup::create('</div></div>');
+      $form['header'] = [
         '#type' => 'container',
-        '#id' => 'edit-node-bulk-form',
-        'action' => [
-          '#type' => 'select',
-          '#title' => $this->t('Action'),
-          '#options' => $this->getBulkFormActions(),
-        ],
-        'actions' => [
-          '#type' => 'actions',
-          'submit' => [
-            '#type' => 'submit',
-            '#name' => 'bulk_submit',
-            '#value' => $this->t('Apply to selected items'),
+        '#id' => 'edit-header',
+        'subpages_bulk_form' => [
+          '#type' => 'container',
+          '#id' => 'edit-node-bulk-form',
+          'action' => [
+            '#type' => 'select',
+            '#title' => $this->t('Action'),
+            '#options' => $this->getBulkFormActions(),
+          ],
+          'actions' => [
+            '#type' => 'actions',
+            'submit' => [
+              '#type' => 'submit',
+              '#name' => 'bulk_submit',
+              '#value' => $this->t('Apply to selected items'),
+            ],
           ],
         ],
-      ],
-    ];
+      ];
+    }
 
     return $form;
   }

@@ -65,11 +65,11 @@ class SyncManager implements ContainerInjectionInterface {
   protected $httpClient;
 
   /**
-   * The UUID of the component.
+   * The UUID generator.
    *
-   * @var \Drupal\Component\UuidInterface
+   * @var \Drupal\Component\Uuid\UuidInterface
    */
-  protected $uuid;
+  protected $uuidGenerator;
 
   /**
    * The time service.

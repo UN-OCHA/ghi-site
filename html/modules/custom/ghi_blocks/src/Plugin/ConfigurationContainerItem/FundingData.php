@@ -177,6 +177,9 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    */
   public function getValue($data_type_key = NULL, $scale = NULL, $cluster_restrict = NULL) {
     $data_type = $this->getDataType($data_type_key ?: $this->get('data_type'));
+    if (!$data_type) {
+      return NULL;
+    }
     $property = $data_type['property'];
 
     // Allow raw data to be passed in so that callers can take advantage of the
@@ -219,6 +222,9 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    */
   public function getRenderArray($data_type_key = NULL, $scale = NULL, $cluster_restrict = NULL) {
     $data_type = $this->getDataType($data_type_key ?: $this->get('data_type'));
+    if (!$data_type) {
+      return NULL;
+    }
     $scale = ($scale ?: $this->get('scale')) ?: (!empty($data_type['scale']) ? $data_type['scale'] : 'auto');
     $cluster_restrict = $cluster_restrict ?: ($this->get('cluster_restrict') ?: NULL);
 

@@ -1051,14 +1051,16 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Because we handle the label fields, we also have to update the
     // configuration.
     $title_form_key = $this instanceof MultiStepFormBlockInterface ? $this->getTitleSubform() : NULL;
-    $this->configuration['label'] = NestedArray::getValue($values, array_filter([
+    $submitted_label = NestedArray::getValue($values, array_filter([
       $title_form_key,
       'label',
     ]));
-    $this->configuration['label_display'] = NestedArray::getValue($values, array_filter([
+    $submitted_label_display = NestedArray::getValue($values, array_filter([
       $title_form_key,
       'label_display',
     ]));
+    $this->configuration['label'] = $submitted_label ?? $this->configuration['label'];
+    $this->configuration['label_display'] = $submitted_label_display ?? $this->configuration['label_display'];
 
     if ($this instanceof OptionalTitleBlockInterface && empty($this->configuration['label'])) {
       $this->configuration['label'] = '<none>';
@@ -1620,6 +1622,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $page_node = $this->getPageNode();
     if ($page_node && $page_node->hasField('field_base_object')) {
       return $page_node->get('field_base_object')->entity;
+    }
+    elseif (($base_page = $this->getCurrentBaseEntity($page_node)) && $base_page->hasField('field_base_object')) {
+      return $base_page->get('field_base_object')->entity;
     }
     $contexts = $this->getContexts();
     foreach ($this->getContextMapping() as $context_name) {

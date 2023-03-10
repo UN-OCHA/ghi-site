@@ -5,6 +5,7 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\ProjectFunding;
 use Drupal\ghi_blocks\Traits\OrganizationsBlockTrait;
@@ -49,7 +50,7 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
+class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use ConfigurationContainerTrait;
   use TableSoftLimitTrait;
@@ -250,6 +251,13 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
       return 'table';
     }
     return 'organizations';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTitleSubform() {
+    return 'display';
   }
 
   /**

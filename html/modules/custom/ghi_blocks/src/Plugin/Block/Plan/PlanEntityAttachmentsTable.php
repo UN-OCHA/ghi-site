@@ -604,7 +604,14 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
   }
 
   /**
-   * Form callback for the base settings form.
+   * {@inheritdoc}
+   */
+  public function getTitleSubform() {
+    return 'display';
+  }
+
+  /**
+   * Form callback for the attachments form.
    */
   public function attachmentsForm(array $form, FormStateInterface $form_state) {
     $form['entity_attachments'] = [
@@ -621,7 +628,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
   }
 
   /**
-   * Form callback for the base settings form.
+   * Form callback for the table form.
    */
   public function tableForm(array $form, FormStateInterface $form_state) {
     $default_value = $this->getDefaultFormValueFromFormState($form_state, 'columns');

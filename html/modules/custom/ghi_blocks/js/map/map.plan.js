@@ -22,7 +22,8 @@
           search_options: {
             placeholder: Drupal.t('Filter by location name'),
             empty_message: Drupal.t('Be sure to enter a location name within the current response plan.'),
-          }
+          },
+          map_tiles_url: map_config.map_tiles_url,
         };
         if (typeof map_config.pcodes_enabled != 'undefined') {
           options.pcodes_enabled = map_config.pcodes_enabled;

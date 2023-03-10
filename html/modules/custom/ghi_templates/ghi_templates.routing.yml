@@ -1,0 +1,26 @@
+ghi_templates.entity.page_config.export:
+  path: '/admin/template/export/{section_storage_type}/{section_storage}'
+  defaults:
+    _form: '\Drupal\ghi_templates\LayoutBuilder\ExportPageConfigForm'
+  requirements:
+    _layout_builder_access: 'view'
+    _permission: show page layout configuration code
+  options:
+    _admin_route: TRUE
+    parameters:
+      section_storage:
+        layout_builder_section_storage: TRUE
+ghi_templates.entity.page_config.import:
+  path: '/admin/template/import/{entity_type}/{entity}/{section_storage_type}/{section_storage}'
+  defaults:
+    _form: '\Drupal\ghi_templates\LayoutBuilder\ImportPageConfigForm'
+  requirements:
+    _layout_builder_access: 'view'
+    _permission: import page layout configuration code
+  options:
+    _admin_route: TRUE
+    parameters:
+      entity:
+        type: entity:{entity_type}
+      section_storage:
+        layout_builder_section_storage: TRUE

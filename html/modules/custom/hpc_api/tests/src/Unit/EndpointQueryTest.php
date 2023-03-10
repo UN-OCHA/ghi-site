@@ -9,7 +9,6 @@ use Prophecy\Argument;
 use GuzzleHttp\Psr7\Response;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
-use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\hpc_api\ConfigService;
@@ -92,9 +91,6 @@ class EndpointQueryTest extends UnitTestCase {
     $this->loggerChannel = $this->prophesize(LoggerChannelInterface::class);
     $logger = $this->loggerFactory->reveal();
 
-    // Mock cache data.
-    $cache = $this->prophesize(CacheBackendInterface::class)->reveal();
-
     // Mock kill switch.
     $kill_switch = $this->prophesize(KillSwitch::class)->reveal();
 
@@ -108,7 +104,7 @@ class EndpointQueryTest extends UnitTestCase {
     $current_user = $this->prophesize(AccountProxyInterface::class)->reveal();
     $time = $this->prophesize(TimeInterface::class)->reveal();
 
-    $this->query = new OverrideEndpointQuery($config_service, $logger, $cache, $kill_switch, $http_client, $current_user, $time);
+    $this->query = new OverrideEndpointQuery($config_service, $logger, $kill_switch, $http_client, $current_user, $time);
   }
 
   /**

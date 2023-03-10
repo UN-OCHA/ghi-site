@@ -9,8 +9,8 @@ dependencies:
     - node
     - publishcontent
 id: cluster_lead
-label: 'cluster lead'
-weight: -3
+label: 'Cluster lead'
+weight: -2
 is_admin: null
 permissions:
   - 'access remote content'

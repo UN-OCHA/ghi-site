@@ -1,0 +1,4 @@
+import_page:
+  css:
+    component:
+      css/import_page.css: {}

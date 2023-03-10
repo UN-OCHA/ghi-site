@@ -1,0 +1,23 @@
+<?php
+
+/**
+ * @file
+ * Contains requirement checks for the  global status report page.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function ghi_blocks_requirements($phase) {
+  $requirements = [];
+  if ($phase == 'runtime') {
+    $mapbox_token = getenv('MAPBOX_TOKEN');
+    $requirements['ghi_blocks_mapbox_token'] = [
+      'title' => t('Mapbox token'),
+      'severity' => !empty($mapbox_token) ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+      'value' => $mapbox_token,
+      'description' => t('A mapbox token is available via an environment variable. This token is used by the GHI Blocks module to create leaflet maps using mapbox static tiles.'),
+    ];
+  }
+  return $requirements;
+}

@@ -1,0 +1,6 @@
+show page layout configuration code:
+  title: 'Show  page layout configuration code'
+  description: 'Allow to show the page layout configuration code.'
+import page layout configuration code:
+  title: 'Import page layout from configuration code'
+  description: 'Allow to import a page layout by pasting the configuration code.'

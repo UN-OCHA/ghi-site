@@ -214,6 +214,9 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
 
     // Get the prototype.
     $prototype = $this->getAttachmentPrototype();
+    if (!$prototype) {
+      return NULL;
+    }
 
     // Filter for the configured attachment prototype id.
     $attachments = $this->filterAttachmentsByPrototype($attachments, $prototype->id);

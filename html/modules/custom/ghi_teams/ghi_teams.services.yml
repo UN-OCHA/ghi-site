@@ -3,3 +3,7 @@ services:
     class: Drupal\ghi_teams\Breadcrumb\TeamsBreadcrumbBuilder
     tags:
       - { name: breadcrumb_builder, priority: 1003 }
+  ghi_teams.route_subscriber:
+    class: Drupal\ghi_teams\EventSubscriber\TaxonomyTermRouteSubscriber
+    tags:
+      - { name: event_subscriber }

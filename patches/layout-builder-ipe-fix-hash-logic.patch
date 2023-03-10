@@ -1,0 +1,33 @@
+diff --git a/src/LayoutBuilderIpeService.php b/src/LayoutBuilderIpeService.php
+index fecb687..d8b3d2d 100644
+--- a/src/LayoutBuilderIpeService.php
++++ b/src/LayoutBuilderIpeService.php
+@@ -24,7 +24,6 @@ use Drupal\Core\Theme\ThemeManagerInterface;
+ use Drupal\Core\Url;
+ use Drupal\layout_builder\LayoutEntityHelperTrait;
+ use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
+-use Drupal\layout_builder\OverridesSectionStorageInterface;
+ use Drupal\layout_builder\Plugin\SectionStorage\DefaultsSectionStorage;
+ use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+ use Drupal\layout_builder\SectionStorageInterface;
+@@ -32,6 +31,9 @@ use Drupal\layout_builder_ipe\Traits\SectionStorageFormTrait;
+ use Drupal\page_manager\Entity\PageVariant;
+ use Symfony\Component\HttpFoundation\RequestStack;
+ 
++/**
++ * General purpose service for IPE related functionality.
++ */
+ class LayoutBuilderIpeService {
+ 
+   use LayoutEntityHelperTrait {
+@@ -606,8 +608,8 @@ class LayoutBuilderIpeService {
+    *   An md5 hash or NULL if no layout exists.
+    */
+   public function hashLayout($section_storage) {
+-    if (!$section_storage instanceof OverridesSectionStorageInterface) {
+-      return NULL;
++    if ($section_storage instanceof DefaultsSectionStorage) {
++      return 'default';
+     }
+     $sections = $section_storage->getSections();
+     $layout_data = [];

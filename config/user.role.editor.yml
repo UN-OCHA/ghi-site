@@ -19,23 +19,19 @@ dependencies:
     - contextual
     - filter
     - ghi_content
-    - ghi_element_sync
     - layout_builder
     - layout_builder_ipe
     - node
-    - publishcontent
     - system
     - toolbar
-    - view_unpublished
 id: editor
-label: editor
-weight: -6
+label: Editor
+weight: -5
 is_admin: null
 permissions:
   - 'access administration pages'
   - 'access content overview'
   - 'access contextual links'
-  - 'access element sync'
   - 'access remote content'
   - 'access toolbar'
   - 'administer nodes'
@@ -50,43 +46,18 @@ permissions:
   - 'configure editable section node layout overrides'
   - 'create document content'
   - 'delete own document content'
-  - 'edit any article content'
   - 'edit own article content'
   - 'edit own document content'
-  - 'publish any node type article'
-  - 'publish editable content'
-  - 'publish editable node type article'
-  - 'publish editable node type document'
-  - 'publish editable node type financials'
-  - 'publish editable node type global_section'
-  - 'publish editable node type population'
-  - 'publish editable node type profile'
-  - 'publish editable node type risk_index'
-  - 'publish editable node type section'
-  - 'publish own node type article'
-  - 'publish own node type document'
-  - 'unpublish any node type article'
-  - 'unpublish editable content'
-  - 'unpublish editable node type article'
-  - 'unpublish editable node type document'
-  - 'unpublish editable node type financials'
-  - 'unpublish editable node type global_section'
-  - 'unpublish editable node type population'
-  - 'unpublish editable node type profile'
-  - 'unpublish editable node type risk_index'
-  - 'unpublish editable node type section'
-  - 'unpublish own node type article'
-  - 'unpublish own node type document'
   - 'use layout builder ipe on editable article node layout overrides'
   - 'use layout builder ipe on editable document node layout overrides'
   - 'use layout builder ipe on editable financials node layout overrides'
   - 'use layout builder ipe on editable global_section node layout overrides'
+  - 'use layout builder ipe on editable homepage node layout overrides'
   - 'use layout builder ipe on editable plan_cluster node layout overrides'
   - 'use layout builder ipe on editable population node layout overrides'
   - 'use layout builder ipe on editable profile node layout overrides'
   - 'use layout builder ipe on editable risk_index node layout overrides'
   - 'use layout builder ipe on editable section node layout overrides'
   - 'use text format html_text'
-  - 'view any unpublished article content'
   - 'view own unpublished content'
   - 'view the administration theme'

@@ -193,3 +193,7 @@ form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions in
 #layout-builder-modal--messages {
   line-height: 1.5rem;
 }
+#layout-builder-modal a.tabledrag-handle .handle {
+  margin-top: 0.4rem;
+  background-position-x: 0;
+}
