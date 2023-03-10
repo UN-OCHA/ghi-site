@@ -34,4 +34,5 @@
   --brand-primary: var(--ghi-yellow);
   --brand-primary--dark: var(--cd-primary-color);
   --brand-highlight: var(--ghi-yellow);
+  --brand-logo-width: 260px;
 }

@@ -12,13 +12,12 @@
   justify-content: center;
   width: 100%;
   height: auto;
-  margin: 0 0 0 -1.5rem;
-  padding-left: 0.5rem;
+  margin-inline-start: 2px; /* for visual balance */
   text-decoration: none;
   color: var(--ghi-default-text-color);
   font-size: var(--cd-font-size--base);
   font-weight: bold;
-  line-height: 1.3rem;
+  line-height: 0;
 }
 
 @media (max-width: 767px) {

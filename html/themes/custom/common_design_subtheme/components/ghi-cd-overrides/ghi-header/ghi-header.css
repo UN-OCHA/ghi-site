@@ -53,18 +53,5 @@
 }
 
 .cd-site-header__inner {
-  height: 80px;
-}
-
-@supports (display: grid) {
-  .cd-site-header__inner {
-    grid-template-rows: 80px;
-    grid-template-columns: 2fr 1fr;
-  }
-
-  @media (min-width: 768px) {
-    .cd-site-header__inner {
-      grid-template-columns: 260px 1fr;
-    }
-  }
+  height: var(--cd-site-header-height);
 }
