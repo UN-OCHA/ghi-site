@@ -98,7 +98,7 @@
           background-size: contain;
         }
 
-        &:not(.sorttable-sorted):not(.sorttable-sorted-reverse):not(.sorttable-nosort):after {
+        &:not(.sorttable-sorted, .sorttable-sorted-reverse, .sorttable-nosort):after {
           background-image: url("../img/table/ghi_sorting.svg");
         }
         &.sorttable-sorted:after {
