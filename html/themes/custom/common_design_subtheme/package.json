@@ -1,7 +1,7 @@
 {
   "name": "common-design-subtheme",
-  "version": "7.0.0",
-  "description": "OCHA Common Design sub theme for Drupal 8+",
+  "version": "8.0.0",
+  "description": "OCHA Common Design sub theme for Drupal 9+",
   "repository": "git@github.com:UN-OCHA/common_design.git",
   "author": "UN OCHA",
   "license": "GPL-2.0",
@@ -20,24 +20,15 @@
     "test": "jest _tests/*.test.js"
   },
   "engines": {
-    "node": "^16.13.2",
-    "npm": "^8.1.2"
+    "node": "^16.19.0",
+    "npm": "^8.19.3"
   },
   "dependencies": {
-    "autoprefixer": "^10.2.5",
-    "postcss": "^8.2.9",
-    "postcss-cli": "^8.3.1",
-    "sass": "^1.43.4",
-    "stylelint": "^14.3.0",
-    "stylelint-config-recommended-scss": "^8.0.0",
-    "stylelint-config-standard": "^29.0.0",
-    "stylelint-config-standard-scss": "^6.1.0",
-    "stylelint-order": "^6.0.1",
-    "stylelint-scss": "^4.3.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.16.4",
     "@xmldom/xmldom": "^0.7.6",
+    "autoprefixer": "^10.2.5",
     "axios": ">=0.21.2",
     "babel-jest": "^26.6.3",
     "core-js": "^3.20.0",
@@ -48,8 +39,17 @@
     "json-schema": ">=0.4.0",
     "minimist": "^1.2.6",
     "nth-check": ">=2.0.1",
+    "postcss": "^8.2.9",
+    "postcss-cli": "^8.3.1",
     "puppeteer": "^9.1.1",
+    "sass": "^1.43.4",
     "set-value": ">=4.0.1",
+    "stylelint": "^14.3.0",
+    "stylelint-config-recommended-scss": "^8.0.0",
+    "stylelint-config-standard": "^29.0.0",
+    "stylelint-config-standard-scss": "^6.1.0",
+    "stylelint-order": "^6.0.1",
+    "stylelint-scss": "^4.3.0",
     "svg-sprite": "^1.5.4",
     "trim": ">=0.0.3",
     "trim-newlines": "^4.0.2",
