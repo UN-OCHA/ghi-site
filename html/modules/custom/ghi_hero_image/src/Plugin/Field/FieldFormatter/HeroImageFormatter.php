@@ -140,9 +140,11 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
         $image_id = $item_settings['image_id'] ?? NULL;
         $image_urls = $image_id ? $this->smugmugImage->getImageSizes($image_id) : NULL;
         $image_url = $image_urls['X3LargeImageUrl'] ?? ($image_urls['LargestImageUrl'] ?? NULL);
-        $image = $this->smugmugImage->getImage($image_id);
-        $caption_format_parents = ['FormattedValues', 'Caption', 'html'];
-        $caption = NestedArray::getValue($image, $caption_format_parents) ?? ($image['Caption'] ?? NULL);
+        $image = $image_id ? $this->smugmugImage->getImage($image_id) : NULL;
+        if ($image) {
+          $caption_format_parents = ['FormattedValues', 'Caption', 'html'];
+          $caption = NestedArray::getValue($image, $caption_format_parents) ?? ($image['Caption'] ?? NULL);
+        }
         break;
 
       case 'inherit':
