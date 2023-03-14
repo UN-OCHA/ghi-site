@@ -7,6 +7,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\layout_builder\Plugin\SectionStorage\DefaultsSectionStorage;
 use Drupal\layout_builder\SectionStorageInterface;
 
 /**
@@ -96,6 +97,9 @@ class TemplateLinkBuilder {
    *   A link array to be used in dropbutton elements.
    */
   public function buildExportLink(SectionStorageInterface $section_storage, EntityInterface $entity) {
+    if ($section_storage instanceof DefaultsSectionStorage) {
+      return NULL;
+    }
     $route_params = [
       'section_storage_type' => $section_storage->getStorageType(),
       'section_storage' => $section_storage->getStorageId(),

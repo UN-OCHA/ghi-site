@@ -284,7 +284,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]|null
    *   An array of plan entity objects for the given context or NULL.
    */
-  public function getPlanEntities(ContentEntityInterface $context_object, $entity_type = NULL, array $filters = NULL) {
+  public function getPlanEntities(ContentEntityInterface $context_object = NULL, $entity_type = NULL, array $filters = NULL) {
     $cache_key = $this->getCacheKey(array_filter([
       'id' => $context_object ? $context_object->id() : NULL,
       'entity_type' => $entity_type,

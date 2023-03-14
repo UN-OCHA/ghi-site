@@ -13,6 +13,9 @@
 .layout-builder-ipe-actions .dropbutton-wrapper.layout-builder-ipe--link .dropbutton-widget ul {
   padding: 0 0 0 0.75rem;
 }
+.layout-builder-ipe-actions .dropbutton-wrapper.layout-builder-ipe--link .dropbutton-widget ul li:first-child.import {
+  padding-right: 0.75rem;
+}
 .layout-builder-ipe-actions .dropbutton-wrapper.layout-builder-ipe--link .dropbutton-widget ul li.dropbutton-toggle {
   transform: rotate(-90deg) translateX(2px);
 }
@@ -33,6 +36,9 @@
   padding: 0;
   margin-left: 0 !important;
   margin-right: 0 !important;
+}
+.layout-builder-ipe-actions .dropbutton-wrapper.layout-builder-ipe--link.open .dropbutton-widget ul li a:hover {
+  text-decoration: underline
 }
 .layout-builder-ipe-actions .dropbutton-wrapper.layout-builder-ipe--link.open .dropbutton-widget ul li.dropbutton-toggle {
   opacity: 0;
