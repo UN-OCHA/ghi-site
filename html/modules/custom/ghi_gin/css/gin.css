@@ -21,3 +21,7 @@ table {
 .layout--twocol-section.layout--twocol-section--50-50 > .layout__region--second {
   flex: 0 1 calc(50% - 0.5rem) !important;
 }
+
+.ui-dialog[aria-describedby="layout-builder-modal"] .ui-dialog-titlebar {
+  box-sizing: border-box;
+}

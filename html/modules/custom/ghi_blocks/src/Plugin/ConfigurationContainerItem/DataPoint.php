@@ -70,12 +70,17 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   public function getDefaultLabel() {
     $attachment = $this->getContextValue('attachment');
+    $data_point_conf = $this->getDataPointConfig();
+    $data_point_index = $data_point_conf['data_points'][0]['index'] ?? NULL;
+    if ($data_point_index === NULL) {
+      return NULL;
+    }
     if ($attachment) {
-      return $attachment->fields[$this->getDataPointConfig()['data_points'][0]['index']];
+      return $attachment->fields[$data_point_index];
     }
     $attachment_prototype = $this->getContextValue('attachment_prototype');
     $fields = array_merge($attachment_prototype->fields ?? []);
-    return $fields[$this->getDataPointConfig()['data_points'][0]['index']] ?? NULL;
+    return $fields[$data_point_index] ?? NULL;
   }
 
   /**
@@ -96,11 +101,12 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     }
     $config = $this->getPluginConfiguration();
     $build = DataPointHelper::formatValue($attachment, $attachment->data_point_conf);
-    if (!empty($config['disaggregation_modal']) && $this->canShowDisaggregatedData($attachment)) {
-      $data_point = $this->getDataPointConfig()['data_points'][0]['index'];
+    $data_point_conf = $this->getDataPointConfig();
+    $data_point_index = $data_point_conf['data_points'][0]['index'] ?? NULL;
+    if ($data_point_index !== NULL && !empty($config['disaggregation_modal']) && $this->canShowDisaggregatedData($attachment)) {
       $link_url = Url::fromRoute('ghi_plans.modal_content.dissaggregation', [
         'attachment' => $attachment->id(),
-        'metric' => $data_point,
+        'metric' => $data_point_index,
         'reporting_period' => $attachment->getLatestPublishedReportingPeriod($attachment->getPlanId()) ?? 'latest',
       ]);
       $link_url->setOptions([
@@ -152,7 +158,11 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getColumnType() {
-    if ($this->getDataPointConfig()['formatting'] == 'percent') {
+    $data_point_conf = $this->getDataPointConfig();
+    if (!$data_point_conf) {
+      return NULL;
+    }
+    if ($data_point_conf['formatting'] == 'percent') {
       return 'percentage';
     }
     return parent::getColumnType();
@@ -161,12 +171,16 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   /**
    * Get the currently configured data point confirguration.
    *
-   * @return array
-   *   An array containing the data point configuration.
+   * @return array|null
+   *   An array containing the data point configuration or null if no
+   *   configuration is set.
    */
   public function getDataPointConfig() {
     $data_point_conf = $this->get('data_point');
-    if (ElementDataPoint::WIDGET_SUPPORT === FALSE) {
+    if (!is_array($data_point_conf) || empty($data_point_conf)) {
+      return NULL;
+    }
+    if (ElementDataPoint::WIDGET_SUPPORT === FALSE && is_array($data_point_conf)) {
       $data_point_conf['widget'] = 'none';
     }
     return $data_point_conf;
@@ -179,6 +193,9 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     $classes = parent::getClasses();
 
     $data_point_conf = $this->getDataPointConfig();
+    if (!$data_point_conf) {
+      return $classes;
+    }
     $widget = $data_point_conf['widget'] ?? NULL;
     if (!empty($widget) && $widget != 'none') {
       $classes[] = Html::getClass($this->getPluginId() . '--widget');
@@ -193,8 +210,8 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   /**
    * Get the attachment object for this item.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment
-   *   The attachment object.
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment|null
+   *   The attachment object or NULL.
    */
   private function getAttachmentObject() {
     $attachment = $this->getContextValue('attachment');
