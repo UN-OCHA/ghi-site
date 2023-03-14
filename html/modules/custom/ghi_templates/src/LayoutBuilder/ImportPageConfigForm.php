@@ -7,6 +7,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Ajax\AjaxHelperTrait;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
+use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormBase;
@@ -109,7 +110,9 @@ class ImportPageConfigForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, EntityInterface $entity = NULL, SectionStorageInterface $section_storage = NULL) {
 
-    $form['#title'] = $this->t('Import page configuration');
+    $form['#title'] = $this->t('Import page configuration to @label', [
+      '@label' => $entity->label(),
+    ]);
 
     $steps = self::STEPS;
     $current_step = $form_state->get('current_import_step') ?? reset($steps);
@@ -245,6 +248,8 @@ class ImportPageConfigForm extends FormBase {
       '#title' => $this->t('Clear layout'),
       '#description' => $this->t('If checked, this will remove all existing page elements from the current page before doing the import. If unchecked, the imported configuration will be appended to the current page instead.'),
       '#default_value' => FALSE,
+      '#gin_lb_form_element' => FALSE,
+      '#gin_lb_form' => FALSE,
     ];
 
     $form['settings']['summary'] = [
@@ -340,10 +345,23 @@ class ImportPageConfigForm extends FormBase {
    *   An AJAX response.
    */
   protected function successfulAjaxSubmit(array $form, FormStateInterface $form_state) {
-    /** @var \Drupal\layout_builder_ipe\Controller\EntityEditController $entity_edit_controller */
-    $entity_edit_controller = $this->controllerResolver->getControllerFromDefinition(EntityEditController::class);
-    $response = $entity_edit_controller->edit($form_state->get('section_storage'));
-    $response->addCommand(new CloseDialogCommand('#layout-builder-modal'));
+    $query = $this->getRequest()->query;
+    $redirect_to_entity = $query->get('redirect_to_entity', FALSE);
+    if ($redirect_to_entity) {
+      /** @var \Drupal\Core\Url $entity_url */
+      $entity_url = $form_state->get('entity')->toUrl();
+      $query = $entity_url->getOption('query');
+      $query['openIpe'] = TRUE;
+      $entity_url->setOption('query', $query);
+      $response = new AjaxResponse();
+      $response->addCommand(new RedirectCommand($entity_url->toString()));
+    }
+    else {
+      /** @var \Drupal\layout_builder_ipe\Controller\EntityEditController $entity_edit_controller */
+      $entity_edit_controller = $this->controllerResolver->getControllerFromDefinition(EntityEditController::class);
+      $response = $entity_edit_controller->edit($form_state->get('section_storage'));
+      $response->addCommand(new CloseDialogCommand('#layout-builder-modal'));
+    }
     return $response;
   }
 
@@ -360,10 +378,10 @@ class ImportPageConfigForm extends FormBase {
       $import_config = Yaml::decode($config);
       $form_state->set('config', $import_config);
       $form_state->set('page_config', $import_config['page_config'] ?? NULL);
-      if (!is_array($import_config) || empty($import_config['page_config']) || empty($import_config['hash'])) {
+      if (!is_array($import_config) || empty($import_config['entity_type']) || empty($import_config['bundle']) || empty($import_config['page_config']) || empty($import_config['hash'])) {
         $form_state->setErrorByName('config', $this->t('Empty or malformed config.'));
       }
-      elseif ($import_config['hash'] != md5(Yaml::encode(ArrayHelper::mapObjectsToString($import_config['page_config'])))) {
+      elseif ($import_config['hash'] != md5(Yaml::encode(ArrayHelper::mapObjectsToString(array_diff_key($import_config, ['hash' => TRUE]))))) {
         $form_state->setErrorByName('config', $this->t('Internal validation failed.'));
       }
     }
