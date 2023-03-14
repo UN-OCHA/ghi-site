@@ -201,23 +201,26 @@ class ImportPageConfigForm extends FormBase {
     $form_state->set('section_storage', $section_storage);
     $form_state->set('entity', $entity);
     $page_config = $form_state->get('page_config');
+    $page_config = array_filter($page_config, function ($section) {
+      return !empty($section['components']);
+    });
 
-    $header = NULL;
-    if (count($page_config) == 1) {
-      $header = [
-        $this->t('Element type'),
-        $this->t('Label'),
-      ];
-    }
+    $header = [
+      $this->t('Element type'),
+      $this->t('Label'),
+    ];
 
     $rows = [];
     foreach ($page_config as $section_key => $section) {
       if (count($page_config) > 1) {
         $rows[] = [
-          'data' => [
-            '#markup' => Markup::create('<h2>' . $section['layout_settings']['label'] . '</h2>'),
+          [
+            'data' => [
+              '#markup' => (string) Markup::create('<h2>' . $section['layout_settings']['label'] . '</h2>'),
+            ],
+            'colspan' => 2,
           ],
-          'colspan' => 2,
+          '#disabled' => TRUE,
         ];
       }
       foreach ($section['components'] as $component_key => $component) {
