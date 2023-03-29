@@ -97,11 +97,15 @@ Tbc.
 TESTING
 -------
 
-    fin phpunit -c /var/www/phpunit.xml html/modules/custom
+PHPUnit tests for the custom modules can be run via docksal like this:
+
+    fin phpunit
+
+The test configuration is in _phpunit.xml_.
 
 The tests can be optionally filtered down very specifically, e.g.:
 
-    fin phpunit -c /var/www/phpunit.xml html/modules/custom --filter testImportParagraphs
+    fin phpunit --filter testImportParagraphs
 
 
 REFERENCES

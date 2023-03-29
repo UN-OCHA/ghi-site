@@ -264,7 +264,12 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
    * {@inheritdoc}
    */
   public function checkConnection() {
-    $response = $this->query('{connection}');
+    try {
+      $response = $this->query('{connection}');
+    }
+    catch (\Exception $e) {
+      return FALSE;
+    }
     return $response && $response->getStatus() && $response->has('connection') && $response->get('connection') == 'connected';
   }
 
