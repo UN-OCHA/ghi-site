@@ -20,21 +20,72 @@ adjust it to match your local requirements.
 
     touch ./.docksal/docksal-local.env
 
-You add a port mapping for MySQL to use a specific port:
-
-    MYSQL_PORT_MAPPING='3312:3306'
-
-In order for the mapbox-based maps to work, an access token must be set:
-
-    MAPBOX_TOKEN="THE MAPBOX ACCESS TOKEN"
-
-For docksal to run, you will need to stop the apache service on your system.
+Refer to _./.docksal/default.docksal-local.env_ for required environement
+variables.
 
 Once the above steps are complete, from the project root, run:
 
-    fin init
+    fin init-site
 
-This should set the stack up and running.
+This will create install all required packages via composer and setup the local
+settings files.
+
+For docksal to run, you will need to stop any other webserver or service on
+your system that might bind to port 80.
+
+
+DATABASE SETUP
+--------------
+
+A database has been created automatically as part of the stack setup above.
+
+Pull a database dump from [here](https://snapshots.aws.ahconu.org/ghi) to get a
+fresh copy and seed your local database.
+
+
+COMPOSER
+--------
+
+Using docksal, you can run any composer command as **_fin composer {COMMAND}_**.
+
+
+DRUSH
+-----
+
+Drush commands can be run as **_fin drush {COMMAND}_**. Eg:
+
+    fin drush cr
+
+
+CODE QUALITY
+------------
+
+Use PHP Codesniffer to assure code quality.
+
+Code linting
+
+    fin exec vendor/bin/phpcs -p --report=full ./html/modules/custom --extensions=module/php,php/php,inc/php
+
+Drupal best practices
+
+    fin exec vendor/bin/phpcs --standard=DrupalPractice --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml ./html/modules/custom/
+
+
+THEME SETUP
+-----------
+
+We have created a sub-theme [fts_public](https://github.com/UN-OCHA/fts-d8-site/tree/master/html/themes/custom/fts_public)
+from the OCHA provided base theme named [common_design](https://github.com/UN-OCHA/common_design).
+
+While working on style changes, update the _.sass_ files under the sass folder.
+Once done with the changes, run the below commands:
+
+    cd html/themes/custom/fts_public/
+    nvm use
+    npm install
+    npm run sass:lint-fix
+    npm run sass:build
+
 
 
 CONFIGURATION AND FEATURES

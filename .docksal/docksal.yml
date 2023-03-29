@@ -2,9 +2,17 @@ version: "2.1"
 
 services:
   cli:
+    volumes:
+      - ${PROJECT_ROOT}/html/sites/simpletest/:/var/www/html/sites/simpletest:rw
     environment:
-      - COMPOSER_MEMORY_LIMIT=-1
+      - HPC_API_USER
+      - HPC_API_PASS
+      - HPC_API_KEY
+      - HID_CLIENT_ID
+      - HID_CLIENT_SECRET
+      - CM_KEY
       - MAPBOX_TOKEN
+      - COMPOSER_MEMORY_LIMIT=-1
   web:
     environment:
       - MAPBOX_TOKEN
