@@ -48,7 +48,7 @@ check_requirements()
   local_docksal_env="${PROJECT_ROOT}/.docksal/docksal-local.env"
   if [[ ! -f "${local_docksal_env}" ]]; then
     echo "Missing local environment file ${local_docksal_env}"
-    echo "You can cuse this command to create this file based on a template."
+    echo "You can use the following command to create the file based on a template."
     echo "Once created, you need to fill in the values for the required environment variables."
     echo ""
     echo "  fin exec cp ${PROJECT_ROOT}/.docksal/default.docksal-local.env ${PROJECT_ROOT}/.docksal/docksal-local.env"
