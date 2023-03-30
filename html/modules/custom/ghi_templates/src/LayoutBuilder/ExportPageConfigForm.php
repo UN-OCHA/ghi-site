@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Traits\GinLbModalTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\SectionStorageInterface;
 
 /**
@@ -15,6 +16,7 @@ use Drupal\layout_builder\SectionStorageInterface;
 class ExportPageConfigForm extends FormBase {
 
   use GinLbModalTrait;
+  use LayoutEntityHelperTrait;
 
   /**
    * {@inheritdoc}
@@ -27,7 +29,11 @@ class ExportPageConfigForm extends FormBase {
    * Build form callback.
    */
   public function buildForm(array $form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL) {
+    /** @var \Drupal\Core\Entity\EntityInterface $entity */
+    $entity = $section_storage->getContextValue('entity');
     $config_export = [
+      'entity_type' => $entity->getEntityTypeId(),
+      'bundle' => $entity->bundle(),
       'page_config' => [],
     ];
     foreach ($section_storage->getSections() as $delta => $section) {
@@ -42,9 +48,11 @@ class ExportPageConfigForm extends FormBase {
       }
     }
 
-    $config_export['hash'] = md5(Yaml::encode(ArrayHelper::mapObjectsToString($config_export['page_config'])));
+    $config_export['hash'] = md5(Yaml::encode(ArrayHelper::mapObjectsToString($config_export)));
 
-    $form['#title'] = $this->t('Export page configuration');
+    $form['#title'] = $this->t('Export page configuration for @label', [
+      '@label' => $section_storage->label(),
+    ]);
 
     $form['settings'] = [
       '#type' => 'container',

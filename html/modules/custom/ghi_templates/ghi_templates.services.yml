@@ -1,0 +1,4 @@
+services:
+  ghi_templates.link_builder:
+    class: Drupal\ghi_templates\TemplateLinkBuilder
+    arguments: ['@config.factory']

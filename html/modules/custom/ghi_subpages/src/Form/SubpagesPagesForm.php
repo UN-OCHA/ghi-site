@@ -14,6 +14,8 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_subpages\SubpageManager;
 use Drupal\ghi_subpages\SubpageTrait;
+use Drupal\ghi_templates\TemplateLinkBuilder;
+use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\node\NodeInterface;
 use Drupal\publishcontent\Access\PublishContentAccess;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -24,6 +26,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SubpagesPagesForm extends FormBase {
 
   use SubpageTrait;
+  use LayoutEntityHelperTrait;
 
   /**
    * The date formatter service.
@@ -75,9 +78,16 @@ class SubpagesPagesForm extends FormBase {
   protected $subpageManager;
 
   /**
+   * The link builder for templates.
+   *
+   * @var \Drupal\ghi_templates\TemplateLinkBuilder
+   */
+  protected $templateLinkBuilder;
+
+  /**
    * Constructs a SubpagesPages form.
    */
-  public function __construct(DateFormatter $date_formatter, EntityTypeManagerInterface $entity_type_manager, PublishContentAccess $publish_content_access, AccountProxyInterface $user, CsrfTokenGenerator $csrf_token, ModuleHandlerInterface $module_handler, SubpageManager $subpage_manager) {
+  public function __construct(DateFormatter $date_formatter, EntityTypeManagerInterface $entity_type_manager, PublishContentAccess $publish_content_access, AccountProxyInterface $user, CsrfTokenGenerator $csrf_token, ModuleHandlerInterface $module_handler, SubpageManager $subpage_manager, TemplateLinkBuilder $template_link_builder) {
     $this->dateFormatter = $date_formatter;
     $this->entityTypeManager = $entity_type_manager;
     $this->publishContentAccess = $publish_content_access;
@@ -85,6 +95,7 @@ class SubpagesPagesForm extends FormBase {
     $this->csrfToken = $csrf_token;
     $this->moduleHandler = $module_handler;
     $this->subpageManager = $subpage_manager;
+    $this->templateLinkBuilder = $template_link_builder;
   }
 
   /**
@@ -98,7 +109,8 @@ class SubpagesPagesForm extends FormBase {
       $container->get('current_user'),
       $container->get('csrf_token'),
       $container->get('module_handler'),
-      $container->get('ghi_subpages.manager')
+      $container->get('ghi_subpages.manager'),
+      $container->get('ghi_templates.link_builder')
     );
   }
 
@@ -333,6 +345,17 @@ class SubpagesPagesForm extends FormBase {
       if ($this->moduleHandler->moduleExists('layout_builder_operation_link')) {
         $links += layout_builder_operation_link_entity_operation($subpage);
       }
+    }
+
+    // Add export/import links.
+    $section_storage = $this->getSectionStorageForEntity($subpage);
+    $export_link = $this->templateLinkBuilder->buildExportLink($section_storage, $subpage);
+    if ($export_link) {
+      $links['export'] = $export_link;
+    }
+    $import_link = $this->templateLinkBuilder->buildImportLink($section_storage, $subpage, ['query' => ['redirect_to_entity' => TRUE]]);
+    if ($import_link) {
+      $links['import'] = $import_link;
     }
 
     if ($this->publishContentAccess->access($this->currentUser, $subpage)->isAllowed() && $section->isPublished()) {

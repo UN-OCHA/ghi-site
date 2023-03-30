@@ -394,6 +394,9 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       $rows[] = $row;
     }
 
+    if (empty($rows)) {
+      return NULL;
+    }
     return [
       'header' => $this->buildTableHeader($columns),
       'rows' => $rows,

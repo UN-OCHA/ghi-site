@@ -14,6 +14,14 @@
 /html/themes/*
 !/html/themes/custom/
 
+!/html/sites/
+/html/sites/*
+
+!/html/sites/default/
+/html/sites/default/*
+!/html/sites/default/default.settings.local.php
+!/html/sites/default/settings.docksal.php
+
 # Ignore node modules.
 /node_modules
 

@@ -6,7 +6,9 @@
  */
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_subpages\Controller\SubpagesAdminController;
@@ -14,6 +16,7 @@ use Drupal\ghi_subpages\Element\LayoutBuilderSectionLock;
 use Drupal\ghi_subpages\Entity\SubpageNode;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\ghi_subpages\SubpageManager;
+use Drupal\node\Form\NodeDeleteForm;
 use Drupal\node\NodeInterface;
 
 /**
@@ -77,6 +80,29 @@ function ghi_subpages_section_post_save(NodeInterface $section_node) {
       }
     }
   }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_insert().
+ *
+ * Invalidate cache tags for the section and all subpages if a new subpage is
+ * created.
+ */
+function ghi_subpages_node_insert(NodeInterface $node) {
+  if (!SubpageHelper::isSubpageTypeNode($node)) {
+    // We act only on subpage nodes.
+    return;
+  }
+  $cache_tags = $node->getCacheTags();
+  $section_node = SubpageHelper::getBaseTypeNode($node);
+  if (!$section_node) {
+    return;
+  }
+  $subpages = SubpageHelper::loadSubpagesForBaseNode($section_node) ?? [];
+  foreach ($subpages as $subpage) {
+    $cache_tags = Cache::mergeTags($cache_tags, $subpage->getCacheTags());
+  }
+  Cache::invalidateTags($cache_tags);
 }
 
 /**
@@ -150,6 +176,40 @@ function ghi_subpages_local_tasks_alter(&$local_tasks) {
       unset($local_tasks['entity.node.publish']);
     }
   }
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Add a custom submit handler to the delete forms of subpage nodes, so that
+ * users are redirected to the section overview page after deleting a subpage.
+ *
+ * @see ghi_subpages_node_subpage_delete_form_submit()
+ */
+function ghi_subpages_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof NodeDeleteForm) {
+    return;
+  }
+  /** @var \Drupal\node\Form\NodeDeleteForm $form_object */
+  $entity = $form_object->getEntity();
+  if (!$entity instanceof NodeInterface || !SubpageHelper::isSubpageTypeNode($entity)) {
+    return;
+  }
+  $form['actions']['submit']['#submit'][] = 'ghi_subpages_node_subpage_delete_form_submit';
+}
+
+/**
+ * Custom submit handler for the delete forms of subpage nodes.
+ *
+ * Redirect to the section overview page after deleting a subpage.
+ */
+function ghi_subpages_node_subpage_delete_form_submit(array &$form, FormStateInterface $form_state) {
+  /** @var \Drupal\node\Form\NodeDeleteForm $form_object */
+  $form_object = $form_state->getFormObject();
+  $entity = $form_object->getEntity();
+  $section_node = SubpageHelper::getBaseTypeNode($entity);
+  $form_state->setRedirectUrl($section_node->toUrl());
 }
 
 /**

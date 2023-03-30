@@ -29,10 +29,10 @@ index 4a3c7ce..4773ff3 100644
   * @} End of "addtogroup hooks".
   */
 diff --git a/gin_lb.module b/gin_lb.module
-index 020bf86..c29214a 100644
+index 931acbc..75b51ac 100644
 --- a/gin_lb.module
 +++ b/gin_lb.module
-@@ -163,6 +163,17 @@ function gin_lb_views_pre_render(ViewExecutable $view) {
+@@ -167,6 +167,17 @@ function gin_lb_views_pre_render(ViewExecutable $view) {
    }
  }
  
@@ -50,12 +50,13 @@ index 020bf86..c29214a 100644
  /**
   * Implements hook_theme_suggestions_alter().
   */
-@@ -228,6 +239,9 @@ function gin_lb_theme_suggestions_alter(
+@@ -238,6 +249,10 @@ function gin_lb_theme_suggestions_alter(
+     )) {
      $add_suggestions = TRUE;
    }
- 
++
 +  // Allow other modules to chime in.
-+  \Drupal::moduleHandler()->alter('gin_lb_add_suggestions', $add_suggestions, $variables, $hook);
++   \Drupal::moduleHandler()->alter('gin_lb_add_suggestions', $add_suggestions, $variables, $hook);
 +
    if (isset($variables['element']['#gin_lb_form']) || $add_suggestions === TRUE) {
  
