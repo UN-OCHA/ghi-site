@@ -20,14 +20,14 @@ adjust it to match your local requirements.
 
     touch ./.docksal/docksal-local.env
 
-Refer to _./.docksal/default.docksal-local.env_ for required environement
+Refer to _./.docksal/default.docksal-local.env_ for required environment
 variables.
 
 Once the above steps are complete, from the project root, run:
 
     fin init-site
 
-This will create install all required packages via composer and setup the local
+This will install all required packages via composer and setup the local
 settings files.
 
 For docksal to run, you will need to stop any other webserver or service on
