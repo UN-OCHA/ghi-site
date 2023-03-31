@@ -16,6 +16,12 @@
   background: var(--brand-highlight);
 }
 
+.cd-site-header__nav-holder .cd-nav .mega-menu ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .cd-site-header__nav-holder .cd-nav a,
 .cd-site-header__nav-holder .cd-nav span,
 .cd-site-header__nav-holder .cd-nav button {
