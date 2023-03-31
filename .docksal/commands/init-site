@@ -60,7 +60,6 @@ check_requirements()
 # Copy repo settings.php file into project
 copy_settings ()
 {
-	copy_settings_file "${PROJECT_ROOT}/.docksal/settings/settings.php" "${SITEDIR_PATH}/settings.php"
 	copy_settings_file "${PROJECT_ROOT}/.docksal/settings/settings.local.php" "${SITEDIR_PATH}/settings.local.php"
 }
 

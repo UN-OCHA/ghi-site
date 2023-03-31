@@ -51,6 +51,13 @@ class ScriptHandler {
       drupal_rewrite_settings($settings, $drupalRoot . '/sites/default/settings.php');
       $fs->chmod($drupalRoot . '/sites/default/settings.php', 0666);
       $event->getIO()->write("Create a sites/default/settings.php file with chmod 0666");
+
+      // Append docksal snippet to settings.php to include settings.local.php.
+      if ($fs->exists($drupalRoot . '/../.docksal/snippets/include_local_settings_file.txt')) {
+        $snippet = file_get_contents($drupalRoot . '/../.docksal/snippets/include_local_settings_file.txt');
+        $fs->appendToFile($drupalRoot . '/sites/default/settings.php', $snippet);
+        $event->getIO()->write("Append ./docksal/snippets/include_local_settings_file.txt to sites/default/settings.php");
+      }
     }
 
     // Create the files directory with chmod 0777
@@ -61,11 +68,6 @@ class ScriptHandler {
       $event->getIO()->write("Create a sites/default/files directory with chmod 0777");
     }
 
-    // Use local docksal template if available to include settings.local.php.
-    if ($fs->exists($drupalRoot . '/../.docksal/settings/settings.php') && $fs->exists($drupalRoot . '/sites/default/settings.local.php')) {
-      $fs->copy($drupalRoot . '/../.docksal/settings/settings.php', $drupalRoot . '/sites/default/settings.php', TRUE);
-      $event->getIO()->write("Copy docksal specific settings.php to sites/default/settings.php");
-    }
   }
 
   /**
