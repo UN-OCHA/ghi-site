@@ -10,8 +10,8 @@ CONTENTS OF THIS FILE
 SETUP
 -----
 
-Humanitarian Action (GHI) uses docksal which is a web-development environment
-based on docker.
+Humanitarian Action (GHI) uses docksal, a web-development environment based on
+docker.
 
 Install docksal: https://docksal.io/installation
 
@@ -20,8 +20,9 @@ adjust it to match your local requirements.
 
     touch ./.docksal/docksal-local.env
 
-Refer to _./.docksal/default.docksal-local.env_ for required environment
-variables.
+Certain environment variables need to be requested from HPC and placed in the
+local environment file in order for the website to function properly. Refer to
+_./.docksal/default.docksal-local.env_ for required environment variables.
 
 Once the above steps are complete, from the project root, run:
 
@@ -37,10 +38,10 @@ your system that might bind to port 80.
 DATABASE SETUP
 --------------
 
-A database has been created automatically as part of the stack setup above.
+A database has been created automatically as part of the stack setup above, but it has no content yet.
 
-Pull a database dump from [here](https://snapshots.aws.ahconu.org/ghi) to get a
-fresh copy and seed your local database.
+Pull a database dump from [snapshots](https://snapshots.aws.ahconu.org/ghi) to
+get a fresh copy and seed your local database.
 
 
 COMPOSER
@@ -75,7 +76,7 @@ THEME SETUP
 -----------
 
 We have created a sub-theme [fts_public](https://github.com/UN-OCHA/fts-d8-site/tree/master/html/themes/custom/fts_public)
-from the OCHA provided base theme named [common_design](https://github.com/UN-OCHA/common_design).
+from the official OCHA base-theme named [common_design](https://github.com/UN-OCHA/common_design).
 
 While working on style changes, update the _.sass_ files under the sass folder.
 Once done with the changes, run the below commands:
@@ -86,12 +87,22 @@ Once done with the changes, run the below commands:
     npm run sass:lint-fix
     npm run sass:build
 
+The Common Design provides tools to pick branding colors out of the box without
+overriding any files. Should you need to modify the Common Design, there is a
+Drupal Library inside `fts_public` called `fts-cd-overrides` that can contain
+the changes in one place.
 
 
 CONFIGURATION AND FEATURES
 --------------------------
 
-Tbc.
+To import all current config from the branch, run the following:
+
+    fin drush cim
+
+If you make changes that can be exported, write them to disk and commit them to git:
+
+    fin drush cex
 
 
 TESTING
@@ -117,10 +128,4 @@ Make sure to follow the [OCHA Standards for Drupal 8+ Websites](https://docs.goo
 TROUBLESHOOTING
 ---------------
 
-If you run into this error when committing:
-
-    Error: Could not find "stylelint-config-standard". Do you need a `configBasedir`?
-
-You need to install all Drupal packages by doing this from the project root:
-
-    fin exec "cd html/core && yarn"
+TBD
