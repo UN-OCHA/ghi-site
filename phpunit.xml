@@ -14,7 +14,7 @@
     <ini name="memory_limit" value="-1"/>
     <env name="SIMPLETEST_BASE_URL" value="http://web"/>
     <env name="SIMPLETEST_DB" value="sqlite://tmp/test.sqlite"/>
-    <env name="BROWSERTEST_OUTPUT_DIRECTORY" value="/var/www/html/sites/simpletest/browser_output"/>
+    <env name="BROWSERTEST_OUTPUT_DIRECTORY" value="/tmp"/>
     <env name="BROWSERTEST_OUTPUT_BASE_URL" value=""/>
     <env name="MINK_DRIVER_CLASS" value=''/>
     <env name="MINK_DRIVER_ARGS" value=''/>
