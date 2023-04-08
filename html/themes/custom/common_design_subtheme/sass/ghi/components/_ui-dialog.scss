@@ -131,3 +131,8 @@
   opacity: 0.9;
   background: var(--ghi-grey--background) !important;
 }
+
+.ui-dialog[aria-describedby="layout-builder-modal"] .ui-dialog-title {
+  display: block;
+  margin-top: 0.5rem !important;
+}
