@@ -17,7 +17,7 @@
     attach: (context) => {
       once('glb-button-discard', '.glb-button-discard ').forEach((item)=>{
         item.addEventListener('click', function (event) {
-          document.querySelector('#gin_sidebar .form-actions .glb-button[data-drupal-selector="edit-cancel"]').click();
+          document.querySelector('#gin_sidebar .form-actions .glb-button[data-drupal-selector="edit-discard-changes"]').click();
         });
       })
     }
