@@ -27,4 +27,4 @@ if [[ ! -f "$phpunit_path" ]]; then
   exit 1
 fi
 
-fin exec "$path/${phpunit_path} -c $path ${args} $path/$DOCROOT/modules/custom"
+fin exec "php $path/${phpunit_path} -c $path ${args} $path/$DOCROOT/modules/custom"
