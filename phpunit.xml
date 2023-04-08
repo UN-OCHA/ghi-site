@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- Using this project's bootstrap file allows tests in `ExistingSite`,
-    `ExistingSiteSelenium2DriverTest`, and `ExistingSiteWebDriverTest`
-     to run alongside core's test types. -->
-<phpunit bootstrap="vendor/weitzman/drupal-test-traits/src/bootstrap.php"
-         beStrictAboutTestsThatDoNotTestAnything="true"
-         beStrictAboutOutputDuringTests="true"
-         beStrictAboutChangesToGlobalState="true"
-         failOnWarning="true"
-         printerClass="\Drupal\Tests\Listeners\HtmlOutputPrinter">
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
+    bootstrap="html/core/tests/bootstrap.php" colors="true"
+    beStrictAboutTestsThatDoNotTestAnything="true"
+    beStrictAboutOutputDuringTests="true"
+    beStrictAboutChangesToGlobalState="true"
+    failOnWarning="true"
+  >
   <php>
     <ini name="error_reporting" value="32767"/>
     <ini name="memory_limit" value="-1"/>
-    <env name="SIMPLETEST_BASE_URL" value="http://web"/>
-    <env name="SIMPLETEST_DB" value="sqlite://tmp/test.sqlite"/>
+    <env name="SIMPLETEST_BASE_URL" value="http://ghi-site.docksal.site"/>
+    <env name="SIMPLETEST_DB" value="sqlite://localhost//tmp/test.sqlite"/>
     <env name="BROWSERTEST_OUTPUT_DIRECTORY" value="/tmp"/>
     <env name="BROWSERTEST_OUTPUT_BASE_URL" value=""/>
     <env name="MINK_DRIVER_CLASS" value=''/>
