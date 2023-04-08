@@ -60,3 +60,38 @@ body .form-boolean--type-radio:checked:not(:disabled),
 body .form-boolean--type-radio:checked:not(:disabled):hover {
   box-shadow: inset 0 0 0 5px #fed83d !important;
 }
+/* Correct the top position when editing */
+body.layout-builder-ipe-editing.gin--horizontal-toolbar.has-secondary-toolbar {
+  padding-top: calc(var(--gin-toolbar-y-offset) + 0.8rem) !important;
+}
+/* Hide the toolbar when not in edit mode */
+body .gin-secondary-toolbar {
+  display: none;
+}
+/* Fix the toolbar when editing */
+body.layout-builder-ipe-editing .gin-secondary-toolbar {
+  display: flex;
+  position: fixed;
+  height: calc(var(--gin-toolbar-secondary-height));
+  top: var(--gin-toolbar-height);
+  left: 0;
+  right: 0;
+  background-color: var(--colorGinLayerBackground);
+  box-shadow: -1px 0 3px 1px rgba(0,0,0,0.3333);
+  -webkit-box-shadow: -1px 0 3px 1px rgba(0,0,0,0.3333);
+  color: var(--colorGinText);
+}
+/* Make sure the main layout builder actions are right aligned */
+body.layout-builder-ipe-editing .gin-secondary-toolbar .gin-secondary-toolbar__layout-container {
+  justify-content: end;
+  gap: 1rem;
+  font-size: initial;
+}
+/* And hide what we don't need */
+body.layout-builder-ipe-editing .gin-secondary-toolbar .gin-breadcrumb-wrapper,
+body.layout-builder-ipe-editing .gin-secondary-toolbar .meta-sidebar__trigger {
+  display: none;
+}
+body.layout-builder-ipe-editing #gin_sidebar {
+  display: none;
+}

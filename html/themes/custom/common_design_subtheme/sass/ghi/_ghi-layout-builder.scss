@@ -13,7 +13,7 @@
   // Position this above the Layout Builder IPE action bar.
   bottom: 64px !important;
 }
-body.toolbar-horizontal .glb-toolbar,
+body.toolbar-horizontal .gin-secondary-toolbar,
 .layout-builder-ipe-actions {
   // Make this higher than the z-index of everything else.
   z-index: 1002 !important;
@@ -26,7 +26,7 @@ body.toolbar-horizontal #toolbar-administration {
 
 body.layout-builder-ipe-editing .dialog-off-canvas-main-canvas {
   // Account for Layout Builder toolbar height.
-  padding-top: 64px;
+  padding-top: 46px;
 }
 
 .layout-builder--content-preview-disabled .layout-builder-block.content-width {
