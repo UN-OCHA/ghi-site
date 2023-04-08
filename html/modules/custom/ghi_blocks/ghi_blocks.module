@@ -460,6 +460,10 @@ function ghi_blocks_node_presave(NodeInterface $node) {
  * Implements hook_page_attachments().
  */
 function ghi_blocks_page_attachments(array &$attachments) {
+  if (\Drupal::currentUser()->isAnonymous()) {
+    // Nothing to do for anonymous.
+    return;
+  }
   if (ghi_blocks_is_layout_builder_route()) {
     $attachments['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
   }

@@ -87,6 +87,9 @@ body.layout-builder-ipe-editing .gin-secondary-toolbar .gin-secondary-toolbar__l
   gap: 1rem;
   font-size: initial;
 }
+body.layout-builder-ipe-editing .gin-secondary-toolbar .gin-secondary-toolbar__layout-container input[data-drupal-selector="edit-submit"] {
+  margin-right: 0 !important;
+}
 /* And hide what we don't need */
 body.layout-builder-ipe-editing .gin-secondary-toolbar .gin-breadcrumb-wrapper,
 body.layout-builder-ipe-editing .gin-secondary-toolbar .meta-sidebar__trigger {
