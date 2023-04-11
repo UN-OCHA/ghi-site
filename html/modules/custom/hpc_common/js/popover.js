@@ -42,6 +42,7 @@
           allowHTML: true,
           maxWidth: 'calc(100vw - 20%)',
           interactive: true,
+          appendTo: document.body,
           theme: 'light',
           hideOnEsc: true,
           role: 'popover',
