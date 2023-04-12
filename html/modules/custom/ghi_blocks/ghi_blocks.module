@@ -356,7 +356,12 @@ function ghi_blocks_link_alter(&$variables) {
  * Implements hook_form_alter().
  */
 function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
-  if (strpos($form_id, 'layout_builder_form') || $form_id == 'layout_builder_import_block') {
+  $form_ids = [
+    'layout_builder_import_block',
+    'layout_builder_import_page_config',
+    'layout_builder_export_page_config',
+  ];
+  if (strpos($form_id, 'layout_builder_form') || in_array($form_id, $form_ids)) {
     $form['#attached']['library'][] = 'system/admin';
     $form['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
     $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
