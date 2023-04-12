@@ -20,7 +20,7 @@
     },
     "drupal/gin_lb": {
       "Issue #??: Add alter hook for template suggestions trigger": "./patches/hook_gin_lb_add_suggestions_alter-1.0.0-rc3.patch",
-      "Issue #?3353020 Allow sidebar form to be loaded via AJAX (required by IPE)": "https://www.drupal.org/files/issues/2023-04-08/3353020-gin_lb-sidebar-region-preview-2.patch"
+      "Issue #3353020 Allow sidebar form to be loaded via AJAX (required by IPE)": "https://www.drupal.org/files/issues/2023-04-12/3353020-gin_lb-sidebar-region-preview-5.patch"
     },
     "drupal/gin_toolbar": {
       "Issue #3121440: Add option for node local tasks in toolbar": "https://www.drupal.org/files/issues/2022-02-11/3263805-41.patch"
