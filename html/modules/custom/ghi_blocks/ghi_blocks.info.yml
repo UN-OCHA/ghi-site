@@ -7,6 +7,7 @@ core_version_requirement: ^8 || ^9
 
 dependencies:
   - drupal:layout_builder
+  - page_manager:page_manager_ui
   - layout_builder_ipe:layout_builder_ipe
   - layout_builder_lock:layout_builder_lock
   - hpc_common:hpc_common

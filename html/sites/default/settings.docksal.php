@@ -107,5 +107,4 @@ $settings['config_exclude_modules'] = [
   'dblog',
   'debug_tools',
   'views_ui',
-  'page_manager_ui',
 ];
