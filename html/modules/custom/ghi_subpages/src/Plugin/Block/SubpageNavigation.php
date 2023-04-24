@@ -87,7 +87,7 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
     }
 
     // Always output parent link.
-    $overview_link = $base_entity->toLink($this->t('Overview'))->toRenderable();
+    $overview_link = $base_entity->toLink($this->t('Overview'), 'canonical', ['fragment' => 'page-title'])->toRenderable();
     if ($node->id() == $base_entity->id()) {
       $overview_link['#attributes']['class'][] = 'active';
       $overview_link['#wrapper_attributes']['class'][] = 'active';
@@ -115,7 +115,7 @@ class SubpageNavigation extends BlockBase implements ContainerFactoryPluginInter
       if (!$subpage->access('view') || (!$this->subpageHasContent($subpage) && !$subpage->access('update'))) {
         continue;
       }
-      $link = $subpage->toLink(NULL)->toRenderable();
+      $link = $subpage->toLink(NULL, 'canonical', ['fragment' => 'page-title'])->toRenderable();
       if ($node->id() == $subpage->id()) {
         $link['#attributes']['class'][] = 'active';
         $link['#wrapper_attributes']['class'][] = 'active';

@@ -8,6 +8,7 @@
     beStrictAboutOutputDuringTests="true"
     beStrictAboutChangesToGlobalState="true"
     failOnWarning="true"
+    printerClass="\Drupal\Tests\Listeners\HtmlOutputPrinter"
   >
   <php>
     <ini name="error_reporting" value="32767"/>
