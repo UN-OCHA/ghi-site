@@ -84,7 +84,7 @@ function ghi_plan_clusters_subpage_navigation_links_alter(&$links, array $contex
     }
 
     // Build the link render array.
-    $cluster_link = $plan_cluster->toLink(NULL)->toRenderable();
+    $cluster_link = $plan_cluster->toLink(NULL, 'canonical', ['fragment' => 'page-title'])->toRenderable();
 
     if (!$plan_cluster->isPublished()) {
       $cluster_link['#attributes']['class'][] = 'node--unpublished';

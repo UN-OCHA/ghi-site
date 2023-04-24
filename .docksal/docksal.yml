@@ -25,8 +25,8 @@ services:
       # Workaround to avoid the browser crashing inside a docker container
       # See https://github.com/SeleniumHQ/docker-selenium#quick-start
       - /tmp:/dev/shm
-    ports:
-      - 5900:5900
+    environment:
+      - JAVA_OPTS=-Dwebdriver.chrome.whitelistedIps=
 
   snap:
     image: public.ecr.aws/unocha/tools-snap-service:v3.0.4
