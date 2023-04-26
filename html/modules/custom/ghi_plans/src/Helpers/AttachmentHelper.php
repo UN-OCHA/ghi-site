@@ -26,7 +26,12 @@ class AttachmentHelper {
   public static function processAttachments(array $attachments) {
     $processed = [];
     foreach ($attachments as $attachment) {
-      $processed[$attachment->id] = self::processAttachment($attachment);
+      try {
+        $processed[$attachment->id] = self::processAttachment($attachment);
+      }
+      catch (InvalidTypeException $e) {
+        // Ignore this for the moment.
+      }
     }
     return $processed;
   }
