@@ -44,7 +44,7 @@ class PlanProjectFundingQuery extends EndpointQueryBase {
       return [];
     }
     $funding = [];
-    foreach ($data->report3->fundingTotals->objects[0]->singleFundingObjects as $project_funding) {
+    foreach ($data->report3->fundingTotals->objects[0]->singleFundingObjects ?? [] as $project_funding) {
       if (!property_exists($project_funding, 'id')) {
         continue;
       }
