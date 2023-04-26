@@ -134,7 +134,26 @@ class IndicatorAttachment extends DataAttachment {
    */
   private function isApiCalculated($index) {
     $calculation_method = $this->getCalculationMethod();
-    return $this->isMeasurementIndex($index) && $calculation_method;
+    return $this->isMeasurementIndex($index) && $calculation_method && $this->isValidCalculatedMethod($calculation_method);
+  }
+
+  /**
+   * Check if the given calculation method is valid.
+   *
+   * @param string $calculation_method
+   *   The calculation method to check.
+   *
+   * @return bool
+   *   TRUE if the calculation method is valid, FALSE otherwise.
+   */
+  private function isValidCalculatedMethod($calculation_method) {
+    return in_array(strtolower($calculation_method), [
+      self::CALCULATION_METHOD_SUM,
+      self::CALCULATION_METHOD_AVERAGE,
+      self::CALCULATION_METHOD_MAXIMUM,
+      self::CALCULATION_METHOD_LATEST,
+      self::CALCULATION_METHOD_MANUAL,
+    ]);
   }
 
 }
