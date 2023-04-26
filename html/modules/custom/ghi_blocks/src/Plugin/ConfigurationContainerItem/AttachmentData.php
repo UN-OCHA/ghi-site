@@ -7,7 +7,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Entity\Plan;
-use Drupal\ghi_plans\Helpers\DataPointHelper;
+use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -150,7 +150,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
    */
   public function getValue() {
     $attachment = $this->getAttachmentObject();
-    return $attachment ? DataPointHelper::getValue($attachment, $attachment->data_point_conf) : NULL;
+    return $attachment ? $attachment->getValue($this->get(['data_point'])) : NULL;
   }
 
   /**
@@ -162,8 +162,8 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
 
-    $build = DataPointHelper::formatValue($attachment, $attachment->data_point_conf);
-    $data_point_index = $attachment->data_point_conf['data_points'][0]['index'];
+    $data_point_conf = $this->get(['data_point']);
+    $data_point_index = $data_point_conf['data_points'][0]['index'];
     $property = $attachment->field_types[$data_point_index] ?? NULL;
     if (!$property) {
       return NULL;
@@ -186,8 +186,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
    */
   private function getAttachmentObject() {
     $attachment_id = $this->get(['attachment', 'attachment_id']);
-    $data_point_conf = $this->get(['data_point']);
-    if (!$attachment_id || !$data_point_conf) {
+    if (!$attachment_id) {
       return NULL;
     }
     // Cast this to a scalar if necessary.
@@ -196,7 +195,6 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     if (!$attachment) {
       return NULL;
     }
-    $attachment->data_point_conf = $data_point_conf;
     return $attachment;
   }
 

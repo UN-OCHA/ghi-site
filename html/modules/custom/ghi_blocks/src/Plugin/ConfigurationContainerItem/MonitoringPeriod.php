@@ -5,7 +5,7 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_plans\Helpers\DataPointHelper;
+use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -77,7 +77,7 @@ class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
     if (!$attachment) {
       return NULL;
     }
-    return DataPointHelper::formatMonitoringPeriod($attachment, $this->get('display_type'));
+    return $attachment->formatMonitoringPeriod($this->get('display_type'));
   }
 
   /**
@@ -92,12 +92,12 @@ class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
   /**
    * Get the current attachment object.
    *
-   * @return object
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment|null
    *   The attachment object.
    */
   private function getAttachmentObject() {
     $attachment = $this->getContextValue('attachment');
-    return $attachment;
+    return $attachment instanceof DataAttachment ? $attachment : NULL;
   }
 
 }

@@ -4,7 +4,7 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_plans\Helpers\DataPointHelper;
+use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -108,7 +108,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
     $monitoring_periods = $this->get('monitoring_periods');
-    $attachment->data_point_conf = [
+    $data_point_conf = [
       'processing' => 'single',
       'calculation' => 'substraction',
       'data_points' => [
@@ -121,7 +121,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
       'formatting' => 'auto',
       'widget' => 'none',
     ];
-    return $attachment ? DataPointHelper::getValue($attachment, $attachment->data_point_conf) : NULL;
+    return $attachment ? $attachment->getValue($data_point_conf) : NULL;
   }
 
   /**
@@ -250,10 +250,13 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
 
   /**
    * Get the attachment object for this item.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment|null
+   *   The attachment object.
    */
   private function getAttachmentObject() {
     $attachment = $this->getContextValue('attachment');
-    return $attachment;
+    return $attachment instanceof DataAttachment ? $attachment : NULL;
   }
 
 }
