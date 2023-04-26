@@ -7,7 +7,6 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Entity\Plan;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -163,17 +162,16 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     }
 
     $data_point_conf = $this->get(['data_point']);
+    $build = $attachment->formatValue($data_point_conf);
+
     $data_point_index = $data_point_conf['data_points'][0]['index'];
     $property = $attachment->field_types[$data_point_index] ?? NULL;
-    if (!$property) {
-      return NULL;
-    }
 
     /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
     $base_object = $this->getContextValue('base_object');
-    if ($base_object && $base_object instanceof Plan) {
+    if ($property && $base_object && $base_object instanceof Plan) {
       $footnotes = $this->getFootnotesForPlanBaseobject($base_object);
-      $build[] = $this->buildFootnoteTooltip($footnotes, $attachment->field_types[$data_point_index]);
+      $build[] = $this->buildFootnoteTooltip($footnotes, $property);
     }
     return $build;
   }
