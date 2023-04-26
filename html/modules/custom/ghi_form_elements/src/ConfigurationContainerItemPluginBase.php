@@ -82,7 +82,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
 
     $this->wrapperId = Html::getClass(implode('-', array_merge($element['#array_parents'], [
       $this->getPluginId(),
-      'wrapper',
+      'container-wrapper',
     ])));
     $element['#prefix'] = '<div id="' . $this->wrapperId . '">';
     $element['#suffix'] = '</div>';
