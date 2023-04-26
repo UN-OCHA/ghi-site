@@ -2,6 +2,15 @@
 .region-page-subtitle,
 .region-page-navigation {
 
+  .toolbar-fixed & a[name="page-title"] {
+    // Keep the page title in place when using named anchors in links and the
+    // admin toolbar is visible.
+    position: relative;
+    top: -150px;
+    display: block;
+    visibility: hidden;
+  }
+
   &.region-page-navigation {
     border-top: 1px solid var(--cd-default-border-color);
     border-bottom: 1px solid var(--cd-white);

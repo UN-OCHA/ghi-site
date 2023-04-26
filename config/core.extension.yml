@@ -121,7 +121,6 @@ module:
   user: 0
   view_unpublished: 0
   views_autocomplete_filters: 0
-  views_ui: 0
   viewsreference: 0
   warmer: 0
   warmer_cdn: 0

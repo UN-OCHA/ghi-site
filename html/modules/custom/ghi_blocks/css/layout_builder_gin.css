@@ -1,7 +1,7 @@
 /**
  * Special styles for the layout builder when used with gin.
  *
- * @todo Check if thiss should be moved into the theme as all of this is
+ * @todo Check if this should be moved into the theme as all of this is
  *   probably frontend related.
  */
 input[type="checkbox"][disabled="disabled"] {
@@ -93,4 +93,18 @@ input[type="checkbox"][disabled="disabled"]:not(:checked) {
 .glb-button.is-disabled {
   color: var(--colorGinDisabledText) !important;
   cursor: not-allowed !important;
+}
+
+/**
+ * Fix issues z-index issues introduced mainly by GIN Layout Builder.
+ */
+.ui-widget-overlay.ui-front {
+  z-index: 1003;
+}
+.ui-dialog[aria-describedby="layout-builder-modal"] {
+  z-index: 1004;
+}
+.ui-widget-overlay .ui-dialog-title {
+  height: 100%;
+  line-height: 2.5rem;
 }

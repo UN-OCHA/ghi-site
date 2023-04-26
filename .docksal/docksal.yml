@@ -2,21 +2,31 @@ version: "2.1"
 
 services:
   cli:
+    volumes:
+      - ${PROJECT_ROOT}/html/sites/simpletest/:/var/www/html/sites/simpletest:rw
     environment:
-      - COMPOSER_MEMORY_LIMIT=-1
+      - HPC_API_USER
+      - HPC_API_PASS
+      - HPC_API_KEY
+      - HID_CLIENT_ID
+      - HID_CLIENT_SECRET
+      - CM_KEY
       - MAPBOX_TOKEN
+      - COMPOSER_MEMORY_LIMIT=-1
+
   web:
     environment:
       - MAPBOX_TOKEN
+
   browser:
     hostname: browser
     image: selenium/standalone-chrome-debug:3.141.59
     volumes:
       # Workaround to avoid the browser crashing inside a docker container
       # See https://github.com/SeleniumHQ/docker-selenium#quick-start
-      - /dev/shm:/dev/shm
-    ports:
-      - 5900:5900
+      - /tmp:/dev/shm
+    environment:
+      - JAVA_OPTS=-Dwebdriver.chrome.whitelistedIps=
 
   snap:
     image: public.ecr.aws/unocha/tools-snap-service:v3.0.4

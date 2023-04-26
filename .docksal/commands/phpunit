@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+## Run project's PHPUnit tests.
+##
+## Usage: fin phpunit [arguments]
+
+# Environment variables passed from fin:
+#
+#   $PROJECT_ROOT - (string) absolute path to NEAREST .docksal folder
+#   $VIRTUAL_HOST - (string) ex. projectname.docksal
+#   $DOCROOT - name of the docroot folder
+#   $DOCKER_RUNNING - (string) "true" or "false"
+
+args="$@"
+path="/var/www"
+phpunit_xml_path="$PROJECT_ROOT/phpunit.xml"
+
+cd $PROJECT_ROOT
+if [[ ! -f "$phpunit_xml_path" ]]; then
+  echo "Could not find $phpunit_xml_path"
+  exit 1
+fi
+
+phpunit_path="vendor/bin/phpunit"
+if [[ ! -f "$phpunit_path" ]]; then
+  echo "Could not find $phpunit_path"
+  exit 1
+fi
+
+fin exec "php $path/${phpunit_path} -c $path ${args} $path/$DOCROOT/modules/custom"

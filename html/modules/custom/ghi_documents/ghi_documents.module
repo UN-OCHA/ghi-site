@@ -58,7 +58,7 @@ function ghi_documents_subpage_navigation_links_alter(&$links, array $context, a
     if (!$document->access('view')) {
       continue;
     }
-    $link = $document->toLink(NULL)->toRenderable();
+    $link = $document->toLink(NULL, 'canonical', ['fragment' => 'page-title'])->toRenderable();
     if ($node->id() == $document->id() && ($document->access('view') || $document->access('update'))) {
       $link['#attributes']['class'][] = 'active';
       if (!$document->isPublished()) {

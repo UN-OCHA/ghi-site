@@ -5,15 +5,31 @@
 (($, Drupal, drupalSettings) => {
 
   Drupal.toolbar.ToolbarVisualView.prototype.updateToolbarHeight = function () {
-    const glbToolbar = $('.glb-toolbar');
-    const ginToolbar = $('#gin-toolbar-bar');
-    const ginToolbarHeight = ginToolbar.outerHeight();
-    this.model.set('height', ginToolbarHeight);
-    const body = $('body')[0];
-    body.style.setProperty('padding-top', this.model.get('height') + 'px', 'important');
-    glbToolbar.css('top', ginToolbarHeight);
-    glbToolbar.addClass('glb-toolbar--processed');
-    this.triggerDisplace();
+    const $glbToolbar = $('.gin-secondary-toolbar');
+    if ($glbToolbar.length) {
+      $('body').addClass('has-secondary-toolbar');
+      $glbToolbar.addClass('gin-secondary-toolbar--processed');
+      this.triggerDisplace();
+    }
+  }
+
+  Drupal.behaviors.ghiGinLbToolbar = {
+    attach: (context) => {
+      once('glb-button-discard', '.glb-button-discard ').forEach((item)=>{
+        item.addEventListener('click', function (event) {
+          // The discard changes button for page manager pages.
+          let cancel_button = document.querySelector('#gin_sidebar .form-actions .glb-button[data-drupal-selector="edit-cancel"]');
+          if (cancel_button) {
+            cancel_button.click();
+          }
+          // The discard changes button for entity pages.
+          let discard_button = document.querySelector('#gin_sidebar .form-actions .glb-button[data-drupal-selector="edit-discard-changes"]');
+          if (discard_button) {
+            discard_button.click();
+          }
+        });
+      })
+    }
   }
 
 })(jQuery, Drupal, drupalSettings);

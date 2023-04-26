@@ -11,7 +11,6 @@ use Drupal\Core\Render\Element;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
-use Drupal\hpc_common\Helpers\CommonHelper;
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -51,39 +50,6 @@ function ghi_plans_preprocess_page(array &$variables) {
       'decimal_format' => $base_object->getDecimalFormat(),
     ];
   }
-}
-
-/**
- * Implements hook_form_alter().
- */
-function ghi_plans_form_alter(&$form, FormStateInterface &$form_state, $form_id) {
-  if (CommonHelper::isAjaxRequest()) {
-    return;
-  }
-  $valid_form_ids = [
-    'base_object_plan_edit_form',
-    // 'node_plan_entity_edit_form',
-    // 'node_governing_entity_edit_form',
-  ];
-  if (!in_array($form_id, $valid_form_ids)) {
-    return;
-  }
-
-  // Disable all form elements except the listed ones.
-  $allow_editing = [
-    'form_id',
-    'form_build_id',
-    'form_token',
-    'field_content',
-    'status',
-  ];
-  foreach (Element::children($form) as $element_key) {
-    if (in_array($element_key, $allow_editing)) {
-      continue;
-    }
-    $form[$element_key]['#disabled'] = 'disabled';
-  }
-  \Drupal::messenger()->addWarning(t('Most of the data in this form is imported automatically from the HPC API and cannot be changed here.'));
 }
 
 /**
@@ -138,7 +104,7 @@ function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterf
         $ref = &$ref[$key];
         $default_widget_value = $default_widget_value[$key];
       }
-      if ($ref['#default_value'] === NULL) {
+      if (!array_key_exists('#default_value', $ref) || $ref['#default_value'] === NULL) {
         $ref['#default_value'] = $default_widget_value;
       }
     }
