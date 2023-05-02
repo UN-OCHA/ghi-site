@@ -392,6 +392,8 @@ function hpc_common_preprocess_hpc_reporting_period(array &$vars) {
   $vars['output'] = new FormattableMarkup(trim($format_string), [
     '@period_number' => $period_number,
     '@date_range' => $start_date_formatted . ' - ' . $end_date_formatted,
+    '@start_date' => $start_date_formatted,
+    '@end_date' => $end_date_formatted,
   ]);
 }
 
