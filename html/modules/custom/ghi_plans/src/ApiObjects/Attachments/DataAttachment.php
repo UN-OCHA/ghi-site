@@ -963,16 +963,21 @@ class DataAttachment extends AttachmentBase {
    *
    * @param int $index
    *   The data point index.
+   * @param bool $filter_empty
+   *   Whether the values should be filtered.
    *
    * @return mixed[]
    *   The data point values, extracted from the attachment according to the
    *   given configuration.
    */
-  protected function getValuesForAllReportingPeriods($index) {
+  protected function getValuesForAllReportingPeriods($index, $filter_empty = FALSE) {
     $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
     $values = [];
     foreach ($reporting_periods as $reporting_period) {
       $value = (int) $this->getValueForDataPoint($index, $reporting_period->id);
+      if (empty($value) && $filter_empty) {
+        continue;
+      }
       $values[$reporting_period->id] = $value;
     }
     return $values;
@@ -1189,11 +1194,13 @@ class DataAttachment extends AttachmentBase {
    *   The display type, either "icon" or "text".
    * @param array $data_point_conf
    *   Optional: The data point configuration to extract the monitoring period.
+   * @param string $format_string
+   *   Optional: The format string used for the tooltip text.
    *
    * @return array|null
    *   A build array or NULL.
    */
-  public function formatMonitoringPeriod($display_type, array $data_point_conf = NULL) {
+  public function formatMonitoringPeriod($display_type, array $data_point_conf = NULL, $format_string = NULL) {
     $monitoring_period_id = $data_point_conf['data_points'][0]['monitoring_period'] ?? NULL;
     $monitoring_period = $monitoring_period_id ? $this->getReportingPeriod($monitoring_period_id) : $this->monitoring_period;
     if (!$monitoring_period) {
@@ -1203,10 +1210,11 @@ class DataAttachment extends AttachmentBase {
       case 'icon':
         $build = [
           '#theme' => 'hpc_tooltip',
-          '#tooltip' => ThemeHelper::render([
+          '#tooltip' => ThemeHelper::render(array_filter([
             '#theme' => 'hpc_reporting_period',
             '#reporting_period' => $monitoring_period,
-          ], FALSE),
+            '#format_string' => $format_string,
+          ]), FALSE),
           '#class' => 'monitoring period',
           '#tag_content' => [
             '#theme' => 'hpc_icon',
@@ -1217,10 +1225,11 @@ class DataAttachment extends AttachmentBase {
         break;
 
       case 'text':
-        $build = [
+        $build = array_filter([
           '#theme' => 'hpc_reporting_period',
           '#reporting_period' => $monitoring_period,
-        ];
+          '#format_string' => $format_string,
+        ]);
         break;
     }
     return $build;

@@ -2,6 +2,8 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
+use Drupal\hpc_common\Helpers\ThemeHelper;
+
 /**
  * Abstraction for API data attachment objects.
  */
@@ -9,12 +11,14 @@ class IndicatorAttachment extends DataAttachment {
 
   /**
    * Define calculation methods.
+   *
+   * Note that the API supports an additional calculation method "manual" that
+   * is not supported here.
    */
   const CALCULATION_METHOD_SUM = 'sum';
   const CALCULATION_METHOD_AVERAGE = 'average';
   const CALCULATION_METHOD_MAXIMUM = 'maximum value';
   const CALCULATION_METHOD_LATEST = 'latest value';
-  const CALCULATION_METHOD_MANUAL = 'manual value';
 
   /**
    * {@inheritdoc}
@@ -25,14 +29,13 @@ class IndicatorAttachment extends DataAttachment {
       return $this->getValueForDataPoint($index);
     }
     $value = NULL;
-    $values = $this->getValuesForAllReportingPeriods($index);
+    $values = $this->getValuesForAllReportingPeriods($index, TRUE);
     switch (strtolower($calculation_method)) {
       case self::CALCULATION_METHOD_SUM:
         $value = array_sum($values);
         break;
 
       case self::CALCULATION_METHOD_AVERAGE:
-        $values = array_filter($values);
         $value = array_sum($values) / count($values);
         break;
 
@@ -41,12 +44,7 @@ class IndicatorAttachment extends DataAttachment {
         break;
 
       case self::CALCULATION_METHOD_LATEST:
-        $values = array_filter($values);
         $value = end($values);
-        break;
-
-      case self::CALCULATION_METHOD_MANUAL:
-        // @todo Implement this.
         break;
     }
     return $value;
@@ -76,31 +74,34 @@ class IndicatorAttachment extends DataAttachment {
     if ($this->isApiCalculated($index) && $conf['processing'] != 'calculated') {
       $tooltip_icon = NULL;
       $tooltip_text = NULL;
+      $values = $this->getValuesForAllReportingPeriods($index, TRUE);
+      $last_reporting_period_id = array_key_last($values);
+      $reporting_period = $this->getReportingPeriod($last_reporting_period_id);
+      $reporting_period_text = ThemeHelper::render([
+        '#theme' => 'hpc_reporting_period',
+        '#reporting_period' => $reporting_period,
+        '#format_string' => ', as of date @end_date',
+      ], FALSE);
       $calculation_method = $this->getCalculationMethod();
       switch (strtolower($calculation_method)) {
         case self::CALCULATION_METHOD_SUM:
-          $tooltip_text = $this->t('This value is the sum of all monitoring periods values');
+          $tooltip_text = $this->t('This value is the sum of all monitoring periods values') . $reporting_period_text;
           $tooltip_icon = 'functions';
           break;
 
         case self::CALCULATION_METHOD_AVERAGE:
-          $tooltip_text = $this->t('This value is the average of all monitoring periods values');
+          $tooltip_text = $this->t('This value is the average of all monitoring periods values') . $reporting_period_text;
           $tooltip_icon = 'moving';
           break;
 
         case self::CALCULATION_METHOD_MAXIMUM:
-          $tooltip_text = $this->t('This value is the maximum of all monitoring periods values');
+          $tooltip_text = $this->t('This value is the maximum of all monitoring periods values') . $reporting_period_text;
           $tooltip_icon = 'equalizer';
           break;
 
         case self::CALCULATION_METHOD_LATEST:
-          $tooltip_text = $this->t('This is the latest monitoring period value');
+          $tooltip_text = $this->t('This is the latest monitoring period value') . $reporting_period_text;
           $tooltip_icon = 'watch_later';
-          break;
-
-        case self::CALCULATION_METHOD_MANUAL:
-          $tooltip_text = $this->t('This value is calculated of all monitoring periods values');
-          $tooltip_icon = 'blood_pressure';
           break;
       }
       $tooltip = [
@@ -118,7 +119,7 @@ class IndicatorAttachment extends DataAttachment {
     elseif ($this->isMeasurement($conf)) {
       // Otherwise see if this is a measurement and if we can get a formatted
       // monitoring period for this data point.
-      return $this->formatMonitoringPeriod('icon', $conf);
+      return $this->formatMonitoringPeriod('icon', $conf, 'as of date @end_date');
     }
     return NULL;
   }
@@ -152,7 +153,6 @@ class IndicatorAttachment extends DataAttachment {
       self::CALCULATION_METHOD_AVERAGE,
       self::CALCULATION_METHOD_MAXIMUM,
       self::CALCULATION_METHOD_LATEST,
-      self::CALCULATION_METHOD_MANUAL,
     ]);
   }
 
