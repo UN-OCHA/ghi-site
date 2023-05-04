@@ -30,6 +30,9 @@ class IndicatorAttachment extends DataAttachment {
     }
     $value = NULL;
     $values = $this->getValuesForAllReportingPeriods($index, TRUE);
+    if (empty($values)) {
+      return $value;
+    }
     switch (strtolower($calculation_method)) {
       case self::CALCULATION_METHOD_SUM:
         $value = array_sum($values);
