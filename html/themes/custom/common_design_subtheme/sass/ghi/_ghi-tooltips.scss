@@ -1,4 +1,5 @@
 .tooltip {
+  z-index: 1004;
   cursor: pointer;
   vertical-align: middle;
 
@@ -29,6 +30,8 @@
 }
 
 .d3-sparkline-tooltip {
+  pointer-events: none;
+
   .tippy-box {
     top: -0.5rem;
 

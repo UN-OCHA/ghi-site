@@ -4,17 +4,19 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides an sparkline chart item for configuration containers.
+ * Provides a sparkline chart item for configuration containers.
  *
  * @ConfigurationContainerItem(
  *   id = "spark_line_chart",
  *   label = @Translation("Spark line chart"),
- *   description = @Translation("This item displays a spark line chart for multiple periods of a metric or measurement item."),
+ *   description = @Translation("This item displays a spark line chart for multiple periods of a measurement data point."),
  * )
  */
 class SparkLineChart extends ConfigurationContainerItemPluginBase {
@@ -52,6 +54,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     $element['data_point'] = [
       '#type' => 'select',
       '#title' => $this->t('Data point'),
+      '#description' => $this->t('Select the measurement data point for the spark line.'),
       '#options' => $attachment_prototype->getMeasurementMetricFields(),
       '#default_value' => $this->getSubmittedValue($element, $form_state, 'data_point'),
     ];
@@ -59,24 +62,35 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
       '#type' => 'monitoring_periods',
       '#title' => $this->t('Monitoring periods'),
       '#default_value' => $this->getSubmittedValue($element, $form_state, 'monitoring_periods'),
-      '#multiple' => TRUE,
+      '#default_all' => TRUE,
       '#plan_id' => $plan_object->getSourceId(),
+      '#required' => TRUE,
+      '#access' => !$attachment_prototype->isIndicator(),
     ];
     $element['include_latest_period'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Always include the latest measurement'),
       '#default_value' => $this->getSubmittedValue($element, $form_state, 'include_latest_period'),
+      '#access' => !$attachment_prototype->isIndicator(),
     ];
     $element['show_baseline'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Include goal line'),
+      '#description' => $this->t('Check this to add an additional goal line for easier comparision of the progress.'),
       '#default_value' => $this->getSubmittedValue($element, $form_state, 'show_baseline'),
     ];
+    $baseline_selector = FormElementHelper::getStateSelector($element, ['show_baseline']);
     $element['baseline'] = [
       '#type' => 'select',
-      '#title' => $this->t('Data point'),
+      '#title' => $this->t('Data point for goal line'),
+      '#description' => $this->t('Select which data point should be used for the goal line.'),
       '#options' => $attachment_prototype->getFields(),
       '#default_value' => $this->getSubmittedValue($element, $form_state, 'baseline'),
+      '#states' => [
+        'visible' => [
+          'input[name="' . $baseline_selector . '"]' => ['checked' => TRUE],
+        ],
+      ],
     ];
 
     return $element;
@@ -153,11 +167,18 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
 
     // Create the data / label arrays for all configured monitoring periods.
     $data = [];
+    $accumulated_reporting_periods = [];
     foreach ($reporting_periods as $reporting_period) {
-      if (is_array($monitoring_periods) && !in_array($reporting_period->id, $monitoring_periods)) {
+      if (!$attachment instanceof IndicatorAttachment && is_array($monitoring_periods) && !in_array($reporting_period->id, $monitoring_periods)) {
         continue;
       }
-      $data[$reporting_period->id] = $attachment->getMeasurementMetricValue($data_point, $reporting_period->id);
+      if ($attachment instanceof IndicatorAttachment) {
+        $accumulated_reporting_periods[$reporting_period->id] = $reporting_period;
+        $data[$reporting_period->id] = $attachment->getSingleValue($data_point, $accumulated_reporting_periods);
+      }
+      else {
+        $data[$reporting_period->id] = $attachment->getMeasurementMetricValue($data_point, $reporting_period->id);
+      }
       $totals = $attachment->values;
 
       // Prepare the tooltip items.

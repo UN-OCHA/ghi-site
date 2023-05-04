@@ -885,12 +885,15 @@ class DataAttachment extends AttachmentBase {
    *
    * @param int $index
    *   The data point index.
+   * @param object[] $reporting_periods
+   *   An optional array of reporting period objects. If not provided, all
+   *   reporting periods from the plan will be used.
    *
    * @return mixed
    *   The data point value, extracted from the attachment according to the
    *   given configuration.
    */
-  protected function getSingleValue($index) {
+  public function getSingleValue($index, array $reporting_periods = NULL) {
     return $this->getValueForDataPoint($index);
   }
 
@@ -899,14 +902,17 @@ class DataAttachment extends AttachmentBase {
    *
    * @param array $conf
    *   The data point configuration.
+   * @param object[] $reporting_periods
+   *   An optional array of reporting period objects. If not provided, all
+   *   reporting periods from the plan will be used.
    *
    * @return mixed
    *   The data point value, extracted from the attachment according to the
    *   given configuration.
    */
-  private function getCalculatedValue(array $conf) {
-    $value_1 = (float) $this->getSingleValue($conf['data_points'][0]['index']);
-    $value_2 = (float) $this->getSingleValue($conf['data_points'][1]['index']);
+  private function getCalculatedValue(array $conf, array $reporting_periods = NULL) {
+    $value_1 = (float) $this->getSingleValue($conf['data_points'][0]['index'], $reporting_periods);
+    $value_2 = (float) $this->getSingleValue($conf['data_points'][1]['index'], $reporting_periods);
 
     switch ($conf['calculation']) {
       case 'addition':
@@ -965,13 +971,18 @@ class DataAttachment extends AttachmentBase {
    *   The data point index.
    * @param bool $filter_empty
    *   Whether the values should be filtered.
+   * @param object[] $reporting_periods
+   *   An optional array of reporting period objects. If not provided, all
+   *   reporting periods from the plan will be used.
    *
    * @return mixed[]
    *   The data point values, extracted from the attachment according to the
    *   given configuration.
    */
-  protected function getValuesForAllReportingPeriods($index, $filter_empty = FALSE) {
-    $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
+  protected function getValuesForAllReportingPeriods($index, $filter_empty = FALSE, $reporting_periods = NULL) {
+    if ($reporting_periods === NULL) {
+      $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
+    }
     $values = [];
     foreach ($reporting_periods as $reporting_period) {
       $value = (int) $this->getValueForDataPoint($index, $reporting_period->id);
