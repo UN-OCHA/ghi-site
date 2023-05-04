@@ -23,16 +23,16 @@ class IndicatorAttachment extends DataAttachment {
   /**
    * {@inheritdoc}
    */
-  protected function getSingleValue($index) {
-    $calculation_method = $this->getCalculationMethod();
+  public function getSingleValue($index, array $reporting_periods = NULL) {
     if (!$this->isApiCalculated($index)) {
-      return $this->getValueForDataPoint($index);
+      return $this->getValueForDataPoint($index, $reporting_periods);
     }
     $value = NULL;
-    $values = $this->getValuesForAllReportingPeriods($index, TRUE);
+    $values = $this->getValuesForAllReportingPeriods($index, TRUE, $reporting_periods);
     if (empty($values)) {
       return $value;
     }
+    $calculation_method = $this->getCalculationMethod();
     switch (strtolower($calculation_method)) {
       case self::CALCULATION_METHOD_SUM:
         $value = array_sum($values);

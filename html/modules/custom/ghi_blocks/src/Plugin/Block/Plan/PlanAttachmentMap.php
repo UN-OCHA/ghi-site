@@ -982,7 +982,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         self::STYLE_CIRCLE,
         'monitoring_period',
       ]),
-      '#multiple' => TRUE,
       '#include_none' => TRUE,
     ];
 
@@ -1048,7 +1047,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         self::STYLE_DONUT,
         'monitoring_period',
       ]),
-      '#multiple' => TRUE,
       '#default_all' => TRUE,
       '#include_latest' => TRUE,
       '#include_none' => TRUE,
