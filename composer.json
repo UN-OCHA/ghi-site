@@ -194,6 +194,7 @@
       ],
       "subtheme-prepare": "cd html/themes/custom/common_design_subtheme && npm install --legacy-peer-deps",
       "subtheme-build": "cd html/themes/custom/common_design_subtheme && npm run sass:build",
+      "subtheme-lint-fix": "cd html/themes/custom/common_design_subtheme && npm run sass:lint-fix",
       "subtheme-cleanup": "cd html/themes/custom/common_design_subtheme && rm -rf ./node_modules",
       "subtheme": [
           "@subtheme-prepare",
