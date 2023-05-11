@@ -1,5 +1,5 @@
 .cd-site-header__nav-holder {
-  z-index: 1001;
+  z-index: z-index(main-menu);
 
   .block-sections-by-term {
 
@@ -56,7 +56,7 @@
 
           .menu-link-contentmain {
             position: absolute;
-            z-index: 200;
+            z-index: z-index(main-menu);
             left: 0;
             width: 100%;
             background-color: var(--cd-default-background-color);

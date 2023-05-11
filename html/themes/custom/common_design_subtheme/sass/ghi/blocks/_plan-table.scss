@@ -62,7 +62,7 @@
    * Bleed the background only.
    */
   position: relative;
-  z-index: 1;
+  z-index: z-index(default);
   margin-top: -1rem;
   padding-bottom: 0;
   background-color: var(--ghi-default-background-color);
@@ -73,7 +73,7 @@
     * Bleed the background only.
     */
     position: relative;
-    z-index: 1;
+    z-index: z-index(default);
     border-top: 0;
     border-bottom: 0;
     background-color: var(--cd-white);
