@@ -51,7 +51,7 @@
 
         &:focus:after,
         &:hover:after {
-          z-index: -1;
+          z-index: z-index(hidden);
           content: "";
           background-color: var(--colorGinPrimary) !important;
           background-repeat: no-repeat;

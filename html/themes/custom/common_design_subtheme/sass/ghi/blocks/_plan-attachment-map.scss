@@ -42,7 +42,7 @@
 
     .selectric-items {
       position: absolute;
-      z-index: 1;
+      z-index: z-index(default);
       top: 0;
       left: -19px;
       width: auto !important;

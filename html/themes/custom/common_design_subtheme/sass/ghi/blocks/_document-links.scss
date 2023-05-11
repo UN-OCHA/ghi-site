@@ -33,7 +33,7 @@
 
         .buttons {
           position: relative;
-          z-index: 1;
+          z-index: z-index(default);
           width: 100%;
           margin-bottom: 2rem;
 
