@@ -19,10 +19,10 @@
   .ui-dialog-content {
     position: static !important;
     color: inherit !important;
+  }
 
-    &.download-dialog {
-      overflow: inherit !important;
-    }
+  &.download-dialog .ui-dialog-content {
+    overflow: inherit !important;
   }
 
   &.ajax-block-error .ui-dialog-content {
