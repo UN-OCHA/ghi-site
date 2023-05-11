@@ -18,11 +18,15 @@
     padding: 1px;
   }
 
+  .leaflet-control-attribution {
+    font-size: 11px;
+  }
+
   .leaflet-top.leaflet-left {
     width: 50%;
 
     .leaflet-control {
-      z-index: calc(z-index(leaflet) + 1);
+      z-index: z-index(leaflet, 1);
       color: var(--ghi-default-text-color);
       border: 1px solid var(--cd-default-border-color);
       border-radius: 0;
