@@ -18,8 +18,11 @@
 
   .ui-dialog-content {
     position: static !important;
-    overflow: inherit !important;
     color: inherit !important;
+
+    &.download-dialog {
+      overflow: inherit !important;
+    }
   }
 
   &.ajax-block-error .ui-dialog-content {
