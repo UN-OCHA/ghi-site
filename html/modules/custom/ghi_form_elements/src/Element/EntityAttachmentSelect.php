@@ -85,7 +85,8 @@ class EntityAttachmentSelect extends FormElement {
     $element['#attached']['library'][] = 'ghi_form_elements/entity_attachment_select';
 
     $wrapper_id = self::getWrapperId($element);
-    $element['#prefix'] = '<div id="' . $wrapper_id . '">';
+    $classes = ['ghi-element-wrapper'];
+    $element['#prefix'] = '<div id="' . $wrapper_id . '" class="' . implode(' ', $classes) . '">';
     $element['#suffix'] = '</div>';
 
     $values = NestedArray::mergeDeepArray([

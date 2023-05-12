@@ -11,6 +11,7 @@ use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Entity\GoverningEntity;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -233,6 +234,8 @@ class FundingData extends ConfigurationContainerItemPluginBase {
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
     $plan_object = $this->getContextValue('plan_object');
+    /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
+    $base_object = $this->getContextValue('base_object');
 
     $rendered = ThemeHelper::getThemeOptions($theme_function, $this->getValue($data_type_key, $scale, $cluster_restrict), [
       'scale' => $scale,
@@ -241,8 +244,8 @@ class FundingData extends ConfigurationContainerItemPluginBase {
 
     // See if we need to add a footnote.
     $footnote = NULL;
-    if (array_key_exists('footnote_property', $data_type)) {
-      $footnotes = $plan_object ? $this->getFootnotesForPlanBaseobject($plan_object) : NULL;
+    if (array_key_exists('footnote_property', $data_type) && $base_object instanceof Plan) {
+      $footnotes = $this->getFootnotesForPlanBaseobject($base_object);
       $footnote = $this->buildFootnoteTooltip($footnotes, $data_type['footnote_property']);
     }
 

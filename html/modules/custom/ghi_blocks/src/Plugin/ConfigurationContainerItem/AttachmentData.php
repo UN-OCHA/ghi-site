@@ -6,7 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\DataPointHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -162,16 +162,19 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
 
-    $plan = $this->getPlanObject($attachment);
     $build = DataPointHelper::formatValue($attachment, $attachment->data_point_conf);
-    $footnotes = $plan ? $this->getFootnotesForPlanBaseobject($plan) : NULL;
-
     $data_point_index = $attachment->data_point_conf['data_points'][0]['index'];
     $property = $attachment->field_types[$data_point_index] ?? NULL;
     if (!$property) {
       return NULL;
     }
-    $build[] = $this->buildFootnoteTooltip($footnotes, $attachment->field_types[$data_point_index]);
+
+    /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
+    $base_object = $this->getContextValue('base_object');
+    if ($base_object && $base_object instanceof Plan) {
+      $footnotes = $this->getFootnotesForPlanBaseobject($base_object);
+      $build[] = $this->buildFootnoteTooltip($footnotes, $attachment->field_types[$data_point_index]);
+    }
     return $build;
   }
 
@@ -195,24 +198,6 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     }
     $attachment->data_point_conf = $data_point_conf;
     return $attachment;
-  }
-
-  /**
-   * Get the plan object for the given attachment.
-   *
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
-   *   The attachment object.
-   *
-   * @return \Drupal\ghi_plans\Entity\Plan|null
-   *   The plan object.
-   */
-  private function getPlanObject(DataAttachment $attachment) {
-    $plan_id = $attachment->getPlanId();
-    $plan_entities = $plan_id ? $this->entityTypeManager->getStorage('base_object')->loadByProperties([
-      'type' => 'plan',
-      'field_original_id' => $plan_id,
-    ]) : [];
-    return count($plan_entities) == 1 ? reset($plan_entities) : NULL;
   }
 
 }

@@ -1,0 +1,11 @@
+@use "sass:map";
+
+@function z-index($value, $offset: 0) {
+  @if map-has-key($zindex, $value) {
+    @return calc(map-get($zindex, $value) + $offset);
+  }
+
+  @else {
+    @warn "`#{$value}` not found in `$zindex` map.";
+  }
+}

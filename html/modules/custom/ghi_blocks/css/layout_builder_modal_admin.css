@@ -125,7 +125,9 @@ form.layout-builder-configure-block.glb-canvas-form .glb-messages-list {
   margin: 0 !important;
   display: none !important;
 }
-form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper > .glb-form-item:first-child {
+form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper > .glb-form-item:first-child,
+form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .ghi-element-wrapper > .glb-form-item:first-child,
+form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .filter-container > .glb-form-item {
   margin-top: 0 !important;
 }
 form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .glb-form-item__description {

@@ -109,7 +109,8 @@ class AttachmentSelect extends FormElement {
     $is_hidden = array_key_exists('#hidden', $element) && $element['#hidden'] && !$triggered_by_select && !$triggered_by_change_request;
 
     $wrapper_id = self::getWrapperId($element);
-    $element['#prefix'] = '<div id="' . $wrapper_id . '" class="' . ($is_hidden ? 'visually-hidden' : NULL) . '">';
+    $classes = ['ghi-element-wrapper'];
+    $element['#prefix'] = '<div id="' . $wrapper_id . '" class="' . implode(' ', $classes) . ($is_hidden ? ' visually-hidden' : NULL) . '">';
     $element['#suffix'] = '</div>';
 
     // Set the defaults from the submitted values and filters.
