@@ -40,7 +40,10 @@ class GhoFootnotes implements TrustedCallbackInterface {
       $footnotes = [];
       $footnote_list_node = $dom->getElementById('gho-footnotes-list-' . $id);
       if (!empty($footnote_list_node)) {
-        $footnote_inner_html = gho_footnotes_get_inner_html($footnote_list_node);
+        // Make sure that footnotes are separated by line breaks.
+        $footnote_inner_html = implode("\n", array_map(function ($child_node) {
+          return trim(gho_footnotes_get_inner_html($child_node));
+        }, iterator_to_array($footnote_list_node->childNodes)));
         $footnotes = gho_footnotes_generate_footnotes($id, $footnote_inner_html, $references, count($accumulator));
 
         // Store the footnotes to render the footnote list.
