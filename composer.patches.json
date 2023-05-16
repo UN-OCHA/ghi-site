@@ -20,6 +20,7 @@
     },
     "drupal/gin_lb": {
       "Issue #??: Add alter hook for template suggestions trigger": "./patches/hook_gin_lb_add_suggestions_alter-1.0.0-rc3.patch",
+      "Issue #3349745: File upload button in Media Library missing in rc-3": "https://www.drupal.org/files/issues/2023-03-23/3349745-8-claro-preprocess-file-fields.patch",
       "Issue #3353020 Allow sidebar form to be loaded via AJAX (required by IPE)": "https://www.drupal.org/files/issues/2023-04-12/3353020-gin_lb-sidebar-region-preview-5.patch"
     },
     "drupal/gin_toolbar": {
