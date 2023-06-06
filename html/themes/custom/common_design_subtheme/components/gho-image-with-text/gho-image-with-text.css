@@ -1,0 +1,14 @@
+/**
+ * Base photo gallery.
+ */
+.gho-image-with-text .gho-image-with-text__inner {
+  max-width: var(--reading-width);
+}
+
+/**
+ * Caption below images.
+ */
+.gho-image-with-text__caption {
+  max-width: var(--reading-width);
+  margin-top: 1.25rem;
+}
