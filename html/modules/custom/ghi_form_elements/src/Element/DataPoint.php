@@ -112,7 +112,10 @@ class DataPoint extends FormElement {
       'processing' => !empty($values['processing']) ? $values['processing'] : array_key_first(DataAttachment::getProcessingOptions()),
       'calculation' => !empty($values['calculation']) ? $values['calculation'] : NULL,
       'data_points' => [
-        0 => array_key_exists('data_points', $values) && array_key_exists(0, $values['data_points']) ? $values['data_points'][0] : array_key_first($attachment_prototype->getFields()),
+        0 => array_key_exists('data_points', $values) && array_key_exists(0, $values['data_points']) ? $values['data_points'][0] : [
+          'index' => array_key_first($attachment_prototype->getFields()),
+          'use_calculation_method' => TRUE,
+        ],
         1 => array_key_exists('data_points', $values) && array_key_exists(1, $values['data_points']) ? $values['data_points'][1] : NULL,
       ],
       'formatting' => !empty($values['formatting']) ? $values['formatting'] : array_key_first(DataAttachment::getFormattingOptions()),
@@ -179,29 +182,34 @@ class DataPoint extends FormElement {
         'wrapper' => $wrapper_id,
       ],
     ];
-    if ($attachment instanceof IndicatorAttachment) {
-      $data_point_selector = FormElementHelper::getStateSelector($element, [
-        'data_points',
-        0,
-        'index',
-      ]);
-      $measurement_fields = $attachment_prototype->getMeasurementMetricFields();
-      $element['data_points'][0]['calculation_method'] = [
-        '#type' => 'select',
-        '#title' => t('Calculation method'),
-        '#description' => t('This is set in RPM and cannot be changed here.'),
-        '#options' => $attachment_prototype->getCalculationMethods(),
-        '#default_value' => $attachment->getCalculationMethod(),
+
+    $data_point_selector = FormElementHelper::getStateSelector($element, [
+      'data_points',
+      0,
+      'index',
+    ]);
+    $measurement_fields = $attachment_prototype->getMeasurementMetricFields();
+    if ($attachment_prototype->isIndicator()) {
+      $element['data_points'][0]['use_calculation_method'] = [
+        '#type' => 'checkbox',
+        '#title' => t('Use calculation method'),
+        '#default_value' => $defaults['data_points'][0]['use_calculation_method'] ?? TRUE,
+        '#ajax' => [
+          'event' => 'change',
+          'callback' => [static::class, 'updateAjax'],
+          'wrapper' => $wrapper_id,
+        ],
         '#states' => [
           'visible' => [
-            'select[name="' . $processing_selector . '"]' => ['value' => 'single'],
             'select[name="' . $data_point_selector . '"]' => array_map(function ($value) {
               return ['value' => $value];
             }, array_keys($measurement_fields)),
           ],
         ],
-        '#disabled' => TRUE,
       ];
+      if ($attachment && $attachment instanceof IndicatorAttachment) {
+        $element['data_points'][0]['use_calculation_method']['#title'] .= ' (' . $attachment->getCalculationMethod() . ')';
+      }
     }
     if (!empty($element['#select_monitoring_period'])) {
       $element['data_points'][0]['monitoring_period'] = [
@@ -232,6 +240,34 @@ class DataPoint extends FormElement {
         'wrapper' => $wrapper_id,
       ],
     ];
+    $data_point_selector_1 = FormElementHelper::getStateSelector($element, [
+      'data_points',
+      1,
+      'index',
+    ]);
+    if ($attachment_prototype->isIndicator()) {
+      $element['data_points'][1]['use_calculation_method'] = [
+        '#type' => 'checkbox',
+        '#title' => t('Use calculation method'),
+        '#default_value' => $defaults['data_points'][1]['use_calculation_method'] ?? TRUE,
+        '#ajax' => [
+          'event' => 'change',
+          'callback' => [static::class, 'updateAjax'],
+          'wrapper' => $wrapper_id,
+        ],
+        '#states' => [
+          'visible' => [
+            'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
+            'select[name="' . $data_point_selector_1 . '"]' => array_map(function ($value) {
+              return ['value' => $value];
+            }, array_keys($measurement_fields)),
+          ],
+        ],
+      ];
+      if ($attachment && $attachment instanceof IndicatorAttachment) {
+        $element['data_points'][1]['use_calculation_method']['#title'] .= ' (' . $attachment->getCalculationMethod() . ')';
+      }
+    }
     if (!empty($element['#select_monitoring_period'])) {
       $element['data_points'][1]['monitoring_period'] = [
         '#type' => 'monitoring_period',

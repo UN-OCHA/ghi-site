@@ -58,6 +58,23 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
       '#options' => $attachment_prototype->getMeasurementMetricFields(),
       '#default_value' => $this->getSubmittedValue($element, $form_state, 'data_point'),
     ];
+
+    $default_checkbox = $this->get('use_calculation_method') ?? TRUE;
+    $element['use_calculation_method'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Use calculation method'),
+      '#description' => $this->t('If checked, the values for the data points will be calculated according to the calculation method set in RPM.'),
+      '#default_value' => $this->getSubmittedValue($element, $form_state, 'use_calculation_method', $default_checkbox),
+      '#access' => $attachment_prototype->isIndicator(),
+    ];
+    if ($this->get('use_calculation_method') === NULL) {
+      // Due to a bug with checkbox elements in ajax contexts, the default
+      // value is not correctly set for new instances of a plugin. We catch
+      // this situation by manually setting the checked attribute only if the
+      // config key is still unset.
+      // Might relate to https://www.drupal.org/project/drupal/issues/1100170.
+      $element['use_calculation_method']['#attributes']['checked'] = 'checked';
+    }
     $element['monitoring_periods'] = [
       '#type' => 'monitoring_periods',
       '#title' => $this->t('Monitoring periods'),
@@ -157,13 +174,14 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     $monitoring_periods = $this->get('monitoring_periods');
     $include_latest_period = $this->get('include_latest_period');
     $show_baseline = $this->get('show_baseline');
+    $use_calculation_method = $this->get('use_calculation_method');
     $baseline = $show_baseline ? $this->get('baseline') : NULL;
     $options = $attachment->getMetricFields();
     $decimal_format = $plan_object->getDecimalFormat();
 
     // Get the monitoring periods.
     $reporting_periods = $attachment->getPlanReportingPeriods($plan_object->getSourceId(), TRUE);
-    $last_reporting_period = end($reporting_periods);
+    $last_reporting_period = $attachment->getLastNonEmptyReportingPeriod($data_point, $reporting_periods);
 
     // Create the data / label arrays for all configured monitoring periods.
     $data = [];
@@ -172,9 +190,14 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
       if (!$attachment instanceof IndicatorAttachment && is_array($monitoring_periods) && !in_array($reporting_period->id, $monitoring_periods)) {
         continue;
       }
+      if ($last_reporting_period && $reporting_period->periodNumber > $last_reporting_period->periodNumber) {
+        continue;
+      }
       if ($attachment instanceof IndicatorAttachment) {
         $accumulated_reporting_periods[$reporting_period->id] = $reporting_period;
-        $data[$reporting_period->id] = $attachment->getSingleValue($data_point, $accumulated_reporting_periods);
+        $data[$reporting_period->id] = $attachment->getSingleValue($data_point, $accumulated_reporting_periods, [
+          'use_calculation_method' => (bool) $use_calculation_method,
+        ]);
       }
       else {
         $data[$reporting_period->id] = $attachment->getMeasurementMetricValue($data_point, $reporting_period->id);
@@ -183,7 +206,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
 
       // Prepare the tooltip items.
       $tooltip_items = [];
-      $tooltip_format = 'Monitoring period #@period_number<br />@date_range';
+      $tooltip_format = (string) $this->t('Monitoring period #@period_number<br />@date_range');
 
       // Add a baseline if needed.
       if ($show_baseline) {

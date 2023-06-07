@@ -870,7 +870,7 @@ class DataAttachment extends AttachmentBase {
   public function getValue(array $conf) {
     switch ($conf['processing']) {
       case 'single':
-        return $this->getSingleValue($conf['data_points'][0]['index']);
+        return $this->getSingleValue($conf['data_points'][0]['index'], NULL, $conf['data_points'][0]);
 
       case 'calculated':
         return $this->getCalculatedValue($conf);
@@ -888,12 +888,15 @@ class DataAttachment extends AttachmentBase {
    * @param object[] $reporting_periods
    *   An optional array of reporting period objects. If not provided, all
    *   reporting periods from the plan will be used.
+   * @param array $data_point_conf
+   *   An optional array with configuration for the specific data point to
+   *   show.
    *
    * @return mixed
    *   The data point value, extracted from the attachment according to the
    *   given configuration.
    */
-  public function getSingleValue($index, array $reporting_periods = NULL) {
+  public function getSingleValue($index, array $reporting_periods = NULL, $data_point_conf = []) {
     return $this->getValueForDataPoint($index);
   }
 
@@ -911,8 +914,8 @@ class DataAttachment extends AttachmentBase {
    *   given configuration.
    */
   private function getCalculatedValue(array $conf, array $reporting_periods = NULL) {
-    $value_1 = (float) $this->getSingleValue($conf['data_points'][0]['index'], $reporting_periods);
-    $value_2 = (float) $this->getSingleValue($conf['data_points'][1]['index'], $reporting_periods);
+    $value_1 = (float) $this->getSingleValue($conf['data_points'][0]['index'], $reporting_periods, $conf['data_points'][0]);
+    $value_2 = (float) $this->getSingleValue($conf['data_points'][1]['index'], $reporting_periods, $conf['data_points'][1]);
 
     switch ($conf['calculation']) {
       case 'addition':
@@ -995,6 +998,27 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
+   * Get the last reporting period with a non-empty value.
+   *
+   * @param int $index
+   *   The data point index.
+   * @param object[] $reporting_periods
+   *   An optional array of reporting period objects. If not provided, all
+   *   reporting periods from the plan will be used.
+   *
+   * @return object|null
+   *   The monitoring period object or NULL if not found.
+   */
+  public function getLastNonEmptyReportingPeriod($index, $reporting_periods = NULL) {
+    if ($reporting_periods === NULL) {
+      $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
+    }
+    $values = $this->getValuesForAllReportingPeriods($index, TRUE, $reporting_periods);
+    $last_reporting_period_id = array_key_last($values);
+    return $reporting_periods[$last_reporting_period_id] ?? NULL;
+  }
+
+  /**
    * Get a formatted value for a data point.
    *
    * @param array $conf
@@ -1038,12 +1062,13 @@ class DataAttachment extends AttachmentBase {
    */
   protected function getTooltip($conf) {
     $index = $conf['data_points'][0]['index'];
-    if (empty($this->getSingleValue($index))) {
+    if (empty($this->getSingleValue($index, NULL, $conf['data_points'][0]))) {
       return NULL;
     }
     // See if this is a measurement and if we can get a formatted monitoring
     // period for this data point.
-    return $this->isMeasurement($conf) ? $this->formatMonitoringPeriod('icon', $conf) : NULL;
+    $monitoring_period_id = $conf['data_points'][0]['monitoring_period'] ?? NULL;
+    return $this->isMeasurement($conf) ? $this->formatMonitoringPeriod('icon', $monitoring_period_id) : NULL;
   }
 
   /**
@@ -1103,7 +1128,7 @@ class DataAttachment extends AttachmentBase {
         ];
 
       case 'auto':
-        if ($conf['processing'] == 'calculated' && $conf['formatting'] == 'percent') {
+        if ($conf['processing'] == 'calculated' && $conf['calculation'] == 'percentage') {
           $rendered_value = [
             '#theme' => 'hpc_percent',
             '#ratio' => $value,
@@ -1111,12 +1136,19 @@ class DataAttachment extends AttachmentBase {
             '#decimal_format' => $decimal_format,
           ];
         }
-        $rendered_value = [
-          '#theme' => 'hpc_autoformat_value',
-          '#value' => $value,
-          '#unit_type' => $this->unit ? $this->unit->type : 'amount',
-          '#decimal_format' => $decimal_format,
-        ];
+        else {
+          $rendered_value = [
+            '#theme' => 'hpc_autoformat_value',
+            '#value' => $value,
+            '#unit_type' => $this->unit ? $this->unit->type : 'amount',
+            '#unit_defaults' => [
+              'amount' => [
+                '#scale' => 'full',
+              ],
+            ],
+            '#decimal_format' => $decimal_format,
+          ];
+        }
         break;
 
       case 'currency':
@@ -1203,16 +1235,15 @@ class DataAttachment extends AttachmentBase {
    *
    * @param string $display_type
    *   The display type, either "icon" or "text".
-   * @param array $data_point_conf
-   *   Optional: The data point configuration to extract the monitoring period.
+   * @param array $monitoring_period_id
+   *   Optional: The id of the monitoring period.
    * @param string $format_string
    *   Optional: The format string used for the tooltip text.
    *
    * @return array|null
    *   A build array or NULL.
    */
-  public function formatMonitoringPeriod($display_type, array $data_point_conf = NULL, $format_string = NULL) {
-    $monitoring_period_id = $data_point_conf['data_points'][0]['monitoring_period'] ?? NULL;
+  public function formatMonitoringPeriod($display_type, $monitoring_period_id = NULL, $format_string = NULL) {
     $monitoring_period = $monitoring_period_id ? $this->getReportingPeriod($monitoring_period_id) : $this->monitoring_period;
     if (!$monitoring_period) {
       return NULL;

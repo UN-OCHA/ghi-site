@@ -23,9 +23,10 @@ class IndicatorAttachment extends DataAttachment {
   /**
    * {@inheritdoc}
    */
-  public function getSingleValue($index, array $reporting_periods = NULL) {
-    if (!$this->isApiCalculated($index)) {
-      return $this->getValueForDataPoint($index, $reporting_periods);
+  public function getSingleValue($index, array $reporting_periods = NULL, $data_point_conf = []) {
+    if (!$this->isApiCalculated($index, $data_point_conf)) {
+      $monitoring_period = !empty($reporting_periods) ? array_key_last($reporting_periods) : 'latest';
+      return $this->getValueForDataPoint($index, $monitoring_period);
     }
     $value = NULL;
     $values = $this->getValuesForAllReportingPeriods($index, TRUE, $reporting_periods);
@@ -63,7 +64,7 @@ class IndicatorAttachment extends DataAttachment {
     $calculation_method = $this->calculation_method;
     $prototype = $this->getPrototypeData();
     $available_methods = $prototype->getCalculationMethods();
-    return in_array($calculation_method, $available_methods) ? $calculation_method : NULL;
+    return in_array($calculation_method, $available_methods) ? $calculation_method : self::CALCULATION_METHOD_LATEST;
   }
 
   /**
@@ -71,18 +72,19 @@ class IndicatorAttachment extends DataAttachment {
    */
   protected function getTooltip($conf) {
     $index = $conf['data_points'][0]['index'];
-    if (empty($this->getSingleValue($index))) {
+    if (empty($this->getSingleValue($index, NULL, $conf['data_points'][0]))) {
       return NULL;
     }
-    if ($this->isApiCalculated($index) && $conf['processing'] != 'calculated') {
+    $last_reporting_period = $this->getLastNonEmptyReportingPeriod($index);
+    if (!$last_reporting_period) {
+      return NULL;
+    }
+    if ($this->isApiCalculated($index, $conf['data_points'][0]) && $conf['processing'] != 'calculated') {
       $tooltip_icon = NULL;
       $tooltip_text = NULL;
-      $values = $this->getValuesForAllReportingPeriods($index, TRUE);
-      $last_reporting_period_id = array_key_last($values);
-      $reporting_period = $this->getReportingPeriod($last_reporting_period_id);
       $reporting_period_text = ThemeHelper::render([
         '#theme' => 'hpc_reporting_period',
-        '#reporting_period' => $reporting_period,
+        '#reporting_period' => $last_reporting_period,
         '#format_string' => ', as of date @end_date',
       ], FALSE);
       $calculation_method = $this->getCalculationMethod();
@@ -122,7 +124,7 @@ class IndicatorAttachment extends DataAttachment {
     elseif ($this->isMeasurement($conf)) {
       // Otherwise see if this is a measurement and if we can get a formatted
       // monitoring period for this data point.
-      return $this->formatMonitoringPeriod('icon', $conf, 'as of date @end_date');
+      return $this->formatMonitoringPeriod('icon', $last_reporting_period->id, 'as of date @end_date');
     }
     return NULL;
   }
@@ -132,11 +134,16 @@ class IndicatorAttachment extends DataAttachment {
    *
    * @param int $index
    *   The data point index.
+   * @param array $data_point_conf
+   *   Array with configuration for the specific data point to show.
    *
    * @return bool
    *   TRUE if a calculation method from the API is used, FALSE otherwise.
    */
-  private function isApiCalculated($index) {
+  private function isApiCalculated($index, $data_point_conf) {
+    if (array_key_exists('use_calculation_method', $data_point_conf) && $data_point_conf['use_calculation_method'] == FALSE) {
+      return FALSE;
+    }
     $calculation_method = $this->getCalculationMethod();
     return $this->isMeasurementIndex($index) && $calculation_method && $this->isValidCalculatedMethod($calculation_method);
   }

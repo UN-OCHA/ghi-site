@@ -237,6 +237,13 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
+  public function set($key, $value) {
+    $this->config[$key] = $value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function get($key) {
     if ($this->config === NULL) {
       return NULL;
@@ -327,7 +334,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   public function getSubmittedValue(array $element, FormStateInterface $form_state, $value_key, $default_value = NULL) {
     $value_parents = array_merge($element['#parents'], (array) $value_key);
     $_form_state = $form_state instanceof SubformStateInterface ? $form_state->getCompleteFormState() : $form_state;
-    $submitted = $_form_state->hasValue($value_parents) ? $_form_state->getValue($value_parents) : NULL;
+    $submitted = $_form_state->getValue($value_parents);
     $stored = $_form_state->get($value_key) ?: NULL;
     $value = $submitted ?: ($stored ?: $this->get($value_key));
     return $value ?: $default_value;

@@ -47,6 +47,8 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     $attachment = $this->getContextValue('attachment');
     $plan_object = $this->getContextValue('plan_object');
     $configuration = $this->getPluginConfiguration();
+    /** @var \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype */
+    $attachment_prototype = $configuration['attachment_prototype'];
 
     $data_point = $this->getSubmittedValue($element, $form_state, 'data_point');
 
@@ -54,9 +56,9 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
       '#type' => 'data_point',
       '#element_context' => $this->getContext(),
       '#attachment' => $attachment,
-      '#attachment_prototype' => $configuration['attachment_prototype'],
+      '#attachment_prototype' => $attachment_prototype,
       '#plan_object' => $plan_object,
-      '#select_monitoring_period' => $configuration['select_monitoring_period'],
+      '#select_monitoring_period' => $configuration['select_monitoring_period'] && !$attachment_prototype->isIndicator(),
       '#default_value' => $data_point,
       '#weight' => 5,
     ] + ($configuration['presets'] ?? []);
@@ -166,11 +168,14 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     if ($data_point_conf['formatting'] == 'percent') {
       return 'percentage';
     }
+    if ($data_point_conf['processing'] == 'calculated' && $data_point_conf['calculation'] == 'percentage') {
+      return 'percentage';
+    }
     return parent::getColumnType();
   }
 
   /**
-   * Get the currently configured data point confirguration.
+   * Get the currently configured data point configuration.
    *
    * @return array|null
    *   An array containing the data point configuration or null if no

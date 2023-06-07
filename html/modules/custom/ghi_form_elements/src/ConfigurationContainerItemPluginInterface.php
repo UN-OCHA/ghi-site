@@ -119,6 +119,16 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
   public function preview($key);
 
   /**
+   * Set an item from config by key.
+   *
+   * @param string $key
+   *   The key to set.
+   * @param mixed $value
+   *   The value to set.
+   */
+  public function set($key, $value);
+
+  /**
    * Get an item from config by key if it exists.
    *
    * @param string $key
