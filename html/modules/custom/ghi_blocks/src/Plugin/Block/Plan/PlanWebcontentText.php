@@ -5,8 +5,6 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\ghi_element_sync\SyncableBlockInterface;
-use Drupal\node\NodeInterface;
 
 /**
  * Provides a 'PlanWebcontentText' block.
@@ -26,20 +24,7 @@ use Drupal\node\NodeInterface;
  *   }
  * )
  */
-class PlanWebcontentText extends GHIBlockBase implements SyncableBlockInterface {
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
-    return [
-      'label' => '',
-      'label_display' => FALSE,
-      'hpc' => [
-        'attachment_id' => $config->attachment_id,
-      ],
-    ];
-  }
+class PlanWebcontentText extends GHIBlockBase {
 
   /**
    * {@inheritdoc}

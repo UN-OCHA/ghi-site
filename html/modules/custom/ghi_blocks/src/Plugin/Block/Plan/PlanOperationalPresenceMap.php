@@ -12,13 +12,11 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 use Drupal\ghi_blocks\Traits\OrganizationsBlockTrait;
-use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
-use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -51,7 +49,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  }
  * )
  */
-class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface {
+class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface {
 
   use OrganizationsBlockTrait;
   use FtsLinkTrait;
@@ -87,27 +85,6 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     // Set our own properties.
     $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
     return $instance;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
-    return [
-      'label' => property_exists($config, 'widget_title') ? $config->widget_title : NULL,
-      'label_display' => TRUE,
-      'hpc' => [
-        'organizations' => [
-          'organization_ids' => (array) $config->organization_ids ?? [],
-        ],
-        'display' => [
-          'available_views' => (array) $config->available_views,
-          'default_view' => $config->default_view,
-          'disclaimer' => $config->map_disclaimer,
-          'pcodes_enabled' => $config->pcodes_enabled,
-        ],
-      ],
-    ];
   }
 
   /**

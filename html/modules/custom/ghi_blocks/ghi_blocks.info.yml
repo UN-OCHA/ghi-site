@@ -16,4 +16,3 @@ dependencies:
   - ghi_sections:ghi_sections
   - ghi_subpages:ghi_subpages
   - ghi_form_elements:ghi_form_elements
-  - ghi_element_sync:ghi_element_sync
