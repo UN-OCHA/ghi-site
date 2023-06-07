@@ -12,11 +12,9 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
-use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
-use Drupal\node\NodeInterface;
 
 /**
  * Provides a 'PlanGoverningEntitiesTable' block.
@@ -51,108 +49,11 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
+class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use ConfigurationContainerTrait;
   use ConfigurationItemClusterRestrictTrait;
   use TableSoftLimitTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
-    $columns = [];
-    // Define a transition map.
-    $transition_map = [
-      'governing_entity_name' => [
-        'target' => 'entity_name',
-      ],
-      'partners_counter' => [
-        'target' => 'project_counter',
-        'config' => ['data_type' => 'organizations_count'],
-      ],
-      'projects_counter' => [
-        'target' => 'project_counter',
-        'config' => ['data_type' => 'projects_count'],
-      ],
-      'original_requirements' => [
-        'target' => 'funding_data',
-        'config' => ['data_type' => 'original_requirements'],
-      ],
-      'funding_requirements' => [
-        'target' => 'funding_data',
-        'config' => ['data_type' => 'current_requirements'],
-      ],
-      'total_funding' => [
-        'target' => 'funding_data',
-        'config' => ['data_type' => 'funding_totals'],
-      ],
-      'funding_coverage' => [
-        'target' => 'funding_data',
-        'config' => ['data_type' => 'funding_coverage'],
-      ],
-      'funding_gap' => [
-        'target' => 'funding_data',
-        'config' => ['data_type' => 'funding_gap'],
-      ],
-    ];
-    foreach ($config->table_columns as $incoming_item) {
-      $source_type = !empty($incoming_item->element) ? $incoming_item->element : NULL;
-      if (!$source_type || !array_key_exists($source_type, $transition_map)) {
-        continue;
-      }
-      // Apply generic config based on the transition map.
-      $transition_definition = $transition_map[$source_type];
-      $item = [
-        'item_type' => $transition_definition['target'],
-        'config' => [
-          'label' => property_exists($incoming_item, 'label') ? $incoming_item->label : NULL,
-        ],
-      ];
-      if (array_key_exists('config', $transition_definition)) {
-        $item['config'] += $transition_definition['config'];
-      }
-
-      // Do special processing for individual item types.
-      $value = property_exists($incoming_item, 'value') ? $incoming_item->value : NULL;
-
-      switch ($transition_definition['target']) {
-        case 'entity_counter':
-          $item['config']['entity_prototype'] = $value;
-          break;
-
-        case 'original_requirements':
-        case 'funding_requirements':
-          $item['config']['scale'] = is_object($value) && property_exists($value, 'formatting') ? $value->formatting : 'auto';
-          break;
-
-        default:
-          break;
-      }
-      $columns[] = $item;
-    }
-    return [
-      'label' => property_exists($config, 'widget_title') ? $config->widget_title : NULL,
-      'label_display' => TRUE,
-      'hpc' => [
-        'base' => [
-          'include_cluster_not_reported' => property_exists($config, 'include_cluster_not_reported') ? $config->include_cluster_not_reported : FALSE,
-          'include_shared_funding' => property_exists($config, 'include_shared_funding') ? $config->include_shared_funding : FALSE,
-          'hide_target_values_for_projects' => property_exists($config, 'hide_target_values_for_projects') ? $config->hide_target_values_for_projects : FALSE,
-          'cluster_restrict' => property_exists($config, 'cluster_restrict') ? [
-            'type' => $config->cluster_restrict,
-            'tag' => $config->cluster_tag,
-          ] : NULL,
-        ],
-        'table' => [
-          'columns' => $columns,
-        ],
-        'display' => [
-          'soft_limit' => 5,
-        ],
-      ],
-    ];
-  }
 
   /**
    * {@inheritdoc}

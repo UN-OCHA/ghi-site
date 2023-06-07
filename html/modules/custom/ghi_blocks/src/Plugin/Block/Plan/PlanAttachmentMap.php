@@ -6,20 +6,16 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\GlobalMapTrait;
-use Drupal\ghi_element_sync\IncompleteElementConfigurationException;
-use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
-use Drupal\node\NodeInterface;
 
 /**
  * Provides a 'PlanAttachmentMap' block.
@@ -51,7 +47,7 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface {
+class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface {
 
   use PlanReportingPeriodTrait;
   use BlockCommentTrait;
@@ -65,90 +61,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   const DONUT_DISPLAY_VALUE_PARTIAL = 'partial';
 
   const DEFAULT_DISCLAIMER = 'The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations.';
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
-    $base_object = BaseObjectHelper::getBaseObjectFromNode($node, 'plan');
-    $plan = $base_object && $base_object->bundle() == 'plan' ? $base_object : NULL;
-    $plan_id = $plan ? $plan->get('field_original_id')->value : NULL;
-
-    if (!property_exists($config, 'entity_select')) {
-      if ($base_object = BaseObjectHelper::getBaseObjectFromNode($node)) {
-        $entity_id = BaseObjectHelper::getOriginalIdFromEntity($base_object);
-        $config->entity_select = (object) [
-          'entity_id' => [
-            $entity_id => $entity_id,
-          ],
-        ];
-      }
-      else {
-        throw new IncompleteElementConfigurationException('Incomplete configuration for "plan_attachment_map"');
-      }
-    }
-    $entity_id = $config->entity_select?->entity_id ?? NULL;
-    $attachment_id = $config->attachment_select?->attachment_id ?? NULL;
-
-    // Sanity check to prevent importing of misconfigured map elements.
-    if ($attachment_id && $plan_id) {
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $attachment_query */
-      $attachment_query = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('attachment_query');
-      $attachment = $attachment_query->getAttachment(is_array($attachment_id) ? reset($attachment_id) : $attachment_id);
-      if (!$attachment || !$attachment instanceof DataAttachment) {
-        $attachment_id = NULL;
-      }
-      elseif ($attachment && $attachment->getPlanId() != $plan_id) {
-        $attachment_id = NULL;
-      }
-    }
-
-    $entity_id = is_array($entity_id) ? array_filter(array_values($entity_id)) : (array) $entity_id;
-    $attachment_id = is_array($attachment_id) ? array_filter(array_values($attachment_id)) : (array) $attachment_id;
-    return [
-      'label' => property_exists($config, 'widget_title') ? $config->widget_title : NULL,
-      'label_display' => TRUE,
-      'hpc' => [
-        'attachments' => [
-          'entity_attachments' => [
-            'entities' => [
-              'entity_ids' => $entity_id ? array_combine($entity_id, $entity_id) : [],
-            ],
-            'attachments' => [
-              'filter' => [
-                'entity_type' => $config->attachment_select?->entity_type,
-                'attachment_type' => $config->attachment_select?->attachment_type,
-                'attachment_prototype' => $config->attachment_select?->attachment_prototype ?? NULL,
-              ],
-              'attachment_id' => $attachment_id ? array_combine($attachment_id, $attachment_id) : NULL,
-            ],
-          ],
-        ],
-        'map' => [
-          'appearance' => [
-            'style' => $config->map_style ?? self::STYLE_CIRCLE,
-            self::STYLE_CIRCLE => [
-              'monitoring_period' => $config->monitoring_period ?? ['latest' => 'latest'],
-            ],
-            self::STYLE_DONUT => [
-              'whole_segments' => (array) ($config->donut_whole_segments ?? []),
-              'whole_segment_default' => $config->donut_whole_segment_default ?? NULL,
-              'partial_segments' => (array) ($config->donut_partial_segments ?? []),
-              'partial_segment_default' => $config->donut_partial_segment_default ?? NULL,
-              'monitoring_period' => $config->donut_monitoring_periods ?? [],
-              'display_value' => $config->donut_display_value ?? NULL,
-            ],
-          ],
-          'common' => [
-            'default_attachment' => $config->default_attachment ?? NULL,
-            'disclaimer' => $config->map_disclaimer,
-            'pcodes_enabled' => $config->pcodes_enabled ?? FALSE,
-          ],
-          'metric_labels' => $config->metric_labels ?? [],
-        ],
-      ],
-    ];
-  }
 
   /**
    * {@inheritdoc}

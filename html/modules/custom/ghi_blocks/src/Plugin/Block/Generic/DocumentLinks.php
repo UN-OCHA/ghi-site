@@ -5,16 +5,13 @@ namespace Drupal\ghi_blocks\Plugin\Block\Generic;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
-use Drupal\ghi_blocks\Element\DocumentLink;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
-use Drupal\node\NodeInterface;
 
 /**
  * Provides a 'Document link' block.
@@ -37,77 +34,10 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class DocumentLinks extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, SyncableBlockInterface, ConfigurableTableBlockInterface {
+class DocumentLinks extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, ConfigurableTableBlockInterface {
 
   use ConfigurationContainerTrait;
   use ConfigurationContainerGroup;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
-    $documents = [];
-
-    // First define a default group. Incoming elements are not grouped, but the
-    // target plugin uses grouping.
-    $documents[] = [
-      'item_type' => 'item_group',
-      'id' => 0,
-      'config' => [
-        'label' => t('Latest'),
-      ],
-      'weight' => 0,
-      'pid' => NULL,
-    ];
-
-    foreach ($config->documents as $document) {
-      $item = [];
-      $timestamp = mktime(0, 0, 0, $document->date->month, $document->date->day, $document->date->year);
-      $item['date'] = date('Y-m-d', $timestamp);
-
-      if (!property_exists($document, 'file_details')) {
-        $item['file_details'] = [
-          array_key_first(DocumentLink::LANGUAGES) => [
-            'target_url' => $document->target_url,
-            'disabled' => FALSE,
-            'filesize' => $document->filesize,
-            'mimetype' => $document->mimetype,
-            'filetype' => $document->filetype,
-          ],
-        ];
-      }
-      else {
-        $item['file_details'] = [];
-        foreach ($document->file_details as $details) {
-          $details = (array) $details;
-          $language = $details['language'];
-          unset($details['language']);
-          $item['file_details'][$language] = $details;
-        }
-      }
-
-      $documents[] = [
-        'item_type' => 'document_link',
-        'pid' => 0,
-        'id' => count($documents),
-        'weight' => count($documents),
-        'config' => [
-          'label' => $document->title,
-          'value' => $item,
-        ],
-      ];
-    }
-
-    return [
-      'label' => property_exists($config, 'widget_title') ? $config->widget_title : t('Publications'),
-      'label_display' => TRUE,
-      'hpc' => [
-        'documents' => [
-          'documents' => $documents,
-        ],
-      ],
-    ];
-  }
 
   /**
    * {@inheritdoc}
