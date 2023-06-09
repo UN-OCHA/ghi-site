@@ -4,7 +4,10 @@ namespace Drupal\ghi_subpages\Plugin\Block;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Block\BlockBase;
+use Drupal\ghi_sections\Entity\GlobalSection;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
+use Drupal\ghi_subpages\SubpageTrait;
+use Drupal\node\NodeInterface;
 
 /**
  * Provides a 'SubpageTitle' block.
@@ -20,6 +23,8 @@ use Drupal\ghi_subpages\Helpers\SubpageHelper;
  */
 class SubpageTitle extends BlockBase {
 
+  use SubpageTrait;
+
   /**
    * {@inheritdoc}
    */
@@ -30,6 +35,21 @@ class SubpageTitle extends BlockBase {
     }
     /** @var \Drupal\node\NodeInterface $node */
     $node = $contexts['node']->getContextValue();
+    if (!$node || !$node instanceof NodeInterface) {
+      return NULL;
+    }
+    if ($node && $node instanceof GlobalSection) {
+      // Don't show the subpage title on nodes of type global section.
+      return NULL;
+    }
+
+    // Get parent if needed.
+    $base_entity = $this->getBaseTypeNode($node);
+    if (!$base_entity || !SubpageHelper::isBaseTypeNode($base_entity) || !$base_entity->id()) {
+      // Don't show the subpage title if no parent section is available.
+      return NULL;
+    }
+
     $title = NULL;
     if (SubpageHelper::isSubpageTypeNode($node)) {
       $title = $node->getTitle();

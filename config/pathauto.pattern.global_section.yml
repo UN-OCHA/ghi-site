@@ -1,0 +1,22 @@
+uuid: 3dc7c4c2-0a71-4b44-8180-2d845e27822e
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: global_section
+label: 'Global section'
+type: 'canonical_entities:node'
+pattern: '[node:title]'
+selection_criteria:
+  12313f48-5585-4d15-b3d6-6d6b25d31d4c:
+    id: 'entity_bundle:node'
+    negate: false
+    uuid: 12313f48-5585-4d15-b3d6-6d6b25d31d4c
+    context_mapping:
+      node: node
+    bundles:
+      global_section: global_section
+selection_logic: and
+weight: -5
+relationships: {  }

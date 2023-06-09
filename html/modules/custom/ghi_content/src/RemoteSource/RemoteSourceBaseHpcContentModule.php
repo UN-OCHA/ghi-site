@@ -5,6 +5,7 @@ namespace Drupal\ghi_content\RemoteSource;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
+use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteDocument;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteParagraph;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\ghi_content\RemoteResponse\RemoteResponse;
@@ -19,6 +20,53 @@ use GuzzleHttp\Exception\ServerException;
 abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
 
   use SimpleCacheTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDocument($id) {
+    $fields = [
+      'id',
+      'title',
+      'tags',
+      'created',
+      'updated',
+    ];
+    $fields['content_space'] = [
+      'title',
+      'tags',
+    ];
+    $fields['content'] = [
+      'id',
+      'uuid',
+      'type',
+      'typeLabel',
+      'promoted',
+      'rendered',
+      'configuration',
+    ];
+    $fields['image'] = [
+      'credits',
+      'imageUrl',
+    ];
+    $document_data = $this->fetchDocumentData($id, $fields);
+    return $document_data ? new RemoteDocument($document_data, $this) : NULL;
+  }
+
+  /**
+   * Fetch data for an article identified by $id.
+   */
+  private function fetchDocumentData($id, array $fields) {
+    $query = '{
+      document(id:' . $id . ') {' . $this->getFieldString($fields) . '}
+    }';
+
+    $response = $this->query($query);
+    if (!$response->has('document')) {
+      return NULL;
+    }
+    return $response->get('document');
+  }
 
   /**
    * {@inheritdoc}
@@ -103,6 +151,27 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       return NULL;
     }
     return $response->get('paragraph');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function searchDocumentsByTitle($title) {
+    $query = '{
+      documentSearch(title:"' . $title . '") {
+        count
+        items {
+          id
+        }
+      }
+    }';
+    $response = $this->query($query);
+    if (!$response->has('documentSearch') || !$response->get('documentSearch')->items) {
+      return [];
+    }
+    return array_map(function ($item) {
+      return $this->getDocument($item->id);
+    }, $response->get('documentSearch')->items);
   }
 
   /**

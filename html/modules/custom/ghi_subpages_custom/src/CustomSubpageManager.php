@@ -1,28 +1,28 @@
 <?php
 
-namespace Drupal\ghi_documents;
+namespace Drupal\ghi_subpages_custom;
 
 use Drupal\ghi_content\ContentManager\BaseContentManager;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\node\NodeInterface;
 
 /**
- * Document manager service class.
+ * Custom subpage manager service class.
  */
-class DocumentManager extends BaseContentManager {
+class CustomSubpageManager extends BaseContentManager {
 
   use LayoutEntityHelperTrait;
 
   /**
-   * The machine name of the bundle to use for documents.
+   * The machine name of the bundle to use for custom subpages.
    */
-  const DOCUMENT_BUNDLE = 'document';
+  const BUNDLE = 'custom_subpage';
 
   /**
-   * Load all documents for a section.
+   * Load all custom subpages for a section.
    *
    * @param \Drupal\node\NodeInterface $section
-   *   The section that documents belong to.
+   *   The section that custom subpage belong to.
    *
    * @return \Drupal\node\NodeInterface[]|null
    *   An array of entity objects indexed by their ids.
@@ -32,11 +32,11 @@ class DocumentManager extends BaseContentManager {
       return NULL;
     }
 
-    $matching_documents = $this->entityTypeManager->getStorage('node')->loadByProperties([
-      'type' => self::DOCUMENT_BUNDLE,
+    $matching_nodes = $this->entityTypeManager->getStorage('node')->loadByProperties([
+      'type' => self::BUNDLE,
       'field_entity_reference' => $section->id(),
     ]);
-    return !empty($matching_documents) ? $matching_documents : NULL;
+    return !empty($matching_nodes) ? $matching_nodes : NULL;
   }
 
   /**

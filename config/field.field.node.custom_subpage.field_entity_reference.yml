@@ -1,0 +1,31 @@
+uuid: 5e141b14-0908-41ee-811d-4fadb63f0722
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_entity_reference
+    - node.type.custom_subpage
+    - node.type.global_section
+    - node.type.section
+id: node.custom_subpage.field_entity_reference
+field_name: field_entity_reference
+entity_type: node
+bundle: custom_subpage
+label: Section
+description: 'The section this custom subpage belongs to.'
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      global_section: global_section
+      section: section
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: global_section
+field_type: entity_reference

@@ -10,6 +10,18 @@ ghi_content.remote.autocomplete_article:
       remote_source:
         type: 'remote_source'
 
+ghi_content.remote.autocomplete_document:
+  path: '/content/remote/{remote_source}/search-document'
+  defaults:
+    _controller: '\Drupal\ghi_content\Controller\RemoteController::autocompleteDocument'
+    _title: 'Search remote document content'
+  requirements:
+    _permission: 'access remote content'
+  options:
+    parameters:
+      remote_source:
+        type: 'remote_source'
+
 ghi_content.remote.plugin_list:
   path: '/admin/config/services/remote-sources'
   defaults:

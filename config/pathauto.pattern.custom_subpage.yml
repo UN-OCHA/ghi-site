@@ -1,0 +1,22 @@
+uuid: 3b372924-c639-46a5-af9d-96c77cc80cd3
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: custom_subpage
+label: 'Custom subpage'
+type: 'canonical_entities:node'
+pattern: '[node:field_entity_reference:entity:url:path]/[node:title]'
+selection_criteria:
+  447286c7-7c45-4488-a2d3-14ca82bd334d:
+    id: 'entity_bundle:node'
+    negate: false
+    uuid: 447286c7-7c45-4488-a2d3-14ca82bd334d
+    context_mapping:
+      node: node
+    bundles:
+      custom_subpage: custom_subpage
+selection_logic: and
+weight: -5
+relationships: {  }

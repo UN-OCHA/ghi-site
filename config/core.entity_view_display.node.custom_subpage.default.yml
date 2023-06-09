@@ -1,0 +1,72 @@
+uuid: 3086c2a0-6923-40f5-b1f0-2cdc4a808cfd
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.custom_subpage.field_entity_reference
+    - field.field.node.custom_subpage.field_hero_image
+    - field.field.node.custom_subpage.field_team
+    - field.field.node.custom_subpage.layout_builder__layout
+    - node.type.custom_subpage
+  module:
+    - ghi_hero_image
+    - layout_builder
+    - layout_builder_ipe
+    - layout_discovery
+    - user
+third_party_settings:
+  layout_builder:
+    enabled: true
+    allow_custom: true
+    sections:
+      -
+        layout_id: layout_onecol
+        layout_settings:
+          label: Content
+          context_mapping: {  }
+        components: {  }
+        third_party_settings:
+          layout_builder_lock:
+            lock: {  }
+  layout_builder_ipe:
+    enabled: true
+id: node.custom_subpage.default
+targetEntityType: node
+bundle: custom_subpage
+mode: default
+content:
+  field_entity_reference:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 102
+    region: content
+  field_hero_image:
+    type: ghi_hero_image
+    label: above
+    settings:
+      include_credits: false
+      crop_image: true
+      responsive_image_style: ''
+      image_link: ''
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  field_team:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 103
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  langcode: true
+  layout_builder__layout: true

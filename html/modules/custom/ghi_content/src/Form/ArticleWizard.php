@@ -2,52 +2,15 @@
 
 namespace Drupal\ghi_content\Form;
 
-use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\ghi_content\ContentManager\ArticleManager;
-use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
-use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a wizard form for creating article nodes.
  */
-class ArticleWizard extends FormBase {
-
-  use AjaxElementTrait;
-
-  /**
-   * The entity type manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The entity type manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
-   */
-  protected $entityFieldManager;
-
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected $currentUser;
+class ArticleWizard extends ContentWizardBase {
 
   /**
    * The article manager.
@@ -57,36 +20,12 @@ class ArticleWizard extends FormBase {
   protected $articleManager;
 
   /**
-   * The attachment query.
-   *
-   * @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager
-   */
-  public $remoteSourceManager;
-
-  /**
-   * Constructs a document create form.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ModuleHandlerInterface $module_handler, AccountProxyInterface $user, ArticleManager $article_manager, RemoteSourceManager $remote_source_manager) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->entityFieldManager = $entity_field_manager;
-    $this->moduleHandler = $module_handler;
-    $this->currentUser = $user;
-    $this->articleManager = $article_manager;
-    $this->remoteSourceManager = $remote_source_manager;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity_type.manager'),
-      $container->get('entity_field.manager'),
-      $container->get('module_handler'),
-      $container->get('current_user'),
-      $container->get('ghi_content.manager.article'),
-      $container->get('plugin.manager.remote_source'),
-    );
+    $instance = parent::create($container);
+    $instance->articleManager = $container->get('ghi_content.manager.article');
+    return $instance;
   }
 
   /**
@@ -295,40 +234,6 @@ class ArticleWizard extends FormBase {
   }
 
   /**
-   * Get options for the remote source.
-   *
-   * @return array|null
-   *   The remote source options or NULL.
-   */
-  private function getSourceOptions() {
-    $definitions = $this->remoteSourceManager->getDefinitions();
-    if (empty($definitions)) {
-      return NULL;
-    }
-    return array_map(function ($remote_source) {
-      return $this->remoteSourceManager->createInstance($remote_source);
-    }, array_keys($definitions));
-  }
-
-  /**
-   * Get the submitted article.
-   *
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state object.
-   *
-   * @return \Drupal\ghi_content\RemoteSource\RemoteSourceInterface
-   *   The remote source of the article.
-   */
-  private function getSubmittedSource(FormStateInterface $form_state) {
-    $remote_source = $form_state->getValue('source');
-    if (empty($remote_source)) {
-      return NULL;
-    }
-    $instance = $this->remoteSourceManager->createInstance($remote_source);
-    return $instance;
-  }
-
-  /**
    * Get the submitted article.
    *
    * @param \Drupal\Core\Form\FormStateInterface $form_state
@@ -348,27 +253,6 @@ class ArticleWizard extends FormBase {
       return NULL;
     }
     return $source->getArticle($article);
-  }
-
-  /**
-   * Retrieve the team options for the team select field.
-   *
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state object.
-   *
-   * @return array
-   *   An array of team names, keyed by tid.
-   */
-  private function getTeamOptions(FormStateInterface $form_state) {
-    $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree('team');
-    if (empty($terms)) {
-      return [];
-    }
-    $options = [];
-    foreach ($terms as $term) {
-      $options[$term->tid] = $term->name;
-    }
-    return $options;
   }
 
 }

@@ -27,7 +27,7 @@ visibility:
     context_mapping:
       node: '@node.node_route_context:node'
     bundles:
-      document: document
+      custom_subpage: custom_subpage
       financials: financials
       global_section: global_section
       plan_cluster: plan_cluster

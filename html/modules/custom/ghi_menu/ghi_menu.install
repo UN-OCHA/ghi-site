@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @file
+ * Contains the install hook for the GHI Menu module.
+ */
+
+/**
+ * Implements hook_install().
+ *
+ * Just make sure that the post update hook will get executed after the module
+ * get's installed.
+ */
+function ghi_menu_install($in_sync) {
+  $existing_update_functions = \Drupal::keyValue('post_update')->get('existing_updates', []);
+  $existing_update_functions = array_diff($existing_update_functions, [
+    'ghi_menu_post_update_adjust_admin_menu',
+  ]);
+  \Drupal::keyValue('post_update')->set('existing_updates', $existing_update_functions);
+}

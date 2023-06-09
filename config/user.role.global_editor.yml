@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - core.entity_view_display.node.article.default
+    - core.entity_view_display.node.custom_subpage.default
     - core.entity_view_display.node.document.default
     - core.entity_view_display.node.financials.default
     - core.entity_view_display.node.global_section.default
@@ -15,6 +16,7 @@ dependencies:
     - core.entity_view_display.node.section.default
     - filter.format.html_text
     - node.type.article
+    - node.type.custom_subpage
     - node.type.document
     - node.type.financials
     - node.type.global_section
@@ -56,6 +58,7 @@ permissions:
   - 'administer users'
   - 'configure all homepage node layout overrides'
   - 'configure editable article node layout overrides'
+  - 'configure editable custom_subpage node layout overrides'
   - 'configure editable document node layout overrides'
   - 'configure editable financials node layout overrides'
   - 'configure editable global_section node layout overrides'
@@ -65,15 +68,16 @@ permissions:
   - 'configure editable profile node layout overrides'
   - 'configure editable risk_index node layout overrides'
   - 'configure editable section node layout overrides'
-  - 'create document content'
+  - 'create custom_subpage content'
   - 'create global_section content'
   - 'create homepage content'
   - 'create news_story content'
   - 'create terms in team'
-  - 'delete own document content'
+  - 'delete own custom_subpage content'
   - 'delete own global_section content'
   - 'delete terms in team'
   - 'edit any article content'
+  - 'edit any custom_subpage content'
   - 'edit any document content'
   - 'edit any financials content'
   - 'edit any global_section content'
@@ -86,6 +90,7 @@ permissions:
   - 'edit any risk_index content'
   - 'edit any section content'
   - 'edit own article content'
+  - 'edit own custom_subpage content'
   - 'edit own document content'
   - 'edit own financials content'
   - 'edit own global_section content'
@@ -100,6 +105,7 @@ permissions:
   - 'edit terms in team'
   - 'publish any content'
   - 'publish any node type article'
+  - 'publish any node type custom_subpage'
   - 'publish any node type document'
   - 'publish any node type financials'
   - 'publish any node type global_section'
@@ -113,6 +119,7 @@ permissions:
   - 'publish any node type section'
   - 'publish editable content'
   - 'publish editable node type article'
+  - 'publish editable node type custom_subpage'
   - 'publish editable node type document'
   - 'publish editable node type financials'
   - 'publish editable node type global_section'
@@ -125,6 +132,7 @@ permissions:
   - 'publish editable node type risk_index'
   - 'publish editable node type section'
   - 'publish own node type article'
+  - 'publish own node type custom_subpage'
   - 'publish own node type document'
   - 'publish own node type financials'
   - 'publish own node type global_section'
@@ -138,6 +146,7 @@ permissions:
   - 'publish own node type section'
   - 'unpublish any content'
   - 'unpublish any node type article'
+  - 'unpublish any node type custom_subpage'
   - 'unpublish any node type document'
   - 'unpublish any node type financials'
   - 'unpublish any node type global_section'
@@ -151,6 +160,7 @@ permissions:
   - 'unpublish any node type section'
   - 'unpublish editable content'
   - 'unpublish editable node type article'
+  - 'unpublish editable node type custom_subpage'
   - 'unpublish editable node type document'
   - 'unpublish editable node type financials'
   - 'unpublish editable node type global_section'
@@ -163,6 +173,7 @@ permissions:
   - 'unpublish editable node type risk_index'
   - 'unpublish editable node type section'
   - 'unpublish own node type article'
+  - 'unpublish own node type custom_subpage'
   - 'unpublish own node type document'
   - 'unpublish own node type financials'
   - 'unpublish own node type global_section'
@@ -175,6 +186,7 @@ permissions:
   - 'unpublish own node type risk_index'
   - 'unpublish own node type section'
   - 'use layout builder ipe on editable article node layout overrides'
+  - 'use layout builder ipe on editable custom_subpage node layout overrides'
   - 'use layout builder ipe on editable document node layout overrides'
   - 'use layout builder ipe on editable financials node layout overrides'
   - 'use layout builder ipe on editable global_section node layout overrides'
@@ -188,6 +200,7 @@ permissions:
   - 'use text format html_text'
   - 'view any unpublished article content'
   - 'view any unpublished content'
+  - 'view any unpublished custom_subpage content'
   - 'view any unpublished document content'
   - 'view any unpublished financials content'
   - 'view any unpublished global_section content'

@@ -1,0 +1,17 @@
+uuid: 68041a8b-f529-431a-b543-4c0acc98e7de
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: 'Custom subpage'
+type: custom_subpage
+description: 'A custom subpage attached to a section.'
+help: ''
+new_revision: true
+preview_mode: 0
+display_submitted: false

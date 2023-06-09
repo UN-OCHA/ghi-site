@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\ghi_content\Kernel;
+namespace Drupal\Tests\ghi_subpages_custom\Kernel;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
@@ -11,11 +11,11 @@ use Drupal\node\Entity\NodeType;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
- * Tests the document manager.
+ * Tests the custom subpage manager.
  *
- * @group ghi_documents
+ * @group ghi_subpages_custom
  */
-class DocumentManagerTest extends KernelTestBase {
+class CustomSubpageManagerTest extends KernelTestBase {
 
   use UserCreationTrait;
 
@@ -32,18 +32,18 @@ class DocumentManagerTest extends KernelTestBase {
     'entity_reference',
     'text',
     'filter',
-    'ghi_documents',
+    'ghi_subpages_custom',
   ];
 
   const SECTION_BUNDLE = 'section';
-  const DOCUMENT_BUNDLE = 'document';
+  const CUSTOM_SUBPAGE_BUNDLE = 'custom_subpage';
 
   /**
-   * The document manager to test.
+   * The custom subpage manager to test.
    *
-   * @var \Drupal\ghi_documents\DocumentManager
+   * @var \Drupal\ghi_subpages_custom\CustomSubpageManager
    */
-  protected $documentManager;
+  protected $customSubpageManager;
 
   /**
    * {@inheritdoc}
@@ -57,10 +57,10 @@ class DocumentManagerTest extends KernelTestBase {
     $this->installSchema('node', ['node_access']);
     $this->installConfig(['system', 'node', 'field']);
 
-    $this->documentManager = \Drupal::service('ghi_documents.manager');
+    $this->customSubpageManager = \Drupal::service('ghi_subpages_custom.manager');
 
     NodeType::create(['type' => self::SECTION_BUNDLE])->save();
-    NodeType::create(['type' => self::DOCUMENT_BUNDLE])->save();
+    NodeType::create(['type' => self::CUSTOM_SUBPAGE_BUNDLE])->save();
 
     // Setup the tags field on our node types.
     $field_storage = FieldStorageConfig::create([
@@ -76,7 +76,7 @@ class DocumentManagerTest extends KernelTestBase {
     FieldConfig::create([
       'field_name' => 'field_entity_reference',
       'field_storage' => $field_storage,
-      'bundle' => self::DOCUMENT_BUNDLE,
+      'bundle' => self::CUSTOM_SUBPAGE_BUNDLE,
       'settings' => [
         'handler' => 'default',
         'handler_settings' => [
@@ -104,28 +104,28 @@ class DocumentManagerTest extends KernelTestBase {
     ]);
     $section->save();
 
-    // Create documents.
-    $document_1 = Node::create([
-      'type' => self::DOCUMENT_BUNDLE,
-      'title' => 'Document 1',
+    // Create custom subpages.
+    $custom_subpage_1 = Node::create([
+      'type' => self::CUSTOM_SUBPAGE_BUNDLE,
+      'title' => 'Custom subpage 1',
       'uid' => 0,
       'field_entity_reference' => [
         'target_id' => $section->id(),
       ],
     ]);
-    $document_1->save();
+    $custom_subpage_1->save();
 
-    $document_2 = Node::create([
-      'type' => self::DOCUMENT_BUNDLE,
-      'title' => 'Document 2',
+    $custom_subpage_2 = Node::create([
+      'type' => self::CUSTOM_SUBPAGE_BUNDLE,
+      'title' => 'Custom subpage 2',
       'uid' => 0,
       'field_entity_reference' => [
         'target_id' => $section->id(),
       ],
     ]);
-    $document_2->save();
+    $custom_subpage_2->save();
 
-    $this->assertEquals([$document_1->id(), $document_2->id()], array_keys($this->documentManager->loadNodesForSection($section)));
+    $this->assertEquals([$custom_subpage_1->id(), $custom_subpage_2->id()], array_keys($this->customSubpageManager->loadNodesForSection($section)));
 
   }
 

@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @file
+ * Contains install and update hooks for the GHI Custom Subpages module.
+ */
+
+/**
+ * Implements hook_install().
+ *
+ * Just make sure that 2 post update hooks will get executed after the module
+ * get's installed.
+ */
+function ghi_subpages_custom_install($in_sync) {
+  $existing_update_functions = \Drupal::keyValue('post_update')->get('existing_updates', []);
+  $existing_update_functions = array_diff($existing_update_functions, [
+    'ghi_subpages_custom_post_update_move_existing_content',
+  ]);
+  \Drupal::keyValue('post_update')->set('existing_updates', $existing_update_functions);
+}

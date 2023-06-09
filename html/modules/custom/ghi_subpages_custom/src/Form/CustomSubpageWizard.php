@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ghi_documents\Form;
+namespace Drupal\ghi_subpages_custom\Form;
 
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -8,15 +8,15 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\ghi_documents\DocumentManager;
+use Drupal\ghi_subpages_custom\CustomSubpageManager;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides a wizard form for creating document nodes.
+ * Provides a wizard form for creating custom subpage nodes.
  */
-class DocumentWizard extends FormBase {
+class CustomSubpageWizard extends FormBase {
 
   use AjaxElementTrait;
 
@@ -49,21 +49,21 @@ class DocumentWizard extends FormBase {
   protected $currentUser;
 
   /**
-   * The document manager.
+   * The custom subpage manager.
    *
-   * @var \Drupal\ghi_documents\DocumentManager
+   * @var \Drupal\ghi_subpages_custom\CustomSubpageManager
    */
-  protected $documentManager;
+  protected $customSubpageManager;
 
   /**
-   * Constructs a document create form.
+   * Constructs a custom subpage create form.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ModuleHandlerInterface $module_handler, AccountProxyInterface $user, DocumentManager $document_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ModuleHandlerInterface $module_handler, AccountProxyInterface $user, CustomSubpageManager $custom_subpage_manager) {
     $this->entityTypeManager = $entity_type_manager;
     $this->entityFieldManager = $entity_field_manager;
     $this->moduleHandler = $module_handler;
     $this->currentUser = $user;
-    $this->documentManager = $document_manager;
+    $this->customSubpageManager = $custom_subpage_manager;
   }
 
   /**
@@ -75,7 +75,7 @@ class DocumentWizard extends FormBase {
       $container->get('entity_field.manager'),
       $container->get('module_handler'),
       $container->get('current_user'),
-      $container->get('ghi_documents.manager'),
+      $container->get('ghi_subpages_custom.manager'),
     );
   }
 
@@ -83,7 +83,7 @@ class DocumentWizard extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'ghi_documents_wizard';
+    return 'ghi_subpages_custom_wizard';
   }
 
   /**
@@ -96,7 +96,7 @@ class DocumentWizard extends FormBase {
     $form['#suffix'] = '</div>';
 
     // Find out what base objects types can be referenced.
-    $fields = $this->entityFieldManager->getFieldDefinitions('node', 'document');
+    $fields = $this->entityFieldManager->getFieldDefinitions('node', CustomSubpageManager::BUNDLE);
     /** @var \Drupal\field\Entity\FieldConfig $base_object_field_config */
     $section_field_config = $fields['field_entity_reference'];
     $allowed_section_types = $section_field_config->getSetting('handler_settings')['target_bundles'];
@@ -159,7 +159,7 @@ class DocumentWizard extends FormBase {
       '#type' => 'entity_autocomplete',
       '#target_type' => 'node',
       '#title' => $this->t('Section'),
-      '#description' => $this->t('Select the section to which the document will be added.'),
+      '#description' => $this->t('Select the section to which the custom subpage will be added.'),
       '#default_value' => $section,
       '#tags' => TRUE,
       '#selection_settings' => [
@@ -174,7 +174,7 @@ class DocumentWizard extends FormBase {
     $form['title'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Title'),
-      '#description' => $this->t('Set the title for this document'),
+      '#description' => $this->t('Set the title for this custom subpage'),
       '#default_value' => NULL,
       '#required' => TRUE,
       '#access' => $step >= array_flip($steps)['title'],
@@ -185,9 +185,8 @@ class DocumentWizard extends FormBase {
       '#type' => 'select',
       '#title' => $this->t('Team'),
       '#options' => $team_options,
-      '#description' => $this->t('Select the team that will be responsible for this section.'),
+      '#description' => $this->t('Select the team that will be responsible for this page. Leave empty to inherit the team from the section.'),
       '#default_value' => $form_state->getValue('team'),
-      '#required' => TRUE,
       '#disabled' => $step > array_flip($steps)['team'],
       '#access' => $step >= array_flip($steps)['team'],
     ];
@@ -225,7 +224,7 @@ class DocumentWizard extends FormBase {
       $form['actions']['submit'] = [
         '#type' => 'submit',
         '#button_type' => 'primary',
-        '#value' => $this->t('Create document'),
+        '#value' => $this->t('Create custom subpage'),
       ];
     }
 
@@ -255,23 +254,28 @@ class DocumentWizard extends FormBase {
     $this->messenger()->deleteAll();
 
     // Create and save the section.
-    $document = $this->entityTypeManager->getStorage('node')->create([
-      'type' => DocumentManager::DOCUMENT_BUNDLE,
+    $subpage = $this->entityTypeManager->getStorage('node')->create([
+      'type' => CustomSubpageManager::BUNDLE,
       'title' => $values['title'],
       'uid' => $this->currentUser()->id(),
       'status' => FALSE,
+      'field_hero_image' => [
+        'source' => 'inherit',
+      ],
     ]);
-    $document->field_entity_reference->entity = $section;
-    $document->field_team = $values['team'];
-    $status = $document->save();
+    $subpage->field_entity_reference->entity = $section;
+    if (!empty($values['team'])) {
+      $subpage->field_team = $values['team'];
+    }
+    $status = $subpage->save();
     if ($status) {
       $this->messenger()->addStatus($this->t('Created @type for @title', [
-        '@type' => $document->type->entity->label(),
-        '@title' => $document->label(),
+        '@type' => $subpage->type->entity->label(),
+        '@title' => $subpage->label(),
       ]));
     }
 
-    $form_state->setRedirectUrl($document->toUrl());
+    $form_state->setRedirectUrl($subpage->toUrl());
   }
 
   /**

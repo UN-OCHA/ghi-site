@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for GHI Menu.
+ */
+
+/**
+ * Implements hook_menu_local_actions_alter().
+ */
+function ghi_menu_menu_local_actions_alter(&$local_actions) {
+  $local_actions['node.add_page']['class'] = 'Drupal\ghi_menu\LocalAction\LocalActionContent';
+}

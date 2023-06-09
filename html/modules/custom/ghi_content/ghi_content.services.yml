@@ -18,6 +18,9 @@ services:
   ghi_content.manager.article:
     class: Drupal\ghi_content\ContentManager\ArticleManager
     arguments: ['@entity_type.manager', '@renderer', '@current_user', '@plugin.manager.migration', '@plugin.manager.remote_source', '@ghi_content.import', '@request_stack']
+  ghi_content.manager.document:
+    class: Drupal\ghi_content\ContentManager\DocumentManager
+    arguments: ['@entity_type.manager', '@renderer', '@current_user']
   ghi_content.contextual_links.block_handler:
     class: Drupal\ghi_content\ContextualLinks\BlockHandler
     arguments: ['@entity_type.manager', '@layout_builder.tempstore_repository']

@@ -11,6 +11,7 @@ dependencies:
     - ghi_base_objects.base_object_type.organization
     - ghi_base_objects.base_object_type.plan
     - node.type.article
+    - node.type.custom_subpage
     - node.type.document
     - node.type.financials
     - node.type.global_section
@@ -24,8 +25,6 @@ dependencies:
     - node.type.section
     - taxonomy.vocabulary.tags
     - taxonomy.vocabulary.team
-    - user.role.administrator
-    - user.role.global_editor
   module:
     - ghi_base_objects
     - ghi_content
@@ -350,7 +349,7 @@ display:
       access:
         type: perm
         options:
-          perm: 'access content overview'
+          perm: 'administer nodes'
       cache:
         type: tag
       empty:
@@ -689,7 +688,7 @@ display:
     id: page_all
     display_title: All
     display_plugin: page
-    position: 1
+    position: 7
     display_options:
       title: All
       fields:
@@ -1258,7 +1257,7 @@ display:
       display_extenders: {  }
       path: admin/content/all
       menu:
-        type: tab
+        type: none
         title: All
         description: ''
         weight: 10
@@ -1288,7 +1287,7 @@ display:
     id: page_articles
     display_title: 'Article pages'
     display_plugin: page
-    position: 5
+    position: 4
     display_options:
       title: 'Article pages'
       fields:
@@ -1952,13 +1951,628 @@ display:
       tags:
         - 'config:field.storage.node.field_remote_article'
         - 'config:field.storage.node.field_tags'
+  page_custom_subpages:
+    id: page_custom_subpages
+    display_title: 'Custom subpages'
+    display_plugin: page
+    position: 3
+    display_options:
+      title: 'Custom subpages'
+      fields:
+        node_bulk_form:
+          id: node_bulk_form
+          table: node
+          field: node_bulk_form
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: node
+          plugin_id: node_bulk_form
+          label: ''
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          action_title: Action
+          include_exclude: include
+          selected_actions:
+            - node_publish_action
+            - node_unpublish_action
+        title:
+          id: title
+          table: node_field_data
+          field: title
+          entity_type: node
+          entity_field: title
+          plugin_id: field
+          label: Title
+          exclude: false
+          alter:
+            alter_text: false
+          element_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          type: string
+          settings:
+            link_to_entity: true
+        field_entity_reference:
+          id: field_entity_reference
+          table: node__field_entity_reference
+          field: field_entity_reference
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: field
+          label: Section
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: target_id
+          type: entity_reference_label
+          settings:
+            link: true
+          group_column: target_id
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        field_team:
+          id: field_team
+          table: node__field_team
+          field: field_team
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: field
+          label: Team
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: target_id
+          type: entity_reference_label
+          settings:
+            link: false
+          group_column: target_id
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        status:
+          id: status
+          table: node_field_data
+          field: status
+          entity_type: node
+          entity_field: status
+          plugin_id: field
+          label: Status
+          exclude: false
+          alter:
+            alter_text: false
+          element_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          type: boolean
+          settings:
+            format: custom
+            format_custom_false: Unpublished
+            format_custom_true: Published
+        changed:
+          id: changed
+          table: node_field_data
+          field: changed
+          entity_type: node
+          entity_field: changed
+          plugin_id: field
+          label: Updated
+          exclude: false
+          alter:
+            alter_text: false
+          element_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          type: timestamp
+          settings:
+            date_format: short
+            custom_date_format: ''
+            timezone: ''
+        operations:
+          id: operations
+          table: node
+          field: operations
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: entity_operations
+          label: Operations
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          destination: true
+      filters:
+        title:
+          id: title
+          table: node_field_data
+          field: title
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: node
+          entity_field: title
+          plugin_id: string
+          operator: contains
+          value: ''
+          group: 1
+          exposed: true
+          expose:
+            operator_id: title_op
+            label: Title
+            description: ''
+            use_operator: false
+            operator: title_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: title
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              administrator: '0'
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+        field_team_target_id:
+          id: field_team_target_id
+          table: node__field_team
+          field: field_team_target_id
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: taxonomy_index_tid
+          operator: or
+          value: {  }
+          group: 1
+          exposed: true
+          expose:
+            operator_id: field_team_target_id_op
+            label: Team
+            description: ''
+            use_operator: false
+            operator: field_team_target_id_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: field_team_target_id
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              administrator: '0'
+              rpm_administrator: '0'
+              plan_lead: '0'
+              cluster_lead: '0'
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+          reduce_duplicates: false
+          vid: team
+          type: select
+          hierarchy: false
+          limit: true
+          error_message: true
+        status:
+          id: status
+          table: node_field_data
+          field: status
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: node
+          entity_field: status
+          plugin_id: boolean
+          operator: '='
+          value: '1'
+          group: 1
+          exposed: true
+          expose:
+            operator_id: ''
+            label: Status
+            description: ''
+            use_operator: false
+            operator: status_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: status
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+          is_grouped: true
+          group_info:
+            label: 'Published status'
+            description: ''
+            identifier: status
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items:
+              1:
+                title: Published
+                operator: '='
+                value: '1'
+              2:
+                title: Unpublished
+                operator: '='
+                value: '0'
+        langcode:
+          id: langcode
+          table: node_field_data
+          field: langcode
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: node
+          entity_field: langcode
+          plugin_id: language
+          operator: in
+          value: {  }
+          group: 1
+          exposed: true
+          expose:
+            operator_id: langcode_op
+            label: Language
+            description: ''
+            use_operator: false
+            operator: langcode_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: langcode
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              administrator: '0'
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+        type_1:
+          id: type_1
+          table: node_field_data
+          field: type
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: node
+          entity_field: type
+          plugin_id: bundle
+          operator: in
+          value:
+            custom_subpage: custom_subpage
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: ''
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+        nid:
+          id: nid
+          table: node_access
+          field: nid
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: node_access
+          operator: '='
+          value: ''
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: ''
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+      filter_groups:
+        operator: AND
+        groups:
+          1: AND
+      defaults:
+        title: false
+        relationships: false
+        fields: false
+        filters: false
+        filter_groups: false
+      relationships:
+        uid:
+          id: uid
+          table: node_field_data
+          field: uid
+          admin_label: author
+          plugin_id: standard
+          required: true
+      display_description: ''
+      display_extenders: {  }
+      path: admin/content/custom-subpages
+      menu:
+        type: tab
+        title: 'Custom subpages'
+        description: ''
+        weight: -8
+        expanded: false
+        menu_name: admin
+        parent: system.admin_content
+        context: '0'
+      tab_options:
+        type: normal
+        title: Content
+        description: 'Find and manage content'
+        weight: -10
+    cache_metadata:
+      max-age: 0
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - url
+        - url.query_args
+        - user
+        - 'user.node_grants:view'
+        - user.permissions
+      tags:
+        - 'config:field.storage.node.field_entity_reference'
+        - 'config:field.storage.node.field_team'
   page_documents:
     id: page_documents
-    display_title: 'Document subpages'
+    display_title: 'Document pages'
     display_plugin: page
-    position: 6
+    position: 5
     display_options:
-      title: 'Document subpages'
+      title: 'Document pages'
       fields:
         node_bulk_form:
           id: node_bulk_form
@@ -2542,7 +3156,7 @@ display:
       path: admin/content/documents
       menu:
         type: tab
-        title: 'Document subpages'
+        title: 'Document pages'
         description: ''
         weight: -8
         expanded: false
@@ -2571,7 +3185,7 @@ display:
     id: page_global_sections
     display_title: 'Global sections'
     display_plugin: page
-    position: 3
+    position: 2
     display_options:
       title: 'Global sections'
       fields:
@@ -3242,7 +3856,7 @@ display:
     id: page_hompages
     display_title: 'Homepage containers'
     display_plugin: page
-    position: 3
+    position: 6
     display_options:
       title: 'Homepage containers'
       fields:
@@ -3542,11 +4156,9 @@ display:
           hide_alter_empty: true
           destination: true
       access:
-        type: role
+        type: perm
         options:
-          role:
-            administrator: administrator
-            global_editor: global_editor
+          perm: 'administer nodes'
       filters:
         title:
           id: title
@@ -3907,7 +4519,7 @@ display:
         - url.query_args
         - user
         - 'user.node_grants:view'
-        - user.roles
+        - user.permissions
       tags:
         - 'config:field.storage.node.field_tags'
         - 'config:field.storage.node.field_team'
@@ -3915,7 +4527,7 @@ display:
     id: page_overview
     display_title: 'Content Overview'
     display_plugin: page
-    position: 2
+    position: 8
     display_options:
       fields:
         title:
@@ -4478,12 +5090,14 @@ display:
       display_extenders: {  }
       path: admin/content/node
       menu:
-        type: 'default tab'
+        type: none
         title: Content
         description: ''
         weight: -10
+        expanded: false
         menu_name: admin
-        context: ''
+        parent: ''
+        context: '0'
       tab_options:
         type: normal
         title: Content
@@ -4506,7 +5120,7 @@ display:
     id: page_sections
     display_title: Sections
     display_plugin: page
-    position: 4
+    position: 1
     display_options:
       title: Sections
       fields:
@@ -5264,9 +5878,9 @@ display:
           required: true
       display_description: ''
       display_extenders: {  }
-      path: admin/content/sections
+      path: admin/content
       menu:
-        type: tab
+        type: 'default tab'
         title: Sections
         description: ''
         weight: -8
@@ -5275,7 +5889,7 @@ display:
         parent: system.admin_content
         context: '0'
       tab_options:
-        type: normal
+        type: none
         title: Content
         description: 'Find and manage content'
         weight: -10
