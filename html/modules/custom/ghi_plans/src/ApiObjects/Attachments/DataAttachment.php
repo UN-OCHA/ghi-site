@@ -206,6 +206,19 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
+   * Check if the given value should be considered NULL.
+   *
+   * @param mixed $value
+   *   The value to check.
+   *
+   * @return bool
+   *   TRUE if the value should be considered NULL, FALSE otherwise.
+   */
+  public function isNullValue($value) {
+    return empty($value) && $value !== 0 && $value !== "0";
+  }
+
+  /**
    * Extract the plan id from an attachment object.
    *
    * @return int
@@ -974,6 +987,8 @@ class DataAttachment extends AttachmentBase {
    *   The data point index.
    * @param bool $filter_empty
    *   Whether the values should be filtered.
+   * @param bool $filter_null
+   *   Whether the values should be filtered.
    * @param object[] $reporting_periods
    *   An optional array of reporting period objects. If not provided, all
    *   reporting periods from the plan will be used.
@@ -982,17 +997,20 @@ class DataAttachment extends AttachmentBase {
    *   The data point values, extracted from the attachment according to the
    *   given configuration.
    */
-  protected function getValuesForAllReportingPeriods($index, $filter_empty = FALSE, $reporting_periods = NULL) {
+  public function getValuesForAllReportingPeriods($index, $filter_empty = FALSE, $filter_null = FALSE, $reporting_periods = NULL) {
     if ($reporting_periods === NULL) {
       $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
     }
     $values = [];
     foreach ($reporting_periods as $reporting_period) {
-      $value = (int) $this->getValueForDataPoint($index, $reporting_period->id);
+      $value = $this->getValueForDataPoint($index, $reporting_period->id);
       if (empty($value) && $filter_empty) {
         continue;
       }
-      $values[$reporting_period->id] = $value;
+      if (empty($value) && $value !== 0 && $value !== "0" && $filter_null) {
+        continue;
+      }
+      $values[$reporting_period->id] = (int) $value;
     }
     return $values;
   }
@@ -1013,7 +1031,7 @@ class DataAttachment extends AttachmentBase {
     if ($reporting_periods === NULL) {
       $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
     }
-    $values = $this->getValuesForAllReportingPeriods($index, TRUE, $reporting_periods);
+    $values = $this->getValuesForAllReportingPeriods($index, TRUE, TRUE, $reporting_periods);
     $last_reporting_period_id = array_key_last($values);
     return $reporting_periods[$last_reporting_period_id] ?? NULL;
   }
@@ -1113,7 +1131,7 @@ class DataAttachment extends AttachmentBase {
 
     // Handle empty data by just "Pending" or "No data" for everything besides
     // percentage displays.
-    if (empty($value) && $conf['formatting'] != 'percent') {
+    if ($this->isNullValue($value) && $conf['formatting'] != 'percent') {
       return [
         '#markup' => $this->isPendingDataEntry() ? $this->t('Pending') : $this->t('No data'),
       ];

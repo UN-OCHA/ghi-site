@@ -29,7 +29,7 @@ class IndicatorAttachment extends DataAttachment {
       return $this->getValueForDataPoint($index, $monitoring_period);
     }
     $value = NULL;
-    $values = $this->getValuesForAllReportingPeriods($index, TRUE, $reporting_periods);
+    $values = $this->getValuesForAllReportingPeriods($index, FALSE, TRUE, $reporting_periods);
     if (empty($values)) {
       return $value;
     }
@@ -72,10 +72,13 @@ class IndicatorAttachment extends DataAttachment {
    */
   protected function getTooltip($conf) {
     $index = $conf['data_points'][0]['index'];
-    if (empty($this->getSingleValue($index, NULL, $conf['data_points'][0]))) {
+    $value = $this->getSingleValue($index, NULL, $conf['data_points'][0]);
+    if ($this->isNullValue($value)) {
       return NULL;
     }
-    $last_reporting_period = $this->getLastNonEmptyReportingPeriod($index);
+    // Get the last published monitoring period.
+    $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
+    $last_reporting_period = end($reporting_periods);
     if (!$last_reporting_period) {
       return NULL;
     }

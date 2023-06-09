@@ -182,24 +182,30 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     // Get the monitoring periods.
     $reporting_periods = $attachment->getPlanReportingPeriods($plan_object->getSourceId(), TRUE);
     $last_reporting_period = $attachment->getLastNonEmptyReportingPeriod($data_point, $reporting_periods);
+    $values = $attachment->getValuesForAllReportingPeriods($data_point, FALSE, TRUE, $reporting_periods);
 
     // Create the data / label arrays for all configured monitoring periods.
     $data = [];
+    $tooltips = [];
     $accumulated_reporting_periods = [];
     foreach ($reporting_periods as $reporting_period) {
+      if (!array_key_exists($reporting_period->id, $values)) {
+        continue;
+      }
       if (!$attachment instanceof IndicatorAttachment && is_array($monitoring_periods) && !in_array($reporting_period->id, $monitoring_periods)) {
         continue;
       }
-      if ($last_reporting_period && $reporting_period->periodNumber > $last_reporting_period->periodNumber) {
-        continue;
-      }
       if ($attachment instanceof IndicatorAttachment) {
-        $accumulated_reporting_periods[$reporting_period->id] = $reporting_period;
-        $data[$reporting_period->id] = $attachment->getSingleValue($data_point, $accumulated_reporting_periods, [
-          'use_calculation_method' => (bool) $use_calculation_method,
-        ]);
+        if ($use_calculation_method) {
+          $accumulated_reporting_periods[$reporting_period->id] = $reporting_period;
+          $data[$reporting_period->id] = $attachment->getSingleValue($data_point, $accumulated_reporting_periods);
+        }
+        else {
+          $data[$reporting_period->id] = $values[$reporting_period->id];
+        }
       }
       else {
+        // Caseloads.
         $data[$reporting_period->id] = $attachment->getMeasurementMetricValue($data_point, $reporting_period->id);
       }
       $totals = $attachment->values;

@@ -36,6 +36,10 @@
           white-space: nowrap;
         }
 
+        &.cd-table--chart {
+          text-align: center;
+        }
+
         &.not-available {
           font-style: italic;
         }
@@ -159,14 +163,15 @@
 
         td.spark-line-chart {
           width: 10rem;
-          padding: 0.5rem 0.25rem 0.5rem 0;
+          padding: 0.5rem 0.75rem 0.5rem 0;
 
           span.sparkline {
             display: inline-block;
             width: 100%;
 
-            svg circle {
-              fill: transparent;
+            svg circle[r="2"] {
+              r: 4px;
+              fill: rgb(254, 216, 61);
             }
           }
         }
