@@ -189,9 +189,6 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     $tooltips = [];
     $accumulated_reporting_periods = [];
     foreach ($reporting_periods as $reporting_period) {
-      if (!array_key_exists($reporting_period->id, $values)) {
-        continue;
-      }
       if (!$attachment instanceof IndicatorAttachment && is_array($monitoring_periods) && !in_array($reporting_period->id, $monitoring_periods)) {
         continue;
       }
@@ -201,12 +198,20 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
           $data[$reporting_period->id] = $attachment->getSingleValue($data_point, $accumulated_reporting_periods);
         }
         else {
-          $data[$reporting_period->id] = $values[$reporting_period->id];
+          $data[$reporting_period->id] = $values[$reporting_period->id] ?? NULL;
         }
       }
       else {
         // Caseloads.
         $data[$reporting_period->id] = $attachment->getMeasurementMetricValue($data_point, $reporting_period->id);
+      }
+
+      // Check if this measurement is an actual NULL, in which case we want to
+      // hide the tooltip.
+      $null_measurement = $data[$reporting_period->id] === NULL;
+      if ($null_measurement) {
+        $tooltips[$reporting_period->id] = NULL;
+        continue;
       }
       $totals = $attachment->values;
 

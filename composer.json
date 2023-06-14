@@ -57,10 +57,10 @@
             "package": {
                 "name": "unocha/d3-sparkline",
                 "type": "drupal-library",
-                "version": "2.0.3",
+                "version": "2.1.0",
                 "dist": {
                     "type": "zip",
-                    "url": "https://github.com/UN-OCHA/d3-sparkline/archive/refs/tags/v2.0.3.zip"
+                    "url": "https://github.com/UN-OCHA/d3-sparkline/archive/refs/tags/v2.1.0.zip"
                 }
             }
         }
@@ -137,7 +137,7 @@
         "oomphinc/composer-installers-extender": "^2.0",
         "phpoffice/phpspreadsheet": "^1.19",
         "unocha/common_design": "^7.4",
-        "unocha/d3-sparkline": "^2.0",
+        "unocha/d3-sparkline": "^2.1",
         "unocha/ocha_snap": "^8.3",
         "wieni/wmbert": "^1.11"
     },
