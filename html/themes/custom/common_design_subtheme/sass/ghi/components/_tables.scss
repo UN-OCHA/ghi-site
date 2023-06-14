@@ -52,7 +52,7 @@
           padding-left: 0;
         }
 
-        &:last-child {
+        &:last-child:not(.cd-table--chart) {
           padding-right: 0;
         }
       }
