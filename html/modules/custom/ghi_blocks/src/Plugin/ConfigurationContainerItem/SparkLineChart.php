@@ -59,7 +59,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
       '#default_value' => $this->getSubmittedValue($element, $form_state, 'data_point'),
     ];
 
-    $default_checkbox = $this->get('use_calculation_method') ?? TRUE;
+    $default_checkbox = $this->get('use_calculation_method') ?? FALSE;
     $element['use_calculation_method'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Use calculation method'),
@@ -67,7 +67,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
       '#default_value' => $this->getSubmittedValue($element, $form_state, 'use_calculation_method', $default_checkbox),
       '#access' => $attachment_prototype->isIndicator(),
     ];
-    if ($this->get('use_calculation_method') === NULL) {
+    if ($this->get('use_calculation_method') === NULL && $default_checkbox) {
       // Due to a bug with checkbox elements in ajax contexts, the default
       // value is not correctly set for new instances of a plugin. We catch
       // this situation by manually setting the checked attribute only if the

@@ -774,7 +774,7 @@ class DataAttachment extends AttachmentBase {
    */
   public function getMeasurementMetricValue($data_point, $reporting_period = 'latest') {
     $measurement = $this->getMeasurementByReportingPeriod($reporting_period);
-    return $measurement->totals[$data_point]?->value ?? 0;
+    return $measurement->totals[$data_point]?->value ?? NULL;
   }
 
   /**
