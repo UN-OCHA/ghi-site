@@ -8,18 +8,16 @@
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Url;
-
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use Drupal\hpc_common\Helpers\BlockHelper;
+use Drupal\hpc_downloads\Helpers\DownloadHelper;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
 use PhpOffice\PhpSpreadsheet\Shared\Drawing as SharedDrawing;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-
-use Drupal\hpc_common\Helpers\BlockHelper;
-use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
-use Drupal\hpc_downloads\Helpers\DownloadHelper;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 /**
  * Implements hook_theme().

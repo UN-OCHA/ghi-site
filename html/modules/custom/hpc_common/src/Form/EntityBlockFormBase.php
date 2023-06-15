@@ -2,13 +2,13 @@
 
 namespace Drupal\hpc_common\Form;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\Plugin\Field\FieldWidget\NumberWidget;
 use Drupal\Core\Field\Plugin\Field\FieldWidget\OptionsButtonsWidget;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\text\Plugin\Field\FieldWidget\TextareaWidget;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base class for custom entity forms, e.g. static blocks, pane comments.

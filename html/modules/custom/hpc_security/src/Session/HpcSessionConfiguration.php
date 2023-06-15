@@ -2,8 +2,8 @@
 
 namespace Drupal\hpc_security\Session;
 
-use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\Session\SessionConfigurationInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * An HPC specific session configuration decorator.

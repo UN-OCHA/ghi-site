@@ -2,17 +2,17 @@
 
 namespace Drupal\page_manager_publishable_variants\Plugin\Condition;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Condition\ConditionPluginBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\TempStore\SharedTempStoreFactory;
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Drupal\page_manager\Entity\PageVariant;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Provides a 'Variant published' condition.

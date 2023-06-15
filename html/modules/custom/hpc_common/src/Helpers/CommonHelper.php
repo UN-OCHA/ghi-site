@@ -2,9 +2,9 @@
 
 namespace Drupal\hpc_common\Helpers;
 
-use Drupal\Core\Url;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**

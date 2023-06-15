@@ -2,9 +2,9 @@
 
 namespace Drupal\hpc_api\Query;
 
-use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Plugin\DefaultPluginManager;
 
 /**
  * Plugin manager class for configuration container item plugins.

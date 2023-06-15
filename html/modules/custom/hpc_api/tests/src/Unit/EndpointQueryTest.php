@@ -3,16 +3,16 @@
 namespace Drupal\Tests\hpc_api\Unit;
 
 use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Prophecy\Argument;
-use GuzzleHttp\Psr7\Response;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\hpc_api\ConfigService;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\Tests\UnitTestCase;
+use GuzzleHttp\Psr7\Response;
+use Prophecy\Argument;
 
 /**
  * @covers Drupal\hpc_api\Query\EndpointQuery

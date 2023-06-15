@@ -4,10 +4,9 @@ namespace Drupal\Tests\hpc_common\Unit;
 
 require_once 'html/modules/custom/hpc_api/hpc_api.module';
 
-use Drupal\Tests\UnitTestCase;
-
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\Tests\UnitTestCase;
 
 /**
  * @covers Drupal\hpc_common\Helpers\ArrayHelper
