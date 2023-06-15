@@ -2,9 +2,9 @@
 
 namespace Drupal\ghi_form_elements;
 
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 
 /**
  * Interface for configuration container item plugins.

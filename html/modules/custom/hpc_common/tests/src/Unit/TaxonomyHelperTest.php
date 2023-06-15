@@ -2,15 +2,14 @@
 
 namespace Drupal\Tests\hpc_common\Unit;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\taxonomy\TermStorageInterface;
-use Drupal\taxonomy\Entity\Term;
-use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
-
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
+use Drupal\taxonomy\Entity\Term;
+use Drupal\taxonomy\TermStorageInterface;
+use Drupal\Tests\UnitTestCase;
 
 /**
  * @covers Drupal\hpc_common\Helpers\TaxonomyHelper

@@ -2,8 +2,8 @@
 
 namespace Drupal\hpc_api\Query;
 
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 
 /**
  * Interface for endpoint query plugins.

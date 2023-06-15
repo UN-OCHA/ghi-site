@@ -24,8 +24,8 @@ use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\node\NodeInterface;
-use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Client;
+use GuzzleHttp\Cookie\CookieJar;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

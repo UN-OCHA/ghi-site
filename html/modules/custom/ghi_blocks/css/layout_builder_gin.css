@@ -17,7 +17,7 @@ input[type="checkbox"][disabled="disabled"]:not(:checked) {
 
 #layout-builder .block-content,
 #layout-builder .block-content * {
-  pointer-events : none !important;
+  pointer-events: none !important;
 }
 
 #layout-builder .layout-builder__add-section {
@@ -76,12 +76,12 @@ input[type="checkbox"][disabled="disabled"]:not(:checked) {
 /**
  * Modifications to the block selection dialog.
  */
- #layout-builder-modal .vertical-tabs .glb-claro-details.js-layout-builder-category {
+#layout-builder-modal .vertical-tabs .glb-claro-details.js-layout-builder-category {
   border-top: 0 !important;
- }
- #layout-builder-modal .vertical-tabs .glb-claro-details.js-layout-builder-category ul li a.js-layout-builder-block-link {
+}
+#layout-builder-modal .vertical-tabs .glb-claro-details.js-layout-builder-category ul li a.js-layout-builder-block-link {
   padding-right: 2rem !important;
- }
+}
 
 /**
  * Improve display of error messages.

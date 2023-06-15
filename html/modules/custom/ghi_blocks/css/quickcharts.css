@@ -74,7 +74,7 @@ hxl-bites hxl-bite-list hxl-bite div.description.empty {
   display: none;
 }
 hxl-bites hxl-bite-list hxl-bite div.description .description-content {
-  color: #464646 ;
+  color: #464646;
 }
 
 /* Footer of a chart */
@@ -109,12 +109,12 @@ hxl-bites hxl-bite-list hxl-bite .footer .glyphicon {
 }
 
 .c3-tooltip-container table.c3-tooltip tbody tr th {
-  color: #FFFFFF !important;
+  color: #ffffff !important;
   font-size: 12px !important;
   font-family: 'Roboto', sans-serif;
 }
 .c3-tooltip-container table.c3-tooltip tbody tr td {
-  color: #FFFFFF !important;
+  color: #ffffff !important;
   font-size: 14px !important;
   font-family: 'Roboto', sans-serif;
   padding: 0px 6px !important;

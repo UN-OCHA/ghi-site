@@ -2,9 +2,8 @@
 
 namespace Drupal\Tests\hpc_common\Unit;
 
-use Drupal\Tests\UnitTestCase;
-
 use Drupal\hpc_common\Helpers\CommonHelper;
+use Drupal\Tests\UnitTestCase;
 
 /**
  * @covers Drupal\hpc_common\Helpers\CommonHelper

@@ -2,7 +2,6 @@
 
 namespace Drupal\ghi_form_elements;
 
-use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
@@ -10,6 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
+use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\hpc_api\Query\EndpointQueryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 

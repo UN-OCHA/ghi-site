@@ -13,9 +13,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_subpages\SubpageTrait;
 use Drupal\taxonomy\Entity\Term;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'SectionsByTerm' block.

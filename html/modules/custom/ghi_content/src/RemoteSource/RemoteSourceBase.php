@@ -10,9 +10,9 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\hpc_common\Hid\HidUserData;
+use GuzzleHttp\ClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
-use GuzzleHttp\ClientInterface;
 
 /**
  * Base class for remote source plugins.

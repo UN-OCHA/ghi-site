@@ -2,8 +2,8 @@
 
 namespace Drupal\ghi_teams\Plugin\views\field;
 
-use Drupal\views\ResultRow;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
+use Drupal\views\ResultRow;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

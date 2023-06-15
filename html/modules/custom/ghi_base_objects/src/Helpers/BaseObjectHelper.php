@@ -2,8 +2,8 @@
 
 namespace Drupal\ghi_base_objects\Helpers;
 
-use Drupal\hpc_common\Helpers\EntityHelper;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\hpc_common\Helpers\EntityHelper;
 
 /**
  * Helper class for base objects.

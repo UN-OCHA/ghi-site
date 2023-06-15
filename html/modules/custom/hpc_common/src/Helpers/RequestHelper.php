@@ -2,7 +2,6 @@
 
 namespace Drupal\hpc_common\Helpers;
 
-use Drupal\panels_ipe\Form\PanelsIPEBlockPluginForm;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
@@ -10,6 +9,7 @@ use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\node\Entity\Node;
+use Drupal\panels_ipe\Form\PanelsIPEBlockPluginForm;
 use Symfony\Component\HttpFoundation\Request;
 
 /**

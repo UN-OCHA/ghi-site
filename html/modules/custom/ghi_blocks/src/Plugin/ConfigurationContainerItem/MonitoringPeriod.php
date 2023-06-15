@@ -2,8 +2,8 @@
 
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\DataPointHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;

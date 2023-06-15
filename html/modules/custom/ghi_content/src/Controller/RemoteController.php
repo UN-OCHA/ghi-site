@@ -8,9 +8,9 @@ use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
 use GuzzleHttp\Exception\ClientException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Returns responses for System routes.

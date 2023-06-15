@@ -6,8 +6,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Context\ContextProviderInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\hpc_common\Helpers\NodeHelper;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Sets a node based on an HPC ID as context.

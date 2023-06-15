@@ -2,12 +2,11 @@
 
 namespace Drupal\Tests\hpc_common\Unit;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Block\BlockManager;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
-
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
+use Drupal\Tests\UnitTestCase;
 
 /**
  * @covers Drupal\hpc_common\Helpers\BlockHelper

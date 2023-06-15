@@ -3,11 +3,11 @@
 namespace Drupal\hpc_common\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Routing\CurrentRouteMatch;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\hpc_common\Hid\HidUserData;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides block to show HID Session Information.

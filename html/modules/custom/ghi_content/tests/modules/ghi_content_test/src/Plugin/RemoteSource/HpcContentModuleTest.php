@@ -4,8 +4,8 @@ namespace Drupal\ghi_content_test\Plugin\RemoteSource;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
-use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceBaseHpcContentModule;
+use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

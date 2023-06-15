@@ -8,10 +8,10 @@
 use Drupal\Core\File\FileSystem;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\hpc_api\ApiObjects\Location;
-use Psr\Http\Message\ResponseInterface;
 use Drupal\hpc_api\Helpers\QueryHelper;
 use Drupal\hpc_api\Plugin\EndpointQuery\IconQuery;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Implements hook_install().

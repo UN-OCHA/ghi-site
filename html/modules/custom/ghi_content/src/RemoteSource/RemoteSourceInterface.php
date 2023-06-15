@@ -3,9 +3,9 @@
 namespace Drupal\ghi_content\RemoteSource;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 
 /**

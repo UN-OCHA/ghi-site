@@ -9,13 +9,12 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_downloads\DownloadRecord;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Controller class for a lissting page and a delete callback.

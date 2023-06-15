@@ -2,8 +2,8 @@
 
 namespace Drupal\ghi_plans\Plugin\Field\FieldFormatter;
 
-use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\FormatterBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

@@ -2,15 +2,13 @@
 
 namespace Drupal\Tests\hpc_common\Unit;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\hpc_common\Helpers\RequestHelper;
+use Drupal\Tests\UnitTestCase;
+use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-
-use Symfony\Component\HttpFoundation\ParameterBag;
-
-use Drupal\hpc_common\Helpers\RequestHelper;
 
 /**
  * @covers Drupal\hpc_common\Helpers\RequestHelper
