@@ -89,7 +89,8 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   public function getValue() {
     $attachment = $this->getAttachmentObject();
-    return $attachment ? $attachment->getValue($this->getDataPointConfig()) : NULL;
+    $data_point_conf = $this->getDataPointConfig();
+    return $attachment && $data_point_conf ? $attachment->getValue($data_point_conf) : NULL;
   }
 
   /**
@@ -97,12 +98,12 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   public function getRenderArray() {
     $attachment = $this->getAttachmentObject();
-    if (!$attachment) {
+    $data_point_conf = $this->getDataPointConfig();
+    if (!$attachment || !$data_point_conf) {
       return NULL;
     }
     $config = $this->getPluginConfiguration();
-    $build = $attachment->formatValue($this->getDataPointConfig());
-    $data_point_conf = $this->getDataPointConfig();
+    $build = $attachment->formatValue($data_point_conf);
     $data_point_index = $data_point_conf['data_points'][0]['index'] ?? NULL;
     if ($data_point_index !== NULL && !empty($config['disaggregation_modal']) && $this->canShowDisaggregatedData($attachment, $data_point_conf)) {
       $link_url = Url::fromRoute('ghi_plans.modal_content.dissaggregation', [
