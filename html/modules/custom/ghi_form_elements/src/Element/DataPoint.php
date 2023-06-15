@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_form_elements\Element;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\FormElement;
@@ -24,6 +25,13 @@ class DataPoint extends FormElement {
    * Global switch for widget support in data points.
    */
   const WIDGET_SUPPORT = FALSE;
+
+  /**
+   * Default value for the calculation method checkbox.
+   *
+   * Applies only to measurement data points on indicator attachments.
+   */
+  const CALCULATION_METHOD_DEFAULT = TRUE;
 
   /**
    * {@inheritdoc}
@@ -112,9 +120,9 @@ class DataPoint extends FormElement {
       'processing' => !empty($values['processing']) ? $values['processing'] : array_key_first(DataAttachment::getProcessingOptions()),
       'calculation' => !empty($values['calculation']) ? $values['calculation'] : NULL,
       'data_points' => [
-        0 => array_key_exists('data_points', $values) && array_key_exists(0, $values['data_points']) ? $values['data_points'][0] : [
+        0 => $values['data_points'][0] ?? [
           'index' => array_key_first($attachment_prototype->getFields()),
-          'use_calculation_method' => TRUE,
+          'use_calculation_method' => NULL,
         ],
         1 => array_key_exists('data_points', $values) && array_key_exists(1, $values['data_points']) ? $values['data_points'][1] : NULL,
       ],
@@ -193,7 +201,7 @@ class DataPoint extends FormElement {
       $element['data_points'][0]['use_calculation_method'] = [
         '#type' => 'checkbox',
         '#title' => t('Use calculation method'),
-        '#default_value' => $defaults['data_points'][0]['use_calculation_method'] ?? TRUE,
+        '#default_value' => $defaults['data_points'][0]['use_calculation_method'] ?? self::CALCULATION_METHOD_DEFAULT,
         '#ajax' => [
           'event' => 'change',
           'callback' => [static::class, 'updateAjax'],
@@ -209,6 +217,20 @@ class DataPoint extends FormElement {
       ];
       if ($attachment && $attachment instanceof IndicatorAttachment) {
         $element['data_points'][0]['use_calculation_method']['#title'] .= ' (' . $attachment->getCalculationMethod() . ')';
+      }
+
+      // It's a difficult to find out here if this part of the form has already
+      // been submitted. What seems to work ok is to look at the value of the
+      // submitted checkbox and the index of the second data point.
+      $input = $form_state->getUserInput();
+      $submitted = NestedArray::getValue($input, array_merge($element['#parents'], ['data_points']));
+      if ($submitted[0]['use_calculation_method'] === NULL && $defaults['data_points'][1]['index'] == '' && self::CALCULATION_METHOD_DEFAULT) {
+        // Due to a bug with checkbox elements in ajax contexts, the default
+        // value is not correctly set for new instances of a plugin. We catch
+        // this situation by manually setting the checked attribute only if the
+        // config key is still unset.
+        // Might relate to https://www.drupal.org/project/drupal/issues/1100170.
+        $element['data_points'][0]['use_calculation_method']['#attributes']['checked'] = 'checked';
       }
     }
     if (!empty($element['#select_monitoring_period'])) {
@@ -249,7 +271,7 @@ class DataPoint extends FormElement {
       $element['data_points'][1]['use_calculation_method'] = [
         '#type' => 'checkbox',
         '#title' => t('Use calculation method'),
-        '#default_value' => $defaults['data_points'][1]['use_calculation_method'] ?? TRUE,
+        '#default_value' => $defaults['data_points'][1]['use_calculation_method'] ?? self::CALCULATION_METHOD_DEFAULT,
         '#ajax' => [
           'event' => 'change',
           'callback' => [static::class, 'updateAjax'],
@@ -266,6 +288,20 @@ class DataPoint extends FormElement {
       ];
       if ($attachment && $attachment instanceof IndicatorAttachment) {
         $element['data_points'][1]['use_calculation_method']['#title'] .= ' (' . $attachment->getCalculationMethod() . ')';
+      }
+
+      // It's a difficult to find out here if this part of the form has already
+      // been submitted. What seems to work ok is to look at the value of the
+      // submitted checkbox and the index of the second data point.
+      $input = $form_state->getUserInput();
+      $submitted = NestedArray::getValue($input, array_merge($element['#parents'], ['data_points']));
+      if ($submitted[1]['use_calculation_method'] === NULL && $defaults['data_points'][1]['index'] == '' && self::CALCULATION_METHOD_DEFAULT) {
+        // Due to a bug with checkbox elements in ajax contexts, the default
+        // value is not correctly set for new instances of a plugin. We catch
+        // this situation by manually setting the checked attribute only if the
+        // config key is still unset.
+        // Might relate to https://www.drupal.org/project/drupal/issues/1100170.
+        $element['data_points'][1]['use_calculation_method']['#attributes']['checked'] = 'checked';
       }
     }
     if (!empty($element['#select_monitoring_period'])) {
