@@ -38,7 +38,7 @@ if $IMPORT_BACKUP; then
   BACKUP_DIRECTORY="$PROJECT_ROOT/.docksal/backups"
   echo "Looking for backups in ${BACKUP_DIRECTORY}"
 
-  FILENAME=$(ls -la ${BACKUP_DIRECTORY} | grep 'hpc-' | egrep '.sql.gz|.sql' | tail -n 1 | awk '{print $9}')
+  FILENAME=$(ls -la ${BACKUP_DIRECTORY} | egrep '.sql.gz|.sql' | tail -n 1 | awk '{print $9}')
   FILEPATH=${BACKUP_DIRECTORY}/${FILENAME}
   if [[ ! -z "$FILENAME" && -f "${FILEPATH}" ]]; then
     echo "Found ${FILENAME}"
