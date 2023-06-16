@@ -19,7 +19,7 @@ use Prophecy\Argument;
 class BaseObjectReferenceControllerTest extends UnitTestCase {
 
   /**
-   * @covers ::extractBaseObjectComponentsFromSection
+   * Tests that base object components can be retrieved from sections.
    */
   public function testExtractBaseObjectComponentsFromSection() {
     $base_object = $this->prophesize(BaseObjectInterface::class);
@@ -63,7 +63,7 @@ class BaseObjectReferenceControllerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::extractOrphanedBaseObjectComponentsFromSections
+   * Tests that orphaned base object components can be retrieved.
    */
   public function testExtractOrphanedBaseObjectComponentsFromSections() {
     $base_object = $this->prophesize(BaseObjectInterface::class);

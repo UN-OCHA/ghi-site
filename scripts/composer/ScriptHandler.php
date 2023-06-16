@@ -13,11 +13,12 @@ use Drupal\Core\Site\Settings;
 use DrupalFinder\DrupalFinder;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Exception\IOException;
-use Webmozart\PathUtil\Path;
+use Symfony\Component\Filesystem\Path;
 
 class ScriptHandler {
 
   public static function createRequiredFiles(Event $event) {
+
     $fs = new Filesystem();
     $drupalFinder = new DrupalFinder();
     $drupalFinder->locateRoot(getcwd());
@@ -67,7 +68,6 @@ class ScriptHandler {
       umask($oldmask);
       $event->getIO()->write("Create a sites/default/files directory with chmod 0777");
     }
-
   }
 
   /**
@@ -124,15 +124,12 @@ class ScriptHandler {
   public static function checkComposerVersion(Event $event) {
     $composer = $event->getComposer();
     $io = $event->getIO();
-
     $version = $composer::VERSION;
-
     // The dev-channel of composer uses the git revision as version number,
     // try to the branch alias instead.
     if (preg_match('/^[0-9a-f]{40}$/i', $version)) {
       $version = $composer::BRANCH_ALIAS_VERSION;
     }
-
     // If Composer is installed through git we have no easy way to determine if
     // it is new enough, just display a warning.
     if ($version === '@package_version@' || $version === '@package_branch_alias_version@') {

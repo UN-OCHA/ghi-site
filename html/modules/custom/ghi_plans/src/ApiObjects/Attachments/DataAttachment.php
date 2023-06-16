@@ -582,7 +582,7 @@ class DataAttachment extends AttachmentBase {
       return (!empty($location->id) || $ignore_missing_location_ids) && (($location->id ?? NULL) != $country->id);
     });
 
-    /** @var \Drupal\hpc_api\Plugin\EndpointQuery\LocationsQuery $locations_query */
+    /** @var \Drupal\ghi_base_objects\Plugin\EndpointQuery\LocationsQuery $locations_query */
     $locations_query = $this->getEndpointQueryManager()->createInstance('locations_query');
 
     // See until which level of detail we should go for the attachment. This is
@@ -593,7 +593,7 @@ class DataAttachment extends AttachmentBase {
 
     // Then we get the coordinates for all locations that the API knows for this
     // country. The coordinates are keyed by the location id.
-    /** @var \Drupal\hpc_api\ApiObjects\Location[] $location_coordinates */
+    /** @var \Drupal\ghi_base_objects\ApiObjects\Location[] $location_coordinates */
     $location_coordinates = $country ? $locations_query->getCountryLocations($country, $max_level) : [];
 
     foreach ($locations as $location_key => $location) {

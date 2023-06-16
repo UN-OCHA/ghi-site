@@ -2,6 +2,8 @@ services:
   hpc_api.config:
     class: Drupal\hpc_api\ConfigService
     arguments: ['@config.factory']
+  hpc_api.geojson:
+    class: Drupal\hpc_api\GeoJsonService
   hpc_api.endpoint_query:
     class: Drupal\hpc_api\Query\EndpointQuery
     arguments: ['@hpc_api.config', '@logger.factory', '@page_cache_kill_switch', '@http_client', '@current_user', '@datetime.time']
