@@ -134,7 +134,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
 
         $progress_group = NULL;
         if ($item_type->getColumnType() == 'percentage') {
-          $progress_group = 'percentage';
+          $progress_group = 'coverage';
         }
         elseif ($item_type->getColumnType() == 'amount') {
           $progress_group = 'amount-' . $key;

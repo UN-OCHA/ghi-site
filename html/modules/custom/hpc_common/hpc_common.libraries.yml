@@ -22,7 +22,7 @@ toggle:
     js/toggle.js: {}
 sparkline:
   js:
-    /libraries/d3-sparkline/d3-sparkline.js: {}
+    /libraries/d3-sparkline/d3-sparkline.min.js: {}
     js/sparkline.js: {}
   dependencies:
     - hpc_common/d3

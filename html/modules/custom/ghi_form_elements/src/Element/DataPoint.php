@@ -2,12 +2,14 @@
 
 namespace Drupal\ghi_form_elements\Element;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\FormElement;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
-use Drupal\ghi_plans\Helpers\DataPointHelper;
+use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
@@ -23,6 +25,13 @@ class DataPoint extends FormElement {
    * Global switch for widget support in data points.
    */
   const WIDGET_SUPPORT = FALSE;
+
+  /**
+   * Default value for the calculation method checkbox.
+   *
+   * Applies only to measurement data points on indicator attachments.
+   */
+  const CALCULATION_METHOD_DEFAULT = TRUE;
 
   /**
    * {@inheritdoc}
@@ -53,6 +62,7 @@ class DataPoint extends FormElement {
       '#widget' => self::WIDGET_SUPPORT,
       '#hidden' => FALSE,
       '#disabled_empty_fields' => TRUE,
+      '#wrapper_id' => NULL,
       // Preset options.
       '#presets' => [],
     ];
@@ -94,6 +104,7 @@ class DataPoint extends FormElement {
   public static function processDataPoint(array &$element, FormStateInterface $form_state) {
     $attachment = $element['#attachment'];
     $plan_object = $element['#plan_object'] ?? NULL;
+    /** @var \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype */
     $attachment_prototype = $attachment ? $attachment->prototype : $element['#attachment_prototype'];
     if (empty($attachment) && empty($attachment_prototype)) {
       return $element;
@@ -106,20 +117,23 @@ class DataPoint extends FormElement {
     // Set the defaults.
     $values = (array) $form_state->getValue($element['#parents']) + (array) $element['#default_value'];
     $defaults = [
-      'processing' => !empty($values['processing']) ? $values['processing'] : array_key_first(DataPointHelper::getProcessingOptions()),
+      'processing' => !empty($values['processing']) ? $values['processing'] : array_key_first(DataAttachment::getProcessingOptions()),
       'calculation' => !empty($values['calculation']) ? $values['calculation'] : NULL,
       'data_points' => [
-        0 => array_key_exists('data_points', $values) && array_key_exists(0, $values['data_points']) ? $values['data_points'][0] : array_key_first($attachment_prototype->fields),
+        0 => $values['data_points'][0] ?? [
+          'index' => array_key_first($attachment_prototype->getFields()),
+          'use_calculation_method' => NULL,
+        ],
         1 => array_key_exists('data_points', $values) && array_key_exists(1, $values['data_points']) ? $values['data_points'][1] : NULL,
       ],
-      'formatting' => !empty($values['formatting']) ? $values['formatting'] : array_key_first(DataPointHelper::getFormattingOptions()),
+      'formatting' => !empty($values['formatting']) ? $values['formatting'] : array_key_first(DataAttachment::getFormattingOptions()),
       'widget' => !empty($values['widget']) ? $values['widget'] : 'none',
     ];
 
     $element['processing'] = [
       '#type' => 'select',
       '#title' => t('Type'),
-      '#options' => DataPointHelper::getProcessingOptions(),
+      '#options' => DataAttachment::getProcessingOptions(),
       '#default_value' => $defaults['processing'],
       '#ajax' => [
         'event' => 'change',
@@ -132,7 +146,7 @@ class DataPoint extends FormElement {
     $element['calculation'] = [
       '#type' => 'select',
       '#title' => t('Calculation'),
-      '#options' => DataPointHelper::getCalculationOptions(),
+      '#options' => DataAttachment::getCalculationOptions(),
       '#default_value' => $defaults['calculation'],
       '#states' => [
         'visible' => [
@@ -176,6 +190,49 @@ class DataPoint extends FormElement {
         'wrapper' => $wrapper_id,
       ],
     ];
+
+    $data_point_selector = FormElementHelper::getStateSelector($element, [
+      'data_points',
+      0,
+      'index',
+    ]);
+    $measurement_fields = $attachment_prototype->getMeasurementMetricFields();
+    if ($attachment_prototype->isIndicator()) {
+      $element['data_points'][0]['use_calculation_method'] = [
+        '#type' => 'checkbox',
+        '#title' => t('Use calculation method'),
+        '#default_value' => $defaults['data_points'][0]['use_calculation_method'] ?? self::CALCULATION_METHOD_DEFAULT,
+        '#ajax' => [
+          'event' => 'change',
+          'callback' => [static::class, 'updateAjax'],
+          'wrapper' => $wrapper_id,
+        ],
+        '#states' => [
+          'visible' => [
+            'select[name="' . $data_point_selector . '"]' => array_map(function ($value) {
+              return ['value' => $value];
+            }, array_keys($measurement_fields)),
+          ],
+        ],
+      ];
+      if ($attachment && $attachment instanceof IndicatorAttachment) {
+        $element['data_points'][0]['use_calculation_method']['#title'] .= ' (' . $attachment->getCalculationMethod() . ')';
+      }
+
+      // It's a difficult to find out here if this part of the form has already
+      // been submitted. What seems to work ok is to look at the value of the
+      // submitted checkbox and the index of the second data point.
+      $input = $form_state->getUserInput();
+      $submitted = NestedArray::getValue($input, array_merge($element['#parents'], ['data_points']));
+      if ($submitted[0]['use_calculation_method'] === NULL && $defaults['data_points'][1]['index'] == '' && self::CALCULATION_METHOD_DEFAULT) {
+        // Due to a bug with checkbox elements in ajax contexts, the default
+        // value is not correctly set for new instances of a plugin. We catch
+        // this situation by manually setting the checked attribute only if the
+        // config key is still unset.
+        // Might relate to https://www.drupal.org/project/drupal/issues/1100170.
+        $element['data_points'][0]['use_calculation_method']['#attributes']['checked'] = 'checked';
+      }
+    }
     if (!empty($element['#select_monitoring_period'])) {
       $element['data_points'][0]['monitoring_period'] = [
         '#type' => 'monitoring_period',
@@ -186,6 +243,11 @@ class DataPoint extends FormElement {
           'event' => 'change',
           'callback' => [static::class, 'updateAjax'],
           'wrapper' => $wrapper_id,
+        ],
+        '#states' => [
+          'visible' => [
+            'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
+          ],
         ],
       ];
     }
@@ -200,6 +262,48 @@ class DataPoint extends FormElement {
         'wrapper' => $wrapper_id,
       ],
     ];
+    $data_point_selector_1 = FormElementHelper::getStateSelector($element, [
+      'data_points',
+      1,
+      'index',
+    ]);
+    if ($attachment_prototype->isIndicator()) {
+      $element['data_points'][1]['use_calculation_method'] = [
+        '#type' => 'checkbox',
+        '#title' => t('Use calculation method'),
+        '#default_value' => $defaults['data_points'][1]['use_calculation_method'] ?? self::CALCULATION_METHOD_DEFAULT,
+        '#ajax' => [
+          'event' => 'change',
+          'callback' => [static::class, 'updateAjax'],
+          'wrapper' => $wrapper_id,
+        ],
+        '#states' => [
+          'visible' => [
+            'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
+            'select[name="' . $data_point_selector_1 . '"]' => array_map(function ($value) {
+              return ['value' => $value];
+            }, array_keys($measurement_fields)),
+          ],
+        ],
+      ];
+      if ($attachment && $attachment instanceof IndicatorAttachment) {
+        $element['data_points'][1]['use_calculation_method']['#title'] .= ' (' . $attachment->getCalculationMethod() . ')';
+      }
+
+      // It's a difficult to find out here if this part of the form has already
+      // been submitted. What seems to work ok is to look at the value of the
+      // submitted checkbox and the index of the second data point.
+      $input = $form_state->getUserInput();
+      $submitted = NestedArray::getValue($input, array_merge($element['#parents'], ['data_points']));
+      if ($submitted[1]['use_calculation_method'] === NULL && $defaults['data_points'][1]['index'] == '' && self::CALCULATION_METHOD_DEFAULT) {
+        // Due to a bug with checkbox elements in ajax contexts, the default
+        // value is not correctly set for new instances of a plugin. We catch
+        // this situation by manually setting the checked attribute only if the
+        // config key is still unset.
+        // Might relate to https://www.drupal.org/project/drupal/issues/1100170.
+        $element['data_points'][1]['use_calculation_method']['#attributes']['checked'] = 'checked';
+      }
+    }
     if (!empty($element['#select_monitoring_period'])) {
       $element['data_points'][1]['monitoring_period'] = [
         '#type' => 'monitoring_period',
@@ -211,13 +315,18 @@ class DataPoint extends FormElement {
           'callback' => [static::class, 'updateAjax'],
           'wrapper' => $wrapper_id,
         ],
+        '#states' => [
+          'visible' => [
+            'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
+          ],
+        ],
       ];
     }
 
     $element['formatting'] = [
       '#type' => 'select',
       '#title' => t('Formatting'),
-      '#options' => DataPointHelper::getFormattingOptions(),
+      '#options' => DataAttachment::getFormattingOptions(),
       '#default_value' => $defaults['formatting'],
       '#ajax' => [
         'event' => 'change',
@@ -229,7 +338,7 @@ class DataPoint extends FormElement {
     $element['widget'] = [
       '#type' => 'select',
       '#title' => t('Mini widget'),
-      '#options' => DataPointHelper::getWidgetOptions(),
+      '#options' => DataAttachment::getWidgetOptions(),
       '#default_value' => $defaults['widget'],
       '#ajax' => [
         'event' => 'change',
@@ -241,7 +350,7 @@ class DataPoint extends FormElement {
 
     // Add a preview if we have an attachment.
     if (!empty($attachment)) {
-      $build = DataPointHelper::formatValue($attachment, $defaults);
+      $build = $attachment->formatValue($defaults);
       $element['value_preview'] = [
         '#type' => 'item',
         '#title' => t('Value preview'),

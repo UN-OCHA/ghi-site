@@ -246,6 +246,9 @@ function hpc_common_preprocess_hpc_pie_chart(array &$vars) {
 function hpc_common_preprocess_hpc_sparkline(&$vars) {
   $vars['#attached']['library'][] = 'hpc_common/sparkline';
   $data = $vars['data'] ?? [];
+  $data = array_map(function ($value) {
+    return $value ?? 'null';
+  }, $data);
   $tooltips = $vars['tooltips'] ?? [];
   $baseline_value = $vars['baseline_value'];
 
@@ -392,6 +395,8 @@ function hpc_common_preprocess_hpc_reporting_period(array &$vars) {
   $vars['output'] = new FormattableMarkup(trim($format_string), [
     '@period_number' => $period_number,
     '@date_range' => $start_date_formatted . ' - ' . $end_date_formatted,
+    '@start_date' => $start_date_formatted,
+    '@end_date' => $end_date_formatted,
   ]);
 }
 
