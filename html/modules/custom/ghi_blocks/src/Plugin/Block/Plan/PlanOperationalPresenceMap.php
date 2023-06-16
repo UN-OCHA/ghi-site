@@ -851,7 +851,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
   /**
    * Get the available locations for the current context.
    *
-   * @return \Drupal\hpc_api\ApiObjects\Location[]
+   * @return \Drupal\ghi_base_objects\ApiObjects\Location[]
    *   A flat array of location objects.
    */
   private function getLocations() {
@@ -866,7 +866,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       ];
       $max_admin_level = max($plan_object->getMaxAdminLevel(), 3);
 
-      /** @var \Drupal\hpc_api\Plugin\EndpointQuery\LocationsQuery $locations_query */
+      /** @var \Drupal\ghi_base_objects\Plugin\EndpointQuery\LocationsQuery $locations_query */
       $locations_query = $this->getQueryHandler('locations');
       $locations = $locations_query->getCountryLocations($country, $max_admin_level);
 

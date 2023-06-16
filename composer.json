@@ -1,6 +1,6 @@
 {
     "name": "unocha/ghi",
-    "description": "Chimera of GHO + Hum-Insight",
+    "description": "Humanitarian Action",
     "type": "project",
     "license": "GPL-2.0-or-later",
     "homepage": "https://www.drupal.org/project/drupal",
@@ -185,21 +185,22 @@
       "post-install-cmd": [
           "DrupalProject\\composer\\ScriptHandler::createRequiredFiles",
           "DrupalProject\\composer\\ScriptHandler::removeUnnecessaryFiles",
-          "git config core.hooksPath git-hooks || true"
+          "@git-hooks"
       ],
       "post-update-cmd": [
           "DrupalProject\\composer\\ScriptHandler::createRequiredFiles",
           "DrupalProject\\composer\\ScriptHandler::removeUnnecessaryFiles",
-          "git config core.hooksPath git-hooks || true"
+          "@git-hooks"
       ],
-      "subtheme-prepare": "cd html/themes/custom/common_design_subtheme && npm install --legacy-peer-deps",
-      "subtheme-build": "cd html/themes/custom/common_design_subtheme && npm run sass:build",
-      "subtheme-lint-fix": "cd html/themes/custom/common_design_subtheme && npm run sass:lint-fix",
-      "subtheme-cleanup": "cd html/themes/custom/common_design_subtheme && rm -rf ./node_modules",
-      "subtheme": [
-          "@subtheme-prepare",
-          "@subtheme-build",
-          "@subtheme-cleanup"
+      "sub-theme": "test -d html/themes/custom/common_design_subtheme || (cp -r html/themes/contrib/common_design/common_design_subtheme html/themes/custom/ && mv html/themes/custom/common_design_subtheme/common_design_subtheme.info.yml.example html/themes/custom/common_design_subtheme/common_design_subtheme.info.yml)",
+      "git-hooks": "test -d .git && git config core.hooksPath git-hooks || exit 0",
+      "sass-prepare": "cd html/themes/custom/common_design_subtheme && npm install",
+      "sass-build": "cd html/themes/custom/common_design_subtheme && ./node_modules/.bin/sass sass:build",
+      "sass-cleanup": "cd html/themes/custom/common_design_subtheme && rm -rf ./node_modules",
+      "sass": [
+          "@sass-prepare",
+          "@sass-build",
+          "@sass-cleanup"
       ]
     },
     "extra": {
