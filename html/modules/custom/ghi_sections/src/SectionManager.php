@@ -12,7 +12,6 @@ use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_common\Helpers\StringHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
-use Drupal\node\NodeInterface;
 use Drupal\taxonomy\TermInterface;
 
 /**
@@ -25,7 +24,7 @@ class SectionManager {
   use ShortNameTrait;
 
   /**
-   * The machine name of the bundle to use for articles.
+   * The machine name of the bundle to use for sections.
    */
   const SECTION_BUNDLES = ['section', 'global_section', 'homepage'];
 
@@ -83,23 +82,6 @@ class SectionManager {
       return in_array($type->id(), $allowed_base_object_types);
     });
     return $base_object_types;
-  }
-
-  /**
-   * Reset a section.
-   *
-   * This basically empties the section storage to remove any configured
-   * layout.
-   *
-   * @param \Drupal\node\NodeInterface $node
-   *   The section node.
-   */
-  public function resetSection(NodeInterface $node) {
-    $section_storage = $this->getSectionStorageForEntity($node);
-    if ($section_storage) {
-      $section_storage->removeAllSections();
-      $section_storage->save();
-    }
   }
 
   /**

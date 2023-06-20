@@ -6,7 +6,7 @@
 .gin--horizontal-toolbar #toolbar-item-administration-tray > nav,
 .gin--horizontal-toolbar #toolbar-item-administration-tray > nav > div > .toolbar-menu,
 .gin--horizontal-toolbar #toolbar-item-administration-tray > nav > div > .toolbar-menu > li {
-  background-color: #4D4D4D !important;
+  background-color: #4d4d4d !important;
 }
 .gin--horizontal-toolbar #toolbar-item-administration-tray > nav > div > .toolbar-menu > li > a.toolbar-icon,
 .gin--horizontal-toolbar #toolbar-item-administration-tray > nav > div > .toolbar-menu > li > .toolbar-box > a.toolbar-icon {

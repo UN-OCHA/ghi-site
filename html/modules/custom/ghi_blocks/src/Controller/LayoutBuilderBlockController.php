@@ -6,12 +6,12 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\OpenDialogCommand;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\layout_builder\LayoutEntityHelperTrait;
+use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\layout_builder\Controller\MoveBlockController;
+use Drupal\layout_builder\LayoutEntityHelperTrait;
+use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\layout_builder_restrictions\Controller\MoveBlockController as RestrictedMoveBlockController;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 

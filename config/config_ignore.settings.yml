@@ -8,8 +8,6 @@ ignored_config_entities:
   - ghi_blocks.global_settings
   - '// Ignore connection credentials.'
   - ghi_content.remote_sources
-  - 'ghi_element_sync.settings:access_key'
-  - 'ghi_element_sync.settings:basic_auth'
   - '// Ignore the homepage config.'
   - 'page_manager.page.homepage:access_logic'
   - 'page_manager.page.homepage:access_conditions'

@@ -2,7 +2,6 @@
 
 namespace Drupal\ghi_form_elements;
 
-use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
@@ -10,6 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
+use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\hpc_api\Query\EndpointQueryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -82,7 +82,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
 
     $this->wrapperId = Html::getClass(implode('-', array_merge($element['#array_parents'], [
       $this->getPluginId(),
-      'wrapper',
+      'container-wrapper',
     ])));
     $element['#prefix'] = '<div id="' . $this->wrapperId . '">';
     $element['#suffix'] = '</div>';
@@ -237,6 +237,13 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
+  public function set($key, $value) {
+    $this->config[$key] = $value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function get($key) {
     if ($this->config === NULL) {
       return NULL;
@@ -327,7 +334,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   public function getSubmittedValue(array $element, FormStateInterface $form_state, $value_key, $default_value = NULL) {
     $value_parents = array_merge($element['#parents'], (array) $value_key);
     $_form_state = $form_state instanceof SubformStateInterface ? $form_state->getCompleteFormState() : $form_state;
-    $submitted = $_form_state->hasValue($value_parents) ? $_form_state->getValue($value_parents) : NULL;
+    $submitted = $_form_state->getValue($value_parents);
     $stored = $_form_state->get($value_key) ?: NULL;
     $value = $submitted ?: ($stored ?: $this->get($value_key));
     return $value ?: $default_value;

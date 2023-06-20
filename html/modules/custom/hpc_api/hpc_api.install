@@ -7,11 +7,11 @@
 
 use Drupal\Core\File\FileSystem;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\hpc_api\ApiObjects\Location;
-use Psr\Http\Message\ResponseInterface;
+use Drupal\hpc_api\GeoJsonService;
 use Drupal\hpc_api\Helpers\QueryHelper;
 use Drupal\hpc_api\Plugin\EndpointQuery\IconQuery;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Implements hook_install().
@@ -25,7 +25,7 @@ function hpc_api_install($is_syncing) {
     \Drupal::service('messenger')->addMessage(t('Unable to create the import file directory. Check the permissions on your files directory.'), 'error');
   }
 
-  $path = Location::GEO_JSON_DIR;
+  $path = GeoJsonService::GEO_JSON_DIR;
   if (!$file_system->prepareDirectory($path, Filesystem::CREATE_DIRECTORY | FileSystem::MODIFY_PERMISSIONS)) {
     \Drupal::service('messenger')->addMessage(t('Unable to create the geojson file directory. Check the permissions on your files directory.'), 'error');
   }
@@ -42,7 +42,7 @@ function hpc_api_install($is_syncing) {
 function hpc_api_uninstall($is_syncing) {
   // Delete import directory.
   \Drupal::service('file_system')->rmdir(QueryHelper::IMPORT_DIR);
-  \Drupal::service('file_system')->rmdir(Location::GEO_JSON_DIR);
+  \Drupal::service('file_system')->rmdir(GeoJsonService::GEO_JSON_DIR);
   \Drupal::service('file_system')->rmdir(IconQuery::IMPORT_DIR);
 }
 
@@ -100,7 +100,7 @@ function hpc_api_requirements($phase) {
     $requirements['hpc_api_geojson']['title'] = t('HPC API: GEO JSON directory');
     $requirements['hpc_api_geojson']['value'] = t('The directory for local storage of GEO JSON data exists and is writable.');
     $requirements['hpc_api_geojson']['severity'] = REQUIREMENT_OK;
-    hpc_api_directory_requirements(Location::GEO_JSON_DIR, $requirements['hpc_api_cluster_icons']);
+    hpc_api_directory_requirements(GeoJsonService::GEO_JSON_DIR, $requirements['hpc_api_cluster_icons']);
 
     // Setup the imports directory.
     $requirements['hpc_api_cluster_icons']['title'] = t('HPC API: Icons directory');

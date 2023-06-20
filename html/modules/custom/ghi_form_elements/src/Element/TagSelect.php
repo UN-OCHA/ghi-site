@@ -3,9 +3,9 @@
 namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Render\Element\FormElement;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Render\Element\FormElement;
 
 /**
  * Provides an element for tag selection.

@@ -12,6 +12,8 @@ use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\hpc_common\Helpers\ThemeHelper;
+use Symfony\Component\Config\Definition\Exception\InvalidTypeException;
 
 /**
  * Abstraction for API data attachment objects.
@@ -75,6 +77,7 @@ class DataAttachment extends AttachmentBase {
       'totals' => $attachment->attachmentVersion->value->metrics->values->totals,
       'has_disaggregated_data' => !empty($attachment->attachmentVersion->hasDisaggregatedData),
       'disaggregated' => $attachment->attachmentVersion->value->metrics->values->disaggregated ?? NULL,
+      'calculation_method' => $attachment->attachmentVersion->value->metrics->calculationMethod ?? NULL,
     ];
 
     // Cleanup the values.
@@ -164,6 +167,19 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
+   * Check if the given data point index represens a measurement metric.
+   *
+   * @param int $index
+   *   The index of the data point to check.
+   *
+   * @return bool
+   *   TRUE if the index represents a measurement, FALSE otherwise.
+   */
+  public function isMeasurementIndex($index) {
+    return array_key_exists($index, $this->getMeasurementMetricFields());
+  }
+
+  /**
    * Check if the given field label represens a measurement metric.
    *
    * @param string $field_label
@@ -173,7 +189,7 @@ class DataAttachment extends AttachmentBase {
    *   TRUE if the field is a measurement, FALSE otherwise.
    */
   public function isMeasurementField($field_label) {
-    return in_array($field_label, $this->measurement_fields);
+    return in_array($field_label, $this->getMeasurementMetricFields());
   }
 
   /**
@@ -187,6 +203,19 @@ class DataAttachment extends AttachmentBase {
    */
   public function isPendingDataEntry() {
     return empty($this->getPlanReportingPeriods($this->getPlanId(), TRUE));
+  }
+
+  /**
+   * Check if the given value should be considered NULL.
+   *
+   * @param mixed $value
+   *   The value to check.
+   *
+   * @return bool
+   *   TRUE if the value should be considered NULL, FALSE otherwise.
+   */
+  public function isNullValue($value) {
+    return empty($value) && $value !== 0 && $value !== "0";
   }
 
   /**
@@ -582,7 +611,7 @@ class DataAttachment extends AttachmentBase {
       return (!empty($location->id) || $ignore_missing_location_ids) && (($location->id ?? NULL) != $country->id);
     });
 
-    /** @var \Drupal\hpc_api\Plugin\EndpointQuery\LocationsQuery $locations_query */
+    /** @var \Drupal\ghi_base_objects\Plugin\EndpointQuery\LocationsQuery $locations_query */
     $locations_query = $this->getEndpointQueryManager()->createInstance('locations_query');
 
     // See until which level of detail we should go for the attachment. This is
@@ -593,7 +622,7 @@ class DataAttachment extends AttachmentBase {
 
     // Then we get the coordinates for all locations that the API knows for this
     // country. The coordinates are keyed by the location id.
-    /** @var \Drupal\hpc_api\ApiObjects\Location[] $location_coordinates */
+    /** @var \Drupal\ghi_base_objects\ApiObjects\Location[] $location_coordinates */
     $location_coordinates = $country ? $locations_query->getCountryLocations($country, $max_level) : [];
 
     foreach ($locations as $location_key => $location) {
@@ -711,10 +740,13 @@ class DataAttachment extends AttachmentBase {
   /**
    * Get a specific measurement by the reporting period.
    *
+   * @param int|string $reporting_period
+   *   The reporting period id or the string 'latest'.
+   *
    * @return \Drupal\ghi_plans\ApiObjects\Measurements\Measurement|null
    *   The measurement object or NULL.
    */
-  protected function getMeasurementByReportingPeriod($reporting_period) {
+  protected function getMeasurementByReportingPeriod($reporting_period = 'latest') {
     if ($reporting_period == 'latest') {
       return $this->getCurrentMeasurement();
     }
@@ -734,15 +766,15 @@ class DataAttachment extends AttachmentBase {
    *
    * @param int $data_point
    *   The data point index.
-   * @param int $reporting_period
-   *   The id of the reporting period.
+   * @param int|string $reporting_period
+   *   The id of the reporting period or the string 'latest'.
    *
    * @return int|float|null
    *   The value of the metric for the specified reporting period.
    */
-  public function getMeasurementMetricValue($data_point, $reporting_period) {
+  public function getMeasurementMetricValue($data_point, $reporting_period = 'latest') {
     $measurement = $this->getMeasurementByReportingPeriod($reporting_period);
-    return $measurement->totals[$data_point]?->value ?? 0;
+    return $measurement->totals[$data_point]?->value ?? NULL;
   }
 
   /**
@@ -754,8 +786,8 @@ class DataAttachment extends AttachmentBase {
    * classes should assure that they use the correct endpoint if full prototype
    * data is required.
    *
-   * @return object
-   *   An object with at least the relevant parts of an attachment prototype.
+   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype
+   *   An attachment prototype object.
    *
    * @throws \Exception
    *   If the prototype cannot be inferred.
@@ -834,6 +866,493 @@ class DataAttachment extends AttachmentBase {
    */
   private static function getEndpointQueryManager() {
     return \Drupal::service('plugin.manager.endpoint_query_manager');
+  }
+
+  /**
+   * Get a value for a data point.
+   *
+   * @param array $conf
+   *   The data point configuration.
+   *
+   * @return mixed
+   *   The data point value, extracted from the attachment according to the
+   *   given configuration.
+   *
+   * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
+   */
+  public function getValue(array $conf) {
+    switch ($conf['processing']) {
+      case 'single':
+        return $this->getSingleValue($conf['data_points'][0]['index'], NULL, $conf['data_points'][0]);
+
+      case 'calculated':
+        return $this->getCalculatedValue($conf);
+
+      default:
+        throw new InvalidTypeException(sprintf('Unknown processing type: %s', $conf['processing']));
+    }
+  }
+
+  /**
+   * Get a single value for a data point.
+   *
+   * @param int $index
+   *   The data point index.
+   * @param object[] $reporting_periods
+   *   An optional array of reporting period objects. If not provided, all
+   *   reporting periods from the plan will be used.
+   * @param array $data_point_conf
+   *   An optional array with configuration for the specific data point to
+   *   show.
+   *
+   * @return mixed
+   *   The data point value, extracted from the attachment according to the
+   *   given configuration.
+   */
+  public function getSingleValue($index, array $reporting_periods = NULL, $data_point_conf = []) {
+    return $this->getValueForDataPoint($index);
+  }
+
+  /**
+   * Get the calculated value for a data point.
+   *
+   * @param array $conf
+   *   The data point configuration.
+   * @param object[] $reporting_periods
+   *   An optional array of reporting period objects. If not provided, all
+   *   reporting periods from the plan will be used.
+   *
+   * @return mixed
+   *   The data point value, extracted from the attachment according to the
+   *   given configuration.
+   */
+  private function getCalculatedValue(array $conf, array $reporting_periods = NULL) {
+    $value_1 = (float) $this->getSingleValue($conf['data_points'][0]['index'], $reporting_periods, $conf['data_points'][0]);
+    $value_2 = (float) $this->getSingleValue($conf['data_points'][1]['index'], $reporting_periods, $conf['data_points'][1]);
+
+    switch ($conf['calculation']) {
+      case 'addition':
+        $final_value = $value_1 + $value_2;
+        break;
+
+      case 'substraction':
+        $final_value = $value_1 - $value_2;
+        break;
+
+      case 'division':
+        $final_value = $value_1 != 0 ? $value_2 / $value_1 : NULL;
+        break;
+
+      case 'percentage':
+        $final_value = $value_2 != 0 ? 1 / $value_2 * $value_1 : NULL;
+        break;
+
+      default:
+        throw new InvalidTypeException(sprintf('Unknown calculation type: %s', $conf['calculation']));
+    }
+
+    return $final_value;
+  }
+
+  /**
+   * Get a specific value for a data point in an attachment.
+   *
+   * @param int $data_point_index
+   *   The index of the data point.
+   * @param int|string $monitoring_period
+   *   The id of the monitoring period or the string 'latest'.
+   *
+   * @return mixed
+   *   The data point value.
+   */
+  public function getValueForDataPoint($data_point_index, $monitoring_period = 'latest') {
+    if ($monitoring_period) {
+      $value = $this->getMeasurementMetricValue($data_point_index, $monitoring_period);
+    }
+    if (!$monitoring_period || (!$value && !$this->isMeasurementIndex($data_point_index))) {
+      // If a monitoring period has been specified but there is no value,
+      // that's either because a measurement is not yet available or because
+      // there is an issue with the data in RPM, where the metric values
+      // haven't been copied over to the measurements. That last issue is why
+      // we do this check.
+      $value = $this->values[$data_point_index] ?? NULL;
+    }
+    return $value;
+  }
+
+  /**
+   * Get the values for all reporting periods of a data point.
+   *
+   * @param int $index
+   *   The data point index.
+   * @param bool $filter_empty
+   *   Whether the values should be filtered.
+   * @param bool $filter_null
+   *   Whether the values should be filtered.
+   * @param object[] $reporting_periods
+   *   An optional array of reporting period objects. If not provided, all
+   *   reporting periods from the plan will be used.
+   *
+   * @return mixed[]
+   *   The data point values, extracted from the attachment according to the
+   *   given configuration.
+   */
+  public function getValuesForAllReportingPeriods($index, $filter_empty = FALSE, $filter_null = FALSE, $reporting_periods = NULL) {
+    if ($reporting_periods === NULL) {
+      $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
+    }
+    $values = [];
+    foreach ($reporting_periods as $reporting_period) {
+      $value = $this->getValueForDataPoint($index, $reporting_period->id);
+      if (empty($value) && $filter_empty) {
+        continue;
+      }
+      if (empty($value) && $value !== 0 && $value !== "0" && $filter_null) {
+        continue;
+      }
+      $values[$reporting_period->id] = (int) $value;
+    }
+    return $values;
+  }
+
+  /**
+   * Get the last reporting period with a non-empty value.
+   *
+   * @param int $index
+   *   The data point index.
+   * @param object[] $reporting_periods
+   *   An optional array of reporting period objects. If not provided, all
+   *   reporting periods from the plan will be used.
+   *
+   * @return object|null
+   *   The monitoring period object or NULL if not found.
+   */
+  public function getLastNonEmptyReportingPeriod($index, $reporting_periods = NULL) {
+    if ($reporting_periods === NULL) {
+      $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
+    }
+    $values = $this->getValuesForAllReportingPeriods($index, TRUE, TRUE, $reporting_periods);
+    $last_reporting_period_id = array_key_last($values);
+    return $reporting_periods[$last_reporting_period_id] ?? NULL;
+  }
+
+  /**
+   * Get a formatted value for a data point.
+   *
+   * @param array $conf
+   *   The data point configuration.
+   *
+   * @return mixed
+   *   The data point value, extracted and formatted from the attachment
+   *   according to the given configuration.
+   *
+   * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
+   */
+  public function formatValue(array $conf) {
+    // Prepare the build.
+    $build = [
+      '#type' => 'container',
+    ];
+    // Create a render array for the actual value.
+    if (empty($conf['widget']) || $conf['widget'] == 'none') {
+      $build[] = $this->formatAsText($conf);
+    }
+    else {
+      $build[] = $this->formatAsWidget($conf);
+    }
+
+    // See if this needs a tooltip.
+    $tooltip = $this->getTooltip($conf);
+    if ($tooltip) {
+      $build[] = $tooltip;
+    }
+    return $build;
+  }
+
+  /**
+   * Get the tooltip for a rendered data point of this attachment.
+   *
+   * @param array $conf
+   *   The data point configuration.
+   *
+   * @return array|null
+   *   Either a build array for the tooltip, or NULL.
+   */
+  protected function getTooltip($conf) {
+    $index = $conf['data_points'][0]['index'];
+    if (empty($this->getSingleValue($index, NULL, $conf['data_points'][0]))) {
+      return NULL;
+    }
+    // See if this is a measurement and if we can get a formatted monitoring
+    // period for this data point.
+    $monitoring_period_id = $conf['data_points'][0]['monitoring_period'] ?? NULL;
+    return $this->isMeasurement($conf) ? $this->formatMonitoringPeriod('icon', $monitoring_period_id) : NULL;
+  }
+
+  /**
+   * Check if the given data point configuration involves measurement fields.
+   *
+   * @param array $conf
+   *   The data point configuration.
+   *
+   * @return bool
+   *   TRUE if any of the involved data points is a measurement, FALSE
+   *   otherwise.
+   */
+  protected function isMeasurement(array $conf) {
+    $data_points = $conf['data_points'];
+    $data_point_1 = $data_points[0]['index'];
+    $data_point_2 = $data_points[1]['index'];
+    switch ($conf['processing']) {
+      case 'single':
+        return $this->isMeasurementIndex($data_point_1);
+
+      case 'calculated':
+        return $this->isMeasurementIndex($data_point_1) || $this->isMeasurementIndex($data_point_2);
+
+    }
+    return FALSE;
+  }
+
+  /**
+   * Get a formatted text value for a data point.
+   *
+   * @param array $conf
+   *   The data point configuration.
+   *
+   * @return mixed
+   *   The data point value, extracted and formatted from the attachment
+   *   according to the given configuration.
+   *
+   * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
+   */
+  private function formatAsText(array $conf) {
+    $value = $this->getValue($conf);
+
+    // Handle empty data by just "Pending" or "No data" for everything besides
+    // percentage displays.
+    if ($this->isNullValue($value) && $conf['formatting'] != 'percent') {
+      return [
+        '#markup' => $this->isPendingDataEntry() ? $this->t('Pending') : $this->t('No data'),
+      ];
+    }
+
+    $decimal_format = $conf['decimal_format'] ?? NULL;
+    $rendered_value = NULL;
+    switch ($conf['formatting']) {
+      case 'raw':
+        return [
+          '#markup' => $value,
+        ];
+
+      case 'auto':
+        if ($conf['processing'] == 'calculated' && $conf['calculation'] == 'percentage') {
+          $rendered_value = [
+            '#theme' => 'hpc_percent',
+            '#ratio' => $value,
+            '#decimals' => 1,
+            '#decimal_format' => $decimal_format,
+          ];
+        }
+        else {
+          $rendered_value = [
+            '#theme' => 'hpc_autoformat_value',
+            '#value' => $value,
+            '#unit_type' => $this->unit ? $this->unit->type : 'amount',
+            '#unit_defaults' => [
+              'amount' => [
+                '#scale' => 'full',
+              ],
+            ],
+            '#decimal_format' => $decimal_format,
+          ];
+        }
+        break;
+
+      case 'currency':
+        $rendered_value = [
+          '#theme' => 'hpc_currency',
+          '#value' => $value,
+          '#decimal_format' => $decimal_format,
+        ];
+        break;
+
+      case 'amount':
+        $rendered_value = [
+          '#theme' => 'hpc_amount',
+          '#amount' => $value,
+          '#scale' => 'full',
+          '#decimal_format' => $decimal_format,
+        ];
+        break;
+
+      case 'amount_rounded':
+        $rendered_value = [
+          '#theme' => 'hpc_amount',
+          '#amount' => $value,
+          '#decimals' => 1,
+          '#decimal_format' => $decimal_format,
+        ];
+        break;
+
+      case 'percent':
+        $rendered_value = [
+          '#theme' => 'hpc_percent',
+          '#ratio' => $value,
+          '#decimals' => 1,
+          '#decimal_format' => $decimal_format,
+        ];
+        break;
+
+      default:
+        throw new InvalidTypeException(sprintf('Unknown formatting type: %s', $conf['formatting']));
+    }
+
+    return $rendered_value;
+  }
+
+  /**
+   * Get a formatted widget for a data point.
+   *
+   * @param array $conf
+   *   The data point configuration.
+   *
+   * @return mixed
+   *   The data point value, extracted and formatted from the attachment
+   *   according to the given configuration.
+   *
+   * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
+   */
+  private function formatAsWidget(array $conf) {
+    switch ($conf['widget']) {
+      case 'progressbar':
+        $value = $this->getValue($conf);
+        $widget = [
+          '#theme' => 'hpc_progress_bar',
+          '#ratio' => $value,
+        ];
+        break;
+
+      case 'pie_chart':
+        $value = $this->getValue($conf);
+        $widget = [
+          '#theme' => 'hpc_pie_chart',
+          '#ratio' => $value,
+        ];
+        break;
+
+      default:
+        throw new InvalidTypeException(sprintf('Unknown widget type: %s', $conf['widget']));
+    }
+
+    return $widget;
+  }
+
+  /**
+   * Get a formatted monitoring period for the attachment object.
+   *
+   * @param string $display_type
+   *   The display type, either "icon" or "text".
+   * @param array $monitoring_period_id
+   *   Optional: The id of the monitoring period.
+   * @param string $format_string
+   *   Optional: The format string used for the tooltip text.
+   *
+   * @return array|null
+   *   A build array or NULL.
+   */
+  public function formatMonitoringPeriod($display_type, $monitoring_period_id = NULL, $format_string = NULL) {
+    $monitoring_period = $monitoring_period_id ? $this->getReportingPeriod($monitoring_period_id) : $this->monitoring_period;
+    if (!$monitoring_period) {
+      return NULL;
+    }
+    switch ($display_type) {
+      case 'icon':
+        $build = [
+          '#theme' => 'hpc_tooltip',
+          '#tooltip' => ThemeHelper::render(array_filter([
+            '#theme' => 'hpc_reporting_period',
+            '#reporting_period' => $monitoring_period,
+            '#format_string' => $format_string,
+          ]), FALSE),
+          '#class' => 'monitoring period',
+          '#tag_content' => [
+            '#theme' => 'hpc_icon',
+            '#icon' => 'calendar_today',
+            '#tag' => 'span',
+          ],
+        ];
+        break;
+
+      case 'text':
+        $build = array_filter([
+          '#theme' => 'hpc_reporting_period',
+          '#reporting_period' => $monitoring_period,
+          '#format_string' => $format_string,
+        ]);
+        break;
+    }
+    return $build;
+  }
+
+  /**
+   * Get an array of processing options.
+   *
+   * @return array
+   *   The options array.
+   */
+  public static function getProcessingOptions() {
+    return [
+      'single' => t('Single data point'),
+      'calculated' => t('Calculated from 2 data points'),
+    ];
+  }
+
+  /**
+   * Get an array of calculation options.
+   *
+   * @return array
+   *   The options array.
+   */
+  public static function getCalculationOptions() {
+    return [
+      'addition' => t('Sum (data point 1 + data point 2)'),
+      'substraction' => t('Substraction (data point 1 - data point 2)'),
+      'division' => t('Division (data point 1 / data point 2)'),
+      'percentage' => t('Percentage (data point 1 * (100 / data point 2))'),
+    ];
+  }
+
+  /**
+   * Get an array of formatting options.
+   *
+   * @return array
+   *   The options array.
+   */
+  public static function getFormattingOptions() {
+    return [
+      'raw' => t('Raw data (no formatting)'),
+      'auto' => t('Automatic based on the unit (uses percentage for percentages, amount for all others)'),
+      'currency' => t('Currency value'),
+      'amount' => t('Amount value'),
+      'amount_rounded' => t('Amount value (rounded, 1 decimal)'),
+      'percent' => t('Percentage value'),
+    ];
+  }
+
+  /**
+   * Get an array of widget options.
+   *
+   * @return array
+   *   The options array.
+   */
+  public static function getWidgetOptions() {
+    return [
+      'none' => t('None'),
+      'progressbar' => t('Progress bar'),
+      'pie_chart' => t('Pie chart'),
+      'spark_line' => t('Spark line'),
+    ];
   }
 
 }

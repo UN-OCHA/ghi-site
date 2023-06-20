@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+#: exec_target = cli
+
+## Run the typical commands for the post-deployment
+##
+## Usage: fin post-deploy
+
+# Environment variables passed from fin:
+#
+#   $PROJECT_ROOT - (string) absolute path to NEAREST .docksal folder
+#   $VIRTUAL_HOST - (string) ex. projectname.docksal
+#   $DOCROOT - name of the docroot folder
+#   $DOCKER_RUNNING - (string) "true" or "false"
+
+# Abort if anything fails
+set -e
+
+usage="$(basename "$0") [-h] [-i]
+
+where:
+    -h  show this help text
+    -i  import a local backup before executing the post-deploy steps"
+
+IMPORT_BACKUP=false
+
+while [ "$1" != "" ]; do
+  case $1 in
+    -i )                  IMPORT_BACKUP=true
+                          ;;
+    -h | --help )         echo "$usage"
+                          exit
+                          ;;
+  esac
+  shift
+done
+
+if $IMPORT_BACKUP; then
+  BACKUP_DIRECTORY="$PROJECT_ROOT/.docksal/backups"
+  echo "Looking for backups in ${BACKUP_DIRECTORY}"
+
+  FILENAME=$(ls -la ${BACKUP_DIRECTORY} | egrep '.sql.gz|.sql' | tail -n 1 | awk '{print $9}')
+  FILEPATH=${BACKUP_DIRECTORY}/${FILENAME}
+  if [[ ! -z "$FILENAME" && -f "${FILEPATH}" ]]; then
+    echo "Found ${FILENAME}"
+
+    echo "Dropping existing tables"
+    drush sql:drop -y >/dev/null
+
+    echo "Importing ${FILENAME}"
+    drush sql:query -y --file=${FILEPATH} --extra=-f >/dev/null
+    echo "Import finished"
+  else
+    echo "No backup found in ${BACKUP_DIRECTORY}"
+    exit 1
+  fi
+fi
+
+echo "Set maintenance mode to on"
+drush sset system.maintenance_mode 1 -y
+
+echo "Clear cache"
+drush cr
+
+echo "Run non-data updates"
+drush updatedb -y --no-post-updates
+
+echo "Import configuration"
+drush cim -y
+
+echo "Run all updates"
+drush updatedb -y
+
+echo "Set maintenance mode to off"
+drush sset system.maintenance_mode 0 -y
+
+echo "Clear cache"
+drush cr

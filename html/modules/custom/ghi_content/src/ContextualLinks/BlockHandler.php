@@ -4,10 +4,10 @@ namespace Drupal\ghi_content\ContextualLinks;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\layout_builder\LayoutEntityHelperTrait;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_content\Plugin\Block\Paragraph;
+use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Sync element service class.

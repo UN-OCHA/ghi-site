@@ -7,7 +7,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ghi_element_sync\SyncBatch;
 use Drupal\ghi_sections\SectionCreateBatch;
 use Drupal\ghi_sections\SectionManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -105,36 +104,6 @@ class SectionBulkCreate extends FormBase {
       '#required' => TRUE,
     ];
 
-    $form['recreate'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Recreate'),
-      '#description' => $this->t('Check this if existing sections should be recreated.'),
-    ];
-
-    $form['reset'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Reset'),
-      '#description' => $this->t('Check this if existing sections should be reset to their initial state (empty page).'),
-    ];
-
-    if ($this->moduleHandler->moduleExists('ghi_element_sync')) {
-      $form['sync_elements'] = [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Sync elements'),
-        '#description' => $this->t('Check this if elements should be synced from Hum Insights.'),
-      ];
-      $form['sync_elements_cleanup'] = [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Cleanup any existing elements'),
-        '#description' => $this->t('Check this if existing elements should be removed before synching from remote.'),
-        '#states' => [
-          'visible' => [
-            ':input[name="sync_elements"]' => ['checked' => TRUE],
-          ],
-        ],
-      ];
-    }
-
     $form['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Bulk-create sections'),
@@ -163,28 +132,7 @@ class SectionBulkCreate extends FormBase {
       $this->sectionManager,
       $bundle,
       $form_state->getValue('team'),
-      $form_state->getValue('recreate'),
-      $form_state->getValue('reset'),
     ]);
-
-    $sync_elements = $form_state->hasValue('sync_elements') && $form_state->getValue('sync_elements');
-    if ($sync_elements && $sync_manager = $this->getSyncManager()) {
-      $sync_bundle = [
-        'section',
-      ];
-      if (in_array('plan', $bundle)) {
-        $sync_bundle[] = 'plan_cluster';
-      }
-      $batch_builder->addOperation([SyncBatch::class, 'process'], [
-        $sync_manager,
-        $sync_bundle,
-        [],
-        TRUE,
-        TRUE,
-        !$form_state->getValue('recreate'),
-        $form_state->getValue('sync_elements_cleanup') ?? FALSE,
-      ]);
-    }
 
     batch_set($batch_builder->toArray());
 
@@ -206,17 +154,6 @@ class SectionBulkCreate extends FormBase {
       $options[$term->tid] = $term->name;
     }
     return $options;
-  }
-
-  /**
-   * Get the element sync manager if available.
-   *
-   * @return \Drupal\ghi_element_sync\SyncManager|null
-   *   The sync manager service or NULL.
-   */
-  protected static function getSyncManager() {
-    $service_id = 'ghi_element_sync.sync_elements';
-    return \Drupal::hasService($service_id) ? \Drupal::service($service_id) : NULL;
   }
 
 }

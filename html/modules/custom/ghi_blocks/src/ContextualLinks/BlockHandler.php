@@ -8,9 +8,9 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\Block\InlineBlock;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Block handler service class.

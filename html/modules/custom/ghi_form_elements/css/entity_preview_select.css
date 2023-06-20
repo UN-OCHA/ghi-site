@@ -55,7 +55,7 @@
   -moz-user-select: none;
   -ms-user-select: none;
 }
-.form-type--entity_preview_select .preview-content > [data-content-id] > .featured-checkbox  {
+.form-type--entity_preview_select .preview-content > [data-content-id] > .featured-checkbox {
   zoom: 1;
 }
 .form-type--entity_preview_select .preview-content > [data-content-id] > .featured-checkbox.disabled > * {

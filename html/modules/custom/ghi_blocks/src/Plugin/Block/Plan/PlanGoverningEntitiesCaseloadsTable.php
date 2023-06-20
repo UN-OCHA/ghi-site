@@ -12,10 +12,8 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
-use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
-use Drupal\node\NodeInterface;
 
 /**
  * Provides a 'PlanGoverningEntitiesCaseloadsTable' block.
@@ -47,116 +45,10 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
+class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
-    $columns = [];
-    // Define a transition map.
-    $transition_map = [
-      'governing_entity_name' => [
-        'target' => 'entity_name',
-      ],
-      'data_point' => [
-        'target' => 'data_point',
-      ],
-      'data_point_single' => [
-        'target' => 'data_point',
-      ],
-      'data_point_calculated_progressbar' => [
-        'target' => 'data_point',
-      ],
-      'data_point_calculated_pie_chart' => [
-        'target' => 'data_point',
-      ],
-      'spark_line_chart' => [
-        'target' => 'spark_line_chart',
-      ],
-      'data_point_monitoring_period' => [
-        'target' => 'monitoring_period',
-      ],
-    ];
-    foreach ($config->table_columns as $incoming_item) {
-      $source_type = !empty($incoming_item->element) ? $incoming_item->element : NULL;
-      if (!$source_type || !array_key_exists($source_type, $transition_map)) {
-        continue;
-      }
-      // Apply generic config based on the transition map.
-      $transition_definition = $transition_map[$source_type];
-      $item = [
-        'item_type' => $transition_definition['target'],
-        'config' => [
-          'label' => property_exists($incoming_item, 'label') ? $incoming_item->label : NULL,
-        ],
-      ];
-      if (array_key_exists('config', $transition_definition)) {
-        $item['config'] += $transition_definition['config'];
-      }
-
-      // Do special processing for individual item types.
-      $value = property_exists($incoming_item, 'value') ? $incoming_item->value : NULL;
-      if (is_object($value) && property_exists($value, 'cluster_restrict') && property_exists($value, 'cluster_tag')) {
-        $item['config']['cluster_restrict'] = [
-          'type' => $value->cluster_restrict,
-          'tag' => $value->cluster_tag,
-        ];
-      }
-      switch ($transition_definition['target']) {
-
-        case 'data_point':
-          $value->data_points[0] = [
-            'index' => $value->data_point_1,
-            'monitoring_period' => $value->monitoring_period_1 ?? 'latest',
-          ];
-          $value->data_points[1] = [
-            'index' => $value->data_point_2,
-            'monitoring_period' => $value->monitoring_period_2 ?? 'latest',
-          ];
-          unset($value->data_point_1);
-          unset($value->data_point_2);
-          unset($value->monitoring_period_1);
-          unset($value->monitoring_period_2);
-          unset($value->mini_widget);
-          $item['config']['data_point'] = (array) $value;
-          break;
-
-        case 'spark_line_chart':
-          $item['config']['data_point'] = $value->data_point->data_point_1;
-          $item['config']['monitoring_periods'] = $value->monitoring_periods;
-          $item['config']['show_baseline'] = $value->show_baseline;
-          $item['config']['baseline'] = $value->baseline->data_point_1;
-          $item['config']['include_latest_period'] = $value->include_latest_period;
-          break;
-
-        case 'monitoring_period':
-          $item['config']['display_type'] = $value->display_type;
-          break;
-
-        default:
-          break;
-      }
-      $columns[] = $item;
-    }
-    return [
-      'label' => property_exists($config, 'widget_title') ? $config->widget_title : NULL,
-      'label_display' => TRUE,
-      'hpc' => [
-        'base' => [
-          'include_non_caseloads' => property_exists($config, 'include_non_caseloads') ? $config->include_non_caseloads : FALSE,
-          'include_unpublished_clusters' => property_exists($config, 'include_unpublished_clusters') ? $config->include_unpublished_clusters : FALSE,
-          'prototype_id' => NULL,
-        ],
-        'table' => [
-          'columns' => $columns,
-        ],
-      ],
-    ];
-  }
 
   /**
    * {@inheritdoc}

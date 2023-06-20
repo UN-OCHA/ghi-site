@@ -20,6 +20,9 @@
           dasharray_baseline: '5, 10',
           point_radius: 2,
           tooltip: function(i) {
+            if (!tooltip_content[i]) {
+              return null;
+            }
             return '<div class="tippy-box" data-state="visible" tabindex="-1" data-animation="fade" role="tooltip" data-placement="top"><div class="tippy-content" data-state="visible" style="transition-duration: 300ms;"><span>' + tooltip_content[i] + '</span></div><div class="tippy-arrow"></div></div>';
           }
         };

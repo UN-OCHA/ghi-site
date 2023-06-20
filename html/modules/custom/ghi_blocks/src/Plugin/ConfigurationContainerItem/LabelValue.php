@@ -4,7 +4,7 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_plans\Helpers\DataPointHelper;
+use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 
 /**
  * Provides an entity counter item for configuration containers.
@@ -28,7 +28,7 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
       '#title' => $this->t('Value'),
       '#default_value' => array_key_exists('value', $this->config) ? $this->config['value'] : NULL,
     ];
-    $formatting_options = DataPointHelper::getFormattingOptions();
+    $formatting_options = DataAttachment::getFormattingOptions();
     unset($formatting_options['auto']);
     $element['formatting'] = [
       '#type' => 'select',

@@ -1,0 +1,76 @@
+version: "2.2"
+
+networks:
+  default:
+
+volumes:
+  ghi-site-database:
+  ghi-site-public:
+  ghi-site-private:
+
+services:
+  memcache:
+    restart: always
+    image: public.ecr.aws/unocha/memcache:1.6
+    hostname: ghi-test-memcache
+    container_name: ghi-test-memcache
+    environment:
+      MEMCACHE_MAX_MEMORY: 64
+    ports:
+      - "11211"
+    networks:
+      - default
+
+  mysql:
+    image: public.ecr.aws/unocha/mysql:10.6
+    hostname: ghi-test-mysql
+    container_name: ghi-test-mysql
+    environment:
+      - MYSQL_DB=ghi
+      - MYSQL_USER=ghi
+      - MYSQL_PASS=ghi
+    volumes:
+      - "ghi-site-database:/var/lib/mysql:rw"
+    networks:
+      - default
+
+  drupal:
+    image: unocha/ghi-site:local
+    hostname: ghi-test-site
+    container_name: ghi-test-site
+    depends_on:
+      # - memcache
+      - mysql
+    volumes:
+      - "./settings:/srv/www/shared/settings:ro"
+      # Mount volumes for the private and public files.
+      - "ghi-site-public:/srv/www/html/sites/default/files:rw"
+      - "ghi-site-private:/srv/www/html/sites/default/private:rw"
+      # Mount the folders needed for the tests.
+      - "../../phpcs.xml:/srv/www/phpcs.xml:ro"
+      - "../../phpunit.xml:/srv/www/phpunit.xml:ro"
+      - "../../html/sites/simpletest:/srv/www/html/sites/simpletest:rw"
+      # Mount local custom code.
+      #- "../html/modules/custom:/srv/www/html/modules/custom:ro"
+      #- "../html/themes/custom:/srv/www/html/themes/custom:ro"
+    environment:
+      - TERM=xterm
+      - ENVIRONMENT=dev
+      - NGINX_SERVERNAME=ghi-test-site,localhost,127.0.0.1
+      - NGINX_OVERRIDE_PROTOCOL=HTTP,ghi-test-site,localhost,127.0.0.1
+      - DRUSH_OPTIONS_URI=http://ghi-test-site
+      - DRUPAL_DB_DATABASE=ghi
+      - DRUPAL_DB_USERNAME=ghi
+      - DRUPAL_DB_PASSWORD=ghi
+      - DRUPAL_DB_HOST=mysql
+      - DRUPAL_DB_DRIVER=mysql
+      - PHP_ENVIRONMENT=dev
+      - PHP_XDEBUG=true
+      - XDEBUG_MODE=coverage
+      - BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output
+      - DTT_BASE_URL=http://127.0.0.1
+      - SYMFONY_DEPRECATIONS_HELPER=disabled
+    ports:
+    - "8081:80"
+    networks:
+      - default

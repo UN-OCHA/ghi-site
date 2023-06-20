@@ -3,9 +3,8 @@
 namespace Drupal\hpc_downloads\DownloadMethods;
 
 use Drupal\Core\Url;
-
-use Drupal\hpc_downloads\Helpers\FileHelper;
 use Drupal\hpc_downloads\DownloadRecord;
+use Drupal\hpc_downloads\Helpers\FileHelper;
 
 /**
  * Create PNG files.

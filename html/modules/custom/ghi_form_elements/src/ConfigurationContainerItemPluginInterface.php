@@ -2,9 +2,9 @@
 
 namespace Drupal\ghi_form_elements;
 
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 
 /**
  * Interface for configuration container item plugins.
@@ -117,6 +117,16 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
    * This should be used only during configuration steps.
    */
   public function preview($key);
+
+  /**
+   * Set an item from config by key.
+   *
+   * @param string $key
+   *   The key to set.
+   * @param mixed $value
+   *   The value to set.
+   */
+  public function set($key, $value);
 
   /**
    * Get an item from config by key if it exists.

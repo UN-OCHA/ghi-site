@@ -153,6 +153,13 @@ gho-further-reading:
   css:
     theme:
       components/gho-further-reading/gho-further-reading.css: {}
+gho-image-with-text:
+  css:
+    theme:
+      components/gho-image-with-text/gho-image-with-text.css: {}
+  dependencies:
+    - common_design_subtheme/gho-aside
+    - common_design_subtheme/gho-caption
 gho-interactive-content:
   css:
     theme:

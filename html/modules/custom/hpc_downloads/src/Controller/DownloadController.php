@@ -2,37 +2,36 @@
 
 namespace Drupal\hpc_downloads\Controller;
 
-use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\Ajax\OpenModalDialogCommand;
-use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\InvokeCommand;
+use Drupal\Core\Ajax\OpenModalDialogCommand;
+use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Http\RequestStack;
-use Drupal\Core\Url;
 use Drupal\Core\Render\Renderer;
-use Drupal\views\Views;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-
+use Drupal\Core\Url;
 use Drupal\hpc_common\Helpers\BlockHelper;
-use Drupal\hpc_common\Helpers\ViewsHelper;
 use Drupal\hpc_common\Helpers\RequestHelper;
-use Drupal\hpc_downloads\DownloadRecord;
-use Drupal\hpc_downloads\DownloadSource\ViewsSource;
-use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
-use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
-use Drupal\hpc_downloads\Interfaces\HPCDownloadPDFInterface;
-use Drupal\hpc_downloads\Interfaces\HPCBatchedDownloadExcelInterface;
+use Drupal\hpc_common\Helpers\ViewsHelper;
 use Drupal\hpc_downloads\Ajax\DownloadObserverCommand;
 use Drupal\hpc_downloads\Ajax\DownloadStatusUpdateCommand;
 use Drupal\hpc_downloads\DownloadDialog\DownloadDialogPlugin;
 use Drupal\hpc_downloads\DownloadDialog\DownloadDialogViews;
+use Drupal\hpc_downloads\DownloadRecord;
+use Drupal\hpc_downloads\DownloadSource\ViewsSource;
+use Drupal\hpc_downloads\Interfaces\HPCBatchedDownloadExcelInterface;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadPDFInterface;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadSourceInterface;
 use Drupal\hpc_downloads\NodeDownloadPlugin;
+use Drupal\views\Views;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Download controller class.

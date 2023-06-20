@@ -2,13 +2,13 @@
 
 namespace Drupal\hpc_downloads\DownloadDialog;
 
-use Drupal\Core\Link;
-use Drupal\Core\Url;
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Link;
 use Drupal\Core\Security\TrustedCallbackInterface;
-use Drupal\views\ViewExecutable;
+use Drupal\Core\Url;
 use Drupal\hpc_downloads\DownloadSource\ViewsSource;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
+use Drupal\views\ViewExecutable;
 
 /**
  * Provides a download dialog for views based pages.

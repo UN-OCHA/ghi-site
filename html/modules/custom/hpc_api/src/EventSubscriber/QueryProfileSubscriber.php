@@ -5,8 +5,8 @@ namespace Drupal\hpc_api\EventSubscriber;
 use Drupal\hpc_api\Helpers\ProfileHelper;
 use Drupal\hpc_api\Helpers\QueryHelper;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\Event\TerminateEvent;
+use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
  * Dump profiling information at the end of a request.

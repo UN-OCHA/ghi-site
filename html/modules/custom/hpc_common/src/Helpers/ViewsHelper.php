@@ -3,11 +3,10 @@
 namespace Drupal\hpc_common\Helpers;
 
 use Drupal\Core\Url;
-use Drupal\views\Views;
-use Drupal\views\ViewExecutable;
-
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
+use Drupal\views\ViewExecutable;
+use Drupal\views\Views;
 
 /**
  * Helper class for Views.
