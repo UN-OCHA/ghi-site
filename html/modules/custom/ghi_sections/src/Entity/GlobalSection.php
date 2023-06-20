@@ -28,6 +28,9 @@ class GlobalSection extends Node implements SectionNodeInterface {
    * {@inheritdoc}
    */
   public function getImage() {
+    if (!$this->hasField('field_hero_image')) {
+      return NULL;
+    }
     return $this->get('field_hero_image');
   }
 

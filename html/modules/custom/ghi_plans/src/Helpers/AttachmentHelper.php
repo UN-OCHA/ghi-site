@@ -3,9 +3,10 @@
 namespace Drupal\ghi_plans\Helpers;
 
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
+use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\ContactAttachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment;
 use Symfony\Component\Config\Definition\Exception\InvalidTypeException;
 
@@ -51,8 +52,10 @@ class AttachmentHelper {
   public static function processAttachment(object $attachment) {
     switch (strtolower($attachment->type)) {
       case 'caseload':
+        return new CaseloadAttachment($attachment);
+
       case 'indicator':
-        return new DataAttachment($attachment);
+        return new IndicatorAttachment($attachment);
 
       case 'filewebcontent':
         return new FileAttachment($attachment);

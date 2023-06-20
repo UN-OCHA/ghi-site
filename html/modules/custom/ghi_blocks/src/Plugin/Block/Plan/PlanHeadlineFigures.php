@@ -8,10 +8,8 @@ use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
-use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
-use Drupal\node\NodeInterface;
 
 /**
  * Provides a 'PlanHeadlineFigures' block.
@@ -38,191 +36,13 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, SyncableBlockInterface, ContainerFactoryPluginInterface {
+class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, ContainerFactoryPluginInterface {
 
   use ConfigurationContainerTrait;
   use ConfigurationContainerGroup;
   use BlockCommentTrait;
 
   const MAX_ITEMS = 20;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
-    $items = [];
-
-    // First define a default group. Incoming elements are not grouped, but the
-    // target plugin uses grouping.
-    $items[] = [
-      'item_type' => 'item_group',
-      'id' => 0,
-      'config' => [
-        'label' => t('Population'),
-      ],
-      'weight' => 0,
-      'pid' => NULL,
-    ];
-    $items[] = [
-      'item_type' => 'item_group',
-      'id' => 1,
-      'config' => [
-        'label' => t('Financials'),
-      ],
-      'weight' => 0,
-      'pid' => NULL,
-    ];
-    $items[] = [
-      'item_type' => 'item_group',
-      'id' => 2,
-      'config' => [
-        'label' => t('Presence'),
-      ],
-      'weight' => 0,
-      'pid' => NULL,
-    ];
-
-    $group_map = [
-      'attachment_data' => 0,
-      'funding_data' => 1,
-      'entity_counter' => 2,
-      'project_counter' => 2,
-      'label_value' => 2,
-    ];
-
-    // Define a transition map.
-    $transition_map = [
-      'plan_entities_counter' => [
-        'target' => 'entity_counter',
-        'config' => ['entity_type' => 'plan'],
-      ],
-      'governing_entities_counter' => [
-        'target' => 'entity_counter',
-        'config' => ['entity_type' => 'governing'],
-      ],
-      'partners_counter' => [
-        'target' => 'project_counter',
-        'config' => ['data_type' => 'organizations_count'],
-      ],
-      'projects_counter' => [
-        'target' => 'project_counter',
-        'config' => ['data_type' => 'projects_count'],
-      ],
-      'attachment_value' => [
-        'target' => 'attachment_data',
-      ],
-      'original_requirements' => [
-        'target' => 'funding_data',
-        'config' => ['data_type' => 'original_requirements'],
-      ],
-      'funding_requirements' => [
-        'target' => 'funding_data',
-        'config' => ['data_type' => 'current_requirements'],
-      ],
-      'total_funding' => [
-        'target' => 'funding_data',
-        'config' => ['data_type' => 'funding_totals'],
-      ],
-      'outside_funding' => [
-        'target' => 'funding_data',
-        'config' => ['data_type' => 'outside_funding'],
-      ],
-      'funding_coverage' => [
-        'target' => 'funding_data',
-        'config' => ['data_type' => 'funding_coverage'],
-      ],
-      'funding_gap' => [
-        'target' => 'funding_data',
-        'config' => ['data_type' => 'funding_gap'],
-      ],
-      'label_value' => [
-        'target' => 'label_value',
-      ],
-    ];
-    foreach ($config->items as $incoming_item) {
-      $source_type = !empty($incoming_item->element) ? $incoming_item->element : NULL;
-      if (!$source_type || !array_key_exists($source_type, $transition_map)) {
-        continue;
-      }
-      // Apply generic config based on the transition map.
-      $transition_definition = $transition_map[$source_type];
-      $item = [
-        'item_type' => $transition_definition['target'],
-        'pid' => $group_map[$transition_definition['target']] ?? 0,
-        'id' => count($items),
-        'weight' => count($items),
-        'config' => [
-          'label' => $incoming_item->label,
-        ],
-      ];
-      if (array_key_exists('config', $transition_definition)) {
-        $item['config'] += $transition_definition['config'];
-      }
-
-      // Do special processing for individual item types.
-      $value = $incoming_item->value;
-      if (is_object($value) && property_exists($value, 'cluster_restrict') && property_exists($value, 'cluster_tag')) {
-        $item['config']['cluster_restrict'] = [
-          'type' => $value->cluster_restrict,
-          'tag' => $value->cluster_tag,
-        ];
-      }
-      switch ($transition_definition['target']) {
-        case 'entity_counter':
-          $item['config']['entity_prototype'] = $value;
-          break;
-
-        case 'label_value':
-          $item['config']['value'] = $value;
-          break;
-
-        case 'original_requirements':
-        case 'funding_requirements':
-          $item['config']['scale'] = property_exists($value, 'formatting') ? $value->formatting : 'auto';
-          break;
-
-        case 'attachment_data':
-          $item['config']['attachment'] = [
-            'entity_type' => $value->attachment_select->entity_type,
-            'attachment_type' => $value->attachment_select->attachment_type,
-            'attachment_id' => $value->attachment_select->attachment_id,
-          ];
-          $item['config']['data_point'] = [
-            'processing' => $value->data_point->processing,
-            'calculation' => $value->data_point->calculation,
-            'data_points' => [
-              0 => [
-                'index' => $value->data_point->data_point_1,
-                'monitoring_period' => $value->data_point->monitoring_period_1 ?? 'latest',
-              ],
-              1 => [
-                'index' => $value->data_point->data_point_2,
-                'monitoring_period' => $value->data_point->monitoring_period_2 ?? 'latest',
-              ],
-            ],
-            'formatting' => $value->data_point->formatting,
-          ];
-          break;
-
-        case 'project_counter':
-        default:
-          break;
-      }
-      $items[] = $item;
-    }
-    return [
-      'label' => '',
-      'label_display' => FALSE,
-      'hpc' => [
-        'key_figures' => [
-          'items' => $items,
-        ],
-        'display' => [
-          'comment' => NULL,
-        ],
-      ],
-    ];
-  }
 
   /**
    * {@inheritdoc}

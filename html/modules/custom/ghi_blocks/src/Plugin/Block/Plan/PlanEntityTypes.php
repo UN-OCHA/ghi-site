@@ -2,17 +2,15 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Markup;
-use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
+use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
-use Drupal\node\NodeInterface;
 
 /**
  * Provides a 'PlanEntityTypes' block.
@@ -30,24 +28,7 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterface, SyncableBlockInterface {
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
-    return [
-      'label' => '',
-      'label_display' => TRUE,
-      'hpc' => [
-        'entity_ids' => property_exists($config, 'entity_ids') ? (array) $config->entity_ids : [],
-        'entity_ref_code' => $config->entity_type,
-        'id_type' => $config->id_type,
-        'sort' => $config->sort,
-        'sort_column' => $config->sort_column,
-      ],
-    ];
-  }
+class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterface {
 
   /**
    * {@inheritdoc}

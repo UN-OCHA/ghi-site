@@ -7,12 +7,12 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\ghi_sections\Entity\GlobalSection;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\ghi_subpages\SubpageManager;
 use Drupal\ghi_subpages\SubpageTrait;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'SubpageNavigation' block.

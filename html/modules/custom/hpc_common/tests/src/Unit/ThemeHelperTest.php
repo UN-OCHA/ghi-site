@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\hpc_common\Unit;
 
-use Twig\Environment;
-use Drupal\Tests\UnitTestCase;
-use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\hpc_common\Helpers\ThemeHelper;
+use Drupal\Tests\UnitTestCase;
+use Twig\Environment;
 
 /**
  * @covers Drupal\hpc_common\Helpers\ThemeHelper

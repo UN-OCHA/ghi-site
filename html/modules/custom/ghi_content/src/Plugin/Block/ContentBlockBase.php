@@ -2,8 +2,8 @@
 
 namespace Drupal\ghi_content\Plugin\Block;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base class for Content block plugins.

@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   id = "plan_overview_query",
  *   label = @Translation("Plan overview query"),
  *   endpoint = {
- *     "public" = "fts/flow/plan/overview/progress/{year}",
+ *     "public" = "public/plan/overview/{year}",
  *     "authenticated" = "plan/overview/{year}",
  *     "version" = "v2"
  *   }

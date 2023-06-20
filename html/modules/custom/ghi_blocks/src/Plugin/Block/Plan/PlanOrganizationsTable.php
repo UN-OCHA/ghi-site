@@ -11,10 +11,8 @@ use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\ProjectFunding;
 use Drupal\ghi_blocks\Traits\OrganizationsBlockTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
-use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
-use Drupal\node\NodeInterface;
 
 /**
  * Provides a 'PlanOrganizationsTable' block.
@@ -50,98 +48,11 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
+class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use ConfigurationContainerTrait;
   use TableSoftLimitTrait;
   use OrganizationsBlockTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
-    $columns = [];
-    // Define a transition map.
-    $transition_map = [
-      'organization_name' => [
-        'target' => 'entity_name',
-      ],
-      'project_codes' => [
-        'target' => 'organization_project_counter',
-      ],
-      'clusters' => [
-        'target' => 'organization_cluster_list',
-        'config' => ['display_icons' => FALSE],
-      ],
-      // 'plan_entities' => [],
-      'original_requirements' => [
-        'target' => 'project_funding',
-        'config' => ['data_type' => 'original_requirements'],
-      ],
-      'current_requirements' => [
-        'target' => 'project_funding',
-        'config' => ['data_type' => 'current_requirements'],
-      ],
-      'total_funding' => [
-        'target' => 'project_funding',
-        'config' => ['data_type' => 'total_funding'],
-      ],
-      'coverage' => [
-        'target' => 'project_funding',
-        'config' => ['data_type' => 'coverage'],
-      ],
-      'requirements_changes' => [
-        'target' => 'project_funding',
-        'config' => ['data_type' => 'requirements_changes'],
-      ],
-    ];
-
-    foreach ($config->table_columns as $incoming_item) {
-      $source_type = !empty($incoming_item->element) ? $incoming_item->element : NULL;
-      if (!$source_type || !array_key_exists($source_type, $transition_map)) {
-        continue;
-      }
-      // Apply generic config based on the transition map.
-      $transition_definition = $transition_map[$source_type];
-      $item = [
-        'item_type' => $transition_definition['target'],
-        'config' => [
-          'label' => property_exists($incoming_item, 'label') ? $incoming_item->label : NULL,
-        ],
-      ];
-      if (array_key_exists('config', $transition_definition)) {
-        $item['config'] += $transition_definition['config'];
-      }
-
-      // Do special processing for individual item types.
-      $value = property_exists($incoming_item, 'value') ? $incoming_item->value : NULL;
-      if (is_object($value) && property_exists($value, 'display_icons')) {
-        $item['config']['display_icons'] = $value->display_icons;
-      }
-      if (is_object($value) && property_exists($value, 'cluster_restrict') && property_exists($value, 'cluster_tag')) {
-        $item['config']['cluster_restrict'] = [
-          'type' => $value->cluster_restrict,
-          'tag' => $value->cluster_tag,
-        ];
-      }
-      $columns[] = $item;
-    }
-    return [
-      'label' => property_exists($config, 'widget_title') ? $config->widget_title : NULL,
-      'label_display' => TRUE,
-      'hpc' => [
-        'organizations' => [
-          'organization_ids' => (array) $config->organization_ids ?? [],
-        ],
-        'table' => [
-          'columns' => $columns,
-        ],
-        'display' => [
-          'soft_limit' => 5,
-        ],
-      ],
-    ];
-  }
 
   /**
    * {@inheritdoc}

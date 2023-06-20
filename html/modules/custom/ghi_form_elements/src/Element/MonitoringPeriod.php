@@ -28,6 +28,7 @@ class MonitoringPeriod extends Select {
     return [
       '#default_value' => NULL,
       '#input' => TRUE,
+      '#multiple' => FALSE,
       '#tree' => TRUE,
       '#plan_id' => NULL,
       '#sort_options' => FALSE,

@@ -2,11 +2,10 @@
 
 namespace Drupal\hpc_downloads\DownloadSource;
 
-use Drupal\views\ViewExecutable;
 use Drupal\Component\Utility\UrlHelper;
-
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
+use Drupal\views\ViewExecutable;
 
 /**
  * A download source class for views executables.

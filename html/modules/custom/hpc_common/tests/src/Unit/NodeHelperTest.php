@@ -2,18 +2,17 @@
 
 namespace Drupal\Tests\hpc_common\Unit;
 
-use Drupal\Tests\UnitTestCase;
-use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeRepositoryInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
-use Drupal\node\NodeStorageInterface;
-use Drupal\node\Entity\Node;
-use Prophecy\Argument;
-
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\hpc_common\Helpers\NodeHelper;
+use Drupal\node\Entity\Node;
+use Drupal\node\NodeStorageInterface;
+use Drupal\Tests\UnitTestCase;
+use Prophecy\Argument;
 
 /**
  * @covers Drupal\hpc_common\Helpers\NodeHelper

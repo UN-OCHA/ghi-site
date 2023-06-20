@@ -2,10 +2,9 @@
 
 namespace Drupal\hpc_downloads;
 
-use Drupal\search_api\Plugin\views\query\SearchApiQuery;
-
-use Drupal\hpc_downloads\Interfaces\HPCDownloadViewsQueryInterface;
 use Drupal\hpc_downloads\DownloadSource\ViewsQueryBatchedSource;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadViewsQueryInterface;
+use Drupal\search_api\Plugin\views\query\SearchApiQuery;
 
 /**
  * Base class for Views queries.

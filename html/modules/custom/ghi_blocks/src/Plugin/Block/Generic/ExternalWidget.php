@@ -6,9 +6,7 @@ use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
-use Drupal\node\NodeInterface;
 
 /**
  * Provides an 'External Widget' block.
@@ -28,43 +26,12 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class ExternalWidget extends GHIBlockBase implements SyncableBlockInterface {
+class ExternalWidget extends GHIBlockBase {
 
   const MAX_ITEMS = 2;
   const MIN_YEAR_HISTORICAL_HPC_DATA = 2011;
   const MAX_YEAR_RANGE = 10;
   const GOOGLE_SHEET = '1MArQSVdbLXLaQ8ixUKo9jIjifTCVDDxTJYbGoRuw3Vw';
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
-    $mapped_config = [];
-    if ($element_type == 'generic_external_widgets') {
-      $mapped_config = [
-        'select_number' => $config->select_number,
-        'widgets' => array_map(function ($item) {
-          return (array) $item;
-        }, (array) $config->widgets),
-      ];
-    }
-    else {
-      // This was a single widget element.
-      $mapped_config['select_number'] = 1;
-      $mapped_config['widgets'] = [
-        [
-          'widget_url' => $config->widget_url,
-          'widget_url_skip_validation' => $config->widget_url_skip_validation,
-          'widget_height' => $config->widget_height ?? 'auto',
-        ],
-      ];
-    }
-    return [
-      'label' => $config->widget_label ?? '',
-      'label_display' => TRUE,
-      'hpc' => $mapped_config,
-    ];
-  }
 
   /**
    * {@inheritdoc}

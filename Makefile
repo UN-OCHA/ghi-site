@@ -15,6 +15,8 @@ build:  clean
 		. --file docker/Dockerfile --rm --force-rm --tag unocha/ghi-site:local \
 		2>&1 | tee buildlog.txt
 
+		@echo "Built a shiny new unocha/ghi-site:local for you."
+
 clean:
 	# This is done in the builder step, preventing breaking some local setups.
 	# rm -rf ./html/themes/custom/common_design_subtheme/node_modules

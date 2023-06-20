@@ -3,14 +3,13 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Serialization\Json;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Element\DataPoint as ElementDataPoint;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
-use Drupal\ghi_plans\Helpers\DataPointHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -48,6 +47,8 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     $attachment = $this->getContextValue('attachment');
     $plan_object = $this->getContextValue('plan_object');
     $configuration = $this->getPluginConfiguration();
+    /** @var \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype */
+    $attachment_prototype = $configuration['attachment_prototype'];
 
     $data_point = $this->getSubmittedValue($element, $form_state, 'data_point');
 
@@ -55,9 +56,9 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
       '#type' => 'data_point',
       '#element_context' => $this->getContext(),
       '#attachment' => $attachment,
-      '#attachment_prototype' => $configuration['attachment_prototype'],
+      '#attachment_prototype' => $attachment_prototype,
       '#plan_object' => $plan_object,
-      '#select_monitoring_period' => $configuration['select_monitoring_period'],
+      '#select_monitoring_period' => $configuration['select_monitoring_period'] && !$attachment_prototype->isIndicator(),
       '#default_value' => $data_point,
       '#weight' => 5,
     ] + ($configuration['presets'] ?? []);
@@ -88,7 +89,8 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   public function getValue() {
     $attachment = $this->getAttachmentObject();
-    return $attachment ? DataPointHelper::getValue($attachment, $attachment->data_point_conf) : NULL;
+    $data_point_conf = $this->getDataPointConfig();
+    return $attachment && $data_point_conf ? $attachment->getValue($data_point_conf) : NULL;
   }
 
   /**
@@ -96,14 +98,14 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   public function getRenderArray() {
     $attachment = $this->getAttachmentObject();
-    if (!$attachment) {
+    $data_point_conf = $this->getDataPointConfig();
+    if (!$attachment || !$data_point_conf) {
       return NULL;
     }
     $config = $this->getPluginConfiguration();
-    $build = DataPointHelper::formatValue($attachment, $attachment->data_point_conf);
-    $data_point_conf = $this->getDataPointConfig();
+    $build = $attachment->formatValue($data_point_conf);
     $data_point_index = $data_point_conf['data_points'][0]['index'] ?? NULL;
-    if ($data_point_index !== NULL && !empty($config['disaggregation_modal']) && $this->canShowDisaggregatedData($attachment)) {
+    if ($data_point_index !== NULL && !empty($config['disaggregation_modal']) && $this->canShowDisaggregatedData($attachment, $data_point_conf)) {
       $link_url = Url::fromRoute('ghi_plans.modal_content.dissaggregation', [
         'attachment' => $attachment->id(),
         'metric' => $data_point_index,
@@ -146,12 +148,14 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    *
    * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
    *   The attachment object.
+   * @param array $data_point_conf
+   *   The data point configuration.
    *
    * @return bool
    *   TRUE if the attachment can show disaggregated data, FALSE otherwise.
    */
-  public function canShowDisaggregatedData(DataAttachment $attachment) {
-    return $this->getValue() && $attachment->hasDisaggregatedData() && $attachment->data_point_conf['processing'] == 'single';
+  public function canShowDisaggregatedData(DataAttachment $attachment, array $data_point_conf) {
+    return $this->getValue() && $attachment->hasDisaggregatedData() && $data_point_conf['processing'] == 'single';
   }
 
   /**
@@ -165,11 +169,14 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     if ($data_point_conf['formatting'] == 'percent') {
       return 'percentage';
     }
+    if ($data_point_conf['processing'] == 'calculated' && $data_point_conf['calculation'] == 'percentage') {
+      return 'percentage';
+    }
     return parent::getColumnType();
   }
 
   /**
-   * Get the currently configured data point confirguration.
+   * Get the currently configured data point configuration.
    *
    * @return array|null
    *   An array containing the data point configuration or null if no
@@ -183,6 +190,11 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     if (ElementDataPoint::WIDGET_SUPPORT === FALSE && is_array($data_point_conf)) {
       $data_point_conf['widget'] = 'none';
     }
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
+    $plan_object = $this->getContextValue('plan_object') ?? NULL;
+    $configuration = $this->getPluginConfiguration();
+    $data_point_conf['decimal_format'] = $plan_object ? $plan_object->getDecimalFormat() : NULL;
+    $data_point_conf = $data_point_conf + ($configuration['presets'] ?? []);
     return $data_point_conf;
   }
 
@@ -215,16 +227,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   private function getAttachmentObject() {
     $attachment = $this->getContextValue('attachment');
-    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
-    $plan_object = $this->getContextValue('plan_object') ?? NULL;
-    $configuration = $this->getPluginConfiguration();
-    $data_point_conf = $this->getDataPointConfig();
-    if (!$attachment || !$data_point_conf) {
-      return NULL;
-    }
-    $data_point_conf['decimal_format'] = $plan_object ? $plan_object->getDecimalFormat() : NULL;
-    $attachment->data_point_conf = $data_point_conf + ($configuration['presets'] ?? []);
-    return $attachment;
+    return $attachment instanceof DataAttachment ? $attachment : NULL;
   }
 
 }

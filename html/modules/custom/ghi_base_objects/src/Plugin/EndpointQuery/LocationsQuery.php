@@ -1,9 +1,9 @@
 <?php
 
-namespace Drupal\hpc_api\Plugin\EndpointQuery;
+namespace Drupal\ghi_base_objects\Plugin\EndpointQuery;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\hpc_api\ApiObjects\Location;
+use Drupal\ghi_base_objects\ApiObjects\Location;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
@@ -63,7 +63,7 @@ class LocationsQuery extends EndpointQueryBase {
    * @param int $max_level
    *   A maximum level of nested locations to retrieve.
    *
-   * @return \Drupal\hpc_api\ApiObjects\Location[]
+   * @return \Drupal\ghi_base_objects\ApiObjects\Location[]
    *   An array of location objects keyed by the location id.
    */
   public function getCountryLocations($country, $max_level = self::MAX_LEVEL) {

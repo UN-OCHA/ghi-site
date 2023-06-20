@@ -3,17 +3,16 @@
 namespace Drupal\hpc_api\Query;
 
 use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Core\Url;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\Url;
 use Drupal\hpc_api\ConfigService;
-use GuzzleHttp\ClientInterface;
-use Psr\Http\Message\ResponseInterface;
-
 use Drupal\hpc_api\Helpers\QueryHelper;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
+use GuzzleHttp\ClientInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class representing an endpoint query.

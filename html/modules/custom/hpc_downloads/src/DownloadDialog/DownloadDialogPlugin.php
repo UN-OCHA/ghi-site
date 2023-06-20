@@ -2,10 +2,10 @@
 
 namespace Drupal\hpc_downloads\DownloadDialog;
 
-use Drupal\Core\Link;
-use Drupal\Core\Url;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Link;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadSourceInterface;

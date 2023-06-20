@@ -3,19 +3,18 @@
 namespace Drupal\hpc_downloads\DownloadSource;
 
 use Drupal\Component\Utility\Html;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Component\Utility\UrlHelper;
-use Drupal\Core\Url;
 use Drupal\Core\Render\Markup;
-
+use Drupal\Core\Url;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\hpc_common\Helpers\ViewsHelper;
-use Drupal\hpc_downloads\Interfaces\HPCBatchedDownloadExcelInterface;
-use Drupal\hpc_downloads\Interfaces\HPCDownloadPDFInterface;
 use Drupal\hpc_downloads\DownloadMethods\Excel;
 use Drupal\hpc_downloads\DownloadRecord;
+use Drupal\hpc_downloads\Interfaces\HPCBatchedDownloadExcelInterface;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadPDFInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadViewsQueryInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * A download source class for batched views queries.

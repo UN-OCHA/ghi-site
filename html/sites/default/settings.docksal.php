@@ -48,8 +48,6 @@ $config['hpc_api.settings'] = array(
   'timeout' => 300,
 );
 
-$config['ghi_element_sync.settings'] = NULL;
-
 $config['ghi_content.remote_sources'] = [
   'hpc_content_module' => [
     'base_url' => 'https://content.hpc.tools',

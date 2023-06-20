@@ -2,10 +2,10 @@
 
 namespace Drupal\ghi_blocks\Traits;
 
+use Drupal\ghi_base_objects\ApiObjects\Location;
 use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\ApiObjects\Project;
 use Drupal\ghi_plans\Entity\GoverningEntity;
-use Drupal\hpc_api\ApiObjects\Location;
 
 /**
  * Helper trait for block plugins showing organization data.
@@ -109,7 +109,7 @@ trait OrganizationsBlockTrait {
    *
    * @param \Drupal\ghi_plans\ApiObjects\Organization $organization
    *   The organization.
-   * @param \Drupal\hpc_api\ApiObjects\Location $location
+   * @param \Drupal\ghi_base_objects\ApiObjects\Location $location
    *   The location.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster[]

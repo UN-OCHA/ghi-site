@@ -1,4 +1,4 @@
 docksal-local.env
 docksal-local.yml
-
 backups/*
+!backups/README.md

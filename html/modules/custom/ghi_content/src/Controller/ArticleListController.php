@@ -14,8 +14,8 @@ use Drupal\migrate_tools\MigrateBatchExecutable;
 use Drupal\node\NodeInterface;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Controller for article lists.

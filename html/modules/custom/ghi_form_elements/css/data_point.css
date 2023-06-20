@@ -5,6 +5,10 @@
   flex-wrap: wrap;
 }
 
+.form-type--data_point .data-points-wrapper > div > .js-form-type-checkbox {
+  top: calc(1.5em + 17px) !important;
+}
+
 .form-type--data_point select {
   width: auto;
 }

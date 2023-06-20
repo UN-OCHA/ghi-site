@@ -2,9 +2,9 @@
 
 namespace Drupal\ghi_element_sync\Form;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 

@@ -3,14 +3,13 @@
 namespace Drupal\hpc_common\EventSubscriber;
 
 use Drupal\Core\Cache\CacheableMetadata;
-use Drupal\page_manager\Event\PageManagerContextEvent;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\hpc_common\Helpers\NodeHelper;
+use Drupal\page_manager\Event\PageManagerContextEvent;
 use Drupal\page_manager\Event\PageManagerEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
-
-use Drupal\hpc_common\Helpers\NodeHelper;
 
 /**
  * Sets a node based on an HPC ID as context.

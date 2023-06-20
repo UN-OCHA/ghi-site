@@ -6,22 +6,18 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
-use Drupal\ghi_element_sync\IncompleteElementConfigurationException;
-use Drupal\ghi_element_sync\SyncableBlockInterface;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
-use Drupal\node\NodeInterface;
 
 /**
  * Provides a 'PlanEntityAttachmentsTable' block.
@@ -59,7 +55,7 @@ use Drupal\node\NodeInterface;
  *  }
  * )
  */
-class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, SyncableBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
+class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
@@ -73,170 +69,6 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
    * @var bool
    */
   private $isExport = FALSE;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function mapConfig($config, NodeInterface $node, $element_type, $dry_run = FALSE) {
-    $base_object = BaseObjectHelper::getBaseObjectFromNode($node, 'plan');
-    $plan = $base_object && $base_object->bundle() == 'plan' ? $base_object : NULL;
-    $plan_id = $plan ? $plan->get('field_original_id')->value : NULL;
-
-    if (!property_exists($config, 'entity_select')) {
-      if ($base_object = BaseObjectHelper::getBaseObjectFromNode($node)) {
-        $entity_id = BaseObjectHelper::getOriginalIdFromEntity($base_object);
-        $config->entity_select = (object) [
-          'entity_id' => [
-            $entity_id => $entity_id,
-          ],
-        ];
-      }
-      else {
-        throw new IncompleteElementConfigurationException('Incomplete configuration for "plan_attachment_map"');
-      }
-    }
-    $entity_id = $config->entity_select->entity_id;
-    $attachment_ids = array_values($config->attachment_select->attachment_id ?? []);
-    $id_format = $config->id_format ?? 'custom_id_prefixed_refcode';
-    $configuration_check = FALSE;
-    // Sanity check to prevent importing of misconfigured elements.
-    if ($attachment_ids && $plan_id) {
-      // Get the attachments. Imported configs can contain items like
-      // 'group_XXXX' as the first configured attachment id. We need to catch
-      // that to prevent errors.
-      $attachment_id = is_array($attachment_ids) ? $attachment_ids[0] : $attachment_ids;
-      if (!is_int($attachment_id)) {
-        $attachment_id = $attachment_ids[1];
-      }
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $attachment_query */
-      $attachment_query = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('attachment_query');
-      $attachment = $attachment_query->getAttachment($attachment_id);
-      $configuration_check = $attachment && $attachment instanceof DataAttachment && $attachment->getPlanId() == $plan_id;
-    }
-    if (!$configuration_check) {
-      throw new IncompleteElementConfigurationException('Incomplete configuration for "plan_attachment_map"');
-    }
-
-    $columns = [];
-    // Define a transition map.
-    $transition_map = [
-      'indicator_name' => [
-        'target' => 'attachment_label',
-        'config' => [
-          'id_prefix' => TRUE,
-          'id_type' => $id_format,
-        ],
-      ],
-      'unit' => [
-        'target' => 'attachment_unit',
-      ],
-      'data_point' => [
-        'target' => 'data_point',
-      ],
-      'data_point_single' => [
-        'target' => 'data_point',
-      ],
-      'data_point_calculated_progressbar' => [
-        'target' => 'data_point',
-      ],
-      'data_point_calculated_pie_chart' => [
-        'target' => 'data_point',
-      ],
-      'spark_line_chart' => [
-        'target' => 'spark_line_chart',
-      ],
-      'data_point_monitoring_period' => [
-        'target' => 'monitoring_period',
-      ],
-    ];
-
-    foreach ($config->table_columns as $incoming_item) {
-      $source_type = !empty($incoming_item->element) ? $incoming_item->element : NULL;
-      if (!$source_type || !array_key_exists($source_type, $transition_map)) {
-        continue;
-      }
-      // Apply generic config based on the transition map.
-      $transition_definition = $transition_map[$source_type];
-      $item = [
-        'item_type' => $transition_definition['target'],
-        'config' => [
-          'label' => property_exists($incoming_item, 'label') ? $incoming_item->label : NULL,
-        ],
-      ];
-      if (array_key_exists('config', $transition_definition)) {
-        $item['config'] += $transition_definition['config'];
-      }
-
-      // Do special processing for individual item types.
-      $value = property_exists($incoming_item, 'value') ? $incoming_item->value : NULL;
-      if ($transition_definition['target'] == 'data_point' && $value === NULL) {
-        continue;
-      }
-      switch ($transition_definition['target']) {
-
-        case 'data_point':
-          $value->data_points[0] = [
-            'index' => $value->data_point_1,
-            'monitoring_period' => $value->monitoring_period_1 ?? 'latest',
-          ];
-          $value->data_points[1] = [
-            'index' => $value->data_point_2,
-            'monitoring_period' => $value->monitoring_period_2 ?? 'latest',
-          ];
-          unset($value->data_point_1);
-          unset($value->data_point_2);
-          unset($value->monitoring_period_1);
-          unset($value->monitoring_period_2);
-          unset($value->mini_widget);
-          $item['config']['data_point'] = (array) $value;
-          break;
-
-        case 'spark_line_chart':
-          $item['config']['data_point'] = $value->data_point->data_point_1;
-          $item['config']['monitoring_periods'] = $value->monitoring_periods;
-          $item['config']['show_baseline'] = $value->show_baseline;
-          $item['config']['baseline'] = $value->baseline->data_point_1;
-          $item['config']['include_latest_period'] = $value->include_latest_period;
-          break;
-
-        default:
-          break;
-      }
-      $columns[] = $item;
-    }
-
-    $entity_id = is_array($entity_id) ? array_filter(array_values($entity_id)) : (array) $entity_id;
-    $attachment_ids = is_array($attachment_ids) ? array_filter(array_values($attachment_ids)) : (array) $attachment_ids;
-    $attachment_ids = array_filter($attachment_ids, function ($attachment_id) {
-      return is_int($attachment_id);
-    });
-    return [
-      'label' => property_exists($config, 'widget_title') ? $config->widget_title : NULL,
-      'label_display' => TRUE,
-      'hpc' => [
-        'attachments' => [
-          'entity_attachments' => [
-            'entities' => [
-              'entity_ids' => array_combine($entity_id, $entity_id),
-            ],
-            'attachments' => [
-              'entity_type' => $config->attachment_select->entity_type ?? NULL,
-              'attachment_type' => $config->attachment_select->attachment_type,
-              'attachment_prototype' => $config->attachment_select->attachment_prototype ?? NULL,
-              'attachment_id' => array_combine($attachment_ids, $attachment_ids),
-            ],
-          ],
-        ],
-        'table' => [
-          'columns' => $columns,
-        ],
-        'display' => [
-          'table_type' => $config->table_type ?? self::TABLE_TYPE_GROUPED,
-          'default_entity' => $config->default_entity ?? reset($entity_id),
-        ],
-      ],
-    ];
-  }
 
   /**
    * {@inheritdoc}
@@ -784,7 +616,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       $entities[$entity_id]['attachments'][] = $attachment;
     }
     uasort($entities, function ($_a, $_b) {
-      return $_a['entity']->sort_key - $_b['entity']->sort_key;
+      return strnatcmp($_a['entity']->sort_key, $_b['entity']->sort_key);
     });
     $attachments = [];
     foreach ($entities as $_entity) {

@@ -5,8 +5,8 @@
  * Contains hpc_common.module.
  */
 
-use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\hpc_common\Helpers\UserHelper;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 
