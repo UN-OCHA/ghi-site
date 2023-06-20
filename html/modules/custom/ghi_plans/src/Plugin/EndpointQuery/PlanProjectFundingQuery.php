@@ -201,7 +201,7 @@ class PlanProjectFundingQuery extends EndpointQueryBase {
     if ($projects_by_organization === NULL) {
       $projects_by_organization = $this->groupProjectsByOrganization($projects);
     }
-    return $projects_by_organization[$organization->id()] ?? NULL;
+    return $projects_by_organization[$organization->id()] ?? [];
   }
 
 }

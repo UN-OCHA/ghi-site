@@ -616,7 +616,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       $entities[$entity_id]['attachments'][] = $attachment;
     }
     uasort($entities, function ($_a, $_b) {
-      return $_a['entity']->sort_key - $_b['entity']->sort_key;
+      return strnatcmp($_a['entity']->sort_key, $_b['entity']->sort_key);
     });
     $attachments = [];
     foreach ($entities as $_entity) {
