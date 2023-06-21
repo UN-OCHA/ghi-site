@@ -43,10 +43,12 @@ module:
   ghi_gin: 0
   ghi_hero_image: 0
   ghi_local_tasks: 0
+  ghi_menu: 0
   ghi_plan_clusters: 0
   ghi_plans: 0
   ghi_sections: 0
   ghi_subpages: 0
+  ghi_subpages_custom: 0
   ghi_teams: 0
   ghi_templates: 0
   ghi_user: 0

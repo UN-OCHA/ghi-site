@@ -73,7 +73,7 @@ class SubpagesAdminController extends ControllerBase {
    *   The access result.
    */
   public function nodeCreateAccess(NodeTypeInterface $node_type) {
-    if ($this->isSubpageType($node_type) && $node_type->id() != 'document') {
+    if ($this->isSubpageType($node_type) && !$this->isManualSubpageType($node_type)) {
       // We don't want subpages to be created manually, as this process is
       // automatic whenever a base page is created.
       return AccessResult::forbidden();

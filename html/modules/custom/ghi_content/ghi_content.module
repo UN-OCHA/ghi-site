@@ -14,6 +14,7 @@ use Drupal\Core\Url;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\Controller\MigrationBatchController;
 use Drupal\ghi_content\Entity\Article;
+use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\node\NodeInterface;
@@ -31,6 +32,8 @@ function ghi_content_cron() {
 function ghi_content_entity_bundle_info_alter(array &$bundles) {
   $bundles['node']['article']['class'] = Article::class;
   $bundles['node']['article']['label'] = t('Article');
+  $bundles['node']['custom_subpage']['class'] = Document::class;
+  $bundles['node']['custom_subpage']['label'] = t('Document');
 }
 
 /**

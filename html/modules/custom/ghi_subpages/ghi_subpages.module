@@ -13,9 +13,9 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_subpages\Controller\SubpagesAdminController;
 use Drupal\ghi_subpages\Element\LayoutBuilderSectionLock;
-use Drupal\ghi_subpages\Entity\SubpageNode;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\ghi_subpages\SubpageManager;
+use Drupal\hpc_common\Helpers\StringHelper;
 use Drupal\node\Form\NodeDeleteForm;
 use Drupal\node\NodeInterface;
 
@@ -30,12 +30,11 @@ function ghi_subpages_entity_bundle_info_alter(array &$bundles) {
       // overwrite that.
       continue;
     }
-    $bundles['node'][$subpage_type]['class'] = SubpageNode::class;
-    // This is a bit strange. During the execution of tests based on
-    // Drupal\Tests\BrowserTest, the label property is not set.
-    // To work around this we add this fallback that derives the label from the
-    // machine name.
-    $bundles['node'][$subpage_type]['label'] = $bundles['node'][$subpage_type]['label'] ?? ucfirst(str_replace('_', ' ', $subpage_type));
+    $class_name = StringHelper::makeCamelCase($subpage_type, FALSE) . 'Subpage';
+    if (!class_exists($class_name)) {
+      continue;
+    }
+    $bundles['node'][$subpage_type]['class'] = $class_name;
   }
 }
 

@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - core.entity_view_display.node.article.default
+    - core.entity_view_display.node.custom_subpage.default
     - core.entity_view_display.node.document.default
     - core.entity_view_display.node.financials.default
     - core.entity_view_display.node.global_section.default
@@ -14,6 +15,7 @@ dependencies:
     - core.entity_view_display.node.section.default
     - filter.format.html_text
     - node.type.article
+    - node.type.custom_subpage
     - node.type.document
   module:
     - contextual
@@ -36,6 +38,7 @@ permissions:
   - 'access toolbar'
   - 'administer nodes'
   - 'configure editable article node layout overrides'
+  - 'configure editable custom_subpage node layout overrides'
   - 'configure editable document node layout overrides'
   - 'configure editable financials node layout overrides'
   - 'configure editable global_section node layout overrides'
@@ -44,11 +47,13 @@ permissions:
   - 'configure editable profile node layout overrides'
   - 'configure editable risk_index node layout overrides'
   - 'configure editable section node layout overrides'
-  - 'create document content'
-  - 'delete own document content'
+  - 'create custom_subpage content'
+  - 'delete own custom_subpage content'
   - 'edit own article content'
+  - 'edit own custom_subpage content'
   - 'edit own document content'
   - 'use layout builder ipe on editable article node layout overrides'
+  - 'use layout builder ipe on editable custom_subpage node layout overrides'
   - 'use layout builder ipe on editable document node layout overrides'
   - 'use layout builder ipe on editable financials node layout overrides'
   - 'use layout builder ipe on editable global_section node layout overrides'

@@ -1,0 +1,171 @@
+<?php
+
+namespace Drupal\ghi_content\RemoteContent\HpcContentModule;
+
+use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Render\Markup;
+use Drupal\ghi_content\RemoteContent\RemoteDocumentBase;
+use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
+
+/**
+ * Defines a RemoteDocument object.
+ */
+class RemoteDocument extends RemoteDocumentBase {
+
+  /**
+   * Array of chapters, keyed by their id.
+   *
+   * @var object[]
+   */
+  private $chapters;
+
+  /**
+   * Array of paragraphs, keyed by their id.
+   *
+   * @var object[]
+   */
+  private $paragraphs;
+
+  /**
+   * Construct a new RemoteArticle object.
+   */
+  public function __construct($data, RemoteSourceInterface $source) {
+    parent::__construct($data, $source);
+    $this->paragraphs = [];
+    if (!empty($this->data->content)) {
+      foreach ($this->data->content as $paragraph) {
+        $this->paragraphs[$paragraph->id] = new RemoteParagraph($paragraph, $source);
+        if ($this->paragraphs[$paragraph->id]->getType() == 'document_chapter') {
+          $this->chapters[$paragraph->id] = $this->paragraphs[$paragraph->id];
+        }
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getId() {
+    return $this->data->id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTitle() {
+    return trim($this->data->title);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getChapters() {
+    return $this->chapters;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCreated() {
+    return strtotime($this->data->created);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getUpdated() {
+    return strtotime($this->data->updated);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSummary() {
+    return Markup::create($this->data->summary);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getImageUri() {
+    return $this->data->image->imageUrl ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getImageCredits() {
+    return $this->data->image->credits ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getImageCaption() {
+    return $this->data->imageCaption ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getImageCaptionPlain() {
+    $caption = $this->getImageCaption();
+    if (!$caption) {
+      return NULL;
+    }
+    return implode(', ', array_filter([
+      $caption->location,
+      $caption->text,
+    ]));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getImageCaptionMarkup($add_credits = FALSE) {
+    $caption = $this->getImageCaption();
+    if (!$caption) {
+      return NULL;
+    }
+    $caption_text = $caption->text;
+    if ($add_credits && $credits = $this->getImageCredits()) {
+      $caption_text = new FormattableMarkup('@text <span class="credits">@credits</span>', [
+        '@text' => $caption->text,
+        '@credits' => $credits,
+      ]);
+    }
+    return new FormattableMarkup('<h6 class="location">@location</h6><p class="text">@text</p>', [
+      '@location' => $caption->location,
+      '@text' => $caption_text,
+    ]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getParagraph($id) {
+    return $this->paragraphs[$id] ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getParagraphs() {
+    return $this->paragraphs;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMajorTags() {
+    return $this->data->content_space ? $this->data->content_space->tags : [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMinorTags() {
+    return $this->data->tags ?? [];
+  }
+
+}

@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - core.entity_view_display.node.article.default
+    - core.entity_view_display.node.custom_subpage.default
     - core.entity_view_display.node.document.default
     - core.entity_view_display.node.financials.default
     - core.entity_view_display.node.global_section.default
@@ -16,6 +17,7 @@ dependencies:
     - filter.format.html_text
     - filter.format.wysiwyg_text
     - node.type.article
+    - node.type.custom_subpage
     - node.type.document
     - node.type.financials
     - node.type.global_section
@@ -90,6 +92,7 @@ permissions:
   - 'configure all homepage node layout overrides'
   - 'configure any layout'
   - 'configure editable article node layout overrides'
+  - 'configure editable custom_subpage node layout overrides'
   - 'configure editable document node layout overrides'
   - 'configure editable financials node layout overrides'
   - 'configure editable global_section node layout overrides'
@@ -101,7 +104,7 @@ permissions:
   - 'configure editable section node layout overrides'
   - 'create and edit custom blocks'
   - 'create content translations'
-  - 'create document content'
+  - 'create custom_subpage content'
   - 'create global_section content'
   - 'create homepage content'
   - 'create media'
@@ -110,6 +113,7 @@ permissions:
   - 'create section content'
   - 'create terms in team'
   - 'create url aliases'
+  - 'delete any custom_subpage content'
   - 'delete any global_section content'
   - 'delete any homepage content'
   - 'delete any media'
@@ -117,13 +121,14 @@ permissions:
   - 'delete any section content'
   - 'delete content translations'
   - 'delete media'
-  - 'delete own document content'
+  - 'delete own custom_subpage content'
   - 'delete own global_section content'
   - 'delete own homepage content'
   - 'delete own news_story content'
   - 'delete own section content'
   - 'delete terms in team'
   - 'edit any article content'
+  - 'edit any custom_subpage content'
   - 'edit any document content'
   - 'edit any financials content'
   - 'edit any global_section content'
@@ -137,6 +142,7 @@ permissions:
   - 'edit any section content'
   - 'edit base object entities'
   - 'edit own article content'
+  - 'edit own custom_subpage content'
   - 'edit own document content'
   - 'edit own financials content'
   - 'edit own global_section content'
@@ -153,6 +159,7 @@ permissions:
   - 'import page layout configuration code'
   - 'publish any content'
   - 'publish any node type article'
+  - 'publish any node type custom_subpage'
   - 'publish any node type document'
   - 'publish any node type financials'
   - 'publish any node type global_section'
@@ -166,6 +173,7 @@ permissions:
   - 'publish any node type section'
   - 'publish editable content'
   - 'publish editable node type article'
+  - 'publish editable node type custom_subpage'
   - 'publish editable node type document'
   - 'publish editable node type financials'
   - 'publish editable node type global_section'
@@ -178,6 +186,7 @@ permissions:
   - 'publish editable node type risk_index'
   - 'publish editable node type section'
   - 'publish own node type article'
+  - 'publish own node type custom_subpage'
   - 'publish own node type document'
   - 'publish own node type financials'
   - 'publish own node type global_section'
@@ -190,6 +199,7 @@ permissions:
   - 'publish own node type risk_index'
   - 'publish own node type section'
   - 'revert article revisions'
+  - 'revert custom_subpage revisions'
   - 'revert document revisions'
   - 'revert financials revisions'
   - 'revert global_section revisions'
@@ -213,6 +223,7 @@ permissions:
   - 'translate section node'
   - 'unpublish any content'
   - 'unpublish any node type article'
+  - 'unpublish any node type custom_subpage'
   - 'unpublish any node type document'
   - 'unpublish any node type financials'
   - 'unpublish any node type global_section'
@@ -226,6 +237,7 @@ permissions:
   - 'unpublish any node type section'
   - 'unpublish editable content'
   - 'unpublish editable node type article'
+  - 'unpublish editable node type custom_subpage'
   - 'unpublish editable node type document'
   - 'unpublish editable node type financials'
   - 'unpublish editable node type global_section'
@@ -238,6 +250,7 @@ permissions:
   - 'unpublish editable node type risk_index'
   - 'unpublish editable node type section'
   - 'unpublish own node type article'
+  - 'unpublish own node type custom_subpage'
   - 'unpublish own node type document'
   - 'unpublish own node type financials'
   - 'unpublish own node type global_section'
@@ -253,6 +266,7 @@ permissions:
   - 'update content translations'
   - 'update media'
   - 'use layout builder ipe on editable article node layout overrides'
+  - 'use layout builder ipe on editable custom_subpage node layout overrides'
   - 'use layout builder ipe on editable document node layout overrides'
   - 'use layout builder ipe on editable financials node layout overrides'
   - 'use layout builder ipe on editable global_section node layout overrides'
@@ -268,6 +282,7 @@ permissions:
   - 'view all media revisions'
   - 'view any unpublished article content'
   - 'view any unpublished content'
+  - 'view any unpublished custom_subpage content'
   - 'view any unpublished document content'
   - 'view any unpublished financials content'
   - 'view any unpublished global_section content'
@@ -280,6 +295,7 @@ permissions:
   - 'view any unpublished risk_index content'
   - 'view any unpublished section content'
   - 'view article revisions'
+  - 'view custom_subpage revisions'
   - 'view document revisions'
   - 'view financials revisions'
   - 'view global_section revisions'

@@ -1,5 +1,5 @@
 name: GHI Documents
-description: Provide logic around documents.
+description: Provide logic around documents (obsolete).
 package: GHI
 
 type: module

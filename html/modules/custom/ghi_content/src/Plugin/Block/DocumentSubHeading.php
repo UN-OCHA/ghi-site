@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ghi_documents\Plugin\Block;
+namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;

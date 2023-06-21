@@ -5,6 +5,7 @@ namespace Drupal\ghi_content\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Link;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
+use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
 use GuzzleHttp\Exception\ClientException;
@@ -65,6 +66,35 @@ class RemoteController extends ControllerBase {
           'label' => $article->getTitle(),
         ];
       }, $articles);
+    }
+    return new JsonResponse($matches);
+
+  }
+
+  /**
+   * Handler for fetching plans using autocomplete.
+   */
+  public function autocompleteDocument(RemoteSourceInterface $remote_source, Request $request) {
+
+    $matches = [];
+    $string = $request->query->get('q');
+    if (empty($string)) {
+      return new JsonResponse($matches);
+    }
+
+    try {
+      $documents = $remote_source->searchDocumentsByTitle($string);
+    }
+    catch (ClientException $e) {
+      // Just catch it for the moment.
+    }
+    if (!empty($documents)) {
+      $matches = array_map(function (RemoteDocumentInterface $document) {
+        return [
+          'value' => $document->getTitle() . ' (' . $document->getId() . ')',
+          'label' => $document->getTitle(),
+        ];
+      }, $documents);
     }
     return new JsonResponse($matches);
 
