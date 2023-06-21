@@ -5,8 +5,6 @@
  * Post update functions for GHI Custom Subpages.
  */
 
-use Drupal\pathauto\PathautoState;
-
 /**
  * Move existing "document" content to "custom_subpage".
  */
@@ -37,7 +35,6 @@ function ghi_subpages_custom_post_update_move_existing_content(&$sandbox) {
     'type' => 'custom_subpage',
   ]);
   foreach ($documents as $document) {
-    $document->path->pathauto = PathautoState::CREATE;
     $document->save();
   }
 }
