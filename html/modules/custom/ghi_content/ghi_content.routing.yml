@@ -77,3 +77,39 @@ ghi_content.articles.update:
     _custom_access: '\Drupal\ghi_content\Controller\ArticleListController::access'
   options:
     _admin_route: TRUE
+
+ghi_content.node.documents:
+  path: '/node/{node}/documents'
+  defaults:
+    _controller: '\Drupal\ghi_content\Controller\DocumentListController::listDocuments'
+    _title_callback: '\Drupal\ghi_content\Controller\DocumentListController::getTitle'
+  requirements:
+    _custom_access: '\Drupal\ghi_content\Controller\DocumentListController::access'
+  options:
+    parameters:
+      node:
+        type: entity:node
+    _admin_route: TRUE
+
+ghi_content.node.documents.update:
+  path: '/node/{node}/documents/update'
+  defaults:
+    _controller: '\Drupal\ghi_content\Controller\DocumentListController::updateDocuments'
+    _title: 'Update documents'
+  requirements:
+    _custom_access: '\Drupal\ghi_content\Controller\DocumentListController::access'
+  options:
+    parameters:
+      node:
+        type: entity:node
+    _admin_route: TRUE
+
+ghi_content.documents.update:
+  path: '/admin/content/documents/update'
+  defaults:
+    _controller: '\Drupal\ghi_content\Controller\DocumentListController::updateDocuments'
+    _title: 'Update documents'
+  requirements:
+    _custom_access: '\Drupal\ghi_content\Controller\DocumentListController::access'
+  options:
+    _admin_route: TRUE

@@ -20,24 +20,14 @@ class RemoteDocument extends RemoteDocumentBase {
   private $chapters;
 
   /**
-   * Array of paragraphs, keyed by their id.
-   *
-   * @var object[]
-   */
-  private $paragraphs;
-
-  /**
-   * Construct a new RemoteArticle object.
+   * Construct a new RemoteDocument object.
    */
   public function __construct($data, RemoteSourceInterface $source) {
     parent::__construct($data, $source);
-    $this->paragraphs = [];
-    if (!empty($this->data->content)) {
-      foreach ($this->data->content as $paragraph) {
-        $this->paragraphs[$paragraph->id] = new RemoteParagraph($paragraph, $source);
-        if ($this->paragraphs[$paragraph->id]->getType() == 'document_chapter') {
-          $this->chapters[$paragraph->id] = $this->paragraphs[$paragraph->id];
-        }
+    $this->chapters = [];
+    if (!empty($this->data->chapters)) {
+      foreach ($this->data->chapters as $chapter) {
+        $this->chapters[$chapter->id] = new RemoteChapter($chapter, $source);
       }
     }
   }
@@ -59,8 +49,22 @@ class RemoteDocument extends RemoteDocumentBase {
   /**
    * {@inheritdoc}
    */
+  public function getShortTitle() {
+    return trim($this->data->title_short);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getChapters() {
     return $this->chapters;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getChapter($id) {
+    return $this->chapters[$id] ?? NULL;
   }
 
   /**
@@ -138,20 +142,6 @@ class RemoteDocument extends RemoteDocumentBase {
       '@location' => $caption->location,
       '@text' => $caption_text,
     ]);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getParagraph($id) {
-    return $this->paragraphs[$id] ?? NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getParagraphs() {
-    return $this->paragraphs;
   }
 
   /**

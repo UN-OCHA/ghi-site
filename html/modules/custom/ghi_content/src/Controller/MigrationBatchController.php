@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_content\Controller;
 
+use Drupal\ghi_content\ContentManager\BaseContentManager;
 use Drupal\node\NodeInterface;
 
 /**
@@ -20,10 +21,12 @@ class MigrationBatchController {
    *   The migration id.
    * @param array $options
    *   The batch executable options.
+   * @param \Drupal\ghi_content\ContentManager\BaseContentManager $content_manager
+   *   The content manager class.
    * @param array|\DrushBatchContext $context
    *   The sandbox context.
    */
-  public static function batchProcessCleanupArticles($migration_id, array $options, &$context) {
+  public static function batchProcessCleanup($migration_id, array $options, BaseContentManager $content_manager, &$context) {
     /** @var \Drupal\migrate\Plugin\MigrationInterface $migration */
     $migration = \Drupal::getContainer()->get('plugin.manager.migration')->createInstance($migration_id, $options['configuration'] ?? []);
 
@@ -34,14 +37,12 @@ class MigrationBatchController {
       $source_iterator = $source->initializeIterator();
       $source_tags = $source->getSourceTags();
 
-      /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
-      $article_manager = \Drupal::service('ghi_content.manager.article');
       if (!empty($source_tags)) {
         $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadMultiple(array_keys($source_tags));
-        $nodes = $article_manager->loadNodesForTags($terms, NULL, 'AND', NULL, FALSE);
+        $nodes = $content_manager->loadNodesForTags($terms, NULL, 'AND', NULL, FALSE);
       }
       else {
-        $nodes = $article_manager->loadAllNodes();
+        $nodes = $content_manager->loadAllNodes();
       }
 
       $source_keys = $source->getIds();
@@ -111,8 +112,8 @@ class MigrationBatchController {
           // Only add a message if we actually changes something.
           continue;
         }
-        $singular_message = "Updated 1 previously imported article - done with post-processing of '@name'";
-        $plural_message = "Updated @updated previously imported articles - done with post-processing of '@name'";
+        $singular_message = "Updated 1 previously imported content item - done with post-processing of '@name'";
+        $plural_message = "Updated @updated previously imported content items - done with post-processing of '@name'";
         \Drupal::messenger()->addStatus(\Drupal::translation()->formatPlural($result['@updated'],
           $singular_message,
           $plural_message,

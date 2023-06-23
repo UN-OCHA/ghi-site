@@ -5,46 +5,46 @@ namespace Drupal\ghi_content\RemoteContent;
 /**
  * Interface class for remote chapters.
  */
-interface RemoteChapterInterface {
+interface RemoteChapterInterface extends RemoteContentItemBaseInterface {
 
   /**
-   * Get the source of the chapter.
-   *
-   * @return \Drupal\ghi_content\RemoteSource\RemoteSourceInterface
-   *   The paragraph source.
-   */
-  public function getSource();
-
-  /**
-   * Get the id of the paragraph.
-   *
-   * @return int
-   *   The paragraph id.
-   */
-  public function getId();
-
-  /**
-   * Get the uuid for the paragraph.
+   * Get the title of the chapter.
    *
    * @return string
-   *   The paragraph uuid.
+   *   The chapter title.
    */
-  public function getUuid();
+  public function getTitle();
 
   /**
-   * Get the rendered content of the paragraph.
+   * Get the short title of the chapter.
    *
    * @return string
-   *   The rendered paragraph content.
+   *   The chapter short title.
    */
-  public function getRendered();
+  public function getShortTitle();
 
   /**
-   * Get the configuration of the paragraph.
+   * Get the summary text of the document.
    *
-   * @return object
-   *   The paragraph configuration.
+   * @return string|\Drupal\Component\Render\MarkupInterface
+   *   The document summary.
    */
-  public function getConfiguration();
+  public function getSummary();
+
+  /**
+   * Get the ids of the articles inside a chapter.
+   *
+   * @return int[]
+   *   The ids of the articles.
+   */
+  public function getArticleIds();
+
+  /**
+   * Get the articles inside a chapter.
+   *
+   * @return \Drupal\ghi_content\RemoteContent\RemoteArticleInterface[]
+   *   The articles.
+   */
+  public function getArticles();
 
 }

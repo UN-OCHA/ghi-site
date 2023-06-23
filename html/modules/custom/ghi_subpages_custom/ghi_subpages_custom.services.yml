@@ -5,4 +5,4 @@ services:
       - { name: event_subscriber }
   ghi_subpages_custom.manager:
     class: Drupal\ghi_subpages_custom\CustomSubpageManager
-    arguments: ['@entity_type.manager', '@renderer', '@current_user']
+    arguments: ['@entity_type.manager']

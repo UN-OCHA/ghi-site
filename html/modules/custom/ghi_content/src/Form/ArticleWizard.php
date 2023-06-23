@@ -192,7 +192,7 @@ class ArticleWizard extends ContentWizardBase {
     $action = self::getActionFromFormState($form_state);
     $article = $this->getSubmittedArticle($form_state);
     if ($action != 'back' && $form_state->get('step') == 1 && $article) {
-      $node = $this->articleManager->loadNodeForRemoteArticle($article);
+      $node = $this->articleManager->loadNodeForRemoteContent($article);
       if ($node) {
         $form_state->setErrorByName('article', $this->t('An @type for the selected article already exists: <a href="@url">@title</a>.', [
           '@type' => $node->type->entity->label(),

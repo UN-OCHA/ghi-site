@@ -1,4 +1,5 @@
-body.page-node-type-article {
+body.page-node-type-article,
+body.page-node-type-document {
 
   .region-page-title {
     margin-top: 4rem;
@@ -31,6 +32,11 @@ body.page-node-type-article {
         gap: 1rem;
         font-size: var(--cd-font-size--small);
       }
+    }
+
+    .document-summary {
+      margin-top: 4.5rem;
+      margin-bottom: -3rem;
     }
   }
 }

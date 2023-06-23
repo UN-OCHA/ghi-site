@@ -1,8 +1,8 @@
-admin.article_edit:
+admin.remote_content_edit:
   version: VERSION
   css:
     component:
-      css/admin/article_edit.css: {}
+      css/admin/remote_content_edit.css: {}
 admin.article_list:
   version: VERSION
   css:

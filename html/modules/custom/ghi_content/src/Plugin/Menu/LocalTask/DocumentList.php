@@ -11,9 +11,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Provides a local task that shows articles.
+ * Provides a local task that shows documents.
  */
-class ArticleList extends LocalTaskDefault implements ContainerFactoryPluginInterface {
+class DocumentList extends LocalTaskDefault implements ContainerFactoryPluginInterface {
 
   use StringTranslationTrait;
   use SectionTrait;
@@ -26,7 +26,7 @@ class ArticleList extends LocalTaskDefault implements ContainerFactoryPluginInte
   protected $routeMatch;
 
   /**
-   * Construct the ArticleList object.
+   * Construct the DocumentList object.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
@@ -60,9 +60,9 @@ class ArticleList extends LocalTaskDefault implements ContainerFactoryPluginInte
   public function getTitle(Request $request = NULL) {
     $node = $this->routeMatch->getParameter('node');
     if ($node && !$this->isSectionNode($node) && $this->getSectionNode($node)) {
-      return $this->t('Section article pages');
+      return $this->t('Section document pages');
     }
-    return $this->t('Article pages');
+    return $this->t('Document pages');
   }
 
 }

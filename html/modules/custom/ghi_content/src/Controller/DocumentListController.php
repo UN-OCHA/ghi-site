@@ -5,7 +5,7 @@ namespace Drupal\ghi_content\Controller;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
-use Drupal\ghi_content\ContentManager\ArticleManager;
+use Drupal\ghi_content\ContentManager\DocumentManager;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\ghi_sections\SectionTrait;
 use Drupal\migrate\MigrateMessage;
@@ -18,33 +18,33 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
- * Controller for article lists.
+ * Controller for document lists.
  */
-class ArticleListController extends ControllerBase {
+class DocumentListController extends ControllerBase {
 
   use SectionTrait;
 
   /**
-   * The machine name of the view to use for this article list.
+   * The machine name of the view to use for this document list.
    */
   const VIEW_NAME = 'content_by_tags';
 
   /**
-   * The machine name of the views display to use for this article list.
+   * The machine name of the views display to use for this document list.
    */
-  const VIEW_DISPLAY = 'block_articles_table';
+  const VIEW_DISPLAY = 'block_documents_table';
 
   /**
    * The route name for the article listing backend page.
    */
-  const ARTICLE_LIST_ROUTE = 'view.content.page_articles';
+  const DOCUMENT_LIST_ROUTE = 'view.content.page_documents';
 
   /**
-   * The article manager.
+   * The document manager.
    *
-   * @var \Drupal\ghi_content\ContentManager\ArticleManager
+   * @var \Drupal\ghi_content\ContentManager\DocumentManager
    */
-  protected $articleManager;
+  protected $documentManager;
 
   /**
    * The migration plugin manager.
@@ -56,8 +56,8 @@ class ArticleListController extends ControllerBase {
   /**
    * Public constructor.
    */
-  public function __construct(ArticleManager $article_manager, MigrationPluginManagerInterface $migration_plugin_manager) {
-    $this->articleManager = $article_manager;
+  public function __construct(DocumentManager $document_manager, MigrationPluginManagerInterface $migration_plugin_manager) {
+    $this->documentManager = $document_manager;
     $this->migrationPluginManager = $migration_plugin_manager;
   }
 
@@ -66,13 +66,13 @@ class ArticleListController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('ghi_content.manager.article'),
+      $container->get('ghi_content.manager.document'),
       $container->get('plugin.manager.migration'),
     );
   }
 
   /**
-   * Access callback for article admin pages on sections.
+   * Access callback for document admin pages on sections.
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
@@ -85,7 +85,7 @@ class ArticleListController extends ControllerBase {
       $section = $this->getSectionNode($node);
       return AccessResult::allowedIf($section && $section->access('update'));
     }
-    return Url::fromRoute(self::ARTICLE_LIST_ROUTE)->access(NULL, TRUE);
+    return Url::fromRoute(self::DOCUMENT_LIST_ROUTE)->access(NULL, TRUE);
   }
 
   /**
@@ -98,13 +98,13 @@ class ArticleListController extends ControllerBase {
    *   The page title.
    */
   public function getTitle(NodeInterface $node) {
-    return $this->t('Article pages for <em>@title</em>', [
+    return $this->t('Document pages for <em>@title</em>', [
       '@title' => $node->label(),
     ]);
   }
 
   /**
-   * Page callback for the article list admin page.
+   * Page callback for the document list admin page.
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
@@ -112,17 +112,17 @@ class ArticleListController extends ControllerBase {
    * @return array|null
    *   A render array.
    */
-  public function listArticles(NodeInterface $node) {
+  public function listDocuments(NodeInterface $node) {
     $node = $this->getSectionNode($node);
     if (!in_array($node->bundle(), SectionManager::SECTION_BUNDLES)) {
       return;
     }
-    $section_tags = $this->articleManager->getTags($node);
+    $section_tags = $this->documentManager->getTags($node);
     $view = Views::getView(self::VIEW_NAME);
 
     $build = [];
     $build[] = [
-      '#markup' => '<p>' . $this->t('This list shows you all articles that are currently available in this section via the shared common section tags: <em>@section_tags</em>', [
+      '#markup' => '<p>' . $this->t('This list shows you all documents that are currently available in this section via the shared common section tags: <em>@section_tags</em>', [
         '@section_tags' => implode(', ', $section_tags),
       ]) . '</p>',
     ];
@@ -133,9 +133,10 @@ class ArticleListController extends ControllerBase {
         '@view' => self::VIEW_NAME,
         '@display' => self::VIEW_DISPLAY,
       ]);
-      $this->messenger()->addError($this->t('There was a technical problem creating this article list. The issue has been logged and we will be looking at it as soon as possible.'));
+      $this->messenger()->addError($this->t('There was a technical problem creating this document list. The issue has been logged and we will be looking at it as soon as possible.'));
       return $build;
     }
+
     $build[] = [
       '#type' => 'view',
       '#name' => self::VIEW_NAME,
@@ -149,31 +150,31 @@ class ArticleListController extends ControllerBase {
   }
 
   /**
-   * Callback for updating articles for a section from the remote source.
+   * Callback for updating documents for a section from the remote source.
    *
    * This runs a migration in a batch process.
    *
    * @param \Drupal\node\NodeInterface|null $node
    *   An optional node object, which limits the migration to only those
-   *   articles relevant to the given node via its tags.
+   *   documents relevant to the given node via its tags.
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse|array
    *   A redirect to a batch url or a render array if the migration can't be
    *   found.
    */
-  public function updateArticles(NodeInterface $node = NULL) {
+  public function updateDocuments(NodeInterface $node = NULL) {
     $section = $node ? $this->getSectionNode($node) : NULL;
     if ($node !== NULL && !$section) {
       $this->messenger()->addError($this->t('Invalid content object to run this migration.'));
       return new RedirectResponse($node->toUrl()->toString());
     }
-    $redirect_url = Url::fromRoute(self::ARTICLE_LIST_ROUTE)->toString();
+    $redirect_url = Url::fromRoute(self::DOCUMENT_LIST_ROUTE)->toString();
     $tags = NULL;
     if ($section) {
-      $redirect_url = Url::fromRoute('ghi_content.node.articles', ['node' => $section->id()])->toString();
-      $tags = $this->articleManager->getTags($section);
+      $redirect_url = Url::fromRoute('ghi_content.node.documents', ['node' => $section->id()])->toString();
+      $tags = $this->documentManager->getTags($section);
     }
-    return $this->runArticlesMigration($redirect_url, $tags);
+    return $this->runDocumentsMigration($redirect_url, $tags);
   }
 
   /**
@@ -188,11 +189,11 @@ class ArticleListController extends ControllerBase {
    *   A redirect to a batch url or a render array if the migration can't be
    *   found.
    */
-  private function runArticlesMigration($redirect, array $tags = NULL) {
+  private function runDocumentsMigration($redirect, array $tags = NULL) {
     // @todo Make this work with more than a single migration. One way to do
     // this, would be to fetch all definitions and then filter by the source
     // plugin used (RemoteSourceGraphQL).
-    $migration = $this->migrationPluginManager->createInstance('articles_hpc_content_module');
+    $migration = $this->migrationPluginManager->createInstance('documents_hpc_content_module');
     if (empty($migration)) {
       return [
         '#markup' => $this->t('There was an error processing your request. Please contact an administrator.'),

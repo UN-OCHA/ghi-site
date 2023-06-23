@@ -1,0 +1,23 @@
+uuid: 94cfe0a8-a239-40ee-a531-ffb9acdd96e1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_display_hero_image
+    - node.type.document
+id: node.document.field_display_hero_image
+field_name: field_display_hero_image
+entity_type: node
+bundle: document
+label: 'Display hero image'
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

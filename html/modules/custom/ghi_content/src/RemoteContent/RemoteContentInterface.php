@@ -66,4 +66,20 @@ interface RemoteContentInterface {
    */
   public function getUpdated();
 
+  /**
+   * Get the major tags.
+   *
+   * @return array
+   *   The major tags.
+   */
+  public function getMajorTags();
+
+  /**
+   * Get the minor tags.
+   *
+   * @return object[]
+   *   The minor tags.
+   */
+  public function getMinorTags();
+
 }

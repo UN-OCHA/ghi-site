@@ -13,7 +13,7 @@ interface SectionNodeInterface extends NodeInterface {
    * Get the page title.
    *
    * @return \Drupal\Component\Render\MarkupInterface
-   *   The markup object for the titel.
+   *   The markup object for the title.
    */
   public function getPageTitle();
 

@@ -2,14 +2,14 @@
 
 namespace Drupal\ghi_subpages_custom;
 
-use Drupal\ghi_content\ContentManager\BaseContentManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\node\NodeInterface;
 
 /**
  * Custom subpage manager service class.
  */
-class CustomSubpageManager extends BaseContentManager {
+class CustomSubpageManager {
 
   use LayoutEntityHelperTrait;
 
@@ -17,6 +17,20 @@ class CustomSubpageManager extends BaseContentManager {
    * The machine name of the bundle to use for custom subpages.
    */
   const BUNDLE = 'custom_subpage';
+
+  /**
+   * The entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * Constructs a document manager.
+   */
+  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
+    $this->entityTypeManager = $entity_type_manager;
+  }
 
   /**
    * Load all custom subpages for a section.

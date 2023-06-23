@@ -1,36 +1,29 @@
-uuid: 0e7aad74-bb51-4c14-af9b-7af26a0c7fc6
-langcode: en
-status: true
-dependencies: {  }
-id: articles_hpc_content_module
-class: null
-field_plugin_method: null
-cck_plugin_method: null
-migration_tags:
-  - NCMS
+id: documents_hpc_content_module
+label: Documents from the HPC Content Module backend
 migration_group: ncms
-label: 'Articles from the HPC Content Module backend'
+migration_tags:
+  - 'NCMS'
 source:
   plugin: remote_source_graphql
   track_changes: true
   remote_source: hpc_content_module
-  content_type: article
+  content_type: document
   fields:
     -
       name: id
-      label: ID
+      label: 'ID'
       selector: id
     -
       name: title
-      label: Title
+      label: 'Title'
       selector: title
     -
-      name: chapter
-      label: Chapter
-      selector: section
+      name: title_short
+      label: 'Title (short)'
+      selector: title_short
     -
       name: summary
-      label: Summary
+      label: 'Summary'
       selector: summary
     -
       name: created
@@ -42,7 +35,7 @@ source:
       selector: updated
     -
       name: tags
-      label: Tags
+      label: 'Tags'
       selector: tags
   ids:
     id:
@@ -50,7 +43,7 @@ source:
 process:
   type:
     plugin: default_value
-    default_value: article
+    default_value: document
   title: title
   status:
     plugin: default_value
@@ -63,11 +56,14 @@ process:
     plugin: callback
     callable: strtotime
     source: updated
-  field_remote_article/remote_source:
+  field_remote_document/remote_source:
     plugin: default_value
     default_value: hpc_content_module
-  field_remote_article/article_id: id
-  field_chapter: section
+  field_remote_document/document_id: id
+  field_short_title/value: title_short
+  field_short_title/format:
+    plugin: default_value
+    default_value: html_text
   field_summary/value: summary
   field_summary/format:
     plugin: default_value
@@ -87,9 +83,9 @@ destination:
   plugin: 'entity:node'
   overwrite_properties:
     - title
-    - field_chapter
+    - field_short_title
     - field_summary
     - field_tags
     - created
     - changed
-migration_dependencies: {  }
+migration_dependencies: {}

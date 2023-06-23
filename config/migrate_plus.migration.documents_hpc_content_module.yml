@@ -1,20 +1,20 @@
-uuid: 0e7aad74-bb51-4c14-af9b-7af26a0c7fc6
+uuid: d7a42f56-a055-4c94-9647-ce48598fde81
 langcode: en
 status: true
 dependencies: {  }
-id: articles_hpc_content_module
+id: documents_hpc_content_module
 class: null
 field_plugin_method: null
 cck_plugin_method: null
 migration_tags:
   - NCMS
 migration_group: ncms
-label: 'Articles from the HPC Content Module backend'
+label: 'Documents from the HPC Content Module backend'
 source:
   plugin: remote_source_graphql
   track_changes: true
   remote_source: hpc_content_module
-  content_type: article
+  content_type: document
   fields:
     -
       name: id
@@ -25,9 +25,9 @@ source:
       label: Title
       selector: title
     -
-      name: chapter
-      label: Chapter
-      selector: section
+      name: title_short
+      label: 'Title (short)'
+      selector: title_short
     -
       name: summary
       label: Summary
@@ -50,7 +50,7 @@ source:
 process:
   type:
     plugin: default_value
-    default_value: article
+    default_value: document
   title: title
   status:
     plugin: default_value
@@ -63,11 +63,14 @@ process:
     plugin: callback
     callable: strtotime
     source: updated
-  field_remote_article/remote_source:
+  field_remote_document/remote_source:
     plugin: default_value
     default_value: hpc_content_module
-  field_remote_article/article_id: id
-  field_chapter: section
+  field_remote_document/document_id: id
+  field_short_title/value: title_short
+  field_short_title/format:
+    plugin: default_value
+    default_value: html_text
   field_summary/value: summary
   field_summary/format:
     plugin: default_value
@@ -87,7 +90,7 @@ destination:
   plugin: 'entity:node'
   overwrite_properties:
     - title
-    - field_chapter
+    - field_short_title
     - field_summary
     - field_tags
     - created
