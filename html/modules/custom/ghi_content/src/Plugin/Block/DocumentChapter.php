@@ -53,8 +53,10 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
       return NULL;
     }
 
+    $document_node = $this->documentManager->loadNodeForRemoteContent($this->getDocument());
     $cache_tags = [];
     foreach ($articles as $article) {
+      $article->setContextNode($document_node);
       $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTags() ?? []);
     }
 
@@ -62,6 +64,7 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
     $build = [
       '#cache' => [
         'tags' => $cache_tags,
+        'contexts' => ['url.path'],
       ],
     ];
 

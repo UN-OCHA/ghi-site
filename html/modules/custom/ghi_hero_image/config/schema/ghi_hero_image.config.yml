@@ -1,0 +1,7 @@
+ghi_hero_image.config:
+  type: config_object
+  label: 'GHI image settings'
+  mapping:
+    force_letterbox:
+      type: boolean
+      label: 'Force hero images to show as letterbox'

@@ -6,6 +6,7 @@ dependencies:
     - field.field.node.document.field_base_objects
     - field.field.node.document.field_display_hero_image
     - field.field.node.document.field_image
+    - field.field.node.document.field_inherit_section_image
     - field.field.node.document.field_remote_document
     - field.field.node.document.field_short_title
     - field.field.node.document.field_summary
@@ -41,6 +42,7 @@ third_party_settings:
     group_display:
       children:
         - field_display_hero_image
+        - field_inherit_section_image
       label: Display
       region: content
       parent_name: group_tabs
@@ -124,6 +126,13 @@ content:
     settings:
       progress_indicator: throbber
       preview_image_style: thumbnail
+    third_party_settings: {  }
+  field_inherit_section_image:
+    type: boolean_checkbox
+    weight: 16
+    region: content
+    settings:
+      display_label: true
     third_party_settings: {  }
   field_remote_document:
     type: ghi_remote_document

@@ -11,8 +11,10 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_subpages\Controller\SubpagesAdminController;
 use Drupal\ghi_subpages\Element\LayoutBuilderSectionLock;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\ghi_subpages\SubpageManager;
 use Drupal\hpc_common\Helpers\StringHelper;
@@ -23,18 +25,13 @@ use Drupal\node\NodeInterface;
  * Implements hook_entity_bundle_info_alter().
  */
 function ghi_subpages_entity_bundle_info_alter(array &$bundles) {
-  $subpage_types = SubpageHelper::getSubpageTypes();
-  foreach ($subpage_types as $subpage_type) {
-    if (!empty($bundles['node'][$subpage_type]['class'])) {
-      // Some subpages use their own bundle class and we don't want to
-      // overwrite that.
-      continue;
-    }
-    $class_name = StringHelper::makeCamelCase($subpage_type, FALSE) . 'Subpage';
+  foreach (SubpageManager::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
+    $class_name = '\\Drupal\ghi_subpages\\Entity\\' . StringHelper::makeCamelCase($subpage_type, FALSE) . 'Subpage';
     if (!class_exists($class_name)) {
       continue;
     }
     $bundles['node'][$subpage_type]['class'] = $class_name;
+    $bundles['node'][$subpage_type]['label'] = ucfirst(str_replace('_', ' ', $subpage_type));
   }
 }
 
@@ -241,6 +238,25 @@ function ghi_subpages_entity_operation(EntityInterface $entity) {
       'url' => Url::fromRoute($route_name, $route_parameters),
     ],
   ];
+}
+
+/**
+ * Implements hook_current_section_alter().
+ */
+function ghi_subpages_current_section_alter(&$section, $node) {
+  if (!$node instanceof SubpageNodeInterface) {
+    return NULL;
+  }
+  $section = $node->getParentNode();
+}
+
+/**
+ * Implements hook_section_standard_subpage_nodes().
+ */
+function ghi_subpages_section_standard_subpage_nodes(Section $section) {
+  /** @var \Drupal\ghi_subpages\SubpageManager $subpage_manager */
+  $subpage_manager = \Drupal::service('ghi_subpages.manager');
+  return $subpage_manager->loadSubpagesForBaseNode($section);
 }
 
 /**

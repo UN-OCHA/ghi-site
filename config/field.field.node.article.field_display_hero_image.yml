@@ -10,7 +10,7 @@ field_name: field_display_hero_image
 entity_type: node
 bundle: article
 label: 'Display hero image'
-description: 'Display the imported image as a hero image on the top of the article page.'
+description: 'Display a hero image on the top of the article page.'
 required: false
 translatable: false
 default_value:

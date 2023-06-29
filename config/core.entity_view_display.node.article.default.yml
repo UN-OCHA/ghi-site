@@ -7,6 +7,7 @@ dependencies:
     - field.field.node.article.field_chapter
     - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
+    - field.field.node.article.field_inherit_section_image
     - field.field.node.article.field_remote_article
     - field.field.node.article.field_summary
     - field.field.node.article.field_tags
@@ -82,7 +83,7 @@ third_party_settings:
           - related_articles
           - related_sections
   layout_builder_ipe:
-    enabled: 1
+    enabled: true
 id: node.article.default
 targetEntityType: node
 bundle: article
@@ -124,6 +125,16 @@ content:
         attribute: lazy
     third_party_settings: {  }
     weight: 3
+    region: content
+  field_inherit_section_image:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 8
     region: content
   field_remote_article:
     type: ghi_remote_article

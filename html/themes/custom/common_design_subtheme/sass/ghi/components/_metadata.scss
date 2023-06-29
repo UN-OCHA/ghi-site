@@ -1,6 +1,8 @@
+.block-document-meta-data,
 .block-section-meta-data,
 article.node--type-article .node__meta .node__submitted,
-article.node--type-document .node__meta .node__submitted {
+article.node--type-document .node__meta .node__submitted,
+.megamenu .megamenu-header {
   $padding: 0.5rem;
 
   & > ul {

@@ -1,0 +1,21 @@
+.block-article-title {
+  background-color: var(--ghi-default-background-color);
+
+  .article-title-wrapper {
+    margin: 0 auto;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+
+    & > * {
+      margin: 0;
+    }
+
+    p {
+      font-size: var(--cd-font-size--small);
+
+      a {
+        text-decoration: none;
+      }
+    }
+  }
+}

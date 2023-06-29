@@ -6,7 +6,7 @@
     // Keep the page title in place when using named anchors in links and the
     // admin toolbar is visible.
     position: relative;
-    top: -150px;
+    top: -80px;
     display: block;
     visibility: hidden;
   }
@@ -25,11 +25,19 @@
     padding-right: var(--cd-container-padding);
     padding-left: var(--cd-container-padding);
 
+    & > .block-section-navigation {
+      position: unset;
+    }
+
     @include min-width("md") {
       max-width: calc(var(--content-width) + 48px);
       padding-right: var(--cd-container-padding-xlarge);
       padding-left: var(--cd-container-padding-xlarge);
     }
+  }
+
+  .block-wrapper--sectionnavigation {
+    position: relative;
   }
 }
 
@@ -86,10 +94,21 @@
     display: flex;
     gap: 1rem;
 
-    #block-sectionmetadata {
+    #block-sectionmetadata,
+    #block-documentmetadata {
       margin: 0.5rem 0 2rem 0;
       text-transform: uppercase;
       font-size: var(--cd-font-size--small);
+    }
+  }
+}
+
+body.force-letterbox main {
+  & > .page-image,
+  & > .field--type-ghi-hero-image {
+    img {
+      height: 400px;
+      object-fit: cover;
     }
   }
 }

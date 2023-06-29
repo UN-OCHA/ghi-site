@@ -66,6 +66,9 @@ class RemoteChapter implements RemoteChapterInterface {
    * {@inheritdoc}
    */
   public function getShortTitle() {
+    if (!$this->data->title_short) {
+      return $this->getTitle();
+    }
     return trim($this->data->title_short);
   }
 

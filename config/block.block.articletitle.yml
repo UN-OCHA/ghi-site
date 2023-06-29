@@ -1,0 +1,22 @@
+uuid: 68e0d897-2907-4e97-a70f-888bb5ca3ea3
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_content
+  theme:
+    - common_design_subtheme
+id: articletitle
+theme: common_design_subtheme
+region: content
+weight: -6
+provider: null
+plugin: article_title
+settings:
+  id: article_title
+  label: 'Article title'
+  label_display: '0'
+  provider: ghi_content
+  context_mapping:
+    node: '@node.node_route_context:node'
+visibility: {  }

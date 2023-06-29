@@ -10,7 +10,7 @@ dependencies:
 id: subpagetitle
 theme: common_design_subtheme
 region: content
-weight: -5
+weight: -7
 provider: null
 plugin: subpage_title
 settings:
@@ -27,6 +27,7 @@ visibility:
     context_mapping:
       node: '@node.node_route_context:node'
     bundles:
+      document: document
       financials: financials
       global_section: global_section
       plan_cluster: plan_cluster

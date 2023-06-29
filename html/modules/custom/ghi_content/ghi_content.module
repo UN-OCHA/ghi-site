@@ -16,7 +16,11 @@ use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_content\RemoteContent\RemoteContentImageInterface;
+use Drupal\ghi_sections\Entity\Section;
+use Drupal\ghi_sections\Menu\SectionDropdown;
+use Drupal\ghi_sections\Menu\SectionMegaMenu;
 use Drupal\ghi_sections\SectionManager;
+use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\node\NodeInterface;
 
@@ -154,6 +158,71 @@ function ghi_content_form_node_document_edit_form_alter(array &$form, FormStateI
 }
 
 /**
+ * Implements hook_current_section_alter().
+ */
+function ghi_content_current_section_alter(&$section, $node) {
+  if ($node instanceof Section) {
+    $section = $node;
+  }
+  if (!$node instanceof ContentBase) {
+    return NULL;
+  }
+  $context_node = $node->getContextNode();
+  if ($context_node instanceof Section) {
+    $section = $context_node;
+  }
+  elseif ($context_node instanceof ContentBase && $context_node->getContextNode()) {
+    ghi_content_current_section_alter($section, $context_node->getContextNode());
+  }
+}
+
+/**
+ * Implements hook_section_subpage_nodes().
+ */
+function ghi_content_section_subpage_nodes(Section $section) {
+  /** @var \Drupal\ghi_content\ContentManager\DocumentManager $document_manager */
+  $document_manager = \Drupal::service('ghi_content.manager.document');
+  /** @var \Drupal\ghi_content\Entity\Document[] $documents */
+  $documents = $document_manager->loadNodesForSection($section);
+  $current_page_node = clone RequestHelper::getCurrentNodeObject();
+  foreach ($documents as $key => $document) {
+    $document->setContextNode($section);
+    $chapters = $document->getChapters();
+    if (empty($chapters)) {
+      continue;
+    }
+    if (count($chapters) == 1) {
+      $chapter = reset($chapters);
+      $nodes = $document->getChapterArticles($chapter);
+      $documents[$key] = new SectionDropdown($document->getShortTitle() ?? $document->label(), $nodes, $document->toLink(t('Outline')));
+    }
+    else {
+      $nodes_grouped = [];
+      foreach ($chapters as $chapter) {
+        $nodes_grouped[$chapter->getShortTitle()] = $document->getChapterArticles($chapter);
+      }
+      $documents[$key] = new SectionMegaMenu((string) ($document->getShortTitle() ?? $document->label()), $nodes_grouped, [
+        [
+          '#type' => 'html_tag',
+          '#tag' => 'h3',
+          'document' => $document->toLink($document->label())->toRenderable(),
+        ],
+        [
+          '#theme' => 'item_list',
+          '#attributes' => ['class' => ['metadata']],
+          '#items' => $document->getPageMetaData(),
+          '#full_width' => TRUE,
+        ],
+      ]);
+      if ($current_page_node && $current_page_node->toUrl() == $document->toUrl()) {
+        $documents[$key]->setActive();
+      }
+    }
+  }
+  return $documents;
+}
+
+/**
  * Implements hook_ENTITY_TYPE_presave() for node entities.
  */
 function ghi_content_node_presave(NodeInterface $node) {
@@ -184,6 +253,20 @@ function ghi_content_node_predelete(NodeInterface $node) {
 }
 
 /**
+ * Implements hook_preprocess_html().
+ */
+function ghi_content_preprocess_html(&$variables) {
+  $node = RequestHelper::getCurrentNodeObject();
+  if (!$node instanceof ContentBase || !$node->access()) {
+    return;
+  }
+
+  if ($node->isStandalonePage()) {
+    $variables['attributes']['class'][] = 'standalone-page';
+  }
+}
+
+/**
  * Implements hook_preprocess_page().
  *
  * This is used to add the configured hero image (or a default image) to the
@@ -197,34 +280,19 @@ function ghi_content_preprocess_page(&$variables) {
     return;
   }
 
-  $request_stack = \Drupal::requestStack();
-  $request = $request_stack->getMasterRequest();
-  /** @var \Drupal\node\Entity\Node $node */
-  $node = $request->attributes->has('node') ? $request->attributes->get('node') : NULL;
-  if (!$node instanceof NodeInterface || !$node->getFieldDefinitions()) {
-    return;
-  }
-
+  $node = RequestHelper::getCurrentNodeObject();
   if (!$node instanceof ContentBase || !$node->access()) {
     return;
   }
 
-  if (!$node->hasField('field_image') || !$node->hasField('field_display_hero_image')) {
+  $image_node = $node->getNodeWithHeroImage();
+  if (!$image_node) {
     return;
   }
-
-  // We want to display the image as a hero image if it's not been
-  // specifically disabled.
-  $display_hero_image = $node->get('field_display_hero_image')->value;
-  $should_display = $display_hero_image == 1 || $display_hero_image === NULL;
-  if (!$should_display) {
-    return;
-  }
-
   // We do not check if the field has actual values, because we might want to
   // show a default image.
-  $image_field = $node->get('field_image');
-  if ($image_field->isEmpty()) {
+  $image_field = $image_node->getImage();
+  if (!$image_field || $image_field->isEmpty()) {
     // Don't show default images in the page view.
     return;
   }
@@ -237,7 +305,7 @@ function ghi_content_preprocess_page(&$variables) {
   // Collect cache tags to be added for each item in the field.
   $responsive_image_style = $repsonsive_image_style_storage->load($repsonsive_image_style_id);
   $image_styles_to_load = [];
-  $cache_tags = [];
+  $cache_tags = $image_node->getCacheTags();
   if ($responsive_image_style) {
     $cache_tags = Cache::mergeTags($cache_tags, $responsive_image_style->getCacheTags());
     $image_styles_to_load = $responsive_image_style->getImageStyleIds();
@@ -250,19 +318,35 @@ function ghi_content_preprocess_page(&$variables) {
 
   /** @var \Drupal\ghi_content\ContentManager\ManagerFactory $manager_factory */
   $manager_factory = \Drupal::getContainer()->get('ghi_content.manager.factory');
-  $content_manager = $manager_factory->getContentManager($node);
+  $content_manager = $manager_factory->getContentManager($image_node);
   if ($content_manager) {
-    $content = $content_manager->loadRemoteContentForNode($node);
+    $content = $content_manager->loadRemoteContentForNode($image_node);
   }
 
-  $image_build = [
-    '#theme' => 'ghi_image',
-    '#responsive_image_style' => $responsive_image_style,
-    '#url' => $image_field->entity->getFileUri(),
-    '#caption' => $content && $content instanceof RemoteContentImageInterface ? $content->getImageCaptionMarkup(TRUE) : NULL,
-    '#alt' => $image_field->alt,
-    '#title' => $image_field->title,
-  ];
+  if (!$image_node instanceof ContentBase) {
+    $image_build = $image_field->view([
+      'label' => 'hidden',
+      'settings' => [
+        'responsive_image_style' => 'hero',
+        'image_link' => NULL,
+        'include_credits' => TRUE,
+      ],
+    ]);
+  }
+  else {
+    $image_build = [
+      '#theme' => 'ghi_image',
+      '#responsive_image_style' => $responsive_image_style,
+      '#url' => $image_field->entity->getFileUri(),
+      '#caption' => $content && $content instanceof RemoteContentImageInterface ? $content->getImageCaptionMarkup(TRUE) : NULL,
+      '#alt' => $image_field->alt,
+      '#title' => $image_field->title,
+      '#cache' => [
+        'tags' => $cache_tags,
+        'contexts' => ['url.path'],
+      ],
+    ];
+  }
 
   if ($image_build) {
     $image['#label_display'] = 'hidden';
@@ -275,12 +359,17 @@ function ghi_content_preprocess_page(&$variables) {
  * Implements hook_preprocess_page_title().
  */
 function ghi_content_preprocess_page_title(&$variables) {
-  $node = \Drupal::routeMatch()->getParameter('node');
+  $node = RequestHelper::getCurrentNodeObject();
   $is_admin_route = \Drupal::service('router.admin_context')->isAdminRoute();
   if ($is_admin_route || !$node instanceof Article) {
     return;
   }
-  $variables['title_prefix'] = $node->getChapter();
+  if ($node->getContextNode()) {
+    $variables['title'] = $node->getContextNode()->label();
+  }
+  else {
+    $variables['title_prefix'] = $node->getChapter();
+  }
 }
 
 /**
@@ -289,7 +378,7 @@ function ghi_content_preprocess_page_title(&$variables) {
 function ghi_content_preprocess_node(&$variables) {
   /** @var \Drupal\ghi_content\Entity\ContentBase $node */
   $node = $variables['node'];
-  if ($node instanceof ContentBase) {
+  if ($node instanceof ContentBase && (!$node->isStandalonePage() || $node instanceof Article)) {
     $variables['metadata'] = [
       '#theme' => 'item_list',
       '#items' => $node->getPageMetaData(),

@@ -8,6 +8,8 @@ ignored_config_entities:
   - ghi_blocks.global_settings
   - '// Ignore connection credentials.'
   - ghi_content.remote_sources
+  - '// Ignore the image settings'
+  - ghi_hero_image.config
   - '// Ignore the homepage config.'
   - 'page_manager.page.homepage:access_logic'
   - 'page_manager.page.homepage:access_conditions'

@@ -69,7 +69,7 @@ class DocumentManagerTest extends KernelTestBase {
 
     // Setup the tags field on our node types.
     $field_storage = FieldStorageConfig::create([
-      'field_name' => 'field_entity_reference',
+      'field_name' => 'field_documents',
       'entity_type' => 'node',
       'type' => 'entity_reference',
       'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
@@ -79,14 +79,14 @@ class DocumentManagerTest extends KernelTestBase {
     ]);
     $field_storage->save();
     FieldConfig::create([
-      'field_name' => 'field_entity_reference',
+      'field_name' => 'field_documents',
       'field_storage' => $field_storage,
-      'bundle' => self::DOCUMENT_BUNDLE,
+      'bundle' => self::SECTION_BUNDLE,
       'settings' => [
         'handler' => 'default',
         'handler_settings' => [
           'target_bundles' => [
-            self::SECTION_BUNDLE => self::SECTION_BUNDLE,
+            self::DOCUMENT_BUNDLE => self::DOCUMENT_BUNDLE,
           ],
         ],
       ],
@@ -101,37 +101,51 @@ class DocumentManagerTest extends KernelTestBase {
    */
   public function testLoadNodesForSection() {
 
-    // Create a section.
+    // Create documents.
+    $document_1 = $this->createDocument('Document 1');
+    $document_2 = $this->createDocument('Document 2');
+    $this->createDocument('Document 3');
+
+    // Create a section with 2 documents.
     $section = Node::create([
       'type' => self::SECTION_BUNDLE,
       'title' => 'A section node',
       'uid' => 0,
+      'field_documents' => [
+        [
+          'target_id' => $document_1->id(),
+        ],
+        [
+          'target_id' => $document_2->id(),
+        ],
+      ],
     ]);
     $section->save();
 
-    // Create documents.
-    $document_1 = Node::create([
+    $loaded_documents = $this->documentManager->loadNodesForSection($section);
+    $this->assertCount(2, $loaded_documents);
+    $this->assertEquals($document_1->id(), $loaded_documents[0]->id());
+    $this->assertEquals($document_2->id(), $loaded_documents[1]->id());
+
+  }
+
+  /**
+   * Create a document node with the given title.
+   *
+   * @param string $title
+   *   The title of the document.
+   *
+   * @return \Drupal\node\NodeInterface
+   *   The created node object.
+   */
+  private function createDocument($title) {
+    $document = Node::create([
       'type' => self::DOCUMENT_BUNDLE,
-      'title' => 'Document 1',
+      'title' => $title,
       'uid' => 0,
-      'field_entity_reference' => [
-        'target_id' => $section->id(),
-      ],
     ]);
-    $document_1->save();
-
-    $document_2 = Node::create([
-      'type' => self::DOCUMENT_BUNDLE,
-      'title' => 'Document 2',
-      'uid' => 0,
-      'field_entity_reference' => [
-        'target_id' => $section->id(),
-      ],
-    ]);
-    $document_2->save();
-
-    $this->assertEquals([$document_1->id(), $document_2->id()], array_keys($this->documentManager->loadNodesForSection($section)));
-
+    $document->save();
+    return $document;
   }
 
 }

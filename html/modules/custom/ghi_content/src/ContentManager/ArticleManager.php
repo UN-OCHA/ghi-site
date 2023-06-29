@@ -64,7 +64,7 @@ class ArticleManager extends BaseContentManager {
   /**
    * {@inheritdoc}
    */
-  protected function getNodeBundle() {
+  public function getNodeBundle() {
     return self::ARTICLE_BUNDLE;
   }
 

@@ -8,7 +8,7 @@ use Drupal\node\Entity\Node;
 /**
  * Bundle class for global section nodes.
  */
-class GlobalSection extends Node implements SectionNodeInterface {
+class GlobalSection extends Node implements SectionNodeInterface, ImageNodeInterface {
 
   /**
    * {@inheritdoc}

@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Http\RequestStack;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_content\Import\ImportManager;
 use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
@@ -62,7 +63,7 @@ class DocumentManager extends BaseContentManager {
   /**
    * {@inheritdoc}
    */
-  protected function getNodeBundle() {
+  public function getNodeBundle() {
     return self::DOCUMENT_BUNDLE;
   }
 
@@ -147,6 +148,26 @@ class DocumentManager extends BaseContentManager {
     }
     $status = $node->save();
     return $status == SAVED_NEW ? $node : NULL;
+  }
+
+  /**
+   * Load all articles for a section.
+   *
+   * @param \Drupal\node\NodeInterface $section
+   *   The section that articles belong to.
+   *
+   * @return \Drupal\ghi_content\Entity\Document[]|null
+   *   An array of node objects indexed by their ids.
+   */
+  public function loadNodesForSection(NodeInterface $section) {
+    if (!$this->isSectionNode($section)) {
+      return [];
+    }
+    $documents = $section->get('field_documents')->referencedEntities();
+    $documents = array_filter($documents, function ($document) {
+      return $document instanceof Document;
+    });
+    return $documents;
   }
 
   /**

@@ -84,7 +84,7 @@ abstract class BaseContentManager {
    * @return string
    *   The bundle name.
    */
-  abstract protected function getNodeBundle();
+  abstract public function getNodeBundle();
 
   /**
    * Get the name of the remote field.
@@ -609,6 +609,16 @@ abstract class BaseContentManager {
     $display_hero_image = $node->get('field_display_hero_image')->value;
     if ($display_hero_image === NULL) {
       $form['field_display_hero_image']['widget']['value']['#default_value'] = TRUE;
+    }
+
+    // If the inherit section image control checkbox is NULL (never actively
+    // saved), we want to make sure that it shows as selected, which is the
+    // default state for new content pages.
+    if ($node->hasField('field_inherit_section_image')) {
+      $inherit_section_image = $node->get('field_inherit_section_image')->value;
+      if ($inherit_section_image === NULL) {
+        $form['field_inherit_section_image']['widget']['value']['#default_value'] = TRUE;
+      }
     }
 
     $content = $this->loadRemoteContentForNode($node);

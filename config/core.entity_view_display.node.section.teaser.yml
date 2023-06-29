@@ -5,6 +5,7 @@ dependencies:
   config:
     - core.entity_view_mode.node.teaser
     - field.field.node.section.field_base_object
+    - field.field.node.section.field_documents
     - field.field.node.section.field_hero_image
     - field.field.node.section.field_summary
     - field.field.node.section.field_tags
@@ -19,7 +20,7 @@ dependencies:
     - user
 third_party_settings:
   layout_builder_ipe:
-    enabled: 0
+    enabled: false
 id: node.section.teaser
 targetEntityType: node
 bundle: section
@@ -41,6 +42,7 @@ content:
     region: content
 hidden:
   field_base_object: true
+  field_documents: true
   field_summary: true
   field_tags: true
   field_team: true

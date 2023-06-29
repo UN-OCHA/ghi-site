@@ -20,6 +20,29 @@ class Article extends ContentBase {
   }
 
   /**
+   * Get the document chapter to which this article belongs.
+   *
+   * This assumes that every article can only appear once per document.
+   *
+   * @param \Drupal\ghi_content\Entity\Document $document
+   *   The document node.
+   *
+   * @return \Drupal\ghi_content\RemoteContent\RemoteChapterInterface
+   *   The chapter object.
+   */
+  public function getDocumentChapter(Document $document) {
+    foreach ($document->getChapters() as $chapter) {
+      $articles = $document->getChapterArticles($chapter);
+      foreach ($articles as $article) {
+        if ($article->id() == $this->id()) {
+          return $chapter;
+        }
+      }
+    }
+    return NULL;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getPageMetaData() {

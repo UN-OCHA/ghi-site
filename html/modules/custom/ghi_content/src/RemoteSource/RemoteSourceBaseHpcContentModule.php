@@ -52,6 +52,10 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'credits',
       'imageUrl',
     ];
+    $fields['imageCaption'] = [
+      'location',
+      'text',
+    ];
     $this->disableCache();
     $document_data = $this->fetchDocumentData($id, $fields);
     return $document_data ? new RemoteDocument($document_data, $this) : NULL;

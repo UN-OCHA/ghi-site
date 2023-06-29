@@ -114,7 +114,7 @@
     </footer>
   {% endif %}
 
-  <div{{ content_attributes }}>
+  <div{{ content_attributes.addClass('content-wrapper') }}>
 
     {% if document_summary %}
       <div class="document-summary content-width">

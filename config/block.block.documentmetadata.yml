@@ -1,0 +1,30 @@
+uuid: 74640297-19bb-4828-b7b4-449bf3428857
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_content
+    - node
+  theme:
+    - common_design_subtheme
+id: documentmetadata
+theme: common_design_subtheme
+region: page_subtitle
+weight: -7
+provider: null
+plugin: document_meta_data
+settings:
+  id: document_meta_data
+  label: 'Document meta data'
+  label_display: '0'
+  provider: ghi_content
+  context_mapping:
+    node: '@node.node_route_context:node'
+visibility:
+  'entity_bundle:node':
+    id: 'entity_bundle:node'
+    negate: false
+    context_mapping:
+      node: '@node.node_route_context:node'
+    bundles:
+      document: document

@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.node.section.field_base_object
+    - field.field.node.section.field_documents
     - field.field.node.section.field_hero_image
     - field.field.node.section.field_summary
     - field.field.node.section.field_tags
@@ -15,6 +16,7 @@ dependencies:
     - ghi_hero_image
     - path
     - text
+    - wmbert
 id: node.section.default
 targetEntityType: node
 bundle: section
@@ -36,11 +38,29 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+  field_documents:
+    type: wmbert
+    weight: 51
+    region: content
+    settings:
+      list: title
+      add: auto_complete
+      add_placeholder: 'Type the name of a document'
+      disable_duplicate_selection: '1'
+      wrapper: '1'
+      disable_remove: 0
+      disable_drag_and_drop: 0
+    third_party_settings: {  }
   field_hero_image:
     type: ghi_hero_image
     weight: 13
     region: content
-    settings: {  }
+    settings:
+      source: null
+      settings:
+        hpc_webcontent_file_attachment: null
+        smugmug_api: null
+        crop_image: true
     third_party_settings: {  }
   field_summary:
     type: text_textarea
@@ -129,6 +149,11 @@ content:
       match_limit: 10
       size: 60
       placeholder: ''
+    third_party_settings: {  }
+  url_redirects:
+    weight: 50
+    region: content
+    settings: {  }
     third_party_settings: {  }
 hidden:
   layout_builder__layout: true

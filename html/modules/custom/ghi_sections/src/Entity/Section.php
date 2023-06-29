@@ -11,7 +11,7 @@ use Drupal\node\Entity\Node;
 /**
  * Bundle class for section nodes.
  */
-class Section extends Node implements SectionNodeInterface {
+class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
 
   use ShortNameTrait;
 

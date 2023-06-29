@@ -25,12 +25,4 @@ interface SectionNodeInterface extends NodeInterface {
    */
   public function getPageTitleMetaData();
 
-  /**
-   * Get the image field for the node.
-   *
-   * @return \Drupal\Core\Field\FieldItemListInterface
-   *   The field item list, containing the image field items.
-   */
-  public function getImage();
-
 }

@@ -32,3 +32,9 @@ services:
     arguments: ['@entity_type.manager']
     tags:
       - { name: breadcrumb_builder, priority: 1003 }
+  ghi_content.content_page_path_processor:
+    class: Drupal\ghi_content\Path\ContentPagePathProcessor
+    arguments: ['@request_stack']
+    tags:
+      - { name: path_processor_inbound, priority: 1000 }
+      - { name: path_processor_outbound, priority: 100 }

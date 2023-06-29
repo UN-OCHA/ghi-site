@@ -10,7 +10,7 @@ field_name: field_display_hero_image
 entity_type: node
 bundle: document
 label: 'Display hero image'
-description: ''
+description: 'Display a hero image on the top of the document page.'
 required: false
 translatable: true
 default_value:
