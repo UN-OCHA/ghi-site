@@ -95,4 +95,6 @@ destination:
     - field_tags
     - created
     - changed
-migration_dependencies: {  }
+migration_dependencies:
+  required:
+    - articles_hpc_content_module
