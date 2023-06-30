@@ -73,7 +73,11 @@ class Document extends ContentBase {
    */
   public function getChapterArticles(RemoteChapterInterface $chapter) {
     $articles = array_filter(array_map(function (RemoteContentInterface $remote_article) {
-      $node = clone $this->getArticleManager()->loadNodeForRemoteContent($remote_article);
+      $_node = $this->getArticleManager()->loadNodeForRemoteContent($remote_article);
+      if (!$_node) {
+        return NULL;
+      }
+      $node = clone $_node;
       if ($node instanceof ContentBase) {
         $node->setContextNode($this);
       }
