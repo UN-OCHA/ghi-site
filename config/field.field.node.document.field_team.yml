@@ -1,0 +1,29 @@
+uuid: 93ea43ee-3c9c-484d-b32d-87207b3ce1dc
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_team
+    - node.type.document
+    - taxonomy.vocabulary.team
+id: node.document.field_team
+field_name: field_team
+entity_type: node
+bundle: document
+label: 'Team (deprecated)'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      team: team
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

@@ -98,10 +98,9 @@ class DocumentManager extends BaseContentManager {
    */
   public function loadRemoteContentForNode(NodeInterface $node, $refresh = FALSE) {
     $remote_field = $this->getRemoteFieldName();
-    if (!$node->hasField($remote_field)) {
+    if (!$node->hasField($remote_field) || $node->get($remote_field)->isEmpty()) {
       return;
     }
-
     $remote_source = $node->get($remote_field)->remote_source;
     $document_id = $node->get($remote_field)->document_id;
     /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source_instance */
