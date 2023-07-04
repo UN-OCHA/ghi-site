@@ -4,7 +4,6 @@ status: true
 dependencies:
   config:
     - field.field.node.section.field_base_object
-    - field.field.node.section.field_documents
     - field.field.node.section.field_hero_image
     - field.field.node.section.field_summary
     - field.field.node.section.field_tags
@@ -95,14 +94,6 @@ content:
       link: true
     third_party_settings: {  }
     weight: 104
-    region: content
-  field_documents:
-    type: entity_reference_label
-    label: above
-    settings:
-      link: true
-    third_party_settings: {  }
-    weight: 109
     region: content
   field_hero_image:
     type: ghi_hero_image
