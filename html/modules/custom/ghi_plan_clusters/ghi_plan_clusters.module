@@ -12,8 +12,6 @@ use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plan_clusters\PlanClusterManager;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
-use Drupal\ghi_sections\Entity\Section;
-use Drupal\ghi_sections\Menu\SectionDropdown;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\node\NodeInterface;
@@ -58,18 +56,6 @@ function ghi_plan_clusters_current_section_alter(&$section, $node) {
     return NULL;
   }
   $section = $node->getParentNode();
-}
-
-/**
- * Implements hook_section_subpage_nodes().
- */
-function ghi_plan_clusters_section_subpage_nodes(Section $section) {
-  // Load plan clusters for the base entity.
-  $plan_cluster_manager = ghi_plan_clusters_get_manager_service();
-  $plan_cluster_nodes = $plan_cluster_manager->loadNodesForSection($section);
-  if (!empty($plan_cluster_nodes)) {
-    return [new SectionDropdown(t('Clusters'), $plan_cluster_nodes)];
-  }
 }
 
 /**

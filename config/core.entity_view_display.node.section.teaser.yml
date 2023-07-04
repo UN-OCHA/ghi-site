@@ -12,6 +12,7 @@ dependencies:
     - field.field.node.section.field_team
     - field.field.node.section.field_year
     - field.field.node.section.layout_builder__layout
+    - field.field.node.section.section_menu
     - node.type.section
     - responsive_image.styles.card_hero
   module:
@@ -49,3 +50,4 @@ hidden:
   field_year: true
   langcode: true
   layout_builder__layout: true
+  section_menu: true

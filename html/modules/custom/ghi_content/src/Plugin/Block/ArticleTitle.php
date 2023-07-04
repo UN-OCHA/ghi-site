@@ -57,12 +57,18 @@ class ArticleTitle extends BlockBase {
       ],
     ];
 
-    if ($chapter = $node->getDocumentChapter($document)) {
-      $build['title'][] = [
-        '#type' => 'html_tag',
-        '#tag' => 'p',
-        '#value' => $document->toLink($document->label())->toString() . ' > ' . $chapter->getTitle(),
-      ];
+    // If we have a section context, we also want to add breadcrumps.
+    if ($this->getCurrentSectionNode()) {
+      // For single chapter documents, we don't show the chapter title in the
+      // breadcrump.
+      $single_chapter_document = count($document->getChapters()) == 1;
+      if ($chapter = $node->getDocumentChapter($document)) {
+        $build['title'][] = [
+          '#type' => 'html_tag',
+          '#tag' => 'p',
+          '#value' => $document->toLink($document->label())->toString() . (!$single_chapter_document ? ' > ' . $chapter->getTitle() : ''),
+        ];
+      }
     }
 
     $build['title'][] = [

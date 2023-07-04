@@ -1,0 +1,276 @@
+diff --git a/src/Controller/BaseController.php b/src/Controller/BaseController.php
+index 4201a3f..2e51093 100644
+--- a/src/Controller/BaseController.php
++++ b/src/Controller/BaseController.php
+@@ -5,6 +5,7 @@ namespace Drupal\layout_builder_ipe\Controller;
+ use Drupal\Core\Ajax\AjaxResponse;
+ use Drupal\Core\Ajax\ReplaceCommand;
+ use Drupal\Core\Controller\ControllerBase;
++use Drupal\Core\Url;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ 
+ /**
+@@ -43,6 +44,13 @@ abstract class BaseController extends ControllerBase {
+    */
+   protected $requestStack;
+ 
++  /**
++   * A uri to be used for redirects.
++   *
++   * @var string
++   */
++  protected $redirectUri;
++
+   /**
+    * {@inheritdoc}
+    */
+@@ -107,4 +115,32 @@ abstract class BaseController extends ControllerBase {
+     return $response;
+   }
+ 
++  /**
++   * Set the redirect uri.
++   *
++   * @param string $uri
++   *   The ur to redirect to.
++   */
++  protected function setRedirectUri($url) {
++    $this->redirectUri = $url;
++  }
++
++  /**
++   * Get the redirect uri.
++   *
++   * @return string
++   *   The uri to redirect to.
++   */
++  protected function getRedirectUri() {
++    if (!$this->redirectUri) {
++      // If no redirect has been set yet, we try to get the destination
++      // parameter from the current request.
++      $destination = $this->requestStack->getCurrentRequest()->query->get('destination');
++      if ($destination && Url::fromUserInput($destination)) {
++        $this->setRedirectUri($destination);
++      }
++    }
++    return $this->redirectUri;
++  }
++
+ }
+diff --git a/src/Controller/EntityBaseController.php b/src/Controller/EntityBaseController.php
+index 11eaa5f..e4ca300 100644
+--- a/src/Controller/EntityBaseController.php
++++ b/src/Controller/EntityBaseController.php
+@@ -88,11 +88,22 @@ abstract class EntityBaseController extends BaseController {
+       'entity_type' => $entity->getEntityTypeId(),
+       'entity' => $entity->id(),
+     ]);
++
++    // Get the query parameters for modification.
++    $query = $url->getOption('query');
++
++    // Add a destination argument if available.
++    $redirect_uri = $this->getRedirectUri();
++    if ($redirect_uri) {
++      $query['destination'] = $redirect_uri;
++      $url->setOption('query', $query);
++    }
+     $form['#action'] = $url->toString();
+ 
+-    $url->setOption('query', [
+-      FormBuilderInterface::AJAX_FORM_REQUEST => TRUE,
+-    ]);
++    // Mark as ajax form request.
++    $query[FormBuilderInterface::AJAX_FORM_REQUEST] = TRUE;
++    $url->setOption('query', $query);
++
+     foreach (Element::children($form['actions']) as $key) {
+       $element = &$form['actions'][$key] ?? NULL;
+       if (!$element || empty($element['#ajax'])) {
+diff --git a/src/Controller/EntityEditController.php b/src/Controller/EntityEditController.php
+index cb88770..dccd2ec 100644
+--- a/src/Controller/EntityEditController.php
++++ b/src/Controller/EntityEditController.php
+@@ -2,6 +2,7 @@
+ 
+ namespace Drupal\layout_builder_ipe\Controller;
+ 
++use Drupal\Core\Url;
+ use Drupal\layout_builder\SectionStorageInterface;
+ 
+ /**
+@@ -35,6 +36,10 @@ class EntityEditController extends EntityBaseController {
+    *   The response containing the layout builder form.
+    */
+   public function edit(SectionStorageInterface $section_storage) {
++    $destination = $this->requestStack->getCurrentRequest()->query->get('destination');
++    if ($destination && Url::fromUserInput($destination)) {
++      $this->setRedirectUri($destination);
++    }
+     return $this->buildAjaxResponse($section_storage);
+   }
+ 
+diff --git a/src/LayoutBuilder/LayoutBuilderConfirmForm.php b/src/LayoutBuilder/LayoutBuilderConfirmForm.php
+index a16ebfb..363b126 100644
+--- a/src/LayoutBuilder/LayoutBuilderConfirmForm.php
++++ b/src/LayoutBuilder/LayoutBuilderConfirmForm.php
+@@ -15,6 +15,7 @@ use Drupal\layout_builder\Form\RevertOverridesForm;
+ use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+ use Drupal\layout_builder\SectionStorageInterface;
+ use Drupal\layout_builder_ipe\LayoutBuilderIpeService;
++use Drupal\layout_builder_ipe\Traits\RedirectUriTrait;
+ use Drupal\layout_builder_ipe\Traits\SectionStorageFormTrait;
+ 
+ /**
+@@ -31,6 +32,7 @@ class LayoutBuilderConfirmForm {
+ 
+   use StringTranslationTrait;
+   use SectionStorageFormTrait;
++  use RedirectUriTrait;
+ 
+   /**
+    * The entity decorator service.
+@@ -103,15 +105,34 @@ class LayoutBuilderConfirmForm {
+     if (count($submit_handlers) != 1 || $submit_handlers[0] != '::redirectOnSubmit') {
+       return;
+     }
++
++    $redirect_url = $this->getRedirectUri($form_state);
++
+     $section_storage = self::getSectionStorageFromFormState($form_state);
+     if (!$section_storage instanceof OverridesSectionStorage) {
+       return;
+     }
++    $entity = $this->layoutBuilderIpe->getEntityFromSectionStorage($section_storage);
++
+     // Ok, this is the default submit handler that simply redirects to the
+     // confirm form, so we are save to proceed.
+     $form['actions'][$button_key]['#ajax'] = [
+       'event' => 'click',
+       'callback' => [static::class, 'handleConfirmableFormSubmit'],
++      // Setting the route here is important, otherwise the form in the modal
++      // inherits the main URL outside the modal, which in our case is the
++      // layout_builder_ipe edit route. Confirming that will obviously fail, so
++      // we set the URL manually here and also mark this request as coming from
++      // AJAX.
++      'url' => Url::fromRoute('layout_builder.' . $section_storage->getStorageType() . '.' . $entity->getEntityTypeId() . '.' . $button_key, [
++        'node' => $entity->id(),
++      ]),
++      'options' => [
++        'query' => array_filter([
++          FormBuilderInterface::AJAX_FORM_REQUEST => TRUE,
++          'destination' => $this->getRedirectUri($form_state),
++        ]),
++      ],
+     ];
+     $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
+   }
+@@ -195,9 +216,10 @@ class LayoutBuilderConfirmForm {
+         'node' => $entity->id(),
+       ]),
+       'options' => [
+-        'query' => [
++        'query' => array_filter([
+           FormBuilderInterface::AJAX_FORM_REQUEST => TRUE,
+-        ],
++          'destination' => $this->getRedirectUri($form_state),
++        ]),
+       ],
+     ];
+     $form['actions']['cancel']['#attributes']['class'][] = 'dialog-cancel';
+@@ -208,14 +230,16 @@ class LayoutBuilderConfirmForm {
+    *
+    * @param \Drupal\layout_builder\SectionStorageInterface $section_storage
+    *   The section storage to get the redirect URL.
++   * @param string $redirect_uri
++   *   An optional redirect uri.
+    *
+    * @return \Drupal\Core\Ajax\AjaxResponse
+    *   An AJAX response object.
+    */
+-  private static function redirectAjaxResponse(SectionStorageInterface $section_storage) {
++  private static function redirectAjaxResponse(SectionStorageInterface $section_storage, $redirect_uri = NULL) {
+     $ajax_response = new AjaxResponse();
+     $ajax_response->addCommand(new CloseDialogCommand('#layout-builder-modal'));
+-    $ajax_response->addCommand(new RedirectCommand($section_storage->getRedirectUrl()->toString()));
++    $ajax_response->addCommand(new RedirectCommand($redirect_uri ?? $section_storage->getRedirectUrl()->toString()));
+     return $ajax_response;
+   }
+ 
+@@ -237,7 +261,7 @@ class LayoutBuilderConfirmForm {
+     $layout_tempstore_repository->delete($section_storage);
+ 
+     \Drupal::messenger()->addMessage(t('The changes to the layout have been discarded.'));
+-    return self::redirectAjaxResponse($section_storage);
++    return self::redirectAjaxResponse($section_storage, self::getRedirectUri($form_state));
+   }
+ 
+   /**
+diff --git a/src/LayoutBuilder/LayoutBuilderSubmitForm.php b/src/LayoutBuilder/LayoutBuilderSubmitForm.php
+index 95689e8..766889e 100644
+--- a/src/LayoutBuilder/LayoutBuilderSubmitForm.php
++++ b/src/LayoutBuilder/LayoutBuilderSubmitForm.php
+@@ -8,6 +8,7 @@ use Drupal\Core\Ajax\RedirectCommand;
+ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\Core\StringTranslation\StringTranslationTrait;
+ use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
++use Drupal\layout_builder_ipe\Traits\RedirectUriTrait;
+ use Drupal\layout_builder_ipe\Traits\SectionStorageFormTrait;
+ 
+ /**
+@@ -24,6 +25,7 @@ class LayoutBuilderSubmitForm {
+ 
+   use StringTranslationTrait;
+   use SectionStorageFormTrait;
++  use RedirectUriTrait;
+ 
+   /**
+    * Get the dialog options to be used for the confirm forms.
+@@ -93,7 +95,7 @@ class LayoutBuilderSubmitForm {
+     }
+     else {
+       $section_storage = self::getSectionStorageFromFormState($form_state);
+-      $ajax_response->addCommand(new RedirectCommand($section_storage->getRedirectUrl()->toString()));
++      $ajax_response->addCommand(new RedirectCommand(self::getRedirectUri($form_state) ?? $section_storage->getRedirectUrl()->toString()));
+     }
+     return $ajax_response;
+   }
+diff --git a/src/Traits/RedirectUriTrait.php b/src/Traits/RedirectUriTrait.php
+new file mode 100644
+index 0000000..73cc507
+--- /dev/null
++++ b/src/Traits/RedirectUriTrait.php
+@@ -0,0 +1,33 @@
++<?php
++
++namespace Drupal\layout_builder_ipe\Traits;
++
++use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\Url;
++
++/**
++ * Helper trait for section storages in forms.
++ */
++trait RedirectUriTrait {
++
++  /**
++   * Get the current redirect uri..
++   *
++   * @return string|null
++   *   The redirect uri.
++   */
++  public static function getRedirectUri(FormStateInterface $form_state) {
++    $redirect_uri = $form_state->getBuildInfo()['redirect_uri'];
++    if ($redirect_uri) {
++      return $redirect_uri;
++    }
++    $request = \Drupal::request();
++    $destination = $request->query->get('destination');
++    if ($destination && Url::fromUserInput($destination)) {
++      return $destination;
++    }
++
++    return NULL;
++  }
++
++}

@@ -55,6 +55,27 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
   }
 
   /**
+   * Get the base object for a section.
+   *
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface
+   *   The base object set for this section node.
+   */
+  public function getBaseObject() {
+    return $this->get('field_base_object')->entity;
+  }
+
+  /**
+   * Get the section type based on the linked base object type.
+   *
+   * @return \Drupal\Component\Render\MarkupInterface|string
+   *   The type label of the base object linked to the section.
+   */
+  public function getSectionType() {
+    $base_object = $this->getBaseObject();
+    return $base_object->type->entity->label();
+  }
+
+  /**
    * See if the current page is an admin page.
    *
    * @return bool

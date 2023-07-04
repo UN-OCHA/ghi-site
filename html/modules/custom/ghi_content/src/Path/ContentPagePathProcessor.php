@@ -5,8 +5,8 @@ namespace Drupal\ghi_content\Path;
 use Drupal\Core\PathProcessor\InboundPathProcessorInterface;
 use Drupal\Core\PathProcessor\OutboundPathProcessorInterface;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\ghi_content\ContentManager\DocumentManager;
 use Drupal\ghi_content\Traits\ContentPathTrait;
-use Drupal\node\NodeInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -32,10 +32,18 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
   protected $requestStack;
 
   /**
+   * The document manager.
+   *
+   * @var \Drupal\ghi_content\ContentManager\DocumentManager
+   */
+  protected $documentManager;
+
+  /**
    * Constructs a document manager.
    */
-  public function __construct(RequestStack $request_stack) {
+  public function __construct(RequestStack $request_stack, DocumentManager $document_manager) {
     $this->requestStack = $request_stack;
+    $this->documentManager = $document_manager;
   }
 
   /**
@@ -72,6 +80,10 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
     $document = $this->getDocumentNodeFromPath($path);
     $article = $this->getArticleNodeFromPath($path);
 
+    if (!$article) {
+      return $path;
+    }
+
     // This is a request for an article inside a document. We need to find the
     // document based on the alias, confirm that the article is actually part
     // of the document and that the current user has access to the section.
@@ -96,16 +108,18 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
   private function processDocumentUrl($path) {
     $section = $this->getSectionNodeFromPath($path);
     $document = $this->getDocumentNodeFromPath($path);
+    if (!$document) {
+      return $path;
+    }
 
     // This is a request for a document inside a section. We need to find the
     // section based on the alias, confirm that the document is associated to
     // that section and that the current user has access to the section.
-    $valid_documents = $section ? $section->get('field_documents')->referencedEntities() : [];
-    $valid_document_ids = array_map(function (NodeInterface $node) {
-      return $node->id();
-    }, $valid_documents);
-    if (!$document || !$valid_documents || !in_array($document->id(), $valid_document_ids)) {
-      return $path;
+    if ($section && $document) {
+      $documents = $this->documentManager->loadNodesForSection($section);
+      if (!array_key_exists($document->id(), $documents)) {
+        return $path;
+      }
     }
 
     if (!$document->access('view') || !$section->access('view')) {

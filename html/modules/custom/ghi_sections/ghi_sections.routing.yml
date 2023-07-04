@@ -1,3 +1,19 @@
+ghi_sections.node.section_navigation:
+  path: '/node/{node}/section-navigation'
+  defaults:
+    _form: '\Drupal\ghi_sections\Form\SectionNavigationForm'
+    _title_callback: '\Drupal\ghi_sections\Form\SectionNavigationForm::getTitle'
+  options:
+    parameters:
+      node:
+        type: entity:node
+        bundle:
+          - section
+    _admin_route: TRUE
+  requirements:
+    _entity_access: node.update
+    node: \d+
+
 ghi_sections.bulk_create:
   path: '/admin/content/sections/bulk-create'
   defaults:

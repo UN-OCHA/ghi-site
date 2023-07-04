@@ -36,7 +36,7 @@ class ArticleManager extends BaseContentManager {
   /**
    * The machine name of the form element to use for displaying source links.
    */
-  const REMOTE_SOURCE_LINK_TYPE = 'ghi_remote_document_source_link';
+  const REMOTE_SOURCE_LINK_TYPE = 'ghi_remote_article_source_link';
 
   /**
    * The migration plugin manager.

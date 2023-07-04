@@ -37,6 +37,17 @@ class SubpageManager extends BaseObjectSubpageManager {
    * @return array
    *   An array of node type machine names.
    */
+  public function getStandardSubpageTypes() {
+    // The basic subpages defined by this module.
+    return self::SUPPORTED_SUBPAGE_TYPES;
+  }
+
+  /**
+   * Get all available subpage types.
+   *
+   * @return array
+   *   An array of node type machine names.
+   */
   public function getSubpageTypes() {
     // The basic subpages defined by this module.
     $subpage_types = self::SUPPORTED_SUBPAGE_TYPES;

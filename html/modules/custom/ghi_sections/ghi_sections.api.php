@@ -22,20 +22,6 @@ function hook_current_section_alter(Section &$section, NodeInterface $node) {
 }
 
 /**
- * Add standard subpage nodes for the given section.
- *
- * @param \Drupal\ghi_sections\Entity\Section $section
- *   The section node.
- *
- * @return array
- *   An aray of objects, either \Drupal\node\NodeInterface or
- *   \Drupal\ghi_sections\Menu\SectionDropdown.
- */
-function hook_section_standard_subpage_nodes(Section $section) {
-  return [];
-}
-
-/**
  * Add non-standard subpage nodes for the given section.
  *
  * @param \Drupal\ghi_sections\Entity\Section $section
@@ -43,7 +29,7 @@ function hook_section_standard_subpage_nodes(Section $section) {
  *
  * @return array
  *   An aray of objects, either \Drupal\node\NodeInterface or
- *   \Drupal\ghi_sections\Menu\SectionDropdown.
+ *   \Drupal\ghi_sections\MenuItemType\SectionDropdown.
  */
 function hook_section_subpage_nodes(Section $section) {
   return [];

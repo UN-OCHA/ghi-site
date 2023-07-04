@@ -12,6 +12,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
+use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_subpages\SubpageManager;
 use Drupal\ghi_subpages\SubpageTrait;
 use Drupal\ghi_templates\TemplateLinkBuilder;
@@ -139,6 +140,7 @@ class SubpagesPagesForm extends FormBase {
 
     $rows = [];
 
+    /** @var \Drupal\ghi_sections\Entity\SectionNodeInterface $node */
     $node = $this->getBaseTypeNode($node);
 
     if (!$node->isPublished()) {
@@ -146,6 +148,20 @@ class SubpagesPagesForm extends FormBase {
         '@type' => $this->entityTypeManager->getStorage('node_type')->load($node->getType())->get('name'),
       ]));
     }
+
+    $overview_links = [
+      Link::createFromRoute($this->t('Article pages'), 'ghi_content.node.articles', ['node' => $node->id()])->toString(),
+      Link::createFromRoute($this->t('Document pages'), 'ghi_content.node.documents', ['node' => $node->id()])->toString(),
+    ];
+
+    $form['description'] = [
+      '#markup' => '<p>' . $this->t('On this page you can see all subpages that are directly linked to this @page_type. Additional content that is linked indirectly via tags can be found on these pages: @overview_links', [
+        '@page_type' => $node instanceof Section ? $this->t('@type section', [
+          '@type' => strtolower($node->getSectionType()),
+        ]) : $this->t('section'),
+        '@overview_links' => Markup::create(implode(', ', $overview_links)),
+      ]) . '</p>',
+    ];
 
     $section_team = $node->field_team->entity->getName();
 

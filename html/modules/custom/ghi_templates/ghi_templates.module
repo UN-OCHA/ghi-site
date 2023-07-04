@@ -10,7 +10,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\layout_builder\SectionStorageInterface;
 
 /**
- * Implements hook_entity_view_alter().
+ * Implements hook_layout_builder_ipe_links_alter().
  *
  * This adds additional links to the IPE action section.
  */

@@ -11,7 +11,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_subpages\Controller\SubpagesAdminController;
 use Drupal\ghi_subpages\Element\LayoutBuilderSectionLock;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
@@ -248,15 +247,6 @@ function ghi_subpages_current_section_alter(&$section, $node) {
     return NULL;
   }
   $section = $node->getParentNode();
-}
-
-/**
- * Implements hook_section_standard_subpage_nodes().
- */
-function ghi_subpages_section_standard_subpage_nodes(Section $section) {
-  /** @var \Drupal\ghi_subpages\SubpageManager $subpage_manager */
-  $subpage_manager = \Drupal::service('ghi_subpages.manager');
-  return $subpage_manager->loadSubpagesForBaseNode($section);
 }
 
 /**
