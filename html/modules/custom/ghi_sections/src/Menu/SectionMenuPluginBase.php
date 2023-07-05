@@ -107,6 +107,11 @@ abstract class SectionMenuPluginBase extends PluginBase implements SectionMenuPl
   /**
    * {@inheritdoc}
    */
+  abstract public function isValid();
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCacheTags() {
     return [];
   }

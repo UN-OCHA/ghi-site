@@ -69,6 +69,16 @@ class SectionMenuStorage {
   }
 
   /**
+   * Set the section.
+   *
+   * @param \Drupal\ghi_sections\Entity\SectionNodeInterface $section
+   *   The section for this storage.
+   */
+  public function setSection(SectionNodeInterface $section) {
+    $this->section = $section;
+  }
+
+  /**
    * Get the section.
    *
    * @return \Drupal\ghi_sections\Entity\SectionNodeInterface|null

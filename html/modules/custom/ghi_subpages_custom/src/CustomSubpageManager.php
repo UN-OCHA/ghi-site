@@ -3,6 +3,7 @@
 namespace Drupal\ghi_subpages_custom;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\node\NodeInterface;
 
@@ -35,22 +36,18 @@ class CustomSubpageManager {
   /**
    * Load all custom subpages for a section.
    *
-   * @param \Drupal\node\NodeInterface $section
+   * @param \Drupal\ghi_sections\Entity\SectionNodeInterface $section
    *   The section that custom subpage belong to.
    *
-   * @return \Drupal\node\NodeInterface[]|null
-   *   An array of entity objects indexed by their ids.
+   * @return \Drupal\ghi_subpages_custom\Entity\CustomSubpage[]
+   *   An array of custom subpage entity objects indexed by their ids.
    */
-  public function loadNodesForSection(NodeInterface $section) {
-    if ($section->bundle() != 'section') {
-      return NULL;
-    }
-
+  public function loadNodesForSection(SectionNodeInterface $section) {
     $matching_nodes = $this->entityTypeManager->getStorage('node')->loadByProperties([
       'type' => self::BUNDLE,
       'field_entity_reference' => $section->id(),
     ]);
-    return !empty($matching_nodes) ? $matching_nodes : NULL;
+    return $matching_nodes;
   }
 
   /**

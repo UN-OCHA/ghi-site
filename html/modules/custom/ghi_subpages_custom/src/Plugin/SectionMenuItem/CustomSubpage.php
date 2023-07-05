@@ -98,6 +98,24 @@ class CustomSubpage extends SectionMenuPluginBase implements OptionalSectionMenu
   /**
    * {@inheritdoc}
    */
+  public function isValid() {
+    $node = $this->getNode();
+    if (!$node instanceof EntityCustomSubpage) {
+      return NULL;
+    }
+    $parent = $node->getParentNode();
+    if (!$parent) {
+      return NULL;
+    }
+    if ($parent != $this->getSection()) {
+      return NULL;
+    }
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildForm($form, FormStateInterface $form_state) {
     $options = $this->getNodeOptions();
     $form['node_id'] = [

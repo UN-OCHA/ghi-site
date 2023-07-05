@@ -67,6 +67,13 @@ class ClusterSubpages extends SectionMenuPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function isValid() {
+    return TRUE;
+  }
+
+  /**
    * Get the cluster nodes.
    *
    * @return @return \Drupal\ghi_plan_clusters\Entity\PlanCluster[]|null

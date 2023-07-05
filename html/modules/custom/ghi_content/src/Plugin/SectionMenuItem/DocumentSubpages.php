@@ -118,6 +118,13 @@ class DocumentSubpages extends SectionMenuPluginBase implements OptionalSectionM
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function isValid() {
+    return $this->getDocument() instanceof Document;
+  }
+
+  /**
    * Get the document for the current menu item.
    *
    * @return \Drupal\ghi_content\Entity\Document|null

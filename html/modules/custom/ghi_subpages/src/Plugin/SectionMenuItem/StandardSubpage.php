@@ -6,6 +6,7 @@ use Drupal\ghi_sections\Menu\SectionMenuItem;
 use Drupal\ghi_sections\Menu\SectionMenuPluginBase;
 use Drupal\ghi_sections\MenuItemType\SectionNode;
 use Drupal\ghi_subpages\Entity\SubpageNode;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -73,6 +74,13 @@ class StandardSubpage extends SectionMenuPluginBase {
    */
   public function getStatus() {
     return $this->getSubpage()?->isPublished();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isValid() {
+    return $this->getSubpage() instanceof SubpageNodeInterface;
   }
 
   /**

@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_sections;
 
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\SubpageManager;
 use Drupal\node\NodeInterface;
 
@@ -20,7 +21,7 @@ trait SectionTrait {
    *   TRUE if the node is a section, FALSE otherwise.
    */
   public function isSectionNode(NodeInterface $node) {
-    return in_array($node->bundle(), SectionManager::SECTION_BUNDLES);
+    return $node instanceof SectionNodeInterface;
   }
 
   /**
@@ -33,7 +34,7 @@ trait SectionTrait {
    *   The section node if found.
    */
   public function getSectionNode(NodeInterface $node) {
-    if (in_array($node->bundle(), SectionManager::SECTION_BUNDLES)) {
+    if ($this->isSectionNode($node)) {
       return $node;
     }
     if ($node->hasField('field_entity_reference') && in_array($node->bundle(), SubpageManager::SUPPORTED_SUBPAGE_TYPES)) {

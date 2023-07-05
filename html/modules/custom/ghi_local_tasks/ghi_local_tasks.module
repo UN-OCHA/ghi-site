@@ -43,7 +43,7 @@ function ghi_local_tasks_menu_local_tasks_alter(&$data, $route_name, RefinableCa
   $route_names = [
     'entity.node.edit_form',
   ];
-  if (!$data['tabs'][0] ?? NULL) {
+  if (!array_key_exists('tabs', $data) || !array_key_exists(0, $data['tabs'])) {
     return;
   }
   foreach ($data['tabs'][0] as $_route_name => &$element) {

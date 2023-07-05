@@ -115,7 +115,7 @@ class SectionNavigation extends BlockBase implements ContainerFactoryPluginInter
 
     // And add these subpages to the navigation tabs.
     foreach ($menu_items->getAll() as $menu_item) {
-      if (!$menu_item->getPlugin()->getStatus()) {
+      if (!$menu_item->getPlugin()->isValid() || !$menu_item->getPlugin()->getStatus()) {
         continue;
       }
       $widget = $menu_item->getPlugin()->getWidget();

@@ -78,6 +78,14 @@ interface SectionMenuPluginInterface extends PluginInspectionInterface, Containe
   public function getStatus();
 
   /**
+   * Check if the plugin is still valid.
+   *
+   * @return bool
+   *   TRUE if still valid, FALSE otherwise.
+   */
+  public function isValid();
+
+  /**
    * Get the cache tags for this item.
    */
   public function getCacheTags();

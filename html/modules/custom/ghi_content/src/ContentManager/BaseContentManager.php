@@ -13,6 +13,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\ghi_sections\SectionTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
@@ -265,13 +266,13 @@ abstract class BaseContentManager {
   /**
    * Load all articles for a section.
    *
-   * @param \Drupal\node\NodeInterface $section
+   * @param \Drupal\ghi_sections\Entity\SectionNodeInterface $section
    *   The section that articles belong to.
    *
    * @return \Drupal\node\NodeInterface[]|null
    *   An array of node objects indexed by their ids.
    */
-  public function loadNodesForSection(NodeInterface $section) {
+  public function loadNodesForSection(SectionNodeInterface $section) {
     if (!$this->isSectionNode($section)) {
       return NULL;
     }
