@@ -52,6 +52,42 @@ class SectionMenuItemList extends FieldItemList {
   }
 
   /**
+   * Remove the given menu item from the list.
+   *
+   * @param \Drupal\ghi_sections\Menu\SectionMenuItemInterface $menu_item
+   *   The menu item to remove.
+   *
+   * @return bool
+   *   TRUE if the item has been removed, FALSE otherwise.
+   */
+  public function removeMenuItem(SectionMenuItemInterface $menu_item) {
+    $delta = $this->getIndex($menu_item);
+    if ($delta === NULL) {
+      return FALSE;
+    }
+    $this->removeItem($delta);
+    return TRUE;
+  }
+
+  /**
+   * Get the index for the given menu item.
+   *
+   * @param \Drupal\ghi_sections\Menu\SectionMenuItemInterface $menu_item
+   *   The menu item to get the index for.
+   *
+   * @return int|null
+   *   The index of the menu item or NULL if not found.
+   */
+  public function getIndex(SectionMenuItemInterface $menu_item) {
+    foreach ($this->getAll() as $delta => $item) {
+      if ($item == $menu_item) {
+        return $delta;
+      }
+    }
+    return NULL;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getEntity() {

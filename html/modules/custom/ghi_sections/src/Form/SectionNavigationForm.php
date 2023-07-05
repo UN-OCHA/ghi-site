@@ -9,7 +9,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_sections\Menu\OptionalSectionMenuPluginInterface;
-use Drupal\ghi_sections\Menu\SectionMenuItem;
 use Drupal\ghi_sections\Menu\SectionMenuPluginInterface;
 use Drupal\ghi_sections\Menu\SectionMenuPluginManager;
 use Drupal\ghi_sections\Menu\SectionMenuStorage;
@@ -304,17 +303,7 @@ class SectionNavigationForm extends FormBase {
 
       case 'add_item':
         $add = $form_state->getValue('add');
-
-        $plugin_id = $add['plugin_id'];
-        $configuration = $add[$plugin_id]['configuration'] + ['section' => $form['#node']->id()];
-
-        /** @var \Drupal\ghi_sections\Menu\SectionMenuPluginInterface $plugin */
-        $plugin = $this->sectionMenuPluginManager->createInstance($plugin_id, $configuration);
-        $menu_item = new SectionMenuItem($plugin_id, $form['#node']->id(), $plugin->getLabel(), $configuration);
-        $menu_items = $this->sectionMenuStorage->getSectionMenuItems();
-        $item = $menu_items->appendItem();
-        $item->menu_item = $menu_item;
-        $this->sectionMenuStorage->save();
+        $this->sectionMenuStorage->createMenuItem($add['plugin_id'], $add[$plugin_id]['configuration']);
         break;
     }
   }

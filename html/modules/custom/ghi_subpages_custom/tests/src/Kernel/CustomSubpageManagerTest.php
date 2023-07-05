@@ -2,9 +2,10 @@
 
 namespace Drupal\Tests\ghi_subpages_custom\Kernel;
 
-use Drupal\Core\Form\FormState;
 use Drupal\ghi_sections\Entity\Section;
+use Drupal\ghi_sections\Menu\SectionMenuItemInterface;
 use Drupal\ghi_subpages_custom\Entity\CustomSubpage;
+use Drupal\ghi_subpages_custom\Plugin\SectionMenuItem\CustomSubpage as SectionMenuItemCustomSubpage;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\ghi_sections\Kernel\SectionMenuTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
@@ -72,6 +73,8 @@ class CustomSubpageManagerTest extends SectionMenuTestBase {
     // Create a section.
     $section = $this->createSection();
     $this->sectionMenuStorage->setSection($section);
+    $menu_items = $this->sectionMenuStorage->getSectionMenuItems()->getAll();
+    $this->assertCount(0, $menu_items);
 
     /** @var \Drupal\ghi_subpages_custom\Plugin\SectionMenuItem\CustomSubpage $menu_plugin */
     $menu_plugin = $this->sectionMenuPluginManager->createInstance('custom_subpage');
@@ -80,24 +83,33 @@ class CustomSubpageManagerTest extends SectionMenuTestBase {
     $this->assertNull($menu_item);
 
     // Create custom subpages.
-    $this->createCustomSubpage($section);
-    $this->createCustomSubpage($section);
+    $custom_subpage_1 = $this->createCustomSubpage($section);
+    $custom_subpage_2 = $this->createCustomSubpage($section);
 
-    $menu_item = $menu_plugin->getItem();
-    $this->assertNull($menu_item);
+    // Confirm we have menu items for them.
+    $menu_item_1 = $custom_subpage_1->getSectionMenuItem();
+    $menu_item_2 = $custom_subpage_2->getSectionMenuItem();
+    $this->assertInstanceOf(SectionMenuItemInterface::class, $menu_item_1);
+    $this->assertInstanceOf(SectionMenuItemInterface::class, $menu_item_2);
+    $this->assertInstanceOf(SectionMenuItemCustomSubpage::class, $menu_item_1->getPlugin());
+    $this->assertInstanceOf(SectionMenuItemCustomSubpage::class, $menu_item_2->getPlugin());
 
-    $form = [];
-    $form_state = new FormState();
-    $form = $menu_plugin->buildForm($form, $form_state);
-    $this->assertCount(2, $form['node_id']['#options']);
+    // Confirm the section storage now lists 2 items.
+    $menu_items = $this->sectionMenuStorage->getSectionMenuItems()->getAll();
+    $this->assertCount(2, $menu_items);
 
+    // Delete a custom subpage and confirm that the menu item also get's
+    // deleted.
+    $custom_subpage_2->delete();
+    $menu_items = $this->sectionMenuStorage->getSectionMenuItems()->getAll();
+    $this->assertCount(1, $menu_items);
   }
 
   /**
    * Create a section node.
    *
-   * @return \Drupal\ghi_sections\Entity\SectionNode
-   *   A section node.
+   * @return \Drupal\ghi_subpages_custom\Entity\CustomSubpage
+   *   A custom subpage node.
    */
   protected function createCustomSubpage(Section $section) {
     $custom_subpage = CustomSubpage::create([

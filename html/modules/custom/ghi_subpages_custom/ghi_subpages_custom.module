@@ -27,6 +27,14 @@ function ghi_subpages_custom_form_node_custom_subpage_edit_form_alter(&$form, Fo
     $form['field_team']['#disabled'] = TRUE;
     $form['field_team']['widget']['#description'] = t('You do not have permission to change the team for this section.');
   }
+
+  // Lock the section field.
+  /** @var \Drupal\Core\Entity\ContentEntityFormInterface $form_object */
+  $form_object = $form_state->getFormObject();
+  $node = $form_object->getEntity();
+  if (!$node->isNew() && !$node->get('field_entity_reference')->isEmpty()) {
+    $form['field_entity_reference']['#disabled'] = TRUE;
+  }
 }
 
 /**

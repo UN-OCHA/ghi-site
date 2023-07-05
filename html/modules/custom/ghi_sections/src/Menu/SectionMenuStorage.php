@@ -136,11 +136,56 @@ class SectionMenuStorage {
   }
 
   /**
-   * {@inheritdoc}
+   * Save the current menu storage.
+   *
+   * @return bool
+   *   TRUE if successfull, FALSE otherwise.
    */
   public function save() {
     $this->getSection()->isSyncing(TRUE);
-    return $this->getSection()->save();
+    return $this->getSection()->save() !== FALSE;
+  }
+
+  /**
+   * Create a new menu item and append it to the list.
+   *
+   * @param string $plugin_id
+   *   The section menu plugin to use for the menu item.
+   * @param array $configuration
+   *   The configuration for the section menu item.
+   *
+   * @return bool
+   *   TRUE if successfull, FALSE otherwise.
+   */
+  public function createMenuItem($plugin_id, $configuration) {
+    if (!$this->getSection()) {
+      return FALSE;
+    }
+    $section_id = $this->getSection()->id();
+    $configuration['section'] = $section_id;
+    /** @var \Drupal\ghi_sections\Menu\SectionMenuPluginInterface $plugin */
+    $plugin = $this->sectionMenuPluginManager->createInstance($plugin_id, $configuration);
+    $menu_item = new SectionMenuItem($plugin_id, $section_id, $plugin->getLabel(), $configuration);
+    $menu_items = $this->getSectionMenuItems();
+    $item = $menu_items->appendItem();
+    $item->menu_item = $menu_item;
+    return $this->save();
+  }
+
+  /**
+   * Remove the given menu item.
+   *
+   * @param \Drupal\ghi_sections\Menu\SectionMenuItemInterface $menu_item
+   *   The menu item to remove.
+   */
+  public function removeMenuItem(SectionMenuItemInterface $menu_item) {
+    $menu_items = $this->getSectionMenuItems();
+    if (!$menu_items || $menu_items->isEmpty()) {
+      return;
+    }
+    if ($menu_items->removeMenuItem($menu_item)) {
+      $this->save();
+    }
   }
 
   /**

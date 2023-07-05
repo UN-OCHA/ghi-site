@@ -1,0 +1,5 @@
+admin.subpages_form:
+  version: VERSION
+  css:
+    component:
+      css/admin/subpages.css: {}

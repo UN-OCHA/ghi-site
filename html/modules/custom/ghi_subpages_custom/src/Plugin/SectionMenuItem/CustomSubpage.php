@@ -2,8 +2,6 @@
 
 namespace Drupal\ghi_subpages_custom\Plugin\SectionMenuItem;
 
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\ghi_sections\Menu\OptionalSectionMenuPluginInterface;
 use Drupal\ghi_sections\Menu\SectionMenuItem;
 use Drupal\ghi_sections\Menu\SectionMenuPluginBase;
 use Drupal\ghi_sections\MenuItemType\SectionNode;
@@ -20,7 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   weight = 4,
  * )
  */
-class CustomSubpage extends SectionMenuPluginBase implements OptionalSectionMenuPluginInterface {
+class CustomSubpage extends SectionMenuPluginBase {
 
   /**
    * The subpage manager.
@@ -82,6 +80,16 @@ class CustomSubpage extends SectionMenuPluginBase implements OptionalSectionMenu
   }
 
   /**
+   * Get the node id for this plugin.
+   *
+   * @return int
+   *   A node id.
+   */
+  public function getNodeId() {
+    return $this->nodeId;
+  }
+
+  /**
    * Get the document for the current menu item.
    *
    * @return \Drupal\ghi_content\Entity\Document|null
@@ -111,58 +119,6 @@ class CustomSubpage extends SectionMenuPluginBase implements OptionalSectionMenu
       return NULL;
     }
     return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function buildForm($form, FormStateInterface $form_state) {
-    $options = $this->getNodeOptions();
-    $form['node_id'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Custom page'),
-      '#options' => $options,
-    ];
-    return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isAvailable() {
-    return !empty($this->getNodeOptions());
-  }
-
-  /**
-   * Get the options for the node select.
-   *
-   * @return string[]
-   *   An array with node labels as options, keyed by the document id.
-   */
-  private function getNodeOptions() {
-    $section = $this->getSection();
-    $nodes = $this->customSubpageManager->loadNodesForSection($section);
-    $options = array_map(function (EntityCustomSubpage $node) {
-      return $node->label();
-    }, $nodes);
-
-    /** @var \Drupal\ghi_sections\Field\SectionMenuItemList $menu_item_list */
-    $menu_item_list = clone $this->sectionMenuStorage->getSectionMenuItems();
-    $exclude_node_ids = [];
-    foreach ($menu_item_list->getAll() as $menu_item) {
-      $plugin = $menu_item->getPlugin();
-      if (!$plugin instanceof self || !$plugin->getNode()) {
-        continue;
-      }
-      if ($plugin->getSection()->id() == $section->id() && array_key_exists($plugin->getNode()->id(), $nodes)) {
-        $data = $menu_item->toArray();
-        $node_id = $data['configuration']['node_id'];
-        $exclude_node_ids[$node_id] = $node_id;
-      }
-    }
-    $options = array_diff_key($options, $exclude_node_ids);
-
-    return $options;
   }
 
 }

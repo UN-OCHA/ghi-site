@@ -129,6 +129,8 @@ class SubpagesPagesForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
 
+    $form['#attached']['library'][] = 'ghi_subpages/admin.subpages_form';
+
     $header = [
       $this->t('Page'),
       $this->t('Status'),
@@ -222,9 +224,7 @@ class SubpagesPagesForm extends FormBase {
 
       /** @var \Drupal\node\NodeInterface[] $subpage_nodes */
       $subpage_nodes = $this->subpageManager->getCustomSubpagesForBaseNode($node, $node_type);
-      if (empty($subpage_nodes)) {
-        continue;
-      }
+
       $header = [
         $this->t('Page'),
         $this->t('Status'),
@@ -234,32 +234,69 @@ class SubpagesPagesForm extends FormBase {
         $this->t('Operations'),
       ];
       $rows = [];
-      foreach ($subpage_nodes as $subpage_node) {
-        /** @var \Drupal\taxonomy\Entity\Term $subpage_team */
-        $subpage_team = !$subpage_node->field_team->isEmpty() ? $subpage_node->field_team->entity : NULL;
+      if (!empty($subpage_nodes)) {
+        foreach ($subpage_nodes as $subpage_node) {
+          /** @var \Drupal\taxonomy\Entity\Term $subpage_team */
+          $subpage_team = !$subpage_node->field_team->isEmpty() ? $subpage_node->field_team->entity : NULL;
 
-        $row = [];
-        $row[] = $subpage_node->toLink();
-        $row[] = $subpage_node->isPublished() ? $this->t('Published') : $this->t('Unpublished');
-        $row[] = $subpage_team ? $subpage_team->getName() : $section_team . ' (' . $this->t('Inherit from section') . ')';
-        $row[] = $this->dateFormatter->format($subpage_node->getCreatedTime(), 'custom', 'F j, Y h:ia');
-        $row[] = $this->dateFormatter->format($subpage_node->getChangedTime(), 'custom', 'F j, Y h:ia');
-        $row[] = $this->getOperationLinks($subpage_node, $node);
-        $rows[$subpage_node->id()] = $row;
+          $row = [];
+          $row[] = $subpage_node->toLink();
+          $row[] = $subpage_node->isPublished() ? $this->t('Published') : $this->t('Unpublished');
+          $row[] = $subpage_team ? $subpage_team->getName() : $section_team . ' (' . $this->t('Inherit from section') . ')';
+          $row[] = $this->dateFormatter->format($subpage_node->getCreatedTime(), 'custom', 'F j, Y h:ia');
+          $row[] = $this->dateFormatter->format($subpage_node->getChangedTime(), 'custom', 'F j, Y h:ia');
+          $row[] = $this->getOperationLinks($subpage_node, $node);
+          $rows[$subpage_node->id()] = $row;
+        }
       }
+      $add_url = Url::fromRoute('node.add', [
+        'node_type' => $node_type->id(),
+      ], [
+        'query' => ['section' => $node->id()],
+      ]);
+      $add_label = $this->t('Create a @type', [
+        '@type' => strtolower($node_type->label()),
+      ]);
       $form['subpages_' . $node_type->id() . '_header'] = [
-        '#type' => 'html_tag',
-        '#tag' => 'h2',
-        '#value' => $this->t('@label subpages', [
-          '@label' => $node_type->label(),
-        ]),
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['subpages-form-header-wrapper'],
+        ],
+        'label' => [
+          '#type' => 'html_tag',
+          '#tag' => 'h2',
+          '#value' => $this->t('@label subpages', [
+            '@label' => $node_type->label(),
+          ]),
+        ],
+        'add_link' => $add_url->access() ? [
+          '#type' => 'html_tag',
+          '#tag' => 'a',
+          'markup' => [
+            '#markup' => $add_label,
+          ],
+          '#attributes' => [
+            'href' => $add_url->toString(),
+            'class' => [
+              'button',
+              'button--primary',
+              'button--action',
+            ],
+          ],
+        ] : NULL,
       ];
       $form['subpages_' . $node_type->id()] = [
         '#type' => 'tableselect',
         '#header' => $header,
         '#options' => $rows,
-        '#empty' => $this->t('No subpages exist for this item.'),
+        '#empty' => Markup::create(implode(' ', array_filter([
+          $this->t('There is no <em>@type</em> content yet.', [
+            '@type' => strtolower($node_type->label()),
+          ]),
+          $add_url->access() ? Link::fromTextAndUrl($add_label, $add_url)->toString() : NULL,
+        ]))),
       ];
+
     }
 
     $bulk_form_actions = $this->getBulkFormActions();
