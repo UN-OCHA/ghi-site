@@ -123,7 +123,10 @@ class SectionNavigation extends BlockBase implements ContainerFactoryPluginInter
         continue;
       }
       $widget->setCurrentNode($node);
-      $tabs[] = $widget->toRenderable();
+      if (!$tab = $widget->toRenderable()) {
+        continue;
+      }
+      $tabs[] = $tab;
     }
 
     foreach ($tabs as $tab) {
