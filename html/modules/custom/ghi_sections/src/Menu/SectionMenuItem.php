@@ -3,6 +3,7 @@
 namespace Drupal\ghi_sections\Menu;
 
 use Drupal\Component\Plugin\Exception\PluginException;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\Entity\Node;
 
 /**
@@ -88,20 +89,21 @@ class SectionMenuItem implements SectionMenuItemInterface {
   }
 
   /**
-   * Get the label for this menu item.
-   *
-   * @return string
-   *   The label for the menu item.
+   * {@inheritdoc}
    */
   public function getLabel() {
     return (string) $this->label;
   }
 
   /**
-   * Gets the menu item plugin configuration.
-   *
-   * @return mixed[]
-   *   The menu item plugin configuration.
+   * {@inheritdoc}
+   */
+  public function setLabel($label) {
+    $this->label = $label;
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function getConfiguration() {
     return $this->configuration;
@@ -121,10 +123,15 @@ class SectionMenuItem implements SectionMenuItemInterface {
   }
 
   /**
-   * Gets the plugin for this menu item.
-   *
-   * @return \Drupal\ghi_sections\Menu\SectionMenuPluginInterface
-   *   The plugin.
+   * {@inheritdoc}
+   */
+  public function buildForm($form, FormStateInterface $form_state) {
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function getPlugin() {
     /** @var \Drupal\ghi_sections\Menu\SectionMenuPluginManager $plugin_manager */

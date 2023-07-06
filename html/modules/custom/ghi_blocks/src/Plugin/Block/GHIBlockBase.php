@@ -816,6 +816,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    */
   public function blockForm($form, FormStateInterface $form_state) {
     parent::blockForm($form, $form_state);
+    $form['#ghi_modal_form'] = TRUE;
 
     $form_state->set('block', $this);
     $this->setFormState($form_state);
@@ -1236,13 +1237,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // GIN backend theme, this is not done automatically.
     $form['actions']['#type'] = 'container';
     $form['actions']['#attributes']['class'][] = 'canvas-form__actions';
-
-    // Also load our library to improve the UI.
-    // @todo Check if this is sufficiently handled by ghi_blocks_form_alter().
-    if (empty($form['#attached']['library'])) {
-      $form['#attached']['library'] = [];
-    }
-    $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
 
     $is_preview = $form_state->get('preview');
     $active_subform = $form_state->get('current_subform');

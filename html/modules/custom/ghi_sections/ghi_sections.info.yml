@@ -12,3 +12,4 @@ dependencies:
   - ghi_form_elements:ghi_form_elements
   - publishcontent:publishcontent
   - pathauto:pathauto
+  - layout_builder_modal:layout_builder_modal

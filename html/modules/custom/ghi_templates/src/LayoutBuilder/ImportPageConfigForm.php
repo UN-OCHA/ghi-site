@@ -8,7 +8,6 @@ use Drupal\Core\Ajax\AjaxHelperTrait;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Ajax\RedirectCommand;
-use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -17,6 +16,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Traits\GinLbModalTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\hpc_common\Traits\AjaxFormTrait;
 use Drupal\layout_builder\Controller\LayoutRebuildTrait;
 use Drupal\layout_builder\LayoutBuilderHighlightTrait;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
@@ -37,6 +37,7 @@ class ImportPageConfigForm extends FormBase {
   use LayoutRebuildTrait;
   use GinLbModalTrait;
   use AjaxHelperTrait;
+  use AjaxFormTrait;
 
   /**
    * The form steps for the import wizard.
@@ -113,6 +114,7 @@ class ImportPageConfigForm extends FormBase {
     $form['#title'] = $this->t('Import page configuration to @label', [
       '@label' => $entity->label(),
     ]);
+    $form['#ghi_modal_form'] = TRUE;
 
     $steps = self::STEPS;
     $current_step = $form_state->get('current_import_step') ?? reset($steps);
@@ -127,9 +129,6 @@ class ImportPageConfigForm extends FormBase {
         break;
     }
 
-    $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
-    $this->makeGinLbForm($form, $form_state);
-
     if ($this->isAjax()) {
       $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
       // @todo static::ajaxSubmit() requires data-drupal-selector to be the same
@@ -143,6 +142,7 @@ class ImportPageConfigForm extends FormBase {
       $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);
     }
 
+    $this->makeGinLbForm($form, $form_state);
     return $form;
   }
 
@@ -300,37 +300,6 @@ class ImportPageConfigForm extends FormBase {
    */
   private function getSubmittedConfig(FormStateInterface $form_state) {
     return $form_state->getValue('config') ?? ($form_state->get('config') ? Yaml::encode($form_state->get('config')) : NULL);
-  }
-
-  /**
-   * Submit form dialog #ajax callback.
-   *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
-   *
-   * @return \Drupal\Core\Ajax\AjaxResponse
-   *   An AJAX response that display validation error messages or represents a
-   *   successful submission.
-   */
-  public function ajaxSubmit(array &$form, FormStateInterface $form_state) {
-    $action = end($form_state->getTriggeringElement()['#parents']);
-    if ($form_state->hasAnyErrors() || $action != 'submit') {
-      if ($form_state->hasAnyErrors()) {
-        $form['status_messages'] = [
-          '#type' => 'status_messages',
-          '#weight' => -1000,
-        ];
-      }
-      $form['#sorted'] = FALSE;
-      $response = new AjaxResponse();
-      $response->addCommand(new ReplaceCommand('[data-drupal-selector="' . $form['#attributes']['data-drupal-selector'] . '"]', $form));
-    }
-    else {
-      $response = $this->successfulAjaxSubmit($form, $form_state);
-    }
-    return $response;
   }
 
   /**

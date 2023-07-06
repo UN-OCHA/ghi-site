@@ -10,13 +10,6 @@ use Drupal\Core\Cache\Cache;
 class SectionDropdown extends SectionMenuWidgetBase {
 
   /**
-   * The label to be used for the widget.
-   *
-   * @var string
-   */
-  private $label;
-
-  /**
    * The nodes to display in the widget.
    *
    * @var \Drupal\node\NodeInterface[]
@@ -44,13 +37,6 @@ class SectionDropdown extends SectionMenuWidgetBase {
     $this->label = $label;
     $this->nodes = $nodes;
     $this->headerLink = $header_link;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getLabel() {
-    return $this->label;
   }
 
   /**

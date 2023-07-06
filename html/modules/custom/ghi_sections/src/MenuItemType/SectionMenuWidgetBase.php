@@ -17,6 +17,13 @@ abstract class SectionMenuWidgetBase {
   protected $currentNode;
 
   /**
+   * The label to be used for the widget.
+   *
+   * @var string
+   */
+  protected $label;
+
+  /**
    * Set the current node for the menu item.
    *
    * @param \Drupal\node\NodeInterface $current_node
@@ -34,6 +41,26 @@ abstract class SectionMenuWidgetBase {
    */
   public function getCurrentNode() {
     return $this->currentNode;
+  }
+
+  /**
+   * Get the label of the menu item.
+   *
+   * @return string|\Drupal\Component\Render\MarkupInterface
+   *   Return the label.
+   */
+  public function getLabel() {
+    return $this->label;
+  }
+
+  /**
+   * Set the label of the menu item.
+   *
+   * @param string|\Drupal\Component\Render\MarkupInterface $label
+   *   Return the label.
+   */
+  public function setLabel($label) {
+    $this->label = $label;
   }
 
   /**

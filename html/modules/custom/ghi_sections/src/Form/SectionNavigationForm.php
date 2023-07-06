@@ -2,10 +2,13 @@
 
 namespace Drupal\ghi_sections\Form;
 
+use Drupal\Component\Serialization\Json;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_sections\Menu\OptionalSectionMenuPluginInterface;
@@ -57,6 +60,13 @@ class SectionNavigationForm extends FormBase {
   protected $moduleHandler;
 
   /**
+   * The layout builder ipe config object.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
+  protected $modalConfig;
+
+  /**
    * The supported bundles.
    *
    * @var array
@@ -66,12 +76,13 @@ class SectionNavigationForm extends FormBase {
   /**
    * Public constructor.
    */
-  public function __construct(SectionManager $section_manager, SectionMenuPluginManager $section_menu_plugin_manager, SectionMenuStorage $section_menu_storage, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler) {
+  public function __construct(SectionManager $section_manager, SectionMenuPluginManager $section_menu_plugin_manager, SectionMenuStorage $section_menu_storage, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, ConfigFactoryInterface $config_factory) {
     $this->sectionManager = $section_manager;
     $this->sectionMenuPluginManager = $section_menu_plugin_manager;
     $this->sectionMenuStorage = $section_menu_storage;
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
+    $this->modalConfig = $config_factory->get('layout_builder_modal.settings');
 
     $this->bundles = $this->sectionManager->getAvailableBaseObjectTypes();
   }
@@ -86,6 +97,7 @@ class SectionNavigationForm extends FormBase {
       $container->get('ghi_sections.section_menu.storage'),
       $container->get('entity_type.manager'),
       $container->get('module_handler'),
+      $container->get('config.factory'),
     );
   }
 
@@ -185,6 +197,10 @@ class SectionNavigationForm extends FormBase {
           '#markup' => $item_status ? $this->t('Visible') : $this->t('Hidden'),
         ],
         'operations' => [
+          'edit' => Link::createFromRoute($this->t('Edit'), 'ghi_sections.menu_item.edit', [
+            'node' => $node->id(),
+            'delta' => $delta,
+          ], ['attributes' => $this->getLinkAttributes(['button'])])->toRenderable(),
           'remove' => [
             '#type' => 'submit',
             '#value' => 'remove',
@@ -303,9 +319,35 @@ class SectionNavigationForm extends FormBase {
 
       case 'add_item':
         $add = $form_state->getValue('add');
-        $this->sectionMenuStorage->createMenuItem($add['plugin_id'], $add[$plugin_id]['configuration']);
+        $plugin_id = $add['plugin_id'];
+        $this->sectionMenuStorage->createMenuItem($plugin_id, $add[$plugin_id]['configuration']);
         break;
     }
+  }
+
+  /**
+   * Get the common attributes for template links.
+   *
+   * @param array $classes
+   *   An optional set of additional classes for the link.
+   *
+   * @return array
+   *   The link attributes array.
+   */
+  private function getLinkAttributes(array $classes = []) {
+    return [
+      'class' => array_merge([
+        'use-ajax',
+      ], $classes),
+      'data-dialog-type' => 'dialog',
+      'data-dialog-options' => Json::encode([
+        'width' => $this->modalConfig->get('modal_width'),
+        'height' => $this->modalConfig->get('modal_height'),
+        'target' => 'layout-builder-modal',
+        'autoResize' => $this->modalConfig->get('modal_autoresize'),
+        'modal' => TRUE,
+      ]),
+    ];
   }
 
 }

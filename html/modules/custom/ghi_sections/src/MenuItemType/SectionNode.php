@@ -13,13 +13,6 @@ class SectionNode extends SectionMenuWidgetBase {
   use LayoutEntityHelperTrait;
 
   /**
-   * The label to be used for the widget.
-   *
-   * @var string
-   */
-  private $label;
-
-  /**
    * The node to display in the widget.
    *
    * @var \Drupal\node\NodeInterface
@@ -37,13 +30,6 @@ class SectionNode extends SectionMenuWidgetBase {
   public function __construct($label, NodeInterface $node) {
     $this->label = $label;
     $this->node = $node;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getLabel() {
-    return $this->label;
   }
 
   /**

@@ -5,6 +5,7 @@ namespace Drupal\ghi_subpages\Plugin\Derivative;
 use Drupal\Component\Plugin\Derivative\DeriverBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_subpages\SubpageManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -15,6 +16,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   Plugin derivers are internal.
  */
 class StandardSubpageSectionMenuItemDeriver extends DeriverBase implements ContainerDeriverInterface {
+
+  use StringTranslationTrait;
 
   /**
    * The subpage manager.
@@ -64,6 +67,10 @@ class StandardSubpageSectionMenuItemDeriver extends DeriverBase implements Conta
         continue;
       }
       $this->derivatives[$type] = $base_plugin_definition;
+      $this->derivatives[$type]['label'] = $this->t('@label (@type)', [
+        '@label' => $this->derivatives[$type]['label'],
+        '@type' => $node_type->label(),
+      ]);
       $this->derivatives[$type]['node_type'] = $node_type->id();
       $this->derivatives[$type]['admin_label'] = $node_type->label();
       $this->derivatives[$type]['config_dependencies'][$node_type->getConfigDependencyKey()][] = $node_type->getConfigDependencyName();

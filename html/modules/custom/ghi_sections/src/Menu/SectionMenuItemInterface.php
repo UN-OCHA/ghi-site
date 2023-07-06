@@ -2,6 +2,8 @@
 
 namespace Drupal\ghi_sections\Menu;
 
+use Drupal\Core\Form\FormStateInterface;
+
 /**
  * Interface for section menu items.
  */
@@ -27,9 +29,17 @@ interface SectionMenuItemInterface {
    * Get the label of the menu item.
    *
    * @return string|\Drupal\Component\Render\MarkupInterface
-   *   Return the rendered value.
+   *   Return the label.
    */
   public function getLabel();
+
+  /**
+   * Set the label of the menu item.
+   *
+   * @param string|\Drupal\Component\Render\MarkupInterface $label
+   *   The label.
+   */
+  public function setLabel($label);
 
   /**
    * Returns an array representation of the menu item.
@@ -49,5 +59,18 @@ interface SectionMenuItemInterface {
    *   The menu item object.
    */
   public static function fromArray($data);
+
+  /**
+   * Build the configuration form for the menu item.
+   *
+   * @param array $form
+   *   A form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state interface.
+   *
+   * @return array
+   *   The form array with the configuration form.
+   */
+  public function buildForm($form, FormStateInterface $form_state);
 
 }

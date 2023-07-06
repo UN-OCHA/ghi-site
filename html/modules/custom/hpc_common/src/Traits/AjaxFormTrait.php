@@ -5,6 +5,7 @@ namespace Drupal\hpc_common\Traits;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
+use Drupal\Core\Ajax\CloseModalDialogCommand;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -35,6 +36,15 @@ trait AjaxFormTrait {
   public static function ajaxCancel(array &$form, FormStateInterface $form_state) {
     $response = new AjaxResponse();
     $response->addCommand(new CloseDialogCommand());
+    return $response;
+  }
+
+  /**
+   * Generic ajax callback for comment forms.
+   */
+  public static function ajaxCancelModal(array &$form, FormStateInterface $form_state) {
+    $response = new AjaxResponse();
+    $response->addCommand(new CloseModalDialogCommand());
     return $response;
   }
 

@@ -44,7 +44,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     if ($this->contextNode) {
       return $this->contextNode;
     }
-    if ($this instanceof Document && $section = $this->getCurrentSectionNode()) {
+    if ($this instanceof ContentBase && $section = $this->getCurrentSectionNode()) {
       $this->contextNode = $section;
       return $this->contextNode;
     }
@@ -66,7 +66,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     if ($this instanceof Article && !$this->getCurrentDocumentNode()) {
       return TRUE;
     }
-    if ($this instanceof Document && !$this->getCurrentSectionNode()) {
+    if ($this instanceof ContentBase && !$this->getCurrentSectionNode()) {
       return TRUE;
     }
   }

@@ -10,13 +10,6 @@ use Drupal\Core\Cache\Cache;
 class SectionMegaMenu extends SectionMenuWidgetBase {
 
   /**
-   * The label for the mega menu component.
-   *
-   * @var \Drupal\Component\Render\MarkupInterface|string
-   */
-  private $label;
-
-  /**
    * The list of nodes for the mega menu.
    *
    * @var array
@@ -44,13 +37,6 @@ class SectionMegaMenu extends SectionMenuWidgetBase {
     $this->label = $label;
     $this->nodes = $nodes;
     $this->header = $header;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getLabel() {
-    return $this->label;
   }
 
   /**

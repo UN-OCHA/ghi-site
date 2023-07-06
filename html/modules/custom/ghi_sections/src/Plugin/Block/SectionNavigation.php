@@ -6,6 +6,7 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\ghi_content\Traits\ContentPathTrait;
 use Drupal\ghi_sections\Entity\GlobalSection;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\node\NodeInterface;
@@ -26,6 +27,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SectionNavigation extends BlockBase implements ContainerFactoryPluginInterface {
 
   use LayoutEntityHelperTrait;
+  use ContentPathTrait;
 
   /**
    * The entity type manager.
@@ -87,7 +89,7 @@ class SectionNavigation extends BlockBase implements ContainerFactoryPluginInter
       return NULL;
     }
 
-    $section = $this->sectionManager->getCurrentSection($node);
+    $section = $this->sectionManager->getCurrentSection($node) ?? $this->getCurrentSectionNode();
     if (!$section) {
       return NULL;
     }
@@ -123,6 +125,7 @@ class SectionNavigation extends BlockBase implements ContainerFactoryPluginInter
         continue;
       }
       $widget->setCurrentNode($node);
+      $widget->setLabel($menu_item->getLabel());
       if (!$tab = $widget->toRenderable()) {
         continue;
       }

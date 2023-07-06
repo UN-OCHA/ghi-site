@@ -86,7 +86,6 @@ class ExportPageConfigForm extends FormBase {
       ],
     ];
 
-    $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
     $this->makeGinLbForm($form, $form_state);
     return $form;
   }

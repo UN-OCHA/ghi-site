@@ -32,10 +32,15 @@ class ArticleTitle extends BlockBase {
     }
 
     $document = $this->getCurrentDocumentNode();
+    $section = $this->getCurrentSectionNode();
 
     /** @var \Drupal\node\NodeInterface $node */
     $node = $contexts['node']->getContextValue();
-    if (!$node || !$node instanceof Article || !$document) {
+    if (!$node || !$node instanceof Article) {
+      return NULL;
+    }
+
+    if (!$document && !$section) {
       return NULL;
     }
 
@@ -58,7 +63,7 @@ class ArticleTitle extends BlockBase {
     ];
 
     // If we have a section context, we also want to add breadcrumps.
-    if ($this->getCurrentSectionNode()) {
+    if ($section && $document) {
       // For single chapter documents, we don't show the chapter title in the
       // breadcrump.
       $single_chapter_document = count($document->getChapters()) == 1;

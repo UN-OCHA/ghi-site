@@ -1,5 +1,4 @@
 admin.section_navigation:
-  version: VERSION
   css:
     component:
       css/admin/section-navigation.css: {}

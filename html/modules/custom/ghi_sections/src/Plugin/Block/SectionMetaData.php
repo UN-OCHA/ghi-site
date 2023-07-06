@@ -4,6 +4,7 @@ namespace Drupal\ghi_sections\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\ghi_content\Traits\ContentPathTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -19,6 +20,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class SectionMetaData extends BlockBase implements ContainerFactoryPluginInterface {
+
+  use ContentPathTrait;
 
   /**
    * The section manager.
@@ -72,7 +75,7 @@ class SectionMetaData extends BlockBase implements ContainerFactoryPluginInterfa
    */
   private function getSectionNode() {
     $node = $this->getPageNode();
-    $section_node = $this->sectionManager->getCurrentSection($node);
+    $section_node = $this->sectionManager->getCurrentSection($node) ?? $this->getCurrentSectionNode();
     return $section_node;
   }
 

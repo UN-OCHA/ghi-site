@@ -77,6 +77,7 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
    *   The path to process.
    */
   private function processArticleUrl($path) {
+    $section = $this->getSectionNodeFromPath($path);
     $document = $this->getDocumentNodeFromPath($path);
     $article = $this->getArticleNodeFromPath($path);
 
@@ -84,14 +85,26 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
       return $path;
     }
 
-    // This is a request for an article inside a document. We need to find the
-    // document based on the alias, confirm that the article is actually part
-    // of the document and that the current user has access to the section.
-    if (!$document || !$document->hasArticle($article)) {
+    if (strpos($path, '/document/') > 0 && !$document) {
       return $path;
     }
 
-    if (!$article->access('view') || !$document->access('view')) {
+    // This is a request for an article inside a document. We need to find the
+    // document based on the alias, confirm that the article is actually part
+    // of the document and that the current user has access to the section.
+    if ($document && (!$document->hasArticle($article) || !$document->access('view'))) {
+      return $path;
+    }
+
+    if (strpos($path, '/article/') !== 0 && !$section && !$document) {
+      return $path;
+    }
+
+    if ($section && !$section->access('view')) {
+      return $path;
+    }
+
+    if (!$article->access('view')) {
       return $path;
     }
 
@@ -109,6 +122,10 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
     $section = $this->getSectionNodeFromPath($path);
     $document = $this->getDocumentNodeFromPath($path);
     if (!$document) {
+      return $path;
+    }
+
+    if (!$document && strpos($path, '/document/') !== 0 && !$section) {
       return $path;
     }
 

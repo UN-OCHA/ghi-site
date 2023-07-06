@@ -52,10 +52,11 @@ trait ContentPathTrait {
    *   The article node or NULL if not found.
    */
   protected function getArticleNodeFromPath($path) {
-    if (strpos($path, '/article/') === FALSE) {
+    $article_path_pos = strpos($path, '/article/');
+    if ($article_path_pos === FALSE) {
       return NULL;
     }
-    $article_url = substr($path, strpos($path, '/article/'));
+    $article_url = substr($path, $article_path_pos);
     $article = $this->getNodeByUrlAlias($article_url);
     return $article instanceof Article ? $article : NULL;
   }
@@ -67,10 +68,11 @@ trait ContentPathTrait {
    *   The document node or NULL if not found.
    */
   protected function getDocumentNodeFromPath($path, $root = FALSE) {
-    if (strpos($path, '/document/') === FALSE) {
+    $document_path_pos = strpos($path, '/document/');
+    if ($document_path_pos === FALSE) {
       return NULL;
     }
-    $document_url = substr($path, strpos($path, '/document/'));
+    $document_url = substr($path, $document_path_pos);
     if (strpos($document_url, '/article/') > 0) {
       $document_url = substr($path, 0, strpos($path, '/article/'));
     }
@@ -85,10 +87,17 @@ trait ContentPathTrait {
    *   The section node or NULL if not found.
    */
   protected function getSectionNodeFromPath($path) {
-    if (!strpos($path, '/document/')) {
+    $document_path_pos = strpos($path, '/document/');
+    $article_path_pos = strpos($path, '/article/');
+    if ($document_path_pos === FALSE && $article_path_pos == FALSE) {
       return NULL;
     }
-    $section_url = substr($path, 0, strpos($path, '/document/'));
+    if ($document_path_pos !== FALSE) {
+      $section_url = substr($path, 0, $document_path_pos);
+    }
+    elseif ($article_path_pos !== FALSE) {
+      $section_url = substr($path, 0, $article_path_pos);
+    }
     $section = $this->getNodeByUrlAlias($section_url);
     return $section instanceof SectionNodeInterface ? $section : NULL;
   }
