@@ -24,9 +24,6 @@
     "drupal/gin_toolbar": {
       "Issue #3121440: Add option for node local tasks in toolbar": "https://www.drupal.org/files/issues/2022-02-11/3263805-41.patch"
     },
-    "drupal/layout_builder_ipe": {
-      "Issue #??: Use redirect destination query argument": "./patches/layout-builder-ipe-redirect-destination.patch"
-    },
     "drupal/google_tag": {
       "Issue #3250315: Error during cache rebuild when assets are stored on NFS": "https://www.drupal.org/files/issues/2022-11-23/3250315-google-tag-nfs-locks-5.patch"
     },
