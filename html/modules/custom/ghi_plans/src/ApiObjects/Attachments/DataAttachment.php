@@ -167,6 +167,16 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
+   * Get the prototype for an attachment.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype
+   *   The attachment prototype object.
+   */
+  public function getPrototype() {
+    return $this->prototype;
+  }
+
+  /**
    * Check if the given data point index represens a measurement metric.
    *
    * @param int $index
@@ -1331,12 +1341,12 @@ class DataAttachment extends AttachmentBase {
    */
   public static function getFormattingOptions() {
     return [
-      'raw' => t('Raw data (no formatting)'),
       'auto' => t('Automatic based on the unit (uses percentage for percentages, amount for all others)'),
       'currency' => t('Currency value'),
       'amount' => t('Amount value'),
       'amount_rounded' => t('Amount value (rounded, 1 decimal)'),
       'percent' => t('Percentage value'),
+      'raw' => t('Raw data (no formatting)'),
     ];
   }
 

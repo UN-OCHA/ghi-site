@@ -1381,7 +1381,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $values = $form_state->get('current_settings') + $values;
         $form_state->setValues($values);
       }
-      // $form_state->setValues()
       $this->formSubmitter->executeSubmitHandlers($form, $form_state);
     }
   }
@@ -1548,6 +1547,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
         if (empty($settings[$form_key]) && !empty($this->configuration['hpc'][$form_key])) {
           $settings[$form_key] = $this->configuration['hpc'][$form_key];
+        }
+
+        // Also make sure to persist everything to prevent issues when coming
+        // back from preview.
+        if (!empty($settings)) {
+          $form_state->setTemporaryValue($form_key, $settings[$form_key]);
+          $form_state->set($storage_key, $settings[$form_key]);
         }
       }
     }

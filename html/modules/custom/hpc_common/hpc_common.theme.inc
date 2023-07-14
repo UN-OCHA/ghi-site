@@ -356,7 +356,11 @@ function hpc_common_preprocess_hpc_icon(array &$vars) {
  * Preprocess a reporting period as text.
  */
 function hpc_common_preprocess_hpc_reporting_period(array &$vars) {
+  $vars['output'] = NULL;
   $reporting_period = $vars['reporting_period'];
+  if (!$reporting_period) {
+    return;
+  }
 
   // We want to handle all times as UTC, because that's what we get from the
   // API.

@@ -21,7 +21,7 @@ trait AttachmentTableTrait {
    * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
    *   An array of entity objects, aka clusters.
    */
-  private function getEntityObjects() {
+  public function getEntityObjects() {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
     $query = $this->getQueryHandler('entities');
     return $query->getPlanEntities($this->getPageNode(), 'governing');
@@ -33,10 +33,10 @@ trait AttachmentTableTrait {
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]|null
    *   An array of attachment objects.
    */
-  private function getAttachments() {
+  public function getAttachments() {
     $entities = $this->getEntityObjects();
     if (empty($entities)) {
-      return NULL;
+      return [];
     }
     return $this->getAttachmentsForEntities($entities);
   }
@@ -47,7 +47,7 @@ trait AttachmentTableTrait {
    * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
    *   The attachment prototype object.
    */
-  private function getAttachmentPrototype($attachments = NULL) {
+  public function getAttachmentPrototype($attachments = NULL) {
     $conf = $this->getBlockConfig();
     $prototype_id = NULL;
     foreach ($conf as $values) {
@@ -70,10 +70,13 @@ trait AttachmentTableTrait {
   /**
    * Get unique prototype options for the available attachments of this block.
    *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[] $attachments
+   *   The attachment objects.
+   *
    * @return array
    *   An array of prototype names, keyed by the prototype id.
    */
-  private function getUniquePrototypes($attachments = NULL) {
+  public function getUniquePrototypes(array $attachments = NULL) {
     $attachments = $attachments ?? ($this->getAttachments() ?? []);
     $prototype_opions = [];
     foreach ($attachments as $attachment) {

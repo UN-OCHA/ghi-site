@@ -104,6 +104,13 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
+  public function canAddNewItem() {
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPluginConfiguration() {
     return $this->configuration;
   }

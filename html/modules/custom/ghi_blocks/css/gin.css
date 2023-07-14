@@ -20,3 +20,8 @@ body[data-gin-accent] .dialog-off-canvas-main-canvas form .messages-list .messag
   background-color: lightgray;
   border: 0;
 }
+
+.glb-form-item__description,
+.glb-fieldset__description {
+  line-height: 1.3rem !important;
+}

@@ -66,6 +66,13 @@ swiper:
     component:
       /libraries/swiper/swiper.min.css: {}
 
+ghi-entity-logframe:
+  css:
+    theme:
+      components/ghi-entity-logframe/ghi-entity-logframe.css: {}
+  js:
+    components/ghi-entity-logframe/ghi-entity-logframe.js: {}
+
 # Libraries specific to GHI.
 ghi-grid:
   css:

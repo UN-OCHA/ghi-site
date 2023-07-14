@@ -74,13 +74,13 @@ Drupal best practices
 THEME SETUP
 -----------
 
-We have created a sub-theme [fts_public](https://github.com/UN-OCHA/fts-d8-site/tree/master/html/themes/custom/fts_public)
-from the OCHA provided base theme named [common_design](https://github.com/UN-OCHA/common_design).
+We have created a sub-theme common_design_subtheme from the OCHA provided base
+theme named [common_design](https://github.com/UN-OCHA/common_design).
 
 While working on style changes, update the _.sass_ files under the sass folder.
 Once done with the changes, run the below commands:
 
-    cd html/themes/custom/fts_public/
+    cd html/themes/custom/common_design_subtheme/
     nvm use
     npm install
     npm run sass:lint-fix

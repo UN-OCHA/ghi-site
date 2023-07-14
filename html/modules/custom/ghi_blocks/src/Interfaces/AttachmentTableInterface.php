@@ -20,4 +20,28 @@ interface AttachmentTableInterface {
    */
   public function getAttachmentsForEntities(array $entities, $prototype_id = NULL);
 
+  /**
+   * Get all governing entity objects for the current block instance.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
+   *   An array of entity objects, aka clusters.
+   */
+  public function getEntityObjects();
+
+  /**
+   * Get all attachment objects for the current block instance.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]|null
+   *   An array of attachment objects.
+   */
+  public function getAttachments();
+
+  /**
+   * Get the attachment prototype to use for the current block instance.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
+   *   The attachment prototype object.
+   */
+  public function getAttachmentPrototype($attachments = NULL);
+
 }
