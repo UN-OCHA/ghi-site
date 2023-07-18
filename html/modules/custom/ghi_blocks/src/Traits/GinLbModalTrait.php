@@ -19,6 +19,7 @@ trait GinLbModalTrait {
    */
   public function makeGinLbForm(array &$form, FormStateInterface $form_state) {
     $form['#attributes']['class'][] = 'canvas-form';
+    $form['#attributes']['class'][] = 'ghi-glb-form';
     $form['description']['#type'] = 'container';
     $form['description']['#attributes']['class'][] = 'canvas-form__settings';
     $form['settings']['#type'] = 'container';

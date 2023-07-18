@@ -356,7 +356,8 @@ function ghi_blocks_link_alter(&$variables) {
  * Implements hook_form_alter().
  */
 function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
-  if (strpos($form_id, 'layout_builder_form') !== FALSE || !empty($form['#ghi_modal_form'])) {
+  if (strpos($form_id, 'layout_builder') !== FALSE || !empty($form['#ghi_modal_form'])) {
+    $form['#attributes']['class'][] = 'ghi-glb-form';
     $form['#attached']['library'][] = 'system/admin';
     $form['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
     $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';

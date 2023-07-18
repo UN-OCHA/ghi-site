@@ -8,26 +8,34 @@
   padding: 0;
 }
 
-.hpc-form-wrapper .glb-form-item--error-message {
+.ghi-glb-form .glb-form-wrapper > fieldset {
+  border: 0;
+}
+
+.ghi-glb-form .glb-form-wrapper > fieldset legend {
+  margin: 1rem 0;
+}
+
+.ghi-glb-form .glb-form-item--error-message {
   padding: 0.5rem 0;
 }
 
-.hpc-form-wrapper .glb-claro-details {
+.ghi-glb-form .glb-claro-details {
   background-color: var(--colorGinAppBackground) !important;
 }
 
-.hpc-form-wrapper > div:not([data-block-preview]) table {
+.ghi-glb-form > :not([data-block-preview]) table {
   width: 100%;
   margin-top: 0;
   margin-bottom: 1.5rem;
   border-collapse: collapse;
 }
-.hpc-form-wrapper > div:not([data-block-preview]) table thead {
+.ghi-glb-form > :not([data-block-preview]) table thead {
   border-radius: 6px;
   -webkit-box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
   box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
 }
-.hpc-form-wrapper > div:not([data-block-preview]) table th {
+.ghi-glb-form > :not([data-block-preview]) table th {
   color: var(--colorGinText);
   background: var(--colorGinTableHeader);
   position: relative;
@@ -40,49 +48,49 @@
   line-height: 1.25rem;
   white-space: nowrap;
 }
-.hpc-form-wrapper > div:not([data-block-preview]) table th:first-child {
+.ghi-glb-form > :not([data-block-preview]) table th:first-child {
   border-top-left-radius: 6px;
   border-bottom-left-radius: 6px;
 }
-.hpc-form-wrapper > div:not([data-block-preview]) table th:last-child {
+.ghi-glb-form > :not([data-block-preview]) table th:last-child {
   border-top-right-radius: 6px;
   border-bottom-right-radius: 6px;
 }
-.hpc-form-wrapper > div:not([data-block-preview]) table tbody tr {
+.ghi-glb-form > :not([data-block-preview]) table tbody tr {
   border-bottom: 1px solid var(--colorGinTableBorder);
   color: var(--colorGinText);
   background-color: transparent;
 }
-.hpc-form-wrapper > div:not([data-block-preview]) table tbody tr:hover,
-.hpc-form-wrapper > div:not([data-block-preview]) table tbody tr:focus {
+.ghi-glb-form > :not([data-block-preview]) table tbody tr:hover,
+.ghi-glb-form > :not([data-block-preview]) table tbody tr:focus {
   color: #222330;
   background: #f0f5fd;
 }
-.hpc-form-wrapper > div:not([data-block-preview]) table tbody tr td {
+.ghi-glb-form > :not([data-block-preview]) table tbody tr td {
   box-sizing: border-box;
   height: 4rem;
   padding: 0.5rem 1rem;
   text-align: left;
   vertical-align: inherit;
 }
-.hpc-form-wrapper > div:not([data-block-preview]) table tbody tr.draggable {
+.ghi-glb-form > :not([data-block-preview]) table tbody tr.draggable {
   position: relative;
 }
-.hpc-form-wrapper > div:not([data-block-preview]) table tbody tr.draggable td:first-child {
+.ghi-glb-form > :not([data-block-preview]) table tbody tr.draggable td:first-child {
   padding-left: 2rem;
 }
-.hpc-form-wrapper > div:not([data-block-preview]) table tbody tr.draggable td:first-child a.tabledrag-handle {
+.ghi-glb-form > :not([data-block-preview]) table tbody tr.draggable td:first-child a.tabledrag-handle {
   float: none;
   position: absolute;
   top: calc(50% - 12px);
   left: 0.5rem;
   height: 37px;
 }
-.hpc-form-wrapper > div:not([data-block-preview]) table tbody tr.draggable td:first-child a.tabledrag-handle .handle {
+.ghi-glb-form > :not([data-block-preview]) table tbody tr.draggable td:first-child a.tabledrag-handle .handle {
   background-position-y: center;
 }
 
-.hpc-form-wrapper .ghi-block {
+.ghi-glb-form .ghi-block {
   margin-top: 0 !important;
 }
 
@@ -105,39 +113,39 @@
   border-top: 1px solid var(--cd-default-border-color);
   border-bottom: 1px solid var(--cd-default-border-color);
 }
-form.layout-builder-configure-block.glb-canvas-form,
+form.ghi-glb-form.glb-canvas-form,
 #layout-builder-modal form.glb-canvas-form {
   position: static;
   min-height: 6rem;
 }
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__settings {
+form.ghi-glb-form.glb-canvas-form .glb-canvas-form__settings {
   position: static;
   padding-top: 0.5rem;
 }
-form.layout-builder-configure-block.glb-canvas-form details.glb-claro-details {
+form.ghi-glb-form.glb-canvas-form details.glb-claro-details {
   margin-top: 1rem;
   border-top: 0 !important;
 }
-form.layout-builder-configure-block.glb-canvas-form details.glb-claro-details .claro-details__description {
+form.ghi-glb-form.glb-canvas-form details.glb-claro-details .claro-details__description {
   line-height: 1.5rem;
 }
-form.layout-builder-configure-block.glb-canvas-form .glb-messages-list {
+form.ghi-glb-form.glb-canvas-form .glb-messages-list {
   margin: 0 !important;
   display: none !important;
 }
-form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper > .glb-form-item:first-child,
-form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .ghi-element-wrapper > .glb-form-item:first-child,
-form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .filter-container > .glb-form-item {
+form.ghi-glb-form.glb-canvas-form .hpc-form-wrapper > .glb-form-item:first-child,
+form.ghi-glb-form.glb-canvas-form .hpc-form-wrapper .ghi-element-wrapper > .glb-form-item:first-child,
+form.ghi-glb-form.glb-canvas-form .hpc-form-wrapper .filter-container > .glb-form-item {
   margin-top: 0 !important;
 }
-form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .glb-form-item__description {
+form.ghi-glb-form.glb-canvas-form .hpc-form-wrapper .glb-form-item__description {
   max-width: 100% !important;
 }
-form.layout-builder-configure-block.glb-canvas-form .hpc-form-wrapper .glb-form-checkboxes .glb-form-type--checkbox {
+form.ghi-glb-form.glb-canvas-form .hpc-form-wrapper .glb-form-checkboxes .glb-form-type--checkbox {
   margin-top: 0.5rem !important;
   margin-bottom: 0.5rem !important;
 }
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions,
+form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions,
 #layout-builder-modal form.glb-canvas-form .glb-canvas-form__actions {
   position: absolute !important;
   bottom: 0;
@@ -150,7 +158,7 @@ form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions,
   border-top: 1px solid var(--colorGinLayerBorder);
   background: var(--colorGinAppBackground);
 }
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions > *:not(.ghi-layout-builder-subform-buttons),
+form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions > *:not(.ghi-layout-builder-subform-buttons),
 #layout-builder-modal form.glb-canvas-form .glb-canvas-form__actions > *:not(.ghi-layout-builder-subform-buttons) {
   margin: 1em 0.75em 1em 0 !important;
 }
@@ -161,19 +169,19 @@ form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions > 
   text-align: left;
 }
 
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .ghi-layout-builder-subform-buttons,
-#layout-builder-modal form.layout-builder-configure-block .canvas-form__actions .ghi-layout-builder-subform-buttons {
+form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions .ghi-layout-builder-subform-buttons,
+#layout-builder-modal form.ghi-glb-form .canvas-form__actions .ghi-layout-builder-subform-buttons {
   position: absolute;
   left: 20px;
 }
 
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions .ghi-layout-builder-subform-buttons > .glb-form-type--checkbox,
-#layout-builder-modal form.layout-builder-configure-block .canvas-form__actions .ghi-layout-builder-subform-buttons > .glb-form-type--checkbox {
+form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions .ghi-layout-builder-subform-buttons > .glb-form-type--checkbox,
+#layout-builder-modal form.ghi-glb-form .canvas-form__actions .ghi-layout-builder-subform-buttons > .glb-form-type--checkbox {
   display: inline-block;
   text-align: left;
 }
-form.layout-builder-configure-block.glb-canvas-form .glb-canvas-form__actions input[disabled],
-#layout-builder-modal form.layout-builder-configure-block .canvas-form__actions input[disabled] {
+form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions input[disabled],
+#layout-builder-modal form.ghi-glb-form .canvas-form__actions input[disabled] {
   cursor: not-allowed !important;
   opacity: 0.5;
 }

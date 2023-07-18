@@ -6,7 +6,6 @@ ghi_templates.entity.page_config.export:
     _layout_builder_access: 'view'
     _permission: show page layout configuration code
   options:
-    _admin_route: TRUE
     parameters:
       section_storage:
         layout_builder_section_storage: TRUE
@@ -18,7 +17,6 @@ ghi_templates.entity.page_config.import:
     _layout_builder_access: 'view'
     _permission: import page layout configuration code
   options:
-    _admin_route: TRUE
     parameters:
       entity:
         type: entity:{entity_type}

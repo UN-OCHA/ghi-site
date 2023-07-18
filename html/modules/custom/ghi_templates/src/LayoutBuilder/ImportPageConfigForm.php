@@ -130,6 +130,7 @@ class ImportPageConfigForm extends FormBase {
     }
 
     if ($this->isAjax()) {
+      $form['actions']['submit']['#ajax']['rebuild'] = FALSE;
       $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
       // @todo static::ajaxSubmit() requires data-drupal-selector to be the same
       //   between the various Ajax requests. A bug in
@@ -153,9 +154,6 @@ class ImportPageConfigForm extends FormBase {
 
     $form['settings'] = [
       '#type' => 'container',
-      '#attributes' => [
-        'class' => ['canvas-form__settings'],
-      ],
     ];
 
     $config = $this->getSubmittedConfig($form_state);
@@ -169,15 +167,13 @@ class ImportPageConfigForm extends FormBase {
 
     $form['actions'] = [
       '#type' => 'container',
-      '#attributes' => [
-        'class' => ['canvas-form__actions'],
-      ],
     ];
     $form['actions']['validate'] = [
       '#type' => 'submit',
       '#value' => $this->t('Validate'),
     ];
     if ($this->isAjax()) {
+      $form['actions']['validate']['#ajax']['rebuild'] = TRUE;
       $form['actions']['validate']['#ajax']['callback'] = '::ajaxSubmit';
       $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);
     }
@@ -238,9 +234,6 @@ class ImportPageConfigForm extends FormBase {
 
     $form['settings'] = [
       '#type' => 'container',
-      '#attributes' => [
-        'class' => ['canvas-form__settings'],
-      ],
     ];
 
     $form['settings']['overwrite'] = [
@@ -248,8 +241,6 @@ class ImportPageConfigForm extends FormBase {
       '#title' => $this->t('Clear layout'),
       '#description' => $this->t('If checked, this will remove all existing page elements from the current page before doing the import. If unchecked, the imported configuration will be appended to the current page instead.'),
       '#default_value' => FALSE,
-      '#gin_lb_form_element' => FALSE,
-      '#gin_lb_form' => FALSE,
     ];
 
     $form['settings']['summary'] = [
@@ -268,9 +259,6 @@ class ImportPageConfigForm extends FormBase {
 
     $form['actions'] = [
       '#type' => 'container',
-      '#attributes' => [
-        'class' => ['canvas-form__actions'],
-      ],
     ];
     $form['actions']['back'] = [
       '#type' => 'submit',
@@ -281,6 +269,7 @@ class ImportPageConfigForm extends FormBase {
       '#value' => $this->t('Import'),
     ];
     if ($this->isAjax()) {
+      $form['actions']['back']['#ajax']['rebuild'] = TRUE;
       $form['actions']['back']['#ajax']['callback'] = '::ajaxSubmit';
       $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
       $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);

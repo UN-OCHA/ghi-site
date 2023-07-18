@@ -125,6 +125,7 @@ class ImportBlockForm extends ConfigureBlockFormBase {
       '#value' => $this->t('Validate and import'),
     ];
     if ($this->isAjax()) {
+      $form['actions']['import']['#ajax']['rebuild'] = TRUE;
       $form['actions']['import']['#ajax']['callback'] = '::ajaxSubmit';
       $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);
     }
