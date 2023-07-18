@@ -204,4 +204,14 @@ class PlanEntity extends EntityObjectBase {
     }
   }
 
+  /**
+   * Get the ref code for the entity type that this entity belongs to.
+   *
+   * @return string
+   *   The ref code as a string, .e.g. SO, CQ, HC, ...
+   */
+  public function getEntityTypeRefCode() {
+    return $this->ref_code;
+  }
+
 }

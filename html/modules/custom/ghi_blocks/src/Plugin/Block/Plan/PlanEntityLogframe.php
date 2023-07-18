@@ -6,9 +6,9 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
@@ -44,11 +44,15 @@ use Drupal\hpc_api\Query\EndpointQuery;
  *      "title" = @Translation("Tables"),
  *      "callback" = "tablesForm",
  *      "base_form" = TRUE
+ *    },
+ *    "display" = {
+ *      "title" = @Translation("Display"),
+ *      "callback" = "displayForm"
  *    }
  *  }
  * )
  */
-class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, AutomaticTitleBlockInterface {
+class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
@@ -56,11 +60,18 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   /**
    * {@inheritdoc}
    */
-  public function getAutomaticBlockTitle() {
+  public function getDefaultTitle() {
     // Get the entities to render.
     $entities = $this->getRenderableEntities();
     $first_entity = !empty($entities) ? reset($entities) : NULL;
     return $first_entity ? $first_entity->plural_name : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTitleSubform() {
+    return 'display';
   }
 
   /**
@@ -122,12 +133,14 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     $rendered_items = [];
     foreach ($entities as $entity) {
       $tables = $this->buildTables($entity, $conf['tables'], $attachments);
+      $contributes_heading = $this->buildContributesToHeading($entity);
       $entity_id = $this->getPlanEntityId($entity, $conf['entities']);
       $entity_description = $this->getPlanEntityDescription($entity, $conf['entities']);
       $rendered_items[] = [
         'label' => [
           '#markup' => Markup::create('<p class="label">' . $entity_id . '</p><p class="description">' . $entity_description . '</p>'),
         ],
+        'contributes_heading' => $contributes_heading,
         'attachment_tables' => $tables ?: NULL,
       ];
     }
@@ -267,7 +280,6 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       'sort_column' => $this->getDefaultFormValueFromFormState($form_state, 'sort_column') ?: NULL,
       'entity_ids' => $this->getDefaultFormValueFromFormState($form_state, 'entity_ids') ?: NULL,
     ];
-
     $form['entity_ref_code'] = [
       '#type' => 'select',
       '#title' => $this->t('Entity type'),
@@ -313,7 +325,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
         // Assemble the list.
         $entity_options = [];
         foreach ($matching_entities as $entity) {
-          $entity_options[] = [
+          $entity_options[$entity->id()] = [
             'id' => $this->getPlanEntityId($entity, $defaults),
             'description' => $this->getPlanEntityDescription($entity, $defaults, TRUE),
           ];
@@ -427,17 +439,26 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       '#type' => 'configuration_container',
       '#title' => $this->t('Configured attachment tables'),
       '#title_display' => 'invisible',
+      '#edit_label' => $this->t('Type'),
       '#item_type_label' => $this->t('Attachment table'),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'attachment_tables'),
       '#allowed_item_types' => $this->getAllowedItemTypes(),
       '#preview' => [
         'columns' => [
           'label' => $this->t('Table'),
-          'columns' => $this->t('Columns'),
+          'prototype' => $this->t('Type'),
+          'columns_summary' => $this->t('Columns'),
         ],
       ],
       '#element_context' => $this->getBlockContext(),
     ];
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function displayForm(array $form, FormStateInterface $form_state) {
     return $form;
   }
 
@@ -684,7 +705,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     }
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
     $query = $this->endpointQueryManager->createInstance('attachment_prototype_query');
-    return $query->getDataPrototypesForPlan($plan_id);
+    $attachment_prototypes = $query->getDataPrototypesForPlan($plan_id);
+    $entities = $this->getRenderableEntities();
+    return $this->filterAttachmentPrototypesByPlanEntities($attachment_prototypes, $entities);
   }
 
 }

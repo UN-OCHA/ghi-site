@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
+use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
@@ -9,6 +10,7 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemCustomActionsInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -50,13 +52,16 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
     $attachments = $this->getContextValue('attachments');
     $prototype_id = $this->get('attachment_prototype');
 
+    // Filter to only selected attachments if configured.
+    $attachment_ids = array_filter($this->getConfig()['attachment_form']['attachment_ids'] ?? []);
+    if (!empty($attachment_ids)) {
+      $attachments = array_intersect_key($attachments, $attachment_ids);
+    }
+
     /** @var \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity $entity */
     $plan_entity = $this->getContextValue('plan_entity');
     $attachments = $this->filterAttachments($attachments, $prototype_id, $plan_entity);
-    $columns = $this->get('table_form')['columns'] ?? [];
-    if (empty($columns) || empty($attachments)) {
-      return NULL;
-    }
+    $columns = $this->getColumns();
 
     $rows = [];
     $context = $this->getBlockContext();
@@ -86,15 +91,13 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
 
       $rows[] = $row;
     }
-    if (empty($rows)) {
-      return NULL;
-    }
     return [
       '#theme' => 'table',
       '#header' => $this->buildTableHeader($columns),
       '#rows' => $rows,
       '#sortable' => TRUE,
       '#progress_groups' => TRUE,
+      '#empty' => $this->t('No data found for this table.'),
     ];
   }
 
@@ -103,7 +106,8 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    */
   public function getCustomActions() {
     return [
-      'table_form' => $this->t('Table'),
+      'table_form' => $this->t('Columns'),
+      'attachment_form' => $this->t('Selection'),
     ];
   }
 
@@ -148,20 +152,37 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   }
 
   /**
-   * Build the article selection subform.
+   * Get the columns to be used for the table.
+   *
+   * Either from the given conf array or from the items configuration. This
+   * applies a fallback.
+   *
+   * @param array $conf
+   *   An optional configuration array.
+   *
+   * @return array
+   *   An array of column definitions.
    */
-  public function tableForm($element, FormStateInterface $form_state, $default_values = NULL) {
-    if (empty($default_values['columns'])) {
-      $default_values['columns'] = [
+  public function getColumns(array $conf = NULL) {
+    $conf = $conf ?? ($this->getConfig()['table_form'] ?? []);
+    if (empty($conf['columns'])) {
+      $prototype = $this->getAttachmentPrototype();
+      $conf['columns'] = [
         [
           'item_type' => 'attachment_label',
           'config' => [
-            'label' => (string) $this->t('Indicator'),
+            'label' => $prototype?->getName() ?? (string) $this->t('Indicator'),
           ],
         ],
       ];
     }
+    return $conf['columns'];
+  }
 
+  /**
+   * Build the article selection subform.
+   */
+  public function tableForm($element, FormStateInterface $form_state, $default_values = NULL) {
     $element['columns'] = [
       '#type' => 'configuration_container',
       '#title' => $this->t('Configured table columns for attachment table @label', [
@@ -169,15 +190,55 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
       ]),
       '#item_type_label' => $this->t('Column'),
       '#parent_type_label' => $this->t('Attachment table'),
-      '#default_value' => $default_values['columns'],
+      '#default_value' => $this->getColumns($default_values),
       '#allowed_item_types' => $this->getAllowedItemTypes(),
       '#preview' => [
         'columns' => [
           'label' => $this->t('Label'),
         ],
       ],
-      '#element_context' => $this->getContext(),
+      '#element_context' => $this->getBlockContext(),
       '#row_filter' => TRUE,
+    ];
+    return $element;
+  }
+
+  /**
+   * Build the article selection subform.
+   */
+  public function attachmentForm($element, FormStateInterface $form_state, $defaults = NULL) {
+    /** @var \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[] $entities */
+    $entities = $entities ?? $this->getContextValue('entities');
+    $attachments = $this->getAttachmentsForEntities($entities);
+    $attachment_options = [];
+    foreach ($attachments as $attachment) {
+      $attachment_options[$attachment->id()] = [
+        'id' => $attachment->id(),
+        'composed_reference' => $attachment->composed_reference,
+        'description' => $attachment->getDescription(),
+      ];
+    }
+    uasort($attachment_options, function ($a, $b) {
+      return SortArray::sortByKeyString($a, $b, 'composed_reference');
+    });
+
+    $element['attachment_ids_header'] = [
+      '#type' => 'markup',
+      '#markup' => $this->t('If you do not want to show all attachments in this table, select the ones that should be visible below. If no attachment is selected, all attachments will be shown.'),
+      '#prefix' => '<div>',
+      '#suffix' => '</div><br />',
+    ];
+
+    $element['attachment_ids'] = [
+      '#type' => 'tableselect',
+      '#header' => [
+        'id' => $this->t('ID'),
+        'composed_reference' => $this->t('Reference'),
+        'description' => $this->t('Description'),
+      ],
+      '#options' => $attachment_options,
+      '#default_value' => !empty($defaults['attachment_ids']) ? array_combine($defaults['attachment_ids'], $defaults['attachment_ids']) : [],
+      '#empty' => $this->t('No suitable attachments found.'),
     ];
     return $element;
   }
@@ -249,7 +310,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   /**
    * Get the available attachment prototypes for the given entities.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[] $entities
+   * @param \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[] $entities
    *   The plan entity objects.
    *
    * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[]
@@ -258,8 +319,10 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   private function getAttachmentPrototypesForEntities(array $entities = NULL) {
     /** @var \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[] $entities */
     $entities = $entities ?? $this->getContextValue('entities');
-    $attachments = $this->getAttachmentsForEntities($entities, $prototype_id = NULL);
-    return $this->getUniquePrototypes($attachments);
+
+    $context = $this->getContext();
+    $attachment_prototypes = $context['attachment_prototypes'] ?? [];
+    return $this->filterAttachmentPrototypesByPlanEntities($attachment_prototypes, $entities);
   }
 
   /**
@@ -277,8 +340,8 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
     if (empty($entities)) {
       return NULL;
     }
-    $entity_ids = array_map(function ($entity) {
-      return $entity->id;
+    $entity_ids = array_map(function (EntityObjectInterface $entity) {
+      return $entity->id();
     }, $entities);
 
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
@@ -350,29 +413,18 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   }
 
   /**
-   * Callback for the "column" preview of the configuration container list.
+   * Callback for the "columns_summary" preview of the item list.
    *
    * @return mixed
    *   The value to show in the configuration container list view under
    *   "column".
    */
-  public function getColumns() {
-    $conf = $this->config;
-    $columns = $this->getConfiguredItems($conf['table_form']['columns']);
-    $labels = [];
-    foreach ($columns as $column) {
-      /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
-      $item_type = $this->getItemTypePluginForColumn($column);
-      if (!$item_type) {
-        continue;
-      }
-      $labels[] = $item_type->getLabel();
-    }
-    return count($labels) ?: $this->t('Not configured');
+  public function getColumnsSummary() {
+    return count($this->getColumns()) ?: $this->t('Not configured');
   }
 
   /**
-   * Callback for the "prototype" preview of the configuration container list.
+   * Callback for the "label" preview of the item list.
    *
    * @return mixed
    *   The value to show in the configuration container list view under
@@ -384,7 +436,19 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   }
 
   /**
-   * Get a uuuid for the purpose of using ConfigurationContainerTrait.
+   * Callback for the "prototype" preview of the item list.
+   *
+   * @return mixed
+   *   The value to show in the configuration container list view under
+   *   "prototype".
+   */
+  public function getPrototype() {
+    $prototype = $this->getAttachmentPrototype();
+    return $prototype ? $prototype->getName() : NULL;
+  }
+
+  /**
+   * Fake a uuuid for the purpose of using ConfigurationContainerTrait.
    *
    * @return string
    *   The plugin id.

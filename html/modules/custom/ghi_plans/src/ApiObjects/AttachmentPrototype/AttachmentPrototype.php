@@ -42,6 +42,7 @@ class AttachmentPrototype extends ApiObjectBase {
           return StringHelper::camelCaseToUnderscoreCase($item->type);
         }, $prototype->value->measureFields ?? [])
       ),
+      'entity_ref_codes' => $prototype->value->entities ?? [],
       'measurement_fields' => $measurement_fields,
       'calculation_methods' => $prototype->value->calculationMethod ?? [],
     ];
@@ -115,6 +116,16 @@ class AttachmentPrototype extends ApiObjectBase {
    */
   public function getCalculationMethods() {
     return $this->calculation_methods;
+  }
+
+  /**
+   * The entity type ref codes of entities using attachments of this type.
+   *
+   * @return string[]
+   *   An array of strings, e.g. SO, CQ, HC, ...
+   */
+  public function getEntityRefCodes() {
+    return $this->entity_ref_codes ?? [];
   }
 
   /**

@@ -779,8 +779,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $settings_form['label']['#default_value'] = $settings_form['label']['#default_value'] == '<none>' ? '' : $settings_form['label']['#default_value'];
         $settings_form['label']['#required'] = FALSE;
         $settings_form['label']['#description'] = $this->t('Leave empty to use the default title "%default_title".', [
-          '%default_title' => $plugin_definition['default_title'],
+          '%default_title' => $this->getDefaultTitle(),
         ]);
+        $settings_form['label']['#placeholder'] = $this->getDefaultTitle();
         $settings_form['label_display']['#access'] = FALSE;
       }
 

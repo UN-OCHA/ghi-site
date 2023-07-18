@@ -183,7 +183,7 @@ class DataPoint extends FormElement {
       '#type' => 'select',
       '#title' => t('Data point'),
       '#options' => $data_point_options,
-      '#default_value' => $defaults['data_points'][0]['index'],
+      '#default_value' => $defaults['data_points'][0]['index'] ?? NULL,
       '#ajax' => [
         'event' => 'change',
         'callback' => [static::class, 'updateAjax'],
@@ -255,7 +255,7 @@ class DataPoint extends FormElement {
       '#type' => 'select',
       '#title' => t('Data point (2)'),
       '#options' => $data_point_options,
-      '#default_value' => $defaults['data_points'][1]['index'],
+      '#default_value' => $defaults['data_points'][1]['index'] ?? NULL,
       '#ajax' => [
         'event' => 'change',
         'callback' => [static::class, 'updateAjax'],
@@ -290,7 +290,7 @@ class DataPoint extends FormElement {
         $element['data_points'][1]['use_calculation_method']['#title'] .= ' (' . $attachment->getCalculationMethod() . ')';
       }
 
-      // It's a difficult to find out here if this part of the form has already
+      // It's difficult to find out here if this part of the form has already
       // been submitted. What seems to work ok is to look at the value of the
       // submitted checkbox and the index of the second data point.
       $input = $form_state->getUserInput();

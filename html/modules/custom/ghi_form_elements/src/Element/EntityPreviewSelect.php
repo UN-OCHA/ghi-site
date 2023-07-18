@@ -143,7 +143,7 @@ class EntityPreviewSelect extends FormElement {
 
     $element['#wrapper_attributes']['data-drupal-selector'] = $name;
 
-    $entities = $element['#entities'];
+    $entities = $element['#entities'] ?? [];
     $entity_type = $element['#entity_type'];
     $view_mode = $element['#view_mode'];
     $allow_selected = !empty($element['#allow_selected']) && is_int($element['#allow_selected']) ? (int) $element['#allow_selected'] : NULL;
@@ -168,7 +168,7 @@ class EntityPreviewSelect extends FormElement {
     // Make sure that the order value is up to date. This means adding new
     // articles (not present in the last configuration of an element) to the
     // end of the list and removing articles that are no longer available.
-    $initial_order = (array) $element['#default_value']['order'];
+    $initial_order = (array) $element['#default_value']['order'] ?? [];
     $new_entity_ids = array_diff(array_keys($entities), $initial_order);
     $removed_entity_ids = array_diff($initial_order, array_keys($entities));
     $default_order = array_merge($initial_order, $new_entity_ids);
@@ -180,13 +180,13 @@ class EntityPreviewSelect extends FormElement {
     ];
     $element['selected'] = [
       '#type' => 'hidden',
-      '#default_value' => implode(',', array_filter((array) $element['#default_value']['selected'])),
+      '#default_value' => implode(',', array_filter((array) $element['#default_value']['selected'] ?? [])),
       '#attributes' => ['class' => Html::getClass('entities_selected')],
     ];
     if ($allow_featured) {
       $element['featured'] = [
         '#type' => 'hidden',
-        '#default_value' => implode(',', array_filter((array) $element['#default_value']['featured'])),
+        '#default_value' => implode(',', array_filter((array) $element['#default_value']['featured'] ?? [])),
         '#attributes' => ['class' => Html::getClass('entities_featured')],
       ];
     }

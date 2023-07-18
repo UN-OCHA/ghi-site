@@ -56,6 +56,7 @@ class ConfigurationContainer extends FormElement {
       '#preview' => NULL,
       '#element_context' => [],
       '#item_type_label' => $this->t('Item'),
+      '#edit_label' => NULL,
       '#row_filter' => FALSE,
       '#parent_type_label' => NULL,
       '#groups' => FALSE,
@@ -308,9 +309,9 @@ class ConfigurationContainer extends FormElement {
       return;
     }
 
-    if (self::get($element, $form_state, 'mode') == 'custom_action') {
+    if (self::get($element, $form_state, 'mode') == 'custom_action' && !self::isOuterContainerUpdate($triggering_element)) {
       // Don't try to apply actions if this is just the wrapper around another
-      // configuration_container element.
+      // element.
       return;
     }
 
@@ -886,7 +887,7 @@ class ConfigurationContainer extends FormElement {
     $operations = [];
     $operations['edit'] = [
       '#type' => 'submit',
-      '#value' => t('Edit'),
+      '#value' => $element['#edit_label'] ?? t('Edit'),
       '#name' => 'edit-' . $key,
       '#ajax' => [
         'event' => 'click',
@@ -1333,20 +1334,21 @@ class ConfigurationContainer extends FormElement {
 
     $element['custom_config'] = [
       '#type' => 'container',
-      'actions' => [
+      'parent_actions' => [
         '#type' => 'container',
         '#attributes' => [
           'class' => [
             'actions-wrapper',
+            'parent-actions',
           ],
         ],
         '#parents' => array_merge($element['#parents'], [
           'custom_config',
-          'actions',
+          'parent_actions',
         ]),
         '#array_parents' => array_merge($element['#array_parents'], [
           'custom_config',
-          'actions',
+          'parent_actions',
         ]),
       ],
     ];
@@ -1368,12 +1370,12 @@ class ConfigurationContainer extends FormElement {
         ]),
       ];
 
-      $config = $items[$item_key]['config'][$custom_action];
+      $config = $items[$item_key]['config'][$custom_action] ?? [];
       $subform_state = SubformState::createForSubform($element['custom_config'][$custom_action], $element, $form_state);
       $element['custom_config'][$custom_action] += $item_type->$callback($element['custom_config'][$custom_action], $subform_state, $config);
     }
 
-    $element['custom_config']['actions']['submit_item'] = [
+    $element['custom_config']['parent_actions']['submit_item'] = [
       '#type' => 'submit',
       '#value' => t('Save'),
       '#name' => 'custom-config-submit',
@@ -1384,7 +1386,7 @@ class ConfigurationContainer extends FormElement {
       ],
     ];
 
-    $element['custom_config']['actions']['cancel'] = [
+    $element['custom_config']['parent_actions']['cancel'] = [
       '#type' => 'submit',
       '#value' => t('Cancel'),
       '#name' => 'custom-config-cancel',

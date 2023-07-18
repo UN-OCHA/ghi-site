@@ -34,6 +34,9 @@
         </div>
         {%- if not item.value.attachment_tables is empty -%}
           <div class="attachment-tables-wrapper">
+            {%- if not item.value.contributes_heading is empty -%}
+              {{ item.value.contributes_heading }}
+            {%- endif -%}
             {{ item.value.attachment_tables }}
           </div>
         {%- endif -%}
