@@ -145,10 +145,12 @@ class ImportManager implements ContainerInjectionInterface {
    *   The name of the source field.
    * @param string $field_name
    *   The field name of the target field.
+   * @param string $format
+   *   The format for the content.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    */
-  public function importTextfield(NodeInterface $node, RemoteContentImageInterface $content, $label, $method, $field_name, MessengerInterface $messenger = NULL) {
+  public function importTextfield(NodeInterface $node, RemoteContentImageInterface $content, $label, $method, $field_name, $format = 'plain_text', MessengerInterface $messenger = NULL) {
     if (!$node->hasField($field_name)) {
       return FALSE;
     }
@@ -164,7 +166,7 @@ class ImportManager implements ContainerInjectionInterface {
       $update = !$node->get($field_name)->isEmpty();
       $node->get($field_name)->setValue($field_type == 'string' ? $value : [
         'value' => $value,
-        'format' => 'plain_text',
+        'format' => $format,
       ]);
       $message = $update ? $this->t('Updated @label', $t_args) : $this->t('Imported @label', $t_args);
     }

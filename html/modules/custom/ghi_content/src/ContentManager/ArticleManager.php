@@ -225,7 +225,7 @@ class ArticleManager extends BaseContentManager {
     $node->setChangedTime($article->getUpdated());
 
     // Import the summary.
-    $this->importManager->importTextfield($node, $article, $this->t('Summary'), 'getSummary', 'field_summary');
+    $this->importManager->importTextfield($node, $article, $this->t('Summary'), 'getSummary', 'field_summary', 'html_text');
 
     // Import the image.
     $this->importManager->importImage($node, $article, 'field_image');

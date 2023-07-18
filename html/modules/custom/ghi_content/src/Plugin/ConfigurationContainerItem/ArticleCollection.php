@@ -89,6 +89,7 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
 
     // Get the defaults.
     $default_tags = $this->getSubmittedValue($element, $form_state, 'tags') ?? ($this->config['article_selection_form']['tags'] ?? []);
+    $default_tags['tag_ids'] = array_combine($section_tag_ids, $section_tag_ids) + ($default_tags['tag_ids'] ?? []);
 
     $element['tags'] = [
       '#type' => 'tag_selection',
@@ -332,7 +333,10 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
    *   The tags that should be applied for article selection.
    */
   private function getApplicableTagIds() {
-    $tag_ids = array_filter($this->config['article_selection_form']['tags']['tag_ids'] ?? []);
+    $section = $this->getContextValue('section');
+    $section_tags = $section ? $this->articleManager->getTags($section) : [];
+    $section_tag_ids = array_keys($section_tags);
+    $tag_ids = array_combine($section_tag_ids, $section_tag_ids) + array_filter($this->config['article_selection_form']['tags']['tag_ids'] ?? []);
     return $tag_ids;
   }
 

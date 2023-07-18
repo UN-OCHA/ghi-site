@@ -204,7 +204,7 @@ class DocumentManager extends BaseContentManager {
     $this->importManager->importTextfield($node, $document, $this->t('Short title'), 'getShortTitle', 'field_short_title');
 
     // Import the summary.
-    $this->importManager->importTextfield($node, $document, $this->t('Summary'), 'getSummary', 'field_summary');
+    $this->importManager->importTextfield($node, $document, $this->t('Summary'), 'getSummary', 'field_summary', 'html_text');
 
     // Import the image.
     $this->importManager->importImage($node, $document, 'field_image');

@@ -41,6 +41,10 @@ trait ContentPathTrait {
    *   The section node or NULL if not found.
    */
   protected function getCurrentSectionNode() {
+    $node = $this->getCurrentNode();
+    if ($node instanceof SectionNodeInterface) {
+      return $node;
+    }
     $path = $this->getCurrentPath();
     return $this->getSectionNodeFromPath($path);
   }
@@ -137,6 +141,16 @@ trait ContentPathTrait {
   protected function getCurrentPath() {
     $request = $this->getRequest();
     return $request->getPathInfo();
+  }
+
+  /**
+   * Get the current node object from the request if available.
+   *
+   * @return \Drupal\node\NodeInterface|null
+   *   The node object or NULL if not found.
+   */
+  protected function getCurrentNode() {
+    return $this->getRequest()->attributes->get('node');
   }
 
   /**
