@@ -1,0 +1,51 @@
+.item-list--entity-logframe {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.item-list--entity-logframe > .item-wrapper {
+  border-left: 4px solid var(--ghi-yellow);
+}
+.item-list--entity-logframe > .item-wrapper > .entity-wrapper {
+  display: flex;
+  gap: 2rem;
+  justify-content: space-between;
+  padding: 2rem 1rem;
+  background-color: var(--ghi-primary-background-color);
+}
+.item-list--entity-logframe > .item-wrapper > .entity-wrapper p {
+  align-self: center;
+  margin: 0;
+  padding: 0;
+}
+.item-list--entity-logframe > .item-wrapper > .entity-wrapper p.label {
+  flex-grow: 0;
+  margin-left: 1rem;
+  white-space: nowrap;
+  font-size: var(--cd-font-size--2xlarge);
+  font-weight: bold;
+}
+
+.item-list--entity-logframe > .item-wrapper > .entity-wrapper p.description {
+  flex-grow: 1;
+  font-size: var(--cd-font-size--default);
+}
+
+.item-list--entity-logframe > .item-wrapper > .entity-wrapper span.table-toggle {
+  flex-grow: 0;
+  align-self: center;
+  width: fit-content;
+  margin-right: 1rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 50%;
+  background-color: var(--brand-grey);
+}
+
+.item-list--entity-logframe > .item-wrapper > .attachment-tables-wrapper {
+  padding: 2rem 1rem 2rem 2rem;
+}
+
+.item-list--entity-logframe > .item-wrapper > .attachment-tables-wrapper table thead th:first-child {
+  width: 100%;
+}

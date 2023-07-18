@@ -362,34 +362,8 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
         '#markup' => Markup::create($entity_description),
       ],
     ];
-    if ($current_entity instanceof PlanEntity && $plan_entity_parents = $current_entity->getPlanEntityParents()) {
-      $contribute_items = array_map(function (PlanEntity $plan_entity) {
-        return [
-          [
-            '#theme' => 'hpc_icon',
-            '#icon' => 'check_circle',
-            '#tag' => 'span',
-          ],
-          [
-            '#markup' => $plan_entity->getEntityName(),
-          ],
-        ];
-      }, $plan_entity_parents);
-      $build[] = [
-        '#type' => 'container',
-        '#attributes' => [
-          'class' => ['contribution-wrapper'],
-        ],
-        [
-          '#type' => 'html_tag',
-          '#tag' => 'span',
-          '#value' => $this->t('Contributes to'),
-        ],
-        [
-          '#theme' => 'item_list',
-          '#items' => $contribute_items,
-        ],
-      ];
+    if ($current_entity instanceof PlanEntity && $contributes_to = $this->buildContributesToHeading($current_entity)) {
+      $build[] = $contributes_to;
     }
     return $build;
   }

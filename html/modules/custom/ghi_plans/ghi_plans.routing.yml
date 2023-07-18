@@ -17,6 +17,7 @@ ghi_plans.plan_autocomplete:
     _controller: '\Drupal\ghi_plans\Controller\PlanAutocompleteController::planAutocomplete'
     _format: json
   requirements:
+    # No access restriction needed for the auto complete callback.
     _access: 'TRUE'
   options:
     no_cache: TRUE
@@ -27,6 +28,7 @@ ghi_plans.modal_content.dissaggregation:
     _format: json
     reporting_period: 'latest'
   requirements:
+    # No access restriction needed for the disaggregation modal.
     _access: 'TRUE'
   options:
     parameters:
@@ -40,6 +42,7 @@ ghi_plans.modal_content.projects:
     _controller: '\Drupal\ghi_plans\Controller\ProjectModalController::buildProjectTable'
     _format: json
   requirements:
+    # No access restriction needed for the projects modal.
     _access: 'TRUE'
   options:
     parameters:
@@ -51,6 +54,7 @@ ghi_plans.modal_content.organizations:
     _controller: '\Drupal\ghi_plans\Controller\ProjectModalController::buildOrganizationList'
     _format: json
   requirements:
+    # No access restriction needed for the organizations modal.
     _access: 'TRUE'
   options:
     parameters:
@@ -62,6 +66,7 @@ ghi_plans.modal_content.organization_projects:
     _controller: '\Drupal\ghi_plans\Controller\ProjectModalController::buildOrganizationProjectTable'
     _format: json
   requirements:
+    # No access restriction needed for the organizations projects modal.
     _access: 'TRUE'
   options:
     parameters:

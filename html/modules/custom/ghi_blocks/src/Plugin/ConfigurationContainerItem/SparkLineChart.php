@@ -254,7 +254,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     }
 
     // Add in the latest measurement if not yet present.
-    if ($include_latest_period && empty($data[$last_reporting_period->id])) {
+    if ($include_latest_period && $last_reporting_period && empty($data[$last_reporting_period->id])) {
       $data[$last_reporting_period->id] = $attachment->getMeasurementMetricValue($data_point, $last_reporting_period->id);
 
       // Prepare the tooltip item.

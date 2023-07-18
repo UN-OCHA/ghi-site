@@ -63,7 +63,7 @@ system.admin_reports_hpc_downloads:
     _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
     _title: 'HPC'
   requirements:
-    _permission: 'access administration pages'
+    _permission: 'access site reports'
 hpc_downloads.reports.download_files:
   path: '/admin/reports/downloads/files'
   defaults:

@@ -31,6 +31,10 @@
   margin-block-end: 0;
 }
 
+.form-type--configuration_container > .glb-form-item__label {
+  padding-bottom: 1rem;
+}
+
 .form-type--configuration_container .tabledrag-toggle-weight-wrapper {
   display: none;
 }
@@ -45,10 +49,13 @@
   position: absolute;
   bottom: 0rem;
   left: 0;
-  z-index: 2;
+  z-index: 3;
   padding: 0 1rem;
   width: 100%;
   background-color: var(--colorGinAppBackground);
+}
+.form-type--configuration_container .actions-wrapper.parent-actions {
+  z-index: 2;
 }
 
 .form-type--configuration_container table.summary-table {
