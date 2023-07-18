@@ -44,12 +44,12 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     if ($this->contextNode) {
       return $this->contextNode;
     }
-    if ($this instanceof ContentBase && $section = $this->getCurrentSectionNode()) {
-      $this->contextNode = $section;
-      return $this->contextNode;
-    }
     if ($this instanceof Article && $document = $this->getCurrentDocumentNode()) {
       $this->contextNode = $document;
+      return $this->contextNode;
+    }
+    if ($this instanceof ContentBase && $section = $this->getCurrentSectionNode()) {
+      $this->contextNode = $section;
       return $this->contextNode;
     }
     return NULL;
@@ -63,10 +63,12 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    *   otherwise.
    */
   public function isStandalonePage() {
-    if ($this instanceof Article && !$this->getCurrentDocumentNode()) {
+    $document = $this->getCurrentDocumentNode();
+    $section = $this->getCurrentSectionNode();
+    if ($this instanceof Article && !$document && !$section) {
       return TRUE;
     }
-    if ($this instanceof ContentBase && !$this->getCurrentSectionNode()) {
+    if ($this instanceof ContentBase && !$section) {
       return TRUE;
     }
   }

@@ -9,6 +9,7 @@ use Drupal\ghi_sections\Menu\SectionMenuItem;
 use Drupal\ghi_sections\Menu\SectionMenuPluginBase;
 use Drupal\ghi_sections\MenuItemType\SectionDropdown;
 use Drupal\ghi_sections\MenuItemType\SectionMegaMenu;
+use Drupal\hpc_common\Helpers\RequestHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -72,7 +73,7 @@ class DocumentSubpages extends SectionMenuPluginBase implements OptionalSectionM
    */
   public function getWidget() {
     $document = $this->getDocument();
-    $current_page_node = NULL;
+    $current_page_node = RequestHelper::getCurrentNodeObject();
     if (!$document) {
       return NULL;
     }

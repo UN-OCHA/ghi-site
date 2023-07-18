@@ -81,14 +81,10 @@ class SectionMegaMenu extends SectionMenuWidgetBase {
    */
   public function toRenderable() {
     $current_node = $this->getCurrentNode();
-    $wrapper_attributes = ['class' => ['megamenu']];
-    if ($this->isActive()) {
-      $wrapper_attributes['class'][] = 'active';
-    }
 
     $build = [
       '#type' => 'container',
-      '#attributes' => $wrapper_attributes,
+      '#attributes' => ['class' => ['megamenu']],
       'label' => [
         '#markup' => $this->getLabel(),
       ],
@@ -123,7 +119,7 @@ class SectionMegaMenu extends SectionMenuWidgetBase {
 
         if ($current_node && $current_node->toUrl() == $node->toUrl()) {
           $link['#attributes']['class'][] = 'active';
-          $build['#attributes']['class'][] = 'active';
+          $this->setActive();
         }
         $links[] = $link;
       }
@@ -158,6 +154,9 @@ class SectionMegaMenu extends SectionMenuWidgetBase {
     }
     if (empty($build)) {
       return NULL;
+    }
+    if ($this->isActive()) {
+      $build['#attributes']['class'][] = 'active';
     }
     $build += [
       'item_list' => [
