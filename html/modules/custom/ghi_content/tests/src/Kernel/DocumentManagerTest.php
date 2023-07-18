@@ -5,6 +5,7 @@ namespace Drupal\Tests\ghi_content\Kernel;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\ghi_sections\Entity\Section;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
@@ -40,6 +41,10 @@ class DocumentManagerTest extends KernelTestBase {
     'text',
     'filter',
     'file',
+    'token',
+    'path_alias',
+    'pathauto',
+    'ghi_sections',
     'ghi_content',
   ];
 
@@ -145,7 +150,7 @@ class DocumentManagerTest extends KernelTestBase {
     $this->createDocument('Document 3');
 
     // Create a section with 2 documents.
-    $section = Node::create([
+    $section = Section::create([
       'type' => self::SECTION_BUNDLE,
       'title' => 'A section node',
       'uid' => 0,

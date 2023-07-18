@@ -319,16 +319,13 @@ abstract class BaseContentManager {
   /**
    * Load available tags for a section.
    *
-   * @param \Drupal\node\NodeInterface $section
+   * @param \Drupal\ghi_sections\Entity\SectionNodeInterface $section
    *   The section.
    *
    * @return array
    *   An array with term ids as keys and term labels as values.
    */
-  public function loadAvailableTagsForSection(NodeInterface $section) {
-    if ($section->bundle() != 'section') {
-      return NULL;
-    }
+  public function loadAvailableTagsForSection(SectionNodeInterface $section) {
     $nodes = $this->loadNodesForSection($section);
     $section_tags = $this->getTags($section);
     $article_tags = $this->getAvailableTags($nodes);
