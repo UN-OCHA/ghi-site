@@ -36,7 +36,7 @@ class Document extends ContentBase {
    */
   public function hasArticle(Article $article) {
     foreach ($this->getChapters() as $chapter) {
-      $articles = $this->getChapterArticles($chapter);
+      $articles = $this->getChapterArticles($chapter, FALSE);
       $article_ids = array_map(function (NodeInterface $node) {
         return $node->id();
       }, $articles);
@@ -77,12 +77,12 @@ class Document extends ContentBase {
       if (!$_node) {
         return NULL;
       }
+      // Cloning is important here, to prevent wrong links when the same
+      // article is part of multiple documents.
       $node = clone $_node;
       if ($node instanceof ContentBase) {
         $node->setContextNode($this);
       }
-      // Cloning is important here, to prevent wrong links when the same
-      // article is part of multiple documents.
       return $node;
     }, $chapter->getArticles()));
     return $articles;

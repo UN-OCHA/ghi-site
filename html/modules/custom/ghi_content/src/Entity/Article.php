@@ -10,6 +10,32 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 class Article extends ContentBase {
 
   /**
+   * Get the current context node.
+   *
+   * @return \Drupal\node\NodeInterface|null
+   *   The context node if set.
+   */
+  public function getContextNode() {
+    if (!$this->contextNode) {
+      $document = $this->getCurrentDocumentNode();
+      if ($document && $this->isValidContextNode($document)) {
+        $this->setContextNode($document);
+      }
+    }
+    return parent::getContextNode();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isValidContextNode($node) {
+    if ($node instanceof Document) {
+      return $node->hasArticle($this);
+    }
+    return parent::isValidContextNode($node);
+  }
+
+  /**
    * Get the chapter of the article.
    *
    * @return string|null

@@ -4,9 +4,11 @@ namespace Drupal\ghi_content\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_form_elements\ConfigurationContainerItemCustomActionsInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_sections\SectionTrait;
 use Drupal\taxonomy\Entity\Term;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -289,6 +291,14 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
     if (empty($articles)) {
       // Check again if we have something to show.
       return;
+    }
+
+    $section = $this->getContextValue('section');
+    if ($section instanceof SectionNodeInterface) {
+      $articles = array_map(function (Article $article) use ($section) {
+        $article->setContextNode($section);
+        return $article;
+      }, $articles);
     }
 
     $build = [

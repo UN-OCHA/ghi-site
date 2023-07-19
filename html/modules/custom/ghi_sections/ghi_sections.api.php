@@ -20,17 +20,3 @@ use Drupal\node\NodeInterface;
 function hook_current_section_alter(Section &$section, NodeInterface $node) {
   $section = Node::load(1);
 }
-
-/**
- * Add non-standard subpage nodes for the given section.
- *
- * @param \Drupal\ghi_sections\Entity\Section $section
- *   The section node.
- *
- * @return array
- *   An aray of objects, either \Drupal\node\NodeInterface or
- *   \Drupal\ghi_sections\MenuItemType\SectionDropdown.
- */
-function hook_section_subpage_nodes(Section $section) {
-  return [];
-}

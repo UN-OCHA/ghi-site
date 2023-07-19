@@ -18,8 +18,6 @@ use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_content\RemoteContent\RemoteContentImageInterface;
 use Drupal\ghi_sections\Entity\Section;
-use Drupal\ghi_sections\MenuItemType\SectionDropdown;
-use Drupal\ghi_sections\MenuItemType\SectionMegaMenu;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -197,6 +195,21 @@ function ghi_content_form_node_document_edit_form_alter(array &$form, FormStateI
 }
 
 /**
+ * Implements hook_entity_build_defaults_alter().
+ *
+ * This is used to add cache keys for context nodes to entity builds of content
+ * like documents and articles. Rendered links to the content can differ not
+ * only by url, but also by manually assigning context in elements like the
+ * DocumentChapter block and we don't want those to be cached together.
+ */
+function ghi_content_entity_build_defaults_alter(array &$build, EntityInterface $entity, $view_mode) {
+  if (!$entity instanceof ContentBase || !$context_node = $entity->getContextNode()) {
+    return;
+  }
+  $build['#cache']['keys'][] = 'context_node:' . $context_node->bundle() . ':' . $context_node->id();
+}
+
+/**
  * Implements hook_current_section_alter().
  */
 function ghi_content_current_section_alter(&$section, $node) {
@@ -213,52 +226,6 @@ function ghi_content_current_section_alter(&$section, $node) {
   elseif ($context_node instanceof ContentBase && $context_node->getContextNode()) {
     ghi_content_current_section_alter($section, $context_node->getContextNode());
   }
-}
-
-/**
- * Implements hook_section_subpage_nodes().
- */
-function ghi_content_section_subpage_nodes(Section $section) {
-  /** @var \Drupal\ghi_content\ContentManager\DocumentManager $document_manager */
-  $document_manager = \Drupal::service('ghi_content.manager.document');
-  /** @var \Drupal\ghi_content\Entity\Document[] $documents */
-  $documents = $document_manager->loadNodesForSection($section);
-  $current_page_node = clone RequestHelper::getCurrentNodeObject();
-  foreach ($documents as $key => $document) {
-    $document->setContextNode($section);
-    $chapters = $document->getChapters();
-    if (empty($chapters)) {
-      continue;
-    }
-    if (count($chapters) == 1) {
-      $chapter = reset($chapters);
-      $nodes = $document->getChapterArticles($chapter);
-      $documents[$key] = new SectionDropdown($document->getShortTitle() ?? $document->label(), $nodes, $document->toLink(t('Outline')));
-    }
-    else {
-      $nodes_grouped = [];
-      foreach ($chapters as $chapter) {
-        $nodes_grouped[$chapter->getShortTitle()] = $document->getChapterArticles($chapter);
-      }
-      $documents[$key] = new SectionMegaMenu((string) ($document->getShortTitle() ?? $document->label()), $nodes_grouped, [
-        [
-          '#type' => 'html_tag',
-          '#tag' => 'h3',
-          'document' => $document->toLink($document->label())->toRenderable(),
-        ],
-        [
-          '#theme' => 'item_list',
-          '#attributes' => ['class' => ['metadata']],
-          '#items' => $document->getPageMetaData(),
-          '#full_width' => TRUE,
-        ],
-      ]);
-      if ($current_page_node && $current_page_node->toUrl() == $document->toUrl()) {
-        $documents[$key]->setActive();
-      }
-    }
-  }
-  return $documents;
 }
 
 /**

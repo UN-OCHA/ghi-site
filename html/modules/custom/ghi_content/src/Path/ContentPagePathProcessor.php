@@ -132,11 +132,8 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
     // This is a request for a document inside a section. We need to find the
     // section based on the alias, confirm that the document is associated to
     // that section and that the current user has access to the section.
-    if ($section && $document) {
-      $documents = $this->documentManager->loadNodesForSection($section);
-      if (!array_key_exists($document->id(), $documents)) {
-        return $path;
-      }
+    if ($section && $document && !$document->isPartOfSection($section)) {
+      return $path;
     }
 
     if (!$document->access('view') || !$section->access('view')) {

@@ -48,16 +48,21 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
    */
   public function buildContent() {
     $chapter = $this->getChapter();
-    $articles = $this->getChapterArticles();
-    if (empty($articles)) {
+    if (!$chapter) {
       return NULL;
     }
-
     $document_node = $this->documentManager->loadNodeForRemoteContent($this->getDocument());
     $cache_tags = [];
-    foreach ($articles as $article) {
+    $articles = [];
+    foreach ($this->getChapterArticles() as $_article) {
+      $article = clone $_article;
       $article->setContextNode($document_node);
       $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTags() ?? []);
+      $articles[] = $article;
+    }
+
+    if (empty($articles)) {
+      return NULL;
     }
 
     // Prepare the build.

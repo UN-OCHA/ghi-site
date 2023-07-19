@@ -6,7 +6,6 @@
  */
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_subpages_custom\CustomSubpageManager;
 use Drupal\ghi_subpages_custom\Entity\CustomSubpage;
 
@@ -35,15 +34,6 @@ function ghi_subpages_custom_form_node_custom_subpage_edit_form_alter(&$form, Fo
   if (!$node->isNew() && !$node->get('field_entity_reference')->isEmpty()) {
     $form['field_entity_reference']['#disabled'] = TRUE;
   }
-}
-
-/**
- * Implements hook_section_subpage_nodes().
- */
-function ghi_subpages_custom_section_subpage_nodes(Section $section) {
-  /** @var \Drupal\ghi_subpages_custom\CustomSubpageManager $custom_subpage_manager */
-  $custom_subpage_manager = \Drupal::service('ghi_subpages_custom.manager');
-  return $custom_subpage_manager->loadNodesForSection($section) ?? [];
 }
 
 /**

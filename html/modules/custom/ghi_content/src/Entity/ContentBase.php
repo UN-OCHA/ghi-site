@@ -7,6 +7,7 @@ use Drupal\Core\Url;
 use Drupal\ghi_content\Traits\ContentPathTrait;
 use Drupal\ghi_sections\Entity\ImageNodeInterface;
 use Drupal\ghi_sections\Entity\Section;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 
@@ -41,18 +42,29 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    *   The context node if set.
    */
   public function getContextNode() {
-    if ($this->contextNode) {
-      return $this->contextNode;
+    if (!$this->contextNode) {
+      $section = $this->getCurrentSectionNode();
+      if ($section && $this->isValidContextNode($section)) {
+        $this->setContextNode($section);
+      }
     }
-    if ($this instanceof Article && $document = $this->getCurrentDocumentNode()) {
-      $this->contextNode = $document;
-      return $this->contextNode;
+    return $this->contextNode && $this->isValidContextNode($this->contextNode) ? $this->contextNode : NULL;
+  }
+
+  /**
+   * Check if the given node is a valid context.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   A node object.
+   *
+   * @return bool
+   *   TRUE if the given node is a valid context, FALSE otherwise.
+   */
+  public function isValidContextNode($node) {
+    if ($node instanceof SectionNodeInterface) {
+      return $this->isPartOfSection($node);
     }
-    if ($this instanceof ContentBase && $section = $this->getCurrentSectionNode()) {
-      $this->contextNode = $section;
-      return $this->contextNode;
-    }
-    return NULL;
+    return FALSE;
   }
 
   /**
@@ -71,6 +83,20 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     if ($this instanceof ContentBase && !$section) {
       return TRUE;
     }
+  }
+
+  /**
+   * Check if the content is part of the given section.
+   *
+   * @param \Drupal\ghi_sections\Entity\SectionNodeInterface $section
+   *   The section node.
+   *
+   * @return bool
+   *   TRUE if the content is part of the given section, FALSE otherwise.
+   */
+  public function isPartOfSection(SectionNodeInterface $section) {
+    $nodes = $this->getContentManager()->loadNodesForSection($section);
+    return array_key_exists($this->id(), $nodes);
   }
 
   /**
