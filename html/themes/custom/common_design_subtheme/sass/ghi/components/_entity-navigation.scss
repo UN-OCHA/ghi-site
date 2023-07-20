@@ -80,7 +80,7 @@ ul.links--entity-navigation {
 
       &.dropdown > div[data-cd-hidden=false] {
         position: absolute;
-        z-index: 2;
+        z-index: z-index(dropdown);
         top: 3.5rem;
         left: -1.5rem;
         display: flex;
@@ -91,7 +91,7 @@ ul.links--entity-navigation {
 
       &.megamenu > div[data-cd-hidden=false] {
         position: absolute;
-        z-index: 2;
+        z-index: z-index(dropdown);
         top: 3.5rem;
         right: 0;
         left: 0;

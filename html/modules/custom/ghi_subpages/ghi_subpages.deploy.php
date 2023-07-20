@@ -10,7 +10,7 @@ use Drupal\ghi_subpages\SubpageManager;
 /**
  * Create new standard subpages.
  */
-function ghi_subpages_post_update_create_standard_subpages(&$sandbox) {
+function ghi_subpages_deploy_create_standard_subpages(&$sandbox) {
   if (!isset($sandbox['sections'])) {
     // Get existing content of type "section".
     $sections = \Drupal::entityQuery('node')->condition('type', 'section')->execute();
@@ -28,7 +28,7 @@ function ghi_subpages_post_update_create_standard_subpages(&$sandbox) {
 /**
  * Queue logframe pages for rebuilding.
  */
-function ghi_subpages_post_update_queue_logframes(&$sandbox) {
+function ghi_subpages_deploy_queue_logframes(&$sandbox) {
   // Queue all logframes for rebuilding.
   /** @var \Drupal\node\NodeInterface[] $nodes */
   $node_ids = \Drupal::entityQuery('node')->condition('type', 'logframe')->execute();
@@ -46,7 +46,7 @@ function ghi_subpages_post_update_queue_logframes(&$sandbox) {
 /**
  * Recreate the url aliases.
  */
-function ghi_subpages_post_update_update_subpage_url_aliases(&$sandbox) {
+function ghi_subpages_deploy_update_subpage_url_aliases(&$sandbox) {
   if (!isset($sandbox['nodes'])) {
     $sandbox['nodes'] = \Drupal::entityQuery('node')->condition('type', SubpageManager::SUPPORTED_SUBPAGE_TYPES, 'IN')->execute();
     drupal_flush_all_caches();
