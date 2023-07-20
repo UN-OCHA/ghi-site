@@ -121,8 +121,6 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       return;
     }
 
-    $attachments = $this->getAttachmentsForEntities($entities);
-
     // Get the config.
     $conf = $this->getBlockConfig();
 
@@ -132,7 +130,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     // Assemble the list.
     $rendered_items = [];
     foreach ($entities as $entity) {
-      $tables = $this->buildTables($entity, $conf['tables'], $attachments);
+      $tables = $this->buildTables($entity, $conf['tables']);
       $contributes_heading = $this->buildContributesToHeading($entity);
       $entity_id = $this->getPlanEntityId($entity, $conf['entities']);
       $entity_description = $this->getPlanEntityDescription($entity, $conf['entities']);
@@ -200,17 +198,17 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    *   The plan entity.
    * @param array $conf
    *   The entity configuration.
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $attachments
-   *   An array of attachments.
    *
    * @return array
    *   An array of entity attachment tables.
    */
-  private function buildTables(PlanEntity $entity, array $conf, array $attachments) {
+  private function buildTables(PlanEntity $entity, array $conf) {
     $tables = [];
     if (empty($conf['attachment_tables'])) {
       return $tables;
     }
+
+    $attachments = $this->getAttachmentsForEntities([$entity]);
 
     $context = $this->getBlockContext();
     $context['attachments'] = $attachments;
@@ -485,23 +483,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       return $default_options;
     }
 
-    $matching_entities = $this->getPlanEntities();
-    $options = [];
-    if (empty($matching_entities)) {
-      return $options;
-    }
-    $weight = [];
-    foreach ($matching_entities as $entity) {
-      $ref_code = $entity->ref_code;
-      if (empty($options[$ref_code])) {
-        $name = $entity->plural_name;
-        $options[$ref_code] = $name;
-        $weight[$ref_code] = $entity->order_number;
-      }
-    }
-    uksort($options, function ($ref_code_a, $ref_code_b) use ($weight) {
-      return $weight[$ref_code_a] - $weight[$ref_code_b];
-    });
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
+    $query = $this->getQueryHandler('entities');
+    $options = $query->getEntityRefCodeOptions($this->getPlanEntities());
     return $options;
   }
 

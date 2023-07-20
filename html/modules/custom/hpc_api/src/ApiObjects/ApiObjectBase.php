@@ -44,7 +44,7 @@ abstract class ApiObjectBase implements ApiObjectInterface {
    * {@inheritdoc}
    */
   public function getRawData() {
-    return $this->data;
+    return $this->data ?: NULL;
   }
 
   /**

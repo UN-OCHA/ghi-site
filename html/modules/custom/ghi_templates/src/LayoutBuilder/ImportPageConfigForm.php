@@ -114,7 +114,6 @@ class ImportPageConfigForm extends FormBase {
     $form['#title'] = $this->t('Import page configuration to @label', [
       '@label' => $entity->label(),
     ]);
-    $form['#ghi_modal_form'] = TRUE;
 
     $steps = self::STEPS;
     $current_step = $form_state->get('current_import_step') ?? reset($steps);

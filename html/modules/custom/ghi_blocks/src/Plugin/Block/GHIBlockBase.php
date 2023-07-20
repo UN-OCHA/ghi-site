@@ -379,7 +379,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
       return $configured_label != '<none>' ? $configured_label : '';
     }
     elseif ($this instanceof OverrideDefaultTitleBlockInterface) {
-      return $configured_label ?: $this->getDefaultTitle();
+      $default_title = $configured_label && $configured_label != '<none>' ? $configured_label : $this->getDefaultTitle();
+      return $default_title != '<none>' ? $default_title : '';
     }
     return $label;
   }

@@ -58,7 +58,9 @@ function ghi_templates_is_layout_builder_route() {
  * Define a the export/import forms to be a layout builder route.
  */
 function ghi_templates_gin_lb_is_layout_builder_route_alter(&$gin_lb_is_layout_builder_route, $context) {
-  $gin_lb_is_layout_builder_route = ghi_templates_is_layout_builder_route();
+  if (ghi_templates_is_layout_builder_route()) {
+    $gin_lb_is_layout_builder_route = ghi_templates_is_layout_builder_route();
+  }
 }
 
 /**

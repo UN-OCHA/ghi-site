@@ -25,10 +25,11 @@ class SubpageManager extends BaseObjectSubpageManager {
    * A list of node bundles that are supported as subpages.
    */
   const SUPPORTED_SUBPAGE_TYPES = [
-    'profile',
     'population',
     'financials',
-    'risk_index',
+    'presence',
+    'logframe',
+    'progress',
   ];
 
   /**

@@ -73,7 +73,7 @@ class SectionNode extends SectionMenuWidgetBase {
       return FALSE;
     }
     $sections = $section_storage->getSections();
-    return !empty($sections[0]->getComponents());
+    return !empty($sections[0]?->getComponents());
   }
 
 }

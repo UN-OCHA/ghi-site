@@ -9,10 +9,10 @@ label: Article
 type: 'canonical_entities:node'
 pattern: 'article/[node:title]'
 selection_criteria:
-  8e255c9e-30b8-498e-a79e-311820ee4a88:
-    id: node_type
+  758cbba3-b8ae-4016-9f67-ff01e7b3895f:
+    id: 'entity_bundle:node'
     negate: false
-    uuid: 8e255c9e-30b8-498e-a79e-311820ee4a88
+    uuid: 758cbba3-b8ae-4016-9f67-ff01e7b3895f
     context_mapping:
       node: node
     bundles:

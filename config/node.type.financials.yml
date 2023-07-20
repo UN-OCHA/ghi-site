@@ -3,11 +3,14 @@ langcode: en
 status: true
 dependencies:
   module:
+    - ghi_subpages
     - menu_ui
 third_party_settings:
   menu_ui:
     available_menus: {  }
     parent: ''
+  ghi_subpages:
+    page_title: ''
 name: Financials
 type: financials
 description: 'A financials page for any of the base entities of this site, e.g. for plans, countries, regions, ...'

@@ -42,3 +42,11 @@ function ghi_subpages_custom_form_node_custom_subpage_edit_form_alter(&$form, Fo
 function ghi_subpages_custom_is_subpage_type($node_type) {
   return in_array($node_type, [CustomSubpageManager::BUNDLE]);
 }
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function ghi_subpages_custom_entity_type_alter(array &$entity_types) {
+  // Add validation constraint to the node entity.
+  $entity_types['node']->addConstraint('ReservedTitle');
+}

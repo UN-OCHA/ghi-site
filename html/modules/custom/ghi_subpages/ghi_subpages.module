@@ -13,12 +13,16 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_subpages\Controller\SubpagesAdminController;
 use Drupal\ghi_subpages\Element\LayoutBuilderSectionLock;
+use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\ghi_subpages\SubpageManager;
 use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\Form\NodeDeleteForm;
 use Drupal\node\NodeInterface;
+use Drupal\node\NodeTypeForm;
+use Drupal\node\NodeTypeInterface;
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -208,6 +212,42 @@ function ghi_subpages_node_subpage_delete_form_submit(array &$form, FormStateInt
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ghi_subpages_form_node_type_edit_form_alter(array &$form, FormStateInterface $form_state) {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof NodeTypeForm) {
+    return;
+  }
+  /** @var \Drupal\node\Entity\NodeType $type */
+  $type = $form_object->getEntity();
+  if (!$type instanceof NodeTypeInterface || !SubpageHelper::isSubpageType($type)) {
+    return;
+  }
+  $form['name']['#weight'] = -2;
+  $form['page_title'] = [
+    '#title' => t('Page title'),
+    '#type' => 'textfield',
+    '#default_value' => $type->getThirdPartySetting('ghi_subpages', 'page_title'),
+    '#description' => t('A title that will be used as a page title on content of this type. Leave empty to use the name of the content type as set above.'),
+    '#size' => 50,
+    '#weight' => -1,
+  ];
+  array_unshift($form['actions']['submit']['#submit'], 'ghi_subpages_form_node_type_edit_form_submit');
+}
+
+/**
+ * Submit handler for node type forms for subpage node types.
+ */
+function ghi_subpages_form_node_type_edit_form_submit(array $form, FormStateInterface $form_state) {
+  /** @var \Drupal\node\NodeTypeForm $form_object */
+  $form_object = $form_state->getFormObject();
+  /** @var \Drupal\node\Entity\NodeType $type */
+  $type = $form_object->getEntity();
+  $type->setThirdPartySetting('ghi_subpages', 'page_title', $form_state->getValue('page_title'));
+}
+
+/**
  * Implements hook_entity_operation().
  */
 function ghi_subpages_entity_operation(EntityInterface $entity) {
@@ -292,4 +332,47 @@ function ghi_subpages_element_info_alter(array &$types) {
     LayoutBuilderSectionLock::class,
     'preRenderRestrictSectionConfiguration',
   ];
+}
+
+/**
+ * Implements hook_layout_builder_ipe_links_alter().
+ *
+ * This adds additional links to the IPE action section.
+ */
+function ghi_subpages_layout_builder_ipe_links_alter(array &$links, SectionStorageInterface $section_storage, EntityInterface $entity) {
+  if (!$entity instanceof LogframeSubpage) {
+    // We only support this for content entites.
+    return;
+  }
+  /** @var \Drupal\ghi_subpages\LayoutBuilder\LogframeRebuildLinkBuilder $link_builder */
+  $link_builder = \Drupal::service('ghi_subpages.link_builder');
+  $rebuild_link = $link_builder->buildLogframeRebuildLink($section_storage, $entity);
+  if ($rebuild_link && $rebuild_link->getUrl()->access()) {
+    $links['logframe'] = $rebuild_link->toRenderable();
+  }
+}
+
+/**
+ * Returns true if the current route is a layout builder route.
+ *
+ * @return bool
+ *   Returns true for layout builder routes.
+ */
+function ghi_subpages_is_layout_builder_route() {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if (!$route_name) {
+    return FALSE;
+  }
+  return $route_name == 'ghi_subpages.entity.logframe_rebuild';
+}
+
+/**
+ * Implements hook_gin_lb_is_layout_builder_route_alter().
+ *
+ * Define a the export/import forms to be a layout builder route.
+ */
+function ghi_subpages_gin_lb_is_layout_builder_route_alter(&$gin_lb_is_layout_builder_route, $context) {
+  if (ghi_subpages_is_layout_builder_route()) {
+    $gin_lb_is_layout_builder_route = ghi_subpages_is_layout_builder_route();
+  }
 }

@@ -240,6 +240,9 @@ class CustomSubpageWizard extends FormBase {
         '#type' => 'submit',
         '#button_type' => 'primary',
         '#value' => $this->t('Create custom subpage'),
+        '#validate' => [
+          '::validateEntity',
+        ],
       ];
     }
 
@@ -247,27 +250,48 @@ class CustomSubpageWizard extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Custom callback for entity validation.
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    // Not used yet, but keep here for the future.
+  public function validateEntity(array &$form, FormStateInterface $form_state) {
+    $subpage = $this->createSubpageFromValues($form_state);
+    $violations = $subpage->validate();
+    if ($violations->count()) {
+      foreach ($violations as $violation) {
+        $form_state->setError($form, $violation->getMessage());
+      }
+    }
   }
 
   /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    // Clear the error messages.
+    $this->messenger()->deleteAll();
+
+    $subpage = $this->createSubpageFromValues($form_state);
+    $status = $subpage->save();
+    if ($status) {
+      $this->messenger()->addStatus($this->t('Created @type for @title', [
+        '@type' => $subpage->type->entity->label(),
+        '@title' => $subpage->label(),
+      ]));
+    }
+    $form_state->setRedirectUrl($subpage->toUrl());
+  }
+
+  /**
+   * Create a subpage node from the submitted form values.
+   *
+   * @return \Drupal\ghi_subpages_custom\Entity\CustomSubpage
+   *   The created custom subpage object, not saved yet.
+   */
+  private function createSubpageFromValues(FormStateInterface $form_state) {
     $values = array_intersect_key($form_state->getValues(), array_flip([
       'year',
       'team',
       'title',
     ]));
-
-    $section = $this->getSubmittedSection($form_state);
-
-    // Clear the error messages.
-    $this->messenger()->deleteAll();
-
     // Create and save the section.
     $subpage = $this->entityTypeManager->getStorage('node')->create([
       'type' => CustomSubpageManager::BUNDLE,
@@ -278,19 +302,12 @@ class CustomSubpageWizard extends FormBase {
         'source' => 'inherit',
       ],
     ]);
+    $section = $this->getSubmittedSection($form_state);
     $subpage->field_entity_reference->entity = $section;
     if (!empty($values['team']) && $values['team'] != 'inherit') {
       $subpage->field_team = $values['team'];
     }
-    $status = $subpage->save();
-    if ($status) {
-      $this->messenger()->addStatus($this->t('Created @type for @title', [
-        '@type' => $subpage->type->entity->label(),
-        '@title' => $subpage->label(),
-      ]));
-    }
-
-    $form_state->setRedirectUrl($subpage->toUrl());
+    return $subpage;
   }
 
   /**

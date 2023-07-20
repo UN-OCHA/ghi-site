@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * @file
+ * Contains install and update hooks for the GHI Custom Subpages module.
+ */
+
+/**
+ * Delete existing profile and risk index content.
+ */
+function ghi_subpages_update_9000($in_sync) {
+  $bundles = [
+    'profile',
+    'risk_index',
+  ];
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  $entities = $storage->loadByProperties([
+    'type' => $bundles,
+  ]);
+  $storage->delete($entities);
+}

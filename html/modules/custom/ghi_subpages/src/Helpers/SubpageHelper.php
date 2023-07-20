@@ -78,10 +78,12 @@ class SubpageHelper {
       ]);
 
       $subpage->save();
-      \Drupal::messenger()->addStatus(t('Created @type subpage for @title', [
-        '@type' => $subpage_name,
-        '@title' => $parent_node->getTitle(),
-      ]));
+      if (PHP_SAPI !== 'cli') {
+        \Drupal::messenger()->addStatus(t('Created @type subpage for @title', [
+          '@type' => $subpage_name,
+          '@title' => $parent_node->getTitle(),
+        ]));
+      }
     }
   }
 

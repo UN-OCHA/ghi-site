@@ -31,9 +31,10 @@ visibility:
       custom_subpage: custom_subpage
       document: document
       financials: financials
+      logframe: logframe
       global_section: global_section
       plan_cluster: plan_cluster
       population: population
-      profile: profile
-      risk_index: risk_index
+      presence: presence
+      progress: progress
       section: section

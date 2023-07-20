@@ -136,6 +136,10 @@ class SectionMenuItem implements SectionMenuItemInterface {
   public function getPlugin() {
     /** @var \Drupal\ghi_sections\Menu\SectionMenuPluginManager $plugin_manager */
     $plugin_manager = $this->pluginManager();
+    $definitions = $plugin_manager->getDefinitions();
+    if (empty($definitions[$this->getPluginId()])) {
+      return NULL;
+    }
     $plugin = $plugin_manager->createInstance($this->getPluginId(), [
       'section' => $this->sectionId,
     ] + $this->getConfiguration());

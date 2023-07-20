@@ -72,7 +72,7 @@ class SubpageTitle extends BlockBase implements ContainerFactoryPluginInterface 
       return NULL;
     }
 
-    $title = $node->getTitle();
+    $title = $node->type->entity->getThirdPartySetting('ghi_subpages', 'page_title') ?: $node->getTitle();
     if (SubpageHelper::isBaseTypeNode($node) && SubpageHelper::getSectionOverviewLabel($node)) {
       $title = SubpageHelper::getSectionOverviewLabel($node);
     }

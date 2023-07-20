@@ -140,10 +140,11 @@ function common_design_subtheme_preprocess_block(&$variables) {
     $page_node = $block_instance->getPageNode();
     $qualified_bundles = [
       'section',
-      'profile',
       'population',
       'financials',
-      'risk_index',
+      'presence',
+      'logframe',
+      'progress',
       'plan_cluster',
     ];
     $is_qualified_node = $page_node && in_array($page_node->bundle(), $qualified_bundles);

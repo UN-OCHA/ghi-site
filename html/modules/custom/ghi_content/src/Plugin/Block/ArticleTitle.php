@@ -71,7 +71,7 @@ class ArticleTitle extends BlockBase {
         $build['title'][] = [
           '#type' => 'html_tag',
           '#tag' => 'p',
-          '#value' => $document->toLink($document->label())->toString() . (!$single_chapter_document ? ' > ' . $chapter->getTitle() : ''),
+          '#value' => $document->toLink($document->label())->toString() . (!$single_chapter_document ? ' / ' . $chapter->getTitle() : ''),
         ];
       }
     }

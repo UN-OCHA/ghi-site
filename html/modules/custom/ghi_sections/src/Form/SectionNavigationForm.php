@@ -177,7 +177,7 @@ class SectionNavigationForm extends FormBase {
     $menu_items = $this->sectionMenuStorage->getSectionMenuItems();
     foreach (array_values($menu_items->getAll()) as $delta => $menu_item) {
       $plugin = $menu_item->getPlugin();
-      if (!$plugin->isValid()) {
+      if (!$plugin || !$plugin->isValid()) {
         continue;
       }
       $item_label = $menu_item->getLabel();

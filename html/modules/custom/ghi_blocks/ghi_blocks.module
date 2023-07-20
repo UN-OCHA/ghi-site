@@ -499,7 +499,9 @@ function ghi_blocks_is_layout_builder_route() {
  * Define a page manager edit form to be a layout builder route.
  */
 function ghi_blocks_gin_lb_is_layout_builder_route_alter(&$gin_lb_is_layout_builder_route, $context) {
-  $gin_lb_is_layout_builder_route = ghi_blocks_is_layout_builder_route();
+  if (ghi_blocks_is_layout_builder_route()) {
+    $gin_lb_is_layout_builder_route = ghi_blocks_is_layout_builder_route();
+  }
 }
 
 /**

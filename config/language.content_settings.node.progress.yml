@@ -1,0 +1,16 @@
+uuid: 16952f83-3bd5-4102-9449-677f2516ede5
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.progress
+  module:
+    - content_translation
+third_party_settings:
+  content_translation:
+    enabled: true
+id: node.progress
+target_entity_type_id: node
+target_bundle: progress
+default_langcode: site_default
+language_alterable: true

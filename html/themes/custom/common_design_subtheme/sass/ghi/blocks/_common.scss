@@ -25,7 +25,7 @@
     page-break-inside: avoid !important;
   }
 
-  #main-content.has-subpage-title .layout__region &:first-child,
+  #main-content.has-subpage-title .layout__region &:first-child:not(.block-plan-entity-logframe),
   body.page-node-type-global-section #main-content .layout__region &:first-child {
     margin-top: 0;
     padding-top: 0;
@@ -43,7 +43,7 @@
     margin-top: 2.5rem;
   }
   .layout__region--content > &.block.block-highlighted:not(.content-width):first-child {
-    &.block-highlighted:not(.content-width) {
+    &.block-highlighted:not(.content-width):not(.block-plan-entity-logframe) {
       margin-top: 0;
       padding-top: 4.5rem;
       background-color: var(--ghi-default-background-color);
