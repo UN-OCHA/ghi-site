@@ -8,10 +8,11 @@ dependencies:
     - core.entity_view_display.node.document.default
     - core.entity_view_display.node.financials.default
     - core.entity_view_display.node.global_section.default
+    - core.entity_view_display.node.logframe.default
     - core.entity_view_display.node.plan_cluster.default
     - core.entity_view_display.node.population.default
-    - core.entity_view_display.node.profile.default
-    - core.entity_view_display.node.risk_index.default
+    - core.entity_view_display.node.presence.default
+    - core.entity_view_display.node.progress.default
     - core.entity_view_display.node.section.default
     - filter.format.html_text
     - node.type.article
@@ -42,10 +43,11 @@ permissions:
   - 'configure editable document node layout overrides'
   - 'configure editable financials node layout overrides'
   - 'configure editable global_section node layout overrides'
+  - 'configure editable logframe node layout overrides'
   - 'configure editable plan_cluster node layout overrides'
   - 'configure editable population node layout overrides'
-  - 'configure editable profile node layout overrides'
-  - 'configure editable risk_index node layout overrides'
+  - 'configure editable presence node layout overrides'
+  - 'configure editable progress node layout overrides'
   - 'configure editable section node layout overrides'
   - 'create custom_subpage content'
   - 'delete own custom_subpage content'
@@ -58,9 +60,12 @@ permissions:
   - 'use layout builder ipe on editable financials node layout overrides'
   - 'use layout builder ipe on editable global_section node layout overrides'
   - 'use layout builder ipe on editable homepage node layout overrides'
+  - 'use layout builder ipe on editable logframe node layout overrides'
   - 'use layout builder ipe on editable plan_cluster node layout overrides'
   - 'use layout builder ipe on editable population node layout overrides'
+  - 'use layout builder ipe on editable presence node layout overrides'
   - 'use layout builder ipe on editable profile node layout overrides'
+  - 'use layout builder ipe on editable progress node layout overrides'
   - 'use layout builder ipe on editable risk_index node layout overrides'
   - 'use layout builder ipe on editable section node layout overrides'
   - 'use text format html_text'

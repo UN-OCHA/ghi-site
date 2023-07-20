@@ -1,0 +1,29 @@
+uuid: 2eb23873-7414-4c76-a796-f34c7609a521
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_team
+    - node.type.progress
+    - taxonomy.vocabulary.team
+id: node.progress.field_team
+field_name: field_team
+entity_type: node
+bundle: progress
+label: Team
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      team: team
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

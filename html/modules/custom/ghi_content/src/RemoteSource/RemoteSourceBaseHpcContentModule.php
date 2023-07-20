@@ -28,6 +28,8 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     $fields = [
       'id',
       'title',
+      'title_short',
+      'summary',
       'tags',
       'created',
       'updated',
@@ -36,18 +38,23 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'title',
       'tags',
     ];
-    $fields['content'] = [
+    $fields['chapters'] = [
       'id',
       'uuid',
-      'type',
-      'typeLabel',
-      'promoted',
-      'rendered',
-      'configuration',
+      'title',
+      'title_short',
+      'summary',
+    ];
+    $fields['chapters']['articles'] = [
+      'id',
     ];
     $fields['image'] = [
       'credits',
       'imageUrl',
+    ];
+    $fields['imageCaption'] = [
+      'location',
+      'text',
     ];
     $document_data = $this->fetchDocumentData($id, $fields);
     return $document_data ? new RemoteDocument($document_data, $this) : NULL;
@@ -169,9 +176,9 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     if (!$response->has('documentSearch') || !$response->get('documentSearch')->items) {
       return [];
     }
-    return array_map(function ($item) {
+    return array_filter(array_map(function ($item) {
       return $this->getDocument($item->id);
-    }, $response->get('documentSearch')->items);
+    }, $response->get('documentSearch')->items));
   }
 
   /**
@@ -190,9 +197,9 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     if (!$response->has('articleSearch') || !$response->get('articleSearch')->items) {
       return [];
     }
-    return array_map(function ($item) {
+    return array_filter(array_map(function ($item) {
       return $this->getArticle($item->id);
-    }, $response->get('articleSearch')->items);
+    }, $response->get('articleSearch')->items));
   }
 
   /**
@@ -442,7 +449,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
         if ($link_item['route_name'] == 'entity.node.canonical') {
           $node_id = $link_item['route_parameters']['node'] ?? NULL;
           $referenced_article = $node_id ? $paragraph->getSource()->getArticle($node_id) : NULL;
-          $article_node = $referenced_article ? $this->articleManager->loadNodeForRemoteArticle($referenced_article) : NULL;
+          $article_node = $referenced_article ? $this->articleManager->loadNodeForRemoteContent($referenced_article) : NULL;
           if ($article_node && $article_node->access('view')) {
             $link_map[$link_item['alias']] = $article_node->toUrl()->toString();
           }
@@ -461,7 +468,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
-  public function importSource(array $tags = NULL) {
+  public function importArticles(array $tags = NULL) {
     $this->disableCache();
     $query = '{
       articleExport ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
@@ -483,6 +490,33 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     return array_map(function ($item) {
       return (array) $item;
     }, $response->get('articleExport')->items);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function importDocuments(array $tags = NULL) {
+    $this->disableCache();
+    $query = '{
+      documentExport ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
+        count
+        items {
+          id
+          title
+          title_short
+          summary
+          created
+          updated
+        }
+      }
+    }';
+    $response = $this->query($query);
+    if (!$response->has('documentExport') || !$response->get('documentExport')->items) {
+      return [];
+    }
+    return array_map(function ($item) {
+      return (array) $item;
+    }, $response->get('documentExport')->items);
   }
 
 }

@@ -15,12 +15,15 @@ services:
     class: Drupal\ghi_content\EventSubscriber\RouteSubscriber
     tags:
       - { name: event_subscriber }
+  ghi_content.manager.factory:
+    class: Drupal\ghi_content\ContentManager\ManagerFactory
+    arguments: ['@ghi_content.manager.article', '@ghi_content.manager.document']
   ghi_content.manager.article:
     class: Drupal\ghi_content\ContentManager\ArticleManager
     arguments: ['@entity_type.manager', '@renderer', '@current_user', '@plugin.manager.migration', '@plugin.manager.remote_source', '@ghi_content.import', '@request_stack']
   ghi_content.manager.document:
     class: Drupal\ghi_content\ContentManager\DocumentManager
-    arguments: ['@entity_type.manager', '@renderer', '@current_user']
+    arguments: ['@entity_type.manager', '@renderer', '@current_user', '@plugin.manager.migration', '@plugin.manager.remote_source', '@ghi_content.import', '@request_stack']
   ghi_content.contextual_links.block_handler:
     class: Drupal\ghi_content\ContextualLinks\BlockHandler
     arguments: ['@entity_type.manager', '@layout_builder.tempstore_repository']
@@ -29,3 +32,9 @@ services:
     arguments: ['@entity_type.manager']
     tags:
       - { name: breadcrumb_builder, priority: 1003 }
+  ghi_content.content_page_path_processor:
+    class: Drupal\ghi_content\Path\ContentPagePathProcessor
+    arguments: ['@request_stack', '@ghi_content.manager.document']
+    tags:
+      - { name: path_processor_inbound, priority: 1000 }
+      - { name: path_processor_outbound, priority: 100 }

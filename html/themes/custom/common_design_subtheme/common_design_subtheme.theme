@@ -85,6 +85,7 @@ function common_design_subtheme_preprocess_region(&$variables) {
   $regions = [
     'page_title',
     'page_subtitle',
+    'page_navigation',
   ];
   if (in_array($variables['region'], $regions) && !empty($variables['elements'])) {
     foreach (Element::children($variables['elements']) as $key) {
@@ -119,7 +120,9 @@ function common_design_subtheme_preprocess_block(&$variables) {
     'system_menu_block:operations-menu',
     'system_menu_block:account',
     'system_menu_block:footer',
+    'section_navigation',
     'subpage_navigation',
+    'document_navigation',
     'system_main_block',
     'paragraph',
   ];
@@ -137,10 +140,11 @@ function common_design_subtheme_preprocess_block(&$variables) {
     $page_node = $block_instance->getPageNode();
     $qualified_bundles = [
       'section',
-      'profile',
       'population',
       'financials',
-      'risk_index',
+      'presence',
+      'logframe',
+      'progress',
       'plan_cluster',
     ];
     $is_qualified_node = $page_node && in_array($page_node->bundle(), $qualified_bundles);
@@ -547,20 +551,30 @@ function common_design_subtheme_preprocess_item_list__key_figures(&$variables) {
 }
 
 /**
- * Preprocess a subpage navigation list.
+ * Preprocess a page navigation item list.
  */
-function common_design_subtheme_preprocess_item_list__subpage_navigation(&$variables) {
+function common_design_subtheme_preprocess_page_navigation_item_list(&$variables) {
   $items = &$variables['items'];
   foreach ($items as $key => &$item) {
-    if (!array_key_exists(0, $item['value']) || !array_key_exists(1, $item['value'])) {
+    if (!array_key_exists('label', $item['value']) || !array_key_exists('item_list', $item['value'])) {
+      $item['value'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#attributes' => [
+          'class' => ['link-wrapper'],
+        ],
+        'value' => $item['value'],
+      ];
       continue;
     }
-    $children = $item['value'][1]['#items'] ?? [];
+    $children = $item['value']['item_list']['#items'] ?? [];
     if (empty($children)) {
       unset($items[$key]);
       continue;
     }
-    $wrapper_attribute = $item['value']['#attributes']['class'] ?? [];
+    $wrapper_classes = $item['value']['#attributes']['class'] ?? [];
+    $is_megamenu = in_array('megamenu', $wrapper_classes);
+    $item_header = $is_megamenu && !empty($item['value']['header']) ? $item['value']['header'] : NULL;
     $item['value'] = [
       '#type' => 'html_tag',
       '#tag' => 'div',
@@ -570,16 +584,60 @@ function common_design_subtheme_preprocess_item_list__subpage_navigation(&$varia
         'id' => Html::getUniqueId('cd-dropdown'),
         'class' => ['cd-dropdown'],
         'aria-labelledby' => 'dropdown-title',
-        'data-cd-toggable' => $item['value'][0],
+        'data-cd-toggable' => $item['value']['label'],
       ],
       '#attached' => [
         'library' => [
           'common_design/cd-dropdown',
         ],
       ],
-    ] + $children;
-    $item['attributes']['class'] = array_merge(['expandable'], $wrapper_attribute);
+    ];
+
+    if ($is_megamenu) {
+      $megamenu = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['megamenu-wrapper-outer'],
+        ],
+        'header' => $item_header,
+        'children' => [
+          '#type' => 'container',
+          '#attributes' => [
+            'class' => ['megamenu-wrapper-inner'],
+          ],
+          'item' => $children,
+        ],
+      ];
+
+      $item['value'][] = $megamenu;
+    }
+    else {
+      $item['value'] += $children;
+    }
+
+    $item['attributes']['class'] = array_merge(['expandable'], $wrapper_classes);
   }
+}
+
+/**
+ * Preprocess a section navigation list.
+ */
+function common_design_subtheme_preprocess_item_list__section_navigation(&$variables) {
+  common_design_subtheme_preprocess_page_navigation_item_list($variables);
+}
+
+/**
+ * Preprocess a subpage navigation list.
+ */
+function common_design_subtheme_preprocess_item_list__subpage_navigation(&$variables) {
+  common_design_subtheme_preprocess_page_navigation_item_list($variables);
+}
+
+/**
+ * Preprocess a document navigation list.
+ */
+function common_design_subtheme_preprocess_item_list__document_navigation(&$variables) {
+  common_design_subtheme_preprocess_page_navigation_item_list($variables);
 }
 
 /**

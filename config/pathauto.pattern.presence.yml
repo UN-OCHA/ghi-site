@@ -1,0 +1,22 @@
+uuid: a0abe677-865a-4e83-8900-741f27476a75
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: presence
+label: Presence
+type: 'canonical_entities:node'
+pattern: '[node:field_entity_reference:entity:url:path]/presence'
+selection_criteria:
+  89db37f1-3e05-4fea-b050-6ce6fff43321:
+    id: 'entity_bundle:node'
+    negate: false
+    uuid: 89db37f1-3e05-4fea-b050-6ce6fff43321
+    context_mapping:
+      node: node
+    bundles:
+      presence: presence
+selection_logic: and
+weight: -5
+relationships: {  }

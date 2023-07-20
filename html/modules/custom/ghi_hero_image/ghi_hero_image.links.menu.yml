@@ -1,0 +1,5 @@
+ghi_hero_image.config.image:
+  title: 'Image settings'
+  route_name: ghi_hero_image.config
+  description: 'Configure image settings'
+  parent: system.admin_config_ghi

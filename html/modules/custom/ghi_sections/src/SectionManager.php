@@ -5,10 +5,12 @@ namespace Drupal\ghi_sections;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_sections\Entity\Section;
 use Drupal\hpc_common\Helpers\StringHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
@@ -43,6 +45,13 @@ class SectionManager {
   protected $entityFieldManager;
 
   /**
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
    * The current user.
    *
    * @var \Drupal\Core\Session\AccountProxyInterface
@@ -52,10 +61,35 @@ class SectionManager {
   /**
    * Constructs a section create form.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, AccountProxyInterface $user) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ModuleHandlerInterface $module_handler, AccountProxyInterface $user) {
     $this->entityTypeManager = $entity_type_manager;
     $this->entityFieldManager = $entity_field_manager;
+    $this->moduleHandler = $module_handler;
     $this->currentUser = $user;
+  }
+
+  /**
+   * Get the section node representing the current page.
+   *
+   * This allows other modules to declare their content as belonging to a
+   * section.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object to check.
+   *
+   * @return \Drupal\ghi_sections\Entity\Section|null
+   *   A section object or NULL.
+   */
+  public function getCurrentSection($node) {
+    $section = NULL;
+    if ($node instanceof Section) {
+      $section = $node;
+    }
+    else {
+      // Allow other modules to declare a section as a parent.
+      $this->moduleHandler->alter('current_section', $section, $node);
+    }
+    return $section instanceof Section ? $section : NULL;
   }
 
   /**

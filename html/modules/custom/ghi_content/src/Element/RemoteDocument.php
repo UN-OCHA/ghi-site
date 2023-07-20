@@ -126,7 +126,7 @@ class RemoteDocument extends FormElement {
         '#type' => 'remote_document_autocomplete',
         '#title' => t('Document'),
         '#remote_source' => $remote_source->getPluginId(),
-        '#description' => t('Type the title of an document to see suggestions.'),
+        '#description' => t('Type the title of a document to see suggestions.'),
         '#default_value' => !empty($values['document_id']) ? $remote_source->getDocument($values['document_id']) : NULL,
         '#required' => $element['#required'],
       ];

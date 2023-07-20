@@ -1,0 +1,11 @@
+.ghi-subpages-admin-views-form .subpages-form-header-wrapper {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  margin-top: 2rem;
+}
+
+.ghi-subpages-admin-views-form .subpages-form-header-wrapper > a {
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}

@@ -11,7 +11,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Provides a local task that shows the amount of unapproved comments.
+ * Provides a local task that shows articles.
  */
 class ArticleList extends LocalTaskDefault implements ContainerFactoryPluginInterface {
 

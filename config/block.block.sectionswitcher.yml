@@ -29,8 +29,9 @@ visibility:
     bundles:
       custom_subpage: custom_subpage
       financials: financials
+      logframe: logframe
       plan_cluster: plan_cluster
       population: population
-      profile: profile
-      risk_index: risk_index
+      presence: presence
+      progress: progress
       section: section

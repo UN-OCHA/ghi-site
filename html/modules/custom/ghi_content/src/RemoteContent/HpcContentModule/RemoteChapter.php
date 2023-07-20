@@ -3,6 +3,7 @@
 namespace Drupal\ghi_content\RemoteContent\HpcContentModule;
 
 use Drupal\Component\Serialization\Yaml;
+use Drupal\Core\Render\Markup;
 use Drupal\ghi_content\RemoteContent\RemoteChapterInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 
@@ -12,7 +13,7 @@ use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 class RemoteChapter implements RemoteChapterInterface {
 
   /**
-   * Raw article data from the remote source.
+   * Raw chapter data from the remote source.
    *
    * @var mixed
    */
@@ -26,7 +27,7 @@ class RemoteChapter implements RemoteChapterInterface {
   protected $source;
 
   /**
-   * Construct a new RemoteParagraph object.
+   * Construct a new RemoteChapter object.
    */
   public function __construct($data, RemoteSourceInterface $source) {
     $this->data = $data;
@@ -57,8 +58,43 @@ class RemoteChapter implements RemoteChapterInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRendered() {
-    return $this->getSource()->changeRessourceLinks($this->data->rendered);
+  public function getTitle() {
+    return trim($this->data->title);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getShortTitle() {
+    if (!$this->data->title_short) {
+      return $this->getTitle();
+    }
+    return trim($this->data->title_short);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSummary() {
+    return Markup::create($this->data->summary);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getArticleIds() {
+    return array_map(function ($article) {
+      return $article->id;
+    }, $this->data->articles);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getArticles() {
+    return array_map(function ($article) {
+      return new RemoteArticle($article, $this->getSource());
+    }, $this->data->articles);
   }
 
   /**

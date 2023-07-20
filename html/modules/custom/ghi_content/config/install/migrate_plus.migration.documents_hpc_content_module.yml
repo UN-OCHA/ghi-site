@@ -1,0 +1,93 @@
+id: documents_hpc_content_module
+label: Documents from the HPC Content Module backend
+migration_group: ncms
+migration_tags:
+  - 'NCMS'
+source:
+  plugin: remote_source_graphql
+  track_changes: true
+  remote_source: hpc_content_module
+  content_type: document
+  fields:
+    -
+      name: id
+      label: 'ID'
+      selector: id
+    -
+      name: title
+      label: 'Title'
+      selector: title
+    -
+      name: title_short
+      label: 'Title (short)'
+      selector: title_short
+    -
+      name: summary
+      label: 'Summary'
+      selector: summary
+    -
+      name: created
+      label: 'Created datetime'
+      selector: created
+    -
+      name: updated
+      label: 'Updated datetime'
+      selector: updated
+    -
+      name: tags
+      label: 'Tags'
+      selector: tags
+  ids:
+    id:
+      type: integer
+process:
+  type:
+    plugin: default_value
+    default_value: document
+  title: title
+  status:
+    plugin: default_value
+    default_value: 1
+  created:
+    plugin: callback
+    callable: strtotime
+    source: created
+  changed:
+    plugin: callback
+    callable: strtotime
+    source: updated
+  field_remote_document/remote_source:
+    plugin: default_value
+    default_value: hpc_content_module
+  field_remote_document/document_id: id
+  field_short_title/value: title_short
+  field_short_title/format:
+    plugin: default_value
+    default_value: html_text
+  field_summary/value: summary
+  field_summary/format:
+    plugin: default_value
+    default_value: html_text
+  field_tags:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: tags
+    -
+      plugin: entity_generate
+      source: tags
+      entity_type: taxonomy_term
+      bundle_key: vid
+      bundle: tags
+destination:
+  plugin: 'entity:node'
+  overwrite_properties:
+    - title
+    - field_short_title
+    - field_summary
+    - field_tags
+    - created
+    - changed
+migration_dependencies:
+  required:
+    - articles_hpc_content_module

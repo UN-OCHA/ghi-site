@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * @file
+ * Contains update hooks for the GHI Sections module.
+ */
+
+/**
+ * Add the section_menu field (locked, no-ui) to content types.
+ */
+function ghi_sections_update_9000(&$sandbox) {
+  /** @var \Drupal\ghi_sections\Menu\SectionMenuStorage $section_menu_storage */
+  $section_menu_storage = \Drupal::service('ghi_sections.section_menu.storage');
+  $bundles = ['section', 'global_section'];
+  foreach ($bundles as $bundle) {
+    $section_menu_storage->addSectionMenuField($bundle);
+  }
+}

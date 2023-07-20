@@ -1,0 +1,17 @@
+/** The table */
+.ghi-sections-section-navigation-form table tr.visually-disabled {
+  opacity: 0.5;
+}
+.ghi-sections-section-navigation-form table tr td.tabledrag-cell {
+  vertical-align: inherit;
+}
+
+/** The add more form */
+.ghi-sections-section-navigation-form #edit-add .fieldset__wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+}
+.ghi-sections-section-navigation-form #edit-add .fieldset__wrapper input[type="submit"] {
+  margin: 1.5rem 0;
+}

@@ -5,11 +5,11 @@ dependencies:
   config:
     - node.type.document
     - node.type.financials
+    - node.type.logframe
     - node.type.global_section
     - node.type.plan_cluster
     - node.type.population
-    - node.type.profile
-    - node.type.risk_index
+    - node.type.presence
     - node.type.section
     - system.menu.admin
     - taxonomy.vocabulary.team
@@ -1526,10 +1526,11 @@ display:
           value:
             document: document
             financials: financials
+            logframe: logframe
             plan_cluster: plan_cluster
             population: population
-            profile: profile
-            risk_index: risk_index
+            presence: presence
+            progress: progress
           group: 1
           exposed: false
           expose:

@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.storage.node.field_entity_reference
     - field.storage.node.field_remote_article
+    - field.storage.node.field_remote_document
     - field.storage.node.field_tags
     - field.storage.node.field_team
     - ghi_base_objects.base_object_type.country
@@ -14,14 +15,14 @@ dependencies:
     - node.type.custom_subpage
     - node.type.document
     - node.type.financials
+    - node.type.logframe
     - node.type.global_section
     - node.type.homepage
     - node.type.news_story
     - node.type.page
     - node.type.plan_cluster
     - node.type.population
-    - node.type.profile
-    - node.type.risk_index
+    - node.type.presence
     - node.type.section
     - taxonomy.vocabulary.tags
     - taxonomy.vocabulary.team
@@ -1028,18 +1029,19 @@ display:
           plugin_id: bundle
           operator: in
           value:
-            all: all
             article: article
+            custom_subpage: custom_subpage
             document: document
             financials: financials
+            logframe: logframe
             global_section: global_section
             homepage: homepage
             news_story: news_story
             page: page
             plan_cluster: plan_cluster
             population: population
-            profile: profile
-            risk_index: risk_index
+            presence: presence
+            progress: progress
             section: section
           group: 1
           exposed: true
@@ -1059,6 +1061,7 @@ display:
               authenticated: authenticated
               anonymous: '0'
               administrator: '0'
+              global_editor: '0'
               editor: '0'
               rpm_administrator: '0'
               plan_lead: '0'
@@ -1659,6 +1662,7 @@ display:
               authenticated: authenticated
               anonymous: '0'
               administrator: '0'
+              global_editor: '0'
               editor: '0'
               rpm_administrator: '0'
               plan_lead: '0'
@@ -1679,56 +1683,6 @@ display:
           reduce_duplicates: false
           vid: tags
           type: textfield
-          hierarchy: false
-          limit: true
-          error_message: true
-        field_team_target_id:
-          id: field_team_target_id
-          table: node__field_team
-          field: field_team_target_id
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: taxonomy_index_tid
-          operator: or
-          value: {  }
-          group: 1
-          exposed: true
-          expose:
-            operator_id: field_team_target_id_op
-            label: Team
-            description: ''
-            use_operator: false
-            operator: field_team_target_id_op
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: field_team_target_id
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-              rpm_administrator: '0'
-              plan_lead: '0'
-              cluster_lead: '0'
-            reduce: false
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-          reduce_duplicates: false
-          vid: team
-          type: select
           hierarchy: false
           limit: true
           error_message: true
@@ -2649,15 +2603,15 @@ display:
           type: string
           settings:
             link_to_entity: true
-        field_entity_reference:
-          id: field_entity_reference
-          table: node__field_entity_reference
-          field: field_entity_reference
+        field_remote_document:
+          id: field_remote_document
+          table: node__field_remote_document
+          field: field_remote_document
           relationship: none
           group_type: group
           admin_label: ''
           plugin_id: field
-          label: Section
+          label: 'Remote document'
           exclude: false
           alter:
             alter_text: false
@@ -2698,11 +2652,13 @@ display:
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
+          click_sort_column: remote_source
+          type: ghi_remote_document_source_link
           settings:
-            link: true
-          group_column: target_id
+            link_label: ''
+            link_to_edit: 1
+            include_publisher_destination: 1
+          group_column: ''
           group_columns: {  }
           group_rows: true
           delta_limit: 0
@@ -2712,15 +2668,15 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_team:
-          id: field_team
-          table: node__field_team
-          field: field_team
+        field_tags:
+          id: field_tags
+          table: node__field_tags
+          field: field_tags
           relationship: none
           group_type: group
           admin_label: ''
           plugin_id: field
-          label: Team
+          label: Tags
           exclude: false
           alter:
             alter_text: false
@@ -2912,34 +2868,36 @@ display:
             default_group: All
             default_group_multiple: {  }
             group_items: {  }
-        field_team_target_id:
-          id: field_team_target_id
-          table: node__field_team
-          field: field_team_target_id
+        field_tags_target_id:
+          id: field_tags_target_id
+          table: node__field_tags
+          field: field_tags_target_id
           relationship: none
           group_type: group
           admin_label: ''
           plugin_id: taxonomy_index_tid
-          operator: or
+          operator: and
           value: {  }
           group: 1
           exposed: true
           expose:
-            operator_id: field_team_target_id_op
-            label: Team
+            operator_id: field_tags_target_id_op
+            label: Tags
             description: ''
             use_operator: false
-            operator: field_team_target_id_op
+            operator: field_tags_target_id_op
             operator_limit_selection: false
             operator_list: {  }
-            identifier: field_team_target_id
+            identifier: tags
             required: false
             remember: false
-            multiple: false
+            multiple: true
             remember_roles:
               authenticated: authenticated
               anonymous: '0'
               administrator: '0'
+              global_editor: '0'
+              editor: '0'
               rpm_administrator: '0'
               plan_lead: '0'
               cluster_lead: '0'
@@ -2957,8 +2915,8 @@ display:
             default_group_multiple: {  }
             group_items: {  }
           reduce_duplicates: false
-          vid: team
-          type: select
+          vid: tags
+          type: textfield
           hierarchy: false
           limit: true
           error_message: true
@@ -3179,8 +3137,8 @@ display:
         - 'user.node_grants:view'
         - user.permissions
       tags:
-        - 'config:field.storage.node.field_entity_reference'
-        - 'config:field.storage.node.field_team'
+        - 'config:field.storage.node.field_remote_document'
+        - 'config:field.storage.node.field_tags'
   page_global_sections:
     id: page_global_sections
     display_title: 'Global sections'
@@ -4847,6 +4805,7 @@ display:
           operator: in
           value:
             article: article
+            custom_subpage: custom_subpage
             document: document
             global_section: global_section
             homepage: homepage
@@ -4870,6 +4829,7 @@ display:
               authenticated: authenticated
               anonymous: '0'
               administrator: '0'
+              global_editor: '0'
               editor: '0'
               rpm_administrator: '0'
               plan_lead: '0'
@@ -5046,9 +5006,10 @@ display:
           operator: 'not in'
           value:
             financials: financials
+            logframe: logframe
             population: population
-            profile: profile
-            risk_index: risk_index
+            presence: presence
+            progress: progress
           group: 1
           exposed: false
           expose:

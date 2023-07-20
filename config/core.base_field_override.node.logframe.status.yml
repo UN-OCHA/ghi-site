@@ -1,0 +1,22 @@
+uuid: 753effe9-b016-41b3-836c-b4b7a595fa3e
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.logframe
+id: node.logframe.status
+field_name: status
+entity_type: node
+bundle: logframe
+label: Published
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

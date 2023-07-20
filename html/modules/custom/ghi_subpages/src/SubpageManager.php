@@ -25,11 +25,23 @@ class SubpageManager extends BaseObjectSubpageManager {
    * A list of node bundles that are supported as subpages.
    */
   const SUPPORTED_SUBPAGE_TYPES = [
-    'profile',
     'population',
     'financials',
-    'risk_index',
+    'presence',
+    'logframe',
+    'progress',
   ];
+
+  /**
+   * Get all available subpage types.
+   *
+   * @return array
+   *   An array of node type machine names.
+   */
+  public function getStandardSubpageTypes() {
+    // The basic subpages defined by this module.
+    return self::SUPPORTED_SUBPAGE_TYPES;
+  }
 
   /**
    * Get all available subpage types.

@@ -1,4 +1,4 @@
-uuid: 57dfd90b-743d-40a9-b8c8-6c1d95c53cf3
+uuid: 93ea43ee-3c9c-484d-b32d-87207b3ce1dc
 langcode: en
 status: true
 dependencies:
@@ -10,9 +10,9 @@ id: node.document.field_team
 field_name: field_team
 entity_type: node
 bundle: document
-label: Team
+label: 'Team (deprecated)'
 description: ''
-required: true
+required: false
 translatable: true
 default_value: {  }
 default_value_callback: ''

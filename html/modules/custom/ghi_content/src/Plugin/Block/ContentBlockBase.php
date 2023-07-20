@@ -25,6 +25,13 @@ abstract class ContentBlockBase extends GHIBlockBase {
   protected $articleManager;
 
   /**
+   * The document manager.
+   *
+   * @var \Drupal\ghi_content\ContentManager\DocumentManager
+   */
+  protected $documentManager;
+
+  /**
    * The renderer service.
    *
    * @var \Drupal\Core\Render\RendererInterface
@@ -43,6 +50,7 @@ abstract class ContentBlockBase extends GHIBlockBase {
       $instance->remoteSource = $remote_source_manager->createInstance($plugin_definition['remote_source']);
     }
     $instance->articleManager = $container->get('ghi_content.manager.article');
+    $instance->documentManager = $container->get('ghi_content.manager.document');
     $instance->renderer = $container->get('renderer');
 
     return $instance;

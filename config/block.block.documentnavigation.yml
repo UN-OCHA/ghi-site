@@ -1,0 +1,22 @@
+uuid: 840db087-3cf1-4440-9860-c813e5dc0ec0
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_content
+  theme:
+    - common_design_subtheme
+id: documentnavigation
+theme: common_design_subtheme
+region: page_navigation
+weight: 0
+provider: null
+plugin: document_navigation
+settings:
+  id: document_navigation
+  label: 'Document navigation'
+  label_display: '0'
+  provider: ghi_content
+  context_mapping:
+    node: '@node.node_route_context:node'
+visibility: {  }

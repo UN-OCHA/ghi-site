@@ -126,7 +126,7 @@ class ImportManagerTest extends KernelTestBase {
     ], $remote_source);
 
     $sections = $node->get(OverridesSectionStorage::FIELD_NAME)->getValue();
-    $result = $import_manager->importParagraphs($node, $article, [], NULL, TRUE);
+    $result = $import_manager->importArticleParagraphs($node, $article, [], NULL, TRUE);
     $this->assertTrue($result);
 
     $sections = $node->get(OverridesSectionStorage::FIELD_NAME)->getValue();

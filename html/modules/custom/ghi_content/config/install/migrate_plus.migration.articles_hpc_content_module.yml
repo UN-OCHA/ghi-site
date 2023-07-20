@@ -7,6 +7,7 @@ source:
   plugin: remote_source_graphql
   track_changes: true
   remote_source: hpc_content_module
+  content_type: article
   fields:
     -
       name: id
@@ -32,6 +33,10 @@ source:
       name: updated
       label: 'Updated datetime'
       selector: updated
+    -
+      name: tags
+      label: 'Tags'
+      selector: tags
   ids:
     id:
       type: integer
@@ -60,12 +65,24 @@ process:
   field_summary/format:
     plugin: default_value
     default_value: html_text
+  field_tags:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: tags
+    -
+      plugin: entity_generate
+      source: tags
+      entity_type: taxonomy_term
+      bundle_key: vid
+      bundle: tags
 destination:
   plugin: 'entity:node'
   overwrite_properties:
     - title
     - field_chapter
     - field_summary
+    - field_tags
     - created
     - changed
 migration_dependencies: {}

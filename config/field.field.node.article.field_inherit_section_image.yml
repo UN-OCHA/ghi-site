@@ -1,0 +1,23 @@
+uuid: 5758bc94-0675-45bf-85e6-44ae1c6bad29
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_inherit_section_image
+    - node.type.article
+id: node.article.field_inherit_section_image
+field_name: field_inherit_section_image
+entity_type: node
+bundle: article
+label: 'Inherit document image'
+description: 'If checked and this article is displayed as a subpage of a document, the hero image will be taken from the document instead of the article.'
+required: false
+translatable: true
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

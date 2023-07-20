@@ -5,7 +5,6 @@
  * Contains hook implementations for the GHI plan clusters module.
  */
 
-use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_base_objects\Entity\BaseObject;
@@ -50,71 +49,13 @@ function ghi_plan_clusters_get_manager_service() {
 }
 
 /**
- * Implements hook_subpage_navigation_links().
+ * Implements hook_current_section_alter().
  */
-function ghi_plan_clusters_subpage_navigation_links_alter(&$links, array $context) {
-  /** @var \Drupal\node\NodeInterface $node */
-  $node = $context['node'];
-
-  /** @var \Drupal\node\NodeInterface $base_entity */
-  $base_entity = $context['base_entity'];
-
-  // Load plan clusters for the base entity.
-  $plan_cluster_manager = ghi_plan_clusters_get_manager_service();
-  $plan_clusters = $plan_cluster_manager->loadNodesForSection($base_entity);
-  if (empty($plan_clusters)) {
-    return;
+function ghi_plan_clusters_current_section_alter(&$section, $node) {
+  if (!$node instanceof PlanCluster) {
+    return NULL;
   }
-
-  $wrapper_attributes = [
-    'class' => [],
-  ];
-
-  $cache_tags = [];
-
-  $cluster_links = [];
-  foreach ($plan_clusters as $plan_cluster) {
-    // We merge the cache cags even if the cluster node is not available, as
-    // that might change.
-    $cache_tags = Cache::mergeTags($cache_tags, $plan_cluster->getCacheTags());
-
-    // Check if the page should be visible.
-    if (!$plan_cluster->access('view')) {
-      continue;
-    }
-
-    // Build the link render array.
-    $cluster_link = $plan_cluster->toLink(NULL, 'canonical', ['fragment' => 'page-title'])->toRenderable();
-
-    if (!$plan_cluster->isPublished()) {
-      $cluster_link['#attributes']['class'][] = 'node--unpublished';
-    }
-    if ($node->id() == $plan_cluster->id()) {
-      $cluster_link['#attributes']['class'][] = 'active';
-      $wrapper_attributes['class'][] = 'active';
-    }
-    $cluster_links[] = $cluster_link;
-  }
-
-  if (empty($cluster_links)) {
-    return;
-  }
-
-  $links[] = [
-    '#type' => 'container',
-    '#attributes' => $wrapper_attributes,
-    [
-      '#markup' => t('Clusters'),
-    ],
-    [
-      '#theme' => 'item_list',
-      '#items' => $cluster_links,
-      '#gin_lb_theme_suggestions' => FALSE,
-    ],
-    '#cache' => [
-      'tags' => $cache_tags,
-    ],
-  ];
+  $section = $node->getParentNode();
 }
 
 /**

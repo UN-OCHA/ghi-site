@@ -2,6 +2,7 @@
 **/node_modules/
 **/.sass-cache/
 **/*.css.map
+**/build
 
 # mac stuff
 **/.DS_Store

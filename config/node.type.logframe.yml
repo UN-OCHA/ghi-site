@@ -1,0 +1,20 @@
+uuid: 7c814e9f-0e83-4ffd-b7c8-304541f1a63b
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_subpages
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+  ghi_subpages:
+    page_title: 'Logical framework'
+name: Logframe
+type: logframe
+description: 'A logframe page for any of the base entities of this site, e.g. for plans, countries, regions, ...'
+help: ''
+new_revision: true
+preview_mode: 0
+display_submitted: false

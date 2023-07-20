@@ -1,0 +1,92 @@
+uuid: 8c0a4b5e-9bdf-42d2-8ad5-bc7a652a31c9
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.logframe.field_entity_reference
+    - field.field.node.logframe.field_hero_image
+    - field.field.node.logframe.field_team
+    - field.field.node.logframe.layout_builder__layout
+    - node.type.logframe
+  module:
+    - layout_builder
+    - layout_builder_ipe
+    - layout_builder_restrictions
+    - layout_discovery
+    - user
+third_party_settings:
+  layout_builder_ipe:
+    enabled: true
+  layout_builder:
+    enabled: true
+    allow_custom: true
+    sections:
+      -
+        layout_id: layout_onecol
+        layout_settings:
+          label: Content
+          context_mapping: {  }
+        components: {  }
+        third_party_settings:
+          layout_builder_lock:
+            lock:
+              5: 5
+              6: 6
+              7: 7
+  layout_builder_restrictions:
+    allowed_block_categories:
+      - 'Chaos Tools'
+      - 'Content fields'
+      - 'Country elements'
+      - 'Custom block types'
+      - Forms
+      - 'Generic elements'
+      - Global
+      - HID
+      - 'Inline blocks'
+      - 'Lists (Views)'
+      - Menus
+      - 'Narrative Content'
+      - Page
+      - 'Plan cluster elements'
+      - 'Plan elements'
+      - Sections
+      - 'Social Auth'
+      - System
+      - User
+      - Views
+      - core
+    entity_view_mode_restriction:
+      allowed_layouts: {  }
+      denylisted_blocks: {  }
+      allowlisted_blocks:
+        'Inline blocks':
+          - 'inline_block:basic'
+      restricted_categories:
+        - 'Chaos Tools'
+        - 'Content fields'
+        - 'Custom block types'
+        - Forms
+        - Global
+        - HID
+        - 'Lists (Views)'
+        - Menus
+        - Page
+        - 'Plan cluster elements'
+        - 'Social Auth'
+        - System
+        - User
+        - Views
+        - core
+id: node.logframe.default
+targetEntityType: node
+bundle: logframe
+mode: default
+content: {  }
+hidden:
+  field_entity_reference: true
+  field_hero_image: true
+  field_team: true
+  langcode: true
+  layout_builder__layout: true
+  links: true

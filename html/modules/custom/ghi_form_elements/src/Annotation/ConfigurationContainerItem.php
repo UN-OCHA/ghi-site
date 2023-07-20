@@ -5,7 +5,7 @@ namespace Drupal\ghi_form_elements\Annotation;
 use Drupal\Component\Annotation\Plugin;
 
 /**
- * Defines a reusable form plugin annotation object.
+ * Defines a reusable configuration item plugin annotation object.
  *
  * @Annotation
  */

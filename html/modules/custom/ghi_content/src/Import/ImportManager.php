@@ -18,7 +18,10 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\file\FileRepositoryInterface;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
-use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
+use Drupal\ghi_content\RemoteContent\RemoteContentImageInterface;
+use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
+use Drupal\ghi_content\RemoteContent\RemoteContentItemBaseInterface;
+use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -65,11 +68,11 @@ class ImportManager implements ContainerInjectionInterface {
   protected $currentUser;
 
   /**
-   * The UUID of the component.
+   * The UUID generator service.
    *
    * @var \Drupal\Component\UuidInterface
    */
-  protected $uuid;
+  protected $uuidGenerator;
 
   /**
    * The time service.
@@ -130,27 +133,77 @@ class ImportManager implements ContainerInjectionInterface {
   }
 
   /**
+   * Import a text field for the node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node for which elements should be imported/synced.
+   * @param \Drupal\ghi_content\RemoteContent\RemoteContentImageInterface $content
+   *   The content object as retrieved from the remote source.
+   * @param string $label
+   *   The label of the field.
+   * @param string $method
+   *   The name of the source field.
+   * @param string $field_name
+   *   The field name of the target field.
+   * @param string $format
+   *   The format for the content.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   An optional messenger to use for result messages.
+   */
+  public function importTextfield(NodeInterface $node, RemoteContentImageInterface $content, $label, $method, $field_name, $format = 'plain_text', MessengerInterface $messenger = NULL) {
+    if (!$node->hasField($field_name)) {
+      return FALSE;
+    }
+    $message = NULL;
+    $value = method_exists($content, $method) ? $content->{$method}() : NULL;
+    $t_args = [
+      '@label' => strtolower($label),
+    ];
+
+    $field_config = $node->get($field_name)->getFieldDefinition();
+    $field_type = $field_config->getType();
+    if ($value) {
+      $update = !$node->get($field_name)->isEmpty();
+      $node->get($field_name)->setValue($field_type == 'string' ? $value : [
+        'value' => $value,
+        'format' => $format,
+      ]);
+      $message = $update ? $this->t('Updated @label', $t_args) : $this->t('Imported @label', $t_args);
+    }
+    else {
+      if (!$node->get($field_name)->isEmpty()) {
+        $message = $this->t('Removed @label', $t_args);
+      }
+      $node->get($field_name)->setValue(NULL);
+    }
+
+    if ($messenger !== NULL && $message) {
+      $messenger->addMessage($message);
+    }
+  }
+
+  /**
    * Import an image for the node.
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node for which elements should be imported/synced.
-   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $article
-   *   The article object as retrieved from the remote source.
+   * @param \Drupal\ghi_content\RemoteContent\RemoteContentImageInterface $content
+   *   The content object as retrieved from the remote source.
    * @param string $field_name
    *   The field name of the target field for the image.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    */
-  public function importImage(NodeInterface $node, RemoteArticleInterface $article, $field_name = 'field_image', MessengerInterface $messenger = NULL) {
+  public function importImage(NodeInterface $node, RemoteContentImageInterface $content, $field_name = 'field_image', MessengerInterface $messenger = NULL) {
     if (!$node->hasField($field_name)) {
       return FALSE;
     }
     $message = NULL;
-    $image_url = $article->getImageUri();
+    $image_url = $content->getImageUri();
     if (!empty($image_url)) {
-      $caption = $article->getImageCaptionPlain();
+      $caption = $content->getImageCaptionPlain();
       $image_name = basename($image_url);
-      $data = $article->getSource()->getFileContent($image_url);
+      $data = $content->getSource()->getFileContent($image_url);
       $file = $this->fileRepository->writeData($data, ArticleManager::IMAGE_DIRECTORY . '/' . $image_name, FileSystem::EXISTS_REPLACE);
       $update = !$node->get($field_name)->isEmpty();
       $node->get($field_name)->setValue([
@@ -190,7 +243,7 @@ class ImportManager implements ContainerInjectionInterface {
    * @throws SyncException
    *   When an error occurs.
    */
-  public function importParagraphs(NodeInterface $node, RemoteArticleInterface $article, array $paragraph_ids = [], MessengerInterface $messenger = NULL, $cleanup = FALSE) {
+  public function importArticleParagraphs(NodeInterface $node, RemoteArticleInterface $article, array $paragraph_ids = [], MessengerInterface $messenger = NULL, $cleanup = FALSE) {
 
     if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
       return FALSE;
@@ -220,7 +273,7 @@ class ImportManager implements ContainerInjectionInterface {
 
       $messages = [];
 
-      $existing_component = $this->getExistingSyncedParagraph($node, $paragraph);
+      $existing_component = $this->getExistingSyncedContentItem($node, $paragraph);
       $paragraph_configuration = [
         'hpc' => [
           'article_select' => [
@@ -299,25 +352,151 @@ class ImportManager implements ContainerInjectionInterface {
   }
 
   /**
-   * Import tags for an article.
+   * Import document chapters into a node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node for which elements should be imported/synced.
+   * @param \Drupal\ghi_content\RemoteContent\RemoteDocumentInterface $document
+   *   The document object as retrieved from the remote source.
+   * @param array $chapter_ids
+   *   An array of chapter ids to process. These must appear in
+   *   $document->getChapters().
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   An optional messenger to use for result messages.
+   * @param bool $cleanup
+   *   Whether existing elements should be cleaned up first.
+   *
+   * @throws SyncException
+   *   When an error occurs.
+   */
+  public function importDocumentChapters(NodeInterface $node, RemoteDocumentInterface $document, array $chapter_ids = [], MessengerInterface $messenger = NULL, $cleanup = FALSE) {
+
+    if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+      return FALSE;
+    }
+
+    $sections = $this->getNodeSections($node);
+    $delta = 0;
+
+    if ($cleanup && $sections[$delta]->getComponents()) {
+      foreach ($sections[$delta]->getComponents() as $component) {
+        $sections[$delta]->removeComponent($component->getUuid());
+      }
+    }
+
+    $chapter_uuids = [];
+    foreach ($document->getChapters() as $chapter) {
+      if (!empty($chapter_ids) && !in_array($chapter->id, $chapter_ids)) {
+        continue;
+      }
+
+      $definition = $this->getChapterPluginDefintion();
+      $context_mapping = [
+        'context_mapping' => [
+          'node' => 'layout_builder.entity',
+        ],
+      ];
+
+      $messages = [];
+
+      $existing_component = $this->getExistingSyncedContentItem($node, $chapter);
+      $chapter_configuration = [
+        'hpc' => [
+          'document_select' => [
+            'document' => [
+              'remote_source' => $document->getSource()->getPluginId(),
+              'document_id' => $document->getId(),
+            ],
+          ],
+          'chapter' => [
+            'chapter_id' => $chapter->getId(),
+          ],
+        ],
+        'lock_document' => TRUE,
+      ];
+      if ($existing_component) {
+        // Update an existing component.
+        $configuration = $chapter_configuration + $context_mapping + $existing_component->get('configuration');
+        $existing_component->setConfiguration($configuration);
+        $messages[] = $this->t('Updated %plugin_title (%uuid)', [
+          '%plugin_title' => $definition['admin_label'],
+          '%uuid' => $chapter->getUuid(),
+        ]);
+        $chapter_uuids[] = $existing_component->getUuid();
+      }
+      else {
+        // Append a new component.
+        $messages[] = $this->t('Added %plugin_title (%uuid)', [
+          '%plugin_title' => $definition['admin_label'],
+          '%uuid' => $chapter->getUuid(),
+        ]);
+        $config = array_filter([
+          'id' => $definition['id'],
+          'provider' => $definition['provider'],
+          'sync' => [
+            'source_uuid' => $chapter->getUuid(),
+          ],
+        ]) + $context_mapping;
+        $config += $chapter_configuration;
+        $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
+        $sections[$delta]->appendComponent($component);
+        $chapter_uuids[] = $component->getUuid();
+      }
+
+    }
+
+    // Always cleanup chapters that have been removed from the source.
+    $definition = $this->getChapterPluginDefintion();
+    foreach ($sections[$delta]->getComponents() as $component) {
+      if ($component->getPluginId() != $definition['id']) {
+        // Not a chapter, ignore.
+        continue;
+      }
+      /** @var \Drupal\ghi_content\Plugin\Block\DocumentChapter */
+      $plugin = $component->getPlugin();
+      if (!$plugin->getDocument() || $plugin->getDocument()->getId() != $document->getId()) {
+        // Only remove chapters from the same document. This allows to add more
+        // chapters from different articles.
+        // @todo Good idea?
+        continue;
+      }
+      if (in_array($component->getUuid(), $chapter_uuids)) {
+        continue;
+      }
+      $sections[$delta]->removeComponent($component->getUuid());
+    }
+
+    $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+
+    if ($messenger !== NULL && count($messages)) {
+      foreach ($messages as $message) {
+        $messenger->addMessage($message);
+      }
+    }
+
+    return TRUE;
+  }
+
+  /**
+   * Import tags for an content object.
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node for which tags should be imported/synced.
-   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $article
-   *   The article object as retrieved from the remote source.
+   * @param \Drupal\ghi_content\RemoteContent\RemoteContentInterface $content
+   *   The content object as retrieved from the remote source.
    * @param string $field_name
    *   The field name into which the tags should be imported.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    */
-  public function importTags(NodeInterface $node, RemoteArticleInterface $article, $field_name = 'field_tags', MessengerInterface $messenger = NULL) {
+  public function importTags(NodeInterface $node, RemoteContentInterface $content, $field_name = 'field_tags', MessengerInterface $messenger = NULL) {
     if (!$node->hasField($field_name)) {
       return FALSE;
     }
 
     // Get the tags.
-    $main_tags = $article->getMajorTags() ?? [];
-    $article_tags = $article->getMinorTags() ?? [];
+    $main_tags = $content->getMajorTags() ?? [];
+    $content_tags = $content->getMinorTags() ?? [];
 
     $update = !$node->get($field_name)->isEmpty();
 
@@ -341,7 +520,7 @@ class ImportManager implements ContainerInjectionInterface {
         $term->save();
       }
       return $term->id() ? $term : NULL;
-    }, array_unique(array_merge($main_tags, $article_tags))));
+    }, array_unique(array_merge($main_tags, $content_tags))));
 
     $node->get($field_name)->setValue($terms);
 
@@ -431,22 +610,32 @@ class ImportManager implements ContainerInjectionInterface {
   }
 
   /**
+   * Get the plugin definition for a chapter block.
+   *
+   * @return mixed
+   *   A plugin definition, or NULL if it can't be found
+   */
+  public function getChapterPluginDefintion() {
+    return $this->blockManager->getDefinition('document_chapter', FALSE);
+  }
+
+  /**
    * Find a section component corresponding to the given source element.
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
-   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface $paragraph
+   * @param \Drupal\ghi_content\RemoteContent\RemoteContentItemBaseInterface $content_item
    *   The paragraph object from the remote source.
    *
    * @return \Drupal\layout_builder\SectionComponent|null
    *   Either a matching component, or NULL.
    */
-  private function getExistingSyncedParagraph(NodeInterface $node, RemoteParagraphInterface $paragraph) {
+  private function getExistingSyncedContentItem(NodeInterface $node, RemoteContentItemBaseInterface $content_item) {
     $section_storage = $this->getSectionStorageForEntity($node);
     $sections = $section_storage->getSections();
     foreach ($sections[0]->getComponents() as $component) {
       $configuration = $component->get('configuration');
-      if (!empty($configuration['sync']) && !empty($configuration['sync']['source_uuid']) && $configuration['sync']['source_uuid'] == $paragraph->getUuid()) {
+      if (!empty($configuration['sync']) && !empty($configuration['sync']['source_uuid']) && $configuration['sync']['source_uuid'] == $content_item->getUuid()) {
         return $component;
       }
     }
@@ -552,6 +741,51 @@ class ImportManager implements ContainerInjectionInterface {
     $uuids = [];
     foreach ($article->getParagraphs() as $paragraph) {
       $uuids[] = $paragraph->getUuid();
+    }
+    sort($uuids);
+    return $uuids;
+  }
+
+  /**
+   * Get the UUIDs of the local chapters.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The local node object.
+   *
+   * @return string[]
+   *   An array of uuids, sorted alphabetically.
+   */
+  public function getLocalDocumentChapterUuids(NodeInterface $node) {
+    $uuids = [];
+    $definition = $this->getChapterPluginDefintion();
+    $sections = $this->getNodeSections($node);
+    foreach ($sections[0]->getComponents() as $component) {
+      if ($component->getPluginId() != $definition['id']) {
+        continue;
+      }
+      $configuration = $component->get('configuration');
+      if (empty($configuration['sync']) || empty($configuration['sync']['source_uuid'])) {
+        continue;
+      }
+      $uuids[] = $configuration['sync']['source_uuid'];
+    }
+    sort($uuids);
+    return $uuids;
+  }
+
+  /**
+   * Get the UUIDs of the remote chapters.
+   *
+   * @param \Drupal\ghi_content\RemoteContent\RemoteDocumentInterface $document
+   *   The remote document object.
+   *
+   * @return string[]
+   *   An array of uuids, sorted alphabetically.
+   */
+  public function getRemoteDocumentChapterUuids(RemoteDocumentInterface $document) {
+    $uuids = [];
+    foreach ($document->getChapters() as $chapter) {
+      $uuids[] = $chapter->getUuid();
     }
     sort($uuids);
     return $uuids;

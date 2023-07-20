@@ -8,12 +8,31 @@ namespace Drupal\ghi_content\RemoteContent;
 interface RemoteDocumentInterface extends RemoteContentInterface {
 
   /**
+   * Get the short title for the document.
+   *
+   * @return string
+   *   The short title.
+   */
+  public function getShortTitle();
+
+  /**
    * Get the chapters of the document.
    *
    * @return \Drupal\ghi_content\RemoteContent\RemoteChapterInterface[]
    *   The document chapters.
    */
   public function getChapters();
+
+  /**
+   * Get the chapters of the document.
+   *
+   * @param int $id
+   *   The chapter id on the remote.
+   *
+   * @return \Drupal\ghi_content\RemoteContent\RemoteChapterInterface
+   *   The document chapter.
+   */
+  public function getChapter($id);
 
   /**
    * Get the summary text of the document.

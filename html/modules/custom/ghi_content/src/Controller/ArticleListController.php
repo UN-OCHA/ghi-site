@@ -27,7 +27,7 @@ class ArticleListController extends ControllerBase {
   /**
    * The machine name of the view to use for this article list.
    */
-  const VIEW_NAME = 'articles_by_tags';
+  const VIEW_NAME = 'content_by_tags';
 
   /**
    * The machine name of the views display to use for this article list.
@@ -140,7 +140,9 @@ class ArticleListController extends ControllerBase {
       '#type' => 'view',
       '#name' => self::VIEW_NAME,
       '#display_id' => self::VIEW_DISPLAY,
-      '#arguments' => array_keys($section_tags),
+      '#arguments' => [
+        implode(',', array_keys($section_tags)),
+      ],
       '#embed' => TRUE,
     ];
     return $build;

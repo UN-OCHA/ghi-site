@@ -1,0 +1,22 @@
+uuid: a92bf142-24c2-4c34-b03e-9d0afa876f8b
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_sections
+  theme:
+    - common_design_subtheme
+id: sectionnavigation
+theme: common_design_subtheme
+region: page_navigation
+weight: -7
+provider: null
+plugin: section_navigation
+settings:
+  id: section_navigation
+  label: 'Section navigation'
+  label_display: '0'
+  provider: ghi_sections
+  context_mapping:
+    node: '@node.node_route_context:node'
+visibility: {  }

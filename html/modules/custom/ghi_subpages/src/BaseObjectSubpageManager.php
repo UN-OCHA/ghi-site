@@ -11,7 +11,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\ghi_sections\SectionManager;
 
 /**
- * Base manager service class..
+ * Base manager service class.
  */
 abstract class BaseObjectSubpageManager {
 

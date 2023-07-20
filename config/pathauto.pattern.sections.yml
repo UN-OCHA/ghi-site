@@ -9,10 +9,10 @@ label: Sections
 type: 'canonical_entities:node'
 pattern: '[node:field_base_object:entity:type]/[node:field_base_object:entity:field_original_id]/[node:field_year]'
 selection_criteria:
-  92328ccb-ae93-4279-a035-09244e0a3e18:
-    id: node_type
+  1d2e8ff8-a8ad-4460-95a9-6ef73981d5d9:
+    id: 'entity_bundle:node'
     negate: false
-    uuid: 92328ccb-ae93-4279-a035-09244e0a3e18
+    uuid: 1d2e8ff8-a8ad-4460-95a9-6ef73981d5d9
     context_mapping:
       node: node
     bundles:

@@ -44,6 +44,8 @@ function ghi_sections_entity_bundle_field_info_alter(&$fields, EntityTypeInterfa
 function ghi_sections_preprocess_page_title(&$variables) {
   $node = \Drupal::routeMatch()->getParameter('node');
   $is_admin_route = \Drupal::service('router.admin_context')->isAdminRoute();
+  /** @var \Drupal\ghi_sections\SectionManager $section_manager */
+  $section_manager = \Drupal::service('ghi_sections.manager');
   if ($is_admin_route || !$node instanceof NodeInterface) {
     return;
   }
@@ -51,8 +53,8 @@ function ghi_sections_preprocess_page_title(&$variables) {
     if ($node instanceof GlobalSection) {
       $variables['title'] = NULL;
     }
-    if ($node instanceof Section) {
-      $variables['title'] = $node->getPageTitle();
+    if ($section = $section_manager->getCurrentSection($node)) {
+      $variables['title'] = $section->getPageTitle();
     }
   }
 }

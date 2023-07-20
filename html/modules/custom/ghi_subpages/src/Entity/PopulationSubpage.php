@@ -3,7 +3,7 @@
 namespace Drupal\ghi_subpages\Entity;
 
 /**
- * Base class for subpage nodes.
+ * Entity bundle class for population subpage nodes.
  */
 class PopulationSubpage extends SubpageNode {
 

@@ -52,4 +52,14 @@ abstract class RemoteContentBase implements RemoteContentInterface {
     return $this->source->getContentUrl($this->getId(), $type);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  abstract public function getMajorTags();
+
+  /**
+   * {@inheritdoc}
+   */
+  abstract public function getMinorTags();
+
 }

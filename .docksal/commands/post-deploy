@@ -37,11 +37,21 @@ done
 if $IMPORT_BACKUP; then
   BACKUP_DIRECTORY="$PROJECT_ROOT/.docksal/backups"
   echo "Looking for backups in ${BACKUP_DIRECTORY}"
-
-  FILENAME=$(ls -la ${BACKUP_DIRECTORY} | egrep '.sql.gz|.sql' | tail -n 1 | awk '{print $9}')
+  FILENAMES=(`ls -la ${BACKUP_DIRECTORY} | egrep '.sql.gz|.sql' | awk '{print $9}'`)
+  COUNT_FILES=${#FILENAMES[@]}
+  if [[ ${COUNT_FILES} -gt 1 ]]; then
+    echo "Found ${COUNT_FILES} files"
+    select FILENAME in ${FILENAMES[@]}; do
+      FILEPATH=${BACKUP_DIRECTORY}/${FILENAME}
+      break
+      done
+  elif [[ ${COUNT_FILES} -eq 1 ]]; then
+    echo "Found 1 file"
+    FILENAME=${FILENAMES[0]}
+  fi
   FILEPATH=${BACKUP_DIRECTORY}/${FILENAME}
   if [[ ! -z "$FILENAME" && -f "${FILEPATH}" ]]; then
-    echo "Found ${FILENAME}"
+    echo "Using ${FILENAME}"
 
     echo "Dropping existing tables"
     drush sql:drop -y >/dev/null

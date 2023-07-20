@@ -9,10 +9,10 @@ label: 'Plan clusters'
 type: 'canonical_entities:node'
 pattern: '[node:field_entity_reference:entity:url:path]/ge/[node:field_base_object:entity:field_original_id]'
 selection_criteria:
-  92328ccb-ae93-4279-a035-09244e0a3e18:
-    id: node_type
+  3e41c3b4-071d-4778-b8c8-f3ab9653668e:
+    id: 'entity_bundle:node'
     negate: false
-    uuid: 92328ccb-ae93-4279-a035-09244e0a3e18
+    uuid: 3e41c3b4-071d-4778-b8c8-f3ab9653668e
     context_mapping:
       node: node
     bundles:

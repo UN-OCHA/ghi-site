@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
@@ -299,7 +300,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
       return NULL;
     }
 
-    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($data, $context_object->bundle() != 'plan' ? $context_object : NULL, $entity_type);
+    $matching_entities = ApiEntityHelper::getMatchingPlanEntities($data, $context_object?->bundle() != 'plan' ? $context_object : NULL, $entity_type);
     if (empty($matching_entities)) {
       return NULL;
     }
@@ -316,6 +317,10 @@ class PlanEntitiesQuery extends EndpointQueryBase {
     if (is_array($filters) && !empty($filters)) {
       $plan_entities = ArrayHelper::filterArray($plan_entities, $filters);
     }
+    $entity_ids = array_map(function (EntityObjectInterface $entity) {
+      return $entity->id();
+    }, $plan_entities);
+    $plan_entities = array_combine($entity_ids, $plan_entities);
     $this->cache($cache_key, $plan_entities);
     return $plan_entities;
   }
@@ -359,6 +364,32 @@ class PlanEntitiesQuery extends EndpointQueryBase {
     }
     $this->cache($cache_key, $cluster_ids);
     return $cluster_ids;
+  }
+
+  /**
+   * Get options for the entity type dropdown.
+   *
+   * @return array
+   *   An array with valid options for the current context.
+   */
+  public function getEntityRefCodeOptions($entities) {
+    $options = [];
+    if (empty($entities)) {
+      return $options;
+    }
+    $weight = [];
+    foreach ($entities as $entity) {
+      $ref_code = $entity->ref_code;
+      if (empty($options[$ref_code])) {
+        $name = $entity->plural_name;
+        $options[$ref_code] = $name;
+        $weight[$ref_code] = $entity->order_number;
+      }
+    }
+    uksort($options, function ($ref_code_a, $ref_code_b) use ($weight) {
+      return $weight[$ref_code_a] - $weight[$ref_code_b];
+    });
+    return $options;
   }
 
 }

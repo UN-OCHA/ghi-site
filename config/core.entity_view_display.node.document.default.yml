@@ -3,19 +3,26 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.node.document.field_base_objects
+    - field.field.node.document.field_display_hero_image
     - field.field.node.document.field_entity_reference
-    - field.field.node.document.field_hero_image
+    - field.field.node.document.field_image
+    - field.field.node.document.field_inherit_section_image
     - field.field.node.document.field_remote_document
+    - field.field.node.document.field_short_title
+    - field.field.node.document.field_summary
+    - field.field.node.document.field_tags
     - field.field.node.document.field_team
     - field.field.node.document.layout_builder__layout
     - node.type.document
   module:
     - ghi_content
-    - ghi_hero_image
+    - image
     - layout_builder
     - layout_builder_ipe
     - layout_builder_restrictions
     - layout_discovery
+    - text
     - user
 third_party_settings:
   layout_builder:
@@ -83,20 +90,42 @@ targetEntityType: node
 bundle: document
 mode: default
 content:
+  field_base_objects:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 110
+    region: content
+  field_display_hero_image:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 109
+    region: content
   field_entity_reference:
     type: entity_reference_label
     label: above
     settings:
       link: true
     third_party_settings: {  }
-    weight: 103
+    weight: 112
     region: content
-  field_hero_image:
-    type: ghi_hero_image
+  field_image:
+    type: image
     label: above
-    settings: {  }
+    settings:
+      image_link: ''
+      image_style: ''
+      image_loading:
+        attribute: lazy
     third_party_settings: {  }
-    weight: 104
+    weight: 111
     region: content
   field_remote_document:
     type: ghi_remote_document
@@ -105,13 +134,36 @@ content:
     third_party_settings: {  }
     weight: 105
     region: content
+  field_short_title:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 108
+    region: content
+  field_summary:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 106
+    region: content
+  field_tags:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 107
+    region: content
   field_team:
     type: entity_reference_label
     label: above
     settings:
       link: true
     third_party_settings: {  }
-    weight: 102
+    weight: 113
     region: content
   links:
     settings: {  }
@@ -119,5 +171,6 @@ content:
     weight: 100
     region: content
 hidden:
+  field_inherit_section_image: true
   langcode: true
   layout_builder__layout: true

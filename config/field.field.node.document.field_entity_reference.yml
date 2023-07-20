@@ -1,4 +1,4 @@
-uuid: d9f9ba81-f2a4-403d-900a-1e8e5cd1f41f
+uuid: c26c828a-9bea-4112-bb83-896fe635e8cb
 langcode: en
 status: true
 dependencies:
@@ -11,8 +11,8 @@ id: node.document.field_entity_reference
 field_name: field_entity_reference
 entity_type: node
 bundle: document
-label: Section
-description: 'The section this document belongs to.'
+label: 'Entity reference (deprecated)'
+description: ''
 required: false
 translatable: true
 default_value: {  }

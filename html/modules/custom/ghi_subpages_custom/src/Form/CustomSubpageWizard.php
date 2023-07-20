@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
+use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_subpages_custom\CustomSubpageManager;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -119,6 +120,7 @@ class CustomSubpageWizard extends FormBase {
       $this->messenger()->addError($this->t('No teams found. You must import teams before sections can be created.'));
       return $form;
     }
+    $team_options = ['inherit' => $this->t('Inherit from section')] + $team_options;
 
     // Define our steps.
     $steps = array_values(array_filter([
@@ -130,10 +132,23 @@ class CustomSubpageWizard extends FormBase {
 
     // Find out in which step we currently are.
     $step = $form_state->get('step') ?: array_key_first($steps);
+    $first_step = array_key_first($steps);
     $action = self::getActionFromFormState($form_state);
 
+    if (in_array('section', $allowed_section_types) && $section_id = $this->getRequest()->query->get('section')) {
+      $_section = $this->entityTypeManager->getStorage('node')->load($section_id);
+      if ($_section instanceof Section) {
+        $section_type = $_section->type->entity;
+        $section = $_section;
+        $form_state->setValue('type', $section_type);
+        $form_state->setValue('section', $section);
+        $step = $step <= array_flip($steps)['title'] ? array_flip($steps)['title'] : $step;
+        $first_step = array_flip($steps)['title'];
+      }
+    }
+
     // Do the step navigation.
-    if ($action === 'back' && $step > 0) {
+    if ($action === 'back' && $step > $first_step) {
       $step--;
     }
     elseif ($action == 'next' && $step < count($steps)) {
@@ -186,12 +201,12 @@ class CustomSubpageWizard extends FormBase {
       '#title' => $this->t('Team'),
       '#options' => $team_options,
       '#description' => $this->t('Select the team that will be responsible for this page. Leave empty to inherit the team from the section.'),
-      '#default_value' => $form_state->getValue('team'),
+      '#default_value' => $form_state->getValue('team') ?? 'inherit',
       '#disabled' => $step > array_flip($steps)['team'],
       '#access' => $step >= array_flip($steps)['team'],
     ];
 
-    if ($step > 0) {
+    if ($step > $first_step) {
       $form['actions']['back'] = [
         '#type' => 'button',
         '#value' => $this->t('Back'),
@@ -225,6 +240,9 @@ class CustomSubpageWizard extends FormBase {
         '#type' => 'submit',
         '#button_type' => 'primary',
         '#value' => $this->t('Create custom subpage'),
+        '#validate' => [
+          '::validateEntity',
+        ],
       ];
     }
 
@@ -232,27 +250,48 @@ class CustomSubpageWizard extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Custom callback for entity validation.
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    // Not used yet, but keep here for the future.
+  public function validateEntity(array &$form, FormStateInterface $form_state) {
+    $subpage = $this->createSubpageFromValues($form_state);
+    $violations = $subpage->validate();
+    if ($violations->count()) {
+      foreach ($violations as $violation) {
+        $form_state->setError($form, $violation->getMessage());
+      }
+    }
   }
 
   /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    // Clear the error messages.
+    $this->messenger()->deleteAll();
+
+    $subpage = $this->createSubpageFromValues($form_state);
+    $status = $subpage->save();
+    if ($status) {
+      $this->messenger()->addStatus($this->t('Created @type for @title', [
+        '@type' => $subpage->type->entity->label(),
+        '@title' => $subpage->label(),
+      ]));
+    }
+    $form_state->setRedirectUrl($subpage->toUrl());
+  }
+
+  /**
+   * Create a subpage node from the submitted form values.
+   *
+   * @return \Drupal\ghi_subpages_custom\Entity\CustomSubpage
+   *   The created custom subpage object, not saved yet.
+   */
+  private function createSubpageFromValues(FormStateInterface $form_state) {
     $values = array_intersect_key($form_state->getValues(), array_flip([
       'year',
       'team',
       'title',
     ]));
-
-    $section = $this->getSubmittedSection($form_state);
-
-    // Clear the error messages.
-    $this->messenger()->deleteAll();
-
     // Create and save the section.
     $subpage = $this->entityTypeManager->getStorage('node')->create([
       'type' => CustomSubpageManager::BUNDLE,
@@ -263,19 +302,12 @@ class CustomSubpageWizard extends FormBase {
         'source' => 'inherit',
       ],
     ]);
+    $section = $this->getSubmittedSection($form_state);
     $subpage->field_entity_reference->entity = $section;
-    if (!empty($values['team'])) {
+    if (!empty($values['team']) && $values['team'] != 'inherit') {
       $subpage->field_team = $values['team'];
     }
-    $status = $subpage->save();
-    if ($status) {
-      $this->messenger()->addStatus($this->t('Created @type for @title', [
-        '@type' => $subpage->type->entity->label(),
-        '@title' => $subpage->label(),
-      ]));
-    }
-
-    $form_state->setRedirectUrl($subpage->toUrl());
+    return $subpage;
   }
 
   /**

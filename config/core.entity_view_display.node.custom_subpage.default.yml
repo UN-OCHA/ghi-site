@@ -12,6 +12,7 @@ dependencies:
     - ghi_hero_image
     - layout_builder
     - layout_builder_ipe
+    - layout_builder_restrictions
     - layout_discovery
     - user
 third_party_settings:
@@ -27,9 +28,35 @@ third_party_settings:
         components: {  }
         third_party_settings:
           layout_builder_lock:
-            lock: {  }
+            lock:
+              5: 5
+              6: 6
+              7: 7
   layout_builder_ipe:
     enabled: true
+  layout_builder_restrictions:
+    allowed_block_categories: {  }
+    entity_view_mode_restriction:
+      allowed_layouts: {  }
+      denylisted_blocks: {  }
+      allowlisted_blocks:
+        'Inline blocks':
+          - 'inline_block:basic'
+      restricted_categories:
+        - 'Chaos Tools'
+        - 'Content fields'
+        - Forms
+        - Global
+        - HID
+        - 'Lists (Views)'
+        - Menus
+        - Page
+        - 'Plan cluster elements'
+        - 'Social Auth'
+        - System
+        - User
+        - Views
+        - core
 id: node.custom_subpage.default
 targetEntityType: node
 bundle: custom_subpage

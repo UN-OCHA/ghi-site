@@ -1,0 +1,4 @@
+entity.node.section_navigation_form:
+  route_name: ghi_sections.node.section_navigation
+  title: 'Section navigation'
+  base_route: entity.node.canonical

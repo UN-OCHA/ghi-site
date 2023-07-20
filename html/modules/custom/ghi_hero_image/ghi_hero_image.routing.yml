@@ -1,0 +1,9 @@
+ghi_hero_image.config:
+  path: '/admin/config/ghi/image'
+  defaults:
+    _form: '\Drupal\ghi_hero_image\Form\ImageSettingsForm'
+    _title: 'Image settings'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer ghi global config'

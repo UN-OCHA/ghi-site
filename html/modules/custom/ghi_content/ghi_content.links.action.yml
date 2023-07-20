@@ -8,3 +8,14 @@ ghi_content.node.article_update:
   title: Update articles
   appears_on:
     - ghi_content.node.articles
+
+ghi_content.document_update:
+  route_name: ghi_content.documents.update
+  title: Update documents
+  appears_on:
+    - view.content.page_documents
+ghi_content.node.document_update:
+  route_name: ghi_content.node.documents.update
+  title: Update documents
+  appears_on:
+    - ghi_content.node.documents

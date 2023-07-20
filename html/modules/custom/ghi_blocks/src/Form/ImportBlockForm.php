@@ -89,7 +89,6 @@ class ImportBlockForm extends ConfigureBlockFormBase {
         break;
     }
 
-    $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
     $this->makeGinLbForm($form, $form_state);
     return $form;
   }
@@ -126,6 +125,7 @@ class ImportBlockForm extends ConfigureBlockFormBase {
       '#value' => $this->t('Validate and import'),
     ];
     if ($this->isAjax()) {
+      $form['actions']['import']['#ajax']['rebuild'] = TRUE;
       $form['actions']['import']['#ajax']['callback'] = '::ajaxSubmit';
       $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);
     }

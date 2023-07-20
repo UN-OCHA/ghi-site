@@ -1,0 +1,17 @@
+uuid: 01a2ff98-c6b1-4c78-a14f-ea7a7391c27e
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: Progress
+type: progress
+description: 'A progress page for any of the base entities of this site, e.g. for plans, countries, regions, ...'
+help: ''
+new_revision: true
+preview_mode: 0
+display_submitted: false

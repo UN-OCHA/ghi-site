@@ -103,8 +103,17 @@ input[type="checkbox"][disabled="disabled"]:not(:checked) {
 }
 .ui-dialog[aria-describedby="layout-builder-modal"] {
   z-index: 1004;
+  line-height: inherit !important;
 }
 .ui-widget-overlay .ui-dialog-title {
   height: 100%;
   line-height: 2.5rem;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.ui-dialog .ui-dialog-titlebar {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
 }

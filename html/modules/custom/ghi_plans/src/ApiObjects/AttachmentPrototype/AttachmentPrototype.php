@@ -20,6 +20,9 @@ class AttachmentPrototype extends ApiObjectBase {
    */
   protected function map() {
     $prototype = $this->getRawData();
+    $metric_fields = array_map(function ($item) {
+      return $item->name->en;
+    }, $prototype->value->metrics ?? []);
     $measurement_fields = array_map(function ($item) {
       return $item->name->en;
     }, $prototype->value->measureFields ?? []);
@@ -43,6 +46,7 @@ class AttachmentPrototype extends ApiObjectBase {
         }, $prototype->value->measureFields ?? [])
       ),
       'entity_ref_codes' => $prototype->value->entities ?? [],
+      'metric_fields' => $metric_fields,
       'measurement_fields' => $measurement_fields,
       'calculation_methods' => $prototype->value->calculationMethod ?? [],
     ];
@@ -83,6 +87,19 @@ class AttachmentPrototype extends ApiObjectBase {
    */
   public function getFields() {
     return $this->fields;
+  }
+
+  /**
+   * Get the fields that represent measurement metrics.
+   *
+   * @return string[]
+   *   An array of metric names.
+   */
+  public function getGoalMetricFields() {
+    $fields = $this->metric_fields;
+    return array_filter($this->fields, function ($field) use ($fields) {
+      return in_array($field, $fields);
+    });
   }
 
   /**

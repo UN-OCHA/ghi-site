@@ -9,6 +9,7 @@ use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
 use Drupal\panels_ipe\Form\PanelsIPEBlockPluginForm;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -16,6 +17,20 @@ use Symfony\Component\HttpFoundation\Request;
  * Helper class for everything request related.
  */
 class RequestHelper {
+
+  /**
+   * Get the node object from the current request if possible.
+   *
+   * @return \Drupal\node\NodeInterface|null
+   *   The node object or NULL if none is available.
+   */
+  public static function getCurrentNodeObject() {
+    $node = \Drupal::routeMatch()->getParameter('node');
+    if (!$node instanceof NodeInterface || !$node->getFieldDefinitions()) {
+      return;
+    }
+    return $node;
+  }
 
   /**
    * Get the current route arguments..

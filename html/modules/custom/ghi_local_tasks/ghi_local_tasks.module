@@ -35,6 +35,31 @@ function ghi_local_tasks_local_tasks_render_alter(&$data, $route_name, Refinable
 }
 
 /**
+ * Implements hook_menu_local_tasks_alter().
+ *
+ * Add the current url as a destination argument.
+ */
+function ghi_local_tasks_menu_local_tasks_alter(&$data, $route_name, RefinableCacheableDependencyInterface &$cacheability) {
+  $route_names = [
+    'entity.node.edit_form',
+  ];
+  if (!array_key_exists('tabs', $data) || !array_key_exists(0, $data['tabs'])) {
+    return;
+  }
+  foreach ($data['tabs'][0] as $_route_name => &$element) {
+    if (!in_array($_route_name, $route_names)) {
+      continue;
+    }
+    $request = \Drupal::request();
+    /** @var \Drupal\Core\Url $url */
+    $url = $element['#link']['url'];
+    $query = $url->getOption('query');
+    $query['destination'] = $request->query->has('destination') ? $request->query->get('destination') : $request->getPathInfo();
+    $url->setOption('query', $query);
+  }
+}
+
+/**
  * Implements hook_link_alter().
  *
  * This is used to rename "Local tasks" to something more "in-context".

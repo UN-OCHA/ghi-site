@@ -1,0 +1,4 @@
+admin.section_navigation:
+  css:
+    component:
+      css/admin/section-navigation.css: {}

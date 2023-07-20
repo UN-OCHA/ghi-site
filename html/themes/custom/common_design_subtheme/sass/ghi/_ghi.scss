@@ -12,7 +12,9 @@
 
 // Blocks
 @import "blocks/article-collection";
+@import "blocks/article-title";
 @import "blocks/common";
+@import "blocks/document-chapter";
 @import "blocks/document-link-button";
 @import "blocks/document-links";
 @import "blocks/document-subheading";
@@ -31,15 +33,15 @@
 @import "blocks/plan-table";
 @import "blocks/plan-webcontent";
 @import "blocks/section-collection";
-@import "blocks/section-metadata";
 @import "blocks/section-switcher";
-@import "blocks/subpage-navigation";
 @import "blocks/subpage-title";
 
 // Other components
 @import "components/cluster-icons";
 @import "components/download-dialog";
+@import "components/entity-navigation";
 @import "components/images";
+@import "components/metadata";
 @import "components/modal";
 @import "components/pie-chart";
 @import "components/plan-entity-contributions";
@@ -53,7 +55,7 @@
 
 // Content
 @import "content/article-grid";
-@import "content/article-page";
+@import "content/content-page";
 @import "content/homepage";
 
 // Downloads

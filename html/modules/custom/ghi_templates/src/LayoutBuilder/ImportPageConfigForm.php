@@ -8,7 +8,6 @@ use Drupal\Core\Ajax\AjaxHelperTrait;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Ajax\RedirectCommand;
-use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -17,6 +16,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Traits\GinLbModalTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\hpc_common\Traits\AjaxFormTrait;
 use Drupal\layout_builder\Controller\LayoutRebuildTrait;
 use Drupal\layout_builder\LayoutBuilderHighlightTrait;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
@@ -37,6 +37,7 @@ class ImportPageConfigForm extends FormBase {
   use LayoutRebuildTrait;
   use GinLbModalTrait;
   use AjaxHelperTrait;
+  use AjaxFormTrait;
 
   /**
    * The form steps for the import wizard.
@@ -127,10 +128,8 @@ class ImportPageConfigForm extends FormBase {
         break;
     }
 
-    $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
-    $this->makeGinLbForm($form, $form_state);
-
     if ($this->isAjax()) {
+      $form['actions']['submit']['#ajax']['rebuild'] = FALSE;
       $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
       // @todo static::ajaxSubmit() requires data-drupal-selector to be the same
       //   between the various Ajax requests. A bug in
@@ -143,6 +142,7 @@ class ImportPageConfigForm extends FormBase {
       $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);
     }
 
+    $this->makeGinLbForm($form, $form_state);
     return $form;
   }
 
@@ -153,9 +153,6 @@ class ImportPageConfigForm extends FormBase {
 
     $form['settings'] = [
       '#type' => 'container',
-      '#attributes' => [
-        'class' => ['canvas-form__settings'],
-      ],
     ];
 
     $config = $this->getSubmittedConfig($form_state);
@@ -169,15 +166,13 @@ class ImportPageConfigForm extends FormBase {
 
     $form['actions'] = [
       '#type' => 'container',
-      '#attributes' => [
-        'class' => ['canvas-form__actions'],
-      ],
     ];
     $form['actions']['validate'] = [
       '#type' => 'submit',
       '#value' => $this->t('Validate'),
     ];
     if ($this->isAjax()) {
+      $form['actions']['validate']['#ajax']['rebuild'] = TRUE;
       $form['actions']['validate']['#ajax']['callback'] = '::ajaxSubmit';
       $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);
     }
@@ -238,9 +233,6 @@ class ImportPageConfigForm extends FormBase {
 
     $form['settings'] = [
       '#type' => 'container',
-      '#attributes' => [
-        'class' => ['canvas-form__settings'],
-      ],
     ];
 
     $form['settings']['overwrite'] = [
@@ -248,8 +240,6 @@ class ImportPageConfigForm extends FormBase {
       '#title' => $this->t('Clear layout'),
       '#description' => $this->t('If checked, this will remove all existing page elements from the current page before doing the import. If unchecked, the imported configuration will be appended to the current page instead.'),
       '#default_value' => FALSE,
-      '#gin_lb_form_element' => FALSE,
-      '#gin_lb_form' => FALSE,
     ];
 
     $form['settings']['summary'] = [
@@ -268,9 +258,6 @@ class ImportPageConfigForm extends FormBase {
 
     $form['actions'] = [
       '#type' => 'container',
-      '#attributes' => [
-        'class' => ['canvas-form__actions'],
-      ],
     ];
     $form['actions']['back'] = [
       '#type' => 'submit',
@@ -281,6 +268,7 @@ class ImportPageConfigForm extends FormBase {
       '#value' => $this->t('Import'),
     ];
     if ($this->isAjax()) {
+      $form['actions']['back']['#ajax']['rebuild'] = TRUE;
       $form['actions']['back']['#ajax']['callback'] = '::ajaxSubmit';
       $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
       $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);
@@ -300,37 +288,6 @@ class ImportPageConfigForm extends FormBase {
    */
   private function getSubmittedConfig(FormStateInterface $form_state) {
     return $form_state->getValue('config') ?? ($form_state->get('config') ? Yaml::encode($form_state->get('config')) : NULL);
-  }
-
-  /**
-   * Submit form dialog #ajax callback.
-   *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
-   *
-   * @return \Drupal\Core\Ajax\AjaxResponse
-   *   An AJAX response that display validation error messages or represents a
-   *   successful submission.
-   */
-  public function ajaxSubmit(array &$form, FormStateInterface $form_state) {
-    $action = end($form_state->getTriggeringElement()['#parents']);
-    if ($form_state->hasAnyErrors() || $action != 'submit') {
-      if ($form_state->hasAnyErrors()) {
-        $form['status_messages'] = [
-          '#type' => 'status_messages',
-          '#weight' => -1000,
-        ];
-      }
-      $form['#sorted'] = FALSE;
-      $response = new AjaxResponse();
-      $response->addCommand(new ReplaceCommand('[data-drupal-selector="' . $form['#attributes']['data-drupal-selector'] . '"]', $form));
-    }
-    else {
-      $response = $this->successfulAjaxSubmit($form, $form_state);
-    }
-    return $response;
   }
 
   /**

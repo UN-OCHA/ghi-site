@@ -8,7 +8,7 @@ use Drupal\Core\Session\AccountInterface;
 /**
  * Bundle class for homepage section nodes.
  */
-class Homepage extends GlobalSection implements SectionNodeInterface {
+class Homepage extends GlobalSection implements SectionNodeInterface, ImageNodeInterface {
 
   /**
    * {@inheritdoc}
