@@ -71,14 +71,8 @@ drush sset system.maintenance_mode 1 -y
 echo "Clear cache"
 drush cr
 
-echo "Run non-data updates"
-drush updatedb -y --no-post-updates
-
-echo "Import configuration"
-drush cim -y
-
-echo "Run all updates"
-drush updatedb -y
+echo "Run the deploy commands"
+drush deploy
 
 echo "Set maintenance mode to off"
 drush sset system.maintenance_mode 0 -y
