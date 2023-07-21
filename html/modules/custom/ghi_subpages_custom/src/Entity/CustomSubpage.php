@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_subpages_custom\Entity;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_subpages\Entity\SubpageManualInterface;
@@ -22,6 +23,7 @@ class CustomSubpage extends SubpageNode implements SubpageManualInterface {
     if ($section instanceof Section) {
       $this->createSectionMenuItem($this);
     }
+    Cache::invalidateTags($section->getCacheTags());
   }
 
   /**
