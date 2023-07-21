@@ -105,7 +105,7 @@ class SectionMenuStorage {
   public function getSectionMenuItems() {
     /** @var \Drupal\ghi_sections\Field\SectionMenuItemList $menu_item_list */
     $menu_item_list = $this->getSection()?->get(self::FIELD_NAME) ?? NULL;
-    if ($menu_item_list->isEmpty()) {
+    if ($menu_item_list && $menu_item_list->isEmpty()) {
       $menu_item_list->setMenuItems($this->getDefaultMenuItems());
     }
     return $menu_item_list;
