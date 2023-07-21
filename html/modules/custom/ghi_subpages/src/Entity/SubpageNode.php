@@ -27,8 +27,11 @@ abstract class SubpageNode extends Node implements SubpageNodeInterface {
    * {@inheritdoc}
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    parent::postSave($storage, $update);
     $parent = $this->getParentNode();
-    Cache::invalidateTags($parent->getCacheTags());
+    if ($parent) {
+      Cache::invalidateTags($parent->getCacheTags());
+    }
   }
 
 }

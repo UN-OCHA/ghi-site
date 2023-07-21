@@ -83,10 +83,23 @@ class AttachmentPrototype extends ApiObjectBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Get the available fields for this prototype.
+   *
+   * @return string[]
+   *   An array of field labels, keyed by their index.
    */
   public function getFields() {
     return $this->fields;
+  }
+
+  /**
+   * Get the available field types for this prototype.
+   *
+   * @return string[]
+   *   An array of field types, keyed by their index.
+   */
+  public function getFieldTypes() {
+    return $this->field_types;
   }
 
   /**
