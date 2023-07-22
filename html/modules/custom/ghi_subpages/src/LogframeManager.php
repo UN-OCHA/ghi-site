@@ -5,6 +5,7 @@ namespace Drupal\ghi_subpages;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Plugin\Context\ContextHandlerInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -33,6 +34,7 @@ class LogframeManager implements ContainerInjectionInterface {
   use StringTranslationTrait;
   use LayoutEntityHelperTrait;
   use AttachmentTableTrait;
+  use DependencySerializationTrait;
 
   /**
    * The block manager.
