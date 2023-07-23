@@ -8,7 +8,9 @@ use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemCustomActionsInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_form_elements\Traits\ConfigurationContainerItemCustomActionTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
@@ -26,6 +28,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class AttachmentTable extends ConfigurationContainerItemPluginBase implements ConfigurationContainerItemCustomActionsInterface, AttachmentTableInterface {
 
   use ConfigurationContainerTrait;
+  use ConfigurationContainerItemCustomActionTrait;
   use AttachmentTableTrait;
 
   /**
@@ -114,17 +117,34 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   /**
    * {@inheritdoc}
    */
+  public function isValidAction($action) {
+    return $this->getAttachmentPrototype() instanceof AttachmentPrototype;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
     $element['label']['#access'] = FALSE;
     $options = $this->getAttachmentPrototypeOptions();
     $prototype = $this->getAttachmentPrototype();
+    $attachment_prototypes = $this->getAttachmentPrototypesForEntities();
     $table_columns = $this->getConfig()['table_form']['columns'] ?? [];
-    if (empty($options)) {
+    if (empty($options) && !empty($attachment_prototypes)) {
       $element['empty_message'] = [
         '#type' => 'html_tag',
         '#tag' => 'p',
-        '#value' => $this->t('There are no attachment prototypes available anymore. All attachment prototypes based on the entities selected for this element are already in use.'),
+        '#value' => $this->t('There are no attachment prototypes available anymore. All @count attachment prototypes available for the selected entities are already in use.', [
+          '@count' => count($attachment_prototypes),
+        ]),
+      ];
+    }
+    elseif (empty($options) && empty($attachment_prototypes)) {
+      $element['empty_message'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#value' => $this->t('There are no attachment prototypes available for the currently selected entities.'),
       ];
     }
     else {
@@ -420,6 +440,9 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    *   "column".
    */
   public function getColumnsSummary() {
+    if (!$this->getAttachmentPrototype()) {
+      return NULL;
+    }
     return count($this->getColumns()) ?: $this->t('Not configured');
   }
 
@@ -432,7 +455,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    */
   public function getLabel() {
     $prototype = $this->getAttachmentPrototype();
-    return $prototype ? $prototype->getName() : NULL;
+    return $prototype ? $prototype->getName() : $this->t('Invalid prototype');
   }
 
   /**

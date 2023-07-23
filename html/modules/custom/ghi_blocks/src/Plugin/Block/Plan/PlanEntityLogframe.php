@@ -209,6 +209,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     }
 
     $attachments = $this->getAttachmentsForEntities([$entity]);
+    $attachment_prototypes = $this->getAttachmentPrototypes();
 
     $context = $this->getBlockContext();
     $context['attachments'] = $attachments;
@@ -217,6 +218,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     foreach ($conf['attachment_tables'] as $table) {
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
       $item_type = $this->getItemTypePluginForColumn($table, $context);
+      if (!array_key_exists($item_type->get('attachment_prototype'), $attachment_prototypes)) {
+        continue;
+      }
       $table = $item_type->getRenderArray();
       if (!$table) {
         continue;
