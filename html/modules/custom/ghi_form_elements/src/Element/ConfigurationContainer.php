@@ -914,6 +914,7 @@ class ConfigurationContainer extends FormElement {
           '#value' => $label,
           '#name' => 'custom-action--' . $element_key . '--' . $key,
           '#custom_action' => $element_key,
+          '#disabled' => !$item_type->isValidAction($element_key),
           '#ajax' => [
             'event' => 'click',
             'callback' => [static::class, 'updateAjax'],

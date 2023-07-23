@@ -16,4 +16,15 @@ interface ConfigurationContainerItemCustomActionsInterface {
    */
   public function getCustomActions();
 
+  /**
+   * Check if the given action is valid.
+   *
+   * @param string $action
+   *   An action key as defined in getCustomActions().
+   *
+   * @return bool
+   *   TRUE if the action is valid, FALSE otherwise.
+   */
+  public function isValidAction($action);
+
 }

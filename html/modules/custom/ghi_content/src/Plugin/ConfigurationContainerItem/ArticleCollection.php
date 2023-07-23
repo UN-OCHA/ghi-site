@@ -8,6 +8,7 @@ use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_form_elements\ConfigurationContainerItemCustomActionsInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
+use Drupal\ghi_form_elements\Traits\ConfigurationContainerItemCustomActionTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_sections\SectionTrait;
 use Drupal\taxonomy\Entity\Term;
@@ -25,6 +26,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ArticleCollection extends ConfigurationContainerItemPluginBase implements ConfigurationContainerItemCustomActionsInterface {
 
   use SectionTrait;
+  use ConfigurationContainerItemCustomActionTrait;
 
   const MAX_FEATURE_COUNT = 2;
   const CARD_LIMIT = 15;
