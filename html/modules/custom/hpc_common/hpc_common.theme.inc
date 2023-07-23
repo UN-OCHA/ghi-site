@@ -293,6 +293,9 @@ function hpc_common_preprocess_hpc_tooltip(array &$vars) {
  * Preprocess a popover.
  */
 function hpc_common_preprocess_hpc_popover(array &$vars) {
+  if (\Drupal::moduleHandler()->moduleExists('gin_lb')) {
+    $vars['#attached']['library'][] = 'gin_lb/gin_lb';
+  }
   $vars['#attached']['library'][] = 'hpc_common/popover';
 
   $trigger_attributes = new Attribute();
