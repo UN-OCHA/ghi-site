@@ -12,8 +12,7 @@ use Drupal\ghi_form_elements\Traits\ConfigurationContainerItemCustomActionTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
-use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
-use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -61,7 +60,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
       $attachments = array_intersect_key($attachments, $attachment_ids);
     }
 
-    /** @var \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity $entity */
+    /** @var \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $plan_entity */
     $plan_entity = $this->getContextValue('plan_entity');
     $attachments = $this->filterAttachments($attachments, $prototype_id, $plan_entity);
     $columns = $this->getColumns();
@@ -227,7 +226,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    * Build the article selection subform.
    */
   public function attachmentForm($element, FormStateInterface $form_state, $defaults = NULL) {
-    /** @var \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[] $entities */
+    /** @var \Drupal\ghi_plans\ApiObjects\PlanEntityInterface[] $entities */
     $entities = $entities ?? $this->getContextValue('entities');
     $attachments = $this->getAttachmentsForEntities($entities);
     $attachment_options = [];
@@ -330,14 +329,14 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   /**
    * Get the available attachment prototypes for the given entities.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[] $entities
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface[] $entities
    *   The plan entity objects.
    *
    * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[]
    *   An array of attachment prototype objects.
    */
   private function getAttachmentPrototypesForEntities(array $entities = NULL) {
-    /** @var \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[] $entities */
+    /** @var \Drupal\ghi_plans\ApiObjects\PlanEntityInterface[] $entities */
     $entities = $entities ?? $this->getContextValue('entities');
 
     $context = $this->getContext();
@@ -348,7 +347,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   /**
    * Get attachments for the given set of entities.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[] $entities
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface[] $entities
    *   The plan entity objects.
    * @param int $prototype_id
    *   An optional prototype id to filter for.
@@ -360,13 +359,14 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
     if (empty($entities)) {
       return NULL;
     }
-    $entity_ids = array_map(function (EntityObjectInterface $entity) {
+    $entity_ids = array_map(function (PlanEntityInterface $entity) {
       return $entity->id();
     }, $entities);
 
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
     $query = $this->endpointQueryManager->createInstance('attachment_search_query');
     $attachments = $query->getAttachmentsByObject('planEntity', $entity_ids);
+    $attachments = array_merge($attachments, $query->getAttachmentsByObject('governingEntity', $entity_ids));
     // Filter the attachments.
     return $this->filterAttachments($attachments, $prototype_id);
   }
@@ -381,7 +381,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    *   The attachments to filter.
    * @param int $prototype_id
    *   An optional prototype id to filter for.
-   * @param \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity $plan_entity
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $plan_entity
    *   An optional plan entity object.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
@@ -396,7 +396,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
         return FALSE;
       }
       $source_entity = $attachment->getSourceEntity();
-      if (!$source_entity instanceof PlanEntity) {
+      if (!$source_entity instanceof PlanEntityInterface) {
         return FALSE;
       }
       if ($plan_entity && $plan_entity->id() != $source_entity->id()) {

@@ -7,11 +7,4 @@ namespace Drupal\ghi_plans\ApiObjects\Attachments;
  */
 class CaseloadAttachment extends DataAttachment {
 
-  /**
-   * {@inheritdoc}
-   */
-  public function getDescription() {
-    return $this->getPrototype()->getName();
-  }
-
 }

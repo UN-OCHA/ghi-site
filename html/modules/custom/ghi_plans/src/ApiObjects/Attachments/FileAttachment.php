@@ -12,13 +12,14 @@ class FileAttachment extends AttachmentBase {
    */
   protected function map() {
     $attachment = $this->getRawData();
+    $attachment_version = $attachment->attachmentVersion ?? NULL;
     return (object) [
       'id' => $attachment->id,
       'type' => strtolower($attachment->type),
-      'url' => $attachment->attachmentVersion->value->file->url,
-      'title' => $attachment->attachmentVersion->value->file->title ?? '',
-      'file_name' => $attachment->attachmentVersion->value->name ?? '',
-      'credit' => $attachment->attachmentVersion->value->credit ?? '',
+      'url' => $attachment_version?->value?->file->url ?? NULL,
+      'title' => $attachment_version?->value?->file->title ?? '',
+      'file_name' => $attachment_version?->value->name ?? '',
+      'credit' => $attachment_version?->value->credit ?? '',
     ];
   }
 

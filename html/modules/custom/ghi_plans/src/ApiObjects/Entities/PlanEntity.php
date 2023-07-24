@@ -142,7 +142,8 @@ class PlanEntity extends EntityObjectBase {
     if (in_array($entity->entityPrototype->refCode, ApiEntityHelper::MAIN_LEVEL_PLE_REF_CODES) || empty($entity_version->value->support)) {
       return NULL;
     }
-    $support = reset($entity_version->value->support);
+    $support = $entity_version?->value?->support;
+    $support = is_array($support) ? reset($support) : $support;
     $plan_entity_ids = $support?->planEntityIds ?? [];
     return reset($plan_entity_ids);
   }
@@ -195,38 +196,6 @@ class PlanEntity extends EntityObjectBase {
       '@type' => $this->name,
       '@custom_reference' => $this->custom_reference,
     ]);
-  }
-
-  /**
-   * Get a custom name for an entity, based on $type.
-   *
-   * @param string $type
-   *   The type for the name to be returned.
-   *
-   * @return string
-   *   The name according to $type.
-   */
-  public function getCustomName($type) {
-    switch ($type) {
-      case 'custom_id':
-        return $this->custom_reference;
-
-      case 'custom_id_prefixed_refcode':
-        return $this->ref_code . $this->custom_reference;
-
-      case 'composed_reference':
-        return $this->composed_reference;
-    }
-  }
-
-  /**
-   * Get the ref code for the entity type that this entity belongs to.
-   *
-   * @return string
-   *   The ref code as a string, .e.g. SO, CQ, HC, ...
-   */
-  public function getEntityTypeRefCode() {
-    return $this->ref_code;
   }
 
 }

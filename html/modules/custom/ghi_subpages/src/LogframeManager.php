@@ -13,7 +13,7 @@ use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
-use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_subpages\Entity\LogframeSubpage;
@@ -239,12 +239,15 @@ class LogframeManager implements ContainerInjectionInterface {
     $field_types = $attachment_prototype->getFieldTypes();
     $in_need = array_search('in_need', $field_types);
     $target = array_search('target', $field_types);
-    $measure = array_search('measure', $field_types);
+    $measure_fields = $attachment_prototype->getMeasurementMetricFields();
+    $measure_keys = array_keys($measure_fields);
+    $measure = count($measure_keys) ? ($measure_keys[1] ?? end($measure_keys)) : NULL;
     $available_fields = [
       $in_need,
       $target,
       $measure,
     ];
+
     $available_fields = array_filter($available_fields, function ($field) {
       return $field !== NULL;
     });
@@ -409,7 +412,7 @@ class LogframeManager implements ContainerInjectionInterface {
    * @param string $ref_code
    *   An optional entity ref code to restrict the retrieved entities.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[]
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
    *   An array of plan entities.
    */
   private function getPlanEntities(LogframeSubpage $node, $ref_code = NULL) {
@@ -421,13 +424,27 @@ class LogframeManager implements ContainerInjectionInterface {
     if ($ref_code) {
       $filter = ['ref_code' => $ref_code];
     }
+
+    $entities = [];
+    $base_object = $section->getBaseObject();
+    if ($base_object instanceof Plan) {
+      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $query */
+      $query = $this->endpointQueryManager->createInstance('entity_query');
+      $plan_data = $query->getEntity('plan', $base_object->getSourceId());
+      if ($plan_data) {
+        $entities = [
+          $plan_data->id() => $plan_data,
+        ];
+      }
+    }
+
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
     $query = $this->endpointQueryManager->createInstance('plan_entities_query');
-    $query->setPlaceholder('plan_id', $section->getBaseObject()->getSourceId());
-    $entities = $query->getPlanEntities($section->getBaseObject(), 'plan', $filter) ?? [];
+    $query->setPlaceholder('plan_id', $base_object->getSourceId());
+    $entities = array_merge($entities, $query->getPlanEntities($base_object, NULL, $filter) ?? []);
     // This should give us only PlanEntity objects, but let's make sure.
     $entities = is_array($entities) ? array_filter($entities, function ($entity) {
-      return $entity instanceof PlanEntity;
+      return $entity instanceof PlanEntityInterface;
     }) : [];
     return $entities;
   }

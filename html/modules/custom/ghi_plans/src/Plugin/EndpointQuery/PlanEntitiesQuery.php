@@ -369,19 +369,22 @@ class PlanEntitiesQuery extends EndpointQueryBase {
   /**
    * Get options for the entity type dropdown.
    *
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface[] $entities
+   *   An array of plan entities to extract the ref code options.
+   *
    * @return array
    *   An array with valid options for the current context.
    */
-  public function getEntityRefCodeOptions($entities) {
+  public function getEntityRefCodeOptions(array $entities) {
     $options = [];
     if (empty($entities)) {
       return $options;
     }
     $weight = [];
     foreach ($entities as $entity) {
-      $ref_code = $entity->ref_code;
+      $ref_code = $entity->getEntityTypeRefCode();
       if (empty($options[$ref_code])) {
-        $name = $entity->plural_name;
+        $name = $entity->getName();
         $options[$ref_code] = $name;
         $weight[$ref_code] = $entity->order_number;
       }

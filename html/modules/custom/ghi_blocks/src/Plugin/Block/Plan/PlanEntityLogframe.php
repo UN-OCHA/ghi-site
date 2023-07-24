@@ -13,7 +13,11 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
+use Drupal\ghi_plans\ApiObjects\Plan as ApiObjectsPlan;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 
@@ -64,6 +68,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     // Get the entities to render.
     $entities = $this->getRenderableEntities();
     $first_entity = !empty($entities) ? reset($entities) : NULL;
+    if ($first_entity instanceof ApiObjectsPlan) {
+      return $this->t('Response plan');
+    }
     return $first_entity ? $first_entity->plural_name : NULL;
   }
 
@@ -131,7 +138,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     $rendered_items = [];
     foreach ($entities as $entity) {
       $tables = $this->buildTables($entity, $conf['tables']);
-      $contributes_heading = $this->buildContributesToHeading($entity);
+      $contributes_heading = $entity instanceof PlanEntity ? $this->buildContributesToHeading($entity) : NULL;
       $entity_id = $this->getPlanEntityId($entity, $conf['entities']);
       $entity_description = $this->getPlanEntityDescription($entity, $conf['entities']);
       $rendered_items[] = [
@@ -144,13 +151,15 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     }
     $count = count($rendered_items);
 
+    $first_entity = reset($entities);
     return [
       '#theme' => 'item_list',
       '#items' => $rendered_items,
-      '#attributes' => [
+      '#wrapper_attributes' => [
         'class' => [
           'plan-entity-logframe',
           $count >= 5 ? 'up-5' : 'up-' . $count,
+          Html::getClass('entity-type--' . $first_entity->getEntityType()),
         ],
       ],
       '#gin_lb_theme_suggestions' => FALSE,
@@ -160,7 +169,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   /**
    * Get the formatted plan entity id according to the configuration.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity $entity
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
    *   The plan entity.
    * @param array $conf
    *   The entity configuration.
@@ -168,7 +177,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    * @return string
    *   The formatted plan entity id.
    */
-  private function getPlanEntityId(PlanEntity $entity, array $conf) {
+  private function getPlanEntityId(PlanEntityInterface $entity, array $conf) {
     $id_type = $conf['id_type'] ?? 'custom_id';
     return $entity->getCustomName($id_type);
   }
@@ -176,7 +185,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   /**
    * Get the formatted plan entity description according to the configuration.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity $entity
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
    *   The plan entity.
    * @param array $conf
    *   The entity configuration.
@@ -186,15 +195,15 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    * @return string
    *   The formatted plan entity description.
    */
-  private function getPlanEntityDescription(PlanEntity $entity, array $conf, $truncate_description = FALSE) {
-    $description = $entity->description;
+  private function getPlanEntityDescription(PlanEntityInterface $entity, array $conf, $truncate_description = FALSE) {
+    $description = $entity->getDescription();
     return $truncate_description ? Unicode::truncate($description, 120, TRUE, TRUE) : $description;
   }
 
   /**
    * Get the entity attachment tables according to the configuration.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity $entity
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
    *   The plan entity.
    * @param array $conf
    *   The entity configuration.
@@ -202,7 +211,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    * @return array
    *   An array of entity attachment tables.
    */
-  private function buildTables(PlanEntity $entity, array $conf) {
+  private function buildTables(PlanEntityInterface $entity, array $conf) {
     $tables = [];
     if (empty($conf['attachment_tables'])) {
       return $tables;
@@ -385,7 +394,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
         '#default_value' => !empty($defaults['entity_ids']) ? array_combine($defaults['entity_ids'], $defaults['entity_ids']) : [],
         '#prefix' => '<div id="' . $wrapper_id . '">',
         '#suffix' => '</div>',
-        '#empty' => $this->t('No suitable plan entities found. If you save this form like this, the block will not be displayed.'),
+        '#empty' => $this->t('No suitable entities found. If you save this form like this, the block will not be displayed.'),
       ];
 
       if (count($matching_entities)) {
@@ -471,25 +480,16 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    *   An array with valid options for the current context.
    */
   private function getEntityRefCodeOptions() {
+    $options = [
+      'PL' => $this->t('Plan'),
+    ];
     if (!$this->getCurrentPlanId()) {
-      // Without a plan context, we show a default set of availabe plan entity
-      // types.
-      $default_options = [
-        'CA' => $this->t('Cluster Activities'),
-        'CO' => $this->t('Cluster Objectives'),
-        'CQ' => $this->t('Humanitarian Consequences'),
-        'SO' => $this->t('Strategic Objectives'),
-        'SP' => $this->t('Specific Objectives'),
-        'SSO' => $this->t('Sub Strategic Objectives'),
-        'OC' => $this->t('Outcomes'),
-        'OP' => $this->t('Outputs'),
-      ];
-      return $default_options;
+      return $options;
     }
 
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
     $query = $this->getQueryHandler('entities');
-    $options = $query->getEntityRefCodeOptions($this->getPlanEntities());
+    $options = $options + $query->getEntityRefCodeOptions($this->getPlanEntities());
     return $options;
   }
 
@@ -499,11 +499,20 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    * @param string $entity_ref_code
    *   The entity type to restrict the context.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[]
+   * @return \Drupal\ghi_plans\ApiObjects\PlanEntityInterface[]
    *   An array of plan entity objects for the current context.
    */
   private function getPlanEntities($entity_ref_code = NULL) {
     $context_object = $this->getCurrentBaseObject();
+
+    if ($entity_ref_code == 'PL' && $context_object instanceof Plan) {
+      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $query */
+      $query = $this->getQueryHandler('entity');
+      $plan_data = $query->getEntity('plan', $context_object->getSourceId());
+      return [
+        $plan_data->id() => $plan_data,
+      ];
+    }
 
     $filter = NULL;
     if ($entity_ref_code) {
@@ -511,10 +520,11 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     }
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
     $query = $this->getQueryHandler('entities');
-    $entities = $query->getPlanEntities($context_object, 'plan', $filter);
-    // This should give us only PlanEntity objects, but let's make sure.
+    $entities = $query->getPlanEntities($context_object, NULL, $filter);
+    // This should give us plan and governing entity objects only, but let's
+    // make sure.
     $entities = is_array($entities) ? array_filter($entities, function ($entity) {
-      return $entity instanceof PlanEntity;
+      return $entity instanceof EntityObjectInterface;
     }) : [];
     return $entities;
   }
@@ -522,12 +532,12 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   /**
    * Get entities that are valid for display.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[] $entities
+   * @param \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[] $entities
    *   The entity objects to check.
    * @param array $conf
    *   The current element configuration used to apply validation.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[]
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
    *   An array with the entity objects that passed validation.
    */
   private function getValidPlanEntities(array $entities, array $conf) {
@@ -547,7 +557,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   /**
    * Sort entities according to the given configuration.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[] $entities
+   * @param \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[] $entities
    *   The entity objects to sort.
    * @param array $conf
    *   The current element configuration used to apply validation.
@@ -571,7 +581,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   /**
    * Validate that the given entity is valid for display.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity $entity
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
    *   An entity object.
    * @param array $conf
    *   The current element configuration used to apply validation.
@@ -579,12 +589,12 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    * @return object
    *   True if the entity passed validation, False otherwhise.
    */
-  private function validatePlanEntity(PlanEntity $entity, array $conf) {
+  private function validatePlanEntity(PlanEntityInterface $entity, array $conf) {
     $entity_ids = !empty($conf['entities']['entity_ids']) ? array_filter($conf['entities']['entity_ids']) : [];
     if (!empty($entity_ids) && !in_array($entity->id(), $entity_ids)) {
       return FALSE;
     }
-    if (empty($entity->description)) {
+    if (empty($entity->getDescription())) {
       return FALSE;
     }
 
@@ -648,7 +658,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   /**
    * Get attachments for the given set of entities.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[] $entities
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface[] $entities
    *   The plan entity objects.
    * @param int $prototype_id
    *   An optional prototype id to filter for.
@@ -666,7 +676,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
 
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
     $query = $this->endpointQueryManager->createInstance('attachment_search_query');
-    $attachments = $query->getAttachmentsByObject('planEntity', $entity_ids);
+    $attachments = $query->getAttachmentsByObject('plan', $entity_ids);
+    $attachments = array_merge($attachments, $query->getAttachmentsByObject('planEntity', $entity_ids));
+    $attachments = array_merge($attachments, $query->getAttachmentsByObject('governingEntity', $entity_ids));
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) use ($prototype_id) {
       if (!$attachment instanceof DataAttachment) {
