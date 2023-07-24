@@ -2,13 +2,13 @@
 
 /**
  * @file
- * Post update functions for GHI Custom Subpages.
+ * Deploy functions for GHI Custom Subpages.
  */
 
 /**
  * Move existing "document" content to "custom_subpage".
  */
-function ghi_subpages_custom_post_update_move_existing_content(&$sandbox) {
+function ghi_subpages_custom_deploy_move_existing_content(&$sandbox) {
   // Get existing content of type "document".
   $documents = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
     'type' => 'document',

@@ -69,6 +69,13 @@ class Plan extends BaseObject implements PlanEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function getTypeName() {
+    return $this->t('Plan');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getEntityTypeRefCode() {
     return 'PL';
   }

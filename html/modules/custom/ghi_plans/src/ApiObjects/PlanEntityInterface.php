@@ -48,6 +48,14 @@ interface PlanEntityInterface extends ApiObjectInterface {
   public function getEntityTypeRefCode();
 
   /**
+   * Get the type name of an entity.
+   *
+   * @return string
+   *   The type as a string.
+   */
+  public function getTypeName();
+
+  /**
    * Get the machine name of an entity type.
    *
    * @return string

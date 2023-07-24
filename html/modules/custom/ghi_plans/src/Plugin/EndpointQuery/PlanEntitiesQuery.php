@@ -384,7 +384,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
     foreach ($entities as $entity) {
       $ref_code = $entity->getEntityTypeRefCode();
       if (empty($options[$ref_code])) {
-        $name = $entity->getName();
+        $name = $entity->getTypeName();
         $options[$ref_code] = $name;
         $weight[$ref_code] = $entity->order_number;
       }
