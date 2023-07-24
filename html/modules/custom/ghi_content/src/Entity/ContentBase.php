@@ -166,7 +166,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     $cache_tags = [];
 
     // Get the tags.
-    $tags = $this->getTags();
+    $tags = $this->getTags(TRUE);
 
     $structural_tags = $this->getStructuralTags();
     $structural_tag_ids = array_map(function ($term) {

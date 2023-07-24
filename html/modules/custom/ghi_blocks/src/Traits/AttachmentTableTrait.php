@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Traits;
 
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
+use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
 
 /**
  * Trait with common logic for attachment based tables.
@@ -101,14 +102,14 @@ trait AttachmentTableTrait {
    *
    * @param \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[] $attachment_prototypes
    *   An array of attachment prototype objects to filter.
-   * @param \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[] $plan_entities
+   * @param \Drupal\hpc_api\ApiObjects\ApiObjectInterface[] $plan_entities
    *   An array of plan entity objects to use for filtering.
    *
    * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[]
    *   The filtered list of attachment prototypes.
    */
   public function filterAttachmentPrototypesByPlanEntities(array $attachment_prototypes, array $plan_entities) {
-    $entity_type_ref_codes = array_unique(array_map(function (PlanEntity $entity) {
+    $entity_type_ref_codes = array_unique(array_map(function (ApiObjectInterface $entity) {
       return $entity->getEntityTypeRefCode();
     }, $plan_entities));
     $attachment_prototypes = array_filter($attachment_prototypes, function (AttachmentPrototype $prototype) use ($entity_type_ref_codes) {

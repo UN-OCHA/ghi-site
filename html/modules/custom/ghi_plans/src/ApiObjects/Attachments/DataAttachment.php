@@ -109,7 +109,7 @@ class DataAttachment extends AttachmentBase {
    *   The entity object.
    */
   public function getSourceEntity() {
-    if (empty($this->source->entity_type) || $this->source->entity_type == 'plan' || empty($this->source->entity_id)) {
+    if (empty($this->source->entity_type) || empty($this->source->entity_id)) {
       return NULL;
     }
     if (empty($this->sourceEntity)) {

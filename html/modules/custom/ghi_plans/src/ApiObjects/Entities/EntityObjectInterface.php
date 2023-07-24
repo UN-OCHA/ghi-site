@@ -2,12 +2,12 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Entities;
 
-use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 
 /**
  * Interface for API entity objects.
  */
-interface EntityObjectInterface extends ApiObjectInterface {
+interface EntityObjectInterface extends PlanEntityInterface {
 
   /**
    * Get the version property of an API entity object.
@@ -56,21 +56,5 @@ interface EntityObjectInterface extends ApiObjectInterface {
    *   The tags for the entity as retrieved from the API.
    */
   public function getTags();
-
-  /**
-   * Get the machine name of an entity type.
-   *
-   * @return string
-   *   The type as a string.
-   */
-  public function getEntityType();
-
-  /**
-   * Get the human readable name of an entity type.
-   *
-   * @return string
-   *   The type as a string.
-   */
-  public function getEntityTypeName();
 
 }
