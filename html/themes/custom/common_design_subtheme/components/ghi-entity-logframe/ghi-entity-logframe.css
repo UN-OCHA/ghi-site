@@ -20,6 +20,7 @@
   margin-left: 1rem;
 }
 .item-list--entity-logframe > .item-wrapper .entity-wrapper--inner p {
+  align-self: center;
   margin: 0;
   padding: 0;
 }

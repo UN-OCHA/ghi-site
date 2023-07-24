@@ -10,7 +10,7 @@ use Drupal\menu_link_content\Entity\MenuLinkContent;
 /**
  * Add custom subpages backend page to admin menu.
  */
-function ghi_menu_post_update_adjust_admin_menu(&$sandbox) {
+function ghi_menu_deploy_adjust_admin_menu(&$sandbox) {
   /** @var \Drupal\Core\Menu\MenuLinkManager $menu_link_manager */
   $menu_link_manager = \Drupal::service('plugin.manager.menu.link');
   $node_types = \Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple(NULL);

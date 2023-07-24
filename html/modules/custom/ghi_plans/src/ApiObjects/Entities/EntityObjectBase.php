@@ -67,6 +67,13 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
   /**
    * {@inheritdoc}
    */
+  public function getTypeName() {
+    return $this->plural_name;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getChildren() {
     return $this->children;
   }
