@@ -62,8 +62,8 @@ class SectionMegaMenu extends SectionMenuWidgetBase {
   /**
    * Set this menu to be active.
    */
-  public function setActive() {
-    $this->isActive = TRUE;
+  public function setActive($state = FALSE) {
+    $this->isActive = $state;
   }
 
   /**
@@ -119,7 +119,6 @@ class SectionMegaMenu extends SectionMenuWidgetBase {
 
         if ($current_node && $current_node->toUrl() == $node->toUrl()) {
           $link['#attributes']['class'][] = 'active';
-          $this->setActive();
         }
         $links[] = $link;
       }

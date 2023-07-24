@@ -3,6 +3,7 @@
 namespace Drupal\ghi_content\Entity;
 
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_content\Traits\ContentPathTrait;
 use Drupal\ghi_sections\Entity\ImageNodeInterface;
@@ -10,6 +11,7 @@ use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Drupal\taxonomy\TermInterface;
 
 /**
  * Bundle class for section nodes.
@@ -125,6 +127,33 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   abstract public function getPageMetaData();
 
   /**
+   * Get the tags for this content.
+   *
+   * @return \Drupal\taxonomy\TermInterface[]
+   *   An array of term objects.
+   */
+  public function getTags($include_context_tags = FALSE) {
+    $field_tags = $this->get('field_tags');
+    if (!$field_tags instanceof EntityReferenceFieldItemListInterface) {
+      return [];
+    }
+    // Get the tags.
+    $tags = $field_tags->referencedEntities();
+    // Re-key them so use the term id as key.
+    $term_ids = array_map(function (TermInterface $term) {
+      return $term->id();
+    }, $tags);
+    $tags = array_combine($term_ids, $tags);
+
+    // See if the context nodes tags should also be loaded.
+    if ($include_context_tags) {
+      $context_node = $this->getContextNode();
+      $tags += $context_node instanceof ContentBase ? $context_node->getTags() : [];
+    }
+    return $tags;
+  }
+
+  /**
    * Get the tags for display.
    *
    * @param int $limit
@@ -137,7 +166,8 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     $cache_tags = [];
 
     // Get the tags.
-    $tags = $this->get('field_tags')->referencedEntities();
+    $tags = $this->getTags();
+
     $structural_tags = $this->getStructuralTags();
     $structural_tag_ids = array_map(function ($term) {
       return $term->id();
@@ -172,7 +202,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    */
   public function getStructuralTags() {
     // Get the tags.
-    $tags = $this->get('field_tags')->referencedEntities();
+    $tags = $this->getTags();
 
     // Filter out the structural tags.
     $tags = array_filter($tags, function ($tag) {

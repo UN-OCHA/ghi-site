@@ -14,10 +14,6 @@ body.page-node-type-document {
     }
   }
 
-  &.standalone-page .region-page-navigation .block-wrapper--documentnavigation {
-    border-bottom: 1px solid var(--cd-default-border-color);
-  }
-
   article.node--view-mode-full {
     footer.node__meta {
       padding: 1rem 0;

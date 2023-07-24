@@ -104,8 +104,10 @@ class DocumentSubpages extends SectionMenuPluginBase implements OptionalSectionM
         ],
       ];
       $widget = new SectionMegaMenu($item->getLabel(), $nodes_grouped, $widget_header);
-      if ($current_page_node && $current_page_node->toUrl() == $document->toUrl()) {
-        $widget->setActive();
+      if ($current_page_node) {
+        $same_page = $current_page_node->toUrl() == $document->toUrl();
+        $contained_page = strpos($current_page_node->toUrl()->toString(), $document->toUrl()->toString()) === 0;
+        $widget->setActive($same_page || $contained_page);
       }
     }
     return $widget;
