@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_content\Plugin\Block;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Block\BlockBase;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Traits\ContentPathTrait;
@@ -68,11 +69,20 @@ class ArticleTitle extends BlockBase {
       // breadcrump.
       $single_chapter_document = count($document->getChapters()) == 1;
       if ($chapter = $node->getDocumentChapter($document)) {
+        $title_args = [
+          '@document' => $document->toLink($document->label())->toString(),
+          '@chapter' => $chapter->getTitle(),
+        ];
+        $title_prefix = new FormattableMarkup('<span class="document-link">@document</span>', $title_args);
+        if (!$single_chapter_document) {
+          $title_prefix .= new FormattableMarkup(' / <span class="chapter">@chapter</span>', $title_args);
+        }
         $build['title'][] = [
           '#type' => 'html_tag',
           '#tag' => 'p',
-          '#value' => $document->toLink($document->label())->toString() . (!$single_chapter_document ? ' / ' . $chapter->getTitle() : ''),
+          '#value' => $title_prefix,
         ];
+        $build['title']['#attributes']['class'][] = 'has-title-prefix';
       }
     }
 
