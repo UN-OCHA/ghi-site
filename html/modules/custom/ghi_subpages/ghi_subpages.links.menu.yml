@@ -1,5 +1,5 @@
 ghi_subpages.logframe.batch_rebuild:
-  title: 'Logframes'
+  title: 'Rebuild'
   route_name: ghi_subpages.logframe.batch_rebuild
   description: 'Rebuild logframe pages'
-  parent: system.admin_config_ghi
+  parent: ghi_blocks.config.logframe

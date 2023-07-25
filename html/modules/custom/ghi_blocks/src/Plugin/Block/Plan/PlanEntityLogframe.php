@@ -136,10 +136,12 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     // Sort the entities.
     $this->sortPlanEntities($entities, $conf['entities']);
 
+    $lazy_load = $this->config('ghi_blocks.logframe_settings')->get('lazy_load');
+
     // Assemble the list.
     $rendered_items = [];
     foreach ($entities as $entity) {
-      if ($this->isPreview()) {
+      if ($this->isPreview() || !$lazy_load) {
         $tables = $this->buildTables($entity, $conf['tables']);
       }
       else {
@@ -154,6 +156,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
             ],
           ],
           '#create_placeholder' => TRUE,
+          '#cache' => [
+            'context' => ['url.path'],
+          ],
         ];
       }
       $contributes_heading = $entity instanceof PlanEntity ? $this->buildContributesToHeading($entity) : NULL;
