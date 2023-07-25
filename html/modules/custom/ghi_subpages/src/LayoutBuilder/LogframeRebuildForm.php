@@ -10,6 +10,7 @@ use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Traits\GinLbModalTrait;
 use Drupal\ghi_subpages\Entity\LogframeSubpage;
@@ -32,6 +33,7 @@ class LogframeRebuildForm extends FormBase {
   use GinLbModalTrait;
   use AjaxHelperTrait;
   use AjaxFormTrait;
+  use StringTranslationTrait;
 
   /**
    * The block manager.
@@ -122,7 +124,7 @@ class LogframeRebuildForm extends FormBase {
     $plan_entity_types = $this->logframeManager->getEntityTypesFromNode($entity);
     $form['settings']['message'] = [
       '#type' => 'markup',
-      '#markup' => new TranslatableMarkup('The logframe page will be completely rebuild, removing all existing elements on the page, including ones that have been manually added and configured.<br />These plan entities will be created: <em>@plan_entities</em><br /><br />Rebuilding the logframe will take some time. Please do not close this browser window while the rebuilding is in progress.', [
+      '#markup' => new TranslatableMarkup('The logframe page will be completely rebuild, removing all existing elements on the page, including ones that have been manually added and configured.<br />Logframe page elements for these levels will be created: <em>@plan_entities</em><br /><br />Rebuilding the logframe will take some time. Please do not close this browser window while the rebuilding is in progress.', [
         '@plan_entities' => implode(', ', $plan_entity_types),
       ]),
     ];
