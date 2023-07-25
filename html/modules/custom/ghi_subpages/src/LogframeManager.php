@@ -141,6 +141,9 @@ class LogframeManager implements ContainerInjectionInterface {
 
     // Get entity types.
     $entity_types = $this->getEntityTypesFromNode($node);
+    if (empty($entity_types)) {
+      return NULL;
+    }
     foreach ($entity_types as $ref_code => $name) {
       $entities = $this->getPlanEntities($node, $ref_code);
       if (empty($entities)) {
@@ -405,7 +408,11 @@ class LogframeManager implements ContainerInjectionInterface {
     if (!$section instanceof Section) {
       return NULL;
     }
-    $entity_types = $this->getEntityTypesFromPlanObject($section->getBaseObject());
+    $plan_object = $section->getBaseObject();
+    if (!$plan_object instanceof Plan) {
+      return NULL;
+    }
+    $entity_types = $this->getEntityTypesFromPlanObject($plan_object);
     $entity_types = array_filter($entity_types, function ($ref_code) use ($node) {
       return !empty($this->getPlanEntities($node, $ref_code));
     }, ARRAY_FILTER_USE_KEY);

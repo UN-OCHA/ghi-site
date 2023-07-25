@@ -4,6 +4,9 @@
   Drupal.behaviors.hpc_sparkline = {
     attach: function(context, settings) {
       $('span.sparkline', context).once('sparkline').each(function(index) {
+        if (!$(this).data('values')) {
+          return;
+        }
         let data = $(this).data('values').toString().split(',');
         let tooltip_content = $(this).data('tooltips').toString().split('|');
         let baseline = $(this).data('baseline');
