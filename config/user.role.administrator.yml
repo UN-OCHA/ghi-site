@@ -78,6 +78,7 @@ permissions:
   - 'administer base_object_type labels'
   - 'administer content translation'
   - 'administer ghi global config'
+  - 'administer ghi table config'
   - 'administer menu'
   - 'administer nodes'
   - 'administer pages'

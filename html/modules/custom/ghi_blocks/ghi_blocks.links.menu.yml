@@ -25,3 +25,8 @@ ghi_blocks.config.logframe.settings:
   description: 'Configure logframe settings'
   parent: ghi_blocks.config.logframe
   weight: -1
+ghi_blocks.config.table.settings:
+  title: 'Table settings'
+  route_name: ghi_blocks.table_config
+  description: 'Configure table settings'
+  parent: system.admin_config_ghi
