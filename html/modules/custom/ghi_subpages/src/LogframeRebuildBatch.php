@@ -40,7 +40,9 @@ class LogframeRebuildBatch {
     $node = Node::load(array_shift($context['sandbox']['node_ids']));
 
     $section_storage = $logframe_manager->setupLogframePage($node);
-    $section_storage->save();
+    if ($section_storage) {
+      $section_storage->save();
+    }
     $context['results']['processed']++;
 
     // Set progress.

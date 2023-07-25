@@ -17,7 +17,9 @@ class LogframeSubpage extends SubpageNode {
   public function createPageElements() {
     $logframe_manager = self::logframeManager();
     $section_storage = $logframe_manager->setupLogframePage($this);
-    $section_storage->save();
+    if ($section_storage) {
+      $section_storage->save();
+    }
   }
 
   /**
