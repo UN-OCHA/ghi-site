@@ -5,6 +5,7 @@ namespace Drupal\ghi_content\Plugin\Block;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_content\Entity\Article;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 
 /**
  * Provides an 'RelatedArticles' block.
@@ -127,10 +128,19 @@ class RelatedArticles extends ContentBlockBase implements OptionalTitleBlockInte
    *   An array of entity objects indexed by their ids.
    */
   private function getArticles($limit = NULL) {
+    /** @var \Drupal\ghi_content\Entity\Article[] $articles */
     $articles = $this->articleManager->loadAllNodes();
     $node = $this->getPageNode();
     if ($node && $node instanceof Article && array_key_exists($node->id(), $articles)) {
       unset($articles[$node->id()]);
+    }
+    $section = $this->getCurrentBaseEntity();
+    if ($section instanceof SectionNodeInterface) {
+      foreach ($articles as $article) {
+        if ($article->isPartOfSection($section)) {
+          $article->setContextNode($section);
+        }
+      };
     }
     return $articles;
   }
