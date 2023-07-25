@@ -88,6 +88,13 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'plan-operational-presence-map',
     ],
+    'plan_entity_logframe' => [
+      'variables' => [
+        'items' => NULL,
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'plan-entity-logframe',
+    ],
     'ajax_switcher' => [
       'variables' => [
         'options' => NULL,

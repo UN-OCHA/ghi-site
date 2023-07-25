@@ -42,6 +42,11 @@ class LogframeBatchRebuildForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
     $form['#node'] = $node;
+    $form['message'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'p',
+      '#value' => $this->t('The logframe pages will be completely rebuild, removing all existing elements on the page, including ones that have been manually added and configured.<br />There is no extra confirmation before overwriting existing pages.<br /><br />Rebuilding the logframes will take some time. Please do not close this browser window while the rebuilding is in progress.'),
+    ];
     $form['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Rebuild all logframe pages now'),

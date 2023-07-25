@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
@@ -20,6 +21,7 @@ use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_common\Helpers\BlockHelper;
 
 /**
  * Provides a 'PlanEntityLogframe' block.
@@ -56,7 +58,7 @@ use Drupal\hpc_api\Query\EndpointQuery;
  *  }
  * )
  */
-class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface {
+class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, TrustedCallbackInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
@@ -137,7 +139,23 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     // Assemble the list.
     $rendered_items = [];
     foreach ($entities as $entity) {
-      $tables = $this->buildTables($entity, $conf['tables']);
+      if ($this->isPreview()) {
+        $tables = $this->buildTables($entity, $conf['tables']);
+      }
+      else {
+        $tables = [
+          '#lazy_builder' => [
+            $this::class . '::lazyBuildTables',
+            [
+              $this->getPluginId(),
+              $this->getUuid(),
+              $this->getCurrentUri(),
+              $entity->id(),
+            ],
+          ],
+          '#create_placeholder' => TRUE,
+        ];
+      }
       $contributes_heading = $entity instanceof PlanEntity ? $this->buildContributesToHeading($entity) : NULL;
       $entity_id = $this->getPlanEntityId($entity, $conf['entities']);
       $entity_description = $this->getPlanEntityDescription($entity, $conf['entities']);
@@ -153,7 +171,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
 
     $first_entity = reset($entities);
     return [
-      '#theme' => 'item_list',
+      '#theme' => 'plan_entity_logframe',
       '#items' => $rendered_items,
       '#wrapper_attributes' => [
         'class' => [
@@ -211,7 +229,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    * @return array
    *   An array of entity attachment tables.
    */
-  private function buildTables(PlanEntityInterface $entity, array $conf) {
+  public function buildTables(PlanEntityInterface $entity, array $conf) {
     $tables = [];
     if (empty($conf['attachment_tables'])) {
       return $tables;
@@ -243,6 +261,32 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       '#type' => 'container',
       'tables' => $tables,
     ];
+  }
+
+  /**
+   * Lazy builder callback for attachment tables.
+   *
+   * @param string $plugin_id
+   *   The plugin id of this block plugin.
+   * @param string $block_uuid
+   *   The uuid of this block plugins instance.
+   * @param string $uri
+   *   The current page uri.
+   * @param int $entity_id
+   *   The id of the entity for which the tables should be rendered.
+   *
+   * @return array
+   *   A render array representing the tables.
+   */
+  public static function lazyBuildTables($plugin_id, $block_uuid, $uri, $entity_id) {
+    /** @var \Drupal\ghi_blocks\Plugin\Block\Plan\PlanEntityLogframe $block_instance */
+    $block_instance = BlockHelper::getBlockInstance($uri, $plugin_id, $block_uuid);
+    if (!$block_instance) {
+      return [];
+    }
+    $entities = $block_instance->getRenderableEntities();
+    $tables = $block_instance->buildTables($entities[$entity_id], $block_instance->getBlockConfig()['tables']);
+    return $tables;
   }
 
   /**
@@ -549,7 +593,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       if (!$this->validatePlanEntity($entity, $conf)) {
         continue;
       }
-      $valid_entities[] = $entity;
+      $valid_entities[$entity->id()] = $entity;
     }
     return $valid_entities;
   }
@@ -708,6 +752,15 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     $attachment_prototypes = $query->getDataPrototypesForPlan($plan_id);
     $entities = $this->getRenderableEntities();
     return $this->filterAttachmentPrototypesByPlanEntities($attachment_prototypes, $entities);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function trustedCallbacks() {
+    return [
+      'lazyBuildTables',
+    ];
   }
 
 }
