@@ -4,7 +4,6 @@ namespace Drupal\ghi_blocks\Traits;
 
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
-use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
 
 /**
  * Trait with common logic for attachment based tables.
@@ -94,6 +93,35 @@ trait AttachmentTableTrait {
   }
 
   /**
+   * Filter the given set of attachment prototypes by entity type ref codes.
+   *
+   * This looks at the attachment prototypes list of supported entity type ref
+   * codes and compares that to entity type ref codes of the given set of plan
+   * entities.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[] $attachment_prototypes
+   *   An array of attachment prototype objects to filter.
+   * @param array $ref_codes
+   *   An array of entity ref codes.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[]
+   *   The filtered list of attachment prototypes.
+   */
+  public function filterAttachmentPrototypesByEntityRefCodes(array $attachment_prototypes, array $ref_codes) {
+    if (empty($ref_codes)) {
+      return $attachment_prototypes;
+    }
+    $attachment_prototypes = array_filter($attachment_prototypes, function (AttachmentPrototype $prototype) use ($ref_codes) {
+      if (empty($prototype->getEntityRefCodes())) {
+        return FALSE;
+      }
+      return array_intersect($prototype->getEntityRefCodes(), $ref_codes);
+    });
+
+    return $attachment_prototypes;
+  }
+
+  /**
    * Filter the given set of attachment prototypes by supported entity types.
    *
    * This looks at the attachment prototypes list of supported entity type ref
@@ -102,24 +130,15 @@ trait AttachmentTableTrait {
    *
    * @param \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[] $attachment_prototypes
    *   An array of attachment prototype objects to filter.
-   * @param \Drupal\hpc_api\ApiObjects\ApiObjectInterface[] $plan_entities
-   *   An array of plan entity objects to use for filtering.
+   * @param array $entity_types
+   *   An array of entity type labels, keyed by the entity ref code.
    *
    * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[]
    *   The filtered list of attachment prototypes.
    */
-  public function filterAttachmentPrototypesByPlanEntities(array $attachment_prototypes, array $plan_entities) {
-    $entity_type_ref_codes = array_unique(array_map(function (ApiObjectInterface $entity) {
-      return $entity->getEntityTypeRefCode();
-    }, $plan_entities));
-    $attachment_prototypes = array_filter($attachment_prototypes, function (AttachmentPrototype $prototype) use ($entity_type_ref_codes) {
-      if (empty($prototype->getEntityRefCodes())) {
-        return FALSE;
-      }
-      return array_intersect($prototype->getEntityRefCodes(), $entity_type_ref_codes);
-    });
-
-    return $attachment_prototypes;
+  public function filterAttachmentPrototypesByEntityTypes(array $attachment_prototypes, array $entity_types) {
+    $ref_codes = array_keys($entity_types);
+    return $this->filterAttachmentPrototypesByEntityRefCodes($attachment_prototypes, $ref_codes);
   }
 
   /**

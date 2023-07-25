@@ -37,6 +37,11 @@ class LogframeManager implements ContainerInjectionInterface {
   use DependencySerializationTrait;
 
   /**
+   * Allow to exclude specific API entity types.
+   */
+  const EXCLUDE_ENTITY_TYPES = ['CQ'];
+
+  /**
    * The block manager.
    *
    * @var \Drupal\Core\Block\BlockManagerInterface
@@ -138,6 +143,9 @@ class LogframeManager implements ContainerInjectionInterface {
     $entity_types = $this->getEntityTypesFromNode($node);
     foreach ($entity_types as $ref_code => $name) {
       $entities = $this->getPlanEntities($node, $ref_code);
+      if (empty($entities)) {
+        continue;
+      }
       $definition = $this->blockManager->getDefinition('plan_entity_logframe', FALSE);
       $context_mapping = [
         'context_mapping' => array_intersect_key([
@@ -176,7 +184,7 @@ class LogframeManager implements ContainerInjectionInterface {
       ];
 
       // See if there are attachment tables to be added.
-      $attachment_prototypes = $this->getAttachmentPrototypes($node, $entities);
+      $attachment_prototypes = $this->getAttachmentPrototypesForEntityRefCode($node, $ref_code);
       uasort($attachment_prototypes, function ($a, $b) {
         return strnatcasecmp($a->type, $b->type);
       });
@@ -390,18 +398,45 @@ class LogframeManager implements ContainerInjectionInterface {
    *   The logframe node object.
    *
    * @return array
-   *   An array of entity ref codes, keyed by ref code, value is the name.
+   *   An array of entity types, keyed by ref code, value is the plural name.
    */
   public function getEntityTypesFromNode(LogframeSubpage $node) {
     $section = $node->getParentNode();
     if (!$section instanceof Section) {
       return NULL;
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
-    $query = $this->endpointQueryManager->createInstance('plan_entities_query');
-    $query->setPlaceholder('plan_id', $section->getBaseObject()->getSourceId());
-    $entities = $this->getPlanEntities($node);
-    return $query->getEntityRefCodeOptions($entities) ?? [];
+    $entity_types = $this->getEntityTypesFromPlanObject($section->getBaseObject());
+    $entity_types = array_filter($entity_types, function ($ref_code) use ($node) {
+      return !empty($this->getPlanEntities($node, $ref_code));
+    }, ARRAY_FILTER_USE_KEY);
+    return $entity_types;
+  }
+
+  /**
+   * Get the entity types from the given plan object.
+   *
+   * @param \Drupal\ghi_plans\Entity\Plan $plan
+   *   The plan entity object.
+   *
+   * @return array
+   *   An array of entity types, keyed by ref code, value is the plural name.
+   */
+  public function getEntityTypesFromPlanObject(Plan $plan) {
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanPrototypeQuery $prototype_query */
+    $prototype_query = $this->endpointQueryManager->createInstance('plan_prototype_query');
+    $prototype = $prototype_query->getPrototype($plan->getSourceId());
+
+    $entity_types = [
+      'PL' => (string) $this->t('Plan'),
+    ];
+    foreach ($prototype->getEntityPrototypes() as $entity_prototype) {
+      $ref_code = $entity_prototype->getRefCode();
+      $entity_types[$ref_code] = $entity_prototype->getPluralName();
+    }
+    if (!empty(self::EXCLUDE_ENTITY_TYPES)) {
+      $entity_types = array_diff_key($entity_types, array_flip(self::EXCLUDE_ENTITY_TYPES));
+    }
+    return $entity_types;
   }
 
   /**
@@ -427,7 +462,7 @@ class LogframeManager implements ContainerInjectionInterface {
 
     $entities = [];
     $base_object = $section->getBaseObject();
-    if ($base_object instanceof Plan) {
+    if ($base_object instanceof Plan && $ref_code == 'PL') {
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $query */
       $query = $this->endpointQueryManager->createInstance('entity_query');
       $plan_data = $query->getEntity('plan', $base_object->getSourceId());
@@ -454,13 +489,13 @@ class LogframeManager implements ContainerInjectionInterface {
    *
    * @param \Drupal\ghi_subpages\Entity\LogframeSubpage $node
    *   The logframe node object.
-   * @param \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[] $entities
-   *   The plan entity objects.
+   * @param string $ref_code
+   *   The entity ref code.
    *
    * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[]
    *   An array of attachment prototypes.
    */
-  private function getAttachmentPrototypes(LogframeSubpage $node, array $entities) {
+  private function getAttachmentPrototypesForEntityRefCode(LogframeSubpage $node, $ref_code) {
     $section = $node->getParentNode();
     if (!$section instanceof Section || !$section->getBaseObject() instanceof Plan) {
       return [];
@@ -473,7 +508,7 @@ class LogframeManager implements ContainerInjectionInterface {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
     $query = $this->endpointQueryManager->createInstance('attachment_prototype_query');
     $attachment_prototypes = $query->getDataPrototypesForPlan($plan_id);
-    return $this->filterAttachmentPrototypesByPlanEntities($attachment_prototypes, $entities);
+    return $this->filterAttachmentPrototypesByEntityRefCodes($attachment_prototypes, [$ref_code]);
   }
 
   /**

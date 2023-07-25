@@ -21,16 +21,7 @@ class PlanPrototype extends BaseObject {
     $plan_id = reset($data)->planId;
     $items = [];
     foreach ($data as $item) {
-      $items[$item->orderNumber] = (object) [
-        'id' => $item->id,
-        'ref_code' => $item->refCode,
-        'type' => $item->type,
-        'name_singular' => $item->value->name->en->singular,
-        'name_plural' => $item->value->name->en->plural,
-        'order_number' => $item->orderNumber,
-        'can_support' => $item->value->canSupport ?? [],
-        'children' => $item->value->possibleChildren ?? [],
-      ];
+      $items[$item->orderNumber] = new EntityPrototype($item);
     }
     ksort($items);
 
@@ -38,6 +29,17 @@ class PlanPrototype extends BaseObject {
       'plan_id' => $plan_id,
       'items' => $items,
     ];
+
+  }
+
+  /**
+   * Get the entity prototypes that make up this plan prototype.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\EntityPrototype[]
+   *   An array of entity prototypes.
+   */
+  public function getEntityPrototypes() {
+    return $this->items;
   }
 
 }

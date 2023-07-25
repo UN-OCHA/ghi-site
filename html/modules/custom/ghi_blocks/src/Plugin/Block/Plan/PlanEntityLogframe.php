@@ -22,6 +22,7 @@ use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\BlockHelper;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanEntityLogframe' block.
@@ -62,6 +63,25 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
+
+  /**
+   * The logframe manager.
+   *
+   * @var \Drupal\ghi_subpages\LogframeManager
+   */
+  public $logframeManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var \Drupal\ghi_blocks\Plugin\Block\Plan\PlanEntityLogframe $instance */
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+
+    // Set our own properties.
+    $instance->logframeManager = $container->get('ghi_subpages.logframe_manager');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -529,17 +549,10 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    *   An array with valid options for the current context.
    */
   private function getEntityRefCodeOptions() {
-    $options = [
-      'PL' => $this->t('Plan'),
-    ];
-    if (!$this->getCurrentPlanId()) {
-      return $options;
+    if (!$this->getCurrentPlanObject()) {
+      return [];
     }
-
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
-    $query = $this->getQueryHandler('entities');
-    $options = $options + $query->getEntityRefCodeOptions($this->getPlanEntities());
-    return $options;
+    return $this->logframeManager->getEntityTypesFromPlanObject($this->getCurrentPlanObject());
   }
 
   /**
@@ -661,6 +674,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    *   An array with context data or query handlers.
    */
   public function getBlockContext() {
+    $plan_object = $this->getCurrentPlanObject();
     $plan_entities = $this->getRenderableEntities();
     $this->sortPlanEntities($plan_entities, [
       'sort' => TRUE,
@@ -668,10 +682,11 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     ]);
     return [
       'page_node' => $this->getPageNode(),
-      'plan_object' => $this->getCurrentPlanObject(),
+      'plan_object' => $plan_object,
       'base_object' => $this->getCurrentBaseObject(),
       'context_node' => $this->getPageNode(),
       'entities' => $plan_entities,
+      'entity_types' => $this->logframeManager->getEntityTypesFromPlanObject($plan_object),
       'attachment_prototypes' => $this->getAttachmentPrototypes(),
       'used_attachment_prototypes' => $this->getUsedAttachmentPrototypeIds(),
     ];
@@ -748,15 +763,20 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    *   An array of attachment prototypes.
    */
   private function getAttachmentPrototypes() {
-    $plan_id = $this->getCurrentPlanId();
-    if (!$plan_id) {
+    $plan_object = $this->getCurrentPlanObject();
+    if (!$plan_object) {
       return [];
     }
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
     $query = $this->endpointQueryManager->createInstance('attachment_prototype_query');
-    $attachment_prototypes = $query->getDataPrototypesForPlan($plan_id);
-    $entities = $this->getRenderableEntities();
-    return $this->filterAttachmentPrototypesByPlanEntities($attachment_prototypes, $entities);
+    $attachment_prototypes = $query->getDataPrototypesForPlan($plan_object->getSourceId());
+
+    $entity_ref_code = $this->getBlockConfig()['entities']['entity_ref_code'] ?? NULL;
+    $entity_ref_codes = array_filter([$entity_ref_code]);
+    if (empty($entity_ref_code)) {
+      $entity_ref_codes = array_keys($this->logframeManager->getEntityTypesFromPlanObject($plan_object));
+    }
+    return $this->filterAttachmentPrototypesByEntityRefCodes($attachment_prototypes, $entity_ref_codes);
   }
 
   /**

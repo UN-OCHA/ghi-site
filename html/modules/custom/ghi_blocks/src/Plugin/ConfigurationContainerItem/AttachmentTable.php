@@ -128,7 +128,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
     $element['label']['#access'] = FALSE;
     $options = $this->getAttachmentPrototypeOptions();
     $prototype = $this->getAttachmentPrototype();
-    $attachment_prototypes = $this->getAttachmentPrototypesForEntities();
+    $attachment_prototypes = $this->getAttachmentPrototypes();
     $table_columns = $this->getConfig()['table_form']['columns'] ?? [];
     if (empty($options) && !empty($attachment_prototypes)) {
       $element['empty_message'] = [
@@ -269,7 +269,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    *   An array of id-label pairs for the attachment prototypes.
    */
   private function getAttachmentPrototypeOptions() {
-    $attachment_prototypes = $this->getAttachmentPrototypesForEntities();
+    $attachment_prototypes = $this->getAttachmentPrototypes();
     $prototype_id = $this->get('attachment_prototype');
     $used_prototypes = $this->getContextValue('used_attachment_prototypes') ?? [];
     $used_prototypes = array_diff($used_prototypes, [$prototype_id]);
@@ -327,21 +327,16 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   }
 
   /**
-   * Get the available attachment prototypes for the given entities.
-   *
-   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface[] $entities
-   *   The plan entity objects.
+   * Get the available attachment prototypes.
    *
    * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[]
    *   An array of attachment prototype objects.
    */
-  private function getAttachmentPrototypesForEntities(array $entities = NULL) {
-    /** @var \Drupal\ghi_plans\ApiObjects\PlanEntityInterface[] $entities */
-    $entities = $entities ?? $this->getContextValue('entities');
-
+  private function getAttachmentPrototypes() {
     $context = $this->getContext();
     $attachment_prototypes = $context['attachment_prototypes'] ?? [];
-    return $this->filterAttachmentPrototypesByPlanEntities($attachment_prototypes, $entities);
+    $entity_types = $context['entity_types'] ?? [];
+    return $this->filterAttachmentPrototypesByEntityRefCodes($attachment_prototypes, array_keys($entity_types));
   }
 
   /**
