@@ -2,17 +2,17 @@ _core:
   default_config_hash: jdY7AU0tU-QsjmiOw3W8vwpYMb-By--_MSFgbqKUTYM
 definitions:
   'admin_toolbar_tools__extra_links:node__add__financials':
+    enabled: false
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 4
     expanded: false
-    enabled: false
   'admin_toolbar_tools__extra_links:node__add__population':
+    enabled: false
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 7
     expanded: false
-    enabled: false
   'admin_toolbar_tools__extra_links:node__add__profile':
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
@@ -152,35 +152,35 @@ definitions:
     expanded: false
     enabled: true
   'admin_toolbar_tools__extra_links:node__add__article':
+    enabled: false
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 2
     expanded: false
-    enabled: false
   'admin_toolbar_tools__extra_links:node__add__document':
+    enabled: false
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 3
     expanded: false
-    enabled: false
   'admin_toolbar_tools__extra_links:node__add__news_story':
+    enabled: false
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 5
     expanded: false
-    enabled: false
   'admin_toolbar_tools__extra_links:node__add__page':
+    enabled: false
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 6
     expanded: false
-    enabled: false
   'admin_toolbar_tools__extra_links:node__add__section':
+    enabled: false
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 1
     expanded: false
-    enabled: false
   entity__base_object_type__collection:
     menu_name: admin
     parent: system.admin_structure
@@ -188,50 +188,50 @@ definitions:
     expanded: false
     enabled: true
   'admin_toolbar_tools__extra_links:node__add':
+    enabled: false
     menu_name: admin
     parent: system.admin_content
     weight: 0
     expanded: false
-    enabled: false
   'admin_toolbar_tools__extra_links:node__add__custom_subpage':
+    enabled: false
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 0
     expanded: false
-    enabled: false
   'admin_toolbar_tools__extra_links:node__add__global_section':
+    enabled: false
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 0
     expanded: false
-    enabled: false
   'admin_toolbar_tools__extra_links:node__add__homepage':
+    enabled: false
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 0
     expanded: false
-    enabled: false
   'admin_toolbar_tools__extra_links:node__add__plan_cluster':
+    enabled: false
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 0
     expanded: false
-    enabled: false
   'admin_toolbar_tools__extra_links:node__add__presence':
+    enabled: false
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 0
     expanded: false
-    enabled: false
   'admin_toolbar_tools__extra_links:node__add__logframe':
+    enabled: false
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 0
     expanded: false
-    enabled: false
   'admin_toolbar_tools__extra_links:node__add__progress':
+    enabled: false
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 0
     expanded: false
-    enabled: false
