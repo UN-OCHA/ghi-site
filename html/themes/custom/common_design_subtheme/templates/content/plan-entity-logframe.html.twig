@@ -1,0 +1,25 @@
+{{ attach_library('common_design/cd-grid') }}
+{{ attach_library('common_design_subtheme/ghi-entity-logframe') }}
+
+{%- if items -%}
+  <div class="item-list--entity-logframe">
+    {%- for item in items -%}
+      <div class="item-wrapper">
+        <div class="entity-wrapper">
+          <div class="entity-wrapper--inner">
+            {{ item.label }}
+          </div>
+          <span class="table-toggle material-icons">menu</span>
+        </div>
+        {%- if not item.attachment_tables is empty -%}
+          <div class="attachment-tables-wrapper">
+            {%- if not item.contributes_heading is empty -%}
+              {{ item.contributes_heading }}
+            {%- endif -%}
+            {{ item.attachment_tables }}
+          </div>
+        {%- endif -%}
+      </div>
+    {%- endfor -%}
+  </div>
+{%- endif -%}

@@ -6,9 +6,25 @@
  */
 
 /**
+ * Check if an update has already been run.
+ *
+ * @param string $name
+ *   The name of the update.
+ *
+ * @return bool
+ *   TRUE if it has already run, FALSE otherwise.
+ */
+function ghi_subpages_custom_update_already_run($name) {
+  return in_array('ghi_subpages_custom_post_update_' . $name, \Drupal::keyValue('post_update')->get('existing_updates'));
+}
+
+/**
  * Move existing "document" content to "custom_subpage".
  */
 function ghi_subpages_custom_deploy_move_existing_content(&$sandbox) {
+  if (ghi_subpages_custom_update_already_run('move_existing_content')) {
+    return;
+  }
   // Get existing content of type "document".
   $documents = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
     'type' => 'document',

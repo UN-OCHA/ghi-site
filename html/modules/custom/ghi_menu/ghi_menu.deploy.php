@@ -8,9 +8,25 @@
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 
 /**
+ * Check if an update has already been run.
+ *
+ * @param string $name
+ *   The name of the update.
+ *
+ * @return bool
+ *   TRUE if it has already run, FALSE otherwise.
+ */
+function ghi_menu_update_already_run($name) {
+  return in_array('ghi_menu_post_update_' . $name, \Drupal::keyValue('post_update')->get('existing_updates'));
+}
+
+/**
  * Add custom subpages backend page to admin menu.
  */
 function ghi_menu_deploy_adjust_admin_menu(&$sandbox) {
+  if (ghi_menu_update_already_run('adjust_admin_menu')) {
+    return;
+  }
   /** @var \Drupal\Core\Menu\MenuLinkManager $menu_link_manager */
   $menu_link_manager = \Drupal::service('plugin.manager.menu.link');
   $node_types = \Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple(NULL);
