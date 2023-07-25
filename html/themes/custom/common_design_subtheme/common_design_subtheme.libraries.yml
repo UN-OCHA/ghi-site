@@ -104,6 +104,14 @@ ghi-link-carousel:
     components/ghi-link-carousel/ghi-link-carousel.js: {}
   dependencies:
     - common_design_subtheme/swiper
+ghi-scrollable-table:
+  css:
+    theme:
+      components/ghi-scrollable-table/ghi-scrollable-table.css: {}
+  js:
+    components/ghi-scrollable-table/ghi-scrollable-table.js: {}
+  dependencies:
+    - core/jquery.ui
 
 # Copy libraries from GHO
 datawrapper-responsive-iframe:

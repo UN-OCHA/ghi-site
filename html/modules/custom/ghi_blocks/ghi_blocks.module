@@ -228,6 +228,18 @@ function ghi_blocks_plugin_filter_block__layout_builder_alter(array &$definition
 }
 
 /**
+ * Implements hook_library_info_alter().
+ */
+function ghi_blocks_library_info_alter(&$libraries, $extension) {
+  if ($extension == 'common_design_subtheme' && isset($libraries['ghi-scrollable-table'])) {
+    if (!\Drupal::config('ghi_blocks.table_settings')->get('scroll_indicator')) {
+      // Disable the visual indicator for scrollable tables.
+      unset($libraries['ghi-scrollable-table']);
+    }
+  }
+}
+
+/**
  * Implements hook_gin_lb_add_suggestions_alter().
  */
 function ghi_blocks_gin_lb_add_suggestions_alter(&$add_suggestions, $variables, $hook) {

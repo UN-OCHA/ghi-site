@@ -46,6 +46,15 @@ ghi_blocks.logframe_config:
     _admin_route: TRUE
   requirements:
     _permission: 'administer ghi logframe config'
+ghi_blocks.table_config:
+  path: '/admin/config/ghi/table'
+  defaults:
+    _form: '\Drupal\ghi_blocks\Form\TableSettingsForm'
+    _title: 'Table settings'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer ghi table config'
 
 ghi_blocks.import_block:
   path: '/layout_builder/import/block/{section_storage_type}/{section_storage}/{delta}/{region}'
