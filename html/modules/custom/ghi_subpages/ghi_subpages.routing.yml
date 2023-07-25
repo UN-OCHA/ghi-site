@@ -24,7 +24,7 @@ ghi_subpages.entity.logframe_rebuild:
       section_storage:
         layout_builder_section_storage: TRUE
 ghi_subpages.logframe.batch_rebuild:
-  path: '/admin/config/ghi/logframes'
+  path: '/admin/config/ghi/logframes/rebuild'
   defaults:
     _form: '\Drupal\ghi_subpages\Form\LogframeBatchRebuildForm'
     _title: 'Logframes'

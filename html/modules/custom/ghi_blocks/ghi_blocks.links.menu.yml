@@ -14,3 +14,14 @@ ghi_blocks.config.map:
   route_name: ghi_blocks.map_config
   description: 'Configure map settings'
   parent: system.admin_config_ghi
+ghi_blocks.config.logframe:
+  title: 'Logframe settings'
+  route_name: ghi_blocks.logframe_config
+  description: 'Configure logframe settings'
+  parent: system.admin_config_ghi
+ghi_blocks.config.logframe.settings:
+  title: 'Settings'
+  route_name: ghi_blocks.logframe_config
+  description: 'Configure logframe settings'
+  parent: ghi_blocks.config.logframe
+  weight: -1
