@@ -198,13 +198,10 @@ class ArticleListController extends ControllerBase {
         '#markup' => $this->t('There was an error processing your request. Please contact an administrator.'),
       ];
     }
-    $options = [
-      'force' => 1,
-    ];
     if ($tags !== NULL) {
       $options['configuration'] = ['source_tags' => $tags];
     }
-    $executable = new MigrateBatchExecutable($migration, new MigrateMessage(), $options);
+    $executable = new MigrateBatchExecutable($migration, new MigrateMessage());
     $executable->batchImport();
     batch_process($redirect);
     $batch = batch_get();
