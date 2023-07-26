@@ -8,6 +8,8 @@ use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
+use Drupal\ghi_plans\Entity\GoverningEntity;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -62,9 +64,15 @@ class HeroImageWidget extends WidgetBase {
 
     // See if we have a plan context.
     $plan_object = NULL;
+    $base_object = NULL;
     if ($entity instanceof NodeInterface) {
       $base_object = BaseObjectHelper::getBaseObjectFromNode($entity);
-      $plan_object = $base_object && $base_object->bundle() == 'plan' ? $base_object : NULL;
+      if ($base_object instanceof GoverningEntity) {
+        $plan_object = $base_object->getPlan();
+      }
+      if ($base_object instanceof Plan) {
+        $plan_object = $base_object;
+      }
     }
 
     // See if we can use SmugMug.
@@ -98,6 +106,7 @@ class HeroImageWidget extends WidgetBase {
       '#type' => 'webcontent_file_select',
       '#default_value' => $items[$delta]->settings['hpc_webcontent_file_attachment'] ?? NULL,
       '#plan_object' => $plan_object,
+      '#base_object' => $base_object,
       '#states' => [
         'visible' => [
           ':input[name="' . $source_selector . '"]' => ['value' => 'hpc_webcontent_file_attachment'],

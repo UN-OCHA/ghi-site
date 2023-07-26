@@ -33,6 +33,7 @@ class WebcontentFileSelect extends FormElement {
       '#theme_wrappers' => ['form_element'],
       '#multiple' => FALSE,
       '#plan_object' => NULL,
+      '#base_object' => NULL,
     ];
   }
 
@@ -49,8 +50,10 @@ class WebcontentFileSelect extends FormElement {
       // This is probably a Fields UI backend page.
       return $element;
     }
+    /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
+    $base_object = $element['#base_object'] ?: NULL;
     $entity_query = self::getPlanEntitiesQuery($plan_object->getSourceId());
-    $attachments = $entity_query->getWebContentFileAttachments($plan_object);
+    $attachments = $entity_query->getWebContentFileAttachments($base_object);
     $states = $element['#states'] ?? [];
 
     $file_options = [];
