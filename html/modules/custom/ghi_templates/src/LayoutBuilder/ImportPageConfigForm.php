@@ -336,10 +336,13 @@ class ImportPageConfigForm extends FormBase {
       $form_state->set('config', $import_config);
       $form_state->set('page_config', $import_config['page_config'] ?? NULL);
       if (!is_array($import_config) || empty($import_config['entity_type']) || empty($import_config['bundle']) || empty($import_config['page_config']) || empty($import_config['hash'])) {
-        $form_state->setErrorByName('config', $this->t('Empty or malformed config.'));
+        $form_state->setErrorByName('config', $this->t('Empty or malformed configuration.'));
       }
       elseif ($import_config['hash'] != md5(Yaml::encode(ArrayHelper::mapObjectsToString(array_diff_key($import_config, ['hash' => TRUE]))))) {
         $form_state->setErrorByName('config', $this->t('Internal validation failed.'));
+      }
+      elseif (count($import_config['page_config']) > 1 || array_key_exists('validation', $import_config) && !$import_config['validation']) {
+        $form_state->setErrorByName('config', $this->t('Configuration cannot be imported due to misconfigured sections.'));
       }
     }
   }
@@ -410,9 +413,17 @@ class ImportPageConfigForm extends FormBase {
           $component->setConfiguration($configuration);
           $components[$component->getUuid()] = $component->toArray();
         }
-        $section_config['components'] = $components;
-        $section = Section::fromArray($section_config);
-        $section_storage->appendSection($section);
+        if ($overwrite || empty($section_storage->getSections())) {
+          $section_config['components'] = $components;
+          $section = Section::fromArray($section_config);
+          $section_storage->appendSection($section);
+        }
+        else {
+          $section = $section_storage->getSection(0);
+          foreach ($components as $component) {
+            $section->appendComponent(SectionComponent::fromArray($component));
+          }
+        }
       }
 
       // Then put all that into the tempstore, so that it's available once the

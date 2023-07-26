@@ -4,12 +4,14 @@ namespace Drupal\ghi_blocks\ContextualLinks;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\Block\InlineBlock;
+use Drupal\layout_builder\Plugin\SectionStorage\DefaultsSectionStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -102,6 +104,14 @@ class BlockHandler implements ContainerInjectionInterface {
     $uuid = $route_parameters['uuid'];
     $delta = $route_parameters['delta'];
     $section_storage = $this->getSectionStorageForEntity($entity, 'default');
+
+    // Get the overridden section storage if necessary. The default section
+    // storage will not have a tempstore version.
+    if ($section_storage instanceof DefaultsSectionStorage) {
+      $section_storage = $this->sectionStorageManager()->load('overrides', [
+        'entity' => EntityContext::fromEntity($entity),
+      ]);
+    }
     $section_storage = $this->layoutTempstoreRepository->get($section_storage);
 
     $component_keys = array_keys($section_storage->getSection($delta)->getComponents());
