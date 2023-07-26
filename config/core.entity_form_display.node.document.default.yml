@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.node.document.field_base_objects
+    - field.field.node.document.field_crop_hero_image
     - field.field.node.document.field_display_hero_image
     - field.field.node.document.field_entity_reference
     - field.field.node.document.field_image
@@ -44,6 +45,7 @@ third_party_settings:
     group_display:
       children:
         - field_display_hero_image
+        - field_crop_hero_image
         - field_inherit_section_image
       label: Display
       region: content
@@ -114,6 +116,13 @@ content:
       disable_drag_and_drop: 0
       wrapper: 0
     third_party_settings: {  }
+  field_crop_hero_image:
+    type: boolean_checkbox
+    weight: 16
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
   field_display_hero_image:
     type: boolean_checkbox
     weight: 15
@@ -131,7 +140,7 @@ content:
     third_party_settings: {  }
   field_inherit_section_image:
     type: boolean_checkbox
-    weight: 16
+    weight: 17
     region: content
     settings:
       display_label: true

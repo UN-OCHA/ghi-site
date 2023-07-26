@@ -303,8 +303,15 @@ function ghi_content_preprocess_page(&$variables) {
     return;
   }
 
+  $crop_image = TRUE;
+  if ($image_node instanceof ContentBase) {
+    $crop_image = $image_node->shouldCropHeroImage();
+  }
+
+  $image_style_name = $crop_image ? 'hero' : 'hero_not_cropped';
+
   // Go through some trouble to show a responsive image here.
-  $repsonsive_image_style_id = 'hero';
+  $repsonsive_image_style_id = $image_style_name;
   $repsonsive_image_style_storage = \Drupal::service('entity_type.manager')->getStorage('responsive_image_style');
   $image_style_storage = \Drupal::service('entity_type.manager')->getStorage('image_style');
 
@@ -333,7 +340,7 @@ function ghi_content_preprocess_page(&$variables) {
     $image_build = $image_field->view([
       'label' => 'hidden',
       'settings' => [
-        'responsive_image_style' => 'hero',
+        'responsive_image_style' => $image_style_name,
         'image_link' => NULL,
         'include_credits' => TRUE,
       ],
