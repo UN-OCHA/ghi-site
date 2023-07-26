@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.node.article.field_base_objects
     - field.field.node.article.field_chapter
+    - field.field.node.article.field_crop_hero_image
     - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
     - field.field.node.article.field_inherit_section_image
@@ -104,6 +105,16 @@ content:
       link_to_entity: false
     third_party_settings: {  }
     weight: 7
+    region: content
+  field_crop_hero_image:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 9
     region: content
   field_display_hero_image:
     type: boolean

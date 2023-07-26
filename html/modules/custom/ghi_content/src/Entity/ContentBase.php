@@ -105,7 +105,8 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    * {@inheritdoc}
    */
   public function toUrl($rel = 'canonical', array $options = []) {
-    if ($rel == 'canonical' && $context_node = $this->getContextNode()) {
+    // Views apparently uses 'revision' as a $rel when rendering linked titles.
+    if (in_array($rel, ['canonical', 'revision']) && $context_node = $this->getContextNode()) {
       $context_url = $context_node->toUrl()->toString();
       $content_url = parent::toUrl($rel, ['absolute' => FALSE] + $options)->toString();
       $url = Url::fromUserInput($context_url . $content_url);
@@ -277,6 +278,20 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     }
     $display_hero_image = $this->get('field_display_hero_image')->value;
     return $display_hero_image == 1 || $display_hero_image === NULL;
+  }
+
+  /**
+   * Check if the current node can and should crop the hero image.
+   *
+   * @return bool
+   *   TRUE if a hero image, if available, should be cropped, FALSE otherwise.
+   */
+  public function shouldCropHeroImage() {
+    if (!$this->hasField('field_crop_hero_image')) {
+      return FALSE;
+    }
+    $crop_hero_image = $this->get('field_crop_hero_image')->value;
+    return $crop_hero_image == 1 || $crop_hero_image === NULL;
   }
 
   /**

@@ -609,6 +609,14 @@ abstract class BaseContentManager {
       $form['field_display_hero_image']['widget']['value']['#default_value'] = TRUE;
     }
 
+    // If the hero image crop checkbox is NULL (never actively saved), we
+    // want to make sure that it shows as selected, which is the default state
+    // for new content pages.
+    $crop_hero_image = $node->get('field_crop_hero_image')->value;
+    if ($crop_hero_image === NULL) {
+      $form['field_crop_hero_image']['widget']['value']['#default_value'] = TRUE;
+    }
+
     // If the inherit section image control checkbox is NULL (never actively
     // saved), we want to make sure that it shows as selected, which is the
     // default state for new content pages.
