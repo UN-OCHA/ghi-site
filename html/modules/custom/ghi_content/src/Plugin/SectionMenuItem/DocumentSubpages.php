@@ -4,6 +4,7 @@ namespace Drupal\ghi_content\Plugin\SectionMenuItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_content\Entity\Document;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_sections\Menu\OptionalSectionMenuPluginInterface;
 use Drupal\ghi_sections\Menu\SectionMenuItem;
 use Drupal\ghi_sections\Menu\SectionMenuPluginBase;
@@ -141,7 +142,10 @@ class DocumentSubpages extends SectionMenuPluginBase implements OptionalSectionM
     if (!$document instanceof Document) {
       return NULL;
     }
-    $document->setContextNode($this->getSection());
+    $section = $this->getSection();
+    if ($section && $section instanceof SectionNodeInterface) {
+      $document->setContextNode($section);
+    }
     return $document;
   }
 
