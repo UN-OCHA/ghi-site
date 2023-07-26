@@ -413,7 +413,7 @@ class ImportPageConfigForm extends FormBase {
           $component->setConfiguration($configuration);
           $components[$component->getUuid()] = $component->toArray();
         }
-        if ($overwrite) {
+        if ($overwrite || empty($section_storage->getSections())) {
           $section_config['components'] = $components;
           $section = Section::fromArray($section_config);
           $section_storage->appendSection($section);
