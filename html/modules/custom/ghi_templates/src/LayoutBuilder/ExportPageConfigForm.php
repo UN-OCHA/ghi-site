@@ -31,12 +31,16 @@ class ExportPageConfigForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL) {
     /** @var \Drupal\Core\Entity\EntityInterface $entity */
     $entity = $section_storage->getContextValue('entity');
+    $sections = $section_storage->getSections();
     $config_export = [
       'entity_type' => $entity->getEntityTypeId(),
+      'entity_id' => (int) $entity->id(),
       'bundle' => $entity->bundle(),
+      'url' => $entity->toUrl()->toString(),
+      'validation' => count($sections) == 1,
       'page_config' => [],
     ];
-    foreach ($section_storage->getSections() as $delta => $section) {
+    foreach ($sections as $delta => $section) {
       $config_export['page_config'][$delta] = $section->toArray();
       uasort($config_export['page_config'][$delta]['components'], function ($a, $b) {
         return $a['weight'] <=> $b['weight'];
