@@ -1015,6 +1015,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       // For the final submit of the form, put the values into the form
       // storage of the current form, so that we have them available later.
       $form_state->set($current_subform, $step_values);
+      $form_state->setTemporaryValue($current_subform, $step_values);
       return;
     }
     else {
