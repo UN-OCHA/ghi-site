@@ -10,7 +10,7 @@ dependencies:
 id: sectionmetadata
 theme: common_design_subtheme
 region: page_subtitle
-weight: -6
+weight: -8
 provider: null
 plugin: section_meta_data
 settings:
@@ -27,10 +27,14 @@ visibility:
     context_mapping:
       node: '@node.node_route_context:node'
     bundles:
+      article: article
+      custom_subpage: custom_subpage
+      document: document
       financials: financials
+      logframe: logframe
       global_section: global_section
       plan_cluster: plan_cluster
       population: population
-      profile: profile
-      risk_index: risk_index
+      presence: presence
+      progress: progress
       section: section

@@ -78,10 +78,12 @@ class SubpageHelper {
       ]);
 
       $subpage->save();
-      \Drupal::messenger()->addStatus(t('Created @type subpage for @title', [
-        '@type' => $subpage_name,
-        '@title' => $parent_node->getTitle(),
-      ]));
+      if (PHP_SAPI !== 'cli') {
+        \Drupal::messenger()->addStatus(t('Created @type subpage for @title', [
+          '@type' => $subpage_name,
+          '@title' => $parent_node->getTitle(),
+        ]));
+      }
     }
   }
 
@@ -111,7 +113,7 @@ class SubpageHelper {
   /**
    * Get all available subpage types.
    *
-   * @return array
+   * @return string[]
    *   An array of node type machine names.
    */
   public static function getSubpageTypes() {
@@ -202,6 +204,19 @@ class SubpageHelper {
    */
   public static function isSubpageType(NodeTypeInterface $node_type) {
     return self::getSubpageManager()->isSubpageType($node_type);
+  }
+
+  /**
+   * Check if the given node type is a manual subpage type.
+   *
+   * @param \Drupal\node\NodeTypeInterface $node_type
+   *   The node type to check.
+   *
+   * @return bool
+   *   TRUE if it is a manual subpage type, FALSE otherwhise.
+   */
+  public static function isManualSubpageType(NodeTypeInterface $node_type) {
+    return self::getSubpageManager()->isManualSubpageType($node_type);
   }
 
   /**

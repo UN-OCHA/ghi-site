@@ -1,0 +1,21 @@
+uuid: f8ae4fd1-2e19-4269-bd20-5ba60d919a37
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.layout_builder__layout
+    - node.type.custom_subpage
+  module:
+    - layout_builder
+id: node.custom_subpage.layout_builder__layout
+field_name: layout_builder__layout
+entity_type: node
+bundle: custom_subpage
+label: Layout
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: layout_section

@@ -16,6 +16,8 @@ use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
+use Drupal\hpc_api\Helpers\ArrayHelper;
+use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 
@@ -274,9 +276,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       $entities[$entity->id()] = $entity;
     }
     // Sort the entities.
-    uasort($entities, function ($_a, $_b) {
-      return $_a->sort_key - $_b->sort_key;
-    });
+    ArrayHelper::sortObjectsByStringProperty($entities, 'sort_key', EndpointQuery::SORT_ASC);
     return $entities;
   }
 
@@ -362,34 +362,8 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
         '#markup' => Markup::create($entity_description),
       ],
     ];
-    if ($current_entity instanceof PlanEntity && $plan_entity_parents = $current_entity->getPlanEntityParents()) {
-      $contribute_items = array_map(function (PlanEntity $plan_entity) {
-        return [
-          [
-            '#theme' => 'hpc_icon',
-            '#icon' => 'check_circle',
-            '#tag' => 'span',
-          ],
-          [
-            '#markup' => $plan_entity->getEntityName(),
-          ],
-        ];
-      }, $plan_entity_parents);
-      $build[] = [
-        '#type' => 'container',
-        '#attributes' => [
-          'class' => ['contribution-wrapper'],
-        ],
-        [
-          '#type' => 'html_tag',
-          '#tag' => 'span',
-          '#value' => $this->t('Contributes to'),
-        ],
-        [
-          '#theme' => 'item_list',
-          '#items' => $contribute_items,
-        ],
-      ];
+    if ($current_entity instanceof PlanEntity && $contributes_to = $this->buildContributesToHeading($current_entity)) {
+      $build[] = $contributes_to;
     }
     return $build;
   }

@@ -1,0 +1,7 @@
+ghi_blocks.logframe_settings:
+  type: config_object
+  label: 'GHI Logframe settings'
+  mapping:
+    lazy_load:
+      type: boolean
+      label: 'Lazy load logframe elements'

@@ -5,8 +5,10 @@ dependencies:
   config:
     - field.field.node.article.field_base_objects
     - field.field.node.article.field_chapter
+    - field.field.node.article.field_crop_hero_image
     - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
+    - field.field.node.article.field_inherit_section_image
     - field.field.node.article.field_remote_article
     - field.field.node.article.field_summary
     - field.field.node.article.field_tags
@@ -75,6 +77,8 @@ third_party_settings:
     group_display:
       children:
         - field_display_hero_image
+        - field_crop_hero_image
+        - field_inherit_section_image
       label: Display
       region: content
       parent_name: group_tabs
@@ -119,6 +123,13 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+  field_crop_hero_image:
+    type: boolean_checkbox
+    weight: 28
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
   field_display_hero_image:
     type: boolean_checkbox
     weight: 27
@@ -133,6 +144,13 @@ content:
     settings:
       progress_indicator: throbber
       preview_image_style: thumbnail
+    third_party_settings: {  }
+  field_inherit_section_image:
+    type: boolean_checkbox
+    weight: 29
+    region: content
+    settings:
+      display_label: true
     third_party_settings: {  }
   field_remote_article:
     type: ghi_remote_article
@@ -214,6 +232,11 @@ content:
       match_limit: 10
       size: 60
       placeholder: ''
+    third_party_settings: {  }
+  url_redirects:
+    weight: 50
+    region: content
+    settings: {  }
     third_party_settings: {  }
 hidden:
   layout_builder__layout: true

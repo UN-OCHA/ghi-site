@@ -1,0 +1,52 @@
+<?php
+
+/**
+ * @file
+ * Contains hook implementations for the GHI Custom Subpages module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_subpages_custom\CustomSubpageManager;
+use Drupal\ghi_subpages_custom\Entity\CustomSubpage;
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function ghi_subpages_custom_entity_bundle_info_alter(array &$bundles) {
+  $bundles['node']['custom_subpage']['class'] = CustomSubpage::class;
+  $bundles['node']['custom_subpage']['label'] = t('Custom subpage');
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ghi_subpages_custom_form_node_custom_subpage_edit_form_alter(&$form, FormStateInterface &$form_state) {
+  // Restrict access to the team field.
+  if (!\Drupal::currentUser()->hasPermission('administer teams')) {
+    $form['field_team']['#disabled'] = TRUE;
+    $form['field_team']['widget']['#description'] = t('You do not have permission to change the team for this section.');
+  }
+
+  // Lock the section field.
+  /** @var \Drupal\Core\Entity\ContentEntityFormInterface $form_object */
+  $form_object = $form_state->getFormObject();
+  $node = $form_object->getEntity();
+  if (!$node->isNew() && !$node->get('field_entity_reference')->isEmpty()) {
+    $form['field_entity_reference']['#disabled'] = TRUE;
+  }
+}
+
+/**
+ * Implements hook_is_subpage_type().
+ */
+function ghi_subpages_custom_is_subpage_type($node_type) {
+  return in_array($node_type, [CustomSubpageManager::BUNDLE]);
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function ghi_subpages_custom_entity_type_alter(array &$entity_types) {
+  // Add validation constraint to the node entity.
+  $entity_types['node']->addConstraint('ReservedTitle');
+}

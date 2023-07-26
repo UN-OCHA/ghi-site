@@ -1,0 +1,22 @@
+uuid: f792d35c-9940-45b2-8260-bfb61a2f94db
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: logframe
+label: Logframe
+type: 'canonical_entities:node'
+pattern: '[node:field_entity_reference:entity:url:path]/logframe'
+selection_criteria:
+  6b26fbd1-1717-4274-bdf4-4834ff9d0b07:
+    id: 'entity_bundle:node'
+    negate: false
+    uuid: 6b26fbd1-1717-4274-bdf4-4834ff9d0b07
+    context_mapping:
+      node: node
+    bundles:
+      logframe: logframe
+selection_logic: and
+weight: -5
+relationships: {  }

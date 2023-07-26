@@ -10,6 +10,7 @@ dependencies:
     - field.field.node.section.field_team
     - field.field.node.section.field_year
     - field.field.node.section.layout_builder__layout
+    - field.field.node.section.section_menu
     - node.type.section
   module:
     - ghi_hero_image
@@ -40,7 +41,12 @@ content:
     type: ghi_hero_image
     weight: 13
     region: content
-    settings: {  }
+    settings:
+      source: null
+      settings:
+        hpc_webcontent_file_attachment: null
+        smugmug_api: null
+        crop_image: true
     third_party_settings: {  }
   field_summary:
     type: text_textarea
@@ -130,5 +136,11 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+  url_redirects:
+    weight: 50
+    region: content
+    settings: {  }
+    third_party_settings: {  }
 hidden:
   layout_builder__layout: true
+  section_menu: true

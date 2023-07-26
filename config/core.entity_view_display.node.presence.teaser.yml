@@ -1,0 +1,29 @@
+uuid: b3b54d7d-e0d2-46dd-8335-6d8b9d2ca81c
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.presence.field_entity_reference
+    - field.field.node.presence.field_hero_image
+    - field.field.node.presence.field_team
+    - field.field.node.presence.layout_builder__layout
+    - node.type.presence
+  module:
+    - user
+id: node.presence.teaser
+targetEntityType: node
+bundle: presence
+mode: teaser
+content:
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  field_entity_reference: true
+  field_hero_image: true
+  field_team: true
+  langcode: true
+  layout_builder__layout: true

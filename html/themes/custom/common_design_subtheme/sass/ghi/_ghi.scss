@@ -2,14 +2,66 @@
 // GHI: root file
 //——————————————————————————————————————————————————————————————————————————————
 
+// GHI general
 @import "ghi-icons";
 @import "ghi-layout-builder";
 @import "ghi-menu";
 @import "ghi-page";
 @import "ghi-tooltips";
 @import "ghi-variables";
-@import "blocks/blocks";
-@import "components/components";
-@import "content/content";
-@import "downloads/downloads";
+
+// Blocks
+@import "blocks/article-collection";
+@import "blocks/article-title";
+@import "blocks/common";
+@import "blocks/document-chapter";
+@import "blocks/document-link-button";
+@import "blocks/document-links";
+@import "blocks/document-subheading";
+@import "blocks/entity-types";
+@import "blocks/external-widgets";
+@import "blocks/headline-figures";
+@import "blocks/hid-session-information";
+@import "blocks/key-figures";
+@import "blocks/paragraph";
+@import "blocks/plan-attachment-map";
+@import "blocks/plan-cluster-header";
+@import "blocks/plan-entity-attachments-table";
+@import "blocks/plan-operational-presence-map";
+@import "blocks/plan-organizations-table";
+@import "blocks/plan-overview-map";
+@import "blocks/plan-table";
+@import "blocks/plan-webcontent";
+@import "blocks/section-collection";
+@import "blocks/section-switcher";
+@import "blocks/subpage-title";
+
+// Other components
+@import "components/cluster-icons";
+@import "components/download-dialog";
+@import "components/entity-navigation";
+@import "components/images";
+@import "components/metadata";
+@import "components/modal";
+@import "components/pie-chart";
+@import "components/plan-entity-contributions";
+@import "components/plan-status";
+@import "components/progress-bar";
+@import "components/project-data";
+@import "components/select2";
+@import "components/tables";
+@import "components/throbber";
+@import "components/ui-dialog";
+
+// Content
+@import "content/article-grid";
+@import "content/content-page";
+@import "content/homepage";
+
+// Downloads
+@import "downloads/snap-pdf";
+@import "downloads/snap-png";
+
+// Map
+@import "map/leaflet";
 @import "map/map";

@@ -104,6 +104,13 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
+  public function canAddNewItem() {
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPluginConfiguration() {
     return $this->configuration;
   }
@@ -144,8 +151,9 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    * {@inheritdoc}
    */
   public function getLabel() {
-    if (array_key_exists('label', $this->config) && !empty($this->config['label'])) {
-      return $this->config['label'];
+    $config = $this->config ?? [];
+    if (array_key_exists('label', $config) && !empty($config['label'])) {
+      return $config['label'];
     }
     if (method_exists($this, 'getDefaultLabel')) {
       return $this->getDefaultLabel();

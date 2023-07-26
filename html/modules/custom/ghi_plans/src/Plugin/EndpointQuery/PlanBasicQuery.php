@@ -37,8 +37,8 @@ class PlanBasicQuery extends EndpointQueryBase {
    * @param int $plan_id
    *   The plan id.
    *
-   * @return object
-   *   An array of attachment objects for the given context.
+   * @return \Drupal\ghi_plans\ApiObjects\Plan
+   *   An API plan object.
    */
   public function getBaseData($plan_id) {
     $cache_key = $this->getCacheKey([

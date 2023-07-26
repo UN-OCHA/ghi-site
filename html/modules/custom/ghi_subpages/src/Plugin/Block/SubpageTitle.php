@@ -4,7 +4,11 @@ namespace Drupal\ghi_subpages\Plugin\Block;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
+use Drupal\ghi_subpages\SubpageTrait;
+use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'SubpageTitle' block.
@@ -12,13 +16,40 @@ use Drupal\ghi_subpages\Helpers\SubpageHelper;
  * @Block(
  *  id = "subpage_title",
  *  admin_label = @Translation("Subpage title"),
- *  category = @Translation("Subpage"),
+ *  category = @Translation("Page"),
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"))
  *  }
  * )
  */
-class SubpageTitle extends BlockBase {
+class SubpageTitle extends BlockBase implements ContainerFactoryPluginInterface {
+
+  use SubpageTrait;
+
+  /**
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
+   * The section manager.
+   *
+   * @var \Drupal\ghi_sections\SectionManager
+   */
+  protected $sectionManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var \Drupal\ghi_subpages\Plugin\Block\SubpageTitle $instance */
+    $instance = new static($configuration, $plugin_id, $plugin_definition);
+    $instance->moduleHandler = $container->get('module_handler');
+    $instance->sectionManager = $container->get('ghi_sections.manager');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -30,11 +61,19 @@ class SubpageTitle extends BlockBase {
     }
     /** @var \Drupal\node\NodeInterface $node */
     $node = $contexts['node']->getContextValue();
-    $title = NULL;
-    if (SubpageHelper::isSubpageTypeNode($node)) {
-      $title = $node->getTitle();
+    if (!$node || !$node instanceof NodeInterface) {
+      return NULL;
     }
-    elseif (SubpageHelper::isBaseTypeNode($node) && SubpageHelper::getSectionOverviewLabel($node)) {
+
+    // Get the section.
+    $section = $this->sectionManager->getCurrentSection($node);
+    if (!$section) {
+      // Don't show the subpage title if no parent section is available.
+      return NULL;
+    }
+
+    $title = $node->type->entity->getThirdPartySetting('ghi_subpages', 'page_title') ?: $node->getTitle();
+    if (SubpageHelper::isBaseTypeNode($node) && SubpageHelper::getSectionOverviewLabel($node)) {
       $title = SubpageHelper::getSectionOverviewLabel($node);
     }
     if ($title) {
@@ -43,6 +82,10 @@ class SubpageTitle extends BlockBase {
           '@title' => $title,
         ]),
         '#full_width' => TRUE,
+        '#cache' => [
+          'tags' => $node->getCacheTags(),
+          'contexts' => $node->getCacheContexts(),
+        ],
       ];
     }
   }

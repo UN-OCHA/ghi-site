@@ -1,0 +1,29 @@
+uuid: 07c89ff6-e1e5-48db-bea2-b469a5f8fa0f
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.progress.field_entity_reference
+    - field.field.node.progress.field_hero_image
+    - field.field.node.progress.field_team
+    - field.field.node.progress.layout_builder__layout
+    - node.type.progress
+  module:
+    - user
+id: node.progress.teaser
+targetEntityType: node
+bundle: progress
+mode: teaser
+content:
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  field_entity_reference: true
+  field_hero_image: true
+  field_team: true
+  langcode: true
+  layout_builder__layout: true

@@ -47,6 +47,15 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
   /**
    * {@inheritdoc}
    */
+  public function label() {
+    // We just want to hide the label always.
+    $this->configuration['label_display'] = FALSE;
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildContent() {
     $conf = $this->getBlockConfig();
 

@@ -11,6 +11,6 @@ gin_toolbar:
   js:
     js/gin_toolbar.js: { minified: true, preprocess: false }
   dependencies:
-    # - gin_lb/gin_lb_form
+    # - gin_lb/gin_lb
     # - gin_lb/gin_lb_init
     - toolbar/toolbar

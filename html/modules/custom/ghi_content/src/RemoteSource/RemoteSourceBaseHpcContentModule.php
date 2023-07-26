@@ -5,6 +5,7 @@ namespace Drupal\ghi_content\RemoteSource;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
+use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteDocument;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteParagraph;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\ghi_content\RemoteResponse\RemoteResponse;
@@ -19,6 +20,60 @@ use GuzzleHttp\Exception\ServerException;
 abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
 
   use SimpleCacheTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDocument($id) {
+    $fields = [
+      'id',
+      'title',
+      'title_short',
+      'summary',
+      'tags',
+      'created',
+      'updated',
+    ];
+    $fields['content_space'] = [
+      'title',
+      'tags',
+    ];
+    $fields['chapters'] = [
+      'id',
+      'uuid',
+      'title',
+      'title_short',
+      'summary',
+    ];
+    $fields['chapters']['articles'] = [
+      'id',
+    ];
+    $fields['image'] = [
+      'credits',
+      'imageUrl',
+    ];
+    $fields['imageCaption'] = [
+      'location',
+      'text',
+    ];
+    $document_data = $this->fetchDocumentData($id, $fields);
+    return $document_data ? new RemoteDocument($document_data, $this) : NULL;
+  }
+
+  /**
+   * Fetch data for an article identified by $id.
+   */
+  private function fetchDocumentData($id, array $fields) {
+    $query = '{
+      document(id:' . $id . ') {' . $this->getFieldString($fields) . '}
+    }';
+
+    $response = $this->query($query);
+    if (!$response->has('document')) {
+      return NULL;
+    }
+    return $response->get('document');
+  }
 
   /**
    * {@inheritdoc}
@@ -108,6 +163,27 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
+  public function searchDocumentsByTitle($title) {
+    $query = '{
+      documentSearch(title:"' . $title . '") {
+        count
+        items {
+          id
+        }
+      }
+    }';
+    $response = $this->query($query);
+    if (!$response->has('documentSearch') || !$response->get('documentSearch')->items) {
+      return [];
+    }
+    return array_filter(array_map(function ($item) {
+      return $this->getDocument($item->id);
+    }, $response->get('documentSearch')->items));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function searchArticlesByTitle($title) {
     $query = '{
       articleSearch(title:"' . $title . '") {
@@ -121,9 +197,9 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     if (!$response->has('articleSearch') || !$response->get('articleSearch')->items) {
       return [];
     }
-    return array_map(function ($item) {
+    return array_filter(array_map(function ($item) {
       return $this->getArticle($item->id);
-    }, $response->get('articleSearch')->items);
+    }, $response->get('articleSearch')->items));
   }
 
   /**
@@ -373,7 +449,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
         if ($link_item['route_name'] == 'entity.node.canonical') {
           $node_id = $link_item['route_parameters']['node'] ?? NULL;
           $referenced_article = $node_id ? $paragraph->getSource()->getArticle($node_id) : NULL;
-          $article_node = $referenced_article ? $this->articleManager->loadNodeForRemoteArticle($referenced_article) : NULL;
+          $article_node = $referenced_article ? $this->articleManager->loadNodeForRemoteContent($referenced_article) : NULL;
           if ($article_node && $article_node->access('view')) {
             $link_map[$link_item['alias']] = $article_node->toUrl()->toString();
           }
@@ -392,7 +468,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
-  public function importSource(array $tags = NULL) {
+  public function importArticles(array $tags = NULL) {
     $this->disableCache();
     $query = '{
       articleExport ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
@@ -414,6 +490,34 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     return array_map(function ($item) {
       return (array) $item;
     }, $response->get('articleExport')->items);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function importDocuments(array $tags = NULL) {
+    $this->disableCache();
+    $query = '{
+      documentExport ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
+        count
+        items {
+          id
+          title
+          title_short
+          summary
+          created
+          updated
+          tags
+        }
+      }
+    }';
+    $response = $this->query($query);
+    if (!$response->has('documentExport') || !$response->get('documentExport')->items) {
+      return [];
+    }
+    return array_map(function ($item) {
+      return (array) $item;
+    }, $response->get('documentExport')->items);
   }
 
 }

@@ -1,0 +1,7 @@
+ghi_blocks.table_settings:
+  type: config_object
+  label: 'GHI Table settings'
+  mapping:
+    scroll_indicator:
+      type: boolean
+      label: 'Use a javascript-based scroll indicator for larger tables'

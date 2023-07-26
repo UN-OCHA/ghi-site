@@ -24,6 +24,28 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
   public function getPluginDescription();
 
   /**
+   * Get a document by id.
+   *
+   * @param int $id
+   *   The id of the document on the remote.
+   *
+   * @return \Drupal\ghi_content\RemoteContent\RemoteDocumentInterface
+   *   The document object.
+   */
+  public function getDocument($id);
+
+  /**
+   * Search documents by title.
+   *
+   * @param string $title
+   *   The title to search.
+   *
+   * @return \Drupal\ghi_content\RemoteContent\RemoteDocumentInterface[]
+   *   The set of matching document objects.
+   */
+  public function searchDocumentsByTitle($title);
+
+  /**
    * Get an article by id.
    *
    * @param int $id
@@ -151,7 +173,7 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
   public function getLinkMap(RemoteParagraphInterface $paragraph);
 
   /**
-   * Get the import source for a remote system.
+   * Import articles from the remote system.
    *
    * @param array $tags
    *   Optional argument to filter the source data by tag names.
@@ -159,7 +181,18 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    * @return array
    *   An array of source identifiers.
    */
-  public function importSource(array $tags = NULL);
+  public function importArticles(array $tags = NULL);
+
+  /**
+   * Import documents from the remote system.
+   *
+   * @param array $tags
+   *   Optional argument to filter the source data by tag names.
+   *
+   * @return array
+   *   An array of source identifiers.
+   */
+  public function importDocuments(array $tags = NULL);
 
   /**
    * Disable the cache.

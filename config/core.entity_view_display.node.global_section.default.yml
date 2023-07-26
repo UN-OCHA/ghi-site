@@ -7,6 +7,7 @@ dependencies:
     - field.field.node.global_section.field_team
     - field.field.node.global_section.field_year
     - field.field.node.global_section.layout_builder__layout
+    - field.field.node.global_section.section_menu
     - node.type.global_section
   module:
     - layout_builder
@@ -85,7 +86,7 @@ third_party_settings:
           - article_collection
           - paragraph
   layout_builder_ipe:
-    enabled: 1
+    enabled: true
 id: node.global_section.default
 targetEntityType: node
 bundle: global_section
@@ -124,3 +125,4 @@ content:
 hidden:
   langcode: true
   layout_builder__layout: true
+  section_menu: true

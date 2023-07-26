@@ -5,3 +5,8 @@
 .toolbar-tray-horizontal ul li.menu-item__local_tasks.hover-intent ul {
   width: auto !important;
 }
+
+.toolbar-tray-horizontal ul li.menu-item__local_tasks.menu-item--expanded.hover-intent ul {
+  left: 0;
+  right: 0;
+}

@@ -9,21 +9,20 @@ use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
-use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\Controller\MigrationBatchController;
 use Drupal\ghi_content\Entity\Article;
+use Drupal\ghi_content\Entity\ContentBase;
+use Drupal\ghi_content\Entity\Document;
+use Drupal\ghi_content\RemoteContent\RemoteContentImageInterface;
+use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_sections\SectionManager;
+use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
-
-/**
- * Implements hook_cron().
- */
-function ghi_content_cron() {
-
-}
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -31,6 +30,8 @@ function ghi_content_cron() {
 function ghi_content_entity_bundle_info_alter(array &$bundles) {
   $bundles['node']['article']['class'] = Article::class;
   $bundles['node']['article']['label'] = t('Article');
+  $bundles['node']['document']['class'] = Document::class;
+  $bundles['node']['document']['label'] = t('Document');
 }
 
 /**
@@ -83,29 +84,72 @@ function ghi_content_theme($existing, $type, $theme, $path) {
  */
 function ghi_content_batch_alter(&$batch) {
   $targeted_callback = '\Drupal\migrate_tools\MigrateBatchExecutable::batchProcessImport';
-  $targeted_migration = 'articles_hpc_content_module';
+  $targeted_migrations = [
+    'articles_hpc_content_module' => 'ghi_content.manager.article',
+    'documents_hpc_content_module' => 'ghi_content.manager.document',
+  ];
+
   $current_set = $batch['current_set'];
   $operations = &$batch['sets'][$current_set]['operations'];
   $callback = $operations[0][0] ?? NULL;
   $migration_name = $operations[0][1][0] ?? NULL;
-  if ($callback != $targeted_callback || $migration_name != $targeted_migration) {
+  if ($callback != $targeted_callback || !array_key_exists($migration_name, $targeted_migrations)) {
     return;
   }
   // Add a post-process batch set to article imports to make sure that articles
   // that are not available on the remote source anymore will get unpublished.
   $placeholders = [
-    '@name' => $targeted_migration,
+    '@name' => $migration_name,
   ];
+  /** @var \Drupal\ghi_content\ContentManager\DocumentManager $document_manager */
+  $content_manager = \Drupal::service($targeted_migrations[$migration_name]);
   $batch_builder = (new BatchBuilder())
     ->setTitle(t('Post process @name', $placeholders))
     ->setInitMessage(t('Start post-processing for @name', $placeholders))
     ->setProgressMessage(t('Post-processing @name', $placeholders))
     ->addOperation(
-        [MigrationBatchController::class, 'batchProcessCleanupArticles'],
-        [$operations[0][1][0], $operations[0][1][1]]
+        [MigrationBatchController::class, 'batchProcessCleanup'],
+        [$operations[0][1][0], $operations[0][1][1], $content_manager]
       )
     ->setFinishCallback([MigrationBatchController::class, 'batchFinished']);
   batch_set($batch_builder->toArray());
+}
+
+/**
+ * Implements hook_layout_builder_ipe_links_alter().
+ *
+ * This adds a destination parameter to selected layout builder ipe routes.
+ */
+function ghi_content_layout_builder_ipe_links_alter(array &$links, SectionStorageInterface $section_storage, EntityInterface $entity) {
+  if (!$entity instanceof ContentBase) {
+    // We only support this for content entites.
+    return;
+  }
+
+  $route_names = [
+    'layout_builder_ipe.entity.edit',
+    'layout_builder_ipe.entity.override',
+  ];
+
+  foreach ($links as &$link) {
+    if (!$link instanceof Link || !$link->getUrl()->isRouted()) {
+      continue;
+    }
+    $url = $link->getUrl();
+    if (!in_array($url->getRouteName(), $route_names)) {
+      continue;
+    }
+    $request = \Drupal::request();
+    $route_params = $request->attributes->get('_route_params');
+    $node = $route_params['node'] ?? NULL;
+    if (!$node instanceof ContentBase) {
+      return;
+    }
+
+    $query = $url->getOption('query');
+    $query['destination'] = $request->query->has('destination') ? $request->query->get('destination') : $request->getPathInfo();
+    $url->setOption('query', $query);
+  }
 }
 
 /**
@@ -132,160 +176,56 @@ function ghi_content_contextual_links_alter(array &$links, $group, array $route_
  * Used to disable fields that automatically populated.
  */
 function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateInterface $form_state) {
-  /** @var \Drupal\node\NodeForm $form_object */
-  $form_object = $form_state->getFormObject();
-  /** @var \Drupal\node\NodeInterface $node */
-  $node = $form_object->getEntity();
-
-  $disable_fields = [
-    'title',
-    'langcode',
-    'field_image',
-    'field_chapter',
-    'field_summary',
-    'field_tags',
-  ];
-  foreach ($disable_fields as $field_name) {
-    $form[$field_name]['#disabled'] = TRUE;
-    $form[$field_name]['#attributes']['title'] = t('This field is disabled because it is automatically populated from the remote source.');
-  }
-  // Also disable the remote article field.
-  $remote_field = ArticleManager::REMOTE_ARTICLE_FIELD;
-  $form[$remote_field]['#disabled'] = TRUE;
-  $form[$remote_field]['#attributes']['title'] = t('This field cannot be edited anymore after an article page has been created.');
-
-  $admin_permission = \Drupal::currentUser()->hasPermission('administer content types');
-  $form['meta']['#access'] = $admin_permission;
-  $form['meta']['published']['#access'] = $admin_permission;
-  $form['meta']['author']['#access'] = $admin_permission;
-  $form['author']['#access'] = $admin_permission;
-  $form['changed']['#access'] = $admin_permission;
-  $form['options']['#access'] = $admin_permission;
-
-  // If the hero image control checkbox is NULL (never actively saved), we want
-  // to make sure that it shows as selected, which is the default state for new
-  // articles pages.
-  $display_hero_image = $node->get('field_display_hero_image')->value;
-  if ($display_hero_image === NULL) {
-    $form['field_display_hero_image']['widget']['value']['#default_value'] = TRUE;
-  }
-
   /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
   $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
-  $article = $article_manager->loadArticleForNode($node);
-  $article_in_sync = $article ? $article_manager->isUpToDateWithRemote($node) : NULL;
-
-  $form['remote_article_info'] = [
-    '#type' => 'details',
-    '#title' => t('Remote article'),
-    '#open' => TRUE,
-    '#group' => 'advanced',
-  ];
-
-  $form['remote_article_info']['status'] = [
-    '#type' => 'item',
-    '#title' => t('Up to date'),
-    '#markup' => '<p>' . t('This article page is up to date with its source content on the remote system.') . '</p>',
-    '#weight' => 1,
-  ];
-
-  if (!$article) {
-    $form['remote_article_info']['status']['#title'] = t('Deleted');
-    $form['remote_article_info']['status']['#markup'] = '<p>' . t('The source of this article page has been removed on the remote system.') . '</p>';
-  }
-  elseif (!$article_in_sync) {
-    $form['remote_article_info']['status']['#title'] = t('Outdated');
-    $form['remote_article_info']['status']['#markup'] = '<p>' . t('The source of this article page has changed on the remote system. It will be automatically updated the next time that the article import will run. To apply the changes immediately use the button below.') . '</p>';
-
-    $form['remote_article_info']['apply_changes'] = [
-      '#type' => 'submit',
-      '#value' => t('Apply changes from remote'),
-      '#submit' => ['ghi_content_form_node_article_edit_form_apply_changes_submit'],
-      '#weight' => 2,
-    ];
-  }
-
-  if ($article) {
-    /** @var \Drupal\Core\Routing\RedirectDestinationInterface $redirect_destination */
-    $redirect_destination = \Drupal::service('redirect.destination');
-    $queryParams = \Drupal::request()->query->all();
-    $redirect_url = Url::fromRouteMatch(\Drupal::routeMatch());
-    if (!empty($queryParams)) {
-      $redirect_url->setOption('query', $queryParams);
-    }
-    $redirect_destination->set($redirect_url->toString());
-    $form['remote_article_info']['link_label'] = [
-      '#type' => 'item',
-      '#title' => t('Go to remote system'),
-      '#weight' => 3,
-    ];
-    $view_builder = \Drupal::entityTypeManager()->getViewBuilder('node');
-    $form['remote_article_info']['link'] = $view_builder->viewField($node->get($remote_field), [
-      'label' => 'hidden',
-      'type' => 'ghi_remote_article_source_link',
-      'settings' => [
-        'link_label' => t('Edit this article on the remote system'),
-        'link_to_edit' => TRUE,
-        'include_publisher_destination' => TRUE,
-      ],
-    ]);
-    $form['remote_article_info']['link']['#weight'] = 4;
-
-    // Add a way to reset the article.
-    $form['remote_article_reset'] = [
-      '#type' => 'details',
-      '#title' => t('Reset article'),
-      '#description' => t('Reset the content paragraphs to the initial state. This will remove any customizations made to this article page and re-import all content paragraphs in the order defined on the remote system.'),
-      '#open' => FALSE,
-      '#group' => 'advanced',
-    ];
-    $form['remote_article_reset']['reset'] = [
-      '#type' => 'submit',
-      '#value' => t('Reset now'),
-      '#submit' => ['ghi_content_form_node_article_edit_form_reset_submit'],
-      '#weight' => 2,
-    ];
-  }
-  $form['#attached']['library'][] = 'ghi_content/admin.article_edit';
+  $article_manager->nodeEditFormAlter($form, $form_state);
+  return $form;
 }
 
 /**
- * Form submit handler for the "Apply changes" button on article forms.
+ * Implements hook_form_FORM_ID_alter().
  *
- * This just saves the node.
+ * Used to disable fields that automatically populated.
  */
-function ghi_content_form_node_article_edit_form_apply_changes_submit($form, FormStateInterface $form_state) {
-  /** @var \Drupal\node\NodeForm $form_object */
-  $form_object = $form_state->getFormObject();
-  $node = $form_object->getEntity();
-
-  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
-  $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
-
-  // Save the article node, making sure that common logic is applied.
-  $article_manager->saveArticleNode($node);
-
-  $form_state->setRebuild();
+function ghi_content_form_node_document_edit_form_alter(array &$form, FormStateInterface $form_state) {
+  /** @var \Drupal\ghi_content\ContentManager\DocumentManager $article_manager */
+  $document_manager = \Drupal::getContainer()->get('ghi_content.manager.document');
+  $document_manager->nodeEditFormAlter($form, $form_state);
+  return $form;
 }
 
 /**
- * Form submit handler for the "Reset article" button on article forms.
+ * Implements hook_entity_build_defaults_alter().
+ *
+ * This is used to add cache keys for context nodes to entity builds of content
+ * like documents and articles. Rendered links to the content can differ not
+ * only by url, but also by manually assigning context in elements like the
+ * DocumentChapter block and we don't want those to be cached together.
  */
-function ghi_content_form_node_article_edit_form_reset_submit($form, FormStateInterface $form_state) {
-  /** @var \Drupal\node\NodeForm $form_object */
-  $form_object = $form_state->getFormObject();
-  $node = $form_object->getEntity();
+function ghi_content_entity_build_defaults_alter(array &$build, EntityInterface $entity, $view_mode) {
+  if (!$entity instanceof ContentBase || !$context_node = $entity->getContextNode()) {
+    return;
+  }
+  $build['#cache']['keys'][] = 'context_node:' . $context_node->bundle() . ':' . $context_node->id();
+}
 
-  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
-  $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
-
-  // Reset the article to it's exact version in the remote system.
-  $article_manager->updateNodeFromRemote($node, FALSE, TRUE);
-
-  // Save the article node, making sure that common logic is applied.
-  $article_manager->saveArticleNode($node);
-
-  $form_state->setRebuild();
+/**
+ * Implements hook_current_section_alter().
+ */
+function ghi_content_current_section_alter(&$section, $node) {
+  if ($node instanceof Section) {
+    $section = $node;
+  }
+  if (!$node instanceof ContentBase) {
+    return NULL;
+  }
+  $context_node = $node->getContextNode();
+  if ($context_node instanceof Section) {
+    $section = $context_node;
+  }
+  elseif ($context_node instanceof ContentBase && $context_node->getContextNode()) {
+    ghi_content_current_section_alter($section, $context_node->getContextNode());
+  }
 }
 
 /**
@@ -297,18 +237,39 @@ function ghi_content_node_presave(NodeInterface $node) {
     return;
   }
 
-  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
-  $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
-  $article_manager->updateNodeFromRemote($node);
+  /** @var \Drupal\ghi_content\ContentManager\ManagerFactory $manager_factory */
+  $manager_factory = \Drupal::getContainer()->get('ghi_content.manager.factory');
+  $content_manager = $manager_factory->getContentManager($node);
+  if ($content_manager) {
+    $content_manager->updateNodeFromRemote($node);
+  }
+
 }
 
 /**
  * Implements hook_ENTITY_TYPE_predelete() for node entities.
  */
 function ghi_content_node_predelete(NodeInterface $node) {
-  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
-  $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
-  $article_manager->cleanupArticleOnDelete($node);
+  /** @var \Drupal\ghi_content\ContentManager\ManagerFactory $manager_factory */
+  $manager_factory = \Drupal::getContainer()->get('ghi_content.manager.factory');
+  $content_manager = $manager_factory->getContentManager($node);
+  if ($content_manager) {
+    $content_manager->cleanupContentOnDelete($node);
+  }
+}
+
+/**
+ * Implements hook_preprocess_html().
+ */
+function ghi_content_preprocess_html(&$variables) {
+  $node = RequestHelper::getCurrentNodeObject();
+  if (!$node instanceof ContentBase || !$node->access()) {
+    return;
+  }
+
+  if ($node->isStandalonePage()) {
+    $variables['attributes']['class'][] = 'standalone-page';
+  }
 }
 
 /**
@@ -325,47 +286,39 @@ function ghi_content_preprocess_page(&$variables) {
     return;
   }
 
-  $request_stack = \Drupal::requestStack();
-  $request = $request_stack->getMasterRequest();
-  /** @var \Drupal\node\Entity\Node $node */
-  $node = $request->attributes->has('node') ? $request->attributes->get('node') : NULL;
-  if (!$node instanceof NodeInterface || !$node->getFieldDefinitions()) {
+  $node = RequestHelper::getCurrentNodeObject();
+  if (!$node instanceof ContentBase || !$node->access()) {
     return;
   }
 
-  if (!$node instanceof Article || !$node->access()) {
+  $image_node = $node->getNodeWithHeroImage();
+  if (!$image_node) {
     return;
   }
-
-  if (!$node->hasField('field_image') || !$node->hasField('field_display_hero_image')) {
-    return;
-  }
-
-  // We want to display the image as a hero image if it's not been
-  // specifically disabled.
-  $display_hero_image = $node->get('field_display_hero_image')->value;
-  $should_display = $display_hero_image == 1 || $display_hero_image === NULL;
-  if (!$should_display) {
-    return;
-  }
-
   // We do not check if the field has actual values, because we might want to
   // show a default image.
-  $image_field = $node->get('field_image');
-  if ($image_field->isEmpty()) {
+  $image_field = $image_node->getImage();
+  if (!$image_field || $image_field->isEmpty()) {
     // Don't show default images in the page view.
     return;
   }
 
+  $crop_image = TRUE;
+  if ($image_node instanceof ContentBase) {
+    $crop_image = $image_node->shouldCropHeroImage();
+  }
+
+  $image_style_name = $crop_image ? 'hero' : 'hero_not_cropped';
+
   // Go through some trouble to show a responsive image here.
-  $repsonsive_image_style_id = 'hero';
+  $repsonsive_image_style_id = $image_style_name;
   $repsonsive_image_style_storage = \Drupal::service('entity_type.manager')->getStorage('responsive_image_style');
   $image_style_storage = \Drupal::service('entity_type.manager')->getStorage('image_style');
 
   // Collect cache tags to be added for each item in the field.
   $responsive_image_style = $repsonsive_image_style_storage->load($repsonsive_image_style_id);
   $image_styles_to_load = [];
-  $cache_tags = [];
+  $cache_tags = $image_node->getCacheTags();
   if ($responsive_image_style) {
     $cache_tags = Cache::mergeTags($cache_tags, $responsive_image_style->getCacheTags());
     $image_styles_to_load = $responsive_image_style->getImageStyleIds();
@@ -376,18 +329,37 @@ function ghi_content_preprocess_page(&$variables) {
     $cache_tags = Cache::mergeTags($cache_tags, $image_style->getCacheTags());
   }
 
-  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
-  $article_manager = \Drupal::service('ghi_content.manager.article');
-  $article = $article_manager->loadArticleForNode($node);
+  /** @var \Drupal\ghi_content\ContentManager\ManagerFactory $manager_factory */
+  $manager_factory = \Drupal::getContainer()->get('ghi_content.manager.factory');
+  $content_manager = $manager_factory->getContentManager($image_node);
+  if ($content_manager) {
+    $content = $content_manager->loadRemoteContentForNode($image_node);
+  }
 
-  $image_build = [
-    '#theme' => 'ghi_image',
-    '#responsive_image_style' => $responsive_image_style,
-    '#url' => $image_field->entity->getFileUri(),
-    '#caption' => $article ? $article->getImageCaptionMarkup(TRUE) : NULL,
-    '#alt' => $image_field->alt,
-    '#title' => $image_field->title,
-  ];
+  if (!$image_node instanceof ContentBase) {
+    $image_build = $image_field->view([
+      'label' => 'hidden',
+      'settings' => [
+        'responsive_image_style' => $image_style_name,
+        'image_link' => NULL,
+        'include_credits' => TRUE,
+      ],
+    ]);
+  }
+  else {
+    $image_build = [
+      '#theme' => 'ghi_image',
+      '#responsive_image_style' => $responsive_image_style,
+      '#url' => $image_field->entity->getFileUri(),
+      '#caption' => $content && $content instanceof RemoteContentImageInterface ? $content->getImageCaptionMarkup(TRUE) : NULL,
+      '#alt' => $image_field->alt,
+      '#title' => $image_field->title,
+      '#cache' => [
+        'tags' => $cache_tags,
+        'contexts' => ['url.path'],
+      ],
+    ];
+  }
 
   if ($image_build) {
     $image['#label_display'] = 'hidden';
@@ -400,25 +372,36 @@ function ghi_content_preprocess_page(&$variables) {
  * Implements hook_preprocess_page_title().
  */
 function ghi_content_preprocess_page_title(&$variables) {
-  $node = \Drupal::routeMatch()->getParameter('node');
+  $node = RequestHelper::getCurrentNodeObject();
   $is_admin_route = \Drupal::service('router.admin_context')->isAdminRoute();
   if ($is_admin_route || !$node instanceof Article) {
     return;
   }
-  $variables['title_prefix'] = $node->getChapter();
+  if ($node->getContextNode()) {
+    $variables['title'] = $node->getContextNode()->label();
+  }
+  else {
+    $variables['title_prefix'] = $node->getChapter();
+  }
 }
 
 /**
  * Implements hook_preprocess_node().
  */
-function ghi_content_preprocess_node__article(&$variables) {
-  /** @var \Drupal\ghi_content\Entity\Article $node */
+function ghi_content_preprocess_node(&$variables) {
+  /** @var \Drupal\ghi_content\Entity\ContentBase $node */
   $node = $variables['node'];
-  $variables['metadata'] = [
-    '#theme' => 'item_list',
-    '#items' => $node->getPageMetaData(),
-    '#full_width' => TRUE,
-  ];
+  if ($node instanceof ContentBase && (!$node->isStandalonePage() || $node instanceof Article)) {
+    $variables['metadata'] = [
+      '#theme' => 'item_list',
+      '#items' => $node->getPageMetaData(),
+      '#full_width' => TRUE,
+    ];
+  }
+
+  if ($node instanceof Document) {
+    $variables['document_summary'] = $node->getSummary();
+  }
 }
 
 /**
@@ -452,7 +435,7 @@ function ghi_content_preprocess_field__field_tags(&$variables) {
  * specific section.
  */
 function ghi_content_preprocess_views_view_field__field_tags(&$variables) {
-  $valid_view_ids = ['articles_by_tags'];
+  $valid_view_ids = ['content_by_tags'];
   /** @var \Drupal\views\ViewExecutable $view */
   $view = $variables['view'];
   if (!in_array($view->storage->id(), $valid_view_ids)) {
@@ -490,17 +473,20 @@ function ghi_content_preprocess_views_view_field__field_tags(&$variables) {
  * This depends on https://www.drupal.org/project/drupal/issues/2585169.
  */
 function ghi_content_local_actions_render_alter(&$data, $route_appears) {
-  $supported_routes = [
-    'ghi_content.article_update',
-    'ghi_content.node.article_update',
+  $route_migration_map = [
+    'ghi_content.article_update' => 'articles_hpc_content_module',
+    'ghi_content.node.article_update' => 'articles_hpc_content_module',
+    'ghi_content.document_update' => 'documents_hpc_content_module',
+    'ghi_content.node.document_update' => 'documents_hpc_content_module',
   ];
   foreach ($data as $link_key => &$element) {
-    if (!in_array($link_key, $supported_routes)) {
+    if (!array_key_exists($link_key, $route_migration_map)) {
       continue;
     }
+    $migration_id = $route_migration_map[$link_key];
 
     $migrate_last_imported_store = \Drupal::keyValue('migrate_last_imported');
-    $last_imported = $migrate_last_imported_store->get('articles_hpc_content_module');
+    $last_imported = $migrate_last_imported_store->get($migration_id);
     $last_imported = $last_imported ? intval($last_imported / 1000) : NULL;
 
     /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
@@ -526,25 +512,31 @@ function ghi_content_entity_operation(EntityInterface $entity) {
     return;
   }
 
-  $route_name = 'ghi_content.node.articles';
-  $route_parameters = [
-    'node' => $entity->id(),
+  $operations = [];
+  $bundles = [
+    'articles' => t('Article pages'),
+    'documents' => t('Document pages'),
   ];
+  foreach ($bundles as $bundle => $label) {
+    $route_name = 'ghi_content.node.' . $bundle;
+    $route_parameters = [
+      'node' => $entity->id(),
+    ];
 
-  // If current user has access to route, then add the operation link.
-  /** @var \Drupal\Core\Access\AccessManagerInterface $access_manager */
-  $access_manager = \Drupal::service('access_manager');
-  if (!$access_manager->checkNamedRoute($route_name, $route_parameters, $account)) {
-    return;
-  }
+    // If current user has access to route, then add the operation link.
+    /** @var \Drupal\Core\Access\AccessManagerInterface $access_manager */
+    $access_manager = \Drupal::service('access_manager');
+    if (!$access_manager->checkNamedRoute($route_name, $route_parameters, $account)) {
+      return;
+    }
 
-  return [
-    'articles' => [
-      'title' => t('Article pages'),
-      'weight' => 50,
+    $operations[$bundle] = [
+      'title' => $label,
+      'weight' => 50 + count($operations),
       'url' => Url::fromRoute($route_name, $route_parameters),
-    ],
-  ];
+    ];
+  }
+  return $operations;
 }
 
 // @codingStandardsIgnoreStart

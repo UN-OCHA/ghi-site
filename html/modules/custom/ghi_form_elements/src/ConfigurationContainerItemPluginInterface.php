@@ -43,6 +43,14 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
   public function buildForm(array $element, FormStateInterface $form_state);
 
   /**
+   * Check if this plugin allows new items to be added.
+   *
+   * @return bool
+   *   TRUE if new items are allowed, FALSE otherwise.
+   */
+  public function canAddNewItem();
+
+  /**
    * Get the configuration for an instance.
    *
    * @return array

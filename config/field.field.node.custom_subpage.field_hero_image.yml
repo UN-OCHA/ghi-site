@@ -1,0 +1,34 @@
+uuid: 327a4cd9-c326-46b0-91e6-5cff604810a0
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_hero_image
+    - node.type.custom_subpage
+  module:
+    - ghi_hero_image
+id: node.custom_subpage.field_hero_image
+field_name: field_hero_image
+entity_type: node
+bundle: custom_subpage
+label: 'Hero image'
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    source: none
+    settings:
+      hpc_webcontent_file_attachment: ''
+      smugmug_api:
+        image_id: ''
+        search:
+          text: ''
+          keywords: ''
+          image_id: Gngctmx-0
+        currently_selected:
+          preview: ''
+      crop_image: 1
+default_value_callback: ''
+settings: {  }
+field_type: ghi_hero_image

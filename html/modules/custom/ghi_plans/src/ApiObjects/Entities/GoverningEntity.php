@@ -70,4 +70,11 @@ class GoverningEntity extends EntityObjectBase {
     ]);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getDescription() {
+    return $this->getEntityName();
+  }
+
 }

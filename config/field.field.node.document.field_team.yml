@@ -10,9 +10,9 @@ id: node.document.field_team
 field_name: field_team
 entity_type: node
 bundle: document
-label: Team
+label: 'Team (deprecated)'
 description: ''
-required: true
+required: false
 translatable: true
 default_value: {  }
 default_value_callback: ''

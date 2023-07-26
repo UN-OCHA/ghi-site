@@ -9,6 +9,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\layout_builder\Plugin\SectionStorage\DefaultsSectionStorage;
 use Drupal\layout_builder\SectionStorageInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Service class for template links.
@@ -25,10 +26,18 @@ class TemplateLinkBuilder {
   protected $modalConfig;
 
   /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
    * Public constructor.
    */
-  public function __construct(ConfigFactoryInterface $config_factory) {
+  public function __construct(ConfigFactoryInterface $config_factory, RequestStack $request_stack) {
     $this->modalConfig = $config_factory->get('layout_builder_modal.settings');
+    $this->requestStack = $request_stack;
   }
 
   /**
@@ -78,6 +87,10 @@ class TemplateLinkBuilder {
     if (!$url->access()) {
       return NULL;
     }
+
+    // Add the redirect destination.
+    $this->addRedirectDestination($url);
+
     return [
       'title' => $this->t('Import'),
       'url' => $url,
@@ -108,11 +121,28 @@ class TemplateLinkBuilder {
     if (!$url->access()) {
       return NULL;
     }
+
+    // Add the redirect destination.
+    $this->addRedirectDestination($url);
+
     return [
       'title' => $this->t('Export'),
       'url' => $url,
       'attributes' => $this->getLinkAttributes(),
     ];
+  }
+
+  /**
+   * Add a redirect destination to the given url.
+   *
+   * @param \Drupal\Core\Url $url
+   *   The url to modify.
+   */
+  private function addRedirectDestination(Url $url) {
+    $request = $this->requestStack->getCurrentRequest();
+    $query = $url->getOption('query');
+    $query['destination'] = $request->query->has('destination') ? $request->query->get('destination') : $request->getPathInfo();
+    $url->setOption('query', $query);
   }
 
 }

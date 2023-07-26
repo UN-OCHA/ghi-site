@@ -1,0 +1,22 @@
+uuid: d47e6f77-f06c-495d-9b7c-b09b69a475d5
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.logframe
+id: node.logframe.promote
+field_name: promote
+entity_type: node
+bundle: logframe
+label: 'Promoted to front page'
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

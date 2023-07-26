@@ -1,0 +1,19 @@
+uuid: ba306a66-7410-4a03-bf1a-ae29c79616b7
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_sections
+    - node
+id: node.section_menu
+field_name: section_menu
+entity_type: node
+type: section_menu
+settings: {  }
+module: ghi_sections
+locked: true
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

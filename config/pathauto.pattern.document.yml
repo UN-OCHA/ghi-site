@@ -9,10 +9,10 @@ label: Document
 type: 'canonical_entities:node'
 pattern: '[node:field_entity_reference:entity:url:path]/document/[node:title]'
 selection_criteria:
-  63db2094-adc3-4185-9aff-557b2a423100:
-    id: node_type
+  b4ffa90b-d169-4bdc-bf24-f44f405368cb:
+    id: 'entity_bundle:node'
     negate: false
-    uuid: 63db2094-adc3-4185-9aff-557b2a423100
+    uuid: b4ffa90b-d169-4bdc-bf24-f44f405368cb
     context_mapping:
       node: node
     bundles:

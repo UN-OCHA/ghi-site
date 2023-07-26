@@ -11,8 +11,8 @@ id: node.document.field_entity_reference
 field_name: field_entity_reference
 entity_type: node
 bundle: document
-label: Section
-description: 'The section this document belongs to.'
+label: 'Entity reference (deprecated)'
+description: ''
 required: false
 translatable: true
 default_value: {  }

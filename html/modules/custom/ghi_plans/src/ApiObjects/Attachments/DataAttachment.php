@@ -109,7 +109,7 @@ class DataAttachment extends AttachmentBase {
    *   The entity object.
    */
   public function getSourceEntity() {
-    if (empty($this->source->entity_type) || $this->source->entity_type == 'plan' || empty($this->source->entity_id)) {
+    if (empty($this->source->entity_type) || empty($this->source->entity_id)) {
       return NULL;
     }
     if (empty($this->sourceEntity)) {
@@ -164,6 +164,16 @@ class DataAttachment extends AttachmentBase {
    */
   public function getUnitType() {
     return $this->unit ? $this->unit->type : NULL;
+  }
+
+  /**
+   * Get the prototype for an attachment.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype
+   *   The attachment prototype object.
+   */
+  public function getPrototype() {
+    return $this->prototype;
   }
 
   /**
@@ -1331,12 +1341,12 @@ class DataAttachment extends AttachmentBase {
    */
   public static function getFormattingOptions() {
     return [
-      'raw' => t('Raw data (no formatting)'),
       'auto' => t('Automatic based on the unit (uses percentage for percentages, amount for all others)'),
       'currency' => t('Currency value'),
       'amount' => t('Amount value'),
       'amount_rounded' => t('Amount value (rounded, 1 decimal)'),
       'percent' => t('Percentage value'),
+      'raw' => t('Raw data (no formatting)'),
     ];
   }
 

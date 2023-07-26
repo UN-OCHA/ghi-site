@@ -6,8 +6,10 @@ dependencies:
     - core.entity_view_mode.node.card
     - field.field.node.article.field_base_objects
     - field.field.node.article.field_chapter
+    - field.field.node.article.field_crop_hero_image
     - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
+    - field.field.node.article.field_inherit_section_image
     - field.field.node.article.field_remote_article
     - field.field.node.article.field_summary
     - field.field.node.article.field_tags
@@ -85,7 +87,9 @@ content:
 hidden:
   field_base_objects: true
   field_chapter: true
+  field_crop_hero_image: true
   field_display_hero_image: true
+  field_inherit_section_image: true
   field_remote_article: true
   field_summary: true
   langcode: true

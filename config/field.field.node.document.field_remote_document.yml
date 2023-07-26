@@ -1,0 +1,24 @@
+uuid: 8abc8cc7-76d9-475e-b0dd-aa035d88c221
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_remote_document
+    - node.type.document
+  module:
+    - ghi_content
+id: node.document.field_remote_document
+field_name: field_remote_document
+entity_type: node
+bundle: document
+label: 'Remote document'
+description: ''
+required: true
+translatable: false
+default_value:
+  -
+    remote_source: hpc_content_module
+    document_id: '242'
+default_value_callback: ''
+settings: {  }
+field_type: ghi_remote_document

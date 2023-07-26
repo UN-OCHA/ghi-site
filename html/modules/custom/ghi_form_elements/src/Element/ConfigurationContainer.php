@@ -14,6 +14,8 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemCustomActionsInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
+use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\StringHelper;
 
 /**
@@ -54,10 +56,222 @@ class ConfigurationContainer extends FormElement {
       '#preview' => NULL,
       '#element_context' => [],
       '#item_type_label' => $this->t('Item'),
+      '#edit_label' => NULL,
       '#row_filter' => FALSE,
-      '#item_type_label' => NULL,
+      '#parent_type_label' => NULL,
       '#groups' => FALSE,
     ];
+  }
+
+  /**
+   * Get the parents array that is used for storing data for the given element.
+   *
+   * @param array $element
+   *   A form element with a #parents key.
+   *
+   * @return array
+   *   An array of parent keys.
+   */
+  public static function getStorageParents(array $element) {
+    if (self::isInnerContainerElement($element)) {
+      $parents = array_slice($element['#parents'], 0, array_search('custom_config', $element['#parents']) + 2);
+      return $parents;
+    }
+    else {
+      return $element['#parents'];
+    }
+  }
+
+  /**
+   * Get the parents array for the root parent of the given element.
+   *
+   * @param array $element
+   *   A form element with a #parents key.
+   *
+   * @return array
+   *   An array of parent keys for the root of the given element.
+   */
+  public static function getRootElementParents(array $element) {
+    if (!self::isInnerContainerElement($element)) {
+      return $element['#parents'];
+    }
+    return array_slice($element['#parents'], 0, array_search('custom_config', $element['#parents']));
+  }
+
+  /**
+   * Wrapper around FormState::has().
+   *
+   * This exists to assure a consistent storage.
+   *
+   * @param array $element
+   *   A form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   * @param string $key
+   *   The key to retrieve.
+   *
+   * @return bool
+   *   TRUE if the form storage for the given key exists, FALSE otherwise.
+   */
+  public static function has(array $element, FormStateInterface $form_state, $key) {
+    return $form_state->has(array_merge(self::getStorageParents($element), [$key]));
+  }
+
+  /**
+   * Wrapper around FormState::set().
+   *
+   * This exists to assure a consistent storage.
+   *
+   * @param array $element
+   *   A form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   * @param string $key
+   *   The key to set.
+   * @param string $value
+   *   The value to set.
+   */
+  public static function set(array $element, FormStateInterface $form_state, $key, $value) {
+    $form_state->set(array_merge(self::getStorageParents($element), [$key]), $value);
+  }
+
+  /**
+   * Wrapper around FormState::get().
+   *
+   * This exists to assure a consistent storage.
+   *
+   * @param array $element
+   *   A form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   * @param string $key
+   *   The key to retrieve.
+   *
+   * @return mixed
+   *   The value for the given key on the given element.
+   */
+  public static function get(array $element, FormStateInterface $form_state, $key) {
+    return $form_state->get(array_merge(self::getStorageParents($element), [$key]));
+  }
+
+  /**
+   * Wrapper around FormState::has(), using the parent element.
+   *
+   * This exists to assure a consistent storage.
+   *
+   * @param array $element
+   *   A form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   * @param string $key
+   *   The key to retrieve.
+   *
+   * @return bool
+   *   TRUE if the form storage for the given key exists, FALSE otherwise.
+   */
+  public static function parentHas(array $element, FormStateInterface $form_state, $key) {
+    return $form_state->has(array_merge(self::getRootElementParents($element), [$key]));
+  }
+
+  /**
+   * Wrapper around FormState::set() using the parent element.
+   *
+   * This exists to assure a consistent storage.
+   *
+   * @param array $element
+   *   A form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   * @param string $key
+   *   The key to set.
+   * @param string $value
+   *   The value to set.
+   */
+  public static function parentSet(array $element, FormStateInterface $form_state, $key, $value) {
+    $root_parents = self::getRootElementParents($element);
+    $form_state->set(array_merge($root_parents, [$key]), $value);
+  }
+
+  /**
+   * Wrapper around FormState::get() using the parent element.
+   *
+   * This exists to assure a consistent storage.
+   *
+   * @param array $element
+   *   A form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   * @param string $key
+   *   The key to retrieve.
+   *
+   * @return mixed
+   *   The value for the given key on the given element.
+   */
+  public static function parentGet(array $element, FormStateInterface $form_state, $key) {
+    return $form_state->get(array_merge(self::getRootElementParents($element), [$key]));
+  }
+
+  /**
+   * Check if the given element is an inner container.
+   *
+   * @param array $element
+   *   A form element array.
+   *
+   * @return bool
+   *   TRUE if the given element is a configuration container element nested
+   *   inside another configuration container element, FALSE otherwise.
+   */
+  public static function isInnerContainerElement(array $element) {
+    return in_array('custom_config', $element['#parents']);
+  }
+
+  /**
+   * Check if the given element represents an update to the outer container.
+   *
+   * @param array $element
+   *   A form element array.
+   *
+   * @return bool
+   *   TRUE if the given element represents an action that affects the outer
+   *   container element, FALSE otherwise.
+   */
+  public static function isOuterContainerUpdate(array $element) {
+    return in_array('parent_actions', $element['#parents']) && in_array('custom_config', $element['#parents']);
+  }
+
+  /**
+   * Set the stored items for the given element.
+   *
+   * @param array $element
+   *   A form element array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   * @param array $items
+   *   The array of items to set.
+   */
+  public static function setItems(array $element, FormStateInterface $form_state, $items) {
+    ArrayHelper::sortArrayByNumericKey($items, 'weight', EndpointQuery::SORT_ASC);
+    self::set($element, $form_state, 'items', $items);
+    $form_state->setTemporaryValue($element['#parents'], $items);
+    $form_state->setValue($element['#parents'], $items);
+
+    if (self::isInnerContainerElement($element)) {
+      // Also update the items stored on the parent.
+      $parent_items = self::parentGet($element, $form_state, 'items');
+      ArrayHelper::sortArrayByNumericKey($parent_items, 'weight', EndpointQuery::SORT_ASC);
+
+      $id = self::parentGet($element, $form_state, 'edit_item');
+      $item_key = self::getItemIndexById($parent_items, $id);
+
+      $config_key_index = array_search('custom_config', $element['#parents']);
+      $nested_parents = array_slice($element['#parents'], $config_key_index + 1);
+      NestedArray::setValue($parent_items, array_merge([$item_key, 'config'], $nested_parents), $items);
+      self::parentSet($element, $form_state, 'items', $parent_items);
+
+      $root_parents = self::getRootElementParents($element);
+      $form_state->setTemporaryValue($root_parents, $parent_items);
+      $form_state->setValue($root_parents, $parent_items);
+    }
   }
 
   /**
@@ -71,23 +285,33 @@ class ConfigurationContainer extends FormElement {
    *   The full form.
    */
   public static function elementSubmit(array &$element, FormStateInterface $form_state, array $form) {
-
-    $items = (array) $form_state->get('items');
+    $items = (array) self::get($element, $form_state, 'items');
     $triggering_element = $form_state->getTriggeringElement();
+
     $parents = $triggering_element['#parents'];
     $action = (string) array_pop($parents);
 
-    if (end($parents) == 'actions') {
+    if (end($parents) == 'actions' || end($parents) == 'parent_actions') {
       // Remove the actions key from the parents.
       array_pop($parents);
+    }
+
+    if (empty($parents)) {
+      return;
     }
 
     if (!empty($triggering_element['#custom_action'])) {
       array_pop($parents);
       $id = array_pop($parents);
-      $form_state->set('mode', 'custom_action');
-      $form_state->set('custom_action', $action);
-      $form_state->set('edit_item', $id);
+      self::set($element, $form_state, 'mode', 'custom_action');
+      self::set($element, $form_state, 'custom_action', $action);
+      self::set($element, $form_state, 'edit_item', $id);
+      return;
+    }
+
+    if (self::get($element, $form_state, 'mode') == 'custom_action' && !self::isOuterContainerUpdate($triggering_element)) {
+      // Don't try to apply actions if this is just the wrapper around another
+      // element.
       return;
     }
 
@@ -104,12 +328,8 @@ class ConfigurationContainer extends FormElement {
         break;
 
       case 'cancel_item_type':
-        if ($form_state->get('current_item_type')) {
-          $new_mode = 'edit_item';
-        }
-        else {
-          $new_mode = 'list';
-        }
+        $new_mode = self::get($element, $form_state, 'current_item_type') ? 'edit_item' : 'list';
+        self::set($element, $form_state, 'current_item_type', NULL);
         break;
 
       case 'edit':
@@ -117,13 +337,13 @@ class ConfigurationContainer extends FormElement {
         $id = array_pop($parents);
 
         // Set the index of the editable item.
-        $form_state->set('edit_item', $id);
+        self::set($element, $form_state, 'edit_item', $id);
 
         // Switch to edit mode.
         $new_mode = 'edit_item';
 
         // Check if this is a group.
-        $items = $form_state->get('items');
+        $items = self::get($element, $form_state, 'items');
         $item = self::getItemById($items, $id);
         $item_type = self::getItemTypeInstance($item, $element);
         if ($item_type->isGroupItem()) {
@@ -132,8 +352,8 @@ class ConfigurationContainer extends FormElement {
         break;
 
       case 'submit_group':
-        $mode = $form_state->get('mode');
-        $values = $form_state->getValue($parents);
+        $mode = self::get($element, $form_state, 'mode');
+        $values = $form_state->cleanValues()->getValue($parents);
         if ($mode == 'add_group') {
           // Get the highest used id.
           $max_id = count($items) ? max(array_map(function ($_item) {
@@ -148,7 +368,7 @@ class ConfigurationContainer extends FormElement {
           ];
         }
         elseif ($mode == 'edit_group') {
-          $id = $form_state->get('edit_item');
+          $id = self::get($element, $form_state, 'edit_item');
           $index = self::getItemIndexById($items, $id);
           $items[$index]['config'] = $values['plugin_config'] + $items[$index]['config'];
         }
@@ -158,8 +378,12 @@ class ConfigurationContainer extends FormElement {
         break;
 
       case 'submit_item':
-        $mode = $form_state->get('mode');
-        $values = $form_state->getValue($parents);
+        $mode = self::get($element, $form_state, 'mode');
+        $id = self::get($element, $form_state, 'edit_item');
+        $index = self::getItemIndexById($items, $id);
+
+        $values = $form_state->getValue(array_merge($parents));
+        $values = $values['item_config'] ?? $values;
 
         if ($mode == 'add_item') {
           $pid = NULL;
@@ -182,30 +406,25 @@ class ConfigurationContainer extends FormElement {
           ];
         }
         elseif ($mode == 'edit_item') {
-          $id = $form_state->get('edit_item');
-          $index = self::getItemIndexById($items, $id);
           $items[$index]['config'] = $values['plugin_config'] + $items[$index]['config'];
         }
         elseif ($mode == 'edit_item_filter') {
-          $id = $form_state->get('edit_item');
-          $index = self::getItemIndexById($items, $id);
           $items[$index]['config']['filter'] = $values['filter_config'];
         }
         elseif ($mode == 'custom_action') {
-          $id = $form_state->get('edit_item');
-          $custom_action = $form_state->get('custom_action');
-          $index = self::getItemIndexById($items, $id);
+          $custom_action = self::get($element, $form_state, 'custom_action');
           $items[$index]['config'][$custom_action] = $values[$custom_action];
         }
 
         // Switch to list mode.
         $new_mode = 'list';
+        self::set($element, $form_state, 'current_item_type', NULL);
         break;
 
       case 'remove_filter':
-        $mode = $form_state->get('mode');
+        $mode = self::get($element, $form_state, 'mode');
         if ($mode == 'edit_item_filter') {
-          $index = $form_state->get('edit_item');
+          $index = self::get($element, $form_state, 'edit_item');
           $items[$index]['config']['filter'] = NULL;
         }
         // Switch to list mode.
@@ -217,7 +436,7 @@ class ConfigurationContainer extends FormElement {
         $id = array_pop($parents);
 
         // Set the index of the editable item.
-        $form_state->set('edit_item', $id);
+        self::set($element, $form_state, 'edit_item', $id);
 
         // Switch to edit mode.
         $new_mode = 'edit_item_filter';
@@ -251,18 +470,21 @@ class ConfigurationContainer extends FormElement {
     }
 
     // Update stored items.
-    $form_state->set('items', $items);
-    $form_state->setTemporaryValue($element['#parents'], $items);
+    self::setItems($element, $form_state, $items);
 
     if ($new_mode) {
       // Update the mode.
-      $form_state->set('mode', $new_mode);
+      self::set($element, $form_state, 'mode', $new_mode);
     }
-    if ($new_mode == 'list') {
-      // Cleanup state.
-      $form_state->set('current_item_type', NULL);
-      $form_state->set('edit_item', NULL);
-      $form_state->set('custom_action', NULL);
+
+    if ($new_mode == 'list' && self::isOuterContainerUpdate($triggering_element)) {
+      self::parentSet($element, $form_state, 'current_item_type', NULL);
+      self::parentSet($element, $form_state, 'edit_item', NULL);
+      self::parentSet($element, $form_state, 'custom_action', NULL);
+      self::parentSet($element, $form_state, 'mode', NULL);
+      // Also set this containers mode to NULL. List is the default anyway and
+      // we use this to know if we should use defaults.
+      self::set($element, $form_state, 'mode', NULL);
     }
 
     // Rebuild the form.
@@ -280,11 +502,11 @@ class ConfigurationContainer extends FormElement {
         return $input;
       }
       else {
-        return $form_state->get('items');
+        return self::get($element, $form_state, 'items');
       }
     }
-    elseif (empty($form_state->getTriggeringElement()['#parents']) && $form_state->has('items')) {
-      return $form_state->get('items');
+    elseif (empty($form_state->getTriggeringElement()['#parents']) && self::has($element, $form_state, 'items')) {
+      return self::get($element, $form_state, 'items');
     }
     if ($input) {
       return $input;
@@ -327,23 +549,24 @@ class ConfigurationContainer extends FormElement {
       'save_order',
       'change_item_type',
       'actions',
+      'parent_actions',
+      'custom_config',
     ];
     foreach ($exclude_form_keys as $exclude_form_key) {
       $form_state->addCleanValueKey(array_merge($element['#parents'], [$exclude_form_key]));
     }
 
     // Get the current mode.
-    $mode = $form_state->has('mode') ? $form_state->get('mode') : 'list';
+    $mode = self::get($element, $form_state, 'mode') ?? NULL;
 
     $element['#prefix'] = '<div id="' . $wrapper_id . '">';
     $element['#suffix'] = '</div>';
 
-    if (!$form_state->has('items')) {
-      $items = self::cleanItemValues((array) $element['#default_value']);
-      $form_state->set('items', $items);
-      $form_state->setValue($element['#parents'], $items);
+    if (!self::has($element, $form_state, 'items') || ($mode == NULL && self::isInnerContainerElement($element))) {
+      self::setItems($element, $form_state, $element['#default_value']);
     }
 
+    $mode = $mode ?? 'list';
     if ($mode == 'list') {
       self::buildSummaryTable($element, $form_state);
     }
@@ -352,7 +575,7 @@ class ConfigurationContainer extends FormElement {
       self::buildGroupConfig($element, $form_state);
     }
     if ($mode == 'edit_group') {
-      self::buildGroupConfig($element, $form_state, $form_state->get('edit_item'));
+      self::buildGroupConfig($element, $form_state, self::get($element, $form_state, 'edit_item'));
     }
 
     if ($mode == 'select_item_type' || $mode == 'add_item') {
@@ -360,15 +583,22 @@ class ConfigurationContainer extends FormElement {
     }
 
     if ($mode == 'edit_item') {
-      self::buildItemConfig($element, $form_state, $form_state->get('edit_item'));
+      self::buildItemConfig($element, $form_state, self::get($element, $form_state, 'edit_item'));
     }
 
     if ($mode == 'edit_item_filter') {
-      self::buildItemFilterConfig($element, $form_state, $form_state->get('edit_item'));
+      self::buildItemFilterConfig($element, $form_state, self::get($element, $form_state, 'edit_item'));
     }
 
     if ($mode == 'custom_action') {
-      self::buildItemCustomActionForm($element, $form_state, $form_state->get('edit_item'), $form_state->get('custom_action'));
+      self::buildItemCustomActionForm($element, $form_state, self::get($element, $form_state, 'edit_item'), self::get($element, $form_state, 'custom_action'));
+    }
+
+    // Make sure that configuration container elements nested inside other
+    // configuration container elements (via the custom actions logic) do have
+    // a special set of submit and cancel buttons.
+    if (self::isInnerContainerElement($element)) {
+      self::buildParentActions($element, $form_state);
     }
 
     unset($element['#description']);
@@ -524,7 +754,7 @@ class ConfigurationContainer extends FormElement {
    */
   public static function buildTableRows(array $element, FormStateInterface $form_state, $include_type_column = TRUE) {
     $rows = [];
-    $items = $form_state->has('items') ? $form_state->get('items') : [];
+    $items = self::get($element, $form_state, 'items') ?? [];
     if (empty($items)) {
       return $rows;
     }
@@ -538,7 +768,7 @@ class ConfigurationContainer extends FormElement {
     // Build the sorted list via a tree representation and update the items.
     $tree = self::buildTree($items);
     $sorted_list = self::buildFlatList($tree);
-    $form_state->set('items', $sorted_list);
+    self::set($element, $form_state, 'items', $sorted_list);
 
     foreach ($sorted_list as $key => $item) {
       $item += [
@@ -553,10 +783,10 @@ class ConfigurationContainer extends FormElement {
 
       $row = [
         '#attributes' => [
-          'class' => [
+          'class' => array_filter([
             'draggable',
             $item_type->isGroupItem() ? 'tabledrag-root' : 'tabledrag-leaf',
-          ],
+          ]),
         ],
         '#weight' => (int) $item['weight'],
       ];
@@ -657,7 +887,7 @@ class ConfigurationContainer extends FormElement {
     $operations = [];
     $operations['edit'] = [
       '#type' => 'submit',
-      '#value' => t('Edit'),
+      '#value' => $element['#edit_label'] ?? t('Edit'),
       '#name' => 'edit-' . $key,
       '#ajax' => [
         'event' => 'click',
@@ -684,6 +914,7 @@ class ConfigurationContainer extends FormElement {
           '#value' => $label,
           '#name' => 'custom-action--' . $element_key . '--' . $key,
           '#custom_action' => $element_key,
+          '#disabled' => !$item_type->isValidAction($element_key),
           '#ajax' => [
             'event' => 'click',
             'callback' => [static::class, 'updateAjax'],
@@ -730,13 +961,13 @@ class ConfigurationContainer extends FormElement {
       ],
     ];
 
-    $items = $form_state->get('items');
+    $items = self::get($element, $form_state, 'items');
     $item = self::getItemById($items, $id);
     if (!$item) {
       $item = ['item_type' => 'item_group'];
       $id = NULL;
     }
-    $form_state->set('mode', $id !== NULL ? 'edit_group' : 'add_group');
+    self::set($element, $form_state, 'mode', $id !== NULL ? 'edit_group' : 'add_group');
     $item_type = self::getItemTypeInstance($item, $element);
 
     $element['group_config']['plugin_config'] = [
@@ -816,13 +1047,13 @@ class ConfigurationContainer extends FormElement {
     $triggering_element = $form_state->getTriggeringElement();
     $trigger_parents = $triggering_element ? $triggering_element['#parents'] : [];
 
-    if (($id === NULL || $form_state->get('mode') == 'select_item_type') && count($item_type_options) == 1) {
+    if (($id === NULL || self::get($element, $form_state, 'mode') == 'select_item_type') && count($item_type_options) == 1) {
       $item = [
         'item_type' => array_key_first($item_type_options),
       ];
-      $form_state->set('mode', $id !== NULL ? 'edit_item' : 'add_item');
+      self::set($element, $form_state, 'mode', $id !== NULL ? 'edit_item' : 'add_item');
     }
-    elseif ($id === NULL || $form_state->get('mode') == 'select_item_type') {
+    elseif ($id === NULL || self::get($element, $form_state, 'mode') == 'select_item_type') {
       $values = $form_state->getValue($element['#parents']);
       if (!empty($values) && array_key_exists('item_config', $values) && array_key_exists('item_type', $values['item_config'])) {
         $item = array_filter($values['item_config'], function ($key) {
@@ -831,7 +1062,7 @@ class ConfigurationContainer extends FormElement {
       }
       else {
         $item = [
-          'item_type' => $form_state->get('current_item_type') ?? NULL,
+          'item_type' => self::get($element, $form_state, 'current_item_type') ?? NULL,
         ];
       }
 
@@ -852,7 +1083,23 @@ class ConfigurationContainer extends FormElement {
           'wrapper' => $wrapper_id,
         ],
       ];
-      if ($form_state->get('mode') == 'select_item_type') {
+      if (self::get($element, $form_state, 'mode') == 'select_item_type') {
+        $element['item_config']['actions']['submit_item_type'] = [
+          '#type' => 'submit',
+          '#value' => t('Select @item_type_label type', [
+            '@item_type_label' => $element['#item_type_label'],
+          ]),
+          '#name' => 'submit-item-type',
+          '#limit_validation_errors' => [],
+          // This is important to prevent form errors. Note that elementSubmit()
+          // is still run for this button.
+          '#submit' => [],
+          '#ajax' => [
+            'event' => 'click',
+            'callback' => [static::class, 'updateAjax'],
+            'wrapper' => $wrapper_id,
+          ],
+        ];
         $element['item_config']['actions']['cancel_item_type'] = [
           '#type' => 'submit',
           '#value' => t('Cancel'),
@@ -870,20 +1117,20 @@ class ConfigurationContainer extends FormElement {
       }
     }
     else {
-      $items = $form_state->get('items');
+      $items = self::get($element, $form_state, 'items');
       $item = self::getItemById($items, $id);
     }
 
     if (!empty($item['item_type'])) {
-      $form_state->set('current_item_type', $item['item_type']);
+      self::set($element, $form_state, 'current_item_type', $item['item_type']);
     }
 
     if (!empty($item['item_type']) && empty($trigger_parents)) {
-      $form_state->set('mode', $id !== NULL ? 'edit_item' : 'add_item');
+      self::set($element, $form_state, 'mode', $id !== NULL ? 'edit_item' : 'add_item');
     }
 
     $item_type = self::getItemTypeInstance($item, $element);
-    if ($item_type && $form_state->get('mode') != 'select_item_type') {
+    if ($item_type && self::get($element, $form_state, 'mode') != 'select_item_type') {
 
       // Add a description if available.
       if (count($item_type_options) > 1 && $plugin_description = $item_type->getPluginDescription()) {
@@ -939,7 +1186,7 @@ class ConfigurationContainer extends FormElement {
       $element['item_config']['plugin_config'] += $item_type->buildForm($element['item_config']['plugin_config'], $subform_state);
     }
 
-    if ($item_type && $form_state->get('mode') != 'select_item_type') {
+    if ($item_type && self::get($element, $form_state, 'mode') != 'select_item_type') {
       $translate_args = [
         '@label' => strtolower($element['#item_type_label']),
       ];
@@ -952,7 +1199,7 @@ class ConfigurationContainer extends FormElement {
           'callback' => [static::class, 'updateAjax'],
           'wrapper' => $wrapper_id,
         ],
-        '#disabled' => $form_state->get('mode') == 'select_item_type',
+        '#disabled' => self::get($element, $form_state, 'mode') == 'select_item_type' || !$item_type->canAddNewItem(),
       ];
 
       $element['item_config']['actions']['cancel'] = [
@@ -985,7 +1232,7 @@ class ConfigurationContainer extends FormElement {
   public static function buildItemFilterConfig(array &$element, FormStateInterface $form_state, $id) {
     $wrapper_id = self::getWrapperId($element);
 
-    $items = $form_state->get('items');
+    $items = self::get($element, $form_state, 'items');
     $item = self::getItemById($items, $id);
     $item_type = self::getItemTypeInstance($item, $element);
 
@@ -1067,7 +1314,7 @@ class ConfigurationContainer extends FormElement {
   }
 
   /**
-   * Build the filter form part for item configuration.
+   * Build the custom action form part for item configuration.
    *
    * @param array $element
    *   The form element.
@@ -1081,36 +1328,39 @@ class ConfigurationContainer extends FormElement {
   public static function buildItemCustomActionForm(array &$element, FormStateInterface $form_state, $id, $custom_action) {
     $wrapper_id = self::getWrapperId($element);
 
-    $items = $form_state->get('items');
+    $items = self::get($element, $form_state, 'items');
     $item = self::getItemById($items, $id);
+    $item_key = self::getItemIndexById($items, $id);
     $item_type = self::getItemTypeInstance($item, $element);
 
     $element['custom_config'] = [
       '#type' => 'container',
-      'actions' => [
+      'parent_actions' => [
         '#type' => 'container',
         '#attributes' => [
           'class' => [
             'actions-wrapper',
+            'parent-actions',
           ],
         ],
         '#parents' => array_merge($element['#parents'], [
           'custom_config',
-          'actions',
+          'parent_actions',
         ]),
         '#array_parents' => array_merge($element['#array_parents'], [
           'custom_config',
-          'actions',
+          'parent_actions',
         ]),
       ],
     ];
 
-    $callback = StringHelper::makeCamelCase($custom_action, FALSE);
-    if (method_exists($item_type, $callback)) {
+    $callback = StringHelper::makeCamelCase($custom_action, TRUE);
+    if ($item_type && method_exists($item_type, $callback)) {
       $element['custom_config']['#attributes'] = [
         'class' => Html::getClass($custom_action),
       ];
       $element['custom_config'][$custom_action] = [
+        '#type' => 'container',
         '#parents' => array_merge($element['#parents'], [
           'custom_config',
           $custom_action,
@@ -1120,10 +1370,13 @@ class ConfigurationContainer extends FormElement {
           $custom_action,
         ]),
       ];
-      $element['custom_config'][$custom_action] = $item_type->$callback($element['custom_config'][$custom_action], $form_state);
+
+      $config = $items[$item_key]['config'][$custom_action] ?? [];
+      $subform_state = SubformState::createForSubform($element['custom_config'][$custom_action], $element, $form_state);
+      $element['custom_config'][$custom_action] += $item_type->$callback($element['custom_config'][$custom_action], $subform_state, $config);
     }
 
-    $element['custom_config']['actions']['submit_item'] = [
+    $element['custom_config']['parent_actions']['submit_item'] = [
       '#type' => 'submit',
       '#value' => t('Save'),
       '#name' => 'custom-config-submit',
@@ -1134,10 +1387,64 @@ class ConfigurationContainer extends FormElement {
       ],
     ];
 
-    $element['custom_config']['actions']['cancel'] = [
+    $element['custom_config']['parent_actions']['cancel'] = [
       '#type' => 'submit',
       '#value' => t('Cancel'),
       '#name' => 'custom-config-cancel',
+      '#limit_validation_errors' => [],
+      // This is important to prevent form errors. Note that elementSubmit()
+      // is still run for this button.
+      '#submit' => [],
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+    ];
+  }
+
+  /**
+   * Build the parent actions for nested configuration container items.
+   *
+   * This is for configuration container items that are nested inside another
+   * configuration container.
+   *
+   * @param array $element
+   *   The form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state interface.
+   */
+  public static function buildParentActions(array &$element, FormStateInterface $form_state) {
+    $wrapper_id = self::getWrapperId($element);
+    $element['parent_actions'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => [
+          'actions-wrapper',
+          'parent-actions',
+        ],
+      ],
+    ];
+
+    $translate_args = [
+      '@label' => strtolower($element['#parent_type_label'] ?? $element['#item_type_label']),
+    ];
+    $element['parent_actions']['submit_item'] = [
+      '#type' => 'submit',
+      '#value' => t('Update @label', $translate_args),
+      '#name' => 'item-config-submit',
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+      '#disabled' => self::get($element, $form_state, 'mode') == 'select_item_type',
+    ];
+
+    $element['parent_actions']['cancel'] = [
+      '#type' => 'submit',
+      '#value' => t('Cancel'),
+      '#name' => 'item-config-parent-cancel',
       '#limit_validation_errors' => [],
       // This is important to prevent form errors. Note that elementSubmit()
       // is still run for this button.

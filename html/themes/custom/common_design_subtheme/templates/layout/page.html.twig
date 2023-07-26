@@ -9,7 +9,9 @@
     {# Link to skip to the main content is in html.html.twig #}
     <main role="main" {{ attributes.setAttribute('id', 'main-content').addClass(layout_classes) }}>
 
-      {{ page.page_image }}
+      <div class="page-image">
+        {{ page.page_image }}
+      </div>
 
       {{ page.page_title }}
 

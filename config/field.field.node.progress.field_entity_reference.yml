@@ -1,0 +1,29 @@
+uuid: 92cc5fe7-7ca6-49d4-9105-2603e50fa1c9
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_entity_reference
+    - node.type.progress
+    - node.type.section
+id: node.progress.field_entity_reference
+field_name: field_entity_reference
+entity_type: node
+bundle: progress
+label: Section
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      section: section
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

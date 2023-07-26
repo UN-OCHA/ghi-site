@@ -5,6 +5,8 @@ namespace Drupal\Tests\ghi_content\Kernel;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\ghi_content\Entity\Article;
+use Drupal\ghi_sections\Entity\Section;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
@@ -40,6 +42,10 @@ class ArticleManagerTest extends KernelTestBase {
     'text',
     'filter',
     'file',
+    'token',
+    'path_alias',
+    'pathauto',
+    'ghi_sections',
     'ghi_content',
   ];
 
@@ -174,7 +180,7 @@ class ArticleManagerTest extends KernelTestBase {
     $this->createTerm($this->vocabulary);
 
     // Create a section.
-    $section = Node::create([
+    $section = Section::create([
       'type' => self::SECTION_BUNDLE,
       'title' => 'A section node',
       'uid' => 0,
@@ -190,7 +196,7 @@ class ArticleManagerTest extends KernelTestBase {
       $term_1->id(),
       $term_2->id(),
     ]);
-    $article_1 = Node::create([
+    $article_1 = Article::create([
       'type' => self::ARTICLE_BUNDLE,
       'title' => 'An article node',
       'status' => NodeInterface::PUBLISHED,
@@ -204,7 +210,7 @@ class ArticleManagerTest extends KernelTestBase {
       $term_3->id(),
       $term_4->id(),
     ]);
-    $article_2 = Node::create([
+    $article_2 = Article::create([
       'type' => self::ARTICLE_BUNDLE,
       'title' => 'An article node',
       'status' => NodeInterface::PUBLISHED,
@@ -250,7 +256,7 @@ class ArticleManagerTest extends KernelTestBase {
     $this->createTerm($this->vocabulary);
 
     // Create a section.
-    $section = Node::create([
+    $section = Section::create([
       'type' => self::SECTION_BUNDLE,
       'title' => 'A section node',
       'uid' => 0,

@@ -8,10 +8,10 @@ third_party_settings:
   menu_ui:
     available_menus: {  }
     parent: ''
-name: 'Document subpage'
+name: 'Document page'
 type: document
-description: 'A document, e.g. a News story or a Feature, which represents an article from a content backend.'
+description: 'A document is a collection of articles, optionally grouped into chapters.'
 help: ''
 new_revision: true
 preview_mode: 0
-display_submitted: false
+display_submitted: true

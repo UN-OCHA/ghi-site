@@ -6,8 +6,10 @@ dependencies:
     - core.entity_view_mode.node.card_summary
     - field.field.node.article.field_base_objects
     - field.field.node.article.field_chapter
+    - field.field.node.article.field_crop_hero_image
     - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
+    - field.field.node.article.field_inherit_section_image
     - field.field.node.article.field_remote_article
     - field.field.node.article.field_summary
     - field.field.node.article.field_tags
@@ -69,7 +71,7 @@ third_party_settings:
           - paragraph
           - related_articles
   layout_builder_ipe:
-    enabled: 0
+    enabled: false
 id: node.article.card_summary
 targetEntityType: node
 bundle: article
@@ -101,7 +103,9 @@ content:
 hidden:
   field_base_objects: true
   field_chapter: true
+  field_crop_hero_image: true
   field_display_hero_image: true
+  field_inherit_section_image: true
   field_remote_article: true
   field_tags: true
   langcode: true

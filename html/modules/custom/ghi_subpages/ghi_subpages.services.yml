@@ -1,7 +1,13 @@
 services:
   ghi_subpages.manager:
     class: Drupal\ghi_subpages\SubpageManager
-    arguments: ['@module_handler', '@entity_type.manager', '@ghi_sections.manager', '@renderer', '@current_user', '@messenger']
+    arguments: ['@module_handler', '@entity_type.manager', '@entity_type.bundle.info' , '@ghi_sections.manager', '@renderer', '@current_user', '@messenger']
+  ghi_subpages.logframe_manager:
+    class: Drupal\ghi_subpages\LogframeManager
+    arguments: ['@plugin.manager.block', '@uuid', '@plugin.manager.endpoint_query_manager', '@context.handler', '@layout_builder.tempstore_repository']
+  ghi_subpages.link_builder:
+    class: Drupal\ghi_subpages\LayoutBuilder\LogframeRebuildLinkBuilder
+    arguments: ['@config.factory', '@request_stack']
   ghi_subpages.route_subscriber:
     class: Drupal\ghi_subpages\EventSubscriber\RouteSubscriber
     tags:

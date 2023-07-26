@@ -88,6 +88,13 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'plan-operational-presence-map',
     ],
+    'plan_entity_logframe' => [
+      'variables' => [
+        'items' => NULL,
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'plan-entity-logframe',
+    ],
     'ajax_switcher' => [
       'variables' => [
         'options' => NULL,
@@ -217,6 +224,18 @@ function ghi_blocks_plugin_filter_block__layout_builder_alter(array &$definition
       }
       return in_array($definition['provider'], ['ghi_blocks', 'ghi_content']);
     });
+  }
+}
+
+/**
+ * Implements hook_library_info_alter().
+ */
+function ghi_blocks_library_info_alter(&$libraries, $extension) {
+  if ($extension == 'common_design_subtheme' && isset($libraries['ghi-scrollable-table'])) {
+    if (!\Drupal::config('ghi_blocks.table_settings')->get('scroll_indicator')) {
+      // Disable the visual indicator for scrollable tables.
+      unset($libraries['ghi-scrollable-table']);
+    }
   }
 }
 
@@ -356,12 +375,8 @@ function ghi_blocks_link_alter(&$variables) {
  * Implements hook_form_alter().
  */
 function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
-  $form_ids = [
-    'layout_builder_import_block',
-    'layout_builder_import_page_config',
-    'layout_builder_export_page_config',
-  ];
-  if (strpos($form_id, 'layout_builder_form') || in_array($form_id, $form_ids)) {
+  if (strpos($form_id, 'layout_builder') !== FALSE || !empty($form['#ghi_modal_form'])) {
+    $form['#attributes']['class'][] = 'ghi-glb-form';
     $form['#attached']['library'][] = 'system/admin';
     $form['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
     $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
@@ -503,7 +518,9 @@ function ghi_blocks_is_layout_builder_route() {
  * Define a page manager edit form to be a layout builder route.
  */
 function ghi_blocks_gin_lb_is_layout_builder_route_alter(&$gin_lb_is_layout_builder_route, $context) {
-  $gin_lb_is_layout_builder_route = ghi_blocks_is_layout_builder_route();
+  if (ghi_blocks_is_layout_builder_route()) {
+    $gin_lb_is_layout_builder_route = ghi_blocks_is_layout_builder_route();
+  }
 }
 
 /**

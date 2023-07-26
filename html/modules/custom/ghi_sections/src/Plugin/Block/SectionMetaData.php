@@ -4,8 +4,7 @@ namespace Drupal\ghi_sections\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\ghi_sections\Entity\GlobalSection;
-use Drupal\ghi_sections\Entity\Homepage;
+use Drupal\ghi_content\Traits\ContentPathTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -22,12 +21,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class SectionMetaData extends BlockBase implements ContainerFactoryPluginInterface {
 
+  use ContentPathTrait;
+
   /**
    * The section manager.
    *
-   * @var \Drupal\ghi_subpages\SubpageManager
+   * @var \Drupal\ghi_sections\SectionManager
    */
-  protected $subpageManager;
+  protected $sectionManager;
 
   /**
    * {@inheritdoc}
@@ -35,7 +36,7 @@ class SectionMetaData extends BlockBase implements ContainerFactoryPluginInterfa
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     /** @var \Drupal\ghi_sections\Plugin\Block\SectionMetaData $instance */
     $instance = new static($configuration, $plugin_id, $plugin_definition);
-    $instance->subpageManager = $container->get('ghi_subpages.manager');
+    $instance->sectionManager = $container->get('ghi_sections.manager');
     return $instance;
   }
 
@@ -60,6 +61,9 @@ class SectionMetaData extends BlockBase implements ContainerFactoryPluginInterfa
       '#theme' => 'item_list',
       '#items' => $metadata,
       '#full_width' => TRUE,
+      '#cache' => [
+        'contexts' => ['url.path'],
+      ],
     ];
   }
 
@@ -71,11 +75,7 @@ class SectionMetaData extends BlockBase implements ContainerFactoryPluginInterfa
    */
   private function getSectionNode() {
     $node = $this->getPageNode();
-    $section_node = $this->subpageManager->getBaseTypeNode($node);
-    // Let's not handle global sections that are not homepages for the moment.
-    if ($section_node instanceof GlobalSection && !$section_node instanceof Homepage) {
-      return NULL;
-    }
+    $section_node = $this->sectionManager->getCurrentSection($node) ?? $this->getCurrentSectionNode();
     return $section_node;
   }
 

@@ -379,7 +379,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
       return $configured_label != '<none>' ? $configured_label : '';
     }
     elseif ($this instanceof OverrideDefaultTitleBlockInterface) {
-      return $configured_label ?: $this->getDefaultTitle();
+      $default_title = $configured_label && $configured_label != '<none>' ? $configured_label : $this->getDefaultTitle();
+      return $default_title != '<none>' ? $default_title : '';
     }
     return $label;
   }
@@ -779,8 +780,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $settings_form['label']['#default_value'] = $settings_form['label']['#default_value'] == '<none>' ? '' : $settings_form['label']['#default_value'];
         $settings_form['label']['#required'] = FALSE;
         $settings_form['label']['#description'] = $this->t('Leave empty to use the default title "%default_title".', [
-          '%default_title' => $plugin_definition['default_title'],
+          '%default_title' => $this->getDefaultTitle(),
         ]);
+        $settings_form['label']['#placeholder'] = $this->getDefaultTitle();
         $settings_form['label_display']['#access'] = FALSE;
       }
 
@@ -815,6 +817,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    */
   public function blockForm($form, FormStateInterface $form_state) {
     parent::blockForm($form, $form_state);
+    $form['#ghi_modal_form'] = TRUE;
 
     $form_state->set('block', $this);
     $this->setFormState($form_state);
@@ -1012,6 +1015,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       // For the final submit of the form, put the values into the form
       // storage of the current form, so that we have them available later.
       $form_state->set($current_subform, $step_values);
+      $form_state->setTemporaryValue($current_subform, $step_values);
       return;
     }
     else {
@@ -1236,13 +1240,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $form['actions']['#type'] = 'container';
     $form['actions']['#attributes']['class'][] = 'canvas-form__actions';
 
-    // Also load our library to improve the UI.
-    // @todo Check if this is sufficiently handled by ghi_blocks_form_alter().
-    if (empty($form['#attached']['library'])) {
-      $form['#attached']['library'] = [];
-    }
-    $form['#attached']['library'][] = 'ghi_blocks/layout_builder_modal_admin';
-
     $is_preview = $form_state->get('preview');
     $active_subform = $form_state->get('current_subform');
 
@@ -1381,7 +1378,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $values = $form_state->get('current_settings') + $values;
         $form_state->setValues($values);
       }
-      // $form_state->setValues()
       $this->formSubmitter->executeSubmitHandlers($form, $form_state);
     }
   }
@@ -1548,6 +1544,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
         if (empty($settings[$form_key]) && !empty($this->configuration['hpc'][$form_key])) {
           $settings[$form_key] = $this->configuration['hpc'][$form_key];
+        }
+
+        // Also make sure to persist everything to prevent issues when coming
+        // back from preview.
+        if (!empty($settings)) {
+          $form_state->setTemporaryValue($form_key, $settings[$form_key]);
+          $form_state->set($storage_key, $settings[$form_key]);
         }
       }
     }

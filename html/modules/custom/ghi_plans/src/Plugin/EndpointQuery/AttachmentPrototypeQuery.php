@@ -45,4 +45,28 @@ class AttachmentPrototypeQuery extends EndpointQueryBase {
     return NULL;
   }
 
+  /**
+   * Get all data attachment prototypes for the given plan.
+   *
+   * @param int $plan_id
+   *   The plan id.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[]
+   *   An array of attachment prototype objects.
+   */
+  public function getDataPrototypesForPlan($plan_id) {
+    $data = $this->getData(['plan_id' => $plan_id]);
+    if (empty($data)) {
+      return [];
+    }
+
+    $prototypes = [];
+    foreach ($data as $prototype) {
+      if (AttachmentPrototype::isDataType($prototype)) {
+        $prototypes[$prototype->id] = new AttachmentPrototype($prototype);
+      }
+    }
+    return $prototypes;
+  }
+
 }

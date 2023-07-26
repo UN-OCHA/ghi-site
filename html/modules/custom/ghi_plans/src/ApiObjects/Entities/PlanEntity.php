@@ -16,31 +16,31 @@ class PlanEntity extends EntityObjectBase {
   protected function map() {
     $entity = $this->getRawData();
     $entity_version = $this->getEntityVersion();
-    $prototype = $entity->entityPrototype;
+    $prototype = $entity?->entityPrototype;
 
     return (object) [
-      'id' => $entity->id,
-      'name' => $prototype->value->name->en->singular,
-      'plural_name' => $prototype->value->name->en->plural,
-      'group_name' => $prototype->value->name->en->plural,
-      'display_name' => $prototype->value->name->en->singular . ' ' . $entity_version->customReference,
-      'description' => property_exists($entity_version->value, 'description') ? $entity_version->value->description : NULL,
+      'id' => $entity?->id,
+      'name' => $prototype ? $prototype->value->name->en->singular : NULL,
+      'plural_name' => $prototype ? $prototype->value->name->en->plural : NULL,
+      'group_name' => $prototype ? $prototype->value->name->en->plural : NULL,
+      'display_name' => $prototype ? ($prototype->value->name->en->singular . ' ' . $entity_version?->customReference) : NULL,
+      'description' => $entity_version?->value?->description,
       // Need to cast to array until HPC-6440 is fixed.
       'support' => !empty($entity_version->value->support) ? (array) $entity_version->value->support : NULL,
-      'ref_code' => $prototype->refCode,
-      'entity_type' => $prototype->type,
-      'entity_prototype_id' => $prototype->id,
-      'order_number' => $prototype->orderNumber,
+      'ref_code' => $prototype ? $prototype->refCode : NULL,
+      'entity_type' => $prototype ? $prototype->type : NULL,
+      'entity_prototype_id' => $prototype ? $prototype->id : NULL,
+      'order_number' => $prototype ? $prototype->orderNumber : NULL,
       'parent_id' => $this->getParentId(),
       'governing_entity_parent_id' => $entity->parentId ?? NULL,
       'root_parent_id' => $this->getMainLevelParentId(),
-      'custom_reference' => $entity_version->customReference,
+      'custom_reference' => $entity_version?->customReference,
       'composed_reference' => $this->getComposedReference(),
-      'sort_key' => $prototype->orderNumber . $entity_version->customReference,
-      'tags' => property_exists($entity_version, 'tags') ? $entity_version->tags : [],
+      'sort_key' => $prototype ? ($prototype->orderNumber . $entity_version?->customReference) : NULL,
+      'tags' => $entity_version?->tags ?? [],
 
       // Legacy support.
-      'custom_id' => $entity_version->customReference,
+      'custom_id' => $entity_version?->customReference,
     ];
   }
 
@@ -52,6 +52,9 @@ class PlanEntity extends EntityObjectBase {
    */
   public function getParentId() {
     $entity = $this->getRawData();
+    if (!$entity) {
+      return NULL;
+    }
     if (property_exists($entity, 'parentId')) {
       return $entity->parentId;
     }
@@ -74,6 +77,9 @@ class PlanEntity extends EntityObjectBase {
    */
   public function getParentIds() {
     $entity = $this->getRawData();
+    if (!$entity) {
+      return [];
+    }
     $entity_version = $this->getEntityVersion($entity);
     if (empty($entity_version->value->support)) {
       return [];
@@ -95,6 +101,9 @@ class PlanEntity extends EntityObjectBase {
    */
   public function getPlanEntityParents() {
     $entity = $this->getRawData();
+    if (!$entity) {
+      return [];
+    }
     $entity_version = $this->getEntityVersion($entity);
     if (empty($entity_version->value->support)) {
       return [];
@@ -126,11 +135,15 @@ class PlanEntity extends EntityObjectBase {
    */
   public function getMainLevelParentId() {
     $entity = $this->getRawData();
+    if (!$entity) {
+      return NULL;
+    }
     $entity_version = $this->getEntityVersion($entity);
     if (in_array($entity->entityPrototype->refCode, ApiEntityHelper::MAIN_LEVEL_PLE_REF_CODES) || empty($entity_version->value->support)) {
       return NULL;
     }
-    $support = reset($entity_version->value->support);
+    $support = $entity_version?->value?->support;
+    $support = is_array($support) ? reset($support) : $support;
     $plan_entity_ids = $support?->planEntityIds ?? [];
     return reset($plan_entity_ids);
   }
@@ -139,7 +152,7 @@ class PlanEntity extends EntityObjectBase {
    * {@inheritdoc}
    */
   public function getEntityVersion() {
-    return $this->getRawData()->planEntityVersion;
+    return $this->getRawData()?->planEntityVersion;
   }
 
   /**
@@ -150,6 +163,9 @@ class PlanEntity extends EntityObjectBase {
    */
   protected function getComposedReference() {
     $entity = $this->getRawData();
+    if (!$entity) {
+      return '';
+    }
     if (property_exists($entity, 'composedReference')) {
       return $entity->composedReference;
     }
@@ -180,28 +196,6 @@ class PlanEntity extends EntityObjectBase {
       '@type' => $this->name,
       '@custom_reference' => $this->custom_reference,
     ]);
-  }
-
-  /**
-   * Get a custom name for an entity, based on $type.
-   *
-   * @param string $type
-   *   The type for the name to be returned.
-   *
-   * @return string
-   *   The name according to $type.
-   */
-  public function getCustomName($type) {
-    switch ($type) {
-      case 'custom_id':
-        return $this->custom_reference;
-
-      case 'custom_id_prefixed_refcode':
-        return $this->ref_code . $this->custom_reference;
-
-      case 'composed_reference':
-        return $this->composed_reference;
-    }
   }
 
 }

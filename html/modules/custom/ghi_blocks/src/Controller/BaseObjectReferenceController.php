@@ -217,7 +217,7 @@ class BaseObjectReferenceController extends ControllerBase implements ContainerI
   }
 
   /**
-   * Cleanup data blocks if references to data objects have been remved.
+   * Cleanup data blocks if references to data objects have been removed.
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node object.

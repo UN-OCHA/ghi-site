@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Entities;
 
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
@@ -9,7 +10,7 @@ use Drupal\hpc_api\Query\EndpointQuery;
 /**
  * Base class for API entity objects.
  */
-abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInterface {
+abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInterface, PlanEntityInterface {
 
   /**
    * The mapped data for an object from the HPC API.
@@ -24,6 +25,50 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
   public function __construct($data) {
     parent::__construct($data);
     $this->children = [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getName() {
+    return $this->name;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCustomName($type) {
+    switch ($type) {
+      case 'custom_id':
+        return $this->custom_reference;
+
+      case 'custom_id_prefixed_refcode':
+        return $this->ref_code . $this->custom_reference;
+
+      case 'composed_reference':
+        return $this->composed_reference;
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDescription() {
+    return $this->description;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityTypeRefCode() {
+    return $this->ref_code;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTypeName() {
+    return $this->plural_name;
   }
 
   /**

@@ -38,7 +38,7 @@ class NodeFromOriginalIDProvider implements ContextProviderInterface {
   protected $entityTypeManager;
 
   /**
-   * Constructs a new CurrentUserContext.
+   * Constructs a new NodeFromOriginalIDProvider.
    *
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The request stack.

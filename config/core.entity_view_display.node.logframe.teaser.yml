@@ -1,0 +1,29 @@
+uuid: 12a7c288-49b3-49d2-a55e-64c9c75ea76b
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.logframe.field_entity_reference
+    - field.field.node.logframe.field_hero_image
+    - field.field.node.logframe.field_team
+    - field.field.node.logframe.layout_builder__layout
+    - node.type.logframe
+  module:
+    - user
+id: node.logframe.teaser
+targetEntityType: node
+bundle: logframe
+mode: teaser
+content:
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  field_entity_reference: true
+  field_hero_image: true
+  field_team: true
+  langcode: true
+  layout_builder__layout: true

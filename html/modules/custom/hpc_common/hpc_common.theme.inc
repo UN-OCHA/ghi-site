@@ -293,6 +293,9 @@ function hpc_common_preprocess_hpc_tooltip(array &$vars) {
  * Preprocess a popover.
  */
 function hpc_common_preprocess_hpc_popover(array &$vars) {
+  if (\Drupal::moduleHandler()->moduleExists('gin_lb')) {
+    $vars['#attached']['library'][] = 'gin_lb/gin_lb';
+  }
   $vars['#attached']['library'][] = 'hpc_common/popover';
 
   $trigger_attributes = new Attribute();
@@ -356,7 +359,11 @@ function hpc_common_preprocess_hpc_icon(array &$vars) {
  * Preprocess a reporting period as text.
  */
 function hpc_common_preprocess_hpc_reporting_period(array &$vars) {
+  $vars['output'] = NULL;
   $reporting_period = $vars['reporting_period'];
+  if (!$reporting_period) {
+    return;
+  }
 
   // We want to handle all times as UTC, because that's what we get from the
   // API.

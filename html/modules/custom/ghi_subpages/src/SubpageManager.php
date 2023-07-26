@@ -3,6 +3,7 @@
 namespace Drupal\ghi_subpages;
 
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\ghi_subpages\Entity\SubpageManualInterface;
 use Drupal\node\NodeInterface;
 use Drupal\node\NodeTypeInterface;
 
@@ -24,11 +25,23 @@ class SubpageManager extends BaseObjectSubpageManager {
    * A list of node bundles that are supported as subpages.
    */
   const SUPPORTED_SUBPAGE_TYPES = [
-    'profile',
     'population',
     'financials',
-    'risk_index',
+    'presence',
+    'logframe',
+    'progress',
   ];
+
+  /**
+   * Get all available subpage types.
+   *
+   * @return array
+   *   An array of node type machine names.
+   */
+  public function getStandardSubpageTypes() {
+    // The basic subpages defined by this module.
+    return self::SUPPORTED_SUBPAGE_TYPES;
+  }
 
   /**
    * Get all available subpage types.
@@ -159,6 +172,21 @@ class SubpageManager extends BaseObjectSubpageManager {
   public function isSubpageType(NodeTypeInterface $node_type) {
     $subpage_types = $this->getSubpageTypes();
     return in_array($node_type->id(), $subpage_types);
+  }
+
+  /**
+   * Check if the given node type is a manual subpage type.
+   *
+   * @param \Drupal\node\NodeTypeInterface $node_type
+   *   The node type to check.
+   *
+   * @return bool
+   *   TRUE if it is a manual subpage type, FALSE otherwhise.
+   */
+  public function isManualSubpageType(NodeTypeInterface $node_type) {
+    $bundle_info = $this->entityTypeBundleInfo->getBundleInfo('node');
+    $class = $bundle_info[$node_type->id()]['class'] ?? NULL;
+    return $class && is_subclass_of($class, SubpageManualInterface::class);
   }
 
   /**

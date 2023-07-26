@@ -28,6 +28,11 @@
       td {
         padding: 1.5rem 2rem;
 
+        body.path-frontpage &,
+        body.path-overview & {
+          padding: 1.5rem 1rem;
+        }
+
         &.entity-name,
         &.cd-table--amount,
         &.cd-table--currency,

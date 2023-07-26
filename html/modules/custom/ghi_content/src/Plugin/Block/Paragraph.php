@@ -473,7 +473,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     if (!$article) {
       return NULL;
     }
-    return $this->articleManager->loadNodeForRemoteArticle($article);
+    return $this->articleManager->loadNodeForRemoteContent($article);
   }
 
   /**

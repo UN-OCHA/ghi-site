@@ -1,0 +1,23 @@
+uuid: 7c96dce7-c95e-4f78-a7f9-07ee94ba50d4
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_inherit_section_image
+    - node.type.document
+id: node.document.field_inherit_section_image
+field_name: field_inherit_section_image
+entity_type: node
+bundle: document
+label: 'Inherit section image'
+description: 'If checked and this document is displayed as a subpage of a section, the hero image will be taken from the section instead of the document.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

@@ -1,0 +1,16 @@
+uuid: dd40654b-d88a-4741-8f64-ce2432e13611
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.logframe
+  module:
+    - content_translation
+third_party_settings:
+  content_translation:
+    enabled: true
+id: node.logframe
+target_entity_type_id: node
+target_bundle: logframe
+default_langcode: site_default
+language_alterable: true

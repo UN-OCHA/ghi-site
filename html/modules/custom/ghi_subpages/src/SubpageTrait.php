@@ -51,6 +51,19 @@ trait SubpageTrait {
   }
 
   /**
+   * Check if the given node type is a manual subpage type.
+   *
+   * @param \Drupal\node\NodeTypeInterface $node_type
+   *   The node type to check.
+   *
+   * @return bool
+   *   TRUE if it is a manual subpage type, FALSE otherwhise.
+   */
+  public function isManualSubpageType(NodeTypeInterface $node_type) {
+    return SubpageHelper::isManualSubpageType($node_type);
+  }
+
+  /**
    * Get the corresponding section node for the given node.
    *
    * @param \Drupal\node\NodeInterface $node

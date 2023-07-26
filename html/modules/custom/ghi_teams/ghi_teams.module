@@ -16,7 +16,8 @@ use Drupal\user\Entity\User;
  * Implements hook_node_access_records().
  */
 function ghi_teams_node_access_records(NodeInterface $node) {
-  if (!$node->hasField('field_team')) {
+  $excluded_bundles = ['document'];
+  if (!$node->hasField('field_team') || in_array($node->bundle(), $excluded_bundles)) {
     return [];
   }
 

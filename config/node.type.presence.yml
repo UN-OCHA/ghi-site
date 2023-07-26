@@ -1,0 +1,20 @@
+uuid: 43c56834-44e5-4f95-b89b-243fd894c283
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_subpages
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+  ghi_subpages:
+    page_title: 'Presence of humanitarian actors'
+name: Presence
+type: presence
+description: 'A presence page for any of the base entities of this site, e.g. for plans, countries, regions, ...'
+help: ''
+new_revision: true
+preview_mode: 0
+display_submitted: false

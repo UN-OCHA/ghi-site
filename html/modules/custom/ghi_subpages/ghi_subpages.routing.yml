@@ -10,3 +10,25 @@ ghi_subpages.node.pages:
     _admin_route: TRUE
   requirements:
     _custom_access: '\Drupal\ghi_subpages\Controller\SubpagesAdminController::access'
+ghi_subpages.entity.logframe_rebuild:
+  path: '/admin/logframe/rebuild/{entity_type}/{entity}/{section_storage_type}/{section_storage}'
+  defaults:
+    _form: '\Drupal\ghi_subpages\LayoutBuilder\LogframeRebuildForm'
+  requirements:
+    _layout_builder_access: 'view'
+    _custom_access: '\Drupal\ghi_subpages\Controller\LogframeRebuildController::access'
+  options:
+    parameters:
+      entity:
+        type: entity:{entity_type}
+      section_storage:
+        layout_builder_section_storage: TRUE
+ghi_subpages.logframe.batch_rebuild:
+  path: '/admin/config/ghi/logframes/rebuild'
+  defaults:
+    _form: '\Drupal\ghi_subpages\Form\LogframeBatchRebuildForm'
+    _title: 'Logframes'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer site configuration'

@@ -1,0 +1,34 @@
+uuid: ccced628-e3ca-47c9-86d2-b9ca490d2b98
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_hero_image
+    - node.type.progress
+  module:
+    - ghi_hero_image
+id: node.progress.field_hero_image
+field_name: field_hero_image
+entity_type: node
+bundle: progress
+label: 'Hero image'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    source: inherit
+    settings:
+      hpc_webcontent_file_attachment: ''
+      smugmug_api:
+        image_id: ''
+        search:
+          text: ''
+          keywords: ''
+          image_id: Gngctmx-0
+        currently_selected:
+          preview: ''
+      crop_image: 1
+default_value_callback: ''
+settings: {  }
+field_type: ghi_hero_image
