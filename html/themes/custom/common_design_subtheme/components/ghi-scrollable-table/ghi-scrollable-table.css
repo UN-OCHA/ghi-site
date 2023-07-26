@@ -2,15 +2,15 @@
   position: relative;
 }
 .scrollable-table--wrapper .shadow-left {
-  width: 20px;
   position: absolute;
-  background-image: radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 100%);
   display: none;
+  width: 20px;
+  background-image: radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 100%);
 }
 
 .scrollable-table--wrapper .shadow-right {
-  width: 20px;
   position: absolute;
-  background-image: radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 100%);
   display: none;
+  width: 20px;
+  background-image: radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 100%);
 }
