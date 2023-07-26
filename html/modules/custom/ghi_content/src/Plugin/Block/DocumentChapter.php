@@ -6,6 +6,7 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteChapterInterface;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
@@ -56,7 +57,9 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
     $articles = [];
     foreach ($this->getChapterArticles() as $_article) {
       $article = clone $_article;
-      $article->setContextNode($document_node);
+      if ($document_node && $document_node instanceof ContentBase) {
+        $article->setContextNode($document_node);
+      }
       $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTags() ?? []);
       $articles[] = $article;
     }

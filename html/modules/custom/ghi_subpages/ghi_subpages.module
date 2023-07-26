@@ -208,7 +208,9 @@ function ghi_subpages_node_subpage_delete_form_submit(array &$form, FormStateInt
   $form_object = $form_state->getFormObject();
   $entity = $form_object->getEntity();
   $section_node = SubpageHelper::getBaseTypeNode($entity);
-  $form_state->setRedirectUrl($section_node->toUrl());
+  if ($section_node) {
+    $form_state->setRedirectUrl($section_node->toUrl());
+  }
 }
 
 /**

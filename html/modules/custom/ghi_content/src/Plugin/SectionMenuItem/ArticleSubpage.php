@@ -4,6 +4,7 @@ namespace Drupal\ghi_content\Plugin\SectionMenuItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_content\Entity\Article;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_sections\Menu\OptionalSectionMenuPluginInterface;
 use Drupal\ghi_sections\Menu\SectionMenuItem;
 use Drupal\ghi_sections\Menu\SectionMenuPluginBase;
@@ -11,7 +12,7 @@ use Drupal\ghi_sections\MenuItemType\SectionNode;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides a article subpage item for section menus.
+ * Provides an article subpage item for section menus.
  *
  * @SectionMenuPlugin(
  *   id = "article_subpage",
@@ -107,7 +108,10 @@ class ArticleSubpage extends SectionMenuPluginBase implements OptionalSectionMen
     if (!$article instanceof Article) {
       return NULL;
     }
-    $article->setContextNode($this->getSection());
+    $section = $this->getSection();
+    if ($section && $section instanceof SectionNodeInterface) {
+      $article->setContextNode($section);
+    }
     return $article;
   }
 
