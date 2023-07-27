@@ -12,6 +12,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
+use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_subpages\SubpageManager;
 use Drupal\ghi_subpages\SubpageTrait;
@@ -132,7 +133,7 @@ class SubpagesPagesForm extends FormBase {
     $form['#attached']['library'][] = 'ghi_subpages/admin.subpages_form';
 
     $header = [
-      $this->t('Page'),
+      $this->t('Page title'),
       $this->t('Status'),
       $this->t('Team'),
       $this->t('Created'),
@@ -225,14 +226,19 @@ class SubpagesPagesForm extends FormBase {
       /** @var \Drupal\node\NodeInterface[] $subpage_nodes */
       $subpage_nodes = $this->subpageManager->getCustomSubpagesForBaseNode($node, $node_type);
 
-      $header = [
-        $this->t('Page'),
+      // See if this subpage type has a base object associated.
+      $bundle_class = $this->entityTypeManager->getStorage('node')->getEntityClass($node_type->id());
+      $has_base_object = $bundle_class && is_subclass_of($bundle_class, BaseObjectAwareEntityInterface::class);
+
+      $header = array_filter([
+        $this->t('Page title'),
+        $has_base_object ? $bundle_class::getBaseObjectType()->label() : NULL,
         $this->t('Status'),
         $this->t('Team'),
         $this->t('Created'),
         $this->t('Updated'),
         $this->t('Operations'),
-      ];
+      ]);
       $rows = [];
       if (!empty($subpage_nodes)) {
         foreach ($subpage_nodes as $subpage_node) {
@@ -241,6 +247,15 @@ class SubpagesPagesForm extends FormBase {
 
           $row = [];
           $row[] = $subpage_node->toLink();
+          if ($has_base_object) {
+            /** @var \Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface $subpage_node */
+            $base_object = $subpage_node->getBaseObject();
+            $row[] = $base_object ? $this->t('@label (<a href="@url">@id</a>)', [
+              '@label' => $base_object->label(),
+              '@url' => $base_object->toUrl('edit-form')->toString(),
+              '@id' => $base_object->getSourceId(),
+            ]) : NULL;
+          }
           $row[] = $subpage_node->isPublished() ? $this->t('Published') : $this->t('Unpublished');
           $row[] = $subpage_team ? $subpage_team->getName() : $section_team . ' (' . $this->t('Inherit from section') . ')';
           $row[] = $this->dateFormatter->format($subpage_node->getCreatedTime(), 'custom', 'F j, Y h:ia');
