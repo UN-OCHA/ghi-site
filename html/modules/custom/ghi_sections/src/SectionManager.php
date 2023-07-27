@@ -31,6 +31,11 @@ class SectionManager {
   const SECTION_BUNDLES = ['section', 'global_section', 'homepage'];
 
   /**
+   * The route name for the section listing backend page.
+   */
+  const SECTION_LIST_ROUTE = 'view.content.page_sections';
+
+  /**
    * The entity type manager service.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface

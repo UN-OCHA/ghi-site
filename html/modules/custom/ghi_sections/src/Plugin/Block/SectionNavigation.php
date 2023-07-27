@@ -100,6 +100,7 @@ class SectionNavigation extends BlockBase implements ContainerFactoryPluginInter
       ],
     ];
     $cache_tags = $node->getCacheTags();
+    $cache_tags = Cache::mergeTags($cache_tags, $section->getCacheTags());
 
     // Always output parent link.
     $overview_link = $section->toLink($this->t('Overview'), 'canonical', ['fragment' => 'page-title'])->toRenderable();
