@@ -35,6 +35,21 @@ class SectionMenuItemList extends FieldItemList {
   }
 
   /**
+   * Check if the given menu item exists in the current liste.
+   *
+   * @param \Drupal\ghi_sections\Menu\SectionMenuItemInterface $menu_item
+   *   The menu item to check for.
+   *
+   * @return bool
+   *   TRUE if the given menu item exists in the list, FALSE otherwise.
+   */
+  public function has(SectionMenuItemInterface $menu_item) {
+    return !empty(array_filter($this->getAll(), function (SectionMenuItemInterface $item) use ($menu_item) {
+      return $menu_item->getPluginId() == $item->getPluginId();
+    }));
+  }
+
+  /**
    * Set the menu items or this section.
    *
    * @param \Drupal\ghi_sections\Menu\SectionMenuItemInterface[] $menu_items

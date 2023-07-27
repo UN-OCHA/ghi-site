@@ -35,7 +35,7 @@ class DocumentListController extends ControllerBase {
   const VIEW_DISPLAY = 'block_documents_table';
 
   /**
-   * The route name for the article listing backend page.
+   * The route name for the document listing backend page.
    */
   const DOCUMENT_LIST_ROUTE = 'view.content.page_documents';
 

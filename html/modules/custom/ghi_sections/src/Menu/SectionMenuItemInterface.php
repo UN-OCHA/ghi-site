@@ -18,6 +18,25 @@ interface SectionMenuItemInterface {
   public function getPlugin();
 
   /**
+   * Gets the plugin ID.
+   *
+   * @return string
+   *   The plugin ID.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   *   Thrown if the plugin ID cannot be found.
+   */
+  public function getPluginId();
+
+  /**
+   * Get the section for this menu item.
+   *
+   * @return \Drupal\node\NodeInterface
+   *   The section node object.
+   */
+  public function getSection();
+
+  /**
    * Get the menu item configuration.
    *
    * @return array
