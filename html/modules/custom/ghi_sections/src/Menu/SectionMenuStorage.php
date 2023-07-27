@@ -105,8 +105,22 @@ class SectionMenuStorage {
   public function getSectionMenuItems() {
     /** @var \Drupal\ghi_sections\Field\SectionMenuItemList $menu_item_list */
     $menu_item_list = $this->getSection()?->get(self::FIELD_NAME) ?? NULL;
-    if ($menu_item_list && $menu_item_list->isEmpty()) {
-      $menu_item_list->setMenuItems($this->getDefaultMenuItems());
+    if (!$menu_item_list) {
+      return $menu_item_list;
+    }
+    $default_items = $this->getDefaultMenuItems();
+    if ($menu_item_list->isEmpty()) {
+      // Set defaults if empty.
+      $menu_item_list->setMenuItems($default_items);
+    }
+    else {
+      // Make sure that each of the default items is still in the list.
+      foreach ($default_items as $item) {
+        if ($menu_item_list->has($item)) {
+          continue;
+        }
+        $menu_item_list->appendItem($item);
+      }
     }
     return $menu_item_list;
   }

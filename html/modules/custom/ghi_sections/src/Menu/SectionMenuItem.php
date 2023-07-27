@@ -7,7 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\Entity\Node;
 
 /**
- * Interface for section menu items.
+ * Section menu item class.
  */
 class SectionMenuItem implements SectionMenuItemInterface {
 
@@ -59,13 +59,7 @@ class SectionMenuItem implements SectionMenuItemInterface {
   }
 
   /**
-   * Gets the plugin ID.
-   *
-   * @return string
-   *   The plugin ID.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\PluginException
-   *   Thrown if the plugin ID cannot be found.
+   * {@inheritdoc}
    */
   public function getPluginId() {
     if (empty($this->pluginId)) {
@@ -75,10 +69,7 @@ class SectionMenuItem implements SectionMenuItemInterface {
   }
 
   /**
-   * Get the section for this menu item.
-   *
-   * @return \Drupal\node\NodeInterface
-   *   The section node object.
+   * {@inheritdoc}
    */
   public function getSection() {
     if (empty($this->sectionId)) {
