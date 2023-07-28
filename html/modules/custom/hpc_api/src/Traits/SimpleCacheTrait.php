@@ -46,11 +46,14 @@ trait SimpleCacheTrait {
    *   can simply use the start time of the migration as the base time, and
    *   only retrieve data once for every API call made during the data migration
    *   process.
+   * @param array $cache_tags
+   *   The cache tags to associate with this cache entry. Optional and only
+   *   relevant when storing data.
    *
    * @return mixed|void
    *   Either the stored data or nothing.
    */
-  public function cache($cache_key, $data = NULL, $reset = FALSE, $cache_base_time = NULL) {
+  public function cache($cache_key, $data = NULL, $reset = FALSE, $cache_base_time = NULL, $cache_tags = []) {
     $cache_store = &drupal_static(__FUNCTION__, []);
 
     if ($data === NULL && $reset === TRUE) {
@@ -76,7 +79,7 @@ trait SimpleCacheTrait {
     // Store data in the cache.
     $cache_store[$cache_key] = $data;
     $expiration_time = self::getRequestTime() + self::getCacheLifetime();
-    self::cacheBackend()->set($cache_key, $data, $expiration_time);
+    self::cacheBackend()->set($cache_key, $data, $expiration_time, $cache_tags);
     return $cache_store[$cache_key];
   }
 

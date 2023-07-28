@@ -5,7 +5,6 @@ namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_plans\ApiObjects\PlanPrototype;
 use Drupal\hpc_api\Query\EndpointQueryBase;
-use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
  * Provides a query plugin for plan entities.
@@ -21,7 +20,6 @@ use Drupal\hpc_api\Traits\SimpleCacheTrait;
  */
 class PlanPrototypeQuery extends EndpointQueryBase {
 
-  use SimpleCacheTrait;
   use StringTranslationTrait;
 
   /**
@@ -35,7 +33,7 @@ class PlanPrototypeQuery extends EndpointQueryBase {
    */
   public function getPrototype($plan_id) {
     $cache_key = $this->getCacheKey(['plan_id' => $plan_id]);
-    $prototype = $this->cache($cache_key);
+    $prototype = $this->getCache($cache_key);
     if ($prototype !== NULL) {
       return $prototype;
     }
@@ -43,7 +41,7 @@ class PlanPrototypeQuery extends EndpointQueryBase {
     $data = $this->getData();
     $prototype = !empty($data) ? new PlanPrototype($data) : FALSE;
 
-    $this->cache($cache_key, $prototype);
+    $this->setCache($cache_key, $prototype);
     return $prototype;
   }
 

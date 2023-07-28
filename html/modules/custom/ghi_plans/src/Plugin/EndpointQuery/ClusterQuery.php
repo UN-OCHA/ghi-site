@@ -86,6 +86,9 @@ class ClusterQuery extends EndpointQueryBase {
    *   An array of cluster objects, keyed by the cluster id.
    */
   public function getTaggedClustersForPlan($plan_id, $cluster_tag) {
+    $this->setCacheTags([
+      'plan_id:' . $plan_id,
+    ]);
     $clusters = $this->getData([], [
       'planId' => $plan_id,
       'scopes' => 'governingEntityVersion',

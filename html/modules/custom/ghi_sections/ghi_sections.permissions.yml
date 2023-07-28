@@ -1,0 +1,4 @@
+administer section cache:
+  title: 'Administer section cache'
+  description: 'Allow to access the cache control page for sections.'
+  restrict access: true

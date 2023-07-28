@@ -10,7 +10,6 @@ use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanVersionArgument;
 use Drupal\hpc_api\Query\EndpointQueryBase;
-use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
  * Provides a query plugin for attachment search.
@@ -33,7 +32,6 @@ class AttachmentSearchQuery extends EndpointQueryBase {
 
   use AttachmentFilterTrait;
   use PlanVersionArgument;
-  use SimpleCacheTrait;
 
   /**
    * {@inheritdoc}
@@ -66,7 +64,7 @@ class AttachmentSearchQuery extends EndpointQueryBase {
       $query_args['disaggregation'] = 'false';
     }
     $cache_key = $this->getCacheKey($query_args);
-    $attachments = $this->cache($cache_key);
+    $attachments = $this->getCache($cache_key);
     if ($attachments) {
       return $attachments;
     }
@@ -76,7 +74,7 @@ class AttachmentSearchQuery extends EndpointQueryBase {
     }
 
     $processed_attachments = AttachmentHelper::processAttachments($attachments);
-    $this->cache($cache_key, $processed_attachments);
+    $this->setCache($cache_key, $processed_attachments);
     return $processed_attachments;
   }
 
@@ -115,7 +113,7 @@ class AttachmentSearchQuery extends EndpointQueryBase {
       'object_ids' => $object_ids,
       'version' => $version,
     ] + (array) $filter);
-    $attachments = $this->cache($cache_key);
+    $attachments = $this->getCache($cache_key);
     if ($attachments) {
       return $attachments;
     }
@@ -137,7 +135,7 @@ class AttachmentSearchQuery extends EndpointQueryBase {
     }
 
     $processed_attachments = AttachmentHelper::processAttachments($attachments);
-    $this->cache($cache_key, $processed_attachments);
+    $this->setCache($cache_key, $processed_attachments);
     return $processed_attachments;
   }
 

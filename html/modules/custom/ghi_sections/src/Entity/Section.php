@@ -4,7 +4,6 @@ namespace Drupal\ghi_sections\Entity;
 
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
-use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
 use Drupal\node\Entity\Node;
 
@@ -36,10 +35,6 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
    * {@inheritdoc}
    */
   public function getPageTitle() {
-    $base_object = BaseObjectHelper::getBaseObjectFromNode($this);
-    if (!$base_object->needsYear()) {
-      return $this->label();
-    }
     return $this->label();
   }
 
@@ -47,7 +42,7 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
    * {@inheritdoc}
    */
   public function getPageTitleMetaData() {
-    $base_object = BaseObjectHelper::getBaseObjectFromNode($this);
+    $base_object = $this->getBaseObject();
     $meta_data = $base_object instanceof BaseObjectMetaDataInterface ? $base_object->getPageTitleMetaData() : NULL;
     return $meta_data;
   }

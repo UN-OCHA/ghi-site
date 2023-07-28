@@ -3,6 +3,7 @@
 namespace Drupal\hpc_api\Query;
 
 use Drupal\Component\Plugin\PluginBase;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -55,6 +56,13 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
   public $cache;
 
   /**
+   * The cache tags.
+   *
+   * @var string[]
+   */
+  protected $cacheTags = [];
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQuery $endpoint_query, AccountProxyInterface $user, HidUserData $hid_user_data, CacheBackendInterface $cache) {
@@ -64,6 +72,7 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
     $this->user = $user;
     $this->hidUserData = $hid_user_data;
     $this->cache = $cache;
+    $this->cacheTags = [];
 
     $endpoint_public = $plugin_definition['endpoint']['public'] ?? NULL;
     $endpoint_authenticated = $plugin_definition['endpoint']['authenticated'] ?? NULL;
@@ -151,7 +160,8 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
       return $data;
     }
     $data = $this->endpointQuery->getData();
-    return $this->cache($cache_key, $data);
+    $this->setCache($cache_key, $data);
+    return $data;
   }
 
   /**
@@ -180,6 +190,63 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
    */
   public function getFullEndpointUrl() {
     return $this->endpointQuery->getFullEndpointUrl();
+  }
+
+  /**
+   * Set the cache tags for this query.
+   *
+   * @param array $cache_tags
+   *   The cache tags for the current query.
+   */
+  public function setCacheTags($cache_tags = []) {
+    $this->cacheTags = Cache::mergeTags($this->cacheTags, $cache_tags);
+  }
+
+  /**
+   * Get the cache tags for this query.
+   *
+   * @return array
+   *   The cache tags for the current query.
+   */
+  public function getCacheTags() {
+    $cache_tags = $this->cacheTags;
+    $placeholders = $this->getPlaceholders();
+    foreach ($placeholders as $key => $value) {
+      $cache_tags[] = $key . ':' . $value;
+    }
+    if (array_key_exists('plan_id', $placeholders)) {
+      $cache_tags[] = 'plan_data';
+    }
+    return $cache_tags;
+  }
+
+  /**
+   * Get cached data for the given cache key.
+   *
+   * @param string $cache_key
+   *   The cache key.
+   *
+   * @return mixed
+   *   The cached data if available.
+   */
+  public function getCache($cache_key) {
+    return $this->cache($cache_key);
+  }
+
+  /**
+   * Set the cache for the given cache id.
+   *
+   * This will also automatically set the cache tags for the current query. The
+   * base implementation of this class just takes the placeholders and
+   * transforms them into cache tags.
+   *
+   * @param string $cache_key
+   *   The cache key.
+   * @param mixed $data
+   *   The data to store for the cache key.
+   */
+  public function setCache($cache_key, $data) {
+    $this->cache($cache_key, $data, FALSE, NULL, $this->getCacheTags());
   }
 
 }

@@ -14,7 +14,6 @@ use Drupal\ghi_plans\Traits\PlanVersionArgument;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\hpc_api\Query\EndpointQueryBase;
-use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
  * Provides a query plugin for plan entities.
@@ -40,7 +39,6 @@ class PlanEntitiesQuery extends EndpointQueryBase {
 
   use AttachmentFilterTrait;
   use PlanVersionArgument;
-  use SimpleCacheTrait;
   use StringTranslationTrait;
 
   /**
@@ -74,7 +72,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    */
   private function getAttachments(ContentEntityInterface $context_object = NULL, array $filter = []) {
     $cache_key = $this->getCacheKey(array_filter(['id' => $context_object ? $context_object->id() : NULL] + $filter + $this->getPlaceholders()));
-    $attachments = $this->cache($cache_key);
+    $attachments = $this->getCache($cache_key);
     if ($attachments) {
       return $attachments;
     }
@@ -167,7 +165,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
     if (!empty($filter)) {
       $attachments = $this->filterAttachments($attachments, $filter);
     }
-    $this->cache($cache_key, $attachments);
+    $this->setCache($cache_key, $attachments);
     return $attachments;
   }
 
@@ -293,7 +291,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
       'entity_type' => $entity_type,
     ] + ($filters ?? [])));
 
-    $plan_entities = $this->cache($cache_key);
+    $plan_entities = $this->getCache($cache_key);
     if ($plan_entities) {
       return $plan_entities;
     }
@@ -323,7 +321,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
       return $entity->id();
     }, $plan_entities);
     $plan_entities = array_combine($entity_ids, $plan_entities);
-    $this->cache($cache_key, $plan_entities);
+    $this->setCache($cache_key, $plan_entities);
     return $plan_entities;
   }
 
@@ -338,7 +336,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    */
   public function getGoverningEntityIdsForPlanEntityId($plan_entity_id) {
     $cache_key = $this->getCacheKey(['plan_entity_id' => $plan_entity_id] + $this->getPlaceholders());
-    $cluster_ids = $this->cache($cache_key);
+    $cluster_ids = $this->getCache($cache_key);
     if ($cluster_ids) {
       return $cluster_ids;
     }
@@ -364,7 +362,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
         }
       }
     }
-    $this->cache($cache_key, $cluster_ids);
+    $this->setCache($cache_key, $cluster_ids);
     return $cluster_ids;
   }
 

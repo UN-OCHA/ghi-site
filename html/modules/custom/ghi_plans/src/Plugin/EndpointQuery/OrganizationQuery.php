@@ -6,7 +6,6 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\Traits\PlanVersionArgument;
 use Drupal\hpc_api\Query\EndpointQueryBase;
-use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
  * Provides a query plugin for organizations.
@@ -23,7 +22,6 @@ use Drupal\hpc_api\Traits\SimpleCacheTrait;
 class OrganizationQuery extends EndpointQueryBase {
 
   use PlanVersionArgument;
-  use SimpleCacheTrait;
   use StringTranslationTrait;
 
   /**
@@ -39,14 +37,14 @@ class OrganizationQuery extends EndpointQueryBase {
     $cache_key = $this->getCacheKey([
       'organization_id' => $organization_id,
     ]);
-    $organization = $this->cache($cache_key);
+    $organization = $this->getCache($cache_key);
     if ($organization !== NULL) {
       return $organization;
     }
     $data = $this->getData(['organization_id' => $organization_id]);
     $organization = !empty($data) ? new Organization($data) : NULL;
 
-    $this->cache($cache_key, $organization);
+    $this->setCache($cache_key, $organization);
     return $organization;
   }
 

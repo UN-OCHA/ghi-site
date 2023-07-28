@@ -40,6 +40,7 @@ dependencies:
     - ghi_blocks
     - ghi_content
     - ghi_embargoed_access
+    - ghi_sections
     - ghi_teams
     - ghi_templates
     - layout_builder
@@ -83,6 +84,7 @@ permissions:
   - 'administer nodes'
   - 'administer pages'
   - 'administer permissions'
+  - 'administer section cache'
   - 'administer social api authentication'
   - 'administer social api autoposting'
   - 'administer social api widgets'
