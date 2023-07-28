@@ -35,5 +35,21 @@ body.page-node-type-document {
     .content-wrapper {
       margin-top: 4.5rem;
     }
+
+    .paragraph--type--text .gho-text__text a > .media--view-mode-thumbnail-medium {
+      &.align-right {
+        margin-left: 2rem;
+        text-align: center;
+        line-height: 0.7rem;
+      }
+      .field--name-field-credits {
+        width: auto;
+        padding: 0.9rem 0.9rem;
+        word-wrap: break-word;
+        background-color: var(--ghi-yellow);
+        font-size: var(--cd-font-size--small);
+        font-weight: bold;
+      }
+    }
   }
 }
