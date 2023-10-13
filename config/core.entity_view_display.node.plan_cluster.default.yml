@@ -34,7 +34,7 @@ third_party_settings:
               6: 6
               7: 7
   layout_builder_ipe:
-    enabled: 1
+    enabled: true
   layout_builder_restrictions:
     allowed_block_categories:
       - 'Chaos Tools'

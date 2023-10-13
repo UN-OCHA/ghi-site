@@ -3,4 +3,3 @@ _core:
 toastify_loading: cdn
 enable_preview_regions: false
 save_behavior: stay
-toastify_cdn: 1

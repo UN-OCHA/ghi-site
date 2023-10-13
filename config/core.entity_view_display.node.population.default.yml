@@ -81,7 +81,7 @@ third_party_settings:
           - article_collection
           - paragraph
   layout_builder_ipe:
-    enabled: 1
+    enabled: true
 id: node.population.default
 targetEntityType: node
 bundle: population
