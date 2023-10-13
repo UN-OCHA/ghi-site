@@ -15,7 +15,7 @@ class TextAttachment extends AttachmentBase {
     return (object) [
       'id' => $attachment->id,
       'type' => strtolower($attachment->type),
-      'title' => $attachment->attachmentVersion->value->name,
+      'title' => $attachment->attachmentVersion->value->name ?? '',
       'content' => html_entity_decode($attachment->attachmentVersion->value->content ?? ''),
     ];
   }

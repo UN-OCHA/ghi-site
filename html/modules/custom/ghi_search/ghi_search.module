@@ -1,0 +1,82 @@
+<?php
+
+/**
+ * @file
+ * Contains hook implementations for the GHI Search module.
+ */
+
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function ghi_search_preprocess_page(array &$variables) {
+  // Attach the UI library so that the search bar works correctly.
+  $variables['page']['content']['#attached']['library'][] = 'ghi_search/ghi_search.ui';
+}
+
+/**
+ * Implements hook_node_view().
+ */
+function ghi_search_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  if ($view_mode != 'search_result') {
+    return;
+  }
+  if ($entity instanceof SubpageNodeInterface) {
+    $parent = $entity->getParentNode();
+    $build['title'][0]['#context']['value'] = $parent->getTitle() . ': ' . $entity->label();
+    $build['field_entity_reference']['#access'] = FALSE;
+    $build['tags'] = $parent->field_tags->view('search_result');
+  }
+
+  if ($entity instanceof SectionNodeInterface) {
+    $build['title'][0]['#context']['value'] = $entity->getTitle() . ': ' . t('Overview');
+  }
+}
+
+/**
+ * Implements TEMPLATE_preprocess_views_view_field().
+ */
+function ghi_search_preprocess_views_view_field(&$vars) {
+  $score = &drupal_static(__FUNCTION__, NULL);
+  /** @var Drupal\views\ViewExecutable $view */
+  $view = $vars['view'];
+  if ($view->id() != 'search_solr' || $view->current_display != 'page_search_results') {
+    return;
+  }
+  if (empty($view->result)) {
+    return;
+  }
+
+  /** @var \Drupal\views\Plugin\views\field\FieldPluginBase $field */
+  $field = $vars['field'];
+  if ($field->field != 'search_api_relevance') {
+    return;
+  }
+
+  /** @var \Drupal\views\Plugin\views\field\NumericField $field_handler */
+  $field_handler = $view->field['search_api_relevance'] ?? NULL;
+  if (!$field_handler) {
+    return;
+  }
+
+  if ($score === NULL) {
+    foreach ($view->result as $row) {
+      /** @var \Drupal\search_api\Item\Item $item */
+      $item = $row->_item;
+      $score = max($score, $item->getScore());
+    }
+
+  }
+
+  /** @var \Drupal\search_api\Plugin\views\ResultRow $row */
+  $row = $vars['row'];
+  $relevance = 100 / $score * $row->search_api_relevance;
+  $vars['output'] = [
+    '#markup' => number_format($relevance, 0) . '%',
+  ];
+
+}

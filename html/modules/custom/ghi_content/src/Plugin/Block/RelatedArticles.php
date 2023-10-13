@@ -25,6 +25,11 @@ class RelatedArticles extends ContentBlockBase implements OptionalTitleBlockInte
    * {@inheritdoc}
    */
   public function buildContent() {
+    // Don't build this block during solr indexing.
+    if (PHP_SAPI == 'cli' || strpos($this->getCurrentUri(), '/batch') === 0) {
+      return;
+    }
+
     $conf = $this->getBlockConfig();
     $options = [];
 

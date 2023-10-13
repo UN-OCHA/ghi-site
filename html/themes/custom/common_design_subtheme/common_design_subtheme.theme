@@ -9,6 +9,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResultForbidden;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Template\Attribute;
@@ -73,6 +74,63 @@ function common_design_subtheme_theme_suggestions_item_list_alter(array &$sugges
   }
   if ($plugin_type && $plugin_id) {
     $suggestions[] = $hook . '__' . strtr($plugin_type, '-', '_') . '__' . strtr($plugin_id, '-', '_');
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function common_design_subtheme_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+
+  // To use this for Views exposed forms, copy the form alter hook into your
+  // subtheme and add the relevant Views IDs to this array in your subtheme.
+  $includeView = ['views-exposed-form-search-solr-page-search-results'];
+  // If in array above, add attributes for styling and behaviour.
+  // Replace $form['keys'] with the appropriate fulltext input eg.
+  // $form['search_api_fulltext'].
+  if (in_array($form['#id'], $includeView)) {
+    $form['#attributes']['class'][] = 'cd-search__form';
+    $form['#attributes']['aria-labelledby'][] = 'cd-search-form';
+    $form['#attributes']['data-cd-toggable'][] = 'Search';
+    $form['#attributes']['data-cd-icon'][] = '';
+    $form['#attributes']['data-cd-component'][] = 'cd-search';
+    $form['#attributes']['data-cd-logo'][] = 'search';
+    // Focus the input when clicking on the toggler button.
+    $form['#attributes']['data-cd-focus-target'] = 'cd-search';
+    $form['keywords']['#attributes']['placeholder'] = t('What are you looking for?');
+    $form['keywords']['#attributes']['class'][] = 'cd-search__input';
+    $form['keywords']['#attributes']['type'][] = 'search';
+    $form['keywords']['#attributes']['id'][] = 'cd-search';
+    $form['keywords']['#attributes']['autocomplete'][] = 'off';
+    // Theme suggestion for submit element.
+    $form['actions']['submit']['#attributes']['data-twig-suggestion'] = 'search_submit';
+    $form['actions']['submit']['#attributes']['class'][] = 'cd-search__submit';
+    $form['actions']['submit']['#attributes']['value'][] = 'Search';
+
+    // This is for a Views exposed form INLINE search block.
+    // There are templates needed for this. Replace cd-search.html.twig
+    // with cd-search--inline.html.twig in cd-site-header.html.twig.
+    // @codingStandardsIgnoreStart
+    /*
+    $form['#attributes']['class'][] = 'cd-search--inline__form';
+    $form['#attributes']['aria-labelledby'][] = 'cd-search-form--inline';
+    $form['#attributes']['data-cd-toggable'][] = 'Search';
+    $form['#attributes']['data-cd-icon'][] = '';
+    $form['#attributes']['data-cd-component'][] = 'cd-search--inline';
+    $form['#attributes']['data-cd-logo'][] = 'search';
+    // Focus the input when clicking on the toggler button.
+    $form['#attributes']['data-cd-focus-target'] = 'cd-search--inline';
+    $form['keys']['#attributes']['placeholder'][] = t('What are you looking for?');
+    $form['keys']['#attributes']['class'][] = 'cd-search--inline__input';
+    $form['keys']['#attributes']['type'][] = 'search';
+    $form['keys']['#attributes']['id'][] = 'cd-search--inline';
+    $form['keys']['#attributes']['autocomplete'][] = 'off';
+    // Theme suggestion for submit element.
+    $form['actions']['submit']['#attributes']['data-twig-suggestion'] = 'search_submit';
+    $form['actions']['submit']['#attributes']['class'][] = 'cd-search--inline__submit';
+    $form['actions']['submit']['#attributes']['value'][] = 'Search';
+    */
+    // @codingStandardsIgnoreEnd
   }
 }
 

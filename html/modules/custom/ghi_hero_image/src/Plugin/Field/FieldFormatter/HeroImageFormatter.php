@@ -6,9 +6,11 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StreamWrapper\StreamWrapperManager;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_common\Helpers\ThemeHelper;
@@ -20,7 +22,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @FieldFormatter(
  *   id = "ghi_hero_image",
- *   label = @Translation("Default"),
+ *   label = @Translation("Hero image"),
  *   field_types = {"ghi_hero_image"}
  * )
  */
@@ -41,12 +43,20 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
   public $smugmugImage;
 
   /**
+   * The file system service.
+   *
+   * @var \Drupal\Core\File\FileSystemInterface
+   */
+  protected $fileSystem;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->entitiesQuery = $container->get('plugin.manager.endpoint_query_manager')->createInstance('plan_entities_query');
     $instance->smugmugImage = $container->get('smugmug_api.image');
+    $instance->fileSystem = $container->get('file_system');
     return $instance;
   }
 
@@ -157,6 +167,41 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
         }
         elseif ($parent_image = $this->getParentImage($entity)) {
           return $parent_image->view($build_settings);
+        }
+        break;
+
+      case 'none':
+      case '':
+        $default_image = $this->getSetting('default_image');
+        $image_path = $default_image['path'];
+        if (!empty($image_path)) {
+          if ($default_image['use_image_style']) {
+            // $image_path must be ready for
+            // Drupal\image\Entity\ImageStyle::buildUri().
+            // This needs a valid scheme.
+            // As long as https://www.drupal.org/project/drupal/issues/1308152
+            // is not fixed, files stored outside from public, private and
+            // temporary directories have no scheme.
+            // So that if our path has no scheme, we copy the file to the public
+            // files directory and add it as scheme.
+            if (!StreamWrapperManager::getScheme($image_path)) {
+              $image_path = ltrim($image_path, '/');
+              $destination = 'public://config_default_image/' . $image_path;
+              $directory = $this->fileSystem->dirname($destination);
+              $this->fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
+              if (!file_exists($destination)) {
+                $image_path = $this->fileSystem->copy($image_path, $destination);
+              }
+              else {
+                $image_path = $destination;
+              }
+            }
+          }
+          else {
+            $this->setSetting('image_style', FALSE);
+          }
+
+          $image_url = $image_path;
         }
         break;
     }

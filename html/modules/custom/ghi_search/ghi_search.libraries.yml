@@ -1,0 +1,8 @@
+ghi_search.ui:
+  # header: true
+  js:
+    js/ghi_search.ui.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - common_design/cd-dropdown

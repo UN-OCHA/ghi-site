@@ -74,26 +74,27 @@
     node.isSticky() ? 'node--sticky',
     not node.isPublished() ? 'node--unpublished',
     view_mode ? 'node--view-mode-' ~ view_mode|clean_class,
-    'ghi-plan-teaser',
+    'gho-related-article',
+    'clearfix',
   ]
 %}
 
-{{ attach_library('common_design_subtheme/ghi-plan-teaser') }}
+{{ attach_library('common_design_subtheme/gho-related-articles') }}
 
 <article{{ attributes.addClass(classes).removeAttribute('id') }}>
-  {% if true or content.field_image|render %}
-    <div class="ghi-plan-teaser__image">
-      {# content.field_image #}
+  <div class="ghi-search-thumbnail ghi-section-teaser__image {{ content.field_hero_image|render is empty ? 'empty-image' }}">
+      {{ content.field_hero_image }}
     </div>
-  {% endif %}
-
-  <div class="ghi-plan-teaser__container">
-    {{ title_prefix }}
-    {% if label and not page %}
-      <h2{{ title_attributes.addClass('ghi-plan-teaser__title') }}>
-        <a href="{{ url }}" rel="bookmark">{{ label }}</a>
-      </h2>
-    {% endif %}
-    {{ title_suffix }}
+  <div class="gho-related-article__content">
+    <h3{{ title_attributes.addClass('gho-related-article__title') }}>
+      <a href="{{ url }}" rel="bookmark">{{ label }}</a>
+    </h3>
+    {{ content|without('field_hero_image') }}
+    <a href="{{ url }}" class="gho-related-article__read-article read-article">
+      {{- 'Go to cluster page'|t -}}
+      <svg class="cd-icon cd-icon--arrow-right gho-related-article__arrow" width="16" height="16" aria-hidden="true" focusable="false">
+        <use xlink:href="#cd-icon--arrow-right"></use>
+      </svg>
+    </a>
   </div>
 </article>

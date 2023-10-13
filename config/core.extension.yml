@@ -45,6 +45,7 @@ module:
   ghi_menu: 0
   ghi_plan_clusters: 0
   ghi_plans: 0
+  ghi_search: 0
   ghi_sections: 0
   ghi_subpages: 0
   ghi_subpages_custom: 0
@@ -103,6 +104,10 @@ module:
   redirect: 0
   responsive_image: 0
   rh_taxonomy: 0
+  search_api: 0
+  search_api_db: 0
+  search_api_solr: 0
+  search_api_solr_admin: 0
   seckit: 0
   settings_tray: 0
   smugmug_api: 0
