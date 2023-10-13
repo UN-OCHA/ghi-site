@@ -32,7 +32,6 @@ dependencies:
     - node
     - taxonomy
     - user
-    - views_autocomplete_filters
 _core:
   default_config_hash: P7F4DFe8BL31DRVqsvS-ix9KZZqvvaPjZ7zEvGo9yNM
 id: content
