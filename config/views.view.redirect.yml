@@ -6,7 +6,6 @@ dependencies:
     - link
     - redirect
     - user
-    - views_autocomplete_filters
 _core:
   default_config_hash: 7-f_3ASk-Ly7MqcUiwREHB0r0l-jkq7bKwjRLTMhDEs
 id: redirect
@@ -248,7 +247,7 @@ display:
         type: basic
         options:
           submit_button: Filter
-          reset_button: false
+          reset_button: true
           reset_button_label: Reset
           exposed_sorts_label: 'Sort by'
           expose_sort_order: true

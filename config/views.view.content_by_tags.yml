@@ -14,7 +14,6 @@ dependencies:
     - node
     - taxonomy
     - user
-    - views_autocomplete_filters
 id: content_by_tags
 label: 'Content by tags'
 module: views
