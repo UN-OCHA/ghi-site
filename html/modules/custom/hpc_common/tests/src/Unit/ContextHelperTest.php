@@ -6,11 +6,14 @@ use Drupal\Component\Plugin\Context\ContextInterface;
 use Drupal\hpc_common\Helpers\ContextHelper;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\UnitTestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @covers Drupal\hpc_common\Helpers\ContextHelper
  */
 class ContextHelperTest extends UnitTestCase {
+
+  use ProphecyTrait;
 
   /**
    * The context helper class.

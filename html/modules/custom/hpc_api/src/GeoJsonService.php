@@ -31,7 +31,7 @@ class GeoJsonService {
     // First see if we have a local copy already.
     $local_path = self::GEO_JSON_DIR . '/' . basename($filepath);
     if (file_exists($local_path) && !$refresh) {
-      if (filemtime($local_path) < REQUEST_TIME - self::GEO_JSON_LIFETIME) {
+      if (filemtime($local_path) < \Drupal::time()->getRequestTime() - self::GEO_JSON_LIFETIME) {
         $this->getGeoJson($filepath_remote, TRUE);
       }
       else {

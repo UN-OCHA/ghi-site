@@ -3,7 +3,7 @@ description: 'Support module for the GHI Content module tests.'
 package: GHI
 
 type: module
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^9 || ^10
 
 dependencies:
   - ghi_content:ghi_content

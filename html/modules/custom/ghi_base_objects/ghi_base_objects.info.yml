@@ -1,7 +1,7 @@
 name: 'GHI Base Objects'
 type: module
 description: 'Provides logic and data migration handling for API base objects'
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^9 || ^10
 package: 'GHI'
 dependencies:
   - hpc_common:hpc_common

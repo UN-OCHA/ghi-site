@@ -22,7 +22,7 @@
 {% if elements %}
   <div{{ attributes.addClass(classes) }}>
     <div class="region-wrapper-inner">
-      {% for key, item in elements if key|first != '#' %}
+      {% for key, item in elements|filter((value, key) => key|first != '#') %}
         {% if item|render %}
           <div class="block-wrapper block-wrapper--{{ key|replace({'_': "-"}) }}">
             <div class="block-wrapper__inner">

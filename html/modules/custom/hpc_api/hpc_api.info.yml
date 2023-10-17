@@ -4,7 +4,7 @@ package: HPC
 configure: hpc_api.config
 
 type: module
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^9 || ^10
 
 dependencies:
   - migrate_plus:migrate_plus

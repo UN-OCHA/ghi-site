@@ -23,7 +23,6 @@ dependencies:
     - image
     - path
     - text
-    - wmbert
 third_party_settings:
   field_group:
     group_tabs:
@@ -104,17 +103,14 @@ content:
     settings: {  }
     third_party_settings: {  }
   field_base_objects:
-    type: wmbert
-    weight: 26
+    type: entity_reference_autocomplete
+    weight: 27
     region: content
     settings:
-      list: title_bundle
-      add: auto_complete
-      add_placeholder: 'Start typing to add a data object'
-      disable_duplicate_selection: '1'
-      disable_remove: 0
-      disable_drag_and_drop: 0
-      wrapper: 0
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
     third_party_settings: {  }
   field_crop_hero_image:
     type: boolean_checkbox

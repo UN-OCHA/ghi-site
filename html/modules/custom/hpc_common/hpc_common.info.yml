@@ -1,7 +1,7 @@
 name: 'HPC Common'
 type: module
 description: 'Common base definitions for HPC features in Drupal 8'
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^9 || ^10
 package: 'HPC'
 dependencies:
   - drupal:node

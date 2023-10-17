@@ -41,8 +41,8 @@ ghi-table-search:
   css:
     theme:
       components/ghi-table-search/ghi-table-search.css: {}
-  dependencies:
-    - core/jquery.ui
+  # dependencies:
+  #   - core/jquery.ui
 
 ghi-table-progress-indicator:
   css:
@@ -110,8 +110,8 @@ ghi-scrollable-table:
       components/ghi-scrollable-table/ghi-scrollable-table.css: {}
   js:
     components/ghi-scrollable-table/ghi-scrollable-table.js: {}
-  dependencies:
-    - core/jquery.ui
+  # dependencies:
+  #   - core/jquery.ui
 
 # Copy libraries from GHO
 datawrapper-responsive-iframe:
