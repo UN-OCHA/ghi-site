@@ -26,9 +26,9 @@
       });
 
       if ($(context).hasClass('path-search') && !$(context).hasClass('search-form-open')) {
-        $(toggle).attr('aria-expanded', 'true');
         $(toggle).trigger('click');
         $('#' + search_form_id).attr('data-cd-hidden', 'false');
+        $('body').addClass('search-form-open');
       }
     }
   }

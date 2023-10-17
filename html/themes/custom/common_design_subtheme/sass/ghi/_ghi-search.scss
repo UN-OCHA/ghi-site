@@ -34,6 +34,11 @@ main#main-content {
 
   button.cd-search__btn {
     height: $cd-site-header-height;
+    padding: 0;
+
+    svg {
+      fill: var(--ghi-default-text-color);
+    }
 
     &[aria-expanded="true"] {
       position: relative;
@@ -60,7 +65,7 @@ main#main-content {
       }
 
       svg {
-        fill: var(--ghi-default-text-color);
+        fill: var(--cd-primary-color);
       }
 
       &:hover,
@@ -125,7 +130,7 @@ main#main-content {
   }
 
   // Visually hide the search input's label.
-  label[for="edit-keys"] {
+  .form-item-keywords label {
     @include visually-hidden;
   }
 }
