@@ -1,7 +1,7 @@
 //——————————————————————————————————————————————————————————————————————————————
 // Common Design: Main Navigation
 //——————————————————————————————————————————————————————————————————————————————
-.cd-nav__btn {
+.cd-nav-level-0__btn {
   height: $cd-site-header-height;
   white-space: nowrap;
 
@@ -57,9 +57,9 @@
     }
 
     // First level.
-    > .menu > .menu-item > a,
-    > .menu > .menu-item > span,
-    > .menu > .menu-item > button {
+    > .menu > .menu-item > button > a,
+    > .menu > .menu-item > button > span,
+    > .menu > .menu-item > button > button {
       text-transform: none;
       font-weight: 700;
     }
@@ -70,6 +70,8 @@
     a,
     span,
     button {
+      height: auto;
+      white-space: normal;
       font-weight: normal;
     }
 

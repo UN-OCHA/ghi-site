@@ -28,7 +28,7 @@ html.snap--pdf {
     display: none !important;
   }
 
-  .dialog-off-canvas-main-canvas > .cd-layout-container {
+  .dialog-off-canvas-main-canvas > .cd-page-layout-container {
     grid-template-rows: 80px auto 1fr auto;
   }
 }
