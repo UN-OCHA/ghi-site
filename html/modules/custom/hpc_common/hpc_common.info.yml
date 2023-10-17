@@ -6,4 +6,3 @@ package: 'HPC'
 dependencies:
   - drupal:node
   - hpc_api:hpc_api
-  - tippy:tippy

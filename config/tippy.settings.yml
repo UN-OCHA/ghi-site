@@ -1,5 +1,0 @@
-_core:
-  default_config_hash: qjNd-m-sJaRQWc4oLBdMmAVw7Lic2tiG0aAkIPI4HxM
-use_cdn: true
-auto_init: false
-external_location: 'https://unpkg.com/tippy.js@6'
