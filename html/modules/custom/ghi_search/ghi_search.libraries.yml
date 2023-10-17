@@ -5,4 +5,6 @@ ghi_search.ui:
   dependencies:
     - core/jquery
     - core/drupal
+    - core/once
+    - core/jquery.once.bc
     - common_design/cd-dropdown
