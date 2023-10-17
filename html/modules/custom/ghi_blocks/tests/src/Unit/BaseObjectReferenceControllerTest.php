@@ -11,12 +11,15 @@ use Drupal\layout_builder\SectionStorage\SectionStorageManagerInterface;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @coversDefaultClass \Drupal\layout_builder\SectionComponent
  * @group layout_builder
  */
 class BaseObjectReferenceControllerTest extends UnitTestCase {
+
+  use ProphecyTrait;
 
   /**
    * Tests that base object components can be retrieved from sections.

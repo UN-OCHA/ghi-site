@@ -7,13 +7,13 @@ module:
   admin_toolbar_tools: 0
   auto_entitylabel: 0
   autologout: 0
+  bert: 0
   big_pipe: 0
   big_pipe_sessionless: 0
   block: 0
   block_content: 0
   breakpoint: 0
   cer: 0
-  ckeditor: 0
   ckeditor5: 0
   config: 0
   config_default_image: 0
@@ -114,10 +114,10 @@ module:
   system: 0
   taxonomy: 0
   text: 0
-  tippy: 0
   token: 0
   toolbar: 0
   update: 0
+  upgrade_status: 0
   user: 0
   username_enumeration_prevention: 0
   view_unpublished: 0
@@ -126,7 +126,6 @@ module:
   warmer: 0
   warmer_cdn: 0
   webp: 0
-  wmbert: 0
   pathauto: 1
   content_translation: 10
   views: 10

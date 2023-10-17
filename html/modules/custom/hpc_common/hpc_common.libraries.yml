@@ -6,11 +6,25 @@ icon:
   css:
     theme:
       css/icon.css: {}
+
+# atomiks.github.io/tippyjs
+tippy.js:
+  remote: https://github.com/atomiks/tippyjs
+  license: &tippy_license
+    name: MIT
+    url: https://github.com/atomiks/tippyjs/blob/master/LICENSE
+    gpl-compatible: true
+  version: 6
+  js:
+    https://unpkg.com/tippy.js@6: { type: external, minified: true, attributes: { defer: false, async: false } }
+  dependencies:
+    - core/popperjs
+
 tooltip:
   js:
     js/tooltip.js: {}
   dependencies:
-    - tippy/tippy.js
+    - hpc_common/tippy.js
 popover:
   css:
     theme:
@@ -26,4 +40,4 @@ sparkline:
     js/sparkline.js: {}
   dependencies:
     - hpc_common/d3
-    - tippy/tippy.js
+    - hpc_common/tippy.js

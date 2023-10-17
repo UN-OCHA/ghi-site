@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an 'External Widget' block.
@@ -32,6 +33,23 @@ class ExternalWidget extends GHIBlockBase {
   const MIN_YEAR_HISTORICAL_HPC_DATA = 2011;
   const MAX_YEAR_RANGE = 10;
   const GOOGLE_SHEET = '1MArQSVdbLXLaQ8ixUKo9jIjifTCVDDxTJYbGoRuw3Vw';
+
+  /**
+   * The extension path resolver.
+   *
+   * @var \Drupal\Core\Extension\ExtensionPathResolver
+   */
+  protected $extensionPathResolver;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var \Drupal\ghi_blocks\Plugin\Block\Generic\ExternalWidget $instance */
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->extensionPathResolver = $container->get('extension.path.resolver');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -342,7 +360,7 @@ class ExternalWidget extends GHIBlockBase {
    *   Whether the url should be processed.
    */
   private function processParams(array &$params, $process_url = TRUE) {
-    $base_url = $this->requestStack->getMasterRequest()->getBaseUrl();
+    $base_url = $this->requestStack->getMainRequest()->getBaseUrl();
 
     // First we deactivate some controls and set the widget into single mode,
     // which removes the embed title.
@@ -353,7 +371,7 @@ class ExternalWidget extends GHIBlockBase {
 
     // Then we add an additional CSS reference, which will be included by HDX,
     // so that we have some control over the styling.
-    $css_url = Url::fromUserInput('/' . drupal_get_path('module', 'ghi_blocks') . '/css/quickcharts.css', [
+    $css_url = Url::fromUserInput('/' . $this->extensionPathResolver->getPath('module', 'ghi_blocks') . '/css/quickcharts.css', [
       'absolute' => TRUE,
     ])->toString();
     if (strpos($css_url, 'docksal') || strpos($css_url, 'ahconu.org')) {

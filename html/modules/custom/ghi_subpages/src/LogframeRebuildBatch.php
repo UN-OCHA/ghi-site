@@ -27,7 +27,7 @@ class LogframeRebuildBatch {
       $query = \Drupal::entityQuery('node')
         ->condition('type', 'logframe');
 
-      $result = $query->execute();
+      $result = $query->accessCheck(FALSE)->execute();
       $context['sandbox']['node_ids'] = array_values($result);
 
       $context['sandbox']['total'] = count($context['sandbox']['node_ids']);

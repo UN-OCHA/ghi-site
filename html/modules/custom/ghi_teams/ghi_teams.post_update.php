@@ -15,6 +15,7 @@ function ghi_teams_post_update_set_new_roles() {
     ->getStorage('user')
     ->getQuery()
     ->condition('roles', 'editor')
+    ->accessCheck(FALSE)
     ->execute();
   if (empty($uids_editor)) {
     return;

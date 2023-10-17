@@ -7,11 +7,14 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\hpc_common\Helpers\UserHelper;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @covers Drupal\hpc_common\Helpers\UserHelper
  */
 class UserHelperTest extends UnitTestCase {
+
+  use ProphecyTrait;
 
   /**
    * The user helper class.

@@ -8,6 +8,7 @@ use Drupal\Component\Utility\Unicode;
 
 use Drupal\hpc_downloads\DownloadRecord;
 use Drupal\hpc_downloads\Helpers\FileHelper;
+use Drupal\phpexcel\PHPExcel;
 
 /**
  * Create Excel files.
@@ -437,15 +438,16 @@ class Excel {
     // For huge data sets, e.g. in custom search, PHP Excel might get problems
     // processing all the data. To prevent this, we disable timeouts here.
     set_time_limit(0);
-    module_load_include('inc', 'phpexcel');
+    /** @var \Drupal\phpexcel\PHPExcel $phpexcel */
+    $phpexcel = \Drupal::service('phpexcel');
 
     // This is very slow for larger documents, or for documents with a lot of
     // columns, like in data search.
     ini_set('memory_limit', '512M');
-    $status = phpexcel_export($data['header'], $data['rows'], \Drupal::service('file_system')->realpath($options['temp_name']), $options);
+    $status = $phpexcel->export($data['header'], $data['rows'], \Drupal::service('file_system')->realpath($options['temp_name']), $options);
     set_time_limit(30);
 
-    return self::finaliseFileGeneration($status == PHPEXCEL_SUCCESS, $options, $download_record);
+    return self::finaliseFileGeneration($status == PHPExcel::PHPEXCEL_SUCCESS, $options, $download_record);
   }
 
   /**

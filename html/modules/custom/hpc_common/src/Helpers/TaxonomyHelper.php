@@ -321,6 +321,7 @@ class TaxonomyHelper extends EntityHelper {
     $result = $query
       ->condition($field_name, $value)
       ->condition('vid', $vid)
+      ->accessCheck()
       ->execute();
 
     if (empty($result)) {

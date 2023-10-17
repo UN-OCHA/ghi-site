@@ -167,7 +167,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       else {
         $tables = [
           '#lazy_builder' => [
-            $this::class . '::lazyBuildTables',
+            static::class . '::lazyBuildTables',
             [
               $this->getPluginId(),
               $this->getUuid(),

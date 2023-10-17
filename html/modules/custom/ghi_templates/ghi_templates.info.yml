@@ -3,7 +3,7 @@ description: Provide templating for GHI layout builder pages.
 package: GHI
 
 type: module
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^9 || ^10
 
 dependencies:
   - drupal:layout_builder

@@ -6,6 +6,7 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\Tests\UnitTestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -14,6 +15,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * @covers Drupal\hpc_common\Helpers\RequestHelper
  */
 class RequestHelperTest extends UnitTestCase {
+
+  use ProphecyTrait;
 
   /**
    * The request helper class.

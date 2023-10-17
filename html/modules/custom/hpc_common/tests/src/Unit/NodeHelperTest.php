@@ -13,11 +13,14 @@ use Drupal\node\Entity\Node;
 use Drupal\node\NodeStorageInterface;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @covers Drupal\hpc_common\Helpers\NodeHelper
  */
 class NodeHelperTest extends UnitTestCase {
+
+  use ProphecyTrait;
 
   /**
    * The node helper class.
@@ -392,6 +395,7 @@ class NodeHelperTest extends UnitTestCase {
 
     // Mock entityQuery methods.
     $this->entityQuery->condition(Argument::any(), Argument::any())->willReturn($this->entityQuery);
+    $this->entityQuery->accessCheck()->willReturn($this->entityQuery);
     $this->entityQuery->execute()->willReturn($query_result);
 
     // Get the nodeStorage in entityTypeManager.
@@ -454,6 +458,7 @@ class NodeHelperTest extends UnitTestCase {
     // Mock entityQuery methods.
     $this->entityQuery->condition(Argument::any(), Argument::any(), Argument::any())->willReturn($this->entityQuery);
     $this->entityQuery->sort(Argument::any(), Argument::any())->willReturn($this->entityQuery);
+    $this->entityQuery->accessCheck()->willReturn($this->entityQuery);
     $this->entityQuery->execute()->willReturn(['1', '2', '3']);
 
     // Get the nodeStorage in entityTypeManager.

@@ -13,6 +13,7 @@ use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\Tests\UnitTestCase;
 use GuzzleHttp\Psr7\Response;
 use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @covers Drupal\hpc_api\Query\EndpointQuery
@@ -20,6 +21,8 @@ use Prophecy\Argument;
  * @group HPC API
  */
 class EndpointQueryTest extends UnitTestCase {
+
+  use ProphecyTrait;
 
   /**
    * The endpoint query instance.

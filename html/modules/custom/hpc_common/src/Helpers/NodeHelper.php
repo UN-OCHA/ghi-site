@@ -117,6 +117,7 @@ class NodeHelper extends EntityHelper {
       ->condition('title', $title, $operator)
       ->condition('type', $bundle)
       ->sort('nid', 'DESC')
+      ->accessCheck()
       ->execute();
     $nodes = Node::loadMultiple($nids);
     $nodes = array_filter($nodes, function ($node) {
@@ -193,6 +194,7 @@ class NodeHelper extends EntityHelper {
   public static function getOriginalIdFromTitle($title, $bundle) {
     $query = \Drupal::entityQuery('node');
     $query->condition('title', $title)->condition('type', $bundle);
+    $query->accessCheck();
     $result = $query->execute();
     if (empty($result)) {
       return NULL;
