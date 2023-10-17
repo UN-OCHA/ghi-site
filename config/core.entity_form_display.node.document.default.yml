@@ -18,6 +18,7 @@ dependencies:
     - image.style.thumbnail
     - node.type.document
   module:
+    - bert
     - field_group
     - ghi_content
     - image
@@ -103,14 +104,17 @@ content:
     settings: {  }
     third_party_settings: {  }
   field_base_objects:
-    type: entity_reference_autocomplete
+    type: bert
     weight: 27
     region: content
     settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
+      list: title_bundle
+      add: auto_complete
+      add_placeholder: 'Start typing to add a data object'
+      disable_duplicate_selection: '1'
+      disable_remove: 0
+      disable_drag_and_drop: 0
+      wrapper: 0
     third_party_settings: {  }
   field_crop_hero_image:
     type: boolean_checkbox

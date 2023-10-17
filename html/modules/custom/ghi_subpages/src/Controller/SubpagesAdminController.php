@@ -54,7 +54,7 @@ class SubpagesAdminController extends ControllerBase {
       return AccessResult::forbidden();
     }
     // Fall back to node type access check.
-    return $this->entityTypeManager->getAccessControlHandler('node')->createAccess($node_type->id(), $this->currentUser(), [], TRUE);
+    return $this->entityTypeManager()->getAccessControlHandler('node')->createAccess($node_type->id(), $this->currentUser(), [], TRUE);
   }
 
   /**
