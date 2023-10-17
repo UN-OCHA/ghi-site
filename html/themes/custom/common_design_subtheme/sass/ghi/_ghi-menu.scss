@@ -39,6 +39,23 @@
       }
     }
 
+    ul.menu li.menu-item .menu-link-contentmain nav[role="navigation"] {
+
+      ul {
+        padding: 0;
+        list-style: none;
+
+        li > span {
+          font-weight: bold;
+        }
+      }
+
+      @include max-width(lg) {
+        margin: 0;
+        padding: 0;
+      }
+    }
+
     @include max-width(lg) {
       margin: 0;
       padding: 0;
