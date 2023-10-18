@@ -71,7 +71,7 @@ function ghi_search_preprocess_views_view_field(&$vars) {
     }
 
   }
-
+  $score = max($score, 140);
   /** @var \Drupal\search_api\Plugin\views\ResultRow $row */
   $row = $vars['row'];
   $relevance = 100 / $score * $row->search_api_relevance;

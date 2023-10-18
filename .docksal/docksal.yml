@@ -13,6 +13,9 @@ services:
       - CM_KEY
       - MAPBOX_TOKEN
       - COMPOSER_MEMORY_LIMIT=-1
+      - SOLR_CORE
+      - SOLR_HOST
+      - SOLR_PORT
 
   web:
     environment:
@@ -46,3 +49,5 @@ services:
       service: solr
     volumes:
       - ${PROJECT_ROOT}/.docksal/etc/solr/solr811:/opt/solr/server/solr/configsets/solr811
+    environment:
+      SOLR_CORE: ${SOLR_CORE:-ghi}

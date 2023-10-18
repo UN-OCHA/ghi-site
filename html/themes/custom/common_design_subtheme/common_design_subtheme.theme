@@ -98,6 +98,9 @@ function common_design_subtheme_form_alter(&$form, FormStateInterface $form_stat
     $form['#attributes']['role'][] = 'search';
     // Focus the input when clicking on the toggler button.
     $form['#attributes']['data-cd-focus-target'] = 'cd-search';
+    // Keep the form open.
+    $form['#attributes']['data-cd-toggable-keep'] = 'true';
+    // The input field.
     $form['keywords']['#attributes']['placeholder'] = t('What are you looking for?');
     $form['keywords']['#attributes']['class'][] = 'cd-search__input';
     $form['keywords']['#attributes']['type'][] = 'search';

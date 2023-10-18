@@ -139,26 +139,41 @@ main#main-content {
 // Search results
 //
 .path-search {
+
+  .views-field-search-api-rendered-item:not(:last-of-type) {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--cd-default-border-color);
+  }
+
   .ghi-search-thumbnail {
-    width: calc(40% - 2.25rem);
-    min-width: 320px;
+    width: 100%;
+    // min-width: 320px;
+
+    @include tablet {
+      width: calc(20% - 2.25rem);
+      min-width: 220px;
+    }
   }
 
   // Pagination
   //
   // @see common_design/components/cd-pagination/cd-pagination.css
-  .cd-pager__item a:hover,
-  .cd-pager__item a:focus {
-    color: var(--ghi-default-text-color);
-    border-color: var(--cd-primary-color);
-    background-color: var(--cd-primary-color);
-  }
+  nav.pager {
+    margin-top: 5rem;
 
-  .cd-pager__item.is-active a,
-  .cd-pager__item.is-active a:hover {
-    color: var(--ghi-default-text-color);
-    border-color: var(--cd-primary-color--dark);
-    background-color: var(--cd-primary-color--dark);
-    font-weight: 700;
+    .cd-pager__item a:hover,
+    .cd-pager__item a:focus {
+      color: var(--ghi-default-text-color);
+      border-color: var(--cd-primary-color);
+      background-color: var(--cd-primary-color);
+    }
+
+    .cd-pager__item.is-active a,
+    .cd-pager__item.is-active a:hover {
+      color: var(--ghi-default-text-color);
+      border-color: var(--cd-primary-color--dark);
+      background-color: var(--cd-primary-color--dark);
+      font-weight: 700;
+    }
   }
 }

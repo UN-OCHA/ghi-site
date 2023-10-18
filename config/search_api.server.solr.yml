@@ -46,7 +46,7 @@ backend_config:
     host: solr.ghi-site.docksal.site
     port: 80
     path: /
-    core: humanitarianaction
+    core: ghi
     timeout: 10
     index_timeout: 30
     optimize_timeout: 40
