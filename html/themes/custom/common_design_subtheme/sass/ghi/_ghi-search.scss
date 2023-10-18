@@ -158,7 +158,11 @@ main#main-content {
 
   .ghi-search-thumbnail {
     width: 100%;
-    // min-width: 320px;
+
+    & > .field--type-image {
+      width: 100%;
+      min-width: auto;
+    }
 
     @include tablet {
       width: calc(20% - 2.25rem);

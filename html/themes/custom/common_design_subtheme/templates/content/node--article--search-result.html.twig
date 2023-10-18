@@ -89,7 +89,9 @@
   ]
 %}
 <article{{ attributes.addClass(classes) }}>
-  {{ content.field_image }}
+  <div class="ghi-search-thumbnail">
+    {{ content.field_image }}
+  </div>
   <div class="gho-related-article__content">
     <h3{{ title_attributes.addClass('gho-related-article__title') }}>
       <a href="{{ url }}" rel="bookmark">{{ label }}</a>
