@@ -1,12 +1,8 @@
 /**
  * @file
- * Make modifications to previewed content in GHI blocks.
+ * UI additions for the GHI search.
  *
- * For the moment this only disables links so that editors do not accidentally
- * click on them and abort block configuration by mistake.
- *
- * @todo Should this be made configurable? Should there be any indication that
- *   there are actually links in the content but they have been disabled?
+ * This makes the search bar always stay visible on on the search results page.
  */
 
 (function ($, Drupal, drupalSettings) {
@@ -21,16 +17,26 @@
         $(toggle).trigger('click');
         $('#' + search_form_id).attr('data-cd-hidden', 'false');
         $('body').addClass('search-form-open');
+        $(toggle).attr('disabled', 'disabled');
       }
 
       if ($(context).find('#' + search_toggle_id)) {
         var search_toggle = document.getElementById(search_toggle_id);
         var observer = new MutationObserver(function(mutations) {
-          if ($(search_toggle).attr('aria-expanded') == 'true') {
-            $('body').addClass('search-form-open');
+          if ($('body').hasClass('path-search')) {
+            if ($(search_toggle).attr('aria-expanded') == 'false') {
+              $(search_toggle).attr('aria-expanded', 'true');
+              $('body').addClass('search-form-open');
+              $('#' + search_form_id).attr('data-cd-hidden', 'false');
+            }
           }
           else {
-            $('body').removeClass('search-form-open');
+            if ($(search_toggle).attr('aria-expanded') == 'true') {
+              $('body').addClass('search-form-open');
+            }
+            else {
+              $('body').removeClass('search-form-open');
+            }
           }
         });
         observer.observe(search_toggle, {

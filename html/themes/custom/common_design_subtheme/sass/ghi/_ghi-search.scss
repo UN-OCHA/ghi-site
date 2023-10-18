@@ -31,10 +31,28 @@ main#main-content {
 }
 
 .cd-search {
+  z-index: calc(var(--cd-z-search) - 2);
+
+  button:focus-visible {
+    background: var(--ghi-primary-background-color);
+
+    &::before {
+      position: absolute;
+      right: -1px;
+      bottom: 0;
+      left: -1px;
+      width: calc(100% + 2px);
+      height: 4px;
+      content: "";
+      transition: background 0.3s ease;
+      transform: none;
+      border: 0;
+      background-color: var(--cd-primary-color);
+    }
+  }
 
   button.cd-search__btn {
     height: $cd-site-header-height;
-    padding: 0;
 
     svg {
       fill: var(--ghi-default-text-color);
@@ -45,27 +63,16 @@ main#main-content {
 
       &::before {
         position: absolute;
+        right: -1px;
         bottom: 0;
-        width: 0;
-        height: 0;
+        left: -1px;
+        width: calc(100% + 2px);
+        height: 4px;
         content: "";
-        border-width: 0 6px 6px;
-        border-style: solid;
-        border-color: transparent transparent var(--cd-primary-color);
-
-        [dir="ltr"] & {
-          left: 50%;
-          margin-left: -6px;
-        }
-
-        [dir="rtl"] & {
-          right: 50%;
-          margin-right: -6px;
-        }
-      }
-
-      svg {
-        fill: var(--cd-primary-color);
+        transition: background 0.3s ease;
+        transform: none;
+        border: 0;
+        background-color: var(--cd-primary-color);
       }
 
       &:hover,
@@ -107,7 +114,11 @@ main#main-content {
   .cd-search__form {
     padding-right: 0;
     padding-left: 0;
-    background-color: var(--cd-primary-color);
+    background-color: var(--ghi-default-background-color);
+
+    &.content-width {
+      max-width: calc(var(--content-width) + 50vw);
+    }
   }
 
   // Search input should take up as much space as possible.

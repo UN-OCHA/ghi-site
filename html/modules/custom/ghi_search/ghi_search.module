@@ -9,6 +9,7 @@ use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
+use Drupal\views\ViewExecutable;
 
 /**
  * Implements hook_preprocess_page().
@@ -16,6 +17,21 @@ use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 function ghi_search_preprocess_page(array &$variables) {
   // Attach the UI library so that the search bar works correctly.
   $variables['page']['content']['#attached']['library'][] = 'ghi_search/ghi_search.ui';
+}
+
+/**
+ * Implements hook_views_pre_render().
+ */
+function ghi_search_views_pre_render(ViewExecutable $view) {
+  if ($view->id() != 'search_solr') {
+    return;
+  }
+  $keywords = $view->getExposedInput()['keywords'] ?? NULL;
+  if ($keywords) {
+    $view->setTitle(t('Search results for <em>@keywords</em>', [
+      '@keywords' => $keywords,
+    ]));
+  }
 }
 
 /**
