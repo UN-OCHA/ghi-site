@@ -64,8 +64,10 @@ $config['social_auth_hid.settings']['client_secret'] = getenv('HID_CLIENT_SECRET
 $config['social_auth_hid.settings']['base_url'] = 'https://auth.humanitarian.id';
 
 // Solr config.
-$config['search_api.server.solr']['backend_config']['connector_config']['host'] = 'solr';
-$config['search_api.server.solr']['backend_config']['connector_config']['port'] = 8983;
+$config['search_api.server.solr_server']['backend_config']['connector'] = 'standard';
+$config['search_api.server.solr_server']['backend_config']['connector_config']['host'] = 'solr';
+$config['search_api.server.solr_server']['backend_config']['connector_config']['port'] = 8983;
+$config['search_api.server.solr_server']['backend_config']['connector_config']['core'] = 'ghi';
 
 $settings['social_auth.settings']['redirect_user_form'] = true;
 

@@ -4,7 +4,7 @@ status: true
 dependencies:
   config:
     - field.storage.node.field_tags
-    - search_api.server.solr
+    - search_api.server.solr_server
     - core.entity_view_mode.node.full
   module:
     - search_api_solr
@@ -178,4 +178,4 @@ options:
   cron_limit: 50
   index_directly: false
   track_changes_in_references: true
-server: solr
+server: solr_server

@@ -45,8 +45,8 @@ field_type:
           words: stopwords_fr.txt
         -
           class: solr.SnowballPorterFilterFactory
-          language: French
           protected: protwords_fr.txt
+          language: French
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
     -
@@ -74,17 +74,17 @@ field_type:
           class: solr.LowerCaseFilterFactory
         -
           class: solr.SynonymFilterFactory
+          ignoreCase: true
           synonyms: synonyms_fr.txt
           expand: true
-          ignoreCase: true
         -
           class: solr.StopFilterFactory
           ignoreCase: true
           words: stopwords_fr.txt
         -
           class: solr.SnowballPorterFilterFactory
-          language: French
           protected: protwords_fr.txt
+          language: French
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
 unstemmed_field_type:
@@ -145,9 +145,9 @@ unstemmed_field_type:
           class: solr.LowerCaseFilterFactory
         -
           class: solr.SynonymFilterFactory
+          ignoreCase: true
           synonyms: synonyms_fr.txt
           expand: true
-          ignoreCase: true
         -
           class: solr.StopFilterFactory
           ignoreCase: true
@@ -402,10 +402,6 @@ text_files:
     quelles
     sans
     soi
-  synonyms: |
-    drupal, durpal
-  nouns: |
-
   protwords: |
 
   accents: |
@@ -594,3 +590,7 @@ text_files:
     "\u014D" => "o"
     # ū => u
     "\u016B" => "u"
+  synonyms: |
+    drupal, durpal
+  nouns: |
+
