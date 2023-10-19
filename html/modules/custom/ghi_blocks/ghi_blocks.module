@@ -6,6 +6,7 @@
  */
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -387,6 +388,20 @@ function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $fo
     // Disable the "Revert to defaults" button.
     if (array_key_exists('actions', $form) && array_key_exists('revert', $form['actions'])) {
       $form['actions']['revert']['#access'] = FALSE;
+    }
+    // Do the same as gin_lb_form_alter(), but targeting the "finish" button
+    // that is used by page manager.
+    if (isset($form['actions']['finish'])) {
+      $form['actions']['finish'] = NestedArray::mergeDeepArray([
+        $form['actions']['finish'],
+        [
+          '#attributes' => [
+            'class' => [
+              'js-glb-button--primary',
+            ],
+          ],
+        ],
+      ]);
     }
   }
   $confirm_forms = [
