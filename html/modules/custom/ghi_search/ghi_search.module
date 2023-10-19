@@ -41,8 +41,7 @@ function ghi_search_node_view(array &$build, EntityInterface $entity, EntityView
   if ($view_mode != 'search_result') {
     return;
   }
-  if ($entity instanceof SubpageNodeInterface) {
-    $parent = $entity->getParentNode();
+  if ($entity instanceof SubpageNodeInterface && $parent = $entity->getParentNode()) {
     $build['title'][0]['#context']['value'] = $parent->getTitle() . ': ' . $entity->label();
     $build['field_entity_reference']['#access'] = FALSE;
     $build['tags'] = $parent->field_tags->view('search_result');
