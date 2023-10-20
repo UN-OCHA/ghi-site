@@ -20,8 +20,8 @@
         $(toggle).attr('disabled', 'disabled');
       }
 
-      if ($(context).find('#' + search_toggle_id)) {
-        var search_toggle = document.getElementById(search_toggle_id);
+      var search_toggle = document.getElementById(search_toggle_id);
+      if ($(context).find('#' + search_toggle_id) && search_toggle) {
         var observer = new MutationObserver(function(mutations) {
           if ($('body').hasClass('path-search')) {
             if ($(search_toggle).attr('aria-expanded') == 'false') {
