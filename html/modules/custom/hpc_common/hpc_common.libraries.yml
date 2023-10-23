@@ -16,9 +16,8 @@ tippy.js:
     gpl-compatible: true
   version: 6
   js:
+    https://unpkg.com/@popperjs/core@2: { type: external, minified: true, attributes: { defer: false, async: false } }
     https://unpkg.com/tippy.js@6: { type: external, minified: true, attributes: { defer: false, async: false } }
-  dependencies:
-    - core/popperjs
 
 tooltip:
   js:
