@@ -7,24 +7,26 @@
 
   Drupal.behaviors.HpcDownloads = {
     attach: function (context, settings) {
-      $('.hpc-download-dialog-content a.btn--download', context).once('hpc-download-buttons-processed').click(function (e) {
-        Drupal.HpcDownloads.download_status = 'starting';
-        if (!$(this).parents('.hpc-download-dialog-wrapper').hasClass('views-query-batched')) {
-          // Non-batched downloads don't have a progress bar and can live with
-          // a simple text message.
-          Drupal.HpcDownloads.setModalContent(Drupal.t('The download process has been started. Please note that generating the download file may take a few moments.'));
-          Drupal.HpcDownloads.setModalFooter(Drupal.t('Preparing download'));
-          // Hide the throbber, as it's obfoscating the text and the progress
-          // is explained.
-          $('.ajax-progress-throbber').hide();
-        }
-        else {
-          // Batched processes have a progressbar that appears quickly, so we
-          // don't want to put a text message in between that will be gone too
-          // fast. So we display a throbber which will be replaced by the
-          // progress bar.
-          Drupal.HpcDownloads.setModalContent('<span class="throbber"></span>');
-        }
+      once('hpc-download-buttons-processed', '.hpc-download-dialog-content a.btn--download', context).forEach(element => {
+        element.addEventListener('click', e => {
+          Drupal.HpcDownloads.download_status = 'starting';
+          if (!$(this).parents('.hpc-download-dialog-wrapper').hasClass('views-query-batched')) {
+            // Non-batched downloads don't have a progress bar and can live with
+            // a simple text message.
+            Drupal.HpcDownloads.setModalContent(Drupal.t('The download process has been started. Please note that generating the download file may take a few moments.'));
+            Drupal.HpcDownloads.setModalFooter(Drupal.t('Preparing download'));
+            // Hide the throbber, as it's obfoscating the text and the progress
+            // is explained.
+            $('.ajax-progress-throbber').hide();
+          }
+          else {
+            // Batched processes have a progressbar that appears quickly, so we
+            // don't want to put a text message in between that will be gone too
+            // fast. So we display a throbber which will be replaced by the
+            // progress bar.
+            Drupal.HpcDownloads.setModalContent('<span class="throbber"></span>');
+          }
+        });
       });
 
       $(document).on('ghi-url-updated', function(event, url) {

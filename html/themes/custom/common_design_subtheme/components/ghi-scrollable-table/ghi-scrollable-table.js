@@ -83,11 +83,11 @@
 
   Drupal.behaviors.ScrollableTable = {
     attach: function (context, settings) {
-      $('.scrollable-table', context).once('sortable-table').each(function(i, table) {
-        if ($(table).css('overflow-x') != 'auto') {
+      once('sortable-table', '.scrollable-table', context).forEach(element => {
+        if ($(element).css('overflow-x') != 'auto') {
           return;
         }
-        table = new Drupal.ScrollableTable(table);
+        table = new Drupal.ScrollableTable(element);
         table.init();
       });
     }

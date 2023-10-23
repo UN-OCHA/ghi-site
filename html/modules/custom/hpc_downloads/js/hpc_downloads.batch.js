@@ -25,7 +25,7 @@
         Drupal.hpc_active_download = null;
       });
 
-      $('.hpc-download-batch-progress-bar', context).once('batch').each(function () {
+      once('batch', $('.hpc-download-batch-progress-bar', context)).forEach(function () {
 
         var holder = $(this);
         var wrapper = $(holder).parents('.hpc-download-dialog-wrapper');

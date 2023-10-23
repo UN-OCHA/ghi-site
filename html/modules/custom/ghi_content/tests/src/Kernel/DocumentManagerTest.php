@@ -34,7 +34,6 @@ class DocumentManagerTest extends KernelTestBase {
     'node',
     'taxonomy',
     'field',
-    'entity_reference',
     'layout_builder',
     'layout_discovery',
     'migrate',

@@ -4,6 +4,7 @@ namespace Drupal\hpc_security\Asset;
 
 use Drupal\Core\Asset\AssetResolverInterface;
 use Drupal\Core\Asset\AttachedAssetsInterface;
+use Drupal\Core\Language\LanguageInterface;
 
 /**
  * An HPC specific asset resolver that allows to add per-request nonces.
@@ -30,7 +31,7 @@ class HpcAssetResolver implements AssetResolverInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCssAssets(AttachedAssetsInterface $assets, $optimize) {
+  public function getCssAssets(AttachedAssetsInterface $assets, $optimize, LanguageInterface $language = NULL) {
     // Don't do anything on CSS assets.
     return $this->assetResolver->getCssAssets($assets, $optimize);
   }
@@ -38,7 +39,7 @@ class HpcAssetResolver implements AssetResolverInterface {
   /**
    * {@inheritdoc}
    */
-  public function getJsAssets(AttachedAssetsInterface $assets, $optimize) {
+  public function getJsAssets(AttachedAssetsInterface $assets, $optimize, LanguageInterface $language = NULL) {
     [$js_assets_header, $js_assets_footer] = $this->assetResolver->getJsAssets($assets, $optimize);
     if (hpc_security_sends_csp_header()) {
       if (hpc_security_can_use_nonce()) {

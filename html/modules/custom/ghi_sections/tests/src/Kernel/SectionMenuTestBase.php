@@ -30,7 +30,6 @@ abstract class SectionMenuTestBase extends KernelTestBase {
     'user',
     'node',
     'field',
-    'entity_reference',
     'text',
     'filter',
     'token',

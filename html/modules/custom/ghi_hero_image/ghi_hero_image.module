@@ -31,7 +31,7 @@ function ghi_hero_image_preprocess_page(&$variables) {
     return;
   }
 
-  /** @var \Drupal\Core\Http\RequestStack $request_stack */
+  /** @var \Symfony\Component\HttpFoundation\RequestStack $request_stack */
   $request_stack = \Drupal::requestStack();
   $request = $request_stack->getMainRequest();
   /** @var \Drupal\node\Entity\Node $node */
