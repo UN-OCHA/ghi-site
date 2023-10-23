@@ -7,6 +7,7 @@
       "Issue #151311: Split 'administer permissions' into a new administer roles permissions": "https://www.drupal.org/files/issues/2023-01-19/split_administer_permissions_151311-72.patch",
       "Issue #2585169: Unable to alter local actions prior to rendering": "https://git.drupalcode.org/project/drupal/-/merge_requests/744.patch",
       "Issue #2663316: Broken title in modal dialog when title is a render array": "https://www.drupal.org/files/issues/2019-10-21/2663316-76.drupal.Broken-title-in-modal-dialog-when-title-is-a-render-array.patch",
+      "Issue #2755791: Ajax error ajax.$form.ajaxSubmit() is not a function": "https://www.drupal.org/files/issues/2023-08-07/drupal-ajax-error-2755791-18_0.patch",
       "Issue #3001188: Make it possible to add relationships to layout builder": "./patches/3001188-make-it-possible-to-add-relationships-to-layout-builder.patch",
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch"
     },
