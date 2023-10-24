@@ -17,7 +17,7 @@ translatable: true
 default_value: {  }
 default_value_callback: ''
 settings:
-  handler: 'wmbert:base_object'
+  handler: 'bert:base_object'
   handler_settings:
     target_bundles:
       plan: plan

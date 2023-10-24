@@ -13,7 +13,7 @@ use Drupal\ghi_subpages\SubpageManager;
 function ghi_subpages_deploy_create_standard_subpages(&$sandbox) {
   if (!isset($sandbox['sections'])) {
     // Get existing content of type "section".
-    $sections = \Drupal::entityQuery('node')->condition('type', 'section')->execute();
+    $sections = \Drupal::entityQuery('node')->condition('type', 'section')->accessCheck(FALSE)->execute();
     $sandbox['sections'] = $sections;
   }
 
@@ -31,7 +31,7 @@ function ghi_subpages_deploy_create_standard_subpages(&$sandbox) {
 function ghi_subpages_deploy_queue_logframes(&$sandbox) {
   // Queue all logframes for rebuilding.
   /** @var \Drupal\node\NodeInterface[] $nodes */
-  $node_ids = \Drupal::entityQuery('node')->condition('type', 'logframe')->execute();
+  $node_ids = \Drupal::entityQuery('node')->condition('type', 'logframe')->accessCheck(FALSE)->execute();
   foreach ($node_ids as $node_id) {
     \Drupal::queue('ghi_subpages_logframe_rebuild_queue')->createItem((object) [
       'entity_id' => $node_id,
@@ -48,7 +48,7 @@ function ghi_subpages_deploy_queue_logframes(&$sandbox) {
  */
 function ghi_subpages_deploy_update_subpage_url_aliases(&$sandbox) {
   if (!isset($sandbox['nodes'])) {
-    $sandbox['nodes'] = \Drupal::entityQuery('node')->condition('type', SubpageManager::SUPPORTED_SUBPAGE_TYPES, 'IN')->execute();
+    $sandbox['nodes'] = \Drupal::entityQuery('node')->condition('type', SubpageManager::SUPPORTED_SUBPAGE_TYPES, 'IN')->accessCheck(FALSE)->execute();
     drupal_flush_all_caches();
     \Drupal::service('pathauto.generator')->resetCaches();
   }

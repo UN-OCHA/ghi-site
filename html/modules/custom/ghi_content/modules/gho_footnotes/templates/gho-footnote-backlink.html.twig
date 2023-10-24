@@ -8,7 +8,7 @@
     2 or 3.
 #}
 {% set label = 'Jump to reference @index'|t({'@index': index}) %}
-{% spaceless %}
+{% apply spaceless %}
 {#
   The following markup has the following purpose:
   - allow the display of `title` tooltip without having the text repeated
@@ -24,4 +24,4 @@
   <span class="visually-hidden">{{ label }}</span>
   <span title="{{ label }}" aria-hidden="true"></span>
 </a>
-{% endspaceless %}
+{% endapply %}

@@ -581,7 +581,6 @@ function common_design_subtheme_preprocess_page_navigation_item_list(&$variables
       '#attributes' => [
         'data-cd-component' => 'cd-dropdown',
         'data-cd-icon' => 'arrow-down',
-        'id' => Html::getUniqueId('cd-dropdown'),
         'class' => ['cd-dropdown'],
         'aria-labelledby' => 'dropdown-title',
         'data-cd-toggable' => $item['value']['label'],

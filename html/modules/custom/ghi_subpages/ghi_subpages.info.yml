@@ -3,7 +3,7 @@ description: Provide logic around subpages for sections and global sections.
 package: GHI
 
 type: module
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^9 || ^10
 
 dependencies:
   - ghi_sections:ghi_sections

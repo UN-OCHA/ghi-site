@@ -3,6 +3,10 @@ display:
     display_title: Maître
     display_options:
       fields:
+        type:
+          label: Type
+        timestamp:
+          label: Date
         name:
           label: Utilisateur
         link:
@@ -18,3 +22,11 @@ display:
           submit_button: Filtrer
           reset_button_label: Réinitialiser
           exposed_sorts_label: 'Trier par'
+          sort_asc_label: Asc
+          sort_desc_label: Desc
+      filters:
+        type:
+          expose:
+            label: Type
+  page:
+    display_title: Page

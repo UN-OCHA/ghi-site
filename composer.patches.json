@@ -11,10 +11,6 @@
       "Issue #3001188: Make it possible to add relationships to layout builder": "./patches/3001188-make-it-possible-to-add-relationships-to-layout-builder.patch",
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch"
     },
-    "drupal/phpexcel": {
-      "Issue #3086234: PhpSpreadsheet support (PHPOffice/PHPExcel deprecated)": "https://www.drupal.org/files/issues/2019-10-07/3086234-phpspreadsheet-support-3.patch",
-      "Issue #2839576: Add additional alter hook": "https://www.drupal.org/files/issues/2839576-php-excel-new-hook-1-7.x-3.11.patch"
-    },
     "drupal/autologout": {
       "Issue #3214958: Autologout triggered in background tab, no indication in other open tabs": "https://git.drupalcode.org/project/autologout/-/merge_requests/6.diff"
     },
@@ -22,7 +18,7 @@
       "Issue #??: Add alter hook for template suggestions trigger": "./patches/hook_gin_lb_add_suggestions_alter-1.0.0-rc3.patch"
     },
     "drupal/gin_toolbar": {
-      "Issue #3121440: Add option for node local tasks in toolbar": "https://www.drupal.org/files/issues/2022-02-11/3263805-41.patch"
+      "Issue #3121440: Add option for node local tasks in toolbar": "https://www.drupal.org/files/issues/2023-10-20/3121440-49.patch"
     },
     "drupal/google_tag": {
       "Issue #3250315: Error during cache rebuild when assets are stored on NFS": "https://www.drupal.org/files/issues/2022-11-23/3250315-google-tag-nfs-locks-5.patch"
@@ -40,7 +36,7 @@
       "Issue #2857247: Support for export filtering via Drush": "https://www.drupal.org/files/issues/2021-08-18/config_ignore_2857247-75.patch"
     },
     "drupal/config_default_image": {
-      "Issue #2921908: Provide a 2nd formatter \"Responsive image or default image\"": "https://www.drupal.org/files/issues/2020-06-11/config_default_image-responsive-2921908-5.patch"
+      "Issue #2921908: Provide a 2nd formatter \"Responsive image or default image\"": "https://www.drupal.org/files/issues/2022-11-21/config_default_image-2921908-7.patch"
     },
     "drupal/smugmug_api": {
       "Issue #3285444: Add support for image search": "https://www.drupal.org/files/issues/2022-06-13/3285444-2.patch"

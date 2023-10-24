@@ -7,7 +7,7 @@
 {{ attach_library('common_design/cd-dropdown') }}
 
 <span class="variant-toggle">
-  <div data-cd-component="ghi-dropdown" data-cd-icon="arrow-down" id="cd-dropdown" class="cd-dropdown" aria-labelledby="dropdown-title" data-cd-toggable="{{ toggle_label }}">
+  <div data-cd-component="ghi-dropdown" data-cd-icon="arrow-down" class="cd-dropdown" aria-labelledby="dropdown-title" data-cd-toggable="{{ toggle_label }}">
     <div class="ghi-dropdown--content">
       {% for key, item in options %}
         {{ item }}

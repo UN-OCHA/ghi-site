@@ -389,6 +389,7 @@ function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $fo
       $form['actions']['revert']['#access'] = FALSE;
     }
   }
+
   $confirm_forms = [
     'layout_builder_discard_changes',
     'layout_builder_revert_overrides',

@@ -31,8 +31,9 @@ function ghi_hero_image_preprocess_page(&$variables) {
     return;
   }
 
+  /** @var \Drupal\Core\Http\RequestStack $request_stack */
   $request_stack = \Drupal::requestStack();
-  $request = $request_stack->getMasterRequest();
+  $request = $request_stack->getMainRequest();
   /** @var \Drupal\node\Entity\Node $node */
   $node = $request->attributes->has('node') ? $request->attributes->get('node') : NULL;
   if (!$node instanceof NodeInterface || !$node->getFieldDefinitions() || !$node->access()) {

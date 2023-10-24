@@ -10,11 +10,14 @@ use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\TermStorageInterface;
 use Drupal\Tests\UnitTestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @covers Drupal\hpc_common\Helpers\TaxonomyHelper
  */
 class TaxonomyHelperTest extends UnitTestCase {
+
+  use ProphecyTrait;
 
   /**
    * The taxonomy helper class.
@@ -303,6 +306,7 @@ class TaxonomyHelperTest extends UnitTestCase {
     // Mock entityQuery methods.
     $this->entityQuery->condition($field_name, $value)->willReturn($this->entityQuery);
     $this->entityQuery->condition('vid', $vid)->willReturn($this->entityQuery);
+    $this->entityQuery->accessCheck()->willReturn($this->entityQuery);
     $this->entityQuery->execute()->willReturn($query_result);
 
     // Mock getQuery.
