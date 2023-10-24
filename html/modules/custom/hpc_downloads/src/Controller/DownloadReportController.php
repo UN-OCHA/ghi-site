@@ -6,6 +6,7 @@ use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
@@ -29,10 +30,18 @@ class DownloadReportController extends ControllerBase {
   private $fileSystem;
 
   /**
+   * The file url generator service.
+   *
+   * @var \Drupal\Core\File\FileUrlGenerator
+   */
+  private $fileUrlGenerator;
+
+  /**
    * Public constructor.
    */
-  public function __construct(FileSystemInterface $file_system) {
+  public function __construct(FileSystemInterface $file_system, FileUrlGeneratorInterface $file_url_generator) {
     $this->fileSystem = $file_system;
+    $this->fileUrlGenerator = $file_url_generator;
 
   }
 
@@ -42,6 +51,7 @@ class DownloadReportController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('file_system'),
+      $container->get('file_url_generator'),
     );
   }
 
@@ -69,7 +79,7 @@ class DownloadReportController extends ControllerBase {
         $download_record = DownloadRecord::loadRecord(['file_path' => $file->uri]);
 
         $row = [];
-        $row[] = Link::fromTextAndUrl($filename, Url::fromUri(file_create_url($file->uri)));
+        $row[] = Link::fromTextAndUrl($filename, Url::fromUri($this->fileUrlGenerator->generate($file->uri)));
         $row[] = date('d.m.Y H:i:s', filectime($filepath));
         $row[] = format_size(filesize($filepath));
         $row[] = $download_record ? $this->t('Yes') : $this->t('No');
@@ -112,7 +122,7 @@ class DownloadReportController extends ControllerBase {
 
       $row = [];
       $row[] = Link::fromTextAndUrl($record->id, Url::fromRoute('hpc_downloads.reports.download_records.view', ['id' => $record->id]));
-      $row[] = $file_exists ? Link::fromTextAndUrl($filename, Url::fromUri(file_create_url($record->file_path))) : $record->file_path;
+      $row[] = $file_exists ? Link::fromTextAndUrl($filename, Url::fromUri($this->fileUrlGenerator->generate($record->file_path))) : $record->file_path;
       $row[] = $this->getSourceLink($record->url);
       $row[] = $this->getUserName($record->uid);
       $row[] = $this->getStatusLabel($record->status);

@@ -141,7 +141,9 @@ class ThemeHelper {
    * Get the URI to the FTS icon.
    */
   public static function getUriToFtsIcon() {
-    return '/' . drupal_get_path('module', 'hpc_common') . '/assets/fts-logo-mobile.png';
+    /** @var \Drupal\Core\Extension\ExtensionPathResolver $path_resolver */
+    $path_resolver = \Drupal::service('extension.path.resolver');
+    return '/' . $path_resolver->getPath('module', 'hpc_common') . '/assets/fts-logo-mobile.png';
   }
 
   /**

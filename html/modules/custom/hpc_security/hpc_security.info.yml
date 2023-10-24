@@ -1,7 +1,7 @@
 name: 'HPC Security'
 type: module
 description: 'Security features for HPC Drupal sites'
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^9 || ^10
 package: 'HPC'
 
 dependencies:

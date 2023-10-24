@@ -1,4 +1,17 @@
-.cd-layout-container {
+.dialog-off-canvas-main-canvas {
+  height: 100%;
+  min-height: 100vh;
+}
+
+.cd-page-layout-container {
+  display: grid;
+  grid-template-areas:
+    "header"
+    "highlighted"
+    "main"
+    "soft-footer"
+    "footer";
+
   @supports (display: grid) {
     @include tablet {
       grid-template-rows: 115px auto 1fr auto;

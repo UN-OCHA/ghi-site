@@ -3,7 +3,7 @@ description: Provide logic around plans and related objects.
 package: GHI
 
 type: module
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^9 || ^10
 
 dependencies:
   - hpc_api:hpc_api

@@ -3,7 +3,7 @@ description: Provide logic teams and content access based on team association.
 package: GHI
 
 type: module
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^9 || ^10
 
 dependencies:
   - drupal:taxonomy

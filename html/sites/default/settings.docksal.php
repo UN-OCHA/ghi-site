@@ -105,4 +105,5 @@ $settings['config_exclude_modules'] = [
   'dblog',
   'debug_tools',
   'views_ui',
+  'upgrade_status',
 ];

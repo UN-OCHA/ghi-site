@@ -7,11 +7,14 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\Tests\UnitTestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @covers Drupal\hpc_common\Helpers\BlockHelper
  */
 class BlockHelperTest extends UnitTestCase {
+
+  use ProphecyTrait;
 
   /**
    * The block helper class.

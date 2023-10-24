@@ -408,7 +408,8 @@ class ViewsQueryBatchedSource extends DownloadSourceBase implements HPCBatchedDo
    *   The batch contexts.
    */
   public static function segmentBatch(HPCBatchedDownloadExcelInterface $handler, array $download_record, array &$context) {
-    module_load_include('inc', 'phpexcel');
+    /** @var \Drupal\phpexcel\PHPExcel $phpexcel */
+    $phpexcel = \Drupal::service('phpexcel');
 
     // Prepare the rows.
     $limit = \Drupal::config('hpc_downloads.settings')->get('excel_segment_size');
@@ -437,7 +438,7 @@ class ViewsQueryBatchedSource extends DownloadSourceBase implements HPCBatchedDo
         $initial_data[$sheet_key] = $sheet_key == 'Meta data' ? $sheet_data : [];
       }
       ini_set('memory_limit', '512M');
-      phpexcel_export($build['header'], $initial_data, $temp_file, $options);
+      $phpexcel->export($build['header'], $initial_data, $temp_file, $options);
 
       // Remove the meta data sheet.
       array_shift($build['rows']);
@@ -526,7 +527,8 @@ class ViewsQueryBatchedSource extends DownloadSourceBase implements HPCBatchedDo
    *   The batch contexts.
    */
   public static function writeBatch(HPCBatchedDownloadExcelInterface $handler, array $download_record, array &$context) {
-    module_load_include('inc', 'phpexcel');
+    /** @var \Drupal\phpexcel\PHPExcel $phpexcel */
+    $phpexcel = \Drupal::service('phpexcel');
 
     $options = $context['results']['options'];
     $temp_file = $context['results']['temp_file'];
@@ -554,7 +556,7 @@ class ViewsQueryBatchedSource extends DownloadSourceBase implements HPCBatchedDo
 
     // Write the current data to the file.
     ini_set('memory_limit', '512M');
-    phpexcel_export($options['header'], $sheets, $temp_file, $options);
+    $phpexcel->export($options['header'], $sheets, $temp_file, $options);
 
     // Inform the batch engine that we are not finished,
     // and provide an estimation of the completion level we reached.

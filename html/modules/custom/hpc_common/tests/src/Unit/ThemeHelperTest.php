@@ -6,12 +6,15 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\Tests\UnitTestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Twig\Environment;
 
 /**
  * @covers Drupal\hpc_common\Helpers\ThemeHelper
  */
 class ThemeHelperTest extends UnitTestCase {
+
+  use ProphecyTrait;
 
   /**
    * The theme helper class.

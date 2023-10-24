@@ -16,6 +16,7 @@ function ghi_plan_clusters_post_update_assure_section_reference() {
     ->getQuery()
     ->condition('type', 'plan_cluster')
     ->notExists('field_entity_reference')
+    ->accessCheck(FALSE)
     ->execute();
   if (empty($nids)) {
     return;

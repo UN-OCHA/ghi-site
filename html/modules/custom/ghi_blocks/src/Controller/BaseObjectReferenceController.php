@@ -25,7 +25,7 @@ class BaseObjectReferenceController extends ControllerBase implements ContainerI
    *
    * This assumes that the node type in question uses a multi-value entity
    * reference field called 'field_base_objects' with the form widget from
-   * wmbert.
+   * bert (better entity reference table).
    *
    * @param array $form
    *   The form array.

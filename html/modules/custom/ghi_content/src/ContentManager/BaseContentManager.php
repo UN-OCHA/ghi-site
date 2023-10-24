@@ -194,9 +194,9 @@ abstract class BaseContentManager {
 
     // Setup the base query.
     $query = $this->entityTypeManager->getStorage('node')->getQuery();
+    $query->accessCheck($published);
     if ($published) {
       $query->condition('status', NodeInterface::PUBLISHED);
-      $query->accessCheck();
     }
     $query->condition('type', $this->getNodeBundle());
     if ($limit !== NULL) {

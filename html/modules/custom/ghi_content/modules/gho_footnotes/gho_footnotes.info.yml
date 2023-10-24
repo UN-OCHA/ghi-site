@@ -2,4 +2,4 @@ type: module
 name: GHO Footnotes
 description: 'Provides text footnotes handling for the GHO site.'
 package: gho
-core_version_requirement: ^8.9 || ^9
+core_version_requirement: ^9 || ^10

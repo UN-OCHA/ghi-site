@@ -18,12 +18,12 @@ dependencies:
     - image.style.thumbnail
     - node.type.document
   module:
+    - bert
     - field_group
     - ghi_content
     - image
     - path
     - text
-    - wmbert
 third_party_settings:
   field_group:
     group_tabs:
@@ -104,8 +104,8 @@ content:
     settings: {  }
     third_party_settings: {  }
   field_base_objects:
-    type: wmbert
-    weight: 26
+    type: bert
+    weight: 27
     region: content
     settings:
       list: title_bundle
