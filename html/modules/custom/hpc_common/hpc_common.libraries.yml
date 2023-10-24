@@ -38,5 +38,7 @@ sparkline:
     /libraries/d3-sparkline/d3-sparkline.min.js: {}
     js/sparkline.js: {}
   dependencies:
+    - core/jquery
+    - core/once
     - hpc_common/d3
     - hpc_common/tippy.js

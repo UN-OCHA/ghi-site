@@ -8,7 +8,6 @@ use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Ajax\OpenModalDialogCommand;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Http\RequestStack;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\Url;
 use Drupal\hpc_common\Helpers\BlockHelper;
@@ -31,6 +30,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -120,7 +120,7 @@ class DownloadController extends ControllerBase {
       throw new NotFoundHttpException();
     }
 
-    $dialog_options = $request->request->get('dialogOptions', []);
+    $dialog_options = $request->request->filter('dialogOptions', [], FILTER_DEFAULT, ['flags' => FILTER_REQUIRE_ARRAY]);
     $title = !empty($dialog_options['title']) ? $dialog_options['title'] : $this->t('Downloads');
     unset($dialog_options['title']);
     $dialog_options['dialogClass'] = 'download-dialog';

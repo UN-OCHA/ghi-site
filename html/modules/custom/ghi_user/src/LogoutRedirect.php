@@ -4,11 +4,11 @@ namespace Drupal\ghi_user;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Http\RequestStack;
 use Drupal\Core\Path\PathMatcherInterface;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\Url;
 use Drupal\ghi_subpages\Entity\SubpageNode;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * LogoutRedirect service class.

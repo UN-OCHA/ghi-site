@@ -39,6 +39,8 @@ tag_select.preview:
   js:
     js/tag_select.preview.js: {}
   dependencies:
+    - core/jquery
+    - core/once
     - common_design_subtheme/ghi-grid
 
 entity_preview_select:

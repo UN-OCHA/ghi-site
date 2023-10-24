@@ -3,16 +3,16 @@
   // Attach behaviors.
   Drupal.behaviors.hpc_sparkline = {
     attach: function(context, settings) {
-      $('span.sparkline', context).once('sparkline').each(function(index) {
-        if (!$(this).data('values')) {
+      once('sparkline', 'span.sparkline', context).forEach(element => {
+        if (!$(element).data('values')) {
           return;
         }
-        let data = $(this).data('values').toString().split(',');
-        let tooltip_content = $(this).data('tooltips').toString().split('|');
-        let baseline = $(this).data('baseline');
-        $(this).uniqueId();
+        let data = $(element).data('values').toString().split(',');
+        let tooltip_content = $(element).data('tooltips').toString().split('|');
+        let baseline = $(element).data('baseline');
+        $(element).uniqueId();
         let options = {
-          target: '#' + $(this).attr('id'),
+          target: '#' + $(element).attr('id'),
           data: data.map(Number),
           baseline: baseline,
           size: 'parent',

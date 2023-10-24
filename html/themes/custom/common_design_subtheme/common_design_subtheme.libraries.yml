@@ -6,6 +6,8 @@ global-styling:
     js/common.js: {}
     js/login_destination.js: {}
   dependencies:
+    - core/jquery
+    - core/once
     - ghi_blocks/block.settings
     - common_design_subtheme/sorttable
     - common_design_subtheme/select2
