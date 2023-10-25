@@ -39,7 +39,8 @@
       "Issue #2921908: Provide a 2nd formatter \"Responsive image or default image\"": "https://www.drupal.org/files/issues/2022-11-21/config_default_image-2921908-7.patch"
     },
     "drupal/smugmug_api": {
-      "Issue #3285444: Add support for image search": "https://www.drupal.org/files/issues/2022-06-13/3285444-2.patch"
+      "Issue #3285444: Add support for image search": "https://www.drupal.org/files/issues/2022-06-13/3285444-2.patch",
+      "Issue #3396521: Fix PHP 8.2 deprecations": "https://www.drupal.org/files/issues/2023-10-25/3396521-2.patch"
     },
     "drupal/warmer": {
       "Issue #3368778: Drush 12 compatibility": "https://git.drupalcode.org/project/warmer/-/merge_requests/13.patch"
