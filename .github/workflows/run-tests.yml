@@ -1,7 +1,7 @@
 name: Run tests
 
 on: [pull_request]
-  
+
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -11,19 +11,19 @@ jobs:
       pull-requests: write 
       actions: read 
       statuses: write 
-  
+
     steps:
       - name: Checkout Code
         id: checkout
         uses: actions/checkout@v3
-        
+
       - name: Extract PHP Version
         id: php
         uses: docker://ghcr.io/un-ocha/actions:extract-php-version-main
         with:
           docker_file: 'docker/Dockerfile'
           docker_image: 'public.ecr.aws/unocha/php-k8s'
-          
+
       - name: Setup PHP with PECL extension
         uses: shivammathur/setup-php@v2
         with:
