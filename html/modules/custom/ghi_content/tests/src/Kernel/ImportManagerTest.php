@@ -62,8 +62,8 @@ class ImportManagerTest extends KernelTestBase {
     $this->installEntitySchema('file');
     $this->installConfig(['system', 'field', 'file']);
 
-    $this->nodeType = NodeType::create(['type' => self::BUNDLE])->save();
-    $this->vocabulary = $this->createVocabulary();
+    NodeType::create(['type' => self::BUNDLE])->save();
+    $this->createVocabulary();
   }
 
   /**
