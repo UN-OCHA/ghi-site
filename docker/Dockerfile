@@ -58,13 +58,11 @@ COPY --from=builder /srv/www/composer.patches.json /srv/www/composer.patches.jso
 COPY --from=builder /srv/www/composer.lock /srv/www/composer.lock
 COPY --from=builder /srv/www/patches /srv/www/patches
 COPY --from=builder /srv/www/scripts /srv/www/scripts
-COPY --from=builder /srv/www/docker/etc/nginx/apps/drupal/fastcgi_drupal.conf /etc/nginx/apps/drupal/fastcgi_drupal.conf
-COPY --from=builder /srv/www/docker/etc/nginx/apps/drupal/drupal.conf /etc/nginx/apps/drupal/drupal.conf
 COPY --from=builder /srv/www/docker/etc/nginx/custom /etc/nginx/custom/
 COPY --from=builder /srv/www/docker/etc/nginx/sites-enabled/02_mapbox_proxy_cache.conf /etc/nginx/sites-enabled/02_mapbox_proxy_cache.conf
 COPY --from=builder /srv/www/docker/99-elastic-apm-custom.ini /tmp/99-elastic-apm-custom.ini
 
-RUN  curl -L -o /tmp/apm-agent-php_1.6.1_all.apk https://github.com/elastic/apm-agent-php/releases/download/v1.6.1/apm-agent-php_1.6.1_all.apk && \
-     apk add --allow-untrusted /tmp/apm-agent-php_1.6.1_all.apk && \
-     rm -f /tmp/apm-agent-php_1.6.1_all.apk && \
-     mv -f /tmp/99-elastic-apm-custom.ini /etc/php81/conf.d/99-elastic-apm-custom.ini
+RUN  curl -L -o /tmp/apm-agent-php_all.apk https://github.com/elastic/apm-agent-php/releases/download/v1.10.0/apm-agent-php_1.10.0_all.apk && \
+     apk add --allow-untrusted /tmp/apm-agent-php_all.apk && \
+     rm -f /tmp/apm-agent-php_all.apk && \
+     mv -f /tmp/99-elastic-apm-custom.ini /etc/php82/conf.d/99-elastic-apm-custom.ini
