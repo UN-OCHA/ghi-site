@@ -1,0 +1,14 @@
+/**
+ * Base photo gallery.
+ */
+.gho-infographic .gho-infographic__inner {
+  max-width: var(--reading-width);
+}
+
+/**
+ * Caption below images.
+ */
+.gho-infographic__caption {
+  max-width: var(--reading-width);
+  margin-top: 1.25rem;
+}

@@ -177,6 +177,13 @@ gho-image-with-text:
   dependencies:
     - common_design_subtheme/gho-aside
     - common_design_subtheme/gho-caption
+gho-infographic:
+  css:
+    theme:
+      components/gho-infographic/gho-infographic.css: {}
+  dependencies:
+    - common_design_subtheme/gho-aside
+    - common_design_subtheme/gho-caption
 gho-interactive-content:
   css:
     theme:
