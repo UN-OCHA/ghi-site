@@ -32,6 +32,7 @@ class GhoFootnotes implements TrustedCallbackInterface {
     foreach (iterator_to_array($dom->getElementsByTagName('gho-footnotes-text')) as $node) {
       $id = $node->getAttribute('data-id');
       $node_inner_html = gho_footnotes_get_inner_html($node);
+      $node_inner_html = preg_replace('/<!--(.|\s)*?-->\s*/', '', $node_inner_html);
 
       // Extract references.
       $references = gho_footnotes_extract_references($node_inner_html);
