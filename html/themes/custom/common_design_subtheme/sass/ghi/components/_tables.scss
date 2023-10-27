@@ -62,7 +62,7 @@
         }
       }
 
-      &.cd-table--responsive td:before {
+      &.cd-table--responsive td::before {
         top: 1.5rem;
         font-size: inherit;
       }
@@ -107,13 +107,13 @@
           background-size: contain;
         }
 
-        &:not(.sorttable-sorted):not(.sorttable-sorted-reverse):not(.sorttable-nosort):after {
+        &:not(.sorttable-sorted, .sorttable-sorted-reverse, .sorttable-nosort)::after {
           background-image: url("../img/table/ghi_sorting.svg");
         }
-        &.sorttable-sorted:after {
+        &.sorttable-sorted::after {
           background-image: url("../img/table/ghi_sorting_up.svg");
         }
-        &.sorttable-sorted-reverse:after {
+        &.sorttable-sorted-reverse::after {
           background-image: url("../img/table/ghi_sorting_down.svg");
         }
         #sorttable-sortfwdind,

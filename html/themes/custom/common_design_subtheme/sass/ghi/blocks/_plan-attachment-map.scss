@@ -26,7 +26,7 @@
         font-size: var(--cd-font-size--base);
         font-weight: bold;
 
-        &:after {
+        &::after {
           display: none;
         }
       }

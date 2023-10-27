@@ -47,7 +47,7 @@ div.ajax-switcher-wrapper {
         font-size: var(--cd-font-size--small);
         font-weight: bold;
 
-        &:after {
+        &::after {
           display: none;
         }
       }

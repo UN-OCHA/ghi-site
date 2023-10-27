@@ -13,7 +13,7 @@ html.snap--png {
     color: var(--ghi-default-text-color);
     background-color: var(--cd-white);
 
-    &:before {
+    &::before {
       position: absolute;
       z-index: z-index(hidden);
       top: -1rem;
