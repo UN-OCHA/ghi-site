@@ -262,6 +262,10 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
       // Stories always use the gho-aside component.
       $theme_components[] = 'common_design_subtheme/gho-aside';
     }
+    if ($paragraph->getType() == 'interactive_content_2_columns') {
+      // Interactive content in 2 columns still needs styles.
+      $theme_components[] = 'common_design_subtheme/gho-interactive-content';
+    }
     if ($paragraph->getType() == 'sub_article') {
       // Find the paragraph types used in the sub article and add the
       // components for those too.
