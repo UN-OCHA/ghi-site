@@ -85,7 +85,7 @@
     &.block-comment {
       margin-top: 2rem;
 
-      &:before {
+      &::before {
         border-bottom: 0;
       }
     }

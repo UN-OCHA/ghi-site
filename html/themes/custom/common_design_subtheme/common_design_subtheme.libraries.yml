@@ -84,12 +84,6 @@ ghi-section-teaser:
   css:
     theme:
       components/ghi-section-teaser/ghi-section-teaser.css: {}
-ghi-social-links:
-  css:
-    theme:
-      components/ghi-social-links/ghi-social-links.css: {}
-  js:
-    components/ghi-social-links/ghi-social-links.js: {}
 ghi-tab-container:
   css:
     theme:

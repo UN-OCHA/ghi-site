@@ -24,7 +24,7 @@
 /**
  * Support for 2-col interactive content.
  */
- .layout--twocol--interactive-content {
+.layout--twocol--interactive-content {
   display: flex;
   flex-wrap: wrap;
 }

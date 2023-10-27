@@ -43,7 +43,7 @@
     margin-top: 2.5rem;
   }
   .layout__region--content > &.block.block-highlighted:not(.content-width):first-child {
-    &.block-highlighted:not(.content-width):not(.block-plan-entity-logframe) {
+    &.block-highlighted:not(.content-width, .block-plan-entity-logframe) {
       margin-top: 0;
       padding-top: 4.5rem;
       background-color: var(--ghi-default-background-color);
@@ -87,7 +87,7 @@
           position: relative;
           padding-left: 1.5rem;
 
-          &:before {
+          &::before {
             position: absolute;
             top: calc(50% - 10px);
             left: 0;

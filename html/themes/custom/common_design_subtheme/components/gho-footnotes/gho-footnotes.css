@@ -29,10 +29,10 @@
   display: inline;
 }
 /* @todo check if it's also fine to decorate the number like that in Arabic. */
-.gho-footnote-reference span:before {
+.gho-footnote-reference span::before {
   content: "[";
 }
-.gho-footnote-reference span:after {
+.gho-footnote-reference span::after {
   content: "]";
 }
 .gho-footnote {
