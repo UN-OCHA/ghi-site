@@ -125,16 +125,18 @@ ul.links--entity-navigation {
           }
 
           .megamenu-wrapper-inner {
-            display: flex;
-            gap: 1rem;
-            flex-direction: row;
+            column-width: auto;
+            column-count: 1;
+            column-gap: 4rem;
+            column-rule: 1px solid var(--ghi-default-border-color-background);
 
             .megamenu-group-wrapper {
-              display: inline-block;
+              display: block;
               width: auto;
+              break-inside: avoid;
 
               .megamenu-group {
-                display: inline-block;
+                display: block;
                 width: auto;
 
                 & > p {
@@ -147,7 +149,7 @@ ul.links--entity-navigation {
                   padding-inline-start: 0;
 
                   li {
-                    width: 80%;
+                    width: 90%;
                     padding: 0.5rem 0;
 
                     a {
@@ -156,6 +158,14 @@ ul.links--entity-navigation {
                   }
                 }
               }
+            }
+
+            @include tablet {
+              column-count: 2;
+            }
+
+            @include desktop {
+              column-count: 3;
             }
           }
 
