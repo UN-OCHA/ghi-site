@@ -55,7 +55,7 @@
           margin-top: 1rem;
           font-size: var(--cd-font-size--tiny);
 
-          &:before {
+          &::before {
             display: block;
             width: 15%;
             padding-top: 1.5rem;

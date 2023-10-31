@@ -76,20 +76,20 @@
       if (typeof sorttable != 'undefined') {
         if (context == document) {
           sorttable.init();
-          $('table.sortable').once('sortable-table');
+          once('sortable-table', 'table.sortable');
         }
         else {
-          $('table.sortable', context).once('sortable-table').each(function() {
+          once('sortable-table', 'table.sortable', context).forEach(element => {
             if (context != document) {
-              sorttable.makeSortable(this);
+              sorttable.makeSortable(element);
             }
           });
         }
-        $('table.sortable.autosort', context).once('sortable-table').each(function() {
+        once('sortable-table', 'table.sortable.autosort', context).forEach(element => {
           if (context != document) {
-            sorttable.makeSortable(this);
+            sorttable.makeSortable(element);
           }
-          column = $('th:not(.sorttable-nosort):first-child', this).get(0);
+          column = $('th:not(.sorttable-nosort):first-child', element).get(0);
           if (column) {
             sorttable.innerSortFunction.apply(column, []);
           }
@@ -115,25 +115,27 @@
           }
 
           // Then make sure that we capture and store sorting activity.
-          $(this).find('> thead th:not(.sorttable-nosort)').once('sortable-events').on('click', function () {
-            // See if this table is part of a block, in which case we want to trigger
-            // an event that the frontend settings for the block have been changed.
-            if ($(this).parents('.ghi-block').length == 0) {
-              return;
-            }
-            Drupal.GhiBlockSettings.setBlockSettingForElement(this, 'sort', {
-              column: $(this).index(),
-              dir: $(this).hasClass('sorttable-sorted-reverse') ? 'desc' : 'asc',
+          once('sortable-events', $(this).find('> thead th:not(.sorttable-nosort)')).forEach(element => {
+            element.addEventListener('click', e => {
+              // See if this table is part of a block, in which case we want to trigger
+              // an event that the frontend settings for the block have been changed.
+              if ($(this).parents('.ghi-block').length == 0) {
+                return;
+              }
+              Drupal.GhiBlockSettings.setBlockSettingForElement(this, 'sort', {
+                column: $(this).index(),
+                dir: $(this).hasClass('sorttable-sorted-reverse') ? 'desc' : 'asc',
+              });
             });
           });
         });
 
       }
 
-      $('table.soft-limit', context).once('soft-limit-table').each(function() {
-        let $table = $(this);
+      once('soft-limit-table', $('table.soft-limit', context)).forEach(element => {
+        let $table = $(element);
         // Check if we have settings for this block element in the URL.
-        let block_soft_limit = Drupal.GhiBlockSettings.getBlockSettingForElement(this, 'soft_limit');
+        let block_soft_limit = Drupal.GhiBlockSettings.getBlockSettingForElement(element, 'soft_limit');
         if (block_soft_limit != 'expanded') {
 
           Drupal.CommonDesignSubtheme.SoftLimit.addExpandButton($table);

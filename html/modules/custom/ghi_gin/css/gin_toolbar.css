@@ -1,3 +1,13 @@
+.gin--horizontal-toolbar .region-sticky {
+  display: block;
+}
+.gin--horizontal-toolbar .region-sticky .region-sticky__items {
+  width: auto;
+}
+.gin--horizontal-toolbar nav#toolbar-bar {
+  width: auto;
+}
+
 /* Fix annoying issues with disappearing elements on iOS. */
 .gin--horizontal-toolbar #toolbar-administration .toolbar-lining,
 .ui-dialog {

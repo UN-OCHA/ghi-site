@@ -4,6 +4,8 @@ hpc_downloads:
     js/hpc_downloads.js: {}
     js/hpc_downloads.batch.js: {}
   dependencies:
+    - core/jquery
+    - core/once
     - core/drupal.dialog
     - core/drupal.ajax
     - core/drupal.progress

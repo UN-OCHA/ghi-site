@@ -20,3 +20,51 @@
   font-size: 0.875rem;
   line-height: 1.5rem;
 }
+
+/**
+ * Support for 2-col interactive content.
+ */
+.layout--twocol--interactive-content {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.layout--twocol--interactive-content > .layout__region {
+  flex: 0 1 100%;
+}
+
+@media screen and (min-width: 1024px) {
+  .layout--twocol--interactive-content {
+    gap: 2rem;
+  }
+
+  .layout--twocol--interactive-content.layout--twocol--interactive-content--50-50 > .layout__region--first,
+  .layout--twocol--interactive-content.layout--twocol--interactive-content--50-50 > .layout__region--second {
+    flex: 0 1 50%;
+    flex-basis: calc(50% - 1rem);
+  }
+
+  .layout--twocol--interactive-content.layout--twocol--interactive-content--33-67 > .layout__region--first,
+  .layout--twocol--interactive-content.layout--twocol--interactive-content--67-33 > .layout__region--second {
+    flex: 0 1 33%;
+    flex-basis: calc(33% - 1rem);
+  }
+
+  .layout--twocol--interactive-content.layout--twocol--interactive-content--33-67 > .layout__region--second,
+  .layout--twocol--interactive-content.layout--twocol--interactive-content--67-33 > .layout__region--first {
+    flex: 0 1 67%;
+    flex-basis: calc(67% - 1rem);
+  }
+
+  .layout--twocol--interactive-content.layout--twocol--interactive-content--25-75 > .layout__region--first,
+  .layout--twocol--interactive-content.layout--twocol--interactive-content--75-25 > .layout__region--second {
+    flex: 0 1 25%;
+    flex-basis: calc(25% - 1rem);
+  }
+
+  .layout--twocol--interactive-content.layout--twocol--interactive-content--25-75 > .layout__region--second,
+  .layout--twocol--interactive-content.layout--twocol--interactive-content--75-25 > .layout__region--first {
+    flex: 0 1 75%;
+    flex-basis: calc(75% - 1rem);
+  }
+}

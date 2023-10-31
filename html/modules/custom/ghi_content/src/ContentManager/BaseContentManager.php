@@ -6,7 +6,6 @@ use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Http\RequestStack;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -23,6 +22,7 @@ use Drupal\migrate\Row;
 use Drupal\migrate_plus\Entity\Migration;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\TermInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Base manager service class..

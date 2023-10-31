@@ -77,7 +77,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   /**
    * The request stack.
    *
-   * @var \Drupal\Core\Http\RequestStack
+   * @var \Symfony\Component\HttpFoundation\RequestStack
    */
   protected $requestStack;
 

@@ -1,7 +1,7 @@
 d3:
   version: 3.0.0
   js:
-    /libraries/d3/dist/d3.min.js: {}
+    /libraries/d3/dist/d3.min.js: { minified: true, preprocess: false }
 icon:
   css:
     theme:
@@ -38,5 +38,7 @@ sparkline:
     /libraries/d3-sparkline/d3-sparkline.min.js: {}
     js/sparkline.js: {}
   dependencies:
+    - core/jquery
+    - core/once
     - hpc_common/d3
     - hpc_common/tippy.js

@@ -23,11 +23,11 @@ settings:
       - '|'
       - sourceEditing
   plugins:
-    ckeditor5_sourceEditing:
-      allowed_tags: {  }
     ckeditor5_list:
       reversed: true
       startIndex: true
+    ckeditor5_sourceEditing:
+      allowed_tags: {  }
 image_upload:
   status: false
   scheme: public
