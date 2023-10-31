@@ -8,7 +8,7 @@ use Drupal\ghi_plans\ApiObjects\Attachments\ContactAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment;
-use Symfony\Component\Config\Definition\Exception\InvalidTypeException;
+use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 
 /**
  * Helper class for mapping attachment objects.
@@ -30,7 +30,7 @@ class AttachmentHelper {
       try {
         $processed[$attachment->id] = self::processAttachment($attachment);
       }
-      catch (InvalidTypeException $e) {
+      catch (InvalidAttachmentTypeException $e) {
         // Ignore this for the moment.
       }
     }
@@ -46,7 +46,7 @@ class AttachmentHelper {
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface
    *   A single attachment object.
    *
-   * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
+   * @throws \Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException
    *   For unsupported attachment types, an Exception is thrown.
    */
   public static function processAttachment(object $attachment) {
@@ -67,7 +67,7 @@ class AttachmentHelper {
         return new ContactAttachment($attachment);
 
       default:
-        throw new InvalidTypeException(sprintf('Unknown attachment type: %s', $attachment->type));
+        throw new InvalidAttachmentTypeException(sprintf('Unknown attachment type: %s', $attachment->type));
     }
   }
 

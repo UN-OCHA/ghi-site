@@ -3,7 +3,6 @@
 namespace Drupal\ghi_content\ContentManager;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Http\RequestStack;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ghi_content\Import\ImportManager;
@@ -13,6 +12,7 @@ use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\migrate\Plugin\MigrationPluginManager;
 use Drupal\node\NodeInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Document manager service class.

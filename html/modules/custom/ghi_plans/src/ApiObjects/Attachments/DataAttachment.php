@@ -7,13 +7,13 @@ use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
-use Symfony\Component\Config\Definition\Exception\InvalidTypeException;
 
 /**
  * Abstraction for API data attachment objects.
@@ -888,7 +888,7 @@ class DataAttachment extends AttachmentBase {
    *   The data point value, extracted from the attachment according to the
    *   given configuration.
    *
-   * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
+   * @throws \Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException
    */
   public function getValue(array $conf) {
     switch ($conf['processing']) {
@@ -899,7 +899,7 @@ class DataAttachment extends AttachmentBase {
         return $this->getCalculatedValue($conf);
 
       default:
-        throw new InvalidTypeException(sprintf('Unknown processing type: %s', $conf['processing']));
+        throw new InvalidAttachmentTypeException(sprintf('Unknown processing type: %s', $conf['processing']));
     }
   }
 
@@ -958,7 +958,7 @@ class DataAttachment extends AttachmentBase {
         break;
 
       default:
-        throw new InvalidTypeException(sprintf('Unknown calculation type: %s', $conf['calculation']));
+        throw new InvalidAttachmentTypeException(sprintf('Unknown calculation type: %s', $conf['calculation']));
     }
 
     return $final_value;
@@ -1056,7 +1056,7 @@ class DataAttachment extends AttachmentBase {
    *   The data point value, extracted and formatted from the attachment
    *   according to the given configuration.
    *
-   * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
+   * @throws \Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException
    */
   public function formatValue(array $conf) {
     // Prepare the build.
@@ -1134,7 +1134,7 @@ class DataAttachment extends AttachmentBase {
    *   The data point value, extracted and formatted from the attachment
    *   according to the given configuration.
    *
-   * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
+   * @throws \Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException
    */
   private function formatAsText(array $conf) {
     $value = $this->getValue($conf);
@@ -1215,7 +1215,7 @@ class DataAttachment extends AttachmentBase {
         break;
 
       default:
-        throw new InvalidTypeException(sprintf('Unknown formatting type: %s', $conf['formatting']));
+        throw new InvalidAttachmentTypeException(sprintf('Unknown formatting type: %s', $conf['formatting']));
     }
 
     return $rendered_value;
@@ -1231,7 +1231,7 @@ class DataAttachment extends AttachmentBase {
    *   The data point value, extracted and formatted from the attachment
    *   according to the given configuration.
    *
-   * @throws \Symfony\Component\Config\Definition\Exception\InvalidTypeException
+   * @throws \Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException
    */
   private function formatAsWidget(array $conf) {
     switch ($conf['widget']) {
@@ -1252,7 +1252,7 @@ class DataAttachment extends AttachmentBase {
         break;
 
       default:
-        throw new InvalidTypeException(sprintf('Unknown widget type: %s', $conf['widget']));
+        throw new InvalidAttachmentTypeException(sprintf('Unknown widget type: %s', $conf['widget']));
     }
 
     return $widget;

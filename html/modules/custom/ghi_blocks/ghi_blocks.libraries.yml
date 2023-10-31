@@ -118,3 +118,6 @@ map.chloropleth:
 modal:
   js:
     js/modal.js: {}
+  dependencies:
+    - core/jquery
+    - core/once

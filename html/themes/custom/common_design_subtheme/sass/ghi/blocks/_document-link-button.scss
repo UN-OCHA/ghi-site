@@ -3,7 +3,7 @@
   button {
     padding: 0.8rem 1.5rem 0.8rem 2.5rem;
 
-    &:before {
+    &::before {
       left: 1rem;
       padding: 10px;
       content: "";

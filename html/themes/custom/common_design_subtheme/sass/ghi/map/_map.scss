@@ -227,7 +227,7 @@
                   font-weight: bold;
                   line-height: 30px;
 
-                  &:after {
+                  &::after {
                     display: none;
                   }
                 }

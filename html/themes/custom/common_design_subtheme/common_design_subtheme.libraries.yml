@@ -6,6 +6,8 @@ global-styling:
     js/common.js: {}
     js/login_destination.js: {}
   dependencies:
+    - core/jquery
+    - core/once
     - ghi_blocks/block.settings
     - common_design_subtheme/sorttable
     - common_design_subtheme/select2
@@ -82,12 +84,6 @@ ghi-section-teaser:
   css:
     theme:
       components/ghi-section-teaser/ghi-section-teaser.css: {}
-ghi-social-links:
-  css:
-    theme:
-      components/ghi-social-links/ghi-social-links.css: {}
-  js:
-    components/ghi-social-links/ghi-social-links.js: {}
 ghi-tab-container:
   css:
     theme:
@@ -172,6 +168,13 @@ gho-image-with-text:
   css:
     theme:
       components/gho-image-with-text/gho-image-with-text.css: {}
+  dependencies:
+    - common_design_subtheme/gho-aside
+    - common_design_subtheme/gho-caption
+gho-infographic:
+  css:
+    theme:
+      components/gho-infographic/gho-infographic.css: {}
   dependencies:
     - common_design_subtheme/gho-aside
     - common_design_subtheme/gho-caption

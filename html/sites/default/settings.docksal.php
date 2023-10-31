@@ -4,7 +4,9 @@ error_reporting(E_ALL);
 ini_set('display_errors', TRUE);
 ini_set('display_startup_errors', TRUE);
 
-$config['system.logging']['error_level'] = 'verbose';
+$config['system.logging'] = [
+  'error_level' => ['verbose'],
+];
 $settings['skip_permissions_hardening'] = TRUE;
 
 /**
@@ -24,10 +26,10 @@ $settings['skip_permissions_hardening'] = TRUE;
  * @see https://wiki.php.net/rfc/expectations
  */
 assert_options(ASSERT_ACTIVE, TRUE);
-\Drupal\Component\Assertion\Handle::register();
+assert_options(ASSERT_EXCEPTION, TRUE).
 
 // Docksal DB connection settings.
-$databases['default']['default'] = array (
+$databases['default']['default'] = [
   'database' => getenv('MYSQL_DATABASE'),
   'username' => getenv('MYSQL_USER'),
   'password' => getenv('MYSQL_PASSWORD'),
@@ -38,15 +40,15 @@ $databases['default']['default'] = array (
   'init_commands' => [
     'isolation_level' => 'SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED',
   ],
-);
+];
 
-$config['hpc_api.settings'] = array(
+$config['hpc_api.settings'] = [
   'url' => 'https://api.hpc.tools',
   'auth_username' => getenv('HPC_API_USER'),
   'auth_password' => getenv('HPC_API_PASS'),
   'api_key' => getenv('HPC_API_KEY'),
   'timeout' => 300,
-);
+];
 
 $config['ghi_content.remote_sources'] = [
   'hpc_content_module' => [
