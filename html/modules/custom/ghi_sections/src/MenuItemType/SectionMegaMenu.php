@@ -24,6 +24,13 @@ class SectionMegaMenu extends SectionMenuWidgetBase {
   private $header;
 
   /**
+   * The configuration for the widget.
+   *
+   * @var array
+   */
+  private $configuration;
+
+  /**
    * Whether this mega menu is currently active.
    *
    * @var bool
@@ -33,10 +40,11 @@ class SectionMegaMenu extends SectionMenuWidgetBase {
   /**
    * Construct a mega menu widget.
    */
-  public function __construct($label, array $nodes, $header) {
+  public function __construct($label, array $nodes, $header, $configuration) {
     $this->label = $label;
     $this->nodes = $nodes;
     $this->header = $header;
+    $this->configuration = $configuration;
   }
 
   /**
@@ -81,10 +89,16 @@ class SectionMegaMenu extends SectionMenuWidgetBase {
    */
   public function toRenderable() {
     $current_node = $this->getCurrentNode();
+    $columns = $this->configuration['mega_menu_columns'] ?: 4;
 
     $build = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['megamenu']],
+      '#attributes' => [
+        'class' => [
+          'megamenu',
+          'megamenu--' . $columns,
+        ],
+      ],
       'label' => [
         '#markup' => $this->getLabel(),
       ],

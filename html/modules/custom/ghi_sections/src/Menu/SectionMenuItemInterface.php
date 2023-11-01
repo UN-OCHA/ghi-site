@@ -45,6 +45,16 @@ interface SectionMenuItemInterface {
   public function getConfiguration();
 
   /**
+   * Sets the plugin configuration.
+   *
+   * @param mixed[] $configuration
+   *   The plugin configuration.
+   *
+   * @return $this
+   */
+  public function setConfiguration(array $configuration);
+
+  /**
    * Get the label of the menu item.
    *
    * @return string|\Drupal\Component\Render\MarkupInterface

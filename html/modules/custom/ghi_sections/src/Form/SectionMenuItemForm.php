@@ -15,6 +15,7 @@ use Drupal\ghi_blocks\Traits\GinLbModalTrait;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_sections\Menu\SectionMenuPluginManager;
 use Drupal\ghi_sections\Menu\SectionMenuStorage;
+use Drupal\ghi_sections\MenuItemType\SectionMegaMenu;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\ghi_subpages\Plugin\SectionMenuItem\StandardSubpage;
 use Drupal\node\NodeInterface;
@@ -152,6 +153,24 @@ class SectionMenuItemForm extends FormBase {
       $form['settings']['label']['#description'] = $this->t('Menu items based on standard subpages cannot be renamed.');
     }
 
+    $form['settings']['configuration'] = [
+      '#type' => 'container',
+      '#tree' => TRUE,
+    ];
+
+    $widget = $menu_item->getPlugin()->getWidget();
+    if ($widget instanceof SectionMegaMenu) {
+      $configuration = $menu_item->getConfiguration()['configuration'] ?? [];
+      $column_options = [2, 3, 4, 5, 6, 7];
+      $form['settings']['configuration']['mega_menu_columns'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Columns (Mega menu)'),
+        '#description' => $this->t('Configure how many columns this item shows in the mega menu.'),
+        '#options' => array_combine($column_options, $column_options),
+        '#default_value' => $configuration['mega_menu_columns'] ?? 4,
+      ];
+    }
+
     $form['actions'] = [
       '#type' => 'container',
       '#attributes' => [
@@ -219,6 +238,9 @@ class SectionMenuItemForm extends FormBase {
     $delta = $form['#delta'];
     $menu_item = $this->getMenuItem($delta);
     $menu_item->setLabel($label);
+    $configuration = $menu_item->getConfiguration();
+    $configuration['configuration'] = $form_state->getValue(['configuration']) ?? [];
+    $menu_item->setConfiguration($configuration);
     $this->sectionMenuStorage->save();
 
     $form_state->setRebuild();

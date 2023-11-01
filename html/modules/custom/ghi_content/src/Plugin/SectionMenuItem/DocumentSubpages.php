@@ -65,7 +65,7 @@ class DocumentSubpages extends SectionMenuPluginBase implements OptionalSectionM
     if (!$document) {
       return NULL;
     }
-    $item = new SectionMenuItem($this->getPluginId(), $this->getSection()->id(), $this->getLabel());
+    $item = new SectionMenuItem($this->getPluginId(), $this->getSection()->id(), $this->getLabel(), $this->getPluginConfiguration()['configuration'] ?? []);
     return $item;
   }
 
@@ -104,7 +104,7 @@ class DocumentSubpages extends SectionMenuPluginBase implements OptionalSectionM
           '#full_width' => TRUE,
         ],
       ];
-      $widget = new SectionMegaMenu($item->getLabel(), $nodes_grouped, $widget_header);
+      $widget = new SectionMegaMenu($item->getLabel(), $nodes_grouped, $widget_header, $item->getConfiguration() ?? []);
       if ($current_page_node) {
         $same_page = $current_page_node->toUrl() == $document->toUrl();
         $contained_page = strpos($current_page_node->toUrl()->toString(), $document->toUrl()->toString()) === 0;

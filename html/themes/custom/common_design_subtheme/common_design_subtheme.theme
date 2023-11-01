@@ -583,6 +583,16 @@ function common_design_subtheme_preprocess_page_navigation_item_list(&$variables
     ];
 
     if ($is_megamenu) {
+      // Move the label of each child group into the <li> element of the first
+      // item. This way we can prevent column-breaking between the group label
+      // and the first group item using CSS.
+      foreach ($children as &$child) {
+        $child[0][1]['#items'][0] = [
+          $child[0][0],
+          $child[0][1]['#items'][0],
+        ];
+        unset($child[0][0]);
+      }
       $megamenu = [
         '#type' => 'container',
         '#attributes' => [
