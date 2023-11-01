@@ -122,10 +122,13 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   /**
    * Get the meta data for this article.
    *
+   * @param bool $include_social
+   *   Whether to include social icons in the metadata.
+   *
    * @return array
    *   An array of metadata items.
    */
-  abstract public function getPageMetaData();
+  abstract public function getPageMetaData($include_social = TRUE);
 
   /**
    * Get the tags for this content.

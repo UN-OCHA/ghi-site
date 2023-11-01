@@ -100,7 +100,7 @@ class DocumentSubpages extends SectionMenuPluginBase implements OptionalSectionM
         [
           '#theme' => 'item_list',
           '#attributes' => ['class' => ['metadata']],
-          '#items' => $document->getPageMetaData(),
+          '#items' => $document->getPageMetaData(FALSE),
           '#full_width' => TRUE,
         ],
       ];
