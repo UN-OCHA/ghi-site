@@ -12,6 +12,7 @@ ul.links--entity-navigation {
       display: flex;
       align-items: center;
       height: 3.5rem;
+      white-space: nowrap;
     }
 
     &.active > .link-wrapper::before,
