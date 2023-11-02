@@ -606,6 +606,7 @@ function common_design_subtheme_preprocess_item_list__key_figures(&$variables) {
  * Preprocess a page navigation item list.
  */
 function common_design_subtheme_preprocess_page_navigation_item_list(&$variables) {
+  $variables['attributes']['class'][] = 'links--entity-navigation';
   $items = &$variables['items'];
   foreach ($items as $key => &$item) {
     if (!array_key_exists('label', $item['value']) || !array_key_exists('item_list', $item['value'])) {
@@ -673,7 +674,7 @@ function common_design_subtheme_preprocess_page_navigation_item_list(&$variables
 /**
  * Preprocess a section navigation list.
  */
-function common_design_subtheme_preprocess_item_list__section_navigation(&$variables) {
+function common_design_subtheme_preprocess_item_list__entity_navigation(&$variables) {
   common_design_subtheme_preprocess_page_navigation_item_list($variables);
 }
 
@@ -681,13 +682,6 @@ function common_design_subtheme_preprocess_item_list__section_navigation(&$varia
  * Preprocess a subpage navigation list.
  */
 function common_design_subtheme_preprocess_item_list__subpage_navigation(&$variables) {
-  common_design_subtheme_preprocess_page_navigation_item_list($variables);
-}
-
-/**
- * Preprocess a document navigation list.
- */
-function common_design_subtheme_preprocess_item_list__document_navigation(&$variables) {
   common_design_subtheme_preprocess_page_navigation_item_list($variables);
 }
 
