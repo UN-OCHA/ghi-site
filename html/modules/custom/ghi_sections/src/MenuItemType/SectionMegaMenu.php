@@ -89,7 +89,7 @@ class SectionMegaMenu extends SectionMenuWidgetBase {
    */
   public function toRenderable() {
     $current_node = $this->getCurrentNode();
-    $columns = $this->configuration['mega_menu_columns'] ?: 4;
+    $columns = $this->configuration['mega_menu_columns'] ?? 4;
 
     $build = [
       '#type' => 'container',
