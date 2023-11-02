@@ -136,11 +136,19 @@ ul.links--entity-navigation {
               .megamenu-group-wrapper {
                 display: block;
                 width: auto;
-                margin-bottom: 1rem;
+                margin-bottom: 2rem;
 
                 .megamenu-group {
                   display: block;
                   width: auto;
+
+                  & > p {
+                    display: inline-block;
+                    margin-top: 0;
+                    font-weight: bold;
+                    break-before: auto;
+                    break-after: avoid;
+                  }
 
                   ul {
                     padding-inline-start: 0;
@@ -149,6 +157,10 @@ ul.links--entity-navigation {
                       width: 90%;
                       padding: 0.5rem 0;
                       break-inside: avoid;
+
+                      &:first-child {
+                        break-before: avoid;
+                      }
 
                       & > p {
                         display: block;
