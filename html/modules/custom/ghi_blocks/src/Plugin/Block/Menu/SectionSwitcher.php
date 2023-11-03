@@ -4,9 +4,11 @@ namespace Drupal\ghi_blocks\Plugin\Block\Menu;
 
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
 use Drupal\ghi_sections\Entity\GlobalSection;
 use Drupal\ghi_sections\Entity\Homepage;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -61,6 +63,20 @@ class SectionSwitcher extends BlockBase implements ContainerFactoryPluginInterfa
   protected $subpageManager;
 
   /**
+   * The path alias manager.
+   *
+   * @var \Drupal\path_alias\AliasManagerInterface
+   */
+  protected $aliasManager;
+
+  /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -71,6 +87,8 @@ class SectionSwitcher extends BlockBase implements ContainerFactoryPluginInterfa
     $instance->moduleHandler = $container->get('module_handler');
     $instance->sectionManager = $container->get('ghi_sections.manager');
     $instance->subpageManager = $container->get('ghi_subpages.manager');
+    $instance->aliasManager = $container->get('path_alias.manager');
+    $instance->requestStack = $container->get('request_stack');
     return $instance;
   }
 
@@ -151,7 +169,43 @@ class SectionSwitcher extends BlockBase implements ContainerFactoryPluginInterfa
     if ($section_node instanceof GlobalSection && !$section_node instanceof Homepage) {
       return NULL;
     }
+    if (!$section_node) {
+      // We can still try to deduce the section from the path.
+      $section_node = $this->getSectionNodeFromPath();
+    }
     return $section_node;
+  }
+
+  /**
+   * Get the section node from the path.
+   *
+   * This processes the path recursively until it can find an alias that
+   * represents a section node.
+   *
+   * @param string $path
+   *   The path to process.
+   *
+   * @return \Drupal\ghi_sections\Entity\SectionNodeInterface|null
+   *   The section node or NULL if not found.
+   */
+  private function getSectionNodeFromPath($path = NULL) {
+    $path = $path ?? $this->requestStack->getCurrentRequest()->getPathInfo();
+    $section = NULL;
+    $path_internal = $this->aliasManager->getPathByAlias($path);
+    try {
+      $params = Url::fromUri("internal:" . $path_internal)->getRouteParameters();
+      $entity_type = key($params);
+      $loaded = $this->entityTypeManager->getStorage($entity_type)->load($params[$entity_type]);
+      $section = $loaded instanceof SectionNodeInterface ? $loaded : NULL;
+    }
+    catch (\Exception $e) {
+      // Just catch any issue and pretend this didn't happen.
+    }
+    if (!$section && strrpos($path, '/') > 1) {
+      $path = substr($path, 0, strrpos($path, '/'));
+      $section = $this->getSectionNodeFromPath($path);
+    }
+    return $section instanceof SectionNodeInterface ? $section : NULL;
   }
 
   /**
