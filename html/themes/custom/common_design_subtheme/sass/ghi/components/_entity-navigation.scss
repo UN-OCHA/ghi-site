@@ -111,6 +111,10 @@ ul.links--entity-navigation {
             padding-right: var(--cd-container-padding);
             padding-left: var(--cd-container-padding);
 
+            &.megamenu-wrapper-outer {
+              max-width: 100vw;
+            }
+
             .megamenu-header {
               margin-bottom: 1rem;
               padding-top: 1rem;
@@ -121,6 +125,7 @@ ul.links--entity-navigation {
                 margin-bottom: 0;
 
                 a {
+                  white-space: normal;
                   font-size: var(--cd-font-size--2xbase);
                 }
               }
@@ -253,6 +258,30 @@ ul.links--entity-navigation {
       &.overflow-item.expandable > div[data-cd-hidden=false] {
         padding-top: 0;
         padding-bottom: 0;
+
+        .second-level-wrapper-outer div[data-cd-hidden=false] {
+          position: relative;
+          top: 0;
+          width: calc(100vw - 3 * var(--cd-container-padding));
+          max-width: calc(100vw - 3 * var(--cd-container-padding));
+
+          .megamenu-wrapper-outer {
+            padding-right: 0;
+            padding-left: 0;
+
+            @include tablet {
+              padding-right: var(--cd-container-padding-xlarge);
+              padding-left: var(--cd-container-padding-xlarge);
+            }
+          }
+
+          @include tablet {
+            position: absolute;
+            top: 3.5rem;
+            width: 100%;
+            max-width: 100%;
+          }
+        }
       }
     }
   }
@@ -283,6 +312,15 @@ ul.links--entity-navigation {
       position: initial;
       flex-direction: row;
       gap: 2rem;
+
+      li.expandable.megamenu {
+        position: static;
+
+        div[data-cd-hidden=false] {
+          width: 100%;
+          max-width: 100%;
+        }
+      }
     }
   }
 }
