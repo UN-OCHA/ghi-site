@@ -132,7 +132,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
         foreach ($plan_entities as $plan_entity) {
           $entity_attachments = array_map(function ($attachment) use ($plan_entity) {
             $attachment->objectId = $plan_entity->id();
-            $attachment->objectType = 'planEntity';
+            $attachment->objectType = $plan_entity->getEntityType();
             return $attachment;
           }, $plan_entity->getRawData()->attachments ?? []);
           $attachments = array_merge($attachments, $entity_attachments);
