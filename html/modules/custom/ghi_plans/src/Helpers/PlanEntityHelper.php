@@ -160,12 +160,12 @@ class PlanEntityHelper {
    *   The confirmed string.
    */
   public static function checkObjectType($type) {
-    $know_types = [
+    $known_types = [
       'plans' => 'plan',
       'planEntities' => 'planEntity',
       'governingEntities' => 'governingEntity',
     ];
-    return $know_types[$type] ?? (in_array($type, $know_types) ? $type : NULL);
+    return $known_types[$type] ?? (in_array($type, $known_types) ? $type : NULL);
   }
 
 }
