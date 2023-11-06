@@ -38,11 +38,19 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   protected $configurationContainerItemManager;
 
   /**
+   * The UUID service.
+   *
+   * @var \Drupal\Component\Uuid\UuidInterface
+   */
+  protected $uuidService;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->configurationContainerItemManager = $container->get('plugin.manager.configuration_container_item_manager');
+    $instance->uuidService = $container->get('uuid');
     return $instance;
   }
 
@@ -472,7 +480,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    *   The plugin id.
    */
   public function getUuid() {
-    return $this->getPluginId();
+    return $this->uuidService->generate();
   }
 
 }
