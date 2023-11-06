@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d7ec189e2bc89a0ba5211a43e4313cd8",
+    "content-hash": "73f18f3694aa287cda5ba396fcc45e7e",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -11736,10 +11736,10 @@
         },
         {
             "name": "unocha/d3-sparkline",
-            "version": "2.1.2",
+            "version": "2.1.3",
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/UN-OCHA/d3-sparkline/archive/refs/tags/v2.1.2.zip"
+                "url": "https://github.com/UN-OCHA/d3-sparkline/archive/refs/tags/v2.1.3.zip"
             },
             "type": "drupal-library"
         },
