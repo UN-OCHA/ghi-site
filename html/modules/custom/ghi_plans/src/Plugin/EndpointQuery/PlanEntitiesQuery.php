@@ -25,6 +25,7 @@ use Drupal\hpc_api\Traits\SimpleCacheTrait;
  *   endpoint = {
  *     "public" = "public/plan/{plan_id}",
  *     "authenticated" = "plan/{plan_id}",
+ *     "api_key" = "plan/{plan_id}",
  *     "version" = "v2",
  *     "query" = {
  *       "content" = "entities",
@@ -46,6 +47,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    * {@inheritdoc}
    */
   public function getData(array $placeholders = [], array $query_args = []) {
+    $this->endpointQuery->setPlaceholders($placeholders);
     if ($plan_id = $this->getPlaceholder('plan_id')) {
       $query_args['version'] = $this->getPlanVersionArgumentForPlanId($plan_id);
     }

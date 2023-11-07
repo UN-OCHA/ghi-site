@@ -3,12 +3,15 @@
 namespace Drupal\ghi_plans\ApiObjects\Entities;
 
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
+use Drupal\ghi_plans\Traits\PlanVersionArgument;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
 
 /**
  * Abstraction class for API plan entity objects.
  */
 class PlanEntity extends EntityObjectBase {
+
+  use PlanVersionArgument;
 
   /**
    * {@inheritdoc}
@@ -113,7 +116,7 @@ class PlanEntity extends EntityObjectBase {
       return [];
     }
     return array_filter(array_map(function ($entity_id) {
-      return PlanEntityHelper::getPlanEntity($entity_id);
+      return PlanEntityHelper::getPlanEntity($entity_id, $this->getPlanVersionArgument());
     }, $first_ref->planEntityIds));
   }
 
@@ -184,7 +187,7 @@ class PlanEntity extends EntityObjectBase {
    * {@inheritdoc}
    */
   public function getFullName() {
-    $parent_entity = $this->governing_entity_parent_id ? PlanEntityHelper::getGoverningEntity($this->governing_entity_parent_id) : NULL;
+    $parent_entity = $this->getParentGoverningEntity();
     if (!$parent_entity) {
       return $this->t('@type @custom_reference', [
         '@type' => $this->name,
@@ -196,6 +199,31 @@ class PlanEntity extends EntityObjectBase {
       '@type' => $this->name,
       '@custom_reference' => $this->custom_reference,
     ]);
+  }
+
+  /**
+   * Get the parent governing entity.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity
+   *   The parent governing entity if found.
+   */
+  private function getParentGoverningEntity() {
+    $entity_id = $this->governing_entity_parent_id ?? NULL;
+    if (!$entity_id) {
+      return NULL;
+    }
+    $entity = PlanEntityHelper::getGoverningEntity($entity_id, $this->getPlanVersionArgument());
+    return $entity instanceof GoverningEntity ? $entity : NULL;
+  }
+
+  /**
+   * Get the version argument to use for this entity.
+   *
+   * @return string
+   *   The version argument as a string.
+   */
+  private function getPlanVersionArgument() {
+    return $this->getPlanVersionArgumentForPlanId($this->getPlanId());
   }
 
 }
