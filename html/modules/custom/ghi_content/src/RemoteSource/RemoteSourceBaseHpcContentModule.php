@@ -509,6 +509,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
           created
           updated
           tags
+          autoVisible
         }
       }
     }';
