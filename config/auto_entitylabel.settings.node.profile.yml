@@ -1,9 +1,0 @@
-status: 1
-pattern: Profile
-escape: false
-preserve_titles: false
-save: false
-chunk: 50
-dependencies:
-  config:
-    - node.type.profile

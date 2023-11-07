@@ -14,9 +14,7 @@ dependencies:
     - core.entity_view_display.node.progress.default
     - core.entity_view_display.node.section.default
     - filter.format.html_text
-    - node.type.article
     - node.type.custom_subpage
-    - node.type.document
   module:
     - contextual
     - filter
@@ -49,9 +47,6 @@ permissions:
   - 'configure editable section node layout overrides'
   - 'create custom_subpage content'
   - 'delete own custom_subpage content'
-  - 'edit own article content'
-  - 'edit own custom_subpage content'
-  - 'edit own document content'
   - 'use layout builder ipe on editable article node layout overrides'
   - 'use layout builder ipe on editable custom_subpage node layout overrides'
   - 'use layout builder ipe on editable document node layout overrides'

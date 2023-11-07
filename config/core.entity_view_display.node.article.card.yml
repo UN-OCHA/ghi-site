@@ -13,6 +13,7 @@ dependencies:
     - field.field.node.article.field_short_title
     - field.field.node.article.field_summary
     - field.field.node.article.field_tags
+    - field.field.node.article.field_team
     - field.field.node.article.layout_builder__layout
     - node.type.article
     - responsive_image.styles.card_hero
@@ -94,6 +95,7 @@ hidden:
   field_remote_article: true
   field_short_title: true
   field_summary: true
+  field_team: true
   langcode: true
   layout_builder__layout: true
   links: true

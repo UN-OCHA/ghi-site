@@ -5,7 +5,7 @@
  * Contains hook implementations for the GHI teams module.
  */
 
-use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
@@ -101,10 +101,16 @@ function ghi_teams_form_user_form_alter(&$form, FormStateInterface $form_state) 
  * Restrict access to field_team to users with proper permission.
  */
 function ghi_teams_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  $form_object = method_exists($form_state, 'getEntity') ? $form_state->getEntity() : NULL;
-  if (!$form_object || !$form_object instanceof EntityPublishedInterface) {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object || !$form_object instanceof ContentEntityFormInterface) {
     return;
   }
+  $entity = $form_object->getEntity();
+  if (!$entity->hasField('field_team')) {
+    return;
+  }
+  $user = \Drupal::currentUser();
+  $form['field_team']['#disabled'] = !$user->hasPermission('administer teams');
 }
 
 /**
