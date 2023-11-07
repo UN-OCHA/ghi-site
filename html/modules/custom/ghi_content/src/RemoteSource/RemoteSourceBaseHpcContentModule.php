@@ -480,6 +480,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
           summary
           created
           updated
+          autoVisible
         }
       }
     }';
