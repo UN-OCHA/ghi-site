@@ -52,9 +52,7 @@ process:
     plugin: default_value
     default_value: article
   title: title
-  status:
-    plugin: default_value
-    default_value: 1
+  status: autoVisible
   created:
     plugin: callback
     callable: strtotime
