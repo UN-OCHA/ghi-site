@@ -32,6 +32,7 @@ class AttachmentQuery extends EndpointQueryBase implements ContainerFactoryPlugi
    * {@inheritdoc}
    */
   public function getData(array $placeholders = [], array $query_args = []) {
+    $this->endpointQuery->setPlaceholders($placeholders);
     if ($plan_id = $this->getPlaceholder('plan_id')) {
       $query_args['version'] = $this->getPlanVersionArgumentForPlanId($plan_id);
     }

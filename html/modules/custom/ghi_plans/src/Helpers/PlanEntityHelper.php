@@ -82,11 +82,13 @@ class PlanEntityHelper {
    *
    * @param int $entity_id
    *   The plan entity id for which to retrieve the data.
+   * @param string $version_argument
+   *   The plan version argument.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity
    *   The plan entity object.
    */
-  public static function getPlanEntity($entity_id) {
+  public static function getPlanEntity($entity_id, $version_argument = 'current') {
     /** @var \Drupal\hpc_api\Query\EndpointQuery $query */
     $query = \Drupal::service('hpc_api.endpoint_query');
     $query->setArguments([
@@ -96,10 +98,11 @@ class PlanEntityHelper {
       'query_args' => [
         'addPercentageOfTotalTarget' => 'true',
         'disaggregation' => 'false',
-        'version' => 'current',
+        'version' => $version_argument,
       ],
     ]);
-    return new PlanEntity($query->getData());
+    $data = $query->getData();
+    return $data ? new PlanEntity($data) : NULL;
   }
 
   /**
@@ -107,11 +110,13 @@ class PlanEntityHelper {
    *
    * @param int $entity_id
    *   The plan entity id for which to retrieve the data.
+   * @param string $version_argument
+   *   The plan version argument.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity
    *   The governing entity object.
    */
-  public static function getGoverningEntity($entity_id) {
+  public static function getGoverningEntity($entity_id, $version_argument = 'current') {
     /** @var \Drupal\hpc_api\Query\EndpointQuery $query */
     $query = \Drupal::service('hpc_api.endpoint_query');
     $query->setArguments([
@@ -121,10 +126,11 @@ class PlanEntityHelper {
       'query_args' => [
         'addPercentageOfTotalTarget' => 'true',
         'disaggregation' => 'false',
-        'version' => 'current',
+        'version' => $version_argument,
       ],
     ]);
-    return new GoverningEntity($query->getData());
+    $data = $query->getData();
+    return $data ? new GoverningEntity($data) : NULL;
   }
 
   /**

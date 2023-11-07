@@ -18,7 +18,7 @@ trait PlanVersionArgument {
    * @return string
    *   The version argument as a string for the API.
    */
-  public function getPlanVersionArgumentForPlanId($plan_id) {
+  public static function getPlanVersionArgumentForPlanId($plan_id) {
     if (self::getCurrentUser()->isAnonymous()) {
       return 'current';
     }
