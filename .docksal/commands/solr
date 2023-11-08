@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+## Import solr backup.
+##
+## Usage: fin solr [-h] [command]
+##
+
+# Environment variables passed from fin:
+#
+#   $PROJECT_ROOT - (string) absolute path to NEAREST .docksal folder
+#   $VIRTUAL_HOST - (string) ex. projectname.docksal
+#   $DOCROOT - name of the docroot folder
+#   $DOCKER_RUNNING - (string) "true" or "false"
+#   $SOLR_HOST -- (string) the hostname
+#   $SOLR_PORT -- (integer) the port
+#   $SOLR_CORE -- (string) the core name
+
+usage="$(basename "$0") [-h] create-core|index|dashboard
+
+where:
+    -h  show this help text"
+
+CONTAINER_BASE_PATH="/var/www/solr"
+CONTAINER_DOWNLOAD_PATH="${CONTAINER_BASE_PATH}/backups/downloaded"
+CONTAINER_BACKUP_PATH="${CONTAINER_BASE_PATH}/backups/snapshot/snapshot.latest"
+
+while [ "$1" != "" ]; do
+  case $1 in
+    create-core )         shift
+                          fin solr-commands/create-core
+                          ;;
+    index )               shift
+                          fin drush search-api:index solr --batch-size=1
+                          ;;
+    dashboard )           shift
+                          fin utils/open-link "http://solr.ghi-site.docksal.site/solr/#/${SOLR_CORE}/core-overview"
+                          ;;
+
+    -h | --help )         echo "$usage"
+                          exit
+                          ;;
+    * )                   echo "$usage"
+                          exit 1
+  esac
+  shift
+done

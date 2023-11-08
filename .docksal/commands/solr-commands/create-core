@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+#: exec_target = solr
+
+## Create solr core.
+##
+## Usage: fin solr create-core [-h]
+##
+
+# Environment variables passed from fin:
+#
+#   $SOLR_HOST -- (string) the hostname
+#   $SOLR_PORT -- (integer) the port
+#   $SOLR_CORE -- (string) the core name
+
+usage="$(basename "$0") [-h]
+
+where:
+    -h  show this help text"
+
+echo "Run solr create command"
+solr delete -c ${SOLR_CORE} -p 8983
+
+# Create the solr core if necessary.
+SOLR_SRC="/opt/solr"
+SOLR_ROOT="/var/solr"
+SOLR_HOME="${SOLR_ROOT}/data"
+SOLR_CORE_DIR="${SOLR_HOME}/${SOLR_CORE}"
+
+
+# Create core
+echo "Run solr create command"
+${SOLR_SRC}/bin/solr create -c ${SOLR_CORE} -p 8983 -d /opt/solr/server/solr/configsets/solr811
+echo "http://solr.ghi-site.docksal.site/solr/#/${SOLR_CORE}/core-overview"

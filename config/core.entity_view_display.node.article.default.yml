@@ -49,12 +49,14 @@ third_party_settings:
       - 'Lists (Views)'
       - Menus
       - 'Narrative Content'
+      - Page
       - 'Plan cluster elements'
       - 'Plan elements'
       - Sections
       - 'Social Auth'
-      - Subpage
       - System
+      - User
+      - Views
       - core
     entity_view_mode_restriction:
       allowed_layouts:
@@ -72,10 +74,12 @@ third_party_settings:
         - 'Inline blocks'
         - 'Lists (Views)'
         - Menus
+        - Page
         - 'Plan cluster elements'
         - 'Social Auth'
-        - Subpage
         - System
+        - User
+        - Views
         - core
       blacklisted_blocks: {  }
       whitelisted_blocks:
@@ -173,3 +177,4 @@ hidden:
   langcode: true
   layout_builder__layout: true
   links: true
+  search_api_excerpt: true
