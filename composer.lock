@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "73f18f3694aa287cda5ba396fcc45e7e",
+    "content-hash": "7074936100e3d0edd1492489ed09303d",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -2073,17 +2073,17 @@
         },
         {
             "name": "drupal/config_split",
-            "version": "2.0.0-rc5",
+            "version": "2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/config_split.git",
-                "reference": "2.0.0-rc5"
+                "reference": "2.0.0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/config_split-2.0.0-rc5.zip",
-                "reference": "2.0.0-rc5",
-                "shasum": "6c7240086bb65c668f2cf32f59f2e1414ad6afbe"
+                "url": "https://ftp.drupal.org/files/projects/config_split-2.0.0.zip",
+                "reference": "2.0.0",
+                "shasum": "be9fd0aba1206e0f19e8448f69d4210e53dae069"
             },
             "require": {
                 "drupal/core": "^8.8 || ^9 || ^10"
@@ -2101,11 +2101,11 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "2.0.0-rc5",
-                    "datestamp": "1698624439",
+                    "version": "2.0.0",
+                    "datestamp": "1699259254",
                     "security-coverage": {
-                        "status": "not-covered",
-                        "message": "RC releases are not covered by Drupal security advisories."
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
                     }
                 },
                 "drush": {
@@ -5543,36 +5543,32 @@
         },
         {
             "name": "drupal/warmer",
-            "version": "2.0.11",
+            "version": "2.0.12",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/warmer.git",
-                "reference": "2.0.11"
+                "reference": "2.0.12"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/warmer-2.0.11.zip",
-                "reference": "2.0.11",
-                "shasum": "d421e0a471a7e334ab3a1d7486c2e0735ed98faf"
+                "url": "https://ftp.drupal.org/files/projects/warmer-2.0.12.zip",
+                "reference": "2.0.12",
+                "shasum": "7f8e4a411e1ced284c8fc4d754fdcb5f2038b710"
             },
             "require": {
                 "drupal/core": "^9 || ^10",
+                "drush/drush": "^11.6 || ^12",
                 "php": ">=5.6.0",
                 "vipnytt/sitemapparser": "^1.0"
             },
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "2.0.11",
-                    "datestamp": "1698732535",
+                    "version": "2.0.12",
+                    "datestamp": "1699265413",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
-                    }
-                },
-                "drush": {
-                    "services": {
-                        "drush.services.yml": "^9"
                     }
                 }
             },
@@ -5658,16 +5654,16 @@
         },
         {
             "name": "drush/drush",
-            "version": "12.4.0",
+            "version": "12.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/drush-ops/drush.git",
-                "reference": "b49cc6b666279bd4582a00437bfdc4969b335612"
+                "reference": "dbc97d7073fc08d06b2fc1208ac9d5e3d037875b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/drush-ops/drush/zipball/b49cc6b666279bd4582a00437bfdc4969b335612",
-                "reference": "b49cc6b666279bd4582a00437bfdc4969b335612",
+                "url": "https://api.github.com/repos/drush-ops/drush/zipball/dbc97d7073fc08d06b2fc1208ac9d5e3d037875b",
+                "reference": "dbc97d7073fc08d06b2fc1208ac9d5e3d037875b",
                 "shasum": ""
             },
             "require": {
@@ -5790,7 +5786,7 @@
                 "issues": "https://github.com/drush-ops/drush/issues",
                 "security": "https://github.com/drush-ops/drush/security/advisories",
                 "slack": "https://drupal.slack.com/messages/C62H9CWQM",
-                "source": "https://github.com/drush-ops/drush/tree/12.4.0"
+                "source": "https://github.com/drush-ops/drush/tree/12.4.2"
             },
             "funding": [
                 {
@@ -5798,7 +5794,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-10-19T21:47:17+00:00"
+            "time": "2023-10-31T14:18:28+00:00"
         },
         {
             "name": "egulias/email-validator",
@@ -12064,16 +12060,16 @@
         },
         {
             "name": "unocha/common_design",
-            "version": "v9.2.1",
+            "version": "v9.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/common_design.git",
-                "reference": "c52613835d3e10baf03783d3601c030483057684"
+                "reference": "f582963b5848d92b42de871b628f52c5a9f34930"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/c52613835d3e10baf03783d3601c030483057684",
-                "reference": "c52613835d3e10baf03783d3601c030483057684",
+                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/f582963b5848d92b42de871b628f52c5a9f34930",
+                "reference": "f582963b5848d92b42de871b628f52c5a9f34930",
                 "shasum": ""
             },
             "require": {
@@ -12088,9 +12084,9 @@
             "description": "OCHA Common Design base theme for Drupal 9+",
             "support": {
                 "issues": "https://github.com/UN-OCHA/common_design/issues",
-                "source": "https://github.com/UN-OCHA/common_design/tree/v9.2.1"
+                "source": "https://github.com/UN-OCHA/common_design/tree/v9.2.2"
             },
-            "time": "2023-10-11T12:36:16+00:00"
+            "time": "2023-10-26T10:03:06+00:00"
         },
         {
             "name": "unocha/d3-sparkline",
@@ -13921,16 +13917,16 @@
         },
         {
             "name": "mglaman/phpstan-drupal",
-            "version": "1.2.0",
+            "version": "1.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mglaman/phpstan-drupal.git",
-                "reference": "d721420086f146640acecebb7a678661a66e97d5"
+                "reference": "920c6b972a832046327f66dc6ff7448e3b5d6e4c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mglaman/phpstan-drupal/zipball/d721420086f146640acecebb7a678661a66e97d5",
-                "reference": "d721420086f146640acecebb7a678661a66e97d5",
+                "url": "https://api.github.com/repos/mglaman/phpstan-drupal/zipball/920c6b972a832046327f66dc6ff7448e3b5d6e4c",
+                "reference": "920c6b972a832046327f66dc6ff7448e3b5d6e4c",
                 "shasum": ""
             },
             "require": {
@@ -14005,7 +14001,7 @@
             "description": "Drupal extension and rules for PHPStan",
             "support": {
                 "issues": "https://github.com/mglaman/phpstan-drupal/issues",
-                "source": "https://github.com/mglaman/phpstan-drupal/tree/1.2.0"
+                "source": "https://github.com/mglaman/phpstan-drupal/tree/1.2.1"
             },
             "funding": [
                 {
@@ -14021,7 +14017,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-08-24T20:32:56+00:00"
+            "time": "2023-11-03T13:17:28+00:00"
         },
         {
             "name": "mikey179/vfsstream",
@@ -14787,16 +14783,16 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.10.40",
+            "version": "1.10.41",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "93c84b5bf7669920d823631e39904d69b9c7dc5d"
+                "reference": "c6174523c2a69231df55bdc65b61655e72876d76"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/93c84b5bf7669920d823631e39904d69b9c7dc5d",
-                "reference": "93c84b5bf7669920d823631e39904d69b9c7dc5d",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/c6174523c2a69231df55bdc65b61655e72876d76",
+                "reference": "c6174523c2a69231df55bdc65b61655e72876d76",
                 "shasum": ""
             },
             "require": {
@@ -14845,7 +14841,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-10-30T14:48:31+00:00"
+            "time": "2023-11-05T12:57:57+00:00"
         },
         {
             "name": "phpstan/phpstan-deprecation-rules",
