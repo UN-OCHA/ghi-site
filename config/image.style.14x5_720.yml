@@ -1,0 +1,27 @@
+uuid: 569dd95f-87eb-4bbe-ab2a-ca38b4414373
+langcode: en
+status: true
+dependencies:
+  config:
+    - crop.type.14x5
+  module:
+    - crop
+name: 14x5_720
+label: '14x5 @ 720'
+effects:
+  9cf08a4c-0063-4dab-8be3-321dfa6c1014:
+    uuid: 9cf08a4c-0063-4dab-8be3-321dfa6c1014
+    id: crop_crop
+    weight: 1
+    data:
+      crop_type: 14x5
+      automatic_crop_provider: null
+  b9e28fc1-04eb-4157-91f0-2befeae7289f:
+    uuid: b9e28fc1-04eb-4157-91f0-2befeae7289f
+    id: image_scale_and_crop
+    weight: 3
+    data:
+      width: 720
+      height: 257
+      anchor: center-center
+pipeline: __default__

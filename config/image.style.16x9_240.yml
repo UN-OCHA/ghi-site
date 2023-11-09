@@ -1,14 +1,25 @@
 uuid: d772c626-36af-4b89-be9a-53531cb7a0da
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  config:
+    - crop.type.16x9
+  module:
+    - crop
 name: 16x9_240
 label: '16x9 @ 240'
 effects:
-  d6d85c4a-8078-4e74-8d2d-9ddf249123ad:
-    uuid: d6d85c4a-8078-4e74-8d2d-9ddf249123ad
+  b15e72c6-f1ee-4d43-b1cb-f71b6968307a:
+    uuid: b15e72c6-f1ee-4d43-b1cb-f71b6968307a
+    id: crop_crop
+    weight: -10
+    data:
+      crop_type: 16x9
+      automatic_crop_provider: null
+  c82a2da7-a0d7-4feb-9a81-27f9918eae9a:
+    uuid: c82a2da7-a0d7-4feb-9a81-27f9918eae9a
     id: image_scale_and_crop
-    weight: 1
+    weight: 3
     data:
       width: 240
       height: 135
