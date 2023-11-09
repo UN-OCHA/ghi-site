@@ -44,7 +44,7 @@
     },
     "drupal/webp": {
       "Issue #3325808: Webp Image not generated for styles using original image.": "https://www.drupal.org/files/issues/2022-12-19/webp-3325808-2.patch",
-      "Issue #3328040: Review webp filename logic": "https://www.drupal.org/files/issues/2023-05-11/3328040-webp-filename-logic-example-5.patch"
+      "Issue #3328040: Review webp filename logic": "https://git.drupalcode.org/project/webp/-/merge_requests/30.patch"
     }
   }
 }
