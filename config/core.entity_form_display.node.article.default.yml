@@ -78,6 +78,7 @@ third_party_settings:
       children:
         - field_display_hero_image
         - field_crop_hero_image
+        - image_crop
         - field_inherit_section_image
       label: Display
       region: content
@@ -147,7 +148,7 @@ content:
     third_party_settings: {  }
   field_inherit_section_image:
     type: boolean_checkbox
-    weight: 29
+    weight: 30
     region: content
     settings:
       display_label: true
@@ -175,6 +176,11 @@ content:
       match_limit: 0
       size: 60
       placeholder: ''
+    third_party_settings: {  }
+  image_crop:
+    weight: 29
+    region: content
+    settings: {  }
     third_party_settings: {  }
   langcode:
     type: language_select

@@ -5,6 +5,10 @@
  * Contains hook implementations for the GHI Hero Image module.
  */
 
+use Drupal\Core\Entity\ContentEntityFormInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_hero_image\HeroImageWidgetCropManager;
+use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
 
 /**
@@ -95,5 +99,55 @@ function ghi_hero_image_cache_flush() {
     // image that get's downloaded and cached, so this is ok.
     $directory = imagecache_external_get_directory_path();
     \Drupal::service('file_system')->deleteRecursive($directory);
+  }
+}
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function ghi_hero_image_entity_extra_field_info() {
+  $return = [];
+  $entityFieldManager = \Drupal::service('entity_field.manager');
+  foreach (NodeType::loadMultiple() as $node_type) {
+    /** @var \Drupal\node\NodeTypeInterface $node_type */
+    $fields = $entityFieldManager->getFieldDefinitions('node', $node_type->id());
+    if (empty(array_intersect_key($fields, array_flip(HeroImageWidgetCropManager::IMAGE_FIELDS)))) {
+      continue;
+    }
+    $return['node'][$node_type->id()]['form']['image_crop'] = [
+      'label' => t('Image crop'),
+      'description' => t('Image crop control'),
+      'weight' => -2,
+      'visible' => TRUE,
+    ];
+  }
+  return $return;
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function ghi_hero_image_form_alter(array &$form, FormStateInterface $form_state) {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof ContentEntityFormInterface) {
+    return;
+  }
+  /** @var \Drupal\ghi_hero_image\HeroImageWidgetCropManager $image_widget_crop_manager */
+  $image_widget_crop_manager = \Drupal::service('hero_image_widget_crop.manager');
+  $image_widget_crop_manager->contentEntityFormAlter($form, $form_state);
+
+  if (!empty($form['image_crop']) && !empty($form['field_hero_image'])) {
+    $form['image_crop']['#states'] = [
+      'visible' => [
+        ':input[name="field_hero_image[0][settings][crop_image]"]' => ['checked' => TRUE],
+      ],
+    ];
+  }
+  if (!empty($form['image_crop']) && !empty($form['field_crop_hero_image'])) {
+    $form['image_crop']['#states'] = [
+      'visible' => [
+        ':input[name="field_crop_hero_image[value]"]' => ['checked' => TRUE],
+      ],
+    ];
   }
 }
