@@ -12135,16 +12135,16 @@
         },
         {
             "name": "vipnytt/sitemapparser",
-            "version": "v1.1.7",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/VIPnytt/SitemapParser.git",
-                "reference": "c263e1f0fdcc8be541e805d52acab801a43be358"
+                "reference": "151bceefa12d7f60d722a9c094bee119e80572e8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/VIPnytt/SitemapParser/zipball/c263e1f0fdcc8be541e805d52acab801a43be358",
-                "reference": "c263e1f0fdcc8be541e805d52acab801a43be358",
+                "url": "https://api.github.com/repos/VIPnytt/SitemapParser/zipball/151bceefa12d7f60d722a9c094bee119e80572e8",
+                "reference": "151bceefa12d7f60d722a9c094bee119e80572e8",
                 "shasum": ""
             },
             "require": {
@@ -12191,9 +12191,9 @@
             ],
             "support": {
                 "issues": "https://github.com/VIPnytt/SitemapParser/issues",
-                "source": "https://github.com/VIPnytt/SitemapParser/tree/v1.1.7"
+                "source": "https://github.com/VIPnytt/SitemapParser/tree/v1.2.0"
             },
-            "time": "2023-03-27T16:06:46+00:00"
+            "time": "2023-11-08T18:43:58+00:00"
         },
         {
             "name": "webflo/drupal-finder",
@@ -17385,5 +17385,5 @@
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
