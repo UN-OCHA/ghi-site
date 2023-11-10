@@ -161,6 +161,7 @@ ul.links--entity-navigation {
                     padding-inline-start: 0;
 
                     li {
+                      display: block;
                       width: 90%;
                       padding: 0.5rem 0;
                       break-inside: avoid;
@@ -198,6 +199,12 @@ ul.links--entity-navigation {
               padding-right: var(--cd-container-padding-xlarge);
               padding-left: var(--cd-container-padding-xlarge);
             }
+          }
+        }
+
+        @include tablet {
+          &.megamenu > div[data-cd-hidden=false] {
+            border-bottom: 2px solid var(--ghi-yellow);
           }
         }
 
@@ -258,28 +265,56 @@ ul.links--entity-navigation {
       &.overflow-item.expandable > div[data-cd-hidden=false] {
         padding-top: 0;
         padding-bottom: 0;
+        border-top: 1px solid var(--ghi-yellow);
+        border-bottom: 1px solid var(--ghi-yellow);
 
-        .second-level-wrapper-outer div[data-cd-hidden=false] {
-          position: relative;
-          top: 0;
-          width: calc(100vw - 3 * var(--cd-container-padding));
-          max-width: calc(100vw - 3 * var(--cd-container-padding));
+        ul:not(.metadata) > li:not(.hidden) {
+          display: block;
+          width: 100%;
+          padding-right: var(--cd-container-padding);
+          padding-left: var(--cd-container-padding);
+          background-color: var(--ghi-primary-background-color);
 
-          .megamenu-wrapper-outer {
-            padding-right: 0;
-            padding-left: 0;
+          @include tablet {
+            display: initial;
+            width: initial;
+            padding-right: initial;
+            padding-left: initial;
+          }
+        }
+
+        .second-level-wrapper-outer {
+          padding-right: 0;
+          padding-left: 0;
+          background-color: var(--cd-white);
+
+          div[data-cd-hidden=false] {
+            position: relative;
+            top: 0;
+            width: calc(100vw - 3 * var(--cd-container-padding));
+            max-width: calc(100vw - 3 * var(--cd-container-padding));
+
+            .megamenu-wrapper-outer {
+              padding-right: 0;
+              padding-left: 0;
+
+              @include tablet {
+                padding-right: var(--cd-container-padding-xlarge);
+                padding-left: var(--cd-container-padding-xlarge);
+              }
+            }
 
             @include tablet {
-              padding-right: var(--cd-container-padding-xlarge);
-              padding-left: var(--cd-container-padding-xlarge);
+              position: absolute;
+              top: calc(3.5rem + 1px);
+              width: fit-content;
             }
           }
 
           @include tablet {
-            position: absolute;
-            top: 3.5rem;
-            width: 100%;
-            max-width: 100%;
+            padding-right: var(--cd-container-padding-xlarge);
+            padding-left: var(--cd-container-padding-xlarge);
+            background-color: initial;
           }
         }
       }
@@ -290,12 +325,19 @@ ul.links--entity-navigation {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0;
     padding-inline-start: 0;
+    column-gap: 0;
+    row-gap: 2px;
 
     li {
       padding: 0;
       break-inside: avoid;
+
+      &:hover > .link-wrapper > a,
+      &:hover > button,
+      .link-wrapper > a:hover {
+        color: var(--ghi-primary-button-color-hover);
+      }
 
       &.expandable.megamenu {
         position: relative;
@@ -306,12 +348,38 @@ ul.links--entity-navigation {
         align-items: center;
         text-align: left;
       }
+
+      @include max-width("md") {
+        &.expandable.dropdown div[data-cd-hidden=false] {
+          width: calc(100vw - 3*var(--cd-container-padding) + 2rem) !important;
+          max-width: calc(100vw - 3*var(--cd-container-padding) + 2rem) !important;
+          padding: 0;
+          background-color: var(--cd-white);
+          row-gap: 2px;
+
+          a {
+            padding-left: 1.5rem;
+
+            &:hover {
+              background-color: var(--ghi-primary-background-color);
+            }
+          }
+        }
+      }
+
+      @include tablet {
+        &.expandable.megamenu > div[data-cd-hidden=false] {
+          width: calc(100vw - 3*var(--cd-container-padding) + 2rem) !important;
+          max-width: calc(100vw - 3*var(--cd-container-padding) + 2rem) !important;
+        }
+      }
     }
 
     @include tablet {
       position: initial;
       flex-direction: row;
-      gap: 2rem;
+      column-gap: 2rem;
+      row-gap: 0;
 
       li.expandable.megamenu {
         position: static;
