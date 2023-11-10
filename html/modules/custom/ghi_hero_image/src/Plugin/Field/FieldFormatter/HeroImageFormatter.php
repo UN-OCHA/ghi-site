@@ -105,8 +105,8 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
     $entity = $items->getEntity();
     $item = !$items->isEmpty() ? (object) $items->get(0)->getValue() ?? NULL : NULL;
     $item_source = $item ? $item->source : NULL;
-    if (!$item_source && $this->getPlanWebContentAttachments($items)) {
-      $item_source = 'hpc_webcontent_file_attachment';
+    if (!$item_source) {
+      $item_source = $this->heroImageManager->getDefaultItemSource($items);
     }
 
     if ($item_source == 'inherit') {

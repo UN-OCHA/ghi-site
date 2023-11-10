@@ -47,6 +47,22 @@ class HeroImageManager {
   }
 
   /**
+   * Get the default item source.
+   *
+   * @param \Drupal\Core\Field\FieldItemListInterface $items
+   *   The field values to be rendered.
+   *
+   * @return string
+   *   The item source as a string.
+   */
+  public function getDefaultItemSource(FieldItemListInterface $items) {
+    if ($this->getPlanWebContentAttachments($items)) {
+      return 'hpc_webcontent_file_attachment';
+    }
+    return 'none';
+  }
+
+  /**
    * Get properties for a hero image.
    *
    * @param \Drupal\Core\Field\FieldItemListInterface $items
@@ -65,8 +81,8 @@ class HeroImageManager {
 
     $item = !$items->isEmpty() ? (object) $items->get(0)->getValue() ?? NULL : NULL;
     $item_source = $item ? $item->source : NULL;
-    if (!$item_source && $attachments = $this->getPlanWebContentAttachments($items)) {
-      $item_source = 'hpc_webcontent_file_attachment';
+    if (!$item_source) {
+      $item_source = $this->getDefaultItemSource($items);
     }
 
     $item_settings = $item && property_exists($item, 'settings') && is_array($item->settings) ? ($item->settings[$item_source] ?? []) : [];
