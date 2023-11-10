@@ -151,3 +151,16 @@ function ghi_hero_image_form_alter(array &$form, FormStateInterface $form_state)
     ];
   }
 }
+
+/**
+ * Implements hook_normalize_content_alter().
+ */
+function ghi_hero_image_normalize_content_alter(&$data) {
+  foreach (HeroImageWidgetCropManager::IMAGE_FIELDS as $field_name) {
+    if (empty($data[$field_name])) {
+      continue;
+    }
+    unset($data[$field_name][0]['width']);
+    unset($data[$field_name][0]['height']);
+  }
+}

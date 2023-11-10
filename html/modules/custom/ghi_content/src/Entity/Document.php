@@ -25,13 +25,6 @@ class Document extends ContentBase {
   }
 
   /**
-   * Get the short title for a document.
-   */
-  public function getShortTitle() {
-    return $this->get('field_short_title')->value ?? NULL;
-  }
-
-  /**
    * Check if the given article is part of this document.
    */
   public function hasArticle(Article $article) {

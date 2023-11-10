@@ -2,14 +2,20 @@
 
 namespace Drupal\ghi_content\ContentManager;
 
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Routing\RedirectDestinationInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\ghi_content\Import\ImportManager;
 use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
@@ -18,16 +24,18 @@ use Drupal\ghi_sections\SectionTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\migrate\MigrateExecutable;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
+use Drupal\migrate\Plugin\MigrationPluginManager;
 use Drupal\migrate\Row;
 use Drupal\migrate_plus\Entity\Migration;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\TermInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Base manager service class..
  */
-abstract class BaseContentManager {
+abstract class BaseContentManager implements ContainerInjectionInterface {
 
   use SectionTrait;
   use StringTranslationTrait;
@@ -62,6 +70,20 @@ abstract class BaseContentManager {
   protected $request;
 
   /**
+   * The route match.
+   *
+   * @var \Drupal\Core\Routing\RouteMatchInterface
+   */
+  protected $routeMatch;
+
+  /**
+   * The migration plugin manager.
+   *
+   * @var \Drupal\migrate\Plugin\MigrationPluginManager
+   */
+  protected $migrationManager;
+
+  /**
    * The remote source manager.
    *
    * @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager
@@ -69,14 +91,67 @@ abstract class BaseContentManager {
   protected $remoteSourceManager;
 
   /**
+   * The remote source manager.
+   *
+   * @var \Drupal\ghi_content\Import\ImportManager
+   */
+  protected $importManager;
+
+  /**
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
+   * The redirect destination.
+   *
+   * @var \Drupal\Core\Routing\RedirectDestinationInterface
+   */
+  protected $redirectDestination;
+
+  /**
+   * Messenger service.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
    * Constructs a document manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer, AccountInterface $current_user, RequestStack $request_stack, RemoteSourceManager $remote_source_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer, AccountInterface $current_user, RequestStack $request_stack, RouteMatchInterface $route_match, MigrationPluginManager $migration_manager, RemoteSourceManager $remote_source_manager, ImportManager $import_manager, ModuleHandlerInterface $module_handler, RedirectDestinationInterface $redirect_destination, MessengerInterface $messenger) {
     $this->entityTypeManager = $entity_type_manager;
     $this->renderer = $renderer;
     $this->currentUser = $current_user;
     $this->request = $request_stack->getCurrentRequest();
+    $this->routeMatch = $route_match;
+    $this->migrationManager = $migration_manager;
     $this->remoteSourceManager = $remote_source_manager;
+    $this->importManager = $import_manager;
+    $this->moduleHandler = $module_handler;
+    $this->redirectDestination = $redirect_destination;
+    $this->messenger = $messenger;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('entity_type.manager'),
+      $container->get('renderer'),
+      $container->get('current_user'),
+      $container->get('request_stack'),
+      $container->get('current_route_match'),
+      $container->get('plugin.manager.migration'),
+      $container->get('plugin.manager.remote_source'),
+      $container->get('ghi_content.import'),
+      $container->get('module_handler'),
+      $container->get('redirect.destination'),
+      $container->get('messenger'),
+    );
   }
 
   /**
@@ -371,7 +446,7 @@ abstract class BaseContentManager {
   }
 
   /**
-   * Save an content node programatically.
+   * Save a content node programatically.
    *
    * Besides saving the node, this does 2 additional things.
    * 1. It handles the presence of an IPE token, which would prevent updates to
@@ -442,6 +517,7 @@ abstract class BaseContentManager {
     unset($data['changed']);
     ArrayHelper::sortMultiDimensionalArrayByKeys($data);
     ArrayHelper::reduceArray($data);
+    $this->moduleHandler->alter('normalize_content', $data);
     return $data;
   }
 
@@ -510,7 +586,6 @@ abstract class BaseContentManager {
 
       $destination_ids = $migration->getIdMap()->lookupDestinationIds($source_id);
       $destination_id_values = $destination_ids ? reset($destination_ids) : [];
-      $destination->import($row, $destination_id_values);
       $migration->getIdMap()->saveIdMapping($row, $destination_id_values, MigrateIdMapInterface::STATUS_IMPORTED, $destination->rollbackAction());
     }
   }
@@ -555,7 +630,7 @@ abstract class BaseContentManager {
 
     // Add a global message about disabled fields.
     if (empty($form_state->getUserInput())) {
-      \Drupal::messenger()->addWarning($this->t('Some of the fields in this form are disabled because their content is automatically synced from the remote source.'));
+      $this->messenger->addWarning($this->t('Some of the fields in this form are disabled because their content is automatically synced from the remote source.'));
     }
 
     $migration_id = $this->getMigration($node)->id();
@@ -593,7 +668,7 @@ abstract class BaseContentManager {
     $form[$remote_field]['#disabled'] = TRUE;
     $form[$remote_field]['#attributes']['title'] = $this->t('This field cannot be edited anymore after the page has been created.');
 
-    $admin_permission = \Drupal::currentUser()->hasPermission('administer content types');
+    $admin_permission = $this->currentUser->hasPermission('administer content types');
     $form['meta']['#access'] = $admin_permission;
     $form['meta']['published']['#access'] = $admin_permission;
     $form['meta']['author']['#access'] = $admin_permission;
@@ -664,20 +739,18 @@ abstract class BaseContentManager {
     }
 
     if ($content) {
-      /** @var \Drupal\Core\Routing\RedirectDestinationInterface $redirect_destination */
-      $redirect_destination = \Drupal::service('redirect.destination');
-      $queryParams = \Drupal::request()->query->all();
-      $redirect_url = Url::fromRouteMatch(\Drupal::routeMatch());
+      $queryParams = $this->request->query->all();
+      $redirect_url = Url::fromRouteMatch($this->routeMatch);
       if (!empty($queryParams)) {
         $redirect_url->setOption('query', $queryParams);
       }
-      $redirect_destination->set($redirect_url->toString());
+      $this->redirectDestination->set($redirect_url->toString());
       $form['remote_content_info']['link_label'] = [
         '#type' => 'item',
         '#title' => $this->t('Go to remote system'),
         '#weight' => 3,
       ];
-      $view_builder = \Drupal::entityTypeManager()->getViewBuilder('node');
+      $view_builder = $this->entityTypeManager->getViewBuilder('node');
       $form['remote_content_info']['link'] = $view_builder->viewField($node->get($remote_field), [
         'label' => 'hidden',
         'type' => $this->getRemoteSourceLinkType(),
@@ -718,6 +791,9 @@ abstract class BaseContentManager {
     $form_object = $form_state->getFormObject();
     $node = $form_object->getEntity();
 
+    // Update based on what's new on the remote.
+    $this->updateNodeFromRemote($node);
+
     // Save the content node, making sure that common logic is applied.
     $this->saveContentNode($node);
 
@@ -735,7 +811,7 @@ abstract class BaseContentManager {
     // Reset the article to it's exact version in the remote system.
     $this->updateNodeFromRemote($node, FALSE, TRUE);
 
-    // Save the article node, making sure that common logic is applied.
+    // Save the content node, making sure that common logic is applied.
     $this->saveContentNode($node);
 
     $form_state->setRebuild();

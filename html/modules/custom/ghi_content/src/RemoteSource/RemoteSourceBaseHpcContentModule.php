@@ -82,6 +82,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     $fields = [
       'id',
       'title',
+      'title_short',
       'section',
       'summary',
       'tags',
@@ -477,10 +478,12 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
         items {
           id
           title
+          title_short
           section
           summary
           created
           updated
+          tags
           autoVisible
         }
       }
