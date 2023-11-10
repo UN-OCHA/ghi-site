@@ -717,7 +717,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
     $form['remote_content_info']['status'] = [
       '#type' => 'item',
       '#title' => $this->t('Up to date'),
-      '#markup' => '<p>' . $this->t('This @label page is up to date with its source content on the remote system.', $t_args) . '</p>',
+      '#markup' => '<p>' . $this->t('This @label is up to date with its source content on the remote system.', $t_args) . '</p>',
       '#weight' => 1,
     ];
 
