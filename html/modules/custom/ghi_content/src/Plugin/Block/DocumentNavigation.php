@@ -82,11 +82,6 @@ class DocumentNavigation extends BlockBase {
     $output['entity_navigation'] = [
       '#theme' => 'item_list',
       '#items' => $tabs,
-      '#attributes' => [
-        'class' => [
-          'links--entity-navigation',
-        ],
-      ],
       '#cache' => [
         'tags' => $cache_tags,
       ],
@@ -94,6 +89,7 @@ class DocumentNavigation extends BlockBase {
       // This is important to make the template suggestions logic work in
       // common_design_subtheme.theme.
       '#context' => [
+        'plugin_type' => 'entity_navigation',
         'plugin_id' => $this->getPluginId(),
       ],
     ];
