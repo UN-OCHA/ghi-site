@@ -120,6 +120,17 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function toLink($text = NULL, $rel = 'canonical', array $options = []) {
+    if (!isset($text)) {
+      // Use the short title as default.
+      $text = $this->getShortTitle() ?? NULL;
+    }
+    return parent::toLink($text, $rel, $options);
+  }
+
+  /**
    * Get the short title for a document.
    */
   public function getShortTitle() {
