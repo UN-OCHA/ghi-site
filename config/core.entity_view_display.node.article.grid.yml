@@ -11,6 +11,7 @@ dependencies:
     - field.field.node.article.field_image
     - field.field.node.article.field_inherit_section_image
     - field.field.node.article.field_remote_article
+    - field.field.node.article.field_short_title
     - field.field.node.article.field_summary
     - field.field.node.article.field_tags
     - field.field.node.article.layout_builder__layout
@@ -108,6 +109,7 @@ hidden:
   field_display_hero_image: true
   field_inherit_section_image: true
   field_remote_article: true
+  field_short_title: true
   field_summary: true
   langcode: true
   layout_builder__layout: true

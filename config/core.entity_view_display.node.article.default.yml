@@ -10,6 +10,7 @@ dependencies:
     - field.field.node.article.field_image
     - field.field.node.article.field_inherit_section_image
     - field.field.node.article.field_remote_article
+    - field.field.node.article.field_short_title
     - field.field.node.article.field_summary
     - field.field.node.article.field_tags
     - field.field.node.article.layout_builder__layout
@@ -33,7 +34,23 @@ third_party_settings:
         layout_settings:
           label: Content
           context_mapping: {  }
-        components: {  }
+        components:
+          8f0e42b8-302c-435f-877f-0b65259f3ef5:
+            uuid: 8f0e42b8-302c-435f-877f-0b65259f3ef5
+            region: content
+            configuration:
+              id: 'field_block:node:article:field_short_title'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: string
+                label: above
+                settings:
+                  link_to_entity: false
+                third_party_settings: {  }
+            weight: 0
+            additional: {  }
         third_party_settings: {  }
   layout_builder_restrictions:
     allowed_block_categories:
@@ -157,6 +174,14 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: 1
+    region: content
+  field_short_title:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 108
     region: content
   field_summary:
     type: text_default

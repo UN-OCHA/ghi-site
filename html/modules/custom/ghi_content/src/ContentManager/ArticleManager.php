@@ -2,16 +2,9 @@
 
 namespace Drupal\ghi_content\ContentManager;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Render\RendererInterface;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\ghi_content\Import\ImportManager;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
-use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
-use Drupal\migrate\Plugin\MigrationPluginManager;
 use Drupal\node\NodeInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Article manager service class.
@@ -37,29 +30,6 @@ class ArticleManager extends BaseContentManager {
    * The machine name of the form element to use for displaying source links.
    */
   const REMOTE_SOURCE_LINK_TYPE = 'ghi_remote_article_source_link';
-
-  /**
-   * The migration plugin manager.
-   *
-   * @var \Drupal\migrate\Plugin\MigrationPluginManager
-   */
-  protected $migrationManager;
-
-  /**
-   * The remote source manager.
-   *
-   * @var \Drupal\ghi_content\Import\ImportManager
-   */
-  protected $importManager;
-
-  /**
-   * Constructs a document manager.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer, AccountInterface $current_user, MigrationPluginManager $migration_manager, RemoteSourceManager $remote_source_manager, ImportManager $import_manager, RequestStack $request_stack) {
-    parent::__construct($entity_type_manager, $renderer, $current_user, $request_stack, $remote_source_manager);
-    $this->migrationManager = $migration_manager;
-    $this->importManager = $import_manager;
-  }
 
   /**
    * {@inheritdoc}
@@ -148,6 +118,7 @@ class ArticleManager extends BaseContentManager {
     if ($team) {
       $node->field_team = $team;
     }
+
     $status = $node->save();
     return $status == SAVED_NEW ? $node : NULL;
   }
@@ -223,6 +194,9 @@ class ArticleManager extends BaseContentManager {
     $node->setTitle($article->getTitle());
     $node->setCreatedTime($article->getCreated());
     $node->setChangedTime($article->getUpdated());
+
+    // Import the short title.
+    $this->importManager->importTextfield($node, $article, $this->t('Short title'), 'getShortTitle', 'field_short_title');
 
     // Import the summary.
     $this->importManager->importTextfield($node, $article, $this->t('Summary'), 'getSummary', 'field_summary', 'html_text');

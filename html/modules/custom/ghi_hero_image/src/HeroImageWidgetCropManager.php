@@ -4,6 +4,7 @@ namespace Drupal\ghi_hero_image;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -28,6 +29,8 @@ use Symfony\Component\Mime\MimeTypeGuesserInterface;
  * It also uses the hero_image_crop form element to support this.
  */
 class HeroImageWidgetCropManager extends ImageWidgetCropManager implements ImageWidgetCropInterface, ContainerInjectionInterface {
+
+  use DependencySerializationTrait;
 
   /**
    * Define the supported crop types.
@@ -117,6 +120,7 @@ class HeroImageWidgetCropManager extends ImageWidgetCropManager implements Image
    */
   public function updateCrop(array $properties, $field_value, CropType $crop_type) {
     $crop_properties = $this->getCropOriginalDimension($field_value, $properties);
+    $changed = FALSE;
     if (!empty($crop_properties)) {
       $image_styles = $this->getImageStylesByCrop($crop_type->id());
       if (!empty($image_styles)) {
@@ -256,6 +260,9 @@ class HeroImageWidgetCropManager extends ImageWidgetCropManager implements Image
     $crop_type_names = self::CROP_TYPES;
     $form_state_values = $form_state->getValues();
     $file = $form['image_crop']['image_crop']['#file'];
+    if (!$file) {
+      return;
+    }
 
     foreach ($crop_type_names as $crop_type_name) {
       $flush_styles = FALSE;

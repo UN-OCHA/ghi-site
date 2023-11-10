@@ -5,7 +5,6 @@ namespace Drupal\ghi_content\Path;
 use Drupal\Core\PathProcessor\InboundPathProcessorInterface;
 use Drupal\Core\PathProcessor\OutboundPathProcessorInterface;
 use Drupal\Core\Render\BubbleableMetadata;
-use Drupal\ghi_content\ContentManager\DocumentManager;
 use Drupal\ghi_content\Traits\ContentPathTrait;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -32,18 +31,10 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
   protected $requestStack;
 
   /**
-   * The document manager.
-   *
-   * @var \Drupal\ghi_content\ContentManager\DocumentManager
+   * Constructs a path processor.
    */
-  protected $documentManager;
-
-  /**
-   * Constructs a document manager.
-   */
-  public function __construct(RequestStack $request_stack, DocumentManager $document_manager) {
+  public function __construct(RequestStack $request_stack) {
     $this->requestStack = $request_stack;
-    $this->documentManager = $document_manager;
   }
 
   /**

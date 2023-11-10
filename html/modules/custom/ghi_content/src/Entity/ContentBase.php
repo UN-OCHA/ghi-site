@@ -120,6 +120,13 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   }
 
   /**
+   * Get the short title for a document.
+   */
+  public function getShortTitle() {
+    return $this->get('field_short_title')->value ?? NULL;
+  }
+
+  /**
    * Get the meta data for this article.
    *
    * @param bool $include_social

@@ -20,7 +20,6 @@ use Drupal\ghi_content\RemoteContent\RemoteContentImageInterface;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\hpc_common\Helpers\RequestHelper;
-use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
 
@@ -226,24 +225,6 @@ function ghi_content_current_section_alter(&$section, $node) {
   elseif ($context_node instanceof ContentBase && $context_node->getContextNode()) {
     ghi_content_current_section_alter($section, $context_node->getContextNode());
   }
-}
-
-/**
- * Implements hook_ENTITY_TYPE_presave() for node entities.
- */
-function ghi_content_node_presave(NodeInterface $node) {
-  if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
-    // We only process nodes that use layout builder.
-    return;
-  }
-
-  /** @var \Drupal\ghi_content\ContentManager\ManagerFactory $manager_factory */
-  $manager_factory = \Drupal::getContainer()->get('ghi_content.manager.factory');
-  $content_manager = $manager_factory->getContentManager($node);
-  if ($content_manager) {
-    $content_manager->updateNodeFromRemote($node);
-  }
-
 }
 
 /**
