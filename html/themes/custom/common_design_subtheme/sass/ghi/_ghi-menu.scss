@@ -83,6 +83,7 @@
 
           nav[role="navigation"] > ul {
             flex-direction: column;
+            justify-content: flex-start;
             max-height: 450px;
             margin: 2rem 0;
 
