@@ -126,6 +126,44 @@ class AttachmentSelect extends FormElement {
       'attachment_id' => !empty($values['attachment_id']) ? array_filter((array) $values['attachment_id']) : [],
     ];
 
+    // Get the list of attachments that this element can access.
+    $element_context_filter = array_filter([
+      'entity_id' => $element['#entity_ids'] ?? NULL,
+      'entity_type' => $element['#entity_type'] ?? NULL,
+      'type' => $element['#attachment_type'] ?? NULL,
+    ]);
+
+    // Get the attachments.
+    $attachments = self::getPlanEntitiesQuery($plan_id)->getDataAttachments($context['base_object'] ?? NULL, $element_context_filter);
+
+    // Get the different options from the available set of all attachments in
+    // the current base context.
+    $entity_type_options = [];
+    $attachment_type_options = [];
+    $attachment_prototype_options = [];
+    foreach ($attachments as $attachment) {
+      if ($source_entity = $attachment->getSourceEntity()) {
+        $entity_type_options[$source_entity->getEntityType()] = $source_entity->getEntityTypeName();
+      }
+      $attachment_type_options[$attachment->type] = ucfirst($attachment->type);
+      $attachment_prototype_options[$attachment->prototype->id] = $attachment->prototype->name . ' (' . $attachment->prototype->ref_code . ')';
+    }
+    krsort($attachment_prototype_options);
+
+    // Sanity check to handle imported code from other plan pages.
+    if (empty($attachment_prototype_options) || ($defaults['attachment_prototype'] && !array_key_exists($defaults['attachment_prototype'], $attachment_prototype_options))) {
+      $defaults['attachment_prototype'] = NULL;
+    }
+
+    if (!empty($attachments)) {
+      if (is_array($defaults['attachment_id']) && !empty($defaults['attachment_id'])) {
+        $defaults['attachment_id'] = array_intersect($defaults['attachment_id'], array_keys($attachments));
+      }
+      elseif (empty($defaults['attachment_id'])) {
+        $defaults['attachment_id'] = [array_key_first($attachments)];
+      }
+    }
+
     // Setup the filters base form structure.
     $element['filter'] = [
       '#type' => 'container',
@@ -183,30 +221,6 @@ class AttachmentSelect extends FormElement {
       return $element;
     }
 
-    // Get the list of attachments that this element can access.
-    $element_context_filter = array_filter([
-      'entity_id' => $element['#entity_ids'] ?? NULL,
-      'entity_type' => $element['#entity_type'] ?? NULL,
-      'type' => $element['#attachment_type'] ?? NULL,
-    ]);
-
-    // Get the attachments.
-    $attachments = self::getPlanEntitiesQuery($plan_id)->getDataAttachments($context['base_object'] ?? NULL, $element_context_filter);
-
-    // Get the different options from the available set of all attachments in
-    // the current base context.
-    $entity_type_options = [];
-    $attachment_type_options = [];
-    $attachment_prototype_options = [];
-    foreach ($attachments as $attachment) {
-      if ($source_entity = $attachment->getSourceEntity()) {
-        $entity_type_options[$source_entity->getEntityType()] = $source_entity->getEntityTypeName();
-      }
-      $attachment_type_options[$attachment->type] = ucfirst($attachment->type);
-      $attachment_prototype_options[$attachment->prototype->id] = $attachment->prototype->name . ' (' . $attachment->prototype->ref_code . ')';
-    }
-    krsort($attachment_prototype_options);
-
     if (!empty($context['plan_object'])) {
       $entity_type_options = array_merge(['plan' => (string) t('Plan')], $entity_type_options);
     }
@@ -260,6 +274,11 @@ class AttachmentSelect extends FormElement {
       if (!empty($element['#entity_type'])) {
         $element['filter']['entity_type']['#type'] = 'hidden';
         $element['filter']['entity_type']['#value'] = NULL;
+      }
+      elseif (count($entity_type_options) == 1) {
+        // Hide the selector if only a single prototype is found.
+        $element['filter']['entity_type']['#prefix'] = '<div class="visually-hidden">';
+        $element['filter']['entity_type']['#suffix'] = '</div>';
       }
     }
 
@@ -353,12 +372,15 @@ class AttachmentSelect extends FormElement {
     if (!empty($default_attachments) && empty($element['#multiple'])) {
       $default_attachments = array_key_first($default_attachments);
     }
+    if (empty($default_attachments) && empty($element['#multiple'])) {
+      $default_attachments = array_key_first($attachment_options);
+    }
     $element['attachment_id'] = [
       '#type' => 'tableselect',
       '#tree' => TRUE,
       '#required' => TRUE,
       '#header' => $columns,
-      '#validated' => TRUE,
+      // '#validated' => TRUE,
       '#options' => $attachment_options,
       '#default_value' => $default_attachments,
       '#multiple' => $element['#multiple'],
