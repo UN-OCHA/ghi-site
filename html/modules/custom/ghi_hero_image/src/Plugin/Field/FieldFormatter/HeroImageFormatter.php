@@ -47,7 +47,6 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
   public static function defaultSettings() {
     return [
       'include_credits' => FALSE,
-      'crop_image' => TRUE,
     ] + parent::defaultSettings();
   }
 
@@ -124,9 +123,9 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
     }
 
     $image_properties = $this->heroImageManager->getImageProperties($items, $this);
-    $image_url = $image_properties['image_url'];
-    $caption = $image_properties['caption'];
-    $credit = $image_properties['credit'];
+    $image_url = $image_properties['image_url'] ?? NULL;
+    $caption = $image_properties['caption'] ?? NULL;
+    $credit = $image_properties['credit'] ?? NULL;
 
     if ($image_url) {
       $image_build = [
