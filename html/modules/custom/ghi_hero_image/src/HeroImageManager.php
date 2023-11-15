@@ -152,12 +152,12 @@ class HeroImageManager {
         break;
     }
 
-    return [
+    return $image_url && $file_uri ? [
       'image_url' => $image_url,
       'file_uri' => $file_uri,
       'caption' => $caption,
       'credit' => $credit,
-    ];
+    ] : NULL;
   }
 
   /**
