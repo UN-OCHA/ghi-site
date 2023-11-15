@@ -514,6 +514,9 @@ class DataAttachment extends AttachmentBase {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $attachment_query */
     $attachment_query = $this->getEndpointQueryManager()->createInstance('attachment_query');
     $attachment_data = $attachment_query->getAttachmentDataWithDisaggregatedData($this->id);
+    if (!$attachment_data) {
+      return;
+    }
     $this->setRawData($attachment_data);
     $this->updateMap();
   }

@@ -571,9 +571,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $query */
       $query = $this->getQueryHandler('entity');
       $plan_data = $query->getEntity('plan', $context_object->getSourceId());
-      return [
+      return $plan_data ? [
         $plan_data->id() => $plan_data,
-      ];
+      ] : [];
     }
 
     $filter = NULL;
