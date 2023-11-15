@@ -11,6 +11,13 @@ use Drupal\hpc_common\Helpers\CommonHelper;
 class Organization extends BaseObject {
 
   /**
+   * A list of clusters.
+   *
+   * @var array
+   */
+  public $clusters;
+
+  /**
    * Map the raw data.
    *
    * @return object

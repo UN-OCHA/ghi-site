@@ -214,6 +214,11 @@ class HeroImageWidgetCropManager extends ImageWidgetCropManager implements Image
         continue;
       }
 
+      // If a newer value for the image is avialble, use that.
+      if ($form_state->hasValue($field_name)) {
+        $entity->get($field_name)->setValue($form_state->getValue($field_name));
+      }
+
       $file = NULL;
       $field = $entity->get($field_name);
       /** @var \Drupal\file\Plugin\Field\FieldType\FileFieldItemList $field_image */
@@ -257,6 +262,9 @@ class HeroImageWidgetCropManager extends ImageWidgetCropManager implements Image
    * Submit handler for content entity forms using the crop api.
    */
   public function contentEntityFormCropSubmit(array &$form, FormStateInterface $form_state) {
+    if (empty($form['image_crop'])) {
+      return;
+    }
     $crop_type_names = self::CROP_TYPES;
     $form_state_values = $form_state->getValues();
     $file = $form['image_crop']['image_crop']['#file'];

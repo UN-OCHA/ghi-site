@@ -302,20 +302,6 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   }
 
   /**
-   * Check if the current node can and should crop the hero image.
-   *
-   * @return bool
-   *   TRUE if a hero image, if available, should be cropped, FALSE otherwise.
-   */
-  public function shouldCropHeroImage() {
-    if (!$this->hasField('field_crop_hero_image')) {
-      return FALSE;
-    }
-    $crop_hero_image = $this->get('field_crop_hero_image')->value;
-    return $crop_hero_image == 1 || $crop_hero_image === NULL;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getCacheTags() {

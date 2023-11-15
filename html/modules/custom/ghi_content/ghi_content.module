@@ -7,11 +7,13 @@
 
 use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\ghi_content\Controller\MigrationBatchController;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentBase;
@@ -284,12 +286,7 @@ function ghi_content_preprocess_page(&$variables) {
     return;
   }
 
-  $crop_image = TRUE;
-  if ($image_node instanceof ContentBase) {
-    $crop_image = $image_node->shouldCropHeroImage();
-  }
-
-  $image_style_name = $crop_image ? 'hero' : 'hero_not_cropped';
+  $image_style_name = 'hero';
 
   // Go through some trouble to show a responsive image here.
   $repsonsive_image_style_id = $image_style_name;
@@ -378,6 +375,20 @@ function ghi_content_preprocess_node(&$variables) {
       '#items' => $node->getPageMetaData(),
       '#full_width' => TRUE,
     ];
+  }
+
+  if ($node instanceof ContentBase && !$node->shouldDisplayHeroImage()) {
+    // If the article is configured to hide the image, hide it everywhere.
+    /** @var \Drupal\Core\Entity\Entity\EntityViewDisplay $view_mode_entity */
+    $view_mode_entity = EntityViewDisplay::load('node.article.' . $variables['view_mode']);
+    /** @var \Drupal\file\Plugin\Field\FieldType\FileFieldItemList $items */
+    $items = $node->field_image;
+    if ($view_mode_entity && $items instanceof FileFieldItemList) {
+      $items->filter(function ($item) {
+        return FALSE;
+      });
+      $variables['content']['field_image'] = $view_mode_entity->getRenderer('field_image')->view($items);
+    }
   }
 
   if ($node instanceof Document) {

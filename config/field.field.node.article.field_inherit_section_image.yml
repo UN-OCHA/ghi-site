@@ -10,12 +10,12 @@ field_name: field_inherit_section_image
 entity_type: node
 bundle: article
 label: 'Inherit document image'
-description: 'If checked and this article is displayed as a subpage of a document, the hero image will be taken from the document instead of the article.'
+description: "If checked and this article is displayed as a subpage of a document, the hero image on the article page will be taken from the document instead of the article. Links to the article will continue to use the article's own image if available."
 required: false
 translatable: true
 default_value:
   -
-    value: 1
+    value: 0
 default_value_callback: ''
 settings:
   on_label: 'On'

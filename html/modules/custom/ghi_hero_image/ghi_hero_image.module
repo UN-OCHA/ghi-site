@@ -66,14 +66,11 @@ function ghi_hero_image_preprocess_page(&$variables) {
   // show a default image or the image from a parent node.
   $hero_image_field = $node->get($hero_image_field_definition->getName());
 
-  // See if the image should be cropped.
-  $crop_image = $hero_image_field?->first()?->getValue()['settings']['crop_image'] ?? TRUE;
-
   // Get the hero image for the current page.
   $hero_image = $hero_image_field->view([
     'label' => 'hidden',
     'settings' => [
-      'responsive_image_style' => $crop_image ? 'hero' : 'hero_not_cropped',
+      'responsive_image_style' => 'hero',
       'image_link' => NULL,
       'include_credits' => TRUE,
     ],
@@ -139,14 +136,19 @@ function ghi_hero_image_form_alter(array &$form, FormStateInterface $form_state)
   if (!empty($form['image_crop']) && !empty($form['field_hero_image'])) {
     $form['image_crop']['#states'] = [
       'visible' => [
-        ':input[name="field_hero_image[0][settings][crop_image]"]' => ['checked' => TRUE],
+        [
+          ':input[name="field_hero_image[0][source]"]' => ['value' => 'hpc_webcontent_file_attachment'],
+        ],
+        [
+          ':input[name="field_hero_image[0][source]"]' => ['value' => 'smugmug_api'],
+        ],
       ],
     ];
   }
-  if (!empty($form['image_crop']) && !empty($form['field_crop_hero_image'])) {
+  if (!empty($form['image_crop']) && !empty($form['field_display_hero_image'])) {
     $form['image_crop']['#states'] = [
       'visible' => [
-        ':input[name="field_crop_hero_image[value]"]' => ['checked' => TRUE],
+        ':input[name="field_display_hero_image[value]"]' => ['checked' => TRUE],
       ],
     ];
   }
