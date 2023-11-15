@@ -2,7 +2,7 @@ uuid: 0990d642-014f-438c-8f6a-e13c90907019
 langcode: en
 status: true
 dependencies: {  }
-label: 16x9
+label: 'In links (16x9)'
 id: 16x9
 description: 'Card size for galleries'
 aspect_ratio: '16:9'

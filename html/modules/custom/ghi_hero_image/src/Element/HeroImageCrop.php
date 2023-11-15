@@ -72,7 +72,7 @@ class HeroImageCrop extends ImageCrop {
       }
       $element['crop_wrapper'] = [
         '#type' => 'details',
-        '#title' => t('Crop image'),
+        '#title' => t('Adjust image cropping'),
         '#attributes' => [
           'class' => ['image-data__crop-wrapper'],
           'data-drupal-iwc' => 'wrapper',

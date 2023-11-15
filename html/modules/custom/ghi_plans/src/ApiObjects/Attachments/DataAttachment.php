@@ -682,11 +682,14 @@ class DataAttachment extends AttachmentBase {
    * This fetches either the metrics from the attachment version, or from a
    * measurement if a published one is already present.
    *
-   * @return object
-   *   A metric object.
+   * @return object|null
+   *   A metric object or NULL.
    */
   protected function getMetrics() {
     $attachment = $this->getRawData();
+    if (!$attachment || !is_object($attachment)) {
+      return NULL;
+    }
     // Get the metrics from the attachment version by default.
     $metrics = $attachment->attachmentVersion->value->metrics;
     // If there are measurements, look at the most recent one and get the

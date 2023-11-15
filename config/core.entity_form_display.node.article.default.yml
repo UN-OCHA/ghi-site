@@ -5,7 +5,6 @@ dependencies:
   config:
     - field.field.node.article.field_base_objects
     - field.field.node.article.field_chapter
-    - field.field.node.article.field_crop_hero_image
     - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
     - field.field.node.article.field_inherit_section_image
@@ -78,7 +77,6 @@ third_party_settings:
     group_display:
       children:
         - field_display_hero_image
-        - field_crop_hero_image
         - image_crop
         - field_inherit_section_image
       label: Display
@@ -124,13 +122,6 @@ content:
     settings:
       size: 60
       placeholder: ''
-    third_party_settings: {  }
-  field_crop_hero_image:
-    type: boolean_checkbox
-    weight: 28
-    region: content
-    settings:
-      display_label: true
     third_party_settings: {  }
   field_display_hero_image:
     type: boolean_checkbox
