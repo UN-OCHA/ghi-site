@@ -87,6 +87,9 @@ class PlanEntity extends EntityObjectBase {
     if (empty($entity_version->value->support)) {
       return [];
     }
+    if (!is_array($entity_version->value->support)) {
+      return [];
+    }
     $first_ref = reset($entity_version->value->support);
     if (property_exists($first_ref, 'planEntityIds') && !empty($first_ref->planEntityIds)) {
       return $first_ref->planEntityIds;
