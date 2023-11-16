@@ -6,6 +6,7 @@ use Drupal\Component\Serialization\Yaml;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
@@ -248,6 +249,11 @@ class DataAttachment extends AttachmentBase {
     }
     elseif (!empty($attachment_data->measurements) && !empty($attachment_data->measurements[0]?->attachment?->planId)) {
       $plan_id = $attachment_data->measurements[0]?->attachment?->planId;
+    }
+    elseif (!empty($attachment_data->objectType) && is_string($attachment_data->objectType) && $attachment_data->objectType == 'governingEntities') {
+      $object_id = $attachment_data->objectId;
+      $entity = BaseObjectHelper::getBaseObjectFromOriginalId($object_id, 'governing_entity');
+      $plan_id = $entity instanceof GoverningEntity ? $entity->getPlan()?->id() : NULL;
     }
     return $plan_id;
   }

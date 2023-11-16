@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
+use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\ApiObjects\Plan;
@@ -92,19 +93,22 @@ class AttachmentSearchQuery extends EndpointQueryBase {
    *   [
    *     'type' => 'caseload',
    *   ].
+   * @param string $version
+   *   The version to use in the query, can be "current" or "latest".
    *
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
    *   The matching (processed) attachment objects, keyed by the attachment id.
    */
-  public function getAttachmentsByObject($object_type, $object_ids, array $filter = NULL) {
+  public function getAttachmentsByObject($object_type, $object_ids, array $filter = NULL, $version = NULL) {
     $object_ids = (array) $object_ids;
     sort($object_ids);
 
-    $version = 'current';
-    if ($object_type == 'plan' && count($object_ids) == 1) {
+    if ($object_type == 'plan' && count($object_ids) == 1 && $version === NULL) {
       // Use the correct plan version argument.
       $version = $this->getPlanVersionArgumentForPlanId(reset($object_ids));
     }
+
+    $version = $version ?? 'current';
 
     $cache_key = $this->getCacheKey([
       'object_type' => $object_type,
@@ -150,6 +154,8 @@ class AttachmentSearchQuery extends EndpointQueryBase {
     if (empty($entities)) {
       return NULL;
     }
+
+    $version = 'current';
     $entity_ids = [
       'plan' => [],
       'plan_entity' => [],
@@ -157,6 +163,7 @@ class AttachmentSearchQuery extends EndpointQueryBase {
     ];
     foreach ($entities as $entity) {
       if ($entity instanceof Plan) {
+        $version = $this->getPlanVersionArgumentForPlanId($entity->id);
         $entity_ids['plan'][] = $entity->id;
       }
       if ($entity instanceof PlanEntity) {
@@ -165,17 +172,20 @@ class AttachmentSearchQuery extends EndpointQueryBase {
       if ($entity instanceof GoverningEntity) {
         $entity_ids['governing_entity'][] = $entity->id;
       }
+      if ($entity instanceof EntityObjectInterface && $plan_id = $entity->getPlanId()) {
+        $version = $this->getPlanVersionArgumentForPlanId($plan_id);
+      }
     }
 
     $attachments = [];
     if (!empty($entity_ids['plan'])) {
-      $attachments = array_merge($attachments, $this->getAttachmentsByObject('plan', $entity_ids['plan']));
+      $attachments = array_merge($attachments, $this->getAttachmentsByObject('plan', $entity_ids['plan'], NULL, $version));
     }
     if (!empty($entity_ids['plan_entity'])) {
-      $attachments = array_merge($attachments, $this->getAttachmentsByObject('planEntity', $entity_ids['plan_entity']));
+      $attachments = array_merge($attachments, $this->getAttachmentsByObject('planEntity', $entity_ids['plan_entity'], NULL, $version));
     }
     if (!empty($entity_ids['governing_entity'])) {
-      $attachments = array_merge($attachments, $this->getAttachmentsByObject('governingEntity', $entity_ids['governing_entity']));
+      $attachments = array_merge($attachments, $this->getAttachmentsByObject('governingEntity', $entity_ids['governing_entity'], NULL, $version));
     }
     return $attachments;
   }

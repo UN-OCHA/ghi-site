@@ -295,7 +295,7 @@ class DataPoint extends FormElement {
       // submitted checkbox and the index of the second data point.
       $input = $form_state->getUserInput();
       $submitted = NestedArray::getValue($input, array_merge($element['#parents'], ['data_points']));
-      if ($submitted[1]['use_calculation_method'] === NULL && $defaults['data_points'][1]['index'] == '' && self::CALCULATION_METHOD_DEFAULT) {
+      if (is_array($submitted) && $submitted[1]['use_calculation_method'] === NULL && $defaults['data_points'][1]['index'] == '' && self::CALCULATION_METHOD_DEFAULT) {
         // Due to a bug with checkbox elements in ajax contexts, the default
         // value is not correctly set for new instances of a plugin. We catch
         // this situation by manually setting the checked attribute only if the
