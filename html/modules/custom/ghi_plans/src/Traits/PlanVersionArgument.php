@@ -19,7 +19,7 @@ trait PlanVersionArgument {
    *   The version argument as a string for the API.
    */
   public static function getPlanVersionArgumentForPlanId($plan_id) {
-    if (self::getCurrentUser()->isAnonymous()) {
+    if (self::getCurrentUser()->isAnonymous() || empty($plan_id)) {
       return 'current';
     }
     $base_object = BaseObjectHelper::getBaseObjectFromOriginalId($plan_id, 'plan');
