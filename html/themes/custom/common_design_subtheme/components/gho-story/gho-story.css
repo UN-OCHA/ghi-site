@@ -54,6 +54,27 @@
 .gho-story .field--name-field-media {
   margin-bottom: 2rem;
 }
+.gho-story .field--name-field-media .media--view-mode-story {
+  position: relative;
+}
+.gho-story .field--name-field-media .media-caption {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  background-color: var(--cd-white);
+  opacity: 0.9;
+  font-size: var(--cd-font-size--tiny);
+  padding: 0.5rem 1rem;
+  max-width: 70%;
+}
+.gho-story .field--name-field-media .media-caption * {
+  display: inline;
+  color: var(--cd-default-text-color);
+}
+.gho-story .field--name-field-media .media-caption .double-field-first {
+  font-weight: bold;
+  display: block;
+}
 .gho-story .gho-caption {
   margin: 0;
 }
