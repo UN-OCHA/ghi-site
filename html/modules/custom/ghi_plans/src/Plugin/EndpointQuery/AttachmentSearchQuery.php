@@ -2,6 +2,9 @@
 
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
+use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
+use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
+use Drupal\ghi_plans\ApiObjects\Plan;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanVersionArgument;
@@ -96,9 +99,17 @@ class AttachmentSearchQuery extends EndpointQueryBase {
   public function getAttachmentsByObject($object_type, $object_ids, array $filter = NULL) {
     $object_ids = (array) $object_ids;
     sort($object_ids);
+
+    $version = 'current';
+    if ($object_type == 'plan' && count($object_ids) == 1) {
+      // Use the correct plan version argument.
+      $version = $this->getPlanVersionArgumentForPlanId(reset($object_ids));
+    }
+
     $cache_key = $this->getCacheKey([
       'object_type' => $object_type,
       'object_ids' => $object_ids,
+      'version' => $version,
     ] + (array) $filter);
     $attachments = $this->cache($cache_key);
     if ($attachments) {
@@ -107,6 +118,7 @@ class AttachmentSearchQuery extends EndpointQueryBase {
     $attachments = $this->getData([], [
       'objectType' => $object_type,
       'objectIds' => implode(',', (array) $object_ids),
+      'version' => $version,
     ]);
 
     if (empty($attachments)) {
@@ -123,6 +135,49 @@ class AttachmentSearchQuery extends EndpointQueryBase {
     $processed_attachments = AttachmentHelper::processAttachments($attachments);
     $this->cache($cache_key, $processed_attachments);
     return $processed_attachments;
+  }
+
+  /**
+   * Get attachments for the given set of entities.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface[] $entities
+   *   The plan entity objects.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   *   An array of data attachments.
+   */
+  public function getAttachmentsForEntities(array $entities) {
+    if (empty($entities)) {
+      return NULL;
+    }
+    $entity_ids = [
+      'plan' => [],
+      'plan_entity' => [],
+      'governing_entity' => [],
+    ];
+    foreach ($entities as $entity) {
+      if ($entity instanceof Plan) {
+        $entity_ids['plan'][] = $entity->id;
+      }
+      if ($entity instanceof PlanEntity) {
+        $entity_ids['plan_entity'][] = $entity->id;
+      }
+      if ($entity instanceof GoverningEntity) {
+        $entity_ids['governing_entity'][] = $entity->id;
+      }
+    }
+
+    $attachments = [];
+    if (!empty($entity_ids['plan'])) {
+      $attachments = array_merge($attachments, $this->getAttachmentsByObject('plan', $entity_ids['plan']));
+    }
+    if (!empty($entity_ids['plan_entity'])) {
+      $attachments = array_merge($attachments, $this->getAttachmentsByObject('planEntity', $entity_ids['plan_entity']));
+    }
+    if (!empty($entity_ids['governing_entity'])) {
+      $attachments = array_merge($attachments, $this->getAttachmentsByObject('governingEntity', $entity_ids['governing_entity']));
+    }
+    return $attachments;
   }
 
 }
