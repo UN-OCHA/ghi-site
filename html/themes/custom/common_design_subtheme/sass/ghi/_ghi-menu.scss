@@ -139,6 +139,7 @@
           z-index: z-index(main-menu);
           left: 0;
           width: 100%;
+          border-bottom: 2px solid var(--ghi-yellow);
           background-color: var(--cd-default-background-color);
 
           nav[role="navigation"] {
