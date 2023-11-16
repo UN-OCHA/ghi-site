@@ -85,7 +85,9 @@ class GhiEntityAutocompleteMatcher extends EntityAutocompleteMatcher {
     $tag_names = array_map(function ($term) {
       return $term->label();
     }, $tags);
-    $label = $label . ' (' . implode(', ', $tag_names) . ')';
+    if (!empty($tag_names)) {
+      $label = $label . ' (' . implode(', ', $tag_names) . ')';
+    }
     return $label;
   }
 
@@ -106,7 +108,9 @@ class GhiEntityAutocompleteMatcher extends EntityAutocompleteMatcher {
     /** @var \Drupal\ghi_subpages\Entity\SubpageNodeInterface $entity */
     $entity = \Drupal::entityTypeManager()->getStorage($entity_type_id)->load($entity_id);
     $parent = $entity->getParentNode();
-    $label = $label . ' (' . $parent->label() . ')';
+    if ($parent) {
+      $label = $label . ' (' . $parent->label() . ')';
+    }
     return $label;
   }
 
