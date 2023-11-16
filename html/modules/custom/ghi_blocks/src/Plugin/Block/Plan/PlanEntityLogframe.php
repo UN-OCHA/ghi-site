@@ -117,7 +117,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   /**
    * Retrieve the renderable entities for this instance.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[]
+   * @return \Drupal\ghi_plans\ApiObjects\PlanEntityInterface[]
    *   An array of preprocessed HPC entities.
    */
   private function getRenderableEntities() {
@@ -734,15 +734,11 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     if (empty($entities)) {
       return NULL;
     }
-    $entity_ids = array_map(function ($entity) {
-      return $entity->id;
-    }, $entities);
 
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
     $query = $this->endpointQueryManager->createInstance('attachment_search_query');
-    $attachments = $query->getAttachmentsByObject('plan', $entity_ids);
-    $attachments = array_merge($attachments, $query->getAttachmentsByObject('planEntity', $entity_ids));
-    $attachments = array_merge($attachments, $query->getAttachmentsByObject('governingEntity', $entity_ids));
+    $attachments = $query->getAttachmentsForEntities($entities);
+
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) use ($prototype_id) {
       if (!$attachment instanceof DataAttachment) {

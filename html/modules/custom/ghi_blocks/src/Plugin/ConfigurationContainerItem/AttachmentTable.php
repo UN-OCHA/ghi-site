@@ -362,14 +362,11 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
     if (empty($entities)) {
       return NULL;
     }
-    $entity_ids = array_map(function (PlanEntityInterface $entity) {
-      return $entity->id();
-    }, $entities);
 
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
     $query = $this->endpointQueryManager->createInstance('attachment_search_query');
-    $attachments = $query->getAttachmentsByObject('planEntity', $entity_ids);
-    $attachments = array_merge($attachments, $query->getAttachmentsByObject('governingEntity', $entity_ids));
+    $attachments = $query->getAttachmentsForEntities($entities);
+
     // Filter the attachments.
     return $this->filterAttachments($attachments, $prototype_id);
   }
