@@ -29,6 +29,9 @@
     "drupal/page_manager": {
       "Issue #3176661: Allow to edit page title when using Layout Builder variant": "https://www.drupal.org/files/issues/2022-11-15/page_manager-lb-title-3176661-15.patch"
     },
+    "drupal/protected_pages": {
+      "Issue #3024997: Global password is requested multiple times for every protected page": "https://www.drupal.org/files/issues/2023-11-20/3024997-11-reroll-8.patch"
+    },
     "drupal/publishcontent": {
       "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions": "https://www.drupal.org/files/issues/2020-07-22/2820867-7-permissions-for-bulk-operations.patch"
     },

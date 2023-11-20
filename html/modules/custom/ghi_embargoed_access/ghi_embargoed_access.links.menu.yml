@@ -1,0 +1,5 @@
+ghi_embargoed_access.config:
+  title: 'Embargoed access'
+  route_name: ghi_embargoed_access.settings
+  description: 'Configure the embargoed access'
+  parent: system.admin_config_ghi

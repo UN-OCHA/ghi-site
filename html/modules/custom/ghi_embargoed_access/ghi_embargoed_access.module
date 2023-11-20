@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for GHI Embargoed Access.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_preprocess_html().
+ */
+function ghi_embargoed_access_preprocess_html(&$vars) {
+  // Add the path-node class to the protected page login page so that it uses
+  // the same page dimensions.
+  if (\Drupal::service('path.current')->getPath() == '/protected-page') {
+    $vars['attributes']['class'][] = 'path-node';
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ghi_embargoed_access_form_protected_pages_enter_password_alter(array &$form, FormStateInterface $form_state) {
+  $form['#attributes']['class'][] = 'content-width';
+  $form['#attached']['library'][] = 'ghi_embargoed_access/protect_pages_login_form';
+}
