@@ -120,6 +120,9 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
       '#parents' => ['tabs'],
       '#attached' => [
         'drupalSettings' => ['widthBreakpoint' => 1024],
+        'library' => [
+          'ghi_menu/mega_menu',
+        ],
       ],
     ];
 
