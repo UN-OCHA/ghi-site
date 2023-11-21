@@ -1,7 +1,7 @@
 services:
   hero_image.manager:
     class: Drupal\ghi_hero_image\HeroImageManager
-    arguments: ['@plugin.manager.endpoint_query_manager', '@smugmug_api.image', '@file_system']
+    arguments: ['@entity_type.manager', '@plugin.manager.endpoint_query_manager', '@smugmug_api.image', '@file_system']
   hero_image_widget_crop.manager:
     class: Drupal\ghi_hero_image\HeroImageWidgetCropManager
     arguments: ['@entity_type.manager', '@config.factory', '@hero_image.manager', '@webp.webp', '@file.mime_type.guesser']
