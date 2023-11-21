@@ -59,21 +59,21 @@
 }
 .gho-story .field--name-field-media .media-caption {
   position: absolute;
-  bottom: 1rem;
   right: 1rem;
-  background-color: var(--cd-white);
-  opacity: 0.9;
-  font-size: var(--cd-font-size--tiny);
-  padding: 0.5rem 1rem;
+  bottom: 1rem;
   max-width: 70%;
+  padding: 0.5rem 1rem;
+  opacity: 0.9;
+  background-color: var(--cd-white);
+  font-size: var(--cd-font-size--tiny);
 }
 .gho-story .field--name-field-media .media-caption * {
   display: inline;
   color: var(--cd-default-text-color);
 }
 .gho-story .field--name-field-media .media-caption .double-field-first {
-  font-weight: bold;
   display: block;
+  font-weight: bold;
 }
 .gho-story .gho-caption {
   margin: 0;
