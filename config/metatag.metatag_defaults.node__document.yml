@@ -1,9 +1,9 @@
-uuid: 69f761fd-da49-45e6-84a8-d5852d46fede
+uuid: 068a4574-17ec-4cd0-941a-e39d4570e07b
 langcode: en
 status: true
 dependencies: {  }
-id: node__article
-label: 'Content: Article'
+id: node__document
+label: 'Content: Document'
 tags:
   article_published_time: '[node:created:html_date]'
   article_tag: '[node:field_tags]'
