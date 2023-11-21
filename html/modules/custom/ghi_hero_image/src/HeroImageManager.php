@@ -3,6 +3,7 @@
 namespace Drupal\ghi_hero_image;
 
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterInterface;
 use Drupal\Core\File\FileSystemInterface;
@@ -15,6 +16,13 @@ use Drupal\smugmug_api\Service\Image;
  * Manager class for hero images.
  */
 class HeroImageManager {
+
+  /**
+   * The entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
 
   /**
    * The attachment query.
@@ -38,9 +46,10 @@ class HeroImageManager {
   protected $fileSystem;
 
   /**
-   * Constructs a section create form.
+   * Constructs a manager class for hero images.
    */
-  public function __construct(EndpointQueryManager $endpoint_query_manager, Image $smugmug_image, FileSystemInterface $file_system) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EndpointQueryManager $endpoint_query_manager, Image $smugmug_image, FileSystemInterface $file_system) {
+    $this->entityTypeManager = $entity_type_manager;
     $this->entitiesQuery = $endpoint_query_manager->createInstance('plan_entities_query');
     $this->smugmugImage = $smugmug_image;
     $this->fileSystem = $file_system;
@@ -188,6 +197,26 @@ class HeroImageManager {
    */
   public function deleteImageFile($uri) {
     $this->fileSystem->delete($uri);
+  }
+
+  /**
+   * Alter tokens for hero images.
+   */
+  public function tokenAlter(&$replacements, $node) {
+    if (!$node->hasField('field_hero_image')) {
+      return;
+    }
+
+    $image_properties = $this->getImageProperties($node->field_hero_image);
+    if (empty($image_properties['file_uri'])) {
+      return;
+    }
+
+    /** @var \Drupal\image\Entity\ImageStyle[] $image_styles */
+    $image_styles = $this->entityTypeManager->getStorage('image_style')->loadMultiple();
+    foreach ($image_styles as $id => $style) {
+      $replacements['[node:field_hero_image:' . $id . ']'] = $style->buildUrl($image_properties['file_uri']);
+    }
   }
 
 }
