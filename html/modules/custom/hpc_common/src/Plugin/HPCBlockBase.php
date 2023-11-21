@@ -8,6 +8,7 @@ use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\hpc_common\Helpers\ContextHelper;
 use Drupal\hpc_common\Helpers\RequestHelper;
+use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
@@ -385,7 +386,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
       $node = is_object($page_parameters['node']) ? $page_parameters['node'] : $entity_storage->load($page_parameters['node']);
       $this->page = $node->bundle() . '_node';
     }
-    elseif (!empty($page_parameters['section_storage'])) {
+    elseif (!empty($page_parameters['section_storage']) && $page_parameters['section_storage'] instanceof OverridesSectionStorage) {
       // Layout builder editing context.
       $entity = $page_parameters['section_storage']->getContextValue('entity');
       if ($entity->bundle() == 'page_variant') {
@@ -397,6 +398,11 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
         // Content entity, e.g. node.
         $this->page = $entity->bundle() . '_' . $entity->getEntityTypeId();
       }
+    }
+    elseif (!empty($page_parameters['entity'])) {
+      // Content entity, e.g. node.
+      $entity = $page_parameters['entity'];
+      $this->page = $entity->bundle() . '_' . $entity->getEntityTypeId();
     }
     else {
       // No page identified.
