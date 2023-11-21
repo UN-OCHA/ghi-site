@@ -39,6 +39,7 @@ module:
   ghi_base_objects: 0
   ghi_blocks: 0
   ghi_content: 0
+  ghi_embargoed_access: 0
   ghi_form_elements: 0
   ghi_gin: 0
   ghi_hero_image: 0
@@ -100,6 +101,7 @@ module:
   path: 0
   path_alias: 0
   phpexcel: 0
+  protected_pages: 0
   publishcontent: 0
   queue_ui: 0
   rabbit_hole: 0

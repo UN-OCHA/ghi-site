@@ -101,6 +101,7 @@
         "drupal/page_manager": "^4.0@beta",
         "drupal/pathauto": "^1.8",
         "drupal/phpexcel": "^4.0",
+        "drupal/protected_pages": "^1.6",
         "drupal/publishcontent": "^1.6",
         "drupal/queue_ui": "^3.1",
         "drupal/rabbit_hole": "^1.0@beta",

@@ -1,0 +1,6 @@
+.path-protected-page .protected_pages_description strong {
+  font-weight: normal;
+}
+.path-protected-page .protected-pages-enter-password .form-item-password {
+  margin-bottom: 2rem;
+}
