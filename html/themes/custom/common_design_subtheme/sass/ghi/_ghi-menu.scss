@@ -196,6 +196,10 @@
               }
             }
 
+            .form-type-vertical-tabs {
+              background: var(--cd-white);
+            }
+
             .vertical-tabs {
               display: flex;
               margin-bottom: 2rem;
@@ -205,6 +209,7 @@
               ul.vertical-tabs__menu {
                 width: fit-content;
                 border: 0;
+                background-color: var(--cd-default-background-color);
 
                 .vertical-tabs__menu-item {
                   white-space: nowrap;
@@ -268,6 +273,8 @@
 
                 & > ul > li {
                   font-weight: bold;
+                  break-inside: avoid-column;
+                  -webkit-column-break-inside: avoid;
 
                   ul li:last-child {
                     padding-bottom: 1rem;
