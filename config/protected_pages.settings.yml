@@ -3,10 +3,9 @@ _core:
 langcode: en
 password:
   per_page_or_global: only_global
-  protected_pages_session_expire_time: '0'
+  protected_pages_session_expire_time: '1440'
   enter_password_once: '1'
   validate_per_section: true
-  protected_pages_global_password: $2y$10$xP0doQlJn.LFMdJO49YJ4uR53yJrRkjKn364MZyzUHlcZN4NeBOUW
 email:
   subject: 'Please visit this new page'
   body: "Dear friend,\r\n\r\nI just created a new page on my website and wanted to invite you to visit. The page is protected by password. Please find the details below:-\r\n\r\nPage Url = [protected-page-url]\r\n\r\nPage Password = password here\r\n\r\nThank you.\r\n[site-name]"

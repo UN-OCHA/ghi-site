@@ -1,0 +1,4 @@
+services:
+  ghi_embargoed_access.manager:
+    class: Drupal\ghi_embargoed_access\EmbargoedAccessManager
+    arguments: ['@entity_type.manager', '@protected_pages.storage', '@password']

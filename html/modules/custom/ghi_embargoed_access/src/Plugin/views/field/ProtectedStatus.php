@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_embargoed_access\Plugin\views\field;
 
+use Drupal\node\NodeInterface;
 use Drupal\views\Plugin\views\field\Boolean;
 use Drupal\views\ResultRow;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -14,18 +15,18 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ProtectedStatus extends Boolean {
 
   /**
-   * The protected pages storage service.
+   * The embargoed access manager service.
    *
-   * @var \Drupal\protected_pages\ProtectedPagesStorage
+   * @var \Drupal\ghi_embargoed_access\EmbargoedAccessManager
    */
-  protected $protectedPagesStorage;
+  protected $embargoedAccessManager;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->protectedPagesStorage = $container->get('protected_pages.storage');
+    $instance->embargoedAccessManager = $container->get('ghi_embargoed_access.manager');
     return $instance;
   }
 
@@ -40,17 +41,11 @@ class ProtectedStatus extends Boolean {
    * {@inheritdoc}
    */
   public function getValue(ResultRow $values, $field = NULL) {
-    $path = '/node/' . $values->_entity->id();
-    $fields = ['pid'];
-    $conditions = [
-      'general' => [],
-    ];
-    $conditions['general'][] = [
-      'field' => 'path',
-      'value' => $path,
-      'operator' => '=',
-    ];
-    $pid = $this->protectedPagesStorage->loadProtectedPage($fields, $conditions, TRUE);
+    $node = $values->_entity ?? NULL;
+    if (!$node instanceof NodeInterface) {
+      return;
+    }
+    $pid = $this->embargoedAccessManager->loadProtectedPageIdForNode($node);
     return !empty($pid);
   }
 
