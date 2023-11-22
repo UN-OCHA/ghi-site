@@ -4,7 +4,6 @@ namespace Drupal\ghi_embargoed_access\Plugin\Action;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Action\ActionBase;
-use Drupal\Core\Cache\Cache;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
@@ -22,18 +21,18 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class UnprotectContent extends ActionBase implements ContainerFactoryPluginInterface {
 
   /**
-   * The protected pages storage service.
+   * The embargoed access manager service.
    *
-   * @var \Drupal\protected_pages\ProtectedPagesStorage
+   * @var \Drupal\ghi_embargoed_access\EmbargoedAccessManager
    */
-  protected $protectedPagesStorage;
+  protected $embargoedAccessManager;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = new static($configuration, $plugin_id, $plugin_definition);
-    $instance->protectedPagesStorage = $container->get('protected_pages.storage');
+    $instance->embargoedAccessManager = $container->get('ghi_embargoed_access.manager');
     return $instance;
   }
 
@@ -44,23 +43,7 @@ class UnprotectContent extends ActionBase implements ContainerFactoryPluginInter
     if (!$node || !$node instanceof NodeInterface) {
       return;
     }
-    $path = '/node/' . $node->id();
-    $fields = ['pid'];
-    $conditions = [
-      'general' => [],
-    ];
-    $conditions['general'][] = [
-      'field' => 'path',
-      'value' => $path,
-      'operator' => '=',
-    ];
-    $pid = $this->protectedPagesStorage->loadProtectedPage($fields, $conditions, TRUE);
-    if (!$pid) {
-      // Already done.
-      return;
-    }
-    $pid = $this->protectedPagesStorage->deleteProtectedPage($pid);
-    Cache::invalidateTags($node->getCacheTags());
+    $this->embargoedAccessManager->unprotectNode($node);
   }
 
   /**

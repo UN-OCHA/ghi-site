@@ -18,7 +18,8 @@ class GhiEmbargoedAccessServiceProvider extends ServiceProviderBase implements S
   public function alter(ContainerBuilder $container) {
     $definition = $container->getDefinition('protected_pages.check_protected_page');
     $definition->setClass('Drupal\ghi_embargoed_access\EventSubscriber\GhiEmbargoedAccessEventSubscriber')
-      ->addArgument(new Reference('config.factory'));
+      ->addArgument(new Reference('config.factory'))
+      ->addArgument(new Reference('ghi_embargoed_access.manager'));
   }
 
 }
