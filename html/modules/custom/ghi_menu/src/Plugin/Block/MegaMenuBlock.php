@@ -96,7 +96,10 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
       $tabs[$plugin_id] = $this->menuTree->build($item->subtree);
       $tabs[$plugin_id]['#title'] = $item->link->getTitle();
       $tabs[$plugin_id]['#group'] = 'tabs';
+      $tabs[$plugin_id]['#weight'] = $item->link->getWeight();
     }
+    // Sort the children.
+    uasort($tabs, ['\Drupal\Component\Utility\SortArray', 'sortByWeightProperty']);
 
     $build = [
       '#type' => 'container',
@@ -117,6 +120,9 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
       '#parents' => ['tabs'],
       '#attached' => [
         'drupalSettings' => ['widthBreakpoint' => 1024],
+        'library' => [
+          'ghi_menu/mega_menu',
+        ],
       ],
     ];
 
