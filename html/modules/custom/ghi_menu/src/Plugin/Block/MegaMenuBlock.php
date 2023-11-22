@@ -107,6 +107,7 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
         'class' => [
           $this->configuration['label_display'] ? Html::getClass('label-visible') : NULL,
           'mega-menu',
+          'mega-menu--' . $this->configuration['menu'],
         ],
       ],
     ];

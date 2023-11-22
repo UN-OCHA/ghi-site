@@ -87,6 +87,7 @@ ul.links--entity-navigation {
         display: flex;
         flex-direction: column;
         padding: 0.5rem 1.5rem;
+        border-bottom: 2px solid var(--ghi-yellow);
         background-color: var(--ghi-primary-background-color);
       }
 
@@ -152,6 +153,7 @@ ul.links--entity-navigation {
                   & > p {
                     display: inline-block;
                     margin-top: 0;
+                    margin-bottom: 0.25rem;
                     font-weight: bold;
                     break-before: auto;
                     break-after: avoid;
@@ -163,7 +165,7 @@ ul.links--entity-navigation {
                     li {
                       display: block;
                       width: 90%;
-                      padding: 0.5rem 0;
+                      padding: 0.25rem 0;
                       break-inside: avoid;
 
                       &:first-child {
@@ -362,6 +364,24 @@ ul.links--entity-navigation {
 
             &:hover {
               background-color: var(--ghi-primary-background-color);
+            }
+          }
+        }
+        &.expandable.megamenu div[data-cd-hidden=false] {
+          left: -0.5rem;
+          width: 100vw !important;
+          max-width: 100vw !important;
+          padding: 0;
+          background-color: var(--cd-white);
+
+          .megamenu-wrapper-outer {
+            width: calc(100vw - 1rem);
+            max-width: calc(100vw - 1rem);
+            margin: 0;
+            padding: 0 0.5rem !important;
+
+            li {
+              background-color: transparent !important;
             }
           }
         }
