@@ -52,28 +52,31 @@
 }
 
 .gho-story .field--name-field-media {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 .gho-story .field--name-field-media .media--view-mode-story {
   position: relative;
 }
-.gho-story .field--name-field-media .media-caption {
-  position: absolute;
-  right: 1rem;
-  bottom: 1rem;
-  max-width: 70%;
-  padding: 0.5rem 1rem;
-  opacity: 0.9;
-  background-color: var(--cd-white);
-  font-size: var(--cd-font-size--tiny);
+.gho-story .media-caption {
+  padding: 1rem 0 0.5rem 0;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #fff;
+  color: #fff;
+  font-size: 0.75rem;
 }
-.gho-story .field--name-field-media .media-caption * {
+@media (min-width: 768px) {
+  .gho-story .media-caption {
+    font-size: 0.875rem;
+  }
+}
+.gho-story .media-caption * {
   display: inline;
-  color: var(--cd-default-text-color);
 }
-.gho-story .field--name-field-media .media-caption .double-field-first {
-  display: block;
+.gho-story .media-caption .double-field-first {
   font-weight: bold;
+}
+.gho-story .media-caption .field--name-field-caption > *::after {
+  content: ".";
 }
 .gho-story .gho-caption {
   margin: 0;
