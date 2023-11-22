@@ -277,11 +277,19 @@ ul.links--entity-navigation {
           padding-left: var(--cd-container-padding);
           background-color: var(--ghi-primary-background-color);
 
+          div[data-cd-hidden=false] {
+            border-bottom: 0;
+          }
+
           @include tablet {
             display: initial;
             width: initial;
             padding-right: initial;
             padding-left: initial;
+
+            div[data-cd-hidden=false] {
+              border-bottom: 2px solid var(--ghi-yellow);
+            }
           }
         }
 
