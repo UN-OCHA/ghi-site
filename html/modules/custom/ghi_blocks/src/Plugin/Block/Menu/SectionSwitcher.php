@@ -96,6 +96,10 @@ class SectionSwitcher extends BlockBase implements ContainerFactoryPluginInterfa
    * {@inheritdoc}
    */
   public function build() {
+    $section = $this->getSectionNode();
+    if ($section instanceof GlobalSection) {
+      return;
+    }
     $sections = $this->buildSectionSwitcherOptions();
     if (!$sections) {
       return [];
@@ -104,7 +108,7 @@ class SectionSwitcher extends BlockBase implements ContainerFactoryPluginInterfa
       '#theme' => 'section_switcher',
       '#title' => $this->t('Other years'),
       '#sections' => $sections,
-      '#current_section' => $this->getSectionNode(),
+      '#current_section' => $section,
     ];
     return $build;
   }
