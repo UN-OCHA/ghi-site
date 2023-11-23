@@ -204,10 +204,8 @@ ul.links--entity-navigation {
           }
         }
 
-        @include tablet {
-          &.megamenu > div[data-cd-hidden=false] {
-            border-bottom: 2px solid var(--ghi-yellow);
-          }
+        &.megamenu > div[data-cd-hidden=false] {
+          border-bottom: 2px solid var(--ghi-yellow);
         }
 
         @include tablet {
