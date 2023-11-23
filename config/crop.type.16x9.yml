@@ -1,0 +1,12 @@
+uuid: 0990d642-014f-438c-8f6a-e13c90907019
+langcode: en
+status: true
+dependencies: {  }
+label: 'In links (16x9)'
+id: 16x9
+description: 'Card size for galleries'
+aspect_ratio: '16:9'
+soft_limit_width: null
+soft_limit_height: null
+hard_limit_width: null
+hard_limit_height: null

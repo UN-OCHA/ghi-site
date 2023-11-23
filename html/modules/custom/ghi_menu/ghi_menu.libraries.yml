@@ -1,0 +1,4 @@
+mega_menu:
+  version: VERSION
+  js:
+    js/mega-menu.js: {}

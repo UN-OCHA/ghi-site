@@ -25,6 +25,7 @@ use Drupal\hpc_api\Traits\SimpleCacheTrait;
  *   endpoint = {
  *     "public" = "public/plan/{plan_id}",
  *     "authenticated" = "plan/{plan_id}",
+ *     "api_key" = "plan/{plan_id}",
  *     "version" = "v2",
  *     "query" = {
  *       "content" = "entities",
@@ -46,6 +47,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    * {@inheritdoc}
    */
   public function getData(array $placeholders = [], array $query_args = []) {
+    $this->endpointQuery->setPlaceholders($placeholders);
     if ($plan_id = $this->getPlaceholder('plan_id')) {
       $query_args['version'] = $this->getPlanVersionArgumentForPlanId($plan_id);
     }
@@ -132,7 +134,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
         foreach ($plan_entities as $plan_entity) {
           $entity_attachments = array_map(function ($attachment) use ($plan_entity) {
             $attachment->objectId = $plan_entity->id();
-            $attachment->objectType = 'planEntity';
+            $attachment->objectType = $plan_entity->getEntityType();
             return $attachment;
           }, $plan_entity->getRawData()->attachments ?? []);
           $attachments = array_merge($attachments, $entity_attachments);

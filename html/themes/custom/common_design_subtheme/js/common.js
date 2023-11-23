@@ -48,6 +48,46 @@
     $table.after($button);
   }
 
+  // Add overflow logic to entity navigation menus.
+  Drupal.CommonDesignSubtheme.EntityNavigation = {};
+  Drupal.CommonDesignSubtheme.EntityNavigation.apply = function($container) {
+    var $primary = $container.find('> ul.links--entity-navigation');
+    var $primary_items = $container.find('> ul.links--entity-navigation > li:not(.overflow-item)');
+    $secondary = $container.find('.overflow-navigation');
+    $secondary_items = $secondary.find('> li');
+    $all_items = $container.find('li');
+    $overflow_item = $primary.find('.overflow-item');
+    $overflow_item.removeClass('active');
+    $toggle = $overflow_item.find('> button');
+    $all_items.each((i, item) => {
+      $(item).removeClass('hidden');
+    });
+
+    let hidden_primary_items = [];
+    let stop_width = 0;
+    const primary_width = $primary.get(0).offsetWidth;
+    $($primary_items.get().reverse()).each((i, item) => {
+      stop_width = $(item).position().left + item.offsetWidth + $toggle.get(0).offsetWidth;
+      if (primary_width < stop_width) {
+        $(item).addClass('hidden');
+        hidden_primary_items.push(i);
+      }
+    });
+    if (!hidden_primary_items.length) {
+      $overflow_item.addClass('hidden');
+    }
+    else {
+      $($secondary_items.get().reverse()).each((i, item) => {
+        if (!hidden_primary_items.includes(i)) {
+          $(item).addClass('hidden');
+        }
+        else if ($(item).hasClass('active')) {
+          $overflow_item.addClass('active');
+        }
+      })
+    }
+  }
+
   Drupal.behaviors.CommonDesignSubtheme = {
     attach: function (context, settings) {
       if ($(context).hasClass('glb-canvas-form')) {
@@ -131,6 +171,13 @@
         });
 
       }
+
+      once('overflow-navigation', $('.block-section-navigation, .block-document-navigation', context)).forEach(element => {
+        Drupal.CommonDesignSubtheme.EntityNavigation.apply($(element));
+        window.addEventListener('resize', function() {
+          Drupal.CommonDesignSubtheme.EntityNavigation.apply($(element));
+        });
+      });
 
       once('soft-limit-table', $('table.soft-limit', context)).forEach(element => {
         let $table = $(element);

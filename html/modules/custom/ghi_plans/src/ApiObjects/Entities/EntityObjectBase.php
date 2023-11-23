@@ -109,4 +109,11 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
     return ucfirst(strtolower(implode(' ', $pieces)));
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getPlanId() {
+    return $this->getRawData()->planId;
+  }
+
 }

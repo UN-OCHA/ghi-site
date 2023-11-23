@@ -25,4 +25,12 @@ interface SectionNodeInterface extends NodeInterface {
    */
   public function getPageTitleMetaData();
 
+  /**
+   * Get the tags associated to the section.
+   *
+   * @return array
+   *   An array of tag names, keyed by the tag id.
+   */
+  public function getTags();
+
 }

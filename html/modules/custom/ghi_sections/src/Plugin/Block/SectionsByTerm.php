@@ -134,7 +134,10 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
     $build = [
       '#type' => 'container',
       '#attributes' => [
-        'class' => [$this->configuration['label_display'] ? Html::getClass('label-visible') : NULL],
+        'class' => [
+          $this->configuration['label_display'] ? Html::getClass('label-visible') : NULL,
+          'mega-menu',
+        ],
       ],
       0 => [
         '#type' => 'html_tag',
@@ -142,7 +145,6 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
         '#attributes' => [
           'role' => 'navigation',
           'aria-labelledby' => $this->getAriaId(),
-          'class' => ['cd-container'],
         ],
         0 => $list_build,
       ],

@@ -1,0 +1,13 @@
+uuid: b6324a7b-f553-44e2-9ed4-382df0ef5cac
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_embargoed_access
+_core:
+  default_config_hash: SVo71HduKFbRs1uPA_qEluJ_mFJSz6vXrQ19ZSObuU8
+id: protect_content
+label: 'Protect Content'
+type: node
+plugin: protect_content
+configuration: {  }

@@ -13,6 +13,9 @@ services:
       - CM_KEY
       - MAPBOX_TOKEN
       - COMPOSER_MEMORY_LIMIT=-1
+      - SOLR_CORE
+      - SOLR_HOST
+      - SOLR_PORT
 
   web:
     environment:
@@ -37,3 +40,14 @@ services:
       - "8444:8442"
     environment:
       - ALLOWED_HOSTNAMES=docksal.site
+
+  # Solr
+  solr:
+    image: arm64v8/solr:8
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: solr
+    volumes:
+      - ${PROJECT_ROOT}/.docksal/etc/solr/solr811:/opt/solr/server/solr/configsets/solr811
+    environment:
+      SOLR_CORE: ${SOLR_CORE:-ghi}

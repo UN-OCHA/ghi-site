@@ -57,4 +57,12 @@ interface EntityObjectInterface extends PlanEntityInterface {
    */
   public function getTags();
 
+  /**
+   * Get the plan id to which the entity belongs.
+   *
+   * @return int
+   *   The plan id.
+   */
+  public function getPlanId();
+
 }

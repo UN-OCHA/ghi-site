@@ -7,3 +7,5 @@ core_version_requirement: ^9 || ^10
 
 dependencies:
   - ghi_sections:ghi_sections
+  - ghi_content:ghi_content
+  - ghi_subpages:ghi_subpages

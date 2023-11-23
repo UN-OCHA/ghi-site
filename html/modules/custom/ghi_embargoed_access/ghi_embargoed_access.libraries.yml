@@ -1,0 +1,5 @@
+protect_pages_login_form:
+  version: VERSION
+  css:
+    component:
+      css/protect_pages_login_form.css: {}

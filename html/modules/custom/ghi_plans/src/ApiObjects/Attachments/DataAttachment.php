@@ -6,6 +6,7 @@ use Drupal\Component\Serialization\Yaml;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
@@ -248,6 +249,11 @@ class DataAttachment extends AttachmentBase {
     }
     elseif (!empty($attachment_data->measurements) && !empty($attachment_data->measurements[0]?->attachment?->planId)) {
       $plan_id = $attachment_data->measurements[0]?->attachment?->planId;
+    }
+    elseif (!empty($attachment_data->objectType) && is_string($attachment_data->objectType) && $attachment_data->objectType == 'governingEntities') {
+      $object_id = $attachment_data->objectId;
+      $entity = BaseObjectHelper::getBaseObjectFromOriginalId($object_id, 'governing_entity');
+      $plan_id = $entity instanceof GoverningEntity ? $entity->getPlan()?->id() : NULL;
     }
     return $plan_id;
   }
@@ -514,6 +520,9 @@ class DataAttachment extends AttachmentBase {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $attachment_query */
     $attachment_query = $this->getEndpointQueryManager()->createInstance('attachment_query');
     $attachment_data = $attachment_query->getAttachmentDataWithDisaggregatedData($this->id);
+    if (!$attachment_data) {
+      return;
+    }
     $this->setRawData($attachment_data);
     $this->updateMap();
   }
@@ -679,11 +688,14 @@ class DataAttachment extends AttachmentBase {
    * This fetches either the metrics from the attachment version, or from a
    * measurement if a published one is already present.
    *
-   * @return object
-   *   A metric object.
+   * @return object|null
+   *   A metric object or NULL.
    */
   protected function getMetrics() {
     $attachment = $this->getRawData();
+    if (!$attachment || !is_object($attachment)) {
+      return NULL;
+    }
     // Get the metrics from the attachment version by default.
     $metrics = $attachment->attachmentVersion->value->metrics;
     // If there are measurements, look at the most recent one and get the

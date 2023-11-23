@@ -1,0 +1,9 @@
+name: GHI Search
+description: Provide logic the search feature.
+package: GHI
+
+type: module
+core_version_requirement: ^9 || ^10
+
+dependencies:
+  - search_api_solr:search_api_solr

@@ -23,6 +23,7 @@ module:
   config_split: 0
   config_translation: 0
   contextual: 0
+  crop: 0
   ctools: 0
   datetime: 0
   datetime_range: 0
@@ -38,6 +39,7 @@ module:
   ghi_base_objects: 0
   ghi_blocks: 0
   ghi_content: 0
+  ghi_embargoed_access: 0
   ghi_form_elements: 0
   ghi_gin: 0
   ghi_hero_image: 0
@@ -45,6 +47,7 @@ module:
   ghi_menu: 0
   ghi_plan_clusters: 0
   ghi_plans: 0
+  ghi_search: 0
   ghi_sections: 0
   ghi_subpages: 0
   ghi_subpages_custom: 0
@@ -60,6 +63,7 @@ module:
   hpc_downloads: 0
   hpc_security: 0
   image: 0
+  image_widget_crop: 0
   imageapi_optimize: 0
   imagecache_external: 0
   imagemagick: 0
@@ -97,12 +101,17 @@ module:
   path: 0
   path_alias: 0
   phpexcel: 0
+  protected_pages: 0
   publishcontent: 0
   queue_ui: 0
   rabbit_hole: 0
   redirect: 0
   responsive_image: 0
   rh_taxonomy: 0
+  search_api: 0
+  search_api_db: 0
+  search_api_solr: 0
+  search_api_solr_admin: 0
   seckit: 0
   settings_tray: 0
   smugmug_api: 0

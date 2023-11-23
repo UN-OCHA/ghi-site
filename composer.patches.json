@@ -23,8 +23,14 @@
     "drupal/google_tag": {
       "Issue #3250315: Error during cache rebuild when assets are stored on NFS": "https://www.drupal.org/files/issues/2022-11-23/3250315-google-tag-nfs-locks-5.patch"
     },
+    "drupal/image_widget_crop": {
+      "Issue #3401986: The containers summary text should not be overwritten": "https://www.drupal.org/files/issues/2023-11-15/3401986-2.patch"
+    },
     "drupal/page_manager": {
       "Issue #3176661: Allow to edit page title when using Layout Builder variant": "https://www.drupal.org/files/issues/2022-11-15/page_manager-lb-title-3176661-15.patch"
+    },
+    "drupal/protected_pages": {
+      "Issue #3024997: Global password is requested multiple times for every protected page": "https://www.drupal.org/files/issues/2023-11-20/3024997-11-reroll-8.patch"
     },
     "drupal/publishcontent": {
       "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions": "https://www.drupal.org/files/issues/2020-07-22/2820867-7-permissions-for-bulk-operations.patch"
@@ -42,12 +48,10 @@
       "Issue #3285444: Add support for image search": "https://www.drupal.org/files/issues/2022-06-13/3285444-2.patch",
       "Issue #3396521: Fix PHP 8.2 deprecations": "https://www.drupal.org/files/issues/2023-10-25/3396521-2.patch"
     },
-    "drupal/warmer": {
-      "Issue #3368778: Drush 12 compatibility": "https://git.drupalcode.org/project/warmer/-/merge_requests/13.patch"
-    },
     "drupal/webp": {
       "Issue #3325808: Webp Image not generated for styles using original image.": "https://www.drupal.org/files/issues/2022-12-19/webp-3325808-2.patch",
-      "Issue #3328040: Review webp filename logic": "https://www.drupal.org/files/issues/2023-05-11/3328040-webp-filename-logic-example-5.patch"
+      "Issue #3281606: Rendering duplicate images when the original images have the same name but different extension": "https://git.drupalcode.org/project/webp/-/merge_requests/30.patch",
+      "Issue #3153137: Using Image Widget Crop in responsive images does not refresh webp image": "./patches/3153137-custom-fix-3281606.patch"
     }
   }
 }

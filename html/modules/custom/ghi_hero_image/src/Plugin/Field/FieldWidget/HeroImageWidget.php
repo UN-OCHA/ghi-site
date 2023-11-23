@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_hero_image\Plugin\Field\FieldWidget;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
@@ -32,6 +33,13 @@ class HeroImageWidget extends WidgetBase {
   public $smugmugUser;
 
   /**
+   * A wrapper id for ajax replace actions.
+   *
+   * @var string
+   */
+  protected $ajaxWrapperId;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -49,7 +57,6 @@ class HeroImageWidget extends WidgetBase {
       'settings' => [
         'hpc_webcontent_file_attachment' => NULL,
         'smugmug_api' => NULL,
-        'crop_image' => TRUE,
       ],
     ] + parent::defaultSettings();
   }
@@ -61,6 +68,12 @@ class HeroImageWidget extends WidgetBase {
 
     $form_object = $form_state->getFormObject();
     $entity = $form_object instanceof EntityFormInterface ? $form_object->getEntity() : NULL;
+    $this->ajaxWrapperId = Html::getUniqueId($form_state->getFormObject()->getFormId() . '-ajax-wrapper');
+
+    // Add a wrapper for ajax actions.
+    $element['#prefix'] = '<div id="' . $this->ajaxWrapperId . '">';
+    $element['#suffix'] = '</div>';
+    $element['add_more']['#ajax']['wrapper'] = $this->ajaxWrapperId;
 
     // See if we have a plan context.
     $plan_object = NULL;
@@ -90,6 +103,10 @@ class HeroImageWidget extends WidgetBase {
       '#title' => $element['#title'],
       '#options' => $source_options,
       '#default_value' => $items[$delta]->source ?? array_key_first($source_options),
+      '#ajax' => [
+        'event' => 'change',
+        'wrapper' => $this->ajaxWrapperId,
+      ],
     ];
 
     $element['settings'] = [
@@ -122,12 +139,6 @@ class HeroImageWidget extends WidgetBase {
         ],
       ],
       '#smugmug_user_scope' => $smugmug_ocha,
-    ];
-
-    $element['settings']['crop_image'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Crop image'),
-      '#default_value' => $items[$delta]->settings['crop_image'] ?? TRUE,
     ];
 
     return $element;

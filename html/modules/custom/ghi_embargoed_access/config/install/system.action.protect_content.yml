@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: protect_content
+label: 'Protect Content'
+type: node
+plugin: protect_content
+configuration: {  }

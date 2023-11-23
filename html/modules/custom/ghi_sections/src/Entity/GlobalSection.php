@@ -27,6 +27,18 @@ class GlobalSection extends Node implements SectionNodeInterface, ImageNodeInter
   /**
    * {@inheritdoc}
    */
+  public function getTags() {
+    $tags = [];
+    $entities = $this->get('field_tags')->referencedEntities() ?? [];
+    foreach ($entities as $tag) {
+      $tags[$tag->id()] = $tag->label();
+    }
+    return $tags;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getImage() {
     if (!$this->hasField('field_hero_image')) {
       return NULL;

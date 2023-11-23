@@ -3,11 +3,11 @@ langcode: en
 status: true
 dependencies:
   config:
-    - image.style.16x9_1200
-    - image.style.16x9_1400
-    - image.style.16x9_240
-    - image.style.16x9_480
-    - image.style.16x9_720
+    - image.style.14x5_1200
+    - image.style.14x5_1400
+    - image.style.14x5_240
+    - image.style.14x5_480
+    - image.style.14x5_720
   theme:
     - common_design
 id: hero
@@ -15,28 +15,28 @@ label: Hero
 image_style_mappings:
   -
     image_mapping_type: image_style
-    image_mapping: 16x9_1400
+    image_mapping: 14x5_1400
     breakpoint_id: common_design.xxl
     multiplier: 1x
   -
     image_mapping_type: image_style
-    image_mapping: 16x9_1200
+    image_mapping: 14x5_1200
     breakpoint_id: common_design.xl
     multiplier: 1x
   -
     image_mapping_type: image_style
-    image_mapping: 16x9_720
+    image_mapping: 14x5_720
     breakpoint_id: common_design.md
     multiplier: 1x
   -
     image_mapping_type: image_style
-    image_mapping: 16x9_480
+    image_mapping: 14x5_480
     breakpoint_id: common_design.sm
     multiplier: 1x
   -
     image_mapping_type: image_style
-    image_mapping: 16x9_480
+    image_mapping: 14x5_480
     breakpoint_id: common_design.xs
     multiplier: 2x
 breakpoint_group: common_design
-fallback_image_style: 16x9_240
+fallback_image_style: 14x5_240

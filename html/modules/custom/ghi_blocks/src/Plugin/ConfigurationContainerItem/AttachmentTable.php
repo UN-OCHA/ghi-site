@@ -38,11 +38,19 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   protected $configurationContainerItemManager;
 
   /**
+   * The UUID service.
+   *
+   * @var \Drupal\Component\Uuid\UuidInterface
+   */
+  protected $uuidService;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->configurationContainerItemManager = $container->get('plugin.manager.configuration_container_item_manager');
+    $instance->uuidService = $container->get('uuid');
     return $instance;
   }
 
@@ -354,14 +362,11 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
     if (empty($entities)) {
       return NULL;
     }
-    $entity_ids = array_map(function (PlanEntityInterface $entity) {
-      return $entity->id();
-    }, $entities);
 
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
     $query = $this->endpointQueryManager->createInstance('attachment_search_query');
-    $attachments = $query->getAttachmentsByObject('planEntity', $entity_ids);
-    $attachments = array_merge($attachments, $query->getAttachmentsByObject('governingEntity', $entity_ids));
+    $attachments = $query->getAttachmentsForEntities($entities);
+
     // Filter the attachments.
     return $this->filterAttachments($attachments, $prototype_id);
   }
@@ -472,7 +477,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    *   The plugin id.
    */
   public function getUuid() {
-    return $this->getPluginId();
+    return $this->uuidService->generate();
   }
 
 }

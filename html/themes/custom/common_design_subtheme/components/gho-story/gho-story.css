@@ -52,7 +52,31 @@
 }
 
 .gho-story .field--name-field-media {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
+}
+.gho-story .field--name-field-media .media--view-mode-story {
+  position: relative;
+}
+.gho-story .media-caption {
+  padding: 1rem 0 0.5rem 0;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #fff;
+  color: #fff;
+  font-size: 0.75rem;
+}
+@media (min-width: 768px) {
+  .gho-story .media-caption {
+    font-size: 0.875rem;
+  }
+}
+.gho-story .media-caption * {
+  display: inline;
+}
+.gho-story .media-caption .double-field-first {
+  font-weight: bold;
+}
+.gho-story .media-caption .field--name-field-caption > *::after {
+  content: ".";
 }
 .gho-story .gho-caption {
   margin: 0;

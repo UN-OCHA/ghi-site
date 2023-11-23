@@ -3,8 +3,15 @@ CONTENTS OF THIS FILE
 ---------------------
 
  * Setup
+ * Database setup
+ * Search using solr
+ * Composer
+ * Drush
+ * Code quality
+ * Theme setup
  * Configuration and features
  * Testing
+ * References
  * Troubleshooting
 
 SETUP
@@ -41,6 +48,23 @@ A database has been created automatically as part of the stack setup above.
 
 Pull a database dump from [here](https://snapshots.aws.ahconu.org/ghi) to get a
 fresh copy and seed your local database.
+
+
+SEARCH USING SOLR
+-----------------
+
+The integrated search feature is based on solr. The local docksal stack comes
+with a solr instance that is already setup in Drupal. On the first setup of the
+site (or when troubleshooting later), you need to create the solr core using
+this command.
+
+    fin solr create-core
+
+Once that's done, go to the [Search Api configuration backend page](http://ghi-site.docksal.site/admin/config/search/search-api) and confirm that
+the search server and the index are there and enabled. You can then start
+indexing content using this command:
+
+    fin solr index
 
 
 COMPOSER

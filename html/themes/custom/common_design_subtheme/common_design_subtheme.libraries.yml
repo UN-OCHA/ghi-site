@@ -11,6 +11,7 @@ global-styling:
     - ghi_blocks/block.settings
     - common_design_subtheme/sorttable
     - common_design_subtheme/select2
+    - common_design/cd-dropdown
     # This is not technically a dependency, but on pages that have no visible
     # element using cd-tables, but at least one hidden, not having this already
     # loaded breaks the frontend customization feature. The reason seems to be,
