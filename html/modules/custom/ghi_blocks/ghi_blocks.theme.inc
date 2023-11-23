@@ -247,6 +247,9 @@ function ghi_blocks_preprocess_section_switcher(&$variables) {
     }
   }
   foreach ($sections as $key => $section) {
+    if (empty($labels[$key])) {
+      continue;
+    }
     $label = $labels[$key];
     if (count(array_keys($labels, $label)) > 1 && !empty($label_additions[$key])) {
       // We need to add an additional element to distinguish non-unique labels.
