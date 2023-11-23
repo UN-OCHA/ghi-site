@@ -48,6 +48,7 @@ class PlanOverviewQuery extends EndpointQueryBase {
    * {@inheritdoc}
    */
   public function getData(array $placeholders = [], array $query_args = []) {
+    $this->endpointQuery->setPlaceholders($placeholders);
     $year = $this->getPlaceholder('year');
     if (!$year) {
       return;

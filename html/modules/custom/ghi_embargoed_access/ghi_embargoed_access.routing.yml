@@ -1,0 +1,9 @@
+ghi_embargoed_access.settings:
+  path: 'admin/config/ghi/embargoed-access'
+  defaults:
+    _title: 'Embargoed access'
+    _form: '\Drupal\ghi_embargoed_access\Form\GhiEmbargoedAccessSettingForm'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer ghi embargoed access config'

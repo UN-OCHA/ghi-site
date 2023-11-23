@@ -1,0 +1,99 @@
+uuid: 08c38671-e2e8-458a-bc42-d57931eb2685
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.search_result
+    - field.field.node.progress.field_entity_reference
+    - field.field.node.progress.field_hero_image
+    - field.field.node.progress.field_team
+    - field.field.node.progress.layout_builder__layout
+    - node.type.progress
+    - responsive_image.styles.card_hero
+  module:
+    - ghi_hero_image
+    - layout_builder
+    - layout_builder_ipe
+    - layout_builder_restrictions
+    - user
+third_party_settings:
+  layout_builder_ipe:
+    enabled: false
+  layout_builder:
+    enabled: false
+    allow_custom: false
+  layout_builder_restrictions:
+    allowed_block_categories:
+      - 'Chaos Tools'
+      - 'Content fields'
+      - 'Country elements'
+      - 'Custom block types'
+      - Forms
+      - 'Generic elements'
+      - Global
+      - HID
+      - 'Inline blocks'
+      - 'Lists (Views)'
+      - Menus
+      - 'Narrative Content'
+      - Page
+      - 'Plan cluster elements'
+      - 'Plan elements'
+      - Sections
+      - 'Social Auth'
+      - System
+      - User
+      - Views
+      - core
+    entity_view_mode_restriction:
+      allowed_layouts: {  }
+      denylisted_blocks: {  }
+      allowlisted_blocks:
+        'Inline blocks':
+          - 'inline_block:basic'
+      restricted_categories:
+        - 'Chaos Tools'
+        - 'Content fields'
+        - 'Custom block types'
+        - Forms
+        - Global
+        - HID
+        - 'Lists (Views)'
+        - Menus
+        - Page
+        - 'Plan cluster elements'
+        - 'Social Auth'
+        - System
+        - User
+        - Views
+        - core
+id: node.progress.search_result
+targetEntityType: node
+bundle: progress
+mode: search_result
+content:
+  field_entity_reference:
+    type: entity_reference_label
+    label: visually_hidden
+    settings:
+      link: false
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_hero_image:
+    type: ghi_hero_image
+    label: hidden
+    settings:
+      responsive_image_style: card_hero
+      image_link: content
+      include_credits: false
+      crop_image: true
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  field_team: true
+  langcode: true
+  layout_builder__layout: true
+  links: true
+  search_api_excerpt: true

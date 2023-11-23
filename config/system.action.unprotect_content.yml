@@ -1,0 +1,13 @@
+uuid: d64129aa-a465-4438-92c7-0f5970603b69
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_embargoed_access
+_core:
+  default_config_hash: 03CbUBTrNYTt7-XQZn1cwc4fMixXExZVVwVPjs5TQOM
+id: unprotect_content
+label: 'Unprotect Content'
+type: node
+plugin: unprotect_content
+configuration: {  }

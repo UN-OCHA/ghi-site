@@ -25,13 +25,6 @@ class Document extends ContentBase {
   }
 
   /**
-   * Get the short title for a document.
-   */
-  public function getShortTitle() {
-    return $this->get('field_short_title')->value ?? NULL;
-  }
-
-  /**
    * Check if the given article is part of this document.
    */
   public function hasArticle(Article $article) {
@@ -101,7 +94,7 @@ class Document extends ContentBase {
   /**
    * {@inheritdoc}
    */
-  public function getPageMetaData() {
+  public function getPageMetaData($include_social = TRUE) {
     $metadata = [];
     $metadata[] = [
       '#markup' => new TranslatableMarkup('Published on @date', [
@@ -116,7 +109,7 @@ class Document extends ContentBase {
         ]),
       ];
     }
-    if ($this->isPublished()) {
+    if ($this->isPublished() && $include_social) {
       $metadata[] = [
         '#theme' => 'social_links',
       ];

@@ -101,12 +101,7 @@ class SectionMenuItem implements SectionMenuItemInterface {
   }
 
   /**
-   * Sets the plugin configuration.
-   *
-   * @param mixed[] $configuration
-   *   The plugin configuration.
-   *
-   * @return $this
+   * {@inheritdoc}
    */
   public function setConfiguration(array $configuration) {
     $this->configuration = $configuration;

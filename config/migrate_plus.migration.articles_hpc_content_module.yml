@@ -25,6 +25,10 @@ source:
       label: Title
       selector: title
     -
+      name: title_short
+      label: 'Title (short)'
+      selector: title_short
+    -
       name: chapter
       label: Chapter
       selector: section
@@ -52,9 +56,7 @@ process:
     plugin: default_value
     default_value: article
   title: title
-  status:
-    plugin: default_value
-    default_value: 1
+  status: autoVisible
   created:
     plugin: callback
     callable: strtotime
@@ -67,6 +69,10 @@ process:
     plugin: default_value
     default_value: hpc_content_module
   field_remote_article/article_id: id
+  field_short_title/value: title_short
+  field_short_title/format:
+    plugin: default_value
+    default_value: html_text
   field_chapter: section
   field_summary/value: summary
   field_summary/format:
@@ -87,6 +93,7 @@ destination:
   plugin: 'entity:node'
   overwrite_properties:
     - title
+    - field_short_title
     - field_chapter
     - field_summary
     - field_tags

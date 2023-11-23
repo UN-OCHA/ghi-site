@@ -1,0 +1,12 @@
+uuid: 14c68939-0df4-4319-b4c6-14c3d62e9763
+langcode: en
+status: true
+dependencies: {  }
+label: 'On page (14x5)'
+id: 14x5
+description: 'Letterbox size for hero images'
+aspect_ratio: '14:5'
+soft_limit_width: null
+soft_limit_height: null
+hard_limit_width: null
+hard_limit_height: null

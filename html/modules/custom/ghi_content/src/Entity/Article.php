@@ -71,7 +71,7 @@ class Article extends ContentBase {
   /**
    * {@inheritdoc}
    */
-  public function getPageMetaData() {
+  public function getPageMetaData($include_social = TRUE) {
     $metadata = [];
     $metadata[] = [
       '#markup' => new TranslatableMarkup('Published on @date', [
@@ -86,7 +86,7 @@ class Article extends ContentBase {
         ]),
       ];
     }
-    if ($this->isPublished()) {
+    if ($this->isPublished() && $include_social) {
       $metadata[] = [
         '#theme' => 'social_links',
       ];

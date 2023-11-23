@@ -93,16 +93,20 @@ trait ContentPathTrait {
   protected function getSectionNodeFromPath($path) {
     $document_path_pos = strpos($path, '/document/');
     $article_path_pos = strpos($path, '/article/');
-    if ($document_path_pos === FALSE && $article_path_pos == FALSE) {
-      return NULL;
-    }
+    $section_url = NULL;
     if ($document_path_pos !== FALSE) {
       $section_url = substr($path, 0, $document_path_pos);
     }
     elseif ($article_path_pos !== FALSE) {
       $section_url = substr($path, 0, $article_path_pos);
     }
-    $section = $this->getNodeByUrlAlias($section_url);
+    elseif (count(explode('/', ltrim($path, '/'))) > 2) {
+      // Also support custom subpages and cluster pages, assuming that section
+      // urls are always using this pattern /OBJECT_TYPE/ID, e.g. /plan/1234.
+      $url_parts = explode('/', ltrim($path, '/'));
+      $section_url = '/' . implode('/', array_slice($url_parts, 0, 2));
+    }
+    $section = $section_url ? $this->getNodeByUrlAlias($section_url) : NULL;
     return $section instanceof SectionNodeInterface ? $section : NULL;
   }
 

@@ -4,6 +4,8 @@ namespace Drupal\ghi_base_objects\Form;
 
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
+use Drupal\Core\Render\Element;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -36,6 +38,23 @@ class BaseObjectForm extends ContentEntityForm {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form['#entity'] = $this->entity;
     $form = parent::buildForm($form, $form_state);
+
+    // Disable all form elements except the listed ones.
+    $allow_editing = [
+      'form_id',
+      'form_build_id',
+      'form_token',
+      'field_content',
+      'status',
+    ];
+    foreach (Element::children($form) as $element_key) {
+      if (in_array($element_key, $allow_editing)) {
+        continue;
+      }
+      $form[$element_key]['#disabled'] = 'disabled';
+    }
+
+    $this->messenger()->addWarning($this->t('Most of the data in this form is imported automatically from the HPC API and cannot be changed here.'));
     return $form;
   }
 
@@ -45,6 +64,9 @@ class BaseObjectForm extends ContentEntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     $entity = $this->entity;
     $status = parent::save($form, $form_state);
+
+    // Delete warnings first.
+    $this->messenger()->deleteByType(Messenger::TYPE_WARNING);
 
     switch ($status) {
       case SAVED_NEW:

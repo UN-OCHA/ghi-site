@@ -8,6 +8,14 @@ namespace Drupal\ghi_content\RemoteContent;
 interface RemoteArticleInterface extends RemoteContentInterface {
 
   /**
+   * Get the short title for the document.
+   *
+   * @return string
+   *   The short title.
+   */
+  public function getShortTitle();
+
+  /**
    * Get the section of the article.
    *
    * @return string

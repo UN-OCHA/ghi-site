@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+## Open a link in a browser.
+##
+## Usage: fin utils/open-link [-h] URL
+##
+
+usage="$(basename "$0") [-h]
+
+where:
+    -h  show this help text"
+
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  xdg-open "$@"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+  open "$@"
+else
+  echo "Unsupported operating system ${OSTYPE}"
+fi

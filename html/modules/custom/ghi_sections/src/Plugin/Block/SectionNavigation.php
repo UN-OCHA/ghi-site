@@ -144,11 +144,6 @@ class SectionNavigation extends BlockBase implements ContainerFactoryPluginInter
     $output['entity_navigation'] = [
       '#theme' => 'item_list',
       '#items' => $tabs,
-      '#attributes' => [
-        'class' => [
-          'links--entity-navigation',
-        ],
-      ],
       '#cache' => [
         'tags' => $cache_tags,
       ],
@@ -156,6 +151,7 @@ class SectionNavigation extends BlockBase implements ContainerFactoryPluginInter
       // This is important to make the template suggestions logic work in
       // common_design_subtheme.theme.
       '#context' => [
+        'plugin_type' => 'entity_navigation',
         'plugin_id' => $this->getPluginId(),
       ],
     ];

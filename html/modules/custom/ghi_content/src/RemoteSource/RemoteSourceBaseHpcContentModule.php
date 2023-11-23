@@ -82,6 +82,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     $fields = [
       'id',
       'title',
+      'title_short',
       'section',
       'summary',
       'tags',
@@ -208,7 +209,8 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   public function query($payload) {
     $body = '{"query": "query ' . str_replace("\n", " ", addslashes(trim($payload))) . '"}';
     $headers = [
-      'Content-type: application/json',
+      'Content-type' => 'application/json',
+      'Apollo-Require-Preflight' => 'true',
     ];
     if ($basic_auth = $this->getRemoteBasicAuth()) {
       $headers['Authorization'] = 'Basic ' . base64_encode($basic_auth['user'] . ':' . $basic_auth['pass']);
@@ -476,10 +478,13 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
         items {
           id
           title
+          title_short
           section
           summary
           created
           updated
+          tags
+          autoVisible
         }
       }
     }';
@@ -508,6 +513,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
           created
           updated
           tags
+          autoVisible
         }
       }
     }';

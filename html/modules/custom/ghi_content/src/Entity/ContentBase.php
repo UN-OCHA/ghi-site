@@ -120,12 +120,33 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function toLink($text = NULL, $rel = 'canonical', array $options = []) {
+    if (!isset($text)) {
+      // Use the short title as default.
+      $text = $this->getShortTitle() ?? NULL;
+    }
+    return parent::toLink($text, $rel, $options);
+  }
+
+  /**
+   * Get the short title for a document.
+   */
+  public function getShortTitle() {
+    return $this->get('field_short_title')->value ?? NULL;
+  }
+
+  /**
    * Get the meta data for this article.
+   *
+   * @param bool $include_social
+   *   Whether to include social icons in the metadata.
    *
    * @return array
    *   An array of metadata items.
    */
-  abstract public function getPageMetaData();
+  abstract public function getPageMetaData($include_social = TRUE);
 
   /**
    * Get the tags for this content.
@@ -278,20 +299,6 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     }
     $display_hero_image = $this->get('field_display_hero_image')->value;
     return $display_hero_image == 1 || $display_hero_image === NULL;
-  }
-
-  /**
-   * Check if the current node can and should crop the hero image.
-   *
-   * @return bool
-   *   TRUE if a hero image, if available, should be cropped, FALSE otherwise.
-   */
-  public function shouldCropHeroImage() {
-    if (!$this->hasField('field_crop_hero_image')) {
-      return FALSE;
-    }
-    $crop_hero_image = $this->get('field_crop_hero_image')->value;
-    return $crop_hero_image == 1 || $crop_hero_image === NULL;
   }
 
   /**

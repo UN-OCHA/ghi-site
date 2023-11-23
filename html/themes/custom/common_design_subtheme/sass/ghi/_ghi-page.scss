@@ -1,6 +1,7 @@
 .region-page-title,
 .region-page-subtitle,
 .region-page-navigation {
+  max-width: 100vw;
 
   .toolbar-fixed & a[name="page-title"] {
     // Keep the page title in place when using named anchors in links and the

@@ -140,6 +140,13 @@
     }
   }
 
+  @include tablet {
+    & > .cd-nav {
+      padding-right: 0;
+      padding-left: 0;
+    }
+  }
+
   @include desktop {
     .cd-nav > .menu {
       > .menu-item {
@@ -168,7 +175,8 @@
 
           &:hover,
           &.is-active,
-          &:focus {
+          &:focus,
+          &[aria-expanded="true"] {
             background: var(--ghi-primary-background-color);
 
             &::before {

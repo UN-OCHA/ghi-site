@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\Helpers;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\ghi_plans\ApiObjects\PlanPrototype;
+use Drupal\ghi_plans\Traits\PlanVersionArgument;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
 
 /**
@@ -12,6 +13,8 @@ use Drupal\hpc_api\Helpers\ApiEntityHelper;
  * @phpcs:disable DrupalPractice.FunctionCalls.InsecureUnserialize
  */
 class PlanStructureHelper {
+
+  use PlanVersionArgument;
 
   /**
    * Retrieve the plan entity structure based on the given plan data.
@@ -26,6 +29,7 @@ class PlanStructureHelper {
 
     $plan_entities = PlanEntityHelper::getPlanEntityObjects($plan_data);
     $governing_entities = PlanEntityHelper::getGoverningEntityObjects($plan_data);
+    $version_argument = self::getPlanVersionArgumentForPlanId($plan_data->id);
 
     $remove_ids = [];
     $ple_structure = [];
@@ -42,7 +46,7 @@ class PlanStructureHelper {
           // there.
           $parent_id = $plan_entity->root_parent_id;
           if (!array_key_exists($parent_id, $plan_entities)) {
-            $plan_entities[$parent_id] = PlanEntityHelper::getPlanEntity($parent_id);
+            $plan_entities[$parent_id] = PlanEntityHelper::getPlanEntity($parent_id, $version_argument);
           }
           $plan_entities[$parent_id]->addChild($plan_entity);
           $remove_ids[] = $entity_id;
@@ -51,7 +55,7 @@ class PlanStructureHelper {
           // If not, put the PLEs according to their structure.
           foreach ($plan_entity->support[0]->planEntityIds as $ple_id) {
             if (!array_key_exists($ple_id, $plan_entities)) {
-              $plan_entities[$ple_id] = PlanEntityHelper::getPlanEntity($ple_id);
+              $plan_entities[$ple_id] = PlanEntityHelper::getPlanEntity($ple_id, $version_argument);
             }
             if ($plan_entities[$ple_id]->entity_type == 'PE') {
               $ple_structure[$plan_entity->id] = $plan_entity;

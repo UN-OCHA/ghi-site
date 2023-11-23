@@ -1,0 +1,10 @@
+name: GHI Embargoed Access
+description: Provides support for embargoed access to specific pages.
+package: GHI
+
+type: module
+core_version_requirement: ^9 || ^10
+
+dependencies:
+  - protected_pages:protected_pages
+  - ghi_content:ghi_content

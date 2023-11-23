@@ -2,14 +2,13 @@
 
 namespace Drupal\ghi_hero_image\Plugin\Field\FieldFormatter;
 
-use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\Core\Url;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\responsive_image\Plugin\Field\FieldFormatter\ResponsiveImageFormatter;
@@ -20,33 +19,25 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @FieldFormatter(
  *   id = "ghi_hero_image",
- *   label = @Translation("Default"),
+ *   label = @Translation("Hero image"),
  *   field_types = {"ghi_hero_image"}
  * )
  */
 class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFactoryPluginInterface {
 
   /**
-   * The attachment query.
+   * The hero image manager class.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
+   * @var \Drupal\ghi_hero_image\HeroImageManager
    */
-  public $entitiesQuery;
-
-  /**
-   * The SmugMug image service.
-   *
-   * @var \Drupal\smugmug_api\Service\Image
-   */
-  public $smugmugImage;
+  public $heroImageManager;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->entitiesQuery = $container->get('plugin.manager.endpoint_query_manager')->createInstance('plan_entities_query');
-    $instance->smugmugImage = $container->get('smugmug_api.image');
+    $instance->heroImageManager = $container->get('hero_image.manager');
     return $instance;
   }
 
@@ -56,7 +47,6 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
   public static function defaultSettings() {
     return [
       'include_credits' => FALSE,
-      'crop_image' => TRUE,
     ] + parent::defaultSettings();
   }
 
@@ -100,6 +90,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
 
     $entity = $items->getEntity();
     $url = NULL;
+    $link_file = FALSE;
     // Check if the formatter involves a link.
     if ($this->getSetting('image_link') == 'content') {
       if (!$entity->isNew()) {
@@ -110,56 +101,31 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
       $link_file = TRUE;
     }
 
-    $image_url = NULL;
-    $credit = NULL;
-    $caption = NULL;
-
+    $entity = $items->getEntity();
     $item = !$items->isEmpty() ? (object) $items->get(0)->getValue() ?? NULL : NULL;
     $item_source = $item ? $item->source : NULL;
-
-    if (!$item_source && $attachments = $this->getPlanWebContentAttachments($items)) {
-      $item_source = 'hpc_webcontent_file_attachment';
+    if (!$item_source) {
+      $item_source = $this->heroImageManager->getDefaultItemSource($items);
     }
 
-    $item_settings = $item && property_exists($item, 'settings') && is_array($item->settings) ? ($item->settings[$item_source] ?? []) : [];
-    switch ($item_source) {
-      case 'hpc_webcontent_file_attachment':
-        // Find the right attachment based on the configuration, or fallback to
-        // the first available attachment.
-        $attachments = $this->getPlanWebContentAttachments($items);
-        $attachment_id = $item_settings['attachment_id'] ?? array_key_first($attachments);
-        if ($attachment_id && !empty($attachments[$attachment_id])) {
-          /** @var \Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment $attachment */
-          $attachment = $attachments[$attachment_id];
-          $image_url = $attachment->getUrl();
-          $credit = $attachment->getCredit();
-        }
-        break;
-
-      case 'smugmug_api':
-        $image_id = $item_settings['image_id'] ?? NULL;
-        $image_urls = $image_id ? $this->smugmugImage->getImageSizes($image_id) : NULL;
-        $image_url = $image_urls['X3LargeImageUrl'] ?? ($image_urls['LargestImageUrl'] ?? NULL);
-        $image = $image_id ? $this->smugmugImage->getImage($image_id) : NULL;
-        if ($image) {
-          $caption_format_parents = ['FormattedValues', 'Caption', 'html'];
-          $caption = NestedArray::getValue($image, $caption_format_parents) ?? ($image['Caption'] ?? NULL);
-        }
-        break;
-
-      case 'inherit':
-        $build_settings = [
-          'label' => 'hidden',
-          'settings' => $this->getSettings(),
-        ];
-        if ($entity instanceof SubpageNodeInterface && $parent_image = $entity->getParentNode()?->getImage()) {
-          return $parent_image->view($build_settings);
-        }
-        elseif ($parent_image = $this->getParentImage($entity)) {
-          return $parent_image->view($build_settings);
-        }
-        break;
+    if ($item_source == 'inherit') {
+      $build_settings = [
+        'label' => 'hidden',
+        'settings' => $this->getSettings(),
+      ];
+      if ($entity instanceof SubpageNodeInterface && $parent_image = $entity->getParentNode()?->getImage()) {
+        return $parent_image->view($build_settings);
+      }
+      elseif ($parent_image = $this->getParentImage($entity)) {
+        return $parent_image->view($build_settings);
+      }
+      return;
     }
+
+    $image_properties = $this->heroImageManager->getImageProperties($items, $this);
+    $image_url = $image_properties['image_url'] ?? NULL;
+    $caption = $image_properties['caption'] ?? NULL;
+    $credit = $image_properties['credit'] ?? NULL;
 
     if ($image_url) {
       $image_build = [
@@ -170,8 +136,8 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
         '#credit' => $include_credits ? $credit : NULL,
       ];
 
-      if (isset($link_file)) {
-        $url = $image_url;
+      if ($link_file) {
+        $url = Url::fromUri($image_url);
       }
 
       if ($url) {
@@ -184,26 +150,6 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
     }
 
     return $element;
-  }
-
-  /**
-   * Get the webcontent file attachments of a plan if possible.
-   *
-   * @param \Drupal\Core\Field\FieldItemListInterface $items
-   *   The field values to be rendered.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment[]
-   *   An array of attachment objects.
-   */
-  private function getPlanWebContentAttachments(FieldItemListInterface $items) {
-    $entity = $items->getEntity();
-    $base_object = BaseObjectHelper::getBaseObjectFromNode($entity, 'plan');
-    $plan_object = $base_object && $base_object->bundle() == 'plan' ? $base_object : NULL;
-    if (!$plan_object) {
-      return [];
-    }
-    $this->entitiesQuery->setPlaceholder('plan_id', $plan_object->field_original_id->value);
-    return $this->entitiesQuery->getWebContentFileAttachments();
   }
 
   /**

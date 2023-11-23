@@ -7,11 +7,13 @@
 
 use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\ghi_content\Controller\MigrationBatchController;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentBase;
@@ -20,7 +22,6 @@ use Drupal\ghi_content\RemoteContent\RemoteContentImageInterface;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\hpc_common\Helpers\RequestHelper;
-use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
 
@@ -229,24 +230,6 @@ function ghi_content_current_section_alter(&$section, $node) {
 }
 
 /**
- * Implements hook_ENTITY_TYPE_presave() for node entities.
- */
-function ghi_content_node_presave(NodeInterface $node) {
-  if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
-    // We only process nodes that use layout builder.
-    return;
-  }
-
-  /** @var \Drupal\ghi_content\ContentManager\ManagerFactory $manager_factory */
-  $manager_factory = \Drupal::getContainer()->get('ghi_content.manager.factory');
-  $content_manager = $manager_factory->getContentManager($node);
-  if ($content_manager) {
-    $content_manager->updateNodeFromRemote($node);
-  }
-
-}
-
-/**
  * Implements hook_ENTITY_TYPE_predelete() for node entities.
  */
 function ghi_content_node_predelete(NodeInterface $node) {
@@ -303,12 +286,7 @@ function ghi_content_preprocess_page(&$variables) {
     return;
   }
 
-  $crop_image = TRUE;
-  if ($image_node instanceof ContentBase) {
-    $crop_image = $image_node->shouldCropHeroImage();
-  }
-
-  $image_style_name = $crop_image ? 'hero' : 'hero_not_cropped';
+  $image_style_name = 'hero';
 
   // Go through some trouble to show a responsive image here.
   $repsonsive_image_style_id = $image_style_name;
@@ -397,6 +375,20 @@ function ghi_content_preprocess_node(&$variables) {
       '#items' => $node->getPageMetaData(),
       '#full_width' => TRUE,
     ];
+  }
+
+  if ($node instanceof ContentBase && !$node->shouldDisplayHeroImage()) {
+    // If the article is configured to hide the image, hide it everywhere.
+    /** @var \Drupal\Core\Entity\Entity\EntityViewDisplay $view_mode_entity */
+    $view_mode_entity = EntityViewDisplay::load('node.article.' . $variables['view_mode']);
+    /** @var \Drupal\file\Plugin\Field\FieldType\FileFieldItemList $items */
+    $items = $node->field_image;
+    if ($view_mode_entity && $items instanceof FileFieldItemList) {
+      $items->filter(function ($item) {
+        return FALSE;
+      });
+      $variables['content']['field_image'] = $view_mode_entity->getRenderer('field_image')->view($items);
+    }
   }
 
   if ($node instanceof Document) {

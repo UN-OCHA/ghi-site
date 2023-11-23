@@ -1,0 +1,8 @@
+uuid: 4a951995-73ad-4d60-baf9-a1ed0a240a8b
+langcode: en
+status: true
+dependencies: {  }
+id: gho-menu
+label: 'GHO Menu'
+description: ''
+locked: false

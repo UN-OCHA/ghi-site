@@ -27,7 +27,8 @@ class SectionCreateBatch {
 
       // The basic query to retrieve base object ids.
       $query = \Drupal::entityQuery('base_object')
-        ->condition('type', $bundle, 'IN');
+        ->condition('type', $bundle, 'IN')
+        ->accessCheck(FALSE);
 
       $result = $query->execute();
 

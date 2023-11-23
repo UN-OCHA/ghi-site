@@ -18,8 +18,8 @@ trait PlanVersionArgument {
    * @return string
    *   The version argument as a string for the API.
    */
-  public function getPlanVersionArgumentForPlanId($plan_id) {
-    if (self::getCurrentUser()->isAnonymous()) {
+  public static function getPlanVersionArgumentForPlanId($plan_id) {
+    if (self::getCurrentUser()->isAnonymous() || empty($plan_id)) {
       return 'current';
     }
     $base_object = BaseObjectHelper::getBaseObjectFromOriginalId($plan_id, 'plan');

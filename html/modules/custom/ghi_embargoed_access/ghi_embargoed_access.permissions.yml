@@ -1,0 +1,4 @@
+administer ghi embargoed access config:
+  title: 'Administer GHI embargoed access config'
+  description: 'Allow to access the GHI embargoed access configuration.'
+  restrict access: true

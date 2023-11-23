@@ -1,0 +1,194 @@
+//——————————————————————————————————————————————————————————————————————————————
+// Search results styles
+//
+// These styles govern the search results page, including the inline widget and
+// the individual results. It does NOT include the search widget inside the top
+// CD Header.
+//
+// @see common_design_subtheme/sass/cd/cd-header/_cd-search.scss
+//——————————————————————————————————————————————————————————————————————————————
+
+//
+// Inline search widget
+//
+.region-highlighted {
+  position: relative;
+  top: 0;
+}
+main#main-content {
+  margin-top: 0;
+  transition: 0.15s margin-top ease-out;
+}
+.search-form-open {
+  .region-highlighted {
+    top: 6rem;
+    transition: 0.15s top ease-out;
+  }
+  main#main-content {
+    margin-top: 6rem;
+    transition: 0.15s margin-top ease-out;
+  }
+}
+
+.cd-search {
+  z-index: calc(var(--cd-z-search) - 2);
+
+  button:focus-visible {
+    background: var(--ghi-primary-background-color);
+
+    &::before {
+      position: absolute;
+      right: -1px;
+      bottom: 0;
+      left: -1px;
+      width: calc(100% + 2px);
+      height: 4px;
+      content: "";
+      transition: background 0.3s ease;
+      transform: none;
+      border: 0;
+      background-color: var(--cd-primary-color);
+    }
+  }
+
+  button.cd-search__btn {
+    height: $cd-site-header-height;
+
+    svg {
+      fill: var(--ghi-default-text-color);
+    }
+
+    &[aria-expanded="true"] {
+      position: relative;
+
+      &::before {
+        position: absolute;
+        right: -1px;
+        bottom: 0;
+        left: -1px;
+        width: calc(100% + 2px);
+        height: 4px;
+        content: "";
+        transition: background 0.3s ease;
+        transform: none;
+        border: 0;
+        background-color: var(--cd-primary-color);
+      }
+
+      &:hover,
+      &:focus {
+        outline: none;
+        background: var(--cd-white);
+      }
+    }
+
+    .cd-search__btn-label {
+      display: none;
+      text-transform: uppercase;
+      font-size: $cd-font-size--tiny;
+      font-weight: 700;
+    }
+
+    @include desktop {
+      .cd-search__btn svg {
+        width: 22px;
+        height: 22px;
+
+        [dir="ltr"] & {
+          padding-right: 4px;
+        }
+
+        [dir="rtl"] & {
+          padding-left: 4px;
+        }
+      }
+
+      .cd-search__btn-label {
+        @include visually-hidden;
+
+        display: block;
+      }
+    }
+  }
+
+  .cd-search__form {
+    padding-right: 0;
+    padding-left: 0;
+    background-color: var(--ghi-default-background-color);
+
+    &.content-width {
+      max-width: calc(var(--content-width) + 50vw);
+    }
+  }
+
+  // Search input should take up as much space as possible.
+  .cd-form__item {
+    flex-basis: 100%;
+  }
+
+  // Search input fills its parent (which is the flex-item).
+  .form-search {
+    width: 100%;
+    height: 100%;
+  }
+
+  // Search button is a flex-item and is fixed-width.
+  .form-submit {
+    text-transform: uppercase;
+    background-color: var(--ghi-default-text-color);
+    font-size: $cd-font-size--small;
+    font-weight: 700;
+  }
+
+  // Visually hide the search input's label.
+  .form-item-keywords label {
+    @include visually-hidden;
+  }
+}
+
+//
+// Search results
+//
+.path-search {
+
+  .views-field-search-api-rendered-item:not(:last-of-type) {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--cd-default-border-color);
+  }
+
+  .ghi-search-thumbnail {
+    width: 100%;
+
+    & > .field--type-image {
+      width: 100%;
+      min-width: auto;
+    }
+
+    @include tablet {
+      width: calc(20% - 2.25rem);
+      min-width: 220px;
+    }
+  }
+
+  // Pagination
+  //
+  // @see common_design/components/cd-pagination/cd-pagination.css
+  nav.pager {
+    margin-top: 5rem;
+
+    .cd-pager__item a:hover,
+    .cd-pager__item a:focus {
+      color: var(--ghi-default-text-color);
+      border-color: var(--cd-primary-color);
+      background-color: var(--cd-primary-color);
+    }
+
+    .cd-pager__item.is-active a,
+    .cd-pager__item.is-active a:hover {
+      color: var(--ghi-default-text-color);
+      border-color: var(--cd-primary-color--dark);
+      background-color: var(--cd-primary-color--dark);
+      font-weight: 700;
+    }
+  }
+}

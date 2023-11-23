@@ -15,13 +15,9 @@ display:
           submit_button: Appliquer
           reset_button_label: Réinitialiser
           exposed_sorts_label: 'Trier par'
-          sort_asc_label: Asc
-          sort_desc_label: Desc
       arguments:
         tid:
           exception:
             title: Tout
   feed_1:
     display_title: Flux
-  page_1:
-    display_title: Page
