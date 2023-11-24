@@ -274,7 +274,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     $string = str_replace('"/themes/custom', '"' . $base_url . '/themes/custom', $string);
     $string = str_replace('"/sites/default/files', '"' . $base_url . '/sites/default/files', $string);
     $string = str_replace(' /sites/default/files', $base_url . '/sites/default/files', $string);
-    $string = str_replace('/media/oembed', $base_url . '/media/oembed', $string);
+    $string = str_replace('"/media/oembed', '"' . $base_url . '/media/oembed', $string);
     return $string;
   }
 
