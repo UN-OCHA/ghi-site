@@ -225,6 +225,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'body' => $body,
       'headers' => $headers,
       'cookies' => $jar,
+      'timeout' => 60000,
     ];
 
     // See if we have a cached version already for this request.
