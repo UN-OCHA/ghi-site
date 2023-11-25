@@ -78,6 +78,9 @@ class PostRowSaveEventSubscriber implements EventSubscriberInterface {
     if (!in_array($event->getMigration()->id(), $migration_ids)) {
       return;
     }
+    if (!$event->getRow()->needsUpdate()) {
+      return;
+    }
     $ids = $event->getDestinationIdValues();
     $entities = $this->entityTypeManager->getStorage('node')->loadMultiple($ids);
     foreach ($entities as $entity) {

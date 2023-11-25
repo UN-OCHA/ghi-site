@@ -207,7 +207,9 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
    * {@inheritdoc}
    */
   public function query($payload) {
-    $body = '{"query": "query ' . str_replace("\n", " ", addslashes(trim($payload))) . '"}';
+    $query = 'query ' . str_replace("\n", " ", addslashes(trim($payload)));
+    $body = '{"query": "' . $query . '"}';
+
     $headers = [
       'Content-type' => 'application/json',
       'Apollo-Require-Preflight' => 'true',
@@ -225,7 +227,6 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'body' => $body,
       'headers' => $headers,
       'cookies' => $jar,
-      'timeout' => 60000,
     ];
 
     // See if we have a cached version already for this request.
@@ -237,6 +238,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
 
     // Otherwise send the query.
     $response = new RemoteResponse();
+    $result = NULL;
     try {
       $result = $this->httpClient->post($this->getRemoteEndpointUrl(), $post_args);
     }
@@ -247,6 +249,9 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     catch (ServerException $e) {
       $response->setCode($e->getCode());
       return $response;
+    }
+    catch (Exception $e) {
+      // Just fail silently.
     }
 
     if (!$result || $result->getStatusCode() !== 200) {
