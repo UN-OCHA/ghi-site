@@ -207,7 +207,9 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
    * {@inheritdoc}
    */
   public function query($payload) {
-    $body = '{"query": "query ' . str_replace("\n", " ", addslashes(trim($payload))) . '"}';
+    $query = 'query ' . str_replace("\n", " ", addslashes(trim($payload)));
+    $body = '{"query": "' . $query . '"}';
+
     $headers = [
       'Content-type' => 'application/json',
       'Apollo-Require-Preflight' => 'true',
@@ -236,6 +238,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
 
     // Otherwise send the query.
     $response = new RemoteResponse();
+    $result = NULL;
     try {
       $result = $this->httpClient->post($this->getRemoteEndpointUrl(), $post_args);
     }
@@ -246,6 +249,9 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     catch (ServerException $e) {
       $response->setCode($e->getCode());
       return $response;
+    }
+    catch (Exception $e) {
+      // Just fail silently.
     }
 
     if (!$result || $result->getStatusCode() !== 200) {
@@ -273,7 +279,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     $string = str_replace('"/themes/custom', '"' . $base_url . '/themes/custom', $string);
     $string = str_replace('"/sites/default/files', '"' . $base_url . '/sites/default/files', $string);
     $string = str_replace(' /sites/default/files', $base_url . '/sites/default/files', $string);
-    $string = str_replace('/media/oembed', $base_url . '/media/oembed', $string);
+    $string = str_replace('"/media/oembed', '"' . $base_url . '/media/oembed', $string);
     return $string;
   }
 

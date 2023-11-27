@@ -254,6 +254,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     $theme_components[] = 'common_design_subtheme/gho-' . Html::getClass($paragraph->getType());
     if ($paragraph->getType() == 'bottom_figure_row') {
       $theme_components[] = 'common_design_subtheme/gho-needs-and-requirements';
+      $theme_components[] = 'ghi_content/bottom_figures.tooltips';
     }
     if ($paragraph->getPromoted() || $this->isPromoted()) {
       $theme_components[] = 'common_design_subtheme/gho-promoted-paragraph';
@@ -276,6 +277,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
         $theme_components[] = 'common_design_subtheme/gho-' . $type;
         if ($type == 'bottom-figure-row') {
           $theme_components[] = 'common_design_subtheme/gho-needs-and-requirements';
+          $theme_components[] = 'ghi_content/bottom_figures.tooltips';
         }
       }
       $matches = [];

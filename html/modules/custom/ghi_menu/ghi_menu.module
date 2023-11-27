@@ -5,9 +5,20 @@
  * Hook implementations for GHI Menu.
  */
 
+use Drupal\ghi_menu\Entity\GhiMenuLinkContent;
+
 /**
  * Implements hook_menu_local_actions_alter().
  */
 function ghi_menu_menu_local_actions_alter(&$local_actions) {
   $local_actions['node.add_page']['class'] = 'Drupal\ghi_menu\LocalAction\LocalActionContent';
+}
+
+/**
+ * Implements hook_entity_type_build().
+ */
+function ghi_menu_entity_type_alter(array &$entity_types) {
+  /** @var \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type */
+  $entity_type = $entity_types['menu_link_content'];
+  $entity_type->setClass(GhiMenuLinkContent::class);
 }
