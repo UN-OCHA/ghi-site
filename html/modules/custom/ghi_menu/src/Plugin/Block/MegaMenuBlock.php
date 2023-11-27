@@ -7,7 +7,6 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
-use Drupal\Core\Menu\MenuTreeParameters;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\RenderElement;
@@ -98,8 +97,6 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
       $tabs[$plugin_id]['#group'] = 'tabs';
       $tabs[$plugin_id]['#weight'] = $item->link->getWeight();
     }
-    // Sort the children.
-    uasort($tabs, ['\Drupal\Component\Utility\SortArray', 'sortByWeightProperty']);
 
     $build = [
       '#type' => 'container',
@@ -180,7 +177,18 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
       return [];
     }
     $menu = $this->entityTypeManager->getStorage('menu')->load($this->configuration['menu']);
-    return $this->menuTree->load($menu->id(), new MenuTreeParameters());
+    $parameters = $this->menuTree->getCurrentRouteMenuTreeParameters('main');
+    $parameters->expandedParents = [];
+    $menu_tree = $this->menuTree->load($menu->id(), $parameters);
+    // Transform the tree using the manipulators you want.
+    $manipulators = [
+      // Only show links that are accessible for the current user.
+      ['callable' => 'menu.default_tree_manipulators:checkAccess'],
+      // Use the default sorting of menu links.
+      ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'],
+    ];
+    $menu_tree = $this->menuTree->transform($menu_tree, $manipulators);
+    return $menu_tree;
   }
 
   /**
