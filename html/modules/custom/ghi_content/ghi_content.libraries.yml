@@ -18,3 +18,9 @@ admin.related_articles:
   css:
     component:
       css/admin/related_articles.css: {}
+bottom_figures.tooltips:
+  version: VERSION
+  js:
+    js/bottom_figures.tooltips.js: {}
+  dependencies:
+    - hpc_common/tooltip
