@@ -96,6 +96,14 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
       $tabs[$plugin_id]['#title'] = $item->link->getTitle();
       $tabs[$plugin_id]['#group'] = 'tabs';
       $tabs[$plugin_id]['#weight'] = $item->link->getWeight();
+
+      // Add classes to child items that themselves do not have child items.
+      foreach ($tabs[$plugin_id]['#items'] ?? [] as &$item) {
+        $item['attributes']['class'] = $item['attributes']['class'] ?? [];
+        if (empty($item['below'])) {
+          $item['attributes']['class'][] = 'leaf';
+        }
+      }
     }
 
     $build = [
