@@ -21,6 +21,7 @@ trait FootnotePropertyTrait {
       'target' => $this->t('Target'),
       'estimated_reach' => $this->t('Estimated reach'),
       'requirements' => $this->t('Requirements'),
+      'funding' => $this->t('Funding'),
     ];
     return array_map(function ($option) {
       return (string) $option;

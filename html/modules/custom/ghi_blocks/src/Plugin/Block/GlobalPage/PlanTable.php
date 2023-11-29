@@ -320,7 +320,10 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'export_commentary' => $this->getFootnoteForProperty($footnotes, 'requirements'),
         ],
         'funding' => [
-          'data' => $link_to_fts ? self::buildFtsLink($value_funding, $plan_entity, 'summary') : $value_funding,
+          'data' => [
+            $link_to_fts ? self::buildFtsLink($value_funding, $plan_entity, 'summary') : $value_funding,
+            $this->buildFootnoteTooltip($footnotes, 'funding'),
+          ],
           'data-raw-value' => $funding,
           'data-column-type' => 'currency',
           'data-progress-group' => 'financial',
