@@ -37,6 +37,22 @@ class GhoFootnotes implements TrustedCallbackInterface {
       // Extract references.
       $references = gho_footnotes_extract_references($node_inner_html);
 
+      // Cleanup faulty footnote links, things like '<a href="#_ftn1">[1]</a>
+      // where it should be just '[1]'.
+      $updated_html = FALSE;
+      $links = $dom->getElementsByTagName('a');
+      foreach ($links as $link) {
+        if (array_key_exists($link->nodeValue, $references)) {
+          $node_inner_html = str_replace($link->ownerDocument->saveXML($link), $link->nodeValue, $node_inner_html);
+          $updated_html = TRUE;
+        }
+      }
+
+      // Extract the references again to make the positions match again.
+      if ($updated_html) {
+        $references = gho_footnotes_extract_references($node_inner_html);
+      }
+
       // Get the footnotes for this text element.
       $footnotes = [];
       $footnote_list_node = $dom->getElementById('gho-footnotes-list-' . $id);
