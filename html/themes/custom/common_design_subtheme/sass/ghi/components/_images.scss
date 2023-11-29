@@ -1,8 +1,7 @@
 .ghi-image-wrapper {
   position: relative;
 
-  div.image-caption-wrapper,
-  div.image-credit-wrapper {
+  div.image-caption-wrapper {
     position: absolute;
     top: 0;
     right: 0;
@@ -12,12 +11,6 @@
     text-align: right;
     opacity: 0.9;
 
-    .link-carousel-wrapper & {
-      max-height: 568px;
-    }
-  }
-
-  div.image-caption-wrapper {
     div.image-caption {
       position: absolute;
       right: 1.9rem;
@@ -48,6 +41,8 @@
     // START: Duplicated code blocks, but I didn't see how to do this without.
     // Always make the cpation collapsed on link caroussels.
     .link-carousel-wrapper & {
+      max-height: 568px;
+
       a.expand-caption {
         position: absolute;
         right: calc(1.9rem + 2px);
@@ -122,21 +117,5 @@
       }
     }
     // END: Duplicated code blocks.
-  }
-
-  div.image-credit-wrapper {
-    a.expand-caption {
-      display: none;
-    }
-    div.image-credit {
-      position: absolute;
-      right: 1.9rem;
-      bottom: 2rem;
-      display: inline-block;
-      padding: 0.1rem 0.5rem;
-      color: var(--cd-white);
-      background-color: var(--cd-black);
-      font-size: var(--cd-font-size--tiny);
-    }
   }
 }
