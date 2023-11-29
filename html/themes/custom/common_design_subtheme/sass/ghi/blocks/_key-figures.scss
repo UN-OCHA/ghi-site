@@ -77,6 +77,10 @@
             font-size: var(--cd-font-size--large);
             font-weight: normal;
           }
+
+          .custom-link--rft > img {
+            height: 1rem;
+          }
         }
       }
     }
