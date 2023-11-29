@@ -248,6 +248,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
       ],
       'label_value' => [
         'footnote' => TRUE,
+        'custom_logo' => TRUE,
       ],
     ];
     return $item_types;
