@@ -58,8 +58,8 @@
   position: relative;
 }
 .gho-story .media-caption {
-  margin-bottom: 0.5rem;
-  padding: 1rem 0 0.5rem 0;
+  margin-bottom: 1rem;
+  padding: 1rem 0;
   color: #fff;
   border-bottom: 1px solid #fff;
   font-size: 0.75rem;
@@ -87,6 +87,8 @@
 
 /* Same font-size/line-height as caption. @see gho-caption */
 .gho-story__source {
+  margin-top: 1rem;
+  padding-top: 1rem;
   border-top: 1px solid #d8d8d8;
   font-size: 0.75rem;
   line-height: 1.25rem;
