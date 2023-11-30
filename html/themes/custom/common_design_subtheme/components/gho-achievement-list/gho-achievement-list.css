@@ -5,6 +5,10 @@
   margin-top: 2rem;
 }
 
+.gho-achievement-list .field__item {
+  width: 100%;
+}
+
 @media (min-width: 504px) {
   .gho-achievement-list .field__item {
     flex: 0 0 calc((100% - 1rem) / 2);

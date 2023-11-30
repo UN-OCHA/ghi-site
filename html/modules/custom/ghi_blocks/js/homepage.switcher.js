@@ -10,11 +10,11 @@
       $homepageBlock = $yearSwitcherBlock.parents('.ghi-block-global-homepages');
       let block_uuid = $homepageBlock.attr('id').replace('block-', '');
 
-      $yearSwitcherBlock.find('.section-switcher-wrapper ul li a').each(function () {
-        let ajax_url = '/load-block/global_homepages/' + block_uuid + '?current_uri=' + $(this).attr('href');
-        $(this).attr('original-href', $(this).attr('href'));
-        $(this).attr('href', ajax_url);
-        $(this).addClass('use-ajax');
+      once('section-switcher', '.ghi-block.has-year-switcher .section-switcher-wrapper ul li a', context).forEach((item) => {
+        let ajax_url = '/load-block/global_homepages/' + block_uuid + '?current_uri=' + $(item).attr('href');
+        $(item).attr('original-href', $(item).attr('href'));
+        $(item).attr('href', ajax_url);
+        $(item).addClass('use-ajax');
       });
       if (!!(window.history && history.pushState)) {
         // Replace the current history item in newer browser.

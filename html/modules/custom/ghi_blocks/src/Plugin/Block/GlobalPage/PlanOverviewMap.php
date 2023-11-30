@@ -352,7 +352,7 @@ class PlanOverviewMap extends GHIBlockBase {
       ],
       'funding_received' => [
         'label' => (new TranslatableMarkup('Funding')),
-        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'total_funding') . CommonHelper::renderValue($data->funding->total_funding, 'value', 'hpc_currency', $common_theme_args),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'funding') . CommonHelper::renderValue($data->funding->total_funding, 'value', 'hpc_currency', $common_theme_args),
       ],
       'funding_progress' => [
         'label' => $this->t('Coverage'),

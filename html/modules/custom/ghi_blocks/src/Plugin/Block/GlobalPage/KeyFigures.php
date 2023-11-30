@@ -278,6 +278,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Ov
       ],
       'label_value' => [
         'footnote' => TRUE,
+        'custom_logo' => TRUE,
       ],
     ];
     return $item_types;

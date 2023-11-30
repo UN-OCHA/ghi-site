@@ -267,7 +267,7 @@ class HeroImageWidgetCropManager extends ImageWidgetCropManager implements Image
     }
     $crop_type_names = self::CROP_TYPES;
     $form_state_values = $form_state->getValues();
-    $file = $form['image_crop']['image_crop']['#file'];
+    $file = $form['image_crop']['image_crop']['#file'] ?? NULL;
     if (!$file) {
       return;
     }

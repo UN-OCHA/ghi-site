@@ -363,6 +363,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'total_funding',
+        'footnote_property' => 'funding',
         'scale' => 'auto',
         'fts_link_target' => 'flows',
       ],
