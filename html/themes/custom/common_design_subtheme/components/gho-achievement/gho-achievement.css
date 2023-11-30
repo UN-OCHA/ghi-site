@@ -10,11 +10,13 @@
 .gho-achievement__icon {
   order: -1;
   height: 3rem;
+  margin-bottom: 1rem;
 }
 
 .gho-achievement__icon img {
   width: auto;
   height: 100%;
+  filter: invert(27%) sepia(9%) saturate(0%) hue-rotate(188deg) brightness(93%) contrast(80%);
 }
 
 .gho-achievement__title {

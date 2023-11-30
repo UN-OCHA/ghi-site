@@ -250,12 +250,6 @@
                     &::before {
                       display: none;
                     }
-
-                    // &:focus,
-                    // &:hover {
-                    //   color: inherit;
-                    //   background: inherit;
-                    // }
                   }
 
                   span {
@@ -269,6 +263,18 @@
                 font-weight: bold;
                 break-inside: avoid-column;
                 -webkit-column-break-inside: avoid;
+
+                &.leaf {
+                  padding-bottom: 2rem;
+                  font-weight: normal;
+
+                  a:hover,
+                  a:focus,
+                  &:hover a,
+                  &:focus a {
+                    color: var(--cd-primary-color);
+                  }
+                }
 
                 ul {
                   padding-bottom: 1rem;

@@ -7,7 +7,6 @@ use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_content\Traits\ContentPathTrait;
 use Drupal\ghi_sections\Entity\ImageNodeInterface;
-use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
@@ -288,10 +287,10 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
 
     $context_node = $this->getContextNode();
     $inherit_section_image = $this->hasField('field_inherit_section_image') ? $this->get('field_inherit_section_image')->value : FALSE;
-    if (($inherit_section_image === NULL || $inherit_section_image == 1) && $context_node instanceof Section) {
-      /** @var \Drupal\ghi_sections\Entity\Section */
-      $section = $this->getContextNode();
-      return !$section->getImage()->isEmpty();
+    if (($inherit_section_image === NULL || $inherit_section_image == 1) && $context_node instanceof ImageNodeInterface) {
+      /** @var \Drupal\ghi_sections\Entity\ImageNodeInterface */
+      $image_node = $this->getContextNode();
+      return !$image_node->getImage()->isEmpty();
     }
 
     if ($this->getImage()->isEmpty()) {

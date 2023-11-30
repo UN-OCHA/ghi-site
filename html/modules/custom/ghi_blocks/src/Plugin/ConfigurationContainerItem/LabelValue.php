@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 
@@ -42,6 +43,17 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
         '#type' => 'textfield',
         '#title' => $this->t('Footnote'),
         '#default_value' => array_key_exists('footnote', $this->config) ? $this->config['footnote'] : NULL,
+      ];
+    }
+
+    if (!empty($this->getPluginConfiguration()['custom_logo'])) {
+      $element['custom_logo'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Logo'),
+        '#options' => [
+          'none' => $this->t('None'),
+        ] + $this->customLogosOptions(),
+        '#default_value' => array_key_exists('custom_logo', $this->config) ? $this->config['custom_logo'] : NULL,
       ];
     }
 
@@ -98,21 +110,89 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
         break;
     }
 
+    $icons = [];
     $footnote = $this->config['footnote'] ?? NULL;
     if ($footnote) {
-      $rendered_value = [
-        '#type' => 'container',
-        0 => $rendered_value,
-        1 => [
-          '#theme' => 'hpc_tooltip',
-          '#tooltip' => [
-            '#plain_text' => $footnote,
-          ],
+      $icons[] = [
+        '#theme' => 'hpc_tooltip',
+        '#tooltip' => [
+          '#plain_text' => $footnote,
         ],
       ];
     }
 
+    $custom_logo = $this->config['custom_logo'] ?? NULL;
+    if ($custom_logo && array_key_exists($custom_logo, $this->customLogos())) {
+      $logo = $this->customLogos()[$custom_logo];
+      $path_resolver = \Drupal::service('extension.path.resolver');
+      $icon = $logo['icon'] ?? ($custom_logo . '.png');
+      $icon_path = $path_resolver->getPath('module', 'ghi_blocks') . '/assets/custom_logos/' . $icon;
+      if (file_exists($icon_path)) {
+        $icons[] = [
+          '#type' => 'link',
+          '#title' => [
+            '#theme' => 'image',
+            '#uri' => '/' . $icon_path,
+            '#attributes' => [
+              'class' => 'custom-logo custom-logo--' . $custom_logo,
+              'title' => $logo['label'],
+            ],
+            '#alt' => $logo['label'],
+          ],
+          '#url' => $logo['url'],
+          '#attributes' => [
+            'target' => '_blank',
+            'title' => $logo['label'],
+            'class' => [
+              'custom-link',
+              'custom-link--' . $custom_logo,
+            ],
+          ],
+        ];
+      }
+    }
+
+    if (!empty($icons)) {
+      $rendered_value = array_merge([
+        '#type' => 'container',
+        0 => $rendered_value,
+      ], $icons);
+    }
     return $rendered_value;
+  }
+
+  /**
+   * Get the options for available custom logos.
+   *
+   * @return array
+   *   An array of key value pairs for the available custom logos.
+   */
+  private function customLogosOptions() {
+    $logos = $this->customLogos();
+    return array_map(function ($item) {
+      return $item['label'];
+    }, $logos);
+  }
+
+  /**
+   * Return the defined set of available custom logos.
+   *
+   * @return array
+   *   An array describing the set of available custom logos.
+   *   Supported keys for each item are:
+   *   - label: The label to be used for the title and alt attributes.
+   *   - url: A url object used to create the target link.
+   *   - icon (optional): The name of the icon file under
+   *     /modules/ghi_blocks/assets/custom_logos. If no icon is provided, the
+   *     name will be build using the array key and the suffix ".png".
+   */
+  private function customLogos() {
+    return [
+      'rft' => [
+        'label' => $this->t('Refugee Funding Tracker (RFT)'),
+        'url' => Url::fromUri('https://refugee-funding-tracker.org'),
+      ],
+    ];
   }
 
 }

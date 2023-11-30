@@ -1,15 +1,10 @@
 <div class="ghi-image-wrapper" role="img" {% if caption and caption_id %}aria-describedby="{{ caption_id }}{% endif %}">
   {{ image }}
-  {% if caption %}
+  {% if caption or credit %}
     <div class="image-caption-wrapper">
       <a class="expand-caption" tabindex="0"></a>
       <div class="image-caption" id="{{ caption_id }}">
         {{ caption }}
-      </div>
-    </div>
-  {% elseif credit %}
-    <div class="image-credit-wrapper cd-container">
-      <div class="image-credit">
         {{ credit }}
       </div>
     </div>
