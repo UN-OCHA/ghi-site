@@ -41,8 +41,8 @@ third_party_settings:
         width_breakpoint: 640
     group_display:
       children:
-        - field_display_hero_image
         - image_crop
+        - field_display_hero_image
         - field_inherit_section_image
       label: Display
       region: content
@@ -115,7 +115,7 @@ content:
     third_party_settings: {  }
   field_display_hero_image:
     type: boolean_checkbox
-    weight: 15
+    weight: 18
     region: content
     settings:
       display_label: true
@@ -130,7 +130,7 @@ content:
     third_party_settings: {  }
   field_inherit_section_image:
     type: boolean_checkbox
-    weight: 18
+    weight: 19
     region: content
     settings:
       display_label: true

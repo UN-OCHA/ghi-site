@@ -290,7 +290,6 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     if (($inherit_section_image === NULL || $inherit_section_image == 1) && $context_node instanceof ImageNodeInterface) {
       /** @var \Drupal\ghi_sections\Entity\ImageNodeInterface */
       $image_node = $this->getContextNode();
-      d(get_class($image_node));
       return !$image_node->getImage()->isEmpty();
     }
 
