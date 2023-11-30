@@ -54,6 +54,7 @@ class ProjectModalController extends ControllerBase {
    *   A title for the build.
    */
   private function modalTitleBaseObject(BaseObjectInterface $base_object, $build_title) {
+    $title = '';
     if ($base_object instanceof GoverningEntity && $icon = $base_object->getIconEmbedCode()) {
       $title = $icon;
     }
