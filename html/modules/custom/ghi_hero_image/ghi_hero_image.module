@@ -146,13 +146,6 @@ function ghi_hero_image_form_alter(array &$form, FormStateInterface $form_state)
       ],
     ];
   }
-  if (!empty($form['image_crop']) && !empty($form['field_display_hero_image'])) {
-    $form['image_crop']['#states'] = [
-      'visible' => [
-        ':input[name="field_display_hero_image[value]"]' => ['checked' => TRUE],
-      ],
-    ];
-  }
 }
 
 /**
