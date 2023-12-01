@@ -97,7 +97,7 @@ class Project extends BaseObject {
    *   An array of clusters for this project.
    */
   public function getClusters() {
-    return $this->clusters;
+    return $this->clusters ?? [];
   }
 
   /**

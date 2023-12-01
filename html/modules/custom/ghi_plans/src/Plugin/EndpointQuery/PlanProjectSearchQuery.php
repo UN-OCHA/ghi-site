@@ -344,7 +344,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
         if (empty($clusters[$organization->id])) {
           $clusters[$organization->id] = [];
         }
-        foreach ($project->clusters as $cluster) {
+        foreach ($project->getClusters() as $cluster) {
           if (!empty($clusters[$organization->id][$cluster->id])) {
             continue;
           }
