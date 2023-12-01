@@ -1288,6 +1288,7 @@ class DataAttachment extends AttachmentBase {
     if (!$monitoring_period) {
       return NULL;
     }
+    $build = NULL;
     switch ($display_type) {
       case 'icon':
         $build = [

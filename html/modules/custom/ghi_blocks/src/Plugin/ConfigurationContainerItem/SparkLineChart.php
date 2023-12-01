@@ -178,6 +178,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     $baseline = $show_baseline ? $this->get('baseline') : NULL;
     $options = $attachment->getMetricFields();
     $decimal_format = $plan_object->getDecimalFormat();
+    $tooltip_format = (string) $this->t('Monitoring period #@period_number<br />@date_range');
 
     // Get the monitoring periods.
     $reporting_periods = $attachment->getPlanReportingPeriods($plan_object->getSourceId(), TRUE);
@@ -217,7 +218,6 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
 
       // Prepare the tooltip items.
       $tooltip_items = [];
-      $tooltip_format = (string) $this->t('Monitoring period #@period_number<br />@date_range');
 
       // Add a baseline if needed.
       if ($show_baseline) {
