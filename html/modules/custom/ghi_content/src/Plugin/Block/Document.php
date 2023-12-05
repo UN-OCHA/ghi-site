@@ -45,7 +45,7 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
     $cache_tags = Cache::mergeTags($cache_tags, $document_node->getCacheTags());
 
     $tabs = [];
-    $chapters = $document->getChapters();
+    $chapters = $document->getChapters(FALSE);
     foreach ($chapters as $chapter) {
       $articles = [];
       foreach ($this->getChapterArticles($chapter) as $_article) {

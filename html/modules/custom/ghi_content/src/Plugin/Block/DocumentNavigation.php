@@ -65,7 +65,7 @@ class DocumentNavigation extends BlockBase {
       0 => $overview_link,
     ];
 
-    foreach ($document->getChapters() as $chapter) {
+    foreach ($document->getChapters(FALSE) as $chapter) {
       $articles = $document->getChapterArticles($chapter);
       $drop_down_links = $this->buildDropDown($chapter->getShortTitle(), $articles, $node, $cache_tags);
       if (empty($drop_down_links)) {
