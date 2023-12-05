@@ -54,3 +54,29 @@ function ghi_blocks_post_update_9001($sandbox) {
     '@total' => \Drupal::queue('ghi_blocks_update_monitoring_period_queue')->numberOfItems(),
   ]);
 }
+
+/**
+ * Update layout builder lock settings for article pages.
+ */
+function ghi_blocks_post_update_9002(&$sandbox) {
+  /** @var \Drupal\node\NodeInterface[] $nodes */
+  $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+    'type' => 'article',
+  ]);
+  foreach ($nodes as $node) {
+    if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+      continue;
+    }
+    $sections = $node->get(OverridesSectionStorage::FIELD_NAME)->getValue();
+    if (empty($sections)) {
+      continue;
+    }
+    \Drupal::queue('ghi_blocks_section_lock_update_queue')->createItem((object) [
+      'entity_id' => $node->id(),
+      'entity_type_id' => $node->getEntityTypeId(),
+    ]);
+  }
+  return (string) t('Enqueued @total nodes for section lock update.', [
+    '@total' => \Drupal::queue('ghi_blocks_section_lock_update_queue')->numberOfItems(),
+  ]);
+}
