@@ -32,6 +32,14 @@ interface RemoteChapterInterface extends RemoteContentItemBaseInterface {
   public function getSummary();
 
   /**
+   * Whether the chapter is hidden from the document.
+   *
+   * @return bool
+   *   TRUE if the chapter is marked as hidden, FALSE otherwhise.
+   */
+  public function isHidden();
+
+  /**
    * Get the ids of the articles inside a chapter.
    *
    * @return int[]

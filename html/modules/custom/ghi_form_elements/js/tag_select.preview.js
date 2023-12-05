@@ -120,11 +120,15 @@
         $wrapper = $('[data-drupal-selector="' + key + '"]');
         let tag_select = settings.tag_select[key];
         Drupal.TagSelectPreview.updateSummary(tag_select, $wrapper);
-        $(Drupal.TagSelectPreview.checkboxSelector, $wrapper).once().bind('change', function() {
-          Drupal.TagSelectPreview.updateSummary(tag_select, $wrapper);
+        once('tag-select-checkbox-selector', $wrapper.find(Drupal.TagSelectPreview.checkboxSelector)).forEach(element => {
+          element.addEventListener('change', e => {
+            Drupal.TagSelectPreview.updateSummary(tag_select, $wrapper);
+          });
         });
-        $(Drupal.TagSelectPreview.logicToggleSelector, $wrapper).once().bind('change', function() {
-          Drupal.TagSelectPreview.updateSummary(tag_select, $wrapper);
+        once('logic-toggle-selector', $wrapper.find(Drupal.TagSelectPreview.logicToggleSelector)).forEach(element => {
+          element.addEventListener('change', e => {
+            Drupal.TagSelectPreview.updateSummary(tag_select, $wrapper);
+          });
         });
       }
 

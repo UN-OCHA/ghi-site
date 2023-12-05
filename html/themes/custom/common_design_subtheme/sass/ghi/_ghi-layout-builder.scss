@@ -5,6 +5,10 @@
   background-position: 100% center !important;
 }
 
+.js .ui-autocomplete {
+  background-color: var(--cd-white);
+}
+
 .js input.form-autocomplete.ui-autocomplete-loading {
   background-image: url("../img/misc/spinner-ltr.gif") !important;
 }

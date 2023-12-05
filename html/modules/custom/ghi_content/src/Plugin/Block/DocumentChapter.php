@@ -207,7 +207,11 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
     $form['label']['#weight'] = -1;
 
     $options = array_map(function (RemoteChapterInterface $chapter) {
-      return $chapter->getTitle();
+      $title = $chapter->getTitle();
+      if ($chapter->isHidden()) {
+        $title .= ' (hidden from navigation)';
+      }
+      return $title;
     }, $document->getChapters());
 
     $form['chapter_id'] = [

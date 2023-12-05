@@ -82,6 +82,13 @@ class RemoteChapter implements RemoteChapterInterface {
   /**
    * {@inheritdoc}
    */
+  public function isHidden() {
+    return $this->data->hidden === TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getArticleIds() {
     return array_map(function ($article) {
       return $article->id;

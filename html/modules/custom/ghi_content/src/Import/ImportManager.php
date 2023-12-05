@@ -385,7 +385,7 @@ class ImportManager implements ContainerInjectionInterface {
     }
 
     $chapter_uuids = [];
-    foreach ($document->getChapters() as $chapter) {
+    foreach ($document->getChapters(FALSE) as $chapter) {
       if (!empty($chapter_ids) && !in_array($chapter->id, $chapter_ids)) {
         continue;
       }
@@ -414,7 +414,7 @@ class ImportManager implements ContainerInjectionInterface {
         ],
         'lock_document' => TRUE,
       ];
-      if ($existing_component) {
+      if ($existing_component && $existing_component->get('configuration')['lock_document']) {
         // Update an existing component.
         $configuration = $chapter_configuration + $context_mapping + $existing_component->get('configuration');
         $existing_component->setConfiguration($configuration);
@@ -784,7 +784,7 @@ class ImportManager implements ContainerInjectionInterface {
    */
   public function getRemoteDocumentChapterUuids(RemoteDocumentInterface $document) {
     $uuids = [];
-    foreach ($document->getChapters() as $chapter) {
+    foreach ($document->getChapters(FALSE) as $chapter) {
       $uuids[] = $chapter->getUuid();
     }
     sort($uuids);
