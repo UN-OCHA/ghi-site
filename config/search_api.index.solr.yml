@@ -12,6 +12,7 @@ dependencies:
     - node
     - search_api
     - view_unpublished
+    - ghi_embargoed_access
 third_party_settings:
   search_api_solr:
     finalize: false
@@ -167,6 +168,9 @@ processor_settings:
     weights:
       preprocess_query: -47
   custom_value: {  }
+  embargoed_access:
+    weights:
+      preprocess_query: -30
   entity_status: {  }
   entity_type: {  }
   html_filter:
