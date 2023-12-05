@@ -43,6 +43,7 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
         '#type' => 'textfield',
         '#title' => $this->t('Footnote'),
         '#default_value' => array_key_exists('footnote', $this->config) ? $this->config['footnote'] : NULL,
+        '#maxlength' => 255,
       ];
     }
 
