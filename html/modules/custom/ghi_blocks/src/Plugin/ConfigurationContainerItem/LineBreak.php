@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 
 /**
@@ -14,6 +15,15 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
  * )
  */
 class LineBreak extends ConfigurationContainerItemPluginBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm($element, FormStateInterface $form_state) {
+    self::setElementParents($element);
+    $element['label']['#access'] = FALSE;
+    return $element;
+  }
 
   /**
    * {@inheritdoc}
