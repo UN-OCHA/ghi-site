@@ -264,6 +264,10 @@
                 break-inside: avoid-column;
                 -webkit-column-break-inside: avoid;
 
+                & > a {
+                  margin-bottom: 0.5rem;
+                }
+
                 &.leaf {
                   padding-bottom: 2rem;
                   font-weight: normal;
