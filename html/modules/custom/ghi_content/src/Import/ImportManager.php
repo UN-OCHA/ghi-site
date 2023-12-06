@@ -385,7 +385,8 @@ class ImportManager implements ContainerInjectionInterface {
     }
 
     $chapter_uuids = [];
-    foreach ($document->getChapters(FALSE) as $chapter) {
+    $chapters = $document->getChapters(FALSE);
+    foreach ($chapters as $chapter) {
       if (!empty($chapter_ids) && !in_array($chapter->id, $chapter_ids)) {
         continue;
       }
@@ -410,6 +411,7 @@ class ImportManager implements ContainerInjectionInterface {
           ],
           'chapter' => [
             'chapter_id' => $chapter->getId(),
+            'show_title' => count($chapters) > 1,
           ],
         ],
         'lock_document' => TRUE,
