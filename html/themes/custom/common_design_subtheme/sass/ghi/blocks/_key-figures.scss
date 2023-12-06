@@ -45,6 +45,7 @@
         }
 
         &.line-break:not(:first-child) {
+          position: absolute;
           width: 100%;
           padding: 0;
         }
