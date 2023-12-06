@@ -80,7 +80,7 @@ class DocumentSubpages extends SectionMenuPluginBase implements OptionalSectionM
     }
     $item = $this->getItem();
     $widget = NULL;
-    $chapters = $document->getChapters();
+    $chapters = $document->getChapters(FALSE);
     if (count($chapters) == 1) {
       $chapter = reset($chapters);
       $nodes = $document->getChapterArticles($chapter);

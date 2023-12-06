@@ -114,13 +114,21 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function shouldDisplayTitle() {
+    $conf = $this->getBlockConfig();
+    return $conf['chapter']['show_title'] ?? TRUE;
+  }
+
+  /**
    * Check if this chapter comes from a document with only a single chapter.
    *
    * @return bool
    *   TRUE if the configured document is a single-chapter document.
    */
   private function isSingleChapterDocument() {
-    return count($this->getDocument()->getChapters()) == 1;
+    return count($this->getDocument()->getChapters(FALSE)) == 1;
   }
 
   /**
@@ -139,6 +147,7 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
       ],
       'chapter' => [
         'chapter_id' => NULL,
+        'show_title' => TRUE,
         'label' => NULL,
       ],
     ];
@@ -222,6 +231,12 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
       '#limit' => 1,
       '#cols' => 3,
       '#default_value' => $chapter ? $chapter->getId() : NULL,
+    ];
+
+    $form['show_title'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Show the chapter title'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'show_title'),
     ];
 
     return $form;

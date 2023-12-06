@@ -414,7 +414,7 @@ class ImportManager implements ContainerInjectionInterface {
         ],
         'lock_document' => TRUE,
       ];
-      if ($existing_component && $existing_component->get('configuration')['lock_document']) {
+      if ($existing_component && ($existing_component->get('configuration')['lock_document'] ?? FALSE)) {
         // Update an existing component.
         $configuration = $chapter_configuration + $context_mapping + $existing_component->get('configuration');
         $existing_component->setConfiguration($configuration);
@@ -458,6 +458,11 @@ class ImportManager implements ContainerInjectionInterface {
         // Only remove chapters from the same document. This allows to add more
         // chapters from different articles.
         // @todo Good idea?
+        continue;
+      }
+      if (!($component->get('configuration')['lock_document'] ?? FALSE)) {
+        // Don't remove chapters that do not have the document locked, those
+        // are manually added and need to be kept.
         continue;
       }
       if (in_array($component->getUuid(), $chapter_uuids)) {
