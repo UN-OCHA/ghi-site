@@ -3,6 +3,27 @@
   cursor: pointer;
   vertical-align: middle;
 
+  .modal-link {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1.15;
+
+    .modal-link-item > a {
+      display: flex;
+      padding: 0.1rem;
+      border: 2px solid transparent;
+      border-radius: 3px;
+      padding-block: 6px;
+
+      &:focus,
+      &:focus-visible {
+        border: 2px solid var(--brand-primary--dark);
+        outline: none;
+        background-color: var(--ghi-primary-button-color-hover);
+      }
+    }
+  }
+
   svg {
     fill: var(--cd-primary-color);
   }

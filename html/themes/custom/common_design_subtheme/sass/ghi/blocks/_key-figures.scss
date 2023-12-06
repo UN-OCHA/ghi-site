@@ -44,7 +44,12 @@
           padding-left: 1.5rem;
         }
 
-        &::before {
+        &.line-break:not(:first-child) {
+          width: 100%;
+          padding: 0;
+        }
+
+        &:not(.line-break)::before {
           position: absolute;
           left: 0;
           width: 1px;
