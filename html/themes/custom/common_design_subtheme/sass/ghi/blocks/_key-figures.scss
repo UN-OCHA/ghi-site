@@ -24,7 +24,6 @@
     .key-figures {
       display: flex;
       flex-wrap: wrap;
-      row-gap: 1rem;
       margin-bottom: 0;
       margin-left: -1.5rem;
       padding-top: 1rem;
@@ -37,6 +36,7 @@
         position: relative;
         flex-basis: auto;
         flex-grow: 0;
+        margin-bottom: 1rem;
         padding: 0 1.5rem;
         border: 0;
 
@@ -45,8 +45,8 @@
         }
 
         &.line-break:not(:first-child) {
-          position: absolute;
           width: 100%;
+          margin-bottom: 0;
           padding: 0;
         }
 
@@ -92,7 +92,7 @@
     }
 
     & > a.external {
-      margin-top: 2rem;
+      margin-top: 1rem;
     }
   }
 
