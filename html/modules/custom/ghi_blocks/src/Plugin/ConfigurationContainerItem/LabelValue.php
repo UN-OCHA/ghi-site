@@ -8,7 +8,7 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 
 /**
- * Provides an entity counter item for configuration containers.
+ * Provides a label/value item for configuration containers.
  *
  * @ConfigurationContainerItem(
  *   id = "label_value",
