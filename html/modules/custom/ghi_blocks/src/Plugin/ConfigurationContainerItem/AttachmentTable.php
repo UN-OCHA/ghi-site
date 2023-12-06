@@ -16,7 +16,7 @@ use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides an article collection item for configuration containers.
+ * Provides an attachment table item for configuration containers.
  *
  * @ConfigurationContainerItem(
  *   id = "attachment_table",

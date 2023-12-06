@@ -10,7 +10,7 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides a cluster list item for configuration containers.
+ * Provides an organization cluster list item for configuration containers.
  *
  * @ConfigurationContainerItem(
  *   id = "organization_cluster_list",

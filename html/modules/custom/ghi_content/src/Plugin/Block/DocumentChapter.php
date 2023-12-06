@@ -41,7 +41,7 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
    */
   public function getAutomaticBlockTitle() {
     $chapter = $this->getChapter();
-    if ($chapter && (!$this->isSingleChapterDocument() || $this->shouldDisplayChapterTitle())) {
+    if ($chapter && $this->shouldDisplayChapterTitle()) {
       return $chapter->getTitle();
     }
     return NULL;
@@ -122,16 +122,6 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
   public function shouldDisplayChapterTitle() {
     $conf = $this->getBlockConfig();
     return array_key_exists('show_title', $conf['chapter']) ? $conf['chapter']['show_title'] : TRUE;
-  }
-
-  /**
-   * Check if this chapter comes from a document with only a single chapter.
-   *
-   * @return bool
-   *   TRUE if the configured document is a single-chapter document.
-   */
-  private function isSingleChapterDocument() {
-    return count($this->getDocument()->getChapters(FALSE)) == 1;
   }
 
   /**
