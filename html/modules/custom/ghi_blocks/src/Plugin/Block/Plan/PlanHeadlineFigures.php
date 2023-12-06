@@ -89,6 +89,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
           '#type' => 'item',
           '#title' => $item_type->getLabel(),
           0 => $item_type->getRenderArray(),
+          '#wrapper_attributes' => ['class' => $item_type->getClasses()],
         ];
       }
       if (empty($rendered)) {
@@ -220,6 +221,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
       'item_group' => [
         'link' => TRUE,
       ],
+      'line_break' => [],
       'funding_data' => [
         'item_types' => [
           'funding_totals',

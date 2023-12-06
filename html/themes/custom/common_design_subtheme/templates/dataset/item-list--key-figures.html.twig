@@ -32,7 +32,7 @@
   {%- if figures -%}
     <{{ list_type }}{{ attributes.addClass('cd-figure-list--large') }}>
       {%- for item in figures -%}
-        <li class="cd-figure-list__item">
+        <li class="cd-figure-list__item {{ item.class }}">
           <div class="cd-figure-list__label">{{ item.label }}</div>
           <div class="cd-figure-list__value">{{ item.value }}</div>
         </li>

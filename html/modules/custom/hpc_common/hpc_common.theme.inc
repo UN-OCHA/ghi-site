@@ -285,6 +285,9 @@ function hpc_common_preprocess_hpc_tooltip(array &$vars) {
     $vars['tag_content'] = Markup::create('<svg class="cd-icon icon cd-icon--about"><use xlink:href="#cd-icon--about"></use></svg>');
     $attributes->addClass('info');
   }
+  elseif (!empty($vars['tag_content']['#theme']) && $vars['tag_content']['#theme'] == 'hpc_modal_link') {
+    $attributes->setAttribute('tabindex', -1);
+  }
 
   $vars['attributes'] = $attributes;
 }
