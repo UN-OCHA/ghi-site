@@ -44,6 +44,9 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
 
     $cache_tags = Cache::mergeTags($cache_tags, $document_node->getCacheTags());
 
+    $conf = $this->getBlockConfig();
+    $show_titles = $conf['show_titles'] ?? TRUE;
+
     $tabs = [];
     $chapters = $document->getChapters(FALSE);
     foreach ($chapters as $chapter) {
@@ -58,7 +61,7 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
       }
       $tabs[] = [
         'title' => [
-          '#markup' => $chapter->getShortTitle(),
+          '#markup' => $show_titles ? $chapter->getShortTitle() : NULL,
         ],
         'items' => [
           '#theme' => 'article_collection_cards',
@@ -104,6 +107,7 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
       'document' => [
         'remote_source' => NULL,
         'document_id' => NULL,
+        'show_titles' => TRUE,
       ],
     ];
   }
@@ -118,18 +122,10 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
       '#required' => TRUE,
     ];
 
-    $form['select_document'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Select this document'),
-      '#element_submit' => [get_class($this) . '::ajaxMultiStepSubmit'],
-      '#ajax' => [
-        'callback' => [$this, 'navigateFormStep'],
-        'wrapper' => $this->getContainerWrapper(),
-        'effect' => 'fade',
-        'method' => 'replace',
-        'parents' => ['settings', 'container'],
-      ],
-      '#next_step' => 'chapter',
+    $form['show_title'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Show the title'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'show_title'),
     ];
 
     return $form;
