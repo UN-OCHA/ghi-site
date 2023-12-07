@@ -14,6 +14,13 @@ class Project extends BaseObject {
   use SimpleCacheTrait;
 
   /**
+   * A list of clusters.
+   *
+   * @var array
+   */
+  public $clusters;
+
+  /**
    * Map the raw data.
    *
    * @return object
@@ -90,7 +97,7 @@ class Project extends BaseObject {
    *   An array of clusters for this project.
    */
   public function getClusters() {
-    return $this->clusters;
+    return $this->clusters ?? [];
   }
 
   /**

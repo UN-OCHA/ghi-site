@@ -81,7 +81,7 @@ class GhiEmbargoedAccessEventSubscriber extends ProtectedPagesSubscriber impleme
    * {@inheritdoc}
    */
   public function checkProtectedPage(ResponseEvent $event) {
-    if (!$this->configFactory->get('ghi_embargoed_access.settings')->get('enabled')) {
+    if (!$this->embargoedAccessManager->embargoedAccessEnabled()) {
       return NULL;
     }
 

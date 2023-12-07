@@ -30,7 +30,7 @@ class GoverningEntity extends BaseObject {
    */
   public function getIconEmbedCode() {
     $entity = $this->getSourceObject();
-    if ($icon = $entity->icon) {
+    if ($entity && $icon = $entity->icon) {
       return $this->getIconQuery()->getIconEmbedCode($icon);
     }
     return NULL;

@@ -1,0 +1,20 @@
+uuid: 13e23f8f-3ad7-4b01-9ded-d94592a965f4
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_blocks
+  theme:
+    - common_design_subtheme
+id: common_design_subtheme_subscribetomailinglist
+theme: common_design_subtheme
+region: footer_navigation
+weight: 0
+provider: null
+plugin: mailing_list_subscribe
+settings:
+  id: mailing_list_subscribe
+  label: 'Subscribe to mailing list'
+  label_display: '0'
+  provider: ghi_blocks
+visibility: {  }

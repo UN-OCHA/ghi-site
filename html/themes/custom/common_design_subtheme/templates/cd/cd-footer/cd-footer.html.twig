@@ -1,5 +1,9 @@
 {% embed '@common_design/cd/cd-footer/cd-footer.html.twig' %}
 
+  {% block footer_menu %}
+    {% include '@common_design/cd/cd-footer/cd-footer-menu.html.twig' %}
+  {% endblock %}
+
   {% block social_menu %}
     {% include '@common_design_subtheme/cd/cd-footer/cd-social-menu.html.twig' %}
   {% endblock %}

@@ -43,16 +43,19 @@ class Document extends ContentBase {
   /**
    * Get the document chapters.
    *
+   * @param bool $include_hidden
+   *   Whether to fetch hidden chapters or not.
+   *
    * @return \Drupal\ghi_content\RemoteContent\RemoteChapterInterface[]
    *   The document chapters.
    */
-  public function getChapters() {
+  public function getChapters($include_hidden = TRUE) {
     $document_manager = $this->getDocumentManager();
     $remote_document = $document_manager->loadRemoteContentForNode($this);
     if (!$remote_document instanceof RemoteDocumentInterface) {
       return [];
     }
-    return $remote_document->getChapters();
+    return $remote_document->getChapters($include_hidden);
   }
 
   /**

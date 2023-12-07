@@ -5,10 +5,13 @@ namespace Drupal\ghi_embargoed_access;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Random;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Password\PasswordInterface;
+use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
 use Drupal\protected_pages\ProtectedPagesStorage;
+use Drupal\search_api\Plugin\search_api\datasource\ContentEntityTrackingManager;
 
 /**
  * Embargoed access manager service class.
@@ -37,12 +40,38 @@ class EmbargoedAccessManager {
   protected $password;
 
   /**
+   * The system theme config object.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
+   * The Search API tracking manager.
+   *
+   * @var \Drupal\search_api\Plugin\search_api\datasource\ContentEntityTrackingManager
+   */
+  protected $searchApiTrackingManager;
+
+  /**
    * Constructs an embargoed access manager class.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ProtectedPagesStorage $protected_pages_storage, PasswordInterface $password) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ProtectedPagesStorage $protected_pages_storage, PasswordInterface $password, ConfigFactoryInterface $config_factory, ContentEntityTrackingManager $search_api_tracking_manager) {
     $this->entityTypeManager = $entity_type_manager;
     $this->protectedPagesStorage = $protected_pages_storage;
     $this->password = $password;
+    $this->configFactory = $config_factory;
+    $this->searchApiTrackingManager = $search_api_tracking_manager;
+  }
+
+  /**
+   * Check if the embargoed access is enabled or not.
+   *
+   * @return bool
+   *   TRUE if the embargoed access is enabled, false otherwise.
+   */
+  public function embargoedAccessEnabled() {
+    return !$this->configFactory->get('ghi_embargoed_access.settings')->get('enabled');
   }
 
   /**
@@ -52,7 +81,7 @@ class EmbargoedAccessManager {
    *   The node for which to load the id.
    *
    * @return int|null
-   *   The if of the protected page item or NULL if not found.
+   *   The id of the protected page item or NULL if not found.
    */
   public function loadProtectedPageIdForNode(NodeInterface $node) {
     if (!$node) {
@@ -103,6 +132,7 @@ class EmbargoedAccessManager {
     ];
     $this->protectedPagesStorage->insertProtectedPage($page_data);
     Cache::invalidateTags($node->getCacheTags());
+    $this->searchApiTrackingManager->entityUpdate($node);
   }
 
   /**
@@ -119,6 +149,25 @@ class EmbargoedAccessManager {
     }
     $this->protectedPagesStorage->deleteProtectedPage($pid);
     Cache::invalidateTags($node->getCacheTags());
+    $this->searchApiTrackingManager->entityUpdate($node);
+  }
+
+  /**
+   * Mark all embargoed nodes for re-index.
+   */
+  public function markAllForReindex() {
+    $pages = $this->protectedPagesStorage->loadAllProtectedPages();
+    if (empty($pages)) {
+      return;
+    }
+    foreach ($pages as $page) {
+      $params = Url::fromUri('internal:' . $page->path)?->getRouteParameters();
+      if (!$params || empty($params['node'])) {
+        continue;
+      }
+      $node = $this->entityTypeManager->getStorage('node')->load($params['node']);
+      $this->searchApiTrackingManager->entityUpdate($node);
+    }
   }
 
 }

@@ -67,14 +67,14 @@ class ArticleTitle extends BlockBase {
     if ($section && $document) {
       // For single chapter documents, we don't show the chapter title in the
       // breadcrump.
-      $single_chapter_document = count($document->getChapters()) == 1;
+      $single_chapter_document = count($document->getChapters(FALSE)) == 1;
       if ($chapter = $node->getDocumentChapter($document)) {
         $title_args = [
           '@document' => $document->toLink($document->label())->toString(),
           '@chapter' => $chapter->getTitle(),
         ];
         $title_prefix = new FormattableMarkup('<span class="document-link">@document</span>', $title_args);
-        if (!$single_chapter_document) {
+        if (!$single_chapter_document && !$chapter->isHidden()) {
           $title_prefix .= new FormattableMarkup(' / <span class="chapter">@chapter</span>', $title_args);
         }
         $build['title'][] = [

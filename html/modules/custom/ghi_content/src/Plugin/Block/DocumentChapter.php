@@ -41,7 +41,22 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
    */
   public function getAutomaticBlockTitle() {
     $chapter = $this->getChapter();
-    return $chapter && !$this->isSingleChapterDocument() ? $chapter->getTitle() : NULL;
+    if ($chapter && $this->shouldDisplayChapterTitle()) {
+      return $chapter->getTitle();
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfiguration() {
+    // Work around an issue with updating "Show title". The logic for title
+    // display in GHIBlockBase is confusing, but setting the configured label
+    // to NULL here works for the moment.
+    $configuration = parent::getConfiguration();
+    $configuration['label'] = NULL;
+    return $configuration;
   }
 
   /**
@@ -114,13 +129,14 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
   }
 
   /**
-   * Check if this chapter comes from a document with only a single chapter.
+   * Check whether the chapter title should display.
    *
    * @return bool
-   *   TRUE if the configured document is a single-chapter document.
+   *   TRUE if the chapter title should display, FALSE otherwise.
    */
-  private function isSingleChapterDocument() {
-    return count($this->getDocument()->getChapters()) == 1;
+  public function shouldDisplayChapterTitle() {
+    $conf = $this->getBlockConfig();
+    return $conf['chapter']['show_title'] ?? TRUE;
   }
 
   /**
@@ -139,7 +155,7 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
       ],
       'chapter' => [
         'chapter_id' => NULL,
-        'label' => NULL,
+        'show_title' => NULL,
       ],
     ];
   }
@@ -205,9 +221,14 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
     ];
 
     $form['label']['#weight'] = -1;
+    $form['label']['#default_value'] = NULL;
 
     $options = array_map(function (RemoteChapterInterface $chapter) {
-      return $chapter->getTitle();
+      $title = $chapter->getTitle();
+      if ($chapter->isHidden()) {
+        $title .= ' (hidden from navigation)';
+      }
+      return $title;
     }, $document->getChapters());
 
     $form['chapter_id'] = [
@@ -218,6 +239,12 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
       '#limit' => 1,
       '#cols' => 3,
       '#default_value' => $chapter ? $chapter->getId() : NULL,
+    ];
+
+    $form['show_title'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Show the chapter title'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'show_title') ?? TRUE,
     ];
 
     return $form;

@@ -15,7 +15,7 @@
 #   $SOLR_PORT -- (integer) the port
 #   $SOLR_CORE -- (string) the core name
 
-usage="$(basename "$0") [-h] create-core|index|dashboard
+usage="$(basename "$0") [-h] create-core|cleanup|index|dashboard
 
 where:
     -h  show this help text"
@@ -28,6 +28,9 @@ while [ "$1" != "" ]; do
   case $1 in
     create-core )         shift
                           fin solr-commands/create-core
+                          ;;
+    cleanup )             shift
+                          fin solr-commands/cleanup
                           ;;
     index )               shift
                           fin drush search-api:index solr --batch-size=1

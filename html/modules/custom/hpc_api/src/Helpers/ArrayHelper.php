@@ -163,7 +163,7 @@ class ArrayHelper {
         return $a_value - $b_value;
       }
       if ($sort == EndpointQuery::SORT_DESC) {
-        return $a_value - $b_value;
+        return $b_value - $a_value;
       }
     });
   }
@@ -181,7 +181,9 @@ class ArrayHelper {
   public static function sortArrayByStringKey(array &$data, $order, $sort = EndpointQuery::SORT_ASC) {
     uasort($data, function ($a, $b) use ($order, $sort) {
       if (empty($a[$order]) || empty($b[$order])) {
-        return $sort == EndpointQuery::SORT_ASC ? empty($a[$order]) > empty($b[$order]) : empty($a[$order]) < empty($b[$order]);
+        $a_value = empty($a[$order]) ? 0 : 1;
+        $b_value = empty($b[$order]) ? 0 : 1;
+        return $sort == EndpointQuery::SORT_ASC ? $a_value - $b_value : $b_value - $a_value;
       }
       if ($sort == EndpointQuery::SORT_ASC) {
         return strcasecmp($a[$order], $b[$order]);

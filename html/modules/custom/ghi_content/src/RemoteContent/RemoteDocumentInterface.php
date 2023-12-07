@@ -18,10 +18,13 @@ interface RemoteDocumentInterface extends RemoteContentInterface {
   /**
    * Get the chapters of the document.
    *
+   * @param bool $include_hidden
+   *   Whether to fetch hidden chapters or not.
+   *
    * @return \Drupal\ghi_content\RemoteContent\RemoteChapterInterface[]
    *   The document chapters.
    */
-  public function getChapters();
+  public function getChapters($include_hidden = TRUE);
 
   /**
    * Get the chapters of the document.

@@ -789,7 +789,9 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
     // Save the content node, making sure that common logic is applied.
     $this->saveContentNode($node);
 
-    $form_state->setRebuild();
+    $form_state->setRebuild(FALSE);
+
+    $this->messenger->addStatus($this->t('The changes from the remote system have been applied.'));
   }
 
   /**
@@ -806,7 +808,9 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
     // Save the content node, making sure that common logic is applied.
     $this->saveContentNode($node);
 
-    $form_state->setRebuild();
+    $form_state->setRebuild(FALSE);
+
+    $this->messenger->addStatus($this->t('The page has been reset to the initial state of the remote system.'));
   }
 
 }

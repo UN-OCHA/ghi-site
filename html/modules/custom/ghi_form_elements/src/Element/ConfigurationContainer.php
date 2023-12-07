@@ -406,7 +406,7 @@ class ConfigurationContainer extends FormElement {
           ];
         }
         elseif ($mode == 'edit_item') {
-          $items[$index]['config'] = $values['plugin_config'] + $items[$index]['config'];
+          $items[$index]['config'] = ($values['plugin_config'] ?? []) + $items[$index]['config'];
         }
         elseif ($mode == 'edit_item_filter') {
           $items[$index]['config']['filter'] = $values['filter_config'];
