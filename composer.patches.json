@@ -52,7 +52,7 @@
       "Issue #2958568: Add a search api processor for view unpublished": "./patches/2958568-view-unpublished-search-api-access-17.patch"
     },
     "drupal/webp": {
-      "Issue #3325808: Webp Image not generated for styles using original image.": "https://www.drupal.org/files/issues/2022-12-19/webp-3325808-2.patch",
+      "Issue #3325808: Webp Image not generated for styles using original image.": "https://www.drupal.org/files/issues/2023-12-07/webp-3325808-11.patch",
       "Issue #3281606: Rendering duplicate images when the original images have the same name but different extension": "https://git.drupalcode.org/project/webp/-/merge_requests/30.patch",
       "Issue #3153137: Using Image Widget Crop in responsive images does not refresh webp image": "./patches/3153137-custom-fix-3281606.patch"
     }
