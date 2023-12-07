@@ -401,6 +401,7 @@ class ImportManager implements ContainerInjectionInterface {
       $messages = [];
 
       $existing_component = $this->getExistingSyncedContentItem($node, $chapter);
+      $existing_configuration = $existing_component?->get('configuration')['hpc'] ?? [];
       $chapter_configuration = [
         'hpc' => [
           'document_select' => [
@@ -411,7 +412,7 @@ class ImportManager implements ContainerInjectionInterface {
           ],
           'chapter' => [
             'chapter_id' => $chapter->getId(),
-            'show_title' => count($chapters) > 1,
+            'show_title' => $existing_component ? ($existing_configuration['chapter']['show_title'] ?? count($chapters) > 1) : count($chapters) > 1,
           ],
         ],
         'lock_document' => TRUE,
