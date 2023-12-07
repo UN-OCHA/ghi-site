@@ -3,14 +3,11 @@
 namespace Drupal\ghi_content\Controller;
 
 use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\ghi_sections\SectionTrait;
-use Drupal\migrate\MigrateMessage;
 use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
-use Drupal\migrate_tools\MigrateBatchExecutable;
 use Drupal\node\NodeInterface;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
@@ -20,7 +17,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 /**
  * Controller for article lists.
  */
-class ArticleListController extends ControllerBase {
+class ArticleListController extends ContentBaseListController {
 
   use SectionTrait;
 
@@ -40,6 +37,11 @@ class ArticleListController extends ControllerBase {
   const ARTICLE_LIST_ROUTE = 'view.content.page_articles';
 
   /**
+   * The migration id for articles.
+   */
+  const MIGRATION_ID = 'articles_hpc_content_module';
+
+  /**
    * The article manager.
    *
    * @var \Drupal\ghi_content\ContentManager\ArticleManager
@@ -47,18 +49,11 @@ class ArticleListController extends ControllerBase {
   protected $articleManager;
 
   /**
-   * The migration plugin manager.
-   *
-   * @var \Drupal\migrate\Plugin\MigrationPluginManagerInterface
-   */
-  protected $migrationPluginManager;
-
-  /**
    * Public constructor.
    */
   public function __construct(ArticleManager $article_manager, MigrationPluginManagerInterface $migration_plugin_manager) {
+    parent::__construct($migration_plugin_manager);
     $this->articleManager = $article_manager;
-    $this->migrationPluginManager = $migration_plugin_manager;
   }
 
   /**
@@ -86,6 +81,13 @@ class ArticleListController extends ControllerBase {
       return AccessResult::allowedIf($section && $section->access('update'));
     }
     return Url::fromRoute(self::ARTICLE_LIST_ROUTE)->access(NULL, TRUE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getMigrationId() {
+    return self::MIGRATION_ID;
   }
 
   /**
@@ -173,40 +175,7 @@ class ArticleListController extends ControllerBase {
       $redirect_url = Url::fromRoute('ghi_content.node.articles', ['node' => $section->id()])->toString();
       $tags = $this->articleManager->getTags($section);
     }
-    return $this->runArticlesMigration($redirect_url, $tags);
-  }
-
-  /**
-   * Run the articles migrations.
-   *
-   * @param string $redirect
-   *   The url to redirect to after the migration has finished.
-   * @param array $tags
-   *   Optional tags to filter the source data by.
-   *
-   * @return \Symfony\Component\HttpFoundation\RedirectResponse|array
-   *   A redirect to a batch url or a render array if the migration can't be
-   *   found.
-   */
-  private function runArticlesMigration($redirect, array $tags = NULL) {
-    // @todo Make this work with more than a single migration. One way to do
-    // this, would be to fetch all definitions and then filter by the source
-    // plugin used (RemoteSourceGraphQL).
-    $migration = $this->migrationPluginManager->createInstance('articles_hpc_content_module');
-    if (empty($migration)) {
-      return [
-        '#markup' => $this->t('There was an error processing your request. Please contact an administrator.'),
-      ];
-    }
-    if ($tags !== NULL) {
-      $options['configuration'] = ['source_tags' => $tags];
-    }
-    $executable = new MigrateBatchExecutable($migration, new MigrateMessage());
-    $executable->batchImport();
-    batch_process($redirect);
-    $batch = batch_get();
-    $url = $batch['url'];
-    return new RedirectResponse($url->toString());
+    return $this->runMigration($redirect_url, $tags);
   }
 
 }

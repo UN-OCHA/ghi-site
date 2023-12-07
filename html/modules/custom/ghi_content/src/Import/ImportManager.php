@@ -385,7 +385,8 @@ class ImportManager implements ContainerInjectionInterface {
     }
 
     $chapter_uuids = [];
-    foreach ($document->getChapters() as $chapter) {
+    $chapters = $document->getChapters(FALSE);
+    foreach ($chapters as $chapter) {
       if (!empty($chapter_ids) && !in_array($chapter->id, $chapter_ids)) {
         continue;
       }
@@ -400,6 +401,7 @@ class ImportManager implements ContainerInjectionInterface {
       $messages = [];
 
       $existing_component = $this->getExistingSyncedContentItem($node, $chapter);
+      $existing_configuration = $existing_component?->get('configuration')['hpc'] ?? [];
       $chapter_configuration = [
         'hpc' => [
           'document_select' => [
@@ -410,11 +412,12 @@ class ImportManager implements ContainerInjectionInterface {
           ],
           'chapter' => [
             'chapter_id' => $chapter->getId(),
+            'show_title' => $existing_component ? ($existing_configuration['chapter']['show_title'] ?? count($chapters) > 1) : count($chapters) > 1,
           ],
         ],
         'lock_document' => TRUE,
       ];
-      if ($existing_component) {
+      if ($existing_component && ($existing_component->get('configuration')['lock_document'] ?? FALSE)) {
         // Update an existing component.
         $configuration = $chapter_configuration + $context_mapping + $existing_component->get('configuration');
         $existing_component->setConfiguration($configuration);
@@ -458,6 +461,11 @@ class ImportManager implements ContainerInjectionInterface {
         // Only remove chapters from the same document. This allows to add more
         // chapters from different articles.
         // @todo Good idea?
+        continue;
+      }
+      if (!($component->get('configuration')['lock_document'] ?? FALSE)) {
+        // Don't remove chapters that do not have the document locked, those
+        // are manually added and need to be kept.
         continue;
       }
       if (in_array($component->getUuid(), $chapter_uuids)) {
@@ -784,7 +792,7 @@ class ImportManager implements ContainerInjectionInterface {
    */
   public function getRemoteDocumentChapterUuids(RemoteDocumentInterface $document) {
     $uuids = [];
-    foreach ($document->getChapters() as $chapter) {
+    foreach ($document->getChapters(FALSE) as $chapter) {
       $uuids[] = $chapter->getUuid();
     }
     sort($uuids);

@@ -128,7 +128,7 @@ class HeroImageManager {
       case 'none':
       case '':
         $default_image = $formatter?->getSetting('default_image');
-        $image_path = $default_image['path'];
+        $image_path = $default_image['path'] ?? NULL;
         if (!empty($image_path)) {
           if ($default_image['use_image_style']) {
             // $image_path must be ready for

@@ -122,6 +122,7 @@ class FootnotesWidget extends WidgetBase {
       '#title' => $this->t('Footnote'),
       '#value' => $items[$delta]->footnote ?? '',
       '#default_value' => $items[$delta]->footnote ?? '',
+      '#maxlength' => 255,
     ];
     return $element;
   }

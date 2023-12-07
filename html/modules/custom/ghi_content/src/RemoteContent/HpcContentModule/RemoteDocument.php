@@ -4,6 +4,7 @@ namespace Drupal\ghi_content\RemoteContent\HpcContentModule;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Render\Markup;
+use Drupal\ghi_content\RemoteContent\RemoteChapterInterface;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentBase;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 
@@ -56,8 +57,13 @@ class RemoteDocument extends RemoteDocumentBase {
   /**
    * {@inheritdoc}
    */
-  public function getChapters() {
-    return $this->chapters;
+  public function getChapters($include_hidden = TRUE) {
+    if ($include_hidden) {
+      return $this->chapters;
+    }
+    return array_filter($this->chapters, function (RemoteChapterInterface $chapter) {
+      return !$chapter->isHidden();
+    });
   }
 
   /**

@@ -8,3 +8,4 @@ core_version_requirement: ^9 || ^10
 dependencies:
   - protected_pages:protected_pages
   - ghi_content:ghi_content
+  - search_api:search_api

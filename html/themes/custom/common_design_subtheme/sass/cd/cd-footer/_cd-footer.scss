@@ -17,4 +17,95 @@
       outline: 3px solid $cd-blue--bright;
     }
   }
+
+  .region-footer-navigation {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    width: 100%;
+    gap: 2rem;
+
+    & > nav {
+      flex-basis: fit-content;
+      margin-bottom: 0.8rem;
+      padding-bottom: 0;
+
+      @media (max-width: 1024px) {
+        margin-right: auto;
+        margin-left: auto;
+      }
+    }
+
+    .block-mailing-list-subscribe {
+      width: 100%;
+      white-space: nowrap;
+
+      form > div > p {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        font-size: var(--cd-font-size--default);
+        font-weight: bold;
+      }
+
+      form .mc-field-group {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0;
+
+        input {
+          border: 0;
+        }
+
+        input[type="email"] {
+          width: 13rem;
+          padding: 0.5rem 1rem;
+          border-top-left-radius: 5px;
+          border-bottom-left-radius: 5px;
+
+          &:focus,
+          &:focus-visible {
+            outline-style: outset;
+            outline-color: var(--ghi-default-text-color);
+            outline-offset: -1px;
+          }
+        }
+
+        input[type="submit"] {
+          color: var(--cd-white) !important;
+          border-top-left-radius: 0;
+          border-top-right-radius: 5px;
+          border-bottom-right-radius: 5px;
+          border-bottom-left-radius: 0;
+          background-color: var(--ghi-default-text-color);
+
+          &:hover {
+            transition: opacity 0.1666s ease-in-out;
+            opacity: 0.8;
+          }
+        }
+
+        @media (max-width: 1024px) {
+          flex-direction: column;
+          justify-content: center;
+          max-width: 20rem;
+          margin-right: auto;
+          margin-left: auto;
+          gap: 0.5rem;
+        }
+      }
+    }
+
+    @include desktop {
+      flex-direction: row;
+
+      .block-mailing-list-subscribe {
+        width: auto;
+      }
+    }
+  }
+
+  .cd-footer__section--social {
+    display: none;
+  }
 }

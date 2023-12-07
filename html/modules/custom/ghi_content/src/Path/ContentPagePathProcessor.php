@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 /**
  * A path processor class for content pages.
  *
- * The logic in this class allows for node aliases to be nexted inside other
+ * The logic in this class allows for node aliases to be nested inside other
  * aliases, creating duplicated content from the perspective of search engines.
  * That's a trade-off we are ok with, because this allows to have documents
  * associated to sections and articles associated to documents, while still

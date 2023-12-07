@@ -8,7 +8,7 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 
 /**
- * Provides an entity counter item for configuration containers.
+ * Provides a label/value item for configuration containers.
  *
  * @ConfigurationContainerItem(
  *   id = "label_value",
@@ -43,6 +43,7 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
         '#type' => 'textfield',
         '#title' => $this->t('Footnote'),
         '#default_value' => array_key_exists('footnote', $this->config) ? $this->config['footnote'] : NULL,
+        '#maxlength' => 255,
       ];
     }
 

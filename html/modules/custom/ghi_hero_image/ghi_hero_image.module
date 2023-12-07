@@ -6,9 +6,13 @@
  */
 
 use Drupal\Core\Entity\ContentEntityFormInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\ghi_hero_image\HeroImageWidgetCropManager;
+use Drupal\image\Entity\ImageStyle;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
 
@@ -79,6 +83,96 @@ function ghi_hero_image_preprocess_page(&$variables) {
   if ($hero_image) {
     $hero_image['#label_display'] = 'hidden';
     $variables['page'][$region_name] = ['hero_image' => $hero_image] + $variables['page'][$region_name];
+  }
+
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function ghi_hero_image_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'entity_update') {
+    // Move ghi_hero_image_entity_update() to the end of the list.
+    // \Drupal::moduleHandler()->getImplementationInfo()
+    // iterates through $implementations with a foreach loop which PHP iterates
+    // in the order that the items were added, so to move an item to the end of
+    // the array, we remove it and then add it.
+    $group = $implementations['ghi_hero_image'];
+    unset($implementations['ghi_hero_image']);
+    $implementations['ghi_hero_image'] = $group;
+  }
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function ghi_hero_image_entity_insert(EntityInterface $entity) {
+  // Pre-create webp derivatives after webp_entity_insert() might have removed
+  // them.
+  ghi_hero_image_webp_create_derivatives($entity);
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function ghi_hero_image_entity_update(EntityInterface $entity) {
+  // Pre-create webp derivatives after webp_entity_update() might have removed
+  // them.
+  ghi_hero_image_webp_create_derivatives($entity);
+}
+
+/**
+ * Create webp derivates for the given entity.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity to check if derivatives should be pre-created.
+ */
+function ghi_hero_image_webp_create_derivatives(EntityInterface $entity) {
+  if (!$entity || !$entity instanceof FieldableEntityInterface) {
+    return;
+  }
+
+  /** @var \Drupal\Core\Image\ImageFactory $image_factory */
+  $image_factory = \Drupal::service('image.factory');
+  /** @var \Drupal\webp\Webp $webp */
+  $webp = \Drupal::service('webp.webp');
+  $styles = ImageStyle::loadMultiple();
+
+  // Loop all fields of the saved entity.
+  foreach ($entity->getFields() as $entity_fields) {
+    // If current field is FileField and use imageWidgetCrop.
+    if ($entity_fields instanceof FileFieldItemList) {
+      try {
+        $file_uri = $entity_fields->entity->getFileUri();
+      }
+      catch (\Throwable $th) {
+        // Continue if for some reason the file uri failed to get.
+        continue;
+      }
+
+      // Loop through each image style and check for webp derivatives.
+      foreach ($styles as $style) {
+        $derivative_uri = $style->buildUri($file_uri);
+        $derivative_webp_uri = $derivative_uri . '.webp';
+
+        if (!file_exists($derivative_webp_uri)) {
+          try {
+            $image_uri = $webp->getWebpDestination($derivative_webp_uri, '@directory@filename');
+            if (!file_exists($image_uri) && $image_uri != urldecode($image_uri)) {
+              $image_uri = urldecode($image_uri);
+            }
+            if (!file_exists($image_uri)) {
+              $style->createDerivative($file_uri, $image_uri);
+            }
+            $image = $image_factory->get($image_uri);
+            $webp->createWebpCopy($image->getSource());
+          }
+          catch (Exception $e) {
+            // Ignore failed attempts.
+          }
+        }
+      }
+    }
   }
 
 }

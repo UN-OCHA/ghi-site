@@ -13,7 +13,7 @@ use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides an attachment data item for configuration containers.
+ * Provides a data point item for configuration containers.
  *
  * @ConfigurationContainerItem(
  *   id = "data_point",

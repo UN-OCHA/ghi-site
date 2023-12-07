@@ -4,11 +4,29 @@ namespace Drupal\ghi_embargoed_access\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a settings form for embargoed access.
  */
 class GhiEmbargoedAccessSettingForm extends ConfigFormBase {
+
+  /**
+   * The embargoed access manager service.
+   *
+   * @var \Drupal\ghi_embargoed_access\EmbargoedAccessManager
+   */
+  protected $embargoedAccessManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    /** @var static $instance */
+    $instance = parent::create($container);
+    $instance->embargoedAccessManager = $container->get('ghi_embargoed_access.manager');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -46,6 +64,10 @@ class GhiEmbargoedAccessSettingForm extends ConfigFormBase {
     $config = $this->config('ghi_embargoed_access.settings');
     $config->set('enabled', $form_state->getValue('enabled'));
     $config->save();
+
+    // Find all currently protected nodes and mark them for re-index.
+    $this->embargoedAccessManager->markAllForReindex();
+
     drupal_flush_all_caches();
     return parent::submitForm($form, $form_state);
   }

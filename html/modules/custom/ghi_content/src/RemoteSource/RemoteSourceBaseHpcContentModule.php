@@ -44,6 +44,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'title',
       'title_short',
       'summary',
+      'hidden',
     ];
     $fields['chapters']['articles'] = [
       'id',

@@ -7,6 +7,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\LineBreak;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
@@ -80,15 +81,20 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemGroupInterface $group_item */
       $group_item = $this->getItemTypePluginForColumn($group, $context);
 
-      foreach ($group['children'] as $item) {
+      foreach ($group['children'] as $key => $item) {
 
         /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
         $item_type = $this->getItemTypePluginForColumn($item, $context);
+
+        if ($key == 0 && $item_type instanceof LineBreak) {
+          continue;
+        }
 
         $rendered[] = [
           '#type' => 'item',
           '#title' => $item_type->getLabel(),
           0 => $item_type->getRenderArray(),
+          '#wrapper_attributes' => ['class' => $item_type->getClasses()],
         ];
       }
       if (empty($rendered)) {
@@ -220,6 +226,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
       'item_group' => [
         'link' => TRUE,
       ],
+      'line_break' => [],
       'funding_data' => [
         'item_types' => [
           'funding_totals',

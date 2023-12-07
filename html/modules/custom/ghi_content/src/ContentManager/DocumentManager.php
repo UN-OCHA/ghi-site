@@ -157,13 +157,13 @@ class DocumentManager extends BaseContentManager {
       return;
     }
 
-    // See if the article needs a cleanup.
+    // See if the document needs a cleanup.
     $remote_source = $node->get($remote_field)->remote_source;
-    $document_id = $node->get($remote_field)->article_id;
+    $document_id = $node->get($remote_field)->document_id;
     $remote_source_original = $node->original ? $node->original->get($remote_field)->remote_source : NULL;
-    $document_id_original = $node->original ? $node->original->get($remote_field)->article_id : NULL;
-    $changed_article = $remote_source_original && $document_id_original && ($remote_source != $remote_source_original || $document_id != $document_id_original);
-    $cleanup = $reset || $changed_article;
+    $document_id_original = $node->original ? $node->original->get($remote_field)->document_id : NULL;
+    $changed_document = $remote_source_original && $document_id_original && ($remote_source != $remote_source_original || $document_id != $document_id_original);
+    $cleanup = $reset || $changed_document;
 
     // Set the base properties.
     $node->setTitle($document->getTitle());
@@ -179,7 +179,7 @@ class DocumentManager extends BaseContentManager {
     // Import the image.
     $this->importManager->importImage($node, $document, 'field_image');
 
-    // Import the paragraphs for the article.
+    // Import the chapters for the document.
     $this->importManager->importDocumentChapters($node, $document, [], NULL, $cleanup);
 
     // Import the tags.
@@ -199,7 +199,7 @@ class DocumentManager extends BaseContentManager {
    * @return bool|null
    *   TRUE if in-sync, FALSE if not and NULL if the migration is not found.
    *
-   * @see ghi_content_form_node_article_edit_form_alter()
+   * @see ghi_content_form_node_document_edit_form_alter()
    */
   public function isUpToDateWithRemote(NodeInterface $node) {
     $migration = $this->getMigration($node);

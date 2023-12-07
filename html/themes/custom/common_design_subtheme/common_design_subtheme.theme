@@ -187,6 +187,7 @@ function common_design_subtheme_preprocess_block(&$variables) {
     'document_navigation',
     'system_main_block',
     'paragraph',
+    'mailing_list_subscribe',
   ];
 
   // On some node types, we want to auto highlight (full-width background) the
@@ -594,10 +595,11 @@ function common_design_subtheme_preprocess_item_list__key_figures(&$variables) {
   $items = &$variables['items'];
   $figures = [];
   foreach ($items as &$item) {
-    $figures[] = [
+    $figures[] = array_filter([
       'label' => $item['value']['#title'],
       'value' => $item['value'][0],
-    ];
+      'class' => implode(' ', $item['value']['#wrapper_attributes']['class'] ?? []),
+    ]);
   }
   $variables['figures'] = $figures;
 }
