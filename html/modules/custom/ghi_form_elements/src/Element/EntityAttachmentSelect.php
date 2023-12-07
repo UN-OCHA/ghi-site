@@ -192,7 +192,7 @@ class EntityAttachmentSelect extends FormElement {
         'wrapper' => $wrapper_id,
       ],
       '#attributes' => [
-        'class' => [$current_action != 'select_entities' ? 'visually-hidden' : NULL],
+        'class' => $current_action != 'select_entities' ? ['visually-hidden'] : [],
       ],
     ];
     $element['actions']['change_entities'] = [
@@ -204,7 +204,7 @@ class EntityAttachmentSelect extends FormElement {
         'wrapper' => $wrapper_id,
       ],
       '#attributes' => [
-        'class' => [$current_action != 'select_attachments' ? 'visually-hidden' : NULL],
+        'class' => $current_action != 'select_attachments' ? ['visually-hidden'] : [],
       ],
       '#limit_validation_errors' => [],
       '#submit' => [],
@@ -218,7 +218,7 @@ class EntityAttachmentSelect extends FormElement {
         'wrapper' => $wrapper_id,
       ],
       '#attributes' => [
-        'class' => [$current_action != 'select_attachments' ? 'visually-hidden' : NULL],
+        'class' => $current_action != 'select_attachments' ? ['visually-hidden'] : [],
       ],
     ];
     if (!empty($element['#next_step']) && !empty($element['#container_wrapper'])) {
