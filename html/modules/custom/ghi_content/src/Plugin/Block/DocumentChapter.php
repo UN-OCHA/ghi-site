@@ -50,6 +50,18 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
   /**
    * {@inheritdoc}
    */
+  public function getConfiguration() {
+    // Work around an issue with updating "Show title". The logic for title
+    // display in GHIBlockBase is confusing, but setting the configured label
+    // to NULL here works for the moment.
+    $configuration = parent::getConfiguration();
+    $configuration['label'] = NULL;
+    return $configuration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildContent() {
     $chapter = $this->getChapter();
     if (!$chapter) {
@@ -118,10 +130,13 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
 
   /**
    * Check whether the chapter title should display.
+   *
+   * @return bool
+   *   TRUE if the chapter title should display, FALSE otherwise.
    */
   public function shouldDisplayChapterTitle() {
     $conf = $this->getBlockConfig();
-    return array_key_exists('show_title', $conf['chapter']) ? $conf['chapter']['show_title'] : TRUE;
+    return $conf['chapter']['show_title'] ?? TRUE;
   }
 
   /**
@@ -140,8 +155,7 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
       ],
       'chapter' => [
         'chapter_id' => NULL,
-        'show_title' => TRUE,
-        'label' => NULL,
+        'show_title' => NULL,
       ],
     ];
   }
@@ -207,6 +221,7 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
     ];
 
     $form['label']['#weight'] = -1;
+    $form['label']['#default_value'] = NULL;
 
     $options = array_map(function (RemoteChapterInterface $chapter) {
       $title = $chapter->getTitle();
@@ -229,7 +244,7 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
     $form['show_title'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Show the chapter title'),
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'show_title'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'show_title') ?? TRUE,
     ];
 
     return $form;
