@@ -4,6 +4,7 @@ namespace Drupal\ghi_menu\Plugin\Block;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
@@ -87,21 +88,32 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
       return $build;
     }
 
-    $tabs = [];
+    $cache_contexts = [];
+    $cache_tags = [];
+
+    $tabs = [
+      '#theme' => 'item_list',
+    ];
     foreach ($menu_tree as $plugin_id => $item) {
       if (!$item->hasChildren) {
         continue;
       }
-      $tabs[$plugin_id] = $this->menuTree->build($item->subtree);
+
+      $_tree = $this->menuTree->build($item->subtree);
+      $cache_contexts = Cache::mergeContexts($cache_contexts, $_tree['#cache']['contexts']);
+      $cache_tags = Cache::mergeTags($cache_tags, $_tree['#cache']['tags']);
+      unset($_tree['#cache']);
+
+      $tabs[$plugin_id] = $_tree;
       $tabs[$plugin_id]['#title'] = $item->link->getTitle();
       $tabs[$plugin_id]['#group'] = 'tabs';
       $tabs[$plugin_id]['#weight'] = $item->link->getWeight();
 
       // Add classes to child items that themselves do not have child items.
-      foreach ($tabs[$plugin_id]['#items'] ?? [] as &$item) {
-        $item['attributes']['class'] = $item['attributes']['class'] ?? [];
-        if (empty($item['below'])) {
-          $item['attributes']['class'][] = 'leaf';
+      foreach ($tabs[$plugin_id]['#items'] ?? [] as &$_item) {
+        $_item['attributes']['class'] = $_item['attributes']['class'] ?? [];
+        if (empty($_item['below'])) {
+          $_item['attributes']['class'][] = 'leaf';
         }
       }
     }
@@ -161,6 +173,12 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
       RenderElement::processGroup($build['tab_content'][$element_key], $form_state, $complete_form);
     }
     $this->processVerticalTabs($build, $form_state);
+
+    $build['#cache'] = [
+      'contexts' => $cache_contexts,
+      'tags' => $cache_tags,
+    ];
+
     return $build;
   }
 

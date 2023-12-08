@@ -175,6 +175,7 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'template' => 'ghi-message',
     ],
     'mailing_list_subscribe' => [
+      'render element' => 'element',
       'template' => 'mailing-list-subscribe',
     ],
   ];
