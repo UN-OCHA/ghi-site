@@ -71,7 +71,7 @@ class EmbargoedAccessManager {
    *   TRUE if the embargoed access is enabled, false otherwise.
    */
   public function embargoedAccessEnabled() {
-    return !$this->configFactory->get('ghi_embargoed_access.settings')->get('enabled');
+    return $this->configFactory->get('ghi_embargoed_access.settings')->get('enabled');
   }
 
   /**
