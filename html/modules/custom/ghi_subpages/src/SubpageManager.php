@@ -51,11 +51,13 @@ class SubpageManager extends BaseObjectSubpageManager {
    */
   public function getSubpageTypes() {
     // The basic subpages defined by this module.
-    $subpage_types = self::SUPPORTED_SUBPAGE_TYPES;
+    $subpage_types = [];
+    $default_subpage_types = self::SUPPORTED_SUBPAGE_TYPES;
 
     $node_types = $this->entityTypeManager->getStorage('node_type')->loadMultiple();
     foreach ($node_types as $node_type) {
-      if (in_array($node_type->id(), $subpage_types)) {
+      if (in_array($node_type->id(), $default_subpage_types)) {
+        $subpage_types[] = $node_type->id();
         continue;
       }
       $is_subpage = FALSE;

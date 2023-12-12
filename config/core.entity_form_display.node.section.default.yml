@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.node.section.field_base_object
     - field.field.node.section.field_hero_image
+    - field.field.node.section.field_protected
     - field.field.node.section.field_summary
     - field.field.node.section.field_tags
     - field.field.node.section.field_team
@@ -13,6 +14,7 @@ dependencies:
     - field.field.node.section.section_menu
     - node.type.section
   module:
+    - entity_access_password
     - ghi_hero_image
     - path
     - text
@@ -47,6 +49,16 @@ content:
         hpc_webcontent_file_attachment: null
         smugmug_api: null
         crop_image: true
+    third_party_settings: {  }
+  field_protected:
+    type: entity_access_password_password
+    weight: 52
+    region: content
+    settings:
+      open: false
+      show_entity_title: optional
+      show_hint: optional
+      allow_random_password: false
     third_party_settings: {  }
   field_summary:
     type: text_textarea

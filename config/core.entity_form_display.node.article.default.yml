@@ -8,6 +8,7 @@ dependencies:
     - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
     - field.field.node.article.field_inherit_section_image
+    - field.field.node.article.field_protected
     - field.field.node.article.field_remote_article
     - field.field.node.article.field_short_title
     - field.field.node.article.field_summary
@@ -17,6 +18,7 @@ dependencies:
     - node.type.article
   module:
     - bert
+    - entity_access_password
     - field_group
     - ghi_content
     - image
@@ -144,6 +146,16 @@ content:
     region: content
     settings:
       display_label: true
+    third_party_settings: {  }
+  field_protected:
+    type: entity_access_password_password
+    weight: 52
+    region: content
+    settings:
+      open: false
+      show_entity_title: optional
+      show_hint: optional
+      allow_random_password: false
     third_party_settings: {  }
   field_remote_article:
     type: ghi_remote_article

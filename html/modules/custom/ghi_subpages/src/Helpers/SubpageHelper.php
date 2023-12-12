@@ -58,7 +58,7 @@ class SubpageHelper {
 
     $parent_node = Node::load($node->id());
 
-    foreach (SubpageManager::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
+    foreach (self::getSubpageTypes() as $subpage_type) {
       if (self::getSubpageForBaseNode($node, $subpage_type)) {
         continue;
       }

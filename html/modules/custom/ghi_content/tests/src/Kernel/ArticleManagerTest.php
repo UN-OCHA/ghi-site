@@ -130,7 +130,7 @@ class ArticleManagerTest extends KernelTestBase {
   }
 
   /**
-   * Tests that tags can be imported.
+   * Tests that tags can be retrieved.
    */
   public function testGetTags() {
     $section_terms = [
@@ -154,7 +154,7 @@ class ArticleManagerTest extends KernelTestBase {
   }
 
   /**
-   * Tests that tags can be imported.
+   * Tests loading nodes for a section.
    */
   public function testLoadNodesForSection() {
 
@@ -230,7 +230,7 @@ class ArticleManagerTest extends KernelTestBase {
   }
 
   /**
-   * Tests that tags can be imported.
+   * Tests that tags available tags for a section can be retrieved.
    */
   public function testLoadAvailableTagsForSection() {
 

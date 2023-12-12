@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.storage.node.field_entity_reference
+    - field.storage.node.field_protected
     - field.storage.node.field_remote_article
     - field.storage.node.field_remote_document
     - field.storage.node.field_tags
@@ -28,9 +29,9 @@ dependencies:
     - taxonomy.vocabulary.tags
     - taxonomy.vocabulary.team
   module:
+    - entity_access_password
     - ghi_base_objects
     - ghi_content
-    - ghi_embargoed_access
     - node
     - taxonomy
     - user
@@ -1540,15 +1541,14 @@ display:
             format: custom
             format_custom_false: Unpublished
             format_custom_true: Published
-        protected_status:
-          id: protected_status
-          table: node
-          field: protected_status
+        field_protected:
+          id: field_protected
+          table: node__field_protected
+          field: field_protected
           relationship: none
           group_type: group
           admin_label: ''
-          entity_type: node
-          plugin_id: protected_status
+          plugin_id: field
           label: Protected
           exclude: false
           alter:
@@ -1586,14 +1586,27 @@ display:
           element_wrapper_type: ''
           element_wrapper_class: ''
           element_default_classes: true
-          empty: ''
+          empty: 'No'
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          type: yes-no
-          type_custom_true: ''
-          type_custom_false: ''
-          not: 0
+          click_sort_column: is_protected
+          type: entity_access_password_boolean
+          settings:
+            format: yes-no
+            format_custom_false: ''
+            format_custom_true: ''
+            condition_property: is_protected
+          group_column: ''
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
         changed:
           id: changed
           table: node_field_data
@@ -1676,6 +1689,86 @@ display:
           hide_alter_empty: true
           destination: true
       filters:
+        type_1:
+          id: type_1
+          table: node_field_data
+          field: type
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: node
+          entity_field: type
+          plugin_id: bundle
+          operator: in
+          value:
+            article: article
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: ''
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+        nid:
+          id: nid
+          table: node_access
+          field: nid
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: node_access
+          operator: '='
+          value: ''
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: ''
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
         title:
           id: title
           table: node_field_data
@@ -1818,29 +1911,30 @@ display:
                 title: Unpublished
                 operator: '='
                 value: '0'
-        langcode:
-          id: langcode
-          table: node_field_data
-          field: langcode
+        field_protected_is_protected:
+          id: field_protected_is_protected
+          table: node__field_protected
+          field: field_protected_is_protected
           relationship: none
           group_type: group
           admin_label: ''
-          entity_type: node
-          entity_field: langcode
-          plugin_id: language
-          operator: in
-          value: {  }
+          plugin_id: numeric
+          operator: '='
+          value:
+            min: ''
+            max: ''
+            value: ''
           group: 1
           exposed: true
           expose:
-            operator_id: langcode_op
-            label: Language
+            operator_id: field_protected_is_protected_op
+            label: Protected
             description: ''
             use_operator: false
-            operator: langcode_op
+            operator: field_protected_is_protected_op
             operator_limit_selection: false
             operator_list: {  }
-            identifier: langcode
+            identifier: protected
             required: false
             remember: false
             multiple: false
@@ -1848,105 +1942,139 @@ display:
               authenticated: authenticated
               anonymous: '0'
               administrator: '0'
-            reduce: false
-          is_grouped: false
+              global_editor: '0'
+              editor: '0'
+              rpm_administrator: '0'
+              plan_lead: '0'
+              cluster_lead: '0'
+            min_placeholder: ''
+            max_placeholder: ''
+            placeholder: ''
+          is_grouped: true
           group_info:
-            label: ''
+            label: Protected
             description: ''
-            identifier: ''
+            identifier: protected
             optional: true
             widget: select
             multiple: false
             remember: false
             default_group: All
             default_group_multiple: {  }
-            group_items: {  }
-        type_1:
-          id: type_1
-          table: node_field_data
-          field: type
-          relationship: none
-          group_type: group
-          admin_label: ''
-          entity_type: node
-          entity_field: type
-          plugin_id: bundle
-          operator: in
-          value:
-            article: article
-          group: 1
-          exposed: false
-          expose:
-            operator_id: ''
-            label: ''
-            description: ''
-            use_operator: false
-            operator: ''
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: ''
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-            reduce: false
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-        nid:
-          id: nid
-          table: node_access
-          field: nid
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: node_access
-          operator: '='
-          value: ''
-          group: 1
-          exposed: false
-          expose:
-            operator_id: ''
-            label: ''
-            description: ''
-            use_operator: false
-            operator: ''
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: ''
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
+            group_items:
+              1:
+                title: 'Yes'
+                operator: '='
+                value:
+                  min: ''
+                  max: ''
+                  value: '1'
+              2:
+                title: 'No'
+                operator: empty
+                value:
+                  min: ''
+                  max: ''
+                  value: ''
+              3:
+                title: ''
+                operator: '='
+                value:
+                  min: ''
+                  max: ''
+                  value: ''
       filter_groups:
         operator: AND
         groups:
           1: AND
+      style:
+        type: table
+        options:
+          grouping: {  }
+          row_class: ''
+          default_row_class: true
+          columns:
+            node_bulk_form: node_bulk_form
+            title: title
+            field_remote_article: field_remote_article
+            field_tags: field_tags
+            status: status
+            protected_status: protected_status
+            field_protected: field_protected
+            changed: changed
+            operations: operations
+          default: changed
+          info:
+            node_bulk_form:
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            title:
+              sortable: true
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            field_remote_article:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            field_tags:
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            status:
+              sortable: true
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            protected_status:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            field_protected:
+              sortable: true
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            changed:
+              sortable: true
+              default_sort_order: desc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: priority-low
+            operations:
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+          override: true
+          sticky: true
+          summary: ''
+          empty_table: true
+          caption: ''
+          description: ''
+      row:
+        type: fields
+        options: {  }
       defaults:
         title: false
+        style: false
+        row: false
         relationships: false
         fields: false
         filters: false
@@ -1987,6 +2115,7 @@ display:
         - 'user.node_grants:view'
         - user.permissions
       tags:
+        - 'config:field.storage.node.field_protected'
         - 'config:field.storage.node.field_remote_article'
         - 'config:field.storage.node.field_tags'
   page_custom_subpages:
@@ -2848,15 +2977,14 @@ display:
             format: custom
             format_custom_false: Unpublished
             format_custom_true: Published
-        protected_status:
-          id: protected_status
-          table: node
-          field: protected_status
+        field_protected:
+          id: field_protected
+          table: node__field_protected
+          field: field_protected
           relationship: none
           group_type: group
           admin_label: ''
-          entity_type: node
-          plugin_id: protected_status
+          plugin_id: field
           label: Protected
           exclude: false
           alter:
@@ -2894,14 +3022,27 @@ display:
           element_wrapper_type: ''
           element_wrapper_class: ''
           element_default_classes: true
-          empty: ''
+          empty: 'No'
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          type: yes-no
-          type_custom_true: ''
-          type_custom_false: ''
-          not: 0
+          click_sort_column: is_protected
+          type: entity_access_password_boolean
+          settings:
+            format: yes-no
+            format_custom_false: ''
+            format_custom_true: ''
+            condition_property: is_protected
+          group_column: ''
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
         changed:
           id: changed
           table: node_field_data
@@ -2984,6 +3125,86 @@ display:
           hide_alter_empty: true
           destination: true
       filters:
+        nid:
+          id: nid
+          table: node_access
+          field: nid
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: node_access
+          operator: '='
+          value: ''
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: ''
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+        type_1:
+          id: type_1
+          table: node_field_data
+          field: type
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: node
+          entity_field: type
+          plugin_id: bundle
+          operator: in
+          value:
+            document: document
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: ''
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
         title:
           id: title
           table: node_field_data
@@ -3126,135 +3347,175 @@ display:
                 title: Unpublished
                 operator: '='
                 value: '0'
-        langcode:
-          id: langcode
-          table: node_field_data
-          field: langcode
+        field_protected_is_protected:
+          id: field_protected_is_protected
+          table: node__field_protected
+          field: field_protected_is_protected
           relationship: none
           group_type: group
           admin_label: ''
-          entity_type: node
-          entity_field: langcode
-          plugin_id: language
-          operator: in
-          value: {  }
+          plugin_id: numeric
+          operator: '='
+          value:
+            min: ''
+            max: ''
+            value: ''
           group: 1
           exposed: true
           expose:
-            operator_id: langcode_op
-            label: Language
-            description: ''
+            operator_id: field_protected_is_protected_op
+            label: 'Protected (field_protected:is_protected)'
+            description: null
             use_operator: false
-            operator: langcode_op
+            operator: field_protected_is_protected_op
             operator_limit_selection: false
             operator_list: {  }
-            identifier: langcode
+            identifier: field_protected_is_protected
             required: false
             remember: false
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-            reduce: false
-          is_grouped: false
+            min_placeholder: null
+            max_placeholder: null
+            placeholder: null
+          is_grouped: true
           group_info:
-            label: ''
+            label: Protected
             description: ''
-            identifier: ''
+            identifier: protected
             optional: true
             widget: select
             multiple: false
             remember: false
             default_group: All
             default_group_multiple: {  }
-            group_items: {  }
-        type_1:
-          id: type_1
-          table: node_field_data
-          field: type
-          relationship: none
-          group_type: group
-          admin_label: ''
-          entity_type: node
-          entity_field: type
-          plugin_id: bundle
-          operator: in
-          value:
-            document: document
-          group: 1
-          exposed: false
-          expose:
-            operator_id: ''
-            label: ''
-            description: ''
-            use_operator: false
-            operator: ''
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: ''
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-            reduce: false
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-        nid:
-          id: nid
-          table: node_access
-          field: nid
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: node_access
-          operator: '='
-          value: ''
-          group: 1
-          exposed: false
-          expose:
-            operator_id: ''
-            label: ''
-            description: ''
-            use_operator: false
-            operator: ''
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: ''
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
+            group_items:
+              1:
+                title: 'Yes'
+                operator: '='
+                value:
+                  min: ''
+                  max: ''
+                  value: '1'
+              2:
+                title: 'No'
+                operator: empty
+                value:
+                  min: ''
+                  max: ''
+                  value: ''
+              3:
+                title: ''
+                operator: '='
+                value:
+                  min: ''
+                  max: ''
+                  value: ''
       filter_groups:
         operator: AND
         groups:
           1: AND
+      style:
+        type: table
+        options:
+          grouping: {  }
+          row_class: ''
+          default_row_class: true
+          columns:
+            node_bulk_form: node_bulk_form
+            title: title
+            type: type
+            name: name
+            status: status
+            changed: changed
+            edit_node: edit_node
+            delete_node: delete_node
+            dropbutton: dropbutton
+            timestamp: title
+          default: changed
+          info:
+            node_bulk_form:
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            title:
+              sortable: true
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            type:
+              sortable: true
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            name:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: priority-low
+            status:
+              sortable: true
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            changed:
+              sortable: true
+              default_sort_order: desc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: priority-low
+            edit_node:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            delete_node:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            dropbutton:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            timestamp:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+          override: true
+          sticky: true
+          summary: ''
+          empty_table: true
+          caption: ''
+          description: ''
+      row:
+        type: fields
+        options: {  }
       defaults:
         title: false
+        style: false
+        row: false
         relationships: false
         fields: false
         filters: false
@@ -3295,6 +3556,7 @@ display:
         - 'user.node_grants:view'
         - user.permissions
       tags:
+        - 'config:field.storage.node.field_protected'
         - 'config:field.storage.node.field_remote_document'
         - 'config:field.storage.node.field_tags'
   page_global_sections:
@@ -5560,15 +5822,14 @@ display:
             format: custom
             format_custom_false: Unpublished
             format_custom_true: Published
-        protected_status:
-          id: protected_status
-          table: node
-          field: protected_status
+        field_protected:
+          id: field_protected
+          table: node__field_protected
+          field: field_protected
           relationship: none
           group_type: group
           admin_label: ''
-          entity_type: node
-          plugin_id: protected_status
+          plugin_id: field
           label: Protected
           exclude: false
           alter:
@@ -5606,14 +5867,27 @@ display:
           element_wrapper_type: ''
           element_wrapper_class: ''
           element_default_classes: true
-          empty: ''
+          empty: 'No'
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          type: yes-no
-          type_custom_true: ''
-          type_custom_false: ''
-          not: 0
+          click_sort_column: is_protected
+          type: entity_access_password_boolean
+          settings:
+            format: yes-no
+            format_custom_false: ''
+            format_custom_true: ''
+            condition_property: is_protected
+          group_column: ''
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
         changed:
           id: changed
           table: node_field_data
@@ -5696,6 +5970,86 @@ display:
           hide_alter_empty: true
           destination: true
       filters:
+        type_1:
+          id: type_1
+          table: node_field_data
+          field: type
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: node
+          entity_field: type
+          plugin_id: bundle
+          operator: in
+          value:
+            section: section
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: ''
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+        nid:
+          id: nid
+          table: node_access
+          field: nid
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: node_access
+          operator: '='
+          value: ''
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: ''
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
         title:
           id: title
           table: node_field_data
@@ -5937,129 +6291,71 @@ display:
                 title: Unpublished
                 operator: '='
                 value: '0'
-        langcode:
-          id: langcode
-          table: node_field_data
-          field: langcode
+        field_protected_is_protected:
+          id: field_protected_is_protected
+          table: node__field_protected
+          field: field_protected_is_protected
           relationship: none
           group_type: group
           admin_label: ''
-          entity_type: node
-          entity_field: langcode
-          plugin_id: language
-          operator: in
-          value: {  }
+          plugin_id: numeric
+          operator: '='
+          value:
+            min: ''
+            max: ''
+            value: ''
           group: 1
           exposed: true
           expose:
-            operator_id: langcode_op
-            label: Language
-            description: ''
+            operator_id: field_protected_is_protected_op
+            label: 'Protected (field_protected:is_protected)'
+            description: null
             use_operator: false
-            operator: langcode_op
+            operator: field_protected_is_protected_op
             operator_limit_selection: false
             operator_list: {  }
-            identifier: langcode
+            identifier: field_protected_is_protected
             required: false
             remember: false
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-            reduce: false
-          is_grouped: false
+            min_placeholder: null
+            max_placeholder: null
+            placeholder: null
+          is_grouped: true
           group_info:
-            label: ''
+            label: Protected
             description: ''
-            identifier: ''
+            identifier: protected
             optional: true
             widget: select
             multiple: false
             remember: false
             default_group: All
             default_group_multiple: {  }
-            group_items: {  }
-        type_1:
-          id: type_1
-          table: node_field_data
-          field: type
-          relationship: none
-          group_type: group
-          admin_label: ''
-          entity_type: node
-          entity_field: type
-          plugin_id: bundle
-          operator: in
-          value:
-            section: section
-          group: 1
-          exposed: false
-          expose:
-            operator_id: ''
-            label: ''
-            description: ''
-            use_operator: false
-            operator: ''
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: ''
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-            reduce: false
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-        nid:
-          id: nid
-          table: node_access
-          field: nid
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: node_access
-          operator: '='
-          value: ''
-          group: 1
-          exposed: false
-          expose:
-            operator_id: ''
-            label: ''
-            description: ''
-            use_operator: false
-            operator: ''
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: ''
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
+            group_items:
+              1:
+                title: 'Yes'
+                operator: '='
+                value:
+                  min: ''
+                  max: ''
+                  value: '1'
+              2:
+                title: 'No'
+                operator: '='
+                value:
+                  min: ''
+                  max: ''
+                  value: '0'
+              3:
+                title: ''
+                operator: '='
+                value:
+                  min: ''
+                  max: ''
+                  value: ''
       filter_groups:
         operator: AND
         groups:
@@ -6115,5 +6411,6 @@ display:
         - 'user.node_grants:view'
         - user.permissions
       tags:
+        - 'config:field.storage.node.field_protected'
         - 'config:field.storage.node.field_tags'
         - 'config:field.storage.node.field_team'

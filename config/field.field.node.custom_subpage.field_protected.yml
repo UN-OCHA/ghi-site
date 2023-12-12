@@ -1,0 +1,38 @@
+uuid: 2dc0e86a-350f-492a-95b9-67cfe0361053
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_protected
+    - node.type.custom_subpage
+  module:
+    - entity_access_password
+id: node.custom_subpage.field_protected
+field_name: field_protected
+entity_type: node
+bundle: custom_subpage
+label: Protected
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  password_entity: false
+  password_bundle: false
+  password_global: true
+  password: ''
+  view_modes:
+    default: default
+    full: full
+    card: '0'
+    card_summary: '0'
+    featured: '0'
+    grid: '0'
+    password_protected: '0'
+    rss: '0'
+    search_index: '0'
+    search_result: '0'
+    teaser: '0'
+    token: '0'
+field_type: entity_access_password_password

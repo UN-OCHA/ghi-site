@@ -6,6 +6,7 @@ dependencies:
     - core.entity_view_mode.node.search_result
     - field.field.node.logframe.field_entity_reference
     - field.field.node.logframe.field_hero_image
+    - field.field.node.logframe.field_protected
     - field.field.node.logframe.field_team
     - field.field.node.logframe.layout_builder__layout
     - node.type.logframe
@@ -92,6 +93,7 @@ content:
     weight: 0
     region: content
 hidden:
+  field_protected: true
   field_team: true
   langcode: true
   layout_builder__layout: true

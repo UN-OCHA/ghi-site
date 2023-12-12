@@ -5,23 +5,88 @@
  * Hook implementations for GHI Embargoed Access.
  */
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Response;
+
+/**
+ * Implements hook_field_formatter_info_alter().
+ */
+function ghi_embargoed_access_field_formatter_info_alter(array &$info) {
+  $info['entity_access_password_form']['class'] = 'Drupal\ghi_embargoed_access\Plugin\Field\FieldFormatter\EntityAccessPasswordFormFormatter';
+}
+
+/**
+ * Implements hook_entity_view_mode_alter().
+ */
+function ghi_embargoed_access_entity_view_mode_alter(string &$view_mode, EntityInterface $entity): void {
+  /** @var \Drupal\ghi_embargoed_access\EmbargoedAccessManager $embargoed_access_manager */
+  $embargoed_access_manager = \Drupal::service('ghi_embargoed_access.manager');
+  $embargoed_access_manager->alterViewMode($view_mode, $entity);
+}
 
 /**
  * Implements hook_preprocess_html().
  */
-function ghi_embargoed_access_preprocess_html(&$vars) {
-  // Add the path-node class to the protected page login page so that it uses
-  // the same page dimensions.
-  if (\Drupal::service('path.current')->getPath() == '/protected-page') {
-    $vars['attributes']['class'][] = 'path-node';
-  }
+function ghi_embargoed_access_preprocess_html(&$variables) {
+  /** @var \Drupal\ghi_embargoed_access\EmbargoedAccessManager $embargoed_access_manager */
+  $embargoed_access_manager = \Drupal::service('ghi_embargoed_access.manager');
+  $embargoed_access_manager->alterHtml($variables);
+}
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function ghi_embargoed_access_preprocess_page(&$variables) {
+  /** @var \Drupal\ghi_embargoed_access\EmbargoedAccessManager $embargoed_access_manager */
+  $embargoed_access_manager = \Drupal::service('ghi_embargoed_access.manager');
+  $embargoed_access_manager->alterPage($variables);
+}
+
+/**
+ * Implements hook_preprocess_page_title().
+ */
+function ghi_embargoed_access_preprocess_page_title(&$variables) {
+  /** @var \Drupal\ghi_embargoed_access\EmbargoedAccessManager $embargoed_access_manager */
+  $embargoed_access_manager = \Drupal::service('ghi_embargoed_access.manager');
+  $embargoed_access_manager->alterPageTitle($variables);
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function ghi_embargoed_access_preprocess_node(&$variables) {
+  /** @var \Drupal\ghi_embargoed_access\EmbargoedAccessManager $embargoed_access_manager */
+  $embargoed_access_manager = \Drupal::service('ghi_embargoed_access.manager');
+  $embargoed_access_manager->alterNode($variables);
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function ghi_embargoed_access_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  /** @var \Drupal\ghi_embargoed_access\EmbargoedAccessManager $embargoed_access_manager */
+  $embargoed_access_manager = \Drupal::service('ghi_embargoed_access.manager');
+  $embargoed_access_manager->alterNodeForm($form, $form_state);
 }
 
 /**
  * Implements hook_form_FORM_ID_alter().
  */
-function ghi_embargoed_access_form_protected_pages_enter_password_alter(array &$form, FormStateInterface $form_state) {
-  $form['#attributes']['class'][] = 'content-width';
+function ghi_embargoed_access_form_entity_access_password_password_alter(array &$form, FormStateInterface $form_state) {
   $form['#attached']['library'][] = 'ghi_embargoed_access/protect_pages_login_form';
+  $form['#submit'][] = 'ghi_embargoed_access_form_entity_access_password_password_submit';
+}
+
+/**
+ * Submit handler for the entity access password form.
+ */
+function ghi_embargoed_access_form_entity_access_password_password_submit(array $form, FormStateInterface $form_state) {
+  // We just want to make sure that the form redirects to the original url.
+  // Without this, the redirect would go to the canonical url of the entity,
+  // which ignores any contextual information ,e.g. document or section base.
+  $path = \Drupal::request()->getPathInfo();
+  $redirect = new RedirectResponse($path, Response::HTTP_SEE_OTHER);
+  $form_state->setResponse($redirect);
 }

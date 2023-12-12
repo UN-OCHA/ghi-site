@@ -228,7 +228,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     // Filter out the structural tags.
     $tags = array_filter($tags, function ($tag) {
       /** @var \Drupal\taxonomy\TermInterface $tag */
-      $is_structural_tag = (bool) $tag->get('field_structural_tag')?->value ?? FALSE;
+      $is_structural_tag = (bool) $tag->hasField('field_structural_tag') && $tag->get('field_structural_tag')?->value ?? FALSE;
       return $is_structural_tag;
     });
 

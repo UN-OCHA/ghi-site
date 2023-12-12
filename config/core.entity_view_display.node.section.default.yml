@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.node.section.field_base_object
     - field.field.node.section.field_hero_image
+    - field.field.node.section.field_protected
     - field.field.node.section.field_summary
     - field.field.node.section.field_tags
     - field.field.node.section.field_team
@@ -13,6 +14,7 @@ dependencies:
     - field.field.node.section.section_menu
     - node.type.section
   module:
+    - entity_access_password
     - ghi_hero_image
     - layout_builder
     - layout_builder_ipe
@@ -30,7 +32,23 @@ third_party_settings:
         layout_settings:
           label: Content
           context_mapping: {  }
-        components: {  }
+        components:
+          b523d1b0-ac25-4613-bb0d-433e494cabff:
+            uuid: b523d1b0-ac25-4613-bb0d-433e494cabff
+            region: content
+            configuration:
+              id: 'field_block:node:section:field_protected'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: entity_access_password_form
+                label: above
+                settings:
+                  help_text: ''
+                third_party_settings: {  }
+            weight: 0
+            additional: {  }
         third_party_settings:
           layout_builder_lock:
             lock:
@@ -105,6 +123,14 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: 106
+    region: content
+  field_protected:
+    type: entity_access_password_form
+    label: above
+    settings:
+      help_text: ''
+    third_party_settings: {  }
+    weight: 109
     region: content
   field_summary:
     type: text_default
