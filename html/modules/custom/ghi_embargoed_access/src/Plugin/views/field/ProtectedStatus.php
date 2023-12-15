@@ -45,8 +45,7 @@ class ProtectedStatus extends Boolean {
     if (!$node instanceof NodeInterface) {
       return;
     }
-    $pid = $this->embargoedAccessManager->loadProtectedPageIdForNode($node);
-    return !empty($pid);
+    return $this->embargoedAccessManager->isProtected($node);
   }
 
 }

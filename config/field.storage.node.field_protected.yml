@@ -1,0 +1,19 @@
+uuid: 330906df-214a-453e-985d-526d8a2fb7d4
+langcode: en
+status: true
+dependencies:
+  module:
+    - entity_access_password
+    - node
+id: node.field_protected
+field_name: field_protected
+entity_type: node
+type: entity_access_password_password
+settings: {  }
+module: entity_access_password
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

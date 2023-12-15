@@ -6,6 +6,7 @@ type: module
 core_version_requirement: ^9 || ^10
 
 dependencies:
-  - protected_pages:protected_pages
+  - entity_access_password:entity_access_password
+  - entity_access_password_session_backend:entity_access_password_session_backend
   - ghi_content:ghi_content
   - search_api:search_api

@@ -6,10 +6,12 @@ dependencies:
     - field.field.node.plan_cluster.field_base_object
     - field.field.node.plan_cluster.field_entity_reference
     - field.field.node.plan_cluster.field_hero_image
+    - field.field.node.plan_cluster.field_protected
     - field.field.node.plan_cluster.field_team
     - field.field.node.plan_cluster.layout_builder__layout
     - node.type.plan_cluster
   module:
+    - entity_access_password
     - ghi_hero_image
     - layout_builder
     - layout_builder_ipe
@@ -26,7 +28,23 @@ third_party_settings:
         layout_settings:
           label: Content
           context_mapping: {  }
-        components: {  }
+        components:
+          32c275fa-49c5-420c-a0c2-b5ea8676bd9c:
+            uuid: 32c275fa-49c5-420c-a0c2-b5ea8676bd9c
+            region: content
+            configuration:
+              id: 'field_block:node:plan_cluster:field_protected'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: entity_access_password_form
+                label: above
+                settings:
+                  help_text: ''
+                third_party_settings: {  }
+            weight: 0
+            additional: {  }
         third_party_settings:
           layout_builder_lock:
             lock:
@@ -120,6 +138,14 @@ content:
       image_link: ''
     third_party_settings: {  }
     weight: 103
+    region: content
+  field_protected:
+    type: entity_access_password_form
+    label: above
+    settings:
+      help_text: ''
+    third_party_settings: {  }
+    weight: 109
     region: content
   field_team:
     type: entity_reference_label

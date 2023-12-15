@@ -5,10 +5,12 @@ dependencies:
   config:
     - field.field.node.custom_subpage.field_entity_reference
     - field.field.node.custom_subpage.field_hero_image
+    - field.field.node.custom_subpage.field_protected
     - field.field.node.custom_subpage.field_team
     - field.field.node.custom_subpage.layout_builder__layout
     - node.type.custom_subpage
   module:
+    - entity_access_password
     - ghi_hero_image
     - layout_builder
     - layout_builder_ipe
@@ -25,7 +27,23 @@ third_party_settings:
         layout_settings:
           label: Content
           context_mapping: {  }
-        components: {  }
+        components:
+          3e3033bc-03e8-46a5-a34f-973c43b89497:
+            uuid: 3e3033bc-03e8-46a5-a34f-973c43b89497
+            region: content
+            configuration:
+              id: 'field_block:node:custom_subpage:field_protected'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: entity_access_password_form
+                label: above
+                settings:
+                  help_text: ''
+                third_party_settings: {  }
+            weight: 0
+            additional: {  }
         third_party_settings:
           layout_builder_lock:
             lock:
@@ -80,6 +98,14 @@ content:
       image_link: ''
     third_party_settings: {  }
     weight: 101
+    region: content
+  field_protected:
+    type: entity_access_password_form
+    label: above
+    settings:
+      help_text: ''
+    third_party_settings: {  }
+    weight: 109
     region: content
   field_team:
     type: entity_reference_label
