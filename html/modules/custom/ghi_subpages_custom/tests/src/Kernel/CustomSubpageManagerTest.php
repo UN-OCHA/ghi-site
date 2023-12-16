@@ -35,6 +35,7 @@ class CustomSubpageManagerTest extends SectionMenuTestBase {
     'text',
     'filter',
     'token',
+    'path',
     'path_alias',
     'pathauto',
     'layout_builder',

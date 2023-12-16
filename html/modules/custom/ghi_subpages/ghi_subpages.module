@@ -7,6 +7,7 @@
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -56,6 +57,7 @@ function ghi_subpages_section_post_save(NodeInterface $section_node) {
   // Load all subpages and save them again to make sure they have proper paths.
   $subpages = SubpageHelper::loadSubpagesForBaseNode($section_node);
   foreach ($subpages as $subpage) {
+    $subpage->setSyncing(TRUE);
     $subpage->save();
   }
 
@@ -187,15 +189,13 @@ function ghi_subpages_local_tasks_alter(&$local_tasks) {
  */
 function ghi_subpages_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
   $form_object = $form_state->getFormObject();
-  if (!$form_object instanceof NodeDeleteForm) {
+  if ($form_object instanceof NodeDeleteForm) {
+    $form['actions']['submit']['#submit'][] = 'ghi_subpages_node_subpage_delete_form_submit';
     return;
   }
-  /** @var \Drupal\node\Form\NodeDeleteForm $form_object */
-  $entity = $form_object->getEntity();
-  if (!$entity instanceof NodeInterface || !SubpageHelper::isSubpageTypeNode($entity)) {
-    return;
+  if ($form_object instanceof ContentEntityForm && $form_object->getEntity() instanceof SubpageNodeInterface) {
+    $form['path']['widget']['#access'] = FALSE;
   }
-  $form['actions']['submit']['#submit'][] = 'ghi_subpages_node_subpage_delete_form_submit';
 }
 
 /**
