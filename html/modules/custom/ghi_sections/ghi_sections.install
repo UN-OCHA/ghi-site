@@ -16,3 +16,16 @@ function ghi_sections_update_9000(&$sandbox) {
     $section_menu_storage->addSectionMenuField($bundle);
   }
 }
+
+/**
+ * Delete content of type global section.
+ */
+function ghi_sections_update_9001(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $global_sections = $entity_type_manager->getStorage('node')->loadByProperties([
+    'type' => 'global_section',
+  ]);
+  foreach ($global_sections as $global_section) {
+    $global_section->delete();
+  }
+}

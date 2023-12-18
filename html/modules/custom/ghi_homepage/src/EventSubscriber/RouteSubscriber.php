@@ -1,16 +1,16 @@
 <?php
 
-namespace Drupal\ghi_sections\EventSubscriber;
+namespace Drupal\ghi_homepage\EventSubscriber;
 
 use Drupal\Core\Routing\RouteSubscriberBase;
 use Drupal\Core\Routing\RoutingEvents;
-use Drupal\ghi_sections\Entity\Section;
+use Drupal\ghi_homepage\Entity\Homepage;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
  * Provides an event subscriber that alters routes.
  *
- * @package Drupal\ghi_sections
+ * @package Drupal\ghi_homepage
  */
 class RouteSubscriber extends RouteSubscriberBase {
 
@@ -20,14 +20,14 @@ class RouteSubscriber extends RouteSubscriberBase {
   protected function alterRoutes(RouteCollection $collection) {
 
     // Add a custom route based on the generic node.add route, in order to use
-    // our Section Wizard form class for the creation of sections.
+    // our Homepage Wizard form class for the creation of homepages.
     if ($route = $collection->get('node.add')) {
       $wizard_route = clone $route;
-      $wizard_route->setPath('node/add/' . Section::BUNDLE);
-      $wizard_route->setRequirement('_entity_create_access', 'node:' . Section::BUNDLE);
-      $wizard_route->setDefault('_form', '\Drupal\ghi_sections\Form\SectionWizard');
-      $wizard_route->setDefault('node_type', Section::BUNDLE);
-      $collection->add('ghi_sections.wizard.section', $wizard_route);
+      $wizard_route->setPath('node/add/' . Homepage::BUNDLE);
+      $wizard_route->setRequirement('_entity_create_access', 'node:' . Homepage::BUNDLE);
+      $wizard_route->setDefault('_form', '\Drupal\ghi_homepage\Form\HomepageWizard');
+      $wizard_route->setDefault('node_type', Homepage::BUNDLE);
+      $collection->add('ghi_homepage.wizard.homepage', $wizard_route);
     }
   }
 

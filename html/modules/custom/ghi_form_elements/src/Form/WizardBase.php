@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ghi_sections\Form;
+namespace Drupal\ghi_form_elements\Form;
 
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -10,7 +10,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
-use Drupal\ghi_sections\SectionManager;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -57,13 +56,6 @@ abstract class WizardBase extends FormBase {
   protected $currentUser;
 
   /**
-   * The section manager.
-   *
-   * @var \Drupal\ghi_sections\Import\SectionManager
-   */
-  protected $sectionManager;
-
-  /**
    * The wrapper id for ajax.
    *
    * @var string
@@ -73,13 +65,12 @@ abstract class WizardBase extends FormBase {
   /**
    * Constructs a section create form.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, TypedDataManagerInterface $typed_data_manager, ModuleHandlerInterface $module_handler, AccountProxyInterface $user, SectionManager $section_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, TypedDataManagerInterface $typed_data_manager, ModuleHandlerInterface $module_handler, AccountProxyInterface $user) {
     $this->entityTypeManager = $entity_type_manager;
     $this->entityFieldManager = $entity_field_manager;
     $this->typedDataManager = $typed_data_manager;
     $this->moduleHandler = $module_handler;
     $this->currentUser = $user;
-    $this->sectionManager = $section_manager;
   }
 
   /**
@@ -91,8 +82,7 @@ abstract class WizardBase extends FormBase {
       $container->get('entity_field.manager'),
       $container->get('typed_data_manager'),
       $container->get('module_handler'),
-      $container->get('current_user'),
-      $container->get('ghi_sections.manager')
+      $container->get('current_user')
     );
   }
 

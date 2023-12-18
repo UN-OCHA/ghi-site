@@ -15,7 +15,7 @@ display:
         filesize:
           label: Taille
         status:
-          label: État
+          label: Status
           settings:
             format_custom_false: Temporaire
         created:
@@ -27,8 +27,8 @@ display:
       pager:
         options:
           tags:
-            next: 'Suivant ›'
-            previous: '‹ Précédent'
+            next: 'Next ›'
+            previous: '‹ Previous'
           expose:
             items_per_page_label: 'Éléments par page'
             items_per_page_options_all_label: '- Tout -'
@@ -50,7 +50,7 @@ display:
             label: 'Type MIME'
         status:
           expose:
-            label: État
+            label: Status
   page_1:
     display_title: "Vue d'ensemble des fichiers"
     display_options:
@@ -72,8 +72,8 @@ display:
       pager:
         options:
           tags:
-            next: 'Suivant ›'
-            previous: '‹ Précédent'
+            next: 'Next ›'
+            previous: '‹ Previous'
           expose:
             items_per_page_label: 'Éléments par page'
             items_per_page_options_all_label: '- Tout -'

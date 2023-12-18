@@ -5,7 +5,7 @@ namespace Drupal\Tests\ghi_base_objects\Traits;
 use Drupal\ghi_base_objects\Entity\BaseObjectType;
 
 /**
- * Provides methods to create a media type from given values.
+ * Provides methods to create base object types in tests.
  *
  * This trait is meant to be used only by test classes.
  */

@@ -15,6 +15,8 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
 
   use ShortNameTrait;
 
+  const BUNDLE = 'section';
+
   /**
    * {@inheritdoc}
    */

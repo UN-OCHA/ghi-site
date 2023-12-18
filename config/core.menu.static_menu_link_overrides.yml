@@ -199,12 +199,6 @@ definitions:
     weight: 0
     expanded: false
     enabled: false
-  'admin_toolbar_tools__extra_links:node__add__global_section':
-    menu_name: admin
-    parent: 'admin_toolbar_tools.extra_links:node.add'
-    weight: 0
-    expanded: false
-    enabled: false
   'admin_toolbar_tools__extra_links:node__add__homepage':
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'

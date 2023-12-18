@@ -1,27 +1,29 @@
 <?php
 
-namespace Drupal\ghi_sections\Form;
+namespace Drupal\ghi_homepage\Form;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_form_elements\Form\WizardBase;
+use Drupal\ghi_homepage\Entity\Homepage;
 use Drupal\node\NodeInterface;
 
 /**
- * Provides a wizard form for creating global section nodes.
+ * Provides a wizard form for creating homepage nodes.
  */
-class GlobalSectionWizard extends WizardBase {
+class HomepageWizard extends WizardBase {
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'ghi_global_sections_wizard';
+    return 'ghi_homepage_wizard';
   }
 
   /**
    * {@inheritdoc}
    */
   protected function getBundle() {
-    return 'global_section';
+    return Homepage::BUNDLE;
   }
 
   /**
@@ -34,14 +36,13 @@ class GlobalSectionWizard extends WizardBase {
     $team_options = $this->getTeamOptions($form_state);
     if (empty($team_options)) {
       // Bail out if there are no teams.
-      $this->messenger()->addError($this->t('No teams found. You must import teams before sections can be created.'));
+      $this->messenger()->addError($this->t('No teams found. You must import teams before homepages can be created.'));
       return $form;
     }
 
     // Define our steps.
     $steps = [
       'year',
-      'tags',
       'team',
       'title',
     ];
@@ -66,29 +67,6 @@ class GlobalSectionWizard extends WizardBase {
       '#default_value' => $form_state->getValue('year'),
       '#required' => TRUE,
       '#disabled' => $step > 0,
-    ];
-
-    $tags = $this->getEntityReferenceFieldItemList($this->getBundle(), 'field_tags', $form_state->getValue('tags') ?? []);
-
-    // Add the team selector.
-    $form['tags'] = [
-      '#type' => 'entity_autocomplete',
-      '#title' => $this->t('Tags'),
-      '#description' => $this->getFieldHelp('field_tags'),
-      '#target_type' => 'taxonomy_term',
-      '#selection_handler' => 'default',
-      '#selection_settings' => [
-        'target_bundles' => ['tags'],
-      ],
-      '#autocreate' => [
-        'bundle' => 'tags',
-        'uid' => $this->currentUser()->id(),
-      ],
-      '#tags' => TRUE,
-      '#default_value' => $tags->referencedEntities(),
-      '#required' => TRUE,
-      '#disabled' => $step > array_flip($steps)['tags'],
-      '#access' => $step >= array_flip($steps)['tags'],
     ];
 
     // Add the team selector.
@@ -119,7 +97,6 @@ class GlobalSectionWizard extends WizardBase {
         '#value' => $this->t('Back'),
         '#limit_validation_errors' => array_filter([
           $step > 0 ? ['year'] : NULL,
-          $step > array_flip($steps)['tags'] ? ['tags'] : NULL,
           $step > array_flip($steps)['team'] ? ['team'] : NULL,
         ]),
         '#ajax' => [
@@ -158,10 +135,37 @@ class GlobalSectionWizard extends WizardBase {
   /**
    * {@inheritdoc}
    */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
+
+    $values = array_intersect_key($form_state->getValues(), array_flip([
+      'year',
+      'team',
+      'title',
+    ]));
+
+    $action = self::getActionFromFormState($form_state);
+
+    if ($action != 'back' && $form_state->get('step') == 0) {
+      $properties = [
+        'type' => 'homepage',
+        'field_year' => $values['year'],
+      ];
+      $sections = $this->entityTypeManager->getStorage('node')->loadByProperties($properties);
+      if (count($sections)) {
+        $form_state->setErrorByName('year', $this->t('A homepage for <em>@year</em> already exists.', [
+          '@year' => $values['year'],
+        ]));
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = array_intersect_key($form_state->getValues(), array_flip([
       'year',
-      'tags',
       'team',
       'title',
     ]));
@@ -170,24 +174,23 @@ class GlobalSectionWizard extends WizardBase {
     $this->messenger()->deleteAll();
 
     // Create and save the section.
-    $global_section = $this->entityTypeManager->getStorage('node')->create([
+    $homepage = $this->entityTypeManager->getStorage('node')->create([
       'type' => $this->getBundle(),
       'title' => $values['title'],
       'uid' => $this->currentUser()->id(),
       'status' => FALSE,
     ]);
-    $global_section->field_year = $values['year'];
-    $global_section->field_tags = $values['tags'];
-    $global_section->field_team = $values['team'];
-    $status = $global_section->save();
+    $homepage->field_year = $values['year'];
+    $homepage->field_team = $values['team'];
+    $status = $homepage->save();
     if ($status) {
       $this->messenger()->addStatus($this->t('Created @type for @title', [
-        '@type' => $global_section->type->entity->label(),
-        '@title' => $global_section->label(),
+        '@type' => $homepage->type->entity->label(),
+        '@title' => $homepage->label(),
       ]));
     }
 
-    $form_state->setRedirectUrl($global_section->toUrl());
+    $form_state->setRedirectUrl($homepage->toUrl());
   }
 
 }

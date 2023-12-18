@@ -5,7 +5,6 @@ dependencies:
   config:
     - field.storage.node.field_entity_reference
     - node.type.custom_subpage
-    - node.type.global_section
     - node.type.section
 id: node.custom_subpage.field_entity_reference
 field_name: field_entity_reference
@@ -21,11 +20,10 @@ settings:
   handler: 'default:node'
   handler_settings:
     target_bundles:
-      global_section: global_section
       section: section
     sort:
       field: _none
       direction: ASC
     auto_create: false
-    auto_create_bundle: global_section
+    auto_create_bundle: null
 field_type: entity_reference

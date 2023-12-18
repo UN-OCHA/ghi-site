@@ -45,6 +45,7 @@ module:
   ghi_form_elements: 0
   ghi_gin: 0
   ghi_hero_image: 0
+  ghi_homepage: 0
   ghi_local_tasks: 0
   ghi_menu: 0
   ghi_plan_clusters: 0

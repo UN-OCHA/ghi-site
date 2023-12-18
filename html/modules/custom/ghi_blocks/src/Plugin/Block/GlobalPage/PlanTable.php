@@ -632,7 +632,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
             'view' => [
               'view_name' => 'content_autocomplete',
               'display_name' => 'entity_reference',
-              'arguments' => ['article+section+global_section'],
+              'arguments' => ['article+section'],
             ],
             'match_operator' => 'CONTAINS',
           ],

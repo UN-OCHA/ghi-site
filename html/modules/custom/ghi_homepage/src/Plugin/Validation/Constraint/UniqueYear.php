@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ghi_sections\Plugin\Validation\Constraint;
+namespace Drupal\ghi_homepage\Plugin\Validation\Constraint;
 
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Symfony\Component\Validator\Constraint;
@@ -11,12 +11,12 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
  * Checks that the submitted value is a unique integer.
  *
  * @Constraint(
- *   id = "UniqueSectionYear",
- *   label = @Translation("Unique section year", context = "Validation"),
- *   type = "string"
+ *   id = "UniqueYear",
+ *   label = @Translation("Unique year", context = "Validation"),
+ *   type = { "integer", "string" }
  * )
  */
-class UniqueSectionYear extends Constraint implements ConstraintValidatorInterface {
+class UniqueYear extends Constraint implements ConstraintValidatorInterface {
 
   /**
    * A context object.
@@ -46,23 +46,23 @@ class UniqueSectionYear extends Constraint implements ConstraintValidatorInterfa
     /** @var \Drupal\Core\Field\FieldItemListInterface $item_list */
     $entity = $item_list->getEntity();
     $field_name = $item_list->getFieldDefinition()->getName();
-    if (!empty($item_list->value)) {
+    if ($entity && !empty($item_list->value)) {
       $year = $item_list->value;
       $properties = [
-        'type' => 'homepage',
+        'type' => $entity->bundle(),
         $field_name => $year,
       ];
-      $sections = $this->getEntityTypeManager()->getStorage('node')->loadByProperties($properties);
-      if (count($sections) && $entity) {
+      $entities = $this->getEntityTypeManager()->getStorage('node')->loadByProperties($properties);
+      if (count($entities) && $entity) {
         // Filter out the entity that this field belongs to.
-        $sections = array_filter($sections, function (FieldableEntityInterface $section) use ($entity) {
-          return $section->id() != $entity->id();
+        $entities = array_filter($entities, function (FieldableEntityInterface $_entity) use ($entity) {
+          return $_entity->id() != $entity->id();
         });
       }
-      if (count($sections)) {
-        $used_years = array_map(function (FieldableEntityInterface $section) use ($field_name) {
-          return $section->get($field_name)->value;
-        }, $sections);
+      if (count($entities)) {
+        $used_years = array_map(function (FieldableEntityInterface $_entity) use ($field_name) {
+          return $_entity->get($field_name)->value;
+        }, $entities);
         $arguments = [
           '%value' => $year,
           '@used_years' => implode(', ', $used_years),

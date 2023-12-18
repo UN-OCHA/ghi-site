@@ -48,7 +48,7 @@ class TeamSectionCount extends FieldPluginBase {
    */
   public function render(ResultRow $values) {
     $sections = $this->entityTypeManager->getStorage('node')->loadByProperties([
-      'type' => ['section', 'global_section'],
+      'type' => ['section'],
       'field_team' => $values->_entity->id(),
     ]);
     return count($sections);

@@ -5,11 +5,8 @@
  * Contains hook implementations for the GHI Sections module.
  */
 
-use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
-use Drupal\ghi_sections\Entity\GlobalSection;
-use Drupal\ghi_sections\Entity\Homepage;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
@@ -18,24 +15,8 @@ use Drupal\node\NodeInterface;
  * Implements hook_entity_bundle_info_alter().
  */
 function ghi_sections_entity_bundle_info_alter(array &$bundles) {
-  $bundles['node']['section']['class'] = Section::class;
-  $bundles['node']['section']['label'] = t('Section');
-  $bundles['node']['global_section']['class'] = GlobalSection::class;
-  $bundles['node']['global_section']['label'] = t('Global section');
-  $bundles['node']['homepage']['class'] = Homepage::class;
-  $bundles['node']['homepage']['label'] = t('Homepage');
-}
-
-/**
- * Implements hook_entity_bundle_field_info_alter().
- *
- * This is used to add a constraint to the homepage node type to guarantee
- * unique years.
- */
-function ghi_sections_entity_bundle_field_info_alter(&$fields, EntityTypeInterface $entity_type, $bundle) {
-  if (($entity_type->id() === 'node') && ($bundle === 'homepage') && isset($fields['field_year'])) {
-    $fields['field_year']->addConstraint('UniqueSectionYear', []);
-  }
+  $bundles['node'][Section::BUNDLE]['class'] = Section::class;
+  $bundles['node'][Section::BUNDLE]['label'] = t('Section');
 }
 
 /**
@@ -50,9 +31,6 @@ function ghi_sections_preprocess_page_title(&$variables) {
     return;
   }
   if (\Drupal::routeMatch()->getRouteName() == 'entity.node.canonical') {
-    if ($node instanceof GlobalSection) {
-      $variables['title'] = NULL;
-    }
     if ($section = $section_manager->getCurrentSection($node)) {
       $variables['title'] = $section->getPageTitle();
     }
@@ -120,25 +98,6 @@ function ghi_sections_layout_builder_view_context_alter(array &$contexts, Sectio
   if ($context) {
     $contexts['year'] = $context;
   }
-}
-
-/**
- * Implements hook_preprocess_page().
- */
-function ghi_sections_preprocess_page(&$variables) {
-  $node = $variables['node'] ?? NULL;
-  if (!$node || !$node instanceof Homepage || \Drupal::routeMatch()->getRouteName() != 'entity.node.canonical') {
-    return;
-  }
-
-  $message = [
-    '#theme' => 'ghi_message',
-    '#message' => t("This is the content container for the @year homepage. The content elements setup on this page are embeded automatically on the public homepage for @year and will be wrapped with common elements configured on the homepage. The page that you currently see will never be publicly available on it's own.", [
-      '@year' => $node->getYear(),
-    ]),
-  ];
-
-  $variables['page']['help'] = ['message' => $message];
 }
 
 /**

@@ -17,8 +17,6 @@ class SubpageManager extends BaseObjectSubpageManager {
    */
   const SUPPORTED_BASE_TYPES = [
     'section',
-    'global_section',
-    'homepage',
   ];
 
   /**

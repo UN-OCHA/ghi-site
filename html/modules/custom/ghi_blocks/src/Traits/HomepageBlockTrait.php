@@ -4,7 +4,7 @@ namespace Drupal\ghi_blocks\Traits;
 
 use Drupal\Core\Link;
 use Drupal\Core\Url;
-use Drupal\ghi_sections\Entity\Homepage;
+use Drupal\ghi_homepage\Entity\Homepage;
 use Drupal\node\NodeInterface;
 
 /**
@@ -15,7 +15,7 @@ trait HomepageBlockTrait {
   /**
    * Return the available homepages keyed by year.
    *
-   * @return \Drupal\ghi_sections\Entity\Homepage[]
+   * @return \Drupal\ghi_homepage\Entity\Homepage[]
    *   An array of nodes.
    */
   protected function getHomepages() {

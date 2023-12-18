@@ -11,14 +11,14 @@ display:
         type:
           label: 'Type de bloc'
         changed:
-          label: 'Mis à jour'
+          label: Updated
         operations:
           label: Actions
       pager:
         options:
           tags:
-            next: 'Suivant ›'
-            previous: '‹ Précédent'
+            next: 'Next ›'
+            previous: '‹ Previous'
           expose:
             items_per_page_label: 'Éléments par page'
             items_per_page_options_all_label: '- Tout -'

@@ -14,7 +14,7 @@ use Drupal\Tests\user\Traits\UserCreationTrait;
 /**
  * Base class for section menu tests.
  *
- * @group ghi_subpages_custom
+ * @group ghi_sections
  */
 abstract class SectionMenuTestBase extends KernelTestBase {
 

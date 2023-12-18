@@ -53,7 +53,29 @@ third_party_settings:
   layout_builder_ipe:
     enabled: true
   layout_builder_restrictions:
-    allowed_block_categories: {  }
+    allowed_block_categories:
+      - 'Chaos Tools'
+      - 'Content fields'
+      - 'Country elements'
+      - 'Custom block types'
+      - Forms
+      - 'Generic elements'
+      - Global
+      - HID
+      - 'Inline blocks'
+      - 'Lists (Views)'
+      - 'Mailing list'
+      - Menus
+      - 'Narrative Content'
+      - Page
+      - 'Plan cluster elements'
+      - 'Plan elements'
+      - Sections
+      - 'Social Auth'
+      - System
+      - User
+      - Views
+      - core
     entity_view_mode_restriction:
       allowed_layouts: {  }
       denylisted_blocks: {  }
@@ -67,6 +89,7 @@ third_party_settings:
         - Global
         - HID
         - 'Lists (Views)'
+        - 'Mailing list'
         - Menus
         - Page
         - 'Plan cluster elements'
