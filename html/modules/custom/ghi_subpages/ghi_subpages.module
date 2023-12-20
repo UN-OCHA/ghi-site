@@ -315,12 +315,12 @@ function ghi_subpages_preprocess_page_title(&$variables) {
  * filter the list on the node add page itself though.
  */
 function ghi_subpages_preprocess_node_add_list(&$variables) {
-  $variables['types'] = [];
   if (!empty($variables['content'])) {
     $subpages_admin_controller = SubpagesAdminController::create(\Drupal::getContainer());
     foreach ($variables['content'] as $key => $type) {
       if ($subpages_admin_controller->nodeCreateAccess($type)->isForbidden()) {
         unset($variables['content'][$key]);
+        unset($variables['types'][$type->id()]);
       }
     }
   }

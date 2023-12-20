@@ -5,9 +5,9 @@ display:
     display_options:
       fields:
         title:
-          label: Titre
+          label: Title
         name:
-          label: Auteur
+          label: Author
         changed:
           label: 'Dernière mise à jour'
       pager:

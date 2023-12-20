@@ -11,6 +11,7 @@ use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
@@ -169,6 +170,20 @@ function ghi_content_contextual_links_alter(array &$links, $group, array $route_
   /** @var \Drupal\ghi_content\ContextualLinks\BlockHandler $contextual_links_block_handler */
   $contextual_links_block_handler = \Drupal::service('ghi_content.contextual_links.block_handler');
   $contextual_links_block_handler->alterLinks($links, $group, $route_parameters);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ghi_content_form_ghi_subpages_admin_views_form_alter(array &$form, FormStateInterface $form_state) {
+  $node = $form['#node'];
+  $overview_links = [
+    Link::createFromRoute(t('Article pages'), 'ghi_content.node.articles', ['node' => $node->id()])->toString(),
+    Link::createFromRoute(t('Document pages'), 'ghi_content.node.documents', ['node' => $node->id()])->toString(),
+  ];
+  $form['description']['#markup'] .= ' ' . t('Additional content that is linked indirectly via tags can be found on these pages: @overview_links', [
+    '@overview_links' => Markup::create(implode(', ', $overview_links)),
+  ]);
 }
 
 /**

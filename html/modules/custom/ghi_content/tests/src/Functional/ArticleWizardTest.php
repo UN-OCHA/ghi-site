@@ -3,14 +3,13 @@
 namespace Drupal\Tests\ghi_content\Functional;
 
 use Drupal\Component\Serialization\Json;
-use Drupal\field\Entity\FieldConfig;
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 
 /**
@@ -22,6 +21,7 @@ class ArticleWizardTest extends BrowserTestBase {
 
   use EntityReferenceTestTrait;
   use TaxonomyTestTrait;
+  use FieldTestTrait;
 
   /**
    * Modules to enable.
@@ -137,27 +137,6 @@ class ArticleWizardTest extends BrowserTestBase {
     $this->assertSession()->buttonExists('Next')->click();
 
     $this->assertSession()->pageTextContains('An article page for the selected article already exists');
-  }
-
-  /**
-   * Creates the testing fields.
-   */
-  protected function createField($entity_type, $bundle, $field_type, $field_name, $field_label) {
-    if (!FieldStorageConfig::loadByName($entity_type, $field_name)) {
-      $field_storage = FieldStorageConfig::create([
-        'type' => $field_type,
-        'entity_type' => $entity_type,
-        'field_name' => $field_name,
-      ]);
-      $field_storage->save();
-    }
-    FieldConfig::create([
-      'field_name' => $field_name,
-      'entity_type' => $entity_type,
-      'bundle' => $bundle,
-      'label' => $field_label,
-    ])->save();
-
   }
 
   /**

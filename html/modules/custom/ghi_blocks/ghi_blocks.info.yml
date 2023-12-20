@@ -14,6 +14,7 @@ dependencies:
   - hpc_common:hpc_common
   - ghi_base_objects:ghi_base_objects
   - ghi_plans:ghi_plans
+  - ghi_homepage:ghi_homepage
   - ghi_sections:ghi_sections
   - ghi_subpages:ghi_subpages
   - ghi_form_elements:ghi_form_elements

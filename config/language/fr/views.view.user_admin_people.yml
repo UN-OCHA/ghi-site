@@ -11,7 +11,7 @@ display:
         name:
           label: "Nom d'utilisateur"
         status:
-          label: État
+          label: Status
           settings:
             format_custom_false: Bloqué
             format_custom_true: Actif
@@ -26,10 +26,10 @@ display:
       pager:
         options:
           tags:
-            next: 'Suivant ›'
-            previous: '‹ Précédent'
-            first: '« Premier'
-            last: 'Dernier »'
+            next: 'Next ›'
+            previous: '‹ Previous'
+            first: '« First'
+            last: 'Last »'
           expose:
             items_per_page_label: 'Éléments par page'
             items_per_page_options_all_label: '- Tout -'
@@ -48,7 +48,7 @@ display:
             label: 'Nom ou courriel contenant'
         status:
           group_info:
-            label: État
+            label: Status
             group_items:
               1:
                 title: Actif

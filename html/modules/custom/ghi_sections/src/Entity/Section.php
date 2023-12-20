@@ -15,6 +15,8 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
 
   use ShortNameTrait;
 
+  const BUNDLE = 'section';
+
   /**
    * {@inheritdoc}
    */
@@ -23,7 +25,10 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
     if ($this->isAutocompleteRoute() || $this->isAdminPage()) {
       return $label;
     }
-    $base_object = $this->get('field_base_object')->entity;
+    $base_object = $this->getBaseObject() ?? NULL;
+    if (!$base_object) {
+      return $label;
+    }
     return $this->getShortName($base_object) ?? $label;
   }
 
@@ -67,20 +72,14 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
   }
 
   /**
-   * Get the base object for a section.
-   *
-   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface
-   *   The base object set for this section node.
+   * {@inheritdoc}
    */
   public function getBaseObject() {
-    return $this->get('field_base_object')->entity;
+    return $this->get('field_base_object')->entity ?? NULL;
   }
 
   /**
-   * Get the section type based on the linked base object type.
-   *
-   * @return \Drupal\Component\Render\MarkupInterface|string
-   *   The type label of the base object linked to the section.
+   * {@inheritdoc}
    */
   public function getSectionType() {
     $base_object = $this->getBaseObject();

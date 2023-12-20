@@ -98,6 +98,9 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    *   Either 'comma', 'point' or NULL.
    */
   public function getDecimalFormat() {
+    if (!$this->hasField('field_decimal_format')) {
+      return NULL;
+    }
     return $this->get('field_decimal_format')->value ?? NULL;
   }
 

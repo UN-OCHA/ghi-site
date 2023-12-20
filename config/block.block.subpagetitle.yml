@@ -30,7 +30,6 @@ visibility:
       document: document
       financials: financials
       logframe: logframe
-      global_section: global_section
       plan_cluster: plan_cluster
       population: population
       presence: presence

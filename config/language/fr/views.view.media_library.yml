@@ -33,12 +33,12 @@ display:
           expose:
             label: 'Statut de publication'
           group_info:
-            label: Publié
+            label: Published
             group_items:
               1:
-                title: Publié
+                title: Published
               2:
-                title: 'Non publié'
+                title: Unpublished
         name:
           expose:
             label: Nom
@@ -49,7 +49,7 @@ display:
             label: 'Type de média'
         langcode:
           expose:
-            label: Langue
+            label: Language
   page:
     display_options:
       fields:
@@ -87,9 +87,9 @@ display:
         name:
           label: Nom
         uid:
-          label: Auteur
+          label: Author
         changed:
-          label: 'Mis à jour'
+          label: Updated
       arguments:
         bundle:
           exception:

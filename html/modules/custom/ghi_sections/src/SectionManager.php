@@ -28,7 +28,7 @@ class SectionManager {
   /**
    * The machine name of the bundle to use for sections.
    */
-  const SECTION_BUNDLES = ['section', 'global_section', 'homepage'];
+  const SECTION_BUNDLES = ['section'];
 
   /**
    * The route name for the section listing backend page.
@@ -105,7 +105,7 @@ class SectionManager {
    */
   public function getAvailableBaseObjectTypes() {
     // Find out what base objects types can be referenced.
-    $fields = $this->entityFieldManager->getFieldDefinitions('node', 'section');
+    $fields = $this->entityFieldManager->getFieldDefinitions('node', Section::BUNDLE);
     if (!array_key_exists('field_base_object', $fields)) {
       // Bail out.
       return FALSE;
@@ -147,7 +147,7 @@ class SectionManager {
       return FALSE;
     }
     $section = $this->entityTypeManager->getStorage('node')->create([
-      'type' => 'section',
+      'type' => Section::BUNDLE,
       'title' => $values['title'] ?? $base_object->label(),
       'uid' => $this->currentUser->id(),
       'status' => FALSE,
@@ -232,7 +232,7 @@ class SectionManager {
     }
 
     $properties = [
-      'type' => 'section',
+      'type' => Section::BUNDLE,
       'field_base_object' => $base_object->id(),
     ];
 
@@ -254,7 +254,7 @@ class SectionManager {
    */
   public function loadSectionsForTeam(TermInterface $term) {
     $sections = $this->entityTypeManager->getStorage('node')->loadByProperties([
-      'type' => 'section',
+      'type' => Section::BUNDLE,
       'field_team' => $term->id(),
     ]);
     return $sections;
