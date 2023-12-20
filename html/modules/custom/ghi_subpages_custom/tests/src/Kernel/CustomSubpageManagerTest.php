@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\ghi_subpages_custom\Kernel;
 
-use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_sections\Menu\SectionMenuItemInterface;
-use Drupal\ghi_subpages_custom\Entity\CustomSubpage;
 use Drupal\ghi_subpages_custom\Plugin\SectionMenuItem\CustomSubpage as SectionMenuItemCustomSubpage;
 use Drupal\node\Entity\NodeType;
+use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
 use Drupal\Tests\ghi_sections\Kernel\SectionMenuTestBase;
+use Drupal\Tests\ghi_subpages_custom\Traits\CustomSubpageTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
@@ -18,6 +18,8 @@ use Drupal\Tests\user\Traits\UserCreationTrait;
 class CustomSubpageManagerTest extends SectionMenuTestBase {
 
   use UserCreationTrait;
+  use EntityReferenceTestTrait;
+  use CustomSubpageTestTrait;
 
   /**
    * Modules to enable.
@@ -25,6 +27,20 @@ class CustomSubpageManagerTest extends SectionMenuTestBase {
    * @var array
    */
   protected static $modules = [
+    'system',
+    'user',
+    'node',
+    'taxonomy',
+    'field',
+    'text',
+    'filter',
+    'token',
+    'path_alias',
+    'pathauto',
+    'layout_builder',
+    'hpc_api',
+    'hpc_common',
+    'ghi_base_objects',
     'ghi_subpages_custom',
   ];
 
@@ -44,7 +60,9 @@ class CustomSubpageManagerTest extends SectionMenuTestBase {
     parent::setUp();
 
     NodeType::create(['type' => self::CUSTOM_SUBPAGE_BUNDLE])->save();
-    $this->createSectionReferenceField(self::CUSTOM_SUBPAGE_BUNDLE);
+    $this->createEntityReferenceField('node', self::CUSTOM_SUBPAGE_BUNDLE, 'field_entity_reference', 'Section', 'node', 'default', [
+      'target_bundles' => [self::SECTION_BUNDLE],
+    ]);
 
     $this->customSubpageManager = \Drupal::service('ghi_subpages_custom.manager');
   }
@@ -103,25 +121,6 @@ class CustomSubpageManagerTest extends SectionMenuTestBase {
     $custom_subpage_2->delete();
     $menu_items = $this->sectionMenuStorage->getSectionMenuItems()->getAll();
     $this->assertCount(1, $menu_items);
-  }
-
-  /**
-   * Create a section node.
-   *
-   * @return \Drupal\ghi_subpages_custom\Entity\CustomSubpage
-   *   A custom subpage node.
-   */
-  protected function createCustomSubpage(Section $section) {
-    $custom_subpage = CustomSubpage::create([
-      'type' => self::CUSTOM_SUBPAGE_BUNDLE,
-      'title' => $this->randomString(),
-      'uid' => 0,
-      'field_entity_reference' => [
-        'target_id' => $section->id(),
-      ],
-    ]);
-    $custom_subpage->save();
-    return $custom_subpage;
   }
 
 }

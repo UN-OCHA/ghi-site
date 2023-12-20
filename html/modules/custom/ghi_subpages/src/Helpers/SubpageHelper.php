@@ -76,8 +76,8 @@ class SubpageHelper {
           'target_id' => $parent_node->id(),
         ],
       ]);
-
       $subpage->save();
+
       if (PHP_SAPI !== 'cli') {
         \Drupal::messenger()->addStatus(t('Created @type subpage for @title', [
           '@type' => $subpage_name,

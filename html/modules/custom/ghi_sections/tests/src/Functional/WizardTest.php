@@ -6,7 +6,7 @@ use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
-use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTypeCreationTrait;
+use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 
@@ -17,7 +17,7 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
  */
 class WizardTest extends BrowserTestBase {
 
-  use BaseObjectTypeCreationTrait;
+  use BaseObjectTestTrait;
   use EntityReferenceTestTrait;
   use TaxonomyTestTrait;
   use FieldTestTrait;

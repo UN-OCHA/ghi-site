@@ -32,4 +32,20 @@ trait FieldTestTrait {
     ])->save();
   }
 
+  /**
+   * Check if a node bundle has a field.
+   *
+   * @param string $bundle
+   *   The bundle.
+   * @param string $field_name
+   *   The field name.
+   *
+   * @return bool
+   *   Returns a TRUE if the entity type has the field.
+   */
+  private function bundleHasField(string $bundle, string $field_name) {
+    $fields = \Drupal::service('entity_field.manager')->getFieldDefinitions('node', $bundle);
+    return array_key_exists($field_name, $fields);
+  }
+
 }
