@@ -18,6 +18,6 @@ ignored_config_entities:
   - 'page_manager.page_variant.homepage*:variant_settings.sections.0.components'
   - '// Ignore cache warmer'
   - warmer.settings
-  - '// Protected password'
-  - 'protected_pages.settings:password.protected_pages_global_password'
+  - '// Entity access password'
+  - 'entity_access_password.settings:global_password'
 enable_export_filtering: true
