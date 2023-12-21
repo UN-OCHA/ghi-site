@@ -99,6 +99,16 @@ class Project extends BaseObject {
   }
 
   /**
+   * Get the project location ids.
+   *
+   * @return int[]
+   *   An array of location ids for this project.
+   */
+  public function getLocationIds() {
+    return $this->location_ids;
+  }
+
+  /**
    * Check if this project has the given organization.
    *
    * @param \Drupal\ghi_plans\ApiObjects\Organization $organization

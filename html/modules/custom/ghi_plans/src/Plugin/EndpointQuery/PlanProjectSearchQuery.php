@@ -386,10 +386,10 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
     $projects = $this->getProjects($base_object);
     $projects_by_location = [];
     foreach ($projects as $project) {
-      if (empty($project->location_ids)) {
+      if (empty($project->getLocationIds())) {
         continue;
       }
-      foreach ($project->location_ids as $location_id) {
+      foreach ($project->getLocationIds() as $location_id) {
         if (empty($projects_by_location[$location_id])) {
           $projects_by_location[$location_id] = [];
         }

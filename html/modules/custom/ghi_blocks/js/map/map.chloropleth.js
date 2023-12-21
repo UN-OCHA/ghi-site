@@ -719,25 +719,24 @@
       return x.admin_level == state.admin_level;
     }).map(x => x.object_count);
     let max_count = Math.max.apply(Math, object_counts);
-    let unique_counts = object_counts.filter(function(value, index, self) {
-        return self.indexOf(value) === index;
-    }).sort();
+    let range_count = Math.min(5, max_count);
+
     // We have 4 steps between 0 and the max count.
-    let range_step = Math.floor((max_count - 1) / 4);
+    let range_step = max_count > 4 ? Math.floor((max_count - 1) / range_count + 1) : 1;
 
     // The first range is always 0.
     var ranges = [0];
 
     // Then we have 4 ranges that are build equally distributed based on the
     // range step.
-    for (var i = 0; i < 4; i++) {
+    for (var i = 0; i < range_count - 1; i++) {
       ranges.push(i * range_step + 1);
     }
 
     // And then add the highest bucket. Adjust the displayed max count so that
-    // not only a single area falls into the this bucket.
+    // not only a single area falls into this bucket.
     var max_count_display = max_count;
-    let max_steps = [1000, 500, 200, 100, 50, 20, 15, 10];
+    let max_steps = [1000, 500, 200, 100, 50, 20, 15, 10, 5, 1];
     for (var i = 0; i < max_steps.length; i++) {
       if (max_count > max_steps[i]) {
         max_count_display = Math.floor(max_count / max_steps[i]) * max_steps[i];
