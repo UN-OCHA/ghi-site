@@ -150,14 +150,18 @@ class ThemeHelper {
    * Get a render array for the FTS icon.
    */
   public static function themeFtsIcon() {
+    $tooltip = t('View this data in FTS');
     return [
-      '#theme' => 'image',
-      '#uri' => self::getUriToFtsIcon(),
-      '#attributes' => [
-        'class' => 'fts-icon',
-        'title' => t('View this data in FTS'),
+      '#theme' => 'hpc_tooltip',
+      '#tooltip' => $tooltip,
+      '#tag_content' => [
+        '#theme' => 'image',
+        '#uri' => self::getUriToFtsIcon(),
+        '#attributes' => [
+          'class' => 'fts-icon',
+          'aria-label' => $tooltip,
+        ],
       ],
-      '#alt' => t('View this data in FTS'),
     ];
   }
 
