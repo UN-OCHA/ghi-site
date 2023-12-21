@@ -2,9 +2,7 @@
 
 namespace Drupal\ghi_blocks\Traits;
 
-use Drupal\ghi_base_objects\ApiObjects\Location;
 use Drupal\ghi_plans\ApiObjects\Organization;
-use Drupal\ghi_plans\ApiObjects\Project;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 
 /**
@@ -102,29 +100,6 @@ trait OrganizationsBlockTrait {
   private function getClustersByOrganization() {
     $query = $this->getProjectSearchQuery();
     return $query->getClustersByOrganization();
-  }
-
-  /**
-   * Get the clusters that are valid for the given organization and location.
-   *
-   * @param \Drupal\ghi_plans\ApiObjects\Organization $organization
-   *   The organization.
-   * @param \Drupal\ghi_base_objects\ApiObjects\Location $location
-   *   The location.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster[]
-   *   An array of project cluster objects.
-   */
-  private function getClustersByOrganizationAndLocation(Organization $organization, Location $location) {
-    $projects = $this->getOrganizationProjects($organization);
-    $projects = array_filter($projects, function (Project $project) use ($location) {
-      return in_array($location->id(), $project->location_ids);
-    });
-    $clusters = [];
-    foreach ($projects as $project) {
-      $clusters = array_merge($clusters, $project->getClusters());
-    }
-    return $clusters;
   }
 
   /**

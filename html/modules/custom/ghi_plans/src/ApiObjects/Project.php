@@ -14,13 +14,6 @@ class Project extends BaseObject {
   use SimpleCacheTrait;
 
   /**
-   * A list of clusters.
-   *
-   * @var array
-   */
-  public $clusters;
-
-  /**
    * Map the raw data.
    *
    * @return object
@@ -28,24 +21,19 @@ class Project extends BaseObject {
    */
   protected function map() {
     $data = $this->getRawData();
-    // Extract the cluster ids.
-    $cluster_ids = property_exists($data, 'clusterId') ? [$data->clusterId] : [];
-    if (empty($cluster_ids) && property_exists($data, 'governingEntities')) {
-      $cluster_ids = array_map(function ($governing_entity) {
-        return $governing_entity->id;
-      }, $data->governingEntities);
+
+    // Extract the clusters.
+    $clusters = [];
+    foreach ($data->governingEntities ?? [] as $governing_entity) {
+      $project_cluster = new PlanProjectCluster($governing_entity);
+      $clusters[$project_cluster->id()] = $project_cluster;
     }
-    $clusters = array_map(function ($governing_entity) {
-      return new PlanProjectCluster($governing_entity);
-    }, $data->governingEntities ?? []);
 
     return (object) [
       'id' => $data->id,
       'name' => $data->name,
       'version_code' => $data->versionCode,
-      'cluster_ids' => $cluster_ids,
       'clusters' => $clusters,
-      // 'global_clusters' => $data->globalClusters ?? [],
       'published' => !empty($data->currentPublishedVersionId),
       'requirements' => $data->currentRequestedFunds,
       'location_ids' => $data->locationIds->ids ?? [],
@@ -58,7 +46,7 @@ class Project extends BaseObject {
   /**
    * Process organization objects from the API.
    *
-   * @return array
+   * @return \Drupal\ghi_plans\ApiObjects\Organization[]
    *   An array of processed organization objects.
    */
   public function getOrganizations() {
@@ -98,6 +86,26 @@ class Project extends BaseObject {
    */
   public function getClusters() {
     return $this->clusters ?? [];
+  }
+
+  /**
+   * Get the project cluster ids.
+   *
+   * @return int[]
+   *   An array of cluster ids for this project.
+   */
+  public function getClusterIds() {
+    return array_keys($this->getClusters() ?? []);
+  }
+
+  /**
+   * Get the project location ids.
+   *
+   * @return int[]
+   *   An array of location ids for this project.
+   */
+  public function getLocationIds() {
+    return $this->location_ids;
   }
 
   /**
