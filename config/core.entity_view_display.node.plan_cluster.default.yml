@@ -28,23 +28,7 @@ third_party_settings:
         layout_settings:
           label: Content
           context_mapping: {  }
-        components:
-          32c275fa-49c5-420c-a0c2-b5ea8676bd9c:
-            uuid: 32c275fa-49c5-420c-a0c2-b5ea8676bd9c
-            region: content
-            configuration:
-              id: 'field_block:node:plan_cluster:field_protected'
-              label_display: '0'
-              context_mapping:
-                entity: layout_builder.entity
-              formatter:
-                type: entity_access_password_form
-                label: above
-                settings:
-                  help_text: ''
-                third_party_settings: {  }
-            weight: 0
-            additional: {  }
+        components: {  }
         third_party_settings:
           layout_builder_lock:
             lock:
