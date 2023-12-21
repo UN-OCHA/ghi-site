@@ -34,23 +34,7 @@ third_party_settings:
         layout_settings:
           label: Content
           context_mapping: {  }
-        components:
-          20a01661-dfac-4bee-b75b-5069d23a3fe6:
-            uuid: 20a01661-dfac-4bee-b75b-5069d23a3fe6
-            region: content
-            configuration:
-              id: 'field_block:node:document:field_protected'
-              label_display: '0'
-              context_mapping:
-                entity: layout_builder.entity
-              formatter:
-                type: entity_access_password_form
-                label: above
-                settings:
-                  help_text: ''
-                third_party_settings: {  }
-            weight: 0
-            additional: {  }
+        components: {  }
         third_party_settings:
           layout_builder_lock:
             lock:
