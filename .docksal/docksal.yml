@@ -1,4 +1,4 @@
-version: "2.1"
+version: "3.9"
 
 services:
   cli:
@@ -23,13 +23,16 @@ services:
 
   browser:
     hostname: browser
-    image: seleniarm/standalone-chromium:latest
+    # image: seleniarm/standalone-chromium:latest
+    image: seleniarm/standalone-chromium:103.0
     volumes:
       # Workaround to avoid the browser crashing inside a docker container
       # See https://github.com/SeleniumHQ/docker-selenium#quick-start
       - /tmp:/dev/shm
     environment:
       - JAVA_OPTS=-Dwebdriver.chrome.whitelistedIps=
+    ports:
+      - 5903:5903
 
   snap:
     image: public.ecr.aws/unocha/tools-snap-service:v3.0.4
