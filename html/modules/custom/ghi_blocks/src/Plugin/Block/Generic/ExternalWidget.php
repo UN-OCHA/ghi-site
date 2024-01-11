@@ -147,6 +147,7 @@ class ExternalWidget extends GHIBlockBase {
       'humdata.org' => $this->t('HDX Quick Charts'),
       'powerbi.com' => $this->t('PowerBI'),
       'tableau.com' => $this->t('Tableau'),
+      'experience.arcgis.com' => $this->t('ArcGIS'),
     ];
   }
 
@@ -360,7 +361,6 @@ class ExternalWidget extends GHIBlockBase {
    *   Whether the url should be processed.
    */
   private function processParams(array &$params, $process_url = TRUE) {
-    $base_url = $this->requestStack->getMainRequest()->getBaseUrl();
 
     // First we deactivate some controls and set the widget into single mode,
     // which removes the embed title.
@@ -377,11 +377,7 @@ class ExternalWidget extends GHIBlockBase {
     if (strpos($css_url, 'docksal') || strpos($css_url, 'ahconu.org')) {
       // On local and dev domains, fallback to the CSS file in current
       // Hum Insight production.
-      $css_url = 'https://hum-insight.info/sites/all/modules/custom/hpc_content_panes/css/quickcharts.css';
-    }
-    $is_dev_environment = strpos($base_url, 'hum-insight-info.ahconu.org') || strpos($base_url, 'hpcviewer.docksal');
-    if ($is_dev_environment) {
-      $css_url = url('https://hum-insight.info/sites/all/modules/custom/hpc_content_panes/css/quickcharts.css');
+      $css_url = 'https://humanitarianaction.info//sites/all/modules/custom/ghi_blocks/css/quickcharts.css';
     }
     $params['externalCss'] = $css_url ? str_replace('/', '%2F', $css_url) : NULL;
 
