@@ -65,6 +65,9 @@ class SubpageHelper {
 
       /** @var \Drupal\node\Entity\NodeTypeInterface $node_type */
       $node_type = \Drupal::entityTypeManager()->getStorage('node_type')->load($subpage_type);
+      if (self::getSubpageManager()->isManualSubpageType($node_type)) {
+        continue;
+      }
       $subpage_name = $node_type->get('name');
       /** @var \Drupal\node\NodeInterface $subpage */
       $subpage = Node::create([
