@@ -70,7 +70,7 @@ class EmbargoedAccessManager {
   /**
    * Constructs an embargoed access manager class.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ConfigFactoryInterface $config_factory, RouteParserInterface $route_parser, PasswordAccessManagerInterface $password_access_manager, ContentEntityTrackingManager $search_api_tracking_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ConfigFactoryInterface $config_factory, RouteParserInterface $route_parser = NULL, PasswordAccessManagerInterface $password_access_manager = NULL, ContentEntityTrackingManager $search_api_tracking_manager) {
     $this->entityTypeManager = $entity_type_manager;
     $this->configFactory = $config_factory;
     $this->routeParser = $route_parser;
