@@ -11,7 +11,7 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\NodeInterface;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 
 /**
@@ -21,7 +21,7 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
  */
 class EmbargoedNodeAccessTest extends BrowserTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
   use StringTranslationTrait;
   use TaxonomyTestTrait;
 

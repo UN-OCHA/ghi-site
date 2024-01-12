@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\ghi_subpages\Traits;
 
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
 use Drupal\Tests\ghi_teams\Traits\TeamTestTrait;
@@ -19,7 +19,7 @@ trait SubpageTestTrait {
   use SectionTestTrait;
   use TeamTestTrait;
   use FieldTestTrait;
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   const SUBPAGE_BUNDLES = [
     'population',
