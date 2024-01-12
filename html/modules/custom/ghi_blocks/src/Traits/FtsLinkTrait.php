@@ -57,7 +57,7 @@ trait FtsLinkTrait {
       ]),
       '#attributes' => [
         'target' => '_blank',
-        'title' => $fts_link_title,
+        'aria-label' => $fts_link_title,
         'class' => [
           'fts-link',
           'fts-plan-link',

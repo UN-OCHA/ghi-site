@@ -89,9 +89,6 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
         '#theme' => 'tab_container',
         '#tabs' => $tabs,
       ];
-      if ($link) {
-        $build[] = $link->toRenderable();
-      }
     }
     return $build;
   }

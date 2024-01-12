@@ -4,7 +4,7 @@ namespace Drupal\Tests\ghi_subpages_custom\Traits;
 
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_subpages_custom\Entity\CustomSubpage;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
 use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
@@ -23,7 +23,7 @@ trait CustomSubpageTestTrait {
   use SubpageTestTrait;
   use TeamTestTrait;
   use FieldTestTrait;
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   const CUSTOM_SUBPAGE_BUNDLE = 'custom_subpage';
 

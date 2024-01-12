@@ -58,6 +58,8 @@ services:
       - ENVIRONMENT=dev
       - NGINX_SERVERNAME=ghi-test-site,localhost,127.0.0.1
       - NGINX_OVERRIDE_PROTOCOL=HTTP,ghi-test-site,localhost,127.0.0.1
+      - NGINX_LIMIT_BOTS=2000r/m
+      - NGINX_LIMIT_HUMANS=2000r/s
       - DRUSH_OPTIONS_URI=http://ghi-test-site
       - DRUPAL_DB_DATABASE=ghi
       - DRUPAL_DB_USERNAME=ghi
@@ -71,6 +73,23 @@ services:
       - DTT_BASE_URL=http://127.0.0.1
       - SYMFONY_DEPRECATIONS_HELPER=disabled
     ports:
-    - "8081:80"
+      - "8081:80"
+    networks:
+      - default
+
+  browser:
+    hostname: ghi-test-browser
+    container_name: ghi-test-browser
+    # image: seleniarm/standalone-chromium:103.0
+    image: selenium/standalone-chrome:103.0
+    shm_size: 2gb
+    volumes:
+      # Workaround to avoid the browser crashing inside a docker container
+      # See https://github.com/SeleniumHQ/docker-selenium#quick-start
+      - /tmp:/dev/shm
+    environment:
+      - JAVA_OPTS=-Dwebdriver.chrome.whitelistedIps=
+    ports:
+      - "7900:7900"
     networks:
       - default

@@ -160,12 +160,16 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
       '#tag' => 'span',
     ];
     $link = Link::fromTextAndUrl($text, $link_url);
+    $tooltip = $this->t('Click to see detailed data for <em>@column_label</em>.', [
+      '@column_label' => $this->getLabel(),
+    ]);
     $modal_link = [
       '#theme' => 'hpc_modal_link',
       '#link' => $link->toRenderable(),
-      '#tooltip' => $this->t('Click to see detailed data for <em>@column_label</em>.', [
-        '@column_label' => $this->getLabel(),
-      ]),
+      '#tooltip' => $tooltip,
+      '#attributes' => [
+        'aria-label' => $tooltip,
+      ],
     ];
     return $modal_link;
   }

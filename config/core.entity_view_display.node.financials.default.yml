@@ -27,23 +27,7 @@ third_party_settings:
         layout_settings:
           label: Content
           context_mapping: {  }
-        components:
-          080ef283-367b-4977-b636-b7fb4c9e2fe2:
-            uuid: 080ef283-367b-4977-b636-b7fb4c9e2fe2
-            region: content
-            configuration:
-              id: 'field_block:node:financials:field_protected'
-              label_display: '0'
-              context_mapping:
-                entity: layout_builder.entity
-              formatter:
-                type: entity_access_password_form
-                label: above
-                settings:
-                  help_text: ''
-                third_party_settings: {  }
-            weight: 0
-            additional: {  }
+        components: {  }
         third_party_settings:
           layout_builder_lock:
             lock:

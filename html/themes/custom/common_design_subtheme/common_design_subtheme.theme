@@ -104,7 +104,7 @@ function common_design_subtheme_form_alter(&$form, FormStateInterface $form_stat
     $form['keywords']['#attributes']['placeholder'] = t('What are you looking for?');
     $form['keywords']['#attributes']['class'][] = 'cd-search__input';
     $form['keywords']['#attributes']['type'][] = 'search';
-    $form['keywords']['#attributes']['id'][] = 'cd-search';
+    $form['keywords']['#attributes']['id'][] = 'edit-keywords';
     $form['keywords']['#attributes']['autocomplete'][] = 'off';
     // Theme suggestion for submit element.
     $form['actions']['submit']['#attributes']['data-twig-suggestion'] = 'search_submit';

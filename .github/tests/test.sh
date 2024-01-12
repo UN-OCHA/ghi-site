@@ -34,12 +34,12 @@ docker-compose -f .github/tests/docker-compose.yml exec -T drupal mkdir -p /srv/
 docker-compose -f .github/tests/docker-compose.yml exec -T drupal chmod -R 777 /srv/www/html/build/logs
 docker-compose -f .github/tests/docker-compose.yml exec -T drupal mkdir -p /srv/www/html/sites/simpletest/browser_output
 docker-compose -f .github/tests/docker-compose.yml exec -T drupal chmod -R 777 /srv/www/html/sites/simpletest/browser_output
-docker-compose -f .github/tests/docker-compose.yml exec -T -u appuser -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/tmp -e BROWSERTEST_OUTPUT_BASE_URL=http://127.0.0.1:8081 -e DTT_BASE_URL=http://127.0.0.1 -e SIMPLETEST_BASE_URL=http://127.0.0.1 -e SIMPLETEST_DB=mysql://ghi:ghi@mysql/ghi drupal ./vendor/bin/phpunit --coverage-clover /srv/www/html/build/logs/clover.xml --debug -c /srv/www
+docker-compose -f .github/tests/docker-compose.yml exec -T -u appuser -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/tmp -e BROWSERTEST_OUTPUT_BASE_URL=http://ghi-test-site:8081 -e DTT_BASE_URL=http://ghi-test-site -e SIMPLETEST_BASE_URL=http://ghi-test-site -e SIMPLETEST_DB=mysql://ghi:ghi@mysql/ghi drupal ./vendor/bin/phpunit --coverage-clover /srv/www/html/build/logs/clover.xml --debug -c /srv/www
 
 # Show logs.
 echo "Show logs."
 docker-compose -f .github/tests/docker-compose.yml exec -T drupal drush watchdog:show
 
-# # Remove the image.
+# Remove the image.
 echo "Remove the test image"
 docker-compose -f .github/tests/docker-compose.yml down -v
