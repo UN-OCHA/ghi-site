@@ -6,5 +6,6 @@ dependencies:
     - node
 id: node.card_summary
 label: 'Card summary'
+description: ''
 targetEntityType: node
 cache: true

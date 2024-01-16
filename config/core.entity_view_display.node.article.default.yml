@@ -4,7 +4,6 @@ status: true
 dependencies:
   config:
     - field.field.node.article.field_base_objects
-    - field.field.node.article.field_chapter
     - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
     - field.field.node.article.field_inherit_section_image
@@ -110,14 +109,6 @@ content:
       link: true
     third_party_settings: {  }
     weight: 5
-    region: content
-  field_chapter:
-    type: string
-    label: above
-    settings:
-      link_to_entity: false
-    third_party_settings: {  }
-    weight: 7
     region: content
   field_display_hero_image:
     type: boolean

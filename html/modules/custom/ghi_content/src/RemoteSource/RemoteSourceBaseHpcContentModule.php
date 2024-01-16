@@ -84,7 +84,6 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'id',
       'title',
       'title_short',
-      'section',
       'summary',
       'tags',
       'created',
@@ -486,7 +485,6 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
           id
           title
           title_short
-          section
           summary
           created
           updated

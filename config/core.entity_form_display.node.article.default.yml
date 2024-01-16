@@ -4,7 +4,6 @@ status: true
 dependencies:
   config:
     - field.field.node.article.field_base_objects
-    - field.field.node.article.field_chapter
     - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
     - field.field.node.article.field_inherit_section_image
@@ -116,14 +115,6 @@ content:
       disable_remove: 0
       disable_drag_and_drop: 0
       wrapper: 0
-    third_party_settings: {  }
-  field_chapter:
-    type: string_textfield
-    weight: 12
-    region: content
-    settings:
-      size: 60
-      placeholder: ''
     third_party_settings: {  }
   field_display_hero_image:
     type: boolean_checkbox

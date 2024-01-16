@@ -97,7 +97,6 @@
     <div class="cd-teaser__title--wrapper">
       {{ title_prefix }}
       {% if label and not page %}
-        {{ content.field_chapter }}
         <h2{{ title_attributes.addClass('cd-teaser__title') }}>
           <a href="{{ url }}" rel="bookmark">{{ label }}</a>
         </h2>
@@ -111,5 +110,5 @@
     </div>
 
   </div>
-  {{ content|without('field_image', 'field_tags', 'field_chapter') }}
+  {{ content|without('field_image', 'field_tags') }}
 </article>

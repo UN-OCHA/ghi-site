@@ -29,10 +29,6 @@ source:
       label: 'Title (short)'
       selector: title_short
     -
-      name: chapter
-      label: Chapter
-      selector: section
-    -
       name: summary
       label: Summary
       selector: summary
@@ -73,7 +69,6 @@ process:
   field_short_title/format:
     plugin: default_value
     default_value: html_text
-  field_chapter: section
   field_summary/value: summary
   field_summary/format:
     plugin: default_value
@@ -94,7 +89,6 @@ destination:
   overwrite_properties:
     - title
     - field_short_title
-    - field_chapter
     - field_summary
     - field_tags
     - created
