@@ -373,9 +373,6 @@ function ghi_content_preprocess_page_title(&$variables) {
   if ($node->getContextNode()) {
     $variables['title'] = $node->getContextNode()->label();
   }
-  else {
-    $variables['title_prefix'] = $node->getChapter();
-  }
 }
 
 /**

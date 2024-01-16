@@ -6,6 +6,11 @@
   overflow: visible;
 }
 
+.views-element-container .gin-table-scroll-wrapper table.sticky-header {
+  /** See https://www.drupal.org/project/gin/issues/3323501#comment-15399587 */
+  width: auto;
+}
+
 .glb-button.button-small,
 .glb-button.button-small:not(:focus) {
   font-size: 14px !important;
