@@ -141,7 +141,7 @@ class DisaggregationModalController extends ControllerBase {
       return [
         '#type' => 'html_tag',
         '#tag' => 'p',
-        '#value' => $this->t('We did not find the requested information. If you think that this ann error, please get in touch.'),
+        '#value' => $this->t('We did not find the requested information. If you think that this an error, please get in touch.'),
       ];
     }
 
