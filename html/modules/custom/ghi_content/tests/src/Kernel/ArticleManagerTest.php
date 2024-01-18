@@ -42,6 +42,7 @@ class ArticleManagerTest extends KernelTestBase {
     'filter',
     'file',
     'token',
+    'path',
     'path_alias',
     'pathauto',
     'ghi_sections',
@@ -75,6 +76,7 @@ class ArticleManagerTest extends KernelTestBase {
     $this->installEntitySchema('node');
     $this->installEntitySchema('taxonomy_term');
     $this->installEntitySchema('file');
+    $this->installEntitySchema('path_alias');
     $this->installSchema('system', 'sequences');
     $this->installSchema('node', ['node_access']);
     $this->installConfig(['system', 'node', 'taxonomy', 'field', 'file']);

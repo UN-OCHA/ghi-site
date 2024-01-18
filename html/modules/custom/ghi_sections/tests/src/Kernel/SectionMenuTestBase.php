@@ -29,6 +29,7 @@ abstract class SectionMenuTestBase extends KernelTestBase {
     'text',
     'filter',
     'token',
+    'path',
     'path_alias',
     'pathauto',
     'ghi_sections',
@@ -65,6 +66,7 @@ abstract class SectionMenuTestBase extends KernelTestBase {
     $this->installEntitySchema('node');
     $this->installEntitySchema('taxonomy_term');
     $this->installEntitySchema('base_object');
+    $this->installEntitySchema('path_alias');
     $this->installSchema('system', 'sequences');
     $this->installSchema('node', ['node_access']);
     $this->installConfig(['system', 'node', 'field']);

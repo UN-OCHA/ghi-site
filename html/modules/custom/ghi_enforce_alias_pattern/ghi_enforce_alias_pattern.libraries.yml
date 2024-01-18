@@ -1,0 +1,7 @@
+entity_form:
+  version: VERSION
+  css:
+    component:
+      css/entity-form.css: {}
+  js:
+    js/entity-form.path.js: {}

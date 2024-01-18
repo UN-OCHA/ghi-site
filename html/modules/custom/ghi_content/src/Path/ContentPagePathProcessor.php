@@ -36,7 +36,6 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
     elseif (strpos($path, '/document/') > 0) {
       $path = $this->processDocumentUrl($path);
     }
-    $request->attributes->set('_disable_route_normalizer', TRUE);
     if ($original_path != $path) {
       self::disableRouteNormalizer(TRUE);
     }

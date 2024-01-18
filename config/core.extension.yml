@@ -42,6 +42,7 @@ module:
   ghi_blocks: 0
   ghi_content: 0
   ghi_embargoed_access: 0
+  ghi_enforce_alias_pattern: 0
   ghi_form_elements: 0
   ghi_gin: 0
   ghi_hero_image: 0

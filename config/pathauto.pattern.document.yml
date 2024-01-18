@@ -7,12 +7,12 @@ dependencies:
 id: document
 label: Document
 type: 'canonical_entities:node'
-pattern: '[node:field_entity_reference:entity:url:path]/document/[node:title]'
+pattern: 'document/[node:title]'
 selection_criteria:
-  b4ffa90b-d169-4bdc-bf24-f44f405368cb:
+  5b74cfbf-c251-4c46-82ce-fd75870a8b9f:
     id: 'entity_bundle:node'
     negate: false
-    uuid: b4ffa90b-d169-4bdc-bf24-f44f405368cb
+    uuid: 5b74cfbf-c251-4c46-82ce-fd75870a8b9f
     context_mapping:
       node: node
     bundles:
