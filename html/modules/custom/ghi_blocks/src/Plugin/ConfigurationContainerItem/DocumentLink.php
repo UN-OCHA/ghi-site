@@ -71,14 +71,16 @@ class DocumentLink extends ConfigurationContainerItemPluginBase {
   /**
    * Get the date for a document link.
    *
-   * @return string
+   * @return string|null
    *   The formatted date of the document link.
    */
   public function getFormattedDate() {
     $document = $this->config['value'];
+    if (empty($document['date'])) {
+      return NULL;
+    }
     $timestamp = strtotime($document['date']);
-    $date = $this->dateFormatter->format($timestamp, 'custom', 'd M Y');
-    return $date;
+    return $timestamp ? $this->dateFormatter->format($timestamp, 'custom', 'd M Y') : NULL;
   }
 
   /**
