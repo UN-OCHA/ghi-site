@@ -399,7 +399,7 @@ function ghi_content_preprocess_node(&$variables) {
       $items->filter(function ($item) {
         return FALSE;
       });
-      $variables['content']['field_image'] = $view_mode_entity->getRenderer('field_image')->view($items);
+      $variables['content']['field_image'] = $view_mode_entity->getRenderer('field_image')?->view($items);
     }
   }
 
