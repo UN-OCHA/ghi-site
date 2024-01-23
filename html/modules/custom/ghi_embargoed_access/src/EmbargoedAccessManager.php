@@ -206,11 +206,17 @@ class EmbargoedAccessManager {
    */
   public function alterPageTitle(&$variables) {
     $entity = $this->routeParser?->getEntityFromCurrentRoute();
-    if (!$entity instanceof NodeInterface || $this->entityAccess($entity)) {
+    if (!$entity instanceof NodeInterface) {
+      return NULL;
+    }
+
+    if ($this->entityAccess($entity)) {
+      $variables['title'] = $entity instanceof ContentBase ? $entity->getPageTitle() : $entity->label();
       return NULL;
     }
 
     $variables['title'] = $this->t('Embargoed content');
+    $variables['#protected'] = TRUE;
 
     $cacheableMetadata = new CacheableMetadata();
     $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);
