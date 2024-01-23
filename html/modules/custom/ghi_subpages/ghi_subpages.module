@@ -296,7 +296,7 @@ function ghi_subpages_current_section_alter(&$section, $node) {
  */
 function ghi_subpages_preprocess_page_title(&$variables) {
   $node = \Drupal::routeMatch()->getParameter('node');
-  if (!$node instanceof NodeInterface || \Drupal::routeMatch()->getRouteName() != 'entity.node.canonical') {
+  if (!$node instanceof NodeInterface || \Drupal::routeMatch()->getRouteName() != 'entity.node.canonical' || !empty($variables['#protected'])) {
     return;
   }
   if (SubpageHelper::isSubpageTypeNode($node) && $section = SubpageHelper::getBaseTypeNode($node)) {

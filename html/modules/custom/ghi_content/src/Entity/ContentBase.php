@@ -53,6 +53,21 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   }
 
   /**
+   * Get the page title for a content node.
+   *
+   * @return string|\Drupal\Core\StringTranslation\TranslatableMarkup|null
+   *   The page title.
+   */
+  public function getPageTitle() {
+    if ($context_node = $this->getContextNode()) {
+      return $context_node->label();
+    }
+    else {
+      return $this->label();
+    }
+  }
+
+  /**
    * Check if the given node is a valid context.
    *
    * @param \Drupal\node\NodeInterface $node

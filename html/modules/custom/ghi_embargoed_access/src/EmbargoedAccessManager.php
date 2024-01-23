@@ -141,22 +141,24 @@ class EmbargoedAccessManager {
       return;
     }
 
-    if ($entity instanceof SubpageNodeInterface && $parent = $entity->getParentNode()) {
-      if ($this->passwordAccessManager->isEntityViewModeProtected($view_mode, $parent)) {
-        $entity->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $parent->getEntityTypeId() . '||' . $parent->id() . '||' . $view_mode]);
+    if ($this->embargoedAccessEnabled()) {
+      if ($entity instanceof SubpageNodeInterface && $parent = $entity->getParentNode()) {
+        if ($this->passwordAccessManager->isEntityViewModeProtected($view_mode, $parent)) {
+          $entity->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $parent->getEntityTypeId() . '||' . $parent->id() . '||' . $view_mode]);
 
-        if (!$this->passwordAccessManager->hasUserAccessToEntity($parent)) {
-          $view_mode = PasswordAccessManagerInterface::PROTECTED_VIEW_MODE;
+          if (!$this->passwordAccessManager->hasUserAccessToEntity($parent)) {
+            $view_mode = PasswordAccessManagerInterface::PROTECTED_VIEW_MODE;
+          }
         }
       }
-    }
 
-    if ($entity instanceof ContentBase && $section = $this->getCurrentSectionNode()) {
-      if ($this->passwordAccessManager->isEntityViewModeProtected($view_mode, $section)) {
-        $entity->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $section->getEntityTypeId() . '||' . $section->id() . '||' . $view_mode]);
+      if ($entity instanceof ContentBase && $section = $this->getCurrentSectionNode()) {
+        if ($this->passwordAccessManager->isEntityViewModeProtected($view_mode, $section)) {
+          $entity->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $section->getEntityTypeId() . '||' . $section->id() . '||' . $view_mode]);
 
-        if (!$this->passwordAccessManager->hasUserAccessToEntity($section)) {
-          $view_mode = PasswordAccessManagerInterface::PROTECTED_VIEW_MODE;
+          if (!$this->passwordAccessManager->hasUserAccessToEntity($section)) {
+            $view_mode = PasswordAccessManagerInterface::PROTECTED_VIEW_MODE;
+          }
         }
       }
     }
@@ -204,11 +206,17 @@ class EmbargoedAccessManager {
    */
   public function alterPageTitle(&$variables) {
     $entity = $this->routeParser?->getEntityFromCurrentRoute();
-    if (!$entity instanceof NodeInterface || $this->entityAccess($entity)) {
+    if (!$entity instanceof NodeInterface) {
+      return NULL;
+    }
+
+    if ($this->entityAccess($entity)) {
+      $variables['title'] = $entity instanceof ContentBase ? $entity->getPageTitle() : $entity->label();
       return NULL;
     }
 
     $variables['title'] = $this->t('Embargoed content');
+    $variables['#protected'] = TRUE;
 
     $cacheableMetadata = new CacheableMetadata();
     $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);
