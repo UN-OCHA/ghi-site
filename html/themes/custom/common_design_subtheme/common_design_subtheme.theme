@@ -31,6 +31,15 @@ function common_design_subtheme_theme($existing, $type, $theme, $path) {
 }
 
 /**
+ * Implements hook_library_info_alter().
+ */
+function common_design_subtheme_library_info_alter(&$libraries, $extension) {
+  // Remove the cd-nodes library, see
+  // https://github.com/UN-OCHA/common_design/commit/1bdb36373bf82120fead784abacbece00bc37b9b.
+  unset($libraries['cd-nodes']);
+}
+
+/**
  * Implements hook_theme_registry_alter().
  */
 function common_design_subtheme_theme_registry_alter(&$theme_registry) {
