@@ -158,7 +158,8 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
    */
   private function getChapterArticles(RemoteChapter $chapter) {
     $articles = $chapter ? array_filter(array_map(function (RemoteArticleInterface $article) {
-      return $this->articleManager->loadNodeForRemoteContent($article);
+      $article_node = $this->articleManager->loadNodeForRemoteContent($article);
+      return $article_node->access('view') ? $article_node : NULL;
     }, $chapter->getArticles())) : [];
     return $articles;
   }

@@ -297,7 +297,8 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
   private function getChapterArticles() {
     $chapter = $this->getChapter();
     $articles = $chapter ? array_filter(array_map(function (RemoteArticleInterface $article) {
-      return $this->articleManager->loadNodeForRemoteContent($article);
+      $article_node = $this->articleManager->loadNodeForRemoteContent($article);
+      return $article_node->access('view') ? $article_node : NULL;
     }, $chapter->getArticles())) : [];
     return $articles;
   }

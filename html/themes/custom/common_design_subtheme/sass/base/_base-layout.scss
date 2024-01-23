@@ -87,10 +87,13 @@
 .node--unpublished {
   background-color: unset;
 }
+.node--view-mode-grid.node--unpublished,
+.user-logged-in main[class*="--unpublished"] {
+  outline: 4px dashed  #ffc310;
+}
 .user-logged-in main[class*="--unpublished"] {
   margin-top: 4px;
   margin-bottom: 4px;
-  outline: 4px dashed  #ffc310;
 }
 
 /* ------------------------------------------------------------------------------
