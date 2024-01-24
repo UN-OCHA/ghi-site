@@ -24,12 +24,19 @@ trait OptionalLinkTrait {
    */
   protected static function transformUrl($url, $host = NULL) {
     $host = $host ?? \Drupal::request()->getSchemeAndHttpHost();
-    if (strpos($url, $host) !== 0) {
+    $relative_url = NULL;
+    if (strpos($url, '/') === 0) {
+      $relative_url = $url;
+    }
+    elseif (strpos($url, $host) === 0) {
+      $relative_url = str_replace(rtrim($host, '/'), '', $url);
+    }
+    if (!$relative_url) {
       return $url;
     }
     // This is a URL that points to an internal page.
     $path_alias_manager = self::getPathAliasManager();
-    $path = $path_alias_manager->getPathByAlias(str_replace($host, '', $url));
+    $path = $path_alias_manager->getPathByAlias($relative_url);
     $uri = Url::fromUri("internal:" . $path);
     if (!$uri || $uri->isExternal()) {
       return $url;
