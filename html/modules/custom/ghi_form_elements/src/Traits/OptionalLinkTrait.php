@@ -3,12 +3,46 @@
 namespace Drupal\ghi_form_elements\Traits;
 
 use Drupal\Core\Entity\Element\EntityAutocomplete;
+use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
 
 /**
  * Helper trait for optional link support on form elements.
  */
 trait OptionalLinkTrait {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLinkFromConfiguration(array $conf) {
+    if (empty($conf['add_link'])) {
+      return NULL;
+    }
+    if (empty($conf['link']['label']) || empty($conf['link']['url'])) {
+      return NULL;
+    }
+    try {
+      $url = Url::fromUri($conf['link']['url']);
+      $link = $url->access() ? Link::fromTextAndUrl($conf['link']['label'], $url) : NULL;
+    }
+    catch (\InvalidArgumentException $e) {
+      return NULL;
+    }
+    if (!$link) {
+      return NULL;
+    }
+    if ($link->getUrl()->isRouted() && $node = $link->getUrl()->getRouteParameters()['node'] ?? NULL) {
+      $node = $node instanceof NodeInterface ? $node : \Drupal::entityTypeManager()->getStorage('node')->load($node);
+      $link->setUrl($node->toUrl());
+    }
+    $classes = ['cd-button'];
+    $classes[] = $link->getUrl()->isExternal() ? 'external' : 'read-more';
+    $attributes = $link->getUrl()->getOption('attributes');
+    $attributes['class'] = $classes;
+    $link->getUrl()->setOption('attributes', $attributes);
+    return $link;
+  }
 
   /**
    * Transform the given URL from an absolute path to an internal entity uri.
@@ -24,17 +58,24 @@ trait OptionalLinkTrait {
    */
   protected static function transformUrl($url, $host = NULL) {
     $host = $host ?? \Drupal::request()->getSchemeAndHttpHost();
-    if (strpos($url, $host) !== 0) {
+    $internal_url = NULL;
+    if (strpos($url, '/') === 0) {
+      $internal_url = $url;
+    }
+    elseif (strpos($url, $host) === 0) {
+      $internal_url = str_replace(rtrim($host, '/'), '', $url);
+    }
+    if (!$internal_url) {
       return $url;
     }
     // This is a URL that points to an internal page.
     $path_alias_manager = self::getPathAliasManager();
-    $path = $path_alias_manager->getPathByAlias(str_replace($host, '', $url));
-    $uri = Url::fromUri("internal:" . $path);
-    if (!$uri || $uri->isExternal()) {
-      return $url;
+    $path = $path_alias_manager->getPathByAlias($internal_url);
+    $uri = Url::fromUserInput($path);
+    if (!$uri || $uri->isExternal() || !$uri->isRouted() || !$uri->access()) {
+      return FALSE;
     }
-    return 'entity:' . ltrim($path, '/');
+    return 'entity:' . $uri->getInternalPath();
   }
 
   /**
@@ -100,6 +141,16 @@ trait OptionalLinkTrait {
    */
   protected static function getPathAliasManager() {
     return \Drupal::service('path_alias.manager');
+  }
+
+  /**
+   * Get the path validator service.
+   *
+   * @return \Drupal\Core\Path\PathValidator
+   *   The path validator.
+   */
+  protected static function getPathValidator() {
+    return \Drupal::service('path.validator');
   }
 
 }

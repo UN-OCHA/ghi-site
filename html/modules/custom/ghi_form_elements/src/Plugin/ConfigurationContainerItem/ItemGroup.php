@@ -3,10 +3,9 @@
 namespace Drupal\ghi_form_elements\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Link;
-use Drupal\Core\Url;
 use Drupal\ghi_form_elements\ConfigurationContainerItemGroupInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
 
 /**
  * Provides an entity counter item for configuration containers.
@@ -19,37 +18,13 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
  */
 class ItemGroup extends ConfigurationContainerItemPluginBase implements ConfigurationContainerItemGroupInterface {
 
-  /**
-   * {@inheritdoc}
-   */
-  public function hasLink() {
-    if (empty($this->config['link']['add_link'])) {
-      return FALSE;
-    }
-    return !empty($this->config['link']['link']['label']) && !empty($this->config['link']['link']['url']);
-  }
+  use OptionalLinkTrait;
 
   /**
    * {@inheritdoc}
    */
   public function getLink() {
-    if (!$this->hasLink()) {
-      return NULL;
-    }
-    try {
-      $link = Link::fromTextAndUrl($this->config['link']['link']['label'], Url::fromUri($this->config['link']['link']['url']));
-    }
-    catch (\InvalidArgumentException $e) {
-      return NULL;
-    }
-    $classes = ['cd-button'];
-    $classes[] = $link->getUrl()->isExternal() ? 'external' : 'read-more';
-    $link->getUrl()->setOptions([
-      'attributes' => [
-        'class' => $classes,
-      ],
-    ]);
-    return $link;
+    return $this->getLinkFromConfiguration($this->config['link']);
   }
 
   /**

@@ -119,7 +119,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
           ],
         ],
       ];
-      if ($group_item->hasLink() && $link = $group_item->getLink()) {
+      if ($link = $group_item->getLink()) {
         $tab['link'] = $link->toRenderable();
       }
       $tabs[] = $tab;
