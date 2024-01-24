@@ -5,10 +5,13 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\Core\Url;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OptionalLinkBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
@@ -22,6 +25,7 @@ use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\BlockHelper;
+use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -59,7 +63,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  }
  * )
  */
-class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, TrustedCallbackInterface {
+class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, OptionalLinkBlockInterface, TrustedCallbackInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
@@ -195,7 +199,8 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     $count = count($rendered_items);
 
     $first_entity = reset($entities);
-    return [
+    $build = [];
+    $build[] = [
       '#theme' => 'plan_entity_logframe',
       '#items' => $rendered_items,
       '#wrapper_attributes' => [
@@ -207,6 +212,12 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       ],
       '#gin_lb_theme_suggestions' => FALSE,
     ];
+
+    if ($this->hasLink() && $link = $this->getLink()) {
+      $build[] = $link->toRenderable();
+    }
+
+    return $build;
   }
 
   /**
@@ -331,6 +342,10 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       ],
       'tables' => [
         'attachment_tables' => [],
+      ],
+      'display' => [
+        'title' => NULL,
+        'link' => NULL,
       ],
     ];
   }
@@ -539,6 +554,11 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    * {@inheritdoc}
    */
   public function displayForm(array $form, FormStateInterface $form_state) {
+    $form['link'] = [
+      '#type' => 'optional_link',
+      '#title' => $this->t('Add a link to this element'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'link'),
+    ];
     return $form;
   }
 
@@ -773,6 +793,44 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       $entity_ref_codes = array_keys($this->logframeManager->getEntityTypesFromPlanObject($plan_object));
     }
     return $this->filterAttachmentPrototypesByEntityRefCodes($attachment_prototypes, $entity_ref_codes);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasLink() {
+    $conf = $this->getBlockConfig()['display']['link'] ?? [];
+    if (empty($conf['add_link'])) {
+      return FALSE;
+    }
+    return !empty($conf['link']['label']) && !empty($conf['link']['url']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLink() {
+    if (!$this->hasLink()) {
+      return NULL;
+    }
+    $conf = $this->getBlockConfig()['display']['link'] ?? [];
+    try {
+      $link = Link::fromTextAndUrl($conf['link']['label'], Url::fromUri($conf['link']['url']));
+    }
+    catch (\InvalidArgumentException $e) {
+      return NULL;
+    }
+
+    if ($link->getUrl()->isRouted() && $node = $link->getUrl()->getRouteParameters()['node'] ?? NULL) {
+      $node = $node instanceof NodeInterface ? $node : $this->entityTypeManager->getStorage('node')->load($node);
+      $link->setUrl($node->toUrl());
+    }
+    $classes = ['cd-button'];
+    $classes[] = $link->getUrl()->isExternal() ? 'external' : 'read-more';
+    $attributes = $link->getUrl()->getOption('attributes');
+    $attributes['class'] = $classes;
+    $link->getUrl()->setOption('attributes', $attributes);
+    return $link;
   }
 
   /**

@@ -3,6 +3,9 @@
   flex-direction: column;
   gap: 0.5rem;
 }
+.item-list--entity-logframe + .cd-button {
+  margin-top: 1rem;
+}
 .item-list--entity-logframe > .item-wrapper {
   border-left: 4px solid var(--ghi-yellow);
 }

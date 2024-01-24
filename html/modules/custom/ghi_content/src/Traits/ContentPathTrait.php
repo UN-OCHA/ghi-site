@@ -6,6 +6,8 @@ use Drupal\Core\Url;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\node\NodeInterface;
 
 /**
  * Trait for handling content paths.
@@ -154,7 +156,19 @@ trait ContentPathTrait {
    *   The node object or NULL if not found.
    */
   protected function getCurrentNode() {
-    return $this->getRequest()->attributes->get('node');
+    $node = $this->getRequest()->attributes->get('node');
+    if ($node instanceof NodeInterface) {
+      return $node;
+    }
+    $section_storage = $this->getRequest()->attributes->get('section_storage');
+    if ($section_storage instanceof OverridesSectionStorage) {
+      [$entity_type, $entity_id] = explode('.', $section_storage->getStorageId());
+      $node = \Drupal::entityTypeManager()->getStorage($entity_type)->load($entity_id);
+    }
+    if ($node instanceof NodeInterface) {
+      return $node;
+    }
+    return NULL;
   }
 
   /**
