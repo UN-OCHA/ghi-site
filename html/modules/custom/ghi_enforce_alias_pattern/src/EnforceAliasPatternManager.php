@@ -72,6 +72,7 @@ class EnforceAliasPatternManager {
         'invisible' => $form['path']['widget'][0]['alias']['#states']['disabled'],
       ],
     ];
+    $form['path']['widget'][0]['alias']['#value'] = '';
     $form['path']['widget'][0]['alias']['#access'] = FALSE;
 
     $form['#attached']['library'][] = 'ghi_enforce_alias_pattern/entity_form';
@@ -86,7 +87,7 @@ class EnforceAliasPatternManager {
       return;
     }
     $value = $form_state->getValue($element['#parents']);
-    $path_element = NestedArray::getValue($form_state->getCompleteForm(), array_slice($element['#parents'], 0, -1));
+    $path_element = NestedArray::getValue($form_state->getCompleteForm(), array_slice($element['#array_parents'], 0, -1));
     if (empty($path_element)) {
       return;
     }
