@@ -71,11 +71,11 @@ trait OptionalLinkTrait {
     // This is a URL that points to an internal page.
     $path_alias_manager = self::getPathAliasManager();
     $path = $path_alias_manager->getPathByAlias($internal_url);
-    $uri = self::getPathValidator()->getUrlIfValid($path);
-    if (!$uri || $uri->isExternal()) {
+    $uri = Url::fromUserInput($path);
+    if (!$uri || $uri->isExternal() || !$uri->isRouted() || !$uri->access()) {
       return FALSE;
     }
-    return 'entity:' . ltrim($path, '/');
+    return 'entity:' . $uri->getInternalPath();
   }
 
   /**
