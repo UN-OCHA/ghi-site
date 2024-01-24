@@ -142,9 +142,15 @@ class OptionalLink extends FormElement {
     if (empty($value['add_link']) || empty($value['link']['url'])) {
       return;
     }
+    if (empty(trim($value['link']['label']))) {
+      $form_state->setError($element['link']['label'], t('The label cannot be empty.'));
+    }
     $url = $value['link']['url'];
     $transformed_url = self::transformUrl($url);
-    if ($transformed_url !== $url) {
+    if (!$transformed_url) {
+      $form_state->setError($element['link']['url'], t('The link URL must be valid and accessible.'));
+    }
+    if (!$form_state->hasAnyErrors() && $transformed_url !== $url) {
       $element['#value']['link']['url'] = $transformed_url;
       $form_state->setValueForElement($element, $element['#value']);
     }

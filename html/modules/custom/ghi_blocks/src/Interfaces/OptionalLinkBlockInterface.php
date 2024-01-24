@@ -8,19 +8,14 @@ namespace Drupal\ghi_blocks\Interfaces;
 interface OptionalLinkBlockInterface {
 
   /**
-   * Check if the block has an additional link configured.
-   *
-   * @return bool
-   *   TRUE if there is a link to be displayed, FALSE otherwise.
-   */
-  public function hasLink();
-
-  /**
    * Get the configured link if any.
+   *
+   * @param array $conf
+   *   The configuration for the link item.
    *
    * @return \Drupal\Core\Link
    *   The link object.
    */
-  public function getLink();
+  public function getLinkFromConfiguration(array $conf);
 
 }
