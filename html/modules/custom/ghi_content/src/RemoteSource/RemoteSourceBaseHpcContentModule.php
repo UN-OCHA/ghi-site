@@ -442,7 +442,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       ];
     }
     $context = stream_context_create($options);
-    return file_get_contents($uri, FALSE, $context);
+    return @file_get_contents($uri, FALSE, $context);
   }
 
   /**

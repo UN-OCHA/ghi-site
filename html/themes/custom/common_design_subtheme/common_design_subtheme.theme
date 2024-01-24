@@ -227,6 +227,9 @@ function common_design_subtheme_preprocess_block(&$variables) {
         $variables['content']['#theme_wrappers']['container']['#attributes']['class'][] = 'content-width';
       }
       foreach (Element::children($variables['content']) as $key) {
+        if (empty($variables['content'][$key]['#type']) || $variables['content'][$key]['#type'] == 'link') {
+          continue;
+        }
         $variables['content'][$key]['#attributes']['class'][] = 'content-width';
       }
       $variables['content']['#full_width'] = TRUE;

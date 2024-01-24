@@ -6,6 +6,8 @@
 }
 
 .js .ui-autocomplete {
+  overflow-y: scroll;
+  max-height: 300px;
   background-color: var(--cd-white);
 }
 
