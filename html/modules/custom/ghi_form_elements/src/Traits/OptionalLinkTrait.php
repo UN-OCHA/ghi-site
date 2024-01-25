@@ -22,6 +22,7 @@ trait OptionalLinkTrait {
     if (empty($conf['link']['label']) || empty($conf['link']['url'])) {
       return NULL;
     }
+    $is_internal = strpos($conf['link']['url'], 'internal:') === 0;
     try {
       $url = Url::fromUri($conf['link']['url']);
       $link = $url->access() ? Link::fromTextAndUrl($conf['link']['label'], $url) : NULL;
@@ -32,7 +33,7 @@ trait OptionalLinkTrait {
     if (!$link) {
       return NULL;
     }
-    if ($link->getUrl()->isRouted() && $node = $link->getUrl()->getRouteParameters()['node'] ?? NULL) {
+    if (!$is_internal && $link->getUrl()->isRouted() && $node = $link->getUrl()->getRouteParameters()['node'] ?? NULL) {
       $node = $node instanceof NodeInterface ? $node : \Drupal::entityTypeManager()->getStorage('node')->load($node);
       $link->setUrl($node->toUrl());
     }
@@ -41,6 +42,9 @@ trait OptionalLinkTrait {
     $attributes = $link->getUrl()->getOption('attributes');
     $attributes['class'] = $classes;
     $link->getUrl()->setOption('attributes', $attributes);
+    if ($is_internal) {
+      $link->getUrl()->setOption('custom_path', str_replace('internal:', '', $conf['link']['url']));
+    }
     return $link;
   }
 
@@ -68,12 +72,22 @@ trait OptionalLinkTrait {
     if (!$internal_url) {
       return $url;
     }
+    if (strpos($internal_url, '#')) {
+      $internal_url = substr($internal_url, 0, strpos($internal_url, '#'));
+    }
     // This is a URL that points to an internal page.
     $path_alias_manager = self::getPathAliasManager();
     $path = $path_alias_manager->getPathByAlias($internal_url);
     $uri = Url::fromUserInput($path);
     if (!$uri || $uri->isExternal() || !$uri->isRouted() || !$uri->access()) {
       return FALSE;
+    }
+    $route_parameters = $uri->getRouteParameters();
+    if (!empty($route_parameters['node'])) {
+      $node = \Drupal::entityTypeManager()->getStorage('node')->load($route_parameters['node']);
+      if ($node->toUrl()->toString() != $url) {
+        return 'internal:' . $internal_url;
+      }
     }
     return 'entity:' . $uri->getInternalPath();
   }
