@@ -7,7 +7,6 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\ghi_content\Traits\ContentPathTrait;
-use Drupal\ghi_sections\Entity\GlobalSection;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -82,10 +81,6 @@ class SectionNavigation extends BlockBase implements ContainerFactoryPluginInter
     $node = $contexts['node']->getContextValue();
 
     if (!$node || !$node instanceof NodeInterface) {
-      return NULL;
-    }
-    if ($node && $node instanceof GlobalSection) {
-      // Don't show the section navigation on nodes of type global section.
       return NULL;
     }
 

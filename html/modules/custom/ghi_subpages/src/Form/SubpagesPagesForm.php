@@ -18,6 +18,7 @@ use Drupal\ghi_subpages\SubpageManager;
 use Drupal\ghi_subpages\SubpageTrait;
 use Drupal\ghi_templates\TemplateLinkBuilder;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
+use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
 use Drupal\publishcontent\Access\PublishContentAccess;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -131,6 +132,7 @@ class SubpagesPagesForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
 
     $form['#attached']['library'][] = 'ghi_subpages/admin.subpages_form';
+    $form['#node'] = $node;
 
     $header = [
       $this->t('Page title'),
@@ -152,18 +154,14 @@ class SubpagesPagesForm extends FormBase {
       ]));
     }
 
-    $overview_links = [
-      Link::createFromRoute($this->t('Article pages'), 'ghi_content.node.articles', ['node' => $node->id()])->toString(),
-      Link::createFromRoute($this->t('Document pages'), 'ghi_content.node.documents', ['node' => $node->id()])->toString(),
-    ];
-
     $form['description'] = [
-      '#markup' => '<p>' . $this->t('On this page you can see all subpages that are directly linked to this @page_type. Additional content that is linked indirectly via tags can be found on these pages: @overview_links', [
+      '#prefix' => '<p>',
+      '#suffix' => '</p>',
+      '#markup' => $this->t('On this page you can see all subpages that are directly linked to this @page_type.', [
         '@page_type' => $node instanceof Section ? $this->t('@type section', [
           '@type' => strtolower($node->getSectionType()),
         ]) : $this->t('section'),
-        '@overview_links' => Markup::create(implode(', ', $overview_links)),
-      ]) . '</p>',
+      ]),
     ];
 
     $section_team = $node->field_team->entity->getName();
@@ -417,13 +415,15 @@ class SubpagesPagesForm extends FormBase {
 
     // Add export/import links.
     $section_storage = $this->getSectionStorageForEntity($subpage);
-    $export_link = $this->templateLinkBuilder->buildExportLink($section_storage, $subpage);
-    if ($export_link) {
-      $links['export'] = $export_link;
-    }
-    $import_link = $this->templateLinkBuilder->buildImportLink($section_storage, $subpage, ['query' => ['redirect_to_entity' => TRUE]]);
-    if ($import_link) {
-      $links['import'] = $import_link;
+    if ($section_storage instanceof SectionStorageInterface) {
+      $export_link = $this->templateLinkBuilder->buildExportLink($section_storage, $subpage);
+      if ($export_link) {
+        $links['export'] = $export_link;
+      }
+      $import_link = $this->templateLinkBuilder->buildImportLink($section_storage, $subpage, ['query' => ['redirect_to_entity' => TRUE]]);
+      if ($import_link) {
+        $links['import'] = $import_link;
+      }
     }
 
     if ($this->publishContentAccess->access($this->currentUser, $subpage)->isAllowed() && $section->isPublished()) {

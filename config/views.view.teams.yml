@@ -6,7 +6,6 @@ dependencies:
     - node.type.document
     - node.type.financials
     - node.type.logframe
-    - node.type.global_section
     - node.type.plan_cluster
     - node.type.population
     - node.type.presence
@@ -649,7 +648,6 @@ display:
             limit: false
             vids: {  }
             anyall: ','
-          default_argument_skip_url: false
           summary_options:
             base_path: ''
             count: true
@@ -954,7 +952,6 @@ display:
             limit: false
             vids: {  }
             anyall: ','
-          default_argument_skip_url: false
           summary_options:
             base_path: ''
             count: true
@@ -1014,7 +1011,6 @@ display:
           plugin_id: bundle
           operator: in
           value:
-            global_section: global_section
             section: section
           group: 1
           exposed: false
@@ -1473,7 +1469,6 @@ display:
             limit: false
             vids: {  }
             anyall: ','
-          default_argument_skip_url: false
           summary_options:
             base_path: ''
             count: true

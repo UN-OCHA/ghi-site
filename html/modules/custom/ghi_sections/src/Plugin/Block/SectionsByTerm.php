@@ -13,6 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_subpages\SubpageTrait;
 use Drupal\taxonomy\Entity\Term;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -223,7 +224,7 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
 
       // Get the section nodes relevant to the base objects.
       $section_nodes = $this->entityTypeManager->getStorage('node')->loadByProperties(array_filter([
-        'type' => 'section',
+        'type' => Section::BUNDLE,
         'field_base_object' => array_keys($base_objects),
         'field_year' => !$base_object_type->hasYear() ? $year : NULL,
       ]));

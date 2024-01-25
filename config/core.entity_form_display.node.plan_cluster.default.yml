@@ -6,10 +6,12 @@ dependencies:
     - field.field.node.plan_cluster.field_base_object
     - field.field.node.plan_cluster.field_entity_reference
     - field.field.node.plan_cluster.field_hero_image
+    - field.field.node.plan_cluster.field_protected
     - field.field.node.plan_cluster.field_team
     - field.field.node.plan_cluster.layout_builder__layout
     - node.type.plan_cluster
   module:
+    - entity_access_password
     - ghi_hero_image
     - path
 id: node.plan_cluster.default
@@ -43,6 +45,16 @@ content:
         hpc_webcontent_file_attachment: null
         smugmug_api: null
     third_party_settings: {  }
+  field_protected:
+    type: entity_access_password_password
+    weight: 52
+    region: content
+    settings:
+      open: false
+      show_entity_title: optional
+      show_hint: optional
+      allow_random_password: false
+    third_party_settings: {  }
   field_team:
     type: entity_reference_autocomplete
     weight: 9
@@ -52,6 +64,11 @@ content:
       match_limit: 10
       size: 60
       placeholder: ''
+    third_party_settings: {  }
+  image_crop:
+    weight: -2
+    region: content
+    settings: {  }
     third_party_settings: {  }
   langcode:
     type: language_select

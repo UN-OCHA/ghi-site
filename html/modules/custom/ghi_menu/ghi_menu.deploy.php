@@ -111,3 +111,19 @@ function ghi_menu_deploy_adjust_admin_menu(&$sandbox) {
     $menu_link->save();
   }
 }
+
+/**
+ * Add custom subpages backend page to admin menu.
+ */
+function ghi_menu_deploy_remove_global_sections_from_admin_menu(&$sandbox) {
+  $section_link = reset(\Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties([
+    'title' => 'Global sections',
+    'link' => [
+      'uri' => 'internal:/admin/content/global-sections',
+    ],
+    'menu_name' => 'admin',
+  ]));
+  if ($section_link) {
+    $section_link->delete();
+  }
+}

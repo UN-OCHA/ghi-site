@@ -96,7 +96,6 @@ field_settings:
           custom_subpage: full
           document: full
           financials: full
-          global_section: full
           logframe: full
           plan_cluster: full
           population: full

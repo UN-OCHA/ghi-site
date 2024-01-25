@@ -4,12 +4,10 @@ status: true
 dependencies:
   config:
     - taxonomy.vocabulary.team
-    - views.view.teams
   module:
     - layout_builder
     - layout_discovery
     - text
-    - views
 third_party_settings:
   layout_builder:
     enabled: true
@@ -21,56 +19,14 @@ third_party_settings:
           label: ''
           context_mapping: {  }
           column_widths: 50-50
-        components:
-          9d3d2809-fd9b-4ec0-9962-00d2b1081bcd:
-            uuid: 9d3d2809-fd9b-4ec0-9962-00d2b1081bcd
-            region: second
-            configuration:
-              id: 'views_block:teams-block_team_sections'
-              label: ''
-              label_display: visible
-              provider: views
-              context_mapping:
-                tid: layout_builder.entity
-              views_label: ''
-              items_per_page: none
-            weight: 0
-            additional: {  }
-          393ff603-49c2-4c16-89f0-efdcddb146fa:
-            uuid: 393ff603-49c2-4c16-89f0-efdcddb146fa
-            region: first
-            configuration:
-              id: 'views_block:teams-block_team_members'
-              label: ''
-              label_display: visible
-              provider: views
-              context_mapping:
-                tid: layout_builder.entity
-              views_label: ''
-              items_per_page: none
-            weight: 1
-            additional: {  }
+        components: {  }
         third_party_settings: {  }
       -
         layout_id: layout_onecol
         layout_settings:
           label: Content
           context_mapping: {  }
-        components:
-          af4c973c-7f3e-4227-8ec0-9f0ffd3b06e5:
-            uuid: af4c973c-7f3e-4227-8ec0-9f0ffd3b06e5
-            region: content
-            configuration:
-              id: 'views_block:teams-block_team_subpages'
-              label: ''
-              label_display: visible
-              provider: views
-              context_mapping:
-                tid: layout_builder.entity
-              views_label: ''
-              items_per_page: none
-            weight: 1
-            additional: {  }
+        components: {  }
         third_party_settings: {  }
 id: taxonomy_term.team.default
 targetEntityType: taxonomy_term
@@ -86,3 +42,4 @@ content:
     region: content
 hidden:
   langcode: true
+  search_api_excerpt: true

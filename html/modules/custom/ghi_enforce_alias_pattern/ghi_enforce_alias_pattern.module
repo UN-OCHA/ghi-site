@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for GHI Enforce Alias pattern.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_theme().
+ */
+function ghi_enforce_alias_pattern_theme() {
+  $theme['form_element__enforced_alias'] = [
+    'base hook' => 'form_element',
+  ];
+
+  return $theme;
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function ghi_enforce_alias_pattern_form_alter(array &$form, FormStateInterface $form_state) {
+  /** @var \Drupal\ghi_enforce_alias_pattern\EnforceAliasPatternManager $enforce_alias_pattern_manager */
+  $enforce_alias_pattern_manager = \Drupal::service('ghi_enforce_alias_pattern.manager');
+  $enforce_alias_pattern_manager->formAlter($form, $form_state);
+}

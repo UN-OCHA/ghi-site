@@ -11,7 +11,7 @@ use Drupal\menu_link_content\Plugin\Menu\MenuLinkContent;
  * This mainly handles the GHO menu, assuring that uris like
  * '/document/xyz/article/abc' stay like that and are not shortened to
  * '/article/abc'. The reason for the shortening is that the actual article's
- * is canonical url is teh short one, but in order to provide context for
+ * canonical url is the short one, but in order to provide context for
  * things like the document menu, we support manually prefixing the article uri
  * with the uri to the document that the article belongs to.
  */

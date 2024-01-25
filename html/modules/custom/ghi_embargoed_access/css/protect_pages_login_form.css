@@ -1,6 +1,4 @@
-.path-protected-page .protected_pages_description strong {
-  font-weight: normal;
-}
-.path-protected-page .protected-pages-enter-password .form-item-password {
+.path-protected .field--type-entity-access-password-password > form {
+  margin-top: 2rem;
   margin-bottom: 2rem;
 }

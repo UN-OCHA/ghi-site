@@ -33,4 +33,20 @@ interface SectionNodeInterface extends NodeInterface {
    */
   public function getTags();
 
+  /**
+   * Get the base object for a section.
+   *
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface
+   *   The base object set for this section node.
+   */
+  public function getBaseObject();
+
+  /**
+   * Get the section type based on the linked base object type.
+   *
+   * @return \Drupal\Component\Render\MarkupInterface|string
+   *   The type label of the base object linked to the section.
+   */
+  public function getSectionType();
+
 }

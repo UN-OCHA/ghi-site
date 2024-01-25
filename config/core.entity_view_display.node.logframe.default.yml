@@ -5,10 +5,12 @@ dependencies:
   config:
     - field.field.node.logframe.field_entity_reference
     - field.field.node.logframe.field_hero_image
+    - field.field.node.logframe.field_protected
     - field.field.node.logframe.field_team
     - field.field.node.logframe.layout_builder__layout
     - node.type.logframe
   module:
+    - entity_access_password
     - layout_builder
     - layout_builder_ipe
     - layout_builder_restrictions
@@ -82,7 +84,15 @@ id: node.logframe.default
 targetEntityType: node
 bundle: logframe
 mode: default
-content: {  }
+content:
+  field_protected:
+    type: entity_access_password_form
+    label: above
+    settings:
+      help_text: ''
+    third_party_settings: {  }
+    weight: 109
+    region: content
 hidden:
   field_entity_reference: true
   field_hero_image: true

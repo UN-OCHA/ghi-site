@@ -6,6 +6,7 @@ dependencies:
     - core.entity_view_mode.node.teaser
     - field.field.node.logframe.field_entity_reference
     - field.field.node.logframe.field_hero_image
+    - field.field.node.logframe.field_protected
     - field.field.node.logframe.field_team
     - field.field.node.logframe.layout_builder__layout
     - node.type.logframe
@@ -24,6 +25,8 @@ content:
 hidden:
   field_entity_reference: true
   field_hero_image: true
+  field_protected: true
   field_team: true
   langcode: true
   layout_builder__layout: true
+  search_api_excerpt: true

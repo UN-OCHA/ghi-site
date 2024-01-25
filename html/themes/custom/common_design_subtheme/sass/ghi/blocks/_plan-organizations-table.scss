@@ -4,6 +4,15 @@
     white-space: unset !important;
   }
 
+  tbody td.organization-cluster-list .display-icons {
+    display: flex;
+    gap: 0.5rem;
+
+    i {
+      cursor: auto;
+    }
+  }
+
   @include tablet {
     thead th.cd-table--name {
       min-width: 200px;

@@ -1,0 +1,9 @@
+name: GHI Enforce Alias Pattern
+description: Validates and enforces rules for manually entered URL aliases
+package: GHI
+
+type: module
+core_version_requirement: ^9 || ^10
+
+dependencies:
+  - pathauto:pathauto
