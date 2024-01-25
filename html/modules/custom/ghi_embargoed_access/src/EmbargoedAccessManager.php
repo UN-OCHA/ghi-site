@@ -2,21 +2,35 @@
 
 namespace Drupal\ghi_embargoed_access;
 
-use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\Random;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Password\PasswordInterface;
-use Drupal\Core\Url;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\entity_access_password\Cache\Context\EntityIsProtectedCacheContext;
+use Drupal\entity_access_password\Service\PasswordAccessManagerInterface;
+use Drupal\entity_access_password\Service\RouteParserInterface;
+use Drupal\ghi_content\Entity\ContentBase;
+use Drupal\ghi_content\Traits\ContentPathTrait;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
+use Drupal\node\NodeForm;
 use Drupal\node\NodeInterface;
-use Drupal\protected_pages\ProtectedPagesStorage;
 use Drupal\search_api\Plugin\search_api\datasource\ContentEntityTrackingManager;
 
 /**
  * Embargoed access manager service class.
  */
 class EmbargoedAccessManager {
+
+  use StringTranslationTrait;
+  use ContentPathTrait;
+
+  /**
+   * The name of the protected field.
+   */
+  const PROTECTED_FIELD = 'field_protected';
 
   /**
    * The entity type manager service.
@@ -26,25 +40,25 @@ class EmbargoedAccessManager {
   protected $entityTypeManager;
 
   /**
-   * The protected pages storage service.
-   *
-   * @var \Drupal\protected_pages\ProtectedPagesStorage
-   */
-  protected $protectedPagesStorage;
-
-  /**
-   * Provides the password hashing service object.
-   *
-   * @var \Drupal\Core\Password\PasswordInterface
-   */
-  protected $password;
-
-  /**
    * The system theme config object.
    *
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected $configFactory;
+
+  /**
+   * The route parser.
+   *
+   * @var \Drupal\entity_access_password\Service\RouteParserInterface
+   */
+  protected $routeParser;
+
+  /**
+   * The password access manager.
+   *
+   * @var \Drupal\entity_access_password\Service\PasswordAccessManagerInterface
+   */
+  protected $passwordAccessManager;
 
   /**
    * The Search API tracking manager.
@@ -56,11 +70,11 @@ class EmbargoedAccessManager {
   /**
    * Constructs an embargoed access manager class.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ProtectedPagesStorage $protected_pages_storage, PasswordInterface $password, ConfigFactoryInterface $config_factory, ContentEntityTrackingManager $search_api_tracking_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ConfigFactoryInterface $config_factory, RouteParserInterface $route_parser = NULL, PasswordAccessManagerInterface $password_access_manager = NULL, ContentEntityTrackingManager $search_api_tracking_manager) {
     $this->entityTypeManager = $entity_type_manager;
-    $this->protectedPagesStorage = $protected_pages_storage;
-    $this->password = $password;
     $this->configFactory = $config_factory;
+    $this->routeParser = $route_parser;
+    $this->passwordAccessManager = $password_access_manager;
     $this->searchApiTrackingManager = $search_api_tracking_manager;
   }
 
@@ -71,33 +85,192 @@ class EmbargoedAccessManager {
    *   TRUE if the embargoed access is enabled, false otherwise.
    */
   public function embargoedAccessEnabled() {
-    return !$this->configFactory->get('ghi_embargoed_access.settings')->get('enabled');
+    return $this->configFactory->get('ghi_embargoed_access.settings')->get('enabled');
   }
 
   /**
-   * Load the id of a protected page item for the given node.
+   * Check the access for the given entity.
    *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node for which to load the id.
+   * @param \Drupal\node\NodeInterface $entity
+   *   The entity to check.
    *
-   * @return int|null
-   *   The id of the protected page item or NULL if not found.
+   * @return bool
+   *   TRUE if access should be granted, FALSE otherwise.
    */
-  public function loadProtectedPageIdForNode(NodeInterface $node) {
-    if (!$node) {
+  public function entityAccess(NodeInterface $entity) {
+    if (!$this->embargoedAccessEnabled()) {
+      return TRUE;
+    }
+    if ($this->isProtected($entity) && !$this->passwordAccessManager?->hasUserAccessToEntity($entity)) {
+      return FALSE;
+    }
+    if ($entity instanceof SubpageNodeInterface && $parent = $entity->getParentNode()) {
+      if ($this->isProtected($parent) && !$this->passwordAccessManager?->hasUserAccessToEntity($parent)) {
+        return FALSE;
+      }
+    }
+    if ($entity instanceof ContentBase && $section = $this->getCurrentSectionNode()) {
+      if ($this->isProtected($section) && !$this->passwordAccessManager?->hasUserAccessToEntity($section)) {
+        return FALSE;
+      }
+    }
+    return TRUE;
+  }
+
+  /**
+   * Alter the view mode for an entity.
+   *
+   * This is used to enforce the global embargo switch and to protect subpages
+   * of sections as well as articles and documents that are accessed via a
+   * section specific url.
+   */
+  public function alterViewMode(&$view_mode, EntityInterface $entity) {
+    // Quick return to avoid instantiation.
+    if ($view_mode == PasswordAccessManagerInterface::PROTECTED_VIEW_MODE && $this->embargoedAccessEnabled()) {
       return;
     }
-    $path = '/node/' . $node->id();
-    $fields = ['pid'];
-    $conditions = [
-      'general' => [],
-    ];
-    $conditions['general'][] = [
-      'field' => 'path',
-      'value' => $path,
-      'operator' => '=',
-    ];
-    return $this->protectedPagesStorage->loadProtectedPage($fields, $conditions, TRUE);
+
+    if ($view_mode == PasswordAccessManagerInterface::PROTECTED_VIEW_MODE && !$this->embargoedAccessEnabled()) {
+      // Reset the original view mode.
+      $entity_access_cache_contexts = array_filter($entity->getCacheContexts(), function ($cache_context) {
+        return strpos($cache_context, 'entity_access_password_entity_is_protected:') === 0;
+      });
+      $entity_access_cache_context = reset($entity_access_cache_contexts);
+      $context_parts = $entity_access_cache_context && strpos($entity_access_cache_context, '||') ? explode('||', $entity_access_cache_context) : NULL;
+      $view_mode = $context_parts ? (end($context_parts) ?: 'full') : 'full';
+      return;
+    }
+
+    if ($this->embargoedAccessEnabled()) {
+      if ($entity instanceof SubpageNodeInterface && $parent = $entity->getParentNode()) {
+        if ($this->passwordAccessManager->isEntityViewModeProtected($view_mode, $parent)) {
+          $entity->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $parent->getEntityTypeId() . '||' . $parent->id() . '||' . $view_mode]);
+
+          if (!$this->passwordAccessManager->hasUserAccessToEntity($parent)) {
+            $view_mode = PasswordAccessManagerInterface::PROTECTED_VIEW_MODE;
+          }
+        }
+      }
+
+      if ($entity instanceof ContentBase && $section = $this->getCurrentSectionNode()) {
+        if ($this->passwordAccessManager->isEntityViewModeProtected($view_mode, $section)) {
+          $entity->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $section->getEntityTypeId() . '||' . $section->id() . '||' . $view_mode]);
+
+          if (!$this->passwordAccessManager->hasUserAccessToEntity($section)) {
+            $view_mode = PasswordAccessManagerInterface::PROTECTED_VIEW_MODE;
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Alter variables for the page.
+   */
+  public function alterHtml(&$variables) {
+    $entity = $this->routeParser?->getEntityFromCurrentRoute();
+    if (!$entity instanceof NodeInterface || $this->entityAccess($entity)) {
+      return NULL;
+    }
+
+    $variables['attributes']['class'][] = 'path-protected';
+
+    $cacheableMetadata = new CacheableMetadata();
+    $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);
+    $cacheableMetadata->applyTo($variables);
+  }
+
+  /**
+   * Alter variables for the page.
+   */
+  public function alterPage(&$variables) {
+    $entity = $this->routeParser?->getEntityFromCurrentRoute();
+    if (!$entity instanceof NodeInterface || $this->entityAccess($entity)) {
+      return NULL;
+    }
+
+    unset($variables['page']['page_title']['sectionswitcher']);
+    unset($variables['page']['page_image']);
+    unset($variables['page']['page_subtitle']);
+    unset($variables['page']['page_navigation']);
+    unset($variables['page']['content']['subpagetitle']);
+    unset($variables['page']['content']['articletitle']);
+
+    $cacheableMetadata = new CacheableMetadata();
+    $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);
+    $cacheableMetadata->applyTo($variables);
+  }
+
+  /**
+   * Alter variables for the page title.
+   */
+  public function alterPageTitle(&$variables) {
+    $entity = $this->routeParser?->getEntityFromCurrentRoute();
+    if (!$entity instanceof NodeInterface) {
+      return NULL;
+    }
+
+    if ($this->entityAccess($entity)) {
+      $variables['title'] = $entity instanceof ContentBase ? $entity->getPageTitle() : $entity->label();
+      return NULL;
+    }
+
+    $variables['title'] = $this->t('Embargoed content');
+    $variables['#protected'] = TRUE;
+
+    $cacheableMetadata = new CacheableMetadata();
+    $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);
+    $cacheableMetadata->applyTo($variables);
+  }
+
+  /**
+   * Alter variables for the node.
+   */
+  public function alterNode(&$variables) {
+    $entity = $variables['node'] ?? NULL;
+    if (!$entity instanceof NodeInterface || $this->entityAccess($entity)) {
+      return NULL;
+    }
+    unset($variables['label']);
+    unset($variables['metadata']);
+    unset($variables['content']['field_image']);
+    $variables['display_submitted'] = FALSE;
+    $variables['attributes']['class'][] = 'content-width';
+
+    $cacheableMetadata = new CacheableMetadata();
+    $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);
+    $cacheableMetadata->applyTo($variables);
+  }
+
+  /**
+   * Alter node forms that use the protected field.
+   */
+  public function alterNodeForm(array &$form, FormStateInterface $form_state) {
+    $form_object = $form_state->getFormObject();
+    if (!$form_object instanceof NodeForm) {
+      return;
+    }
+    if (empty($form[self::PROTECTED_FIELD])) {
+      return;
+    }
+    $form[self::PROTECTED_FIELD]['widget'][0]['show_title']['#access'] = FALSE;
+    $form[self::PROTECTED_FIELD]['widget'][0]['show_title']['#default_value'] = FALSE;
+    $form[self::PROTECTED_FIELD]['widget'][0]['hint']['#access'] = FALSE;
+    $form[self::PROTECTED_FIELD]['widget'][0]['hint']['#default_value'] = NULL;
+
+    // Subpages have the protected field, but should inherit the protection
+    // status from the section.
+    $entity = $form_object->getEntity();
+    if ($entity instanceof SubpageNodeInterface && $parent = $entity->getParentNode()) {
+      $form[self::PROTECTED_FIELD]['widget'][0]['is_protected']['#access'] = FALSE;
+      $form[self::PROTECTED_FIELD]['widget'][0]['is_protected_parent'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Enable password protection'),
+        '#description' => $parent->get(self::PROTECTED_FIELD)->is_protected ? $this->t("This page is currently password protected because it's section page is password protected.") : $this->t('Password protection cannot be changed here. It is inherited from the section.'),
+        '#default_value' => $parent->get(self::PROTECTED_FIELD)->is_protected,
+        '#disabled' => 'disabled',
+      ];
+    }
   }
 
   /**
@@ -110,8 +283,10 @@ class EmbargoedAccessManager {
    *   TRUE if the node is currently protected, FALSE otherwise.
    */
   public function isProtected(NodeInterface $node) {
-    $pid = $this->loadProtectedPageIdForNode($node);
-    return !empty($pid);
+    if (!$node->hasField(self::PROTECTED_FIELD)) {
+      return FALSE;
+    }
+    return !empty($node->get(self::PROTECTED_FIELD)->is_protected);
   }
 
   /**
@@ -125,12 +300,14 @@ class EmbargoedAccessManager {
       // Already done.
       return;
     }
-    $random = new Random();
-    $page_data = [
-      'password' => $this->password->hash(Html::escape($random->string(32))),
-      'path' => '/node/' . $node->id(),
-    ];
-    $this->protectedPagesStorage->insertProtectedPage($page_data);
+    $node->get(self::PROTECTED_FIELD)->setValue([
+      'is_protected' => TRUE,
+      'show_title' => FALSE,
+      'hint' => '',
+    ]);
+    $node->setNewRevision(FALSE);
+    $node->setSyncing(TRUE);
+    $node->save();
     Cache::invalidateTags($node->getCacheTags());
     $this->searchApiTrackingManager->entityUpdate($node);
   }
@@ -142,12 +319,14 @@ class EmbargoedAccessManager {
    *   The node to unprotect.
    */
   public function unprotectNode(NodeInterface $node) {
-    $pid = $this->loadProtectedPageIdForNode($node);
-    if (!$pid) {
+    if (!$this->isProtected($node)) {
       // Already done.
       return;
     }
-    $this->protectedPagesStorage->deleteProtectedPage($pid);
+    $node->get(self::PROTECTED_FIELD)->setValue(NULL);
+    $node->setNewRevision(FALSE);
+    $node->setSyncing(TRUE);
+    $node->save();
     Cache::invalidateTags($node->getCacheTags());
     $this->searchApiTrackingManager->entityUpdate($node);
   }
@@ -156,16 +335,13 @@ class EmbargoedAccessManager {
    * Mark all embargoed nodes for re-index.
    */
   public function markAllForReindex() {
-    $pages = $this->protectedPagesStorage->loadAllProtectedPages();
-    if (empty($pages)) {
+    $protected_nodes = $this->entityTypeManager->getStorage('node')->loadByProperties([
+      self::PROTECTED_FIELD . '.is_protected' => TRUE,
+    ]);
+    if (empty($protected_nodes)) {
       return;
     }
-    foreach ($pages as $page) {
-      $params = Url::fromUri('internal:' . $page->path)?->getRouteParameters();
-      if (!$params || empty($params['node'])) {
-        continue;
-      }
-      $node = $this->entityTypeManager->getStorage('node')->load($params['node']);
+    foreach ($protected_nodes as $node) {
       $this->searchApiTrackingManager->entityUpdate($node);
     }
   }

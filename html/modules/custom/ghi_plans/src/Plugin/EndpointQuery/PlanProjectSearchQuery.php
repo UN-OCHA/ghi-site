@@ -205,12 +205,12 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
       if (!$project->published) {
         continue;
       }
-      if (empty($project->clusters)) {
+      if (empty($project->getClusters())) {
         continue;
       }
       $organization_ids = array_keys($project->getOrganizations());
       if (in_array($organization->id, $organization_ids)) {
-        $organization_clusters = array_merge($organization_clusters, $project->clusters);
+        $organization_clusters = array_merge($organization_clusters, $project->getClusters());
       }
     }
     $this->cache($cache_key, $organization_clusters);
@@ -299,15 +299,15 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
 
     if (!empty($base_object) && $base_object instanceof GoverningEntity) {
       $context_original_id = $base_object->getSourceId();
-      $projects = array_filter($projects, function ($item) use ($context_original_id) {
-        return in_array($context_original_id, $item->cluster_ids);
+      $projects = array_filter($projects, function (Project $item) use ($context_original_id) {
+        return in_array($context_original_id, $item->getClusterIds());
       });
     }
 
     if ($this->filterByClusterIds !== NULL) {
       $cluster_ids = $this->filterByClusterIds;
-      $projects = array_filter($projects, function ($item) use ($cluster_ids) {
-        return count(array_intersect($cluster_ids, $item->cluster_ids));
+      $projects = array_filter($projects, function (Project $item) use ($cluster_ids) {
+        return count(array_intersect($cluster_ids, $item->getClusterIds()));
       });
     }
     $this->cache($cache_key, $projects);
@@ -341,14 +341,14 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
         continue;
       }
       foreach ($project_organizations as $organization) {
-        if (empty($clusters[$organization->id])) {
-          $clusters[$organization->id] = [];
+        if (empty($clusters[$organization->id()])) {
+          $clusters[$organization->id()] = [];
         }
         foreach ($project->getClusters() as $cluster) {
-          if (!empty($clusters[$organization->id][$cluster->id])) {
+          if (!empty($clusters[$organization->id()][$cluster->id()])) {
             continue;
           }
-          $clusters[$organization->id][$cluster->id] = $cluster;
+          $clusters[$organization->id()][$cluster->id()] = $cluster;
         }
       }
     }
@@ -386,10 +386,10 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
     $projects = $this->getProjects($base_object);
     $projects_by_location = [];
     foreach ($projects as $project) {
-      if (empty($project->location_ids)) {
+      if (empty($project->getLocationIds())) {
         continue;
       }
-      foreach ($project->location_ids as $location_id) {
+      foreach ($project->getLocationIds() as $location_id) {
         if (empty($projects_by_location[$location_id])) {
           $projects_by_location[$location_id] = [];
         }

@@ -1,33 +1,33 @@
-label: Contenu
-description: 'Trouver et gérer le contenu.'
+label: Content
+description: 'Find and manage content.'
 display:
   default:
     display_title: Maître
     display_options:
-      title: Contenu
+      title: Content
       fields:
         title:
-          label: Titre
+          label: Title
         type:
-          label: 'Type de contenu'
+          label: 'Content type'
         name:
-          label: Auteur
+          label: Author
         status:
-          label: État
+          label: Status
           settings:
-            format_custom_false: 'Non publié'
-            format_custom_true: Publié
+            format_custom_false: Unpublished
+            format_custom_true: Published
         changed:
-          label: 'Mis à jour'
+          label: Updated
         operations:
           label: Actions
       pager:
         options:
           tags:
-            next: 'Suivant ›'
-            previous: '‹ Précédent'
-            first: '« Premier'
-            last: 'Dernier »'
+            next: 'Next ›'
+            previous: '‹ Previous'
+            first: '« First'
+            last: 'Last »'
       exposed_form:
         options:
           submit_button: Filtrer
@@ -35,24 +35,24 @@ display:
           exposed_sorts_label: 'Trier par'
       empty:
         area_text_custom:
-          content: 'Aucun contenu disponible.'
+          content: 'No content available.'
       filters:
         title:
           expose:
-            label: Titre
+            label: Title
         type:
           expose:
-            label: 'Type de contenu'
+            label: 'Content type'
         status:
           expose:
-            label: État
+            label: Status
           group_info:
-            label: 'Statut de publication'
+            label: 'Published status'
             group_items:
               1:
-                title: Publié
+                title: Published
               2:
-                title: 'Non publié'
+                title: Unpublished
         langcode:
           expose:
-            label: Langue
+            label: Language

@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Tags;
 use Drupal\Core\Entity\EntityAutocompleteMatcher;
 use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 
@@ -13,6 +14,8 @@ use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
  * Matcher class to get autocompletion results for entity reference.
  */
 class GhiEntityAutocompleteMatcher extends EntityAutocompleteMatcher {
+
+  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
@@ -33,7 +36,7 @@ class GhiEntityAutocompleteMatcher extends EntityAutocompleteMatcher {
       'handler_settings' => $selection_settings,
     ]);
     $match_operator = !empty($selection_settings['match_operator']) ? $selection_settings['match_operator'] : 'CONTAINS';
-    $entity_labels = $handler->getReferenceableEntities($string, $match_operator, 10);
+    $entity_labels = $handler->getReferenceableEntities($string, $match_operator, 100);
 
     // Customize the labels used in autocomplete.
     foreach ($entity_labels as $bundle => $values) {
@@ -42,13 +45,15 @@ class GhiEntityAutocompleteMatcher extends EntityAutocompleteMatcher {
       foreach ($values as $entity_id => $label) {
         $entity = $entities[$entity_id];
         if ($entity instanceof Article) {
-          $custom_label = $this->getArticleLabel($entity_id, $target_id, $label);
+          $custom_label = $node_type->label() . ': ' . $this->getArticleLabel($entity_id, $target_id, $label);
         }
         elseif ($entity instanceof SubpageNodeInterface) {
-          $custom_label = $this->getSubpageLabel($entity_id, $target_id, $label);
+          $custom_label = $this->t('Subpage: @subpage_label', [
+            '@subpage_label' => $this->getSubpageLabel($entity_id, $target_id, $label),
+          ]);
         }
         else {
-          $custom_label = $label;
+          $custom_label = $node_type->label() . ': ' . $label;
         }
 
         if ($entity instanceof EntityPublishedInterface && !$entity->isPublished()) {
@@ -59,7 +64,7 @@ class GhiEntityAutocompleteMatcher extends EntityAutocompleteMatcher {
         $key = "$label ($entity_id)";
         $key = preg_replace('/\s\s+/', ' ', str_replace("\n", '', trim(Html::decodeEntities(strip_tags($key)))));
         $key = Tags::encode($key);
-        $matches[] = ['value' => $key, 'label' => $node_type->label() . ': ' . $custom_label];
+        $matches[] = ['value' => $key, 'label' => $custom_label];
       }
     }
     return $matches;

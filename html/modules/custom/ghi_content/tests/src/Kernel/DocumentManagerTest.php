@@ -41,6 +41,7 @@ class DocumentManagerTest extends KernelTestBase {
     'filter',
     'file',
     'token',
+    'path',
     'path_alias',
     'pathauto',
     'ghi_sections',
@@ -73,6 +74,7 @@ class DocumentManagerTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
     $this->installEntitySchema('taxonomy_term');
+    $this->installEntitySchema('path_alias');
     $this->installSchema('system', 'sequences');
     $this->installSchema('node', ['node_access']);
     $this->installConfig(['system', 'node', 'taxonomy', 'field']);

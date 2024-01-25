@@ -90,10 +90,10 @@ class CustomSubpage extends SectionMenuPluginBase {
   }
 
   /**
-   * Get the document for the current menu item.
+   * Get the custom subpage for the current menu item.
    *
-   * @return \Drupal\ghi_content\Entity\Document|null
-   *   The document node if found, or NULL otherwise.
+   * @return \Drupal\ghi_subpages_custom\Entity\CustomSubpage|null
+   *   The custom subpage node if found, or NULL otherwise.
    */
   private function getNode() {
     if (!$this->nodeId) {

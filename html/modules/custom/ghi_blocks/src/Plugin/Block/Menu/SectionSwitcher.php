@@ -6,8 +6,6 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
-use Drupal\ghi_sections\Entity\GlobalSection;
-use Drupal\ghi_sections\Entity\Homepage;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -97,9 +95,6 @@ class SectionSwitcher extends BlockBase implements ContainerFactoryPluginInterfa
    */
   public function build() {
     $section = $this->getSectionNode();
-    if ($section instanceof GlobalSection) {
-      return;
-    }
     $sections = $this->buildSectionSwitcherOptions();
     if (!$sections) {
       return [];
@@ -169,10 +164,6 @@ class SectionSwitcher extends BlockBase implements ContainerFactoryPluginInterfa
     /** @var \Drupal\node\NodeInterface $node */
     $node = $contexts['node']->getContextValue();
     $section_node = $this->subpageManager->getBaseTypeNode($node);
-    // Let's not handle global sections that are not homepages for the moment.
-    if ($section_node instanceof GlobalSection && !$section_node instanceof Homepage) {
-      return NULL;
-    }
     if (!$section_node) {
       // We can still try to deduce the section from the path.
       $section_node = $this->getSectionNodeFromPath();

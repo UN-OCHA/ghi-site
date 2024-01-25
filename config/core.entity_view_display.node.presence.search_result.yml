@@ -6,6 +6,7 @@ dependencies:
     - core.entity_view_mode.node.search_result
     - field.field.node.presence.field_entity_reference
     - field.field.node.presence.field_hero_image
+    - field.field.node.presence.field_protected
     - field.field.node.presence.field_team
     - field.field.node.presence.layout_builder__layout
     - node.type.presence
@@ -92,6 +93,7 @@ content:
     weight: 0
     region: content
 hidden:
+  field_protected: true
   field_team: true
   langcode: true
   layout_builder__layout: true

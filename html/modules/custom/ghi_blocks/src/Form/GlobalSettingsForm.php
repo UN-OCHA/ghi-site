@@ -8,7 +8,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
-use Drupal\ghi_sections\Entity\Homepage;
+use Drupal\ghi_homepage\Entity\Homepage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -154,7 +154,7 @@ class GlobalSettingsForm extends ConfigFormBase {
    * @param int $year
    *   The year.
    *
-   * @return \Drupal\ghi_sections\Entity\Homepage
+   * @return \Drupal\ghi_homepage\Entity\Homepage
    *   The homepage node object.
    */
   public function getHomepageForYear($year) {

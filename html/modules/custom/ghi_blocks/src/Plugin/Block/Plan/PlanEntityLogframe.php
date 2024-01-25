@@ -9,10 +9,12 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OptionalLinkBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
@@ -59,10 +61,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  }
  * )
  */
-class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, TrustedCallbackInterface {
+class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, OptionalLinkBlockInterface, TrustedCallbackInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
+  use OptionalLinkTrait;
 
   /**
    * The logframe manager.
@@ -195,7 +198,8 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     $count = count($rendered_items);
 
     $first_entity = reset($entities);
-    return [
+    $build = [];
+    $build[] = [
       '#theme' => 'plan_entity_logframe',
       '#items' => $rendered_items,
       '#wrapper_attributes' => [
@@ -207,6 +211,12 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       ],
       '#gin_lb_theme_suggestions' => FALSE,
     ];
+
+    if ($link = $this->getLinkFromConfiguration($this->getBlockConfig()['display']['link'] ?? [])) {
+      $build[] = $link->toRenderable();
+    }
+
+    return $build;
   }
 
   /**
@@ -331,6 +341,10 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       ],
       'tables' => [
         'attachment_tables' => [],
+      ],
+      'display' => [
+        'title' => NULL,
+        'link' => NULL,
       ],
     ];
   }
@@ -539,6 +553,11 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    * {@inheritdoc}
    */
   public function displayForm(array $form, FormStateInterface $form_state) {
+    $form['link'] = [
+      '#type' => 'optional_link',
+      '#title' => $this->t('Add a link to this element'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'link'),
+    ];
     return $form;
   }
 

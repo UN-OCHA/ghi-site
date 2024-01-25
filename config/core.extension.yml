@@ -29,6 +29,8 @@ module:
   datetime_range: 0
   dynamic_page_cache: 0
   editor: 0
+  entity_access_password: 0
+  entity_access_password_session_backend: 0
   field: 0
   field_group: 0
   field_ui: 0
@@ -40,9 +42,11 @@ module:
   ghi_blocks: 0
   ghi_content: 0
   ghi_embargoed_access: 0
+  ghi_enforce_alias_pattern: 0
   ghi_form_elements: 0
   ghi_gin: 0
   ghi_hero_image: 0
+  ghi_homepage: 0
   ghi_local_tasks: 0
   ghi_menu: 0
   ghi_plan_clusters: 0
@@ -101,7 +105,6 @@ module:
   path: 0
   path_alias: 0
   phpexcel: 0
-  protected_pages: 0
   publishcontent: 0
   queue_ui: 0
   rabbit_hole: 0

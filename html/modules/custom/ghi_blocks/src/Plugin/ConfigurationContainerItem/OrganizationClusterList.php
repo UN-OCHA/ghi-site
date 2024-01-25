@@ -141,12 +141,11 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
       $content = array_map(function ($cluster) {
         return [
           0 => [
-            '#type' => 'html_tag',
-            '#tag' => 'span',
-            '#attributes' => [
-              'title' => $cluster->name,
+            '#theme' => 'hpc_tooltip',
+            '#tooltip' => $cluster->name,
+            '#tag_content' => [
+              '#markup' => Markup::create($this->iconQuery->getIconEmbedCode($cluster->icon)),
             ],
-            '#value' => Markup::create($this->iconQuery->getIconEmbedCode($cluster->icon)),
           ],
         ];
       }, $clusters);

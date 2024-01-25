@@ -8,7 +8,7 @@
         if (!$table_wrapper.html() || $table_wrapper.html().includes('data-big-pipe-placeholder-id')) {
           return;
         }
-        if ($table_wrapper.html() !== '') {
+        if ($table_wrapper.html().trim() !== '') {
           $table_wrapper.parents('.item-wrapper').find('.table-toggle').css('visibility', 'visible');
           $(once('logframe-toggle', item)).find('.table-toggle').click(function() {
             $(item).find('.attachment-tables-wrapper').slideToggle({

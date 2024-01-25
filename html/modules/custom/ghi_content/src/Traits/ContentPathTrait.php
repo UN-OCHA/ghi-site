@@ -6,6 +6,9 @@ use Drupal\Core\Url;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
+use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\node\NodeInterface;
 
 /**
  * Trait for handling content paths.
@@ -19,6 +22,10 @@ trait ContentPathTrait {
    *   The article node or NULL if not found.
    */
   protected function getCurrentArticleNode() {
+    $node = $this->getCurrentNode();
+    if ($node instanceof Article) {
+      return $node;
+    }
     $path = $this->getCurrentPath();
     return $this->getArticleNodeFromPath($path, TRUE);
   }
@@ -30,6 +37,10 @@ trait ContentPathTrait {
    *   The document node or NULL if not found.
    */
   protected function getCurrentDocumentNode() {
+    $node = $this->getCurrentNode();
+    if ($node instanceof Document) {
+      return $node;
+    }
     $path = $this->getCurrentPath();
     return $this->getDocumentNodeFromPath($path, TRUE);
   }
@@ -44,6 +55,9 @@ trait ContentPathTrait {
     $node = $this->getCurrentNode();
     if ($node instanceof SectionNodeInterface) {
       return $node;
+    }
+    if ($node instanceof SubpageNodeInterface) {
+      return $node->getParentNode();
     }
     $path = $this->getCurrentPath();
     return $this->getSectionNodeFromPath($path);
@@ -130,7 +144,14 @@ trait ContentPathTrait {
         $loaded[$alias] = \Drupal::entityTypeManager()->getStorage($entity_type)->load($params[$entity_type]);
       }
       catch (\Exception $e) {
-        // Just catch any issue and pretend this didn't happen.
+        // If this didn't work, see if there is a redirect by the given path
+        // and try to load the node via that redirect.
+        $redirects = $this->redirectRepository()->findBySourcePath(trim($path, '/'));
+        $redirect = count($redirects) == 1 ? reset($redirects) : NULL;
+        if ($redirect) {
+          $redirect_alias = $redirect->getRedirectUrl()->toString();
+          $loaded[$alias] = $this->getNodeByUrlAlias($redirect_alias);
+        }
       }
     }
     return $loaded[$alias];
@@ -154,7 +175,19 @@ trait ContentPathTrait {
    *   The node object or NULL if not found.
    */
   protected function getCurrentNode() {
-    return $this->getRequest()->attributes->get('node');
+    $node = $this->getRequest()->attributes->get('node');
+    if ($node instanceof NodeInterface) {
+      return $node;
+    }
+    $section_storage = $this->getRequest()->attributes->get('section_storage');
+    if ($section_storage instanceof OverridesSectionStorage) {
+      [$entity_type, $entity_id] = explode('.', $section_storage->getStorageId());
+      $node = \Drupal::entityTypeManager()->getStorage($entity_type)->load($entity_id);
+    }
+    if ($node instanceof NodeInterface) {
+      return $node;
+    }
+    return NULL;
   }
 
   /**
@@ -165,6 +198,16 @@ trait ContentPathTrait {
    */
   protected static function pathAliasManager() {
     return \Drupal::service('path_alias.manager');
+  }
+
+  /**
+   * Get the redirect repository.
+   *
+   * @return \Drupal\redirect\RedirectRepository
+   *   The redirect repository.
+   */
+  protected static function redirectRepository() {
+    return \Drupal::service('redirect.repository');
   }
 
   /**

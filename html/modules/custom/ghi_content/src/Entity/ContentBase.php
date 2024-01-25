@@ -53,6 +53,21 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   }
 
   /**
+   * Get the page title for a content node.
+   *
+   * @return string|\Drupal\Core\StringTranslation\TranslatableMarkup|null
+   *   The page title.
+   */
+  public function getPageTitle() {
+    if ($context_node = $this->getContextNode()) {
+      return $context_node->label();
+    }
+    else {
+      return $this->label();
+    }
+  }
+
+  /**
    * Check if the given node is a valid context.
    *
    * @param \Drupal\node\NodeInterface $node
@@ -228,7 +243,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     // Filter out the structural tags.
     $tags = array_filter($tags, function ($tag) {
       /** @var \Drupal\taxonomy\TermInterface $tag */
-      $is_structural_tag = (bool) $tag->get('field_structural_tag')?->value ?? FALSE;
+      $is_structural_tag = (bool) $tag->hasField('field_structural_tag') && $tag->get('field_structural_tag')?->value ?? FALSE;
       return $is_structural_tag;
     });
 

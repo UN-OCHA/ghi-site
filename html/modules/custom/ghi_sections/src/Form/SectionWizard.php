@@ -3,12 +3,32 @@
 namespace Drupal\ghi_sections\Form;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_form_elements\Form\WizardBase;
+use Drupal\ghi_sections\Entity\Section;
 use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a wizard form for creating section nodes.
  */
 class SectionWizard extends WizardBase {
+
+  /**
+   * The section manager.
+   *
+   * @var \Drupal\ghi_sections\Import\SectionManager
+   */
+  protected $sectionManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    /** @var static $instance */
+    $instance = parent::create($container);
+    $instance->sectionManager = $container->get('ghi_sections.manager');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -21,7 +41,7 @@ class SectionWizard extends WizardBase {
    * {@inheritdoc}
    */
   protected function getBundle() {
-    return 'section';
+    return Section::BUNDLE;
   }
 
   /**
@@ -114,7 +134,7 @@ class SectionWizard extends WizardBase {
       '#access' => $needs_year && $step >= array_flip($steps)['year'],
     ];
 
-    $tags = $this->getEntityReferenceFieldItemList('section', 'field_tags', $form_state->getValue('tags') ?? []);
+    $tags = $this->getEntityReferenceFieldItemList(Section::BUNDLE, 'field_tags', $form_state->getValue('tags') ?? []);
 
     // Add the team selector.
     $form['tags'] = [

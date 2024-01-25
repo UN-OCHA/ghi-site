@@ -6,8 +6,10 @@ use Drupal\Core\PathProcessor\InboundPathProcessorInterface;
 use Drupal\Core\PathProcessor\OutboundPathProcessorInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\ghi_content\Traits\ContentPathTrait;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
  * A path processor class for content pages.
@@ -19,35 +21,24 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * providing standalone pages for articles and documents and providing
  * consistent in-page navigation for these objects.
  */
-class ContentPagePathProcessor implements InboundPathProcessorInterface, OutboundPathProcessorInterface {
+class ContentPagePathProcessor implements InboundPathProcessorInterface, OutboundPathProcessorInterface, EventSubscriberInterface {
 
   use ContentPathTrait;
-
-  /**
-   * The request stack.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
-   */
-  protected $requestStack;
-
-  /**
-   * Constructs a path processor.
-   */
-  public function __construct(RequestStack $request_stack) {
-    $this->requestStack = $request_stack;
-  }
 
   /**
    * {@inheritdoc}
    */
   public function processInbound($path, Request $request) {
+    $original_path = $path;
     if (strpos($path, '/article/') > 0) {
       $path = $this->processArticleUrl($path);
     }
     elseif (strpos($path, '/document/') > 0) {
       $path = $this->processDocumentUrl($path);
     }
-    $this->requestStack->getCurrentRequest()->attributes->set('_disable_route_normalizer', TRUE);
+    if ($original_path != $path) {
+      self::disableRouteNormalizer(TRUE);
+    }
     return $path;
   }
 
@@ -82,8 +73,8 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
 
     // This is a request for an article inside a document. We need to find the
     // document based on the alias, confirm that the article is actually part
-    // of the document and that the current user has access to the section.
-    if ($document && (!$document->hasArticle($article) || !$document->access('view'))) {
+    // of the document.
+    if ($document && !$document->hasArticle($article)) {
       return $path;
     }
 
@@ -91,11 +82,7 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
       return $path;
     }
 
-    if ($section && (!$section->access('view') || !$article->isPartOfSection($section))) {
-      return $path;
-    }
-
-    if (!$article->access('view')) {
+    if ($section && !$article->isPartOfSection($section)) {
       return $path;
     }
 
@@ -133,6 +120,45 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
 
     $path = '/node/' . $document->id();
     return $path;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getSubscribedEvents() {
+    // Register our event right before the redirect module redirects.
+    $events[KernelEvents::REQUEST][] = ['disableRedirectOnContextualPath', 31];
+    return $events;
+  }
+
+  /**
+   * Disable a redirect on contextial paths.
+   *
+   * @param \Symfony\Component\HttpKernel\Event\RequestEvent $event
+   *   The event to process.
+   */
+  public static function disableRedirectOnContextualPath(RequestEvent $event) {
+    if (self::disableRouteNormalizer()) {
+      $event->getRequest()->attributes->set('_disable_route_normalizer', TRUE);
+    }
+  }
+
+  /**
+   * Disable the route normalizer to prevent unintended redirects.
+   *
+   * @param bool $status
+   *   TRUE to disable the route normalizer, FALSE to enable it.
+   *
+   * @return bool|void
+   *   If not void, a boolean indicating whether the route normalizer is
+   *   disabled.
+   */
+  public static function disableRouteNormalizer($status = NULL) {
+    $disable_route_normalizer = &drupal_static(__FUNCTION__, FALSE);
+    if ($status === NULL) {
+      return $disable_route_normalizer;
+    }
+    $disable_route_normalizer = $status;
   }
 
 }

@@ -58,13 +58,16 @@ class SubpageHelper {
 
     $parent_node = Node::load($node->id());
 
-    foreach (SubpageManager::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
+    foreach (self::getSubpageTypes() as $subpage_type) {
       if (self::getSubpageForBaseNode($node, $subpage_type)) {
         continue;
       }
 
       /** @var \Drupal\node\Entity\NodeTypeInterface $node_type */
       $node_type = \Drupal::entityTypeManager()->getStorage('node_type')->load($subpage_type);
+      if (self::getSubpageManager()->isManualSubpageType($node_type)) {
+        continue;
+      }
       $subpage_name = $node_type->get('name');
       /** @var \Drupal\node\NodeInterface $subpage */
       $subpage = Node::create([
@@ -76,8 +79,8 @@ class SubpageHelper {
           'target_id' => $parent_node->id(),
         ],
       ]);
-
       $subpage->save();
+
       if (PHP_SAPI !== 'cli') {
         \Drupal::messenger()->addStatus(t('Created @type subpage for @title', [
           '@type' => $subpage_name,

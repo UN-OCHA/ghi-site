@@ -36,16 +36,6 @@ class Article extends ContentBase {
   }
 
   /**
-   * Get the chapter of the article.
-   *
-   * @return string|null
-   *   The chapter as a plain string or NULL.
-   */
-  public function getChapter() {
-    return $this->get('field_chapter')->value ?? NULL;
-  }
-
-  /**
    * Get the document chapter to which this article belongs.
    *
    * This assumes that every article can only appear once per document.

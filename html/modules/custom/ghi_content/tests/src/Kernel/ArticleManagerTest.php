@@ -42,6 +42,7 @@ class ArticleManagerTest extends KernelTestBase {
     'filter',
     'file',
     'token',
+    'path',
     'path_alias',
     'pathauto',
     'ghi_sections',
@@ -75,6 +76,7 @@ class ArticleManagerTest extends KernelTestBase {
     $this->installEntitySchema('node');
     $this->installEntitySchema('taxonomy_term');
     $this->installEntitySchema('file');
+    $this->installEntitySchema('path_alias');
     $this->installSchema('system', 'sequences');
     $this->installSchema('node', ['node_access']);
     $this->installConfig(['system', 'node', 'taxonomy', 'field', 'file']);
@@ -130,7 +132,7 @@ class ArticleManagerTest extends KernelTestBase {
   }
 
   /**
-   * Tests that tags can be imported.
+   * Tests that tags can be retrieved.
    */
   public function testGetTags() {
     $section_terms = [
@@ -154,7 +156,7 @@ class ArticleManagerTest extends KernelTestBase {
   }
 
   /**
-   * Tests that tags can be imported.
+   * Tests loading nodes for a section.
    */
   public function testLoadNodesForSection() {
 
@@ -230,7 +232,7 @@ class ArticleManagerTest extends KernelTestBase {
   }
 
   /**
-   * Tests that tags can be imported.
+   * Tests that tags available tags for a section can be retrieved.
    */
   public function testLoadAvailableTagsForSection() {
 

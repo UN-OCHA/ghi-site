@@ -77,7 +77,6 @@ display:
               custom_subpage: search_result
               document: search_result
               financials: search_result
-              global_section: search_result
               logframe: search_result
               plan_cluster: search_result
               population: search_result

@@ -28,4 +28,14 @@ class PlanProjectCluster extends BaseObject {
     ];
   }
 
+  /**
+   * Get the icon for the cluster.
+   *
+   * @return string
+   *   The icon string.
+   */
+  public function getIcon() {
+    return $this->icon;
+  }
+
 }

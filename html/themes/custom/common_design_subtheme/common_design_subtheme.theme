@@ -31,6 +31,15 @@ function common_design_subtheme_theme($existing, $type, $theme, $path) {
 }
 
 /**
+ * Implements hook_library_info_alter().
+ */
+function common_design_subtheme_library_info_alter(&$libraries, $extension) {
+  // Remove the cd-nodes library, see
+  // https://github.com/UN-OCHA/common_design/commit/1bdb36373bf82120fead784abacbece00bc37b9b.
+  unset($libraries['cd-nodes']);
+}
+
+/**
  * Implements hook_theme_registry_alter().
  */
 function common_design_subtheme_theme_registry_alter(&$theme_registry) {
@@ -104,7 +113,7 @@ function common_design_subtheme_form_alter(&$form, FormStateInterface $form_stat
     $form['keywords']['#attributes']['placeholder'] = t('What are you looking for?');
     $form['keywords']['#attributes']['class'][] = 'cd-search__input';
     $form['keywords']['#attributes']['type'][] = 'search';
-    $form['keywords']['#attributes']['id'][] = 'cd-search';
+    $form['keywords']['#attributes']['id'][] = 'edit-keywords';
     $form['keywords']['#attributes']['autocomplete'][] = 'off';
     // Theme suggestion for submit element.
     $form['actions']['submit']['#attributes']['data-twig-suggestion'] = 'search_submit';
@@ -218,6 +227,9 @@ function common_design_subtheme_preprocess_block(&$variables) {
         $variables['content']['#theme_wrappers']['container']['#attributes']['class'][] = 'content-width';
       }
       foreach (Element::children($variables['content']) as $key) {
+        if (empty($variables['content'][$key]['#type']) || $variables['content'][$key]['#type'] == 'link') {
+          continue;
+        }
         $variables['content'][$key]['#attributes']['class'][] = 'content-width';
       }
       $variables['content']['#full_width'] = TRUE;

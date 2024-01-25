@@ -175,6 +175,7 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'template' => 'ghi-message',
     ],
     'mailing_list_subscribe' => [
+      'render element' => 'element',
       'template' => 'mailing-list-subscribe',
     ],
   ];
@@ -484,6 +485,7 @@ function ghi_blocks_node_presave(NodeInterface $node) {
  * Implements hook_page_attachments().
  */
 function ghi_blocks_page_attachments(array &$attachments) {
+  $attachments['#attached']['library'][] = 'ghi_blocks/throbber';
   if (\Drupal::currentUser()->isAnonymous()) {
     // Nothing to do for anonymous.
     return;
@@ -491,7 +493,6 @@ function ghi_blocks_page_attachments(array &$attachments) {
   if (ghi_blocks_is_layout_builder_route()) {
     $attachments['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
   }
-  $attachments['#attached']['library'][] = 'ghi_blocks/throbber';
   $attachments['#attached']['library'][] = 'ghi_blocks/gin';
 }
 

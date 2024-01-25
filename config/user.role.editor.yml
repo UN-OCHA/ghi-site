@@ -7,7 +7,6 @@ dependencies:
     - core.entity_view_display.node.custom_subpage.default
     - core.entity_view_display.node.document.default
     - core.entity_view_display.node.financials.default
-    - core.entity_view_display.node.global_section.default
     - core.entity_view_display.node.logframe.default
     - core.entity_view_display.node.plan_cluster.default
     - core.entity_view_display.node.population.default
@@ -42,7 +41,6 @@ permissions:
   - 'configure editable custom_subpage node layout overrides'
   - 'configure editable document node layout overrides'
   - 'configure editable financials node layout overrides'
-  - 'configure editable global_section node layout overrides'
   - 'configure editable logframe node layout overrides'
   - 'configure editable plan_cluster node layout overrides'
   - 'configure editable population node layout overrides'
@@ -58,7 +56,6 @@ permissions:
   - 'use layout builder ipe on editable custom_subpage node layout overrides'
   - 'use layout builder ipe on editable document node layout overrides'
   - 'use layout builder ipe on editable financials node layout overrides'
-  - 'use layout builder ipe on editable global_section node layout overrides'
   - 'use layout builder ipe on editable homepage node layout overrides'
   - 'use layout builder ipe on editable logframe node layout overrides'
   - 'use layout builder ipe on editable plan_cluster node layout overrides'

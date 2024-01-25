@@ -28,8 +28,8 @@ function ghi_blocks_preprocess_document_link_box(&$variables) {
   $variables['title'] = Unicode::truncate($document['title'], DocumentLink::TITLE_MAX_LENGTH, TRUE, TRUE);
 
   // Get the document date.
-  $timestamp = strtotime($document['date']);
-  $date = $date_formatter->format($timestamp, 'custom', 'd M Y');
+  $timestamp = !empty($document['date']) ? strtotime($document['date']) : NULL;
+  $date = $timestamp ? $date_formatter->format($timestamp, 'custom', 'd M Y') : NULL;
 
   $filetypes = [];
 

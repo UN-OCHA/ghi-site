@@ -3,12 +3,9 @@
 namespace Drupal\ghi_form_elements\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Link;
-use Drupal\Core\Url;
 use Drupal\ghi_form_elements\ConfigurationContainerItemGroupInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_form_elements\Helpers\FormElementHelper;
-use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
+use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
 
 /**
  * Provides an entity counter item for configuration containers.
@@ -21,29 +18,13 @@ use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
  */
 class ItemGroup extends ConfigurationContainerItemPluginBase implements ConfigurationContainerItemGroupInterface {
 
-  /**
-   * {@inheritdoc}
-   */
-  public function hasLink() {
-    if (empty($this->config['add_link'])) {
-      return FALSE;
-    }
-    return !empty($this->config['link']['label']) && !empty($this->config['link']['url']);
-  }
+  use OptionalLinkTrait;
 
   /**
    * {@inheritdoc}
    */
   public function getLink() {
-    if (!$this->hasLink()) {
-      return NULL;
-    }
-    try {
-      return Link::fromTextAndUrl($this->config['link']['label'], Url::fromUri($this->config['link']['url']));
-    }
-    catch (\InvalidArgumentException $e) {
-      return NULL;
-    }
+    return $this->getLinkFromConfiguration($this->config['link']);
   }
 
   /**
@@ -64,34 +45,10 @@ class ItemGroup extends ConfigurationContainerItemPluginBase implements Configur
     ];
 
     if (!empty($configuration['link'])) {
-      $element['add_link'] = [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Add a link to this tab'),
-        '#default_value' => !empty($this->config['add_link']),
-      ];
-      $state_selector = FormElementHelper::getStateSelector($element, ['add_link']);
       $element['link'] = [
-        '#type' => 'container',
-        '#states' => [
-          'visible' => [
-            'input[name="' . $state_selector . '"]' => ['checked' => TRUE],
-          ],
-        ],
-      ];
-      $element['link']['label'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('Label'),
-        '#description' => $this->t('Enter a label for the link.'),
-        '#default_value' => array_key_exists('link', $this->config) ? $this->config['link']['label'] : NULL,
-      ];
-      $element['link']['url'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('Url'),
-        '#default_value' => array_key_exists('link', $this->config) ? $this->config['link']['url'] : NULL,
-        '#description' => $this->t('Enter the url for the link.'),
-        '#element_validate' => [
-          [LinkWidget::class, 'validateUriElement'],
-        ],
+        '#type' => 'optional_link',
+        '#title' => $this->t('Add a link to this element'),
+        '#default_value' => $this->config['link'] ?? [],
       ];
     }
 

@@ -15,6 +15,8 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
 
   use ShortNameTrait;
 
+  const BUNDLE = 'section';
+
   /**
    * {@inheritdoc}
    */
@@ -23,7 +25,10 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
     if ($this->isAutocompleteRoute() || $this->isAdminPage()) {
       return $label;
     }
-    $base_object = $this->get('field_base_object')->entity;
+    $base_object = $this->getBaseObject() ?? NULL;
+    if (!$base_object) {
+      return $label;
+    }
     return $this->getShortName($base_object) ?? $label;
   }
 
@@ -67,20 +72,14 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
   }
 
   /**
-   * Get the base object for a section.
-   *
-   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface
-   *   The base object set for this section node.
+   * {@inheritdoc}
    */
   public function getBaseObject() {
-    return $this->get('field_base_object')->entity;
+    return $this->get('field_base_object')->entity ?? NULL;
   }
 
   /**
-   * Get the section type based on the linked base object type.
-   *
-   * @return \Drupal\Component\Render\MarkupInterface|string
-   *   The type label of the base object linked to the section.
+   * {@inheritdoc}
    */
   public function getSectionType() {
     $base_object = $this->getBaseObject();
@@ -115,7 +114,42 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
     parent::postSave($storage, $update);
 
     // Make sure we have a valid alias for this node.
-    \Drupal::service('pathauto.generator')->updateEntityAlias($this, $this->isNew() ? 'insert' : 'update');
+    /** @var \Drupal\pathauto\PathautoGeneratorInterface $pathauto_generator */
+    $pathauto_generator = \Drupal::service('pathauto.generator');
+    $result = $pathauto_generator->updateEntityAlias($this, $this->isNew() ? 'insert' : 'update', [
+      'language' => $this->language()->getId(),
+    ]);
+
+    // The current alias is either the result of the pathauto generator, or the
+    // alias set manually by a user.
+    $alias = $result['alias'] ?? $this->path->alias;
+
+    // If we have a valid path alias, set for this node, make sure it's
+    // persistet, so that other nodes that have alias patterns using this nodes
+    // path alias, can have direct access to it.
+    // It should not be necessary to do this here, but it seems that the path
+    // alias module persists the alias after this code has run.
+    if (!empty($alias)) {
+      /** @var \Drupal\path_alias\PathAliasStorage $path_alias_storage */
+      $path_alias_storage = \Drupal::entityTypeManager()->getStorage('path_alias');
+      $path_alias_storage->resetCache();
+
+      /** @var \Drupal\path_alias\Entity\PathAlias $path_alias */
+      $path_aliases = $path_alias_storage->loadByProperties([
+        'path' => '/' . $this->toUrl()->getInternalPath(),
+      ]);
+      if (!empty($path_aliases)) {
+        $path_alias = end($path_aliases);
+        $path_alias->setAlias($alias)->save();
+      }
+      else {
+        $path_alias_storage->create([
+          'path' => '/' . $this->toUrl()->getInternalPath(),
+          'alias' => $alias,
+          'language' => $this->language()->getId(),
+        ])->save();
+      }
+    }
 
     // Due to the way that the pathauto module works, the alias generation for
     // the subpages is not finished at this point. This is because at the time

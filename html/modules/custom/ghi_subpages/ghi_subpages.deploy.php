@@ -61,3 +61,16 @@ function ghi_subpages_deploy_update_subpage_url_aliases(&$sandbox) {
 
   $sandbox['#finished'] = 1 / (count($sandbox['nodes']) + 1);
 }
+
+/**
+ * Delete obsolete subpages for homepages.
+ */
+function ghi_subpages_deploy_delete_homepage_subpages(&$sandbox) {
+  $homepages = \Drupal::entityQuery('node')->condition('type', 'homepage')->accessCheck(FALSE)->execute();
+  $subpages = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+    'field_entity_reference' => $homepages,
+  ]);
+  foreach ($subpages as $subpage) {
+    $subpage->delete();
+  }
+}

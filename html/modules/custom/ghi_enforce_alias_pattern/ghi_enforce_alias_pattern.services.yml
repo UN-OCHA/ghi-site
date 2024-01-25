@@ -1,0 +1,4 @@
+services:
+  ghi_enforce_alias_pattern.manager:
+    class: Drupal\ghi_enforce_alias_pattern\EnforceAliasPatternManager
+    arguments: ['@pathauto.generator', '@entity_type.manager']

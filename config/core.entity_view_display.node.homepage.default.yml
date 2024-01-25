@@ -3,7 +3,6 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.node.homepage.field_tags
     - field.field.node.homepage.field_team
     - field.field.node.homepage.field_year
     - field.field.node.homepage.layout_builder__layout
@@ -32,7 +31,7 @@ third_party_settings:
               6: 6
               7: 7
   layout_builder_ipe:
-    enabled: 1
+    enabled: true
   layout_builder_restrictions:
     allowed_block_categories: {  }
     entity_view_mode_restriction:
@@ -53,27 +52,21 @@ third_party_settings:
         - Forms
         - HID
         - 'Lists (Views)'
+        - 'Mailing list'
         - Menus
+        - Page
         - 'Plan cluster elements'
         - 'Plan elements'
         - 'Social Auth'
-        - Subpage
         - System
         - User
+        - Views
         - core
 id: node.homepage.default
 targetEntityType: node
 bundle: homepage
 mode: default
 content:
-  field_tags:
-    type: entity_reference_label
-    label: above
-    settings:
-      link: true
-    third_party_settings: {  }
-    weight: 102
-    region: content
   field_team:
     type: entity_reference_label
     label: above
@@ -99,3 +92,4 @@ content:
 hidden:
   langcode: true
   layout_builder__layout: true
+  search_api_excerpt: true
