@@ -6,6 +6,7 @@ use Drupal\Core\Url;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\node\NodeInterface;
 
@@ -21,6 +22,10 @@ trait ContentPathTrait {
    *   The article node or NULL if not found.
    */
   protected function getCurrentArticleNode() {
+    $node = $this->getCurrentNode();
+    if ($node instanceof Article) {
+      return $node;
+    }
     $path = $this->getCurrentPath();
     return $this->getArticleNodeFromPath($path, TRUE);
   }
@@ -32,6 +37,10 @@ trait ContentPathTrait {
    *   The document node or NULL if not found.
    */
   protected function getCurrentDocumentNode() {
+    $node = $this->getCurrentNode();
+    if ($node instanceof Document) {
+      return $node;
+    }
     $path = $this->getCurrentPath();
     return $this->getDocumentNodeFromPath($path, TRUE);
   }
@@ -46,6 +55,9 @@ trait ContentPathTrait {
     $node = $this->getCurrentNode();
     if ($node instanceof SectionNodeInterface) {
       return $node;
+    }
+    if ($node instanceof SubpageNodeInterface) {
+      return $node->getParentNode();
     }
     $path = $this->getCurrentPath();
     return $this->getSectionNodeFromPath($path);
