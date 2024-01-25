@@ -29,3 +29,10 @@ function ghi_sections_update_9001(&$sandbox) {
     $global_section->delete();
   }
 }
+
+/**
+ * Enable entity_access_password to prevent issues during config import.
+ */
+function ghi_sections_update_9002(&$sandbox) {
+  \Drupal::service("module_installer")->install(['entity_access_password']);
+}
