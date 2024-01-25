@@ -132,7 +132,14 @@ trait ContentPathTrait {
         $loaded[$alias] = \Drupal::entityTypeManager()->getStorage($entity_type)->load($params[$entity_type]);
       }
       catch (\Exception $e) {
-        // Just catch any issue and pretend this didn't happen.
+        // If this didn't work, see if there is a redirect by the given path
+        // and try to load the node via that redirect.
+        $redirects = $this->redirectRepository()->findBySourcePath(trim($path, '/'));
+        $redirect = count($redirects) == 1 ? reset($redirects) : NULL;
+        if ($redirect) {
+          $redirect_alias = $redirect->getRedirectUrl()->toString();
+          $loaded[$alias] = $this->getNodeByUrlAlias($redirect_alias);
+        }
       }
     }
     return $loaded[$alias];
@@ -179,6 +186,16 @@ trait ContentPathTrait {
    */
   protected static function pathAliasManager() {
     return \Drupal::service('path_alias.manager');
+  }
+
+  /**
+   * Get the redirect repository.
+   *
+   * @return \Drupal\redirect\RedirectRepository
+   *   The redirect repository.
+   */
+  protected static function redirectRepository() {
+    return \Drupal::service('redirect.repository');
   }
 
   /**
