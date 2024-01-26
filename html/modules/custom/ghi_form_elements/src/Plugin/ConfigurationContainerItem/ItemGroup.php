@@ -24,6 +24,9 @@ class ItemGroup extends ConfigurationContainerItemPluginBase implements Configur
    * {@inheritdoc}
    */
   public function getLink() {
+    if (empty($this->config['link'])) {
+      return NULL;
+    }
     return $this->getLinkFromConfiguration($this->config['link']);
   }
 
