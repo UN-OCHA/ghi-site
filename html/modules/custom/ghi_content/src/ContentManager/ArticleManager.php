@@ -216,6 +216,7 @@ class ArticleManager extends BaseContentManager {
 
     if (!$dry_run) {
       $this->importManager->layoutManagerDiscardChanges($node, NULL);
+      $node->setSyncing(TRUE);
     }
   }
 

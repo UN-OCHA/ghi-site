@@ -633,12 +633,12 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
       $this->messenger->addWarning($this->t('Some of the fields in this form are disabled because their content is automatically synced from the remote source.'));
     }
 
-    $migration_id = $this->getMigration($node)->id();
-    $loaded_migration = Migration::load($migration_id);
-    $destination = $loaded_migration->get('destination');
+    $migration = $this->getMigration($node);
+    $loaded_migration = $migration ? Migration::load($migration->id()) : NULL;
+    $destination = $loaded_migration?->get('destination') ?? NULL;
     $disabled_field_text = $this->t('This field is disabled because it is automatically populated from the remote source.');
 
-    $field_keys = array_merge($destination['overwrite_properties'], ['field_image']);
+    $field_keys = array_merge($destination ? $destination['overwrite_properties'] : [], ['field_image']);
     foreach ($field_keys as $field_key) {
       if (empty($form[$field_key])) {
         continue;
