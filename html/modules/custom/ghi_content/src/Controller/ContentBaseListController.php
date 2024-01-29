@@ -73,10 +73,13 @@ abstract class ContentBaseListController extends ControllerBase {
       $this->messenger()->addWarning($this->t('The import is currently running. Please try again later.'));
       return new RedirectResponse($redirect);
     }
+    $options = [
+      'update' => 0,
+    ];
     if ($tags !== NULL) {
       $options['configuration'] = ['source_tags' => $tags];
     }
-    $executable = new MigrateBatchExecutable($migration, new MigrateMessage());
+    $executable = new MigrateBatchExecutable($migration, new MigrateMessage(), $options);
     $executable->batchImport();
     batch_process($redirect);
     $batch = batch_get();
