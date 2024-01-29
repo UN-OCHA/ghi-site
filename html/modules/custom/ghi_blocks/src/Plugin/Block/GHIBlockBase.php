@@ -745,7 +745,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $form['label']['#access'] = FALSE;
     $form['label']['#required'] = FALSE;
     $form['label_display']['#access'] = FALSE;
-    $form['context_mapping']['#access'] = FALSE;
+    $form['context_mapping']['#access'] = $form_state->get('current_subform') == self::CONTEXTS_FORM_KEY && !$this->isConfigurationPreview();
 
     $settings_form = &$form['container'];
 
