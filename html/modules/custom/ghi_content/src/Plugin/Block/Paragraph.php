@@ -429,6 +429,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     }
     /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
     $remote_source_manager = \Drupal::service('plugin.manager.remote_source');
+    /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source */
     $remote_source = $remote_source_manager->createInstance($remote_source_key);
     $article_id = $conf['article_select']['article']['article_id'] ?? NULL;
     if (!$remote_source || !$article_id) {
