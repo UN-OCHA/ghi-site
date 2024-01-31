@@ -1,4 +1,4 @@
 services:
   ghi_embargoed_access.manager:
     class: Drupal\ghi_embargoed_access\EmbargoedAccessManager
-    arguments: ['@entity_type.manager', '@config.factory', '@?entity_access_password.route_parser', '@?entity_access_password.password_access_manager', '@search_api.entity_datasource.tracking_manager']
+    arguments: ['@entity_type.manager', '@entity_field.manager', '@config.factory', '@?entity_access_password.route_parser', '@?entity_access_password.password_access_manager', '@search_api.entity_datasource.tracking_manager']
