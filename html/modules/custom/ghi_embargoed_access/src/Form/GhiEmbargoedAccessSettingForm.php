@@ -4,6 +4,8 @@ namespace Drupal\ghi_embargoed_access\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -19,6 +21,13 @@ class GhiEmbargoedAccessSettingForm extends ConfigFormBase {
   protected $embargoedAccessManager;
 
   /**
+   * The section manager.
+   *
+   * @var \Drupal\ghi_subpages\SubpageManager
+   */
+  protected $subpageManager;
+
+  /**
    * The password hashing service.
    *
    * @var \Drupal\Core\Password\PasswordInterface
@@ -32,6 +41,7 @@ class GhiEmbargoedAccessSettingForm extends ConfigFormBase {
     /** @var static $instance */
     $instance = parent::create($container);
     $instance->embargoedAccessManager = $container->get('ghi_embargoed_access.manager');
+    $instance->subpageManager = $container->get('ghi_subpages.manager');
     $instance->password = $container->get('password');
     return $instance;
   }
@@ -76,6 +86,44 @@ class GhiEmbargoedAccessSettingForm extends ConfigFormBase {
         ],
       ],
     ];
+
+    $rows = [];
+    foreach ($this->embargoedAccessManager->getEmbargoedNodeTypes() as $node_type) {
+      if ($this->subpageManager->isSubpageType($node_type)) {
+        continue;
+      }
+      $rows[] = [
+        $node_type->label(),
+        count($this->embargoedAccessManager->getEmbargoedNodesForNodeType($node_type)),
+        Link::fromTextAndUrl($this->t('show list'), Url::fromUserInput('/admin/config/ghi/embargoed-access/embargoed-pages/' . $node_type->id())),
+      ];
+    }
+
+    // Add a summary table with links to backend listings.
+    $form['summary'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          'input[name="enabled"]' => ['checked' => TRUE],
+        ],
+      ],
+      [
+        '#type' => 'html_tag',
+        '#tag' => 'h6',
+        '#value' => $this->t('Summary of protected pages by content type'),
+      ],
+      [
+        '#theme' => 'table',
+        '#header' => [
+          $this->t('Content type'),
+          $this->t('# protected pages'),
+          '',
+        ],
+        '#rows' => $rows,
+        '#empty' => $this->t('It seems no content type is currently configured for protection. If you think this is an error, please contact an administrator'),
+      ],
+    ];
+
     return $form;
   }
 
