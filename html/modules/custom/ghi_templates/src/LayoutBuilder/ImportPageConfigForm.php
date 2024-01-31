@@ -314,9 +314,8 @@ class ImportPageConfigForm extends FormBase {
       $response->addCommand(new RedirectCommand($entity_url->toString()));
     }
     else {
-      /** @var \Drupal\layout_builder_ipe\Controller\EntityEditController $entity_edit_controller */
-      $entity_edit_controller = $this->controllerResolver->getControllerFromDefinition(EntityEditController::class);
-      $response = $entity_edit_controller->edit($form_state->get('section_storage'));
+      $callable = $this->controllerResolver->getControllerFromDefinition(EntityEditController::class . '::edit');
+      $response = $callable($form_state->get('section_storage'));
       $response->addCommand(new CloseDialogCommand('#layout-builder-modal'));
     }
     return $response;

@@ -72,17 +72,19 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
     $endpoint_query_args = $plugin_definition['endpoint']['query'] ?? [];
 
     $this->isAutenticatedEndpoint = $endpoint_authenticated && $this->user->isAuthenticated() && $this->getHidAccessToken();
+    $endpoint_url = $this->isAutenticatedEndpoint ? $endpoint_authenticated : $endpoint_public;
+    $auth_method = EndpointQuery::AUTH_METHOD_BASIC;
     if ($endpoint_api_key) {
-      $this->endpointQuery->setAuthMethod(EndpointQuery::AUTH_METHOD_API_KEY);
-      $this->endpointQuery->setEndpoint($endpoint_api_key);
-    }
-    else {
-      $this->endpointQuery->setAuthMethod(EndpointQuery::AUTH_METHOD_BASIC);
-      $this->endpointQuery->setEndpoint($this->isAutenticatedEndpoint ? $endpoint_authenticated : $endpoint_public);
+      $auth_method = EndpointQuery::AUTH_METHOD_API_KEY;
+      $endpoint_url = $endpoint_api_key;
     }
 
-    $this->endpointQuery->setEndpointVersion($endpoint_version);
-    $this->endpointQuery->setEndpointArguments($endpoint_query_args);
+    $this->endpointQuery->setArguments([
+      'api_version' => $endpoint_version,
+      'endpoint' => $endpoint_url,
+      'query_args' => $endpoint_query_args,
+      'auth_method' => $auth_method,
+    ]);
   }
 
   /**

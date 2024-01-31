@@ -14,8 +14,12 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  *   id = "plan_project_funding_query",
  *   label = @Translation("Plan funding summary query"),
  *   endpoint = {
- *     "public" = "fts/project/plan?planid={plan_id}&groupBy=project",
- *     "version" = "v1"
+ *     "public" = "fts/project/plan",
+ *     "version" = "v1",
+ *     "query" = {
+ *       "planid" = "{plan_id}",
+ *       "groupBy" = "project"
+ *     }
  *   }
  * )
  */

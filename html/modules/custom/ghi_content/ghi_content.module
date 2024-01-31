@@ -189,7 +189,7 @@ function ghi_content_form_ghi_subpages_admin_views_form_alter(array &$form, Form
 /**
  * Implements hook_form_FORM_ID_alter().
  *
- * Used to disable fields that automatically populated.
+ * Used to disable fields that are automatically populated.
  */
 function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateInterface $form_state) {
   /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
@@ -201,7 +201,7 @@ function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateIn
 /**
  * Implements hook_form_FORM_ID_alter().
  *
- * Used to disable fields that automatically populated.
+ * Used to disable fields that are automatically populated.
  */
 function ghi_content_form_node_document_edit_form_alter(array &$form, FormStateInterface $form_state) {
   /** @var \Drupal\ghi_content\ContentManager\DocumentManager $article_manager */
