@@ -230,7 +230,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     ];
 
     // See if we have a cached version already for this request.
-    $cache_key = $this->getCacheKey(['url' => $this->getRemoteEndpointUrl()] + $post_args);
+    $cache_key = $this->getCacheKey(['url' => $this->getRemoteEndpointUrl()] + ['body' => $post_args['body']]);
     if (!$this->disableCache && $response = $this->cache($cache_key)) {
       // If we have a cached version, use that.
       return $response;

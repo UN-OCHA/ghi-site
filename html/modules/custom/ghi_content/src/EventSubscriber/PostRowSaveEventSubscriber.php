@@ -78,7 +78,7 @@ class PostRowSaveEventSubscriber implements EventSubscriberInterface {
     if (!in_array($event->getMigration()->id(), $migration_ids)) {
       return;
     }
-    if (!$event->getRow()->needsUpdate()) {
+    if (!$event->getRow()->changed()) {
       return;
     }
     $ids = $event->getDestinationIdValues();

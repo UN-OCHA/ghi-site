@@ -54,3 +54,8 @@ services:
       - ${PROJECT_ROOT}/.docksal/etc/solr/solr811:/opt/solr/server/solr/configsets/solr811
     environment:
       SOLR_CORE: ${SOLR_CORE:-ghi}
+
+  memcached:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: memcached

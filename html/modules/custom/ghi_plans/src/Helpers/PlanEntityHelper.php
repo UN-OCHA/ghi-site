@@ -90,7 +90,7 @@ class PlanEntityHelper {
    */
   public static function getPlanEntity($entity_id, $version_argument = 'current') {
     /** @var \Drupal\hpc_api\Query\EndpointQuery $query */
-    $query = \Drupal::service('hpc_api.endpoint_query');
+    $query = clone \Drupal::service('hpc_api.endpoint_query');
     $query->setArguments([
       'endpoint' => 'planEntity/' . $entity_id,
       'api_version' => 'v2',

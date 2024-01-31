@@ -3,6 +3,7 @@
 namespace Drupal\ghi_enforce_alias_pattern;
 
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -15,6 +16,7 @@ use Drupal\pathauto\PathautoGeneratorInterface;
 class EnforceAliasPatternManager {
 
   use StringTranslationTrait;
+  use DependencySerializationTrait;
 
   /**
    * The pathauto generator service.
