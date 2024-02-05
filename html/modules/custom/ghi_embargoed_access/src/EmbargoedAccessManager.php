@@ -5,6 +5,7 @@ namespace Drupal\ghi_embargoed_access;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -15,6 +16,7 @@ use Drupal\entity_access_password\Service\RouteParserInterface;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Traits\ContentPathTrait;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
+use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeForm;
 use Drupal\node\NodeInterface;
 use Drupal\search_api\Plugin\search_api\datasource\ContentEntityTrackingManager;
@@ -38,6 +40,13 @@ class EmbargoedAccessManager {
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
+
+  /**
+   * The entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
+  protected $entityFieldManager;
 
   /**
    * The system theme config object.
@@ -70,8 +79,9 @@ class EmbargoedAccessManager {
   /**
    * Constructs an embargoed access manager class.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ConfigFactoryInterface $config_factory, RouteParserInterface $route_parser = NULL, PasswordAccessManagerInterface $password_access_manager = NULL, ContentEntityTrackingManager $search_api_tracking_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ConfigFactoryInterface $config_factory, RouteParserInterface $route_parser = NULL, PasswordAccessManagerInterface $password_access_manager = NULL, ContentEntityTrackingManager $search_api_tracking_manager) {
     $this->entityTypeManager = $entity_type_manager;
+    $this->entityFieldManager = $entity_field_manager;
     $this->configFactory = $config_factory;
     $this->routeParser = $route_parser;
     $this->passwordAccessManager = $password_access_manager;
@@ -344,6 +354,40 @@ class EmbargoedAccessManager {
     foreach ($protected_nodes as $node) {
       $this->searchApiTrackingManager->entityUpdate($node);
     }
+  }
+
+  /**
+   * Get the node types that can be embargoed.
+   *
+   * @return \Drupal\node\Entity\NodeType[]
+   *   An array of node types.
+   */
+  public function getEmbargoedNodeTypes() {
+    $field_storages = $this->entityFieldManager->getFieldStorageDefinitions('node');
+    if (empty($field_storages[self::PROTECTED_FIELD])) {
+      return [];
+    }
+    $field_storage = $field_storages[self::PROTECTED_FIELD];
+    $bundles = $this->entityTypeManager->getStorage('node_type')->loadByProperties([
+      'type' => $field_storage->getBundles(),
+    ]);
+    return $bundles;
+  }
+
+  /**
+   * Get all embargoed nodes for the given node type.
+   *
+   * @param \Drupal\node\Entity\NodeType $node_type
+   *   The node type for which to load the protected nodes.
+   *
+   * @return \Drupal\node\NodeInterface[]
+   *   An array of node objects.
+   */
+  public function getEmbargoedNodesForNodeType(NodeType $node_type) {
+    return $this->entityTypeManager->getStorage('node')->loadByProperties([
+      'type' => $node_type->id(),
+      self::PROTECTED_FIELD . '.is_protected' => TRUE,
+    ]);
   }
 
 }
