@@ -21,3 +21,10 @@ function ghi_blocks_requirements($phase) {
   }
   return $requirements;
 }
+
+/**
+ * Enable ghi_image and maxlength to prevent issues during config import.
+ */
+function ghi_blocks_update_9001(&$sandbox) {
+  \Drupal::service("module_installer")->install(['ghi_image', 'maxlength']);
+}

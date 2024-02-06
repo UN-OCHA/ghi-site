@@ -1,0 +1,14 @@
+[data-drupal-selector="edit-links-links-item-config"] .counter {
+  font-size: .889em !important;
+}
+[data-drupal-selector="edit-links-links-item-config"] .filter-wrapper {
+  display: none !important;
+}
+
+[data-drupal-selector="edit-links-links-item-config"] .form-item-links-links-item-config-plugin-config-link-description-value.glb-form-item {
+  margin-bottom: 0.5rem !important;
+}
+
+.ck-balloon-panel {
+  display: none !important;
+}

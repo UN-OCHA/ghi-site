@@ -47,6 +47,7 @@ module:
   ghi_gin: 0
   ghi_hero_image: 0
   ghi_homepage: 0
+  ghi_image: 0
   ghi_local_tasks: 0
   ghi_menu: 0
   ghi_plan_clusters: 0
@@ -82,6 +83,7 @@ module:
   link: 0
   locale: 0
   maintenance200: 0
+  maxlength: 0
   media: 0
   media_library: 0
   memcache: 0

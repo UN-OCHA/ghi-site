@@ -104,6 +104,11 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
+  public function submitForm(array $values, $mode) {}
+
+  /**
+   * {@inheritdoc}
+   */
   public function canAddNewItem() {
     return TRUE;
   }

@@ -1,7 +1,7 @@
 {#
 /**
  * @file
- * Theme override for a plan entity types item list.
+ * Theme override for a links item list.
  *
  * Available variables:
  * - figures: A list of items. Each item contains:
@@ -19,12 +19,13 @@
  * @see common_design_subtheme_preprocess_item_list__plan_headline_figures()
  */
 #}
-{{ attach_library('common_design/cd-grid') }}
+
+{{ attach_library('common_design_subtheme/gho-related-articles') }}
 
 {%- if items -%}
-  <div class="item-list--entity-types">
+  <div class="item-list--links gho-related-articles">
     {%- for item in items -%}
-      <div>{{ item.value }}</div>
+      {{ item.value }}
     {%- endfor -%}
   </div>
 {%- endif -%}
