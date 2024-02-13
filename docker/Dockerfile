@@ -9,10 +9,9 @@ WORKDIR /srv/www
 
 # Clean up previous composer installation and run new one.
 RUN rm -rf ./vendor && \
-    # Update composer to avoid issues with missing drupal files.
-    # @see https://github.com/drupal-composer/drupal-project/issues/282
-    composer self-update 2.5.5 && \
-    COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --no-interaction --prefer-dist
+    COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_MEMORY_LIMIT=-1 \
+    composer install --no-dev --no-interaction --prefer-dist
 
 # Copy settings to default site location.
 RUN mkdir -m 0775 -p html/sites/default && \
