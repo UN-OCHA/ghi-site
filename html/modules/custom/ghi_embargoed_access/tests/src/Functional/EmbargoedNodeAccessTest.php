@@ -5,7 +5,6 @@ namespace Drupal\Tests\ghi_embargoed_access\Functional;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Password\PasswordInterface;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\entity_access_password\Service\PasswordAccessManagerInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -22,7 +21,6 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 class EmbargoedNodeAccessTest extends BrowserTestBase {
 
   use EntityReferenceFieldCreationTrait;
-  use StringTranslationTrait;
   use TaxonomyTestTrait;
 
   const BUNDLE_PAGE = 'page';
@@ -231,7 +229,7 @@ class EmbargoedNodeAccessTest extends BrowserTestBase {
     // Enter password and confirm access.
     $this->submitForm(
       ['form_password' => self::PASSWORD],
-      $this->t('Submit'),
+      'Submit',
       'entity-access-password-password-node-' . $node->id()
     );
     $this->assertSession()->pageTextNotContains('Help text: ' . self::BUNDLE_PAGE);
@@ -357,7 +355,7 @@ class EmbargoedNodeAccessTest extends BrowserTestBase {
     // Enter password and confirm access.
     $this->submitForm(
       ['form_password' => self::PASSWORD],
-      $this->t('Submit'),
+      'Submit',
       'entity-access-password-password-node-' . $section_node->id()
     );
     $this->assertSession()->pageTextNotContains('Help text: ' . self::BUNDLE_SECTION);
@@ -409,7 +407,7 @@ class EmbargoedNodeAccessTest extends BrowserTestBase {
     // Enter password and confirm access.
     $this->submitForm(
       ['form_password' => self::PASSWORD],
-      $this->t('Submit'),
+      'Submit',
       'entity-access-password-password-node-' . $section_node->id()
     );
     $this->assertSession()->pageTextNotContains('Help text: ' . self::BUNDLE_SUBPAGE);
@@ -484,7 +482,7 @@ class EmbargoedNodeAccessTest extends BrowserTestBase {
     // Enter password and confirm access.
     $this->submitForm(
       ['form_password' => self::PASSWORD],
-      $this->t('Submit'),
+      'Submit',
       'entity-access-password-password-node-' . $section_node->id()
     );
     $this->assertSession()->pageTextNotContains('Help text: ' . self::BUNDLE_ARTICLE);
