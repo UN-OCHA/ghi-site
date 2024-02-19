@@ -29,7 +29,9 @@ trait HomepageBlockTrait {
     $years = array_map(function ($node) {
       return $node->get('field_year')->value;
     }, $nodes);
-    return array_combine($years, $nodes);
+    $nodes = array_combine($years, $nodes);
+    krsort($nodes);
+    return $nodes;
   }
 
   /**
