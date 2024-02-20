@@ -76,6 +76,13 @@ class ImportPageConfigForm extends FormBase {
   protected $controllerResolver;
 
   /**
+   * The UUID generator service.
+   *
+   * @var \Drupal\Component\UuidInterface
+   */
+  protected $uuidGenerator;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
@@ -84,6 +91,7 @@ class ImportPageConfigForm extends FormBase {
     $instance->layoutTempstoreRepository = $container->get('layout_builder.tempstore_repository');
     $instance->contextHandler = $container->get('context.handler');
     $instance->controllerResolver = $container->get('controller_resolver');
+    $instance->uuidGenerator = $container->get('uuid');
     return $instance;
   }
 
@@ -386,6 +394,8 @@ class ImportPageConfigForm extends FormBase {
           if (empty($selected_elements[$section_key . '--' . $component_key])) {
             continue;
           }
+          // Set a new UUID to prevent UUID collisions.
+          $component_config['uuid'] = $this->uuidGenerator->generate();
           $component = SectionComponent::fromArray($component_config);
           $plugin = $component->getPlugin();
           $definition = $plugin->getPluginDefinition();
