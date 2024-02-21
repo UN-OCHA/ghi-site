@@ -8,7 +8,7 @@ effects:
   8b957d78-962c-46fc-82ef-81a8315a37eb:
     uuid: 8b957d78-962c-46fc-82ef-81a8315a37eb
     id: image_scale_and_crop
-    weight: 1
+    weight: -9
     data:
       width: 398
       height: 73

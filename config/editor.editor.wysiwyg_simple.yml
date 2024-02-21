@@ -1,0 +1,18 @@
+uuid: 78e3c839-6164-4a4e-9da4-f0adde9d7016
+langcode: en
+status: true
+dependencies:
+  config:
+    - filter.format.wysiwyg_simple
+  module:
+    - ckeditor5
+format: wysiwyg_simple
+editor: ckeditor5
+settings:
+  toolbar:
+    items:
+      - bold
+      - italic
+      - underline
+  plugins: {  }
+image_upload: {  }

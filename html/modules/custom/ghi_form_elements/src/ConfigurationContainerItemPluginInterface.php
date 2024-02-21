@@ -43,6 +43,16 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
   public function buildForm(array $element, FormStateInterface $form_state);
 
   /**
+   * React on submission of the config form.
+   *
+   * @param array $values
+   *   The submitted form values.
+   * @param string $mode
+   *   A string identifier for the current edit context.
+   */
+  public function submitForm(array $values, $mode);
+
+  /**
    * Check if this plugin allows new items to be added.
    *
    * @return bool

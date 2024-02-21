@@ -1,0 +1,16 @@
+uuid: ae9a3bc9-5acf-4e69-9b57-1e3df335206b
+langcode: en
+status: true
+dependencies: {  }
+name: crop_thumbnail_2x
+label: 'Crop thumbnail 2x'
+effects:
+  a15ceebb-8b24-4a06-a789-31adb63e090a:
+    uuid: a15ceebb-8b24-4a06-a789-31adb63e090a
+    id: image_scale
+    weight: 1
+    data:
+      width: 800
+      height: null
+      upscale: true
+pipeline: __default__

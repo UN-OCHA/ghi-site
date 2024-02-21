@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * @file
+ * Contains hook implementations for the GHI Image module.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function ghi_image_theme($existing, $type, $theme, $path) {
+  return [
+    'ghi_image' => [
+      'variables' => [
+        'url' => NULL,
+        'style' => NULL,
+        'responsive_image_style' => NULL,
+        'caption' => NULL,
+        'credit' => NULL,
+        'alt' => NULL,
+        'title' => NULL,
+        'attributes' => NULL,
+      ],
+      'file' => 'ghi_image.theme.inc',
+      'template' => 'ghi-image',
+    ],
+  ];
+}

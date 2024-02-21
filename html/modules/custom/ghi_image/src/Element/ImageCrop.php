@@ -1,13 +1,13 @@
 <?php
 
-namespace Drupal\ghi_hero_image\Element;
+namespace Drupal\ghi_image\Element;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\crop\Entity\Crop;
 use Drupal\crop\Entity\CropType;
 use Drupal\file_entity\Entity\FileEntity;
-use Drupal\image_widget_crop\Element\ImageCrop;
+use Drupal\image_widget_crop\Element\ImageCrop as ImageWidgetCropImageCrop;
 
 /**
  * Provides a form element for crop.
@@ -15,9 +15,9 @@ use Drupal\image_widget_crop\Element\ImageCrop;
  * This extends the ImageCrop element to remove a failing validation check that
  * would prevent cropping to work with externally hosted images.
  *
- * @FormElement("hero_image_crop")
+ * @FormElement("ghi_image_crop")
  */
-class HeroImageCrop extends ImageCrop {
+class ImageCrop extends ImageWidgetCropImageCrop {
 
   /**
    * {@inheritdoc}

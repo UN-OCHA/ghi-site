@@ -1,0 +1,27 @@
+uuid: f8bd10a9-b0ea-499b-80d0-50f5911d53f6
+langcode: en
+status: true
+dependencies:
+  config:
+    - crop.type.paper_size
+  module:
+    - crop
+name: paper_size_720
+label: 'Paper size @ 720'
+effects:
+  4c91ce9a-8269-4aff-bd4a-564c77f0afc6:
+    uuid: 4c91ce9a-8269-4aff-bd4a-564c77f0afc6
+    id: crop_crop
+    weight: 1
+    data:
+      crop_type: paper_size
+      automatic_crop_provider: null
+  76b05d1d-c915-4545-bb94-f3e4a3e15a56:
+    uuid: 76b05d1d-c915-4545-bb94-f3e4a3e15a56
+    id: image_scale_and_crop
+    weight: 2
+    data:
+      width: 720
+      height: 1008
+      anchor: center-center
+pipeline: __default__

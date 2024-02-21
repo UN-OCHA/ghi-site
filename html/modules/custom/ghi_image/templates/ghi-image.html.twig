@@ -1,4 +1,4 @@
-<div class="ghi-image-wrapper" role="img" {% if caption and caption_id %}aria-describedby="{{ caption_id }}{% endif %}">
+<div {{ attributes }} {% if caption and caption_id %}aria-describedby="{{ caption_id }}{% endif %}">
   {{ image }}
   {% if caption or credit %}
     <div class="image-caption-wrapper">

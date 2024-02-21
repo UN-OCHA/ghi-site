@@ -1,0 +1,4 @@
+services:
+  ghi_image.crop_manager:
+    class: Drupal\ghi_image\CropManager
+    arguments: ['@entity_type.manager', '@file_system', '@webp.webp', '@file.mime_type.guesser', '@image_widget_crop.manager']
