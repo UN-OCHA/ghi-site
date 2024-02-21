@@ -11,7 +11,11 @@
       border: 1px solid var(--ghi-default-border-color);
 
       & > .field--name-field-thumbnail-image {
-        margin-bottom: -0.5rem;
+
+        picture {
+          display: block;
+          margin-bottom: -0.5rem;
+        }
       }
 
       & > .content-wrapper {
@@ -32,7 +36,8 @@
           &::after {
             display: block;
             width: 15%;
-            padding-top: 1.5rem;
+            margin-top: 0.75rem;
+            margin-bottom: 0.75rem;
             content: " ";
             border-top: 4px solid var(--ghi-yellow);
           }

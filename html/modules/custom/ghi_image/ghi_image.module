@@ -19,6 +19,7 @@ function ghi_image_theme($existing, $type, $theme, $path) {
         'credit' => NULL,
         'alt' => NULL,
         'title' => NULL,
+        'attributes' => NULL,
       ],
       'file' => 'ghi_image.theme.inc',
       'template' => 'ghi-image',

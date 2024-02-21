@@ -140,7 +140,7 @@ class CropManager {
       }
 
       if (empty($crops)) {
-        $this->saveCrop($crop_properties, $field_value, $crop_type, $this->imageWidgetCropSettings->get('settings.notify_update'));
+        $this->saveCrop($crop_properties, $field_value, $crop_type, FALSE);
         return TRUE;
       }
 

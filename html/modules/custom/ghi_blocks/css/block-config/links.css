@@ -1,3 +1,7 @@
+[data-drupal-selector="edit-links-links-summary-table"] [data-drupal-selector="edit-links-links-summary-table-3-image"] {
+  min-width: 200px;
+}
+
 [data-drupal-selector="edit-links-links-item-config"] .counter {
   font-size: .889em !important;
 }
@@ -11,4 +15,15 @@
 
 .ck-balloon-panel {
   display: none !important;
+}
+
+[data-drupal-selector="edit-links-links-item-config"] .image-data__crop-wrapper {
+  padding: 0;
+}
+[data-drupal-selector="edit-links-links-item-config"] .image-data__crop-wrapper summary {
+  display: none;
+}
+
+[data-drupal-selector="edit-links-links-item-config"] .image-data__crop-wrapper .details-wrapper {
+  padding: 0 !important;
 }

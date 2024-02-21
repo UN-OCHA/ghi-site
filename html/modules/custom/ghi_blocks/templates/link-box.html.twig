@@ -1,11 +1,11 @@
 {{ attach_library('common_design_subtheme/gho-related-articles') }}
 
 <div class="link-box gho-related-article">
-  <div class="field--name-field-thumbnail-image">
-    {% if image %}
+  {% if image %}
+    <div class="field--name-field-thumbnail-image">
       {{ image }}
-    {% endif %}
-  </div>
+    </div>
+  {% endif %}
   <div class="content-wrapper gho-related-article__content">
     <div class="title-wrapper gho-related-article__title">
       <p class="title">{{ title }}</p>

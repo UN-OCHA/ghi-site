@@ -35,7 +35,7 @@ class Link extends ConfigurationContainerItemPluginBase {
   const TITLE_MAX_LENGTH = 150;
   const DESCRIPTION_MAX_LENGTH = 250;
   const THUMBNAIL_DIRECTORY = 'public://content-panes/link-images/';
-  const CROP_TYPE = '16x9';
+  const CROP_TYPES = ['16x9', 'paper_size'];
   const CROP_THUMBNAIL_STYLE = 'crop_thumbnail_2x';
   const RESPONSIVE_IMAGE_STYLE = 'card_hero';
 
@@ -183,6 +183,27 @@ class Link extends ConfigurationContainerItemPluginBase {
       ],
       '#default_value' => $this->config['image']['image'] ?? NULL,
     ];
+    $image_selector = FormElementHelper::getStateSelector($element, ['image', 'image', 'fids']);
+
+    $crop_type_options = [];
+    foreach (self::CROP_TYPES as $crop_type) {
+      $crop_type_options[$crop_type] = $this->entityTypeManager->getStorage('crop_type')->load($crop_type)->label();
+    }
+    $element['image']['image']['crop_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Display'),
+      '#options' => $crop_type_options,
+      '#default_value' => $this->config['image']['crop_type'] ?? NULL,
+      '#weight' => 5,
+      '#wrapper_attributes' => [
+        'style' => 'width: 100%;',
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="' . $image_selector . '"]' => ['empty' => FALSE],
+        ],
+      ],
+    ];
 
     // Note: We nest the image crop inside the image widget so that it get's
     // updated together with the image widget when file operations are done
@@ -196,11 +217,10 @@ class Link extends ConfigurationContainerItemPluginBase {
     if (!empty(NestedArray::keyExists($user_input, $element['#parents']))) {
       $file_id = $form_state->get('image_fid');
     }
-    $image_selector = FormElementHelper::getStateSelector($element, ['image', 'fids']);
     $element['image']['image']['image_crop'] = [
       '#type' => 'ghi_image_crop',
       '#file' => $this->loadFile($file_id),
-      '#crop_type_list' => [self::CROP_TYPE],
+      '#crop_type_list' => self::CROP_TYPES,
       '#crop_preview_image_style' => self::CROP_THUMBNAIL_STYLE,
       '#show_default_crop' => TRUE,
       '#show_crop_area' => TRUE,
@@ -208,7 +228,7 @@ class Link extends ConfigurationContainerItemPluginBase {
       '#default_value' => $this->config['image']['image_crop'] ?? NULL,
       '#states' => [
         'visible' => [
-          ':input[name="' . $image_selector . '"]' => ['value' => 'filled'],
+          ':input[name="' . $image_selector . '"]' => ['empty' => FALSE],
         ],
       ],
       '#weight' => 100,
@@ -244,6 +264,9 @@ class Link extends ConfigurationContainerItemPluginBase {
 
     // Extract the cropping information from the user input.
     $user_input = $form_state->getUserInput();
+    $crop_type = NestedArray::getValue($user_input, array_merge($element['#parents'], ['image', 'image', 'crop_type']));
+    $form_state->setValue(array_merge($element['#parents'], ['image', 'crop_type']), $crop_type);
+
     $image_crop = NestedArray::getValue($user_input, array_merge($element['#parents'], ['image', 'image', 'image_crop']));
     if ($file_id && $file = File::load($file_id)) {
       $image_crop['file-uri'] = $file->getFileUri();
@@ -275,7 +298,9 @@ class Link extends ConfigurationContainerItemPluginBase {
     if (!$file_uri) {
       return;
     }
-    $this->cropManager->processCropSubmit($file_uri, self::CROP_TYPE, $values['image']['image_crop']);
+    foreach (self::CROP_TYPES as $crop_type) {
+      $this->cropManager->processCropSubmit($file_uri, $crop_type, $values['image']['image_crop']);
+    }
   }
 
   /**
@@ -291,9 +316,13 @@ class Link extends ConfigurationContainerItemPluginBase {
     ];
     $file = $this->loadFile();
     if ($file) {
+      $image_style = 'card_hero';
+      if ($this->config['image']['crop_type'] == 'paper_size') {
+        $image_style = 'paper_size';
+      }
       $build['#image'] = [
         '#theme' => 'ghi_image',
-        '#responsive_image_style' => $this->entityTypeManager->getStorage('responsive_image_style')->load('card_hero'),
+        '#responsive_image_style' => $this->entityTypeManager->getStorage('responsive_image_style')->load($image_style),
         '#url' => $file->getFileUri(),
       ];
     }
@@ -334,10 +363,19 @@ class Link extends ConfigurationContainerItemPluginBase {
     if (!$file) {
       return NULL;
     }
+    $image_style = '16x9_480';
+    if ($this->config['image']['crop_type'] == 'paper_size') {
+      $image_style = 'paper_size_480';
+    }
     return [
       '#theme' => 'image_style',
-      '#style_name' => '16x9_240',
+      '#style_name' => $image_style,
       '#uri' => $file->getFileUri(),
+      '#attached' => [
+        'library' => [
+          'ghi_blocks/block_config.links',
+        ],
+      ],
     ];
   }
 

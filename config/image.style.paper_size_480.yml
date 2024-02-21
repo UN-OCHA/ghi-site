@@ -1,0 +1,27 @@
+uuid: f432a8b1-b925-4910-b74d-642e4c7d64a0
+langcode: en
+status: true
+dependencies:
+  config:
+    - crop.type.paper_size
+  module:
+    - crop
+name: paper_size_480
+label: 'Paper size @ 480'
+effects:
+  66a0e419-455d-4830-b874-ab7f40020568:
+    uuid: 66a0e419-455d-4830-b874-ab7f40020568
+    id: crop_crop
+    weight: 1
+    data:
+      crop_type: paper_size
+      automatic_crop_provider: null
+  39f16cdd-913d-4aa7-8faf-6bd84203e33b:
+    uuid: 39f16cdd-913d-4aa7-8faf-6bd84203e33b
+    id: image_scale_and_crop
+    weight: 2
+    data:
+      width: 480
+      height: 672
+      anchor: center-center
+pipeline: __default__

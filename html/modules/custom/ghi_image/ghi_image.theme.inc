@@ -35,4 +35,6 @@ function ghi_image_preprocess_ghi_image(&$variables) {
   ];
   $variables['id'] = Html::getUniqueId('ghi-image');
   $variables['caption_id'] = Html::getUniqueId('ghi-image-caption');
+  $variables['attributes']['class'][] = 'ghi-image-wrapper';
+  $variables['attributes']['role'] = 'img';
 }
