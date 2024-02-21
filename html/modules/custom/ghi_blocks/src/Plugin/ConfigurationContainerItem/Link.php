@@ -105,7 +105,7 @@ class Link extends ConfigurationContainerItemPluginBase {
       '#maxlength' => self::TITLE_MAX_LENGTH,
       '#attributes' => [
         'data-maxlength' => self::TITLE_MAX_LENGTH,
-        'maxlength_js_enforce' => TRUE,
+        '#maxlength_js_enforce' => TRUE,
         'class' => ['maxlength'],
       ],
     ] + $element['label'];
@@ -163,7 +163,7 @@ class Link extends ConfigurationContainerItemPluginBase {
       ],
       '#attributes' => [
         'data-maxlength' => self::DESCRIPTION_MAX_LENGTH,
-        'maxlength_js_enforce' => TRUE,
+        '#maxlength_js_enforce' => TRUE,
         'class' => ['maxlength'],
       ],
     ];
@@ -349,8 +349,8 @@ class Link extends ConfigurationContainerItemPluginBase {
    */
   public function getDescription() {
     if ($this->shouldDisplayDescription()) {
-      $description = $this->config['link']['description'];
-      return Markup::create($description['value']);
+      $description = $this->config['link']['description']['value'];
+      return Markup::create($description);
     }
     else {
       return $this->getFormattedDate();
