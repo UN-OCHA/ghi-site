@@ -5,7 +5,7 @@ namespace Drupal\ghi_blocks\Plugin\Block\Generic;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
-use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
@@ -17,7 +17,6 @@ use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
  *  id = "links",
  *  admin_label = @Translation("Links"),
  *  category = @Translation("Generic elements"),
- *  title = false,
  *  config_forms = {
  *    "links" = {
  *      "title" = @Translation("Links"),
@@ -31,7 +30,7 @@ use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
  *  }
  * )
  */
-class Links extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, ConfigurableTableBlockInterface {
+class Links extends GHIBlockBase implements MultiStepFormBlockInterface, OptionalTitleBlockInterface, ConfigurableTableBlockInterface {
 
   use ConfigurationContainerTrait;
   use ConfigurationContainerGroup;
