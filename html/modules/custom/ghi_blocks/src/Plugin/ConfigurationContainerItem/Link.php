@@ -35,7 +35,9 @@ class Link extends ConfigurationContainerItemPluginBase {
   const TITLE_MAX_LENGTH = 150;
   const DESCRIPTION_MAX_LENGTH = 250;
   const THUMBNAIL_DIRECTORY = 'public://content-panes/link-images/';
-  const CROP_TYPES = ['16x9', 'paper_size'];
+  // Also allows 'paper_size' but this has been deactivated for the moment,
+  // see https://humanitarian.atlassian.net/browse/HPC-9391.
+  const CROP_TYPES = ['16x9'];
   const CROP_THUMBNAIL_STYLE = 'crop_thumbnail_2x';
   const RESPONSIVE_IMAGE_STYLE = 'card_hero';
 
@@ -185,24 +187,32 @@ class Link extends ConfigurationContainerItemPluginBase {
     ];
     $image_selector = FormElementHelper::getStateSelector($element, ['image', 'image', 'fids']);
 
-    $crop_type_options = [];
-    foreach (self::CROP_TYPES as $crop_type) {
-      $crop_type_options[$crop_type] = $this->entityTypeManager->getStorage('crop_type')->load($crop_type)->label();
-    }
+    // Also allows to define the crop type but this has been deactivated for
+    // the moment, see https://humanitarian.atlassian.net/browse/HPC-9391.
+    // @codingStandardsIgnoreStart
+    // $crop_type_options = [];
+    // foreach (self::CROP_TYPES as $crop_type) {
+    //   $crop_type_options[$crop_type] = $this->entityTypeManager->getStorage('crop_type')->load($crop_type)->label();
+    // }
+    // $element['image']['image']['crop_type'] = [
+    //   '#type' => 'select',
+    //   '#title' => $this->t('Display'),
+    //   '#options' => $crop_type_options,
+    //   '#default_value' => $this->config['image']['crop_type'] ?? NULL,
+    //   '#weight' => 5,
+    //   '#wrapper_attributes' => [
+    //     'style' => 'width: 100%;',
+    //   ],
+    //   '#states' => [
+    //     'visible' => [
+    //       ':input[name="' . $image_selector . '"]' => ['empty' => FALSE],
+    //     ],
+    //   ],
+    // ];
+    // @codingStandardsIgnoreEnd
     $element['image']['image']['crop_type'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Display'),
-      '#options' => $crop_type_options,
-      '#default_value' => $this->config['image']['crop_type'] ?? NULL,
-      '#weight' => 5,
-      '#wrapper_attributes' => [
-        'style' => 'width: 100%;',
-      ],
-      '#states' => [
-        'visible' => [
-          ':input[name="' . $image_selector . '"]' => ['empty' => FALSE],
-        ],
-      ],
+      '#type' => 'hidden',
+      '#value' => self::CROP_TYPES[0],
     ];
 
     // Note: We nest the image crop inside the image widget so that it get's
