@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\ghi_templates\PageTemplateInterface;
 use Drupal\layout_builder\SectionStorageInterface;
+use Drupal\node\NodeInterface;
 
 /**
  * Implements hook_theme().
@@ -22,6 +23,25 @@ function ghi_templates_theme() {
     'template' => 'page_template',
   ];
   return $theme;
+}
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function ghi_templates_preprocess_page(&$variables) {
+  if ($page_template = \Drupal::routeMatch()->getParameter('page_template')) {
+    $variables['page_template'] = $page_template;
+  }
+  $page_template = $variables['page_template'] ?? NULL;
+  if (!$page_template || !$page_template instanceof PageTemplateInterface || \Drupal::routeMatch()->getRouteName() != 'entity.page_template.canonical') {
+    return;
+  }
+
+  $message = [
+    '#theme' => 'ghi_message',
+    '#message' => t("This is a page template. It can be used to create new pages with a predefined set of page elements. You can edit it the same way as other pages and then apply it's structure to a destination page using the provided frontend controls. The page that you currently see will never be publicly available on it's own."),
+  ];
+  $variables['page']['help'] = ['message' => $message];
 }
 
 /**
@@ -83,9 +103,11 @@ function ghi_templates_layout_builder_view_context_alter(array &$contexts, Secti
     $context->getContextDefinition()->addConstraint('Bundle', $base_entity->bundle());
     $contexts['node'] = $context;
 
-    $context = EntityContext::fromEntity($base_object, $base_object->label());
-    $context->getContextDefinition()->addConstraint('Bundle', $base_object->getEntityTypeId());
-    $contexts[$base_object->getUniqueIdentifier()] = $context;
+    if ($base_object) {
+      $context = EntityContext::fromEntity($base_object, $base_object->label());
+      $context->getContextDefinition()->addConstraint('Bundle', $base_object->getEntityTypeId());
+      $contexts[$base_object->getUniqueIdentifier()] = $context;
+    }
   }
 }
 
@@ -101,6 +123,7 @@ function ghi_templates_layout_builder_ipe_links_alter(array &$links, SectionStor
   }
   /** @var \Drupal\ghi_templates\TemplateLinkBuilder $template_link_builder */
   $template_link_builder = \Drupal::service('ghi_templates.link_builder');
+  $template_links = [];
   $template_links['export'] = $template_link_builder->buildExportLink($section_storage, $entity);
   $template_links['import'] = $template_link_builder->buildImportLink($section_storage, $entity);
   $template_links = array_filter($template_links);
@@ -116,6 +139,25 @@ function ghi_templates_layout_builder_ipe_links_alter(array &$links, SectionStor
       ],
     ];
   }
+
+  if ($entity instanceof NodeInterface) {
+    // Nodes can also have templates applied.
+    $page_template_links = [];
+    $page_template_links['apply'] = $template_link_builder->buildApplyPageTemplateLink($section_storage, $entity);
+    $page_template_links['store'] = $template_link_builder->buildStorePageTemplateLink($section_storage, $entity);
+    $page_template_links = array_filter($page_template_links);
+    if (count($page_template_links)) {
+      $links['page_template'] = [
+        '#type' => 'dropbutton',
+        '#links' => $page_template_links,
+        '#attached' => [
+          'library' => [
+            'ghi_templates/import_page',
+          ],
+        ],
+      ];
+    }
+  }
 }
 
 /**
@@ -129,7 +171,13 @@ function ghi_templates_is_layout_builder_route() {
   if (!$route_name) {
     return FALSE;
   }
-  return $route_name == 'ghi_templates.entity.page_config.export' || $route_name == 'ghi_templates.entity.page_config.import';
+  $route_names = [
+    'ghi_templates.entity.page_config.export',
+    'ghi_templates.entity.page_config.import',
+    'ghi_templates.entity.page_template.apply',
+    'ghi_templates.entity.page_template.store',
+  ];
+  return in_array($route_name, $route_names);
 }
 
 /**

@@ -63,6 +63,78 @@ class TemplateLinkBuilder {
   }
 
   /**
+   * Build an apply link for the given entity and section storage.
+   *
+   * @param \Drupal\layout_builder\SectionStorageInterface $section_storage
+   *   The section storage.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
+   * @param array $options
+   *   Optional options for the url.
+   *
+   * @return array
+   *   A link array to be used in dropbutton elements.
+   */
+  public function buildApplyPageTemplateLink(SectionStorageInterface $section_storage, EntityInterface $entity, array $options = []) {
+    $route_params = [
+      'section_storage_type' => $section_storage->getStorageType(),
+      'section_storage' => $section_storage->getStorageId(),
+    ];
+    $url = Url::fromRoute('ghi_templates.entity.page_template.apply', $route_params + [
+      'entity' => $entity->id(),
+      'entity_type' => $entity->getEntityTypeId(),
+    ], $options);
+    if (!$url->access()) {
+      return NULL;
+    }
+
+    // Add the redirect destination.
+    $this->addRedirectDestination($url);
+
+    return [
+      'title' => $this->t('Apply template'),
+      'url' => $url,
+      'attributes' => $this->getLinkAttributes(),
+    ];
+  }
+
+  /**
+   * Build an apply link for the given entity and section storage.
+   *
+   * @param \Drupal\layout_builder\SectionStorageInterface $section_storage
+   *   The section storage.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
+   * @param array $options
+   *   Optional options for the url.
+   *
+   * @return array
+   *   A link array to be used in dropbutton elements.
+   */
+  public function buildStorePageTemplateLink(SectionStorageInterface $section_storage, EntityInterface $entity, array $options = []) {
+    $route_params = [
+      'section_storage_type' => $section_storage->getStorageType(),
+      'section_storage' => $section_storage->getStorageId(),
+    ];
+    $url = Url::fromRoute('ghi_templates.entity.page_template.store', $route_params + [
+      'entity' => $entity->id(),
+      'entity_type' => $entity->getEntityTypeId(),
+    ], $options);
+    if (!$url->access()) {
+      return NULL;
+    }
+
+    // Add the redirect destination.
+    $this->addRedirectDestination($url);
+
+    return [
+      'title' => $this->t('Create template'),
+      'url' => $url,
+      'attributes' => $this->getLinkAttributes(),
+    ];
+  }
+
+  /**
    * Build an import link for the given entity and section storage.
    *
    * @param \Drupal\layout_builder\SectionStorageInterface $section_storage

@@ -2,38 +2,42 @@
 
 namespace Drupal\ghi_templates\LayoutBuilder;
 
-use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Ajax\AjaxHelperTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\ghi_templates\PageConfigTrait;
+use Drupal\ghi_templates\PageTemplateInterface;
 use Drupal\hpc_common\Traits\AjaxFormTrait;
 use Drupal\layout_builder\Controller\LayoutRebuildTrait;
-use Drupal\layout_builder\LayoutBuilderHighlightTrait;
-use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\SectionStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Form for exporting page config.
+ * Form for applying a page template to a content page.
  */
-class ImportPageConfigForm extends TemplateFormBase {
+class ApplyPageTemplateForm extends TemplateFormBase {
 
-  use LayoutEntityHelperTrait;
-  use LayoutBuilderHighlightTrait;
   use LayoutRebuildTrait;
   use AjaxHelperTrait;
   use AjaxFormTrait;
+  use PageConfigTrait;
 
   /**
    * The form steps for the import wizard.
    */
   const STEPS = [
-    'import',
+    'select_template',
     'confirm',
   ];
+
+  /**
+   * The entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
 
   /**
    * The block manager.
@@ -54,6 +58,7 @@ class ImportPageConfigForm extends TemplateFormBase {
    */
   public static function create(ContainerInterface $container) {
     $instance = parent::create($container);
+    $instance->entityTypeManager = $container->get('entity_type.manager');
     $instance->blockManager = $container->get('plugin.manager.block');
     $instance->layoutTempstoreRepository = $container->get('layout_builder.tempstore_repository');
     return $instance;
@@ -63,7 +68,7 @@ class ImportPageConfigForm extends TemplateFormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'layout_builder_import_page_config';
+    return 'layout_builder_apply_page_template';
   }
 
   /**
@@ -84,7 +89,7 @@ class ImportPageConfigForm extends TemplateFormBase {
   public function buildForm(array $form, FormStateInterface $form_state, EntityInterface $entity = NULL, SectionStorageInterface $section_storage = NULL) {
     $form = parent::buildForm($form, $form_state, $entity, $section_storage);
 
-    $form['#title'] = $this->t('Import page configuration to @label', [
+    $form['#title'] = $this->t('Apply page template to @label', [
       '@label' => $entity->label(),
     ]);
 
@@ -92,8 +97,8 @@ class ImportPageConfigForm extends TemplateFormBase {
     $current_step = $form_state->get('current_import_step') ?? reset($steps);
 
     switch ($current_step) {
-      case 'import':
-        $form = $this->importForm($form, $form_state, $section_storage);
+      case 'select_template':
+        $form = $this->selectTemplateForm($form, $form_state, $section_storage);
         break;
 
       case 'confirm':
@@ -121,15 +126,16 @@ class ImportPageConfigForm extends TemplateFormBase {
   /**
    * Build the import form where the code can be inserted.
    */
-  private function importForm($form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL) {
+  private function selectTemplateForm($form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL) {
+    $page_template_options = array_map(function (PageTemplateInterface $page_template) {
+      return $page_template->label();
+    }, $this->entityTypeManager->getStorage('page_template')->loadMultiple());
 
-    $config = $this->getSubmittedConfig($form_state);
-
-    $form['settings']['config'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Import from code'),
-      '#default_value' => $config,
-      '#rows' => 10,
+    $form['settings']['page_template'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Select page template'),
+      '#options' => $page_template_options,
+      '#default_value' => $this->getSubmittedPageTemplate($form_state)?->id(),
     ];
 
     $form['actions']['validate'] = [
@@ -241,11 +247,12 @@ class ImportPageConfigForm extends TemplateFormBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
    *
-   * @return array|null
-   *   The submitted or stored value.
+   * @return \Drupal\ghi_templates\PageTemplateInterface|null
+   *   The submitted or stored page template.
    */
-  private function getSubmittedConfig(FormStateInterface $form_state) {
-    return $form_state->getValue('config') ?? ($form_state->get('config') ? Yaml::encode($form_state->get('config')) : NULL);
+  private function getSubmittedPageTemplate(FormStateInterface $form_state) {
+    $id = $form_state->getValue('page_template') ?? ($form_state->get('page_template') ?? NULL);
+    return $id ? $this->entityTypeManager->getStorage('page_template')->load($id) : NULL;
   }
 
   /**
@@ -257,19 +264,11 @@ class ImportPageConfigForm extends TemplateFormBase {
       return parent::validateForm($form, $form_state);
     }
     else {
-      $config = $this->getSubmittedConfig($form_state);
-      $import_config = Yaml::decode($config);
-      $form_state->set('config', $import_config);
+      $page_template = $this->getSubmittedPageTemplate($form_state);
+      $section_storage = $this->getSectionStorageForEntity($page_template);
+      $import_config = $this->exportSectionStorage($section_storage);
+      $form_state->set('page_template', $page_template?->id());
       $form_state->set('page_config', $import_config['page_config'] ?? NULL);
-      if (!is_array($import_config) || empty($import_config['entity_type']) || empty($import_config['bundle']) || empty($import_config['page_config']) || empty($import_config['hash'])) {
-        $form_state->setErrorByName('config', $this->t('Empty or malformed configuration.'));
-      }
-      elseif ($import_config['hash'] != md5(Yaml::encode(ArrayHelper::mapObjectsToString(array_diff_key($import_config, ['hash' => TRUE]))))) {
-        $form_state->setErrorByName('config', $this->t('Internal validation failed.'));
-      }
-      elseif (count($import_config['page_config']) > 1 || array_key_exists('validation', $import_config) && !$import_config['validation']) {
-        $form_state->setErrorByName('config', $this->t('Configuration cannot be imported due to misconfigured sections.'));
-      }
     }
   }
 

@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityPublishedTrait;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\ghi_templates\PageTemplateInterface;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
@@ -29,11 +30,11 @@ use Drupal\user\EntityOwnerTrait;
  *     plural = "@count page templates",
  *   ),
  *   handlers = {
- *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
+ *     "view_builder" = "Drupal\ghi_templates\PageTemplateViewBuilder",
  *     "list_builder" = "Drupal\ghi_templates\PageTemplateListBuilder",
  *     "views_data" = "Drupal\ghi_templates\Entity\PageTemplateViewsData",
  *     "form" = {
- *       "default" = "Drupal\Core\Entity\ContentEntityForm",
+ *       "default" = "Drupal\ghi_templates\Form\PageTemplateform",
  *     },
  *     "route_provider" = {
  *       "html" = "Drupal\ghi_templates\PageTemplateHtmlRouteProvider",
@@ -69,6 +70,7 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
   use EntityOwnerTrait;
   use EntityPublishedTrait;
   use LayoutEntityHelperTrait;
+  use MessengerTrait;
 
   /**
    * {@inheritdoc}
@@ -98,7 +100,7 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
           ], $definition['context_definitions']),
         ];
         // And make sure that base objects are mapped too.
-        $base_objects = [$this->field_base_object->entity];
+        $base_objects = array_filter([$this->field_base_object->entity]);
         foreach ($base_objects as $_base_object) {
           $contexts = [
             EntityContext::fromEntity($_base_object),

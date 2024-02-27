@@ -20,7 +20,7 @@ use Drupal\Core\Render\Element;
  *   - attributes: HTML attributes for the containing element
  *   The base object can be accessed as $variables['elements']['#base_object'].
  */
-function template_preprocess_page_template(array &$variables) {
+function ghi_templates_preprocess_page_template(array &$variables) {
   // Helpful $content variable for templates.
   foreach (Element::children($variables['elements']) as $key) {
     $variables['content'][$key] = $variables['elements'][$key];

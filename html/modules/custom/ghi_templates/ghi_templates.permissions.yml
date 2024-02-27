@@ -1,3 +1,6 @@
+use page templates:
+  title: 'Create and apply page templates to content pages'
+  description: 'Use a page template to populate a content page'
 show page layout configuration code:
   title: 'Show  page layout configuration code'
   description: 'Allow to show the page layout configuration code.'
