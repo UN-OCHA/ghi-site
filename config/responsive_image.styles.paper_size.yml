@@ -23,7 +23,7 @@ image_style_mappings:
     multiplier: 2x
   -
     image_mapping_type: image_style
-    image_mapping: paper_size_240
+    image_mapping: paper_size_720
     breakpoint_id: common_design.sm
     multiplier: 2x
 breakpoint_group: common_design

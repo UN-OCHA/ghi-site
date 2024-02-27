@@ -6,6 +6,7 @@ dependencies:
     - crop.type.paper_size
   module:
     - crop
+    - image_effects
 name: paper_size_480
 label: 'Paper size @ 480'
 effects:
@@ -21,7 +22,25 @@ effects:
     id: image_scale_and_crop
     weight: 2
     data:
-      width: 480
-      height: 672
+      width: 189
+      height: 270
       anchor: center-center
+  874824a1-b392-41fc-b801-f5cb70fcd43b:
+    uuid: 874824a1-b392-41fc-b801-f5cb70fcd43b
+    id: image_effects_set_canvas
+    weight: 3
+    data:
+      canvas_size: exact
+      canvas_color: '#F5F5F5FF'
+      exact:
+        width: '480'
+        height: '270'
+        placement: center-center
+        x_offset: 0
+        y_offset: 0
+      relative:
+        left: 0
+        right: 0
+        top: 0
+        bottom: 0
 pipeline: __default__
