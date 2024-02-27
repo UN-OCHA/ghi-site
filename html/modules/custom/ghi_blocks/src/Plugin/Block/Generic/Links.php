@@ -2,11 +2,14 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Generic;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\Link;
+use Drupal\ghi_blocks\Traits\ManagedFileBlockTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 
@@ -34,6 +37,7 @@ class Links extends GHIBlockBase implements MultiStepFormBlockInterface, Optiona
 
   use ConfigurationContainerTrait;
   use ConfigurationContainerGroup;
+  use ManagedFileBlockTrait;
 
   /**
    * {@inheritdoc}
@@ -135,6 +139,56 @@ class Links extends GHIBlockBase implements MultiStepFormBlockInterface, Optiona
    */
   public function displayForm(array $form, FormStateInterface $form_state) {
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityInterface $entity, $uuid) {
+    $files = $this->getFiles();
+    if (empty($files)) {
+      return;
+    }
+    $files = $this->getFiles();
+    $this->persistFiles($files, $entity, $uuid);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postDelete(EntityInterface $entity, $uuid) {
+    $files = $this->getFiles();
+    $this->cleanupFiles($files, $entity, $uuid);
+  }
+
+  /**
+   * Get the files included in this blocks configuration.
+   *
+   * @return \Drupal\file\Entity\File[]
+   *   The file objects configured for this block.
+   */
+  private function getFiles() {
+    $conf = $this->getBlockConfig();
+    // Get the items.
+    $items = $this->getConfiguredItems($conf['links']['links']);
+    if (empty($items)) {
+      return [];
+    }
+    $files = [];
+    $context = $this->getBlockContext();
+    foreach ($items as $item) {
+      /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
+      $item_type = $this->getItemTypePluginForColumn($item, $context);
+      if (!$item_type instanceof Link) {
+        continue;
+      }
+      $file = $item_type->getImageFile();
+      if (!$file) {
+        continue;
+      }
+      $files[$file->id()] = $file;
+    }
+    return $files;
   }
 
   /**

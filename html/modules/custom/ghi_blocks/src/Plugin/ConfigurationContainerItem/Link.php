@@ -178,7 +178,6 @@ class Link extends ConfigurationContainerItemPluginBase {
     ];
     $element['image']['image'] = [
       '#type' => 'managed_file',
-      // '#title' => $this->t('Image'),
       '#upload_location' => self::THUMBNAIL_DIRECTORY,
       '#upload_validators' => [
         'file_validate_extensions' => ['jpg jpeg png gif'],
@@ -360,6 +359,16 @@ class Link extends ConfigurationContainerItemPluginBase {
     $date = $this->config['link']['date'];
     $timestamp = strtotime($date);
     return $timestamp ? $this->dateFormatter->format($timestamp, 'custom', 'd M Y') : NULL;
+  }
+
+  /**
+   * Get the image file if any has been uploaded.
+   *
+   * @return \Drupal\file\FileInterface|null
+   *   The file entity object or NULL.
+   */
+  public function getImageFile() {
+    return $this->loadFile();
   }
 
   /**
