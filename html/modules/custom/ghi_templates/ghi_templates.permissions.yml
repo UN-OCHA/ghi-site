@@ -4,3 +4,7 @@ show page layout configuration code:
 import page layout configuration code:
   title: 'Import page layout from configuration code'
   description: 'Allow to import a page layout by pasting the configuration code.'
+administer page templates:
+  title: 'Administer page templates'
+  description: 'Allow to view and edit page templates.'
+  restrict access: true

@@ -1,0 +1,11 @@
+uuid: 17e260ba-171e-440d-8457-d6f24ba49b8d
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_templates
+id: page_template_publish_action
+label: 'Publish page template'
+type: page_template
+plugin: 'entity:publish_action:page_template'
+configuration: {  }

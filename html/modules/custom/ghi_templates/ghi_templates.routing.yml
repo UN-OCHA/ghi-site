@@ -22,3 +22,10 @@ ghi_templates.entity.page_config.import:
         type: entity:{entity_type}
       section_storage:
         layout_builder_section_storage: TRUE
+entity.page_template.add_page:
+  path: '/admin/structure/page-templates/add'
+  defaults:
+    _title: 'Add page template'
+    _entity_form: 'page_template.default'
+  requirements:
+    _entity_create_any_access: 'page_template'

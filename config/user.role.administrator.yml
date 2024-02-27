@@ -14,6 +14,7 @@ dependencies:
     - core.entity_view_display.node.presence.default
     - core.entity_view_display.node.progress.default
     - core.entity_view_display.node.section.default
+    - core.entity_view_display.page_template.page_template.default
     - filter.format.html_text
     - filter.format.wysiwyg_text
     - node.type.article
@@ -81,6 +82,7 @@ permissions:
   - 'administer ghi table config'
   - 'administer menu'
   - 'administer nodes'
+  - 'administer page templates'
   - 'administer pages'
   - 'administer section cache'
   - 'administer social api authentication'
@@ -98,6 +100,7 @@ permissions:
   - 'configure editable financials node layout overrides'
   - 'configure editable homepage node layout overrides'
   - 'configure editable logframe node layout overrides'
+  - 'configure editable page_template page_template layout overrides'
   - 'configure editable plan_cluster node layout overrides'
   - 'configure editable population node layout overrides'
   - 'configure editable presence node layout overrides'
@@ -256,6 +259,7 @@ permissions:
   - 'use layout builder ipe on editable homepage node layout overrides'
   - 'use layout builder ipe on editable logframe node layout overrides'
   - 'use layout builder ipe on editable page manager pages'
+  - 'use layout builder ipe on editable page_template layout overrides'
   - 'use layout builder ipe on editable plan_cluster node layout overrides'
   - 'use layout builder ipe on editable population node layout overrides'
   - 'use layout builder ipe on editable presence node layout overrides'

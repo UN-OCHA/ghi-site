@@ -7,7 +7,87 @@
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Plugin\Context\EntityContext;
+use Drupal\ghi_templates\PageTemplateInterface;
 use Drupal\layout_builder\SectionStorageInterface;
+
+/**
+ * Implements hook_theme().
+ */
+function ghi_templates_theme() {
+  $theme = [];
+  $theme['page_template'] = [
+    'render element' => 'elements',
+    'file' => 'ghi_templates.theme.inc',
+    'template' => 'page_template',
+  ];
+  return $theme;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_insert().
+ */
+function ghi_templates_page_template_insert(PageTemplateInterface $entity) {
+  $entity->setupTemplate();
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function ghi_templates_module_implements_alter(&$implementations, $hook) {
+  if ($hook === 'layout_builder_view_context_alter') {
+    // Ensure that this module's implementation of hook_entity_view_alter() runs
+    // last so that other modules that use this hook to render extra fields will
+    // run before it.
+    $group = $implementations['ghi_templates'];
+    unset($implementations['ghi_templates']);
+    $implementations['ghi_templates'] = $group;
+  }
+}
+
+/**
+ * Implements hook_layout_builder_view_context_alter().
+ */
+function ghi_templates_layout_builder_view_context_alter(array &$contexts, SectionStorageInterface $section_storage = NULL, $sample = FALSE) {
+
+  // See if there is a context.
+  $entity_context = $contexts['layout_builder.entity'] ?? ($contexts['entity'] ?? ($contexts['page_template'] ?? NULL));
+  if (!$entity_context || !$entity_context->hasContextValue()) {
+    return;
+  }
+  $entity = $entity_context->getContextValue();
+  if (!$entity instanceof PageTemplateInterface) {
+    return;
+  }
+
+  /** @var \Drupal\node\NodeInterface $base_entity */
+  $base_entity = $entity->field_entity_reference->entity;
+
+  /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
+  $base_object = $entity->field_base_object->entity;
+
+  if (!$entity->id() || $sample) {
+    // This is the manage display form or some other config form with a sample
+    // entity. We only want to make sure that we provide some dummy context so
+    // that plan elements that depend on a base object can be selected.
+    $types = \Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple();
+    $type = reset($types);
+    $entity = \Drupal::service('layout_builder.sample_entity_generator')->get('node', $type->id());
+    $context = EntityContext::fromEntity($entity, $type->label());
+    $context->getContextDefinition()->addConstraint('Bundle', $type->getEntityTypeId());
+    $contexts['node'] = $context;
+  }
+  else {
+    // This is an actual entity page.
+    $context = EntityContext::fromEntity($base_entity, $base_entity->getEntityType()->getBundleLabel());
+    $context->getContextDefinition()->addConstraint('Bundle', $base_entity->bundle());
+    $contexts['node'] = $context;
+
+    $context = EntityContext::fromEntity($base_object, $base_object->label());
+    $context->getContextDefinition()->addConstraint('Bundle', $base_object->getEntityTypeId());
+    $contexts[$base_object->getUniqueIdentifier()] = $context;
+  }
+}
 
 /**
  * Implements hook_layout_builder_ipe_links_alter().
