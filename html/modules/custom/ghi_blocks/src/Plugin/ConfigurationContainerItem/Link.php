@@ -317,6 +317,9 @@ class Link extends ConfigurationContainerItemPluginBase {
    */
   public function getRenderArray() {
     $link = $this->getLinkFromUri($this->config['link']['url']);
+    if (!$link) {
+      return [];
+    }
     $build = [
       '#theme' => 'link_box',
       '#title' => Unicode::truncate($this->config['label'], self::TITLE_MAX_LENGTH),
