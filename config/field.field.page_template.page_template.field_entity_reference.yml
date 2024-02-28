@@ -22,7 +22,7 @@ field_name: field_entity_reference
 entity_type: page_template
 bundle: page_template
 label: 'Source page'
-description: 'The source page where the template originated. This is used for initial setup of the page template and to extract context information for data retrieval during the configuration of the template.'
+description: 'The source page where the template originated. This is used for initial setup of the page template and to extract context information for data retrieval during the configuration of the template. This cannot be changed once the template has been created.'
 required: true
 translatable: false
 default_value: {  }

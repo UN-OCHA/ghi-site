@@ -1,19 +1,19 @@
-uuid: 655f82d4-999b-4682-8aca-9431b203ed94
+uuid: ed52508a-eee1-4078-abe9-d76fff98207d
 langcode: en
 status: true
 dependencies:
   module:
     - ghi_base_objects
     - ghi_templates
-id: page_template.field_base_object
-field_name: field_base_object
+id: page_template.field_base_objects
+field_name: field_base_objects
 entity_type: page_template
 type: entity_reference
 settings:
   target_type: base_object
 module: core
 locked: false
-cardinality: 1
+cardinality: -1
 translatable: true
 indexes: {  }
 persist_with_no_fields: false

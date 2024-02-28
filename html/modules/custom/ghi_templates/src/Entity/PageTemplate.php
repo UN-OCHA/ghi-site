@@ -2,6 +2,8 @@
 
 namespace Drupal\ghi_templates\Entity;
 
+use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityPublishedTrait;
@@ -9,7 +11,8 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Plugin\Context\EntityContext;
-use Drupal\ghi_templates\PageTemplateInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Section;
@@ -35,6 +38,7 @@ use Drupal\user\EntityOwnerTrait;
  *     "views_data" = "Drupal\ghi_templates\Entity\PageTemplateViewsData",
  *     "form" = {
  *       "default" = "Drupal\ghi_templates\Form\PageTemplateform",
+ *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm",
  *     },
  *     "route_provider" = {
  *       "html" = "Drupal\ghi_templates\PageTemplateHtmlRouteProvider",
@@ -71,20 +75,23 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
   use EntityPublishedTrait;
   use LayoutEntityHelperTrait;
   use MessengerTrait;
+  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
    */
   public function setupTemplate() {
+    $source_page = $this->getSourceEntity();
+    if (!$source_page) {
+      return;
+    }
 
-    // Here we want to initially setup the template.
-    $source_page = $this->field_entity_reference->entity;
-    if ($source_page && !empty($source_page->field_base_object->entity)) {
-      $this->field_base_object = $source_page->field_base_object;
+    $base_objects = $this->getBaseObjectsfromSource();
+    if ($source_page && $base_objects) {
+      $this->setBaseObjects($base_objects);
     }
 
     $source_section_storage = $this->getSectionStorageForEntity($source_page);
-
     $source_sections = $source_section_storage->getSections();
     foreach ($source_sections as $source_section) {
       $section_config = $source_section->toArray();
@@ -100,8 +107,7 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
           ], $definition['context_definitions']),
         ];
         // And make sure that base objects are mapped too.
-        $base_objects = array_filter([$this->field_base_object->entity]);
-        foreach ($base_objects as $_base_object) {
+        foreach (array_filter($base_objects) as $_base_object) {
           $contexts = [
             EntityContext::fromEntity($_base_object),
           ];
@@ -130,6 +136,72 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
   /**
    * {@inheritdoc}
    */
+  public function getSourceEntity() {
+    return $this->field_entity_reference?->entity ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBaseObjects() {
+    return $this->field_base_objects?->referencedEntities() ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setBaseObjects(array $base_objects) {
+    foreach ($base_objects as $base_object) {
+      $this->field_base_objects[] = [
+        'target_id' => $base_object->id(),
+      ];
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBaseObjectsfromSource() {
+    $source_page = $this->getSourceEntity();
+    if ($source_page && $source_page->hasField('field_base_objects')) {
+      return $source_page->field_base_objects?->referencedEntities();
+    }
+    if ($source_page && $source_page->hasField('field_base_object')) {
+      return [$source_page->field_base_object?->entity];
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSourceSummary(MarkupInterface $source_template = NULL, MarkupInterface $base_object_template = NULL) {
+    if ($source_template === NULL) {
+      $source_template = new TranslatableMarkup('Template based on <em>@source</em> @entity_type page');
+    }
+    if ($base_object_template === NULL) {
+      $base_object_template = new TranslatableMarkup('using @base_object_type <em>@base_object</em> for data context');
+    }
+    $base_objects = $this->getBaseObjects();
+
+    $source_summary = new FormattableMarkup($source_template, [
+      '@source' => $this->getSourceEntity()?->label() ?? $this->t('deleted'),
+      '@entity_type' => strtolower($this->getSourceEntity()?->type->entity->label() ?? ''),
+    ]);
+    $base_object_summary = !empty($base_objects) ? array_map(function ($base_object) use ($base_object_template) {
+      return new FormattableMarkup($base_object_template, [
+        '@base_object_type' => strtolower($base_object->type->entity->label() ?? ''),
+        '@base_object' => $base_object->label(),
+      ]);
+    }, array_filter($base_objects)) : [];
+    return implode(', ', array_filter(array_merge([
+      $source_summary,
+    ], $base_object_summary)));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     /** @var \Drupal\Core\Field\BaseFieldDefinition[] $fields */
     $fields = parent::baseFieldDefinitions($entity_type);
@@ -143,6 +215,7 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
 
     $fields['title'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Title'))
+      ->setDescription(t('An internal title for the template that makes it easy to find.'))
       ->setRequired(TRUE)
       ->setTranslatable(TRUE)
       ->setSetting('max_length', 255)

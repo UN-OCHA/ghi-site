@@ -17,11 +17,11 @@ class PageTemplateViewsData extends EntityViewsData {
 
     // Additional information for Views integration, such as table joins, can be
     // put here.
-    $data['page_template']['bulk_form'] = [
+    $data['page_template']['page_template_bulk_form'] = [
       'title' => $this->t('Page template operations bulk form'),
       'help' => $this->t('Add a form element that lets you run operations on multiple page templates.'),
       'field' => [
-        'id' => 'bulk_form',
+        'id' => 'page_template_bulk_form',
       ],
     ];
 

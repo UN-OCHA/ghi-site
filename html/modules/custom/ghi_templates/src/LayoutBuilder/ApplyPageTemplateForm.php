@@ -7,8 +7,8 @@ use Drupal\Core\Ajax\AjaxHelperTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\ghi_templates\Entity\PageTemplateInterface;
 use Drupal\ghi_templates\PageConfigTrait;
-use Drupal\ghi_templates\PageTemplateInterface;
 use Drupal\hpc_common\Traits\AjaxFormTrait;
 use Drupal\layout_builder\Controller\LayoutRebuildTrait;
 use Drupal\layout_builder\SectionStorageInterface;
@@ -129,13 +129,19 @@ class ApplyPageTemplateForm extends TemplateFormBase {
   private function selectTemplateForm($form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL) {
     $page_template_options = array_map(function (PageTemplateInterface $page_template) {
       return $page_template->label();
-    }, $this->entityTypeManager->getStorage('page_template')->loadMultiple());
+    }, $this->entityTypeManager->getStorage('page_template')->loadByProperties([
+      'status' => TRUE,
+    ]));
 
     $form['settings']['page_template'] = [
       '#type' => 'select',
       '#title' => $this->t('Select page template'),
       '#options' => $page_template_options,
       '#default_value' => $this->getSubmittedPageTemplate($form_state)?->id(),
+    ];
+    $form['settings']['explanation'] = [
+      '#type' => 'markup',
+      '#markup' => $this->t('The selected template will be applied to the current page. Before the changes take effect, you will see a summary of the newly created page elements in the next step. You can also choose to add the page elements from the template to the existing elements on the page, or to overwrite the page completely. If the page template is associated with a base object, it will be used for previewing of the element content.'),
     ];
 
     $form['actions']['validate'] = [
@@ -202,11 +208,9 @@ class ApplyPageTemplateForm extends TemplateFormBase {
       }
     }
 
-    $form['settings']['overwrite'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Clear layout'),
-      '#description' => $this->t('If checked, this will remove all existing page elements from the current page before doing the import. If unchecked, the imported configuration will be appended to the current page instead.'),
-      '#default_value' => FALSE,
+    $form['settings']['explanation'] = [
+      '#type' => 'markup',
+      '#markup' => $this->t('On this screen you can preview which page elements should be imported from the template. When you click on "Import", the template will be applied and you will be redirected to the customize screen of the page, where you can do further modifications before saving the page.'),
     ];
 
     $form['settings']['summary'] = [
@@ -221,6 +225,12 @@ class ApplyPageTemplateForm extends TemplateFormBase {
         return TRUE;
       }, $rows),
       '#required' => TRUE,
+    ];
+    $form['settings']['overwrite'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Clear layout'),
+      '#description' => $this->t('If checked, this will remove all existing page elements from the current page before doing the import. If unchecked, the imported configuration will be appended to the current page instead.'),
+      '#default_value' => TRUE,
     ];
 
     $form['actions']['back'] = [
@@ -247,7 +257,7 @@ class ApplyPageTemplateForm extends TemplateFormBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
    *
-   * @return \Drupal\ghi_templates\PageTemplateInterface|null
+   * @return \Drupal\ghi_templates\Entity\PageTemplateInterface|null
    *   The submitted or stored page template.
    */
   private function getSubmittedPageTemplate(FormStateInterface $form_state) {

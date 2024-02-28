@@ -26,7 +26,7 @@ class PageTemplateListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
-    /** @var \Drupal\ghi_templates\PageTemplateInterface $entity */
+    /** @var \Drupal\ghi_templates\Entity\PageTemplateInterface $entity */
     $row = [];
     $row['name'] = Link::createFromRoute(
       $entity->label(),

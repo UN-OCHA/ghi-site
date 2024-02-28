@@ -8,7 +8,7 @@
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
-use Drupal\ghi_templates\PageTemplateInterface;
+use Drupal\ghi_templates\Entity\PageTemplateInterface;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
 
@@ -37,6 +37,19 @@ function ghi_templates_preprocess_page(&$variables) {
     return;
   }
 
+  // Add a summary for the page template, to give the editor some context.
+  if (empty($variables['page']['page_subtitle'])) {
+    $variables['page']['page_subtitle'] = [
+      '#theme_wrappers' => ['region'],
+      '#region' => 'page_subtitle',
+    ];
+  }
+  $variables['page']['page_subtitle']['pagetitle_subline'] = [
+    '#type' => 'html_tag',
+    '#tag' => 'p',
+    '#value' => $page_template->getSourceSummary(),
+  ];
+  // Add a message explaining what this is.
   $message = [
     '#theme' => 'ghi_message',
     '#message' => t("This is a page template. It can be used to create new pages with a predefined set of page elements. You can edit it the same way as other pages and then apply it's structure to a destination page using the provided frontend controls. The page that you currently see will never be publicly available on it's own."),
@@ -99,9 +112,11 @@ function ghi_templates_layout_builder_view_context_alter(array &$contexts, Secti
   }
   else {
     // This is an actual entity page.
-    $context = EntityContext::fromEntity($base_entity, $base_entity->getEntityType()->getBundleLabel());
-    $context->getContextDefinition()->addConstraint('Bundle', $base_entity->bundle());
-    $contexts['node'] = $context;
+    if ($base_entity) {
+      $context = EntityContext::fromEntity($base_entity, $base_entity->getEntityType()->getBundleLabel());
+      $context->getContextDefinition()->addConstraint('Bundle', $base_entity->bundle());
+      $contexts['node'] = $context;
+    }
 
     if ($base_object) {
       $context = EntityContext::fromEntity($base_object, $base_object->label());
