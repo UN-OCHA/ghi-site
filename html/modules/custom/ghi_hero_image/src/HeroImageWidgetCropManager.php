@@ -2,17 +2,19 @@
 
 namespace Drupal\ghi_hero_image;
 
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\ContentEntityFormInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\crop\Entity\CropType;
 use Drupal\file\Entity\File;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\ghi_hero_image\Plugin\Field\FieldType\HeroImageItem;
+use Drupal\ghi_image\CropManager;
 use Drupal\image_widget_crop\ImageWidgetCropInterface;
 use Drupal\image_widget_crop\ImageWidgetCropManager;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Mime\MimeTypeGuesserInterface;
 
 /**
  * HeroImageWidgetCropManager class.
@@ -25,7 +27,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @see \Drupal\ghi_image\CropManager
  */
-class HeroImageWidgetCropManager extends ImageWidgetCropManager implements ImageWidgetCropInterface, ContainerInjectionInterface {
+class HeroImageWidgetCropManager extends ImageWidgetCropManager implements ImageWidgetCropInterface {
 
   use DependencySerializationTrait;
 
@@ -61,17 +63,13 @@ class HeroImageWidgetCropManager extends ImageWidgetCropManager implements Image
   protected $cropManager;
 
   /**
-   * {@inheritdoc}
+   * Public constructor.
    */
-  public static function create(ContainerInterface $container) {
-    $instance = new static(
-      $container->get('entity_type.manager'),
-      $container->get('config.factory')
-    );
-    $instance->heroImageManager = $container->get('hero_image.manager');
-    $instance->mimeTypeGuesser = $container->get('file.mime_type.guesser');
-    $instance->cropManager = $container->get('ghi_image.crop_manager');
-    return $instance;
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ConfigFactoryInterface $config_factory, HeroImageManager $hero_image_manager, MimeTypeGuesserInterface $mime_type_guesser, CropManager $crop_manager) {
+    parent::__construct($entity_type_manager, $config_factory);
+    $this->heroImageManager = $hero_image_manager;
+    $this->mimeTypeGuesser = $mime_type_guesser;
+    $this->cropManager = $crop_manager;
   }
 
   /**
