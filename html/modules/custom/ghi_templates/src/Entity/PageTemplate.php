@@ -37,9 +37,9 @@ use Drupal\user\EntityOwnerTrait;
  *     "list_builder" = "Drupal\ghi_templates\PageTemplateListBuilder",
  *     "views_data" = "Drupal\ghi_templates\Entity\PageTemplateViewsData",
  *     "form" = {
- *       "default" = "Drupal\ghi_templates\Form\PageTemplateform",
- *       "add" = "Drupal\ghi_templates\Form\PageTemplateform",
- *       "edit" = "Drupal\ghi_templates\Form\PageTemplateform",
+ *       "default" = "Drupal\ghi_templates\Form\PageTemplateForm",
+ *       "add" = "Drupal\ghi_templates\Form\PageTemplateForm",
+ *       "edit" = "Drupal\ghi_templates\Form\PageTemplateForm",
  *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm",
  *     },
  *     "route_provider" = {
