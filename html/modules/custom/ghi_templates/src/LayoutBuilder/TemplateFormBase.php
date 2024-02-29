@@ -69,6 +69,7 @@ abstract class TemplateFormBase extends FormBase {
     $form['actions'] = [
       '#type' => 'container',
     ];
+    $form['#attached']['library'][] = 'ghi_templates/template_modal_form';
     $this->makeGinLbForm($form, $form_state);
     return $form;
   }

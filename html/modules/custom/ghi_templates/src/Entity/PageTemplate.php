@@ -3,7 +3,6 @@
 namespace Drupal\ghi_templates\Entity;
 
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityPublishedTrait;
@@ -177,22 +176,24 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
   /**
    * {@inheritdoc}
    */
-  public function getSourceSummary(MarkupInterface $source_template = NULL, MarkupInterface $base_object_template = NULL) {
+  public function getSourceSummary($source_template = NULL, $base_object_template = NULL) {
     if ($source_template === NULL) {
-      $source_template = new TranslatableMarkup('Template based on <em>@source</em> @entity_type page');
+      $source_template = new TranslatableMarkup('Template based on <em>@source</em> @entity_type_lowercase page');
     }
     if ($base_object_template === NULL) {
-      $base_object_template = new TranslatableMarkup('using @base_object_type <em>@base_object</em> for data context');
+      $base_object_template = new TranslatableMarkup('using @base_object_type_lowercase <em>@base_object</em> for data context');
     }
     $base_objects = $this->getBaseObjects();
 
     $source_summary = new FormattableMarkup($source_template, [
       '@source' => $this->getSourceEntity()?->label() ?? $this->t('deleted'),
-      '@entity_type' => strtolower($this->getSourceEntity()?->type->entity->label() ?? ''),
+      '@entity_type_lowercase' => strtolower($this->getSourceEntity()?->type->entity->label() ?? ''),
+      '@entity_type' => $this->getSourceEntity()?->type->entity->label(),
     ]);
-    $base_object_summary = !empty($base_objects) ? array_map(function ($base_object) use ($base_object_template) {
+    $base_object_summary = $base_object_template && !empty($base_objects) ? array_map(function ($base_object) use ($base_object_template) {
       return new FormattableMarkup($base_object_template, [
-        '@base_object_type' => strtolower($base_object->type->entity->label() ?? ''),
+        '@base_object_type_lowercase' => strtolower($base_object->type->entity->label() ?? ''),
+        '@base_object_type' => $base_object->type->entity->label(),
         '@base_object' => $base_object->label(),
       ]);
     }, array_filter($base_objects)) : [];
@@ -220,6 +221,7 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
       ->setDescription(t('An internal title for the template that makes it easy to find.'))
       ->setRequired(TRUE)
       ->setTranslatable(TRUE)
+      ->addConstraint('UniqueLabel')
       ->setSetting('max_length', 255)
       ->setDisplayOptions('view', [
         'label' => 'hidden',

@@ -49,7 +49,7 @@ class StorePageTemplateForm extends TemplateFormBase {
     $form_state->set('section_storage', $section_storage);
     $form_state->set('entity', $entity);
 
-    $form['#title'] = $this->t('Store as a new page template based on @label', [
+    $form['#title'] = $this->t('Save as a new page template based on @label', [
       '@label' => $section_storage->label(),
     ]);
 
@@ -85,7 +85,17 @@ class StorePageTemplateForm extends TemplateFormBase {
       'title' => $form_state->getValue('name'),
       'field_entity_reference' => $form_state->get('entity'),
     ]);
-    $page_template->save();
+    if ($page_template->save()) {
+      $this->messenger()->addStatus($this->t('The page template <a href="@url">@label</a> has been saved.', [
+        '@label' => $page_template->label(),
+        '@url' => $page_template->toUrl('canonical')->toString(),
+      ]));
+    }
+    else {
+      $this->messenger()->addStatus($this->t('The page template @label could not be saved. Please contact an administrator.', [
+        '@label' => $page_template->label(),
+      ]));
+    }
   }
 
 }

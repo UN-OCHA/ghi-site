@@ -2,3 +2,7 @@ import_page:
   css:
     component:
       css/import_page.css: {}
+template_modal_form:
+  css:
+    component:
+      css/template_modal_form.css: {}

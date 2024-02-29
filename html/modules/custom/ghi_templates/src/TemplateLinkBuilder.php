@@ -92,7 +92,7 @@ class TemplateLinkBuilder {
     $this->addRedirectDestination($url);
 
     return [
-      'title' => $this->t('Apply template'),
+      'title' => $this->t('Page templates'),
       'url' => $url,
       'attributes' => $this->getLinkAttributes(),
     ];
@@ -128,7 +128,7 @@ class TemplateLinkBuilder {
     $this->addRedirectDestination($url);
 
     return [
-      'title' => $this->t('Create template'),
+      'title' => $this->t('Save as template'),
       'url' => $url,
       'attributes' => $this->getLinkAttributes(),
     ];

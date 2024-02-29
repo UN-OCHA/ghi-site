@@ -20,6 +20,17 @@ class PageTemplateForm extends ContentEntityForm {
     $form = parent::form($form, $form_state);
     $entity = $this->entity;
 
+    // Allow to preset the source via a GET parameter.
+    $source = $this->getRequest()->query->get('source');
+    if (!empty($source) && strpos($source, ':')) {
+      [$entity_type_id, $entity_id] = explode(':', $source);
+      $source_entity = $this->entityTypeManager->getStorage($entity_type_id)?->load($entity_id);
+      if ($source_entity) {
+        $form['field_entity_reference']['widget'][0]['target_id']['#default_value'] = $source_entity;
+        $form['field_entity_reference']['widget']['#disabled'] = TRUE;
+      }
+    }
+
     if (!$entity->isNew()) {
       // Disable the source page form element for existing page templates.
       $form['field_entity_reference']['widget']['#disabled'] = TRUE;

@@ -7,6 +7,8 @@ use Drupal\Core\Ajax\AjaxHelperTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Url;
 use Drupal\ghi_templates\Entity\PageTemplateInterface;
 use Drupal\ghi_templates\PageConfigTrait;
 use Drupal\hpc_common\Traits\AjaxFormTrait;
@@ -33,11 +35,11 @@ class ApplyPageTemplateForm extends TemplateFormBase {
   ];
 
   /**
-   * The entity type manager service.
+   * The page template manager service.
    *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   * @var \Drupal\ghi_templates\PageTemplateManager
    */
-  protected $entityTypeManager;
+  protected $pageTemplateManager;
 
   /**
    * The block manager.
@@ -58,7 +60,7 @@ class ApplyPageTemplateForm extends TemplateFormBase {
    */
   public static function create(ContainerInterface $container) {
     $instance = parent::create($container);
-    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->pageTemplateManager = $container->get('ghi_templates.manager');
     $instance->blockManager = $container->get('plugin.manager.block');
     $instance->layoutTempstoreRepository = $container->get('layout_builder.tempstore_repository');
     return $instance;
@@ -88,8 +90,11 @@ class ApplyPageTemplateForm extends TemplateFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, EntityInterface $entity = NULL, SectionStorageInterface $section_storage = NULL) {
     $form = parent::buildForm($form, $form_state, $entity, $section_storage);
+    if ($entity === NULL || $section_storage === NULL) {
+      return $form;
+    }
 
-    $form['#title'] = $this->t('Apply page template to @label', [
+    $form['#title'] = $this->t('Apply a page template for @label', [
       '@label' => $entity->label(),
     ]);
 
@@ -98,7 +103,7 @@ class ApplyPageTemplateForm extends TemplateFormBase {
 
     switch ($current_step) {
       case 'select_template':
-        $form = $this->selectTemplateForm($form, $form_state, $section_storage);
+        $form = $this->selectTemplateForm($form, $form_state, $entity, $section_storage);
         break;
 
       case 'confirm':
@@ -126,33 +131,38 @@ class ApplyPageTemplateForm extends TemplateFormBase {
   /**
    * Build the import form where the code can be inserted.
    */
-  private function selectTemplateForm($form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL) {
+  private function selectTemplateForm($form, FormStateInterface $form_state, EntityInterface $entity, SectionStorageInterface $section_storage) {
     $page_template_options = array_map(function (PageTemplateInterface $page_template) {
-      return $page_template->label();
-    }, $this->entityTypeManager->getStorage('page_template')->loadByProperties([
-      'status' => TRUE,
-    ]));
+      return [
+        'title' => $page_template->label(),
+        'source' => $page_template->getSourceSummary('@entity_type: @source', FALSE),
+      ];
+    }, $this->pageTemplateManager->loadAvailableTemplatesForEntity($entity));
+
+    if (!empty($page_template_options)) {
+      $form['settings']['explanation'] = [
+        '#type' => 'container',
+        0 => [
+          '#type' => 'markup',
+          '#markup' => $this->t('Select a template to apply it to the current page. Before the changes take effect, you will see a summary of the newly created page elements in the next step. You can also choose to add the page elements from the template to the existing elements on the page, or to overwrite the page completely. If the page template is associated with a base object, it will be used for previewing of the element content.') . '<br /><br />',
+        ],
+      ];
+    }
 
     $form['settings']['page_template'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Select page template'),
+      '#type' => 'tableselect',
+      '#multiple' => FALSE,
+      '#header' => [
+        'title' => $this->t('Title'),
+        'source' => $this->t('Source page'),
+      ],
       '#options' => $page_template_options,
-      '#default_value' => $this->getSubmittedPageTemplate($form_state)?->id(),
+      '#empty' => new TranslatableMarkup('<p>There no page templates available to apply to the current page. You can see a list of available templates on the <a href="@url_collection">Page templates</a> page.</p><p>You can create a page template either manually using the <a href="@url_add">Add page template</a> page, or create one from any supported content page using the frontend controls.</p>', [
+        '@url_collection' => Url::fromRoute('entity.page_template.collection')->toString(),
+        '@url_add' => Url::fromRoute('entity.page_template.add_page')->toString(),
+      ]),
+      '#default_value' => array_key_first($page_template_options),
     ];
-    $form['settings']['explanation'] = [
-      '#type' => 'markup',
-      '#markup' => $this->t('The selected template will be applied to the current page. Before the changes take effect, you will see a summary of the newly created page elements in the next step. You can also choose to add the page elements from the template to the existing elements on the page, or to overwrite the page completely. If the page template is associated with a base object, it will be used for previewing of the element content.'),
-    ];
-
-    $form['actions']['validate'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Validate'),
-    ];
-    if ($this->isAjax()) {
-      $form['actions']['validate']['#ajax']['rebuild'] = TRUE;
-      $form['actions']['validate']['#ajax']['callback'] = '::ajaxSubmit';
-      $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);
-    }
 
     $form['actions']['cancel'] = [
       '#type' => 'link',
@@ -166,13 +176,24 @@ class ApplyPageTemplateForm extends TemplateFormBase {
       ],
     ];
 
+    $form['actions']['validate'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Validate'),
+      '#disabled' => empty($page_template_options),
+    ];
+    if ($this->isAjax()) {
+      $form['actions']['validate']['#ajax']['rebuild'] = TRUE;
+      $form['actions']['validate']['#ajax']['callback'] = '::ajaxSubmit';
+      $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);
+    }
+
     return $form;
   }
 
   /**
    * Build the summary form where the code can be inserted.
    */
-  private function confirmForm($form, FormStateInterface $form_state, EntityInterface $entity = NULL, SectionStorageInterface $section_storage = NULL) {
+  private function confirmForm($form, FormStateInterface $form_state, EntityInterface $entity, SectionStorageInterface $section_storage) {
     $form_state->set('section_storage', $section_storage);
     $form_state->set('entity', $entity);
     $page_config = $form_state->get('page_config');
@@ -262,7 +283,7 @@ class ApplyPageTemplateForm extends TemplateFormBase {
    */
   private function getSubmittedPageTemplate(FormStateInterface $form_state) {
     $id = $form_state->getValue('page_template') ?? ($form_state->get('page_template') ?? NULL);
-    return $id ? $this->entityTypeManager->getStorage('page_template')->load($id) : NULL;
+    return $id ? $this->pageTemplateManager->loadPageTemplate($id) : NULL;
   }
 
   /**

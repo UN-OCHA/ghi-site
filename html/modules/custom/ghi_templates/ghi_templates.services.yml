@@ -1,4 +1,7 @@
 services:
+  ghi_templates.manager:
+    class: Drupal\ghi_templates\PageTemplateManager
+    arguments: ['@entity_type.manager']
   ghi_templates.link_builder:
     class: Drupal\ghi_templates\TemplateLinkBuilder
     arguments: ['@config.factory', '@request_stack']

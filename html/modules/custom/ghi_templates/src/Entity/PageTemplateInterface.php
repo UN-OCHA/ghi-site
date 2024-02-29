@@ -2,7 +2,6 @@
 
 namespace Drupal\ghi_templates\Entity;
 
-use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityPublishedInterface;
@@ -53,15 +52,16 @@ interface PageTemplateInterface extends ContentEntityInterface, EntityChangedInt
   /**
    * Get a summary description for the template source.
    *
-   * @param \Drupal\Component\Render\MarkupInterface $source_template
+   * @param \Drupal\Component\Render\MarkupInterface|string $source_template
    *   The markup to use for the source template.
-   * @param \Drupal\Component\Render\MarkupInterface $base_object_template
-   *   The markup to use for the base object template.
+   * @param \Drupal\Component\Render\MarkupInterface|string|bool $base_object_template
+   *   The markup to use for the base object template or boolean FALSE to
+   *   indicate that it should not be used at all.
    *
    * @return \Drupal\Component\Render\MarkupInterface
    *   A summary of the template source, listing the source page and an
    *   associated base object if available.
    */
-  public function getSourceSummary(MarkupInterface $source_template = NULL, MarkupInterface $base_object_template = NULL);
+  public function getSourceSummary($source_template = NULL, $base_object_template = NULL);
 
 }

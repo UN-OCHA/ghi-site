@@ -270,21 +270,21 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        created:
-          id: created
-          table: page_template
-          field: created
-          relationship: none
+        type_1:
+          id: type_1
+          table: node_field_data
+          field: type
+          relationship: field_entity_reference
           group_type: group
           admin_label: ''
-          entity_type: page_template
-          entity_field: created
+          entity_type: node
+          entity_field: type
           plugin_id: field
-          label: Created
+          label: 'Applicable on'
           exclude: false
           alter:
-            alter_text: false
-            text: ''
+            alter_text: true
+            text: '{{ type_1 }} pages'
             make_link: false
             path: ''
             absolute: false
@@ -321,23 +321,11 @@ display:
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          click_sort_column: value
-          type: timestamp
+          click_sort_column: target_id
+          type: entity_reference_label
           settings:
-            date_format: medium
-            custom_date_format: ''
-            timezone: ''
-            tooltip:
-              date_format: long
-              custom_date_format: ''
-            time_diff:
-              enabled: false
-              future_format: '@interval hence'
-              past_format: '@interval ago'
-              granularity: 2
-              refresh: 60
-              description: ''
-          group_column: value
+            link: false
+          group_column: target_id
           group_columns: {  }
           group_rows: true
           delta_limit: 0
@@ -587,7 +575,7 @@ display:
           admin_label: ''
           plugin_id: text_custom
           empty: true
-          content: 'No page templates have been created yet. <a href="/admin/structure/page-templates/add">Create a page template now</a>.'
+          content: 'No page templates available with the current filters. <a href="/admin/structure/page-templates/add">Create a new page template now</a>.'
           tokenize: false
       sorts: {  }
       arguments: {  }
@@ -635,6 +623,54 @@ display:
             autocomplete_raw_suggestion: 1
             autocomplete_raw_dropdown: 1
             autocomplete_dependent: 0
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+        type:
+          id: type
+          table: node_field_data
+          field: type
+          relationship: field_entity_reference
+          group_type: group
+          admin_label: ''
+          entity_type: node
+          entity_field: type
+          plugin_id: bundle
+          operator: in
+          value: {  }
+          group: 1
+          exposed: true
+          expose:
+            operator_id: type_op
+            label: 'Applicable on'
+            description: ''
+            use_operator: false
+            operator: type_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: applicable_type
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              administrator: '0'
+              global_editor: '0'
+              editor: '0'
+              rpm_administrator: '0'
+              plan_lead: '0'
+              cluster_lead: '0'
+            reduce: false
           is_grouped: false
           group_info:
             label: ''
