@@ -38,6 +38,8 @@ use Drupal\user\EntityOwnerTrait;
  *     "views_data" = "Drupal\ghi_templates\Entity\PageTemplateViewsData",
  *     "form" = {
  *       "default" = "Drupal\ghi_templates\Form\PageTemplateform",
+ *       "add" = "Drupal\ghi_templates\Form\PageTemplateform",
+ *       "edit" = "Drupal\ghi_templates\Form\PageTemplateform",
  *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm",
  *     },
  *     "route_provider" = {
