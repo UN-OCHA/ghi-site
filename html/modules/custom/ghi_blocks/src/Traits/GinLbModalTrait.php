@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Traits;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\gin_lb\HookHandler\FormAlter;
 
 /**
  * Trait with common helpers to get inliny with GIN LB styles..
@@ -29,7 +30,7 @@ trait GinLbModalTrait {
     $form['actions']['#gin_lb_form'] = TRUE;
     $form['#gin_lb_form'] = TRUE;
     $form['#ghi_modal_form'] = TRUE;
-    $form['#after_build'][] = 'gin_lb_after_build';
+    $form['#after_build'][] = [FormAlter::class, 'afterBuildAttachGinLbForm'];
   }
 
 }
