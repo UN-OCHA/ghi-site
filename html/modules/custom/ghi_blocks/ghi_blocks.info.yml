@@ -20,3 +20,4 @@ dependencies:
   - ghi_form_elements:ghi_form_elements
   - ghi_image:ghi_image
   - maxlength:maxlength
+  - gin_lb:gin_lb
