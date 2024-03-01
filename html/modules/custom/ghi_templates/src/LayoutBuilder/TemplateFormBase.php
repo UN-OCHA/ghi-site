@@ -10,6 +10,8 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
+use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\GinLbModalTrait;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\Plugin\SectionStorage\DefaultsSectionStorage;
@@ -119,11 +121,13 @@ abstract class TemplateFormBase extends FormBase {
    * @param array $selected_elements
    *   Optional: An array of selected elements. If given, then only the
    *   elements specified will be added to the section storage.
+   * @param bool $fix_element_configuration
+   *   Whether the element configuration should be fixed if necessary.
    *
    * @return \Drupal\layout_builder\SectionStorageInterface
    *   The update section storage.
    */
-  protected function buildSectionStorageFromPageConfig(SectionStorageInterface $section_storage, EntityInterface $entity, array $page_config, bool $overwrite, array $selected_elements = []) {
+  protected function buildSectionStorageFromPageConfig(SectionStorageInterface $section_storage, EntityInterface $entity, array $page_config, bool $overwrite, array $selected_elements = [], $fix_element_configuration = TRUE) {
     // First, make sure we have an overridden section storage.
     if ($section_storage instanceof DefaultsSectionStorage) {
       // Overide the section storage in the tempstore.
@@ -151,6 +155,7 @@ abstract class TemplateFormBase extends FormBase {
         $component_config['uuid'] = $this->uuidGenerator->generate();
         $component = SectionComponent::fromArray($component_config);
         $plugin = $component->getPlugin();
+
         $definition = $plugin->getPluginDefinition();
         $context_mapping = [
           'context_mapping' => array_intersect_key([
@@ -173,6 +178,13 @@ abstract class TemplateFormBase extends FormBase {
         }
         $configuration = $context_mapping + $component->get('configuration');
         $component->setConfiguration($configuration);
+        $plugin = $component->getPlugin();
+        if ($fix_element_configuration && $plugin instanceof GHIBlockBase && $plugin instanceof ConfigValidationInterface) {
+          $plugin->setContext('entity', EntityContext::fromEntity($entity, $entity->type->entity->label()));
+          $plugin->fixConfigErrors();
+          $configuration = $context_mapping + $plugin->getConfiguration();
+          $component->setConfiguration($configuration);
+        }
         $components[$component->getUuid()] = $component->toArray();
       }
       if ($overwrite || empty($section_storage->getSections())) {

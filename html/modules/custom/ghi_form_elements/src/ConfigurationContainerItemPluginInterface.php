@@ -240,6 +240,27 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
   public function isGroupItem();
 
   /**
+   * Checks if the item is valid.
+   *
+   * @return bool
+   *   TRUE if the item is valid, FALSE otherwise.
+   */
+  public function isValid();
+
+  /**
+   * Get a list of configuration errors.
+   *
+   * @return array
+   *   An array of configuration errors.
+   */
+  public function getConfigurationErrors();
+
+  /**
+   * Attempt to fix the configuration errors.
+   */
+  public function fixConfigurationErrors();
+
+  /**
    * Get the cache tags for this item.
    */
   public function getCacheTags();

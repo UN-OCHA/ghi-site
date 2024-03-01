@@ -65,6 +65,33 @@ trait ConfigurationContainerTrait {
   }
 
   /**
+   * Retrieve the valid configured items as plugin instances from an item store.
+   *
+   * @param array $item_store
+   *   The storage for configured items. This should be in most cases a part of
+   *   the block configuration array.
+   * @param array $context
+   *   An array of context objects.
+   *
+   * @return \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface[]
+   *   An array of configuration container plugin instances.
+   */
+  public function getConfiguredItemPlugins(array $item_store = NULL, array $context) {
+    if (empty($item_store)) {
+      return NULL;
+    }
+    $items = $this->getConfiguredItems($item_store);
+    if (empty($items)) {
+      return NULL;
+    }
+    $plugins = [];
+    foreach ($items as $key => $item) {
+      $plugins[$key] = $this->getItemTypePluginForColumn($item, $context);
+    }
+    return $plugins;
+  }
+
+  /**
    * Get the item type plugin responsible for the given column.
    *
    * @param array $column

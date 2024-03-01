@@ -6,9 +6,11 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Ajax\AjaxHelperTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_templates\Entity\PageTemplateInterface;
 use Drupal\ghi_templates\PageConfigTrait;
 use Drupal\hpc_common\Traits\AjaxFormTrait;
@@ -204,6 +206,7 @@ class ApplyPageTemplateForm extends TemplateFormBase {
     $header = [
       $this->t('Element type'),
       $this->t('Label'),
+      $this->t('Configuration issues'),
     ];
 
     $rows = [];
@@ -222,16 +225,18 @@ class ApplyPageTemplateForm extends TemplateFormBase {
       foreach ($section['components'] as $component_key => $component) {
         /** @var \Drupal\Core\Block\BlockBase $block */
         $block = $this->blockManager->createInstance($component['configuration']['id'], $component['configuration']);
+        $block->setContext('entity', EntityContext::fromEntity($entity, $entity->type->entity->label()));
         $rows[$section_key . '--' . $component_key] = [
           $block->getPluginDefinition()['admin_label'],
           $block->label() ?? $this->t('n/a'),
+          $block instanceof ConfigValidationInterface && !$block->validateConfiguration() ? Markup::create(implode('<br />', $block->getConfigErrors())) : '',
         ];
       }
     }
 
     $form['settings']['explanation'] = [
       '#type' => 'markup',
-      '#markup' => $this->t('On this screen you can preview which page elements should be imported from the template. When you click on "Import", the template will be applied and you will be redirected to the customize screen of the page, where you can do further modifications before saving the page.'),
+      '#markup' => $this->t('On this screen you can preview which page elements should be imported from the template. When you click on "Import", the template will be applied and you will be redirected to the customize screen of the page, where you can do further modifications before saving the page.<br />If you see any errors in the column "Configuration issues", these will be attempted to be corrected automatically, but need a manual review after the elements have been added to the page.'),
     ];
 
     $form['settings']['summary'] = [

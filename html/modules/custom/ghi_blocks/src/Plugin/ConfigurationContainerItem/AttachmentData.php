@@ -196,4 +196,37 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     return $attachment;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigurationErrors() {
+    $errors = [];
+    $attachment = $this->getAttachmentObject();
+
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan */
+    $plan = $this->getContextValue('plan_object');
+    if (!$attachment) {
+      $errors[] = $this->t('No attachment configured');
+    }
+    elseif (!$plan) {
+      $errors[] = $this->t('No plan available');
+    }
+    elseif ($attachment->getPlanId() != $plan->getSourceId()) {
+      $errors[] = $this->t('Configured attachment is not available in the context of the current plan');
+    }
+    return $errors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fixConfigurationErrors() {
+    $attachment = $this->getAttachmentObject();
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan */
+    $plan = $this->getContextValue('plan_object');
+    if ($attachment && $plan && $attachment->getPlanId() != $plan->getSourceId()) {
+      $this->config['attachment']['attachment_id'] = NULL;
+    }
+  }
+
 }

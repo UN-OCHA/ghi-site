@@ -657,7 +657,10 @@ class ConfigurationContainer extends FormElement {
         ],
         'pid' => self::canGroupItems($element) ? t('Parent') : NULL,
       ]),
-      ['operations' => '']
+      [
+        'issues' => t('Issues'),
+        'operations' => '',
+      ]
     );
 
     $table_rows = self::buildTableRows($element, $form_state, $include_type_column);
@@ -864,6 +867,10 @@ class ConfigurationContainer extends FormElement {
           $row[$first_column_key]['#prefix'] = \Drupal::service('renderer')->render($indentation);
         }
       }
+      $row['issues'] = [
+        '#markup' => implode(', ', $item_type->getConfigurationErrors()),
+      ];
+
       $row['operations'] = [
         '#type' => 'container',
         '#attributes' => [
