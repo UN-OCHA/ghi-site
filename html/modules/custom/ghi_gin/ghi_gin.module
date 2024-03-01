@@ -8,6 +8,9 @@
  * theme.
  */
 
+use Drupal\Core\Asset\AttachedAssetsInterface;
+use Drupal\Core\Language\LanguageInterface;
+
 /**
  * Implements hook_preprocess_page().
  */
@@ -68,4 +71,12 @@ function ghi_gin_page_attachments_alter(array &$attachments) {
     'href' => '/' . $theme_path . '/img/favicon-16x16.png',
     'type' => 'image/png',
   ];
+}
+
+/**
+ * Implements hook_css_alter().
+ */
+function ghi_gin_css_alter(array &$css, AttachedAssetsInterface $assets, LanguageInterface $language): void {
+  dk($css);
+  unset($css['core/themes/claro/css/components/messages.css']);
 }
