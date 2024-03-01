@@ -30,3 +30,6 @@ body[data-gin-accent] .dialog-off-canvas-main-canvas form .messages-list .messag
 .glb-fieldset__description {
   line-height: 1.3rem !important;
 }
+.ui-dialog *:focus {
+  box-shadow: none !important;
+}
