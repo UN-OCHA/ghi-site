@@ -77,6 +77,5 @@ function ghi_gin_page_attachments_alter(array &$attachments) {
  * Implements hook_css_alter().
  */
 function ghi_gin_css_alter(array &$css, AttachedAssetsInterface $assets, LanguageInterface $language): void {
-  dk($css);
   unset($css['core/themes/claro/css/components/messages.css']);
 }
