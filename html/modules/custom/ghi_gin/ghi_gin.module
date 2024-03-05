@@ -77,5 +77,13 @@ function ghi_gin_page_attachments_alter(array &$attachments) {
  * Implements hook_css_alter().
  */
 function ghi_gin_css_alter(array &$css, AttachedAssetsInterface $assets, LanguageInterface $language): void {
-  unset($css['core/themes/claro/css/components/messages.css']);
+  // Unset all claro files because they interfere with our frontend styles.
+  $theme = \Drupal::theme()->getActiveTheme();
+  if ($theme->getName() != 'gin') {
+    foreach (array_keys($css) as $key) {
+      if (strpos($key, 'core/themes/claro') === 0) {
+        unset($css[$key]);
+      }
+    }
+  }
 }
