@@ -1,5 +1,5 @@
 diff --git a/composer.json b/composer.json
-index fcea783..2ba3cec 100644
+index 71d1c19..281c181 100644
 --- a/composer.json
 +++ b/composer.json
 @@ -2,6 +2,7 @@
@@ -10,20 +10,21 @@ index fcea783..2ba3cec 100644
      "license": "GPL-2.0-or-later",
      "authors": [
          {
-@@ -9,5 +10,12 @@
+@@ -9,7 +10,14 @@
              "email": "amaria@chisholmtech.com"
          }
      ],
--    "require": {}
 +    "require": {
 +        "drupal/core": "^9.4 || ^10"
 +    },
-+    "require-dev": {
+     "require-dev": {
 +        "drupal/search_api": "^1.26",
 +        "phpcompatibility/php-compatibility": "10.x-dev@dev",
 +        "drupal/coder": "^8.3.18"
 +    }
- }
+         "phpcompatibility/php-compatibility": "10.x-dev@dev",
+         "drupal/coder": "^8.3.18"
+     }
 diff --git a/src/Plugin/search_api/processor/ViewUnpublished.php b/src/Plugin/search_api/processor/ViewUnpublished.php
 new file mode 100644
 index 0000000..b6d12e3
@@ -1354,12 +1355,12 @@ index 0000000..05ead26
 +
 +}
 diff --git a/view_unpublished.install b/view_unpublished.install
-index 2792f8d..0451634 100644
+index 941e106..d4bca73 100644
 --- a/view_unpublished.install
 +++ b/view_unpublished.install
-@@ -43,3 +43,42 @@ function view_unpublished_update_8001() {
- function view_unpublished_update_8002() {
-   Drupal::service('view_unpublished.install_helper')->removeDependency();
+@@ -60,3 +60,42 @@ function view_unpublished_update_8002(): void {
+   $install_helper = Drupal::service('view_unpublished.install_helper');
+   $install_helper->removeDependency();
  }
 +
 +/**
@@ -1400,13 +1401,14 @@ index 2792f8d..0451634 100644
 +
 +  return t('Switched from old "Content Access: View Unpublished" to new "Content access" processor with automatic support for "View Unpublished".');
 +}
+\ No newline at end of file
 diff --git a/view_unpublished.module b/view_unpublished.module
-index 9f74500..4cd2ebc 100644
+index 073f511..61f796f 100644
 --- a/view_unpublished.module
 +++ b/view_unpublished.module
-@@ -10,6 +10,36 @@ use Drupal\node\Entity\NodeType;
+@@ -12,6 +12,36 @@ use Drupal\Core\Session\AccountInterface;
+ use Drupal\node\Entity\NodeType;
  use Drupal\node\NodeInterface;
- use Drupal\Core\Routing\RouteMatchInterface;
  
 +/**
 + * Implements hook_search_api_processor_info_alter().

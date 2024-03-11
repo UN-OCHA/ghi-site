@@ -52,7 +52,7 @@
       "Issue #3396521: Fix PHP 8.2 deprecations": "https://www.drupal.org/files/issues/2023-10-25/3396521-2.patch"
     },
     "drupal/view_unpublished": {
-      "Issue #2958568: Add a search api processor for view unpublished": "./patches/2958568-view-unpublished-search-api-access-17.patch"
+      "Issue #2958568: Add a search api processor for view unpublished": "./patches/2958568-view-unpublished-search-api-access-18.patch"
     },
     "drupal/webp": {
       "Issue #3325808: Webp Image not generated for styles using original image.": "https://www.drupal.org/files/issues/2023-12-07/webp-3325808-11.patch",
