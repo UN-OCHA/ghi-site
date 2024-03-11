@@ -96,7 +96,7 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
     $source_sections = $source_section_storage->getSections();
     foreach ($source_sections as $source_section) {
       $section_config = $source_section->toArray();
-
+      $components = [];
       foreach ($section_config['components'] as $component_config) {
         $component_config['uuid'] = \Drupal::service('uuid')->generate();
         $component = SectionComponent::fromArray($component_config);

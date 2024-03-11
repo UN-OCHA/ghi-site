@@ -300,7 +300,7 @@ class ImportPageConfigForm extends TemplateFormBase {
       $section_storage = $form_state->get('section_storage');
       $entity = $form_state->get('entity');
       $page_config = $form_state->get('page_config');
-      $section_storage = $this->buildSectionStorageFromPageConfig($section_storage, $entity, $page_config, $overwrite, $selected_elements);
+      $section_storage = $this->pageTemplateManager->buildSectionStorageFromPageConfig($section_storage, $entity, $page_config, $overwrite, $selected_elements);
 
       // Then put all that into the tempstore, so that it's available once the
       // layout is edited.

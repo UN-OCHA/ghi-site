@@ -113,6 +113,7 @@ permissions:
   - 'create media'
   - 'create news_story content'
   - 'create page content'
+  - 'create page templates'
   - 'create section content'
   - 'create terms in team'
   - 'create url aliases'

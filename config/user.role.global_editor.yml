@@ -34,6 +34,7 @@ dependencies:
     - contextual
     - filter
     - ghi_content
+    - ghi_templates
     - layout_builder
     - layout_builder_ipe
     - node
@@ -55,6 +56,7 @@ permissions:
   - 'access toolbar'
   - 'access user profiles'
   - 'administer menu'
+  - 'administer page templates'
   - 'administer user roles'
   - 'administer users'
   - 'configure all homepage node layout overrides'
@@ -73,6 +75,7 @@ permissions:
   - 'create custom_subpage content'
   - 'create homepage content'
   - 'create news_story content'
+  - 'create page templates'
   - 'create terms in team'
   - 'delete own custom_subpage content'
   - 'delete terms in team'
@@ -198,6 +201,7 @@ permissions:
   - 'use layout builder ipe on editable presence node layout overrides'
   - 'use layout builder ipe on editable progress node layout overrides'
   - 'use layout builder ipe on editable section node layout overrides'
+  - 'use page templates'
   - 'use text format html_text'
   - 'view any unpublished article content'
   - 'view any unpublished content'

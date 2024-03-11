@@ -4,7 +4,6 @@ namespace Drupal\ghi_templates\LayoutBuilder;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ghi_templates\PageConfigTrait;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\SectionStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -15,7 +14,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class StorePageTemplateForm extends TemplateFormBase {
 
   use LayoutEntityHelperTrait;
-  use PageConfigTrait;
 
   /**
    * The entity type manager service.

@@ -12,7 +12,6 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_templates\Entity\PageTemplateInterface;
-use Drupal\ghi_templates\PageConfigTrait;
 use Drupal\hpc_common\Traits\AjaxFormTrait;
 use Drupal\layout_builder\Controller\LayoutRebuildTrait;
 use Drupal\layout_builder\SectionStorageInterface;
@@ -26,7 +25,6 @@ class ApplyPageTemplateForm extends TemplateFormBase {
   use LayoutRebuildTrait;
   use AjaxHelperTrait;
   use AjaxFormTrait;
-  use PageConfigTrait;
 
   /**
    * The form steps for the import wizard.
@@ -35,13 +33,6 @@ class ApplyPageTemplateForm extends TemplateFormBase {
     'select_template',
     'confirm',
   ];
-
-  /**
-   * The page template manager service.
-   *
-   * @var \Drupal\ghi_templates\PageTemplateManager
-   */
-  protected $pageTemplateManager;
 
   /**
    * The block manager.
@@ -62,7 +53,6 @@ class ApplyPageTemplateForm extends TemplateFormBase {
    */
   public static function create(ContainerInterface $container) {
     $instance = parent::create($container);
-    $instance->pageTemplateManager = $container->get('ghi_templates.manager');
     $instance->blockManager = $container->get('plugin.manager.block');
     $instance->layoutTempstoreRepository = $container->get('layout_builder.tempstore_repository');
     return $instance;
@@ -96,7 +86,7 @@ class ApplyPageTemplateForm extends TemplateFormBase {
       return $form;
     }
 
-    $form['#title'] = $this->t('Apply a page template for @label', [
+    $form['#title'] = $this->t('Apply a page template to @label', [
       '@label' => $entity->label(),
     ]);
 
@@ -159,10 +149,10 @@ class ApplyPageTemplateForm extends TemplateFormBase {
         'source' => $this->t('Source page'),
       ],
       '#options' => $page_template_options,
-      '#empty' => new TranslatableMarkup('<p>There no page templates available to apply to the current page. You can see a list of available templates on the <a href="@url_collection">Page templates</a> page.</p><p>You can create a page template either manually using the <a href="@url_add">Add page template</a> page, or create one from any supported content page using the frontend controls.</p>', [
+      '#empty' => ($this->currentUser()->hasPermission('administer page templates') ? new TranslatableMarkup('<p>There no page templates available to apply to the current page. You can see a list of available templates on the <a href="@url_collection">Page templates</a> page.</p><p>You can create a page template either manually using the <a href="@url_add">Add page template</a> page, or create one from any supported content page using the frontend controls.</p>', [
         '@url_collection' => Url::fromRoute('entity.page_template.collection')->toString(),
         '@url_add' => Url::fromRoute('entity.page_template.add_page')->toString(),
-      ]),
+      ]) : new TranslatableMarkup('<p>There no page templates available to apply to the current page. Please contact an administrator if you think that this is an error.</p>')),
       '#default_value' => array_key_first($page_template_options),
     ];
 
@@ -301,8 +291,7 @@ class ApplyPageTemplateForm extends TemplateFormBase {
     }
     else {
       $page_template = $this->getSubmittedPageTemplate($form_state);
-      $section_storage = $this->getSectionStorageForEntity($page_template);
-      $import_config = $this->exportSectionStorage($section_storage);
+      $import_config = $this->pageTemplateManager->exportSectionStorage($page_template);
       $form_state->set('page_template', $page_template?->id());
       $form_state->set('page_config', $import_config['page_config'] ?? NULL);
     }
@@ -325,7 +314,7 @@ class ApplyPageTemplateForm extends TemplateFormBase {
       $section_storage = $form_state->get('section_storage');
       $entity = $form_state->get('entity');
       $page_config = $form_state->get('page_config');
-      $section_storage = $this->buildSectionStorageFromPageConfig($section_storage, $entity, $page_config, $overwrite, $selected_elements);
+      $section_storage = $this->pageTemplateManager->buildSectionStorageFromPageConfig($section_storage, $entity, $page_config, $overwrite, $selected_elements);
 
       // Then put all that into the tempstore, so that it's available once the
       // layout is edited.

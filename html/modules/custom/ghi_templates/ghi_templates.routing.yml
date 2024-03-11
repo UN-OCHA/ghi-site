@@ -14,7 +14,6 @@ ghi_templates.entity.page_config.import:
   defaults:
     _form: '\Drupal\ghi_templates\LayoutBuilder\ImportPageConfigForm'
   requirements:
-    _layout_builder_access: 'view'
     _permission: import page layout configuration code
   options:
     parameters:
@@ -34,7 +33,6 @@ ghi_templates.entity.page_template.apply:
   defaults:
     _form: '\Drupal\ghi_templates\LayoutBuilder\ApplyPageTemplateForm'
   requirements:
-    _layout_builder_access: 'view'
     _permission: use page templates
   options:
     parameters:
@@ -48,7 +46,7 @@ ghi_templates.entity.page_template.store:
     _form: '\Drupal\ghi_templates\LayoutBuilder\StorePageTemplateForm'
   requirements:
     _layout_builder_access: 'view'
-    _permission: use page templates
+    _permission: create page templates
   options:
     parameters:
       entity:

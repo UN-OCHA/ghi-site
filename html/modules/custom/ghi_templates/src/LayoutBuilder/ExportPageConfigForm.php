@@ -5,7 +5,6 @@ namespace Drupal\ghi_templates\LayoutBuilder;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ghi_templates\PageConfigTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\SectionStorageInterface;
@@ -16,7 +15,6 @@ use Drupal\layout_builder\SectionStorageInterface;
 class ExportPageConfigForm extends TemplateFormBase {
 
   use LayoutEntityHelperTrait;
-  use PageConfigTrait;
 
   /**
    * {@inheritdoc}
@@ -31,7 +29,8 @@ class ExportPageConfigForm extends TemplateFormBase {
   public function buildForm(array $form, FormStateInterface $form_state, EntityInterface $entity = NULL, SectionStorageInterface $section_storage = NULL) {
     $form = parent::buildForm($form, $form_state, $entity, $section_storage);
 
-    $config_export = $this->exportSectionStorage($section_storage);
+    $entity = $entity ?? $section_storage->getContextValue('entity');
+    $config_export = $this->pageTemplateManager->exportSectionStorage($entity);
 
     $form['#title'] = $this->t('Export page configuration for @label', [
       '@label' => $section_storage->label(),

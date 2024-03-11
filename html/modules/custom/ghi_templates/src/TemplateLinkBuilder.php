@@ -112,6 +112,9 @@ class TemplateLinkBuilder {
    *   A link array to be used in dropbutton elements.
    */
   public function buildStorePageTemplateLink(SectionStorageInterface $section_storage, EntityInterface $entity, array $options = []) {
+    if ($section_storage instanceof DefaultsSectionStorage) {
+      return NULL;
+    }
     $route_params = [
       'section_storage_type' => $section_storage->getStorageType(),
       'section_storage' => $section_storage->getStorageId(),

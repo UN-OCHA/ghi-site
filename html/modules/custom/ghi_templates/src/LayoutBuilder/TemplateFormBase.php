@@ -8,15 +8,8 @@ use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\Context\EntityContext;
-use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
-use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
-use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\GinLbModalTrait;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
-use Drupal\layout_builder\Plugin\SectionStorage\DefaultsSectionStorage;
-use Drupal\layout_builder\Section;
-use Drupal\layout_builder\SectionComponent;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\layout_builder_ipe\Controller\EntityEditController;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -37,18 +30,11 @@ abstract class TemplateFormBase extends FormBase {
   protected $controllerResolver;
 
   /**
-   * The plugin context handler.
+   * The template manager.
    *
-   * @var \Drupal\Core\Plugin\Context\ContextHandlerInterface
+   * @var \Drupal\ghi_templates\PageTemplateManager
    */
-  protected $contextHandler;
-
-  /**
-   * The UUID generator service.
-   *
-   * @var \Drupal\Component\UuidInterface
-   */
-  protected $uuidGenerator;
+  protected $pageTemplateManager;
 
   /**
    * {@inheritdoc}
@@ -56,8 +42,7 @@ abstract class TemplateFormBase extends FormBase {
   public static function create(ContainerInterface $container) {
     $instance = new static();
     $instance->controllerResolver = $container->get('controller_resolver');
-    $instance->contextHandler = $container->get('context.handler');
-    $instance->uuidGenerator = $container->get('uuid');
+    $instance->pageTemplateManager = $container->get('ghi_templates.manager');
     return $instance;
   }
 
@@ -105,101 +90,6 @@ abstract class TemplateFormBase extends FormBase {
       $response->addCommand(new CloseDialogCommand('#layout-builder-modal'));
     }
     return $response;
-  }
-
-  /**
-   * Build a section storage from the given page configuration.
-   *
-   * @param \Drupal\layout_builder\SectionStorageInterface $section_storage
-   *   The section storage to extend or rebuild.
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The entity associated with the section storage.
-   * @param array $page_config
-   *   The page config.
-   * @param bool $overwrite
-   *   Whether the section storage should be completely overwritten.
-   * @param array $selected_elements
-   *   Optional: An array of selected elements. If given, then only the
-   *   elements specified will be added to the section storage.
-   * @param bool $fix_element_configuration
-   *   Whether the element configuration should be fixed if necessary.
-   *
-   * @return \Drupal\layout_builder\SectionStorageInterface
-   *   The update section storage.
-   */
-  protected function buildSectionStorageFromPageConfig(SectionStorageInterface $section_storage, EntityInterface $entity, array $page_config, bool $overwrite, array $selected_elements = [], $fix_element_configuration = TRUE) {
-    // First, make sure we have an overridden section storage.
-    if ($section_storage instanceof DefaultsSectionStorage) {
-      // Overide the section storage in the tempstore.
-      $section_storage = $this->sectionStorageManager()->load('overrides', [
-        'entity' => EntityContext::fromEntity($entity),
-      ]);
-    }
-
-    // Clear the current storage.
-    if ($overwrite) {
-      $section_storage->removeAllSections();
-    }
-
-    // Now setup each section according to the imported config.
-    foreach ($page_config as $section_key => $section_config) {
-      if (empty($section_config['components'])) {
-        continue;
-      }
-      $components = [];
-      foreach ($section_config['components'] as $component_key => $component_config) {
-        if (empty($selected_elements[$section_key . '--' . $component_key])) {
-          continue;
-        }
-        // Set a new UUID to prevent UUID collisions.
-        $component_config['uuid'] = $this->uuidGenerator->generate();
-        $component = SectionComponent::fromArray($component_config);
-        $plugin = $component->getPlugin();
-
-        $definition = $plugin->getPluginDefinition();
-        $context_mapping = [
-          'context_mapping' => array_intersect_key([
-            'node' => 'layout_builder.entity',
-          ], $definition['context_definitions']),
-        ];
-        // And make sure that base objects are mapped too.
-        $base_objects = BaseObjectHelper::getBaseObjectsFromNode($entity) ?? [];
-        foreach ($base_objects as $_base_object) {
-          $contexts = [
-            EntityContext::fromEntity($_base_object),
-          ];
-          foreach ($definition['context_definitions'] as $context_key => $context_definition) {
-            $matching_contexts = $this->contextHandler->getMatchingContexts($contexts, $context_definition);
-            if (empty($matching_contexts)) {
-              continue;
-            }
-            $context_mapping['context_mapping'][$context_key] = $_base_object->getUniqueIdentifier();
-          }
-        }
-        $configuration = $context_mapping + $component->get('configuration');
-        $component->setConfiguration($configuration);
-        $plugin = $component->getPlugin();
-        if ($fix_element_configuration && $plugin instanceof GHIBlockBase && $plugin instanceof ConfigValidationInterface) {
-          $plugin->setContext('entity', EntityContext::fromEntity($entity, $entity->type->entity->label()));
-          $plugin->fixConfigErrors();
-          $configuration = $context_mapping + $plugin->getConfiguration();
-          $component->setConfiguration($configuration);
-        }
-        $components[$component->getUuid()] = $component->toArray();
-      }
-      if ($overwrite || empty($section_storage->getSections())) {
-        $section_config['components'] = $components;
-        $section = Section::fromArray($section_config);
-        $section_storage->appendSection($section);
-      }
-      else {
-        $section = $section_storage->getSection(0);
-        foreach ($components as $component) {
-          $section->appendComponent(SectionComponent::fromArray($component));
-        }
-      }
-    }
-    return $section_storage;
   }
 
 }
