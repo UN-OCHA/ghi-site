@@ -227,6 +227,18 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     if ($attachment && $plan && $attachment->getPlanId() != $plan->getSourceId()) {
       $this->config['attachment']['attachment_id'] = NULL;
     }
+
+    // Let's see if we can find an alternative attachment.
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
+    $query = $this->endpointQueryManager->createInstance('plan_entities_query');
+    $query->setPlaceholder('plan_id', $plan->getSourceId());
+    $attachments = $query->getDataAttachments($this->getContextValue('base_object'));
+    foreach ($attachments as $_attachment) {
+      if ($attachment->getType() == $_attachment->getType() && $attachment->source->entity_type && $_attachment->source->entity_type) {
+        $this->config['attachment']['attachment_id'] = $_attachment->id();
+        break;
+      }
+    }
   }
 
 }

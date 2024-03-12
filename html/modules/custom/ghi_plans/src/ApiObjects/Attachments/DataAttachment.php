@@ -104,6 +104,16 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
+   * Get the type of attachment.
+   *
+   * @return string
+   *   The type as string.
+   */
+  public function getType() {
+    return $this->type;
+  }
+
+  /**
    * Get the source entity.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface|null
