@@ -177,7 +177,7 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
   public function organizationsForm(array $form, FormStateInterface $form_state) {
     $organization_options = $this->getAvailableOrganizationOptions();
 
-    $header_text = $this->t('Found @count organizations with projects.', [
+    $header_text = $this->t('Found @count organizations with projects. Select the ones that should be visible below. If no organization is selected, all organizations will be shown.', [
       '@count' => count($organization_options),
     ]);
     $form['organization_ids_header'] = [

@@ -11,6 +11,7 @@ use Drupal\Core\Plugin\Context\ContextHandlerInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
+use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_templates\Entity\PageTemplateInterface;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;

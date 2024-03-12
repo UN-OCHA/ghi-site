@@ -854,8 +854,8 @@ class DataAttachment extends AttachmentBase {
    *   An attachment prototype object.
    */
   protected function fetchPrototypeForAttachment($attachment) {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query_handler */
-    $query_handler = $this->getEndpointQueryManager()->createInstance('attachment_prototype_query');
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanAttachmentPrototypeQuery $query_handler */
+    $query_handler = $this->getEndpointQueryManager()->createInstance('plan_attachment_prototype_query');
     if (!$query_handler) {
       return NULL;
     }

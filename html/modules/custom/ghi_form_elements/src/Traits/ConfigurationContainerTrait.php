@@ -104,7 +104,7 @@ trait ConfigurationContainerTrait {
    */
   public function getItemTypePluginForColumn(array $column, array $context = NULL) {
     // Check if this item is allowed. Do that lazy as this is called often.
-    $allowed_items = &drupal_static($this->getUuid() . '_' . __FUNCTION__ . '_allowed_items', NULL);
+    $allowed_items = &drupal_static(($this->getUuid() ?? rand()) . '_' . __FUNCTION__ . '_allowed_items', NULL);
     if ($allowed_items === NULL) {
       $allowed_items = $this->getAllowedItemTypes();
     }
@@ -119,7 +119,7 @@ trait ConfigurationContainerTrait {
     $cache_key = $this->getCacheKey($column);
     /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface[] $item_types */
     $item_types = &drupal_static($this->getUuid() . '_' . __FUNCTION__ . '_item_types', []);
-    if (!array_key_exists($cache_key, $item_types)) {
+    if (!$this->getUuid() || !array_key_exists($cache_key, $item_types)) {
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
       $item_type = $this->getConfigurationContainerItemManager()->createInstance($item_type_plugin, $allowed_items[$column['item_type']]);
       $item_type->setConfig($column['config'] ?? []);

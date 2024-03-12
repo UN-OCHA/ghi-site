@@ -153,7 +153,7 @@ class ApplyPageTemplateForm extends TemplateFormBase {
         '@url_collection' => Url::fromRoute('entity.page_template.collection')->toString(),
         '@url_add' => Url::fromRoute('entity.page_template.add_page')->toString(),
       ]) : new TranslatableMarkup('<p>There no page templates available to apply to the current page. Please contact an administrator if you think that this is an error.</p>')),
-      '#default_value' => array_key_first($page_template_options),
+      '#default_value' => $this->getSubmittedPageTemplate($form_state)?->id() ?? array_key_first($page_template_options),
     ];
 
     $form['actions']['cancel'] = [

@@ -6,10 +6,12 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
+use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
@@ -47,11 +49,12 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
  *  }
  * )
  */
-class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface {
+class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface, ConfigValidationInterface {
 
   use PlanReportingPeriodTrait;
   use BlockCommentTrait;
   use GlobalMapTrait;
+  use ConfigValidationTrait;
 
   const STYLE_CIRCLE = 'circle';
   const STYLE_DONUT = 'donut';
@@ -1191,6 +1194,108 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       'context_node' => $this->getPageNode(),
       'attachment_prototype' => $this->getAttachmentPrototype(),
     ];
+  }
+
+  /**
+   * Get the configured entity ids if any.
+   *
+   * @return array
+   *   An array of entity ids.
+   */
+  private function getConfiguredEntities() {
+    $conf = $this->getBlockConfig();
+    return array_filter($conf['attachments']['entity_attachments']['entities']['entity_ids'] ?? []);
+  }
+
+  /**
+   * Get the available entities.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
+   *   An array of plan entity objects.
+   */
+  private function getAvailableEntities() {
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query_handler */
+    $query_handler = $this->endpointQueryManager->createInstance('plan_entities_query');
+    $query_handler->setPlaceholder('plan_id', $this->getCurrentPlanObject()->getSourceId());
+    return $query_handler->getPlanEntities($this->getCurrentBaseObject()) ?? [];
+  }
+
+  /**
+   * Get the configured attachment ids if any.
+   *
+   * @return array
+   *   An array of attachment ids.
+   */
+  private function getConfiguredAttachments() {
+    $conf = $this->getBlockConfig();
+    return array_filter($conf['attachments']['entity_attachments']['attachments']['attachment_id'] ?? []);
+  }
+
+  /**
+   * Get the available attachments.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   *   An array of attachment objects.
+   */
+  private function getAvailableAttachments() {
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query_handler */
+    $query_handler = $this->endpointQueryManager->createInstance('plan_entities_query');
+    $query_handler->setPlaceholder('plan_id', $this->getCurrentPlanObject()->getSourceId());
+    return $query_handler->getDataAttachments($this->getCurrentBaseObject());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigErrors() {
+    $errors = [];
+    $configured_entities = $this->getConfiguredEntities();
+    if (!empty($configured_entities)) {
+      $available_entities = $this->getAvailableEntities();
+      if (!empty($configured_entities) && $available_entities && count($configured_entities) != count(array_intersect_key($configured_entities, $available_entities))) {
+        $errors[] = $this->t('Some configured entities are not available');
+      }
+    }
+    $configured_attachments = $this->getConfiguredAttachments();
+    if (!empty($configured_attachments)) {
+      $available_attachments = $this->getAvailableAttachments();
+      if (!empty($configured_attachments) && $available_attachments && count($configured_attachments) != count(array_intersect_key($configured_attachments, $available_attachments))) {
+        $errors[] = $this->t('Some configured attachments are not available');
+      }
+    }
+    return $errors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fixConfigErrors() {
+    $conf = $this->getBlockConfig();
+
+    $configured_entities = $this->getConfiguredEntities();
+    $available_entities = $this->getAvailableEntities();
+    if (!empty($configured_entities)) {
+      $valid_entity_ids = array_intersect_key($configured_entities, $available_entities);
+      $conf['attachments']['entity_attachments']['entities']['entity_ids'] = array_combine($valid_entity_ids, $valid_entity_ids);
+    }
+    else {
+      $conf['attachments']['entity_attachments']['entities']['entity_ids'] = array_fill_keys(array_keys($available_entities), 0);
+    }
+
+    $configured_attachments = $this->getConfiguredAttachments();
+    $available_attachments = $this->getAvailableAttachments();
+    $default_attachment = !empty($available_attachments) ? array_key_first($available_attachments) : NULL;
+    if (!empty($configured_attachments)) {
+      $valid_attachment_ids = array_intersect_key($configured_attachments, $available_attachments);
+      $conf['attachments']['entity_attachments']['attachments']['attachment_id'] = array_combine($valid_attachment_ids, $valid_attachment_ids);
+    }
+
+    if (empty($conf['attachments']['entity_attachments']['attachments']['attachment_id'])) {
+      $conf['attachments']['entity_attachments']['attachments']['attachment_id'] = array_filter([$default_attachment]);
+    }
+    $conf['map']['common']['default_attachment'] = $default_attachment;
+
+    $this->setBlockConfig($conf);
   }
 
 }

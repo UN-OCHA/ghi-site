@@ -10,6 +10,7 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\LineBreak;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
+use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 
@@ -43,6 +44,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
   use ConfigurationContainerTrait;
   use ConfigurationContainerGroup;
   use BlockCommentTrait;
+  use ConfigValidationTrait;
 
   const MAX_ITEMS = 20;
 
@@ -258,13 +260,6 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
       ],
     ];
     return $item_types;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function validateConfiguration() {
-    return empty($this->getConfigErrors());
   }
 
   /**
