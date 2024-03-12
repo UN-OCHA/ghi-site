@@ -174,7 +174,7 @@ function ghi_templates_layout_builder_ipe_links_alter(array &$links, SectionStor
         '#links' => $page_template_links,
         '#attributes' => [
           'class' => [
-            'links--' . count($template_links),
+            'links--' . count($page_template_links),
           ],
         ],
         '#attached' => [
