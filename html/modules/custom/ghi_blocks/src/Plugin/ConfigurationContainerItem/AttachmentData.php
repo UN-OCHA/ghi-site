@@ -221,6 +221,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function fixConfigurationErrors() {
+    $conf = $this->config['attachment'];
     $attachment = $this->getAttachmentObject();
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
     $plan = $this->getContextValue('plan_object');
@@ -233,12 +234,26 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     $query = $this->endpointQueryManager->createInstance('plan_entities_query');
     $query->setPlaceholder('plan_id', $plan->getSourceId());
     $attachments = $query->getDataAttachments($this->getContextValue('base_object'));
-    foreach ($attachments as $_attachment) {
-      if ($attachment->getType() == $_attachment->getType() && $attachment->source->entity_type && $_attachment->source->entity_type) {
-        $this->config['attachment']['attachment_id'] = $_attachment->id();
-        break;
+    $filtered_attachments = array_filter($attachments, function ($_attachment) use ($attachment) {
+      if ($attachment->getType() != $_attachment->getType()) {
+        return FALSE;
       }
+      if ($attachment->source->entity_type != $_attachment->source->entity_type) {
+        return FALSE;
+      }
+      return TRUE;
+    });
+
+    // Use the default plan caseload if available.
+    $caseload_id = $plan->getPlanCaseloadId();
+    if ($caseload_id && $attachment->getType() == 'caseload' && array_key_exists($caseload_id, $filtered_attachments)) {
+      $conf['attachment_id'] = $caseload_id;
     }
+    elseif (count($filtered_attachments) == 1) {
+      $conf['attachment_id'] = array_key_first($filtered_attachments);
+    }
+
+    $this->config['attachment'] = $conf;
   }
 
 }

@@ -82,6 +82,17 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
+   * Get the configured plan caseload.
+   *
+   * @return int|null
+   *   The ID of the configured plan caseload.
+   */
+  public function getPlanCaseloadId() {
+    $plan_caseload_id = $this->get('field_plan_caseload')?->attachment_id;
+    return !empty($plan_caseload_id) ? $plan_caseload_id : NULL;
+  }
+
+  /**
    * Get the document uri.
    *
    * @return string|null

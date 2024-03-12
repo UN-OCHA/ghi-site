@@ -136,7 +136,7 @@ class ApplyPageTemplateForm extends TemplateFormBase {
         '#type' => 'container',
         0 => [
           '#type' => 'markup',
-          '#markup' => $this->t('Select a template to apply it to the current page. Before the changes take effect, you will see a summary of the newly created page elements in the next step. You can also choose to add the page elements from the template to the existing elements on the page, or to overwrite the page completely. If the page template is associated with a base object, it will be used for previewing of the element content.') . '<br /><br />',
+          '#markup' => $this->t('Select a template to apply it to the current page. Before the changes take effect, you will see a summary of the newly created page elements in the next step. You can also choose to add the page elements from the template to the existing elements on the page, or to overwrite the page completely. If the current page is associated with a base object, it will be used for previewing of the element content that needs a base object.') . '<br /><br />',
         ],
       ];
     }
