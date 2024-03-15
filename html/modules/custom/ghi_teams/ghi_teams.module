@@ -5,12 +5,20 @@
  * Contains hook implementations for the GHI teams module.
  */
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\ContentEntityFormInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
+use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\node\NodeInterface;
+use Drupal\taxonomy\TermInterface;
 use Drupal\user\Entity\User;
+use Drupal\views\Plugin\Block\ViewsBlock;
+use Drupal\views\Views;
 
 /**
  * Implements hook_node_access_records().
@@ -117,11 +125,55 @@ function ghi_teams_form_alter(&$form, FormStateInterface $form_state, $form_id) 
  * Implements hook_preprocess_views_view().
  */
 function ghi_teams_preprocess_views_view(&$variables) {
+  /** @var \Drupal\views\ViewExecutable $view */
   $view = $variables['view'];
   if ($view->storage->id() != 'teams') {
     return;
   }
   $variables['#attached']['library'][] = 'ghi_teams/gin';
+  $variables['more'] = NULL;
+}
+
+/**
+ * Implements hook_preprocess_block().
+ */
+function ghi_teams_preprocess_block(&$variables) {
+  $block = \Drupal::service('plugin.manager.block')->createInstance($variables['plugin_id'], $variables['configuration']);
+  if (!$block instanceof ViewsBlock) {
+    return;
+  }
+  $block->build();
+  $view = $block->getViewExecutable();
+  if ($view->id() != 'teams') {
+    return;
+  }
+
+  /** @var \Drupal\taxonomy\Plugin\views\argument\Taxonomy $term_argument */
+  $term_argument = $view->display_handler->getHandlers('argument')['tid'] ?? NULL;
+  if (!$term_argument || !$term_argument?->argument) {
+    return;
+  }
+
+  $variables['attributes']['class'][] = 'block-views--teams';
+  $more_link = $view->getDisplay()->renderMoreLink();
+  $title = $more_link['#title'];
+  /** @var \Drupal\Core\Url $url */
+  $url = $more_link['#url'];
+  $url->setRouteParameter('taxonomy_term', $term_argument->argument);
+  $url->setOption('attributes', [
+    'class' => [
+      'button',
+      'link',
+    ],
+  ]);
+  $variables['label'] = [
+    '#type' => 'container',
+    '#attributes' => [
+      'class' => ['title-wrapper'],
+    ],
+    'label' => $variables['label'],
+    'more_link' => Link::fromTextAndUrl($title, $url)->toRenderable(),
+  ];
 }
 
 /**
@@ -147,4 +199,91 @@ function ghi_teams_form_node_form_alter(&$form, FormStateInterface $form_state) 
       '@published' => $config->get('publish_text_value'),
     ]);
   }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update() for taxonomy_term entities.
+ */
+function ghi_teams_taxonomy_term_update(TermInterface $term) {
+  if ($term->bundle() != 'team') {
+    return;
+  }
+  // Invalidate cache for the backend content listing when a term is updated.
+  // Terms can have content spaces assigned, and this associtation controls
+  // edit access to some content types (articles and documents). When a term is
+  // edited and that content space association is changed, we want the changes
+  // to be immediately visible in the backend listings to prevent confusion.
+  $cache_tags = Cache::mergeTags(['config:views.view.content'], $term->getCacheTags());
+  // Also invalidate cache associated with any of the content spaces associated
+  // to the team.
+  $content_spaces = $term->get('field_content_spaces')->referencedEntities();
+  foreach ($content_spaces as $content_space) {
+    $cache_tags = Cache::mergeTags($cache_tags, $content_space->getCacheTags());
+  }
+  \Drupal::service('cache_tags.invalidator')->invalidateTags($cache_tags);
+
+}
+
+/**
+ * Implements hook_preprocess_taxonomy_term().
+ */
+function ghi_teams_preprocess_taxonomy_term(&$variables) {
+  // Mark all term pages as admin pages for JS.
+  $variables['#attached']['drupalSettings']['path']['currentPathIsAdmin'] = TRUE;
+}
+
+/**
+ * Implements hook_preprocess_breadcrumb().
+ */
+function ghi_teams_preprocess_breadcrumb(&$variables) {
+  // Don't consider terms as public content pages.
+  $entity = RequestHelper::getCurrentEntityObject();
+  if (!$entity instanceof TermInterface) {
+    return;
+  }
+  if ($variables['breadcrumb']) {
+    $variables['breadcrumb'][0]['attributes']['data'] = 'data-gin-toolbar-escape-admin';
+  }
+}
+
+/**
+ * Implements hook_entity_operation().
+ *
+ * Add team subpages to operation links.
+ */
+function ghi_teams_entity_operation(EntityInterface $entity) {
+  if (!$entity instanceof TermInterface || $entity->bundle() != 'team') {
+    return;
+  }
+
+  // We have a single view that contains all the team related blocks and pages.
+  /** @var \Drupal\views\ViewExecutable $view */
+  $view = Views::getView('teams');
+  if (!$view) {
+    // At least we should have.
+    return;
+  }
+
+  $operations = [];
+  foreach ($view->storage->get('display') as $id => $display) {
+    if ($display['display_plugin'] != 'page') {
+      continue;
+    }
+    $view->setDisplay($id);
+    $path = $display['display_options']['path'];
+    if (strpos($path, 'taxonomy/term/%taxonomy_term') !== 0) {
+      continue;
+    }
+    $page_path = str_replace('taxonomy/term/%taxonomy_term', $entity->toUrl()->toString(), $path);
+    if ($path == $page_path || $page_path[0] != '/') {
+      continue;
+    }
+
+    $operations[$id] = [
+      'title' => $display['display_options']['title'],
+      'weight' => 50 + count($operations),
+      'url' => Url::fromUserInput($page_path),
+    ];
+  }
+  return $operations;
 }

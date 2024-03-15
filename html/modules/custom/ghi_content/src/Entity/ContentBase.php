@@ -251,6 +251,16 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   }
 
   /**
+   * Get the content space.
+   *
+   * @return \Drupal\taxonomy\TermInterface
+   *   The content space term.
+   */
+  public function getContentSpace() {
+    return $this->get('field_content_space')?->entity ?? NULL;
+  }
+
+  /**
    * Get the node with the image to be displayed.
    *
    * @return \Drupal\ghi_sections\Entity\ImageNodeInterface
@@ -324,6 +334,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     if ($context_node) {
       $cache_tags = Cache::mergeTags($cache_tags, $context_node->getCacheTags());
     }
+    $cache_tags = Cache::mergeTags($cache_tags, $this->getContentSpace()?->getCacheTags() ?? []);
     return $cache_tags;
   }
 

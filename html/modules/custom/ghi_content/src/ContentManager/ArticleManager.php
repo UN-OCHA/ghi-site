@@ -210,6 +210,9 @@ class ArticleManager extends BaseContentManager {
     // Import the tags.
     $this->importManager->importTags($node, $article, 'field_tags');
 
+    // Import the content space.
+    $this->importManager->importContentSpace($node, $article, 'field_content_space');
+
     if ($node->isNew()) {
       $this->importManager->setupRelatedArticlesElement($node, $article);
     }

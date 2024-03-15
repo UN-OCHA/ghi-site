@@ -540,6 +540,59 @@ class ImportManager implements ContainerInjectionInterface {
   }
 
   /**
+   * Import tags for an content object.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node for which tags should be imported/synced.
+   * @param \Drupal\ghi_content\RemoteContent\RemoteContentInterface $content
+   *   The content object as retrieved from the remote source.
+   * @param string $field_name
+   *   The field name into which the tags should be imported.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   An optional messenger to use for result messages.
+   */
+  public function importContentSpace(NodeInterface $node, RemoteContentInterface $content, $field_name = 'field_content_space', MessengerInterface $messenger = NULL) {
+    if (!$node->hasField($field_name)) {
+      return FALSE;
+    }
+
+    // Get the content space.
+    $content_space = $content->getContentSpace();
+
+    $update = !$node->get($field_name)->isEmpty();
+
+    /** @var \Drupal\Core\Entity\Plugin\EntityReferenceSelection\DefaultSelection $handler */
+    $handler = $this->selectionPluginManager->getInstance([
+      // Restrict selection of terms to a single vocabulary.
+      'target_type' => 'taxonomy_term',
+      'target_bundles' => [
+        'content_space' => 'content_space',
+      ],
+    ]);
+    $terms = array_filter(array_map(function ($term_name) use ($handler) {
+      $matches = $handler->getReferenceableEntities($term_name, '=', 1);
+      $term = NULL;
+      if (!empty($matches) && !empty($matches['content_space']) && count($matches['content_space']) == 1) {
+        $term_id = array_key_first($matches['content_space']);
+        $term = $this->entityTypeManager->getStorage('taxonomy_term')->load($term_id);
+      }
+      if (!$term) {
+        $term = $handler->createNewEntity('taxonomy_term', 'content_space', $term_name, $this->currentUser->id());
+        $term->save();
+      }
+      return $term->id() ? $term : NULL;
+    }, [$content_space]));
+
+    $node->get($field_name)->setValue($terms);
+
+    if ($messenger !== NULL) {
+      $messenger->addMessage($update ? $this->t('Updated content space') : $this->t('Imported content space'));
+    }
+
+    return TRUE;
+  }
+
+  /**
    * Setup the related articles element.
    *
    * @param \Drupal\node\NodeInterface $node

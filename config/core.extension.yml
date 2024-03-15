@@ -39,6 +39,7 @@ module:
   file_mdm_exif: 0
   file_mdm_font: 0
   filter: 0
+  flat_taxonomy: 0
   fpa: 0
   ghi_base_objects: 0
   ghi_blocks: 0
@@ -127,6 +128,7 @@ module:
   social_auth: 0
   social_auth_hid: 0
   sophron: 0
+  subpathauto: 0
   syslog: 0
   system: 0
   taxonomy: 0

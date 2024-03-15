@@ -75,10 +75,7 @@ body .form-boolean--type-radio:checked:not(:disabled):hover {
 body.layout-builder-ipe-editing.gin--horizontal-toolbar.has-secondary-toolbar {
   padding-top: calc(var(--gin-toolbar-y-offset) + 0.8rem) !important;
 }
-/* Hide the toolbar when not in edit mode */
-body .gin-secondary-toolbar {
-  display: none;
-}
+
 /* Fix the toolbar when editing */
 body.layout-builder-ipe-editing .gin-secondary-toolbar {
   display: flex;

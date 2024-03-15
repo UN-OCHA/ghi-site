@@ -31,5 +31,19 @@ function ghi_teams_views_data() {
       'id' => 'team_subpage_count',
     ],
   ];
+  $data['taxonomy_term_data']['team_article_count'] = [
+    'field' => [
+      'title' => t('Team article count'),
+      'help' => t('Get the number of articles for a team.'),
+      'id' => 'team_article_count',
+    ],
+  ];
+  $data['taxonomy_term_data']['team_document_count'] = [
+    'field' => [
+      'title' => t('Team document count'),
+      'help' => t('Get the number of documents for a team.'),
+      'id' => 'team_document_count',
+    ],
+  ];
   return $data;
 }
