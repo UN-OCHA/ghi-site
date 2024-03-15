@@ -257,6 +257,9 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    *   The content space term.
    */
   public function getContentSpace() {
+    if (!$this->hasField('field_content_space')) {
+      return NULL;
+    }
     return $this->get('field_content_space')?->entity ?? NULL;
   }
 
