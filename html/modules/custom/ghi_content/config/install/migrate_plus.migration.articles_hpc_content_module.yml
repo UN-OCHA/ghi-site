@@ -85,7 +85,7 @@ process:
     -
       plugin: skip_on_empty
       method: process
-      source: tags
+      source: content_space/title
     -
       plugin: entity_lookup
       entity_type: taxonomy_term

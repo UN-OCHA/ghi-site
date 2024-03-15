@@ -620,7 +620,7 @@ display:
           plugin_id: text
           empty: true
           content:
-            value: 'There are no sections assigned to this team.'
+            value: 'There are no documents associated with this team.'
             format: wysiwyg_text
           tokenize: false
       sorts:
@@ -1093,7 +1093,7 @@ display:
           plugin_id: text
           empty: true
           content:
-            value: 'There are no sections assigned to this team.'
+            value: 'There are no articles associated with this team.'
             format: wysiwyg_text
           tokenize: false
       sorts:
@@ -2842,7 +2842,7 @@ display:
     display_plugin: page
     position: 3
     display_options:
-      title: 'Articles'
+      title: Articles
       fields:
         title:
           id: title
@@ -3132,7 +3132,7 @@ display:
           plugin_id: text
           empty: true
           content:
-            value: 'There are no sections assigned to this team.'
+            value: 'There are no articles associated with this team.'
             format: wysiwyg_text
           tokenize: false
       sorts:
@@ -3390,7 +3390,7 @@ display:
     display_plugin: page
     position: 3
     display_options:
-      title: 'Documents'
+      title: Documents
       fields:
         title:
           id: title
@@ -3680,7 +3680,7 @@ display:
           plugin_id: text
           empty: true
           content:
-            value: 'There are no sections assigned to this team.'
+            value: 'There are no documents associated with this team.'
             format: wysiwyg_text
           tokenize: false
       sorts:
@@ -4477,7 +4477,7 @@ display:
     display_plugin: page
     position: 4
     display_options:
-      title: 'Sections'
+      title: Sections
       fields:
         type:
           id: type
@@ -5029,7 +5029,7 @@ display:
     display_plugin: page
     position: 5
     display_options:
-      title: 'Subpages'
+      title: Subpages
       fields:
         title:
           id: title
@@ -6254,7 +6254,7 @@ display:
           plugin_id: text
           empty: false
           content:
-            value: 'Note that the available articles and documents for a team depend on the "Content space(s)" assigned to the team.'
+            value: 'Note: The responsible team is set directly for sections and subpages. The available articles and documents for a team depend on the "Content space(s)" assigned to the team. A team member can edit any content belonging to a content space that is set for her team.'
             format: wysiwyg_text
           tokenize: false
       display_extenders: {  }

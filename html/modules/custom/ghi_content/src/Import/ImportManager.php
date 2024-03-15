@@ -486,7 +486,7 @@ class ImportManager implements ContainerInjectionInterface {
   }
 
   /**
-   * Import tags for an content object.
+   * Import tags for a content entity.
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node for which tags should be imported/synced.
@@ -540,7 +540,7 @@ class ImportManager implements ContainerInjectionInterface {
   }
 
   /**
-   * Import tags for an content object.
+   * Import the content space for a content entity.
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node for which tags should be imported/synced.
