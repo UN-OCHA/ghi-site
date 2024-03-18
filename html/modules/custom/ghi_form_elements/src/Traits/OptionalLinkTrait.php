@@ -56,9 +56,13 @@ trait OptionalLinkTrait {
       $node = $node instanceof NodeInterface ? $node : \Drupal::entityTypeManager()->getStorage('node')->load($node);
       $link->setUrl($node->toUrl());
     }
+
+    $attributes = $link->getUrl()->getOption('attributes');
+
     if ($label === NULL) {
       if ($link->getUrl()->isExternal()) {
         $link->setText($this->t('Open'));
+        $attributes['target'] = '_blank';
       }
       else {
         $link->setText($this->t('Go to page'));
@@ -67,8 +71,8 @@ trait OptionalLinkTrait {
 
     $classes = ['cd-button'];
     $classes[] = $link->getUrl()->isExternal() ? 'external' : 'read-more';
-    $attributes = $link->getUrl()->getOption('attributes');
     $attributes['class'] = $classes;
+
     $link->getUrl()->setOption('attributes', $attributes);
     if ($is_internal) {
       $link->getUrl()->setOption('custom_path', str_replace('internal:', '', $uri));
