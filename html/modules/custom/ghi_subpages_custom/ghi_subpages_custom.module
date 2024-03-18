@@ -21,12 +21,6 @@ function ghi_subpages_custom_entity_bundle_info_alter(array &$bundles) {
  * Implements hook_form_FORM_ID_alter().
  */
 function ghi_subpages_custom_form_node_custom_subpage_edit_form_alter(&$form, FormStateInterface &$form_state) {
-  // Restrict access to the team field.
-  if (!\Drupal::currentUser()->hasPermission('administer teams')) {
-    $form['field_team']['#disabled'] = TRUE;
-    $form['field_team']['widget']['#description'] = t('You do not have permission to change the team for this section.');
-  }
-
   // Lock the section field.
   /** @var \Drupal\Core\Entity\ContentEntityFormInterface $form_object */
   $form_object = $form_state->getFormObject();

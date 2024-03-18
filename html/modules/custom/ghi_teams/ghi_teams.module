@@ -7,25 +7,42 @@
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\ContentEntityFormInterface;
+use Drupal\Core\Entity\EditorialContentEntityBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\ghi_teams\Entity\ContentSpace;
+use Drupal\ghi_teams\Entity\Team;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\TermInterface;
 use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 use Drupal\views\Plugin\Block\ViewsBlock;
 use Drupal\views\Views;
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function ghi_teams_entity_bundle_info_alter(array &$bundles) {
+  if (!empty($bundles['taxonomy_term'][Team::BUNDLE])) {
+    $bundles['taxonomy_term'][Team::BUNDLE]['class'] = Team::class;
+    $bundles['taxonomy_term'][Team::BUNDLE]['label'] = t('Team');
+  }
+  if (!empty($bundles['taxonomy_term'][ContentSpace::BUNDLE])) {
+    $bundles['taxonomy_term'][ContentSpace::BUNDLE]['class'] = ContentSpace::class;
+    $bundles['taxonomy_term'][ContentSpace::BUNDLE]['label'] = t('Content space');
+  }
+}
 
 /**
  * Implements hook_node_access_records().
  */
 function ghi_teams_node_access_records(NodeInterface $node) {
-  $excluded_bundles = ['document'];
-  if (!$node->hasField('field_team') || in_array($node->bundle(), $excluded_bundles)) {
+  if (!$node->hasField('field_team')) {
     return [];
   }
 
@@ -114,11 +131,15 @@ function ghi_teams_form_alter(&$form, FormStateInterface $form_state, $form_id) 
     return;
   }
   $entity = $form_object->getEntity();
-  if (!$entity->hasField('field_team')) {
+  if (!$entity instanceof EditorialContentEntityBase || !$entity->hasField('field_team')) {
     return;
   }
+
   $user = \Drupal::currentUser();
   $form['field_team']['#disabled'] = !$user->hasPermission('administer teams');
+  $form['field_team']['widget']['#description'] = t('You do not have permission to change the team for this @bundle.', [
+    '@bundle' => strtolower($entity->type->entity->label()),
+  ]);
 }
 
 /**
@@ -136,6 +157,8 @@ function ghi_teams_preprocess_views_view(&$variables) {
 
 /**
  * Implements hook_preprocess_block().
+ *
+ * Move the "Read more" link from the views footer into the views titles.
  */
 function ghi_teams_preprocess_block(&$variables) {
   $block = \Drupal::service('plugin.manager.block')->createInstance($variables['plugin_id'], $variables['configuration']);
@@ -202,29 +225,6 @@ function ghi_teams_form_node_form_alter(&$form, FormStateInterface $form_state) 
 }
 
 /**
- * Implements hook_ENTITY_TYPE_update() for taxonomy_term entities.
- */
-function ghi_teams_taxonomy_term_update(TermInterface $term) {
-  if ($term->bundle() != 'team') {
-    return;
-  }
-  // Invalidate cache for the backend content listing when a term is updated.
-  // Terms can have content spaces assigned, and this associtation controls
-  // edit access to some content types (articles and documents). When a term is
-  // edited and that content space association is changed, we want the changes
-  // to be immediately visible in the backend listings to prevent confusion.
-  $cache_tags = Cache::mergeTags(['config:views.view.content'], $term->getCacheTags());
-  // Also invalidate cache associated with any of the content spaces associated
-  // to the team.
-  $content_spaces = $term->get('field_content_spaces')->referencedEntities();
-  foreach ($content_spaces as $content_space) {
-    $cache_tags = Cache::mergeTags($cache_tags, $content_space->getCacheTags());
-  }
-  \Drupal::service('cache_tags.invalidator')->invalidateTags($cache_tags);
-
-}
-
-/**
  * Implements hook_preprocess_taxonomy_term().
  */
 function ghi_teams_preprocess_taxonomy_term(&$variables) {
@@ -244,6 +244,30 @@ function ghi_teams_preprocess_breadcrumb(&$variables) {
   if ($variables['breadcrumb']) {
     $variables['breadcrumb'][0]['attributes']['data'] = 'data-gin-toolbar-escape-admin';
   }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update() for user entities.
+ */
+function ghi_teams_user_update(UserInterface $user) {
+  if (!$user->hasField('field_team')) {
+    return;
+  }
+  // Invalidate cache for the backend content listing when a user is updated.
+  // Users can have a team assigned, and this associtation controls edit access
+  // to some content types. When a user is edited and that content space
+  // association is changed, we want the changes to be immediately visible in
+  // the backend listings to prevent confusion.
+  $cache_tags = Cache::mergeTags(['config:views.view.content'], $user->getCacheTags());
+
+  /** @var \Drupal\ghi_teams\Entity\Team $team */
+  $team = $user->get('field_team')->entity ?? NULL;
+  if ($team instanceof Team) {
+    // Also invalidate cache associated with the team.
+    $cache_tags = Cache::mergeTags($cache_tags, $team->getCacheTagsToInvalidate());
+  }
+  \Drupal::service('cache_tags.invalidator')->invalidateTags($cache_tags);
+
 }
 
 /**
