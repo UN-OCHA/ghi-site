@@ -49,4 +49,12 @@ interface SectionNodeInterface extends NodeInterface {
    */
   public function getSectionType();
 
+  /**
+   * Returns the cache tags that should be used to invalidate API caches.
+   *
+   * @return string[]
+   *   Set of cache tags.
+   */
+  public function getApiCacheTagsToInvalidate();
+
 }

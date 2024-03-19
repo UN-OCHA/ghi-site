@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_sections\Entity;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
@@ -70,6 +71,9 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
    * {@inheritdoc}
    */
   public function getBaseObject() {
+    if (!$this->hasField('field_base_object')) {
+      return NULL;
+    }
     return $this->get('field_base_object')->entity ?? NULL;
   }
 
@@ -153,6 +157,29 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
     // available. To fix this, we invoke a custom hook that lets the
     // GHI Subpages module react just after a section has been fully build.
     \Drupal::moduleHandler()->invokeAll('section_post_save', [$this]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTagsToInvalidate() {
+    $cache_tags = parent::getCacheTagsToInvalidate();
+    $base_object = $this->getBaseObject();
+    if ($base_object) {
+      $cache_tags = Cache::mergeTags($cache_tags, $base_object->getCacheTagsToInvalidate());
+    }
+    return $cache_tags;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiCacheTagsToInvalidate() {
+    $base_object = $this->getBaseObject();
+    if (!$base_object) {
+      return [];
+    }
+    return $base_object->getApiCacheTagsToInvalidate();
   }
 
 }

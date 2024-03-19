@@ -212,10 +212,10 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
     $cache_tags = $this->cacheTags;
     $placeholders = $this->getPlaceholders();
     foreach ($placeholders as $key => $value) {
-      $cache_tags[] = $key . ':' . $value;
+      Cache::mergeTags($cache_tags, [$key . ':' . $value]);
     }
     if (array_key_exists('plan_id', $placeholders)) {
-      $cache_tags[] = 'plan_data';
+      Cache::mergeTags($cache_tags, ['plan_data']);
     }
     return $cache_tags;
   }

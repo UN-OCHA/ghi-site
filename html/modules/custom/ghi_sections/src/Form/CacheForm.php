@@ -69,11 +69,10 @@ class CacheForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     /** @var \Drupal\ghi_sections\Entity\Section $node */
     $node = $form['#node'];
-    $base_object = $node->getBaseObject();
-    Cache::invalidateTags([
-      $base_object->bundle() . '_id:' . $base_object->getSourceId(),
-      'node:' . $node->id(),
-    ]);
+    Cache::invalidateTags($node->getApiCacheTagsToInvalidate());
+    $this->messenger()->addStatus($this->t('The API cache for @label has been cleared', [
+      '@label' => $node->label(),
+    ]));
   }
 
 }
