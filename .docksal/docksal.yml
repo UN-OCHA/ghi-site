@@ -17,6 +17,7 @@ services:
       - SOLR_HOST
       - SOLR_PORT
       - XDEBUG_ENABLED=1
+      - XDEBUG_MODE=off
 
   web:
     environment:
