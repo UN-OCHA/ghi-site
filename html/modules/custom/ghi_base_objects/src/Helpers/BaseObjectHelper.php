@@ -63,7 +63,7 @@ class BaseObjectHelper extends EntityHelper {
     $field_name = self::getBaseObjectFieldName($entity);
     $base_object = $field_name ? $entity->get($field_name)->entity : NULL;
     if (!$base_object) {
-      $parent_node = $entity->hasField('field_entity_reference') ? $entity->field_entity_reference->entity : NULL;
+      $parent_node = $entity->hasField('field_entity_reference') ? $entity->get('field_entity_reference')->entity : NULL;
       $base_object = $parent_node ? self::getBaseObjectFromNode($parent_node) : NULL;
     }
     return $base_object;
@@ -86,7 +86,7 @@ class BaseObjectHelper extends EntityHelper {
     $field_name = self::getBaseObjectFieldName($entity);
     $base_objects = $field_name ? $entity->get($field_name)->referencedEntities() : NULL;
     if (!$base_objects) {
-      $parent_node = $entity->hasField('field_entity_reference') ? $entity->field_entity_reference->entity : NULL;
+      $parent_node = $entity->hasField('field_entity_reference') ? $entity->get('field_entity_reference')->entity : NULL;
       $base_objects = $parent_node ? self::getBaseObjectsFromNode($parent_node) : NULL;
     }
     if (empty($base_objects)) {
@@ -161,8 +161,9 @@ class BaseObjectHelper extends EntityHelper {
       if (empty($result)) {
         return $result;
       }
+      /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface[] $result */
       foreach ($result as $entity) {
-        $objects[$bundle][self::getFieldData($entity, 'field_original_id', 0, 'value')] = $entity;
+        $objects[$entity->bundle()][$entity->getSourceId()] = $entity;
       }
 
     }

@@ -27,4 +27,18 @@ if [[ ! -f "$phpunit_path" ]]; then
   exit 1
 fi
 
-fin exec "php $path/${phpunit_path} -c $path ${args} $path/$DOCROOT/modules/custom"
+
+COVERAGE=false
+while [ "$1" != "" ]; do
+  case $1 in
+    --coverage )          COVERAGE=true
+                          ;;
+  esac
+  shift
+done
+
+fin exec "XDEBUG_MODE=coverage $path/${phpunit_path} -c $path ${args} $path/$DOCROOT/modules/custom --coverage-html $path/$DOCROOT/sites/simpletest/test-coverage"
+
+if $COVERAGE; then
+  fin utils/open-link "http://ghi-site.docksal.site/sites/simpletest/test-coverage/dashboard.html"
+fi
