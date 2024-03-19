@@ -290,6 +290,26 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
+   * See if the attachment can be mapped for the given reporting period.
+   *
+   * @param int|string $reporting_period
+   *   The reporting period id.
+   *
+   * @return bool
+   *   TRUE if the attachment can be mapped, FALSE otherwise.
+   */
+  public function canBeMapped($reporting_period) {
+    $disaggregated_data = $this->getDisaggregatedData($reporting_period, TRUE);
+    foreach ($disaggregated_data as $metric_item) {
+      if (empty($metric_item['locations'])) {
+        continue;
+      }
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
    * Get the disaggregated data for multiple reporting periods.
    *
    * @param array $reporting_period_ids

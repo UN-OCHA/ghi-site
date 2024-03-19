@@ -7,6 +7,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -21,6 +22,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class AttachmentData extends ConfigurationContainerItemPluginBase {
 
   use PlanFootnoteTrait;
+  use AttachmentFilterTrait;
 
   /**
    * The attachment query.
@@ -234,15 +236,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     $query = $this->endpointQueryManager->createInstance('plan_entities_query');
     $query->setPlaceholder('plan_id', $plan->getSourceId());
     $attachments = $query->getDataAttachments($this->getContextValue('base_object'));
-    $filtered_attachments = array_filter($attachments, function ($_attachment) use ($attachment) {
-      if ($attachment->getType() != $_attachment->getType()) {
-        return FALSE;
-      }
-      if ($attachment->source->entity_type != $_attachment->source->entity_type) {
-        return FALSE;
-      }
-      return TRUE;
-    });
+    $filtered_attachments = $this->matchDataAttachments($attachment, $attachments);
 
     // Use the default plan caseload if available.
     $caseload_id = $plan->getPlanCaseloadId();

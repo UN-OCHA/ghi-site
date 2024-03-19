@@ -13,7 +13,9 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_blocks\Traits\GlobalMapTrait;
+use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
@@ -55,6 +57,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   use BlockCommentTrait;
   use GlobalMapTrait;
   use ConfigValidationTrait;
+  use AttachmentFilterTrait;
 
   const STYLE_CIRCLE = 'circle';
   const STYLE_DONUT = 'donut';
@@ -70,7 +73,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    */
   public function buildContent() {
     $attachment = $this->getDefaultAttachment();
-    if (!$attachment) {
+    if (!$attachment || !$this->attachmentCanBeMapped($attachment)) {
       // Nothing to show.
       return NULL;
     }
@@ -135,6 +138,23 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   }
 
   /**
+   * Check if the given attachment can be mapped.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment
+   *   The attachment to check.
+   *
+   * @return bool
+   *   TRUE if the given attachment can be mapped, FALSE otherwise.
+   */
+  private function attachmentCanBeMapped(AttachmentInterface $attachment) {
+    if (!$attachment instanceof DataAttachment) {
+      return FALSE;
+    }
+    $reporting_period = $this->getCurrentReportingPeriod();
+    return $attachment->canBeMapped($reporting_period);
+  }
+
+  /**
    * Map builder for circle maps.
    */
   private function buildCircleMap() {
@@ -149,8 +169,8 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     ];
 
     $attachment = $this->getDefaultAttachment();
-    $plan_base_object = $this->getCurrentPlanObject();
-    $plan_id = $this->getCurrentPlanId();
+    $plan_base_object = $attachment->getPlanObject();
+    $plan_id = $plan_base_object->getSourceId();
     $decimal_format = $plan_base_object->getDecimalFormat();
     $reporting_periods = $this->getPlanReportingPeriods($plan_id);
     $reporting_periods_rendered = array_map(function ($reporting_period) {
@@ -565,8 +585,8 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   /**
    * Get the current reporting period for this element.
    *
-   * @return object
-   *   A reporting period object if found.
+   * @return int|null
+   *   A reporting period id if found.
    */
   private function getCurrentReportingPeriod() {
     $plan_id = $this->getCurrentPlanId();
@@ -582,7 +602,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     if ($reporting_period == 'none') {
       // Using the base metric totals instead of measurements identified by a
       // reporting period id.
-      $reporting_period = FALSE;
+      $reporting_period = NULL;
     }
     return $reporting_period;
   }
@@ -1113,7 +1133,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
       $query = $this->getQueryHandler('attachment');
       $attachment = $query->getAttachment($attachment_id, TRUE);
-      if (!$attachment || !$attachment instanceof DataAttachment) {
+      if (!$attachment || !$attachment instanceof DataAttachment || !$this->attachmentCanBeMapped($attachment)) {
         return NULL;
       }
       if ($attachment->getPlanId() != $this->getCurrentPlanId()) {
@@ -1284,10 +1304,39 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
 
     $configured_attachments = $this->getConfiguredAttachments();
     $available_attachments = $this->getAvailableAttachments();
+
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
+    $query = $this->getQueryHandler('attachment_search');
+    $configured_attachments = $query->getAttachmentsById($configured_attachments);
+
+    $reporting_period = $this->getCurrentReportingPeriod();
+
     $default_attachment = !empty($available_attachments) ? array_key_first($available_attachments) : NULL;
     if (!empty($configured_attachments)) {
+      // Less probable, but maybe one of the configured attachments is still
+      // valid in the new context.
       $valid_attachment_ids = array_intersect_key($configured_attachments, $available_attachments);
-      $conf['attachments']['entity_attachments']['attachments']['attachment_id'] = array_combine($valid_attachment_ids, $valid_attachment_ids);
+      $conf['attachments']['entity_attachments']['attachments']['attachment_id'] = [];
+      if (!empty($valid_attachment_ids)) {
+        // If so, let's use these.
+        $conf['attachments']['entity_attachments']['attachments']['attachment_id'] = array_combine($valid_attachment_ids, $valid_attachment_ids);
+      }
+      else {
+        // Otherwise, go over all configured attachments (valid in the original
+        // context) and see if we can find comparable attachments in the new
+        // context via $available_attachments.
+        foreach ($configured_attachments as $attachment) {
+          if (!$attachment instanceof DataAttachment) {
+            continue;
+          }
+          $filtered_attachments = $this->matchDataAttachments($attachment, $available_attachments);
+          $filtered_attachments = array_filter($filtered_attachments, function ($attachment) use ($reporting_period) {
+            return $attachment->canBeMapped($reporting_period);
+          });
+          $attachment_ids = array_keys($filtered_attachments);
+          $conf['attachments']['entity_attachments']['attachments']['attachment_id'] += array_combine($attachment_ids, $attachment_ids);
+        }
+      }
     }
 
     if (empty($conf['attachments']['entity_attachments']['attachments']['attachment_id'])) {
