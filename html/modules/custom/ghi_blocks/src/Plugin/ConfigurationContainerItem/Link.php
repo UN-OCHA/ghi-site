@@ -290,8 +290,7 @@ class Link extends ConfigurationContainerItemPluginBase {
       $form_state->setError($element['link']['url'], t('The link URL must be valid and accessible.'));
     }
     if (!$form_state->hasAnyErrors() && $transformed_url !== $url) {
-      $element['#value']['link']['url'] = $transformed_url;
-      $form_state->setValueForElement($element, $element['#value']);
+      $form_state->setValue(array_merge($element['#parents'], ['link', 'url']), $transformed_url);
     }
 
   }
