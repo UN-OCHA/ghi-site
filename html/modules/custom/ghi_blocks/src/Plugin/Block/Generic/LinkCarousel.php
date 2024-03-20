@@ -4,14 +4,15 @@ namespace Drupal\ghi_blocks\Plugin\Block\Generic;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\file\Entity\File;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Plugin\Block\ImageProviderBlockInterface;
+use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\CarouselItem;
 use Drupal\ghi_blocks\Traits\ManagedFileBlockTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
@@ -29,6 +30,7 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
 
   use ConfigurationContainerTrait;
   use ManagedFileBlockTrait;
+  use OptionalLinkTrait;
 
   /**
    * {@inheritdoc}
@@ -62,18 +64,19 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
 
       /** @var \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\CarouselItem $item_type */
       $item_type = $this->getItemTypePluginForColumn($item, $context);
+      if (!$item_type instanceof CarouselItem) {
+        continue;
+      }
 
       $file = $item_type->getImage();
       if (!$file) {
         continue;
       }
 
-      $link = Link::fromTextAndUrl($item_type->getButtonLabel() ?? $this->t('Read more'), $item_type->getUrl());
-      $link->getUrl()->setOptions([
-        'attributes' => [
-          'class' => ['cd-button', 'read-more'],
-        ],
-      ]);
+      $link = $item_type->getLink();
+      $attributes = $link->getUrl()->getOption('attributes');
+      $attributes['class'] = ['cd-button', 'read-more'];
+      $link->getUrl()->setOption('attributes', $attributes);
       $carousel_items[] = [
         'tag_line' => Markup::create($item_type->getTagLine()),
         'title' => Markup::create($item_type->getLabel()),

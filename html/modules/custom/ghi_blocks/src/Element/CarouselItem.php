@@ -2,10 +2,11 @@
 
 namespace Drupal\ghi_blocks\Element;
 
-use Drupal\Core\Entity\Element\EntityAutocomplete;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\FormElement;
+use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
+use Drupal\link\LinkItemInterface;
 use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
 
 /**
@@ -14,6 +15,8 @@ use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
  * @FormElement("carousel_item")
  */
 class CarouselItem extends FormElement {
+
+  use OptionalLinkTrait;
 
   const THUMBNAIL_DIRECTORY = 'public://content-panes/carousel-items/';
 
@@ -77,11 +80,13 @@ class CarouselItem extends FormElement {
       '#type' => 'textfield',
       '#title' => t('Tag line'),
       '#default_value' => $element['#default_value']['tag_line'] ?? NULL,
+      '#description' => t('Enter a tag line that will appear above the title.'),
     ];
     $element['description'] = [
       '#type' => 'textarea',
       '#title' => t('Description'),
       '#default_value' => $element['#default_value']['description'] ?? NULL,
+      '#description' => t('Enter a short description for this link.'),
     ];
     $element['image'] = [
       '#type' => 'managed_file',
@@ -96,17 +101,29 @@ class CarouselItem extends FormElement {
       '#type' => 'textfield',
       '#title' => t('Image credit'),
       '#default_value' => $element['#default_value']['image_credit'] ?? NULL,
+      '#description' => t('Enter a credit for the image. This will appear on top of the image.'),
     ];
     $element['image_caption'] = [
       '#type' => 'textfield',
       '#title' => t('Image caption'),
       '#default_value' => $element['#default_value']['image_caption'] ?? NULL,
+      '#description' => t('Enter a caption for the image. This will appear together with the image credit on top of the image.'),
     ];
     $element['url'] = [
-      '#type' => 'path',
+      '#type' => 'entity_autocomplete',
       '#title' => t('Url'),
-      '#default_value' => static::getUriAsDisplayableString($element['#default_value']['url']) ?? NULL,
+      '#default_value' => self::getUriAsDisplayableString($element['#default_value']['url']) ?? NULL,
+      '#description' => t('Start typing the title of a piece of content to select it. You can also enter an external URL such as %url.', [
+        '%url' => 'http://example.com',
+      ]),
+      '#link_type' => LinkItemInterface::LINK_GENERIC,
+      '#target_type' => 'node',
+      '#attributes' => [
+        'data-autocomplete-first-character-blacklist' => '/#?',
+      ],
+      '#process_default_value' => FALSE,
       '#element_validate' => [[LinkWidget::class, 'validateUriElement']],
+      '#maxlength' => 256,
     ];
     $element['button_label'] = [
       '#type' => 'textfield',
@@ -128,61 +145,6 @@ class CarouselItem extends FormElement {
     // occurred.
     static::setAttributes($element, ['form-carousel-item']);
     return $element;
-  }
-
-  /**
-   * Gets the URI without the 'internal:' or 'entity:' scheme.
-   *
-   * The following two forms of URIs are transformed:
-   * - 'entity:' URIs: to entity autocomplete ("label (entity id)") strings;
-   * - 'internal:' URIs: the scheme is stripped.
-   *
-   * This method is the inverse of ::getUserEnteredStringAsUri().
-   *
-   * This method has been copied from LinkWidget::getUriAsDisplayableString().
-   *
-   * @param string $uri
-   *   The URI to get the displayable string for.
-   *
-   * @return string
-   *   The uri as a displayable (human-readably) string.
-   *
-   * @see LinkWidget::getUserEnteredStringAsUri()
-   */
-  protected static function getUriAsDisplayableString($uri) {
-    $scheme = parse_url($uri, PHP_URL_SCHEME);
-
-    // By default, the displayable string is the URI.
-    $displayable_string = $uri;
-
-    // A different displayable string may be chosen in case of the 'internal:'
-    // or 'entity:' built-in schemes.
-    if ($scheme === 'internal') {
-      $uri_reference = explode(':', $uri, 2)[1];
-
-      // @todo '<front>' is valid input for BC reasons, may be removed by
-      //   https://www.drupal.org/node/2421941
-      $path = parse_url($uri, PHP_URL_PATH);
-      if ($path === '/') {
-        $uri_reference = '<front>' . substr($uri_reference, 1);
-      }
-
-      $displayable_string = $uri_reference;
-    }
-    elseif ($scheme === 'entity') {
-      [$entity_type, $entity_id] = explode('/', substr($uri, 7), 2);
-      // Show the 'entity:' URI as the entity autocomplete would.
-      // @todo Support entity types other than 'node'. Will be fixed in
-      //   https://www.drupal.org/node/2423093.
-      if ($entity_type == 'node' && $entity = \Drupal::entityTypeManager()->getStorage($entity_type)->load($entity_id)) {
-        $displayable_string = EntityAutocomplete::getEntityLabels([$entity]);
-      }
-    }
-    elseif ($scheme === 'route') {
-      $displayable_string = ltrim($displayable_string, 'route:');
-    }
-
-    return $displayable_string;
   }
 
 }
