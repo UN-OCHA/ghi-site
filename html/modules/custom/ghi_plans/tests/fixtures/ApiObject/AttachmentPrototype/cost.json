@@ -1,0 +1,20 @@
+{
+  "id": 4128,
+  "refCode": "CS",
+  "type": "cost",
+  "value": {
+    "hasMeasures": 0,
+    "min": 0,
+    "max": 1,
+    "name": {
+      "en": "Cost"
+    },
+    "entities": [
+      "PL",
+      "CL"
+    ]
+  },
+  "planId": 929,
+  "createdAt": "2019-11-27T14:30:30.331Z",
+  "updatedAt": "2019-11-27T14:30:30.331Z"
+}

@@ -80,7 +80,6 @@ class HpcContentModuleTest extends RemoteSourceBaseHpcContentModule implements R
       return stripos($item->title, $title) !== FALSE;
     });
     return array_map(function ($item) {
-      // $this->getArticle($item->id)->getSource()->getPluginId();
       return $this->getArticle($item->id);
     }, $json->articleSearch->items);
   }
