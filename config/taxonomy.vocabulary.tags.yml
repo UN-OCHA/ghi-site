@@ -1,8 +1,13 @@
 uuid: 344ed2b9-071d-41bf-988b-885adee55bac
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - flat_taxonomy
+third_party_settings:
+  flat_taxonomy:
+    flat: 1
 name: Tags
 vid: tags
-description: ''
+description: 'Tags imported from the Content Module'
 weight: 0

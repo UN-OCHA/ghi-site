@@ -1,0 +1,29 @@
+uuid: 9bf715b2-ffc8-4923-a598-dc36d8dc1633
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_content_spaces
+    - taxonomy.vocabulary.content_space
+    - taxonomy.vocabulary.team
+id: taxonomy_term.team.field_content_spaces
+field_name: field_content_spaces
+entity_type: taxonomy_term
+bundle: team
+label: 'Content spaces'
+description: 'The content space(s) associated with this team.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      content_space: content_space
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

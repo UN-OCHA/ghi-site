@@ -62,4 +62,11 @@ abstract class RemoteContentBase implements RemoteContentInterface {
    */
   abstract public function getMinorTags();
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getContentSpace() {
+    return $this->data->content_space?->title ?? NULL;
+  }
+
 }

@@ -1,8 +1,13 @@
 uuid: 6f035566-fbc8-4965-949d-193ae2d1aacb
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - flat_taxonomy
+third_party_settings:
+  flat_taxonomy:
+    flat: 1
 name: 'Plan type'
 vid: plan_type
-description: ''
+description: 'Plan types imported from the HPC API'
 weight: 0

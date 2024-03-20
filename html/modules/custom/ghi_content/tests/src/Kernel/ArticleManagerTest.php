@@ -3,14 +3,13 @@
 namespace Drupal\Tests\ghi_content\Kernel;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
-use Drupal\field\Entity\FieldConfig;
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 
@@ -23,6 +22,7 @@ class ArticleManagerTest extends KernelTestBase {
 
   use TaxonomyTestTrait;
   use UserCreationTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
    * Modules to enable.
@@ -89,43 +89,13 @@ class ArticleManagerTest extends KernelTestBase {
     $this->vocabulary = $this->createVocabulary();
 
     // Setup the tags field on our node types.
-    $field_storage = FieldStorageConfig::create([
-      'field_name' => 'field_tags',
-      'entity_type' => 'node',
-      'type' => 'entity_reference',
-      'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-      'settings' => [
-        'target_type' => 'taxonomy_term',
+    $handler_settings = [
+      'target_bundles' => [
+        $this->vocabulary->id() => $this->vocabulary->id(),
       ],
-    ]);
-    $field_storage->save();
-
-    FieldConfig::create([
-      'field_name' => 'field_tags',
-      'field_storage' => $field_storage,
-      'bundle' => self::SECTION_BUNDLE,
-      'settings' => [
-        'handler' => 'default',
-        'handler_settings' => [
-          'target_bundles' => [
-            $this->vocabulary->id() => $this->vocabulary->id(),
-          ],
-        ],
-      ],
-    ])->save();
-    FieldConfig::create([
-      'field_name' => 'field_tags',
-      'field_storage' => $field_storage,
-      'bundle' => self::ARTICLE_BUNDLE,
-      'settings' => [
-        'handler' => 'default',
-        'handler_settings' => [
-          'target_bundles' => [
-            $this->vocabulary->id() => $this->vocabulary->id(),
-          ],
-        ],
-      ],
-    ])->save();
+    ];
+    $this->createEntityReferenceField('node', self::SECTION_BUNDLE, 'field_tags', 'Tags', 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
+    $this->createEntityReferenceField('node', self::ARTICLE_BUNDLE, 'field_tags', 'Tags', 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
     // $this->setUpCurrentUser([], ['access content']);
     $this->setUpCurrentUser(['uid' => 1]);

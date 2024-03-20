@@ -1,0 +1,39 @@
+uuid: 6090ce7d-1fda-4f8a-b762-4eec71561e26
+langcode: en
+status: true
+dependencies: {  }
+id: taxonomy_content_space_hpc_content_module
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags:
+  - NCMS
+migration_group: ncms
+label: 'Content spaces from the HPC Content Module backend'
+source:
+  plugin: remote_source_graphql
+  track_changes: true
+  remote_source: hpc_content_module
+  content_type: content_space
+  fields:
+    -
+      name: id
+      label: ID
+      selector: id
+    -
+      name: title
+      label: Title
+      selector: title
+  ids:
+    id:
+      type: integer
+process:
+  vid:
+    plugin: default_value
+    default_value: content_space
+  name: title
+destination:
+  plugin: 'entity:taxonomy_term'
+  overwrite_properties:
+    - name
+migration_dependencies: {  }

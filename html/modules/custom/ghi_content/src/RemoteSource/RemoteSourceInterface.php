@@ -195,6 +195,14 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
   public function importDocuments(array $tags = NULL);
 
   /**
+   * Import content spaces from the remote system.
+   *
+   * @return array
+   *   An array of source identifiers.
+   */
+  public function importContentSpaces();
+
+  /**
    * Disable the cache.
    *
    * @param bool $status

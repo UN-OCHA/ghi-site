@@ -82,4 +82,12 @@ interface RemoteContentInterface {
    */
   public function getMinorTags();
 
+  /**
+   * Get the content space.
+   *
+   * @return string
+   *   The name of the content space.
+   */
+  public function getContentSpace();
+
 }

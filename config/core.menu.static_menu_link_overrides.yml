@@ -13,18 +13,6 @@ definitions:
     weight: 7
     expanded: false
     enabled: false
-  'admin_toolbar_tools__extra_links:node__add__profile':
-    menu_name: admin
-    parent: 'admin_toolbar_tools.extra_links:node.add'
-    weight: 8
-    expanded: false
-    enabled: false
-  'admin_toolbar_tools__extra_links:node__add__risk_index':
-    menu_name: admin
-    parent: 'admin_toolbar_tools.extra_links:node.add'
-    weight: 9
-    expanded: false
-    enabled: false
   'admin_toolbar_tools__extra_links:node__add__overview':
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'

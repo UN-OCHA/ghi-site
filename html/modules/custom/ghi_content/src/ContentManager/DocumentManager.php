@@ -182,6 +182,9 @@ class DocumentManager extends BaseContentManager {
     // Import the chapters for the document.
     $this->importManager->importDocumentChapters($node, $document, [], NULL, $cleanup);
 
+    // Import the content space.
+    $this->importManager->importContentSpace($node, $document, 'field_content_space');
+
     // Import the tags.
     $this->importManager->importTags($node, $document, 'field_tags');
 
