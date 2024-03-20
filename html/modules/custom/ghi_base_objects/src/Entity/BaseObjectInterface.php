@@ -89,4 +89,12 @@ interface BaseObjectInterface extends ContentEntityInterface, EntityChangedInter
    */
   public function setCreatedTime($timestamp);
 
+  /**
+   * Returns the cache tags that should be used to invalidate API caches.
+   *
+   * @return string[]
+   *   Set of cache tags.
+   */
+  public function getApiCacheTagsToInvalidate();
+
 }

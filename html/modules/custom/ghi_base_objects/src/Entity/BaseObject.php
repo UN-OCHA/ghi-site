@@ -177,4 +177,15 @@ class BaseObject extends ContentEntityBase implements BaseObjectInterface {
     return $fields;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiCacheTagsToInvalidate() {
+    $source_id = $this->getSourceId();
+    if (!$source_id) {
+      return [];
+    }
+    return [$this->bundle() . '_id:' . $this->getSourceId()];
+  }
+
 }

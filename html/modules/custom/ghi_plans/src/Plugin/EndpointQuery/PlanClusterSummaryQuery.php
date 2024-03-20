@@ -3,7 +3,6 @@
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\hpc_api\Query\EndpointQueryBase;
-use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
@@ -20,19 +19,18 @@ use Drupal\hpc_common\Helpers\ArrayHelper;
  */
 class PlanClusterSummaryQuery extends EndpointQueryBase {
 
-  use SimpleCacheTrait;
-
   /**
    * {@inheritdoc}
    */
   public function getData(array $placeholders = [], array $query_args = []) {
     $cache_key = $this->getCacheKey($this->getPlaceholders() + $placeholders + $query_args);
-    if ($data = $this->cache($cache_key)) {
+    if ($data = $this->getCache($cache_key)) {
       return $data;
     }
     $data = parent::getData($placeholders);
     if (empty($data) || empty($data->objects)) {
-      return $this->cache($cache_key, []);
+      $this->setCache($cache_key, []);
+      return [];
     }
 
     $totals = property_exists($data, 'totals') ? $data->totals : $data;
@@ -57,7 +55,8 @@ class PlanClusterSummaryQuery extends EndpointQueryBase {
         'total_funding' => $totals->totalFunding,
       ],
     ];
-    return $this->cache($cache_key, $summary_data);
+    $this->setCache($cache_key, $summary_data);
+    return $summary_data;
   }
 
   /**

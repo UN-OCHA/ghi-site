@@ -2,6 +2,7 @@
 
 namespace Drupal\hpc_api\ApiObjects;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
@@ -24,6 +25,13 @@ abstract class ApiObjectBase implements ApiObjectInterface {
    * @var object
    */
   private $map;
+
+  /**
+   * The cache tags.
+   *
+   * @var string[]
+   */
+  protected $cacheTags = [];
 
   /**
    * {@inheritdoc}
@@ -107,5 +115,25 @@ abstract class ApiObjectBase implements ApiObjectInterface {
    *   An object with the mapped data.
    */
   abstract protected function map();
+
+  /**
+   * Set the cache tags for this object.
+   *
+   * @param array $cache_tags
+   *   The cache tags for this object.
+   */
+  public function setCacheTags($cache_tags) {
+    $this->cacheTags = Cache::mergeTags($cache_tags);
+  }
+
+  /**
+   * Get the cache tags for this object.
+   *
+   * @return array
+   *   The cache tags for this object.
+   */
+  public function getCacheTags() {
+    return $this->cacheTags;
+  }
 
 }

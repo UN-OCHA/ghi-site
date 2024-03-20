@@ -1,3 +1,20 @@
+ghi_sections.node.cache:
+  path: '/node/{node}/cache'
+  defaults:
+    _form: '\Drupal\ghi_sections\Form\CacheForm'
+    _title_callback: '\Drupal\ghi_sections\Form\CacheForm::getTitle'
+  options:
+    parameters:
+      node:
+        type: entity:node
+        bundle:
+          - section
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer section cache'
+    _entity_access: node.update
+    node: \d+
+
 ghi_sections.node.section_navigation:
   path: '/node/{node}/section-navigation'
   defaults:
