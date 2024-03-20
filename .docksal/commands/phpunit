@@ -11,7 +11,6 @@
 #   $DOCROOT - name of the docroot folder
 #   $DOCKER_RUNNING - (string) "true" or "false"
 
-args="$@"
 path="/var/www"
 phpunit_xml_path="$PROJECT_ROOT/phpunit.xml"
 
@@ -29,10 +28,13 @@ fi
 
 
 COVERAGE=false
+args=""
 while [ "$1" != "" ]; do
   case $1 in
-    --coverage )          COVERAGE=true
-                          ;;
+    --open-coverage )  COVERAGE=true
+                       ;;
+    *)                 args="$args $1"
+                       ;;
   esac
   shift
 done
