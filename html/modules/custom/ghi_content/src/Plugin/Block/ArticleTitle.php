@@ -63,10 +63,10 @@ class ArticleTitle extends BlockBase {
       ],
     ];
 
-    // If we have a section context, we also want to add breadcrumps.
+    // If we have a section context, we also want to add breadcrumbs.
     if ($section && $document) {
       // For single chapter documents, we don't show the chapter title in the
-      // breadcrump.
+      // breadcrumb.
       $single_chapter_document = count($document->getChapters(FALSE)) == 1;
       if ($chapter = $node->getDocumentChapter($document)) {
         $title_args = [

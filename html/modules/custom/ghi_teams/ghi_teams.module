@@ -23,6 +23,7 @@ use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Drupal\views\Plugin\Block\ViewsBlock;
 use Drupal\views\Views;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -111,6 +112,32 @@ function ghi_teams_node_grants(AccountInterface $account, $op) {
 }
 
 /**
+ * Implements hook_menu_local_actions_alter().
+ *
+ * Add the destination argument to the add team action so that the user is
+ * redirected to the teams list page after creating a new team.
+ */
+function ghi_teams_menu_local_actions_alter(&$local_actions) {
+  if (empty($local_actions['ghi_teams.add_team'])) {
+    return;
+  }
+  $route_name = 'view.teams.page_teams';
+  try {
+    \Drupal::service('router.route_provider')
+      ->getRouteByName($route_name);
+  }
+  catch (RouteNotFoundException $exception) {
+    return NULL;
+  }
+  $team_page_url = Url::fromRoute($route_name);
+  $local_actions['ghi_teams.add_team']['options'] = [
+    'query' => [
+      'destination' => $team_page_url->toString(),
+    ],
+  ];
+}
+
+/**
  * Implements hook_FORM_ID_alter().
  *
  * Restrict access to field_team to users with proper permission.
@@ -121,7 +148,7 @@ function ghi_teams_form_user_form_alter(&$form, FormStateInterface $form_state) 
 }
 
 /**
- * Implements hook_FORM_ID_alter().
+ * Implements hook_alter().
  *
  * Restrict access to field_team to users with proper permission.
  */
