@@ -31,14 +31,14 @@ class FileAttachment extends AttachmentBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Get the url for this attachment.
    */
   public function getUrl() {
     return $this->url;
   }
 
   /**
-   * {@inheritdoc}
+   * Get the credit for this attachment.
    */
   public function getCredit() {
     return $this->credit;

@@ -258,7 +258,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $context_object
    *   The current context object.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment[]
    *   An array of attachment objects for the given context.
    */
   public function getWebContentTextAttachments(ContentEntityInterface $context_object) {

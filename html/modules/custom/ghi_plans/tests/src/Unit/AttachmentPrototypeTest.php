@@ -3,12 +3,11 @@
 namespace Drupal\Tests\ghi_plans\Unit;
 
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
-use Drupal\Tests\UnitTestCase;
 
 /**
- * Tests for API objects.
+ * Tests for API attachment prototype objects.
  */
-class ApiObjectTest extends UnitTestCase {
+class AttachmentPrototypeTest extends ApiObjectTestBase {
 
   /**
    * Test attachment prototype parsing of indicator prototypes.
@@ -137,37 +136,6 @@ class ApiObjectTest extends UnitTestCase {
     $attachment_data = $this->getApiObjectFixture('AttachmentPrototype', $type);
     $this->assertNotEmpty($attachment_data);
     return new AttachmentPrototype($attachment_data);
-  }
-
-  /**
-   * Get the content of an ApiObject fixture.
-   *
-   * @param string $object_type
-   *   The object type to look up.
-   * @param string $name
-   *   The name of the fixture.
-   *
-   * @return mixed
-   *   The json decoded content of the fixture.
-   */
-  private function getApiObjectFixture($object_type, $name) {
-    return $this->getFixture('ApiObject/' . $object_type, $name);
-  }
-
-  /**
-   * Get the content of a fixture.
-   *
-   * @param string $path
-   *   The path to the fixture.
-   * @param string $name
-   *   The name of the fixture.
-   *
-   * @return mixed
-   *   The json decoded content of the fixture.
-   */
-  private function getFixture($path, $name) {
-    $file_path = $this->root . '/modules/custom/ghi_plans/tests/fixtures/' . $path . '/' . $name . '.json';
-    return json_decode(file_get_contents($file_path));
   }
 
 }
