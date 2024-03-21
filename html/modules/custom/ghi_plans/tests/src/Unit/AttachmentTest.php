@@ -76,6 +76,38 @@ class AttachmentTest extends ApiObjectTestBase {
   }
 
   /**
+   * Test that missing measurements on DataAttachment does not create a loop.
+   *
+   * This tests against a potential loop in DataAttachment::getMeasurements().
+   */
+  public function testAttachmentEmptyMeasurementLoop() {
+    $measurement_query = $this->getMockBuilder('Drupal\ghi_plans\Plugin\EndpointQuery\MeasurementQuery')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $measurement_query->method('setPlaceholder')->willReturn(NULL);
+    $measurement_query->method('getUnprocessedMeasurements')->willReturn([]);
+    $measurement_query->expects($this->once())->method('getUnprocessedMeasurements');
+
+    $endpoint_query_manager = $this->getMockBuilder('Drupal\hpc_api\Query\EndpointQueryManager')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $endpoint_query_manager->method('createInstance')->with('measurement_query')->willReturn($measurement_query);
+
+    $container = \Drupal::getContainer();
+    $container->set('plugin.manager.endpoint_query_manager', $endpoint_query_manager);
+    \Drupal::setContainer($container);
+
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
+    $attachment = AttachmentHelper::processAttachment((object) [
+      'id' => 38529,
+      'type' => 'caseLoad',
+      'attachmentPrototype' => $this->getApiObjectFixture('AttachmentPrototype', 'caseload'),
+    ]);
+    $this->assertInstanceOf(DataAttachment::class, $attachment);
+    $this->assertEmpty($attachment->getSourceEntity());
+  }
+
+  /**
    * Test value retrieval from DataAttachments.
    */
   public function testAttachmentGetDataValues() {
