@@ -717,8 +717,8 @@ class DataAttachment extends AttachmentBase {
     if (!$attachment || !is_object($attachment)) {
       return NULL;
     }
-    $measurements = $attachment->measurements ?? [];
-    if (empty($measurements) && $measurements_query = $this->getEndpointQueryManager()->createInstance('measurement_query')) {
+    $measurements = property_exists($attachment, 'measurements') ? $attachment->measurements : [];
+    if (!property_exists($attachment, 'measurements') && $measurements_query = $this->getEndpointQueryManager()->createInstance('measurement_query')) {
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\MeasurementQuery $measurements_query */
       $measurements_query->setPlaceholder('attachment_id', $attachment->id);
       $measurements = $measurements_query->getUnprocessedMeasurements($this, TRUE);
