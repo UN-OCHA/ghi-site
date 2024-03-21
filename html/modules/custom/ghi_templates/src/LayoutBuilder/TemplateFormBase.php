@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_templates\LayoutBuilder;
 
+use Drupal\Core\Ajax\AjaxHelperTrait;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Ajax\RedirectCommand;
@@ -9,6 +10,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Traits\GinLbModalTrait;
+use Drupal\hpc_common\Traits\AjaxFormTrait;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\layout_builder_ipe\Controller\EntityEditController;
@@ -21,6 +23,8 @@ abstract class TemplateFormBase extends FormBase {
 
   use LayoutEntityHelperTrait;
   use GinLbModalTrait;
+  use AjaxFormTrait;
+  use AjaxHelperTrait;
 
   /**
    * The controller resolver.
@@ -58,6 +62,7 @@ abstract class TemplateFormBase extends FormBase {
     ];
     $form['#attached']['library'][] = 'ghi_templates/template_modal_form';
     $this->makeGinLbForm($form, $form_state);
+    $this->setAjaxCompatibleFormId($form, $form_state);
     return $form;
   }
 

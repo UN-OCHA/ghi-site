@@ -26,7 +26,7 @@ class StorePageTemplateForm extends TemplateFormBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    $instance = new static();
+    $instance = parent::create($container);
     $instance->entityTypeManager = $container->get('entity_type.manager');
     return $instance;
   }
@@ -72,7 +72,27 @@ class StorePageTemplateForm extends TemplateFormBase {
       '#value' => $this->t('Create new template'),
     ];
 
+    if ($this->isAjax()) {
+      $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
+    }
+
     return $form;
+  }
+
+  /**
+   * Validate callback for the form.
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    /** @var \Drupal\ghi_templates\Entity\PageTemplate $page_template */
+    $page_template = $this->entityTypeManager->getStorage('page_template')->create([
+      'title' => $form_state->getValue('name'),
+      'field_entity_reference' => $form_state->get('entity'),
+    ]);
+    $violations = $page_template->validate();
+    foreach ($violations as $violation) {
+      /** @var \Symfony\Component\Validator\ConstraintViolation $violation */
+      $form_state->setError($form['settings']['name'], $violation->getMessage());
+    }
   }
 
   /**

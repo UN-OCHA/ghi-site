@@ -2,8 +2,6 @@
 
 namespace Drupal\ghi_templates\LayoutBuilder;
 
-use Drupal\Component\Utility\Html;
-use Drupal\Core\Ajax\AjaxHelperTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
@@ -12,7 +10,6 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_templates\Entity\PageTemplateInterface;
-use Drupal\hpc_common\Traits\AjaxFormTrait;
 use Drupal\layout_builder\Controller\LayoutRebuildTrait;
 use Drupal\layout_builder\SectionStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -23,8 +20,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ApplyPageTemplateForm extends TemplateFormBase {
 
   use LayoutRebuildTrait;
-  use AjaxHelperTrait;
-  use AjaxFormTrait;
 
   /**
    * The form steps for the import wizard.
@@ -106,15 +101,6 @@ class ApplyPageTemplateForm extends TemplateFormBase {
     if ($this->isAjax()) {
       $form['actions']['submit']['#ajax']['rebuild'] = FALSE;
       $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
-      // @todo static::ajaxSubmit() requires data-drupal-selector to be the same
-      //   between the various Ajax requests. A bug in
-      //   \Drupal\Core\Form\FormBuilder prevents that from happening unless
-      //   $form['#id'] is also the same. Normally, #id is set to a unique HTML
-      //   ID via Html::getUniqueId(), but here we bypass that in order to work
-      //   around the data-drupal-selector bug. This is okay so long as we
-      //   assume that this form only ever occurs once on a page. Remove this
-      //   workaround in https://www.drupal.org/node/2897377.
-      $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);
     }
 
     return $form;
@@ -176,7 +162,6 @@ class ApplyPageTemplateForm extends TemplateFormBase {
     if ($this->isAjax()) {
       $form['actions']['validate']['#ajax']['rebuild'] = TRUE;
       $form['actions']['validate']['#ajax']['callback'] = '::ajaxSubmit';
-      $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);
     }
 
     return $form;
@@ -261,7 +246,6 @@ class ApplyPageTemplateForm extends TemplateFormBase {
       $form['actions']['back']['#ajax']['rebuild'] = TRUE;
       $form['actions']['back']['#ajax']['callback'] = '::ajaxSubmit';
       $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
-      $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);
     }
 
     return $form;

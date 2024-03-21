@@ -23,6 +23,7 @@ class PageTemplateUiTest extends BlockUiBase {
    * @var array
    */
   protected static $modules = [
+    'inline_form_errors',
     'ghi_templates',
   ];
 
@@ -175,6 +176,65 @@ class PageTemplateUiTest extends BlockUiBase {
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->waitForElementRemoved('css', '#layout-builder-modal');
     $assert_session->pageTextContains('You have unsaved changes.');
+    $this->htmlOutput(NULL);
+  }
+
+  /**
+   * Tests that unique labels are enforced for page templates.
+   */
+  public function testPageTemplateUniqueLabelValidation() {
+    $node_source = $this->createNode([
+      'type' => 'page',
+    ]);
+
+    $this->loginEditor([
+      'use page templates',
+      'create page templates',
+    ]);
+
+    $this->drupalGet($node_source->toUrl()->toString());
+    $this->addInlineBlock();
+
+    $assert_session = $this->assertSession();
+    $page = $this->getSession()->getPage();
+
+    // Go to node view page and create a template from it.
+    $this->drupalGet($node_source->toUrl()->toString());
+    $this->expandDropButton('page_template');
+    $this->htmlOutput(NULL);
+
+    $store_link = $this->assertTemplateLink('store');
+    $store_link->click();
+    $assert_session->waitForElement('css', '#layout-builder-modal');
+    $assert_session->elementContains('css', '.ui-dialog-title', 'Save as a new page template based on ' . $node_source->label());
+    $page->findField('Label')->setValue('Page template');
+    $this->htmlOutput(NULL);
+
+    $button = $assert_session->buttonExists('Create new template');
+    $button->press();
+
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->waitForElementRemoved('css', '#layout-builder-modal');
+    $assert_session->pageTextContains('The page template Page template has been saved.');
+    $this->htmlOutput(NULL);
+
+    // Now try that again with the same label and confirm that we see a
+    // validation error.
+    $this->drupalGet($node_source->toUrl()->toString());
+    $this->expandDropButton('page_template');
+    $this->htmlOutput(NULL);
+
+    $store_link = $this->assertTemplateLink('store');
+    $store_link->click();
+    $assert_session->waitForElement('css', '#layout-builder-modal');
+    $assert_session->elementContains('css', '.ui-dialog-title', 'Save as a new page template based on ' . $node_source->label());
+    $page->findField('Label')->setValue('Page template');
+    $this->htmlOutput(NULL);
+
+    $button = $assert_session->buttonExists('Create new template');
+    $button->press();
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->elementTextContains('css', '.form-item-name', 'Page template is already in use. Please choose a different value.');
     $this->htmlOutput(NULL);
   }
 
