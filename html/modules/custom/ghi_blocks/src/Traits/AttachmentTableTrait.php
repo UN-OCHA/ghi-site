@@ -65,7 +65,7 @@ trait AttachmentTableTrait {
     if (!$prototype_id) {
       return NULL;
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanAttachmentPrototypeQuery $query */
     $query = $this->getQueryHandler('attachment_prototype');
     return $query->getPrototypeByPlanAndId($this->getCurrentPlanId(), $prototype_id);
   }

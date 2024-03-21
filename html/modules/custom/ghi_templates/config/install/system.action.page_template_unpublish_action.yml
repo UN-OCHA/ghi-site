@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_templates
+id: page_template_unpublish_action
+label: 'Unpublish page template'
+type: page_template
+plugin: entity:unpublish_action:page_template
+configuration: {  }

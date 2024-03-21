@@ -1,6 +1,16 @@
+use page templates:
+  title: 'Apply page templates to content pages'
+  description: 'Use a page template to populate a content page'
+create page templates:
+  title: 'Create page templates'
+  description: 'Create page templates'
 show page layout configuration code:
   title: 'Show  page layout configuration code'
   description: 'Allow to show the page layout configuration code.'
 import page layout configuration code:
   title: 'Import page layout from configuration code'
   description: 'Allow to import a page layout by pasting the configuration code.'
+administer page templates:
+  title: 'Administer page templates'
+  description: 'Allow to view and edit page templates.'
+  restrict access: true

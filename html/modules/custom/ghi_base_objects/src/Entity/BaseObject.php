@@ -21,7 +21,6 @@ use Drupal\Core\Url;
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\ghi_base_objects\BaseObjectListBuilder",
  *     "views_data" = "Drupal\ghi_base_objects\Entity\BaseObjectViewsData",
- *
  *     "form" = {
  *       "default" = "Drupal\ghi_base_objects\Form\BaseObjectForm",
  *       "add" = "Drupal\ghi_base_objects\Form\BaseObjectForm",

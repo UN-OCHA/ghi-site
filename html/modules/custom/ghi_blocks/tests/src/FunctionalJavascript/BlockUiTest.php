@@ -3,139 +3,13 @@
 namespace Drupal\Tests\ghi_blocks\FunctionalJavascript;
 
 use Drupal\block_content\Entity\BlockContentType;
-use Drupal\Component\Render\FormattableMarkup;
-use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
-use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
-use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
-use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
-use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Tests the GHI specific block UI.
  *
- * @group ghi_sections
+ * @group ghi_blocks
  */
-class BlockUiTest extends WebDriverTestBase {
-
-  use BaseObjectTestTrait;
-  use EntityReferenceFieldCreationTrait;
-  use TaxonomyTestTrait;
-  use FieldTestTrait;
-
-  /**
-   * Modules to enable.
-   *
-   * @var array
-   */
-  protected static $modules = [
-    'block_content',
-    'toolbar',
-    'admin_toolbar',
-    'admin_toolbar_tools',
-    'node',
-    'field_ui',
-    'gin_lb',
-    'gin_toolbar',
-    'ghi_blocks',
-    'ghi_gin',
-  ];
-
-  /**
-   * Declare modules that the used theme depends on.
-   *
-   * @var array
-   */
-  protected static $themeDependencies = [
-    'gin_lb',
-  ];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected $defaultTheme = 'common_design_subtheme';
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    $this->assertTrue(\Drupal::service('theme_installer')->install(['gin']));
-    $this->container->get('config.factory')
-      ->getEditable('system.theme')
-      ->set('default', 'common_design_subtheme')
-      ->set('admin', 'gin')
-      ->save();
-
-    $this->container->get('config.factory')
-      ->getEditable('gin.settings')
-      ->merge([
-        'preset_accent_color' => 'custom',
-        'preset_focus_color' => 'gin',
-        'enable_darkmode' => '0',
-        'classic_toolbar' => 'horizontal',
-        'secondary_toolbar_frontend' => FALSE,
-        'high_contrast_mode' => FALSE,
-        'accent_color' => '#4D4D4D',
-        'focus_color' => '',
-        'layout_density' => 'default',
-        'show_description_toggle' => FALSE,
-        'show_user_theme_settings' => FALSE,
-      ])
-      ->save();
-
-    // Create a user with sufficient permissions to setup Layout Builder.
-    $this->drupalLogin($this->drupalCreateUser([
-      'access toolbar',
-      'access administration pages',
-      'configure any layout',
-      'create and edit custom blocks',
-      'administer node display',
-      'administer node fields',
-      'access contextual links',
-      'administer layout builder ipe',
-      'view the administration theme',
-    ]));
-
-    // Create content types.
-    $this->createContentType(['type' => 'page']);
-
-    // Create a block content type.
-    $this->createBlockContentType('basic', 'Basic block');
-
-    // Enable layout builder for the first bundle.
-    $this->drupalGet('admin/structure/types/manage/page/display/default');
-
-    $page = $this->getSession()->getPage();
-    $page->find('css', '[name="layout[enabled]"]')->check();
-    $page->find('css', '[name="layout[allow_custom]"]')->check();
-    $page->find('css', '[name="layout[layout_builder_ipe]"]')->check();
-    $page->find('css', '[value="Save"]')->click();
-    $this->assertSession()->pageTextContains('Your settings have been saved.');
-    $this->drupalGet('admin/structure/types/manage/page/display/default');
-
-    $this->drupalLogout();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function installDefaultThemeFromClassProperty(ContainerInterface $container) {
-    // We install the theme dependencies first, otherwhise our custom theme
-    // refuses to install.
-    $modules = static::$themeDependencies;
-    $success = $container->get('module_installer')->install($modules, TRUE);
-    $this->assertTrue($success, new FormattableMarkup('Enabled modules: %modules', ['%modules' => implode(', ', $modules)]));
-
-    // And we need to clear the config cache so that the theme installer is
-    // aware of the newly installed modules.
-    /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
-    $config_factory = $container->get('config.factory');
-    $config_factory->clearStaticCache();
-
-    parent::installDefaultThemeFromClassProperty($container);
-  }
+class BlockUiTest extends BlockUiBase {
 
   /**
    * Tests the block configuration page.
@@ -145,20 +19,7 @@ class BlockUiTest extends WebDriverTestBase {
       'type' => 'page',
     ]);
 
-    $this->drupalLogin($this->drupalCreateUser([
-      'access administration pages',
-      'access content',
-      'access content overview',
-      'access contextual links',
-      'access toolbar',
-      'administer nodes',
-      'create and edit custom blocks',
-      'configure editable page node layout overrides',
-      'edit any page content',
-      'use layout builder ipe on editable page node layout overrides',
-      'use inline blocks',
-      'view the administration theme',
-    ]));
+    $this->loginEditor();
 
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();

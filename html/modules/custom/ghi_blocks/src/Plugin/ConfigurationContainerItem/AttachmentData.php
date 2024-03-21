@@ -7,6 +7,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -21,6 +22,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class AttachmentData extends ConfigurationContainerItemPluginBase {
 
   use PlanFootnoteTrait;
+  use AttachmentFilterTrait;
 
   /**
    * The attachment query.
@@ -194,6 +196,58 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
     return $attachment;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigurationErrors() {
+    $errors = [];
+    $attachment = $this->getAttachmentObject();
+
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan */
+    $plan = $this->getContextValue('plan_object');
+    if (!$attachment) {
+      $errors[] = $this->t('No attachment configured');
+    }
+    elseif (!$plan) {
+      $errors[] = $this->t('No plan available');
+    }
+    elseif ($attachment->getPlanId() != $plan->getSourceId()) {
+      $errors[] = $this->t('Configured attachment is not available in the context of the current plan');
+    }
+    return $errors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fixConfigurationErrors() {
+    $conf = $this->config['attachment'];
+    $attachment = $this->getAttachmentObject();
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan */
+    $plan = $this->getContextValue('plan_object');
+    if ($attachment && $plan && $attachment->getPlanId() != $plan->getSourceId()) {
+      $this->config['attachment']['attachment_id'] = NULL;
+    }
+
+    // Let's see if we can find an alternative attachment.
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
+    $query = $this->endpointQueryManager->createInstance('plan_entities_query');
+    $query->setPlaceholder('plan_id', $plan->getSourceId());
+    $attachments = $query->getDataAttachments($this->getContextValue('base_object'));
+    $filtered_attachments = $this->matchDataAttachments($attachment, $attachments);
+
+    // Use the default plan caseload if available.
+    $caseload_id = $plan->getPlanCaseloadId();
+    if ($caseload_id && $attachment->getType() == 'caseload' && array_key_exists($caseload_id, $filtered_attachments)) {
+      $conf['attachment_id'] = $caseload_id;
+    }
+    elseif (count($filtered_attachments) == 1) {
+      $conf['attachment_id'] = array_key_first($filtered_attachments);
+    }
+
+    $this->config['attachment'] = $conf;
   }
 
 }

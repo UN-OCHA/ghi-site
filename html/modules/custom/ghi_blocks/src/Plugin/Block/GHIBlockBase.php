@@ -1141,6 +1141,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state object.
+   *
+   * @todo Review and remove if possible.
    */
   private function setFormContexts(FormStateInterface $form_state) {
     // Provide context so that data can be retrieved.

@@ -6,7 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\gin_lb\HookHandler\FormAlter;
 
 /**
- * Trait with common helpers to get inliny with GIN LB styles..
+ * Trait with common helpers to get inline with GIN LB styles..
  */
 trait GinLbModalTrait {
 

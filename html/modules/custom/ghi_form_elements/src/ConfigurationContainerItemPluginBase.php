@@ -517,6 +517,27 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
+  public function isValid() {
+    return empty($this->getConfigurationErrors());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigurationErrors() {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fixConfigurationErrors() {
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCacheTags() {
     return [];
   }

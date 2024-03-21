@@ -3,41 +3,26 @@
 namespace Drupal\ghi_templates\LayoutBuilder;
 
 use Drupal\Component\Serialization\Yaml;
-use Drupal\Component\Utility\Html;
-use Drupal\Core\Ajax\AjaxHelperTrait;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\CloseDialogCommand;
-use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Render\Markup;
-use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
-use Drupal\ghi_blocks\Traits\GinLbModalTrait;
+use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\hpc_common\Helpers\ArrayHelper;
-use Drupal\hpc_common\Traits\AjaxFormTrait;
 use Drupal\layout_builder\Controller\LayoutRebuildTrait;
 use Drupal\layout_builder\LayoutBuilderHighlightTrait;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
-use Drupal\layout_builder\Plugin\SectionStorage\DefaultsSectionStorage;
-use Drupal\layout_builder\Section;
-use Drupal\layout_builder\SectionComponent;
 use Drupal\layout_builder\SectionStorageInterface;
-use Drupal\layout_builder_ipe\Controller\EntityEditController;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form for exporting page config.
  */
-class ImportPageConfigForm extends FormBase {
+class ImportPageConfigForm extends TemplateFormBase {
 
   use LayoutEntityHelperTrait;
   use LayoutBuilderHighlightTrait;
   use LayoutRebuildTrait;
-  use GinLbModalTrait;
-  use AjaxHelperTrait;
-  use AjaxFormTrait;
 
   /**
    * The form steps for the import wizard.
@@ -62,36 +47,12 @@ class ImportPageConfigForm extends FormBase {
   protected $layoutTempstoreRepository;
 
   /**
-   * The plugin context handler.
-   *
-   * @var \Drupal\Core\Plugin\Context\ContextHandlerInterface
-   */
-  protected $contextHandler;
-
-  /**
-   * The controller resolver.
-   *
-   * @var \Drupal\Core\Controller\ControllerResolverInterface
-   */
-  protected $controllerResolver;
-
-  /**
-   * The UUID generator service.
-   *
-   * @var \Drupal\Component\UuidInterface
-   */
-  protected $uuidGenerator;
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    $instance = new static();
+    $instance = parent::create($container);
     $instance->blockManager = $container->get('plugin.manager.block');
     $instance->layoutTempstoreRepository = $container->get('layout_builder.tempstore_repository');
-    $instance->contextHandler = $container->get('context.handler');
-    $instance->controllerResolver = $container->get('controller_resolver');
-    $instance->uuidGenerator = $container->get('uuid');
     return $instance;
   }
 
@@ -118,6 +79,7 @@ class ImportPageConfigForm extends FormBase {
    *   The form array.
    */
   public function buildForm(array $form, FormStateInterface $form_state, EntityInterface $entity = NULL, SectionStorageInterface $section_storage = NULL) {
+    $form = parent::buildForm($form, $form_state, $entity, $section_storage);
 
     $form['#title'] = $this->t('Import page configuration to @label', [
       '@label' => $entity->label(),
@@ -139,18 +101,8 @@ class ImportPageConfigForm extends FormBase {
     if ($this->isAjax()) {
       $form['actions']['submit']['#ajax']['rebuild'] = FALSE;
       $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
-      // @todo static::ajaxSubmit() requires data-drupal-selector to be the same
-      //   between the various Ajax requests. A bug in
-      //   \Drupal\Core\Form\FormBuilder prevents that from happening unless
-      //   $form['#id'] is also the same. Normally, #id is set to a unique HTML
-      //   ID via Html::getUniqueId(), but here we bypass that in order to work
-      //   around the data-drupal-selector bug. This is okay so long as we
-      //   assume that this form only ever occurs once on a page. Remove this
-      //   workaround in https://www.drupal.org/node/2897377.
-      $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);
     }
 
-    $this->makeGinLbForm($form, $form_state);
     return $form;
   }
 
@@ -158,10 +110,6 @@ class ImportPageConfigForm extends FormBase {
    * Build the import form where the code can be inserted.
    */
   private function importForm($form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL) {
-
-    $form['settings'] = [
-      '#type' => 'container',
-    ];
 
     $config = $this->getSubmittedConfig($form_state);
 
@@ -172,9 +120,6 @@ class ImportPageConfigForm extends FormBase {
       '#rows' => 10,
     ];
 
-    $form['actions'] = [
-      '#type' => 'container',
-    ];
     $form['actions']['validate'] = [
       '#type' => 'submit',
       '#value' => $this->t('Validate'),
@@ -182,7 +127,6 @@ class ImportPageConfigForm extends FormBase {
     if ($this->isAjax()) {
       $form['actions']['validate']['#ajax']['rebuild'] = TRUE;
       $form['actions']['validate']['#ajax']['callback'] = '::ajaxSubmit';
-      $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);
     }
 
     $form['actions']['cancel'] = [
@@ -214,6 +158,7 @@ class ImportPageConfigForm extends FormBase {
     $header = [
       $this->t('Element type'),
       $this->t('Label'),
+      $this->t('Configuration issues'),
     ];
 
     $rows = [];
@@ -232,22 +177,18 @@ class ImportPageConfigForm extends FormBase {
       foreach ($section['components'] as $component_key => $component) {
         /** @var \Drupal\Core\Block\BlockBase $block */
         $block = $this->blockManager->createInstance($component['configuration']['id'], $component['configuration']);
+        $block->setContext('entity', EntityContext::fromEntity($entity, $entity->type->entity->label()));
         $rows[$section_key . '--' . $component_key] = [
           $block->getPluginDefinition()['admin_label'],
           $block->label() ?? $this->t('n/a'),
+          $block instanceof ConfigValidationInterface && !$block->validateConfiguration() ? Markup::create(implode('<br />', $block->getConfigErrors())) : '',
         ];
       }
     }
 
-    $form['settings'] = [
-      '#type' => 'container',
-    ];
-
-    $form['settings']['overwrite'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Clear layout'),
-      '#description' => $this->t('If checked, this will remove all existing page elements from the current page before doing the import. If unchecked, the imported configuration will be appended to the current page instead.'),
-      '#default_value' => FALSE,
+    $form['settings']['explanation'] = [
+      '#type' => 'markup',
+      '#markup' => $this->t('On this screen you can preview which page elements should be imported from the template. When you click on "Import", the template will be applied and you will be redirected to the customize screen of the page, where you can do further modifications before saving the page.<br />If you see any errors in the column "Configuration issues", these will be attempted to be corrected automatically, but need a manual review after the elements have been added to the page.'),
     ];
 
     $form['settings']['summary'] = [
@@ -264,9 +205,6 @@ class ImportPageConfigForm extends FormBase {
       '#required' => TRUE,
     ];
 
-    $form['actions'] = [
-      '#type' => 'container',
-    ];
     $form['actions']['back'] = [
       '#type' => 'submit',
       '#value' => $this->t('Back'),
@@ -279,8 +217,14 @@ class ImportPageConfigForm extends FormBase {
       $form['actions']['back']['#ajax']['rebuild'] = TRUE;
       $form['actions']['back']['#ajax']['callback'] = '::ajaxSubmit';
       $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
-      $form['#id'] = Html::getId($form_state->getBuildInfo()['form_id']);
     }
+
+    $form['settings']['overwrite'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Clear layout'),
+      '#description' => $this->t('If checked, this will remove all existing page elements from the current page before doing the import. If unchecked, the imported configuration will be appended to the current page instead.'),
+      '#default_value' => TRUE,
+    ];
 
     return $form;
   }
@@ -296,37 +240,6 @@ class ImportPageConfigForm extends FormBase {
    */
   private function getSubmittedConfig(FormStateInterface $form_state) {
     return $form_state->getValue('config') ?? ($form_state->get('config') ? Yaml::encode($form_state->get('config')) : NULL);
-  }
-
-  /**
-   * Build and send an ajax response after successfull form submission.
-   *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
-   *
-   * @return \Drupal\Core\Ajax\AjaxResponse
-   *   An AJAX response.
-   */
-  protected function successfulAjaxSubmit(array $form, FormStateInterface $form_state) {
-    $query = $this->getRequest()->query;
-    $redirect_to_entity = $query->get('redirect_to_entity', FALSE);
-    if ($redirect_to_entity) {
-      /** @var \Drupal\Core\Url $entity_url */
-      $entity_url = $form_state->get('entity')->toUrl();
-      $query = $entity_url->getOption('query');
-      $query['openIpe'] = TRUE;
-      $entity_url->setOption('query', $query);
-      $response = new AjaxResponse();
-      $response->addCommand(new RedirectCommand($entity_url->toString()));
-    }
-    else {
-      $callable = $this->controllerResolver->getControllerFromDefinition(EntityEditController::class . '::edit');
-      $response = $callable($form_state->get('section_storage'));
-      $response->addCommand(new CloseDialogCommand('#layout-builder-modal'));
-    }
-    return $response;
   }
 
   /**
@@ -370,70 +283,8 @@ class ImportPageConfigForm extends FormBase {
       /** @var \Drupal\layout_builder\SectionStorageInterface $section_storage */
       $section_storage = $form_state->get('section_storage');
       $entity = $form_state->get('entity');
-      // First, make sure we have an overridden section storage.
-      if ($section_storage instanceof DefaultsSectionStorage) {
-        // Overide the section storage in the tempstore.
-        $section_storage = $this->sectionStorageManager()->load('overrides', [
-          'entity' => EntityContext::fromEntity($entity),
-        ]);
-      }
-
-      // Clear the current storage.
-      if ($overwrite) {
-        $section_storage->removeAllSections();
-      }
-
-      // Now setup each section according to the imported config.
       $page_config = $form_state->get('page_config');
-      foreach ($page_config as $section_key => $section_config) {
-        if (empty($section_config['components'])) {
-          continue;
-        }
-        $components = [];
-        foreach ($section_config['components'] as $component_key => $component_config) {
-          if (empty($selected_elements[$section_key . '--' . $component_key])) {
-            continue;
-          }
-          // Set a new UUID to prevent UUID collisions.
-          $component_config['uuid'] = $this->uuidGenerator->generate();
-          $component = SectionComponent::fromArray($component_config);
-          $plugin = $component->getPlugin();
-          $definition = $plugin->getPluginDefinition();
-          $context_mapping = [
-            'context_mapping' => array_intersect_key([
-              'node' => 'layout_builder.entity',
-            ], $definition['context_definitions']),
-          ];
-          // And make sure that base objects are mapped too.
-          $base_objects = BaseObjectHelper::getBaseObjectsFromNode($entity) ?? [];
-          foreach ($base_objects as $_base_object) {
-            $contexts = [
-              EntityContext::fromEntity($_base_object),
-            ];
-            foreach ($definition['context_definitions'] as $context_key => $context_definition) {
-              $matching_contexts = $this->contextHandler->getMatchingContexts($contexts, $context_definition);
-              if (empty($matching_contexts)) {
-                continue;
-              }
-              $context_mapping['context_mapping'][$context_key] = $_base_object->getUniqueIdentifier();
-            }
-          }
-          $configuration = $context_mapping + $component->get('configuration');
-          $component->setConfiguration($configuration);
-          $components[$component->getUuid()] = $component->toArray();
-        }
-        if ($overwrite || empty($section_storage->getSections())) {
-          $section_config['components'] = $components;
-          $section = Section::fromArray($section_config);
-          $section_storage->appendSection($section);
-        }
-        else {
-          $section = $section_storage->getSection(0);
-          foreach ($components as $component) {
-            $section->appendComponent(SectionComponent::fromArray($component));
-          }
-        }
-      }
+      $section_storage = $this->pageTemplateManager->buildSectionStorageFromPageConfig($section_storage, $entity, $page_config, $overwrite, $selected_elements);
 
       // Then put all that into the tempstore, so that it's available once the
       // layout is edited.

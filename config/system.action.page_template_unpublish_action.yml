@@ -1,0 +1,11 @@
+uuid: 8e35c002-678b-4f01-adb5-9afb73316993
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_templates
+id: page_template_unpublish_action
+label: 'Unpublish page template'
+type: page_template
+plugin: 'entity:unpublish_action:page_template'
+configuration: {  }

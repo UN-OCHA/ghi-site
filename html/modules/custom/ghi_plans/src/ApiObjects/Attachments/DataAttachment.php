@@ -104,6 +104,16 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
+   * Get the type of attachment.
+   *
+   * @return string
+   *   The type as string.
+   */
+  public function getType() {
+    return $this->type;
+  }
+
+  /**
    * Get the source entity.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface|null
@@ -277,6 +287,26 @@ class DataAttachment extends AttachmentBase {
    */
   public function hasDisaggregatedData() {
     return (bool) $this->has_disaggregated_data;
+  }
+
+  /**
+   * See if the attachment can be mapped for the given reporting period.
+   *
+   * @param int|string $reporting_period
+   *   The reporting period id.
+   *
+   * @return bool
+   *   TRUE if the attachment can be mapped, FALSE otherwise.
+   */
+  public function canBeMapped($reporting_period) {
+    $disaggregated_data = $this->getDisaggregatedData($reporting_period, TRUE);
+    foreach ($disaggregated_data as $metric_item) {
+      if (empty($metric_item['locations'])) {
+        continue;
+      }
+      return TRUE;
+    }
+    return FALSE;
   }
 
   /**
@@ -854,8 +884,8 @@ class DataAttachment extends AttachmentBase {
    *   An attachment prototype object.
    */
   protected function fetchPrototypeForAttachment($attachment) {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query_handler */
-    $query_handler = $this->getEndpointQueryManager()->createInstance('attachment_prototype_query');
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanAttachmentPrototypeQuery $query_handler */
+    $query_handler = $this->getEndpointQueryManager()->createInstance('plan_attachment_prototype_query');
     if (!$query_handler) {
       return NULL;
     }

@@ -7,7 +7,6 @@ use Drupal\pathauto\PathautoGeneratorInterface;
 use Drupal\pathauto\PathautoState;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
-use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\pathauto\Functional\PathautoTestHelperTrait;
 
 /**
@@ -17,7 +16,6 @@ use Drupal\Tests\pathauto\Functional\PathautoTestHelperTrait;
  */
 class SectionAliasTest extends KernelTestBase {
 
-  use ContentTypeCreationTrait;
   use EntityReferenceFieldCreationTrait;
   use SectionTestTrait;
   use PathautoTestHelperTrait;

@@ -418,9 +418,10 @@ class ConfigurationContainer extends FormElement {
         }
 
         // Let the item type react to it's submitted values.
-        $item = self::getItemById($items, $id);
-        $item_type = self::getItemTypeInstance($item, $element);
-        $item_type->submitForm($values['plugin_config'], $mode);
+        if ($id && $item = self::getItemById($items, $id)) {
+          $item_type = self::getItemTypeInstance($item, $element);
+          $item_type->submitForm($values['plugin_config'], $mode);
+        }
 
         // Switch to list mode.
         $new_mode = 'list';
@@ -657,7 +658,10 @@ class ConfigurationContainer extends FormElement {
         ],
         'pid' => self::canGroupItems($element) ? t('Parent') : NULL,
       ]),
-      ['operations' => '']
+      [
+        'issues' => t('Issues'),
+        'operations' => '',
+      ]
     );
 
     $table_rows = self::buildTableRows($element, $form_state, $include_type_column);
@@ -864,6 +868,10 @@ class ConfigurationContainer extends FormElement {
           $row[$first_column_key]['#prefix'] = \Drupal::service('renderer')->render($indentation);
         }
       }
+      $row['issues'] = [
+        '#markup' => implode(', ', $item_type->getConfigurationErrors()),
+      ];
+
       $row['operations'] = [
         '#type' => 'container',
         '#attributes' => [
