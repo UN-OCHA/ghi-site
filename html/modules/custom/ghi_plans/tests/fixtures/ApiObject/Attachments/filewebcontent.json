@@ -1,0 +1,105 @@
+{
+  "id": 38155,
+  "attachmentPrototypeId": 5404,
+  "objectId": 1112,
+  "objectType": "plan",
+  "planId": 1112,
+  "type": "fileWebContent",
+  "currentVersion": true,
+  "latestVersion": true,
+  "latestTaggedVersion": true,
+  "versionTags": [
+    "0.1",
+    "0.2",
+    "0.3",
+    "0.4",
+    "0.5",
+    "1.0",
+    "1.1",
+    "1.2",
+    "1.3",
+    "1.4",
+    "1.5",
+    "1.6",
+    "1.7",
+    "1.8",
+    "1.9",
+    "1.10",
+    "1.11",
+    "1.12",
+    "1.13"
+  ],
+  "createdAt": "2022-11-16T11:50:46.729Z",
+  "updatedAt": "2024-03-18T10:52:33.515Z",
+  "deletedAt": null,
+  "attachmentPrototype": {
+    "id": 5404,
+    "refCode": "FI",
+    "type": "fileWebContent",
+    "value": {
+      "min": 0,
+      "max": 1,
+      "hasMeasures": 0,
+      "name": {
+        "en": "Contenu en fichier"
+      },
+      "entities": [
+        "PL",
+        "CL"
+      ]
+    },
+    "planId": 1112,
+    "createdAt": "2022-09-27T09:22:20.015Z",
+    "updatedAt": "2022-09-27T09:22:20.015Z"
+  },
+  "attachmentVersion": {
+    "id": 447472,
+    "attachmentId": 38155,
+    "customReference": "1",
+    "value": {
+      "file": {
+        "url": "https://api.hpc.tools/public/files/rpm/262835-burkinafaso_ocha_Michele-Cattani_hero.jpg",
+        "file": {
+          "id": 262835
+        },
+        "title": "262835-burkinafaso_ocha_Michele-Cattani_hero.jpg",
+        "fieldName": "Image",
+        "fieldType": "file"
+      },
+      "name": "header line 31",
+      "credit": "OCHA/Michele Cattani",
+      "metrics": {
+        "values": {}
+      },
+      "description": ""
+    },
+    "hasDisaggregatedData": false,
+    "currentVersion": true,
+    "latestVersion": true,
+    "latestTaggedVersion": true,
+    "versionTags": [
+      "0.2",
+      "0.3",
+      "0.4",
+      "0.5",
+      "1.0",
+      "1.1",
+      "1.2",
+      "1.3",
+      "1.4",
+      "1.5",
+      "1.6",
+      "1.7",
+      "1.8",
+      "1.9",
+      "1.10",
+      "1.11",
+      "1.12",
+      "1.13"
+    ],
+    "createdAt": "2022-11-16T13:09:08.748Z",
+    "updatedAt": "2024-03-18T10:52:40.509Z"
+  },
+  "measurements": [],
+  "composedReference": "FI1"
+}
