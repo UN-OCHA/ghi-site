@@ -3,6 +3,7 @@
 namespace Drupal\ghi_subpages;
 
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageManualInterface;
 use Drupal\node\NodeInterface;
 use Drupal\node\NodeTypeInterface;
@@ -10,14 +11,7 @@ use Drupal\node\NodeTypeInterface;
 /**
  * Subpage manager service class.
  */
-class SubpageManager extends BaseObjectSubpageManager {
-
-  /**
-   * A list of node bundles that are supported as base types.
-   */
-  const SUPPORTED_BASE_TYPES = [
-    'section',
-  ];
+class SubpageManager extends BaseSubpageManager {
 
   /**
    * A list of node bundles that are supported as subpages.
@@ -157,7 +151,7 @@ class SubpageManager extends BaseObjectSubpageManager {
    *   TRUE if it is a base type, FALSE otherwhise.
    */
   public function isBaseTypeNode(NodeInterface $node) {
-    return in_array($node->bundle(), self::SUPPORTED_BASE_TYPES);
+    return $node instanceof SectionNodeInterface;
   }
 
   /**

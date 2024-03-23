@@ -5,18 +5,22 @@ namespace Drupal\ghi_plans\Entity;
 use Drupal\ghi_base_objects\Entity\BaseObject;
 
 /**
- * Bundle class for plan base objects.
+ * Bundle class for governing entity base objects.
  */
 class GoverningEntity extends BaseObject {
 
   /**
    * Get the plan object that this governing entity belongs to.
    *
-   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface
+   * @return \Drupal\ghi_plans\Entity\Plan
    *   The plan base object.
    */
   public function getPlan() {
-    return $this->get('field_plan')->entity ?? NULL;
+    if (!$this->hasField('field_plan')) {
+      return NULL;
+    }
+    $plan = $this->get('field_plan')->entity;
+    return $plan instanceof Plan ? $plan : NULL;
   }
 
   /**

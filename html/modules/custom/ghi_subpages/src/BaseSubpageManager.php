@@ -13,7 +13,7 @@ use Drupal\ghi_sections\SectionManager;
 /**
  * Base manager service class.
  */
-abstract class BaseObjectSubpageManager {
+abstract class BaseSubpageManager {
 
   /**
    * The module handler service.

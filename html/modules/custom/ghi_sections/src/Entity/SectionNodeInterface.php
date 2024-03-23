@@ -9,6 +9,9 @@ use Drupal\node\NodeInterface;
  */
 interface SectionNodeInterface extends NodeInterface {
 
+  const BUNDLE = 'section';
+  const BASE_OBJECT_FIELD_NAME = 'field_base_object';
+
   /**
    * Get the page title.
    *
