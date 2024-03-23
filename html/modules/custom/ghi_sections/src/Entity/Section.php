@@ -15,8 +15,6 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
 
   use ShortNameTrait;
 
-  const BUNDLE = 'section';
-
   /**
    * {@inheritdoc}
    */
@@ -71,10 +69,10 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
    * {@inheritdoc}
    */
   public function getBaseObject() {
-    if (!$this->hasField('field_base_object')) {
+    if (!$this->hasField(self::BASE_OBJECT_FIELD_NAME)) {
       return NULL;
     }
-    return $this->get('field_base_object')->entity ?? NULL;
+    return $this->get(self::BASE_OBJECT_FIELD_NAME)->entity ?? NULL;
   }
 
   /**
