@@ -104,7 +104,7 @@ trait PlanTypeTrait {
    */
   public function getPlanTypeShortName($name, $include_totals) {
     if (strtolower($name) == 'other' && !$include_totals) {
-      return (string) $this->t('Non-HRP');
+      return (string) $this->t('Non-GHO');
     }
     return StringHelper::getAbbreviation($this->getPlanTypeName($name, $include_totals));
   }
