@@ -10,9 +10,11 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\migrate\MigrateSkipRowException;
 use Drupal\migrate\Plugin\MigrateSourceInterface;
@@ -83,6 +85,28 @@ function ghi_base_objects_theme() {
     'file' => 'base_object.page.inc',
   ];
   return $theme;
+}
+
+/**
+ * Implements hook_preprocess_base_object().
+ */
+function ghi_base_objects_preprocess_base_object(&$variables) {
+  // Mark all term pages as admin pages for JS.
+  $variables['#attached']['drupalSettings']['path']['currentPathIsAdmin'] = TRUE;
+}
+
+/**
+ * Implements hook_preprocess_breadcrumb().
+ */
+function ghi_base_objects_preprocess_breadcrumb(&$variables) {
+  // Don't consider base objects as public content pages.
+  $entity = RequestHelper::getCurrentEntityObject();
+  if (!$entity instanceof BaseObject) {
+    return;
+  }
+  if ($variables['breadcrumb']) {
+    $variables['breadcrumb'][0]['attributes']['data'] = 'data-gin-toolbar-escape-admin';
+  }
 }
 
 /**
