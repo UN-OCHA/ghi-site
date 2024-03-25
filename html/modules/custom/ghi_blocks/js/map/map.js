@@ -563,6 +563,17 @@
       state.tab_data.locations = locations;
     }
 
+    // Add all available admin levels to the current state.
+    var admin_levels = [];
+    for (i = 0; i < locations.length; i++) {
+      let admin_level = locations[i].admin_level;
+      if (!admin_levels.includes(admin_level)) {
+        admin_levels.push(admin_level);
+      }
+    }
+    state.admin_levels = admin_levels;
+    state.admin_levels.sort();
+
     // Make sure we have integer values.
     locations = locations.map(function(d) {
       let total = typeof d.total == 'string' ? parseInt(d.total.replace(/,/g, '')) : d.total;
@@ -876,12 +887,13 @@
   }
 
   // Calculate the radius for the given data point.
-  Drupal.hpc_map.getRadius = function(d, scale, base_radius, radius_factor, min_radius) {
+  Drupal.hpc_map.getRadius = function(d, scale, base_radius, state, radius_factor, min_radius) {
     var admin_level = typeof d.admin_level != 'undefined' ? d.admin_level : 1;
     if (typeof radius_factor == 'undefined') {
       radius_factor = Drupal.hpc_map.getRadiusFactor(d);
     }
-    let radius = (base_radius + (radius_factor / scale)) / admin_level;
+    current_admin_level = state.admin_levels.indexOf(admin_level) + 1;
+    let radius = (base_radius + (radius_factor / scale)) / current_admin_level;
     return (typeof min_radius != 'undefined') ? (radius > min_radius ? radius : min_radius) : radius;
   }
 

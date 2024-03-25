@@ -53,7 +53,7 @@
         .transition()
         .duration(250)
         .attr('fill', function(d) { return Drupal.hpc_map_circle.getColor(d, map_state, map_id); })
-        .attr('r', function(d) { return Drupal.hpc_map.getRadius(d, scale, radius) + 10/scale; })
+        .attr('r', function(d) { return Drupal.hpc_map.getRadius(d, scale, radius, map_state) + 10/scale; })
         .attr('opacity', 0.6);
     }
     else {
@@ -73,7 +73,7 @@
         .attr('cursor', attrs.cursor)
         .attr('opacity', attrs.opacity)
         .attr('fill', function(d) { return Drupal.hpc_map_circle.getColor(d, map_state, map_id); })
-        .attr('r', function(d) { return Drupal.hpc_map.getRadius(d, scale, radius); });
+        .attr('r', function(d) { return Drupal.hpc_map.getRadius(d, scale, radius, map_state); });
     }
   }
 
@@ -114,7 +114,7 @@
           .duration(500)
           .attr('cursor', attrs.cursor)
           .attr('fill', function(d) { return Drupal.hpc_map_circle.getColor(d, state, map_id); })
-          .attr('r', function(d) { return Drupal.hpc_map.getRadius(d, scale, radius); })
+          .attr('r', function(d) { return Drupal.hpc_map.getRadius(d, scale, radius, state); })
           .attr('stroke-width', strokeWidth)
           .attr('opacity', function(d) {
             return Drupal.hpc_map.isActiveLocation(d, state) ? 0.6 : attrs.opacity;
@@ -126,7 +126,7 @@
           .attr('stroke', attrs.stroke)
           .attr('cursor', attrs.cursor)
           .attr('fill', function(d) { return Drupal.hpc_map_circle.getColor(d, state, map_id); })
-          .attr('r', function(d) { return Drupal.hpc_map.getRadius(d, scale, radius); })
+          .attr('r', function(d) { return Drupal.hpc_map.getRadius(d, scale, radius, state); })
           .attr('stroke-width', strokeWidth)
           .attr('opacity', function(d) {
             return Drupal.hpc_map.isActiveLocation(d, state) ? 0.6 : attrs.opacity;
