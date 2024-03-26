@@ -9,6 +9,7 @@ use Drupal\Core\Render\Element\FormElement;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_common\Helpers\NodeHelper;
 
@@ -63,6 +64,12 @@ class EntitySelect extends FormElement {
    * @todo Check if this is actually needed.
    */
   public static function elementSubmit(array &$element, FormStateInterface $form_state, array $form) {
+    $values = $form_state->getValue($element['#parents']);
+    $fixed_entity_ids = self::getFixedEntityIds($element);
+    foreach ($fixed_entity_ids as $id) {
+      $values['entity_ids'][$id] = $id;
+    }
+    $form_state->setValue($element['#parents'], $values);
     $form_state->setRebuild(TRUE);
   }
 
@@ -72,16 +79,44 @@ class EntitySelect extends FormElement {
   public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
     if (!empty($input)) {
       // Make sure input is returned as normal during item configuration.
-      if (!empty($element['#include_main_plan'])) {
-        $context = $element['#element_context'];
-        $plan_id = $context['plan_object']->get('field_original_id')->value;
-        $selected_entities = $input['entity_ids'] ?? [];
-        $input['entity_ids'] = [$plan_id => $plan_id] + $selected_entities;
-        $form_state->setValues($input);
-      }
+      $fixed_entity_ids = self::getFixedEntityIds($element);
+      $selected_entities = $input['entity_ids'] ?? [];
+      $input['entity_ids'] = array_combine($fixed_entity_ids, $fixed_entity_ids) + $selected_entities;
+      $form_state->setValues($input);
       return $input;
     }
     return NULL;
+  }
+
+  /**
+   * Get the fixed entity ids based on the element context.
+   *
+   * @param array $element
+   *   The base element.
+   *
+   * @return array
+   *   An array of fixed entity ids.
+   */
+  private static function getFixedEntityIds($element) {
+    if (empty($element['#include_main_plan'])) {
+      return [];
+    }
+    /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
+    $base_object = $element['#element_context']['base_object'] ?? NULL;
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
+    $plan_object = $element['#element_context']['plan_object'] ?? NULL;
+
+    $fixed_entity_ids = [];
+    if ($plan_object) {
+      $fixed_entity_ids[] = $plan_object->getSourceId();
+    }
+
+    $plan_id = $plan_object?->getSourceId() ?? NULL;
+    if ($base_object && !$base_object instanceof Plan && $base_object->getSourceId() != $plan_id) {
+      $fixed_entity_ids[] = $base_object->getSourceId();
+    }
+
+    return $fixed_entity_ids;
   }
 
   /**
@@ -93,9 +128,13 @@ class EntitySelect extends FormElement {
   public static function processEntitySelect(array &$element, FormStateInterface $form_state) {
     $element['#attached']['library'][] = 'ghi_form_elements/entity_select';
 
-    $context = $element['#element_context'];
-    $plan_id = $context['plan_object']->get('field_original_id')->value;
-    $plan_entities = self::getPlanEntitiesQuery($plan_id)->getPlanEntities($context['base_object']);
+    /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
+    $base_object = $element['#element_context']['base_object'] ?? NULL;
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
+    $plan_object = $element['#element_context']['plan_object'] ?? NULL;
+
+    $plan_id = $plan_object->getSourceId();
+    $plan_entities = self::getPlanEntitiesQuery($plan_id)->getPlanEntities($base_object);
     $plan_data = self::getPlanEntitiesQuery($plan_id)->getData();
 
     $is_hidden = array_key_exists('#hidden', $element) && $element['#hidden'];
@@ -106,6 +145,8 @@ class EntitySelect extends FormElement {
     $element['#suffix'] = '</div>';
 
     $values = (array) $form_state->getValue($element['#parents']) + (array) $element['#default_value'];
+    $fixed_entity_ids = self::getFixedEntityIds($element);
+
     $defaults = [
       'entity_ids' => $values['entity_ids'],
     ];
@@ -114,7 +155,7 @@ class EntitySelect extends FormElement {
     }, ARRAY_FILTER_USE_KEY);
 
     $entities = self::getEntityOptionsFromEntities($plan_entities);
-    $sorted_entity_options = self::sortEntitiesByPlanStructure($entities, $plan_data, $context['base_object'], TRUE, FALSE);
+    $sorted_entity_options = self::sortEntitiesByPlanStructure($entities, $plan_data, $base_object, TRUE, FALSE);
     $found_entities = array_reduce($sorted_entity_options, function ($carry, $items) {
       return $carry + count($items);
     });
@@ -146,9 +187,13 @@ class EntitySelect extends FormElement {
         ],
         '#disabled' => TRUE,
       ];
-      $defaults['entity_ids'][$plan_id] = $plan_id;
       $entity_header_parts[] = t('The main plan context is always present and cannot be unselected.');
     }
+
+    if (!empty($fixed_entity_ids)) {
+      $defaults['entity_ids'] = array_combine($fixed_entity_ids, $fixed_entity_ids) + $defaults['entity_ids'];
+    }
+    $has_additional_entities = count($entities) > count($fixed_entity_ids);
 
     // Then we add the actual entity options in groups.
     foreach ($sorted_entity_options as $group_name => $items) {
@@ -166,6 +211,13 @@ class EntitySelect extends FormElement {
         '#disabled' => TRUE,
       ];
       $entity_options = $entity_options + $items;
+
+      if (!$base_object instanceof Plan && !empty($entity_options[$base_object->getSourceId()])) {
+        $entity_options[$base_object->getSourceId()]['#disabled'] = TRUE;
+        $entity_header_parts[0] = t('The main plan context and the current @type is always present and cannot be unselected.', [
+          '@type' => strtolower($base_object->type->entity->label()),
+        ]);
+      }
     }
 
     $columns = [
@@ -175,14 +227,14 @@ class EntitySelect extends FormElement {
     ];
 
     // Build the explanation that should show above the attachment select table.
-    $entity_header_parts[] = $element['#multiple'] ? t('Select the entities that you want to use.') : t('Select the entity that you want to use.');
+    $select_message = $element['#multiple'] ? t('Select the entities that you want to use.') : t('Select the entity that you want to use.');
 
     $element['header'] = [
       '#type' => 'markup',
-      '#markup' => t('Found @count additional entities in @count_groups groups matching your selection.', [
+      '#markup' => ($has_additional_entities ? t('Found @count additional entities in @count_groups groups matching your selection.', [
         '@count' => $found_entities,
         '@count_groups' => count($sorted_entity_options),
-      ]) . '<br />' . implode(' ', $entity_header_parts),
+      ]) . ' ' . $select_message : t('No additional entities found.')) . '<br />' . implode(' ', $entity_header_parts),
       '#prefix' => '<div>',
       '#suffix' => '</div><br />',
     ];
@@ -208,10 +260,17 @@ class EntitySelect extends FormElement {
   public static function preRenderEntitySelect(array $element) {
     $element['#attributes']['type'] = 'entity_select';
     Element::setAttributes($element, ['id', 'name', 'value']);
+
     // Sets the necessary attributes, such as the error class for validation.
     // Without this line the field will not be hightlighted, if an error
     // occurred.
     static::setAttributes($element, ['form-entity-select']);
+
+    // Make sure that the fixed defaults are really checked.
+    foreach (self::getFixedEntityIds($element) as $id) {
+      $element['entity_ids'][$id]['#attributes']['checked'] = 'checked';
+    }
+
     return $element;
   }
 
