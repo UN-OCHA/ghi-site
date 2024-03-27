@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\LayoutBuilder;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Traits\GinLbModalTrait;
+use Drupal\gin_lb\HookHandler\FormAlter;
 use Drupal\layout_builder\Form\LayoutRebuildConfirmFormBase;
 use Drupal\layout_builder\SectionStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -54,7 +55,7 @@ abstract class ConfirmFormBase extends LayoutRebuildConfirmFormBase {
     $form = parent::buildForm($form, $form_state, $section_storage, $delta);
 
     if ($this->moduleHandler->moduleExists('gin_lb')) {
-      $form['#after_build'][] = 'gin_lb_after_build';
+      $form['#after_build'][] = [FormAlter::class, 'afterBuildAttachGinLbForm'];
       $form['#gin_lb_form'] = TRUE;
       $form['#attributes']['class'][] = 'glb-form';
     }

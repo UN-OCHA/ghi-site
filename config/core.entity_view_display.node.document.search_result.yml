@@ -5,6 +5,7 @@ dependencies:
   config:
     - core.entity_view_mode.node.search_result
     - field.field.node.document.field_base_objects
+    - field.field.node.document.field_content_space
     - field.field.node.document.field_display_hero_image
     - field.field.node.document.field_image
     - field.field.node.document.field_inherit_section_image
@@ -104,6 +105,7 @@ content:
     region: content
 hidden:
   field_base_objects: true
+  field_content_space: true
   field_display_hero_image: true
   field_inherit_section_image: true
   field_protected: true

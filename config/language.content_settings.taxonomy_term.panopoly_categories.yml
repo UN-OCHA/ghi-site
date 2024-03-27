@@ -1,0 +1,11 @@
+uuid: 2bc0fcc0-eba6-4a56-9b5d-9f28c0c8bd1d
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.panopoly_categories
+id: taxonomy_term.panopoly_categories
+target_entity_type_id: taxonomy_term
+target_bundle: panopoly_categories
+default_langcode: site_default
+language_alterable: false

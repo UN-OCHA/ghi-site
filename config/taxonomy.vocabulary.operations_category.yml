@@ -1,7 +1,12 @@
 uuid: ce1e641e-cbd3-48e2-a58b-3ad25dc3556f
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - flat_taxonomy
+third_party_settings:
+  flat_taxonomy:
+    flat: 1
 name: 'Operations category'
 vid: operations_category
 description: 'Used to group objects in the operations menu'

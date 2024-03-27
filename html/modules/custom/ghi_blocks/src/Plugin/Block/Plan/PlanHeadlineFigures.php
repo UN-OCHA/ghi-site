@@ -5,10 +5,12 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
+use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\LineBreak;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
+use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 
@@ -37,11 +39,12 @@ use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
  *  }
  * )
  */
-class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, ContainerFactoryPluginInterface {
+class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, ContainerFactoryPluginInterface, ConfigValidationInterface {
 
   use ConfigurationContainerTrait;
   use ConfigurationContainerGroup;
   use BlockCommentTrait;
+  use ConfigValidationTrait;
 
   const MAX_ITEMS = 20;
 
@@ -87,6 +90,10 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
         $item_type = $this->getItemTypePluginForColumn($item, $context);
 
         if ($key == 0 && $item_type instanceof LineBreak) {
+          continue;
+        }
+
+        if (!$item_type->isValid()) {
           continue;
         }
 
@@ -253,6 +260,52 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
       ],
     ];
     return $item_types;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigErrors() {
+    $conf = $this->getBlockConfig();
+    $items = $this->getConfiguredItemPlugins($conf['key_figures']['items'] ?? [], $this->getBlockContext());
+    if (empty($items)) {
+      return [
+        $this->t('No configured items'),
+      ];
+    }
+    $errors = [];
+    foreach ($items as $item) {
+      if ($item->isGroupItem()) {
+        continue;
+      }
+      if (!$item->isValid()) {
+        $errors[] = $this->t('@item_type: @errors', [
+          '@item_type' => $item->getLabel(),
+          '@errors' => implode(', ', $item->getConfigurationErrors()),
+        ]);
+      }
+    }
+
+    return $errors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fixConfigErrors() {
+    $conf = $this->getBlockConfig();
+    $items = $this->getConfiguredItemPlugins($conf['key_figures']['items'] ?? [], $this->getBlockContext());
+    if (empty($items)) {
+      return;
+    }
+    foreach ($items as $key => $item) {
+      if ($item->isGroupItem() || $item->isValid()) {
+        continue;
+      }
+      $item->fixConfigurationErrors();
+      $conf['key_figures']['items'][$key]['config'] = $item->getConfig();
+    }
+    $this->setBlockConfig($conf);
   }
 
 }

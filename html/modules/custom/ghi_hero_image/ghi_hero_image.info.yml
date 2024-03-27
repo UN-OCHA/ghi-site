@@ -6,9 +6,7 @@ type: module
 core_version_requirement: ^9 || ^10
 
 dependencies:
-  - config_default_image:config_default_image
-  - responsive_image:responsive_image
-  - imagecache_external:imagecache_external
   - hpc_api:hpc_api
+  - ghi_image:ghi_image
   - ghi_subpages:ghi_subpages
   - smugmug_api:smugmug_api

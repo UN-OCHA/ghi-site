@@ -27,6 +27,7 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\hpc_api\Helpers\ProfileHelper;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\BlockHelper;
@@ -1141,6 +1142,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state object.
+   *
+   * @todo Review and remove if possible.
    */
   private function setFormContexts(FormStateInterface $form_state) {
     // Provide context so that data can be retrieved.
@@ -1669,8 +1672,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
     if ($this->hasContext('plan_cluster')) {
       $plan_cluster = $this->getContext('plan_cluster')->getContextValue();
-      if ($plan_cluster && $plan_cluster->hasField('field_plan')) {
-        return $plan_cluster->get('field_plan')->entity;
+      if ($plan_cluster instanceof GoverningEntity) {
+        return $plan_cluster->getPlan();
       }
     }
     return NULL;

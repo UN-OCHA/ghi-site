@@ -44,8 +44,14 @@ class MeasurementQuery extends EndpointQueryBase implements ContainerFactoryPlug
     if (!$disaggregation) {
       $endpoint_args['disaggregation'] = 'false';
     }
+    $plan_id = $attachment->getPlanId();
+    if ($plan_id) {
+      $this->setCacheTags([
+        'plan_id:' . $plan_id,
+      ]);
+    }
     if ($this->isAutenticatedEndpoint) {
-      if ($plan_id = $attachment->getPlanId()) {
+      if ($plan_id) {
         $endpoint_args['version'] = $this->getPlanVersionArgumentForPlanId($plan_id);
       }
       $data = $this->getData([], ['attachmentId' => $attachment->id()] + $endpoint_args);

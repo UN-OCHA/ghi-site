@@ -35,6 +35,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'updated',
     ];
     $fields['content_space'] = [
+      'id',
       'title',
       'tags',
     ];
@@ -90,6 +91,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'updated',
     ];
     $fields['content_space'] = [
+      'id',
       'title',
       'tags',
     ];
@@ -489,6 +491,9 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
           created
           updated
           tags
+          content_space {
+            title
+          }
           autoVisible
         }
       }
@@ -518,6 +523,9 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
           created
           updated
           tags
+          content_space {
+            title
+          }
           autoVisible
         }
       }

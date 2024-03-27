@@ -2,9 +2,9 @@
 
 namespace Drupal\ghi_sections\Entity;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
-use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
 use Drupal\node\Entity\Node;
 
@@ -14,8 +14,6 @@ use Drupal\node\Entity\Node;
 class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
 
   use ShortNameTrait;
-
-  const BUNDLE = 'section';
 
   /**
    * {@inheritdoc}
@@ -36,10 +34,6 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
    * {@inheritdoc}
    */
   public function getPageTitle() {
-    $base_object = BaseObjectHelper::getBaseObjectFromNode($this);
-    if (!$base_object->needsYear()) {
-      return $this->label();
-    }
     return $this->label();
   }
 
@@ -47,7 +41,7 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
    * {@inheritdoc}
    */
   public function getPageTitleMetaData() {
-    $base_object = BaseObjectHelper::getBaseObjectFromNode($this);
+    $base_object = $this->getBaseObject();
     $meta_data = $base_object instanceof BaseObjectMetaDataInterface ? $base_object->getPageTitleMetaData() : NULL;
     return $meta_data;
   }
@@ -75,7 +69,10 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
    * {@inheritdoc}
    */
   public function getBaseObject() {
-    return $this->get('field_base_object')->entity ?? NULL;
+    if (!$this->hasField(self::BASE_OBJECT_FIELD_NAME)) {
+      return NULL;
+    }
+    return $this->get(self::BASE_OBJECT_FIELD_NAME)->entity ?? NULL;
   }
 
   /**
@@ -158,6 +155,29 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
     // available. To fix this, we invoke a custom hook that lets the
     // GHI Subpages module react just after a section has been fully build.
     \Drupal::moduleHandler()->invokeAll('section_post_save', [$this]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTagsToInvalidate() {
+    $cache_tags = parent::getCacheTagsToInvalidate();
+    $base_object = $this->getBaseObject();
+    if ($base_object) {
+      $cache_tags = Cache::mergeTags($cache_tags, $base_object->getCacheTagsToInvalidate());
+    }
+    return $cache_tags;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiCacheTagsToInvalidate() {
+    $base_object = $this->getBaseObject();
+    if (!$base_object) {
+      return [];
+    }
+    return $base_object->getApiCacheTagsToInvalidate();
   }
 
 }

@@ -480,4 +480,54 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
     return $this->uuidService->generate();
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigurationErrors() {
+    $errors = [];
+    $prototype = $this->getAttachmentPrototype();
+    $prototype_id = $this->get('attachment_prototype');
+    if (!$prototype) {
+      $errors[] = $prototype_id ?? $this->t('unknown');
+    }
+    return $errors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fixConfigurationErrors() {
+    if ($this->getAttachmentPrototype()) {
+      return NULL;
+    }
+    $prototype_id = $this->get('attachment_prototype');
+    if (!$prototype_id) {
+      return NULL;
+    }
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
+    $query = $this->endpointQueryManager->createInstance('attachment_prototype_query');
+    $original_prototype = $query->getPrototypeById($prototype_id);
+    if (!$original_prototype) {
+      return NULL;
+    }
+
+    // Get the available prototypes for the current page and filter it down
+    // based on the provided entity types.
+    $attachment_prototypes = $this->getBlockContext()['attachment_prototypes'] ?? [];
+    if (empty($attachment_prototypes)) {
+      return NULL;
+    }
+    $entity_types = $this->getContextValue('entity_types') ?? [];
+    $attachment_prototypes = $this->filterAttachmentPrototypesByEntityRefCodes($attachment_prototypes, array_keys($entity_types));
+
+    // Now go and match the available prototypes with the original one to find
+    // an equivalent.
+    foreach ($attachment_prototypes as $prototype) {
+      if ($prototype->getType() == $original_prototype->getType()) {
+        $this->set('attachment_prototype', $prototype->id());
+        break;
+      }
+    }
+  }
+
 }

@@ -1,0 +1,19 @@
+uuid: 4e1d098f-1b99-461d-893c-0a229125d46d
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_templates
+    - layout_builder
+id: page_template.layout_builder__layout
+field_name: layout_builder__layout
+entity_type: page_template
+type: layout_section
+settings: {  }
+module: layout_builder
+locked: true
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

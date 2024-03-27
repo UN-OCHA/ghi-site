@@ -1,0 +1,53 @@
+{
+  "id": 4130,
+  "refCode": "BF",
+  "type": "caseLoad",
+  "value": {
+    "hasMeasures": 1,
+    "measureFields": [
+      {
+        "name": {
+          "en": "Reached"
+        },
+        "type": "measure"
+      },
+      {
+        "name": {
+          "en": "Covered"
+        },
+        "type": "measure"
+      }
+    ],
+    "min": 0,
+    "max": 3,
+    "name": {
+      "en": "Caseload"
+    },
+    "metrics": [
+      {
+        "type": "affected",
+        "name": {
+          "en": "Affected"
+        }
+      },
+      {
+        "type": "inNeed",
+        "name": {
+          "en": "In Need"
+        }
+      },
+      {
+        "type": "target",
+        "name": {
+          "en": "Targeted"
+        }
+      }
+    ],
+    "entities": [
+      "CL"
+    ]
+  },
+  "planId": 929,
+  "createdAt": "2019-11-27T14:30:30.340Z",
+  "updatedAt": "2020-08-10T08:22:57.942Z"
+}

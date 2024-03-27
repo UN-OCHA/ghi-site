@@ -1,0 +1,7 @@
+ghi_teams.add_team:
+  route_name: entity.taxonomy_term.add_form
+  route_parameters:
+    taxonomy_vocabulary: team
+  title: Add team
+  appears_on:
+    - view.teams.page_teams

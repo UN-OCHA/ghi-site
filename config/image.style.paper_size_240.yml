@@ -1,0 +1,46 @@
+uuid: a8642f3f-bf06-4f8f-947a-ca09ef6e4d63
+langcode: en
+status: true
+dependencies:
+  config:
+    - crop.type.paper_size
+  module:
+    - crop
+    - image_effects
+name: paper_size_240
+label: 'Paper size @ 240'
+effects:
+  2a828022-d2cb-47fc-a3a6-48f5da1bce66:
+    uuid: 2a828022-d2cb-47fc-a3a6-48f5da1bce66
+    id: crop_crop
+    weight: 1
+    data:
+      crop_type: paper_size
+      automatic_crop_provider: null
+  d9715fd9-e15b-4392-891d-6fdab1c095a6:
+    uuid: d9715fd9-e15b-4392-891d-6fdab1c095a6
+    id: image_scale_and_crop
+    weight: 2
+    data:
+      width: 94
+      height: 135
+      anchor: center-center
+  6cada80e-1dba-48f4-9f39-0fa3ae7800a5:
+    uuid: 6cada80e-1dba-48f4-9f39-0fa3ae7800a5
+    id: image_effects_set_canvas
+    weight: 3
+    data:
+      canvas_size: exact
+      canvas_color: '#F5F5F5FF'
+      exact:
+        width: '240'
+        height: '135'
+        placement: center-center
+        x_offset: 0
+        y_offset: 0
+      relative:
+        left: 0
+        right: 0
+        top: 0
+        bottom: 0
+pipeline: __default__

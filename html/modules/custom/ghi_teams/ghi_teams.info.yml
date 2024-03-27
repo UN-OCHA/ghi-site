@@ -8,3 +8,4 @@ core_version_requirement: ^9 || ^10
 dependencies:
   - drupal:taxonomy
   - publishcontent:publishcontent
+  - hpc_common:hpc_common

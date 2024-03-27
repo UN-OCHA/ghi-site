@@ -512,8 +512,8 @@ class LogframeManager implements ContainerInjectionInterface {
     if (!$plan_id) {
       return [];
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
-    $query = $this->endpointQueryManager->createInstance('attachment_prototype_query');
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanAttachmentPrototypeQuery $query */
+    $query = $this->endpointQueryManager->createInstance('plan_attachment_prototype_query');
     $attachment_prototypes = $query->getDataPrototypesForPlan($plan_id);
     return $this->filterAttachmentPrototypesByEntityRefCodes($attachment_prototypes, [$ref_code]);
   }

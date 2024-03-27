@@ -1,0 +1,14 @@
+uuid: 2dbdb9e3-f7b1-4bac-a505-adce2f6c8e18
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.panopoly_categories
+id: taxonomy_vocabulary_panopoly_categories
+entity_type_id: taxonomy_vocabulary
+entity_id: panopoly_categories
+action: display_page
+allow_override: 1
+redirect: ''
+redirect_code: 301
+redirect_fallback_action: access_denied

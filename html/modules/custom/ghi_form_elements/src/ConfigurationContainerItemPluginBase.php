@@ -104,6 +104,11 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
+  public function submitForm(array $values, $mode) {}
+
+  /**
+   * {@inheritdoc}
+   */
   public function canAddNewItem() {
     return TRUE;
   }
@@ -507,6 +512,27 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    */
   public function isGroupItem() {
     return $this instanceof ConfigurationContainerItemGroupInterface;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isValid() {
+    return empty($this->getConfigurationErrors());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigurationErrors() {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fixConfigurationErrors() {
+    return NULL;
   }
 
   /**

@@ -1,0 +1,21 @@
+uuid: 1dadeb79-c467-46b2-8802-5a0c0610ccd5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.page_template.layout_builder__layout
+  module:
+    - ghi_templates
+    - layout_builder
+id: page_template.page_template.layout_builder__layout
+field_name: layout_builder__layout
+entity_type: page_template
+bundle: page_template
+label: Layout
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: layout_section

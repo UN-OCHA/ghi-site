@@ -33,7 +33,7 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
  *    "entity" = "entity_query",
  *    "attachment" = "attachment_query",
  *    "attachment_search" = "attachment_search_query",
- *    "attachment_prototype" = "attachment_prototype_query",
+ *    "attachment_prototype" = "plan_attachment_prototype_query",
  *  },
  *  default_title = @Translation("Indicator overview"),
  *  context_definitions = {

@@ -8,7 +8,6 @@ use Drupal\ghi_plans\ApiObjects\Project;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Traits\ProjectTrait;
 use Drupal\hpc_api\Query\EndpointQueryBase;
-use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
  * Provides a query plugin for project search.
@@ -33,7 +32,6 @@ use Drupal\hpc_api\Traits\SimpleCacheTrait;
  */
 class PlanProjectSearchQuery extends EndpointQueryBase {
 
-  use SimpleCacheTrait;
   use ProjectTrait;
 
   /**
@@ -117,11 +115,11 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
     $cache_key = $this->getCacheKey(array_filter($this->getCommonCacheKeys() + [
       'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
     ]));
-    if ($project_count = $this->cache($cache_key)) {
+    if ($project_count = $this->getCache($cache_key)) {
       return $project_count;
     }
     $project_count = count($this->getProjects($base_object));
-    $this->cache($cache_key, $project_count);
+    $this->setCache($cache_key, $project_count);
     return $project_count;
   }
 
@@ -138,11 +136,11 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
     $cache_key = $this->getCacheKey(array_filter($this->getCommonCacheKeys() + [
       'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
     ]));
-    if ($organization_count = $this->cache($cache_key)) {
+    if ($organization_count = $this->getCache($cache_key)) {
       return $organization_count;
     }
     $organization_count = count($this->getOrganizations($base_object));
-    $this->cache($cache_key, $organization_count);
+    $this->setCache($cache_key, $organization_count);
     return $organization_count;
   }
 
@@ -162,7 +160,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
       'organization' => $organization->id(),
       'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
     ]));
-    if ($organization_projects = $this->cache($cache_key)) {
+    if ($organization_projects = $this->getCache($cache_key)) {
       return $organization_projects;
     }
 
@@ -176,7 +174,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
         $organization_projects[$project->id] = $project;
       }
     }
-    $this->cache($cache_key, $organization_projects);
+    $this->setCache($cache_key, $organization_projects);
     return $organization_projects;
   }
 
@@ -196,7 +194,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
       'organization' => $organization->id(),
       'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
     ]));
-    if ($organization_clusters = $this->cache($cache_key)) {
+    if ($organization_clusters = $this->getCache($cache_key)) {
       return $organization_clusters;
     }
     $projects = $this->getProjects($base_object);
@@ -213,7 +211,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
         $organization_clusters = array_merge($organization_clusters, $project->getClusters());
       }
     }
-    $this->cache($cache_key, $organization_clusters);
+    $this->setCache($cache_key, $organization_clusters);
     return $organization_clusters;
   }
 
@@ -230,7 +228,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
     $cache_key = $this->getCacheKey(array_filter($this->getCommonCacheKeys() + [
       'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
     ]));
-    if ($organizations = $this->cache($cache_key)) {
+    if ($organizations = $this->getCache($cache_key)) {
       return $organizations;
     }
 
@@ -256,7 +254,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
 
       }
     }
-    $this->cache($cache_key, $organizations);
+    $this->setCache($cache_key, $organizations);
     return $organizations;
   }
 
@@ -276,14 +274,14 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
       'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
       'filter_unpublished' => $filter_unpublished ? 'true' : 'false',
     ]));
-    $projects = $this->cache($cache_key);
+    $projects = $this->getCache($cache_key);
     if (is_array($projects)) {
       return $projects;
     }
 
     $data = $this->getData();
     if (empty($data) || !is_object($data)) {
-      $this->cache($cache_key, []);
+      $this->setCache($cache_key, []);
       return [];
     }
 
@@ -294,7 +292,11 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
         // Do this early to save ressources.
         continue;
       }
-      $projects[] = new Project($project);
+      $project_object = new Project($project);
+      $project_object->setCacheTags([
+        'plan_id:' . $this->getPlaceholder('plan_id'),
+      ]);
+      $projects[] = $project_object;
     }
 
     if (!empty($base_object) && $base_object instanceof GoverningEntity) {
@@ -310,7 +312,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
         return count(array_intersect($cluster_ids, $item->getClusterIds()));
       });
     }
-    $this->cache($cache_key, $projects);
+    $this->setCache($cache_key, $projects);
     return $projects;
   }
 
@@ -329,7 +331,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
     $cache_key = $this->getCacheKey(array_filter($this->getCommonCacheKeys() + [
       'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
     ]));
-    if ($clusters = $this->cache($cache_key)) {
+    if ($clusters = $this->getCache($cache_key)) {
       return $clusters;
     }
 
@@ -352,7 +354,7 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
         }
       }
     }
-    $this->cache($cache_key, $clusters);
+    $this->setCache($cache_key, $clusters);
     return $clusters;
   }
 

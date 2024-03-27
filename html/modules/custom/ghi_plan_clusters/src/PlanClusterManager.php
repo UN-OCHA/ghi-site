@@ -5,7 +5,7 @@ namespace Drupal\ghi_plan_clusters;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
-use Drupal\ghi_subpages\BaseObjectSubpageManager;
+use Drupal\ghi_subpages\BaseSubpageManager;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\node\Entity\Node;
@@ -14,7 +14,7 @@ use Drupal\node\NodeInterface;
 /**
  * Plan cluster manager service class.
  */
-class PlanClusterManager extends BaseObjectSubpageManager {
+class PlanClusterManager extends BaseSubpageManager {
 
   use LayoutEntityHelperTrait;
   use StringTranslationTrait;

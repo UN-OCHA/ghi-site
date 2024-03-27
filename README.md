@@ -118,6 +118,31 @@ CONFIGURATION AND FEATURES
 Tbc.
 
 
+IMPORTING DATABASE SNAPSHOT
+---------------------------
+
+Download database snapshots from https://snapshots.aws.ahconu.org/ghi/ and
+place them in **_.docksal_/backups**
+
+To import a snapshot and run all the steps that a deployment would run please
+use this command:
+
+    fin post-deploy -i
+
+If you have multiple database snapshots available locally, running this command
+will let you select which one you want to import.
+Running this without the _-i_ argument, will just run the deployment actions on
+the current database without importing a snapshot.
+
+
+Data migrations
+---------------
+
+The data migrations can be run locally with this command:
+
+    fin update-data
+
+
 TESTING
 -------
 

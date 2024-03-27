@@ -46,5 +46,6 @@ services:
       - { name: event_subscriber }
   ghi_content.redirect_request_subscriber:
     class: Drupal\ghi_content\EventSubscriber\RedirectRequestSubscriber
+    arguments: ['@entity_type.manager']
     tags:
       - { name: event_subscriber }

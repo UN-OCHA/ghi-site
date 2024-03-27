@@ -65,6 +65,33 @@ trait ConfigurationContainerTrait {
   }
 
   /**
+   * Retrieve the valid configured items as plugin instances from an item store.
+   *
+   * @param array $item_store
+   *   The storage for configured items. This should be in most cases a part of
+   *   the block configuration array.
+   * @param array $context
+   *   An array of context objects.
+   *
+   * @return \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface[]
+   *   An array of configuration container plugin instances.
+   */
+  public function getConfiguredItemPlugins(array $item_store = NULL, array $context) {
+    if (empty($item_store)) {
+      return NULL;
+    }
+    $items = $this->getConfiguredItems($item_store);
+    if (empty($items)) {
+      return NULL;
+    }
+    $plugins = [];
+    foreach ($items as $key => $item) {
+      $plugins[$key] = $this->getItemTypePluginForColumn($item, $context);
+    }
+    return $plugins;
+  }
+
+  /**
    * Get the item type plugin responsible for the given column.
    *
    * @param array $column
@@ -77,7 +104,7 @@ trait ConfigurationContainerTrait {
    */
   public function getItemTypePluginForColumn(array $column, array $context = NULL) {
     // Check if this item is allowed. Do that lazy as this is called often.
-    $allowed_items = &drupal_static($this->getUuid() . '_' . __FUNCTION__ . '_allowed_items', NULL);
+    $allowed_items = &drupal_static(($this->getUuid() ?? rand()) . '_' . __FUNCTION__ . '_allowed_items', NULL);
     if ($allowed_items === NULL) {
       $allowed_items = $this->getAllowedItemTypes();
     }
@@ -92,7 +119,7 @@ trait ConfigurationContainerTrait {
     $cache_key = $this->getCacheKey($column);
     /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface[] $item_types */
     $item_types = &drupal_static($this->getUuid() . '_' . __FUNCTION__ . '_item_types', []);
-    if (!array_key_exists($cache_key, $item_types)) {
+    if (!$this->getUuid() || !array_key_exists($cache_key, $item_types)) {
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
       $item_type = $this->getConfigurationContainerItemManager()->createInstance($item_type_plugin, $allowed_items[$column['item_type']]);
       $item_type->setConfig($column['config'] ?? []);

@@ -25,3 +25,7 @@ table {
 .ui-dialog[aria-describedby="layout-builder-modal"] .ui-dialog-titlebar {
   box-sizing: border-box;
 }
+
+.ui-dialog #drupal-modal {
+  padding: 2rem 1.5rem;
+}

@@ -14,6 +14,8 @@ use Drupal\ghi_base_objects\Entity\BaseObjectTypeInterface;
  */
 trait BaseObjectTestTrait {
 
+  use FieldTestTrait;
+
   /**
    * Create a base object type.
    *
@@ -40,6 +42,7 @@ trait BaseObjectTestTrait {
     $base_object_type = BaseObjectType::create($values);
     $this->assertSame(SAVED_NEW, $base_object_type->save());
     $this->assertInstanceOf(BaseObjectTypeInterface::class, $base_object_type);
+    $this->createField('base_object', $base_object_type->id(), 'integer', 'field_original_id', 'Source id');
     return $base_object_type;
   }
 
@@ -51,7 +54,7 @@ trait BaseObjectTestTrait {
    *   - name: The human-readable label of the base object type. If none is
    *     provided, a random value will be used.
    *
-   * @return \Drupal\ghi_base_objects\Entity\BaseObjectTypeInterface
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface
    *   A base object type.
    *
    * @see \Drupal\ghi_base_objects\Entity\BaseObjectTypeInterface
@@ -59,7 +62,9 @@ trait BaseObjectTestTrait {
    */
   protected function createBaseObject(array $values = []) {
     $values += [
+      'type' => $this->randomString(),
       'name' => $this->randomString(),
+      'field_content_space' => rand(1, 100),
     ];
     $base_object = BaseObject::create($values);
     $this->assertSame(SAVED_NEW, $base_object->save());

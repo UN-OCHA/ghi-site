@@ -1,0 +1,63 @@
+{
+  "id": 4670,
+  "attachmentPrototypeId": 3291,
+  "objectId": 4112,
+  "objectType": "governingEntity",
+  "planId": 644,
+  "type": "textWebContent",
+  "currentVersion": true,
+  "latestVersion": true,
+  "latestTaggedVersion": true,
+  "versionTags": [
+    "1.0"
+  ],
+  "createdAt": "2018-10-09T10:32:13.821Z",
+  "updatedAt": "2019-01-21T12:21:02.653Z",
+  "deletedAt": null,
+  "attachmentPrototype": {
+    "id": 3291,
+    "refCode": "TE",
+    "type": "textWebContent",
+    "value": {
+      "hasMeasures": 0,
+      "min": 0,
+      "max": 3,
+      "name": {
+        "en": "Text Web Content"
+      },
+      "entities": [
+        "SO",
+        "CL",
+        "CO",
+        "CA"
+      ]
+    },
+    "planId": 644,
+    "createdAt": "2017-10-18T17:44:50.680Z",
+    "updatedAt": "2018-10-09T10:28:19.577Z"
+  },
+  "attachmentVersion": {
+    "id": 6834,
+    "attachmentId": 4670,
+    "customReference": "6",
+    "value": {
+      "name": "MSA detail",
+      "content": "<h3>Refugee Response</h3>\n\n<p>The refugee response will be protection-focused, and will be geared towards providing life-saving and dignity-enhancing assistance for the 13,000 refugees and 14,000 asylum seekers currently in Somalia. This will be done through multi-sectoral, rights-based interventions, including: the improvement of registrations and civil status documentation, the enhancement of self-reliance through Vocational Skills Trainings (VSTs) and other livelihood programmes, the promotion of refugee access to basic national services such as healthcare and education, and the establishment of a comprehensive legal framework for refugee protection, in conjunction with the federal government.</p>\n\n<h3>Multi-Sectoral Assistance for Non-Refugees</h3>\n\n<p>In 2018, the overall humanitarian response will be more focused towards a multi-sectoral approach. Numerous interventions which began in 2017 will carry on, serving to ensure that service delivery is people-centric. These include the continued deployment of Integrated Emergency Response Teams (IERTs), the continued usage of the Drought Operations Control Centres (DOCCs), the re-emphasizing of Multi-Purpose Cash Assistance (MPCA) as an integrated solution, and the movement towards nutrition-sensitive (as opposed to nutrition-specific) programming.</p>\n",
+      "metrics": {
+        "values": {}
+      },
+      "description": ""
+    },
+    "hasDisaggregatedData": false,
+    "currentVersion": true,
+    "latestVersion": true,
+    "latestTaggedVersion": true,
+    "versionTags": [
+      "1.0"
+    ],
+    "createdAt": "2018-10-09T10:32:13.821Z",
+    "updatedAt": "2019-01-21T12:21:02.653Z"
+  },
+  "measurements": [],
+  "composedReference": "CLL5498/TE6"
+}

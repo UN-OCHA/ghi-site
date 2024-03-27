@@ -1,7 +1,12 @@
 uuid: f7e09d61-798d-4e42-a078-e06019dc754e
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - flat_taxonomy
+third_party_settings:
+  flat_taxonomy:
+    flat: 1
 name: Categories
 vid: panopoly_categories
 description: 'This is a sitewide taxonomy of categories to organize the content on your site!'

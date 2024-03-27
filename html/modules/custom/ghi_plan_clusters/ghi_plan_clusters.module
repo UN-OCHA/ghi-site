@@ -26,18 +26,6 @@ function ghi_plan_clusters_entity_bundle_info_alter(array &$bundles) {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter().
- */
-function ghi_plan_clusters_form_node_plan_cluster_edit_form_alter(&$form, FormStateInterface &$form_state) {
-
-  // Restrict access to the team field.
-  if (!\Drupal::currentUser()->hasPermission('administer teams')) {
-    $form['field_team']['#disabled'] = TRUE;
-    $form['field_team']['widget']['#description'] = t('You do not have permission to change the team for this section.');
-  }
-}
-
-/**
  * Get the plan cluster manager class.
  *
  * @return \Drupal\ghi_plan_clusters\PlanClusterManager
@@ -120,12 +108,41 @@ function ghi_plan_clusters_base_object_insert(BaseObject $base_object) {
   // Load all sections which reference the plan object.
   $sections = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
     'type' => SectionManager::SECTION_BUNDLES,
-    'field_base_object' => $plan_object->id(),
+    PlanCluster::BASE_OBJECT_FIELD_NAME => $plan_object->id(),
   ]);
   if (!empty($sections)) {
     foreach ($sections as $section) {
+      // Trigger a save, so that ghi_plan_clusters_section_post_save() get's
+      // called.
       $section->save();
     }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ghi_plan_clusters_form_node_plan_cluster_edit_form_alter(&$form, FormStateInterface &$form_state) {
+  /** @var \Drupal\node\NodeForm $form_object */
+  $form_object = $form_state->getFormObject();
+  $entity = $form_object->buildEntity($form, $form_state);
+  if (!$entity instanceof PlanCluster) {
+    return;
+  }
+
+  /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $object */
+  $object = $entity->getBaseObject();
+
+  // Always disable the base object field if the cluster has a base object set
+  // already. There is no use case to change it. Display it for convenience.
+  if ($object instanceof GoverningEntity) {
+    $field_name = PlanCluster::BASE_OBJECT_FIELD_NAME;
+    $form[$field_name]['#disabled'] = !\Drupal::currentUser()->hasPermission('administer site configuration');
+    $form[$field_name]['widget'][0]['target_id']['#description'] = t('The base object cannot be changed after the initial creation of a @entity_type_label. <a href="@base_object_edit_url" target="_blank">Edit @label</a>', [
+      '@entity_type_label' => strtolower($entity->type->entity->label()),
+      '@base_object_edit_url' => $object->toUrl('edit-form')->toString(),
+      '@label' => $object->label(),
+    ]);
   }
 }
 

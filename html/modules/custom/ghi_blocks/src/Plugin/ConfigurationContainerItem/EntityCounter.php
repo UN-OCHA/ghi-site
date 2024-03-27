@@ -306,4 +306,36 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     return $plugin_configuration['entity_type'];
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigurationErrors() {
+    $errors = [];
+    $entity_type = $this->get('entity_type') ?? NULL;
+    $entity_prototype = $this->get('entity_prototype') ?? NULL;
+    if ($entity_type) {
+      $entity_prototype_options = $this->getEntityPrototypeOptions($entity_type);
+      if (!array_key_exists($entity_prototype, $entity_prototype_options)) {
+        $errors[] = $this->t('Configured entity prototype is not available in the context of the current plan');
+      }
+    }
+    return $errors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fixConfigurationErrors() {
+    $entity_type = $this->get('entity_type') ?? NULL;
+    $entity_prototype = $this->get('entity_prototype') ?? NULL;
+    if (!$entity_type) {
+      return;
+    }
+    $entity_prototype_options = $this->getEntityPrototypeOptions($entity_type);
+
+    if (!empty($entity_prototype_options) && !array_key_exists($entity_prototype, $entity_prototype_options)) {
+      $this->set('entity_prototype', array_key_first($entity_prototype_options));
+    }
+  }
+
 }

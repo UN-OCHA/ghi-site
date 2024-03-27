@@ -1,0 +1,30 @@
+uuid: 9c90a064-05bc-49d9-b084-12252af9c55a
+langcode: en
+status: true
+dependencies:
+  config:
+    - image.style.paper_size_240
+    - image.style.paper_size_480
+    - image.style.paper_size_720
+  theme:
+    - common_design
+id: paper_size
+label: 'Paper size'
+image_style_mappings:
+  -
+    image_mapping_type: image_style
+    image_mapping: paper_size_720
+    breakpoint_id: common_design.xl
+    multiplier: 2x
+  -
+    image_mapping_type: image_style
+    image_mapping: paper_size_480
+    breakpoint_id: common_design.md
+    multiplier: 2x
+  -
+    image_mapping_type: image_style
+    image_mapping: paper_size_720
+    breakpoint_id: common_design.sm
+    multiplier: 2x
+breakpoint_group: common_design
+fallback_image_style: paper_size_240

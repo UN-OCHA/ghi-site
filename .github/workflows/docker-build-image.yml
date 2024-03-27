@@ -6,6 +6,7 @@ on:
       - develop
       - feature/**
       - main
+      - berliner/HPC-8713
   release:
     types: [published]
 

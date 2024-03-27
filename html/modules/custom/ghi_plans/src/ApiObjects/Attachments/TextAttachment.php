@@ -2,6 +2,8 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
+use Drupal\Core\Render\Markup;
+
 /**
  * Abstraction for API text attachment objects.
  */
@@ -25,6 +27,26 @@ class TextAttachment extends AttachmentBase {
    */
   public function getTitle() {
     return $this->title;
+  }
+
+  /**
+   * Get the content of the text attachment.
+   *
+   * @return string
+   *   The raw content of the attachment.
+   */
+  public function getContent() {
+    return $this->content;
+  }
+
+  /**
+   * Get the content of the text attachment as a markup object.
+   *
+   * @return string|\Drupal\Component\Render\MarkupInterface
+   *   The content of the attachment as a markup object.
+   */
+  public function getMarkup() {
+    return Markup::create($this->getContent());
   }
 
 }

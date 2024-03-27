@@ -25,7 +25,7 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
  *  data_sources = {
  *    "entities" = "plan_entities_query",
  *    "attachment_search" = "attachment_search_query",
- *    "attachment_prototype" = "attachment_prototype_query",
+ *    "attachment_prototype" = "plan_attachment_prototype_query",
  *  },
  *  default_title = @Translation("Cluster caseloads"),
  *  context_definitions = {

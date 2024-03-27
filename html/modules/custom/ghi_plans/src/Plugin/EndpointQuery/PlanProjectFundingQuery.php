@@ -40,7 +40,7 @@ class PlanProjectFundingQuery extends EndpointQueryBase {
   public function getData(array $placeholders = [], array $query_args = []) {
     $placeholders = array_merge($placeholders, $this->getPlaceholders());
     $cache_key = $this->getCacheKey($placeholders);
-    if ($cached_data = $this->cache($cache_key)) {
+    if ($cached_data = $this->getCache($cache_key)) {
       return $cached_data;
     }
     $data = (object) parent::getData($placeholders, $query_args);
@@ -69,7 +69,7 @@ class PlanProjectFundingQuery extends EndpointQueryBase {
     }
 
     $this->data = $funding;
-    $this->cache($cache_key, $this->data);
+    $this->setCache($cache_key, $this->data);
     return $this->data;
   }
 

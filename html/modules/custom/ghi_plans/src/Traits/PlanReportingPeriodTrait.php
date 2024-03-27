@@ -22,6 +22,9 @@ trait PlanReportingPeriodTrait {
     if ($period_id == 'latest') {
       $period_id = self::getLatestPublishedReportingPeriod($plan_id);
     }
+    if (!$period_id) {
+      return NULL;
+    }
     $periods = self::getPlanReportingPeriods($plan_id, FALSE);
     return array_key_exists($period_id, $periods) ? $periods[$period_id] : NULL;
   }
@@ -40,10 +43,12 @@ trait PlanReportingPeriodTrait {
   public static function getPlanReportingPeriods($plan_id, $limit_to_published = FALSE) {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanReportingPeriodsQuery $query */
     $query = self::getEndpointQueryManager()->createInstance('plan_reporting_periods_query');
+    if (!$query) {
+      return [];
+    }
     $query->setPlaceholder('plan_id', $plan_id);
     $periods = $query->getReportingPeriods();
-    if ($limit_to_published) {
-      $last_published_period = self::getLatestPublishedReportingPeriod($plan_id);
+    if ($limit_to_published && $last_published_period = self::getLatestPublishedReportingPeriod($plan_id)) {
       $periods = array_filter($periods, function ($period) use ($last_published_period) {
         return $period->id <= $last_published_period;
       });
@@ -63,8 +68,11 @@ trait PlanReportingPeriodTrait {
   public static function getLatestPublishedReportingPeriod($plan_id) {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanBasicQuery $query */
     $query = self::getEndpointQueryManager()->createInstance('plan_basic_query');
+    if (!$query) {
+      return NULL;
+    }
     $plan_data = $query->getBaseData($plan_id);
-    return $plan_data->last_published_period;
+    return $plan_data ? $plan_data->last_published_period : NULL;
   }
 
   /**

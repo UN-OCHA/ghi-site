@@ -74,7 +74,7 @@ class Project extends BaseObject {
       }
       $processed_organizations[$organization->id] = new Organization($organization);
     }
-    $this->cache($cache_key, $processed_organizations);
+    $this->cache($cache_key, $processed_organizations, FALSE, NULL, $this->getCacheTags());
     return $processed_organizations;
   }
 

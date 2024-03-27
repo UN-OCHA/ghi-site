@@ -3,30 +3,121 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.taxonomy_term.team.field_content_spaces
     - taxonomy.vocabulary.team
+    - views.view.teams
   module:
     - layout_builder
     - layout_discovery
     - text
+    - views
 third_party_settings:
   layout_builder:
     enabled: true
     allow_custom: false
     sections:
       -
-        layout_id: layout_twocol_section
+        layout_id: layout_onecol
         layout_settings:
-          label: ''
+          label: Header
           context_mapping: {  }
-          column_widths: 50-50
-        components: {  }
+        components:
+          1b899fae-47df-4c24-9390-f824e56ead9c:
+            uuid: 1b899fae-47df-4c24-9390-f824e56ead9c
+            region: content
+            configuration:
+              id: 'field_block:taxonomy_term:team:field_content_spaces'
+              label: 'Content spaces'
+              label_display: '0'
+              provider: layout_builder
+              context_mapping:
+                entity: layout_builder.entity
+                view_mode: view_mode
+              formatter:
+                type: entity_reference_label
+                label: above
+                settings:
+                  link: false
+                third_party_settings: {  }
+            weight: 0
+            additional: {  }
         third_party_settings: {  }
       -
         layout_id: layout_onecol
         layout_settings:
           label: Content
           context_mapping: {  }
-        components: {  }
+        components:
+          30965c23-55dd-4647-8b34-6d6f26a74586:
+            uuid: 30965c23-55dd-4647-8b34-6d6f26a74586
+            region: content
+            configuration:
+              id: 'views_block:teams-block_team_articles'
+              label: ''
+              label_display: visible
+              provider: views
+              context_mapping:
+                tid: layout_builder.entity
+              views_label: ''
+              items_per_page: none
+            weight: 3
+            additional: {  }
+          9c5ee4fe-756a-4c37-9c10-3a20e9a78821:
+            uuid: 9c5ee4fe-756a-4c37-9c10-3a20e9a78821
+            region: content
+            configuration:
+              id: 'views_block:teams-block_team_subpages'
+              label: ''
+              label_display: visible
+              provider: views
+              context_mapping:
+                tid: layout_builder.entity
+              views_label: ''
+              items_per_page: none
+            weight: 2
+            additional: {  }
+          bc43268a-cab6-4a82-bbb2-403444de2a95:
+            uuid: bc43268a-cab6-4a82-bbb2-403444de2a95
+            region: content
+            configuration:
+              id: 'views_block:teams-block_team_sections'
+              label: ''
+              label_display: visible
+              provider: views
+              context_mapping:
+                tid: layout_builder.entity
+              views_label: ''
+              items_per_page: none
+            weight: 1
+            additional: {  }
+          5286db20-27f0-4779-b0d0-93ed68d7e4a2:
+            uuid: 5286db20-27f0-4779-b0d0-93ed68d7e4a2
+            region: content
+            configuration:
+              id: 'views_block:teams-block_team_members'
+              label: ''
+              label_display: visible
+              provider: views
+              context_mapping:
+                tid: layout_builder.entity
+              views_label: ''
+              items_per_page: none
+            weight: 0
+            additional: {  }
+          516efe3a-cd31-4fa1-a1b1-f0f34ac6d8b3:
+            uuid: 516efe3a-cd31-4fa1-a1b1-f0f34ac6d8b3
+            region: content
+            configuration:
+              id: 'views_block:teams-block_documents'
+              label: ''
+              label_display: visible
+              provider: views
+              context_mapping:
+                tid: layout_builder.entity
+              views_label: ''
+              items_per_page: none
+            weight: 4
+            additional: {  }
         third_party_settings: {  }
 id: taxonomy_term.team.default
 targetEntityType: taxonomy_term
@@ -40,6 +131,14 @@ content:
     third_party_settings: {  }
     weight: 0
     region: content
+  field_content_spaces:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: first
 hidden:
   langcode: true
   search_api_excerpt: true

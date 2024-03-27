@@ -679,8 +679,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
     // If the hero image control checkbox is NULL (never actively saved), we
     // want to make sure that it shows as selected, which is the default state
     // for new content pages.
-    $display_hero_image = $node->get('field_display_hero_image')->value;
-    if ($display_hero_image === NULL) {
+    if ($node->hasField('field_display_hero_image') && $node->get('field_display_hero_image')->value === NULL) {
       $form['field_display_hero_image']['widget']['value']['#default_value'] = TRUE;
     }
 

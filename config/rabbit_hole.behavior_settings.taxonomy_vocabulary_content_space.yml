@@ -1,0 +1,14 @@
+uuid: 1da21ae6-11a3-4c4b-891f-402b13472b73
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.content_space
+id: taxonomy_vocabulary_content_space
+entity_type_id: taxonomy_vocabulary
+entity_id: content_space
+action: display_page
+allow_override: 0
+redirect: ''
+redirect_code: 301
+redirect_fallback_action: access_denied
