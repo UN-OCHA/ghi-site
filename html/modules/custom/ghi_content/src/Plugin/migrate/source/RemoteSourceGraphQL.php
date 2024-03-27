@@ -86,7 +86,6 @@ class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPl
     $results = match ($type) {
       'article' => $this->remoteSource->importArticles($tags),
       'document' => $this->remoteSource->importDocuments($tags),
-      'content_space' => $this->remoteSource->importContentSpaces(),
     };
     $object = new \ArrayObject($results);
     return $object->getIterator();

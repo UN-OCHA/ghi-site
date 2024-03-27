@@ -539,24 +539,4 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     }, $response->get('documentExport')->items);
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function importContentSpaces() {
-    $this->disableCache();
-    $query = '{
-      contentSpaceExport {
-        id
-        title
-      }
-    }';
-    $response = $this->query($query);
-    if (!$response->has('contentSpaceExport') || !$response->get('contentSpaceExport')) {
-      return [];
-    }
-    return array_map(function ($item) {
-      return (array) $item;
-    }, $response->get('contentSpaceExport'));
-  }
-
 }
