@@ -1,3 +1,8 @@
 ul li:empty {
   display: none;
 }
+
+.item-list ul li,
+li.menu-item {
+  list-style: none !important;
+}

@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_templates
+id: page_template_delete_action
+label: 'Delete page template'
+type: page_template
+plugin: entity:delete_action:page_template
+configuration: {  }

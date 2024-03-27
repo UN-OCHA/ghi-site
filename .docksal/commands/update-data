@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+## Run project's PHPUnit tests.
+##
+## Usage: fin update-data
+
+# Environment variables passed from fin:
+#
+#   $PROJECT_ROOT - (string) absolute path to NEAREST .docksal folder
+#   $VIRTUAL_HOST - (string) ex. projectname.docksal
+#   $DOCROOT - name of the docroot folder
+#   $DOCKER_RUNNING - (string) "true" or "false"
+
+fin drush migrate:import --group hpc_api_data --update
+fin drush migrate:import --group ncms

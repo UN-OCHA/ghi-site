@@ -121,3 +121,8 @@ modal:
   dependencies:
     - core/jquery
     - core/once
+
+block_config.links:
+  css:
+    component:
+      css/block-config/links.css: {}

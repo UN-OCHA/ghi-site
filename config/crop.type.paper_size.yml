@@ -1,0 +1,12 @@
+uuid: fe505718-6af6-404f-9b85-6d762d597dab
+langcode: en
+status: true
+dependencies: {  }
+label: 'Paper size (7:10)'
+id: paper_size
+description: 'Paper size for publication previews'
+aspect_ratio: '7:10'
+soft_limit_width: null
+soft_limit_height: null
+hard_limit_width: null
+hard_limit_height: null

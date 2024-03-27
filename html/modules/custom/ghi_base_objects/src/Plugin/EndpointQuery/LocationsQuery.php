@@ -5,7 +5,6 @@ namespace Drupal\ghi_base_objects\Plugin\EndpointQuery;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_base_objects\ApiObjects\Location;
 use Drupal\hpc_api\Query\EndpointQueryBase;
-use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
  * Provides a query plugin for locations.
@@ -25,7 +24,6 @@ use Drupal\hpc_api\Traits\SimpleCacheTrait;
 class LocationsQuery extends EndpointQueryBase {
 
   use StringTranslationTrait;
-  use SimpleCacheTrait;
 
   const MAX_LEVEL = 5;
 
@@ -71,14 +69,15 @@ class LocationsQuery extends EndpointQueryBase {
       'country_id' => $country->id,
       'max_level' => $max_level,
     ]);
-    $locations = $this->cache($cache_key);
+    $locations = $this->getCache($cache_key);
     if ($locations) {
       return $locations;
     }
 
     $data = $this->getCountryLocationData($country->id, $max_level);
     if (empty($data) || empty($data->children) || !is_array($data->children)) {
-      return $this->cache($cache_key, []);
+      $this->setCache($cache_key, []);
+      return [];
     }
 
     // Make it a flat array.
@@ -97,7 +96,8 @@ class LocationsQuery extends EndpointQueryBase {
     $locations = array_filter($locations, function ($location) {
       return !empty($location->latLng[0]) && !empty($location->latLng[1]) && $location->admin_level != 0;
     });
-    return $this->cache($cache_key, $locations);
+    $this->setCache($cache_key, $locations);
+    return $locations;
   }
 
   /**

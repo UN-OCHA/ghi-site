@@ -48,7 +48,7 @@ class BaseObjectMigrateController extends ControllerBase {
   }
 
   /**
-   * Access callback for article admin pages on sections.
+   * Access callback for base object admin list pages.
    *
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectType|null $base_object_type
    *   An base object type to migrate.

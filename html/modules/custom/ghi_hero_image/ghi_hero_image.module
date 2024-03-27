@@ -9,6 +9,7 @@ use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\ghi_hero_image\HeroImageWidgetCropManager;
+use Drupal\layout_builder\Form\OverridesEntityForm;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
 
@@ -127,9 +128,10 @@ function ghi_hero_image_entity_extra_field_info() {
  */
 function ghi_hero_image_form_alter(array &$form, FormStateInterface $form_state) {
   $form_object = $form_state->getFormObject();
-  if (!$form_object instanceof ContentEntityFormInterface) {
+  if (!$form_object instanceof ContentEntityFormInterface || $form_object instanceof OverridesEntityForm || $form_object->getOperation() != 'edit') {
     return;
   }
+
   /** @var \Drupal\ghi_hero_image\HeroImageWidgetCropManager $image_widget_crop_manager */
   $image_widget_crop_manager = \Drupal::service('hero_image_widget_crop.manager');
   $image_widget_crop_manager->contentEntityFormAlter($form, $form_state);

@@ -14,7 +14,6 @@ ghi_templates.entity.page_config.import:
   defaults:
     _form: '\Drupal\ghi_templates\LayoutBuilder\ImportPageConfigForm'
   requirements:
-    _layout_builder_access: 'view'
     _permission: import page layout configuration code
   options:
     parameters:
@@ -22,3 +21,49 @@ ghi_templates.entity.page_config.import:
         type: entity:{entity_type}
       section_storage:
         layout_builder_section_storage: TRUE
+entity.page_template.add_page:
+  path: '/admin/structure/page-templates/add'
+  defaults:
+    _title: 'Add page template'
+    _entity_form: 'page_template.default'
+  requirements:
+    _entity_create_any_access: 'page_template'
+ghi_templates.entity.page_template.apply:
+  path: '/admin/template/apply/{entity_type}/{entity}/{section_storage_type}/{section_storage}'
+  defaults:
+    _form: '\Drupal\ghi_templates\LayoutBuilder\ApplyPageTemplateForm'
+  requirements:
+    _permission: use page templates
+  options:
+    parameters:
+      entity:
+        type: entity:{entity_type}
+      section_storage:
+        layout_builder_section_storage: TRUE
+ghi_templates.entity.page_template.store:
+  path: '/admin/template/store/{entity_type}/{entity}/{section_storage_type}/{section_storage}'
+  defaults:
+    _form: '\Drupal\ghi_templates\LayoutBuilder\StorePageTemplateForm'
+  requirements:
+    _layout_builder_access: 'view'
+    _permission: create page templates
+  options:
+    parameters:
+      entity:
+        type: entity:{entity_type}
+      section_storage:
+        layout_builder_section_storage: TRUE
+page_template.multiple_delete_confirm:
+  path: '/admin/structure/page-template/delete'
+  defaults:
+    _form: '\Drupal\ghi_templates\Form\PageTemplateDeleteMultipleForm'
+    entity_type_id: 'page_template'
+  requirements:
+    _entity_delete_multiple_access: 'page_template'
+entity.page_template.delete_multiple_form:
+  path: '/admin/structure/page-template/delete'
+  defaults:
+    _form: '\Drupal\ghi_templates\Form\PageTemplateDeleteMultipleForm'
+    entity_type_id: 'page_template'
+  requirements:
+    _entity_delete_multiple_access: 'page_template'

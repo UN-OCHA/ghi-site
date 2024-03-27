@@ -3,12 +3,23 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.taxonomy_term.team.field_content_spaces
     - taxonomy.vocabulary.team
 id: taxonomy_term.team.default
 targetEntityType: taxonomy_term
 bundle: team
 mode: default
 content:
+  field_content_spaces:
+    type: entity_reference_autocomplete
+    weight: 1
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
   name:
     type: string_textfield
     weight: 0

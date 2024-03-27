@@ -47,8 +47,8 @@ class DataAttachment extends AttachmentBase {
     $unit = $metrics && is_object($metrics) && property_exists($metrics, 'unit') ? ($metrics->unit->object ?? NULL) : NULL;
     $prototype = $this->getPrototypeData();
     $period = $this->fetchReportingPeriodForAttachment();
-    $measurement_fields = $metrics->measureFields ?? [];
-    $references = explode('/', $attachment->composedReference);
+    $measurement_fields = $metrics?->measureFields ?? [];
+    $references = property_exists($attachment, 'composedReference') ? explode('/', $attachment->composedReference) : [];
 
     $processed = (object) [
       'id' => $attachment->id,
@@ -58,10 +58,10 @@ class DataAttachment extends AttachmentBase {
         'entity_id' => $attachment->objectId ?? NULL,
         'plan_id' => $attachment->planId ?? NULL,
       ],
-      'custom_id' => $attachment->attachmentVersion->value->customId ?? ($attachment->customReference ?? NULL),
+      'custom_id' => $attachment->attachmentVersion?->value?->customId ?? ($attachment->customReference ?? NULL),
       'custom_id_prefixed_refcode' => end($references),
-      'composed_reference' => $attachment->composedReference,
-      'description' => $attachment->attachmentVersion->value->description ?? NULL,
+      'composed_reference' => $attachment->composedReference ?? NULL,
+      'description' => $attachment->attachmentVersion?->value?->description ?? NULL,
       'values' => $this->extractValues(),
       'prototype' => $prototype,
       'unit' => $unit ? (object) [
@@ -75,10 +75,10 @@ class DataAttachment extends AttachmentBase {
       'measurement_fields' => $measurement_fields ? array_map(function ($field) {
         return $field->name->en;
       }, $measurement_fields) : [],
-      'totals' => $attachment->attachmentVersion->value->metrics->values->totals,
-      'has_disaggregated_data' => !empty($attachment->attachmentVersion->hasDisaggregatedData),
-      'disaggregated' => $attachment->attachmentVersion->value->metrics->values->disaggregated ?? NULL,
-      'calculation_method' => $attachment->attachmentVersion->value->metrics->calculationMethod ?? NULL,
+      'totals' => $attachment->attachmentVersion?->value?->metrics?->values?->totals ?? [],
+      'has_disaggregated_data' => !empty($attachment->attachmentVersion?->hasDisaggregatedData),
+      'disaggregated' => $attachment->attachmentVersion?->value?->metrics?->values?->disaggregated ?? NULL,
+      'calculation_method' => $attachment->attachmentVersion?->value?->metrics?->calculationMethod ?? NULL,
     ];
 
     // Cleanup the values.
@@ -104,18 +104,27 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
+   * Get the type of attachment.
+   *
+   * @return string
+   *   The type as string.
+   */
+  public function getType() {
+    return $this->type;
+  }
+
+  /**
    * Get the source entity.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface|null
    *   The entity object.
    */
   public function getSourceEntity() {
     if (empty($this->source->entity_type) || empty($this->source->entity_id)) {
       return NULL;
     }
-    if (empty($this->sourceEntity)) {
+    if (empty($this->sourceEntity) && $entityQuery = $this->getEndpointQueryManager()->createInstance('entity_query')) {
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $entityQuery */
-      $entityQuery = $this->getEndpointQueryManager()->createInstance('entity_query');
       $this->sourceEntity = $entityQuery->getEntity($this->source->entity_type, $this->source->entity_id);
     }
     return $this->sourceEntity;
@@ -281,6 +290,26 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
+   * See if the attachment can be mapped for the given reporting period.
+   *
+   * @param int|string $reporting_period
+   *   The reporting period id.
+   *
+   * @return bool
+   *   TRUE if the attachment can be mapped, FALSE otherwise.
+   */
+  public function canBeMapped($reporting_period) {
+    $disaggregated_data = $this->getDisaggregatedData($reporting_period, TRUE);
+    foreach ($disaggregated_data as $metric_item) {
+      if (empty($metric_item['locations'])) {
+        continue;
+      }
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
    * Get the disaggregated data for multiple reporting periods.
    *
    * @param array $reporting_period_ids
@@ -294,19 +323,19 @@ class DataAttachment extends AttachmentBase {
    *   An array of disaggregated data arrays per reporting period.
    */
   public function getDisaggregatedDataMultiple(array $reporting_period_ids = [], $filter_empty_locations = FALSE, $filter_empty_categories = FALSE) {
+    $map_data = [];
     $attachment_data = $this->getRawData();
     if (empty($attachment_data) || empty($reporting_period_ids)) {
-      return NULL;
+      return $map_data;
     }
     $plan_id = $this->getPlanId();
     if (!$plan_id) {
-      return FALSE;
+      return $map_data;
     }
     $reporting_periods = self::getPlanReportingPeriods($plan_id, TRUE);
     if (empty($reporting_periods)) {
-      return FALSE;
+      return $map_data;
     }
-    $map_data = [];
     foreach ($reporting_period_ids as $reporting_period_id) {
       if (!array_key_exists($reporting_period_id, $reporting_periods)) {
         continue;
@@ -618,10 +647,10 @@ class DataAttachment extends AttachmentBase {
 
     // We extract the country from the locations array.
     $country = $this->getMainCountryFromLocations($base_data->locations);
-    if (!$country && !empty($this->getRawData()->planId)) {
+    if (!$country && !empty($this->getPlanId())) {
       // The disaggregation data doesn't seem to include the main country in the
       // locations. Let's try to get it from the plan id.
-      $country = $this->getMainCountryFromPlanId($this->getRawData()->planId);
+      $country = $this->getMainCountryFromPlanId($this->getPlanId());
     }
 
     // Then we remove the country from the locations array and create an array
@@ -642,7 +671,7 @@ class DataAttachment extends AttachmentBase {
     // Then we get the coordinates for all locations that the API knows for this
     // country. The coordinates are keyed by the location id.
     /** @var \Drupal\ghi_base_objects\ApiObjects\Location[] $location_coordinates */
-    $location_coordinates = $country ? $locations_query->getCountryLocations($country, $max_level) : [];
+    $location_coordinates = $country && $locations_query ? $locations_query->getCountryLocations($country, $max_level) : [];
 
     foreach ($locations as $location_key => $location) {
       $locations[$location_key]->country_id = $country->id;
@@ -670,12 +699,12 @@ class DataAttachment extends AttachmentBase {
     $prototype = $this->getPrototypeData();
     $metrics = $this->getMetrics();
     // Then get the measure fields.
-    $measure_fields = $metrics->measureFields ?? NULL;
+    $measure_fields = $metrics?->measureFields ?? NULL;
     // And merge metrics and measurements together.
     return array_pad(array_merge(
       array_map(function ($item) {
         return $item->value ?? NULL;
-      }, $metrics->values->totals),
+      }, $metrics?->values->totals ?? []),
       $measure_fields ? array_map(function ($item) {
         return $item->value ?? NULL;
       }, $measure_fields) : []
@@ -697,7 +726,7 @@ class DataAttachment extends AttachmentBase {
       return NULL;
     }
     // Get the metrics from the attachment version by default.
-    $metrics = $attachment->attachmentVersion->value->metrics;
+    $metrics = $attachment->attachmentVersion?->value?->metrics ?? NULL;
     // If there are measurements, look at the most recent one and get the
     // metrics from there.
     $measurement = self::getCurrentMeasurement();
@@ -718,18 +747,16 @@ class DataAttachment extends AttachmentBase {
     if (!$attachment || !is_object($attachment)) {
       return NULL;
     }
-    if (!property_exists($attachment, 'measurements')) {
+    $measurements = property_exists($attachment, 'measurements') ? $attachment->measurements : [];
+    if (!property_exists($attachment, 'measurements') && $measurements_query = $this->getEndpointQueryManager()->createInstance('measurement_query')) {
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\MeasurementQuery $measurements_query */
-      $measurements_query = $this->getEndpointQueryManager()->createInstance('measurement_query');
       $measurements_query->setPlaceholder('attachment_id', $attachment->id);
       $measurements = $measurements_query->getUnprocessedMeasurements($this, TRUE);
       $attachment->measurements = $measurements;
       $this->setRawData($attachment);
       $this->updateMap();
     }
-    else {
-      $measurements = $attachment->measurements ?? [];
-    }
+
     if (empty($measurements)) {
       return NULL;
     }
@@ -753,6 +780,9 @@ class DataAttachment extends AttachmentBase {
     }
     // Limit this to the published measurements.
     $latest_published_period_id = $this->getLatestPublishedReportingPeriod($this->getPlanId());
+    if (!$latest_published_period_id) {
+      return NULL;
+    }
     $measurements = array_filter($measurements, function ($measurement) use ($latest_published_period_id) {
       return $measurement->reporting_period <= $latest_published_period_id;
     });
@@ -850,12 +880,15 @@ class DataAttachment extends AttachmentBase {
    * @param object $attachment
    *   The attachment object from the API.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype
+   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
    *   An attachment prototype object.
    */
   protected function fetchPrototypeForAttachment($attachment) {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query_handler */
-    $query_handler = $this->getEndpointQueryManager()->createInstance('attachment_prototype_query');
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanAttachmentPrototypeQuery $query_handler */
+    $query_handler = $this->getEndpointQueryManager()->createInstance('plan_attachment_prototype_query');
+    if (!$query_handler) {
+      return NULL;
+    }
     return $query_handler->getPrototypeByPlanAndId($attachment->planId, $attachment->attachmentPrototypeId);
   }
 
@@ -866,8 +899,8 @@ class DataAttachment extends AttachmentBase {
    *   A reporting period object or NULL.
    */
   protected function fetchReportingPeriodForAttachment() {
-    $attachment = $this->getRawData();
-    if (!property_exists($attachment, 'planId') || !$attachment->planId) {
+    $plan_id = $this->getPlanId();
+    if (!$plan_id) {
       return NULL;
     }
     $measurement = $this->getCurrentMeasurement();
@@ -876,7 +909,10 @@ class DataAttachment extends AttachmentBase {
     }
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanReportingPeriodsQuery $planReportingPeriodsQuery */
     $planReportingPeriodsQuery = $this->getEndpointQueryManager()->createInstance('plan_reporting_periods_query');
-    $planReportingPeriodsQuery->setPlaceholder('plan_id', $attachment->planId);
+    if (!$planReportingPeriodsQuery) {
+      return NULL;
+    }
+    $planReportingPeriodsQuery->setPlaceholder('plan_id', $plan_id);
     return $planReportingPeriodsQuery->getReportingPeriod($measurement->getReportingPeriodId());
   }
 

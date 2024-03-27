@@ -9,6 +9,7 @@ use Drupal\ghi_sections\Menu\SectionMenuStorage;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_teams\Traits\TeamTestTrait;
+use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 
 /**
@@ -22,6 +23,7 @@ trait SectionTestTrait {
   use TeamTestTrait;
   use TaxonomyTestTrait;
   use FieldTestTrait;
+  use ContentTypeCreationTrait;
 
   const SECTION_BUNDLE = 'section';
 

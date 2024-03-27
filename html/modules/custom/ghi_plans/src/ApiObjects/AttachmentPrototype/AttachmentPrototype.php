@@ -15,14 +15,24 @@ class AttachmentPrototype extends ApiObjectBase {
     'caseload',
   ];
 
+  const LABEL_MAP = [
+    'textwebcontent' => 'Text (web content)',
+    'filewebcontent' => 'File (web content)',
+    'contact' => 'Contact',
+    'cost' => 'Cost',
+    'indicator' => 'Indicator',
+    'caseload' => 'Caseload',
+  ];
+
   /**
    * {@inheritdoc}
    */
   protected function map() {
     $prototype = $this->getRawData();
+    $metrics = $prototype->value->metrics ?? [];
     $metric_fields = array_map(function ($item) {
       return $item->name->en;
-    }, $prototype->value->metrics ?? []);
+    }, $metrics ?? []);
     $measurement_fields = array_map(function ($item) {
       return $item->name->en;
     }, $prototype->value->measureFields ?? []);
@@ -34,13 +44,13 @@ class AttachmentPrototype extends ApiObjectBase {
       'fields' => array_merge(
         array_map(function ($item) {
           return $item->name->en;
-        }, $prototype->value->metrics),
+        }, $metrics),
         $measurement_fields
       ),
       'field_types' => array_merge(
         array_map(function ($item) {
           return StringHelper::camelCaseToUnderscoreCase($item->type);
-        }, $prototype->value->metrics),
+        }, $metrics),
         array_map(function ($item) {
           return StringHelper::camelCaseToUnderscoreCase($item->type);
         }, $prototype->value->measureFields ?? [])
@@ -79,7 +89,7 @@ class AttachmentPrototype extends ApiObjectBase {
    *   The type label of the attachment prototype.
    */
   public function getTypeLabel() {
-    return ucfirst(strtolower($this->type));
+    return self::LABEL_MAP[$this->getType()] ?? ucfirst(strtolower($this->type));
   }
 
   /**
@@ -159,10 +169,10 @@ class AttachmentPrototype extends ApiObjectBase {
   }
 
   /**
-   * Check if the attachment prototype represents a data attachment.
+   * Check if the given raw attachment prototype represents a data attachment.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype
-   *   The attachment prototype to check.
+   * @param object $attachment_prototype
+   *   The attachment prototype raw data to check.
    *
    * @return bool
    *   TRUE if the given attachment prototype represents a data attachment,

@@ -242,6 +242,20 @@ class EndpointQuery {
   }
 
   /**
+   * Get the cache tags for this query.
+   *
+   * @return array
+   *   The cache tags for the current query.
+   */
+  public function getCacheTags() {
+    $cache_tags = [];
+    foreach ($this->getPlaceholders() as $key => $value) {
+      $cache_tags[] = $key . ':' . $value;
+    }
+    return $cache_tags;
+  }
+
+  /**
    * Replace placeholders with values in an endpoint.
    */
   public function substitutePlaceholders($string) {
@@ -347,7 +361,7 @@ class EndpointQuery {
       if ($result->getStatusCode() == 200) {
         // Only cache the response, if the call returned successfully.
         $response = (string) $result->getBody();
-        $this->cache($cache_key, $response);
+        $this->cache($cache_key, $response, FALSE, NULL, $this->getCacheTags());
       }
     }
 

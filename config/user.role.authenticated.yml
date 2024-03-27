@@ -2,7 +2,10 @@ uuid: ba7ac141-f8f5-4715-8304-2f2b0f1415a1
 langcode: en
 status: true
 dependencies:
+  config:
+    - filter.format.wysiwyg_simple
   module:
+    - filter
     - system
 _core:
   default_config_hash: dJ0L2DNSj5q6XVZAGsuVDpJTh5UeYkIPwKrUOOpr8YI
@@ -12,3 +15,4 @@ weight: -9
 is_admin: false
 permissions:
   - 'access content'
+  - 'use text format wysiwyg_simple'

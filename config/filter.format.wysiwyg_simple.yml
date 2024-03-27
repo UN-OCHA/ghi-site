@@ -1,0 +1,23 @@
+uuid: fb76a6d2-9a3a-4afd-bfd3-c0009372539f
+langcode: en
+status: true
+dependencies: {  }
+name: 'WYSIWYG Simple'
+format: wysiwyg_simple
+weight: 0
+filters:
+  filter_autop:
+    id: filter_autop
+    provider: filter
+    status: true
+    weight: 0
+    settings: {  }
+  filter_html:
+    id: filter_html
+    provider: filter
+    status: true
+    weight: -10
+    settings:
+      allowed_html: '<br> <p> <strong> <em> <u>'
+      filter_html_help: true
+      filter_html_nofollow: false

@@ -1,0 +1,20 @@
+entity.page_template.canonical:
+  route_name: entity.page_template.canonical
+  base_route: entity.page_template.canonical
+  title: 'View'
+
+entity.page_template.edit_form:
+  route_name: entity.page_template.edit_form
+  base_route: entity.page_template.canonical
+  title: 'Edit'
+
+entity.page_template.delete_form:
+  route_name:  entity.page_template.delete_form
+  base_route:  entity.page_template.canonical
+  title: Delete
+  weight: 10
+
+entity.page_template.collection:
+  title: List
+  route_name: entity.page_template.collection
+  base_route: entity.page_template.collection

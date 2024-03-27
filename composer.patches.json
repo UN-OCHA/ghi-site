@@ -14,11 +14,15 @@
     "drupal/autologout": {
       "Issue #3214958: Autologout triggered in background tab, no indication in other open tabs": "https://git.drupalcode.org/project/autologout/-/merge_requests/6.diff"
     },
+    "drupal/flat_taxonomy": {
+      "Issue #3427628: Hide 'Add child' link from entity operations": "https://www.drupal.org/files/issues/2024-03-13/3427628-hide-add-child-link-2.patch"
+    },
     "drupal/gin": {
-      "Issue #??: Use toolbar-bar as id for the toolbar to prevent JS errors in Drupal 10.2": "./patches/gin-toolbar-id.patch"
+      "Issue #??: Use toolbar-bar as id for the toolbar to prevent JS errors in Drupal 10.2": "./patches/gin-toolbar-id.patch",
+      "Issue #3281984: The breadcrumb shows 'Edit <label>' on all entity routes, even canonical/delete routes": "https://www.drupal.org/files/issues/2024-02-07/gin_3281984_cherrypick_for_rc9.patch"
     },
     "drupal/gin_lb": {
-      "Issue #??: Add alter hook for template suggestions trigger": "./patches/hook_gin_lb_add_suggestions_alter-1.0.0-rc3.patch"
+      "Issue #??: Add alter hook for template suggestions trigger": "./patches/hook_gin_lb_add_suggestions_alter-1.0.0-rc6.patch"
     },
     "drupal/gin_toolbar": {
       "Issue #3121440: Add option for node local tasks in toolbar": "https://www.drupal.org/files/issues/2023-10-20/3121440-49.patch"
@@ -52,7 +56,7 @@
       "Issue #3396521: Fix PHP 8.2 deprecations": "https://www.drupal.org/files/issues/2023-10-25/3396521-2.patch"
     },
     "drupal/view_unpublished": {
-      "Issue #2958568: Add a search api processor for view unpublished": "./patches/2958568-view-unpublished-search-api-access-17.patch"
+      "Issue #2958568: Add a search api processor for view unpublished": "./patches/2958568-view-unpublished-search-api-access-18.patch"
     },
     "drupal/webp": {
       "Issue #3325808: Webp Image not generated for styles using original image.": "https://www.drupal.org/files/issues/2023-12-07/webp-3325808-11.patch",

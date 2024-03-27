@@ -8,6 +8,7 @@
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_sections\Entity\Section;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
 
@@ -44,33 +45,33 @@ function ghi_sections_form_node_section_edit_form_alter(&$form, FormStateInterfa
   /** @var \Drupal\node\NodeForm $form_object */
   $form_object = $form_state->getFormObject();
   $entity = $form_object->buildEntity($form, $form_state);
+  if (!$entity instanceof SectionNodeInterface) {
+    return;
+  }
 
   /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $object */
-  $object = $entity->get('field_base_object')->entity;
+  $object = $entity->getBaseObject();
 
   // Hide the year field if the object doesn't need it.
   if ($object instanceof BaseObjectInterface && !$object->needsYear()) {
     $form['field_year']['#access'] = FALSE;
   }
-
-  // Always disable the base object field. It's currently not allowed to
-  // change it.
-  $form['field_base_object']['#disabled'] = TRUE;
-  $form['field_base_object']['widget'][0]['target_id']['#title'] .= ': ' . $object->type->entity->label();
-  $form['field_base_object']['widget'][0]['target_id']['#description'] = t('The base object cannot be changed after the initial creation of a section. <a href="@base_object_edit_url" target="_blank">Edit @label</a>', [
-    '@base_object_edit_url' => $object->toUrl('edit-form')->toString(),
-    '@label' => $object->label(),
-  ]);
-
   // Also disable the year field. Beeing able to change it would at least need
   // another validation for duplication of base object - year combinations, as
   // we do them during section creation.
   $form['field_year']['#disabled'] = TRUE;
 
-  // Restrict access to the team field.
-  if (!\Drupal::currentUser()->hasPermission('administer teams')) {
-    $form['field_team']['#disabled'] = TRUE;
-    $form['field_team']['widget']['#description'] = t('You do not have permission to change the team for this section.');
+  // Always disable the base object field. It's currently not allowed to
+  // change it.
+  if ($object instanceof BaseObjectInterface) {
+    $field_name = SectionNodeInterface::BASE_OBJECT_FIELD_NAME;
+    $form[$field_name]['#disabled'] = TRUE;
+    $form[$field_name]['widget'][0]['target_id']['#title'] .= ': ' . $object->type->entity->label();
+    $form[$field_name]['widget'][0]['target_id']['#description'] = t('The base object cannot be changed after the initial creation of a @entity_type_label. <a href="@base_object_edit_url" target="_blank">Edit @label</a>', [
+      '@entity_type_label' => strtolower($entity->type->entity->label()),
+      '@base_object_edit_url' => $object->toUrl('edit-form')->toString(),
+      '@label' => $object->label(),
+    ]);
   }
 }
 

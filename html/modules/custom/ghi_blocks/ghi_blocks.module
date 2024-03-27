@@ -43,6 +43,16 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'link-carousel',
     ],
+    'link_box' => [
+      'variables' => [
+        'image' => NULL,
+        'title' => NULL,
+        'description' => NULL,
+        'link' => NULL,
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'link-box',
+    ],
     'tab_container' => [
       'variables' => [
         'tabs' => [],

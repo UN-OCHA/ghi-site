@@ -8,6 +8,9 @@ use Drupal\Core\Url;
 /**
  * Provides a base object deletion confirmation form.
  *
+ * This is necessary to provide the entity:delete_action:base_object action
+ * plugin.
+ *
  * @internal
  */
 class BaseObjectDeleteMultipleForm extends DeleteMultipleForm {

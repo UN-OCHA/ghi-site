@@ -7,23 +7,25 @@ dependencies:
     - core.entity_view_display.node.custom_subpage.default
     - core.entity_view_display.node.document.default
     - core.entity_view_display.node.financials.default
+    - core.entity_view_display.node.homepage.default
     - core.entity_view_display.node.logframe.default
     - core.entity_view_display.node.plan_cluster.default
     - core.entity_view_display.node.population.default
     - core.entity_view_display.node.presence.default
     - core.entity_view_display.node.progress.default
     - core.entity_view_display.node.section.default
+    - core.entity_view_display.page_template.page_template.default
     - filter.format.html_text
-    - node.type.article
     - node.type.custom_subpage
-    - node.type.document
   module:
     - contextual
     - filter
     - ghi_content
+    - ghi_templates
     - layout_builder
     - layout_builder_ipe
     - node
+    - publishcontent
     - system
     - toolbar
 id: editor
@@ -42,6 +44,7 @@ permissions:
   - 'configure editable document node layout overrides'
   - 'configure editable financials node layout overrides'
   - 'configure editable logframe node layout overrides'
+  - 'configure editable page_template page_template layout overrides'
   - 'configure editable plan_cluster node layout overrides'
   - 'configure editable population node layout overrides'
   - 'configure editable presence node layout overrides'
@@ -49,20 +52,39 @@ permissions:
   - 'configure editable section node layout overrides'
   - 'create custom_subpage content'
   - 'delete own custom_subpage content'
-  - 'edit own article content'
-  - 'edit own custom_subpage content'
-  - 'edit own document content'
+  - 'publish editable node type article'
+  - 'publish editable node type custom_subpage'
+  - 'publish editable node type document'
+  - 'publish editable node type financials'
+  - 'publish editable node type logframe'
+  - 'publish editable node type plan_cluster'
+  - 'publish editable node type population'
+  - 'publish editable node type presence'
+  - 'publish editable node type progress'
+  - 'publish editable node type section'
+  - 'unpublish editable node type article'
+  - 'unpublish editable node type custom_subpage'
+  - 'unpublish editable node type document'
+  - 'unpublish editable node type financials'
+  - 'unpublish editable node type logframe'
+  - 'unpublish editable node type plan_cluster'
+  - 'unpublish editable node type population'
+  - 'unpublish editable node type presence'
+  - 'unpublish editable node type progress'
+  - 'unpublish editable node type section'
   - 'use layout builder ipe on editable article node layout overrides'
   - 'use layout builder ipe on editable custom_subpage node layout overrides'
   - 'use layout builder ipe on editable document node layout overrides'
   - 'use layout builder ipe on editable financials node layout overrides'
   - 'use layout builder ipe on editable homepage node layout overrides'
   - 'use layout builder ipe on editable logframe node layout overrides'
+  - 'use layout builder ipe on editable page_template layout overrides'
   - 'use layout builder ipe on editable plan_cluster node layout overrides'
   - 'use layout builder ipe on editable population node layout overrides'
   - 'use layout builder ipe on editable presence node layout overrides'
   - 'use layout builder ipe on editable progress node layout overrides'
   - 'use layout builder ipe on editable section node layout overrides'
+  - 'use page templates'
   - 'use text format html_text'
   - 'view own unpublished content'
   - 'view the administration theme'

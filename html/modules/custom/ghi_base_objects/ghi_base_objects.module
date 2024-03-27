@@ -10,9 +10,11 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\migrate\MigrateSkipRowException;
 use Drupal\migrate\Plugin\MigrateSourceInterface;
@@ -45,11 +47,10 @@ function ghi_base_objects_layout_builder_view_context_alter(array &$contexts, Se
     return;
   }
   $entity = $entity_context->getContextValue();
-
-  if (!$entity->id() || \Drupal::routeMatch()->getRouteName() == 'entity.entity_view_display.node.default') {
+  if (!$entity->id() || strpos(\Drupal::routeMatch()->getRouteName(), 'entity.entity_view_display.') === 0) {
     // This is the manage display form or some other config form with a sample
     // entity. We only want to make sure that we provide some dummy context so
-    // that plan elements that depend on a base object can be selected.
+    // that page elements that depend on a base object can be selected.
     $types = \Drupal::entityTypeManager()->getStorage('base_object_type')->loadMultiple();
     foreach ($types as $type) {
       $entity = \Drupal::service('layout_builder.sample_entity_generator')->get('base_object', $type->id());
@@ -59,7 +60,7 @@ function ghi_base_objects_layout_builder_view_context_alter(array &$contexts, Se
     }
   }
   elseif ($base_objects = BaseObjectHelper::getBaseObjectsFromNode($entity)) {
-    // This is an actual node page.
+    // This is an actual entity page.
     foreach ($base_objects as $base_object) {
       $context = EntityContext::fromEntity($base_object, $base_object->label());
       $context->getContextDefinition()->addConstraint('Bundle', $base_object->getEntityTypeId());
@@ -84,6 +85,28 @@ function ghi_base_objects_theme() {
     'file' => 'base_object.page.inc',
   ];
   return $theme;
+}
+
+/**
+ * Implements hook_preprocess_base_object().
+ */
+function ghi_base_objects_preprocess_base_object(&$variables) {
+  // Mark all term pages as admin pages for JS.
+  $variables['#attached']['drupalSettings']['path']['currentPathIsAdmin'] = TRUE;
+}
+
+/**
+ * Implements hook_preprocess_breadcrumb().
+ */
+function ghi_base_objects_preprocess_breadcrumb(&$variables) {
+  // Don't consider base objects as public content pages.
+  $entity = RequestHelper::getCurrentEntityObject();
+  if (!$entity instanceof BaseObject) {
+    return;
+  }
+  if ($variables['breadcrumb']) {
+    $variables['breadcrumb'][0]['attributes']['data'] = 'data-gin-toolbar-escape-admin';
+  }
 }
 
 /**

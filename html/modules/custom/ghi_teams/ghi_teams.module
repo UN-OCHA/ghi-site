@@ -5,19 +5,45 @@
  * Contains hook implementations for the GHI teams module.
  */
 
-use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\ContentEntityFormInterface;
+use Drupal\Core\Entity\EditorialContentEntityBase;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
+use Drupal\ghi_teams\Entity\ContentSpace;
+use Drupal\ghi_teams\Entity\Team;
+use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\node\NodeInterface;
+use Drupal\taxonomy\TermInterface;
 use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
+use Drupal\views\Plugin\Block\ViewsBlock;
+use Drupal\views\Views;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function ghi_teams_entity_bundle_info_alter(array &$bundles) {
+  if (!empty($bundles['taxonomy_term'][Team::BUNDLE])) {
+    $bundles['taxonomy_term'][Team::BUNDLE]['class'] = Team::class;
+    $bundles['taxonomy_term'][Team::BUNDLE]['label'] = t('Team');
+  }
+  if (!empty($bundles['taxonomy_term'][ContentSpace::BUNDLE])) {
+    $bundles['taxonomy_term'][ContentSpace::BUNDLE]['class'] = ContentSpace::class;
+    $bundles['taxonomy_term'][ContentSpace::BUNDLE]['label'] = t('Content space');
+  }
+}
 
 /**
  * Implements hook_node_access_records().
  */
 function ghi_teams_node_access_records(NodeInterface $node) {
-  $excluded_bundles = ['document'];
-  if (!$node->hasField('field_team') || in_array($node->bundle(), $excluded_bundles)) {
+  if (!$node->hasField('field_team')) {
     return [];
   }
 
@@ -86,6 +112,32 @@ function ghi_teams_node_grants(AccountInterface $account, $op) {
 }
 
 /**
+ * Implements hook_menu_local_actions_alter().
+ *
+ * Add the destination argument to the add team action so that the user is
+ * redirected to the teams list page after creating a new team.
+ */
+function ghi_teams_menu_local_actions_alter(&$local_actions) {
+  if (empty($local_actions['ghi_teams.add_team'])) {
+    return;
+  }
+  $route_name = 'view.teams.page_teams';
+  try {
+    \Drupal::service('router.route_provider')
+      ->getRouteByName($route_name);
+  }
+  catch (RouteNotFoundException $exception) {
+    return NULL;
+  }
+  $team_page_url = Url::fromRoute($route_name);
+  $local_actions['ghi_teams.add_team']['options'] = [
+    'query' => [
+      'destination' => $team_page_url->toString(),
+    ],
+  ];
+}
+
+/**
  * Implements hook_FORM_ID_alter().
  *
  * Restrict access to field_team to users with proper permission.
@@ -96,26 +148,82 @@ function ghi_teams_form_user_form_alter(&$form, FormStateInterface $form_state) 
 }
 
 /**
- * Implements hook_FORM_ID_alter().
+ * Implements hook_alter().
  *
  * Restrict access to field_team to users with proper permission.
  */
 function ghi_teams_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  $form_object = method_exists($form_state, 'getEntity') ? $form_state->getEntity() : NULL;
-  if (!$form_object || !$form_object instanceof EntityPublishedInterface) {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object || !$form_object instanceof ContentEntityFormInterface) {
     return;
   }
+  $entity = $form_object->getEntity();
+  if (!$entity instanceof EditorialContentEntityBase || !$entity->hasField('field_team')) {
+    return;
+  }
+
+  $user = \Drupal::currentUser();
+  $form['field_team']['#disabled'] = !$user->hasPermission('administer teams');
+  $form['field_team']['widget']['#description'] = t('You do not have permission to change the team for this @bundle.', [
+    '@bundle' => strtolower($entity->type->entity->label()),
+  ]);
 }
 
 /**
  * Implements hook_preprocess_views_view().
  */
 function ghi_teams_preprocess_views_view(&$variables) {
+  /** @var \Drupal\views\ViewExecutable $view */
   $view = $variables['view'];
   if ($view->storage->id() != 'teams') {
     return;
   }
   $variables['#attached']['library'][] = 'ghi_teams/gin';
+  $variables['more'] = NULL;
+}
+
+/**
+ * Implements hook_preprocess_block().
+ *
+ * Move the "Read more" link from the views footer into the views titles.
+ */
+function ghi_teams_preprocess_block(&$variables) {
+  $block = \Drupal::service('plugin.manager.block')->createInstance($variables['plugin_id'], $variables['configuration']);
+  if (!$block instanceof ViewsBlock) {
+    return;
+  }
+  $block->build();
+  $view = $block->getViewExecutable();
+  if ($view->id() != 'teams') {
+    return;
+  }
+
+  /** @var \Drupal\taxonomy\Plugin\views\argument\Taxonomy $term_argument */
+  $term_argument = $view->display_handler->getHandlers('argument')['tid'] ?? NULL;
+  if (!$term_argument || !$term_argument?->argument) {
+    return;
+  }
+
+  $variables['attributes']['class'][] = 'block-views--teams';
+  $more_link = $view->getDisplay()->renderMoreLink();
+  $title = $more_link['#title'];
+  /** @var \Drupal\Core\Url $url */
+  $url = $more_link['#url'];
+  $url->setRouteParameter('taxonomy_term', $term_argument->argument);
+  $url->setOption('attributes', [
+    'class' => [
+      'button',
+      'link',
+    ],
+  ]);
+  $variables['label'] = [
+    '#type' => 'container',
+    '#attributes' => [
+      'class' => ['title-wrapper'],
+    ],
+    'label' => $variables['label'],
+    'more_link' => Link::fromTextAndUrl($title, $url)->toRenderable(),
+  ];
 }
 
 /**
@@ -141,4 +249,92 @@ function ghi_teams_form_node_form_alter(&$form, FormStateInterface $form_state) 
       '@published' => $config->get('publish_text_value'),
     ]);
   }
+}
+
+/**
+ * Implements hook_preprocess_taxonomy_term().
+ */
+function ghi_teams_preprocess_taxonomy_term(&$variables) {
+  // Mark all term pages as admin pages for JS.
+  $variables['#attached']['drupalSettings']['path']['currentPathIsAdmin'] = TRUE;
+}
+
+/**
+ * Implements hook_preprocess_breadcrumb().
+ */
+function ghi_teams_preprocess_breadcrumb(&$variables) {
+  // Don't consider terms as public content pages.
+  $entity = RequestHelper::getCurrentEntityObject();
+  if (!$entity instanceof TermInterface) {
+    return;
+  }
+  if ($variables['breadcrumb']) {
+    $variables['breadcrumb'][0]['attributes']['data'] = 'data-gin-toolbar-escape-admin';
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update() for user entities.
+ */
+function ghi_teams_user_update(UserInterface $user) {
+  if (!$user->hasField('field_team')) {
+    return;
+  }
+  // Invalidate cache for the backend content listing when a user is updated.
+  // Users can have a team assigned, and this associtation controls edit access
+  // to some content types. When a user is edited and that content space
+  // association is changed, we want the changes to be immediately visible in
+  // the backend listings to prevent confusion.
+  $cache_tags = Cache::mergeTags(['config:views.view.content'], $user->getCacheTags());
+
+  /** @var \Drupal\ghi_teams\Entity\Team $team */
+  $team = $user->get('field_team')->entity ?? NULL;
+  if ($team instanceof Team) {
+    // Also invalidate cache associated with the team.
+    $cache_tags = Cache::mergeTags($cache_tags, $team->getCacheTagsToInvalidate());
+  }
+  \Drupal::service('cache_tags.invalidator')->invalidateTags($cache_tags);
+
+}
+
+/**
+ * Implements hook_entity_operation().
+ *
+ * Add team subpages to operation links.
+ */
+function ghi_teams_entity_operation(EntityInterface $entity) {
+  if (!$entity instanceof TermInterface || $entity->bundle() != 'team') {
+    return;
+  }
+
+  // We have a single view that contains all the team related blocks and pages.
+  /** @var \Drupal\views\ViewExecutable $view */
+  $view = Views::getView('teams');
+  if (!$view) {
+    // At least we should have.
+    return;
+  }
+
+  $operations = [];
+  foreach ($view->storage->get('display') as $id => $display) {
+    if ($display['display_plugin'] != 'page') {
+      continue;
+    }
+    $view->setDisplay($id);
+    $path = $display['display_options']['path'];
+    if (strpos($path, 'taxonomy/term/%taxonomy_term') !== 0) {
+      continue;
+    }
+    $page_path = str_replace('taxonomy/term/%taxonomy_term', $entity->toUrl()->toString(), $path);
+    if ($path == $page_path || $page_path[0] != '/') {
+      continue;
+    }
+
+    $operations[$id] = [
+      'title' => $display['display_options']['title'],
+      'weight' => 50 + count($operations),
+      'url' => Url::fromUserInput($page_path),
+    ];
+  }
+  return $operations;
 }

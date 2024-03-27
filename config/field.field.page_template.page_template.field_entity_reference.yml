@@ -1,0 +1,50 @@
+uuid: a32348e9-d1cd-4cc4-b0b4-d9f1cd88d655
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.page_template.field_entity_reference
+    - node.type.article
+    - node.type.custom_subpage
+    - node.type.document
+    - node.type.financials
+    - node.type.homepage
+    - node.type.logframe
+    - node.type.plan_cluster
+    - node.type.population
+    - node.type.presence
+    - node.type.progress
+    - node.type.section
+  module:
+    - ghi_templates
+id: page_template.page_template.field_entity_reference
+field_name: field_entity_reference
+entity_type: page_template
+bundle: page_template
+label: 'Source page'
+description: 'The source page where the template originated. This is used for initial setup of the page template and to extract context information for data retrieval during the configuration of the template. This cannot be changed once the template has been created.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      article: article
+      custom_subpage: custom_subpage
+      document: document
+      financials: financials
+      homepage: homepage
+      logframe: logframe
+      plan_cluster: plan_cluster
+      population: population
+      presence: presence
+      progress: progress
+      section: section
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: article
+field_type: entity_reference

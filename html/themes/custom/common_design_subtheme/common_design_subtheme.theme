@@ -199,6 +199,10 @@ function common_design_subtheme_preprocess_block(&$variables) {
     'mailing_list_subscribe',
   ];
 
+  if ($variables['plugin_id'] == 'system_main_block' && strpos(\Drupal::routeMatch()->getRouteName(), 'system.40') === 0) {
+    $variables['attributes']['class'][] = 'content-width';
+  }
+
   // On some node types, we want to auto highlight (full-width background) the
   // first block in the content region. But only if that block is not already a
   // full-width block.
@@ -321,6 +325,13 @@ function common_design_subtheme_preprocess_page(&$variables) {
   if ($subpage_title) {
     $variables['attributes']['class'][] = 'has-subpage-title';
   }
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function common_design_subtheme_preprocess_user(&$variables) {
+  $variables['attributes']['class'][] = 'content-width';
 }
 
 /**

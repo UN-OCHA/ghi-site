@@ -190,16 +190,6 @@ class HeroImageManager {
   }
 
   /**
-   * Delete an image file.
-   *
-   * @param string $uri
-   *   The URI to the file to delete.
-   */
-  public function deleteImageFile($uri) {
-    $this->fileSystem->delete($uri);
-  }
-
-  /**
    * Alter tokens for hero images.
    */
   public function tokenAlter(&$replacements, $node) {

@@ -37,6 +37,10 @@ source:
       name: tags
       label: 'Tags'
       selector: tags
+    -
+      name: content_space
+      label: 'Content space'
+      selector: content_space/title
   ids:
     id:
       type: integer
@@ -77,6 +81,18 @@ process:
       entity_type: taxonomy_term
       bundle_key: vid
       bundle: tags
+  field_content_space:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: content_space/title
+    -
+      plugin: entity_lookup
+      entity_type: taxonomy_term
+      source: content_space/title
+      bundle_key: vid
+      value_key: name
+      bundle: content_space
 destination:
   plugin: 'entity:node'
   overwrite_properties:
@@ -84,6 +100,7 @@ destination:
     - field_short_title
     - field_summary
     - field_tags
+    - field_content_space
     - created
     - changed
 migration_dependencies: {}

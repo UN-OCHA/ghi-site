@@ -43,6 +43,16 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
   public function buildForm(array $element, FormStateInterface $form_state);
 
   /**
+   * React on submission of the config form.
+   *
+   * @param array $values
+   *   The submitted form values.
+   * @param string $mode
+   *   A string identifier for the current edit context.
+   */
+  public function submitForm(array $values, $mode);
+
+  /**
    * Check if this plugin allows new items to be added.
    *
    * @return bool
@@ -228,6 +238,27 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
    *   TRUE if the item is a group, FALSE otherwise.
    */
   public function isGroupItem();
+
+  /**
+   * Checks if the item is valid.
+   *
+   * @return bool
+   *   TRUE if the item is valid, FALSE otherwise.
+   */
+  public function isValid();
+
+  /**
+   * Get a list of configuration errors.
+   *
+   * @return array
+   *   An array of configuration errors.
+   */
+  public function getConfigurationErrors();
+
+  /**
+   * Attempt to fix the configuration errors.
+   */
+  public function fixConfigurationErrors();
 
   /**
    * Get the cache tags for this item.

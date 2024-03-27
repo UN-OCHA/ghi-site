@@ -397,8 +397,9 @@ class ConfigurationContainer extends FormElement {
           $max_id = count($items) ? max(array_map(function ($_item) {
             return $_item['id'];
           }, $items)) : 0;
+          $id = $max_id + 1;
           $items[] = [
-            'id' => $max_id + 1,
+            'id' => $id,
             'item_type' => $values['item_type'],
             'config' => $values['plugin_config'],
             'weight' => 0,
@@ -414,6 +415,12 @@ class ConfigurationContainer extends FormElement {
         elseif ($mode == 'custom_action') {
           $custom_action = self::get($element, $form_state, 'custom_action');
           $items[$index]['config'][$custom_action] = $values[$custom_action];
+        }
+
+        // Let the item type react to it's submitted values.
+        if ($id && $item = self::getItemById($items, $id)) {
+          $item_type = self::getItemTypeInstance($item, $element);
+          $item_type->submitForm($values['plugin_config'], $mode);
         }
 
         // Switch to list mode.
@@ -563,7 +570,7 @@ class ConfigurationContainer extends FormElement {
     $element['#suffix'] = '</div>';
 
     if (!self::has($element, $form_state, 'items') || ($mode == NULL && self::isInnerContainerElement($element))) {
-      self::setItems($element, $form_state, $element['#default_value']);
+      self::setItems($element, $form_state, $element['#default_value'] ?? []);
     }
 
     $mode = $mode ?? 'list';
@@ -651,7 +658,10 @@ class ConfigurationContainer extends FormElement {
         ],
         'pid' => self::canGroupItems($element) ? t('Parent') : NULL,
       ]),
-      ['operations' => '']
+      [
+        'issues' => t('Issues'),
+        'operations' => '',
+      ]
     );
 
     $table_rows = self::buildTableRows($element, $form_state, $include_type_column);
@@ -858,6 +868,10 @@ class ConfigurationContainer extends FormElement {
           $row[$first_column_key]['#prefix'] = \Drupal::service('renderer')->render($indentation);
         }
       }
+      $row['issues'] = [
+        '#markup' => implode(', ', $item_type->getConfigurationErrors()),
+      ];
+
       $row['operations'] = [
         '#type' => 'container',
         '#attributes' => [

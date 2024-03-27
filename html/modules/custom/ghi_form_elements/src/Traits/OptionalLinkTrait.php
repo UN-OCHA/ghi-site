@@ -4,6 +4,7 @@ namespace Drupal\ghi_form_elements\Traits;
 
 use Drupal\Core\Entity\Element\EntityAutocomplete;
 use Drupal\Core\Link;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
 
@@ -11,6 +12,8 @@ use Drupal\node\NodeInterface;
  * Helper trait for optional link support on form elements.
  */
 trait OptionalLinkTrait {
+
+  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
@@ -22,10 +25,26 @@ trait OptionalLinkTrait {
     if (empty($conf['link']['label']) || empty($conf['link']['url'])) {
       return NULL;
     }
-    $is_internal = strpos($conf['link']['url'], 'internal:') === 0;
+    return $this->getLinkFromUri($conf['link']['url'], $conf['link']['label']);
+  }
+
+  /**
+   * Get a link for the given URI and optional label.
+   *
+   * @param string $uri
+   *   A URI string.
+   * @param string $label
+   *   Optional label to use. If left empty, a default label will be build.
+   *
+   * @return \Drupal\Core\Link
+   *   The link object.
+   */
+  protected function getLinkFromUri($uri, $label = NULL) {
+    $is_internal = strpos($uri, 'internal:') === 0;
+    $label = $label ?? NULL;
     try {
-      $url = Url::fromUri($conf['link']['url']);
-      $link = $url->access() ? Link::fromTextAndUrl($conf['link']['label'], $url) : NULL;
+      $url = Url::fromUri($uri);
+      $link = $url->access() ? Link::fromTextAndUrl($label, $url) : NULL;
     }
     catch (\InvalidArgumentException $e) {
       return NULL;
@@ -37,13 +56,26 @@ trait OptionalLinkTrait {
       $node = $node instanceof NodeInterface ? $node : \Drupal::entityTypeManager()->getStorage('node')->load($node);
       $link->setUrl($node->toUrl());
     }
+
+    $attributes = $link->getUrl()->getOption('attributes');
+
+    if ($label === NULL) {
+      if ($link->getUrl()->isExternal()) {
+        $link->setText($this->t('Open'));
+        $attributes['target'] = '_blank';
+      }
+      else {
+        $link->setText($this->t('Go to page'));
+      }
+    }
+
     $classes = ['cd-button'];
     $classes[] = $link->getUrl()->isExternal() ? 'external' : 'read-more';
-    $attributes = $link->getUrl()->getOption('attributes');
     $attributes['class'] = $classes;
+
     $link->getUrl()->setOption('attributes', $attributes);
     if ($is_internal) {
-      $link->getUrl()->setOption('custom_path', str_replace('internal:', '', $conf['link']['url']));
+      $link->getUrl()->setOption('custom_path', str_replace('internal:', '', $uri));
     }
     return $link;
   }

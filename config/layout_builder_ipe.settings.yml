@@ -3,3 +3,5 @@ hide_local_tasks_block: false
 enhance_ui: true
 override_entity_changed_constraint: true
 non_concurrent_editing: true
+lock_layout: false
+lock_message: ''

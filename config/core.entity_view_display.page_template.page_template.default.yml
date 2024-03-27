@@ -1,0 +1,100 @@
+uuid: 561a824c-a8ac-4e0d-bc1d-946472265585
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.page_template.page_template.field_base_objects
+    - field.field.page_template.page_template.field_entity_reference
+    - field.field.page_template.page_template.layout_builder__layout
+  module:
+    - ghi_templates
+    - layout_builder
+    - layout_builder_ipe
+    - layout_builder_restrictions
+    - layout_discovery
+third_party_settings:
+  layout_builder:
+    enabled: true
+    allow_custom: true
+    sections:
+      -
+        layout_id: layout_onecol
+        layout_settings:
+          label: Content
+          context_mapping: {  }
+        components:
+          7d8d9242-cb8b-434a-9c71-559b1f812242:
+            uuid: 7d8d9242-cb8b-434a-9c71-559b1f812242
+            region: content
+            configuration:
+              id: 'field_block:page_template:page_template:field_base_objects'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: entity_reference_label
+                label: above
+                settings:
+                  link: true
+                third_party_settings: {  }
+            weight: 0
+            additional: {  }
+        third_party_settings:
+          layout_builder_lock:
+            lock:
+              5: 5
+              6: 6
+              7: 7
+  layout_builder_ipe:
+    enabled: true
+  layout_builder_restrictions:
+    allowed_block_categories: {  }
+    entity_view_mode_restriction:
+      allowed_layouts:
+        - layout_onecol
+      denylisted_blocks: {  }
+      allowlisted_blocks:
+        'Inline blocks':
+          - 'inline_block:basic'
+      restricted_categories:
+        - 'Chaos Tools'
+        - 'Content fields'
+        - 'Custom block types'
+        - Forms
+        - Global
+        - HID
+        - 'Lists (Views)'
+        - 'Mailing list'
+        - Menus
+        - Page
+        - Sections
+        - 'Social Auth'
+        - System
+        - User
+        - Views
+        - core
+id: page_template.page_template.default
+targetEntityType: page_template
+bundle: page_template
+mode: default
+content:
+  field_base_objects:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_entity_reference:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+hidden:
+  langcode: true
+  layout_builder__layout: true
+  search_api_excerpt: true

@@ -8,11 +8,13 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
+use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalLinkBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
+use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
@@ -38,7 +40,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *    "entity" = "entity_query",
  *    "attachment" = "attachment_query",
  *    "attachment_search" = "attachment_search_query",
- *    "attachment_prototype" = "attachment_prototype_query",
+ *    "attachment_prototype" = "plan_attachment_prototype_query",
  *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
@@ -61,11 +63,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  }
  * )
  */
-class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, OptionalLinkBlockInterface, TrustedCallbackInterface {
+class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, OptionalLinkBlockInterface, TrustedCallbackInterface, ConfigValidationInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
   use OptionalLinkTrait;
+  use ConfigValidationTrait;
 
   /**
    * The logframe manager.
@@ -717,8 +720,8 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    * @return int[]
    *   An array of attachment prototype ids.
    */
-  private function getUsedAttachmentPrototypeIds() {
-    $conf = $this->getBlockConfig()['tables'];
+  private function getUsedAttachmentPrototypeIds($conf = NULL) {
+    $conf = $conf !== NULL ? ($conf['tables'] ?? []) : $this->getBlockConfig()['tables'] ?? [];
     $attachment_prototype_ids = [];
     foreach ($conf['attachment_tables'] as $table) {
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
@@ -782,8 +785,8 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     if (!$plan_object) {
       return [];
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
-    $query = $this->endpointQueryManager->createInstance('attachment_prototype_query');
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanAttachmentPrototypeQuery $query */
+    $query = $this->endpointQueryManager->createInstance('plan_attachment_prototype_query');
     $attachment_prototypes = $query->getDataPrototypesForPlan($plan_object->getSourceId());
 
     $entity_ref_code = $this->getBlockConfig()['entities']['entity_ref_code'] ?? NULL;
@@ -801,6 +804,77 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     return [
       'lazyBuildTables',
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigErrors() {
+    $conf = $this->getBlockConfig();
+    $errors = [];
+    $configured_entities = array_filter($conf['entities']['entity_ids']);
+    $available_entities = $this->getPlanEntities($conf['entities']['entity_ref_code']);
+
+    if (!empty($configured_entities) && $available_entities && count($configured_entities) != count(array_intersect_key($configured_entities, $available_entities))) {
+      $errors[] = $this->t('Some configured entities are not available');
+    }
+
+    $items = $this->getConfiguredItemPlugins($conf['tables']['attachment_tables'] ?? [], $this->getBlockContext());
+    if (empty($items)) {
+      $errors[] = $this->t('No configured tables');
+    }
+    else {
+      foreach ($items as $item) {
+        if (!$item->isValid()) {
+          $errors[] = $this->t('@item_type: @errors', [
+            '@item_type' => $item->getLabel(),
+            '@errors' => implode(', ', $item->getConfigurationErrors()),
+          ]);
+        }
+      }
+    }
+
+    return $errors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fixConfigErrors() {
+    $conf = $this->getBlockConfig();
+
+    $entities = $this->getRenderableEntities();
+    $configured_entities = array_filter($conf['entities']['entity_ids']);
+    if (!empty($configured_entities)) {
+      $available_entities = $this->getPlanEntities($conf['entities']['entity_ref_code']);
+      $valid_entity_ids = array_intersect_key($configured_entities, $available_entities);
+      $conf['entities']['entity_ids'] = array_combine($valid_entity_ids, $valid_entity_ids);
+    }
+    else {
+      $conf['entities']['entity_ids'] = array_fill_keys(array_keys($entities), 0);
+    }
+
+    $entity_ref_code = $conf['entities']['entity_ref_code'] ?? [];
+    $context = $this->getBlockContext();
+    $context['entity_types'] = array_intersect_key($context['entity_types'], [$entity_ref_code => TRUE]);
+    $items = $this->getConfiguredItemPlugins($conf['tables']['attachment_tables'] ?? [], $context);
+    if (empty($items)) {
+      return;
+    }
+    foreach ($items as $key => $item) {
+      $item->setContextValue('used_attachment_prototypes', $this->getUsedAttachmentPrototypeIds($conf));
+      if ($item->isValid()) {
+        continue;
+      }
+      $item->fixConfigurationErrors();
+      if ($item->isValid()) {
+        $conf['tables']['attachment_tables'][$key]['config'] = $item->getConfig();
+      }
+      else {
+        unset($conf['tables']['attachment_tables'][$key]);
+      }
+    }
+    $this->setBlockConfig($conf);
   }
 
 }

@@ -1,0 +1,57 @@
+{
+  "id": 4126,
+  "refCode": "IN",
+  "type": "indicator",
+  "value": {
+    "hasMeasures": 1,
+    "measureFields": [
+      {
+        "name": {
+          "en": "Reached"
+        },
+        "type": "measure"
+      },
+      {
+        "name": {
+          "en": "Assessed People in Need"
+        },
+        "type": "covered"
+      }
+    ],
+    "name": {
+      "en": "Indicator"
+    },
+    "min": 0,
+    "max": 50,
+    "entities": [
+      "SO",
+      "CL",
+      "OC",
+      "OP",
+      "CA"
+    ],
+    "metrics": [
+      {
+        "type": "baseline",
+        "name": {
+          "en": "Baseline"
+        }
+      },
+      {
+        "type": "inNeed",
+        "name": {
+          "en": "In Need"
+        }
+      },
+      {
+        "type": "target",
+        "name": {
+          "en": "Target"
+        }
+      }
+    ]
+  },
+  "planId": 929,
+  "createdAt": "2019-11-27T14:30:30.323Z",
+  "updatedAt": "2020-07-29T07:16:53.044Z"
+}

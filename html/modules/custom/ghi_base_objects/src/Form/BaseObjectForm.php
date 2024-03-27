@@ -46,6 +46,7 @@ class BaseObjectForm extends ContentEntityForm {
       'form_token',
       'field_content',
       'status',
+      'actions',
     ];
     foreach (Element::children($form) as $element_key) {
       if (in_array($element_key, $allow_editing)) {

@@ -1,0 +1,18 @@
+{{ attach_library('common_design_subtheme/gho-related-articles') }}
+
+<div class="link-box gho-related-article">
+  {% if image %}
+    <div class="field--name-field-thumbnail-image">
+      {{ image }}
+    </div>
+  {% endif %}
+  <div class="content-wrapper gho-related-article__content">
+    <div class="title-wrapper gho-related-article__title">
+      <p class="title">{{ title }}</p>
+    </div>
+    <div class="description-wrapper gho-related-article__summary">
+      <div class="description">{{ description }}</div>
+      {{ link }}
+    </div>
+  </div>
+</div>

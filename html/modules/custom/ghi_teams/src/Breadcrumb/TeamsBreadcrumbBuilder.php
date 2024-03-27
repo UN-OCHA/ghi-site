@@ -8,6 +8,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\taxonomy\Entity\Term;
+use Drupal\taxonomy\Entity\Vocabulary;
 
 /**
  * Breadcrumb builder for team backend pages.
@@ -21,7 +22,14 @@ class TeamsBreadcrumbBuilder implements BreadcrumbBuilderInterface {
    */
   public function applies(RouteMatchInterface $route_match) {
     $term = $route_match->getParameter('taxonomy_term');
-    return ($term instanceof Term && $term->bundle() == 'team');
+    if ($term instanceof Term && $term->bundle() == 'team') {
+      return TRUE;
+    }
+    $vocabulary = $route_match->getParameter('taxonomy_vocabulary');
+    if ($vocabulary instanceof Vocabulary && $vocabulary->id() == 'team') {
+      return TRUE;
+    }
+    return FALSE;
   }
 
   /**

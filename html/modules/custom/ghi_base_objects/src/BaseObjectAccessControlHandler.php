@@ -34,6 +34,10 @@ class BaseObjectAccessControlHandler extends EntityAccessControlHandler {
       return AccessResult::allowed();
     }
 
+    if ($operation == 'view') {
+      return AccessResult::forbidden();
+    }
+
     return parent::checkAccess($entity, $operation, $account);
   }
 

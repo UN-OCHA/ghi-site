@@ -1,0 +1,431 @@
+{
+  "id": 38544,
+  "attachmentPrototypeId": 5399,
+  "objectId": 21388,
+  "objectType": "planEntity",
+  "planId": 1112,
+  "type": "indicator",
+  "currentVersion": true,
+  "latestVersion": true,
+  "latestTaggedVersion": true,
+  "versionTags": [
+    "0.4",
+    "0.5",
+    "1.0",
+    "1.1",
+    "1.2",
+    "1.3",
+    "1.4",
+    "1.5",
+    "1.6",
+    "1.7",
+    "1.8",
+    "1.9",
+    "1.10",
+    "1.11",
+    "1.12",
+    "1.13"
+  ],
+  "createdAt": "2022-11-23T15:17:10.242Z",
+  "updatedAt": "2024-03-18T10:52:33.041Z",
+  "deletedAt": null,
+  "attachmentPrototype": {
+    "id": 5399,
+    "refCode": "IN",
+    "type": "indicator",
+    "value": {
+      "calculationMethod": [
+        "Sum",
+        "Average",
+        "Maximum value",
+        "Latest value"
+      ],
+      "hasMeasures": 1,
+      "measureFields": [
+        {
+          "name": {
+            "en": "Mesure"
+          },
+          "type": "measure"
+        }
+      ],
+      "name": {
+        "en": "Indicateur"
+      },
+      "min": 0,
+      "max": 15,
+      "entities": [
+        "SP",
+        "CO",
+        "CA"
+      ],
+      "metrics": [
+        {
+          "type": "target",
+          "name": {
+            "en": "Ciblés"
+          }
+        }
+      ]
+    },
+    "planId": 1112,
+    "createdAt": "2022-09-27T09:22:19.994Z",
+    "updatedAt": "2023-05-11T09:17:27.888Z"
+  },
+  "attachmentVersion": {
+    "id": 455465,
+    "attachmentId": 38544,
+    "customReference": "1",
+    "value": {
+      "name": "header line 01",
+      "metrics": {
+        "unit": {
+          "id": 1,
+          "object": {
+            "id": 1,
+            "label": "Individuals",
+            "labelFr": "",
+            "isGender": "0"
+          }
+        },
+        "values": {
+          "totals": [
+            {
+              "name": {
+                "en": "Ciblés"
+              },
+              "type": "target",
+              "value": 183000
+            }
+          ]
+        },
+        "measureFields": [
+          {
+            "name": {
+              "en": "Mesure"
+            },
+            "type": "measure"
+          }
+        ],
+        "calculationMethod": "Sum"
+      },
+      "description": "Nombre de personnes non déplacées en insécurité alimentaire sévère ont reçu une assistance alimentaire",
+      "globalIndicatorId": 0
+    },
+    "hasDisaggregatedData": false,
+    "currentVersion": true,
+    "latestVersion": true,
+    "latestTaggedVersion": true,
+    "versionTags": [
+      "0.4",
+      "0.5",
+      "1.0",
+      "1.1",
+      "1.2",
+      "1.3",
+      "1.4",
+      "1.5",
+      "1.6",
+      "1.7",
+      "1.8",
+      "1.9",
+      "1.10",
+      "1.11",
+      "1.12",
+      "1.13"
+    ],
+    "createdAt": "2022-11-24T16:40:28.703Z",
+    "updatedAt": "2024-03-18T10:52:40.538Z"
+  },
+  "measurements": [
+    {
+      "id": 122775,
+      "attachmentId": 38544,
+      "planReportingPeriodId": 2387,
+      "currentVersion": true,
+      "latestVersion": true,
+      "latestTaggedVersion": true,
+      "versionTags": [
+        "1.10"
+      ],
+      "createdAt": "2023-07-17T09:25:25.812Z",
+      "updatedAt": "2023-10-12T07:13:41.347Z",
+      "deletedAt": null,
+      "measurementVersion": {
+        "id": 240300,
+        "value": {
+          "name": "header line 01",
+          "metrics": {
+            "unit": {
+              "id": 1,
+              "object": {
+                "id": 1,
+                "label": "Individuals",
+                "labelFr": "",
+                "isGender": "0"
+              }
+            },
+            "values": {
+              "totals": [
+                {
+                  "name": {
+                    "en": "Ciblés"
+                  },
+                  "type": "target",
+                  "value": 183000
+                },
+                {
+                  "name": {
+                    "en": "Mesure"
+                  },
+                  "type": "measure",
+                  "value": null
+                }
+              ]
+            },
+            "measureFields": [
+              {
+                "name": {
+                  "en": "Mesure"
+                },
+                "type": "measure"
+              }
+            ],
+            "calculationMethod": "Sum"
+          },
+          "description": "Nombre de personnes non déplacées en insécurité alimentaire sévère ont reçu une assistance alimentaire",
+          "attachmentType": "indicator",
+          "globalIndicatorId": 0
+        },
+        "measurementId": 122775,
+        "currentVersion": true,
+        "latestVersion": true,
+        "latestTaggedVersion": true,
+        "versionTags": [
+          "1.10"
+        ],
+        "createdAt": "2023-07-17T09:25:25.818Z",
+        "updatedAt": "2023-10-12T07:13:41.997Z"
+      }
+    },
+    {
+      "id": 113042,
+      "attachmentId": 38544,
+      "planReportingPeriodId": 2386,
+      "currentVersion": true,
+      "latestVersion": true,
+      "latestTaggedVersion": true,
+      "versionTags": [
+        "1.3",
+        "1.4",
+        "1.6",
+        "1.8",
+        "1.9"
+      ],
+      "createdAt": "2023-04-12T11:14:19.211Z",
+      "updatedAt": "2023-07-17T09:25:46.729Z",
+      "deletedAt": null,
+      "measurementVersion": {
+        "id": 219124,
+        "value": {
+          "name": "header line 01",
+          "metrics": {
+            "unit": {
+              "id": 1,
+              "object": {
+                "id": 1,
+                "label": "Individuals",
+                "labelFr": "",
+                "isGender": "0"
+              }
+            },
+            "values": {
+              "totals": [
+                {
+                  "name": {
+                    "en": "Ciblés"
+                  },
+                  "type": "target",
+                  "value": 183000
+                },
+                {
+                  "name": {
+                    "en": "Mesure"
+                  },
+                  "type": "measure",
+                  "value": null
+                }
+              ]
+            },
+            "measureFields": [
+              {
+                "name": {
+                  "en": "Mesure"
+                },
+                "type": "measure"
+              }
+            ],
+            "calculationMethod": "Sum"
+          },
+          "description": "Nombre de personnes non déplacées en insécurité alimentaire sévère ont reçu une assistance alimentaire",
+          "attachmentType": "indicator",
+          "globalIndicatorId": 0
+        },
+        "measurementId": 113042,
+        "currentVersion": true,
+        "latestVersion": true,
+        "latestTaggedVersion": true,
+        "versionTags": [
+          "1.3",
+          "1.4",
+          "1.6",
+          "1.8",
+          "1.9"
+        ],
+        "createdAt": "2023-04-12T11:14:19.216Z",
+        "updatedAt": "2023-07-17T09:25:47.494Z"
+      }
+    },
+    {
+      "id": 138600,
+      "attachmentId": 38544,
+      "planReportingPeriodId": 2389,
+      "currentVersion": true,
+      "latestVersion": true,
+      "latestTaggedVersion": true,
+      "versionTags": [
+        "1.13"
+      ],
+      "createdAt": "2024-01-10T11:45:10.989Z",
+      "updatedAt": "2024-03-18T10:52:49.226Z",
+      "deletedAt": null,
+      "measurementVersion": {
+        "id": 280697,
+        "value": {
+          "name": "header line 01",
+          "metrics": {
+            "unit": {
+              "id": 1,
+              "object": {
+                "id": 1,
+                "label": "Individuals",
+                "labelFr": "",
+                "isGender": "0"
+              }
+            },
+            "values": {
+              "totals": [
+                {
+                  "name": {
+                    "en": "Ciblés"
+                  },
+                  "type": "target",
+                  "value": 183000
+                },
+                {
+                  "name": {
+                    "en": "Mesure"
+                  },
+                  "type": "measure",
+                  "value": null
+                }
+              ]
+            },
+            "measureFields": [
+              {
+                "name": {
+                  "en": "Mesure"
+                },
+                "type": "measure"
+              }
+            ],
+            "calculationMethod": "Sum"
+          },
+          "description": "Nombre de personnes non déplacées en insécurité alimentaire sévère ont reçu une assistance alimentaire",
+          "attachmentType": "indicator",
+          "globalIndicatorId": 0
+        },
+        "measurementId": 138600,
+        "currentVersion": true,
+        "latestVersion": true,
+        "latestTaggedVersion": true,
+        "versionTags": [
+          "1.13"
+        ],
+        "createdAt": "2024-01-10T11:45:10.995Z",
+        "updatedAt": "2024-03-18T10:52:51.281Z"
+      }
+    },
+    {
+      "id": 132989,
+      "attachmentId": 38544,
+      "planReportingPeriodId": 2388,
+      "currentVersion": true,
+      "latestVersion": true,
+      "latestTaggedVersion": true,
+      "versionTags": [
+        "1.12"
+      ],
+      "createdAt": "2023-10-12T07:14:17.477Z",
+      "updatedAt": "2023-12-04T11:07:40.064Z",
+      "deletedAt": null,
+      "measurementVersion": {
+        "id": 269717,
+        "value": {
+          "name": "header line 01",
+          "metrics": {
+            "unit": {
+              "id": 1,
+              "object": {
+                "id": 1,
+                "label": "Individuals",
+                "labelFr": "",
+                "isGender": "0"
+              }
+            },
+            "values": {
+              "totals": [
+                {
+                  "name": {
+                    "en": "Ciblés"
+                  },
+                  "type": "target",
+                  "value": 183000
+                },
+                {
+                  "name": {
+                    "en": "Mesure"
+                  },
+                  "type": "measure",
+                  "value": null
+                }
+              ]
+            },
+            "measureFields": [
+              {
+                "name": {
+                  "en": "Mesure"
+                },
+                "type": "measure"
+              }
+            ],
+            "calculationMethod": "Sum"
+          },
+          "description": "Nombre de personnes non déplacées en insécurité alimentaire sévère ont reçu une assistance alimentaire",
+          "attachmentType": "indicator",
+          "globalIndicatorId": 0
+        },
+        "measurementId": 132989,
+        "currentVersion": true,
+        "latestVersion": true,
+        "latestTaggedVersion": true,
+        "versionTags": [
+          "1.12"
+        ],
+        "createdAt": "2023-10-12T07:14:17.483Z",
+        "updatedAt": "2023-12-04T11:07:41.474Z"
+      }
+    }
+  ],
+  "composedReference": "SP1/IN1"
+}

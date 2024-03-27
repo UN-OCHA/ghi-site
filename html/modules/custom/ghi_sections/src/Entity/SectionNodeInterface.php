@@ -9,6 +9,9 @@ use Drupal\node\NodeInterface;
  */
 interface SectionNodeInterface extends NodeInterface {
 
+  const BUNDLE = 'section';
+  const BASE_OBJECT_FIELD_NAME = 'field_base_object';
+
   /**
    * Get the page title.
    *
@@ -48,5 +51,13 @@ interface SectionNodeInterface extends NodeInterface {
    *   The type label of the base object linked to the section.
    */
   public function getSectionType();
+
+  /**
+   * Returns the cache tags that should be used to invalidate API caches.
+   *
+   * @return string[]
+   *   Set of cache tags.
+   */
+  public function getApiCacheTagsToInvalidate();
 
 }

@@ -1,0 +1,5 @@
+entity.page_template.collection:
+  title: 'Page templates'
+  parent: system.admin_structure
+  description: 'Create and manage page templates.'
+  route_name: entity.page_template.collection

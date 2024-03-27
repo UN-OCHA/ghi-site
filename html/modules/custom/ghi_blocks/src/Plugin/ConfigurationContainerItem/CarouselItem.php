@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
 
 /**
  * Provides a carousel item for configuration containers.
@@ -19,6 +20,8 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
  */
 class CarouselItem extends ConfigurationContainerItemPluginBase {
 
+  use OptionalLinkTrait;
+
   /**
    * {@inheritdoc}
    */
@@ -29,7 +32,35 @@ class CarouselItem extends ConfigurationContainerItemPluginBase {
       '#type' => 'carousel_item',
       '#default_value' => array_key_exists('value', $this->config) ? $this->config['value'] : NULL,
     ];
+
+    $element['#element_validate'] = [
+      [static::class, 'validateElement'],
+    ];
     return $element;
+  }
+
+  /**
+   * Validate the link form element.
+   *
+   * @param array $element
+   *   The element build in ::buildForm().
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   * @param array $complete_form
+   *   The complete form that contains the element.
+   */
+  public static function validateElement(&$element, FormStateInterface $form_state, &$complete_form) {
+    // @todo This repeats logic from
+    // \Drupal\ghi_form_elements\Element\OptionalLink::elementValidate().
+    $url = $form_state->getValue($element['#parents'])['value']['url'];
+    $transformed_url = self::transformUrl($url);
+    if (!$transformed_url) {
+      $form_state->setError($element['value']['url'], t('The link URL must be valid and accessible.'));
+    }
+    if (!$form_state->hasAnyErrors() && $transformed_url !== $url) {
+      $form_state->setValue(array_merge($element['#parents'], ['value', 'url']), $transformed_url);
+    }
+
   }
 
   /**
@@ -85,6 +116,17 @@ class CarouselItem extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * Get the link.
+   *
+   * @return \Drupal\Core\Link
+   *   A link object.
+   */
+  public function getLink() {
+    $label = $this->getButtonLabel() ?? $this->t('Read more');
+    return $this->getLinkFromUri($this->config['value']['url'], $label);
+  }
+
+  /**
    * Get the url.
    *
    * @return \Drupal\Core\Url
@@ -92,7 +134,8 @@ class CarouselItem extends ConfigurationContainerItemPluginBase {
    */
   public function getUrl() {
     try {
-      return Url::fromUri($this->config['value']['url']);
+      $link = $this->getLink();
+      return $link->getUrl();
     }
     catch (\InvalidArgumentException $e) {
       return NULL;

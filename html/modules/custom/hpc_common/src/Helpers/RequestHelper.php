@@ -3,6 +3,7 @@
 namespace Drupal\hpc_common\Helpers;
 
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Plugin\Context\Context;
@@ -30,6 +31,31 @@ class RequestHelper {
       return;
     }
     return $node;
+  }
+
+  /**
+   * Get the entity object from the current request if possible.
+   *
+   * @return \Drupal\core\Entity\EntityInterface|null
+   *   The entity object or NULL if none is available.
+   */
+  public static function getCurrentEntityObject() {
+    $route_match = \Drupal::routeMatch();
+    // Entity will be found in the route parameters.
+    if (($route = $route_match->getRouteObject()) && ($parameters = $route->getOption('parameters'))) {
+      // Determine if the current route represents an entity.
+      foreach ($parameters as $name => $options) {
+        if (isset($options['type']) && strpos($options['type'], 'entity:') === 0) {
+          $entity = $route_match->getParameter($name);
+          if ($entity instanceof ContentEntityInterface && $entity->hasLinkTemplate('canonical')) {
+            return $entity;
+          }
+
+          // Since entity was found, no need to iterate further.
+          return NULL;
+        }
+      }
+    }
   }
 
   /**

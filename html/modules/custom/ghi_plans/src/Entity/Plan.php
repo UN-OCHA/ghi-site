@@ -82,6 +82,17 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
+   * Get the configured plan caseload.
+   *
+   * @return int|null
+   *   The ID of the configured plan caseload.
+   */
+  public function getPlanCaseloadId() {
+    $plan_caseload_id = $this->get('field_plan_caseload')?->attachment_id;
+    return !empty($plan_caseload_id) ? $plan_caseload_id : NULL;
+  }
+
+  /**
    * Get the document uri.
    *
    * @return string|null
@@ -122,39 +133,6 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    */
   public function canLinkToFts() {
     return $this->get('field_link_to_fts')->value ?? FALSE;
-  }
-
-  /**
-   * Map a status string value to a boolean.
-   *
-   * This basically maps "published" to TRUE and everything else to FALSE.
-   *
-   * @param string $value
-   *   The incoming value.
-   *
-   * @return bool
-   *   The resulting status.
-   */
-  public static function mapPlanStatus($value) {
-    if (strtolower($value) == 'published') {
-      return TRUE;
-    }
-    return FALSE;
-  }
-
-  /**
-   * Map the prevent_fts_link value (Insight) to the link_to_fts value (GHI).
-   *
-   * We negate the value because we try to prevent negative field meanings.
-   *
-   * @param bool $value
-   *   The incoming value.
-   *
-   * @return bool
-   *   The resulting status.
-   */
-  public static function mapFtsLink($value) {
-    return !$value;
   }
 
 }

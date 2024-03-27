@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.storage.node.field_content_space
     - field.storage.node.field_entity_reference
     - field.storage.node.field_protected
     - field.storage.node.field_remote_article
@@ -26,6 +27,7 @@ dependencies:
     - node.type.presence
     - node.type.progress
     - node.type.section
+    - taxonomy.vocabulary.content_space
     - taxonomy.vocabulary.tags
     - taxonomy.vocabulary.team
   module:
@@ -1455,6 +1457,69 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
+        field_content_space:
+          id: field_content_space
+          table: node__field_content_space
+          field: field_content_space
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: field
+          label: 'Content space'
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: target_id
+          type: entity_reference_label
+          settings:
+            link: false
+          group_column: target_id
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
         field_tags:
           id: field_tags
           table: node__field_tags
@@ -1810,6 +1875,58 @@ display:
             default_group: All
             default_group_multiple: {  }
             group_items: {  }
+        field_content_space_target_id:
+          id: field_content_space_target_id
+          table: node__field_content_space
+          field: field_content_space_target_id
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: taxonomy_index_tid
+          operator: or
+          value: {  }
+          group: 1
+          exposed: true
+          expose:
+            operator_id: field_content_space_target_id_op
+            label: 'Content space'
+            description: ''
+            use_operator: false
+            operator: field_content_space_target_id_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: field_content_space_target_id
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              administrator: '0'
+              global_editor: '0'
+              editor: '0'
+              rpm_administrator: '0'
+              plan_lead: '0'
+              cluster_lead: '0'
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+          reduce_duplicates: false
+          vid: content_space
+          type: select
+          hierarchy: false
+          limit: true
+          error_message: true
         field_tags_target_id:
           id: field_tags_target_id
           table: node__field_tags
@@ -1939,13 +2056,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-              global_editor: '0'
-              editor: '0'
-              rpm_administrator: '0'
-              plan_lead: '0'
-              cluster_lead: '0'
             min_placeholder: ''
             max_placeholder: ''
             placeholder: ''
@@ -1963,7 +2073,7 @@ display:
             group_items:
               1:
                 title: 'Yes'
-                operator: '='
+                operator: 'not empty'
                 value:
                   min: ''
                   max: ''
@@ -1974,14 +2084,7 @@ display:
                 value:
                   min: ''
                   max: ''
-                  value: ''
-              3:
-                title: ''
-                operator: '='
-                value:
-                  min: ''
-                  max: ''
-                  value: ''
+                  value: '1'
       filter_groups:
         operator: AND
         groups:
@@ -2110,10 +2213,10 @@ display:
         - 'languages:language_interface'
         - url
         - url.query_args
-        - user
         - 'user.node_grants:view'
         - user.permissions
       tags:
+        - 'config:field.storage.node.field_content_space'
         - 'config:field.storage.node.field_protected'
         - 'config:field.storage.node.field_remote_article'
         - 'config:field.storage.node.field_tags'
@@ -2764,25 +2867,18 @@ display:
             group_items:
               1:
                 title: 'Yes'
-                operator: '='
+                operator: 'not empty'
                 value:
                   min: ''
                   max: ''
                   value: '1'
               2:
                 title: 'No'
-                operator: '='
+                operator: empty
                 value:
                   min: ''
                   max: ''
                   value: '0'
-              3:
-                title: ''
-                operator: '='
-                value:
-                  min: ''
-                  max: ''
-                  value: ''
       filter_groups:
         operator: AND
         groups:
@@ -2905,7 +3001,6 @@ display:
         - 'languages:language_interface'
         - url
         - url.query_args
-        - user
         - 'user.node_grants:view'
         - user.permissions
       tags:
@@ -3053,6 +3148,69 @@ display:
             link_to_edit: 1
             include_publisher_destination: 1
           group_column: ''
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        field_content_space:
+          id: field_content_space
+          table: node__field_content_space
+          field: field_content_space
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: field
+          label: 'Content space'
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: target_id
+          type: entity_reference_label
+          settings:
+            link: false
+          group_column: target_id
           group_columns: {  }
           group_rows: true
           delta_limit: 0
@@ -3417,6 +3575,58 @@ display:
             default_group: All
             default_group_multiple: {  }
             group_items: {  }
+        field_content_space_target_id:
+          id: field_content_space_target_id
+          table: node__field_content_space
+          field: field_content_space_target_id
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: taxonomy_index_tid
+          operator: or
+          value: {  }
+          group: 1
+          exposed: true
+          expose:
+            operator_id: field_content_space_target_id_op
+            label: 'Content space'
+            description: ''
+            use_operator: false
+            operator: field_content_space_target_id_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: field_content_space_target_id
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              administrator: '0'
+              global_editor: '0'
+              editor: '0'
+              rpm_administrator: '0'
+              plan_lead: '0'
+              cluster_lead: '0'
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+          reduce_duplicates: false
+          vid: content_space
+          type: select
+          hierarchy: false
+          limit: true
+          error_message: true
         field_tags_target_id:
           id: field_tags_target_id
           table: node__field_tags
@@ -3546,9 +3756,9 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-            min_placeholder: null
-            max_placeholder: null
-            placeholder: null
+            min_placeholder: ''
+            max_placeholder: ''
+            placeholder: ''
           is_grouped: true
           group_info:
             label: Protected
@@ -3563,21 +3773,14 @@ display:
             group_items:
               1:
                 title: 'Yes'
-                operator: '='
-                value:
-                  min: ''
-                  max: ''
-                  value: '1'
-              2:
-                title: 'No'
-                operator: empty
+                operator: 'not empty'
                 value:
                   min: ''
                   max: ''
                   value: ''
-              3:
-                title: ''
-                operator: '='
+              2:
+                title: 'No'
+                operator: empty
                 value:
                   min: ''
                   max: ''
@@ -3702,10 +3905,10 @@ display:
         - 'languages:language_interface'
         - url
         - url.query_args
-        - user
         - 'user.node_grants:view'
         - user.permissions
       tags:
+        - 'config:field.storage.node.field_content_space'
         - 'config:field.storage.node.field_protected'
         - 'config:field.storage.node.field_remote_document'
         - 'config:field.storage.node.field_tags'
@@ -4025,7 +4228,7 @@ display:
       access:
         type: perm
         options:
-          perm: 'administer nodes'
+          perm: 'create homepage content'
       filters:
         type_1:
           id: type_1
@@ -4413,7 +4616,6 @@ display:
         - 'languages:language_interface'
         - url
         - url.query_args
-        - user
         - 'user.node_grants:view'
         - user.permissions
       tags:
@@ -5018,7 +5220,6 @@ display:
         - 'languages:language_interface'
         - url
         - url.query_args
-        - user
         - 'user.node_grants:view'
         - user.permissions
       tags:
@@ -5836,25 +6037,18 @@ display:
             group_items:
               1:
                 title: 'Yes'
-                operator: '='
+                operator: 'not empty'
                 value:
                   min: ''
                   max: ''
                   value: '1'
               2:
                 title: 'No'
-                operator: '='
+                operator: empty
                 value:
                   min: ''
                   max: ''
                   value: '0'
-              3:
-                title: ''
-                operator: '='
-                value:
-                  min: ''
-                  max: ''
-                  value: ''
       filter_groups:
         operator: AND
         groups:
@@ -5992,7 +6186,6 @@ display:
         - 'languages:language_interface'
         - url
         - url.query_args
-        - user
         - 'user.node_grants:view'
         - user.permissions
       tags:

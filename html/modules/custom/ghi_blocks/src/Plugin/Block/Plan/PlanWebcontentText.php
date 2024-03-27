@@ -3,8 +3,8 @@
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment;
 
 /**
  * Provides a 'PlanWebcontentText' block.
@@ -39,13 +39,16 @@ class PlanWebcontentText extends GHIBlockBase {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
     $query = $this->getQueryHandler('attachment');
     $attachment = $query->getAttachment($conf['attachment_id']);
+    if (!$attachment instanceof TextAttachment) {
+      return;
+    }
 
     $build = [
       '#type' => 'container',
       'content' => [
         [
           '#type' => 'markup',
-          '#markup' => Markup::create($attachment->content),
+          '#markup' => $attachment->getMarkup(),
         ],
       ],
     ];
@@ -77,10 +80,10 @@ class PlanWebcontentText extends GHIBlockBase {
 
     if (!empty($attachments)) {
       foreach ($attachments as $attachment) {
-        $options[$attachment->id] = [
-          'id' => $attachment->id,
-          'title' => $attachment->title,
-          'text' => Markup::create($attachment->content),
+        $options[$attachment->id()] = [
+          'id' => $attachment->id(),
+          'title' => $attachment->getTitle(),
+          'text' => $attachment->getMarkup(),
         ];
       }
     }

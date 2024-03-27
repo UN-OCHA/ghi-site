@@ -1,0 +1,120 @@
+diff --git a/gin_lb.api.php b/gin_lb.api.php
+index 2db241a..075d1ac 100644
+--- a/gin_lb.api.php
++++ b/gin_lb.api.php
+@@ -42,6 +42,25 @@ function hook_gin_lb_is_layout_builder_route_alter(&$gin_lb_is_layout_builder_ro
+   }
+ }
+ 
++/**
++ * Alter the template suggestion logic.
++ *
++ * Allows modules to overrule whether template suggestions should be added.
++ *
++ * @param boolean $add_suggestions
++ *   Boolean flag.
++ * @param array $variables
++ *   The variables array of a render item.
++ * @param string $hook
++ *   The theme hook.
++ */
++function hook_gin_lb_add_suggestions_alter(&$add_suggestions, $variables, $hook) {
++  $route_name = \Drupal::routeMatch()->getRouteName();
++  if ($route_name == 'layout_builder.add_block' && $add_suggestions) {
++    $add_suggestions = FALSE;
++  }
++}
++
+ /**
+  * @} End of "addtogroup hooks".
+  */
+diff --git a/gin_lb.module b/gin_lb.module
+index bb32458..70ee12e 100644
+--- a/gin_lb.module
++++ b/gin_lb.module
+@@ -224,6 +224,17 @@ function gin_lb_theme(): array {
+   return $instance->themes();
+ }
+ 
++/**
++ * Implements hook_theme_registry_alter().
++ */
++function gin_lb_theme_registry_alter(&$theme_registry) {
++  foreach ($theme_registry as &$value) {
++    if (array_key_exists('variables', $value)) {
++      $value['variables']['gin_lb_theme_suggestions'] = NULL;
++    }
++  }
++}
++
+ /**
+  * Implements hook_theme_suggestions_alter().
+  */
+diff --git a/src/HookHandler/ThemeSuggestionsAlter.php b/src/HookHandler/ThemeSuggestionsAlter.php
+index ff612ca..87e5124 100644
+--- a/src/HookHandler/ThemeSuggestionsAlter.php
++++ b/src/HookHandler/ThemeSuggestionsAlter.php
+@@ -5,6 +5,7 @@ declare(strict_types=1);
+ namespace Drupal\gin_lb\HookHandler;
+ 
+ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
++use Drupal\Core\Extension\ModuleHandlerInterface;
+ use Drupal\Core\Routing\RouteMatchInterface;
+ use Drupal\gin_lb\Service\ContextValidatorInterface;
+ use Drupal\views\ViewExecutable;
+@@ -16,6 +17,13 @@ use Symfony\Component\HttpFoundation\RequestStack;
+  */
+ class ThemeSuggestionsAlter implements ContainerInjectionInterface {
+ 
++  /**
++   * The module handler.
++   *
++   * @var \Drupal\Core\Extension\ModuleHandlerInterface
++   */
++  protected ModuleHandlerInterface $moduleHandler;
++
+   /**
+    * The current route match.
+    *
+@@ -77,6 +85,8 @@ class ThemeSuggestionsAlter implements ContainerInjectionInterface {
+   /**
+    * Constructor.
+    *
++   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
++   *   The module handler.
+    * @param \Drupal\Core\Routing\RouteMatchInterface $currentRouteMatch
+    *   The current route match.
+    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
+@@ -85,10 +95,12 @@ class ThemeSuggestionsAlter implements ContainerInjectionInterface {
+    *   The context validator.
+    */
+   public function __construct(
++    ModuleHandlerInterface $moduleHandler,
+     RouteMatchInterface $currentRouteMatch,
+     RequestStack $requestStack,
+     ContextValidatorInterface $contextValidator
+   ) {
++    $this->moduleHandler = $moduleHandler;
+     $this->currentRouteMatch = $currentRouteMatch;
+     $this->requestStack = $requestStack;
+     $this->contextValidator = $contextValidator;
+@@ -100,6 +112,7 @@ class ThemeSuggestionsAlter implements ContainerInjectionInterface {
+   public static function create(ContainerInterface $container): static {
+     // @phpstan-ignore-next-line
+     return new static(
++      $container->get('module_handler'),
+       $container->get('current_route_match'),
+       $container->get('request_stack'),
+       $container->get('gin_lb.context_validator')
+@@ -125,7 +138,10 @@ class ThemeSuggestionsAlter implements ContainerInjectionInterface {
+       $suggestions[] = $hook . '__gin_lb';
+     }
+ 
+-    if (isset($variables['element']['#gin_lb_form']) || $this->hasSuggestions($variables, $hook)) {
++    $has_suggestions = $this->hasSuggestions($variables, $hook);
++    $this->moduleHandler->alter('gin_lb_add_suggestions', $has_suggestions, $variables, $hook);
++
++    if (isset($variables['element']['#gin_lb_form']) || $has_suggestions) {
+       // Fix form element suggestions when they are not implemented in the
+       // theme.
+       if (empty($suggestions) && !empty($variables['theme_hook_original'])) {

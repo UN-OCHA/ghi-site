@@ -4,5 +4,5 @@ status: true
 dependencies: {  }
 name: 'Organization type'
 vid: organization_type
-description: ''
+description: 'Organization types imported from the HPC API'
 weight: 0

@@ -1,0 +1,5 @@
+entity.page_template.add_form:
+  route_name: entity.page_template.add_page
+  title: 'Add Page template'
+  appears_on:
+    - entity.page_template.collection

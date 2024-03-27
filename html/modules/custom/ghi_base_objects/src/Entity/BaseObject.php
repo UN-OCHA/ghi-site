@@ -21,7 +21,6 @@ use Drupal\Core\Url;
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\ghi_base_objects\BaseObjectListBuilder",
  *     "views_data" = "Drupal\ghi_base_objects\Entity\BaseObjectViewsData",
- *
  *     "form" = {
  *       "default" = "Drupal\ghi_base_objects\Form\BaseObjectForm",
  *       "add" = "Drupal\ghi_base_objects\Form\BaseObjectForm",
@@ -175,6 +174,17 @@ class BaseObject extends ContentEntityBase implements BaseObjectInterface {
       ->setDescription(t('The time that the entity was last edited.'));
 
     return $fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiCacheTagsToInvalidate() {
+    $source_id = $this->getSourceId();
+    if (!$source_id) {
+      return [];
+    }
+    return [$this->bundle() . '_id:' . $this->getSourceId()];
   }
 
 }
