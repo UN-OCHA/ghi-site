@@ -80,7 +80,6 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
     $this->disableCache = FALSE;
 
     // Init the configuration based on stored values.
-    $config = $this->configFactory->get('ghi_content.remote_sources')->get($this->getPluginId());
     $config = $this->configFactory->get('ghi_content.remote_sources')->getOriginal($this->getPluginId());
     $this->setConfiguration($config ? $config : []);
   }
@@ -150,6 +149,17 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
    */
   public function saveConfiguration() {
     $this->configFactory->getEditable('ghi_content.remote_sources')->set($this->getPluginId(), $this->configuration)->save();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContent($type, $id) {
+    $method = 'get' . ucfirst(strtolower($type));
+    if (!method_exists($this, $method)) {
+      return NULL;
+    }
+    return $this->{$method}($id);
   }
 
   /**
