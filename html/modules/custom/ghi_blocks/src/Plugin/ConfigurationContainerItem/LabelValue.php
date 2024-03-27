@@ -126,7 +126,7 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
     if ($custom_logo && array_key_exists($custom_logo, $this->customLogos())) {
       $logo = $this->customLogos()[$custom_logo];
       $path_resolver = \Drupal::service('extension.path.resolver');
-      $icon = $logo['icon'] ?? ($custom_logo . '.png');
+      $icon = $logo['icon'] ?? ($custom_logo . '.svg');
       $icon_path = $path_resolver->getPath('module', 'ghi_blocks') . '/assets/custom_logos/' . $icon;
       if (file_exists($icon_path)) {
         $icons[] = [
@@ -185,7 +185,7 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
    *   - url: A url object used to create the target link.
    *   - icon (optional): The name of the icon file under
    *     /modules/ghi_blocks/assets/custom_logos. If no icon is provided, the
-   *     name will be build using the array key and the suffix ".png".
+   *     name will be build using the array key and the suffix ".svg".
    */
   private function customLogos() {
     return [
