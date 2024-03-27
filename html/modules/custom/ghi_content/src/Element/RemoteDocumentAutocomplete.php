@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element\Textfield;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
+use Drupal\ghi_content\Traits\RemoteElementTrait;
 
 /**
  * Provides an autocomplete form element for remote documents.
@@ -32,6 +33,8 @@ use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
  * @FormElement("remote_document_autocomplete")
  */
 class RemoteDocumentAutocomplete extends Textfield {
+
+  use RemoteElementTrait;
 
   /**
    * {@inheritdoc}
@@ -236,21 +239,6 @@ class RemoteDocumentAutocomplete extends Textfield {
     }
 
     return $match;
-  }
-
-  /**
-   * Get a remote source instance.
-   *
-   * @param string $remote_source
-   *   The machine name of the remote source.
-   *
-   * @return \Drupal\ghi_content\RemoteSource\RemoteSourceInterface
-   *   The remote source instance
-   */
-  private static function getRemoteSourceInstance($remote_source) {
-    /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
-    $remote_source_manager = \Drupal::service('plugin.manager.remote_source');
-    return $remote_source_manager->createInstance($remote_source);
   }
 
 }
