@@ -25,7 +25,7 @@ trait GlobalMapTrait {
     $use_proxy = !empty($map_config['mapbox_proxy']);
     $host = $use_proxy ? '/mapbox' : 'https://api.mapbox.com';
     $token = $use_proxy ? 'token' : getenv('MAPBOX_TOKEN');
-    $style_url = 'styles/v1/reliefweb/' . $style_id . '/tiles/256/{z}/{x}/{y}?title=view&access_token=' . $token;
+    $style_url = 'styles/v1/reliefweb/' . $style_id . '/tiles/256/{z}/{x}/{y}?access_token=' . $token;
     return $host . '/' . $style_url;
   }
 
