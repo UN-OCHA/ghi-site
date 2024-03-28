@@ -66,6 +66,7 @@
     flex-basis: 320px;
     flex-grow: 1;
     flex-shrink: 0;
+    margin-top: 0;
   }
   [dir="ltr"] .gho-related-article__content {
     padding-right: 0;
