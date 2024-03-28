@@ -23,14 +23,12 @@ class TaxonomyTermRouteSubscriber extends RouteSubscriberBase {
     // Sets the _admin_route for the canonical taxonomy term route.
     if ($route = $collection->get('entity.taxonomy_term.canonical')) {
       $route->setOption('_admin_route', TRUE);
+      $route->setRequirement('_custom_access', '\Drupal\ghi_teams\Controller\TaxonomyTermController::access');
     }
     if ($route = $collection->get('entity.taxonomy_term.add_form')) {
       $route->setDefault('_title_callback', TaxonomyTermController::class . '::addTitle');
     }
     if ($route = $collection->get('entity.taxonomy_term.edit_form')) {
-      $route->setDefault('_title_callback', TaxonomyTermController::class . '::editTitle');
-    }
-    if ($route = $collection->get('entity.taxonomy_term.delete_form')) {
       $route->setDefault('_title_callback', TaxonomyTermController::class . '::editTitle');
     }
   }

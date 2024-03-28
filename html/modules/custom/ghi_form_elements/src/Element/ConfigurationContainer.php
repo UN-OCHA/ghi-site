@@ -420,7 +420,7 @@ class ConfigurationContainer extends FormElement {
         // Let the item type react to it's submitted values.
         if ($id && $item = self::getItemById($items, $id)) {
           $item_type = self::getItemTypeInstance($item, $element);
-          $item_type->submitForm($values['plugin_config'], $mode);
+          $item_type->submitForm($values['plugin_config'] ?? [], $mode);
         }
 
         // Switch to list mode.

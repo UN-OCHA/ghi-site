@@ -40,9 +40,7 @@ class RouteSubscriber extends RouteSubscriberBase {
     // Add a custom access check for node creation.
     // @see ghi_subpages_preprocess_node_add_list().
     if ($route = $collection->get('node.add')) {
-      $requirements = $route->getRequirements();
-      $requirements['_custom_access'] = '\Drupal\ghi_subpages\Controller\SubpagesAdminController::nodeCreateAccess';
-      $route->setRequirements($requirements);
+      $route->setRequirement('_custom_access', '\Drupal\ghi_subpages\Controller\SubpagesAdminController::nodeCreateAccess');
     }
   }
 
