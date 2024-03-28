@@ -69,7 +69,7 @@ class CustomSubpageManagerTest extends SectionMenuTestBase {
   }
 
   /**
-   * Tests that tags can be imported.
+   * Tests that nodes for a section can be loaded.
    */
   public function testLoadNodesForSection() {
 
