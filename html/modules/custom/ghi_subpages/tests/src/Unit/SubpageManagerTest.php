@@ -36,6 +36,13 @@ class SubpageManagerTest extends UnitTestCase {
   protected $subpageManager;
 
   /**
+   * A node type representing anything.
+   *
+   * @var \Drupal\node\NodeTypeInterface
+   */
+  protected $nodeType;
+
+  /**
    * A node type representing base nodes.
    *
    * @var \Drupal\node\NodeTypeInterface
@@ -59,15 +66,12 @@ class SubpageManagerTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = [
-    'ghi_subpages',
-  ];
-
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
+
+    $node_type = $this->prophesize(NodeTypeInterface::class);
+    $node_type->id()->willReturn('node');
+    $this->nodeType = $node_type->reveal();
 
     $base_node_type = $this->prophesize(NodeTypeInterface::class);
     $base_node_type->id()->willReturn('section');
@@ -83,6 +87,7 @@ class SubpageManagerTest extends UnitTestCase {
 
     $node_storage = $this->prophesize(EntityStorageInterface::class);
     $node_storage->loadMultiple()->willReturn([
+      $this->nodeType,
       $this->baseNodeType,
       $this->standardSubpageNodeType,
       $this->customSubpageNodeType,
@@ -94,6 +99,7 @@ class SubpageManagerTest extends UnitTestCase {
 
     $entity_type_bundle_info = $this->prophesize(EntityTypeBundleInfoInterface::class);
     $entity_type_bundle_info->getBundleInfo('node')->willReturn([
+      'node' => ['class' => Node::class],
       'section' => ['class' => Section::class],
       'population' => ['class' => PopulationSubpage::class],
       'custom_subpage' => ['class' => CustomSubpage::class],
@@ -122,6 +128,41 @@ class SubpageManagerTest extends UnitTestCase {
   public function testGetStandardSubpageTypes() {
     $subpage_types = $this->subpageManager->getStandardSubpageTypes();
     $this->assertEquals(SubpageManager::SUPPORTED_SUBPAGE_TYPES, $subpage_types);
+  }
+
+  /**
+   * Test the getBaseTypeNode method.
+   */
+  public function testGetBaseTypeNode() {
+    $node_type = $this->prophesize(NodeTypeInterface::class);
+    $node_type->id()->willReturn('article');
+
+    $node = $this->prophesize(Node::class);
+    $type = $this->prophesize(EntityReferenceFieldItemListInterface::class);
+    $type->addMethodProphecy((new MethodProphecy($type, '__get', ['entity']))->willReturn($node_type->reveal()));
+    $node->type = $type->reveal();
+    $base_node = $this->subpageManager->getBaseTypeNode($node->reveal());
+    $this->assertNull($base_node);
+
+    $section = $this->prophesize(SectionNodeInterface::class);
+    $base_node = $this->subpageManager->getBaseTypeNode($section->reveal());
+    $this->assertEquals($section->reveal(), $base_node);
+
+    $subpage = $this->prophesize(Node::class);
+    $type = $this->prophesize(EntityReferenceFieldItemListInterface::class);
+    $type->addMethodProphecy((new MethodProphecy($type, '__get', ['entity']))->willReturn($this->standardSubpageNodeType));
+    $subpage->type = $type->reveal();
+    $subpage->getFieldDefinitions()->willReturn([]);
+    $subpage->hasField('field_entity_reference')->willReturn(FALSE);
+    $base_node = $this->subpageManager->getBaseTypeNode($subpage->reveal());
+    $this->assertNull($base_node);
+
+    $subpage->hasField('field_entity_reference')->willReturn(TRUE);
+    $references = $this->prophesize(EntityReferenceFieldItemListInterface::class);
+    $references->addMethodProphecy((new MethodProphecy($type, '__get', ['entity']))->willReturn($section->reveal()));
+    $subpage->get('field_entity_reference')->willReturn($references->reveal());
+    $base_node = $this->subpageManager->getBaseTypeNode($subpage->reveal());
+    $this->assertEquals($section->reveal(), $base_node);
   }
 
   /**
@@ -157,6 +198,8 @@ class SubpageManagerTest extends UnitTestCase {
   public function testIsStandardSubpageType() {
     $this->assertTrue($this->subpageManager->isStandardSubpageType($this->standardSubpageNodeType));
     $this->assertFalse($this->subpageManager->isStandardSubpageType($this->customSubpageNodeType));
+    $this->assertFalse($this->subpageManager->isStandardSubpageType($this->baseNodeType));
+    $this->assertFalse($this->subpageManager->isStandardSubpageType($this->nodeType));
   }
 
   /**
