@@ -19,7 +19,7 @@
     },
     "drupal/gin": {
       "Issue #??: Use toolbar-bar as id for the toolbar to prevent JS errors in Drupal 10.2": "./patches/gin-toolbar-id.patch",
-      "Issue #3281984: The breadcrumb shows 'Edit <label>' on all entity routes, even canonical/delete routes": "https://www.drupal.org/files/issues/2024-02-07/gin_3281984_cherrypick_for_rc9.patch"
+      "Issue #3281984: The breadcrumb shows 'Edit <label>' on all entity routes, even canonical/delete routes": "https://www.drupal.org/files/issues/2024-04-11/gin_3281984_cherrypick_for_rc10.patch"
     },
     "drupal/gin_lb": {
       "Issue #??: Add alter hook for template suggestions trigger": "./patches/hook_gin_lb_add_suggestions_alter-1.0.0-rc6.patch"
