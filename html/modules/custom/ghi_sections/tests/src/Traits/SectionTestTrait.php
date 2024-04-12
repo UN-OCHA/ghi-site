@@ -52,11 +52,19 @@ trait SectionTestTrait {
       'name' => ucfirst(self::SECTION_BUNDLE),
     ]);
 
+    /** @var \Drupal\Core\Entity\EntityDisplayRepository $display_repository */
+    $display_repository = $this->container->get('entity_display.repository');
+
+    /** @var \Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay $display */
+    $display = $display_repository->getViewDisplay('node', self::SECTION_BUNDLE);
+    $display->enableLayoutBuilder()
+      ->setOverridable()
+      ->save();
+
     $this->createEntityReferenceField('node', self::SECTION_BUNDLE, 'field_base_object', 'Base object', 'base_object', 'default', [
       'target_bundles' => ['plan'],
     ]);
 
-    $display_repository = $this->container->get('entity_display.repository');
     $display_repository->getFormDisplay('node', self::SECTION_BUNDLE)
       ->setComponent('field_base_object', [
         'type' => 'entity_reference_autocomplete',

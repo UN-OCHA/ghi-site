@@ -4,9 +4,11 @@ namespace Drupal\ghi_templates;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\Plugin\SectionStorage\DefaultsSectionStorage;
 use Drupal\layout_builder\SectionStorageInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -17,6 +19,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class TemplateLinkBuilder {
 
   use StringTranslationTrait;
+  use LayoutEntityHelperTrait;
 
   /**
    * The layout builder ipe config object.
@@ -205,6 +208,32 @@ class TemplateLinkBuilder {
       'url' => $url,
       'attributes' => $this->getLinkAttributes(),
     ];
+  }
+
+  /**
+   * Alter the entity operations for the given entity.
+   *
+   * @param array $links
+   *   An array of operation links.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity for which operations are built.
+   *
+   * @see ghi_templates_entity_operation_alter()
+   */
+  public function alterEntityOperations(array &$links, ContentEntityInterface $entity) {
+    $section_storage = $this->getSectionStorageForEntity($entity);
+    if ($section_storage instanceof SectionStorageInterface) {
+      $export_link = $this->buildExportLink($section_storage, $entity);
+      if ($export_link) {
+        $links['export'] = $export_link;
+        $links['export']['weight'] = 100;
+      }
+      $import_link = $this->buildImportLink($section_storage, $entity, ['query' => ['redirect_to_entity' => TRUE]]);
+      if ($import_link) {
+        $links['import'] = $import_link;
+        $links['import']['weight'] = 100;
+      }
+    }
   }
 
   /**

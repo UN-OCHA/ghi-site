@@ -162,13 +162,16 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
   /**
    * {@inheritdoc}
    */
-  public function getBaseObjectsfromSource() {
-    $source_page = $this->getSourceEntity();
+  public function getBaseObjectsfromSource($source_page = NULL) {
+    $source_page = $source_page ?? $this->getSourceEntity();
     if ($source_page && $source_page->hasField('field_base_objects')) {
       return $source_page->field_base_objects?->referencedEntities();
     }
     if ($source_page && $source_page->hasField('field_base_object')) {
       return [$source_page->field_base_object?->entity];
+    }
+    if ($source_page && $source_page->hasField('field_entity_reference')) {
+      return $this->getBaseObjectsfromSource($source_page->field_entity_reference?->entity);
     }
     return [];
   }

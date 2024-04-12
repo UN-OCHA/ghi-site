@@ -32,6 +32,8 @@ abstract class SectionMenuTestBase extends KernelTestBase {
     'path',
     'path_alias',
     'pathauto',
+    'layout_builder',
+    'layout_discovery',
     'ghi_sections',
   ];
 
