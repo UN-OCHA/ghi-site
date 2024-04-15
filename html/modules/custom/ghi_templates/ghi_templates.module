@@ -79,6 +79,21 @@ function ghi_templates_module_implements_alter(&$implementations, $hook) {
 }
 
 /**
+ * Implements hook_entity_operation_alter().
+ */
+function ghi_templates_entity_operation_alter(array &$operations, EntityInterface $entity) {
+  if (!$entity instanceof ContentEntityInterface) {
+    return;
+  }
+  if ($entity instanceof PageTemplateInterface) {
+    return;
+  }
+  /** @var \Drupal\ghi_templates\TemplateLinkBuilder $template_link_builder */
+  $template_link_builder = \Drupal::service('ghi_templates.link_builder');
+  $template_link_builder->alterEntityOperations($operations, $entity);
+}
+
+/**
  * Implements hook_layout_builder_view_context_alter().
  */
 function ghi_templates_layout_builder_view_context_alter(array &$contexts, SectionStorageInterface $section_storage = NULL, $sample = FALSE) {

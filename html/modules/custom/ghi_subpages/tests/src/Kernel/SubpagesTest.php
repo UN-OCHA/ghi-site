@@ -35,6 +35,7 @@ class SubpagesTest extends KernelTestBase {
     'path_alias',
     'pathauto',
     'layout_builder',
+    'layout_discovery',
     'hpc_api',
     'hpc_common',
     'ghi_base_objects',

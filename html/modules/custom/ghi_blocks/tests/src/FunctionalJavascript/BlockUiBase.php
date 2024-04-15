@@ -184,4 +184,22 @@ abstract class BlockUiBase extends WebDriverTestBase {
     $assert_session->waitForElementRemoved('css', '#layout-builder-modal');
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function htmlOutput($message = NULL) {
+    if (!$this->htmlOutputEnabled) {
+      return;
+    }
+    $message = $message ?: $this->getSession()->getPage()->getContent();
+    $message = '<div class="phpunit--browser-output--navigation" style="z-index: 10000; position: fixed; top: 0; right: 0; padding: 0.5rem 1rem; height: 50px; background-color: yellow; display: flex; gap: 0.5rem; align-items: center; border: 1px solid grey;">ID #' . $this->htmlOutputCounter . ' (<a href="' . $this->htmlOutputClassName . '-' . ($this->htmlOutputCounter - 1) . '-' . $this->htmlOutputTestId . '.html">Previous</a> | <a href="' . $this->htmlOutputClassName . '-' . ($this->htmlOutputCounter + 1) . '-' . $this->htmlOutputTestId . '.html">Next</a>)</div>' . $message;
+    $html_output_filename = $this->htmlOutputClassName . '-' . $this->htmlOutputCounter . '-' . $this->htmlOutputTestId . '.html';
+    file_put_contents($this->htmlOutputDirectory . '/' . $html_output_filename, $message);
+    file_put_contents($this->htmlOutputCounterStorage, $this->htmlOutputCounter++);
+    // Do not use the file_url_generator service as the module_handler service
+    // might not be available.
+    $uri = $this->htmlOutputBaseUrl . '/sites/simpletest/browser_output/' . $html_output_filename;
+    file_put_contents($this->htmlOutputFile, $uri . "\n", FILE_APPEND);
+  }
+
 }
