@@ -228,23 +228,25 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
     $plan = $this->getContextValue('plan_object');
     if ($attachment && $plan && $attachment->getPlanId() != $plan->getSourceId()) {
-      $this->config['attachment']['attachment_id'] = NULL;
+      $conf['attachment_id'] = NULL;
     }
 
-    // Let's see if we can find an alternative attachment.
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
-    $query = $this->endpointQueryManager->createInstance('plan_entities_query');
-    $query->setPlaceholder('plan_id', $plan->getSourceId());
-    $attachments = $query->getDataAttachments($this->getContextValue('base_object'));
-    $filtered_attachments = $this->matchDataAttachments($attachment, $attachments);
+    if ($attachment) {
+      // Let's see if we can find an alternative attachment.
+      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
+      $query = $this->endpointQueryManager->createInstance('plan_entities_query');
+      $query->setPlaceholder('plan_id', $plan->getSourceId());
+      $attachments = $query->getDataAttachments($this->getContextValue('base_object'));
+      $filtered_attachments = $this->matchDataAttachments($attachment, $attachments);
 
-    // Use the default plan caseload if available.
-    $caseload_id = $plan->getPlanCaseloadId();
-    if ($caseload_id && $attachment->getType() == 'caseload' && array_key_exists($caseload_id, $filtered_attachments)) {
-      $conf['attachment_id'] = $caseload_id;
-    }
-    elseif (count($filtered_attachments) == 1) {
-      $conf['attachment_id'] = array_key_first($filtered_attachments);
+      // Use the default plan caseload if available.
+      $caseload_id = $plan->getPlanCaseloadId();
+      if ($caseload_id && $attachment->getType() == 'caseload' && array_key_exists($caseload_id, $filtered_attachments)) {
+        $conf['attachment_id'] = $caseload_id;
+      }
+      elseif (count($filtered_attachments) == 1) {
+        $conf['attachment_id'] = array_key_first($filtered_attachments);
+      }
     }
 
     $this->config['attachment'] = $conf;

@@ -2,6 +2,17 @@ uuid: e9a2ff0c-c77b-460a-9c79-b8a9d0f521c4
 langcode: en
 status: true
 dependencies:
+  config:
+    - node.type.article
+    - node.type.custom_subpage
+    - node.type.document
+    - node.type.financials
+    - node.type.logframe
+    - node.type.plan_cluster
+    - node.type.population
+    - node.type.presence
+    - node.type.progress
+    - node.type.section
   module:
     - ghi_templates
     - node
@@ -646,7 +657,17 @@ display:
           entity_field: type
           plugin_id: bundle
           operator: in
-          value: {  }
+          value:
+            article: article
+            custom_subpage: custom_subpage
+            document: document
+            financials: financials
+            logframe: logframe
+            plan_cluster: plan_cluster
+            population: population
+            presence: presence
+            progress: progress
+            section: section
           group: 1
           exposed: true
           expose:
@@ -670,7 +691,7 @@ display:
               rpm_administrator: '0'
               plan_lead: '0'
               cluster_lead: '0'
-            reduce: false
+            reduce: true
           is_grouped: false
           group_info:
             label: ''

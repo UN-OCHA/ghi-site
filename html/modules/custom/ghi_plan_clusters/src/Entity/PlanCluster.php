@@ -17,6 +17,7 @@ class PlanCluster extends SubpageNode implements SubpageNodeInterface, BaseObjec
   use StringTranslationTrait;
 
   const BASE_OBJECT_FIELD_NAME = 'field_base_object';
+  const SECTION_REFERENCE_FIELD_NAME = 'field_entity_reference';
 
   /**
    * {@inheritdoc}
