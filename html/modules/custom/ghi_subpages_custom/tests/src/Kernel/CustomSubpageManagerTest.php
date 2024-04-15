@@ -39,6 +39,7 @@ class CustomSubpageManagerTest extends SectionMenuTestBase {
     'path_alias',
     'pathauto',
     'layout_builder',
+    'layout_discovery',
     'hpc_api',
     'hpc_common',
     'ghi_base_objects',
@@ -69,7 +70,7 @@ class CustomSubpageManagerTest extends SectionMenuTestBase {
   }
 
   /**
-   * Tests that tags can be imported.
+   * Tests that nodes for a section can be loaded.
    */
   public function testLoadNodesForSection() {
 

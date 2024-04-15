@@ -52,39 +52,56 @@ index 4d6522f..8eb3824 100644
  }
 -
 diff --git a/dist/js/toolbar.js b/dist/js/toolbar.js
-index 0d2a6bc..9140575 100644
+index 87371a2..3912e61 100644
 --- a/dist/js/toolbar.js
 +++ b/dist/js/toolbar.js
-@@ -12,11 +12,11 @@
+@@ -13,11 +13,11 @@
      }
    }, Drupal.ginToolbar = {
      init: function(context) {
 -      once("ginToolbarInit", "#gin-toolbar-bar", context).forEach((() => {
 +      once("ginToolbarInit", "#toolbar-bar.gin-toolbar-bar", context).forEach((() => {
          const toolbarTrigger = document.querySelector(".toolbar-menu__trigger");
--        "classic" != drupalSettings.gin.toolbar_variant && localStorage.getItem("Drupal.toolbar.trayVerticalLocked") && localStorage.removeItem("Drupal.toolbar.trayVerticalLocked"), 
+-        "classic" != toolbarVariant && localStorage.getItem("Drupal.toolbar.trayVerticalLocked") && localStorage.removeItem("Drupal.toolbar.trayVerticalLocked"), 
 -        "true" === localStorage.getItem("Drupal.gin.toolbarExpanded") ? (document.body.setAttribute("data-toolbar-menu", "open"), 
 -        toolbarTrigger.classList.add("is-active")) : (document.body.setAttribute("data-toolbar-menu", ""), 
-+        "classic" != drupalSettings.gin.toolbar_variant && localStorage.getItem("Drupal.toolbar.trayVerticalLocked") && localStorage.removeItem("Drupal.toolbar.trayVerticalLocked"),
++        "classic" != toolbarVariant && localStorage.getItem("Drupal.toolbar.trayVerticalLocked") && localStorage.removeItem("Drupal.toolbar.trayVerticalLocked"),
 +        "true" === localStorage.getItem("Drupal.gin.toolbarExpanded") ? (document.body.setAttribute("data-toolbar-menu", "open"),
 +        toolbarTrigger.classList.add("is-active")) : (document.body.setAttribute("data-toolbar-menu", ""),
          toolbarTrigger.classList.remove("is-active")), document.addEventListener("keydown", (e => {
            !0 === e.altKey && "KeyT" === e.code && this.toggleToolbar();
          })), this.initDisplace();
-@@ -25,7 +25,7 @@
+@@ -26,7 +26,7 @@
        }))));
      },
      initDisplace: () => {
--      const toolbar = document.querySelector("#gin-toolbar-bar .toolbar-menu-administration"), toolbarVariant = drupalSettings.gin.toolbar_variant;
-+      const toolbar = document.querySelector("#toolbar-bar.gin-toolbar-bar .toolbar-menu-administration"), toolbarVariant = drupalSettings.gin.toolbar_variant;
+-      const toolbar = document.querySelector("#gin-toolbar-bar .toolbar-menu-administration");
++      const toolbar = document.querySelector("#toolbar-bar.gin-toolbar-bar .toolbar-menu-administration");
        toolbar && ("vertical" === toolbarVariant ? toolbar.setAttribute("data-offset-left", "") : toolbar.setAttribute("data-offset-top", ""));
      },
-     toggleToolbar: () => {
+     toggleToolbar: function() {
+@@ -34,13 +34,13 @@
+       toolbarTrigger.classList.toggle("is-active"), toolbarTrigger.classList.contains("is-active") ? this.showToolbar() : this.collapseToolbar();
+     },
+     showToolbar: function() {
+-      document.body.setAttribute("data-toolbar-menu", "open"), localStorage.setItem("Drupal.gin.toolbarExpanded", "true"), 
++      document.body.setAttribute("data-toolbar-menu", "open"), localStorage.setItem("Drupal.gin.toolbarExpanded", "true"),
+       this.dispatchToolbarEvent("true"), this.displaceToolbar(), window.innerWidth < 1280 && "vertical" === toolbarVariant && Drupal.ginSidebar.collapseSidebar();
+     },
+     collapseToolbar: function() {
+       const toolbarTrigger = document.querySelector(".toolbar-menu__trigger"), elementToRemove = document.querySelector(".gin-toolbar-inline-styles");
+-      toolbarTrigger.classList.remove("is-active"), document.body.setAttribute("data-toolbar-menu", ""), 
+-      elementToRemove && elementToRemove.parentNode.removeChild(elementToRemove), localStorage.setItem("Drupal.gin.toolbarExpanded", "false"), 
++      toolbarTrigger.classList.remove("is-active"), document.body.setAttribute("data-toolbar-menu", ""),
++      elementToRemove && elementToRemove.parentNode.removeChild(elementToRemove), localStorage.setItem("Drupal.gin.toolbarExpanded", "false"),
+       this.dispatchToolbarEvent("false"), this.displaceToolbar();
+     },
+     dispatchToolbarEvent: active => {
 diff --git a/js/toolbar.js b/js/toolbar.js
-index e74712a..5a7b42a 100644
+index aa50459..aa76be0 100644
 --- a/js/toolbar.js
 +++ b/js/toolbar.js
-@@ -28,7 +28,7 @@
+@@ -31,7 +31,7 @@
  
    Drupal.ginToolbar = {
      init: function (context) {
@@ -93,15 +110,6 @@ index e74712a..5a7b42a 100644
          const toolbarTrigger = document.querySelector('.toolbar-menu__trigger');
  
          // Check for Drupal trayVerticalLocked and remove it.
-@@ -65,7 +65,7 @@
-     },
- 
-     initDisplace: () => {
--      const toolbar = document.querySelector('#gin-toolbar-bar .toolbar-menu-administration');
-+      const toolbar = document.querySelector('#toolbar-bar.gin-toolbar-bar .toolbar-menu-administration');
-       const toolbarVariant = drupalSettings.gin.toolbar_variant;
- 
-       if (toolbar) {
 diff --git a/styles/components/settings_tray.scss b/styles/components/settings_tray.scss
 index 9df1f21..40d307a 100644
 --- a/styles/components/settings_tray.scss

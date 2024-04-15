@@ -113,7 +113,7 @@ class ApplyPageTemplateForm extends TemplateFormBase {
     $page_template_options = array_map(function (PageTemplateInterface $page_template) {
       return [
         'title' => $page_template->label(),
-        'source' => $page_template->getSourceSummary('@entity_type: @source', FALSE),
+        'source' => $page_template->getSourceSummary('@entity_type: @source'),
       ];
     }, $this->pageTemplateManager->loadAvailableTemplatesForEntity($entity));
 

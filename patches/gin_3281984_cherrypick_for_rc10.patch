@@ -1,0 +1,217 @@
+diff --git a/includes/breadcrumb.theme b/includes/breadcrumb.theme
+index 9f8cc49..2cfc550 100644
+--- a/includes/breadcrumb.theme
++++ b/includes/breadcrumb.theme
+@@ -5,7 +5,9 @@
+  * breadcrumb.theme
+  */
+ 
++use Drupal\Core\Cache\CacheableMetadata;
+ use Drupal\Core\Entity\ContentEntityInterface;
++use Drupal\Core\Entity\EntityInterface;
+ use Drupal\Core\Url;
+ use Drupal\node\NodeInterface;
+ 
+@@ -14,69 +16,85 @@ use Drupal\node\NodeInterface;
+  */
+ function gin_preprocess_breadcrumb(&$variables) {
+   // Alter node breadcrumb.
+-  if ($variables['breadcrumb']) {
+-    $entity = _gin_get_route_entity();
+-    $entity_id = $entity ? $entity->getEntityTypeId() : NULL;
+-    $url = $entity ? $entity->toUrl() : NULL;
++  if (empty($variables['breadcrumb'])) {
++   return;
++  }
+ 
+-    foreach ($variables['breadcrumb'] as $key => $item) {
+-      // Back to site item.
+-      if ($key === 0) {
+-        $variables['breadcrumb'][$key]['text'] = t('Back to site');
+-        $variables['breadcrumb'][$key]['attributes']['title'] = t('Return to site content');
+-
+-        // Media handling.
+-        if ($entity_id === 'media' && !\Drupal::config('media.settings')->get('standalone_url')) {
+-          $url = Url::fromRoute('<front>');
+-        }
++  $cacheability = new CacheableMetadata();
++  $cacheability->addCacheContexts(['route']);
+ 
+-        // Custom block handling (a custom block cannot be viewed standalone).
+-        if ($entity_id === 'block_content') {
+-          $url = Url::fromRoute('<front>');
+-        }
++  $entity = _gin_get_route_entity();
++  $route_name = \Drupal::routeMatch()->getRouteName();
+ 
+-        // Check for entity $url.
+-        if ($url && $url->access()) {
+-          $variables['breadcrumb'][$key]['url'] = $url;
+-        }
+-        else {
+-          // Let escapeAdmin override the return URL.
+-          $variables['breadcrumb'][$key]['attributes']['data'] = 'data-gin-toolbar-escape-admin';
+-        }
+-      }
+-      elseif (isset($item['url']) && $item['url'] === $url) {
+-        // Remove as we already have the back to site link set.
+-        unset($variables['breadcrumb'][$key]);
++  if ($entity !== NULL) {
++    $url = $entity->toUrl();
++    $entity_type_id = $entity->getEntityTypeId();
++    $operation_label = _gin_get_route_entity_operation_label($route_name, $entity);
++
++    $url_access = $url->access(NULL, TRUE);
++    $cacheability->addCacheableDependency($url_access);
++
++    // Media handling.
++    if ($entity_type_id === 'media') {
++      $media_config = \Drupal::config('media.settings');
++      $cacheability->addCacheableDependency($media_config);
++
++      if (!$media_config->get('standalone_url')) {
++        $url = Url::fromRoute('<front>');
+       }
+     }
+ 
+-    // Adjust breadcrumb for nodes.
+-    if ($node = \Drupal::routeMatch()->getParameter('node')) {
+-      if ($node instanceof NodeInterface) {
+-        // Unset items, except home link.
+-        foreach ($variables['breadcrumb'] as $key => $item) {
+-          if ($key > 0) {
+-            unset($variables['breadcrumb'][$key]);
+-          }
+-        }
++    // Custom block handling (a custom block cannot be viewed standalone).
++    if ($entity_type_id === 'block_content') {
++      $url = Url::fromRoute('<front>');
++    }
++  }
++
++  // Back to site item.
++  foreach ($variables['breadcrumb'] as $key => $item) {
++    if ($key === 0) {
++      $variables['breadcrumb'][$key]['text'] = t('Back to site');
++      $variables['breadcrumb'][$key]['attributes']['title'] = t('Return to site content');
+ 
+-        // Add bundle info.
+-        $variables['breadcrumb'][] = [
+-          'text' => t('Edit') . ' ' . $node->type->entity->label(),
+-          'url' => '',
+-        ];
++      if (isset($url, $url_access) && $url_access->isAllowed()) {
++        // Link to the canonical route of the entity.
++        $variables['breadcrumb'][$key]['url'] = $url;
++      }
++      else {
++        // Let escapeAdmin override the return URL.
++        $variables['breadcrumb'][$key]['attributes']['data'] = 'data-gin-toolbar-escape-admin';
+       }
+     }
+-    // Adjust breadcrumb for other entities.
+-    elseif ($entity) {
+-      // Add bundle info.
+-      $variables['breadcrumb'][] = [
+-        'text' => t('Edit') . ' ' . $entity->getEntityType()->getLabel(),
+-        'url' => '',
+-      ];
++    elseif (isset($url) && $item['url'] === $url->setAbsolute(FALSE)->toString()) {
++      // Remove as we already have the back to site link set.
++      unset($variables['breadcrumb'][$key]);
+     }
+   }
+ 
++  // Adjust breadcrumb for nodes: unset all items, except home link.
++  if ($entity instanceof NodeInterface) {
++    // Unset items, except home link.
++    foreach ($variables['breadcrumb'] as $key => $item) {
++      if ($key > 0) {
++        unset($variables['breadcrumb'][$key]);
++      }
++    }
++
++    // Add bundle info.
++    $variables['breadcrumb'][] = [
++      'text' => t('Edit') . ' ' . $entity->type->entity->label(),
++      'url' => '',
++    ];
++  }
++  // Adjust breadcrumb for other entities.
++  elseif ($entity) {
++    // Add bundle info.
++    $variables['breadcrumb'][] = [
++     'text' => t('Edit') . ' ' . $entity->getEntityType()->getLabel(),
++      'url' => '',
++    ];
++  }
++
+   // Node add: Fix Drupal 9 issue.
+   if (\Drupal::routeMatch()->getRouteName() === 'node.add') {
+     foreach ($variables['breadcrumb'] as $key => $item) {
+@@ -85,6 +103,8 @@ function gin_preprocess_breadcrumb(&$variables) {
+       }
+     }
+   }
++
++  $cacheability->applyTo($variables);
+ }
+ 
+ /**
+@@ -111,3 +131,43 @@ function _gin_get_route_entity() {
+     }
+   }
+ }
++
++/**
++ * Helper function to extract the entity operation label for the supplied route.
++ *
++ * @return null|string
++ *   Returns the label.
++ */
++function _gin_get_route_entity_operation_label(string $route_name, EntityInterface $entity) {
++  $entity_type = $entity->getEntityType();
++  $type_label = $entity_type->getSingularLabel();
++  $bundle_key = $entity_type->getKey('bundle');
++
++  if ($bundle_key && $bundle_entity = $entity->get($bundle_key)->entity) {
++    $type_label = $bundle_entity->label();
++  }
++
++  if ($entity_type->id() === 'user') {
++    $type_label = 'account';
++  }
++
++  $operation_labels = [
++    '#entity.(?<entityTypeId>.+).canonical#' => t('View @bundle', ['@bundle' => $type_label]),
++    '#entity.(?<entityTypeId>.+).delete_form#' => t('Delete @bundle', ['@bundle' => $type_label]),
++    '#entity.(?<entityTypeId>.+).delete_multiple_form#' => t('Delete @bundle', ['@bundle' => $type_label]),
++    '#entity.(?<entityTypeId>.+).edit_form#' => t('Edit @bundle', ['@bundle' => $type_label]),
++    '#entity.(?<entityTypeId>.+).add_form#' => t('Add @bundle', ['@bundle' => $type_label]),
++    '#entity.(?<entityTypeId>.+).add_page#' => t('Add @bundle', ['@bundle' => $type_label]),
++    '#entity.(?<entityTypeId>.+).reset_form#' => t('Reset @bundle', ['@bundle' => $type_label]),
++    '#entity.(?<entityTypeId>.+).cancel_form#' => t('Cancel @bundle', ['@bundle' => $type_label]),
++    '#entity.(?<entityTypeId>.+).clone_form#' => t('Clone @bundle', ['@bundle' => $type_label]),
++  ];
++
++  foreach ($operation_labels as $regex => $label) {
++    if (preg_match($regex, $route_name)) {
++      return $label;
++    }
++  }
++
++  return NULL;
++}
+diff --git a/includes/page.theme b/includes/page.theme
+index 38dee47..9a958d5 100644
+--- a/includes/page.theme
++++ b/includes/page.theme
+@@ -30,7 +30,7 @@ function gin_preprocess_page(&$variables) {
+   if (preg_match('#entity\.(?<entity_type_id>.+)\.canonical#', $variables['route_name'], $matches)) {
+     $entity = \Drupal::request()->attributes->get($matches['entity_type_id']);
+ 
+-    if ($entity instanceof EntityInterface && $entity->hasLinkTemplate('edit-form')) {
++    if ($entity instanceof EntityInterface && $entity->hasLinkTemplate('edit-form') && $entity->access('update')) {
+       $variables['entity_title'] = $entity->label();
+       $variables['entity_edit_url'] = $entity->toUrl('edit-form');
+     }
