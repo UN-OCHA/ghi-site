@@ -10,8 +10,10 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Plugin\Context\EntityContext;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Section;
@@ -164,45 +166,75 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
    */
   public function getBaseObjectsfromSource($source_page = NULL) {
     $source_page = $source_page ?? $this->getSourceEntity();
+    $base_objects = [];
     if ($source_page && $source_page->hasField('field_base_objects')) {
-      return $source_page->field_base_objects?->referencedEntities();
+      $base_objects = $source_page->field_base_objects?->referencedEntities();
     }
-    if ($source_page && $source_page->hasField('field_base_object')) {
-      return [$source_page->field_base_object?->entity];
+    elseif ($source_page && $source_page->hasField('field_base_object')) {
+      $base_objects = [$source_page->field_base_object?->entity];
     }
-    if ($source_page && $source_page->hasField('field_entity_reference')) {
-      return $this->getBaseObjectsfromSource($source_page->field_entity_reference?->entity);
+    elseif ($source_page && $source_page->hasField('field_entity_reference')) {
+      $base_objects = $this->getBaseObjectsfromSource($source_page->field_entity_reference?->entity);
     }
-    return [];
+    foreach ($base_objects as $base_object) {
+      if (!$base_object instanceof BaseObjectChildInterface) {
+        continue;
+      }
+      $parent = $base_object->getParentBaseObject();
+      if (!$parent) {
+        continue;
+      }
+      $base_objects[] = $parent;
+    }
+    return $base_objects;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getSourceSummary($source_template = NULL, $base_object_template = NULL) {
+  public function getSourceSummary($source_template = NULL) {
     if ($source_template === NULL) {
-      $source_template = new TranslatableMarkup('Template based on <em>@source</em> @entity_type_lowercase page');
+      $source_template = 'Template based on <em>@source</em> @entity_type_lowercase page';
     }
-    if ($base_object_template === NULL) {
-      $base_object_template = new TranslatableMarkup('using @base_object_type_lowercase <em>@base_object</em> for data context');
-    }
+
     $base_objects = $this->getBaseObjects();
+
+    $base_object_summmaries = [];
+    if (!empty($base_objects)) {
+      $base_object_summmaries = array_map(function ($base_object) {
+        return new FormattableMarkup('@base_object_type_lowercase <em>@base_object</em>', [
+          '@base_object_type_lowercase' => strtolower($base_object->type->entity->label() ?? ''),
+          '@base_object_type' => $base_object->type->entity->label(),
+          '@base_object' => $base_object->label(),
+        ]);
+      }, array_filter($base_objects));
+    }
 
     $source_summary = new FormattableMarkup($source_template, [
       '@source' => $this->getSourceEntity()?->label() ?? $this->t('deleted'),
-      '@entity_type_lowercase' => strtolower($this->getSourceEntity()?->type->entity->label() ?? ''),
-      '@entity_type' => $this->getSourceEntity()?->type->entity->label(),
+      '@entity_type_lowercase' => strtolower($this->getSourceEntity()?->type?->entity->label() ?? ''),
+      '@entity_type' => $this->getSourceEntity()?->type?->entity->label(),
     ]);
-    $base_object_summary = $base_object_template && !empty($base_objects) ? array_map(function ($base_object) use ($base_object_template) {
-      return new FormattableMarkup($base_object_template, [
-        '@base_object_type_lowercase' => strtolower($base_object->type->entity->label() ?? ''),
-        '@base_object_type' => $base_object->type->entity->label(),
-        '@base_object' => $base_object->label(),
+
+    if (count($base_object_summmaries) > 1) {
+      $base_object_summary = new TranslatableMarkup('@first_items and @last_item', [
+        '@first_items' => Markup::create(implode(', ', array_slice($base_object_summmaries, 0, count($base_object_summmaries) - 1))),
+        '@last_item' => end($base_object_summmaries),
       ]);
-    }, array_filter($base_objects)) : [];
-    return implode(', ', array_filter(array_merge([
+    }
+    else {
+      $base_object_summary = new FormattableMarkup('@base_object_summaries', [
+        '@base_object_summaries' => Markup::create(implode(', ', $base_object_summmaries)),
+      ]);
+    }
+
+    $base_object_summary = new TranslatableMarkup('using @base_objects for data context', [
+      '@base_objects' => Markup::create($base_object_summary),
+    ]);
+
+    return Markup::create(implode(', ', array_filter(array_merge([
       $source_summary,
-    ], $base_object_summary)));
+    ], [$base_object_summary]))));
   }
 
   /**

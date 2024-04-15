@@ -211,11 +211,12 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
    *   An array with context data or query handlers.
    */
   public function getBlockContext() {
+    $page_node = $this->getPageNode();
     return [
-      'page_node' => $this->getPageNode(),
+      'page_node' => $page_node,
       'plan_object' => $this->getCurrentPlanObject(),
       'base_object' => $this->getCurrentBaseObject(),
-      'context_node' => $this->getPageNode(),
+      'context_node' => $page_node,
     ];
   }
 

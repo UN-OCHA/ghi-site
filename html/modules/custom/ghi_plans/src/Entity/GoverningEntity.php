@@ -3,11 +3,19 @@
 namespace Drupal\ghi_plans\Entity;
 
 use Drupal\ghi_base_objects\Entity\BaseObject;
+use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 
 /**
  * Bundle class for governing entity base objects.
  */
-class GoverningEntity extends BaseObject {
+class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getParentBaseObject() {
+    return $this->getPlan();
+  }
 
   /**
    * Get the plan object that this governing entity belongs to.

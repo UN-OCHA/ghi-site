@@ -12,6 +12,7 @@ use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plan_clusters\PlanClusterManager;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\node\NodeInterface;
@@ -130,7 +131,6 @@ function ghi_plan_clusters_form_node_plan_cluster_edit_form_alter(&$form, FormSt
     return;
   }
 
-  /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $object */
   $object = $entity->getBaseObject();
 
   // Always disable the base object field if the cluster has a base object set
@@ -138,10 +138,24 @@ function ghi_plan_clusters_form_node_plan_cluster_edit_form_alter(&$form, FormSt
   if ($object instanceof GoverningEntity) {
     $field_name = PlanCluster::BASE_OBJECT_FIELD_NAME;
     $form[$field_name]['#disabled'] = !\Drupal::currentUser()->hasPermission('administer site configuration');
-    $form[$field_name]['widget'][0]['target_id']['#description'] = t('The base object cannot be changed after the initial creation of a @entity_type_label. <a href="@base_object_edit_url" target="_blank">Edit @label</a>', [
+    $form[$field_name]['widget'][0]['target_id']['#description'] = t('The base object cannot be changed after the initial creation of a @entity_type_label page. <a href="@base_object_edit_url" target="_blank">Edit @label</a>', [
       '@entity_type_label' => strtolower($entity->type->entity->label()),
       '@base_object_edit_url' => $object->toUrl('edit-form')->toString(),
       '@label' => $object->label(),
+    ]);
+  }
+
+  $section = $entity->getParentNode();
+
+  // Always disable the section reference if the cluster has a reference set
+  // already. There is no use case to change it. Display it for convenience.
+  if ($section instanceof SectionNodeInterface) {
+    $field_name = PlanCluster::SECTION_REFERENCE_FIELD_NAME;
+    $form[$field_name]['#disabled'] = !\Drupal::currentUser()->hasPermission('administer site configuration');
+    $form[$field_name]['widget'][0]['target_id']['#description'] = t('The section cannot be changed after the initial creation of a @entity_type_label page. <a href="@section_url" target="_blank">View @label</a>', [
+      '@entity_type_label' => strtolower($entity->type->entity->label()),
+      '@section_url' => $section->toUrl()->toString(),
+      '@label' => $section->label(),
     ]);
   }
 }
@@ -150,17 +164,16 @@ function ghi_plan_clusters_form_node_plan_cluster_edit_form_alter(&$form, FormSt
  * Implements hook_ENTITY_TYPE_presave().
  */
 function ghi_plan_clusters_node_presave(EntityInterface $node) {
-  if ($node instanceof PlanCluster) {
+  if ($node instanceof PlanCluster && $node->hasField(PlanCluster::SECTION_REFERENCE_FIELD_NAME)) {
     // Just make sure that this node has a valid reference to a section node.
     $parent_node = $node->getParentNode();
-    if ($parent_node) {
-      $node->field_entity_reference = [
-        [
-          'target_id' => $node->getParentNode()->id(),
-        ],
-      ];
+    $stored_parent_node = $node->get(PlanCluster::SECTION_REFERENCE_FIELD_NAME)->entity;
+    if ($parent_node && (!$stored_parent_node || $parent_node->id() != $stored_parent_node->id())) {
+      $node->get(PlanCluster::SECTION_REFERENCE_FIELD_NAME)->setValue([
+        'target_id' => $parent_node->id(),
+      ]);
     }
-    else {
+    if ($node->get(PlanCluster::SECTION_REFERENCE_FIELD_NAME)->isEmpty()) {
       $node->setUnpublished();
     }
   }
