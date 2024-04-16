@@ -1,0 +1,20 @@
+uuid: e617ae6b-6591-4cd5-8370-8823edfd749c
+langcode: en
+status: false
+dependencies:
+  module:
+    - hpc_downloads
+id: core_requirements_hpc_downloads
+label: 'Module hpc_downloads'
+description: 'Requirements of the hpc_downloads module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: hpc_downloads
+  exclude_keys: {  }
+thresholds:
+  type: none
