@@ -24,6 +24,7 @@ display:
           label: 'Date de modification'
         count:
           label: 'Utilisé dans'
+          format_plural_string: !!binary QGNvdW50IGVtcGxhY2VtZW50A0Bjb3VudCBlbXBsYWNlbWVudHM=
       pager:
         options:
           tags:
@@ -38,6 +39,8 @@ display:
           submit_button: Filtrer
           reset_button_label: Réinitialiser
           exposed_sorts_label: 'Trier par'
+          sort_asc_label: Asc
+          sort_desc_label: Desc
       empty:
         area_text_custom:
           content: 'Aucun fichier disponible.'

@@ -1,0 +1,28 @@
+uuid: e6c54484-2976-4034-813c-d9a9092a2fdd
+langcode: en
+status: false
+dependencies:
+  module:
+    - dblog
+_core:
+  default_config_hash: zZ2Ztc6zZGpHNw4u4jC2ew3FreYahVnQEIGmi-lfOhA
+id: dblog_php_notices
+label: 'PHP notices'
+description: 'Monitors and displays most frequent PHP notices and errors'
+category: Watchdog
+plugin_id: php_notices
+result_class: null
+value_label: 'Watchdog events'
+value_type: number
+caching_time: 3600
+settings:
+  time_interval_field: timestamp
+  time_interval_value: 86400
+  verbose_fields:
+    - variables
+  table: watchdog
+  history_status: true
+thresholds:
+  type: none
+  warning: 10
+  critical: 100

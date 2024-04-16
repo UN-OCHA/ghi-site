@@ -1,0 +1,20 @@
+uuid: 0b5938af-3c2e-4360-a797-8ce18c4f9c30
+langcode: en
+status: false
+dependencies:
+  module:
+    - webp
+id: core_requirements_webp
+label: 'Module webp'
+description: 'Requirements of the webp module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: webp
+  exclude_keys: {  }
+thresholds:
+  type: none

@@ -1,0 +1,20 @@
+uuid: aa407119-92c0-4b16-a356-f3983fc8fe80
+langcode: en
+status: true
+dependencies:
+  module:
+    - ocha_monitoring
+_core:
+  default_config_hash: SYrs2XQqCwJd_irnnaW73Nal_csoWLlY1_2Z8j-KXIw
+id: ocha_un_date
+label: 'UN Date'
+description: 'UN Date'
+category: OCHA
+plugin_id: ocha_un_date
+result_class: null
+value_label: Version
+value_type: string
+caching_time: 86400
+settings: {  }
+thresholds:
+  type: none

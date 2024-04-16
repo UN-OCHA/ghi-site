@@ -1,0 +1,20 @@
+uuid: 4d44cd39-0a56-41b2-8128-f46c3b8f9586
+langcode: en
+status: false
+dependencies:
+  module:
+    - search_api_solr
+id: core_requirements_search_api_solr
+label: 'Module search_api_solr'
+description: 'Requirements of the search_api_solr module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: search_api_solr
+  exclude_keys: {  }
+thresholds:
+  type: none

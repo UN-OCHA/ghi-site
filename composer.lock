@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b3a7f2870be7ef34d5cd0fb94bc3ad37",
+    "content-hash": "20aa39a90b5b75c80c4b280fca703838",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3598,7 +3598,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/layout_builder_ipe.git",
-                "reference": "85adfbb08730916bebd35cbf35ab6784e5eb868c"
+                "reference": "3cff4bd91f53de2c71f05314203ec4fe91808770"
             },
             "require": {
                 "drupal/core": "^9.5 || ^10"
@@ -3609,8 +3609,8 @@
                     "dev-1.0.x": "1.0.x-dev"
                 },
                 "drupal": {
-                    "version": "1.0.0-beta9+2-dev",
-                    "datestamp": "1709600239",
+                    "version": "1.0.0-beta9+4-dev",
+                    "datestamp": "1713270772",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
@@ -4392,6 +4392,74 @@
                 "source": "https://git.drupalcode.org/project/migrate_tools",
                 "issues": "https://www.drupal.org/project/issues/migrate_tools",
                 "slack": "#migrate"
+            }
+        },
+        {
+            "name": "drupal/monitoring",
+            "version": "1.14.0",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/monitoring.git",
+                "reference": "8.x-1.14"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/monitoring-8.x-1.14.zip",
+                "reference": "8.x-1.14",
+                "shasum": "72e19442488e61a9bb555f98b4f10cf0eeaf7597"
+            },
+            "require": {
+                "drupal/core": "^9.4 || ^10"
+            },
+            "conflict": {
+                "drupal/redirect": "<1.5"
+            },
+            "require-dev": {
+                "drupal/captcha": "~1.0",
+                "drupal/commerce": "~2.0",
+                "drupal/hal": "^2",
+                "drupal/past": "~1.0",
+                "drupal/redirect": "~1.0",
+                "drupal/search_api": "~1.0",
+                "drupal/search_api_db": "*",
+                "drupal/search_api_solr": "~4.0",
+                "drupal/simplenews": "~4.0",
+                "drupal/ultimate_cron": "~2.0"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "8.x-1.14",
+                    "datestamp": "1709913391",
+                    "security-coverage": {
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
+                    }
+                },
+                "drush": {
+                    "services": {
+                        "drush.services.yml": "^9 || ^10"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Berdir",
+                    "homepage": "https://www.drupal.org/user/214652"
+                },
+                {
+                    "name": "miro_dietiker",
+                    "homepage": "https://www.drupal.org/user/227761"
+                }
+            ],
+            "description": "Monitoring base.",
+            "homepage": "https://www.drupal.org/project/monitoring",
+            "support": {
+                "source": "https://git.drupalcode.org/project/monitoring"
             }
         },
         {
@@ -12743,6 +12811,36 @@
                 "url": "https://github.com/UN-OCHA/d3-sparkline/archive/refs/tags/v2.1.3.zip"
             },
             "type": "drupal-library"
+        },
+        {
+            "name": "unocha/ocha_monitoring",
+            "version": "1.0.14",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/UN-OCHA/ocha_monitoring.git",
+                "reference": "c105d4199bc86049f2b0589e8cf0b08aff95dd63"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_monitoring/zipball/c105d4199bc86049f2b0589e8cf0b08aff95dd63",
+                "reference": "c105d4199bc86049f2b0589e8cf0b08aff95dd63",
+                "shasum": ""
+            },
+            "require": {
+                "drupal/core": "^10",
+                "drupal/monitoring": "^1"
+            },
+            "type": "drupal-module",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "description": "UNOCHA Monitoring",
+            "support": {
+                "issues": "https://github.com/UN-OCHA/ocha_monitoring/issues",
+                "source": "https://github.com/UN-OCHA/ocha_monitoring/tree/1.0.14"
+            },
+            "time": "2024-02-09T10:23:16+00:00"
         },
         {
             "name": "unocha/ocha_snap",

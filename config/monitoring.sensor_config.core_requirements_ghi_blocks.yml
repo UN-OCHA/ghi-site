@@ -1,0 +1,20 @@
+uuid: 633ef130-a44a-445e-823d-2cccb779fced
+langcode: en
+status: false
+dependencies:
+  module:
+    - ghi_blocks
+id: core_requirements_ghi_blocks
+label: 'Module ghi_blocks'
+description: 'Requirements of the ghi_blocks module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: ghi_blocks
+  exclude_keys: {  }
+thresholds:
+  type: none

@@ -1,0 +1,21 @@
+uuid: 689531e2-555b-4420-b2fc-a06dde441e63
+langcode: en
+status: true
+dependencies:
+  module:
+    - update
+_core:
+  default_config_hash: '-re8-AFGO4z0a0i4NeTZV5HlEipd-KC9kkLxzgz1mgs'
+id: update_contrib
+label: 'Modules and themes'
+description: 'Available updates for contrib modules and themes'
+category: Update
+plugin_id: update_status
+result_class: null
+value_label: 'Outdated modules'
+value_type: number
+caching_time: 3600
+settings:
+  type: contrib
+thresholds:
+  type: none

@@ -1,0 +1,20 @@
+uuid: 570ced16-79fb-4221-9c60-c6b221b4a0a7
+langcode: en
+status: false
+dependencies:
+  module:
+    - ghi_content
+id: core_requirements_ghi_content
+label: 'Module ghi_content'
+description: 'Requirements of the ghi_content module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: ghi_content
+  exclude_keys: {  }
+thresholds:
+  type: none
