@@ -1,0 +1,20 @@
+uuid: 2639a2e9-6e06-4e72-b58d-fbf2884d5381
+langcode: en
+status: false
+dependencies:
+  module:
+    - imagecache_external
+id: core_requirements_imagecache_external
+label: 'Module imagecache_external'
+description: 'Requirements of the imagecache_external module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: imagecache_external
+  exclude_keys: {  }
+thresholds:
+  type: none

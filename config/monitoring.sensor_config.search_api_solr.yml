@@ -1,0 +1,19 @@
+uuid: fe6c3740-c5e4-4a99-9237-0107a6c76e7e
+langcode: en
+status: false
+dependencies:
+  module:
+    - search_api
+id: search_api_solr
+label: 'Search index queue size of Solr'
+description: ''
+category: 'Search API'
+plugin_id: search_api_unindexed
+result_class: null
+value_label: 'Unindexed items'
+value_type: number
+caching_time: 900
+settings:
+  index_id: solr
+thresholds:
+  type: none

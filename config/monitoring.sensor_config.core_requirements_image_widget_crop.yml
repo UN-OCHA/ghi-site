@@ -1,0 +1,20 @@
+uuid: ddbf3fc8-0ab9-4fc7-82fb-de1d5d3126e6
+langcode: en
+status: false
+dependencies:
+  module:
+    - image_widget_crop
+id: core_requirements_image_widget_crop
+label: 'Module image_widget_crop'
+description: 'Requirements of the image_widget_crop module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: image_widget_crop
+  exclude_keys: {  }
+thresholds:
+  type: none

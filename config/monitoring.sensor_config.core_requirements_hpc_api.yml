@@ -1,0 +1,20 @@
+uuid: 234d77b6-d868-4c2a-acff-040dff47a5d8
+langcode: en
+status: false
+dependencies:
+  module:
+    - hpc_api
+id: core_requirements_hpc_api
+label: 'Module hpc_api'
+description: 'Requirements of the hpc_api module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: hpc_api
+  exclude_keys: {  }
+thresholds:
+  type: none

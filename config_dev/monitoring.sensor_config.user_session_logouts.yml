@@ -1,0 +1,36 @@
+uuid: a511c728-1326-4bff-b11c-378f02f05496
+langcode: en
+status: false
+dependencies:
+  module:
+    - dblog
+_core:
+  default_config_hash: m-Seshml89p-yQviLPuWdL9u0--RuzOn58zMdKUedj4
+id: user_session_logouts
+label: 'User session logouts'
+description: 'User session logouts by Watchdog'
+category: 'User activity'
+plugin_id: watchdog_aggregator
+result_class: null
+value_label: Logouts
+value_type: number
+caching_time: 3600
+settings:
+  time_interval_field: timestamp
+  time_interval_value: 86400
+  conditions:
+    -
+      field: type
+      value: user
+    -
+      field: message
+      value: 'Session closed for %name.'
+  verbose_fields:
+    - wid
+    - message
+    - variables
+    - timestamp
+  table: watchdog
+  history_status: true
+thresholds:
+  type: none

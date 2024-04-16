@@ -1,0 +1,20 @@
+uuid: bc916d7f-8cd2-4047-ac37-c8d8b131d1aa
+langcode: en
+status: false
+dependencies:
+  module:
+    - google_tag
+id: core_requirements_google_tag
+label: 'Module google_tag'
+description: 'Requirements of the google_tag module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: google_tag
+  exclude_keys: {  }
+thresholds:
+  type: none

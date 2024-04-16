@@ -1,0 +1,38 @@
+uuid: 7bf03906-6563-45dc-8ab9-54403e6c00ff
+langcode: en
+status: false
+dependencies:
+  module:
+    - dblog
+_core:
+  default_config_hash: dZ8UpvBDGye7ExNndJvwyuQpLqPJQOmNvE1aAwKbzKg
+id: user_void_failed_logins
+label: 'Failed nonexisting user logins'
+description: 'Failed nonexisting user logins by Watchdog'
+category: 'User activity'
+plugin_id: user_void_failed_logins
+result_class: null
+value_label: 'Login attempts'
+value_type: number
+caching_time: 3600
+settings:
+  time_interval_field: timestamp
+  time_interval_value: 86400
+  conditions:
+    -
+      field: type
+      value: user
+    -
+      field: message
+      value: 'Login attempt failed from %ip.'
+  verbose_fields:
+    - wid
+    - message
+    - variables
+    - timestamp
+  table: watchdog
+  history_status: true
+thresholds:
+  type: exceeds
+  warning: 50
+  critical: 120
