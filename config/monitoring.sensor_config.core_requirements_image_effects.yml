@@ -1,0 +1,20 @@
+uuid: 0f118d18-ba2a-414d-a046-88f08d4c1217
+langcode: en
+status: false
+dependencies:
+  module:
+    - image_effects
+id: core_requirements_image_effects
+label: 'Module image_effects'
+description: 'Requirements of the image_effects module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: image_effects
+  exclude_keys: {  }
+thresholds:
+  type: none

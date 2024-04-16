@@ -1,0 +1,20 @@
+uuid: c78928b1-aba8-49ef-961d-3183c89fbb95
+langcode: en
+status: false
+dependencies:
+  module:
+    - gin_toolbar
+id: core_requirements_gin_toolbar
+label: 'Module gin_toolbar'
+description: 'Requirements of the gin_toolbar module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: gin_toolbar
+  exclude_keys: {  }
+thresholds:
+  type: none
