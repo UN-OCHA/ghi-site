@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Measurements;
 
+use Drupal\Core\Render\Markup;
 use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 
 /**
@@ -19,19 +20,24 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
       'metrics' => $measurement->measurementVersion->value->metrics,
       'totals' => $measurement->measurementVersion->value->metrics->values->totals,
       'disaggregated' => $measurement->measurementVersion->value->metrics->values->disaggregated ?? NULL,
+      'comment' => !empty($measurement->isCommentPublic) ? ($measurement->measurementVersion->value->commentsMonitoring ?? NULL) : NULL,
     ];
 
     return $processed;
   }
 
   /**
-   * Get the reporting period id for a measurement.
-   *
-   * @return int
-   *   The id of the reporting period for a measurement.
+   * {@inheritdoc}
    */
   public function getReportingPeriodId() {
     return $this->reporting_period;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getComment() {
+    return !empty($this->comment) ? Markup::create($this->comment) : NULL;
   }
 
 }

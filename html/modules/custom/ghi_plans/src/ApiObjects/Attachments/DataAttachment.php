@@ -830,6 +830,20 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
+   * Get a comment tooltip for the current measurement.
+   *
+   * @param int|string $reporting_period
+   *   The id of the reporting period or the string 'latest'.
+   *
+   * @return string|\Drupal\Component\Render\MarkupInterface|null
+   *   The value of the metric for the specified reporting period.
+   */
+  public function getMeasurementComment($reporting_period = 'latest') {
+    $measurement = $this->getMeasurementByReportingPeriod($reporting_period);
+    return $measurement?->getComment();
+  }
+
+  /**
    * Extract prototype information from an attachment.
    *
    * Not all endpoints include the prototype in the response, which is why we
@@ -1144,7 +1158,15 @@ class DataAttachment extends AttachmentBase {
     // See if this is a measurement and if we can get a formatted monitoring
     // period for this data point.
     $monitoring_period_id = $conf['data_points'][0]['monitoring_period'] ?? NULL;
-    return $this->isMeasurement($conf) ? $this->formatMonitoringPeriod('icon', $monitoring_period_id) : NULL;
+    $monitoring_tooltip = $this->isMeasurement($conf) ? $this->formatMonitoringPeriod('icon', $monitoring_period_id) : NULL;
+
+    // See if there is a comment.
+    $comment = $this->isMeasurement($conf) ? $this->formatMeasurementCommentTooltip() : NULL;
+
+    return array_filter([
+      $monitoring_tooltip,
+      $comment,
+    ]);
   }
 
   /**
@@ -1334,7 +1356,6 @@ class DataAttachment extends AttachmentBase {
             '#reporting_period' => $monitoring_period,
             '#format_string' => $format_string,
           ]), FALSE),
-          '#class' => 'monitoring period',
           '#tag_content' => [
             '#theme' => 'hpc_icon',
             '#icon' => 'calendar_today',
@@ -1352,6 +1373,24 @@ class DataAttachment extends AttachmentBase {
         break;
     }
     return $build;
+  }
+
+  /**
+   * Get a formatted measurement comment tooltip.
+   *
+   * @return array|null
+   *   A build array or NULL.
+   */
+  public function formatMeasurementCommentTooltip() {
+    $comment = $this->getMeasurementComment();
+    if (!$comment) {
+      return NULL;
+    }
+    return [
+      '#theme' => 'hpc_tooltip',
+      '#tooltip' => $comment,
+      '#tooltip_theme' => 'measurement-comment',
+    ];
   }
 
   /**

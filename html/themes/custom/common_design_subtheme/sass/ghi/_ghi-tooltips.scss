@@ -49,6 +49,10 @@
   }
 }
 
+.tippy-box[data-theme="measurement-comment"] {
+  max-width: 20rem !important;
+}
+
 .d3-sparkline-tooltip {
   pointer-events: none;
 
