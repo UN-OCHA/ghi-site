@@ -1,9 +1,9 @@
 (function ($, Drupal) {
 
   // Attach behaviors.
-  Drupal.behaviors.BottomFiguresTooltips = {
+  Drupal.behaviors.TopFiguresTooltips = {
     attach: (context, settings) => {
-      once('bottom-figure-footnotes', '.gho-figure__value[data-footnote]', context).forEach((item) => {
+      once('top-figure-footnotes', '.gho-figure__value[data-footnote]', context).forEach((item) => {
         let footnote = $(item).attr('data-footnote').trim();
         if (!footnote) {
           return;

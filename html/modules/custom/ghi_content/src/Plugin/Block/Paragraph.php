@@ -132,6 +132,14 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
         if (($preview || $internal_preview) && in_array('gho-bottom-figure-row', $classes)) {
           $block_attributes['class'][] = 'gho-bottom-figure-row';
         }
+        // Special logic for top figure rows to assure that styles are also
+        // applied during preview.
+        if (($preview || $internal_preview) && in_array('gho-top-figures', $classes)) {
+          $block_attributes['class'][] = 'gho-top-figures';
+        }
+        if (($preview || $internal_preview) && in_array('gho-top-figures--small', $classes)) {
+          $block_attributes['class'][] = 'gho-top-figures--small';
+        }
 
         $wrapper_attributes['class'] = $gho_classes;
         $attributes->getNamedItem('class')->nodeValue = implode(' ', array_diff($classes, $gho_classes));
@@ -254,7 +262,10 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     $theme_components[] = 'common_design_subtheme/gho-' . Html::getClass($paragraph->getType());
     if ($paragraph->getType() == 'bottom_figure_row') {
       $theme_components[] = 'common_design_subtheme/gho-needs-and-requirements';
-      $theme_components[] = 'ghi_content/bottom_figures.tooltips';
+      $theme_components[] = 'ghi_content/top_figures.tooltips';
+    }
+    if ($paragraph->getType() == 'top_figures') {
+      $theme_components[] = 'ghi_content/top_figures.tooltips';
     }
     if ($paragraph->getPromoted() || $this->isPromoted()) {
       $theme_components[] = 'common_design_subtheme/gho-promoted-paragraph';
@@ -277,7 +288,10 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
         $theme_components[] = 'common_design_subtheme/gho-' . $type;
         if ($type == 'bottom-figure-row') {
           $theme_components[] = 'common_design_subtheme/gho-needs-and-requirements';
-          $theme_components[] = 'ghi_content/bottom_figures.tooltips';
+          $theme_components[] = 'ghi_content/topfigures.tooltips';
+        }
+        if ($type == 'top-figures') {
+          $theme_components[] = 'ghi_content/top_figures.tooltips';
         }
       }
       $matches = [];
