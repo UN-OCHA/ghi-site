@@ -1,9 +1,9 @@
 {%
   set wrapper_classes = [
-    'hpc-sparkline',
+    'sparkline',
   ]
 %}
 
 {{ attach_library('hpc_common/sparkline') }}
 
-<span class="sparkline" {{ wrapper_attributes.addClass(classes) }}></span>
+<span {{ wrapper_attributes.addClass(wrapper_classes) }}></span>

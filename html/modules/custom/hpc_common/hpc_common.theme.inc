@@ -253,7 +253,6 @@ function hpc_common_preprocess_hpc_sparkline(&$vars) {
   $baseline_value = $vars['baseline_value'];
 
   $wrapper_attributes = new Attribute();
-  $wrapper_attributes->addClass('hpc-pie-chart-wrapper');
   $wrapper_attributes->setAttribute('data-values', implode(',', $data));
   $wrapper_attributes->setAttribute('data-tooltips', implode('|', $tooltips));
   if ($baseline_value) {
