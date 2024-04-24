@@ -55,6 +55,52 @@ class StringHelperTest extends UnitTestCase {
   }
 
   /**
+   * Data provider for testCamelCaseToUnderscoreCase.
+   */
+  public function camelCaseToUnderscoreCaseDataProvider() {
+    return [
+      ['camelCase', 'camel_case'],
+      ['camelCaseCase', 'camel_case_case'],
+      ['CamelCaseCase', 'camel_case_case'],
+      ['CCC', 'ccc'],
+      ['CaCaCa', 'ca_ca_ca'],
+    ];
+  }
+
+  /**
+   * Test making string camel case.
+   *
+   * @group StringHelper
+   * @dataProvider camelCaseToUnderscoreCaseDataProvider
+   */
+  public function testCamelCaseToUnderscoreCase($string, $result) {
+    $this->assertEquals($result, StringHelper::camelCaseToUnderscoreCase($string));
+  }
+
+  /**
+   * Data provider for testGetAbbreviation.
+   */
+  public function getAbbreviationDataProvider() {
+    return [
+      ['camelCase', 'camelCase'],
+      ['camel Case Case', 'CCC'],
+      ['Camel Case Case', 'CCC'],
+      ['Camel  Case  Case', 'CCC'],
+      ['Content Security Policy', 'CSP'],
+    ];
+  }
+
+  /**
+   * Test making string camel case.
+   *
+   * @group StringHelper
+   * @dataProvider getAbbreviationDataProvider
+   */
+  public function testGetAbbreviation($string, $result) {
+    $this->assertEquals($result, StringHelper::getAbbreviation($string));
+  }
+
+  /**
    * Data provider for renderString.
    */
   public function renderStringDataProvider() {

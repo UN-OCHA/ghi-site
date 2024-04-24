@@ -43,7 +43,7 @@ class StringHelper {
     $words = explode(' ', $string);
     $abbreviation = implode('', array_map(function ($word) {
       return $word[0];
-    }, $words));
+    }, array_filter($words)));
     return strtoupper($abbreviation);
   }
 
