@@ -7,7 +7,7 @@
 {% if hide_value == false %}
   {{ formatted_value }}
 {% endif %}
-<div {{ wrapper_attributes.addClass(classes) }}>
+<div {{ wrapper_attributes.addClass(wrapper_classes) }}>
   <svg viewBox="0 0 32 32">
     <circle r="16" cx="16" cy="16" style="stroke-dasharray: {{ pie_value }} 100" />
   </svg>
