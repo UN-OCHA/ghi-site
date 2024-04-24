@@ -211,12 +211,13 @@ function ghi_plan_clusters_custom_subpages_alter(array &$subpages, NodeInterface
   if ($node_type->id() != PlanClusterManager::NODE_BUNDLE_PLAN_CLUSTER) {
     return;
   }
-  $plan_cluster_manager = ghi_plan_clusters_get_manager_service();
-  $nodes = $plan_cluster_manager->loadNodesForSection($node);
-  if (empty($nodes)) {
-    return;
-  }
-  $subpages += $nodes;
+  // The cluster subpages should already be there, as added by
+  // SubpageManager::getCustomSubpagesForBaseNode(). We validate the list here
+  // and make sure to filter out plan clusters that don't have a base object
+  // associated.
+  $subpages = array_filter($subpages, function (NodeInterface $node) {
+    return !$node instanceof PlanCluster || !empty($node->getBaseObject());
+  });
 }
 
 /**
