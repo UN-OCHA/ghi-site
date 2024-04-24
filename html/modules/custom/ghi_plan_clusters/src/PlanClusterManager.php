@@ -90,9 +90,9 @@ class PlanClusterManager extends BaseSubpageManager {
     if (empty($governing_entities)) {
       return NULL;
     }
-
     $plan_clusters = $this->entityTypeManager->getStorage('node')->loadByProperties([
       'type' => self::NODE_BUNDLE_PLAN_CLUSTER,
+      'field_entity_reference' => $section->id(),
       'field_base_object' => array_map(function (BaseObjectInterface $base_object) {
         return $base_object->id();
       }, $governing_entities),

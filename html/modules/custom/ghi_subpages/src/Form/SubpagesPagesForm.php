@@ -241,7 +241,7 @@ class SubpagesPagesForm extends FormBase {
               '@label' => $base_object->label(),
               '@url' => $base_object->toUrl('edit-form')->toString(),
               '@id' => $base_object->getSourceId(),
-            ]) : NULL;
+            ]) : $this->t('Missing');
           }
           $row[] = $subpage_node->isPublished() ? $this->t('Published') : $this->t('Unpublished');
           $row[] = $subpage_team ? $subpage_team->getName() : $section_team . ' (' . $this->t('Inherit from section') . ')';
