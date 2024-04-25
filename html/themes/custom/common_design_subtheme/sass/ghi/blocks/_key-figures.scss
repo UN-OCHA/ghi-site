@@ -75,13 +75,23 @@
             }
           }
 
-          i[data-toggle="tooltip"] {
-            vertical-align: top;
-          }
+          .tooltip-wrapper {
+            gap: 0.5rem;
 
-          .material-icon {
-            font-size: var(--cd-font-size--large);
-            font-weight: normal;
+            i[data-toggle="tooltip"] {
+              vertical-align: top;
+              line-height: initial;
+            }
+
+            .material-icon {
+              font-size: var(--cd-font-size--large);
+              font-weight: normal;
+            }
+
+            svg {
+              width: var(--cd-font-size--large);
+              height: var(--cd-font-size--large);
+            }
           }
 
           .custom-link--rft > img {
