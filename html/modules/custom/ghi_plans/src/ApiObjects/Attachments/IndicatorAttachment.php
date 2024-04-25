@@ -71,65 +71,88 @@ class IndicatorAttachment extends DataAttachment {
    * {@inheritdoc}
    */
   protected function getTooltip($conf) {
-    $index = $conf['data_points'][0]['index'];
-    $value = $this->getSingleValue($index, NULL, $conf['data_points'][0]);
-    if ($this->isNullValue($value)) {
-      return NULL;
-    }
+    $tooltip = parent::getTooltip($conf);
+
     // Get the last published monitoring period.
     $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
     $last_reporting_period = end($reporting_periods);
     if (!$last_reporting_period) {
-      return NULL;
-    }
-    if ($this->isApiCalculated($index, $conf['data_points'][0]) && $conf['processing'] != 'calculated') {
-      $tooltip_icon = NULL;
-      $tooltip_text = NULL;
-      $reporting_period_text = ThemeHelper::render([
-        '#theme' => 'hpc_reporting_period',
-        '#reporting_period' => $last_reporting_period,
-        '#format_string' => ', as of date @end_date',
-      ], FALSE);
-      $calculation_method = $this->getCalculationMethod();
-      switch (strtolower($calculation_method)) {
-        case self::CALCULATION_METHOD_SUM:
-          $tooltip_text = $this->t('This value is the sum of all monitoring periods values') . $reporting_period_text;
-          $tooltip_icon = 'functions';
-          break;
-
-        case self::CALCULATION_METHOD_AVERAGE:
-          $tooltip_text = $this->t('This value is the average of all monitoring periods values') . $reporting_period_text;
-          $tooltip_icon = 'moving';
-          break;
-
-        case self::CALCULATION_METHOD_MAXIMUM:
-          $tooltip_text = $this->t('This value is the maximum of all monitoring periods values') . $reporting_period_text;
-          $tooltip_icon = 'equalizer';
-          break;
-
-        case self::CALCULATION_METHOD_LATEST:
-          $tooltip_text = $this->t('This is the latest monitoring period value') . $reporting_period_text;
-          $tooltip_icon = 'watch_later';
-          break;
-      }
-      $tooltip = [
-        '#theme' => 'hpc_tooltip',
-        '#tooltip' => $tooltip_text,
-        '#class' => 'api-calculated',
-        '#tag_content' => [
-          '#theme' => 'hpc_icon',
-          '#icon' => $tooltip_icon,
-          '#tag' => 'span',
-        ],
-      ];
       return $tooltip;
     }
-    elseif ($this->isMeasurement($conf)) {
+
+    if ($this->isMeasurement($conf)) {
       // Otherwise see if this is a measurement and if we can get a formatted
       // monitoring period for this data point.
-      return $this->formatMonitoringPeriod('icon', $last_reporting_period->id, 'as of date @end_date');
+      $tooltip['monitoring_period'] = $this->formatMonitoringPeriod('icon', $last_reporting_period->id, 'as of date @end_date');
     }
-    return NULL;
+
+    $index = $conf['data_points'][0]['index'];
+    $value = $this->getSingleValue($index, NULL, $conf['data_points'][0]);
+    if ($this->isNullValue($value)) {
+      return $tooltip;
+    }
+    if ($this->isApiCalculated($index, $conf['data_points'][0]) && $conf['processing'] != 'calculated') {
+      $tooltip = [
+        'monitoring_period' => $this->formatCalculationTooltip($last_reporting_period),
+      ] + $tooltip;
+      $tooltip = array_filter($tooltip);
+    }
+    return $tooltip;
+  }
+
+  /**
+   * Get a formatted calculation tooltip.
+   *
+   * @param array $monitoring_period_id
+   *   The id of the monitoring period.
+   *
+   * @return array|null
+   *   Either a build array for the tooltip, or NULL.
+   */
+  public function formatCalculationTooltip($monitoring_period_id) {
+    $tooltip_icon = NULL;
+    $tooltip_text = NULL;
+    $reporting_period_text = ThemeHelper::render([
+      '#theme' => 'hpc_reporting_period',
+      '#reporting_period' => $monitoring_period_id,
+      '#format_string' => ', as of date @end_date',
+    ], FALSE);
+    $calculation_method = $this->getCalculationMethod();
+    switch (strtolower($calculation_method)) {
+      case self::CALCULATION_METHOD_SUM:
+        $tooltip_text = $this->t('This value is the sum of all monitoring periods values');
+        $tooltip_icon = 'functions';
+        break;
+
+      case self::CALCULATION_METHOD_AVERAGE:
+        $tooltip_text = $this->t('This value is the average of all monitoring periods values');
+        $tooltip_icon = 'moving';
+        break;
+
+      case self::CALCULATION_METHOD_MAXIMUM:
+        $tooltip_text = $this->t('This value is the maximum of all monitoring periods values');
+        $tooltip_icon = 'equalizer';
+        break;
+
+      case self::CALCULATION_METHOD_LATEST:
+        $tooltip_text = $this->t('This is the latest monitoring period value');
+        $tooltip_icon = 'watch_later';
+        break;
+    }
+    if (!$tooltip_text) {
+      return NULL;
+    }
+    $tooltip = [
+      '#theme' => 'hpc_tooltip',
+      '#tooltip' => $tooltip_text . $reporting_period_text,
+      '#class' => 'api-calculated',
+      '#tag_content' => [
+        '#theme' => 'hpc_icon',
+        '#icon' => $tooltip_icon,
+        '#tag' => 'span',
+      ],
+    ];
+    return $tooltip;
   }
 
   /**

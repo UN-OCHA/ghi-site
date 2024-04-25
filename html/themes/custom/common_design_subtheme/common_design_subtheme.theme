@@ -553,6 +553,42 @@ function common_design_subtheme_preprocess_table(&$vars) {
     }
   }
 
+  // Unify the output structure of the cells so that the values are nicely
+  // wrapped and tooltips are apart. This makes styling easier.
+  foreach ($vars['rows'] as $row_key => $row) {
+    if (!is_array($row) || !is_array($row['cells'])) {
+      continue;
+    }
+    foreach (array_keys($row['cells']) as $column_key) {
+      if (!is_array($vars['rows'][$row_key]['cells'][$column_key])) {
+        continue;
+      }
+      $content = &$vars['rows'][$row_key]['cells'][$column_key]['content'];
+      if (empty(Element::children($content))) {
+        $content = [$content];
+      }
+      $tooltips = $content['tooltips'] ?? NULL;
+      $content = array_filter([
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => [
+            'value-wrapper-outer',
+          ],
+        ],
+        0 => [
+          '#type' => 'container',
+          '#attributes' => [
+            'class' => [
+              'value-wrapper',
+            ],
+          ],
+          0 => array_diff_key($content, array_flip(['tooltips'])),
+          1 => $tooltips,
+        ],
+      ]);
+    }
+  }
+
   if (!empty($progress_groups)) {
     $attached['library'][] = 'common_design_subtheme/ghi-table-progress-indicator';
     foreach ($progress_groups as $group => $items) {
@@ -589,32 +625,13 @@ function common_design_subtheme_preprocess_table(&$vars) {
           continue;
         }
         $content = &$vars['rows'][$row_key]['cells'][$column_key]['content'];
-        if (empty(Element::children($content))) {
-          $content = [$content];
+        if (empty($content)) {
+          continue;
         }
-        $tooltips = $content['tooltips'] ?? NULL;
-        $content = array_filter([
-          '#type' => 'container',
-          '#attributes' => [
-            'class' => [
-              'value-wrapper-outer',
-            ],
-          ],
-          0 => [
-            '#type' => 'container',
-            '#attributes' => [
-              'class' => [
-                'value-wrapper',
-              ],
-            ],
-            0 => array_diff_key($content, array_flip(['tooltips'])),
-            1 => $tooltips,
-          ],
-          1 => [
-            '#markup' => Markup::create('<span class="progress-indicator-wrapper"><span class="progress-indicator" ' . $progress_attributes . '></span></span>'),
-            '#weight' => 1000,
-          ],
-        ]);
+        $content[] = [
+          '#markup' => Markup::create('<span class="progress-indicator-wrapper"><span class="progress-indicator" ' . $progress_attributes . '></span></span>'),
+          '#weight' => 1000,
+        ];
       }
     }
   }
