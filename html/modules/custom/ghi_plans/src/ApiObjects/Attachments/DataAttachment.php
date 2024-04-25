@@ -1157,9 +1157,11 @@ class DataAttachment extends AttachmentBase {
    */
   protected function getTooltip($conf) {
     $index = $conf['data_points'][0]['index'];
-    if (empty($this->getSingleValue($index, NULL, $conf['data_points'][0]))) {
+    $value = $this->getSingleValue($index, NULL, $conf['data_points'][0]);
+    if ($this->isNullValue($value)) {
       return NULL;
     }
+
     // See if this is a measurement and if we can get a formatted monitoring
     // period for this data point.
     $monitoring_period_id = $conf['data_points'][0]['monitoring_period'] ?? NULL;
@@ -1169,8 +1171,8 @@ class DataAttachment extends AttachmentBase {
     $comment = $this->isMeasurement($conf) ? $this->formatMeasurementCommentTooltip() : NULL;
 
     $tooltips = array_filter([
-      $monitoring_tooltip,
-      $comment,
+      'monitoring_period' => $monitoring_tooltip,
+      'measurement_comment' => $comment,
     ]);
     if (empty($tooltips)) {
       return NULL;
