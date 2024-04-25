@@ -10,6 +10,7 @@ use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment;
+use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 
 /**
@@ -111,9 +112,9 @@ class AttachmentTest extends ApiObjectTestBase {
    * Test value retrieval from DataAttachments.
    */
   public function testAttachmentGetDataValues() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
     $attachment = $this->getAttachmentFromFixture('caseload');
-    $this->assertInstanceOf(DataAttachment::class, $attachment);
+    $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
     $conf = [
       'processing' => 'single',
       'data_points' => [['index' => 2]],
@@ -141,6 +142,90 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertEquals(3124881 / 4648210, $attachment->getValue($conf));
     $conf['calculation'] = 'percentage';
     $this->assertEquals(1 / 3124881 * 4648210, $attachment->getValue($conf));
+
+    $conf['calculation'] = 'INVALID CALCULATION TYPE';
+    $this->expectException(InvalidAttachmentTypeException::class);
+    $attachment->getValue($conf);
+
+    $conf = [
+      'processing' => 'INVALID PROCESSING TYPE',
+      'data_points' => [['index' => 2]],
+    ];
+    $this->expectException(InvalidAttachmentTypeException::class);
+    $attachment->getValue($conf);
+  }
+
+  /**
+   * Test the getDataForAllReportingPeriods method.
+   */
+  public function testGetDataForAllReportingPeriods() {
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
+    $attachment = $this->getAttachmentFromFixture('caseload_empty_values');
+    $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
+    $reporting_periods = $this->mockCaseloadReportingPeriods([2386, 2387, 2388, 2389]);
+    $values = $attachment->getValuesForAllReportingPeriods(2, FALSE, FALSE, $reporting_periods);
+    $this->assertIsArray($values);
+    $this->assertArrayHasKey(2386, $values);
+    $this->assertArrayHasKey(2387, $values);
+    $this->assertArrayHasKey(2388, $values);
+    $this->assertArrayHasKey(2389, $values);
+    $expected = [
+      2386 => 4648210,
+      2387 => 4648210,
+      2388 => 4648210,
+      2389 => 4648210,
+    ];
+    $this->assertEquals($expected, $values);
+
+    $values = $attachment->getValuesForAllReportingPeriods(1, TRUE, FALSE, $reporting_periods);
+    $this->assertEquals([], $values);
+
+    $values = $attachment->getValuesForAllReportingPeriods(1, FALSE, TRUE, $reporting_periods);
+    $this->assertEquals([], $values);
+
+    $values = $attachment->getValuesForAllReportingPeriods(1, TRUE, TRUE, $reporting_periods);
+    $this->assertEquals([], $values);
+
+    $values = $attachment->getValuesForAllReportingPeriods(3, FALSE, TRUE, $reporting_periods);
+    $expected = [
+      2386 => 0,
+      2387 => 3124881,
+      2388 => 3124881,
+      2389 => 3124881,
+    ];
+    $this->assertEquals($expected, $values);
+
+    $values = $attachment->getValuesForAllReportingPeriods(3, TRUE, FALSE, $reporting_periods);
+    $expected = [
+      2387 => 3124881,
+      2388 => 3124881,
+      2389 => 3124881,
+    ];
+    $this->assertEquals($expected, $values);
+  }
+
+  /**
+   * Test the getLastNonEmptyReportingPeriod method.
+   */
+  public function testGetLastNonEmptyReportingPeriod() {
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
+    $attachment = $this->getAttachmentFromFixture('caseload_empty_values');
+    $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
+    $reporting_periods = $this->mockCaseloadReportingPeriods([2386, 2387, 2388, 2389]);
+    $this->assertNull($attachment->getLastNonEmptyReportingPeriod(1, $reporting_periods));
+    $this->assertEquals($reporting_periods[2389], $attachment->getLastNonEmptyReportingPeriod(2, $reporting_periods));
+    $this->assertEquals($reporting_periods[2389], $attachment->getLastNonEmptyReportingPeriod(3, $reporting_periods));
+  }
+
+  /**
+   * Test the getMeasurementComment method.
+   */
+  public function testGetMeasurementComment() {
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
+    $attachment = $this->getAttachmentFromFixture('caseload');
+    $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
+    $this->assertNull($attachment->getMeasurementComment(2389));
+    $this->assertEquals('Test comment', $attachment->getMeasurementComment(2388));
   }
 
   /**
@@ -396,6 +481,7 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
     $this->assertEquals('BP1', $attachment->getTitle());
     $this->assertEquals('HPC 2023', $attachment->getDescription());
+    $this->assertEquals('caseload', $attachment->getType());
     $this->assertEmpty($attachment->getSourceEntity());
     $this->assertCount(8, $attachment->getMetricFields());
     $this->assertCount(5, $attachment->getGoalMetricFields());
@@ -409,6 +495,7 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertTrue($attachment->isPendingDataEntry());
     $this->assertEquals(1112, $attachment->getPlanId());
     $this->assertTrue($attachment->hasDisaggregatedData());
+    $this->assertFalse($attachment->canBeMapped('latest'));
   }
 
   /**
@@ -420,6 +507,7 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertInstanceOf(IndicatorAttachment::class, $attachment);
     $this->assertEquals('SP1/IN1', $attachment->getTitle());
     $this->assertEquals('Nombre de personnes non déplacées en insécurité alimentaire sévère ont reçu une assistance alimentaire', $attachment->getDescription());
+    $this->assertEquals('indicator', $attachment->getType());
     $this->assertEmpty($attachment->getSourceEntity());
     $this->assertCount(2, $attachment->getMetricFields());
     $this->assertCount(1, $attachment->getGoalMetricFields());
@@ -490,6 +578,16 @@ class AttachmentTest extends ApiObjectTestBase {
     $attachment_data = $this->getApiObjectFixture('Attachments', $type);
     $this->assertNotEmpty($attachment_data);
     return AttachmentHelper::processAttachment($attachment_data);
+  }
+
+  /**
+   * Build an array of dummy reporting periods for the caseload fixtures.
+   */
+  private function mockCaseloadReportingPeriods($ids) {
+    $reporting_periods = array_map(function ($id) {
+      return (object) ['id' => $id];
+    }, [2386, 2387, 2388, 2389]);
+    return array_combine($ids, $reporting_periods);
   }
 
 }
