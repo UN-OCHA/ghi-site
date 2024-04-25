@@ -141,8 +141,10 @@
           padding-left: 2rem;
         }
 
-        td .tooltip {
-          margin-left: 0.3rem;
+        td .value-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 0.3rem;
         }
 
         td.data-point--widget-pie-chart {

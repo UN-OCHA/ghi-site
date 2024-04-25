@@ -592,18 +592,29 @@ function common_design_subtheme_preprocess_table(&$vars) {
         if (empty(Element::children($content))) {
           $content = [$content];
         }
-        $content = [
+        $tooltips = $content['tooltips'] ?? NULL;
+        $content = array_filter([
           '#type' => 'container',
           '#attributes' => [
             'class' => [
-              'value-wrapper',
+              'value-wrapper-outer',
             ],
           ],
-          0 => $content,
+          0 => [
+            '#type' => 'container',
+            '#attributes' => [
+              'class' => [
+                'value-wrapper',
+              ],
+            ],
+            0 => array_diff_key($content, array_flip(['tooltips'])),
+            1 => $tooltips,
+          ],
           1 => [
             '#markup' => Markup::create('<span class="progress-indicator-wrapper"><span class="progress-indicator" ' . $progress_attributes . '></span></span>'),
+            '#weight' => 1000,
           ],
-        ];
+        ]);
       }
     }
   }

@@ -1124,6 +1124,11 @@ class DataAttachment extends AttachmentBase {
     // Prepare the build.
     $build = [
       '#type' => 'container',
+      'tooltips' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['tooltip-wrapper']],
+        '#weight' => 100,
+      ],
     ];
     // Create a render array for the actual value.
     if (empty($conf['widget']) || $conf['widget'] == 'none') {
@@ -1136,7 +1141,7 @@ class DataAttachment extends AttachmentBase {
     // See if this needs a tooltip.
     $tooltip = $this->getTooltip($conf);
     if ($tooltip) {
-      $build[] = $tooltip;
+      $build['tooltips'] += $tooltip;
     }
     return $build;
   }
@@ -1163,10 +1168,14 @@ class DataAttachment extends AttachmentBase {
     // See if there is a comment.
     $comment = $this->isMeasurement($conf) ? $this->formatMeasurementCommentTooltip() : NULL;
 
-    return array_filter([
+    $tooltips = array_filter([
       $monitoring_tooltip,
       $comment,
     ]);
+    if (empty($tooltips)) {
+      return NULL;
+    }
+    return $tooltips;
   }
 
   /**

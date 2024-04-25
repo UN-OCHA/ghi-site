@@ -159,8 +159,7 @@ class AttachmentTest extends ApiObjectTestBase {
         ],
       ],
       'expected' => [
-        '#type' => 'container',
-        0 => ['#markup' => 4648210],
+        '#markup' => 4648210,
       ],
     ];
     $test_cases['text_currency'] = [
@@ -173,12 +172,9 @@ class AttachmentTest extends ApiObjectTestBase {
         ],
       ],
       'expected' => [
-        '#type' => 'container',
-        0 => [
-          '#theme' => 'hpc_currency',
-          '#value' => 4648210,
-          '#decimal_format' => NULL,
-        ],
+        '#theme' => 'hpc_currency',
+        '#value' => 4648210,
+        '#decimal_format' => NULL,
       ],
     ];
     $test_cases['text_amount'] = [
@@ -191,13 +187,10 @@ class AttachmentTest extends ApiObjectTestBase {
         ],
       ],
       'expected' => [
-        '#type' => 'container',
-        0 => [
-          '#theme' => 'hpc_amount',
-          '#amount' => 4648210,
-          '#scale' => 'full',
-          '#decimal_format' => NULL,
-        ],
+        '#theme' => 'hpc_amount',
+        '#amount' => 4648210,
+        '#scale' => 'full',
+        '#decimal_format' => NULL,
       ],
     ];
     $test_cases['text_amount_rounded'] = [
@@ -210,13 +203,10 @@ class AttachmentTest extends ApiObjectTestBase {
         ],
       ],
       'expected' => [
-        '#type' => 'container',
-        0 => [
-          '#theme' => 'hpc_amount',
-          '#amount' => 4648210,
-          '#decimals' => 1,
-          '#decimal_format' => NULL,
-        ],
+        '#theme' => 'hpc_amount',
+        '#amount' => 4648210,
+        '#decimals' => 1,
+        '#decimal_format' => NULL,
       ],
     ];
     $test_cases['text_auto_amount'] = [
@@ -229,18 +219,15 @@ class AttachmentTest extends ApiObjectTestBase {
         ],
       ],
       'expected' => [
-        '#type' => 'container',
-        0 => [
-          '#theme' => 'hpc_autoformat_value',
-          '#value' => 4648210,
-          '#unit_type' => 'amount',
-          '#unit_defaults' => [
-            'amount' => [
-              '#scale' => 'full',
-            ],
+        '#theme' => 'hpc_autoformat_value',
+        '#value' => 4648210,
+        '#unit_type' => 'amount',
+        '#unit_defaults' => [
+          'amount' => [
+            '#scale' => 'full',
           ],
-          '#decimal_format' => NULL,
         ],
+        '#decimal_format' => NULL,
       ],
     ];
     $test_cases['text_auto__percentage'] = [
@@ -254,13 +241,10 @@ class AttachmentTest extends ApiObjectTestBase {
         ],
       ],
       'expected' => [
-        '#type' => 'container',
-        0 => [
-          '#theme' => 'hpc_percent',
-          '#ratio' => 1 / 3124881 * 4648210,
-          '#decimals' => 1,
-          '#decimal_format' => NULL,
-        ],
+        '#theme' => 'hpc_percent',
+        '#ratio' => 1 / 3124881 * 4648210,
+        '#decimals' => 1,
+        '#decimal_format' => NULL,
       ],
     ];
     $test_cases['text_percent'] = [
@@ -274,13 +258,10 @@ class AttachmentTest extends ApiObjectTestBase {
         ],
       ],
       'expected' => [
-        '#type' => 'container',
-        0 => [
-          '#theme' => 'hpc_percent',
-          '#ratio' => 1 / 3124881 * 4648210,
-          '#decimals' => 1,
-          '#decimal_format' => NULL,
-        ],
+        '#theme' => 'hpc_percent',
+        '#ratio' => 1 / 3124881 * 4648210,
+        '#decimals' => 1,
+        '#decimal_format' => NULL,
       ],
     ];
     $test_cases['text_empty'] = [
@@ -293,10 +274,7 @@ class AttachmentTest extends ApiObjectTestBase {
         ],
       ],
       'expected' => [
-        '#type' => 'container',
-        0 => [
-          '#markup' => 'Pending',
-        ],
+        '#markup' => 'Pending',
       ],
     ];
     // Format as widgets.
@@ -312,11 +290,8 @@ class AttachmentTest extends ApiObjectTestBase {
         ],
       ],
       'expected' => [
-        '#type' => 'container',
-        0 => [
-          '#theme' => 'hpc_progress_bar',
-          '#ratio' => 1 / 3124881 * 4648210,
-        ],
+        '#theme' => 'hpc_progress_bar',
+        '#ratio' => 1 / 3124881 * 4648210,
       ],
     ];
     // Format as widgets.
@@ -332,11 +307,8 @@ class AttachmentTest extends ApiObjectTestBase {
         ],
       ],
       'expected' => [
-        '#type' => 'container',
-        0 => [
-          '#theme' => 'hpc_pie_chart',
-          '#ratio' => 1 / 3124881 * 4648210,
-        ],
+        '#theme' => 'hpc_pie_chart',
+        '#ratio' => 1 / 3124881 * 4648210,
       ],
     ];
     return $test_cases;
@@ -351,7 +323,11 @@ class AttachmentTest extends ApiObjectTestBase {
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
     $attachment = $this->getAttachmentFromFixture('caseload');
     $this->assertInstanceOf(DataAttachment::class, $attachment);
-    $this->assertEquals($expected, $attachment->formatValue($conf));
+    $build = $attachment->formatValue($conf);
+    $this->assertEquals('container', $build['#type']);
+    $this->assertArrayHasKey(0, $build);
+    $this->assertEquals($expected, $build[0]);
+    $this->assertArrayHasKey('tooltips', $build);
   }
 
   /**

@@ -1,6 +1,17 @@
+.tooltip-wrapper {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
 .tooltip {
+  display: inherit;
   cursor: pointer;
   vertical-align: middle;
+
+  .material-icon {
+    line-height: initial;
+  }
 
   .modal-link {
     display: inline-flex;
@@ -9,10 +20,8 @@
 
     .modal-link-item > a {
       display: flex;
-      padding: 0.1rem;
       border: 2px solid transparent;
       border-radius: 3px;
-      padding-block: 6px;
 
       &:focus,
       &:focus-visible {
@@ -72,10 +81,12 @@
 
           .item-wrapper {
             display: flex;
+            gap: 2rem;
 
             .label {
               width: 50%;
               text-align: left;
+              white-space: nowrap;
               color: var(--cd-white);
               font-size: 100%;
               line-height: inherit;
