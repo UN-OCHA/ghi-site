@@ -564,6 +564,9 @@ function common_design_subtheme_preprocess_table(&$vars) {
         continue;
       }
       $content = &$vars['rows'][$row_key]['cells'][$column_key]['content'];
+      if (!is_array($content)) {
+        continue;
+      }
       if (empty(Element::children($content))) {
         $content = [$content];
       }
