@@ -137,7 +137,6 @@ function ghi_blocks_deploy_9003_retire_plan_entity_types(&$sandbox) {
   $block_plugin_manager = \Drupal::service('plugin.manager.block');
   $entity_logframe_plugin_definition = $block_plugin_manager->getDefinition('plan_entity_logframe', FALSE);
 
-  /** @var \Drupal\node\NodeInterface[] $nodes */
   for ($i = 0; $i < 10; $i++) {
     if (empty($sandbox['nodes'])) {
       continue;
@@ -200,6 +199,97 @@ function ghi_blocks_deploy_9003_retire_plan_entity_types(&$sandbox) {
   $sandbox['#finished'] = 1 / (count($sandbox['nodes']) + 1);
   if ($sandbox['#finished'] === 1) {
     return t('Replaced plan_entity_types block with plan_entity_logframe block in @count_changed nodes', [
+      '@count_changed' => $sandbox['updated'],
+    ]);
+  }
+}
+
+/**
+ * Replace instances of the plan_entity_types plugin.
+ */
+function ghi_blocks_deploy_9004_retire_plan_entity_types_revisions(&$sandbox) {
+  if (!isset($sandbox['node_revisions'])) {
+    $result = \Drupal::database()->select('node_revision__layout_builder__layout')
+      ->fields('node_revision__layout_builder__layout', ['revision_id'])
+      ->condition('layout_builder__layout_section', '%plan_entity_types%', 'LIKE')
+      ->orderBy('revision_id')
+      ->execute();
+    $sandbox['node_revisions'] = array_map(function ($row) {
+      return $row->revision_id;
+    }, $result->fetchAll());
+    $sandbox['total'] = count($sandbox['node_revisions']);
+    $sandbox['updated'] = 0;
+  }
+
+  /** @var \Drupal\Component\UuidInterface $uuid_generator */
+  $uuid_generator = \Drupal::service('uuid');
+
+  /** @var \Drupal\Core\Block\BlockManagerInterface $block_plugin_manager */
+  $block_plugin_manager = \Drupal::service('plugin.manager.block');
+  $entity_logframe_plugin_definition = $block_plugin_manager->getDefinition('plan_entity_logframe', FALSE);
+
+  for ($i = 0; $i < 10; $i++) {
+    if (empty($sandbox['node_revisions'])) {
+      continue;
+    }
+    $revision_id = array_shift($sandbox['node_revisions']);
+
+    /** @var \Drupal\node\NodeInterface $revision */
+    $revision = \Drupal::entityTypeManager()->getStorage('node')->loadRevision($revision_id);
+    if (!$revision) {
+      continue;
+    }
+
+    if (!$revision || !$revision->hasField(OverridesSectionStorage::FIELD_NAME)) {
+      continue;
+    }
+    $sections = $revision->get(OverridesSectionStorage::FIELD_NAME)->getValue();
+    if (empty($sections)) {
+      continue;
+    }
+
+    foreach (array_keys($sections) as $delta) {
+      /** @var \Drupal\layout_builder\Section $section */
+      $components = $sections[$delta]['section']->getComponents();
+      /** @var \Drupal\layout_builder\SectionComponent[] $components */
+      foreach ($components as $component) {
+        $plugin = $component->getPlugin();
+        if (!$plugin instanceof PlanEntityTypes) {
+          continue;
+        }
+        $config = array_filter([
+          'id' => $entity_logframe_plugin_definition['id'],
+          'provider' => $entity_logframe_plugin_definition['provider'],
+          'context_mapping' => $plugin->getContextMapping(),
+          'hpc' => [
+            'entities' => $plugin->getBlockConfig(),
+            'tables' => [
+              'attachment_tables' => [],
+            ],
+          ],
+
+        ]);
+        // Create the new component.
+        $entity_logframe_component = new SectionComponent($uuid_generator->generate(), $component->getRegion(), $config);
+        $entity_logframe_component->setWeight($component->getWeight());
+
+        // And put it into the same position as the component it replaces.
+        $_section = $sections[$delta]['section']->toArray();
+        array_splice($_section['components'], array_search($component->getUuid(), array_keys($_section['components'])), 1, [$entity_logframe_component->getUuid() => $entity_logframe_component->toArray()]);
+        $sections[$delta]['section'] = Section::fromArray($_section);
+      }
+    }
+
+    $revision->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+    $revision->setNewRevision(FALSE);
+    $revision->setSyncing(TRUE);
+    $revision->save();
+    $sandbox['updated']++;
+  }
+
+  $sandbox['#finished'] = 1 / (count($sandbox['node_revisions']) + 1);
+  if ($sandbox['#finished'] === 1) {
+    return t('Replaced plan_entity_types block with plan_entity_logframe block in @count_changed node revisions', [
       '@count_changed' => $sandbox['updated'],
     ]);
   }
