@@ -830,6 +830,20 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
+   * Get a comment tooltip for the current measurement.
+   *
+   * @param int|string $reporting_period
+   *   The id of the reporting period or the string 'latest'.
+   *
+   * @return string|\Drupal\Component\Render\MarkupInterface|null
+   *   The value of the metric for the specified reporting period.
+   */
+  public function getMeasurementComment($reporting_period = 'latest') {
+    $measurement = $this->getMeasurementByReportingPeriod($reporting_period);
+    return $measurement?->getComment();
+  }
+
+  /**
    * Extract prototype information from an attachment.
    *
    * Not all endpoints include the prototype in the response, which is why we
@@ -1110,6 +1124,11 @@ class DataAttachment extends AttachmentBase {
     // Prepare the build.
     $build = [
       '#type' => 'container',
+      'tooltips' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['tooltip-wrapper']],
+        '#weight' => 100,
+      ],
     ];
     // Create a render array for the actual value.
     if (empty($conf['widget']) || $conf['widget'] == 'none') {
@@ -1122,7 +1141,7 @@ class DataAttachment extends AttachmentBase {
     // See if this needs a tooltip.
     $tooltip = $this->getTooltip($conf);
     if ($tooltip) {
-      $build[] = $tooltip;
+      $build['tooltips'] += $tooltip;
     }
     return $build;
   }
@@ -1138,13 +1157,27 @@ class DataAttachment extends AttachmentBase {
    */
   protected function getTooltip($conf) {
     $index = $conf['data_points'][0]['index'];
-    if (empty($this->getSingleValue($index, NULL, $conf['data_points'][0]))) {
+    $value = $this->getSingleValue($index, NULL, $conf['data_points'][0]);
+    if ($this->isNullValue($value)) {
       return NULL;
     }
+
     // See if this is a measurement and if we can get a formatted monitoring
     // period for this data point.
     $monitoring_period_id = $conf['data_points'][0]['monitoring_period'] ?? NULL;
-    return $this->isMeasurement($conf) ? $this->formatMonitoringPeriod('icon', $monitoring_period_id) : NULL;
+    $monitoring_tooltip = $this->isMeasurement($conf) ? $this->formatMonitoringPeriod('icon', $monitoring_period_id) : NULL;
+
+    // See if there is a comment.
+    $comment = $this->isMeasurement($conf) ? $this->formatMeasurementCommentTooltip() : NULL;
+
+    $tooltips = array_filter([
+      'monitoring_period' => $monitoring_tooltip,
+      'measurement_comment' => $comment,
+    ]);
+    if (empty($tooltips)) {
+      return NULL;
+    }
+    return $tooltips;
   }
 
   /**
@@ -1334,7 +1367,6 @@ class DataAttachment extends AttachmentBase {
             '#reporting_period' => $monitoring_period,
             '#format_string' => $format_string,
           ]), FALSE),
-          '#class' => 'monitoring period',
           '#tag_content' => [
             '#theme' => 'hpc_icon',
             '#icon' => 'calendar_today',
@@ -1352,6 +1384,24 @@ class DataAttachment extends AttachmentBase {
         break;
     }
     return $build;
+  }
+
+  /**
+   * Get a formatted measurement comment tooltip.
+   *
+   * @return array|null
+   *   A build array or NULL.
+   */
+  public function formatMeasurementCommentTooltip() {
+    $comment = $this->getMeasurementComment();
+    if (!$comment) {
+      return NULL;
+    }
+    return [
+      '#theme' => 'hpc_tooltip',
+      '#tooltip' => $comment,
+      '#tooltip_theme' => 'measurement-comment',
+    ];
   }
 
   /**

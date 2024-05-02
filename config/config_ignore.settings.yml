@@ -1,23 +1,16 @@
 _core:
   default_config_hash: UVH1aJ4b44UM-VdPVN7hNNuuVqfReJxwfVeDQH1Hvsk
+mode: simple
 ignored_config_entities:
-  - '// Smugmug API'
+  - 'entity_access_password.settings:global_password'
+  - ghi_blocks.global_settings
+  - ghi_content.remote_sources
+  - ghi_embargoed_access.settings
+  - ghi_hero_image.config
+  - 'page_manager.page.homepage:access_conditions'
+  - 'page_manager.page.homepage:access_logic'
+  - 'page_manager.page_variant.homepage*:variant_settings.sections.0.components'
   - 'smugmug_api.settings:api_key'
   - 'smugmug_api.settings:api_secret'
-  - '// Ignore global settings.'
-  - ghi_blocks.global_settings
-  - '// Ignore connection credentials.'
-  - ghi_content.remote_sources
-  - '// Embargoed settings'
-  - ghi_embargoed_access.settings
-  - '// Ignore the image settings'
-  - ghi_hero_image.config
-  - '// Ignore the homepage config.'
-  - 'page_manager.page.homepage:access_logic'
-  - 'page_manager.page.homepage:access_conditions'
-  - 'page_manager.page_variant.homepage*:variant_settings.sections.0.components'
-  - '// Ignore cache warmer'
   - warmer.settings
-  - '// Entity access password'
-  - 'entity_access_password.settings:global_password'
 enable_export_filtering: true

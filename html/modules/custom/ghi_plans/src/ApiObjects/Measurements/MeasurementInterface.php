@@ -10,11 +10,19 @@ use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
 interface MeasurementInterface extends ApiObjectInterface {
 
   /**
-   * Get a title for the attachment.
+   * Get a reporting period id for the measurement.
    *
    * @return int
    *   The id of the reporting period for a measurement.
    */
   public function getReportingPeriodId();
+
+  /**
+   * Get the comment for the measurement.
+   *
+   * @return string|\Drupal\Component\Render\MarkupInterface|null
+   *   The comment set for the measurement.
+   */
+  public function getComment();
 
 }

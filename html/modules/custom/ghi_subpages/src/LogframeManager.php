@@ -483,7 +483,7 @@ class LogframeManager implements ContainerInjectionInterface {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
     $query = $this->endpointQueryManager->createInstance('plan_entities_query');
     $query->setPlaceholder('plan_id', $base_object->getSourceId());
-    $entities = array_merge($entities, $query->getPlanEntities($base_object, NULL, $filter) ?? []);
+    $entities = $entities + ($query->getPlanEntities($base_object, NULL, $filter) ?? []);
     // This should give us only PlanEntity objects, but let's make sure.
     $entities = is_array($entities) ? array_filter($entities, function ($entity) {
       return $entity instanceof PlanEntityInterface;

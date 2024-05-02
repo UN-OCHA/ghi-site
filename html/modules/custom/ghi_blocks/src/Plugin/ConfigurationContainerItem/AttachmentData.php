@@ -173,7 +173,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     $base_object = $this->getContextValue('base_object');
     if ($property && $base_object && $base_object instanceof Plan) {
       $footnotes = $this->getFootnotesForPlanBaseobject($base_object);
-      $build[] = $this->buildFootnoteTooltip($footnotes, $property);
+      $build['tooltips'][] = $this->buildFootnoteTooltip($footnotes, $property);
     }
     return $build;
   }

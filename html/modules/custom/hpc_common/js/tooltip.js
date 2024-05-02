@@ -13,7 +13,7 @@
  (function ($, Drupal) {
 
   document.addEventListener("DOMContentLoaded", function () {
-    [].slice.call(document.querySelectorAll('[data-toggle="tooltip"]')).forEach(function (el) {
+    once('tooltip', '[data-toggle="tooltip"]').forEach(function (el) {
       Drupal.hpcTooltips.initTippy(el);
     });
   });
@@ -30,12 +30,13 @@
       aria: {
         expanded: null,
       },
+      theme: $(el).attr('data-theme') ?? null,
     });
   }
 
   Drupal.behaviors.tooltips = {
     attach: function(context, settings) {
-      [].slice.call($(context).find('[data-toggle="tooltip"]')).forEach(function (el) {
+      once('tooltip', '[data-toggle="tooltip"]', context).forEach(function (el) {
         Drupal.hpcTooltips.initTippy(el);
       });
     }

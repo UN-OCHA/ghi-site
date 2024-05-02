@@ -54,7 +54,7 @@ trait SimpleCacheTrait {
    *   Either the stored data or nothing.
    */
   public function cache($cache_key, $data = NULL, $reset = FALSE, $cache_base_time = NULL, $cache_tags = []) {
-    $cache_store = &drupal_static(__FUNCTION__, []);
+    $cache_store = &drupal_static(get_called_class() . '::' . __FUNCTION__, []);
 
     if ($data === NULL && $reset === TRUE) {
       // Clear the cached data as requested.

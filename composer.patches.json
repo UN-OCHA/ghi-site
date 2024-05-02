@@ -45,9 +45,6 @@
     "drupal/seckit": {
       "Issue #2844205: Provide hook_seckit_options_alter() D8": "https://www.drupal.org/files/issues/2021-09-13/2844205-alter-csp-directives-10.patch"
     },
-    "drupal/config_ignore": {
-      "Issue #2857247: Support for export filtering via Drush": "https://www.drupal.org/files/issues/2021-08-18/config_ignore_2857247-75.patch"
-    },
     "drupal/config_default_image": {
       "Issue #2921908: Provide a 2nd formatter \"Responsive image or default image\"": "https://www.drupal.org/files/issues/2022-11-21/config_default_image-2921908-7.patch"
     },
