@@ -291,6 +291,9 @@ function hpc_common_preprocess_hpc_tooltip(array &$vars) {
   elseif (!empty($vars['tag_content']['#theme']) && $vars['tag_content']['#theme'] == 'hpc_modal_link') {
     $attributes->setAttribute('tabindex', -1);
   }
+  elseif (!empty($vars['tag_content']['#theme']) && $vars['tag_content']['#theme'] == 'hpc_popover') {
+    $attributes->setAttribute('tabindex', -1);
+  }
 
   $vars['attributes'] = $attributes;
 }

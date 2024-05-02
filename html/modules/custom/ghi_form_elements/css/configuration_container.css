@@ -70,6 +70,15 @@
 .form-type--configuration_container table.summary-table tbody tr td {
   text-align: left;
 }
+.form-type--configuration_container table.summary-table tbody tr td .value-wrapper {
+  display: flex;
+}
+.form-type--configuration_container table.summary-table tbody tr td .value-wrapper .tooltip {
+  display: inline-block;
+}
+.form-type--configuration_container table.summary-table tbody tr td .value-wrapper .tooltip a {
+  text-decoration: none !important;
+}
 .form-type--configuration_container table.summary-table thead th:first-child {
   padding-left: 1.2rem;
 }
@@ -90,11 +99,3 @@
 .form-type--configuration_container table.summary-table .operation-buttons {
   white-space: nowrap;
 }
-
-/* .form-type--configuration_container input[type="radio"]:checked,
-.form-type--configuration_container input[type="radio"]:checked:hover,
-.form-type--configuration_container input[type="radio"]:checked:active,
-.form-type--configuration_container input[type="radio"]:checked:focus,
-.form-type--configuration_container input[type="radio"]:checked:hover:focus {
-  box-shadow: none !important;
-} */

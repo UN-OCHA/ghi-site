@@ -1,6 +1,6 @@
 .material-icon {
-  font-family: 'Material Icons';
-  font-style: normal;
-  font-weight: normal;
+  font-family: 'Material Icons' !important;
+  font-style: normal !important;
+  font-weight: normal !important;
   text-transform: none !important;
 }
