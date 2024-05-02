@@ -158,7 +158,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   public function getLabel() {
     $config = $this->config ?? [];
     if (array_key_exists('label', $config) && !empty($config['label'])) {
-      return $config['label'];
+      return trim($config['label']);
     }
     if (method_exists($this, 'getDefaultLabel')) {
       return $this->getDefaultLabel();
