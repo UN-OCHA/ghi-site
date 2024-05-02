@@ -485,8 +485,8 @@ function common_design_subtheme_preprocess_table(&$vars) {
 
   // Process the rows.
   if (!empty($vars['rows'])) {
-    foreach ($vars['rows'] as $row_key => &$row) {
-      foreach ($row['cells'] as $column_name => &$column) {
+    foreach ($vars['rows'] as $row_key => $row) {
+      foreach ($vars['rows'][$row_key]['cells'] as $column_name => &$column) {
         /** @var \Drupal\Core\Template\Attribute $attribute */
         $attribute = is_array($column) && array_key_exists('attributes', $column) ? $column['attributes'] : NULL;
         if (!$attribute) {
@@ -535,8 +535,8 @@ function common_design_subtheme_preprocess_table(&$vars) {
 
   // Process the footer the same as the header.
   if (!empty($vars['footer'])) {
-    foreach ($vars['footer'] as $row_key => &$row) {
-      foreach ($row['cells'] as $column_name => &$column) {
+    foreach ($vars['footer'] as $row_key => $row) {
+      foreach ($vars['footer'][$row_key]['cells'] as $column_name => &$column) {
         $attribute = is_array($column) && array_key_exists('attributes', $column) ? $column['attributes'] : NULL;
         if (!$attribute) {
           continue;
