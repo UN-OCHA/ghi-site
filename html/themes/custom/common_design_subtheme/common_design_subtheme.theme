@@ -571,6 +571,10 @@ function common_design_subtheme_preprocess_table(&$vars) {
         $content = [$content];
       }
       $tooltips = $content['tooltips'] ?? NULL;
+      $main_content = array_diff_key($content, array_flip(['tooltips']));
+      if (!empty($main_content['#type']) && $main_content['#type'] == 'container') {
+        unset($main_content['#type']);
+      }
       $content = array_filter([
         '#type' => 'container',
         '#attributes' => [
@@ -585,7 +589,7 @@ function common_design_subtheme_preprocess_table(&$vars) {
               'value-wrapper',
             ],
           ],
-          0 => array_diff_key($content, array_flip(['tooltips'])),
+          0 => $main_content,
           1 => $tooltips,
         ],
       ]);

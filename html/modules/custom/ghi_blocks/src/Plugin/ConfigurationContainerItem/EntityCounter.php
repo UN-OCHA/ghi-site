@@ -202,12 +202,17 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     }
 
     return [
-      '#theme' => 'hpc_popover',
-      '#title' => Markup::create($icon . '<span class="name">' . $this->getLabel() . '</span>'),
-      '#content' => $popover_content,
-      '#class' => 'entity-counter entity-counter-popover',
-      '#material_icon' => 'view_list',
-      '#disabled' => empty($popover_content),
+      '#theme' => 'hpc_tooltip',
+      '#tooltip' => $this->t('Click to see the list of clusters.'),
+      '#class' => 'popover-tooltip',
+      '#tag_content' => [
+        '#theme' => 'hpc_popover',
+        '#title' => Markup::create($icon . '<span class="name">' . $this->getLabel() . '</span>'),
+        '#content' => $popover_content,
+        '#class' => 'entity-counter entity-counter-popover',
+        '#material_icon' => 'view_list',
+        '#disabled' => empty($popover_content),
+      ],
     ];
   }
 
