@@ -26,3 +26,24 @@ function ghi_plan_clusters_post_update_assure_section_reference() {
     $plan_cluster->save();
   }
 }
+
+/**
+ * Remove plan cluster nodes that are missing a base object.
+ */
+function ghi_plan_clusters_post_update_remove_invalid_plan_clusters() {
+  // Load nids of plan_cluster nodes without a base object.
+  $nids = \Drupal::entityTypeManager()
+    ->getStorage('node')
+    ->getQuery()
+    ->condition('type', 'plan_cluster')
+    ->condition('field_base_object', NULL, 'IS NULL')
+    ->accessCheck(FALSE)
+    ->execute();
+  if (empty($nids)) {
+    return;
+  }
+  foreach (PlanCluster::loadMultiple($nids) as $plan_cluster) {
+    // Delete the broken plan cluster node.
+    $plan_cluster->delete();
+  }
+}

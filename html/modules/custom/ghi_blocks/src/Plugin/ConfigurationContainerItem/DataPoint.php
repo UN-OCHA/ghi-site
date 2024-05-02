@@ -138,7 +138,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
           '@column_label' => $this->getLabel(),
         ]),
       ];
-      $build[] = $modal_link;
+      $build['tooltips'][] = $modal_link;
     }
     return $build;
   }

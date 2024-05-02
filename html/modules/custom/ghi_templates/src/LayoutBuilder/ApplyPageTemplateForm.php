@@ -61,7 +61,7 @@ class ApplyPageTemplateForm extends TemplateFormBase {
   }
 
   /**
-   * Builds the form for the block import.
+   * Builds the form for template selection and validation.
    *
    * @param array $form
    *   An associative array containing the structure of the form.

@@ -271,6 +271,10 @@ function hpc_common_preprocess_hpc_tooltip(array &$vars) {
   $attributes->setAttribute('data-toggle', 'tooltip');
   $attributes->setAttribute('tabindex', 0);
 
+  if (!empty($vars['tooltip_theme'])) {
+    $attributes->setAttribute('data-theme', $vars['tooltip_theme']);
+  }
+
   $attributes->addClass('tooltip');
   if (!empty($vars['class'])) {
     $attributes->addClass($vars['class']);

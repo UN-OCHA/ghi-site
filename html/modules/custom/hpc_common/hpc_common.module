@@ -132,6 +132,7 @@ function hpc_common_theme($existing, $type, $theme, $path) {
         'class' => NULL,
         'tag' => NULL,
         'tag_content' => NULL,
+        'tooltip_theme' => NULL,
       ],
       'template' => 'hpc-tooltip',
     ] + $common,

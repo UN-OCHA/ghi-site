@@ -136,7 +136,7 @@
                 "en": "Ciblés"
               },
               "type": "target",
-              "value": 3124881
+              "value": 0
             },
             {
               "name": {
@@ -58813,7 +58813,6 @@
       "createdAt": "2023-10-12T07:14:12.709Z",
       "updatedAt": "2023-12-04T11:07:40.064Z",
       "deletedAt": null,
-      "isCommentPublic": true,
       "measurementVersion": {
         "id": 275932,
         "value": {
@@ -94068,8 +94067,7 @@
             ]
           },
           "description": "HPC 2023",
-          "attachmentType": "caseLoad",
-          "commentsMonitoring": "Test comment"
+          "attachmentType": "caseLoad"
         },
         "measurementId": 132807,
         "currentVersion": true,
@@ -94133,7 +94131,7 @@
                     "en": "Ciblés"
                   },
                   "type": "target",
-                  "value": 3124881
+                  "value": 0
                 },
                 {
                   "name": {
@@ -97732,7 +97730,7 @@
                     0,
                     0,
                     4648210,
-                    3124881,
+                    0,
                     2300000,
                     522701,
                     522701,

@@ -162,12 +162,13 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     // Sort the entities.
     $this->sortPlanEntities($entities, $conf['entities']);
 
+    // See if we should use lazy loading for the tables.
     $lazy_load = $this->config('ghi_blocks.logframe_settings')->get('lazy_load');
 
     // Assemble the list.
     $rendered_items = [];
     foreach ($entities as $entity) {
-      if ($this->isPreview() || !$lazy_load) {
+      if ($this->isConfigurationPreview() || !$lazy_load) {
         $tables = $this->buildTables($entity, $conf['tables']);
       }
       else {
@@ -324,6 +325,16 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     }
     $entities = $block_instance->getRenderableEntities();
     $tables = $block_instance->buildTables($entities[$entity_id], $block_instance->getBlockConfig()['tables']);
+
+    // Reset the static caches to prevent memory issues. Lazy load callbacks
+    // are part of the same main thread that renders the page. Given that there
+    // can be an arbitrarily high number of these calls, especially on logframe
+    // pages, we need to account for that by keeping memory under control. So
+    // better to loose a bit of performance when it comes to lazy loading the
+    // tables, than running into a memory issue and not showing some of the
+    // tables at all.
+    drupal_static_reset();
+
     return $tables;
   }
 
