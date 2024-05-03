@@ -575,24 +575,24 @@ function common_design_subtheme_preprocess_table(&$vars) {
       if (!empty($main_content['#type']) && $main_content['#type'] == 'container') {
         unset($main_content['#type']);
       }
-      $content = array_filter([
+      $content = [
         '#type' => 'container',
         '#attributes' => [
           'class' => [
             'value-wrapper-outer',
           ],
         ],
-        0 => [
+        'value' => [
           '#type' => 'container',
           '#attributes' => [
             'class' => [
               'value-wrapper',
             ],
           ],
-          0 => $main_content,
-          1 => $tooltips,
+          'content' => $main_content,
+          'tooltips' => $tooltips,
         ],
-      ]);
+      ];
     }
   }
 

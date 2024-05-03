@@ -2,6 +2,10 @@
   display: inline-flex;
   gap: 0.3rem;
   align-items: center;
+
+  a {
+    text-decoration: none;
+  }
 }
 
 .tooltip {
@@ -20,15 +24,19 @@
 
     .modal-link-item > a {
       display: flex;
-      border: 2px solid transparent;
-      border-radius: 3px;
+    }
+  }
 
-      &:focus,
-      &:focus-visible {
-        border: 2px solid var(--brand-primary--dark);
-        outline: none;
-        background-color: var(--ghi-primary-button-color-hover);
-      }
+  & > a,
+  .modal-link-item > a {
+    border: 2px solid transparent;
+    border-radius: 3px;
+
+    &:focus,
+    &:focus-visible {
+      border: 2px solid var(--brand-primary--dark);
+      outline: none;
+      background-color: var(--ghi-primary-button-color-hover);
     }
   }
 

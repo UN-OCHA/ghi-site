@@ -157,7 +157,10 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     return [
       '#type' => 'container',
       0 => parent::getRenderArray(),
-      1 => $popover,
+      'tooltips' => [
+        '#theme' => 'hpc_tooltip_wrapper',
+        '#tooltips' => [$popover],
+      ],
     ];
   }
 
