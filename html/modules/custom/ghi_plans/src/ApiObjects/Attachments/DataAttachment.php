@@ -1133,13 +1133,16 @@ class DataAttachment extends AttachmentBase {
       $build[] = $this->formatAsWidget($conf);
     }
 
+    // Prepare the tooltips.
+    $build['tooltips'] = [
+      '#theme' => 'hpc_tooltip_wrapper',
+      '#tooltips' => [],
+    ];
+
     // See if this needs a tooltip.
     $tooltip = $this->getTooltip($conf);
     if ($tooltip) {
-      $build['tooltips'] = [
-        '#theme' => 'hpc_tooltip_wrapper',
-        '#tooltips' => [$tooltip],
-      ];
+      $build['tooltips']['#tooltips'] = $tooltip;
     }
     return $build;
   }
