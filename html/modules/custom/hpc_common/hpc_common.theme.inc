@@ -284,14 +284,21 @@ function hpc_common_preprocess_hpc_tooltip(array &$vars) {
     $vars['tag'] = 'i';
   }
 
+  // Define element types that should not have a tabindex.
+  $no_tabindex_types = [
+    'link',
+    'hpc_modal_link',
+    'hpc_popover',
+  ];
+
   if (empty($vars['tag_content'])) {
     $vars['tag_content'] = Markup::create('<svg class="cd-icon icon cd-icon--about"><use xlink:href="#cd-icon--about"></use></svg>');
     $attributes->addClass('info');
   }
-  elseif (!empty($vars['tag_content']['#theme']) && $vars['tag_content']['#theme'] == 'hpc_modal_link') {
+  elseif (!empty($vars['tag_content']['#theme']) && in_array($vars['tag_content']['#theme'], $no_tabindex_types)) {
     $attributes->setAttribute('tabindex', -1);
   }
-  elseif (!empty($vars['tag_content']['#theme']) && $vars['tag_content']['#theme'] == 'hpc_popover') {
+  elseif (!empty($vars['tag_content']['#type']) && in_array($vars['tag_content']['#type'], $no_tabindex_types)) {
     $attributes->setAttribute('tabindex', -1);
   }
 

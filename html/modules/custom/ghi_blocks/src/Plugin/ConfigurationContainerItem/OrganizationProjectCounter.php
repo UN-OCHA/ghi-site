@@ -114,7 +114,10 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
     return [
       '#type' => 'container',
       0 => parent::getRenderArray(),
-      1 => $modal_link,
+      'tooltips' => [
+        '#theme' => 'hpc_tooltip_wrapper',
+        '#tooltips' => [$modal_link],
+      ],
     ];
   }
 

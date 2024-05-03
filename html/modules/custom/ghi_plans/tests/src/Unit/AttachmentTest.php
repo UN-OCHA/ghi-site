@@ -412,7 +412,7 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertEquals('container', $build['#type']);
     $this->assertArrayHasKey(0, $build);
     $this->assertEquals($expected, $build[0]);
-    $this->assertArrayHasKey('tooltips', $build);
+    $this->assertArrayNotHasKey('tooltips', $build);
   }
 
   /**

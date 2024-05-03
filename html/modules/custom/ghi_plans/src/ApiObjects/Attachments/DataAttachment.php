@@ -1124,11 +1124,6 @@ class DataAttachment extends AttachmentBase {
     // Prepare the build.
     $build = [
       '#type' => 'container',
-      'tooltips' => [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['tooltip-wrapper']],
-        '#weight' => 100,
-      ],
     ];
     // Create a render array for the actual value.
     if (empty($conf['widget']) || $conf['widget'] == 'none') {
@@ -1141,7 +1136,10 @@ class DataAttachment extends AttachmentBase {
     // See if this needs a tooltip.
     $tooltip = $this->getTooltip($conf);
     if ($tooltip) {
-      $build['tooltips'] += $tooltip;
+      $build['tooltips'] = [
+        '#theme' => 'hpc_tooltip_wrapper',
+        '#tooltips' => [$tooltip],
+      ];
     }
     return $build;
   }
