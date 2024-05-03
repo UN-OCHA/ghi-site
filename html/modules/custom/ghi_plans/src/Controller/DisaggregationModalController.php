@@ -280,6 +280,7 @@ class DisaggregationModalController extends ControllerBase {
 
     return [
       '#theme' => 'table',
+      '#cell_wrapping' => FALSE,
       '#header' => $header,
       '#rows' => $rows,
       '#sticky_rows' => [$total_row],

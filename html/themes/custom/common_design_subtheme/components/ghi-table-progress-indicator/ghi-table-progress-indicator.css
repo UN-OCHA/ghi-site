@@ -1,4 +1,4 @@
-.has-progress-indicator tbody td[data-progress-group] .value-wrapper-outer {
+.has-progress-indicator tbody td[data-progress-group] .cell-wrapper-inner {
   position: relative;
 }
 
