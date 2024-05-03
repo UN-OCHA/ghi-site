@@ -9,3 +9,17 @@ entity.node.documents:
   base_route: entity.node.canonical
   class: Drupal\ghi_content\Plugin\Menu\LocalTask\DocumentList
   weight: 1
+
+views.orphaned_content.article:
+  title: List orphaned articles
+  route_name: ghi_content.orphan_content
+  route_parameters:
+    node_type: article
+  base_route: ghi_content.orphan_content
+
+views.orphaned_content.document:
+  title: List orphaned documents
+  route_name: ghi_content.orphan_content
+  route_parameters:
+    node_type: document
+  base_route: ghi_content.orphan_content

@@ -15,6 +15,7 @@ ghi_templates.entity.page_config.import:
     _form: '\Drupal\ghi_templates\LayoutBuilder\ImportPageConfigForm'
   requirements:
     _permission: import page layout configuration code
+    _entity_access: 'entity.update'
   options:
     parameters:
       entity:

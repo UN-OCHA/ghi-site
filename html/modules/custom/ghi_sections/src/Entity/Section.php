@@ -154,7 +154,7 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
     // itself has not been build, so that token replacements are not fully
     // available. To fix this, we invoke a custom hook that lets the
     // GHI Subpages module react just after a section has been fully build.
-    \Drupal::moduleHandler()->invokeAll('section_post_save', [$this]);
+    \Drupal::moduleHandler()->invokeAll('section_post_save', [$this->load($this->id())]);
   }
 
   /**

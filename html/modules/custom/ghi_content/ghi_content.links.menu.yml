@@ -4,3 +4,24 @@ ghi_content.admin.remote_sources:
   route_name: ghi_content.remote.plugin_list
   description: 'List and configure remote sources.'
   weight: 20
+ghi_content.orphaned_content_report:
+  title: 'Orphaned content'
+  description: 'List orphaned content pages.'
+  route_name: ghi_content.orphan_content
+  route_parameters:
+    node_type: article
+  parent: system.admin_reports
+ghi_content.orphaned_content_report.articles:
+  title: 'Orphaned articles'
+  description: 'List orphaned article pages.'
+  route_name: ghi_content.orphan_content
+  route_parameters:
+    node_type: article
+  parent: ghi_content.orphaned_content_report
+ghi_content.orphaned_content_report.documents:
+  title: 'Orphaned documents'
+  description: 'List orphaned article pages.'
+  route_name: ghi_content.orphan_content
+  route_parameters:
+    node_type: document
+  parent: ghi_content.orphaned_content_report

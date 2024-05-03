@@ -6,3 +6,7 @@ administer remote services:
   title: 'Administer remote services'
   description: 'Allow administration of remote services.'
   restrict access: true
+administer orphaned content:
+  title: 'Administer orphaned content'
+  description: 'Allow administration of orphaned content.'
+  restrict access: true
