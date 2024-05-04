@@ -51,6 +51,10 @@
 
         &[data-formatting="numeric-full"] {
           text-align: right;
+
+          .cell-wrapper-inner {
+            justify-content: end;
+          }
         }
 
         &:first-child {
@@ -141,6 +145,7 @@
           padding-left: 2rem;
         }
 
+        td .cell-wrapper-inner,
         td .value-wrapper {
           display: flex;
           align-items: center;

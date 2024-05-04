@@ -47,7 +47,7 @@ function ghi_subpages_entity_bundle_info_alter(array &$bundles) {
  * section's url alias as one of their tokens.
  */
 function ghi_subpages_section_post_save(NodeInterface $section_node) {
-  if (!SubpageHelper::isBaseTypeNode($section_node)) {
+  if (!SubpageHelper::isBaseTypeNode($section_node) || !$section_node->isLatestRevision()) {
     return;
   }
 

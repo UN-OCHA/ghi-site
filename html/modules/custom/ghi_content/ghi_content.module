@@ -17,6 +17,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\ghi_content\Controller\MigrationBatchController;
+use Drupal\ghi_content\Controller\OrphanedContentController;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Entity\Document;
@@ -87,7 +88,7 @@ function ghi_content_theme($existing, $type, $theme, $path) {
  * Implements hook_batch_alter().
  */
 function ghi_content_batch_alter(&$batch) {
-  $targeted_callback = '\Drupal\migrate_tools\MigrateBatchExecutable::batchProcessImport';
+  $targeted_callback = 'Drupal\migrate_tools\MigrateBatchExecutable::batchProcessImport';
   $targeted_migrations = [
     'articles_hpc_content_module' => 'ghi_content.manager.article',
     'documents_hpc_content_module' => 'ghi_content.manager.document',
@@ -543,6 +544,18 @@ function ghi_content_entity_operation(EntityInterface $entity) {
     ];
   }
   return $operations;
+}
+
+/**
+ * Implements hook_entity_operation_alter().
+ */
+function ghi_content_entity_operation_alter(array &$operations, EntityInterface $entity) {
+  if (!$entity instanceof ContentBase || !$entity->hasField(OrphanedContentController::FIELD_NAME)) {
+    return;
+  }
+  if ($entity->isOrphaned()) {
+    $operations = array_intersect_key($operations, ['delete' => TRUE]);
+  }
 }
 
 /**

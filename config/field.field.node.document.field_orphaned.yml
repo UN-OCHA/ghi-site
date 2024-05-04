@@ -1,0 +1,23 @@
+uuid: e182bd2d-4483-495e-9ed0-f62cc2915c30
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_orphaned
+    - node.type.document
+id: node.document.field_orphaned
+field_name: field_orphaned
+entity_type: node
+bundle: document
+label: Orphaned
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean
