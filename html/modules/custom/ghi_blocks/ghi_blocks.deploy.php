@@ -46,6 +46,7 @@ function ghi_blocks_deploy_9001_remove_empty_layout_builder_sections(&$sandbox) 
     }
     if ($changed) {
       $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+      $node->setSyncing(TRUE);
       $node->save();
     }
 
@@ -105,6 +106,7 @@ function ghi_blocks_deploy_9002_merge_layout_builder_sections(&$sandbox) {
     }
 
     $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+    $node->setSyncing(TRUE);
     $node->save();
     $count_nodes++;
   }
