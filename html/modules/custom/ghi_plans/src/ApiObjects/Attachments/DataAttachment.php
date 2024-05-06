@@ -116,7 +116,7 @@ class DataAttachment extends AttachmentBase {
   /**
    * Get the source entity.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface|null
+   * @return \Drupal\ghi_plans\ApiObjects\PlanEntityInterface|null
    *   The entity object.
    */
   public function getSourceEntity() {
