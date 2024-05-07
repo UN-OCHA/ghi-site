@@ -154,10 +154,14 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
     }
 
     if (!empty($icons)) {
-      $rendered_value = array_merge([
+      $rendered_value = [
         '#type' => 'container',
         0 => $rendered_value,
-      ], $icons);
+        'tooltips' => [
+          '#theme' => 'hpc_tooltip_wrapper',
+          '#tooltips' => $icons,
+        ],
+      ];
     }
     return $rendered_value;
   }

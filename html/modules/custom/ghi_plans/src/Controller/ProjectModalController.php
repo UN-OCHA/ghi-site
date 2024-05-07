@@ -291,6 +291,7 @@ class ProjectModalController extends ControllerBase {
 
     return [
       '#theme' => 'table',
+      '#cell_wrapping' => FALSE,
       '#header' => $header,
       '#sticky_rows' => $total_rows,
       '#rows' => $rows,
@@ -374,9 +375,10 @@ class ProjectModalController extends ControllerBase {
 
     return [
       '#theme' => 'table',
+      '#cell_wrapping' => FALSE,
       '#header' => $header,
-      '#rows' => $rows,
       '#sticky_rows' => $total_rows,
+      '#rows' => $rows,
       '#sortable' => TRUE,
     ];
   }

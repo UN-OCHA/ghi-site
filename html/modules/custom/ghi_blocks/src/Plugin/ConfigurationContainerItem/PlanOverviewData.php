@@ -176,10 +176,13 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
       $build = [
         '#type' => 'container',
         0 => $build,
-        1 => [
-          '#theme' => 'hpc_tooltip',
-          '#tooltip' => [
-            '#plain_text' => $footnote,
+        'tooltips' => [
+          '#theme' => 'hpc_tooltip_wrapper',
+          '#tooltips' => [
+            '#theme' => 'hpc_tooltip',
+            '#tooltip' => [
+              '#plain_text' => $footnote,
+            ],
           ],
         ],
       ];

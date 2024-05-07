@@ -104,7 +104,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     }
     $config = $this->getPluginConfiguration();
     $build = $attachment->formatValue($data_point_conf);
-    $data_point_index = $data_point_conf['data_points'][0]['index'] ?: NULL;
+    $data_point_index = $data_point_conf['data_points'][0]['index'] ?? NULL;
     if ($data_point_index !== NULL && !empty($config['disaggregation_modal']) && $this->canShowDisaggregatedData($attachment, $data_point_conf)) {
       $link_url = Url::fromRoute('ghi_plans.modal_content.dissaggregation', [
         'attachment' => $attachment->id(),
@@ -138,7 +138,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
           '@column_label' => $this->getLabel(),
         ]),
       ];
-      $build['tooltips'][] = $modal_link;
+      $build['tooltips']['#tooltips']['disaggregation'] = $modal_link;
     }
     return $build;
   }
