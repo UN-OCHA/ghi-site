@@ -239,6 +239,11 @@ function ghi_blocks_plugin_filter_block__layout_builder_alter(array &$definition
       return in_array($definition['provider'], ['ghi_blocks', 'ghi_content']);
     });
   }
+
+  // Remove deprecated block types.
+  $definitions = array_filter($definitions, function ($definition) {
+    return empty($definition['deprecated']);
+  });
 }
 
 /**

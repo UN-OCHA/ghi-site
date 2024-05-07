@@ -25,7 +25,8 @@ use Drupal\hpc_api\Query\EndpointQuery;
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
  *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
- *  }
+ *  },
+ *  deprecated = TRUE
  * )
  */
 class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterface {
