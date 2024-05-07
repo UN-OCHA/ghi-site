@@ -116,7 +116,7 @@ class DataAttachment extends AttachmentBase {
   /**
    * Get the source entity.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface|null
+   * @return \Drupal\ghi_plans\ApiObjects\PlanEntityInterface|null
    *   The entity object.
    */
   public function getSourceEntity() {
@@ -1124,11 +1124,6 @@ class DataAttachment extends AttachmentBase {
     // Prepare the build.
     $build = [
       '#type' => 'container',
-      'tooltips' => [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['tooltip-wrapper']],
-        '#weight' => 100,
-      ],
     ];
     // Create a render array for the actual value.
     if (empty($conf['widget']) || $conf['widget'] == 'none') {
@@ -1138,10 +1133,16 @@ class DataAttachment extends AttachmentBase {
       $build[] = $this->formatAsWidget($conf);
     }
 
+    // Prepare the tooltips.
+    $build['tooltips'] = [
+      '#theme' => 'hpc_tooltip_wrapper',
+      '#tooltips' => [],
+    ];
+
     // See if this needs a tooltip.
     $tooltip = $this->getTooltip($conf);
     if ($tooltip) {
-      $build['tooltips'] += $tooltip;
+      $build['tooltips']['#tooltips'] = $tooltip;
     }
     return $build;
   }

@@ -69,34 +69,39 @@
           & > div {
             display: flex;
             gap: 0.5rem;
-
-            a {
-              text-decoration: none;
-            }
-
-            > i[data-toggle="tooltip"] {
-              display: flex;
-              align-items: center;
-              align-self: center;
-              max-height: 2.25rem;
-
-              button.popover {
-                padding: 0;
-                font-size: inherit;
-              }
-            }
           }
 
           .tooltip-wrapper {
             gap: 0.5rem;
 
             i[data-toggle="tooltip"] {
+              display: flex;
+              align-items: center;
+              align-self: center;
+              max-height: 2.25rem;
               vertical-align: top;
               line-height: initial;
             }
 
+            i[data-toggle="tooltip"] > * {
+              font-size: 1.65rem;
+            }
+
+            button.popover {
+              padding: 0;
+            }
+
+            a {
+              display: flex;
+              align-items: center;
+
+              &.fts-link {
+                min-height: 2.25rem;
+              }
+            }
+
             .material-icon {
-              font-size: var(--cd-font-size--large);
+              font-size: inherit;
               font-weight: normal;
             }
           }

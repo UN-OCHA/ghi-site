@@ -31,7 +31,7 @@ class EntityQuery extends EndpointQueryBase implements ContainerFactoryPluginInt
    * @param int $entity_id
    *   The entity id to query.
    *
-   * @return \Drupal\ghi_base_objects\ApiObjects\BaseObjectInterface
+   * @return \Drupal\ghi_plans\ApiObjects\PlanEntityInterface
    *   The entity object.
    */
   public function getEntity($entity_type, $entity_id) {

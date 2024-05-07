@@ -9,6 +9,7 @@ dependencies:
     - field.field.node.document.field_display_hero_image
     - field.field.node.document.field_image
     - field.field.node.document.field_inherit_section_image
+    - field.field.node.document.field_orphaned
     - field.field.node.document.field_protected
     - field.field.node.document.field_remote_document
     - field.field.node.document.field_short_title
@@ -108,6 +109,7 @@ hidden:
   field_content_space: true
   field_display_hero_image: true
   field_inherit_section_image: true
+  field_orphaned: true
   field_protected: true
   field_remote_document: true
   field_short_title: true

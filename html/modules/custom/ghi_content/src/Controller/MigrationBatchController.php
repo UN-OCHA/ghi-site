@@ -3,6 +3,7 @@
 namespace Drupal\ghi_content\Controller;
 
 use Drupal\ghi_content\ContentManager\BaseContentManager;
+use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\node\NodeInterface;
 
 /**
@@ -31,7 +32,6 @@ class MigrationBatchController {
     $migration = \Drupal::getContainer()->get('plugin.manager.migration')->createInstance($migration_id, $options['configuration'] ?? []);
 
     if (empty($context['sandbox']['nodes']) || empty($context['sandbox']['source_ids'])) {
-
       /** @var \Drupal\ghi_content\Plugin\migrate\source\RemoteSourceGraphQL $source */
       $source = $migration->getSourcePlugin();
       $source_iterator = $source->initializeIterator();
@@ -62,15 +62,30 @@ class MigrationBatchController {
 
     if (!empty($context['sandbox']['nodes'])) {
       $node = array_shift($context['sandbox']['nodes']);
-      if ($node instanceof NodeInterface) {
+      // Let us only do the following when the full imports are run.
+      if ($node instanceof NodeInterface && empty($source_tags)) {
         $source_id = $migration->getIdMap()->lookupSourceId(['nid' => $node->id()]);
+        $needs_saving = FALSE;
         if (!in_array($source_id, $context['sandbox']['source_ids']) && $node->isPublished()) {
+          // Disappeared nodes should be unpublished.
           $node->setUnpublished();
-          $node->save();
-          $context['sandbox']['updated']++;
+          $needs_saving = TRUE;
         }
         if (in_array($source_id, $context['sandbox']['source_ids']) && !$node->isPublished()) {
+          // New nodes should be published.
+          // @todo Prevent publishing nodes that have been manually unpublished
+          // in HA.
           $node->setPublished();
+          $needs_saving = TRUE;
+        }
+        $orphaned = !in_array($source_id, $context['sandbox']['source_ids']);
+        if (empty($source_tags) && $node instanceof ContentBase && $node->isOrphaned() != $orphaned) {
+          $node->setOrphaned($orphaned);
+          $node->setNewRevision(FALSE);
+          $node->setSyncing(TRUE);
+          $needs_saving = TRUE;
+        }
+        if ($needs_saving) {
           $node->save();
           $context['sandbox']['updated']++;
         }

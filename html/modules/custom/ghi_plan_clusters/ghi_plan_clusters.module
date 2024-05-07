@@ -55,7 +55,7 @@ function ghi_plan_clusters_current_section_alter(&$section, $node) {
  * section's url alias as one of their tokens.
  */
 function ghi_plan_clusters_section_post_save(NodeInterface $section_node) {
-  if (!SubpageHelper::isBaseTypeNode($section_node)) {
+  if (!SubpageHelper::isBaseTypeNode($section_node) || !$section_node->isLatestRevision()) {
     return;
   }
 
@@ -84,8 +84,10 @@ function ghi_plan_clusters_section_post_save(NodeInterface $section_node) {
         $subpage->setUnpublished();
         $subpage->save();
 
-        \Drupal::messenger()->addStatus(t('Cluster subpage @subpage has been unpublished.', [
+        \Drupal::messenger()->addStatus(t('Cluster subpage @subpage has been unpublished (@id, @revision_id).', [
           '@subpage' => $subpage->label(),
+          '@id' => $subpage->id(),
+          '@revision_id' => $subpage->getRevisionId(),
         ]));
       }
     }

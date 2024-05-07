@@ -50,7 +50,7 @@ class DisaggregationModalController extends ControllerBase {
     if ($icon && $icon_embed = $this->iconQuery->getIconEmbedCode($icon)) {
       $title = $icon_embed;
     }
-    $title .= $entity->getEntityName() . ' | ' . $metrics[$metric];
+    $title .= $entity->getName() . ' | ' . $metrics[$metric];
 
     if ($attachment->isMeasurementField($metrics[$metric])) {
       $title .= ThemeHelper::render([
@@ -59,7 +59,6 @@ class DisaggregationModalController extends ControllerBase {
         '#format_string' => '<span class="title-additional-info">Monitoring period @period_number: @date_range</span>',
       ], FALSE);
     }
-
     return Markup::create($title);
   }
 
@@ -280,6 +279,7 @@ class DisaggregationModalController extends ControllerBase {
 
     return [
       '#theme' => 'table',
+      '#cell_wrapping' => FALSE,
       '#header' => $header,
       '#rows' => $rows,
       '#sticky_rows' => [$total_row],

@@ -44,6 +44,7 @@
   z-index: 1;
 }
 
+.ajax-progress-throbber .throbber,
 .ajax-progress .message,
 .ajax-progress .ajax-progress__message {
   display: none;

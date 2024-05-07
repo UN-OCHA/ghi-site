@@ -250,17 +250,27 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     }
 
     // If this needs an FTS link, lets build and add that.
-    $fts_link = NULL;
+    $fts_tooltip = NULL;
     if ($this->needsFtsLink()) {
       $link_icon = ThemeHelper::themeFtsIcon();
       $fts_link = $this->needsFtsLink() ? self::buildFtsLink($link_icon, $this->getContextValue('plan_object'), $data_type['fts_link_target'], $this->getContextValue('base_object')) : NULL;
+      $fts_tooltip = $fts_link ? [
+        '#theme' => 'hpc_tooltip',
+        '#tooltip' => $this->t('View this data in FTS'),
+        '#tag_content' => $fts_link,
+      ] : NULL;
     }
 
     return [
       '#type' => 'container',
-      0 => $rendered,
-      1 => $footnote,
-      2 => $fts_link,
+      'content' => $rendered,
+      'tooltips' => [
+        '#theme' => 'hpc_tooltip_wrapper',
+        '#tooltips' => [
+          $footnote,
+          $fts_tooltip,
+        ],
+      ],
     ];
   }
 

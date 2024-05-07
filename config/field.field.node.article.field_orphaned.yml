@@ -1,0 +1,23 @@
+uuid: 60110d8c-8a00-4a4e-96c4-8460b394820a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_orphaned
+    - node.type.article
+id: node.article.field_orphaned
+field_name: field_orphaned
+entity_type: node
+bundle: article
+label: Orphaned
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

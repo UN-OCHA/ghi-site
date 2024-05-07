@@ -80,6 +80,8 @@
       }
 
       .ui-dialog-title {
+        display: flex;
+        align-items: self-start;
         color: var(--ghi-default-text-color) !important;
 
         .cluster-icon {

@@ -51,6 +51,10 @@
 
         &[data-formatting="numeric-full"] {
           text-align: right;
+
+          .cell-wrapper-inner {
+            justify-content: end;
+          }
         }
 
         &:first-child {
@@ -141,6 +145,7 @@
           padding-left: 2rem;
         }
 
+        td .cell-wrapper-inner,
         td .value-wrapper {
           display: flex;
           align-items: center;
@@ -171,6 +176,10 @@
         td.spark-line-chart {
           width: 10rem;
           padding: 0.5rem 0.75rem 0.5rem 0;
+
+          .value-wrapper {
+            width: 100%;
+          }
 
           span.sparkline {
             display: inline-block;

@@ -2,6 +2,7 @@
   display: flex !important;
   margin: 0.5rem 0.75rem !important;
   padding: 0 !important;
+  width: initial !important;
 }
 .layout-builder-ipe-actions .dropbutton-wrapper.layout-builder-ipe--link .dropbutton-widget {
   position: relative;

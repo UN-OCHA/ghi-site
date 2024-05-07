@@ -2,9 +2,12 @@
 
 namespace Drupal\ghi_content\Entity;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\ghi_content\Controller\OrphanedContentController;
 use Drupal\ghi_content\Traits\ContentPathTrait;
 use Drupal\ghi_sections\Entity\ImageNodeInterface;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
@@ -25,6 +28,23 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    * @var \Drupal\node\NodeInterface
    */
   private $contextNode = NULL;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access($operation = 'view', ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+    $orphan_operations = [
+      'view',
+      'delete',
+    ];
+    if ($this->isOrphaned() && !in_array($operation, $orphan_operations)) {
+      return $return_as_object ? AccessResult::forbidden() : FALSE;
+    }
+    if ($operation == 'delete') {
+      return $return_as_object ? AccessResult::allowedIf($this->isOrphaned()) : $this->isOrphaned();
+    }
+    return parent::access($operation, $account, $return_as_object);
+  }
 
   /**
    * Set the given node as the current context.
@@ -113,6 +133,32 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   public function isPartOfSection(SectionNodeInterface $section) {
     $nodes = $this->getContentManager()->loadNodesForSection($section);
     return array_key_exists($this->id(), $nodes);
+  }
+
+  /**
+   * Check if the content is orphaned.
+   *
+   * @return bool
+   *   TRUE if the content is orphaned, FALSE otherwise.
+   */
+  public function isOrphaned() {
+    if (!$this->hasField(OrphanedContentController::FIELD_NAME)) {
+      return FALSE;
+    }
+    return $this->get(OrphanedContentController::FIELD_NAME)->value ?? FALSE;
+  }
+
+  /**
+   * Check if the content is orphaned.
+   *
+   * @param bool $status
+   *   TRUE if the content is orphaned, FALSE otherwise.
+   */
+  public function setOrphaned($status) {
+    if (!$this->hasField(OrphanedContentController::FIELD_NAME)) {
+      return;
+    }
+    return $this->set(OrphanedContentController::FIELD_NAME, $status);
   }
 
   /**

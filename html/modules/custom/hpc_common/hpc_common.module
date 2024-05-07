@@ -126,6 +126,11 @@ function hpc_common_theme($existing, $type, $theme, $path) {
       ],
       'template' => 'hpc-modal-link',
     ] + $common,
+    'hpc_tooltip_wrapper' => [
+      'variables' => [
+        'tooltips' => NULL,
+      ],
+    ],
     'hpc_tooltip' => [
       'variables' => [
         'tooltip' => NULL,
