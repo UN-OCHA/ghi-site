@@ -177,13 +177,13 @@ class AttachmentSearchQuery extends EndpointQueryBase {
 
     $attachments = [];
     if (!empty($entity_ids['plan'])) {
-      $attachments = array_merge($attachments, $this->getAttachmentsByObject('plan', $entity_ids['plan'], NULL, $version));
+      $attachments += $this->getAttachmentsByObject('plan', $entity_ids['plan'], NULL, $version);
     }
     if (!empty($entity_ids['plan_entity'])) {
-      $attachments = array_merge($attachments, $this->getAttachmentsByObject('planEntity', $entity_ids['plan_entity'], NULL, $version));
+      $attachments += $this->getAttachmentsByObject('planEntity', $entity_ids['plan_entity'], NULL, $version);
     }
     if (!empty($entity_ids['governing_entity'])) {
-      $attachments = array_merge($attachments, $this->getAttachmentsByObject('governingEntity', $entity_ids['governing_entity'], NULL, $version));
+      $attachments += $this->getAttachmentsByObject('governingEntity', $entity_ids['governing_entity'], NULL, $version);
     }
     return $attachments;
   }
