@@ -86,6 +86,9 @@ class SubpageManagerTest extends UnitTestCase {
     $this->customSubpageNodeType = $custom_subpage_node_type->reveal();
 
     $node_storage = $this->prophesize(EntityStorageInterface::class);
+    $node_storage->loadByProperties(['name' => SubpageManager::SUPPORTED_SUBPAGE_TYPES])->willReturn([
+      $this->standardSubpageNodeType->id() => $this->standardSubpageNodeType,
+    ]);
     $node_storage->loadMultiple()->willReturn([
       $this->nodeType,
       $this->baseNodeType,
@@ -127,7 +130,7 @@ class SubpageManagerTest extends UnitTestCase {
    */
   public function testGetStandardSubpageTypes() {
     $subpage_types = $this->subpageManager->getStandardSubpageTypes();
-    $this->assertEquals(SubpageManager::SUPPORTED_SUBPAGE_TYPES, $subpage_types);
+    $this->assertEquals(['population'], $subpage_types);
   }
 
   /**

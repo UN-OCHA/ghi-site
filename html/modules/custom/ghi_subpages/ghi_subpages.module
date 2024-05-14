@@ -47,38 +47,37 @@ function ghi_subpages_entity_bundle_info_alter(array &$bundles) {
  * section's url alias as one of their tokens.
  */
 function ghi_subpages_section_post_save(NodeInterface $section_node) {
-  if (!SubpageHelper::isBaseTypeNode($section_node) || !$section_node->isLatestRevision()) {
+  if (!SubpageHelper::getSubpageManager()->isBaseTypeNode($section_node) || !$section_node->isLatestRevision()) {
     return;
   }
 
+  $subpage_manager = SubpageHelper::getSubpageManager();
+
   // Make sure all subpages exist.
-  SubpageHelper::assureSubpagesForBaseNode($section_node);
+  $subpage_manager->assureSubpagesForBaseNode($section_node);
 
   // Load all subpages and save them again to make sure they have proper paths.
-  $subpages = SubpageHelper::loadSubpagesForBaseNode($section_node);
+  $subpages = $subpage_manager->loadSubpagesForBaseNode($section_node) ?? [];
   foreach ($subpages as $subpage) {
+    $subpage->setNewRevision(FALSE);
     $subpage->setSyncing(TRUE);
     $subpage->save();
   }
 
   if (!$section_node->isPublished()) {
     // Load all subpages and make sure that those are unpublished too.
-    $subpages = SubpageHelper::loadSubpagesForBaseNode($section_node);
-
-    if (!empty($subpages)) {
-      foreach ($subpages as $subpage) {
-        if (!$subpage->isPublished()) {
-          continue;
-        }
-        /** @var \Drupal\node\Entity\NodeInterface $node_type */
-        $node_type = \Drupal::entityTypeManager()->getStorage('node_type')->load($subpage->getType());
-        $subpage->setUnpublished();
-        $subpage->save();
-
-        \Drupal::messenger()->addStatus(t('Subpage @subpage has been unpublished.', [
-          '@subpage' => $node_type->get('name'),
-        ]));
+    foreach ($subpages as $subpage) {
+      if (!$subpage->isPublished()) {
+        continue;
       }
+      /** @var \Drupal\node\Entity\NodeInterface $node_type */
+      $node_type = \Drupal::entityTypeManager()->getStorage('node_type')->load($subpage->getType());
+      $subpage->setUnpublished();
+      $subpage->save();
+
+      \Drupal::messenger()->addStatus(t('Subpage @subpage has been unpublished.', [
+        '@subpage' => $node_type->get('name'),
+      ]));
     }
   }
 }
@@ -90,16 +89,17 @@ function ghi_subpages_section_post_save(NodeInterface $section_node) {
  * created.
  */
 function ghi_subpages_node_insert(NodeInterface $node) {
-  if (!SubpageHelper::isSubpageTypeNode($node)) {
+  $subpage_manager = SubpageHelper::getSubpageManager();
+  if (!$subpage_manager->isSubpageTypeNode($node)) {
     // We act only on subpage nodes.
     return;
   }
   $cache_tags = $node->getCacheTags();
-  $section_node = SubpageHelper::getBaseTypeNode($node);
+  $section_node = $subpage_manager->getBaseTypeNode($node);
   if (!$section_node) {
     return;
   }
-  $subpages = SubpageHelper::loadSubpagesForBaseNode($section_node) ?? [];
+  $subpages = $subpage_manager->loadSubpagesForBaseNode($section_node) ?? [];
   foreach ($subpages as $subpage) {
     $cache_tags = Cache::mergeTags($cache_tags, $subpage->getCacheTags());
   }
@@ -110,10 +110,11 @@ function ghi_subpages_node_insert(NodeInterface $node) {
  * Implements hook_entity_delete().
  */
 function ghi_subpages_entity_delete(EntityInterface $entity) {
-  if (!$entity instanceof NodeInterface || !SubpageHelper::isBaseTypeNode($entity)) {
+  $subpage_manager = SubpageHelper::getSubpageManager();
+  if (!$entity instanceof NodeInterface || !$subpage_manager->isBaseTypeNode($entity)) {
     return;
   }
-  SubpageHelper::deleteSubpagesForBaseNode($entity);
+  $subpage_manager->deleteSubpagesForBaseNode($entity);
 }
 
 /**
@@ -207,7 +208,7 @@ function ghi_subpages_node_subpage_delete_form_submit(array &$form, FormStateInt
   /** @var \Drupal\node\Form\NodeDeleteForm $form_object */
   $form_object = $form_state->getFormObject();
   $entity = $form_object->getEntity();
-  $section_node = SubpageHelper::getBaseTypeNode($entity);
+  $section_node = SubpageHelper::getSubpageManager()->getBaseTypeNode($entity);
   if ($section_node) {
     $form_state->setRedirectUrl($section_node->toUrl());
   }
@@ -223,7 +224,7 @@ function ghi_subpages_form_node_type_edit_form_alter(array &$form, FormStateInte
   }
   /** @var \Drupal\node\Entity\NodeType $type */
   $type = $form_object->getEntity();
-  if (!$type instanceof NodeTypeInterface || !SubpageHelper::isSubpageType($type)) {
+  if (!$type instanceof NodeTypeInterface || !SubpageHelper::getSubpageManager()->isSubpageType($type)) {
     return;
   }
   $form['name']['#weight'] = -2;
@@ -254,7 +255,7 @@ function ghi_subpages_form_node_type_edit_form_submit(array $form, FormStateInte
  */
 function ghi_subpages_entity_operation(EntityInterface $entity) {
   $account = \Drupal::currentUser();
-  if (!$entity instanceof NodeInterface || !SubpageHelper::isBaseTypeNode($entity)) {
+  if (!$entity instanceof NodeInterface || !SubpageHelper::getSubpageManager()->isBaseTypeNode($entity)) {
     return;
   }
 
@@ -299,7 +300,8 @@ function ghi_subpages_preprocess_page_title(&$variables) {
   if (!$node instanceof NodeInterface || \Drupal::routeMatch()->getRouteName() != 'entity.node.canonical' || !empty($variables['#protected'])) {
     return;
   }
-  if (SubpageHelper::isSubpageTypeNode($node) && $section = SubpageHelper::getBaseTypeNode($node)) {
+  $subpage_manager = SubpageHelper::getSubpageManager();
+  if ($subpage_manager->isSubpageTypeNode($node) && $section = $subpage_manager->getBaseTypeNode($node)) {
     $variables['title'] = $section->getPageTitle();
   }
 }

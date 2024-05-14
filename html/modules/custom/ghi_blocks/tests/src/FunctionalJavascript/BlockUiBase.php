@@ -168,12 +168,12 @@ abstract class BlockUiBase extends WebDriverTestBase {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
     $page->clickLink('Customize');
-    $assert_session->assertWaitOnAjaxRequest();
+    $this->waitForAjaxToFinish();
     $page->clickLink('Add block');
-    $assert_session->assertWaitOnAjaxRequest();
+    $this->waitForAjaxToFinish();
     $page->clickLink('Admin restricted');
     $page->clickLink('Generic HTML');
-    $assert_session->assertWaitOnAjaxRequest();
+    $this->waitForAjaxToFinish();
     $page->findField('Title')->setValue('Hello World');
     $page->findField('Display title')->setValue(1);
     $page->findField('Body')->setValue('Body says hello');
@@ -182,6 +182,14 @@ abstract class BlockUiBase extends WebDriverTestBase {
     $button = $assert_session->buttonExists('Save layout');
     $button->press();
     $assert_session->waitForElementRemoved('css', '#layout-builder-modal');
+  }
+
+  /**
+   * Waits for jQuery to become ready and animations to complete.
+   */
+  protected function waitForAjaxToFinish() {
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->htmlOutput(NULL);
   }
 
   /**

@@ -102,14 +102,15 @@ function ghi_local_tasks_link_alter(&$variables) {
   $node = \Drupal::entityTypeManager()->getStorage('node')->load($node_id);
   if ($node) {
     $type = $node->type->entity->label();
-    if (SubpageHelper::isSubpageTypeNode($node) && $base_node = SubpageHelper::getBaseTypeNode($node)) {
+    $subpage_manager = SubpageHelper::getSubpageManager();
+    if ($subpage_manager->isSubpageTypeNode($node) && $base_node = $subpage_manager->getBaseTypeNode($node)) {
       $variables['text'] = t('@parent_type subpage: @type @active_title', [
         '@parent_type' => $base_node->type->entity->label(),
         '@type' => $type,
         '@active_title' => $active_title ? '- ' . $active_title : NULL,
       ]);
     }
-    elseif (SubpageHelper::isBaseTypeNode($node) && $label = SubpageHelper::getSectionOverviewLabel($node)) {
+    elseif ($subpage_manager->isBaseTypeNode($node) && $label = $subpage_manager->getSectionOverviewLabel($node)) {
       $variables['text'] = t('@parent_type: @label @active_title', [
         '@parent_type' => $node->type->entity->label(),
         '@label' => $label,
