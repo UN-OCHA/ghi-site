@@ -7,10 +7,12 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
+use Drupal\ghi_blocks\Interfaces\DeprecatedBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanEntityTypes' block.
@@ -28,7 +30,46 @@ use Drupal\hpc_api\Query\EndpointQuery;
  *  }
  * )
  */
-class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterface {
+class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterface, DeprecatedBlockInterface {
+
+  /**
+   * The block plugin manager.
+   *
+   * @var \Drupal\Core\Block\BlockManagerInterface
+   */
+  protected $blockPluginManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var \Drupal\ghi_blocks\Plugin\Block\Plan\PlanEntityTypes $instance */
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->blockPluginManager = $container->get('plugin.manager.block');
+    return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBlockConfigForReplacement() {
+    $entity_logframe_plugin_definition = $this->blockPluginManager->getDefinition('plan_entity_logframe', FALSE);
+    if (!$entity_logframe_plugin_definition) {
+      return NULL;
+    }
+    $config = array_filter([
+      'id' => $entity_logframe_plugin_definition['id'],
+      'provider' => $entity_logframe_plugin_definition['provider'],
+      'context_mapping' => $this->getContextMapping(),
+      'hpc' => [
+        'entities' => $this->getBlockConfig(),
+        'tables' => [
+          'attachment_tables' => [],
+        ],
+      ],
+    ]);
+    return $config;
+  }
 
   /**
    * {@inheritdoc}

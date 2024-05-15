@@ -1,0 +1,61 @@
+.preview-content {
+  &.ghi-grid .paragraph--type--bottom-figure-row > * > *,
+  &.ghi-grid .paragraph--type--top-figures > * > * {
+    zoom: inherit;
+  }
+  .paragraph--gho-bottom-figure-row,
+  .paragraph--gho-top-figures {
+    margin-top: 0;
+
+    &::before,
+    .gho-bottom-figure-row::before,
+    .gho-top-figures::before {
+      display: none;
+    }
+  }
+}
+
+.paragraph--gho-bottom-figure-row[data-block-preview="paragraph"],
+.paragraph--gho-top-figures[data-block-preview="paragraph"] {
+  &::before,
+  .gho-bottom-figure-row::before,
+  .gho-top-figures::before {
+    display: none;
+  }
+}
+
+/* Hide the border when the figures follow another figures paragraph. */
+.paragraph--gho-needs-and-requirements-paragraph + .paragraph--gho-bottom-figure-row,
+.paragraph--gho-top-figures + .paragraph--gho-top-figures {
+
+  body:not(.layout-builder-ipe-editing) & {
+    margin-top: -2rem !important;
+  }
+
+  &::before,
+  .gho-bottom-figure-row::before,
+  .gho-top-figures::before {
+    display: none;
+  }
+}
+
+.gho-figures {
+  .gho-figure__value[data-footnote] {
+    display: flex;
+    gap: 0.3rem;
+
+    i.tooltip > svg {
+      fill: #5391cb;
+    }
+  }
+
+  &.gho-figures--small .gho-figure__value[data-footnote] i.tooltip {
+    position: relative;
+    top: 1px;
+
+    & > svg {
+      width: 0.8rem;
+      height: 0.8rem;
+    }
+  }
+}

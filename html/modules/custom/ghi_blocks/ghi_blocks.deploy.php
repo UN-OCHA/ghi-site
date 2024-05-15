@@ -44,6 +44,7 @@ function ghi_blocks_deploy_9001_remove_empty_layout_builder_sections(&$sandbox) 
     }
     if ($changed) {
       $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+      $node->setSyncing(TRUE);
       $node->save();
     }
 
@@ -103,10 +104,34 @@ function ghi_blocks_deploy_9002_merge_layout_builder_sections(&$sandbox) {
     }
 
     $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+    $node->setSyncing(TRUE);
     $node->save();
     $count_nodes++;
   }
   return t('Updated @count_nodes nodes', [
     '@count_nodes' => $count_nodes,
+  ]);
+}
+
+/**
+ * Enqueue nodes for the replacement of the plan_entity_types plugin.
+ */
+function ghi_blocks_deploy_9003_queue_nodes_for_plan_entity_type_replacement(&$sandbox) {
+  $plugin_id = 'plan_entity_types';
+  /** @var \Drupal\node\NodeInterface[] $nodes */
+  $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple();
+  foreach ($nodes as $node) {
+    if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+      continue;
+    }
+    \Drupal::queue('ghi_blocks_replace_deprecated_blocks_queue')->createItem((object) [
+      'entity_id' => $node->id(),
+      'entity_type_id' => $node->getEntityTypeId(),
+      'plugin_id' => $plugin_id,
+    ]);
+  }
+  return (string) t('Enqueued @total nodes for replacing of deprecated plan element @plugin_id.', [
+    '@total' => \Drupal::queue('ghi_blocks_replace_deprecated_blocks_queue')->numberOfItems(),
+    '@plugin_id' => $plugin_id,
   ]);
 }

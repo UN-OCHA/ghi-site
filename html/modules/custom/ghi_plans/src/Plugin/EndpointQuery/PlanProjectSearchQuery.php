@@ -22,7 +22,7 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  *     "query" = {
  *       "planIds" = "{plan_id}",
  *       "latest" = "true",
- *       "excludeFields" = "plans,workflowStatusOptions,locations,planEntityIds",
+ *       "excludeFields" = "plans,workflowStatusOptions,locations,planEntityIds,globalClusters",
  *       "includeFields" = "locationIds",
  *       "limit" = "2000",
  *     }
