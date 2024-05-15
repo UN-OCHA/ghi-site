@@ -31,8 +31,12 @@ class SubpageManager extends BaseSubpageManager {
    *   An array of node type machine names.
    */
   public function getStandardSubpageTypes() {
-    // The basic subpages defined by this module.
-    return self::SUPPORTED_SUBPAGE_TYPES;
+    // Load the basic subpages defined by this module, but make sure they
+    // really exist.
+    $node_types = $this->entityTypeManager->getStorage('node_type')->loadByProperties([
+      'name' => self::SUPPORTED_SUBPAGE_TYPES,
+    ]);
+    return array_keys($node_types);
   }
 
   /**
@@ -98,6 +102,93 @@ class SubpageManager extends BaseSubpageManager {
   }
 
   /**
+   * Assure that subpages for a base node exist.
+   *
+   * If they don't exist, this function will create the missing ones.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The base node.
+   */
+  public function assureSubpagesForBaseNode(NodeInterface $node) {
+    if (!$this->isBaseTypeNode($node)) {
+      return;
+    }
+
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+    $node_type_storage = $this->entityTypeManager->getStorage('node_type');
+    $parent_node = $node_storage->load($node->id());
+
+    foreach ($this->getStandardSubpageTypes() as $subpage_type) {
+      if ($this->getSubpageForBaseNode($node, $subpage_type)) {
+        continue;
+      }
+
+      /** @var \Drupal\node\NodeTypeInterface $node_type */
+      $node_type = $node_type_storage->load($subpage_type);
+      $subpage_name = $node_type->get('name');
+      /** @var \Drupal\node\NodeInterface $subpage */
+      $subpage = $node_storage->create([
+        'type' => $subpage_type,
+        'title' => $subpage_name,
+        'uid' => $parent_node->uid,
+        'status' => NodeInterface::NOT_PUBLISHED,
+        'field_entity_reference' => [
+          'target_id' => $parent_node->id(),
+        ],
+      ]);
+      $subpage->save();
+
+      $this->messenger->addStatus($this->t('Created @type subpage for @title', [
+        '@type' => $subpage_name,
+        '@title' => $parent_node->label(),
+      ]));
+    }
+  }
+
+  /**
+   * Delete all subpages for a base node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The base node.
+   */
+  public function deleteSubpagesForBaseNode(NodeInterface $node) {
+    if (!$this->isBaseTypeNode($node)) {
+      return;
+    }
+    foreach (self::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
+      $subpage_node = $this->getSubpageForBaseNode($node, $subpage_type);
+      if (!$subpage_node) {
+        continue;
+      }
+      $subpage_node->delete();
+      $this->messenger->addStatus($this->t('Deleted @type subpage for @title', [
+        '@type' => $subpage_node->getTitle(),
+        '@title' => $node->getTitle(),
+      ]));
+    }
+  }
+
+  /**
+   * Get the subpage node for a base node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The base node.
+   * @param string $subpage_type
+   *   A subpage type.
+   *
+   * @return \Drupal\node\NodeInterface|null
+   *   A subpage node if found, NULL otherwhise.
+   */
+  public function getSubpageForBaseNode(NodeInterface $node, $subpage_type) {
+    $matching_subpages = $this->entityTypeManager->getStorage('node')->loadByProperties([
+      'type' => $subpage_type,
+      'field_entity_reference' => $node->id(),
+    ]);
+    return !empty($matching_subpages) ? reset($matching_subpages) : NULL;
+  }
+
+  /**
    * Get all subpage nodes for a base node.
    *
    * @param \Drupal\node\NodeInterface $node
@@ -137,6 +228,24 @@ class SubpageManager extends BaseSubpageManager {
       $base_type_node = NULL;
       $this->moduleHandler->alter('get_base_type_node', $base_type_node, $node);
       return $base_type_node;
+    }
+    return NULL;
+  }
+
+  /**
+   * Get the label for the section overview page.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The base node.
+   *
+   * @return string|null
+   *   The label of a section overview page.
+   */
+  public function getSectionOverviewLabel(NodeInterface $node) {
+    if ($this->isBaseTypeNode($node) && $node->field_base_object) {
+      return $this->t('@type overview', [
+        '@type' => $node->field_base_object->entity->type->entity->label(),
+      ]);
     }
     return NULL;
   }

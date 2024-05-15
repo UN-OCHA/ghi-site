@@ -12,6 +12,7 @@ dependencies:
   - layout_builder_ipe:layout_builder_ipe
   - layout_builder_lock:layout_builder_lock
   - hpc_common:hpc_common
+  - hpc_downloads:hpc_downloads
   - ghi_base_objects:ghi_base_objects
   - ghi_plans:ghi_plans
   - ghi_homepage:ghi_homepage

@@ -8,7 +8,6 @@ use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_subpages\BaseSubpageManager;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
-use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 
 /**
@@ -109,11 +108,13 @@ class PlanClusterManager extends BaseSubpageManager {
    *   The base node.
    */
   public function assureSubpagesForBaseNode(NodeInterface $node) {
-    if (!SubpageHelper::isBaseTypeNode($node)) {
+    if (!SubpageHelper::getSubpageManager()->isBaseTypeNode($node)) {
       return;
     }
 
-    $parent_node = $this->entityTypeManager->getStorage('node')->load($node->id());
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+    $parent_node = $node_storage->load($node->id());
     $governing_entities = $this->loadGoverningEntityBaseObjectsForSection($parent_node);
     if (empty($governing_entities)) {
       return NULL;
@@ -126,7 +127,7 @@ class PlanClusterManager extends BaseSubpageManager {
       }
 
       /** @var \Drupal\node\NodeInterface $subpage */
-      $subpage = Node::create([
+      $subpage = $node_storage->create([
         'type' => self::NODE_BUNDLE_PLAN_CLUSTER,
         'title' => $governing_entity->label(),
         'uid' => $parent_node->uid,
@@ -151,7 +152,7 @@ class PlanClusterManager extends BaseSubpageManager {
    *   The base node.
    */
   public function deleteSubpagesForBaseNode(NodeInterface $node) {
-    if (!SubpageHelper::isBaseTypeNode($node)) {
+    if (!SubpageHelper::getSubpageManager()->isBaseTypeNode($node)) {
       return;
     }
     $governing_entities = $this->loadGoverningEntityBaseObjectsForSection($node);
