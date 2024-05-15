@@ -21,7 +21,7 @@ trait SubpageTrait {
    *   TRUE if the node is a section, FALSE otherwise.
    */
   public function isBaseTypeNode(NodeInterface $node) {
-    return SubpageHelper::isBaseTypeNode($node);
+    return SubpageHelper::getSubpageManager()->isBaseTypeNode($node);
   }
 
   /**
@@ -34,7 +34,7 @@ trait SubpageTrait {
    *   TRUE if the node is a section, FALSE otherwise.
    */
   public function isSubpageTypeNode(NodeInterface $node) {
-    return SubpageHelper::isSubpageTypeNode($node);
+    return SubpageHelper::getSubpageManager()->isSubpageTypeNode($node);
   }
 
   /**
@@ -47,7 +47,7 @@ trait SubpageTrait {
    *   TRUE if it is a subpage type, FALSE otherwhise.
    */
   public function isSubpageType(NodeTypeInterface $node_type) {
-    return SubpageHelper::isSubpageType($node_type);
+    return SubpageHelper::getSubpageManager()->isSubpageType($node_type);
   }
 
   /**
@@ -60,7 +60,7 @@ trait SubpageTrait {
    *   TRUE if it is a manual subpage type, FALSE otherwhise.
    */
   public function isManualSubpageType(NodeTypeInterface $node_type) {
-    return SubpageHelper::isManualSubpageType($node_type);
+    return SubpageHelper::getSubpageManager()->isManualSubpageType($node_type);
   }
 
   /**
@@ -73,7 +73,7 @@ trait SubpageTrait {
    *   The section node if found.
    */
   public function getBaseTypeNode(NodeInterface $node) {
-    return SubpageHelper::getBaseTypeNode($node);
+    return SubpageHelper::getSubpageManager()->getBaseTypeNode($node);
   }
 
 }

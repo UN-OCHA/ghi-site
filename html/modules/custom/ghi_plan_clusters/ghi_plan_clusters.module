@@ -55,7 +55,7 @@ function ghi_plan_clusters_current_section_alter(&$section, $node) {
  * section's url alias as one of their tokens.
  */
 function ghi_plan_clusters_section_post_save(NodeInterface $section_node) {
-  if (!SubpageHelper::isBaseTypeNode($section_node) || !$section_node->isLatestRevision()) {
+  if (!SubpageHelper::getSubpageManager()->isBaseTypeNode($section_node) || !$section_node->isLatestRevision()) {
     return;
   }
 
@@ -68,28 +68,24 @@ function ghi_plan_clusters_section_post_save(NodeInterface $section_node) {
   // Load all subpages and save them again to make sure they have proper paths.
   $subpages = $plan_cluster_manager->loadNodesForSection($section_node) ?? [];
   foreach ($subpages as $subpage) {
+    $subpage->setNewRevision(FALSE);
     $subpage->setSyncing(TRUE);
     $subpage->save();
   }
 
   if (!$section_node->isPublished()) {
-    // Load all subpages and make sure that those are unpublished too.
-    $subpages = $plan_cluster_manager->loadNodesForSection($section_node);
-
-    if (!empty($subpages)) {
-      foreach ($subpages as $subpage) {
-        if (!$subpage->isPublished()) {
-          continue;
-        }
-        $subpage->setUnpublished();
-        $subpage->save();
-
-        \Drupal::messenger()->addStatus(t('Cluster subpage @subpage has been unpublished (@id, @revision_id).', [
-          '@subpage' => $subpage->label(),
-          '@id' => $subpage->id(),
-          '@revision_id' => $subpage->getRevisionId(),
-        ]));
+    foreach ($subpages as $subpage) {
+      if (!$subpage->isPublished()) {
+        continue;
       }
+      $subpage->setUnpublished();
+      $subpage->save();
+
+      \Drupal::messenger()->addStatus(t('Cluster subpage @subpage has been unpublished (@id, @revision_id).', [
+        '@subpage' => $subpage->label(),
+        '@id' => $subpage->id(),
+        '@revision_id' => $subpage->getRevisionId(),
+      ]));
     }
   }
 }
@@ -186,7 +182,7 @@ function ghi_plan_clusters_node_presave(EntityInterface $node) {
  */
 function ghi_plan_clusters_entity_delete(EntityInterface $entity) {
   $plan_cluster_manager = ghi_plan_clusters_get_manager_service();
-  if ($entity instanceof NodeInterface && SubpageHelper::isBaseTypeNode($entity)) {
+  if ($entity instanceof NodeInterface && SubpageHelper::getSubpageManager()->isBaseTypeNode($entity)) {
     // Delete cluster subpages for this base node.
     $plan_cluster_manager->deleteSubpagesForBaseNode($entity);
   }

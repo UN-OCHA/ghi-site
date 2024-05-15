@@ -221,3 +221,8 @@ gho-text:
   css:
     theme:
       components/gho-text/gho-text.css: {}
+gho-top-figures:
+  css:
+    theme:
+      components/gho-top-figures/gho-top-figures.css: {}
+      components/gho-top-figures/gho-top-figures--small.css: {}

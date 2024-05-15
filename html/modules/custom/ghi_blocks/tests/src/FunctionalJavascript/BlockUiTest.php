@@ -32,7 +32,7 @@ class BlockUiTest extends BlockUiBase {
     $assert_session->elementExists('css', '.layout-builder-ipe-actions');
     $assert_session->linkExists('Customize');
     $page->clickLink('Customize');
-    $assert_session->assertWaitOnAjaxRequest();
+    $this->waitForAjaxToFinish();
     $assert_session->waitForElementVisible('css', '#layout-builder-ipe-wrapper.edit-layout');
     $assert_session->elementExists('css', '#layout-builder-ipe-wrapper.edit-layout');
 
@@ -44,7 +44,7 @@ class BlockUiTest extends BlockUiBase {
     // Open the "add new block" dialog.
     $assert_session->linkExists('Add block');
     $page->clickLink('Add block');
-    $assert_session->assertWaitOnAjaxRequest();
+    $this->waitForAjaxToFinish();
 
     // Confirm that block selection opens in a modal.
     $assert_session->elementTextContains('css', '#layout-builder-modal', 'Choose a block type from the following categories');
@@ -52,7 +52,7 @@ class BlockUiTest extends BlockUiBase {
     $page->clickLink('Admin restricted');
     $assert_session->linkExists('Generic HTML');
     $page->clickLink('Generic HTML');
-    $assert_session->assertWaitOnAjaxRequest();
+    $this->waitForAjaxToFinish();
 
     // Confirm modal and UI details.
     $assert_session->elementExists('css', '#layout-builder-modal');
@@ -67,13 +67,12 @@ class BlockUiTest extends BlockUiBase {
     $button->press();
 
     // Confirm that it closes the modal and that the submitted data displays.
-    $assert_session->assertWaitOnAjaxRequest();
+    $this->waitForAjaxToFinish();
     $assert_session->waitForElementRemoved('css', '#layout-builder-modal');
     $assert_session->elementNotExists('css', '#layout-builder-modal');
     $assert_session->elementContains('css', '.block-inline-blockbasic h2.cd-block-title', 'Hello World');
     $assert_session->elementContains('css', '.block-inline-blockbasic .field--name-body', 'Body says hello');
     $assert_session->pageTextContains('You have unsaved changes.');
-    $this->htmlOutput(NULL);
 
     // Confirm contextual block links.
     $assert_session->elementExists('css', '.block-inline-blockbasic ul.contextual-links li.layout-builder-block-remove');
@@ -86,12 +85,10 @@ class BlockUiTest extends BlockUiBase {
     $assert_session->waitForElement('css', '#layout-builder-modal');
     $assert_session->elementExists('css', '#layout-builder-modal');
     $cancel_link = $assert_session->elementExists('css', '#layout-builder-modal a.dialog-cancel');
-    $this->htmlOutput(NULL);
 
     $cancel_link->click();
-    $assert_session->assertWaitOnAjaxRequest();
+    $this->waitForAjaxToFinish();
     $assert_session->waitForElementRemoved('css', '#layout-builder-modal');
-    $this->htmlOutput(NULL);
   }
 
   /**

@@ -290,12 +290,19 @@ class ImportManager implements ContainerInjectionInterface {
       ];
       if ($existing_component) {
         // Update an existing component.
-        $configuration = $paragraph_configuration + $context_mapping + $existing_component->get('configuration');
-        $existing_component->setConfiguration($configuration);
         $messages[] = $this->t('Updated %plugin_title (%uuid)', [
           '%plugin_title' => $definition['admin_label'],
           '%uuid' => $paragraph->getUuid(),
         ]);
+        $config = array_filter([
+          'id' => $definition['id'],
+          'provider' => $definition['provider'],
+          'sync' => [
+            'source_uuid' => $paragraph->getUuid(),
+          ],
+        ]);
+        $configuration = $config + $paragraph_configuration + $context_mapping + $existing_component->get('configuration');
+        $existing_component->setConfiguration($configuration);
         $paragraph_uuids[] = $existing_component->getUuid();
       }
       else {
@@ -683,20 +690,27 @@ class ImportManager implements ContainerInjectionInterface {
   /**
    * Find a section component corresponding to the given source element.
    *
+   * This also supports finding existing components if the given content item
+   * is set to replace another one via it's "replaces" configuration key.
+   *
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
    * @param \Drupal\ghi_content\RemoteContent\RemoteContentItemBaseInterface $content_item
    *   The paragraph object from the remote source.
    *
    * @return \Drupal\layout_builder\SectionComponent|null
-   *   Either a matching component, or NULL.
+   *   Either a matching component or NULL.
    */
   private function getExistingSyncedContentItem(NodeInterface $node, RemoteContentItemBaseInterface $content_item) {
+    $replaces = $content_item->getConfiguration()['replaces'] ?? NULL;
     $section_storage = $this->getSectionStorageForEntity($node);
     $sections = $section_storage->getSections();
     foreach ($sections[0]->getComponents() as $component) {
       $configuration = $component->get('configuration');
-      if (!empty($configuration['sync']) && !empty($configuration['sync']['source_uuid']) && $configuration['sync']['source_uuid'] == $content_item->getUuid()) {
+      $source_uuid = $configuration['sync']['source_uuid'] ?? NULL;
+      if ($source_uuid && ($source_uuid == $content_item->getUuid() || ($replaces && $replaces == $source_uuid))) {
+        $configuration['sync']['source_uuid'] = $content_item->getUuid();
+        $component->setConfiguration($configuration);
         return $component;
       }
     }

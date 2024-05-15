@@ -34,6 +34,9 @@ while [ "$1" != "" ]; do
   shift
 done
 
+# First make sure that the code base is up to date.
+composer install
+
 if $IMPORT_BACKUP; then
   BACKUP_DIRECTORY="$PROJECT_ROOT/.docksal/backups"
   echo "Looking for backups in ${BACKUP_DIRECTORY}"
