@@ -43,6 +43,9 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    *   The label of the plan type.
    */
   public function getPlanTypeLabel($override = TRUE) {
+    if (!$this->hasField('field_plan_type_label_override')) {
+      return NULL;
+    }
     $plan_type_label_override = $this->get('field_plan_type_label_override')->value;
     if ($override && !empty($plan_type_label_override)) {
       return $plan_type_label_override;
@@ -73,6 +76,9 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    *   A label for the plan status or NULL if the field is not found.
    */
   public function getPlanStatusLabel() {
+    if (!$this->hasField('field_plan_status')) {
+      return NULL;
+    }
     $plan_status = $this->get('field_plan_status') ?? NULL;
     if (!$plan_status) {
       return NULL;

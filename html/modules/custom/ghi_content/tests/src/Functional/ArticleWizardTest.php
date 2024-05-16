@@ -5,11 +5,10 @@ namespace Drupal\Tests\ghi_content\Functional;
 use Drupal\Component\Serialization\Json;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\node\Entity\Node;
-use Drupal\taxonomy\Entity\Term;
-use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
+use Drupal\Tests\ghi_content\Traits\ContentTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 
 /**
@@ -22,6 +21,7 @@ class ArticleWizardTest extends BrowserTestBase {
   use EntityReferenceFieldCreationTrait;
   use TaxonomyTestTrait;
   use FieldTestTrait;
+  use ContentTestTrait;
 
   /**
    * Modules to enable.
@@ -43,7 +43,7 @@ class ArticleWizardTest extends BrowserTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->setupContent();
+    $this->createArticleContentType();
 
     // Create a user with permission to view the actions administration pages.
     $this->drupalLogin($this->drupalCreateUser([
@@ -72,9 +72,7 @@ class ArticleWizardTest extends BrowserTestBase {
     $this->drupalGet('/node/add/article');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextNotContains('No remote sources found. You must create at least one remote source before creating an Article page.');
-    $this->assertSession()->pageTextNotContains('No teams found. You must import teams before creating an Article page.');
     $this->assertSession()->pageTextNotContains('Type the title of an article to see suggestions.');
-    $this->assertSession()->pageTextNotContains('Select the team that will be responsible for this Article page.');
     $this->assertSession()->pageTextNotContains('Optional: Change the title for this article page.');
 
     $this->assertSession()->elementExists('css', 'select[data-drupal-selector="edit-source"]')->selectOption('hpc_content_module_test');
@@ -87,10 +85,6 @@ class ArticleWizardTest extends BrowserTestBase {
     $this->assertEquals($autocomplete_url, $this->getAbsoluteUrl($article_input->getAttribute('data-autocomplete-path')));
 
     $this->getSession()->getPage()->fillField('article', $data[0]['value']);
-    $this->assertSession()->buttonExists('Next')->click();
-
-    $this->assertSession()->pageTextContains('Select the team that will be responsible for this Article page.');
-    $this->assertSession()->elementExists('css', 'select[data-drupal-selector="edit-team"]');
     $this->assertSession()->buttonExists('Next')->click();
 
     $this->assertSession()->pageTextContains('Optional: Change the title for this Article page.');
@@ -137,34 +131,6 @@ class ArticleWizardTest extends BrowserTestBase {
     $this->assertSession()->buttonExists('Next')->click();
 
     $this->assertSession()->pageTextContains('An article page for the selected article already exists');
-  }
-
-  /**
-   * Setup content types and content for these tests.
-   */
-  private function setupContent() {
-    $this->drupalCreateContentType([
-      'type' => ArticleManager::ARTICLE_BUNDLE,
-      'name' => 'Article page',
-    ]);
-    $this->createField('node', ArticleManager::ARTICLE_BUNDLE, 'ghi_remote_article', ArticleManager::REMOTE_ARTICLE_FIELD, 'Remote Article');
-
-    // Create team vocabulary and fields.
-    Vocabulary::create([
-      'vid' => 'team',
-      'name' => 'Team',
-    ])->save();
-    $handler_settings = [
-      'target_bundles' => [
-        'team' => 'team',
-      ],
-    ];
-    $this->createEntityReferenceField('node', ArticleManager::ARTICLE_BUNDLE, 'field_team', 'Team', 'taxonomy_term', 'default', $handler_settings);
-    Term::create([
-      'name' => $this->randomMachineName(),
-      'vid' => 'team',
-    ])->save();
-    $this->createEntityReferenceField('node', ArticleManager::ARTICLE_BUNDLE, 'field_tags', 'Tags', 'taxonomy_term');
   }
 
 }

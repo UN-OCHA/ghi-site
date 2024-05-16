@@ -79,7 +79,7 @@ class ArticleManagerTest extends KernelTestBase {
     $this->installEntitySchema('path_alias');
     $this->installSchema('system', 'sequences');
     $this->installSchema('node', ['node_access']);
-    $this->installConfig(['system', 'node', 'taxonomy', 'field', 'file']);
+    $this->installConfig(['system', 'node', 'taxonomy', 'field', 'file', 'pathauto']);
 
     $this->articleManager = \Drupal::service('ghi_content.manager.article');
 

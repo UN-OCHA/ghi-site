@@ -40,7 +40,10 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     if ($this->isOrphaned() && !in_array($operation, $orphan_operations)) {
       return $return_as_object ? AccessResult::forbidden() : FALSE;
     }
-    if ($operation == 'delete') {
+    if (!$account) {
+      $account = \Drupal::currentUser();
+    }
+    if ($operation == 'delete' && !$account->hasPermission('administer site configuration')) {
       return $return_as_object ? AccessResult::allowedIf($this->isOrphaned()) : $this->isOrphaned();
     }
     return parent::access($operation, $account, $return_as_object);

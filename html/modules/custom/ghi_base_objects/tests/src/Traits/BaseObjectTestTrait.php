@@ -64,6 +64,7 @@ trait BaseObjectTestTrait {
     $values += [
       'type' => $this->randomString(),
       'name' => $this->randomString(),
+      'field_original_id' => rand(1, 100),
       'field_content_space' => rand(1, 100),
     ];
     $base_object = BaseObject::create($values);

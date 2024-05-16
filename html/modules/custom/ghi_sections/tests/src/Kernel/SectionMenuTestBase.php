@@ -71,7 +71,7 @@ abstract class SectionMenuTestBase extends KernelTestBase {
     $this->installEntitySchema('path_alias');
     $this->installSchema('system', 'sequences');
     $this->installSchema('node', ['node_access']);
-    $this->installConfig(['system', 'node', 'field']);
+    $this->installConfig(['system', 'node', 'field', 'pathauto']);
 
     $this->entityTypeManager = $this->container->get('entity_type.manager');
     $this->sectionMenuPluginManager = $this->container->get('plugin.manager.section_menu');

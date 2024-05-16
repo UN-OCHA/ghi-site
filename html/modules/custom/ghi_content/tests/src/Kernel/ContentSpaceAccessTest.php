@@ -61,7 +61,7 @@ class ContentSpaceAccessTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
     $this->installEntitySchema('taxonomy_term');
-    $this->installConfig(['system', 'node', 'taxonomy', 'field']);
+    $this->installConfig(['system', 'node', 'taxonomy', 'field', 'pathauto']);
 
     $this->setupTeamVocabularies();
 
