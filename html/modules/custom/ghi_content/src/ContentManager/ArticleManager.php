@@ -91,13 +91,11 @@ class ArticleManager extends BaseContentManager {
    *   An article object from the remote source.
    * @param string $title
    *   An title for the article node.
-   * @param int $team
-   *   An optional term id for the team field.
    *
    * @return \Drupal\node\NodeInterface|null
    *   The created article node if successful or NULL otherwise.
    */
-  public function createNodeFromRemoteArticle(RemoteArticleInterface $article, $title, $team = NULL) {
+  public function createNodeFromRemoteArticle(RemoteArticleInterface $article, $title) {
     $node = $this->loadNodeForRemoteContent($article);
     if ($node) {
       // We allow only a single local article per remote article.
@@ -115,9 +113,6 @@ class ArticleManager extends BaseContentManager {
         'article_id' => $article->getId(),
       ],
     ];
-    if ($team) {
-      $node->field_team = $team;
-    }
 
     $status = $node->save();
     return $status == SAVED_NEW ? $node : NULL;

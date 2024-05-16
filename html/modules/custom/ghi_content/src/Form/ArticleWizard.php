@@ -49,18 +49,8 @@ class ArticleWizard extends ContentWizardBase {
 
     $source_options = $this->getSourceOptions();
     if (empty($source_options)) {
-      // Bail out if there are no teams.
+      // Bail out if there are no remote sources.
       $this->messenger()->addError($this->t('No remote sources found. You must create at least one remote source before creating an @type.', [
-        '@type' => $node_type->label(),
-      ]));
-      return $form;
-    }
-
-    // Get the team options.
-    $team_options = $this->getTeamOptions($form_state);
-    if (empty($team_options)) {
-      // Bail out if there are no teams.
-      $this->messenger()->addError($this->t('No teams found. You must import teams before creating an @type.', [
         '@type' => $node_type->label(),
       ]));
       return $form;
@@ -70,7 +60,6 @@ class ArticleWizard extends ContentWizardBase {
     $steps = array_values(array_filter([
       'source',
       'article',
-      'team',
       'title',
     ]));
 
@@ -112,20 +101,6 @@ class ArticleWizard extends ContentWizardBase {
       '#access' => $step >= array_flip($steps)['article'],
     ];
 
-    // Add the team selector.
-    $form['team'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Team'),
-      '#options' => $team_options,
-      '#description' => $this->t('Select the team that will be responsible for this @type.', [
-        '@type' => $node_type->label(),
-      ]),
-      '#default_value' => $form_state->getValue('team'),
-      '#required' => TRUE,
-      '#disabled' => $step > array_flip($steps)['team'],
-      '#access' => $step >= array_flip($steps)['team'],
-    ];
-
     // Set a title.
     $form['title'] = [
       '#type' => 'textfield',
@@ -146,7 +121,6 @@ class ArticleWizard extends ContentWizardBase {
         '#limit_validation_errors' => array_filter([
           $step > array_flip($steps)['source'] ? ['source'] : NULL,
           $step > array_flip($steps)['article'] ? ['article'] : NULL,
-          $step > array_flip($steps)['team'] ? ['team'] : NULL,
         ]),
         '#ajax' => [
           'event' => 'click',
@@ -210,7 +184,6 @@ class ArticleWizard extends ContentWizardBase {
     $values = array_intersect_key($form_state->getValues(), array_flip([
       'source',
       'article',
-      'team',
       'title',
     ]));
 
@@ -220,7 +193,7 @@ class ArticleWizard extends ContentWizardBase {
     $article = $this->getSubmittedArticle($form_state);
 
     // Create the article.
-    $node = $this->articleManager->createNodeFromRemoteArticle($article, $values['title'], $values['team']);
+    $node = $this->articleManager->createNodeFromRemoteArticle($article, $values['title']);
     if ($node) {
       $this->messenger()->addStatus($this->t('Created @type for @title', [
         '@type' => $node->type->entity->label(),
