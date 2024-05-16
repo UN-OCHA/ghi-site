@@ -80,17 +80,19 @@ class IndicatorAttachment extends DataAttachment {
       return $tooltip;
     }
 
+    $index = $conf['data_points'][0]['index'];
+    $value = $this->getSingleValue($index, NULL, $conf['data_points'][0]);
+
+    if ($this->isNullValue($value)) {
+      return $tooltip;
+    }
+
     if ($this->isMeasurement($conf)) {
       // Otherwise see if this is a measurement and if we can get a formatted
       // monitoring period for this data point.
       $tooltip['monitoring_period'] = $this->formatMonitoringPeriod('icon', $last_reporting_period->id, 'as of date @end_date');
     }
 
-    $index = $conf['data_points'][0]['index'];
-    $value = $this->getSingleValue($index, NULL, $conf['data_points'][0]);
-    if ($this->isNullValue($value)) {
-      return $tooltip;
-    }
     if ($this->isApiCalculated($index, $conf['data_points'][0]) && $conf['processing'] != 'calculated') {
       $tooltip = [
         'monitoring_period' => $this->formatCalculationTooltip($last_reporting_period),
