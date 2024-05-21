@@ -123,9 +123,17 @@ class ContentPageTest extends BrowserTestBase {
     $article->setPublished();
     $article->save();
 
+    // Test article display in section context.
     $this->drupalGet($section->toUrl()->toString() . $article->toUrl()->toString());
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->elementExists('css', '#block-sectionnavigation li a[href="' . $section->toUrl()->toString() . '#page-title"]');
+    $this->assertSession()->elementExists('css', 'article.node--type-article .node__submitted');
+    $this->assertSession()->pageTextContains('Published on');
+
+    // Test standalone article display.
+    $this->drupalGet($article->toUrl()->toString());
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->elementExists('css', 'article.node--type-article .node__submitted');
     $this->assertSession()->pageTextContains('Published on');
   }
 
