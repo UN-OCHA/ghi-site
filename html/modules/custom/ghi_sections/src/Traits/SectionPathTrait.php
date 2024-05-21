@@ -23,13 +23,13 @@ trait SectionPathTrait {
    *   The section node or NULL if not found.
    */
   private function getSectionNodeFromPath($path = NULL) {
-    $path = $path ?? $this->requestStack->getCurrentRequest()->getPathInfo();
+    $path = $path ?? \Drupal::requestStack()->getCurrentRequest()->getPathInfo();
     $section = NULL;
-    $path_internal = $this->aliasManager->getPathByAlias($path);
+    $path_internal = \Drupal::service('path_alias.manager')->getPathByAlias($path);
     try {
       $params = Url::fromUri("internal:" . $path_internal)->getRouteParameters();
       $entity_type = key($params);
-      $loaded = $this->entityTypeManager->getStorage($entity_type)->load($params[$entity_type]);
+      $loaded = \Drupal::entityTypeManager()->getStorage($entity_type)->load($params[$entity_type]);
       $section = $loaded instanceof SectionNodeInterface ? $loaded : NULL;
     }
     catch (\Exception $e) {
