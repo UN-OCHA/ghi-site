@@ -11,7 +11,6 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Cache\Cache;
-use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
@@ -89,13 +88,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface
    */
   protected $layoutTempstoreRepository;
-
-  /**
-   * The manager class for endpoint query plugins.
-   *
-   * @var \Drupal\hpc_api\Query\EndpointQueryManager
-   */
-  protected $endpointQueryManager;
 
   /**
    * The manager class for configuration container items.
@@ -177,7 +169,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $instance->configFactory = $container->get('config.factory');
     $instance->contextRepository = $container->get('context.repository');
     $instance->layoutTempstoreRepository = $container->get('layout_builder.tempstore_repository');
-    $instance->endpointQueryManager = $container->get('plugin.manager.endpoint_query_manager');
     $instance->configurationContainerItemManager = $container->get('plugin.manager.configuration_container_item_manager');
     $instance->sectionManager = $container->get('ghi_sections.manager');
     $instance->subpageManager = $container->get('ghi_subpages.manager');
@@ -217,66 +208,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
   public function getData(string $source_key = 'data') {
     $query = $this->getQueryHandler($source_key);
     return $query ? $query->getData() : NULL;
-  }
-
-  /**
-   * Get a query handler for this block.
-   *
-   * This returns either the requested named handler if it exists, or the only
-   * one defined if no source key is given.
-   * The handler will be initialized with placeholders reflecting the current
-   * contexts.
-   *
-   * @param string $source_key
-   *   The source key that should be used to retrieve data for a block.
-   *
-   * @return \Drupal\hpc_api\Query\EndpointQueryPluginInterface
-   *   The query handler class.
-   */
-  protected function getQueryHandler($source_key = 'data') {
-
-    $configuration = $this->getPluginDefinition();
-    if (empty($configuration['data_sources'])) {
-      return NULL;
-    }
-
-    $sources = $configuration['data_sources'];
-    $definition = !empty($sources[$source_key]) ? $sources[$source_key] : NULL;
-    if (!$definition || !is_scalar($definition) || !$this->endpointQueryManager->hasDefinition($definition)) {
-      return NULL;
-    }
-
-    /** @var \Drupal\hpc_api\Query\EndpointQueryPluginInterface $query_handler */
-    $query_handler = $this->endpointQueryManager->createInstance($definition);
-
-    // Get the available context values and use them as placeholder values for
-    // the query.
-    foreach ($this->getContexts() as $context_key => $context) {
-      /** @var \Drupal\Core\Plugin\Context\Context $context */
-      if ($context_key == 'node' || strpos($context_key, '--') || !$context->hasContextValue()) {
-        continue;
-      }
-      $context_value = $context->getContextValue();
-      if (is_scalar($context_value)) {
-        // Arguments like "year".
-        $query_handler->setPlaceholder($context_key, $context->getContextValue());
-      }
-      elseif ($context_value instanceof ContentEntityInterface && $context_value->hasField('field_original_id')) {
-        // Arguments like "plan_id".
-        $original_id = $context_value->get('field_original_id')->value;
-        if ($original_id && is_scalar($original_id)) {
-          $query_handler->setPlaceholder($context_key . '_id', $original_id);
-        }
-        if ($context_value->hasField('field_plan')) {
-          $plan_id = $context_value->get('field_plan')->entity->get('field_original_id')->value ?? NULL;
-          if ($plan_id) {
-            $query_handler->setPlaceholder('plan_id', $plan_id);
-          }
-        }
-      }
-    }
-
-    return $query_handler;
   }
 
   /**

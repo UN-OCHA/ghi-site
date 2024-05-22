@@ -110,6 +110,11 @@ class LayoutBuilderBlockController extends ControllerBase implements ContainerIn
    *   The entity being updated.
    */
   public function updateEntity(EntityInterface $entity) {
+    if ($entity->getEntityType()->isRevisionable() && !$entity->isDefaultRevision()) {
+      // We do not want to trigger any action when revisions are updated.
+      // @see https://humanitarian.atlassian.net/browse/HPC-9349
+      return;
+    }
     $section_storage = $this->getSectionStorageForEntity($entity);
     if (!$section_storage) {
       return;
