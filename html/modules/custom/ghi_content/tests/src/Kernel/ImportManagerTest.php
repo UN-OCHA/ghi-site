@@ -71,8 +71,6 @@ class ImportManagerTest extends KernelTestBase {
    */
   public function testServiceAvailable() {
     $import_manager = \Drupal::service('ghi_content.import');
-
-    // Test if hook_aggregator_fetcher_info_alter is being called.
     $this->assertTrue($import_manager instanceof ImportManager, "The ImportManager service is available");
   }
 
