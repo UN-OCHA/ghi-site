@@ -230,15 +230,21 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
   /**
    * Load all nodes for this manager.
    *
+   * @param bool $published
+   *   Whether to load only published nodes.
+   *
    * @return \Drupal\Core\Entity\EntityInterface[]|null
    *   An array of entity objects indexed by their ids.
    */
-  public function loadAllNodes() {
+  public function loadAllNodes($published = TRUE) {
+    $properties = [
+      'type' => $this->getNodeBundle(),
+    ];
+    if ($published) {
+      $properties['status'] = NodeInterface::PUBLISHED;
+    }
     $nodes = $this->entityTypeManager->getStorage('node')
-      ->loadByProperties([
-        'type' => $this->getNodeBundle(),
-        'status' => NodeInterface::PUBLISHED,
-      ]);
+      ->loadByProperties($properties);
     return $nodes;
   }
 

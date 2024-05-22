@@ -42,7 +42,7 @@ class MigrationBatchController {
         $nodes = $content_manager->loadNodesForTags($terms, NULL, 'AND', NULL, FALSE);
       }
       else {
-        $nodes = $content_manager->loadAllNodes();
+        $nodes = $content_manager->loadAllNodes(FALSE);
       }
 
       $source_keys = $source->getIds();
