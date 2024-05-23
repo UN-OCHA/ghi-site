@@ -6,6 +6,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ghi_content\Controller\OrphanedContentController;
 use Drupal\ghi_content\Traits\ContentPathTrait;
@@ -162,7 +163,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    */
   public function setOrphaned($status) {
     if (!$this->hasField(OrphanedContentController::FIELD_NAME)) {
-      return;
+      return $this;
     }
     return $this->set(OrphanedContentController::FIELD_NAME, $status);
   }
@@ -212,7 +213,28 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    * @return array
    *   An array of metadata items.
    */
-  abstract public function getPageMetaData($include_social = TRUE);
+  public function getPageMetaData($include_social = TRUE) {
+    $metadata = [];
+    $metadata[] = [
+      '#markup' => new TranslatableMarkup('Published on @date', [
+        '@date' => $this->getDateFormatter()->format($this->getCreatedTime(), 'custom', 'j F Y'),
+      ]),
+    ];
+    $tags = $this->getDisplayTags();
+    if (!empty($tags)) {
+      $metadata[] = [
+        '#markup' => new TranslatableMarkup('Keywords @keywords', [
+          '@keywords' => implode(', ', $tags),
+        ]),
+      ];
+    }
+    if ($this->isPublished() && $include_social) {
+      $metadata[] = [
+        '#theme' => 'social_links',
+      ];
+    }
+    return $metadata;
+  }
 
   /**
    * Get the tags for this content.
@@ -283,9 +305,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     $tag_names = array_map(function ($tag) {
       return $tag->label();
     }, $tags);
-
-    // And build the render array.
-    return $tag_names;
+    return array_values($tag_names);
   }
 
   /**

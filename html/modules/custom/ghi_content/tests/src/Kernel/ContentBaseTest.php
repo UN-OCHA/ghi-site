@@ -3,6 +3,7 @@
 namespace Drupal\Tests\ghi_content\Kernel;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\Url;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\ContentManager\DocumentManager;
 use Drupal\ghi_content\Controller\OrphanedContentController;
@@ -12,6 +13,7 @@ use Drupal\ghi_sections\Entity\Section;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
+use Drupal\taxonomy\Entity\Term;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
@@ -84,6 +86,9 @@ class ContentBaseTest extends KernelTestBase {
 
     $this->vocabulary = $this->createVocabulary();
 
+    // Now create the orphaned field and re-create the article.
+    $this->createField('taxonomy_term', $this->vocabulary->id(), 'boolean', 'field_structural_tag', 'Structural tag');
+
     // Setup the tags field on our node types.
     $handler_settings = [
       'target_bundles' => [
@@ -132,7 +137,7 @@ class ContentBaseTest extends KernelTestBase {
     $article->save();
 
     // Assert that calling setOrphaned and isOrphaned is not creating errors.
-    $this->assertNull($article->setOrphaned(TRUE));
+    $article->setOrphaned(TRUE);
     $article->save();
     $this->assertFalse($article->isOrphaned());
 
@@ -145,13 +150,23 @@ class ContentBaseTest extends KernelTestBase {
     $article->save();
 
     // Confirm we can set and unset the orphaned flag.
-    $article->setOrphaned(TRUE);
-    $article->save();
+    $article->setOrphaned(TRUE)->save();
     $this->assertTrue($article->isOrphaned());
 
-    $article->setOrphaned(FALSE);
-    $article->save();
+    $article->setOrphaned(FALSE)->save();
     $this->assertFalse($article->isOrphaned());
+
+    // Confirm access to orphaned articles. Even assuming a user who can bypass
+    // node access, we want to impose some limits on what can be done.
+    $article->setOrphaned(TRUE)->save();
+    $this->assertTrue($article->isOrphaned());
+    $this->setUpCurrentUser([], [
+      'access content',
+      'bypass node access',
+    ]);
+    $this->assertFalse($article->access('update'));
+    $this->assertTrue($article->access('view'));
+    $this->assertTrue($article->access('delete'));
   }
 
   /**
@@ -277,12 +292,19 @@ class ContentBaseTest extends KernelTestBase {
     $article->save();
     $this->assertEquals('Article title', $article->getPageTitle());
 
+    // Store the url of the standalone article to compare later.
+    $article_url = $article->toUrl()->toString();
+    $this->assertEquals('/node/1', $article_url);
+
     // Mock a document. Using a real document is more complicated because it
     // would check for the presence of an article in any of the remote chapters
     // of the document.
     $document = $this->prophesize(Document::class);
     $document->hasArticle($article)->willReturn(TRUE);
     $document->label()->willReturn('Document title');
+    $document_url = $this->prophesize(Url::class);
+    $document_url->toString()->willReturn('/document/1');
+    $document->toUrl()->willReturn($document_url->reveal());
 
     // Confirm this document is a valid context node and that it's label is
     // used as the page title for the article.
@@ -290,6 +312,16 @@ class ContentBaseTest extends KernelTestBase {
     $article->setContextNode($document->reveal());
     $this->assertEquals($document->reveal(), $article->getContextNode());
     $this->assertEquals('Document title', $article->getPageTitle());
+
+    // Not get the url with the context node set.
+    $url = $article->toUrl();
+    $this->assertEquals('/document/1' . $article_url, $url->toString());
+    // Confirm it's marked as "alias" already, so that the url stays as is.
+    $this->assertTrue($url->getOption('alias'));
+    // And that a custom_path option is set so that ContentPagePathProcessor
+    // can tell that this should be url to be used in rendered links. Otherwise
+    // link sanitization done by drupal would reset the custom set path.
+    $this->assertEquals('/document/1' . $article_url, $url->getOption('custom_path'));
 
     // Mock another document.
     $document = $this->prophesize(Document::class);
@@ -391,7 +423,84 @@ class ContentBaseTest extends KernelTestBase {
     // And confirm that the tags are unique when combining the article tags and
     // the document context tags.
     $this->assertCount(7, $article->getTags(TRUE));
+  }
 
+  /**
+   * Tests that structural tags are handled and kept out of displayed tags.
+   */
+  public function testStructuralTags() {
+    // Create some normal tags.
+    $tags = [
+      $this->createTerm($this->vocabulary),
+      $this->createTerm($this->vocabulary),
+      $this->createTerm($this->vocabulary),
+      $this->createTerm($this->vocabulary),
+      $this->createTerm($this->vocabulary),
+      $this->createTerm($this->vocabulary),
+      $this->createTerm($this->vocabulary),
+    ];
+    // Create some structural tags.
+    $structural_tags = [
+      $this->createTerm($this->vocabulary, ['field_structural_tag' => TRUE]),
+      $this->createTerm($this->vocabulary, ['field_structural_tag' => TRUE]),
+    ];
+
+    // Create an article having all 5 tags.
+    $article = Article::create([
+      'title' => 'Article title',
+      'status' => NodeInterface::PUBLISHED,
+      'field_tags' => array_merge($tags, $structural_tags),
+    ]);
+    $article->save();
+
+    // Confirm all tags are returned by getTags.
+    $this->assertCount(count($tags) + count($structural_tags), $article->getTags());
+    // Confirm only structural tags are returned by getStructuralTags.
+    $this->assertCount(count($structural_tags), $article->getStructuralTags());
+    // Confirm a max number of item is returned by getDisplayTags.
+    $this->assertCount(6, $article->getDisplayTags());
+    // Confirm that the number of item returned by getDisplayTags can be set.
+    $this->assertCount(3, $article->getDisplayTags(3));
+
+    // Confirm the result of getDisplayTags is an array of tag names, keyed by
+    // secuential integers.
+    $expected_display_tags_all = array_map(function (Term $tag) {
+      return $tag->label();
+    }, $tags);
+    $this->assertEquals(array_slice($expected_display_tags_all, 0, 6), $article->getDisplayTags());
+    $this->assertEquals(array_slice($expected_display_tags_all, 0, 2), $article->getDisplayTags(2));
+  }
+
+  /**
+   * Test assembly of page meta data.
+   */
+  public function testPageMetaData() {
+    $article = Article::create([
+      'title' => 'Article title',
+      'status' => NodeInterface::PUBLISHED,
+      'created' => strtotime('2024-06-01'),
+      'field_tags' => [
+        $this->createTerm($this->vocabulary, ['name' => 'Tag 1']),
+        $this->createTerm($this->vocabulary, ['name' => 'Tag 2']),
+      ],
+    ]);
+    $article->save();
+
+    $metadata = $article->getPageMetaData(FALSE);
+    $this->assertIsArray($metadata);
+    $this->assertCount(2, $metadata);
+    $this->assertEquals('Published on 1 June 2024', (string) $metadata[0]['#markup']);
+    $this->assertEquals('Keywords Tag 1, Tag 2', (string) $metadata[1]['#markup']);
+
+    $metadata = $article->getPageMetaData();
+    $this->assertIsArray($metadata);
+    $this->assertCount(3, $metadata);
+    $this->assertEquals('social_links', $metadata[2]['#theme']);
+
+    $article->setUnpublished()->save();
+    $metadata = $article->getPageMetaData();
+    $this->assertIsArray($metadata);
+    $this->assertCount(2, $metadata);
   }
 
 }
