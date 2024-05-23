@@ -4,7 +4,6 @@ namespace Drupal\ghi_content\Controller;
 
 use Drupal\ghi_content\ContentManager\BaseContentManager;
 use Drupal\ghi_content\Entity\ContentBase;
-use Drupal\node\NodeInterface;
 
 /**
  * Controller class for migration batches.
@@ -63,7 +62,7 @@ class MigrationBatchController {
     if (!empty($context['sandbox']['nodes'])) {
       $node = array_shift($context['sandbox']['nodes']);
       // Let us only do the following when the full imports are run.
-      if ($node instanceof NodeInterface && empty($source_tags)) {
+      if ($node instanceof ContentBase && empty($source_tags)) {
         $source_id = $migration->getIdMap()->lookupSourceId(['nid' => $node->id()]);
         $needs_saving = FALSE;
         if (!in_array($source_id, $context['sandbox']['source_ids']) && $node->isPublished()) {
@@ -71,21 +70,20 @@ class MigrationBatchController {
           $node->setUnpublished();
           $needs_saving = TRUE;
         }
-        if (in_array($source_id, $context['sandbox']['source_ids']) && !$node->isPublished()) {
-          // New nodes should be published.
-          // @todo Prevent publishing nodes that have been manually unpublished
-          // in HA.
+        if (in_array($source_id, $context['sandbox']['source_ids']) && !$node->isPublished() && !$node->unpublishedManually()) {
+          // New nodes should be published, nodes that have been manually
+          // unpublished should not be published.
           $node->setPublished();
           $needs_saving = TRUE;
         }
         $orphaned = !in_array($source_id, $context['sandbox']['source_ids']);
-        if (empty($source_tags) && $node instanceof ContentBase && $node->isOrphaned() != $orphaned) {
+        if ($node->isOrphaned() != $orphaned) {
           $node->setOrphaned($orphaned);
-          $node->setNewRevision(FALSE);
-          $node->setSyncing(TRUE);
           $needs_saving = TRUE;
         }
         if ($needs_saving) {
+          $node->setNewRevision(FALSE);
+          $node->setSyncing(TRUE);
           $node->save();
           $context['sandbox']['updated']++;
         }
