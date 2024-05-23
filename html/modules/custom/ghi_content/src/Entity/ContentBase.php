@@ -13,6 +13,7 @@ use Drupal\ghi_sections\Entity\ImageNodeInterface;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Drupal\node\NodeStorageInterface;
 use Drupal\taxonomy\TermInterface;
 
 /**
@@ -431,6 +432,43 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    */
   protected static function getDateFormatter() {
     return \Drupal::service('date.formatter');
+  }
+
+  /**
+   * Check if the node has been manually unpublished.
+   *
+   * @return bool
+   *   TRUE if, and only if,
+   */
+  public function unpublishedManually() {
+    if ($this->isPublished()) {
+      return FALSE;
+    }
+    /** @var \Drupal\node\NodeStorageInterface $storage */
+    $storage = $this->entityTypeManager()->getStorage($this->getEntityTypeId());
+    if (!$storage instanceof NodeStorageInterface) {
+      return FALSE;
+    }
+
+    $revision_ids = $storage->revisionIds($this);
+    if (count($revision_ids) == 1) {
+      // We give it the benefit of a doubt.
+      return TRUE;
+    }
+    foreach ($revision_ids as $revision_id) {
+      /** @var \Drupal\ghi_content\Entity\ContentBase $revision */
+      $revision = $storage->loadRevision($revision_id);
+      if (!$revision) {
+        continue;
+      }
+      if ($revision->getRevisionId() == $this->getRevisionId()) {
+        continue;
+      }
+      if ($revision->isPublished()) {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
 
 }

@@ -89,7 +89,7 @@ class PostRowSaveEventSubscriber implements EventSubscriberInterface {
         continue;
       }
       $content_manager->updateNodeFromRemote($entity);
-      $content_manager->saveContentNode($entity);
+      $content_manager->saveContentNode($entity, FALSE);
     }
   }
 
