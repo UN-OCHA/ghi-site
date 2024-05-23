@@ -12,9 +12,6 @@
       "Issue #2329253: Allow the ChangedItem to skip updating the entity's changed timestamp when synchronizing (f.e. when migrating)": "https://www.drupal.org/files/issues/2024-04-18/2329253-127-10.2.5.patch",
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch"
     },
-    "drupal/autologout": {
-      "Issue #3214958: Autologout triggered in background tab, no indication in other open tabs": "https://git.drupalcode.org/project/autologout/-/merge_requests/6.diff"
-    },
     "drupal/flat_taxonomy": {
       "Issue #3427628: Hide 'Add child' link from entity operations": "https://www.drupal.org/files/issues/2024-03-13/3427628-hide-add-child-link-2.patch"
     },
