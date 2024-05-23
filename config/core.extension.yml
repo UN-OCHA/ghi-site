@@ -76,6 +76,7 @@ module:
   imagecache_external: 0
   imagemagick: 0
   inline_form_errors: 0
+  js_cookie: 0
   language: 0
   layout_builder: 0
   layout_builder_ipe: 0
