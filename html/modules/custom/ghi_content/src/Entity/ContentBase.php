@@ -227,17 +227,23 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     }
     // Get the tags.
     $tags = $field_tags->referencedEntities();
-    // Re-key them so use the term id as key.
-    $term_ids = array_map(function (TermInterface $term) {
-      return $term->id();
-    }, $tags);
-    $tags = array_combine($term_ids, $tags);
 
     // See if the context nodes tags should also be loaded.
     if ($include_context_tags) {
       $context_node = $this->getContextNode();
-      $tags += $context_node instanceof ContentBase ? $context_node->getTags() : [];
+      // Merging the tags. This can lead to duplication in $tags.
+      $tags = array_merge($tags, $context_node instanceof ContentBase ? $context_node->getTags() : []);
     }
+
+    // Get the term ids to be able to re-key them to use the term id as key.
+    $term_ids = array_map(function (TermInterface $term) {
+      return $term->id();
+    }, $tags);
+    // There might be duplications in both $term_ids and $tags. But they should
+    // be exactly equal, so this should not be an issue. According to the docs
+    // for array_combine, if 2 keys are the same, the second one prevails.
+    $tags = array_combine($term_ids, $tags);
+
     return $tags;
   }
 
