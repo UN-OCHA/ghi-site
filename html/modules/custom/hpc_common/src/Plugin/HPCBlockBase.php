@@ -3,6 +3,7 @@
 namespace Drupal\hpc_common\Plugin;
 
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
