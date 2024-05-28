@@ -877,6 +877,10 @@ class ConfigurationContainer extends FormElement {
         '#attributes' => [
           'class' => ['operation-buttons'],
         ],
+        '#wrapper_attributes' => ['class' => ['row-operations']],
+        // Disable cell wrapping for operations.
+        // @see common_design_subtheme_preprocess_table().
+        '#cell_wrapping' => FALSE,
       ] + self::buildRowOperations($element, $item['id'], $item_type);
       $rows[$item['id']] = $row;
     }
