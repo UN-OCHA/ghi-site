@@ -3,21 +3,59 @@
 namespace Drupal\ghi_plan_clusters\Entity;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNode;
-use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 
 /**
  * Bundle class for plan cluster nodes.
  */
-class PlanCluster extends SubpageNode implements SubpageNodeInterface, BaseObjectAwareEntityInterface {
+class PlanCluster extends SubpageNode implements PlanClusterInterface {
 
   use StringTranslationTrait;
 
-  const BASE_OBJECT_FIELD_NAME = 'field_base_object';
-  const SECTION_REFERENCE_FIELD_NAME = 'field_entity_reference';
+  /**
+   * {@inheritdoc}
+   */
+  public function label() {
+    if ($override = $this->getTitleOverride()) {
+      return $override;
+    }
+    return parent::label();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTitle() {
+    if ($override = $this->getTitleOverride()) {
+      return $override;
+    }
+    return parent::getTitle();
+  }
+
+  /**
+   * Get the title override.
+   *
+   * @return string|null
+   *   The title override if set.
+   */
+  private function getTitleOverride() {
+    if (!$this->hasField(self::TITLE_OVERRIDE_FIELD_NAME)) {
+      return NULL;
+    }
+    return $this->get(self::TITLE_OVERRIDE_FIELD_NAME)->value ?: NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setTitleOverride($title_override) {
+    if (!$this->hasField(self::TITLE_OVERRIDE_FIELD_NAME)) {
+      return NULL;
+    }
+    $this->get(self::TITLE_OVERRIDE_FIELD_NAME)->setValue($title_override);
+  }
 
   /**
    * {@inheritdoc}

@@ -6,6 +6,7 @@
  */
 
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
+use Drupal\ghi_plan_clusters\Entity\PlanClusterInterface;
 
 /**
  * Assure section references for plan clusters.
@@ -14,7 +15,7 @@ function ghi_plan_clusters_post_update_assure_section_reference() {
   $nids = \Drupal::entityTypeManager()
     ->getStorage('node')
     ->getQuery()
-    ->condition('type', 'plan_cluster')
+    ->condition('type', PlanClusterInterface::BUNDLE)
     ->notExists('field_entity_reference')
     ->accessCheck(FALSE)
     ->execute();
@@ -35,7 +36,7 @@ function ghi_plan_clusters_post_update_remove_invalid_plan_clusters() {
   $nids = \Drupal::entityTypeManager()
     ->getStorage('node')
     ->getQuery()
-    ->condition('type', 'plan_cluster')
+    ->condition('type', PlanClusterInterface::BUNDLE)
     ->condition('field_base_object', NULL, 'IS NULL')
     ->accessCheck(FALSE)
     ->execute();

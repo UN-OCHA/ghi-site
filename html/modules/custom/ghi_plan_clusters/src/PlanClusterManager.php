@@ -2,9 +2,13 @@
 
 namespace Drupal\ghi_plan_clusters;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_plan_clusters\Entity\PlanClusterInterface;
+use Drupal\ghi_plans\Entity\GoverningEntity;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\BaseSubpageManager;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
@@ -19,11 +23,6 @@ class PlanClusterManager extends BaseSubpageManager {
   use StringTranslationTrait;
 
   /**
-   * The machine name of the bundle to use for plan clusters.
-   */
-  const NODE_BUNDLE_PLAN_CLUSTER = 'plan_cluster';
-
-  /**
    * The machine name of the base object bundle for governing entities.
    */
   const BASE_OBJECT_BUNDLE_GOVERNING_ENTITY = 'governing_entity';
@@ -34,12 +33,12 @@ class PlanClusterManager extends BaseSubpageManager {
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
    *   The base object.
    *
-   * @return \Drupal\node\NodeInterface
-   *   The subpage node.
+   * @return \Drupal\ghi_plan_clusters\Entity\PlanClusterInterface
+   *   The plan cluster subpage node.
    */
   public function loadClusterSubpageForBaseObject(BaseObjectInterface $base_object) {
     $nodes = $this->entityTypeManager->getStorage('node')->loadByProperties([
-      'type' => self::NODE_BUNDLE_PLAN_CLUSTER,
+      'type' => PlanClusterInterface::BUNDLE,
       'field_base_object' => $base_object->id(),
     ]);
     return !empty($nodes) ? reset($nodes) : NULL;
@@ -90,7 +89,7 @@ class PlanClusterManager extends BaseSubpageManager {
       return NULL;
     }
     $plan_clusters = $this->entityTypeManager->getStorage('node')->loadByProperties([
-      'type' => self::NODE_BUNDLE_PLAN_CLUSTER,
+      'type' => PlanClusterInterface::BUNDLE,
       'field_entity_reference' => $section->id(),
       'field_base_object' => array_map(function (BaseObjectInterface $base_object) {
         return $base_object->id();
@@ -128,7 +127,7 @@ class PlanClusterManager extends BaseSubpageManager {
 
       /** @var \Drupal\node\NodeInterface $subpage */
       $subpage = $node_storage->create([
-        'type' => self::NODE_BUNDLE_PLAN_CLUSTER,
+        'type' => PlanClusterInterface::BUNDLE,
         'title' => $governing_entity->label(),
         'uid' => $parent_node->uid,
         'status' => NodeInterface::NOT_PUBLISHED,
@@ -182,7 +181,7 @@ class PlanClusterManager extends BaseSubpageManager {
    *   The section node if found.
    */
   public function loadSectionForClusterNode(NodeInterface $node) {
-    if ($node->bundle() != PlanClusterManager::NODE_BUNDLE_PLAN_CLUSTER) {
+    if ($node->bundle() != PlanClusterInterface::BUNDLE) {
       return NULL;
     }
     $base_object = BaseObjectHelper::getBaseObjectFromNode($node);
@@ -193,6 +192,53 @@ class PlanClusterManager extends BaseSubpageManager {
 
     $plan_object = $base_object->get('field_plan')->entity;
     return $this->sectionManager->loadSectionForBaseObject($plan_object);
+  }
+
+  /**
+   * Alter the node edit forms for plan cluster nodes.
+   *
+   * @param array $form
+   *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   */
+  public function nodeEditFormAlter(&$form, FormStateInterface &$form_state) {
+    /** @var \Drupal\node\NodeForm $form_object */
+    $form_object = $form_state->getFormObject();
+    /** @var \Drupal\ghi_plan_clusters\Entity\PlanCluster $entity */
+    $entity = $form_object->buildEntity($form, $form_state);
+
+    // Disable the title.
+    $form['title']['#disabled'] = TRUE;
+    $form['title']['widget'][0]['value']['#description'] = $this->t('The default page title cannot be changed because it is synced from the @entity_type_label data object. To use a non-default title for this page, use the "Title override" field below.', [
+      '@entity_type_label' => strtolower($entity->getBaseObjectType()->label()),
+    ]);
+
+    // Always disable the base object field if the cluster has a base object set
+    // already. There is no use case to change it. Display it for convenience.
+    $object = $entity->getBaseObject();
+    if ($object instanceof GoverningEntity) {
+      $field_name = PlanClusterInterface::BASE_OBJECT_FIELD_NAME;
+      $form[$field_name]['#disabled'] = !$this->currentUser->hasPermission('administer site configuration');
+      $form[$field_name]['widget'][0]['target_id']['#description'] = $this->t('The base object cannot be changed after the initial creation of a @entity_type_label page. <a href="@base_object_edit_url" target="_blank">Edit @label</a>', [
+        '@entity_type_label' => strtolower($entity->type->entity->label()),
+        '@base_object_edit_url' => $object->toUrl('edit-form')->toString(),
+        '@label' => $object->label(),
+      ]);
+    }
+
+    // Always disable the section reference if the cluster has a reference set
+    // already. There is no use case to change it. Display it for convenience.
+    $section = $entity->getParentNode();
+    if ($section instanceof SectionNodeInterface) {
+      $field_name = PlanClusterInterface::SECTION_REFERENCE_FIELD_NAME;
+      $form[$field_name]['#disabled'] = !$this->currentUser->hasPermission('administer site configuration');
+      $form[$field_name]['widget'][0]['target_id']['#description'] = $this->t('The section cannot be changed after the initial creation of a @entity_type_label page. <a href="@section_url" target="_blank">View @label</a>', [
+        '@entity_type_label' => strtolower($entity->type->entity->label()),
+        '@section_url' => $section->toUrl()->toString(),
+        '@label' => $section->label(),
+      ]);
+    }
   }
 
 }
