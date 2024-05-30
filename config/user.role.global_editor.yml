@@ -56,6 +56,7 @@ permissions:
   - 'access toolbar'
   - 'access user profiles'
   - 'administer menu'
+  - 'administer nodes'
   - 'administer orphaned content'
   - 'administer page templates'
   - 'administer user roles'

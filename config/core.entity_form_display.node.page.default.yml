@@ -3,14 +3,26 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.node.page.body
     - node.type.page
   module:
     - path
+    - text
 id: node.page.default
 targetEntityType: node
 bundle: page
 mode: default
 content:
+  body:
+    type: text_textarea_with_summary
+    weight: 2
+    region: content
+    settings:
+      rows: 9
+      summary_rows: 3
+      placeholder: ''
+      show_summary: false
+    third_party_settings: {  }
   created:
     type: datetime_timestamp
     weight: 10
@@ -68,5 +80,10 @@ content:
       match_limit: 10
       size: 60
       placeholder: ''
+    third_party_settings: {  }
+  url_redirects:
+    weight: 50
+    region: content
+    settings: {  }
     third_party_settings: {  }
 hidden: {  }
