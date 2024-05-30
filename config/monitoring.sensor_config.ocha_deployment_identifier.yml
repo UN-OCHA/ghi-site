@@ -1,11 +1,9 @@
-uuid: 7ffa14af-dfdd-4953-af5c-a9c50fd9a9ff
+uuid: null
 langcode: en
-status: false
+status: true
 dependencies:
   module:
     - ocha_monitoring
-_core:
-  default_config_hash: ere9CmHK37HMBjz2iB_Bc7HCxVqddUBPh52MhTJnLvE
 id: ocha_deployment_identifier
 label: 'Deployment identifier'
 description: 'Deployment identifier'

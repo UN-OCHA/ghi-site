@@ -1,11 +1,9 @@
-uuid: a86b7bf4-40dd-49cd-ad7e-6d9898c66e1e
+uuid: null
 langcode: en
 status: true
 dependencies:
   module:
     - ocha_monitoring
-_core:
-  default_config_hash: JDRoZxAcRY6goJLBJ5IXhGuZtY4luymEso_DndWtlmY
 id: ocha_current_composer_version
 label: 'Current composer version'
 description: 'Current composer version'

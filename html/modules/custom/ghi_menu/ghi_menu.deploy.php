@@ -113,7 +113,7 @@ function ghi_menu_deploy_adjust_admin_menu(&$sandbox) {
 }
 
 /**
- * Add custom subpages backend page to admin menu.
+ * Delete the global section menu link.
  */
 function ghi_menu_deploy_remove_global_sections_from_admin_menu(&$sandbox) {
   $section_link = reset(\Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties([
@@ -126,4 +126,20 @@ function ghi_menu_deploy_remove_global_sections_from_admin_menu(&$sandbox) {
   if ($section_link) {
     $section_link->delete();
   }
+}
+
+/**
+ * Add the menu item for simple pages.
+ */
+function ghi_menu_deploy_add_pages_item_to_admin_menu(&$sandbox) {
+  $menu_link = MenuLinkContent::create([
+    'link' => [
+      'uri' => 'internal:/admin/content/pages',
+    ],
+    'menu_name' => 'admin',
+  ]);
+  $menu_link->set('title', 'Pages');
+  $menu_link->set('weight', 0);
+  $menu_link->set('parent', 'system.admin_content');
+  $menu_link->save();
 }
