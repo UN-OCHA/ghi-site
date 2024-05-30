@@ -6,7 +6,6 @@ use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plan_clusters\Entity\PlanClusterInterface;
 use Drupal\ghi_plan_clusters\PlanClusterManager;
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\node\NodeInterface;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
 
@@ -149,14 +148,6 @@ class PlanClusterNodeBundleTest extends KernelTestBase {
     $section->delete();
     $plan_cluster = $this->planClusterManager->loadClusterSubpageForBaseObject($governing_entity);
     $this->assertNull($plan_cluster);
-
-    // Testing passing invalid values to some manager functions.
-    $non_section_node = $this->prophesize(NodeInterface::class);
-    $non_section_node->bundle()->willReturn('page');
-    $null_result = $this->planClusterManager->loadNodesForSection($non_section_node->reveal());
-    $this->assertNull($null_result);
-    $null_result = $this->planClusterManager->loadSectionForClusterNode($non_section_node->reveal());
-    $this->assertNull($null_result);
   }
 
   /**

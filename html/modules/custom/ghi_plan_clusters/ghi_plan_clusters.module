@@ -7,6 +7,7 @@
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
@@ -14,7 +15,9 @@ use Drupal\ghi_plan_clusters\Entity\PlanClusterInterface;
 use Drupal\ghi_plan_clusters\PlanClusterManager;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_sections\SectionManager;
+use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\node\NodeInterface;
 use Drupal\node\NodeTypeInterface;
@@ -42,10 +45,12 @@ function ghi_plan_clusters_get_manager_service() {
  * Implements hook_current_section_alter().
  */
 function ghi_plan_clusters_current_section_alter(&$section, $node) {
-  if (!$node instanceof PlanClusterInterface) {
-    return NULL;
+  if ($node instanceof PlanClusterInterface) {
+    $section = $node->getParentNode();
   }
-  $section = $node->getParentNode();
+  if ($node instanceof LogframeSubpage && $node->getParentNode() instanceof PlanClusterInterface) {
+    $section = $node->getParentBaseNode();
+  }
 }
 
 /**
@@ -53,10 +58,10 @@ function ghi_plan_clusters_current_section_alter(&$section, $node) {
  *
  * Go over all created subpages for a node and save it again, to fix an issue
  * with the generation of url alias for subpages, if the pattern uses the
- * section's url alias as one of their tokens.
+ * section url alias as one of their tokens.
  */
-function ghi_plan_clusters_section_post_save(NodeInterface $section_node) {
-  if (!SubpageHelper::getSubpageManager()->isBaseTypeNode($section_node) || !$section_node->isLatestRevision()) {
+function ghi_plan_clusters_section_post_save(SectionNodeInterface $section_node) {
+  if (!$section_node->isLatestRevision()) {
     return;
   }
 
@@ -112,7 +117,7 @@ function ghi_plan_clusters_base_object_insert(BaseObject $base_object) {
   ]);
   if (!empty($sections)) {
     foreach ($sections as $section) {
-      // Trigger a save, so that ghi_plan_clusters_section_post_save() get's
+      // Trigger a save, so that ghi_plan_clusters_section_post_save() gets
       // called.
       $section->save();
     }
@@ -132,6 +137,21 @@ function ghi_plan_clusters_base_object_update(BaseObjectInterface $base_object) 
   $entity->setNewRevision(FALSE);
   $entity->setSyncing(TRUE);
   $entity->save();
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ghi_plan_clusters_form_node_logframe_edit_form_alter(&$form, FormStateInterface &$form_state) {
+  /** @var \Drupal\node\NodeForm $form_object */
+  $form_object = $form_state->getFormObject();
+  /** @var \Drupal\ghi_subpages\Entity\LogframeSubpage $entity */
+  $entity = $form_object->getEntity();
+  if ($entity->getParentNode() instanceof PlanCluster) {
+    $form['status']['#disabled'] = TRUE;
+    $form['status']['#attributes']['title'] = t('The published status is inherited from the parent cluster page.');
+    $form['field_entity_reference']['widget'][0]['target_id']['#title'] = $entity->getParentNode()->type->entity->label();
+  }
 }
 
 /**
@@ -167,6 +187,26 @@ function ghi_plan_clusters_node_presave(EntityInterface $node) {
       $node->setUnpublished();
     }
   }
+
+  // Synchronise the published status for plan clusters and their logframe
+  // pages.
+  if ($node instanceof LogframeSubpage && $node->getParentNode() instanceof PlanCluster) {
+    $node->status = $node->getParentNode()->isPublished();
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function ghi_plan_clusters_node_update(EntityInterface $node) {
+  // Synchronise the published status for plan clusters and their logframe
+  // pages.
+  if ($node instanceof PlanCluster && $logframe_node = $node->getLogframeNode()) {
+    $logframe_node->status = $node->isPublished();
+    $logframe_node->setNewRevision(FALSE);
+    $logframe_node->isSyncing(TRUE);
+    $logframe_node->save();
+  }
 }
 
 /**
@@ -195,6 +235,31 @@ function ghi_plan_clusters_is_subpage_type($node_type) {
 }
 
 /**
+ * Implements hook_subpage_admin_form_header_links().
+ */
+function ghi_plan_clusters_subpage_admin_form_header_links(NodeTypeInterface $node_type, SectionNodeInterface $section_node) {
+  if ($node_type->id() != PlanClusterInterface::BUNDLE) {
+    return;
+  }
+  $plan_cluster_manager = ghi_plan_clusters_get_manager_service();
+  $plan_clusters = $plan_cluster_manager->loadNodesForSection($section_node);
+  $cluster_logframes = $plan_cluster_manager->loadPlanClusterLogframeSubpageNodesForSection($section_node);
+  if (count($cluster_logframes) == count($plan_clusters)) {
+    return;
+  }
+  $link_label = t('Create logframe subpages');
+  if ($cluster_logframes && count($cluster_logframes) < count($plan_clusters)) {
+    $link_label = t('Create missing logframe subpages');
+  }
+  $links = [
+    'create_logframes' => Link::createFromRoute($link_label, 'ghi_plan_clusters.create_logframes', [
+      'node' => $section_node->id(),
+    ]),
+  ];
+  return $links;
+}
+
+/**
  * Implements hook_custom_subpages_alter().
  */
 function ghi_plan_clusters_custom_subpages_alter(array &$subpages, NodeInterface $node, NodeTypeInterface $node_type) {
@@ -205,18 +270,39 @@ function ghi_plan_clusters_custom_subpages_alter(array &$subpages, NodeInterface
   // SubpageManager::getCustomSubpagesForBaseNode(). We validate the list here
   // and make sure to filter out plan clusters that don't have a base object
   // associated.
-  $subpages = array_filter($subpages, function (NodeInterface $node) {
-    return !$node instanceof PlanClusterInterface || !empty($node->getBaseObject());
+  $subpages = array_filter($subpages, function (NodeInterface $subpage_node) {
+    return !$subpage_node instanceof PlanClusterInterface || !empty($subpage_node->getBaseObject());
   });
+
+  // Let's add in the logframe subpages if there are any.
+  $plan_cluster_manager = ghi_plan_clusters_get_manager_service();
+  $logframes = $plan_cluster_manager->loadPlanClusterLogframeSubpageNodesForSection($node);
+  $subpages += $logframes;
 }
 
 /**
  * Implements hook_get_base_type_node_alter().
  */
 function ghi_plan_clusters_get_base_type_node_alter(&$base_type_node, NodeInterface $node) {
-  if ($node->bundle() != PlanClusterInterface::BUNDLE) {
+  $plan_cluster = $node;
+  if ($node instanceof LogframeSubpage && $node->getParentNode() instanceof PlanClusterInterface) {
+    $plan_cluster = $node->getParentNode();
+  }
+  if (!$plan_cluster instanceof PlanClusterInterface) {
     return NULL;
   }
   $plan_cluster_manager = ghi_plan_clusters_get_manager_service();
-  $base_type_node = $plan_cluster_manager->loadSectionForClusterNode($node);
+  $section = $plan_cluster_manager->loadSectionForClusterNode($plan_cluster);
+  if ($section) {
+    $base_type_node = $section;
+  }
+}
+
+/**
+ * Implements hook_entity_operation_alter().
+ */
+function ghi_plan_clusters_entity_operation_alter(array &$operations, EntityInterface $entity) {
+  if ($entity instanceof LogframeSubpage && $entity->getParentNode() instanceof PlanCluster) {
+    unset($operations['toggle_status']);
+  }
 }

@@ -111,7 +111,7 @@ class CustomSubpage extends SectionMenuPluginBase {
     if (!$node instanceof EntityCustomSubpage) {
       return NULL;
     }
-    $parent = $node->getParentNode();
+    $parent = $node->getParentBaseNode();
     if (!$parent) {
       return NULL;
     }

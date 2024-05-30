@@ -104,7 +104,7 @@ class SubpagesTest extends KernelTestBase {
     $this->assertCount(count(self::SUBPAGE_BUNDLES), $existing_subpages);
     foreach ($existing_subpages as $subpage) {
       $this->assertInstanceOf(SubpageNodeInterface::class, $subpage);
-      $parent_node = $subpage->getParentNode();
+      $parent_node = $subpage->getParentBaseNode();
       $this->assertInstanceOf(SectionNodeInterface::class, $parent_node);
       $this->assertEquals($section->id(), $parent_node->id());
     }

@@ -11,6 +11,7 @@ use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_sections\Entity\Section;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\taxonomy\TermInterface;
@@ -81,19 +82,19 @@ class SectionManager {
    * @param \Drupal\node\NodeInterface $node
    *   The node object to check.
    *
-   * @return \Drupal\ghi_sections\Entity\Section|null
+   * @return \Drupal\ghi_sections\Entity\SectionNodeInterface|null
    *   A section object or NULL.
    */
   public function getCurrentSection($node) {
     $section = NULL;
-    if ($node instanceof Section) {
+    if ($node instanceof SectionNodeInterface) {
       $section = $node;
     }
     else {
       // Allow other modules to declare a section as a parent.
       $this->moduleHandler->alter('current_section', $section, $node);
     }
-    return $section instanceof Section ? $section : NULL;
+    return $section instanceof SectionNodeInterface ? $section : NULL;
   }
 
   /**
@@ -104,7 +105,7 @@ class SectionManager {
    */
   public function getAvailableBaseObjectTypes() {
     // Find out what base objects types can be referenced.
-    $fields = $this->entityFieldManager->getFieldDefinitions('node', Section::BUNDLE);
+    $fields = $this->entityFieldManager->getFieldDefinitions('node', SectionNodeInterface::BUNDLE);
     if (!array_key_exists('field_base_object', $fields)) {
       // Bail out.
       return FALSE;
@@ -220,7 +221,7 @@ class SectionManager {
    * @param int $year
    *   An optional year.
    *
-   * @return \Drupal\node\NodeInterface|null
+   * @return \Drupal\ghi_sections\Entity\SectionNodeInterface|null
    *   The section node if one could be found.
    */
   public function loadSectionForBaseObject(BaseObjectInterface $base_object, $year = NULL) {
@@ -229,7 +230,7 @@ class SectionManager {
     }
 
     $properties = [
-      'type' => Section::BUNDLE,
+      'type' => SectionNodeInterface::BUNDLE,
       'field_base_object' => $base_object->id(),
     ];
 
@@ -246,12 +247,12 @@ class SectionManager {
    * @param \Drupal\taxonomy\TermInterface $term
    *   The taxonomy term for the team.
    *
-   * @return \Drupal\node\NodeInterface[]
+   * @return \Drupal\ghi_sections\Entity\SectionNodeInterface[]
    *   An array of sections assigned to the team.
    */
   public function loadSectionsForTeam(TermInterface $term) {
     $sections = $this->entityTypeManager->getStorage('node')->loadByProperties([
-      'type' => Section::BUNDLE,
+      'type' => SectionNodeInterface::BUNDLE,
       'field_team' => $term->id(),
     ]);
     return $sections;

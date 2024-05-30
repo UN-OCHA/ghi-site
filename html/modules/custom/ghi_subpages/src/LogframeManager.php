@@ -9,13 +9,14 @@ use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Plugin\Context\ContextHandlerInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Entity\Plan;
-use Drupal\ghi_sections\Entity\Section;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
@@ -404,8 +405,8 @@ class LogframeManager implements ContainerInjectionInterface {
    *   An array of entity types, keyed by ref code, value is the plural name.
    */
   public function getEntityTypesFromNode(LogframeSubpage $node) {
-    $section = $node->getParentNode();
-    if (!$section instanceof Section) {
+    $section = $node->getParentBaseNode();
+    if (!$section instanceof SectionNodeInterface) {
       return NULL;
     }
     $plan_object = $section->getBaseObject();
@@ -416,6 +417,19 @@ class LogframeManager implements ContainerInjectionInterface {
     $entity_types = array_filter($entity_types, function ($ref_code) use ($node) {
       return !empty($this->getPlanEntities($node, $ref_code));
     }, ARRAY_FILTER_USE_KEY);
+
+    // Filter by parent if available. This is to support the use case of plan
+    // cluster specific logframes as semi-automatic standard subpage for plan
+    // clusters.
+    $parent = $node->getParentNode();
+    if (!$parent instanceof SectionNodeInterface && $parent instanceof BaseObjectAwareEntityInterface) {
+      $context_base_object = $parent->getBaseObject();
+      $ref_codes = $context_base_object?->getSourceObject()?->getValidRefCodes() ?? NULL;
+      if ($ref_codes) {
+        $entity_types = array_intersect_key($entity_types, array_flip($ref_codes));
+      }
+    }
+
     return $entity_types;
   }
 
@@ -458,8 +472,8 @@ class LogframeManager implements ContainerInjectionInterface {
    *   An array of plan entities.
    */
   private function getPlanEntities(LogframeSubpage $node, $ref_code = NULL) {
-    $section = $node->getParentNode();
-    if (!$section instanceof Section) {
+    $section = $node->getParentBaseNode();
+    if (!$section instanceof SectionNodeInterface) {
       return NULL;
     }
     $filter = NULL;
@@ -503,8 +517,8 @@ class LogframeManager implements ContainerInjectionInterface {
    *   An array of attachment prototypes.
    */
   private function getAttachmentPrototypesForEntityRefCode(LogframeSubpage $node, $ref_code) {
-    $section = $node->getParentNode();
-    if (!$section instanceof Section || !$section->getBaseObject() instanceof Plan) {
+    $section = $node->getParentBaseNode();
+    if (!$section instanceof SectionNodeInterface || !$section->getBaseObject() instanceof Plan) {
       return [];
     }
 

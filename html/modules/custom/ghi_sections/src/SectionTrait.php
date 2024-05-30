@@ -38,7 +38,8 @@ trait SectionTrait {
       return $node;
     }
     if ($node->hasField('field_entity_reference') && in_array($node->bundle(), SubpageManager::SUPPORTED_SUBPAGE_TYPES)) {
-      return $node->get('field_entity_reference')->entity;
+      $parent = $node->get('field_entity_reference')->entity;
+      return $parent instanceof SectionNodeInterface ? $parent : $this->getSectionNode($parent);
     }
   }
 

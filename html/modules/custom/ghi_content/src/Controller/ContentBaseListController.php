@@ -4,6 +4,8 @@ namespace Drupal\ghi_content\Controller;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\migrate\MigrateMessage;
 use Drupal\migrate\Plugin\Migration;
 use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
@@ -120,6 +122,24 @@ abstract class ContentBaseListController extends ControllerBase {
       }
     }
     return $migration->getStatus() == Migration::STATUS_IDLE && !$dependency_busy;
+  }
+
+  /**
+   * Get the section node for the given node if any.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node for which to retrieve the section node.
+   *
+   * @return \Drupal\ghi_sections\Entity\SectionNodeInterface|null
+   *   A section node object if any can be found.
+   */
+  protected function getSectionNode($node) {
+    if ($node instanceof SectionNodeInterface) {
+      return $node;
+    }
+    if ($node instanceof SubpageNodeInterface) {
+      return $node->getParentBaseNode();
+    }
   }
 
 }

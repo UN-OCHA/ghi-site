@@ -1,0 +1,11 @@
+ghi_plan_clusters.create_logframes:
+  path: '/node/{node}/create-logframes'
+  defaults:
+    _controller: '\Drupal\ghi_plan_clusters\Controller\PlanClusterController::createLogframeSubpages'
+  requirements:
+    _entity_access: node.update
+  options:
+    parameters:
+      node:
+        type: entity:node
+    _admin_route: TRUE

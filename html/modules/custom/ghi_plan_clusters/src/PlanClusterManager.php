@@ -71,17 +71,13 @@ class PlanClusterManager extends BaseSubpageManager {
   /**
    * Load all plan cluster nodes for a section.
    *
-   * @param \Drupal\node\NodeInterface $section
+   * @param \Drupal\ghi_sections\Entity\SectionNodeInterface $section
    *   The section that plan clusters belong to.
    *
    * @return \Drupal\ghi_plan_clusters\Entity\PlanCluster[]|null
    *   An array of entity objects indexed by their ids.
    */
-  public function loadNodesForSection(NodeInterface $section) {
-    if ($section->bundle() != 'section') {
-      return NULL;
-    }
-
+  public function loadNodesForSection(SectionNodeInterface $section) {
     // Now find all governing entity base objects that reference the plan base
     // object.
     $governing_entities = $this->loadGoverningEntityBaseObjectsForSection($section);
@@ -96,6 +92,28 @@ class PlanClusterManager extends BaseSubpageManager {
       }, $governing_entities),
     ]);
     return !empty($plan_clusters) ? $plan_clusters : NULL;
+  }
+
+  /**
+   * Load all plan cluster specific logframe nodes for the given section.
+   *
+   * @param \Drupal\node\NodeInterface $section
+   *   The section for which to load the nodes.
+   *
+   * @return \Drupal\ghi_subpages\Entity\LogframeSubpage[]
+   *   An array of logframe node objects.
+   */
+  public function loadPlanClusterLogframeSubpageNodesForSection(NodeInterface $section) {
+    $plan_clusters = $this->loadNodesForSection($section) ?? NULL;
+    if (!$plan_clusters) {
+      return [];
+    }
+    return $this->entityTypeManager->getStorage('node')->loadByProperties([
+      'type' => 'logframe',
+      'field_entity_reference' => array_map(function (NodeInterface $plan_cluster) {
+        return $plan_cluster->id();
+      }, $plan_clusters),
+    ]);
   }
 
   /**
@@ -134,12 +152,51 @@ class PlanClusterManager extends BaseSubpageManager {
         'field_base_object' => [
           'target_id' => $governing_entity->id(),
         ],
+        'field_entity_reference' => [
+          'target_id' => $parent_node->id(),
+        ],
       ]);
-
       $subpage->save();
       $this->messenger->addStatus($this->t('Created cluster subpage @type for @title', [
         '@type' => $governing_entity->label(),
         '@title' => $parent_node->label(),
+      ]));
+    }
+  }
+
+  /**
+   * Assure the existence of logframe subpages for section cluster pages.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The base node.
+   */
+  public function assureLogframeSubpagesForBaseNode(NodeInterface $node) {
+    if (!SubpageHelper::getSubpageManager()->isBaseTypeNode($node)) {
+      return;
+    }
+    $cluster_subpages = $this->loadNodesForSection($node) ?? [];
+    $node_storage = $this->entityTypeManager->getStorage('node');
+    foreach ($cluster_subpages as $cluster_subpage) {
+      if ($cluster_subpage->getLogframeNode()) {
+        continue;
+      }
+      /** @var \Drupal\ghi_subpages\Entity\LogframeSubpage $logframe */
+      $logframe = $node_storage->create([
+        'type' => 'logframe',
+        'title' => $cluster_subpage->label() . ' logframe',
+        'uid' => $cluster_subpage->uid,
+        'status' => NodeInterface::NOT_PUBLISHED,
+        'field_entity_reference' => [
+          'target_id' => $cluster_subpage->id(),
+        ],
+      ]);
+      $status = $logframe->save();
+      if ($status == SAVED_NEW) {
+        $logframe->createPageElements();
+      }
+
+      $this->messenger->addStatus($this->t('Created logframe subpage for @title', [
+        '@title' => $cluster_subpage->label(),
       ]));
     }
   }

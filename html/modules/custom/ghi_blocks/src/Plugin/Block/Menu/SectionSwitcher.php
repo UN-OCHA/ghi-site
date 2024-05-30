@@ -5,6 +5,7 @@ namespace Drupal\ghi_blocks\Plugin\Block\Menu;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_sections\Traits\SectionPathTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -152,7 +153,7 @@ class SectionSwitcher extends BlockBase implements ContainerFactoryPluginInterfa
   /**
    * Get the current section node.
    *
-   * @return \Drupal\node\NodeInterface|null
+   * @return \Drupal\ghi_sections\Entity\SectionNodeInterface|null
    *   The current section node or NULL if none can be found.
    */
   private function getSectionNode() {
@@ -164,11 +165,14 @@ class SectionSwitcher extends BlockBase implements ContainerFactoryPluginInterfa
     /** @var \Drupal\node\NodeInterface $node */
     $node = $contexts['node']->getContextValue();
     $section_node = $this->subpageManager->getBaseTypeNode($node);
-    if (!$section_node) {
+    while (!$section_node instanceof SectionNodeInterface && $section_node !== NULL) {
+      $section_node = $this->subpageManager->getBaseTypeNode($section_node);
+    }
+    if (!$section_node instanceof SectionNodeInterface) {
       // We can still try to deduce the section from the path.
       $section_node = $this->getSectionNodeFromPath();
     }
-    return $section_node;
+    return $section_node instanceof SectionNodeInterface ? $section_node : NULL;
   }
 
   /**

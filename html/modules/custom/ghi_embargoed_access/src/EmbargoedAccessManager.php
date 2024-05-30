@@ -114,7 +114,7 @@ class EmbargoedAccessManager {
     if ($this->isProtected($entity) && !$this->passwordAccessManager?->hasUserAccessToEntity($entity)) {
       return FALSE;
     }
-    if ($entity instanceof SubpageNodeInterface && $parent = $entity->getParentNode()) {
+    if ($entity instanceof SubpageNodeInterface && $parent = $entity->getParentBaseNode()) {
       if ($this->isProtected($parent) && !$this->passwordAccessManager?->hasUserAccessToEntity($parent)) {
         return FALSE;
       }
@@ -152,7 +152,7 @@ class EmbargoedAccessManager {
     }
 
     if ($this->embargoedAccessEnabled()) {
-      if ($entity instanceof SubpageNodeInterface && $parent = $entity->getParentNode()) {
+      if ($entity instanceof SubpageNodeInterface && $parent = $entity->getParentBaseNode()) {
         if ($this->passwordAccessManager->isEntityViewModeProtected($view_mode, $parent)) {
           $entity->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $parent->getEntityTypeId() . '||' . $parent->id() . '||' . $view_mode]);
 
@@ -271,7 +271,7 @@ class EmbargoedAccessManager {
     // Subpages have the protected field, but should inherit the protection
     // status from the section.
     $entity = $form_object->getEntity();
-    if ($entity instanceof SubpageNodeInterface && $parent = $entity->getParentNode()) {
+    if ($entity instanceof SubpageNodeInterface && $parent = $entity->getParentBaseNode()) {
       $form[self::PROTECTED_FIELD]['widget'][0]['is_protected']['#access'] = FALSE;
       $form[self::PROTECTED_FIELD]['widget'][0]['is_protected_parent'] = [
         '#type' => 'checkbox',

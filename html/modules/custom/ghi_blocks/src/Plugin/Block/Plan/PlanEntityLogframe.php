@@ -96,10 +96,13 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     // Get the entities to render.
     $entities = $this->getRenderableEntities();
     $first_entity = !empty($entities) ? reset($entities) : NULL;
+    if (!$first_entity) {
+      return NULL;
+    }
     if ($first_entity instanceof ApiObjectsPlan) {
       return $this->t('Response plan');
     }
-    return $first_entity ? $first_entity->plural_name : NULL;
+    return count($entities) > 1 ? $first_entity->plural_name : $first_entity->singular_name;
   }
 
   /**

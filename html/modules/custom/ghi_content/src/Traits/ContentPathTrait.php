@@ -57,7 +57,7 @@ trait ContentPathTrait {
       return $node;
     }
     if ($node instanceof SubpageNodeInterface) {
-      return $node->getParentNode();
+      return $node->getParentBaseNode();
     }
     $path = $this->getCurrentPath();
     return $this->getSectionNodeFromPath($path);
