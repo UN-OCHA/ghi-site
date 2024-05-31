@@ -13,6 +13,9 @@ class GeoJsonService {
   const GEO_JSON_LIFETIME = 24 * 60 * 60;
 
   public function getGeoJsonLocalFilePath($filepath, $refresh = FALSE) {
+    if (empty($filepath)) {
+      return FALSE;
+    }
     // The geodata exits only on production, so we replace the domain name,
     // whatever it is, with the APIs production domain.
     $filepath_remote = preg_replace('/(https?:\/\/)(.*?)\/(.*)/', '${1}api.hpc.tools/${3}', $filepath);
@@ -43,7 +46,13 @@ class GeoJsonService {
    *   The geo json data object.
    */
   public function getGeoJson($filepath, $refresh = FALSE) {
+    if (empty($filepath)) {
+      return FALSE;
+    }
     $local_path = $this->getGeoJsonLocalFilePath($filepath, $refresh);
+    if (!$local_path) {
+      return FALSE;
+    }
     $geo_json = file_get_contents($local_path);
     if (empty($geo_json)) {
       return FALSE;

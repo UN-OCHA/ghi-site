@@ -35,7 +35,7 @@ class Location extends BaseObject {
   public function getGeoJsonLocalFilePath($refresh = FALSE) {
     $geojson_service = self::getGeoJsonService();
     $uri = $geojson_service->getGeoJsonLocalFilePath($this->filepath, $refresh);
-    return \Drupal::service('file_url_generator')->generate($uri)->toString();
+    return $uri ? \Drupal::service('file_url_generator')->generate($uri)->toString() : NULL;
   }
 
   /**
