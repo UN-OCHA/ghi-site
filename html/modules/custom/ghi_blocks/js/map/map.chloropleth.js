@@ -322,13 +322,13 @@
           let location_data = Drupal.hpc_map_chloropleth.getLocationDataById(state, location_id);
           this._input.value = location_data.location_name;
           if (state.admin_level == location_data.admin_level) {
-            Drupal.hpc_map_chloropleth.showPopup(location_data.geojson, state);
+            Drupal.hpc_map_chloropleth.showPopup(Drupal.hpc_map_chloropleth.getGeoJSON(location_data), state);
           }
           else {
             // Find the button and click it
             Drupal.hpc_map_chloropleth.changeAdminLevel(state, location_data.admin_level);
             setTimeout(function() {
-              Drupal.hpc_map_chloropleth.showPopup(location_data.geojson, state);
+              Drupal.hpc_map_chloropleth.showPopup(Drupal.hpc_map_chloropleth.getGeoJSON(location_data), state);
             }, 500);
           }
         }
@@ -383,6 +383,38 @@
     };
   }
 
+  /**
+   * Get the GeoJSON data for the given location.
+   *
+   * @param object location
+   *   The location object.
+   *
+   * @returns object
+   *   The feature data.
+   */
+  Drupal.hpc_map_chloropleth.getGeoJSON = function(location) {
+    if (typeof this.storage == 'undefined') {
+      this.storage = []
+    }
+    if (typeof this.storage[location.filepath] == 'undefined') {
+      let feature = null;
+      $.ajax({
+        dataType: 'json',
+        url: location.filepath,
+        success: function (data) {
+          feature = data.features[0];
+          feature.properties.location_id = location.location_id;
+          feature.properties.location_name = location.location_name;
+          feature.properties.object_count = location.object_count;
+          feature.properties.admin_level = location.admin_level;
+        },
+        async: false
+      });
+      this.storage[location.filepath] = feature;
+    }
+    return this.storage[location.filepath];
+  }
+
   // Build the map, add geojson.
   Drupal.hpc_map_chloropleth.buildMap = function(state) {
     let locations = state.data.locations.filter(function(d) {
@@ -391,9 +423,8 @@
     if (!locations.length) {
       return false;
     }
-    let geojson_features = locations.map(item => {
-      return JSON.parse(item.geojson);
-    });
+
+    let geojson_features = locations.map(item => Drupal.hpc_map_chloropleth.getGeoJSON(item));
     if (!geojson_features.length) {
       return false;
     }
@@ -591,7 +622,7 @@
         var new_active_area = null;
         $.each(state.data.locations, function(i) {
           if (state.data.locations[i].location_id == location_id) {
-            new_active_area = JSON.parse(state.data.locations[i].geojson);
+            new_active_area = Drupal.hpc_map_chloropleth.getGeoJSON(state.data.locations[i]);
           }
         });
         if (new_active_area) {
