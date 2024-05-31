@@ -202,24 +202,13 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       $fts_link = ThemeHelper::render($fts_link_build, FALSE);
     }
 
-    // Process the GEOJSON files and add in the organization counts.
+    // Process the locations.
     foreach ($locations as $location) {
-      $geo_data = $location->getGeoJson();
-      if (empty($geo_data)) {
-        continue;
-      }
-
       $objects = $objects_by_location[$location->location_id] ?? [];
       $location_data = (object) $location->toArray();
 
-      $geo_data->properties->location_id = $location->location_id;
-      $geo_data->properties->location_name = $location->location_name;
-      $geo_data->properties->admin_level = $location->admin_level;
-      $geo_data->properties->object_count = count($objects);
-
       $location_data->object_count = count($objects);
       $location_data->modal_content = $this->buildModalContent($location, $objects, $selected_view, $fts_link);
-      $location_data->geojson = json_encode($geo_data);
 
       $map_data['locations'][] = clone $location_data;
     }

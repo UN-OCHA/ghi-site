@@ -8,10 +8,7 @@ namespace Drupal\ghi_base_objects\ApiObjects;
 class Location extends BaseObject {
 
   /**
-   * Map the raw data.
-   *
-   * @return object
-   *   An object with the mapped data.
+   * {@inheritdoc}
    */
   protected function map() {
     $data = $this->getRawData();
@@ -27,6 +24,21 @@ class Location extends BaseObject {
   }
 
   /**
+   * Get the path to the local copy of the geo json data.
+   *
+   * @param bool $refresh
+   *   Whether to refresh stored data.
+   *
+   * @return string
+   *   A local path.
+   */
+  public function getGeoJsonLocalFilePath($refresh = FALSE) {
+    $geojson_service = self::getGeoJsonService();
+    $uri = $geojson_service->getGeoJsonLocalFilePath($this->filepath, $refresh);
+    return \Drupal::service('file_url_generator')->generate($uri)->toString();
+  }
+
+  /**
    * Get the geo json data from the API.
    *
    * @param bool $refresh
@@ -38,6 +50,15 @@ class Location extends BaseObject {
   public function getGeoJson($refresh = FALSE) {
     $geojson_service = self::getGeoJsonService();
     return $geojson_service->getGeoJson($this->filepath, $refresh);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function toArray() {
+    $array = parent::toArray();
+    $array['filepath'] = $this->getGeoJsonLocalFilePath();
+    return $array;
   }
 
   /**
