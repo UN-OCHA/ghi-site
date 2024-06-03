@@ -1315,7 +1315,8 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     if (!empty($configured_attachments)) {
       // Less probable, but maybe one of the configured attachments is still
       // valid in the new context.
-      $valid_attachment_ids = array_intersect_key($configured_attachments, $available_attachments);
+      $valid_attachment = array_intersect_key($configured_attachments, $available_attachments);
+      $valid_attachment_ids = !empty($valid_attachment) ? array_keys($valid_attachment) : [];
       $conf['attachments']['entity_attachments']['attachments']['attachment_id'] = [];
       if (!empty($valid_attachment_ids)) {
         // If so, let's use these.
