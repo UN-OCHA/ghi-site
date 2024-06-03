@@ -36,10 +36,23 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   /**
    * Get the plan type.
    *
+   * @return \Drupal\taxonomy\TermInterface|null
+   *   The plan type.
+   */
+  public function getPlanType() {
+    if (!$this->hasField('field_plan_type')) {
+      return NULL;
+    }
+    return $this->get('field_plan_type')?->entity ?? NULL;
+  }
+
+  /**
+   * Get the plan type label.
+   *
    * @param bool $override
    *   Whether the overridden label can be used if it's available.
    *
-   * @return string
+   * @return string|null
    *   The label of the plan type.
    */
   public function getPlanTypeLabel($override = TRUE) {
@@ -50,7 +63,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
     if ($override && !empty($plan_type_label_override)) {
       return $plan_type_label_override;
     }
-    $plan_type = $this->get('field_plan_type')?->entity ?? NULL;
+    $plan_type = $this->getPlanType();
     return $plan_type ? $plan_type->label() : NULL;
   }
 
@@ -60,13 +73,14 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    * @param bool $override
    *   Whether the overridden label can be used if it's available.
    *
-   * @return string
+   * @return string|null
    *   The short label of the plan type.
    */
   public function getPlanTypeShortLabel($override = TRUE) {
-    $plan_type = $this->get('field_plan_type')?->entity ?? NULL;
+    $plan_type = $this->getPlanType();
     $included_in_totals = $plan_type ? $plan_type->get('field_included_in_totals')->value : FALSE;
-    return $this->getPlanTypeShortName($this->getPlanTypeLabel($override), $included_in_totals);
+    $plan_type_label = $this->getPlanTypeLabel($override);
+    return $plan_type_label ? $this->getPlanTypeShortName($plan_type_label, $included_in_totals) : NULL;
   }
 
   /**

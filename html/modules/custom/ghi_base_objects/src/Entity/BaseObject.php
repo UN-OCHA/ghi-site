@@ -89,6 +89,16 @@ class BaseObject extends ContentEntityBase implements BaseObjectInterface {
   /**
    * {@inheritdoc}
    */
+  public function getShortName() {
+    if (!$this->hasField('field_short_name')) {
+      return NULL;
+    }
+    return $this->get('field_short_name')->value ?: NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getSourceId() {
     if (!$this->hasField('field_original_id')) {
       return NULL;

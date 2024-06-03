@@ -43,6 +43,9 @@ trait BaseObjectTestTrait {
     $this->assertSame(SAVED_NEW, $base_object_type->save());
     $this->assertInstanceOf(BaseObjectTypeInterface::class, $base_object_type);
     $this->createField('base_object', $base_object_type->id(), 'integer', 'field_original_id', 'Source id');
+    if (!empty($values['hasYear'])) {
+      $this->createField('base_object', $base_object_type->id(), 'integer', 'field_year', 'Year');
+    }
     return $base_object_type;
   }
 
