@@ -7,10 +7,12 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
+use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
+use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
@@ -45,10 +47,11 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
  *  }
  * )
  */
-class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
+class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, ConfigValidationInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
+  use ConfigValidationTrait;
 
   /**
    * {@inheritdoc}
@@ -533,6 +536,30 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    */
   public function buildDownloadData() {
     return $this->buildTableData();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigErrors() {
+    $prototype = $this->getAttachmentPrototype();
+    $prototype_options = $this->getUniquePrototypeOptions();
+    if (!$prototype && (empty($prototype_options) || count($prototype_options) > 1)) {
+      $errors[] = $this->t('Attachment prototype: Invalid prototype or multiple prototypes available in the new plan context');
+    }
+    return $errors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fixConfigErrors() {
+    $conf = $this->getBlockConfig();
+    $prototype_options = $this->getUniquePrototypeOptions();
+    if (count($prototype_options) == 1) {
+      $conf['base']['prototype_id'] = array_key_first($prototype_options);
+    }
+    $this->setBlockConfig($conf);
   }
 
 }
