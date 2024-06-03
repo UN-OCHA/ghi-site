@@ -1243,12 +1243,15 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   /**
    * Get the configured attachment ids if any.
    *
-   * @return array
-   *   An array of attachment ids.
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   *   An array of attachment objects.
    */
   private function getConfiguredAttachments() {
     $conf = $this->getBlockConfig();
-    return array_filter($conf['attachments']['entity_attachments']['attachments']['attachment_id'] ?? []);
+    $attachment_ids = array_filter($conf['attachments']['entity_attachments']['attachments']['attachment_id'] ?? []);
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
+    $query = $this->getQueryHandler('attachment_search');
+    return !empty($attachment_ids) ? $query->getAttachmentsById($attachment_ids) : [];
   }
 
   /**
@@ -1305,13 +1308,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $configured_attachments = $this->getConfiguredAttachments();
     $available_attachments = $this->getAvailableAttachments();
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
-    $query = $this->getQueryHandler('attachment_search');
-    $configured_attachments = $query->getAttachmentsById($configured_attachments);
-
-    $reporting_period = $this->getCurrentReportingPeriod();
-
-    $default_attachment = !empty($available_attachments) ? array_key_first($available_attachments) : NULL;
     if (!empty($configured_attachments)) {
       // Less probable, but maybe one of the configured attachments is still
       // valid in the new context.
@@ -1331,18 +1327,13 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
             continue;
           }
           $filtered_attachments = $this->matchDataAttachments($attachment, $available_attachments);
-          $filtered_attachments = array_filter($filtered_attachments, function ($attachment) use ($reporting_period) {
-            return $attachment->canBeMapped($reporting_period);
-          });
           $attachment_ids = array_keys($filtered_attachments);
           $conf['attachments']['entity_attachments']['attachments']['attachment_id'] += array_combine($attachment_ids, $attachment_ids);
         }
       }
     }
 
-    if (empty($conf['attachments']['entity_attachments']['attachments']['attachment_id'])) {
-      $conf['attachments']['entity_attachments']['attachments']['attachment_id'] = array_filter([$default_attachment]);
-    }
+    $default_attachment = array_key_first($conf['attachments']['entity_attachments']['attachments']['attachment_id']);
     $conf['map']['common']['default_attachment'] = $default_attachment;
 
     $this->setBlockConfig($conf);
