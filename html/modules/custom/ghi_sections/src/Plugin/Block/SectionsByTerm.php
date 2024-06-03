@@ -116,8 +116,8 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
       foreach ($section_nodes as $section_node) {
         $base_object = BaseObjectHelper::getBaseObjectFromNode($section_node);
         $section_label = $section_node->label();
-        if ($base_object && $base_object->hasField('field_short_name') && !$base_object->get('field_short_name')->isEmpty()) {
-          $section_label = $base_object->get('field_short_name')->value;
+        if ($shortname = $base_object->getShortName()) {
+          $section_label = $shortname;
         }
         $section_links[(string) $section_label . '__' . $section_node->id()] = $section_node->toLink($section_label)->toRenderable();
       }
