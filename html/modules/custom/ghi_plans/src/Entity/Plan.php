@@ -102,14 +102,29 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
+   * Get the operations category.
+   *
+   * @return \Drupal\taxonomy\TermInterface|null
+   *   The operations category term or NULL if not set.
+   */
+  public function getOperationsCategory() {
+    if (!$this->hasField('field_operations_category')) {
+      return NULL;
+    }
+    return $this->get('field_operations_category')?->entity ?: NULL;
+  }
+
+  /**
    * Get the configured plan caseload.
    *
    * @return int|null
    *   The ID of the configured plan caseload.
    */
   public function getPlanCaseloadId() {
-    $plan_caseload_id = $this->get('field_plan_caseload')?->attachment_id;
-    return !empty($plan_caseload_id) ? $plan_caseload_id : NULL;
+    if (!$this->hasField('field_plan_caseload')) {
+      return NULL;
+    }
+    return $this->get('field_plan_caseload')?->attachment_id ?: NULL;
   }
 
   /**
@@ -119,6 +134,9 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    *   A uri to the document for the plan.
    */
   public function getDocumentUri() {
+    if (!$this->hasField('field_plan_document_link')) {
+      return NULL;
+    }
     return $this->get('field_plan_document_link')->uri ?? NULL;
   }
 
@@ -138,11 +156,14 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   /**
    * Get the maximum admin level for the plan.
    *
-   * @return int
+   * @return int|null
    *   The highest supported admin level.
    */
   public function getMaxAdminLevel() {
-    return $this->get('field_max_admin_level')->value;
+    if (!$this->hasField('field_max_admin_level')) {
+      return NULL;
+    }
+    return $this->get('field_max_admin_level')->value ?? NULL;
   }
 
   /**
@@ -152,6 +173,9 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    *   Whether the plan can be linked to FTS.
    */
   public function canLinkToFts() {
+    if (!$this->hasField('field_link_to_fts')) {
+      return FALSE;
+    }
     return $this->get('field_link_to_fts')->value ?? FALSE;
   }
 

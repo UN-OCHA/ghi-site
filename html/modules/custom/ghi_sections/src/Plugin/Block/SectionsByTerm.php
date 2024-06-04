@@ -96,6 +96,8 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
       return $build;
     }
 
+    $cache_tags = [];
+
     $list_build = [
       '#theme' => 'item_list',
       '#items' => [],
@@ -109,6 +111,7 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
         '#markup' => new FormattableMarkup('<span>@term_label</span>', [
           '@term_label' => $terms[$term_id]->label(),
         ]),
+        '#weight' => $terms[$term_id]->getWeight(),
       ];
 
       $section_links = [];
@@ -148,6 +151,9 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
           'aria-labelledby' => $this->getAriaId(),
         ],
         0 => $list_build,
+      ],
+      '#cache' => [
+        'tags' => $cache_tags,
       ],
     ];
 
