@@ -261,8 +261,6 @@
               &[role="navigation"] > ul > li,
               details > ul > li {
                 font-weight: bold;
-                break-inside: avoid-column;
-                -webkit-column-break-inside: avoid;
 
                 & > a {
                   margin-bottom: 0.5rem;
@@ -299,6 +297,11 @@
                     a:hover,
                     a:focus {
                       color: var(--cd-primary-color);
+                    }
+
+                    &:first-child {
+                      break-before: avoid-column;
+                      -webkit-column-break-before: avoid;
                     }
 
                     &:last-child {

@@ -30,6 +30,7 @@ dependencies:
     - node.type.presence
     - node.type.progress
     - node.type.section
+    - taxonomy.vocabulary.operations_category
     - taxonomy.vocabulary.team
   module:
     - auto_entitylabel
@@ -71,6 +72,7 @@ permissions:
   - 'access remote content'
   - 'access site in maintenance mode'
   - 'access site reports'
+  - 'access taxonomy overview'
   - 'access toolbar'
   - 'access unpublished page variants'
   - 'access user profiles'
@@ -116,6 +118,7 @@ permissions:
   - 'create page content'
   - 'create page templates'
   - 'create section content'
+  - 'create terms in operations_category'
   - 'create terms in team'
   - 'create url aliases'
   - 'delete any custom_subpage content'
@@ -131,6 +134,7 @@ permissions:
   - 'delete own news_story content'
   - 'delete own page content'
   - 'delete own section content'
+  - 'delete terms in operations_category'
   - 'delete terms in team'
   - 'edit any article content'
   - 'edit any custom_subpage content'
@@ -158,6 +162,7 @@ permissions:
   - 'edit own presence content'
   - 'edit own progress content'
   - 'edit own section content'
+  - 'edit terms in operations_category'
   - 'edit terms in team'
   - 'import block from configuration code'
   - 'import page layout configuration code'

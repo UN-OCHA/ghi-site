@@ -29,6 +29,7 @@ dependencies:
     - node.type.presence
     - node.type.progress
     - node.type.section
+    - taxonomy.vocabulary.operations_category
     - taxonomy.vocabulary.team
   module:
     - contextual
@@ -53,6 +54,7 @@ permissions:
   - 'access remote content'
   - 'access site in maintenance mode'
   - 'access site reports'
+  - 'access taxonomy overview'
   - 'access toolbar'
   - 'access user profiles'
   - 'administer menu'
@@ -78,8 +80,10 @@ permissions:
   - 'create homepage content'
   - 'create news_story content'
   - 'create page templates'
+  - 'create terms in operations_category'
   - 'create terms in team'
   - 'delete own custom_subpage content'
+  - 'delete terms in operations_category'
   - 'delete terms in team'
   - 'edit any article content'
   - 'edit any custom_subpage content'
@@ -107,6 +111,7 @@ permissions:
   - 'edit own presence content'
   - 'edit own progress content'
   - 'edit own section content'
+  - 'edit terms in operations_category'
   - 'edit terms in team'
   - 'publish any content'
   - 'publish any node type article'

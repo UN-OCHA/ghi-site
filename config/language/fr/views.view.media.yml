@@ -8,19 +8,25 @@ display:
       fields:
         thumbnail__target_id:
           label: Vignette
+          separator: ', '
         name:
           label: 'Nom du média'
+          separator: ', '
         bundle:
           label: Type
+          separator: ', '
         uid:
           label: Author
+          separator: ', '
         status:
           label: Status
           settings:
             format_custom_false: Unpublished
             format_custom_true: Published
+          separator: ', '
         changed:
           label: Updated
+          separator: ', '
         operations:
           label: Actions
       pager:
