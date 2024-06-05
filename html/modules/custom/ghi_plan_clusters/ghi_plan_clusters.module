@@ -265,25 +265,30 @@ function ghi_plan_clusters_subpage_admin_form_header_links(NodeTypeInterface $no
     ],
   ];
 
+  $links = [];
   if (count($cluster_logframes) != count($plan_clusters)) {
     $link_label = t('Create logframe subpages');
     if ($cluster_logframes && count($cluster_logframes) < count($plan_clusters)) {
       $link_label = t('Create missing logframe subpages');
     }
-    $links = [
-      'create_logframes' => Link::createFromRoute($link_label, 'ghi_plan_clusters.create_logframes', [
-        'node' => $section_node->id(),
-      ], $link_options),
-    ];
+    $links['create_logframes'] = Link::createFromRoute($link_label, 'ghi_plan_clusters.logframes.create', [
+      'node' => $section_node->id(),
+    ], $link_options);
   }
   else {
     $link_label = t('Rebuild logframe subpages');
-    $links = [
-      'create_logframes' => Link::createFromRoute($link_label, 'ghi_plan_clusters.rebuild_logframes', [
-        'node' => $section_node->id(),
-      ], $link_options),
-    ];
+    $links['rebuild_logframes'] = Link::createFromRoute($link_label, 'ghi_plan_clusters.logframes.rebuild', [
+      'node' => $section_node->id(),
+    ], $link_options);
   }
+
+  if (count($cluster_logframes)) {
+    $link_label = t('Delete logframe subpages');
+    $links['delete_logframes'] = Link::createFromRoute($link_label, 'ghi_plan_clusters.logframes.delete', [
+      'node' => $section_node->id(),
+    ], $link_options);
+  }
+
   return $links;
 }
 

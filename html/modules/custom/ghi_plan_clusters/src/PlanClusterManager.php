@@ -165,6 +165,33 @@ class PlanClusterManager extends BaseSubpageManager {
   }
 
   /**
+   * Delete all subpages for a base node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The base node.
+   */
+  public function deleteSubpagesForBaseNode(NodeInterface $node) {
+    if (!SubpageHelper::getSubpageManager()->isBaseTypeNode($node)) {
+      return;
+    }
+    $governing_entities = $this->loadGoverningEntityBaseObjectsForSection($node);
+    if (empty($governing_entities)) {
+      return NULL;
+    }
+    foreach ($governing_entities as $governing_entity) {
+      $cluster_subpage = $this->loadClusterSubpageForBaseObject($governing_entity);
+      if (!$cluster_subpage) {
+        continue;
+      }
+      $cluster_subpage->delete();
+      $this->messenger->addStatus($this->t('Deleted cluster subpage @type for @title', [
+        '@type' => $cluster_subpage->label(),
+        '@title' => $node->label(),
+      ]));
+    }
+  }
+
+  /**
    * Assure the existence of logframe subpages for section cluster pages.
    *
    * @param \Drupal\node\NodeInterface $node
@@ -221,23 +248,20 @@ class PlanClusterManager extends BaseSubpageManager {
    * @param \Drupal\node\NodeInterface $node
    *   The base node.
    */
-  public function deleteSubpagesForBaseNode(NodeInterface $node) {
+  public function deleteLogframeSubpagesForBaseNode(NodeInterface $node) {
     if (!SubpageHelper::getSubpageManager()->isBaseTypeNode($node)) {
       return;
     }
-    $governing_entities = $this->loadGoverningEntityBaseObjectsForSection($node);
-    if (empty($governing_entities)) {
-      return NULL;
-    }
-    foreach ($governing_entities as $governing_entity) {
-      $cluster_subpage = $this->loadClusterSubpageForBaseObject($governing_entity);
-      if (!$cluster_subpage) {
+    $cluster_subpages = $this->loadNodesForSection($node) ?? [];
+    foreach ($cluster_subpages as $cluster_subpage) {
+      $logframe = $cluster_subpage->getLogframeNode();
+      if (!$logframe) {
         continue;
       }
-      $cluster_subpage->delete();
+      $logframe->delete();
       $this->messenger->addStatus($this->t('Deleted cluster subpage @type for @title', [
-        '@type' => $cluster_subpage->label(),
-        '@title' => $node->label(),
+        '@type' => $logframe->label(),
+        '@title' => $cluster_subpage->label(),
       ]));
     }
   }
