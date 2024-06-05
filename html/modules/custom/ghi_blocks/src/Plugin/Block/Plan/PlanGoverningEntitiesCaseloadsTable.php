@@ -544,6 +544,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   public function getConfigErrors() {
     $prototype = $this->getAttachmentPrototype();
     $prototype_options = $this->getUniquePrototypeOptions();
+    $errors = [];
     if (!$prototype && (empty($prototype_options) || count($prototype_options) > 1)) {
       $errors[] = $this->t('Attachment prototype: Invalid prototype or multiple prototypes available in the new plan context');
     }

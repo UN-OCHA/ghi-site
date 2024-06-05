@@ -1110,11 +1110,12 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    */
   private function getDefaultAttachment() {
     $default_attachment = &drupal_static(__FUNCTION__, NULL);
-    if (!$default_attachment) {
+    if ($default_attachment === NULL) {
       $conf = $this->getBlockConfig();
       $requested_attachment_id = $this->requestStack->getCurrentRequest()->request->get('attachment_id') ?? NULL;
       $default_attachment_id = $conf['map']['common']['default_attachment'] ?? NULL;
       $attachments = $this->getSelectedAttachments();
+      $attachment = NULL;
       if ($requested_attachment_id && !empty($attachments[$requested_attachment_id])) {
         $attachment = $attachments[$requested_attachment_id];
       }
@@ -1125,10 +1126,10 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         $attachment = reset($attachments);
       }
       if (!$attachment || !$attachment instanceof DataAttachment || !$this->attachmentCanBeMapped($attachment)) {
-        return NULL;
+        $default_attachment = FALSE;
       }
-      if ($attachment->getPlanId() != $this->getCurrentPlanId()) {
-        return NULL;
+      if ($attachment && $attachment->getPlanId() != $this->getCurrentPlanId()) {
+        $default_attachment = FALSE;
       }
       $default_attachment = $attachment;
     }
@@ -1215,10 +1216,19 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    *   An array of plan entity objects.
    */
   private function getAvailableEntities() {
+    $plan_id = $this->getCurrentPlanObject()->getSourceId();
+
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanBasicQuery $query_handler */
+    $query_handler = $this->endpointQueryManager->createInstance('plan_basic_query');
+    $plan_entities = [
+      $plan_id => $query_handler->getBaseData($plan_id),
+    ];
+
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query_handler */
     $query_handler = $this->endpointQueryManager->createInstance('plan_entities_query');
-    $query_handler->setPlaceholder('plan_id', $this->getCurrentPlanObject()->getSourceId());
-    return $query_handler->getPlanEntities($this->getCurrentBaseObject()) ?? [];
+    $query_handler->setPlaceholder('plan_id', $plan_id);
+    $plan_entities += $query_handler->getPlanEntities($this->getCurrentBaseObject()) ?? [];
+    return $plan_entities;
   }
 
   /**
