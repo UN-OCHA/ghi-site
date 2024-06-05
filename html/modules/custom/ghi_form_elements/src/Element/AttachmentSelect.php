@@ -155,15 +155,6 @@ class AttachmentSelect extends FormElement {
       $defaults['attachment_prototype'] = NULL;
     }
 
-    if (!empty($attachments)) {
-      if (is_array($defaults['attachment_id']) && !empty($defaults['attachment_id'])) {
-        $defaults['attachment_id'] = array_intersect($defaults['attachment_id'], array_keys($attachments));
-      }
-      elseif (empty($defaults['attachment_id'])) {
-        $defaults['attachment_id'] = [array_key_first($attachments)];
-      }
-    }
-
     // Setup the filters base form structure.
     $element['filter'] = [
       '#type' => 'container',
@@ -378,9 +369,7 @@ class AttachmentSelect extends FormElement {
     $element['attachment_id'] = [
       '#type' => 'tableselect',
       '#tree' => TRUE,
-      '#required' => TRUE,
       '#header' => $columns,
-      // '#validated' => TRUE,
       '#options' => $attachment_options,
       '#default_value' => $default_attachments,
       '#multiple' => $element['#multiple'],
