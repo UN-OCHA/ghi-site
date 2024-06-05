@@ -3,15 +3,15 @@
 //——————————————————————————————————————————————————————————————————————————————
 
 .cd-footer {
-  color: var(--ghi-default-text-color);
-  background: $implementation-primary;
+  color: var(--cd-white);
+  background: var(--ghi-grey--dark);
 
   svg {
-    fill: var(--ghi-default-text-color);
+    fill: var(--cd-white);
   }
 
   a {
-    color: var(--ghi-default-text-color);
+    color: var(--cd-white);
 
     &:focus {
       outline: 3px solid $cd-blue--bright;
@@ -66,18 +66,18 @@
           &:focus,
           &:focus-visible {
             outline-style: outset;
-            outline-color: var(--ghi-default-text-color);
+            outline-color: var(--cd-white);
             outline-offset: -1px;
           }
         }
 
         input[type="submit"] {
-          color: var(--cd-white) !important;
+          color: var(--ghi-default-text-color) !important;
           border-top-left-radius: 0;
           border-top-right-radius: 5px;
           border-bottom-right-radius: 5px;
           border-bottom-left-radius: 0;
-          background-color: var(--ghi-default-text-color);
+          background-color: $implementation-primary;
 
           &:hover {
             transition: opacity 0.1666s ease-in-out;
