@@ -1,5 +1,9 @@
 .cd-ocha-services {
 
+  &::before {
+    background: $implementation-primary;
+  }
+
   h2,
   .cd-ocha-services__heading {
     color: inherit;
