@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_subpages\Form;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Datetime\DateFormatter;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -419,20 +420,21 @@ class SubpagesPagesForm extends FormBase {
       ];
     }
     foreach ($this->moduleHandler->invokeAll('subpage_admin_form_header_links', [$node_type, $section_node]) as $key => $link) {
+      /** @var \Drupal\Core\Link $link */
       $header_links[$key] = [
         '#type' => 'html_tag',
         '#tag' => 'a',
         'markup' => [
           '#markup' => $link->getText(),
         ],
-        '#attributes' => [
+        '#attributes' => NestedArray::mergeDeep([
           'href' => $link->getUrl()->toString(),
           'class' => [
             'button',
             'button--primary',
             'button--action',
           ],
-        ],
+        ], $link->getUrl()->getOption('attributes')),
       ];
     }
     return $header_links;

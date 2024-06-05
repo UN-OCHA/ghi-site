@@ -169,35 +169,49 @@ class PlanClusterManager extends BaseSubpageManager {
    *
    * @param \Drupal\node\NodeInterface $node
    *   The base node.
+   * @param bool $rebuild
+   *   Whether to rebuild existing logframe pages.
    */
-  public function assureLogframeSubpagesForBaseNode(NodeInterface $node) {
+  public function assureLogframeSubpagesForBaseNode(NodeInterface $node, $rebuild = FALSE) {
     if (!SubpageHelper::getSubpageManager()->isBaseTypeNode($node)) {
       return;
     }
     $cluster_subpages = $this->loadNodesForSection($node) ?? [];
     $node_storage = $this->entityTypeManager->getStorage('node');
     foreach ($cluster_subpages as $cluster_subpage) {
-      if ($cluster_subpage->getLogframeNode()) {
+      $logframe = $cluster_subpage->getLogframeNode();
+      if ($logframe && !$rebuild) {
         continue;
       }
-      /** @var \Drupal\ghi_subpages\Entity\LogframeSubpage $logframe */
-      $logframe = $node_storage->create([
-        'type' => 'logframe',
-        'title' => $cluster_subpage->label() . ' logframe',
-        'uid' => $cluster_subpage->uid,
-        'status' => NodeInterface::NOT_PUBLISHED,
-        'field_entity_reference' => [
-          'target_id' => $cluster_subpage->id(),
-        ],
-      ]);
-      $status = $logframe->save();
-      if ($status == SAVED_NEW) {
+      $status = SAVED_UPDATED;
+      if (!$logframe) {
+        /** @var \Drupal\ghi_subpages\Entity\LogframeSubpage $logframe */
+        $logframe = $node_storage->create([
+          'type' => 'logframe',
+          'title' => $cluster_subpage->label() . ' logframe',
+          'uid' => $cluster_subpage->uid,
+          'status' => NodeInterface::NOT_PUBLISHED,
+          'field_entity_reference' => [
+            'target_id' => $cluster_subpage->id(),
+          ],
+        ]);
+        $status = $logframe->save();
+      }
+
+      if ($logframe) {
         $logframe->createPageElements();
       }
 
-      $this->messenger->addStatus($this->t('Created logframe subpage for @title', [
+      $t_args = [
         '@title' => $cluster_subpage->label(),
-      ]));
+      ];
+      if ($status == SAVED_NEW) {
+        $status_message = $this->t('Created logframe subpage for @title', $t_args);
+      }
+      else {
+        $status_message = $this->t('Rebuild logframe subpage for @title', $t_args);
+      }
+      $this->messenger->addStatus($status_message);
     }
   }
 

@@ -5,6 +5,7 @@
  * Contains hook implementations for the GHI plan clusters module.
  */
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
@@ -244,18 +245,45 @@ function ghi_plan_clusters_subpage_admin_form_header_links(NodeTypeInterface $no
   $plan_cluster_manager = ghi_plan_clusters_get_manager_service();
   $plan_clusters = $plan_cluster_manager->loadNodesForSection($section_node);
   $cluster_logframes = $plan_cluster_manager->loadPlanClusterLogframeSubpageNodesForSection($section_node);
-  if (count($cluster_logframes) == count($plan_clusters)) {
+  if (empty($plan_clusters)) {
     return;
   }
-  $link_label = t('Create logframe subpages');
-  if ($cluster_logframes && count($cluster_logframes) < count($plan_clusters)) {
-    $link_label = t('Create missing logframe subpages');
-  }
-  $links = [
-    'create_logframes' => Link::createFromRoute($link_label, 'ghi_plan_clusters.create_logframes', [
-      'node' => $section_node->id(),
-    ]),
+
+  $config = \Drupal::config('layout_builder_modal.settings');
+  $data_dialog_options = Json::encode([
+    'width' => $config->get('modal_width'),
+    'height' => $config->get('modal_height'),
+    'target' => 'layout-builder-modal',
+    'autoResize' => $config->get('modal_autoresize'),
+    'modal' => TRUE,
+  ]);
+  $link_options = [
+    'attributes' => [
+      'class' => ['use-ajax'],
+      'data-dialog-options' => $data_dialog_options,
+      'data-dialog-type' => 'dialog',
+    ],
   ];
+
+  if (count($cluster_logframes) != count($plan_clusters)) {
+    $link_label = t('Create logframe subpages');
+    if ($cluster_logframes && count($cluster_logframes) < count($plan_clusters)) {
+      $link_label = t('Create missing logframe subpages');
+    }
+    $links = [
+      'create_logframes' => Link::createFromRoute($link_label, 'ghi_plan_clusters.create_logframes', [
+        'node' => $section_node->id(),
+      ], $link_options),
+    ];
+  }
+  else {
+    $link_label = t('Rebuild logframe subpages');
+    $links = [
+      'create_logframes' => Link::createFromRoute($link_label, 'ghi_plan_clusters.rebuild_logframes', [
+        'node' => $section_node->id(),
+      ], $link_options),
+    ];
+  }
   return $links;
 }
 

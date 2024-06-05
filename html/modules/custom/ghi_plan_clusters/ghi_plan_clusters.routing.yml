@@ -1,11 +1,26 @@
 ghi_plan_clusters.create_logframes:
-  path: '/node/{node}/create-logframes'
+  path: '/node/{node}/cluster-logframes/create'
   defaults:
-    _controller: '\Drupal\ghi_plan_clusters\Controller\PlanClusterController::createLogframeSubpages'
+    _form: '\Drupal\ghi_plan_clusters\Form\LogframeCreateConfirmForm'
   requirements:
     _entity_access: node.update
   options:
     parameters:
       node:
         type: entity:node
+        bundle:
+          - section
+    _admin_route: TRUE
+ghi_plan_clusters.rebuild_logframes:
+  path: '/node/{node}/cluster-logframes/rebuild'
+  defaults:
+    _form: '\Drupal\ghi_plan_clusters\Form\LogframeRebuildConfirmForm'
+  requirements:
+    _entity_access: node.update
+  options:
+    parameters:
+      node:
+        type: entity:node
+        bundle:
+          - section
     _admin_route: TRUE
