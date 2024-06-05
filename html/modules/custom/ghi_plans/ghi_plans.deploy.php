@@ -15,13 +15,13 @@ function ghi_plans_deploy_update_plan_operations_category(&$sandbox) {
   /** @var \Drupal\taxonomy\TermInterface[] $terms */
   $terms = $term_storage->loadByProperties([
     'vid' => 'operations_category',
-    'name' => 'Humanitarian Response Plans',
+    'name' => 'Country plans',
   ]);
   $hrp_term = count($terms) ? reset($terms) : NULL;
   if (!$hrp_term) {
     $hrp_term = $term_storage->create([
       'vid' => 'operations_category',
-      'name' => 'Humanitarian Response Plans',
+      'name' => 'Country plans',
       'status' => TRUE,
     ]);
     $hrp_term->save();
@@ -33,8 +33,6 @@ function ghi_plans_deploy_update_plan_operations_category(&$sandbox) {
     'name' => 'Regional plans',
   ]);
   $regional_term = count($terms) ? reset($terms) : NULL;
-  $regional_term->setName('Regional Plans');
-  $regional_term->save();
 
   /** @var \Drupal\ghi_plans\Entity\Plan[] $plan_objects */
   $plan_objects = $base_object_storage->loadByProperties([
