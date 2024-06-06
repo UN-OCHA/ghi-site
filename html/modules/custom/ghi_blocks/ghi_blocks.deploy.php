@@ -135,3 +135,85 @@ function ghi_blocks_deploy_9003_queue_nodes_for_plan_entity_type_replacement(&$s
     '@plugin_id' => $plugin_id,
   ]);
 }
+
+/**
+ * Remove obsolete field from layout sections to prevent warnings.
+ */
+function ghi_blocks_deploy_9004_remove_field_block(&$sandbox) {
+  $count_nodes = 0;
+  $result = \Drupal::database()->select('node__layout_builder__layout')
+    ->fields('node__layout_builder__layout', ['entity_id'])
+    ->condition('layout_builder__layout_section', '%field_chapter%', 'LIKE')
+    ->orderBy('entity_id')
+    ->execute();
+
+  foreach ($result as $row) {
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($row->entity_id);
+    if (!$node || !$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+      continue;
+    }
+    $sections = $node->get(OverridesSectionStorage::FIELD_NAME)->getValue();
+    foreach (array_keys($sections) as $delta) {
+      /** @var \Drupal\layout_builder\Section $section */
+      $components = $sections[$delta]['section']->getComponents();
+      /** @var \Drupal\layout_builder\SectionComponent[] $components */
+      foreach ($components as $component) {
+        if ($component->getPluginId() != 'field_block:node:article:field_chapter') {
+          continue;
+        }
+        $sections[$delta]['section']->removeComponent($component->getUuid());
+      }
+    }
+
+    $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+    $node->setNewRevision(FALSE);
+    $node->setSyncing(TRUE);
+    $node->save();
+    $count_nodes++;
+  }
+  return t('Updated @count_nodes nodes', [
+    '@count_nodes' => $count_nodes,
+  ]);
+}
+
+/**
+ * Remove obsolete field from layout sections to prevent warnings (revisions).
+ */
+function ghi_blocks_deploy_9005_remove_field_block_revisions(&$sandbox) {
+  $count_revisions = 0;
+  $result = \Drupal::database()->select('node_revision__layout_builder__layout')
+    ->fields('node_revision__layout_builder__layout', ['revision_id'])
+    ->condition('layout_builder__layout_section', '%field_chapter%', 'LIKE')
+    ->orderBy('entity_id')
+    ->execute();
+
+  foreach ($result as $row) {
+    /** @var \Drupal\node\NodeInterface $revision */
+    $revision = \Drupal::entityTypeManager()->getStorage('node')->loadRevision($row->revision_id);
+    if (!$revision || !$revision->hasField(OverridesSectionStorage::FIELD_NAME)) {
+      continue;
+    }
+    $sections = $revision->get(OverridesSectionStorage::FIELD_NAME)->getValue();
+    foreach (array_keys($sections) as $delta) {
+      /** @var \Drupal\layout_builder\Section $section */
+      $components = $sections[$delta]['section']->getComponents();
+      /** @var \Drupal\layout_builder\SectionComponent[] $components */
+      foreach ($components as $component) {
+        if ($component->getPluginId() != 'field_block:node:article:field_chapter') {
+          continue;
+        }
+        $sections[$delta]['section']->removeComponent($component->getUuid());
+      }
+    }
+
+    $revision->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+    $revision->setNewRevision(FALSE);
+    $revision->setSyncing(TRUE);
+    $revision->save();
+    $count_revisions++;
+  }
+  return t('Updated @count_nodes nodes', [
+    '@count_nodes' => $count_revisions,
+  ]);
+}

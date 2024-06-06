@@ -3,7 +3,7 @@
 namespace Drupal\Tests\ghi_sections\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\pathauto\PathautoGeneratorInterface;
+use Drupal\node\Entity\Node;
 use Drupal\pathauto\PathautoState;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
@@ -70,13 +70,6 @@ class SectionAliasTest extends KernelTestBase {
     $this->entityTypeManager = $this->container->get('entity_type.manager');
 
     $this->createSectionType();
-    $section_pattern = $this->createPattern('node', '/content/[node:title]');
-    $this->addBundleCondition($section_pattern, 'node', self::SECTION_BUNDLE);
-    $section_pattern->save();
-
-    $config = $this->config('pathauto.settings');
-    $config->set('update_action', PathautoGeneratorInterface::UPDATE_ACTION_NO_NEW);
-    $config->save();
   }
 
   /**
@@ -85,12 +78,19 @@ class SectionAliasTest extends KernelTestBase {
   public function testSectionAlias() {
     $section = $this->createSection([
       'title' => 'Section 1 title',
-      'path' => [
-        'pathauto' => PathautoState::CREATE,
-      ],
     ]);
     $this->assertInstanceOf('\\Drupal\ghi_sections\\Entity\\Section', $section);
-    $this->assertEntityAlias($section, '/content/section-1-title');
+
+    $expected_section_alias = '/' . $section->getBaseObject()->bundle() . '/' . $section->getBaseObject()->getSourceId();
+    $this->assertEntityAlias($section, $expected_section_alias);
+
+    // Change the alias of the section.
+    $section->path->alias = '/content/custom-section-title';
+    $section->path->pathauto = PathautoState::SKIP;
+    $section->save();
+
+    $section = Node::load($section->id());
+    $this->assertEntityAlias($section, '/content/custom-section-title');
   }
 
 }

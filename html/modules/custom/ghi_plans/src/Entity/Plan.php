@@ -36,18 +36,34 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   /**
    * Get the plan type.
    *
+   * @return \Drupal\taxonomy\TermInterface|null
+   *   The plan type.
+   */
+  public function getPlanType() {
+    if (!$this->hasField('field_plan_type')) {
+      return NULL;
+    }
+    return $this->get('field_plan_type')?->entity ?? NULL;
+  }
+
+  /**
+   * Get the plan type label.
+   *
    * @param bool $override
    *   Whether the overridden label can be used if it's available.
    *
-   * @return string
+   * @return string|null
    *   The label of the plan type.
    */
   public function getPlanTypeLabel($override = TRUE) {
+    if (!$this->hasField('field_plan_type_label_override')) {
+      return NULL;
+    }
     $plan_type_label_override = $this->get('field_plan_type_label_override')->value;
     if ($override && !empty($plan_type_label_override)) {
       return $plan_type_label_override;
     }
-    $plan_type = $this->get('field_plan_type')?->entity ?? NULL;
+    $plan_type = $this->getPlanType();
     return $plan_type ? $plan_type->label() : NULL;
   }
 
@@ -57,13 +73,14 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    * @param bool $override
    *   Whether the overridden label can be used if it's available.
    *
-   * @return string
+   * @return string|null
    *   The short label of the plan type.
    */
   public function getPlanTypeShortLabel($override = TRUE) {
-    $plan_type = $this->get('field_plan_type')?->entity ?? NULL;
+    $plan_type = $this->getPlanType();
     $included_in_totals = $plan_type ? $plan_type->get('field_included_in_totals')->value : FALSE;
-    return $this->getPlanTypeShortName($this->getPlanTypeLabel($override), $included_in_totals);
+    $plan_type_label = $this->getPlanTypeLabel($override);
+    return $plan_type_label ? $this->getPlanTypeShortName($plan_type_label, $included_in_totals) : NULL;
   }
 
   /**
@@ -73,6 +90,9 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    *   A label for the plan status or NULL if the field is not found.
    */
   public function getPlanStatusLabel() {
+    if (!$this->hasField('field_plan_status')) {
+      return NULL;
+    }
     $plan_status = $this->get('field_plan_status') ?? NULL;
     if (!$plan_status) {
       return NULL;
@@ -82,14 +102,29 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
+   * Get the operations category.
+   *
+   * @return \Drupal\taxonomy\TermInterface|null
+   *   The operations category term or NULL if not set.
+   */
+  public function getOperationsCategory() {
+    if (!$this->hasField('field_operations_category')) {
+      return NULL;
+    }
+    return $this->get('field_operations_category')?->entity ?: NULL;
+  }
+
+  /**
    * Get the configured plan caseload.
    *
    * @return int|null
    *   The ID of the configured plan caseload.
    */
   public function getPlanCaseloadId() {
-    $plan_caseload_id = $this->get('field_plan_caseload')?->attachment_id;
-    return !empty($plan_caseload_id) ? $plan_caseload_id : NULL;
+    if (!$this->hasField('field_plan_caseload')) {
+      return NULL;
+    }
+    return $this->get('field_plan_caseload')?->attachment_id ?: NULL;
   }
 
   /**
@@ -99,6 +134,9 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    *   A uri to the document for the plan.
    */
   public function getDocumentUri() {
+    if (!$this->hasField('field_plan_document_link')) {
+      return NULL;
+    }
     return $this->get('field_plan_document_link')->uri ?? NULL;
   }
 
@@ -118,11 +156,14 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   /**
    * Get the maximum admin level for the plan.
    *
-   * @return int
+   * @return int|null
    *   The highest supported admin level.
    */
   public function getMaxAdminLevel() {
-    return $this->get('field_max_admin_level')->value;
+    if (!$this->hasField('field_max_admin_level')) {
+      return NULL;
+    }
+    return $this->get('field_max_admin_level')->value ?? NULL;
   }
 
   /**
@@ -132,6 +173,9 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    *   Whether the plan can be linked to FTS.
    */
   public function canLinkToFts() {
+    if (!$this->hasField('field_link_to_fts')) {
+      return FALSE;
+    }
     return $this->get('field_link_to_fts')->value ?? FALSE;
   }
 

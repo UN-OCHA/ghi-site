@@ -3,9 +3,11 @@
 namespace Drupal\Tests\hpc_common\Unit;
 
 use Drupal\Component\Plugin\Context\ContextInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\hpc_common\Helpers\ContextHelper;
-use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
 use Drupal\Tests\UnitTestCase;
+use Drupal\user\UserInterface;
 use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
@@ -43,24 +45,38 @@ class ContextHelperTest extends UnitTestCase {
    * Data provider for getNodeFromContexts.
    */
   public function getNodeFromContextsDataProvider() {
+    $entity_context_definition = $this->prophesize(EntityContextDefinition::class);
+
     // Mock node context.
-    $node_entity = $this->prophesize(Node::class)->reveal();
+    $node_entity = $this->prophesize(NodeInterface::class);
     $node_context = $this->prophesize(ContextInterface::class);
     $node_context->hasContextValue()->willReturn('TRUE');
-    $node_context->getContextValue()->willReturn($node_entity);
-    $node_result = $node_context->reveal();
+    $node_context->getContextValue()->willReturn($node_entity->reveal());
+    $node_context->getContextDefinition()->willReturn($entity_context_definition->reveal());
+
+    $user_entity = $this->prophesize(UserInterface::class);
+    $user_context = $this->prophesize(ContextInterface::class);
+    $user_context->hasContextValue()->willReturn('TRUE');
+    $user_context->getContextValue()->willReturn($user_entity->reveal());
+    $user_context->getContextDefinition()->willReturn($entity_context_definition->reveal());
 
     return [
       [
         [
-          'node' => $node_result,
+          'node' => $node_context->reveal(),
           'appeals' => 'This should not be called',
         ],
-        $node_entity,
+        $node_entity->reveal(),
       ],
       [
         [
           'countries' => 'Should return NULL',
+        ],
+        NULL,
+      ],
+      [
+        [
+          'user' => $user_context->reveal(),
         ],
         NULL,
       ],

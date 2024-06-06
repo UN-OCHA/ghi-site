@@ -60,7 +60,6 @@ class ContentLocalActions extends DeriverBase implements ContainerDeriverInterfa
     $displays = $view->get('display');
     $exclude_displays = [
       'page_all',
-      'page_overview',
     ];
 
     foreach ($displays as $display) {

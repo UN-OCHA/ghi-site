@@ -1,11 +1,9 @@
-uuid: 308246be-f056-4efc-9cbc-a3548a70a838
+uuid: null
 langcode: en
 status: true
 dependencies:
   module:
     - ocha_monitoring
-_core:
-  default_config_hash: mwdBsqMx73dUbE3Jngyctoe6sk1QZ12etn-nLbZ3YU8
 id: ocha_gtm_barebones
 label: 'GTM Barebones'
 description: 'GTM Barebones'

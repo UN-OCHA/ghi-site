@@ -827,8 +827,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    * {@inheritdoc}
    */
   public function canShowSubform(array $form, FormStateInterface $form_state, $subform_key) {
-    $conf = $this->getBlockConfig();
-    if (empty($conf['attachments']['entity_attachments']['attachments']['attachment_id'])) {
+    if (empty($this->getSelectedAttachments())) {
       return $subform_key == 'attachments';
     }
     return TRUE;
@@ -838,8 +837,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    * {@inheritdoc}
    */
   public function getDefaultSubform($is_new = FALSE) {
-    $conf = $this->getBlockConfig();
-    if (empty($conf['attachments']['entity_attachments']['attachments']['attachment_id'])) {
+    if (empty($this->getSelectedAttachments())) {
       return 'attachments';
     }
     return 'map';
@@ -1112,32 +1110,26 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    */
   private function getDefaultAttachment() {
     $default_attachment = &drupal_static(__FUNCTION__, NULL);
-    if (!$default_attachment) {
+    if ($default_attachment === NULL) {
       $conf = $this->getBlockConfig();
       $requested_attachment_id = $this->requestStack->getCurrentRequest()->request->get('attachment_id') ?? NULL;
       $default_attachment_id = $conf['map']['common']['default_attachment'] ?? NULL;
-      $attachment_ids = $conf['attachments']['entity_attachments']['attachments']['attachment_id'] ?? [];
-      $attachment_id = NULL;
-      if ($requested_attachment_id && in_array($requested_attachment_id, $attachment_ids)) {
-        $attachment_id = $requested_attachment_id;
+      $attachments = $this->getSelectedAttachments();
+      $attachment = NULL;
+      if ($requested_attachment_id && !empty($attachments[$requested_attachment_id])) {
+        $attachment = $attachments[$requested_attachment_id];
       }
-      elseif ($default_attachment_id && in_array($default_attachment_id, $attachment_ids)) {
-        $attachment_id = $default_attachment_id;
+      elseif ($default_attachment_id && !empty($attachments[$default_attachment_id])) {
+        $attachment = $attachments[$default_attachment_id];
       }
-      elseif (count($attachment_ids)) {
-        $attachment_id = reset($attachment_ids);
+      elseif (count($attachments)) {
+        $attachment = reset($attachments);
       }
-      if (!$attachment_id) {
-        return NULL;
-      }
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
-      $query = $this->getQueryHandler('attachment');
-      $attachment = $query->getAttachment($attachment_id, TRUE);
       if (!$attachment || !$attachment instanceof DataAttachment || !$this->attachmentCanBeMapped($attachment)) {
-        return NULL;
+        $default_attachment = FALSE;
       }
-      if ($attachment->getPlanId() != $this->getCurrentPlanId()) {
-        return NULL;
+      if ($attachment && $attachment->getPlanId() != $this->getCurrentPlanId()) {
+        $default_attachment = FALSE;
       }
       $default_attachment = $attachment;
     }
@@ -1151,21 +1143,11 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    *   An array of attachment objects, keyed by the attachment id.
    */
   private function getSelectedAttachments() {
-    $conf = $this->getBlockConfig();
-    $attachments = [];
-    $attachment_ids = array_filter($conf['attachments']['entity_attachments']['attachments']['attachment_id'] ?? []);
-    if (empty($attachment_ids)) {
-      return $attachments;
+    $entities = $this->getConfiguredEntities();
+    if (empty($entities)) {
+      return [];
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
-    $query = $this->getQueryHandler('attachment');
-    foreach ($attachment_ids as $attachment_id) {
-      $attachment = $query->getAttachment($attachment_id, TRUE);
-      if (!$attachment) {
-        continue;
-      }
-      $attachments[$attachment_id] = $attachment;
-    }
+    $attachments = $this->getConfiguredAttachments();
     return $attachments;
   }
 
@@ -1234,21 +1216,33 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    *   An array of plan entity objects.
    */
   private function getAvailableEntities() {
+    $plan_id = $this->getCurrentPlanObject()->getSourceId();
+
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanBasicQuery $query_handler */
+    $query_handler = $this->endpointQueryManager->createInstance('plan_basic_query');
+    $plan_entities = [
+      $plan_id => $query_handler->getBaseData($plan_id),
+    ];
+
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query_handler */
     $query_handler = $this->endpointQueryManager->createInstance('plan_entities_query');
-    $query_handler->setPlaceholder('plan_id', $this->getCurrentPlanObject()->getSourceId());
-    return $query_handler->getPlanEntities($this->getCurrentBaseObject()) ?? [];
+    $query_handler->setPlaceholder('plan_id', $plan_id);
+    $plan_entities += $query_handler->getPlanEntities($this->getCurrentBaseObject()) ?? [];
+    return $plan_entities;
   }
 
   /**
    * Get the configured attachment ids if any.
    *
-   * @return array
-   *   An array of attachment ids.
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   *   An array of attachment objects.
    */
   private function getConfiguredAttachments() {
     $conf = $this->getBlockConfig();
-    return array_filter($conf['attachments']['entity_attachments']['attachments']['attachment_id'] ?? []);
+    $attachment_ids = array_filter($conf['attachments']['entity_attachments']['attachments']['attachment_id'] ?? []);
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
+    $query = $this->getQueryHandler('attachment_search');
+    return !empty($attachment_ids) ? $query->getAttachmentsById($attachment_ids) : [];
   }
 
   /**
@@ -1305,17 +1299,11 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $configured_attachments = $this->getConfiguredAttachments();
     $available_attachments = $this->getAvailableAttachments();
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
-    $query = $this->getQueryHandler('attachment_search');
-    $configured_attachments = $query->getAttachmentsById($configured_attachments);
-
-    $reporting_period = $this->getCurrentReportingPeriod();
-
-    $default_attachment = !empty($available_attachments) ? array_key_first($available_attachments) : NULL;
     if (!empty($configured_attachments)) {
       // Less probable, but maybe one of the configured attachments is still
       // valid in the new context.
-      $valid_attachment_ids = array_intersect_key($configured_attachments, $available_attachments);
+      $valid_attachment = array_intersect_key($configured_attachments, $available_attachments);
+      $valid_attachment_ids = !empty($valid_attachment) ? array_keys($valid_attachment) : [];
       $conf['attachments']['entity_attachments']['attachments']['attachment_id'] = [];
       if (!empty($valid_attachment_ids)) {
         // If so, let's use these.
@@ -1330,18 +1318,13 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
             continue;
           }
           $filtered_attachments = $this->matchDataAttachments($attachment, $available_attachments);
-          $filtered_attachments = array_filter($filtered_attachments, function ($attachment) use ($reporting_period) {
-            return $attachment->canBeMapped($reporting_period);
-          });
           $attachment_ids = array_keys($filtered_attachments);
           $conf['attachments']['entity_attachments']['attachments']['attachment_id'] += array_combine($attachment_ids, $attachment_ids);
         }
       }
     }
 
-    if (empty($conf['attachments']['entity_attachments']['attachments']['attachment_id'])) {
-      $conf['attachments']['entity_attachments']['attachments']['attachment_id'] = array_filter([$default_attachment]);
-    }
+    $default_attachment = array_key_first($conf['attachments']['entity_attachments']['attachments']['attachment_id']);
     $conf['map']['common']['default_attachment'] = $default_attachment;
 
     $this->setBlockConfig($conf);

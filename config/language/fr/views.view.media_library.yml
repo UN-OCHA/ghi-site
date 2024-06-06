@@ -6,6 +6,9 @@ display:
       title: Média
       pager:
         options:
+          tags:
+            next: ››
+            previous: ‹‹
           expose:
             items_per_page_label: 'Éléments par page'
             items_per_page_options_all_label: '- Tout -'
@@ -56,6 +59,8 @@ display:
     display_title: Page
     display_options:
       fields:
+        name:
+          separator: ', '
         edit_media:
           alter:
             text: 'Modifier {{ name }}'

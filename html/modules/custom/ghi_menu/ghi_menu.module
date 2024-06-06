@@ -5,7 +5,12 @@
  * Hook implementations for GHI Menu.
  */
 
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\ghi_menu\Entity\GhiMenuLinkContent;
+use Drupal\taxonomy\VocabularyInterface;
 
 /**
  * Implements hook_menu_local_actions_alter().
@@ -21,4 +26,27 @@ function ghi_menu_entity_type_alter(array &$entity_types) {
   /** @var \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type */
   $entity_type = $entity_types['menu_link_content'];
   $entity_type->setClass(GhiMenuLinkContent::class);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ghi_menu_form_taxonomy_overview_vocabularies_alter(&$form, FormStateInterface $form_state) {
+  $current_user = \Drupal::currentUser();
+  foreach (Element::children($form['vocabularies']) as $vid) {
+    $vocabulary = \Drupal::entityTypeManager()->getStorage('taxonomy_vocabulary')->load($vid);
+    if (!$current_user->hasPermission('edit terms in ' . $vocabulary->id())) {
+      unset($form['vocabularies'][$vid]);
+    }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_access().
+ */
+function ghi_menu_taxonomy_vocabulary_access(VocabularyInterface $vocabulary, $operation, AccountInterface $account) {
+  if (!$account->hasPermission('edit terms in ' . $vocabulary->id())) {
+    return AccessResult::forbidden();
+  }
+  return AccessResult::neutral();
 }

@@ -11,7 +11,6 @@ use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_sections\Entity\Section;
-use Drupal\hpc_common\Helpers\StringHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\taxonomy\TermInterface;
@@ -139,11 +138,15 @@ class SectionManager {
   public function createSectionForBaseObject(BaseObjectInterface $base_object, array $values) {
     $status = FALSE;
     $base_object_type = $base_object->type->entity;
-    if ($base_object_type->needsYearForDataRetrieval() && empty($values['year']) || empty($values['team'])) {
+    if (($base_object_type->needsYearForDataRetrieval() && empty($values['year'])) || empty($values['team'])) {
       return FALSE;
     }
     $tags = $values['tags'] ?? $this->getDefaultTagsFromBaseObject($base_object);
     if (empty($tags)) {
+      return FALSE;
+    }
+    if ($this->loadSectionForBaseObject($base_object)) {
+      // There is already a section for this base object.
       return FALSE;
     }
     $section = $this->entityTypeManager->getStorage('node')->create([
@@ -179,21 +182,15 @@ class SectionManager {
    */
   private function getDefaultTagsFromBaseObject(BaseObjectInterface $base_object) {
     $tags = [];
-    switch ($base_object->bundle()) {
-      case 'plan':
-        $shortname = $base_object->get('field_short_name')->value;
-        if ($shortname) {
-          $tags[] = $shortname;
-        }
-        $tags[] = $base_object->get('field_year')->value;
-        $tags[] = StringHelper::getAbbreviation($base_object->get('field_plan_type')->entity->label());
-        break;
 
-      default:
-        // Not yet implemented.
-        break;
-
+    if ($base_object instanceof Plan) {
+      if ($shortname = $base_object->getShortName()) {
+        $tags[] = $shortname;
+      }
+      $tags[] = $base_object->getYear();
+      $tags[] = $base_object->getPlanTypeShortLabel();
     }
+
     $tags = array_filter($tags);
     if (empty($tags)) {
       return $tags;
@@ -258,6 +255,16 @@ class SectionManager {
       'field_team' => $term->id(),
     ]);
     return $sections;
+  }
+
+  /**
+   * Set the module handler service.
+   *
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
+   */
+  public function setModuleHandler(ModuleHandlerInterface $module_handler) {
+    $this->moduleHandler = $module_handler;
   }
 
 }

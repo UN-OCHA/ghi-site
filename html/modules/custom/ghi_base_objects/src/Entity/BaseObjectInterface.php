@@ -25,6 +25,14 @@ interface BaseObjectInterface extends ContentEntityInterface, EntityChangedInter
   public function getName();
 
   /**
+   * Gets the Base object short name if available.
+   *
+   * @return string|null
+   *   Short name of the Base object if available.
+   */
+  public function getShortName();
+
+  /**
    * Sets the Base object name.
    *
    * @param string $name

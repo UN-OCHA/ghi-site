@@ -10,6 +10,7 @@ display:
           label: 'Identifiant (FID)'
         filename:
           label: Nom
+          separator: ', '
         filemime:
           label: 'Type MIME'
         filesize:
@@ -72,6 +73,7 @@ display:
           label: 'Enregistrement du module'
         count:
           label: "Nombre d'utilisations"
+          format_plural_string: !!binary MQNAY291bnQ=
       pager:
         options:
           tags:

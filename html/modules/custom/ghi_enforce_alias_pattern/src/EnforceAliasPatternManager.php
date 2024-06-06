@@ -60,6 +60,10 @@ class EnforceAliasPatternManager {
     }
     $alias = $entity->path->alias ?? $this->pathautoGenerator->createEntityAlias($entity, 'return');
     $parts = explode('/', trim($alias, '/'));
+    if (count($parts) <= 1) {
+      // Bail out if there are not enough parts in the alias pattern.
+      return;
+    }
     $editable_part = array_pop($parts);
     $form['path']['widget'][0]['enforced_alias'] = [
       '#type' => 'enforced_alias',

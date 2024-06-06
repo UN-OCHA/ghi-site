@@ -8,11 +8,11 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_subpages\SubpageTrait;
 use Drupal\taxonomy\Entity\Term;
@@ -96,12 +96,15 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
       return $build;
     }
 
+    $cache_tags = [];
+
     $list_build = [
       '#theme' => 'item_list',
       '#items' => [],
     ];
 
     foreach ($sections_by_terms as $term_id => $section_nodes) {
+      $cache_tags = Cache::mergeTags($cache_tags, $terms[$term_id]->getCacheTags());
       if (empty($section_nodes)) {
         continue;
       }
@@ -109,17 +112,15 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
         '#markup' => new FormattableMarkup('<span>@term_label</span>', [
           '@term_label' => $terms[$term_id]->label(),
         ]),
+        '#weight' => $terms[$term_id]->getWeight(),
       ];
 
       $section_links = [];
       /** @var \Drupal\node\NodeInterface[] $section_nodes */
       foreach ($section_nodes as $section_node) {
-        $base_object = BaseObjectHelper::getBaseObjectFromNode($section_node);
+        $cache_tags = Cache::mergeTags($cache_tags, $section_node->getCacheTags());
         $section_label = $section_node->label();
-        if ($base_object && $base_object->hasField('field_short_name') && !$base_object->get('field_short_name')->isEmpty()) {
-          $section_label = $base_object->get('field_short_name')->value;
-        }
-        $section_links[(string) $section_label . '__' . $section_node->id()] = $section_node->toLink($section_label)->toRenderable();
+        $section_links[(string) $section_label . '__' . $section_node->id()] = $section_node->toLink()->toRenderable();
       }
 
       if (!empty($section_links)) {
@@ -148,6 +149,9 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
           'aria-labelledby' => $this->getAriaId(),
         ],
         0 => $list_build,
+      ],
+      '#cache' => [
+        'tags' => $cache_tags,
       ],
     ];
 

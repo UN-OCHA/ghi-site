@@ -7,13 +7,16 @@
         if (!$(element).data('values')) {
           return;
         }
-        let data = $(element).data('values').toString().split(',');
+        let data = $(element).data('values').toString().split(',').map(Number);
+        if (data.filter(x => !!x).length == 0) {
+          return;
+        }
         let tooltip_content = $(element).data('tooltips').toString().split('|');
         let baseline = $(element).data('baseline');
         $(element).uniqueId();
         let options = {
           target: '#' + $(element).attr('id'),
-          data: data.map(Number),
+          data: data,
           baseline: baseline,
           size: 'parent',
           stroke_width: 3,

@@ -2,7 +2,6 @@
 
 namespace Drupal\ghi_content\Entity;
 
-use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_content\RemoteContent\RemoteChapterInterface;
 use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
@@ -92,32 +91,6 @@ class Document extends ContentBase {
    */
   public function getSummary() {
     return $this->get('field_summary')->value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getPageMetaData($include_social = TRUE) {
-    $metadata = [];
-    $metadata[] = [
-      '#markup' => new TranslatableMarkup('Published on @date', [
-        '@date' => $this->getDateFormatter()->format($this->getCreatedTime(), 'custom', 'j F Y'),
-      ]),
-    ];
-    $tags = $this->getDisplayTags();
-    if (!empty($tags)) {
-      $metadata[] = [
-        '#markup' => new TranslatableMarkup('Keywords @keywords', [
-          '@keywords' => implode(', ', $tags),
-        ]),
-      ];
-    }
-    if ($this->isPublished() && $include_social) {
-      $metadata[] = [
-        '#theme' => 'social_links',
-      ];
-    }
-    return $metadata;
   }
 
   /**
