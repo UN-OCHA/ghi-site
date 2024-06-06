@@ -25,18 +25,18 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
   use ConfigurationItemValuePreviewTrait;
 
   /**
-   * The organization funding query.
+   * The project search query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanOrganizationFundingQuery
+   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectFundingQuery
    */
-  public $organizationFundingQuery;
+  public $projectFundingQuery;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->organizationFundingQuery = $instance->endpointQueryManager->createInstance('plan_organization_funding_query');
+    $instance->projectFundingQuery = $instance->endpointQueryManager->createInstance('plan_project_funding_query');
     return $instance;
   }
 
@@ -99,17 +99,21 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
   public function getValue($data_type = NULL) {
     $data_type = $data_type ?? $this->get('data_type');
     $organization = $this->getContextValue('organization');
+    $projects = $this->getContextValue('projects');
     $value = NULL;
     switch ($data_type) {
       case 'original_requirements':
       case 'current_requirements':
       case 'total_funding':
+        $value = $this->projectFundingQuery->getSumForOrganization($data_type, $organization, $projects);
+        break;
+
       case 'coverage':
-        $value = $this->organizationFundingQuery->getPropertyForOrganization($data_type, $organization);
+        $value = $this->projectFundingQuery->getFundingCoverageForOrganization($organization, $projects);
         break;
 
       case 'requirements_changes':
-        $value = $this->organizationFundingQuery->getRequirementsChangesForOrganization($organization);
+        $value = $this->projectFundingQuery->getRequirementsChangesForOrganization($organization, $projects);
         break;
     }
     return $value;
