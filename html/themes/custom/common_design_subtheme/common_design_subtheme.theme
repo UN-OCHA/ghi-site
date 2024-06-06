@@ -338,6 +338,13 @@ function common_design_subtheme_preprocess_user(&$variables) {
 /**
  * Implements hook_preprocess_node().
  */
+function common_design_subtheme_preprocess_node__page(&$variables) {
+  $variables['attributes']['class'][] = 'content-width';
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
 function common_design_subtheme_preprocess_node__article(&$variables) {
   $variables['social_links'] = [
     '#theme' => 'social_links',

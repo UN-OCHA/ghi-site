@@ -171,9 +171,8 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
 
     /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
     $base_object = $this->getContextValue('base_object');
-    if ($property && $base_object && $base_object instanceof Plan) {
-      $footnotes = $this->getFootnotesForPlanBaseobject($base_object);
-      $build['tooltips'][] = $this->buildFootnoteTooltip($footnotes, $property);
+    if ($property && $base_object instanceof Plan && $footnotes = $this->getFootnotesForPlanBaseobject($base_object)) {
+      $build['tooltips']['#tooltips'][] = $this->buildFootnoteTooltip($footnotes, $property);
     }
     return $build;
   }

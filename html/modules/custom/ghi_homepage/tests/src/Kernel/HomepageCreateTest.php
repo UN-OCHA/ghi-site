@@ -44,7 +44,7 @@ class HomepageCreateTest extends KernelTestBase {
     $this->installEntitySchema('node');
     $this->installSchema('system', 'sequences');
     $this->installSchema('node', ['node_access']);
-    $this->installConfig(['system', 'node', 'field']);
+    $this->installConfig(['system', 'node', 'field', 'pathauto']);
 
     NodeType::create(['type' => Homepage::BUNDLE])->save();
     $this->createField('node', Homepage::BUNDLE, 'integer', 'field_year', 'Year');

@@ -159,6 +159,16 @@ class AttachmentPrototype extends ApiObjectBase {
   }
 
   /**
+   * The prototype ref code, e.g. BP, BF, ...
+   *
+   * @return string
+   *   The ref code string.
+   */
+  public function getRefCode() {
+    return $this->ref_code;
+  }
+
+  /**
    * The entity type ref codes of entities using attachments of this type.
    *
    * @return string[]

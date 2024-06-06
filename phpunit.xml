@@ -20,6 +20,14 @@
     <env name="MINK_DRIVER_CLASS" value=''/>
     <env name="MINK_DRIVER_ARGS" value=''/>
     <env name="MINK_DRIVER_ARGS_WEBDRIVER" value='["chrome", { "chromeOptions": { "w3c": false } }, "http://browser:4444/wd/hub"]'/>
+
+    <!-- This is for tests based on ExistingSiteBase -->
+    <env name="DTT_BASE_URL" value="http://ghi-site.docksal.site"/>
+    <env name="DTT_API_URL" value="http://localhost:9222"/>
+    <env name="DTT_MINK_DRIVER_ARGS" value='["chrome", { "chromeOptions" : { "w3c": false } }, "http://localhost:4444/wd/hub"]'/>
+    <env name="DTT_API_OPTIONS" value='{"socketTimeout": 360, "domWaitTimeout": 3600000}' />
+    <env name="SYMFONY_DEPRECATIONS_HELPER" value="disabled" />
+
   </php>
   <coverage includeUncoveredFiles="false">
     <include>

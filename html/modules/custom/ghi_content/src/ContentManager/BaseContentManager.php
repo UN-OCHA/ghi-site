@@ -230,15 +230,21 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
   /**
    * Load all nodes for this manager.
    *
+   * @param bool $published
+   *   Whether to load only published nodes.
+   *
    * @return \Drupal\Core\Entity\EntityInterface[]|null
    *   An array of entity objects indexed by their ids.
    */
-  public function loadAllNodes() {
+  public function loadAllNodes($published = TRUE) {
+    $properties = [
+      'type' => $this->getNodeBundle(),
+    ];
+    if ($published) {
+      $properties['status'] = NodeInterface::PUBLISHED;
+    }
     $nodes = $this->entityTypeManager->getStorage('node')
-      ->loadByProperties([
-        'type' => $this->getNodeBundle(),
-        'status' => NodeInterface::PUBLISHED,
-      ]);
+      ->loadByProperties($properties);
     return $nodes;
   }
 
@@ -456,8 +462,13 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
+   * @param bool $update_migration_state
+   *   Optionally allows to prevent updating the migration statue. This can be
+   *   used if a node is saved manually suite to updates during a migration
+   *   run, where the migration system already takes care of updating the
+   *   status.
    */
-  public function saveContentNode(NodeInterface $node) {
+  public function saveContentNode(NodeInterface $node, $update_migration_state = TRUE) {
     // If the layout builder ipe module is used, we need to remove their token,
     // otherwhise layout updates (paragraphs) will be reverted before saving
     // because this action is issued from the node edit form.
@@ -472,7 +483,9 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
     // The next thing we need to do after that is to update the migration state,
     // so that this article is not wrongly treated as changed on the next
     // migration run.
-    $this->updateMigrationState($node);
+    if ($update_migration_state) {
+      $this->updateMigrationState($node);
+    }
   }
 
   /**

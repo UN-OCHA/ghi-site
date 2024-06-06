@@ -1,11 +1,9 @@
-uuid: d46942ad-4fe7-4117-afe1-805b03118350
+uuid: null
 langcode: en
 status: true
 dependencies:
   module:
     - ocha_monitoring
-_core:
-  default_config_hash: jSQSHMDj-QUZ4XRrETPCF9BqVSbKLag73azb0_gsqGY
 id: ocha_env_link_fixer
 label: 'Environment Link Fixer'
 description: 'Environment Link Fixer'

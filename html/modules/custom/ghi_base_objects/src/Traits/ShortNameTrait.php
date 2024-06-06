@@ -24,10 +24,10 @@ trait ShortNameTrait {
    *   The shortname for the base object.
    */
   public function getShortName(BaseObjectInterface $base_object, $include_type = FALSE, $include_year = FALSE) {
-    if (!$base_object->hasField('field_short_name') || $base_object->get('field_short_name')->isEmpty()) {
+    $shortname = $base_object->getShortName();
+    if (!$shortname) {
       return NULL;
     }
-    $shortname = $base_object->get('field_short_name')->value;
 
     $type_field_map = [
       'plan' => 'field_plan_type',

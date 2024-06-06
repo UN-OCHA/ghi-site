@@ -77,7 +77,7 @@ class DocumentManagerTest extends KernelTestBase {
     $this->installEntitySchema('path_alias');
     $this->installSchema('system', 'sequences');
     $this->installSchema('node', ['node_access']);
-    $this->installConfig(['system', 'node', 'taxonomy', 'field']);
+    $this->installConfig(['system', 'node', 'taxonomy', 'field', 'pathauto']);
 
     $this->documentManager = \Drupal::service('ghi_content.manager.document');
 

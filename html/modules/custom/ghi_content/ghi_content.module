@@ -606,7 +606,7 @@ function ghi_content_node_grants(AccountInterface $account, $op) {
   $grants['ghi_content_access'] = [0];
 
   $user = User::load($account->id());
-  if (!$user->hasField('field_team') || $user->get('field_team')->isEmpty()) {
+  if (!$user || !$user->hasField('field_team') || $user->get('field_team')->isEmpty()) {
     return $grants;
   }
 

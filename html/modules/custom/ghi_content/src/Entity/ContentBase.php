@@ -6,6 +6,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ghi_content\Controller\OrphanedContentController;
 use Drupal\ghi_content\Traits\ContentPathTrait;
@@ -13,6 +14,7 @@ use Drupal\ghi_sections\Entity\ImageNodeInterface;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Drupal\node\NodeStorageInterface;
 use Drupal\taxonomy\TermInterface;
 
 /**
@@ -40,8 +42,13 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     if ($this->isOrphaned() && !in_array($operation, $orphan_operations)) {
       return $return_as_object ? AccessResult::forbidden() : FALSE;
     }
-    if ($operation == 'delete') {
-      return $return_as_object ? AccessResult::allowedIf($this->isOrphaned()) : $this->isOrphaned();
+    if (!$account) {
+      $account = \Drupal::currentUser();
+    }
+    if ($operation == 'delete' && !$account->hasPermission('administer site configuration')) {
+      if ($this->isOrphaned()) {
+        return $return_as_object ? AccessResult::allowed() : TRUE;
+      }
     }
     return parent::access($operation, $account, $return_as_object);
   }
@@ -156,7 +163,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    */
   public function setOrphaned($status) {
     if (!$this->hasField(OrphanedContentController::FIELD_NAME)) {
-      return;
+      return $this;
     }
     return $this->set(OrphanedContentController::FIELD_NAME, $status);
   }
@@ -206,7 +213,28 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    * @return array
    *   An array of metadata items.
    */
-  abstract public function getPageMetaData($include_social = TRUE);
+  public function getPageMetaData($include_social = TRUE) {
+    $metadata = [];
+    $metadata[] = [
+      '#markup' => new TranslatableMarkup('Published on @date', [
+        '@date' => $this->getDateFormatter()->format($this->getCreatedTime(), 'custom', 'j F Y'),
+      ]),
+    ];
+    $tags = $this->getDisplayTags();
+    if (!empty($tags)) {
+      $metadata[] = [
+        '#markup' => new TranslatableMarkup('Keywords @keywords', [
+          '@keywords' => implode(', ', $tags),
+        ]),
+      ];
+    }
+    if ($this->isPublished() && $include_social) {
+      $metadata[] = [
+        '#theme' => 'social_links',
+      ];
+    }
+    return $metadata;
+  }
 
   /**
    * Get the tags for this content.
@@ -221,17 +249,23 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     }
     // Get the tags.
     $tags = $field_tags->referencedEntities();
-    // Re-key them so use the term id as key.
-    $term_ids = array_map(function (TermInterface $term) {
-      return $term->id();
-    }, $tags);
-    $tags = array_combine($term_ids, $tags);
 
     // See if the context nodes tags should also be loaded.
     if ($include_context_tags) {
       $context_node = $this->getContextNode();
-      $tags += $context_node instanceof ContentBase ? $context_node->getTags() : [];
+      // Merging the tags. This can lead to duplication in $tags.
+      $tags = array_merge($tags, $context_node instanceof ContentBase ? $context_node->getTags() : []);
     }
+
+    // Get the term ids to be able to re-key them to use the term id as key.
+    $term_ids = array_map(function (TermInterface $term) {
+      return $term->id();
+    }, $tags);
+    // There might be duplications in both $term_ids and $tags. But they should
+    // be exactly equal, so this should not be an issue. According to the docs
+    // for array_combine, if 2 keys are the same, the second one prevails.
+    $tags = array_combine($term_ids, $tags);
+
     return $tags;
   }
 
@@ -271,9 +305,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     $tag_names = array_map(function ($tag) {
       return $tag->label();
     }, $tags);
-
-    // And build the render array.
-    return $tag_names;
+    return array_values($tag_names);
   }
 
   /**
@@ -426,6 +458,43 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    */
   protected static function getDateFormatter() {
     return \Drupal::service('date.formatter');
+  }
+
+  /**
+   * Check if the node has been manually unpublished.
+   *
+   * @return bool
+   *   TRUE if, and only if,
+   */
+  public function unpublishedManually() {
+    if ($this->isPublished()) {
+      return FALSE;
+    }
+    /** @var \Drupal\node\NodeStorageInterface $storage */
+    $storage = $this->entityTypeManager()->getStorage($this->getEntityTypeId());
+    if (!$storage instanceof NodeStorageInterface) {
+      return FALSE;
+    }
+
+    $revision_ids = $storage->revisionIds($this);
+    if (count($revision_ids) == 1) {
+      // We give it the benefit of a doubt.
+      return TRUE;
+    }
+    foreach ($revision_ids as $revision_id) {
+      /** @var \Drupal\ghi_content\Entity\ContentBase $revision */
+      $revision = $storage->loadRevision($revision_id);
+      if (!$revision) {
+        continue;
+      }
+      if ($revision->getRevisionId() == $this->getRevisionId()) {
+        continue;
+      }
+      if ($revision->isPublished()) {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
 
 }

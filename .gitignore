@@ -33,6 +33,7 @@ buildlog.txt
 /database/
 /private/
 /notes/
+/logs
 
 ###> squizlabs/php_codesniffer ###
 /.phpcs-cache

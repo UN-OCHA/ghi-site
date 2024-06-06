@@ -9,3 +9,14 @@
   padding-top: 0.3rem;
   padding-bottom: 0.3rem;
 }
+
+.ghi-subpages-admin-views-form table tr.title-mismatch {
+  border-left: 6px solid #fed83d;
+}
+.ghi-subpages-admin-views-form table tr.missing-base-object {
+  border-left: 6px solid #d92828;
+}
+.ghi-subpages-admin-views-form table tr.title-mismatch td:first-child .form-type--checkbox,
+.ghi-subpages-admin-views-form table tr.missing-base-object td:first-child .form-type--checkbox {
+  margin-left: -3px;
+}

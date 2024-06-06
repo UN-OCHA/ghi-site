@@ -79,7 +79,7 @@ class ArticleManagerTest extends KernelTestBase {
     $this->installEntitySchema('path_alias');
     $this->installSchema('system', 'sequences');
     $this->installSchema('node', ['node_access']);
-    $this->installConfig(['system', 'node', 'taxonomy', 'field', 'file']);
+    $this->installConfig(['system', 'node', 'taxonomy', 'field', 'file', 'pathauto']);
 
     $this->articleManager = \Drupal::service('ghi_content.manager.article');
 
@@ -123,6 +123,38 @@ class ArticleManagerTest extends KernelTestBase {
       'field_tags' => array_keys($expected_section_term),
     ]);
     $this->assertEquals($expected_section_term, $this->articleManager->getTags($section));
+  }
+
+  /**
+   * Tests loading all nodes.
+   */
+  public function testLoadAllNodes() {
+    // Create a published article.
+    $article_published = Article::create([
+      'type' => self::ARTICLE_BUNDLE,
+      'title' => 'A published article node',
+      'status' => NodeInterface::PUBLISHED,
+      'uid' => 0,
+    ]);
+    $article_published->save();
+
+    // Create an unpublished article.
+    $article_unpublished = Article::create([
+      'type' => self::ARTICLE_BUNDLE,
+      'title' => 'A published article node',
+      'status' => NodeInterface::NOT_PUBLISHED,
+      'uid' => 0,
+    ]);
+    $article_unpublished->save();
+
+    $result = $this->articleManager->loadAllNodes();
+    $this->assertCount(1, $result);
+    $this->assertArrayHasKey($article_published->id(), $result);
+
+    $result = $this->articleManager->loadAllNodes(FALSE);
+    $this->assertCount(2, $result);
+    $this->assertArrayHasKey($article_published->id(), $result);
+    $this->assertArrayHasKey($article_unpublished->id(), $result);
   }
 
   /**

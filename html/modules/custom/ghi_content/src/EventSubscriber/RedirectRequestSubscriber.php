@@ -75,6 +75,8 @@ class RedirectRequestSubscriber implements EventSubscriberInterface {
       '/layout/discard-changes',
       '/layout/revert',
       '/layout/disable',
+      '/revisions',
+      '/delete',
     ];
     foreach ($blacklist as $blacklist_path) {
       if (strpos($path, $blacklist_path)) {

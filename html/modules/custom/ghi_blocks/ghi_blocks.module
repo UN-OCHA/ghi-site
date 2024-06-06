@@ -308,6 +308,10 @@ function ghi_blocks_preprocess_block(&$variables) {
     }
   }
 
+  // Add the block settings library, so that block actions get stored in the
+  // URL and can be reset when deep linking or reloading.
+  $variables['#attached']['library'][] = 'ghi_blocks/block.settings';
+
   // This is necessary to make sure that cache metadata from the block
   // correctly bubbles up the chain.
   // @see https://drupal.stackexchange.com/a/225569/8881

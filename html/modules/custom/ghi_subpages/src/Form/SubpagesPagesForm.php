@@ -231,7 +231,7 @@ class SubpagesPagesForm extends FormBase {
         foreach ($subpage_nodes as $subpage_node) {
           /** @var \Drupal\taxonomy\Entity\Term $subpage_team */
           $subpage_team = !$subpage_node->field_team->isEmpty() ? $subpage_node->field_team->entity : NULL;
-
+          $row_classes = [];
           $row = [];
           $row[] = $subpage_node->toLink();
           if ($has_base_object) {
@@ -242,12 +242,21 @@ class SubpagesPagesForm extends FormBase {
               '@url' => $base_object->toUrl('edit-form')->toString(),
               '@id' => $base_object->getSourceId(),
             ]) : $this->t('Missing');
+            if (!$base_object) {
+              $row_classes[] = 'missing-base-object';
+            }
+            if ($base_object && (string) $base_object->label() != (string) $subpage_node->label()) {
+              $row_classes[] = 'title-mismatch';
+            }
           }
           $row[] = $subpage_node->isPublished() ? $this->t('Published') : $this->t('Unpublished');
           $row[] = $subpage_team ? $subpage_team->getName() : $section_team . ' (' . $this->t('Inherit from section') . ')';
           $row[] = $this->dateFormatter->format($subpage_node->getCreatedTime(), 'custom', 'F j, Y h:ia');
           $row[] = $this->dateFormatter->format($subpage_node->getChangedTime(), 'custom', 'F j, Y h:ia');
           $row[] = $this->getOperationLinks($subpage_node, $node);
+          $row['#attributes'] = [
+            'class' => $row_classes,
+          ];
           $rows[$subpage_node->id()] = $row;
         }
       }

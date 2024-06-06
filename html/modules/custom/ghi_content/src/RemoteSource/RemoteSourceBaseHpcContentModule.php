@@ -495,6 +495,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
             title
           }
           autoVisible
+          forceUpdate
         }
       }
     }';
@@ -527,6 +528,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
             title
           }
           autoVisible
+          forceUpdate
         }
       }
     }';

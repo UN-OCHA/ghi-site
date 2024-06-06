@@ -8,7 +8,6 @@ global-styling:
   dependencies:
     - core/jquery
     - core/once
-    - ghi_blocks/block.settings
     - common_design_subtheme/sorttable
     - common_design_subtheme/select2
     - common_design/cd-dropdown
@@ -44,8 +43,8 @@ ghi-table-search:
   css:
     theme:
       components/ghi-table-search/ghi-table-search.css: {}
-  # dependencies:
-  #   - core/jquery.ui
+  dependencies:
+    - core/internal.jquery_ui
 
 ghi-table-progress-indicator:
   css:
@@ -107,8 +106,8 @@ ghi-scrollable-table:
       components/ghi-scrollable-table/ghi-scrollable-table.css: {}
   js:
     components/ghi-scrollable-table/ghi-scrollable-table.js: {}
-  # dependencies:
-  #   - core/jquery.ui
+  dependencies:
+    - core/internal.jquery_ui
 
 # Copy libraries from GHO
 datawrapper-responsive-iframe:
