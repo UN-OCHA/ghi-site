@@ -66,7 +66,7 @@ class EndpointReportController extends ControllerBase {
       'header' => [
         '#type' => 'html_tag',
         '#tag' => 'p',
-        '#value' => $this->t('This page lists all API endpoints used by this site. Please note that the shown query strings are not necesarily exhaustive, as individual page elements which are using an endpoint can add parameters to the query.'),
+        '#value' => $this->t('This page lists all API endpoints used by this site. Please note that the shown query strings are not necessarily exhaustive, as individual page elements which are using an endpoint can add parameters to the query.'),
       ],
       'table' => [
         '#type' => 'table',
