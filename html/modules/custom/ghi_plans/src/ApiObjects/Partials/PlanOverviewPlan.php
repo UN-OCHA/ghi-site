@@ -359,29 +359,31 @@ class PlanOverviewPlan extends BaseObject {
   public function getPlanCaseload($attachment_id = NULL) {
     $caseload = NULL;
 
-    $caseloads = $this->getRawData()->caseLoads ?? NULL;
-
-    // In case there are multiple plan level caseloads, sort by ascending
-    // attachment ID to be sure to use the first one.
-    if ($caseloads && count($caseloads) > 1) {
-      // We have 2 options here. Either a specific attachment has been
-      // requested and we use that if it is part of the available attachments.
-      if ($attachment_id !== NULL) {
-        $matching_caseloads = array_filter($caseloads, function ($caseload) use ($attachment_id) {
-          return $caseload->attachmentId == $attachment_id;
-        });
-        $caseload = !empty($matching_caseloads) && is_array($matching_caseloads) ? reset($matching_caseloads) : NULL;
-      }
-
-      // Or we try to deduce the suitable attachment by selecting the one with
-      // the lowest custom reference.
-      if ($caseload === NULL) {
-        ArrayHelper::sortObjectsByProperty($caseloads, 'customReference', EndpointQuery::SORT_ASC, SORT_STRING);
-        $caseload = is_array($caseloads) && count($caseloads) ? reset($caseloads) : NULL;
-      }
+    $caseloads = $this->getRawData()->caseLoads ?? [];
+    if (empty($caseloads)) {
+      return $caseload;
     }
-    else {
-      $caseload = is_array($caseloads) && count($caseloads) ? reset($caseloads) : NULL;
+
+    $plan_entity = $this->getEntity();
+    $selected_caseload_id = $plan_entity ? $plan_entity->getPlanCaseloadId() : NULL;
+
+    // Try to either get the requested caseload, or the one selected in the
+    // base object.
+    $attachment_id = $attachment_id ?? $selected_caseload_id;
+    // We have 2 options here. Either a specific attachment has been
+    // requested and we use that if it is part of the available attachments.
+    if ($attachment_id !== NULL) {
+      $matching_caseloads = array_filter($caseloads, function ($caseload) use ($attachment_id) {
+        return $caseload->attachmentId == $attachment_id;
+      });
+      $caseload = !empty($matching_caseloads) && is_array($matching_caseloads) ? reset($matching_caseloads) : NULL;
+    }
+
+    // Or we try to deduce the suitable attachment by selecting the one with
+    // the lowest custom reference.
+    if ($caseload === NULL) {
+      ArrayHelper::sortObjectsByProperty($caseloads, 'customReference', EndpointQuery::SORT_ASC, SORT_STRING);
+      $caseload = count($caseloads) ? reset($caseloads) : NULL;
     }
     return $caseload;
   }
