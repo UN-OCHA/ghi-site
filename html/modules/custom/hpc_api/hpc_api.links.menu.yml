@@ -3,6 +3,11 @@ hpc_api.config:
   description: 'Configure settings for interacting with the HPC API.'
   route_name: hpc_api.config
   parent: system.admin_config_services
+hpc_api.endpoint_report:
+  title: 'HPC API Endpoints'
+  description: 'List API endpoints.'
+  route_name: hpc_api.reports.endpoints
+  parent: system.admin_reports
 hpc_api.files_report:
   title: HPC files
   description: 'List files imported from HPC.'
