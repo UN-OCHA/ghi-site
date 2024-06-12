@@ -1426,10 +1426,10 @@ class DataAttachment extends AttachmentBase {
    */
   public static function getCalculationOptions() {
     return [
+      'percentage' => t('Percentage (data point 1 * (100 / data point 2))'),
       'addition' => t('Sum (data point 1 + data point 2)'),
       'substraction' => t('Substraction (data point 1 - data point 2)'),
       'division' => t('Division (data point 1 / data point 2)'),
-      'percentage' => t('Percentage (data point 1 * (100 / data point 2))'),
     ];
   }
 
