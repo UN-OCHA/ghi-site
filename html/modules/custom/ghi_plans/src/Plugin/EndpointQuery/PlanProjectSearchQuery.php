@@ -254,6 +254,12 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
 
       }
     }
+
+    // Alphabetical sort of Organizations.
+    uasort($organizations, function ($a, $b) {
+      return strcmp($a->name, $b->name);
+    });
+
     $this->setCache($cache_key, $organizations);
     return $organizations;
   }
