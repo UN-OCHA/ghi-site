@@ -112,6 +112,7 @@
         "drupal/rabbit_hole": "^1.0@beta",
         "drupal/redirect": "^1.6",
         "drupal/redis": "^1.5",
+        "drupal/role_delegation": "^1.2",
         "drupal/search_api": "^1.30",
         "drupal/search_api_solr": "^4.3",
         "drupal/seckit": "^2.0",
