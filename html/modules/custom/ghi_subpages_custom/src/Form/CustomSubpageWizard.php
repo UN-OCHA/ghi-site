@@ -207,7 +207,7 @@ class CustomSubpageWizard extends FormBase {
     ];
 
     if ($step > $first_step) {
-      $form['actions']['back'] = [
+      $form['back'] = [
         '#type' => 'button',
         '#value' => $this->t('Back'),
         '#limit_validation_errors' => array_filter([
@@ -224,7 +224,7 @@ class CustomSubpageWizard extends FormBase {
     }
 
     if ($step < count($steps) - 1) {
-      $form['actions']['next'] = [
+      $form['next'] = [
         '#type' => 'button',
         '#button_type' => 'primary',
         '#value' => $this->t('Next'),
@@ -236,7 +236,7 @@ class CustomSubpageWizard extends FormBase {
       ];
     }
     else {
-      $form['actions']['submit'] = [
+      $form['submit'] = [
         '#type' => 'submit',
         '#button_type' => 'primary',
         '#value' => $this->t('Create custom subpage'),

@@ -172,15 +172,13 @@ class SectionMenuItemForm extends FormBase {
     }
 
     $form['actions'] = [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['canvas-form__actions'],
-      ],
+      '#type' => 'actions',
     ];
 
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update menu item'),
+      '#gin_action_item' => TRUE,
     ];
     if ($this->isAjax()) {
       $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
@@ -208,6 +206,7 @@ class SectionMenuItemForm extends FormBase {
           'dialog-cancel',
         ],
       ],
+      '#gin_action_item' => TRUE,
     ];
 
     $this->makeGinLbForm($form, $form_state);

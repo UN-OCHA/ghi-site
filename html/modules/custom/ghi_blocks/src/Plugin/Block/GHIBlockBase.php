@@ -1171,7 +1171,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // Make sure the actions element is a container. GIN Layout Builder does
     // that already in the frontend, but when editing page manager pages in the
     // GIN backend theme, this is not done automatically.
-    $form['actions']['#type'] = 'container';
+    $form['actions']['#type'] = 'actions';
     $form['actions']['#attributes']['class'][] = 'canvas-form__actions';
 
     $is_preview = $form_state->get('preview');
