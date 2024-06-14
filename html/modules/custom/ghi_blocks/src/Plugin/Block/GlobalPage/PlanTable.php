@@ -259,7 +259,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       $rows[$plan->id()] = [
         'name' => [
           'data' => [
-            [
+            'name' => [
               '#markup' => $plan->getName(),
             ],
           ],
@@ -267,7 +267,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         ],
         'type' => [
           'data' => [
-            [
+            'name' => [
               '#markup' => $plan->getTypeShortName(),
             ],
           ],

@@ -9,33 +9,44 @@
   table {
     tbody {
       td[data-column="name"] {
-        display: flex;
-        justify-content: space-between;
 
-        .tooltip.plan-type-icon[data-toggle] {
-          width: auto !important;
-          min-width: 4rem;
-          height: auto !important;
-          max-height: 1.5rem;
-          text-align: center;
-          color: $cd-white;
-          // The default background color for plan type other and unknown
-          background-color: rgb(135, 207, 173);
-          font-size: var(--cd-font-size--small);
-          font-weight: normal;
+        .cell-wrapper-inner {
+          justify-content: space-between;
+        }
 
-          &.plan-type-hrp {
-            background-color: rgb(80, 144, 205);
+        .tooltip-wrapper {
+
+          .gho-included-tooltip {
+            color: var(--cd-primary-color);
+            font-size: var(--cd-font-size--medium);
           }
-          &.plan-type-fa {
-            background-color: rgb(136, 105, 174);
-          }
-          &.plan-type-rrp {
-            background-color: rgb(230, 103, 81);
-          }
-          &.plan-type-non-hrp {
-            padding: 0 5px;
-            background-color: rgb(119, 119, 119);
+
+          .tooltip.plan-type-icon[data-toggle] {
+            display: inline;
+            width: auto !important;
+            min-width: 4rem;
+            height: auto !important;
+            max-height: 1.5rem;
+            text-align: center;
+            color: $cd-white;
+            // The default background color for plan type other and unknown
+            background-color: rgb(135, 207, 173);
+            font-size: var(--cd-font-size--small);
+            font-weight: normal;
+
+            &.plan-type-hrp {
+              background-color: rgb(80, 144, 205);
+            }
+            &.plan-type-fa {
+              background-color: rgb(136, 105, 174);
+            }
+            &.plan-type-rrp {
+              background-color: rgb(230, 103, 81);
+            }
+            &.plan-type-non-hrp {
+              padding: 0 5px;
+              background-color: rgb(119, 119, 119);
+            }
           }
         }
       }

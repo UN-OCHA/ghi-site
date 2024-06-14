@@ -150,8 +150,14 @@ trait GlobalSettingsTrait {
     $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($columns) {
       foreach ($columns as $column) {
         if (!is_array($row[$column])) {
-          $row[$column] = ['data' => [0 => ['#markup' => $row[$column]]]];
+          $row[$column] = ['data' => ['name' => ['#markup' => $row[$column]]]];
         }
+        $row[$column]['data'] += [
+          'tooltips' => [
+            '#theme' => 'hpc_tooltip_wrapper',
+            '#tooltips' => [],
+          ],
+        ];
       }
       return $row;
     }, $rows);
@@ -164,7 +170,7 @@ trait GlobalSettingsTrait {
         if (!$plan) {
           return $row;
         }
-        $row['type']['data'][0]['#markup'] = $plan->getTypeShortName(TRUE);
+        $row['type']['data']['name']['#markup'] = $plan->getTypeShortName(TRUE);
         $row['type']['data-value'] = $plan->getTypeShortName(TRUE);
         return $row;
       }, $rows);
@@ -178,7 +184,7 @@ trait GlobalSettingsTrait {
         if (!$plan || $plan instanceof PlanOverviewPlanMock) {
           return $row;
         }
-        $row['name']['data'][0]['#markup'] = $plan->getShortName();
+        $row['name']['data']['name']['#markup'] = $plan->getShortName();
         $row['name']['data-value'] = $plan->getShortName();
         return $row;
       }, $rows);
@@ -202,9 +208,30 @@ trait GlobalSettingsTrait {
         $row['status']['data']['content']['document'] = NULL;
         return $row;
       }
-      $row['name']['data'][0] = $section->toLink($row['name']['data'][0]['#markup'])->toRenderable();
+      $row['name']['data']['name'] = $section->toLink($row['name']['data']['name']['#markup'])->toRenderable();
       return $row;
     }, $rows);
+
+    if (!empty($config['plan_included_in_gho_tooltip'])) {
+      $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
+        /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
+        $plan = $plans[$plan_id] ?? NULL;
+        if (!$plan || $plan->isTypeIncluded()) {
+          return $row;
+        }
+        $row['name']['data']['tooltips']['#tooltips'][] = [
+          '#theme' => 'hpc_tooltip',
+          '#tooltip' => $this->t('This plan is not included in the GHO totals'),
+          '#class' => 'gho-included-tooltip',
+          '#tag_content' => [
+            '#theme' => 'hpc_icon',
+            '#icon' => 'warning',
+            '#tag' => 'span',
+          ],
+        ];
+        return $row;
+      }, $rows);
+    }
 
     if (!empty($config['plan_type_icons'])) {
       // Add plan type icons to plan name column.
@@ -217,7 +244,7 @@ trait GlobalSettingsTrait {
         if (!$plan) {
           return $row;
         }
-        $row['name']['data'][] = [
+        $row['name']['data']['tooltips']['#tooltips'][] = [
           '#theme' => 'hpc_tooltip',
           '#tooltip' => $plan->getTypeName($plan_type_short_name),
           '#tag' => 'span',
@@ -332,6 +359,10 @@ trait GlobalSettingsTrait {
       'plan_short_names' => [
         '#title' => $this->t('Use plan short names'),
         '#description' => $this->t('Check to display short names for plans on global pages. If no short name is set the normal plan name will be used as a fallback.'),
+      ],
+      'plan_included_in_gho_tooltip' => [
+        '#title' => $this->t('Show tooltips when a plan is not included in the GHO'),
+        '#description' => $this->t('If checked, a tooltip is added to the plan name column, indicating that the plan is not included in the GHO totals.'),
       ],
       'plan_type_icons' => [
         '#title' => $this->t('Show plan type icons'),
