@@ -12,3 +12,8 @@ services:
     class: Drupal\ghi_subpages\EventSubscriber\RouteSubscriber
     tags:
       - { name: event_subscriber }
+  ghi_subpages.breadcrumb:
+    class: Drupal\ghi_subpages\Breadcrumb\SubpageBreadcrumbBuilder
+    arguments: ['@entity_type.manager', '@router']
+    tags:
+      - { name: breadcrumb_builder, priority: 1003 }

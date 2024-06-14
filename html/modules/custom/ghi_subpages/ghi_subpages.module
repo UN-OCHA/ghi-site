@@ -12,6 +12,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Controller\SubpagesAdminController;
 use Drupal\ghi_subpages\Element\LayoutBuilderSectionLock;
 use Drupal\ghi_subpages\Entity\LogframeSubpage;
@@ -191,11 +192,23 @@ function ghi_subpages_local_tasks_alter(&$local_tasks) {
 function ghi_subpages_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
   $form_object = $form_state->getFormObject();
   if ($form_object instanceof NodeDeleteForm) {
+    // Add custom submit handler for custom redirect to the section overview
+    // page.
     $form['actions']['submit']['#submit'][] = 'ghi_subpages_node_subpage_delete_form_submit';
     return;
   }
+
   if ($form_object instanceof ContentEntityForm && $form_object->getEntity() instanceof SubpageNodeInterface) {
+    // Make some modifications to all node edit forms of subpage nodes.
+    $entity = $form_object->getEntity();
     $form['path']['widget']['#access'] = FALSE;
+    if (!empty($form['field_entity_reference'])) {
+      $form['field_entity_reference']['widget'][0]['target_id']['#disabled'] = 'disabled';
+      $form['field_entity_reference']['widget'][0]['target_id']['#description'] = t('This field cannot be changed after the initial creation of a @entity_type_label page.', [
+        '@entity_type_label' => strtolower($entity->type->entity->label()),
+      ]);
+    }
+    $form['promote']['#access'] = \Drupal::currentUser()->hasPermission('administer site');
   }
 }
 
@@ -289,7 +302,7 @@ function ghi_subpages_current_section_alter(&$section, $node) {
   if (!$node instanceof SubpageNodeInterface) {
     return NULL;
   }
-  $section = $node->getParentNode();
+  $section = $node->getParentBaseNode();
 }
 
 /**
@@ -301,8 +314,15 @@ function ghi_subpages_preprocess_page_title(&$variables) {
     return;
   }
   $subpage_manager = SubpageHelper::getSubpageManager();
-  if ($subpage_manager->isSubpageTypeNode($node) && $section = $subpage_manager->getBaseTypeNode($node)) {
-    $variables['title'] = $section->getPageTitle();
+  if (!$subpage_manager->isSubpageTypeNode($node)) {
+    return;
+  }
+  $parent_node = $subpage_manager->getBaseTypeNode($node);
+  while (!$parent_node instanceof SectionNodeInterface && $parent_node !== NULL) {
+    $parent_node = $subpage_manager->getBaseTypeNode($parent_node);
+  }
+  if ($parent_node instanceof SectionNodeInterface) {
+    $variables['title'] = $parent_node->getPageTitle();
   }
 }
 

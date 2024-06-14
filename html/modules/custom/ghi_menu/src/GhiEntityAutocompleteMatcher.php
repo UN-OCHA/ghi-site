@@ -112,7 +112,7 @@ class GhiEntityAutocompleteMatcher extends EntityAutocompleteMatcher {
   protected function getSubpageLabel($entity_id, $entity_type_id, $label) {
     /** @var \Drupal\ghi_subpages\Entity\SubpageNodeInterface $entity */
     $entity = \Drupal::entityTypeManager()->getStorage($entity_type_id)->load($entity_id);
-    $parent = $entity->getParentNode();
+    $parent = $entity->getParentBaseNode();
     if ($parent) {
       $label = $label . ' (' . $parent->label() . ')';
     }

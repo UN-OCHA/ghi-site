@@ -15,3 +15,8 @@ services:
   ghi_sections.section_menu.storage:
     class: Drupal\ghi_sections\Menu\SectionMenuStorage
     arguments: ['@ghi_sections.manager', '@plugin.manager.section_menu', '@current_route_match']
+  ghi_sections.breadcrumb:
+    class: Drupal\ghi_sections\Breadcrumb\SectionBreadcrumbBuilder
+    arguments: ['@entity_type.manager', '@router']
+    tags:
+      - { name: breadcrumb_builder, priority: 1003 }

@@ -8,6 +8,7 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\entity_access_password\Plugin\Field\FieldFormatter\EntityAccessPasswordFormFormatter as FieldFormatterEntityAccessPasswordFormFormatter;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Traits\ContentPathTrait;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 
 /**
@@ -28,13 +29,13 @@ class EntityAccessPasswordFormFormatter extends FieldFormatterEntityAccessPasswo
     $entity = $items->getEntity();
     $parent = NULL;
     if ($entity instanceof SubpageNodeInterface) {
-      $parent = $entity->getParentNode();
+      $parent = $entity->getParentBaseNode();
     }
     elseif ($entity instanceof ContentBase) {
       $parent = $this->getCurrentSectionNode();
     }
 
-    if (!$parent) {
+    if (!$parent instanceof SectionNodeInterface) {
       return $elements;
     }
     $field_name = $this->fieldDefinition->getName();

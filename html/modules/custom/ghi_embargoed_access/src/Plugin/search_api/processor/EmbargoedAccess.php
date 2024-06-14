@@ -77,6 +77,12 @@ class EmbargoedAccess extends ProcessorPluginBase {
           unset($items[$item_id]);
           continue;
         }
+        $section_parent = $node->getParentBaseNode();
+        if ($section_parent && $this->embargoedAccessManager->isProtected($section_parent)) {
+          // The section parent of the item is protected.
+          unset($items[$item_id]);
+          continue;
+        }
       }
     }
   }

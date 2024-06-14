@@ -10,7 +10,7 @@ use Drupal\ghi_subpages\LogframeManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Controller for autocomplete plan loading.
+ * Controller class for the rebuilding of logframes.
  */
 class LogframeRebuildController extends ControllerBase {
 

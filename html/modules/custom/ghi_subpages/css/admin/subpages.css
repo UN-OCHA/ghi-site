@@ -20,3 +20,7 @@
 .ghi-subpages-admin-views-form table tr.missing-base-object td:first-child .form-type--checkbox {
   margin-left: -3px;
 }
+
+.ghi-subpages-admin-views-form table tr.dependent-subpage-row input[disabled='disabled'] {
+  display: none;
+}

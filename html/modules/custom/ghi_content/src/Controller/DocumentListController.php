@@ -5,21 +5,17 @@ namespace Drupal\ghi_content\Controller;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Url;
 use Drupal\ghi_content\ContentManager\DocumentManager;
-use Drupal\ghi_sections\SectionManager;
-use Drupal\ghi_sections\SectionTrait;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
 use Drupal\node\NodeInterface;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Controller for document lists.
  */
 class DocumentListController extends ContentBaseListController {
-
-  use SectionTrait;
 
   /**
    * The machine name of the view to use for this document list.
@@ -77,8 +73,7 @@ class DocumentListController extends ContentBaseListController {
    */
   public function access(NodeInterface $node = NULL) {
     if ($node) {
-      $section = $this->getSectionNode($node);
-      return AccessResult::allowedIf($section && $section->access('update'));
+      return AccessResult::allowedIf($node instanceof SectionNodeInterface && $node->access('update'));
     }
     return Url::fromRoute(self::DOCUMENT_LIST_ROUTE)->access(NULL, TRUE);
   }
@@ -108,17 +103,13 @@ class DocumentListController extends ContentBaseListController {
   /**
    * Page callback for the document list admin page.
    *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node object.
+   * @param \Drupal\ghi_sections\Entity\SectionNodeInterface $node
+   *   The section node object.
    *
    * @return array|null
    *   A render array.
    */
-  public function listDocuments(NodeInterface $node) {
-    $node = $this->getSectionNode($node);
-    if (!in_array($node->bundle(), SectionManager::SECTION_BUNDLES)) {
-      return;
-    }
+  public function listDocuments(SectionNodeInterface $node) {
     $section_tags = $this->documentManager->getTags($node);
     $view = Views::getView(self::VIEW_NAME);
 
@@ -156,20 +147,15 @@ class DocumentListController extends ContentBaseListController {
    *
    * This runs a migration in a batch process.
    *
-   * @param \Drupal\node\NodeInterface|null $node
-   *   An optional node object, which limits the migration to only those
-   *   documents relevant to the given node via its tags.
+   * @param \Drupal\ghi_sections\Entity\SectionNodeInterface|null $section
+   *   An optional section node object, which limits the migration to only
+   *   those documents relevant to the given node via its tags.
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse|array
    *   A redirect to a batch url or a render array if the migration can't be
    *   found.
    */
-  public function updateDocuments(NodeInterface $node = NULL) {
-    $section = $node ? $this->getSectionNode($node) : NULL;
-    if ($node !== NULL && !$section) {
-      $this->messenger()->addError($this->t('Invalid content object to run this migration.'));
-      return new RedirectResponse($node->toUrl()->toString());
-    }
+  public function updateDocuments(SectionNodeInterface $section = NULL) {
     $redirect_url = Url::fromRoute(self::DOCUMENT_LIST_ROUTE)->toString();
     $tags = NULL;
     if ($section) {

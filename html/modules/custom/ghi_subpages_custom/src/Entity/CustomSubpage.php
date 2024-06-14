@@ -18,7 +18,7 @@ class CustomSubpage extends SubpageNode implements SubpageManualInterface {
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
-    $section = $this->getParentNode();
+    $section = $this->getParentBaseNode();
     if ($section instanceof Section) {
       $this->createSectionMenuItem($this);
     }
@@ -93,7 +93,7 @@ class CustomSubpage extends SubpageNode implements SubpageManualInterface {
    *   The section menu storage service.
    */
   public static function getSectionMenuStorage(CustomSubpage $node) {
-    $section = $node->getParentNode();
+    $section = $node->getParentBaseNode();
     if (!$section) {
       return NULL;
     }

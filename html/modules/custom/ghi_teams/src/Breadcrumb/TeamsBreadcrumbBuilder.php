@@ -38,7 +38,6 @@ class TeamsBreadcrumbBuilder implements BreadcrumbBuilderInterface {
   public function build(RouteMatchInterface $route_match) {
     $breadcrumb = new Breadcrumb();
     $breadcrumb->addLink(Link::createFromRoute($this->t('Home'), '<front>'));
-    $breadcrumb->addLink(Link::createFromRoute($this->t('Administration'), 'system.admin'));
     $breadcrumb->addLink(Link::createFromRoute($this->t('People'), 'entity.user.collection'));
     $breadcrumb->addLink(Link::createFromRoute($this->t('Teams'), 'view.teams.page_teams'));
     $breadcrumb->addCacheContexts(['route']);

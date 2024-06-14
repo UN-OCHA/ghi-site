@@ -17,6 +17,7 @@
     },
     "drupal/gin": {
       "Issue #??: Use toolbar-bar as id for the toolbar to prevent JS errors in Drupal 10.2": "./patches/gin-toolbar-id.patch",
+      "Issue #3386486: Option to use compact or full breadcrumb navigation": "https://www.drupal.org/files/issues/2024-05-30/3386486-skip-gin-node-breadcrumbs.patch",
       "Issue #3281984: The breadcrumb shows 'Edit <label>' on all entity routes, even canonical/delete routes": "https://www.drupal.org/files/issues/2024-04-11/gin_3281984_cherrypick_for_rc10.patch"
     },
     "drupal/gin_lb": {

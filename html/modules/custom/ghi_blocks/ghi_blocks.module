@@ -423,6 +423,25 @@ function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $fo
     $layout_builder_form_alter = \Drupal::service('ghi_blocks.layout_builder_form_alter');
     $layout_builder_form_alter->alterConfirmationForm($form, $form_state);
   }
+
+  if ($form['#theme'] == 'confirm_form') {
+    $form['#after_build'][] = 'ghi_blocks_confirm_form_after_build';
+
+  }
+}
+
+/**
+ * After build callback for confirm forms.
+ *
+ * This removes some classes from the cancel links that are added by the common
+ * design.
+ */
+function ghi_blocks_confirm_form_after_build($form, FormStateInterface $form_state) {
+  $form['actions']['cancel']['#attributes']['class'] = array_diff($form['actions']['cancel']['#attributes']['class'], [
+    // @see common_design_form_alter()
+    'cd-button cd-button--outline',
+  ]);
+  return $form;
 }
 
 /**

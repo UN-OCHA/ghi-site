@@ -4,7 +4,9 @@ namespace Drupal\ghi_subpages;
 
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_sections\SectionTrait;
 use Drupal\ghi_subpages\Entity\SubpageManualInterface;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\node\NodeInterface;
 use Drupal\node\NodeTypeInterface;
 
@@ -12,6 +14,8 @@ use Drupal\node\NodeTypeInterface;
  * Subpage manager service class.
  */
 class SubpageManager extends BaseSubpageManager {
+
+  use SectionTrait;
 
   /**
    * A list of node bundles that are supported as subpages.
@@ -196,7 +200,7 @@ class SubpageManager extends BaseSubpageManager {
    * @param \Drupal\node\NodeTypeInterface $node_type
    *   The node type for the custom subpage to fetch.
    *
-   * @return \Drupal\node\NodeInterface[]|null
+   * @return \Drupal\ghi_subpages\Entity\SubpageNodeInterface[]|null
    *   An array of subpage nodes if found, NULL otherwhise.
    */
   public function getCustomSubpagesForBaseNode(NodeInterface $node, NodeTypeInterface $node_type) {
@@ -205,6 +209,9 @@ class SubpageManager extends BaseSubpageManager {
       'field_entity_reference' => $node->id(),
     ]);
     $this->moduleHandler->alter('custom_subpages', $subpages, $node, $node_type);
+    $subpages = array_filter($subpages, function ($subpage) {
+      return $subpage instanceof SubpageNodeInterface;
+    });
     return $subpages;
   }
 
@@ -223,9 +230,8 @@ class SubpageManager extends BaseSubpageManager {
     }
     if ($this->isSubpageTypeNode($node)) {
       if ($node->hasField('field_entity_reference')) {
-        return $node->get('field_entity_reference')->entity;
+        $base_type_node = $node->get('field_entity_reference')->entity;
       }
-      $base_type_node = NULL;
       $this->moduleHandler->alter('get_base_type_node', $base_type_node, $node);
       return $base_type_node;
     }
@@ -235,16 +241,17 @@ class SubpageManager extends BaseSubpageManager {
   /**
    * Get the label for the section overview page.
    *
-   * @param \Drupal\node\NodeInterface $node
+   * @param \Drupal\ghi_sections\Entity\SectionNodeInterface $node
    *   The base node.
    *
    * @return string|null
    *   The label of a section overview page.
    */
-  public function getSectionOverviewLabel(NodeInterface $node) {
-    if ($this->isBaseTypeNode($node) && $node->field_base_object) {
+  public function getSectionOverviewLabel(SectionNodeInterface $node) {
+    $base_object = $node->getBaseObject();
+    if ($base_object) {
       return $this->t('@type overview', [
-        '@type' => $node->field_base_object->entity->type->entity->label(),
+        '@type' => $base_object->type->entity->label(),
       ]);
     }
     return NULL;
