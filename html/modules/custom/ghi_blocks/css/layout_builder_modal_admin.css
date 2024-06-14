@@ -113,6 +113,9 @@
   border-top: 1px solid var(--cd-default-border-color);
   border-bottom: 1px solid var(--cd-default-border-color);
 }
+#layout-builder-modal .second-level-actions-wrapper > *:first-child {
+  margin-right: 0 !important;
+}
 form.ghi-glb-form.glb-canvas-form,
 #layout-builder-modal form.glb-canvas-form {
   position: static;
@@ -151,16 +154,32 @@ form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions,
   bottom: 0;
   right: 0;
   left: 0;
+  height: 5rem;
   display: block;
   text-align: right;
-  padding-right: 20px;
+  padding-right: 1rem;
+  padding-left: 1rem;
   flex-direction: row-reverse;
   border-top: 1px solid var(--colorGinLayerBorder);
   background: var(--colorGinAppBackground);
 }
-form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions > *:not(.ghi-layout-builder-subform-buttons),
-#layout-builder-modal form.glb-canvas-form .glb-canvas-form__actions > *:not(.ghi-layout-builder-subform-buttons) {
-  margin: 1em 0.75em 1em 0 !important;
+form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions.gin-sticky-form-actions,
+#layout-builder-modal form.glb-canvas-form .glb-canvas-form__actions.gin-sticky-form-actions {
+  width: auto;
+  height: 5rem;
+}
+form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions.gin-sticky-form-actions > .gin-more-actions,
+#layout-builder-modal form.glb-canvas-form .glb-canvas-form__actions.gin-sticky-form-actions > .gin-more-actions {
+  margin: 0 !important;
+  height: 100%;
+}
+form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions.gin-sticky-form-actions > .gin-more-actions .gin-more-actions__menu,
+#layout-builder-modal form.glb-canvas-form .glb-canvas-form__actions.gin-sticky-form-actions > .gin-more-actions .gin-more-actions__menu {
+  height: 100%;
+}
+
+#layout-builder-modal .glb-canvas-form__actions *:last-child {
+  margin-right: 0 !important;
 }
 
 #layout-builder-modal form.glb-canvas-form.confirmation .glb-canvas-form__actions {
@@ -172,7 +191,7 @@ form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions > *:not(.ghi-layout-
 form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions .ghi-layout-builder-subform-buttons,
 #layout-builder-modal form.ghi-glb-form .canvas-form__actions .ghi-layout-builder-subform-buttons {
   position: absolute;
-  left: 20px;
+  left: 1rem;
 }
 
 form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions .ghi-layout-builder-subform-buttons > .glb-form-type--checkbox,
@@ -192,9 +211,10 @@ form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions input[disabled],
   margin-right: 0;
 }
 
-#layout-builder-modal form.glb-canvas-form .glb-canvas-form__actions > a {
+#layout-builder-modal form.glb-canvas-form .glb-canvas-form__actions > a,
+#layout-builder-modal form.glb-canvas-form .glb-canvas-form__actions .gin-more-actions__menu > a {
   display: inline-block;
-  padding: 1rem;
+  padding: 2rem 1rem;
 }
 
 #layout-builder-modal--messages {
