@@ -51,9 +51,9 @@ class EndpointReportController extends ControllerBase {
         [
           'data' => [
             '#markup' => Markup::create(implode('<br />', array_filter([
-              $endpoint_public ? ('/' . $version . '/' . $endpoint_public . $query_string) : NULL,
-              $endpoint_authenticated ? ('/' . $version . '/' . $endpoint_authenticated . $query_string) : NULL,
-              $endpoint_backend ? ('/' . $version . '/' . $endpoint_backend . $query_string) : NULL,
+              $endpoint_public ? ('<strong>public:</strong> /' . $version . '/' . $endpoint_public . $query_string) : NULL,
+              $endpoint_authenticated ? ('<strong>authenticated</strong>: /' . $version . '/' . $endpoint_authenticated . $query_string) : NULL,
+              $endpoint_backend ? ('<strong>backend</strong>: /' . $version . '/' . $endpoint_backend . $query_string) : NULL,
             ]))),
           ],
         ],
