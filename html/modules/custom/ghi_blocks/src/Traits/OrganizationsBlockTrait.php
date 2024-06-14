@@ -33,11 +33,7 @@ trait OrganizationsBlockTrait {
    */
   private function getOrganizations() {
     $query = $this->getProjectSearchQuery();
-    $organizations = $query->getOrganizations();
-    uasort($organizations, function ($a, $b) {
-      return strcmp($a->name, $b->name);
-    });
-    return $organizations;
+    return $query->getOrganizations();
   }
 
   /**
