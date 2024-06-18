@@ -182,6 +182,10 @@ class SectionWizard extends WizardBase {
       $form['title']['#default_value'] .= ' ' . $form_state->getValue('year');
     }
 
+    $form['actions'] = [
+      '#type' => 'actions',
+    ];
+
     if ($step > 0) {
       $form['actions']['back'] = [
         '#type' => 'button',

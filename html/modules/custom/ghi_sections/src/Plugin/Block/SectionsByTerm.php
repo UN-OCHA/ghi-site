@@ -96,7 +96,10 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
       return $build;
     }
 
-    $cache_tags = [];
+    $cache_tags = [
+      'base_object_list:plan',
+      'node_list:section',
+    ];
 
     $list_build = [
       '#theme' => 'item_list',
@@ -104,15 +107,17 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
     ];
 
     foreach ($sections_by_terms as $term_id => $section_nodes) {
-      $cache_tags = Cache::mergeTags($cache_tags, $terms[$term_id]->getCacheTags());
+      $term = $terms[$term_id];
+      $cache_tags = Cache::mergeTags($cache_tags, $term->getCacheTags(), [$term->getEntityTypeId() . '_list:' . $term->bundle()]);
+
       if (empty($section_nodes)) {
         continue;
       }
       $term_build = [
         '#markup' => new FormattableMarkup('<span>@term_label</span>', [
-          '@term_label' => $terms[$term_id]->label(),
+          '@term_label' => $term->label(),
         ]),
-        '#weight' => $terms[$term_id]->getWeight(),
+        '#weight' => $term->getWeight(),
       ];
 
       $section_links = [];
@@ -202,11 +207,10 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
 
     $bundle = $conf['bundle'] ?? NULL;
     $reference_field = $conf['reference_field'] ?? NULL;
-    $vocabulary_id = $conf['vocabulary_id'] ?? NULL;
     $year = $conf['year'] ?? date('Y');
     $terms = $this->getTerms();
 
-    if (empty($terms) || empty($bundle) || empty($reference_field) || empty($vocabulary_id)) {
+    if (empty($terms) || empty($bundle) || empty($reference_field)) {
       return NULL;
     }
 

@@ -218,8 +218,7 @@ class SubpagesPagesForm extends FormBase {
       // See if this subpage type has a base object associated.
       $bundle_class = $this->entityTypeManager->getStorage('node')->getEntityClass($node_type->id());
       $has_base_object = $bundle_class && is_subclass_of($bundle_class, BaseObjectAwareEntityInterface::class);
-
-      $header = array_filter([
+      $header = array_values(array_filter([
         $this->t('Page title'),
         $has_base_object ? $bundle_class::getBaseObjectType()->label() : NULL,
         $this->t('Status'),
@@ -227,7 +226,7 @@ class SubpagesPagesForm extends FormBase {
         $this->t('Created'),
         $this->t('Updated'),
         $this->t('Operations'),
-      ]);
+      ]));
       $rows = [];
       foreach ($subpage_nodes as $subpage_node) {
         /** @var \Drupal\taxonomy\Entity\Term $subpage_team */
@@ -251,7 +250,7 @@ class SubpagesPagesForm extends FormBase {
             $row_classes[] = 'title-mismatch';
           }
         }
-        $row[] = $subpage_node->isPublished() ? $this->t('Published') : $this->t('Unpublished');
+        $row[] = $subpage_node->isPublished() ? (string) $this->t('Published') : (string) $this->t('Unpublished');
         $row[] = $subpage_team ? $subpage_team->getName() : $section_team . ' (' . $this->t('Inherit from section') . ')';
         $row[] = $this->dateFormatter->format($subpage_node->getCreatedTime(), 'custom', 'F j, Y h:ia');
         $row[] = $this->dateFormatter->format($subpage_node->getChangedTime(), 'custom', 'F j, Y h:ia');

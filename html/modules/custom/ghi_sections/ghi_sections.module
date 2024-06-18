@@ -113,3 +113,10 @@ function ghi_sections_preprocess_block__sections_by_term(&$variables) {
   $variables['label'] = !empty($variables['configuration']['label_display']) ? $block->label() : '';
   $variables['title_attributes']['id'] = $block->getAriaId();
 }
+
+/**
+ * Implements hook_gin_ignore_sticky_form_actions_alter().
+ */
+function ghi_sections_gin_ignore_sticky_form_actions_alter(&$form_ids) {
+  $form_ids[] = 'ghi_sections_wizard';
+}
