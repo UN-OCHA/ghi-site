@@ -298,11 +298,21 @@ trait GlobalSettingsTrait {
       }, $rows);
     }
 
-    if (empty($config['caseload_expected_reach'])) {
-      // Hide the expected reach column.
-      unset($header['expected_reach']);
+    // Handle optional caseload columns.
+    if (empty($config['caseload_latest_reached'])) {
+      // Hide the reached column.
+      unset($header['latest_reached']);
       $rows = array_map(function ($row) {
-        unset($row['expected_reach']);
+        unset($row['latest_reached']);
+        return $row;
+      }, $rows);
+    }
+
+    if (empty($config['caseload_expected_reached'])) {
+      // Hide the expected reach column.
+      unset($header['expected_reached']);
+      $rows = array_map(function ($row) {
+        unset($row['expected_reached']);
         return $row;
       }, $rows);
     }
@@ -386,9 +396,13 @@ trait GlobalSettingsTrait {
       ],
       'caseload_reached' => [
         '#title' => $this->t('Show reached values'),
-        '#description' => $this->t('Check to show reached values on global pages.'),
+        '#description' => $this->t('Check to show reached values on global pages. This is a percentage value.'),
       ],
-      'caseload_expected_reach' => [
+      'caseload_latest_reached' => [
+        '#title' => $this->t('Show latest reached values'),
+        '#description' => $this->t('Check to show latest reached values on global pages. This is a calculated field from the API.'),
+      ],
+      'caseload_expected_reached' => [
         '#title' => $this->t('Show estimated reached values'),
         '#description' => $this->t('Check to show estimated reached values on global pages.'),
       ],

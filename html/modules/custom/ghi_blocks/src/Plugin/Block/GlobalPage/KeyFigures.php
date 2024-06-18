@@ -59,11 +59,14 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Ov
     $funding = !empty($data->totals->totalFunding) ? $data->totals->totalFunding : NULL;
     $funding_progress = CommonHelper::calculateRatio($funding, $requirements) * 100;
 
-    // Get the values of people in need and target from the caseload totals.
+    // Get the values of PiN and reached values from the caseload totals.
     $types = [
       'inNeed' => 'In need',
       'target' => 'Targeted',
-      'reached' => 'Reached',
+      'reached' => [
+        'type' => 'latestReach',
+        'fallback' => 'cumulativeReach',
+      ],
     ];
     $caseload_values = $this->getPlanQuery()->getCaseloadTotalValues($types);
     return [
@@ -72,6 +75,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Ov
       'funding_progress' => $funding_progress,
       'people_in_need' => $caseload_values['inNeed'],
       'people_target' => $caseload_values['target'],
+      'people_reached' => $caseload_values['reached'],
       'people_reached_percent' => CommonHelper::calculateRatio($caseload_values['reached'], $caseload_values['target']),
     ];
   }
@@ -255,6 +259,9 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Ov
           ],
           'people_target' => [
             'label' => $this->t('People targeted'),
+          ],
+          'people_reached' => [
+            'label' => $this->t('People reached'),
           ],
           'people_reached_percent' => [
             'label' => $this->t('People reached (%)'),

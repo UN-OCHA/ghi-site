@@ -106,6 +106,8 @@ class PlanOverviewQuery extends EndpointQueryBase {
    * @param array $types
    *   The types of caseload of which the sum is to be returned. The keys
    *   should be the expected metric type, the values the metric label.
+   *   The values can also be an associative array with the keys 'fallback' or
+   *   'label'.
    *
    * @return array
    *   An array keyed by the type and valued by the total sum of that type
@@ -137,17 +139,30 @@ class PlanOverviewQuery extends EndpointQueryBase {
 
         // Check caseLoads and respective totals property has value.
         $caseload = $plan->getPlanCaseload($attachment_overrides[$plan->id()] ?? NULL);
-        if (empty($caseload) || empty($caseload->totals)) {
+        if (empty($caseload)) {
+          continue;
+        }
+        $calculated_fields = $caseload->calculatedFields ?? [];
+        if ($calculated_fields && !is_array($calculated_fields)) {
+          $calculated_fields = [$calculated_fields];
+        }
+        $totals = array_merge($caseload->totals, $calculated_fields);
+        if (empty($totals)) {
           continue;
         }
 
-        foreach ($types as $type => $type_label) {
-          $value = $plan->getCaseloadValue($type, $type_label);
-          $caseload_totals[$type] += $value ?? 0;
+        foreach ($types as $type_key => $type) {
+          $label = is_scalar($type) ? $type : ($type['label'] ?? NULL);
+          $key = is_array($type) && !empty($type['type']) ? $type['type'] : $type_key;
+          $fallback = is_array($type) && !empty($type['fallback']) ? $type['fallback'] : NULL;
+          $value = $plan->getCaseloadValue($key, $label);
+          if (!$value && $fallback) {
+            $value = $plan->getCaseloadValue($fallback);
+          }
+          $caseload_totals[$type_key] += $value ?? 0;
         }
       }
     }
-
     return $caseload_totals;
   }
 

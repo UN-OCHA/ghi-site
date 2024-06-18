@@ -283,7 +283,13 @@ class PlanOverviewPlan extends BaseObject {
     if (!$caseload) {
       return NULL;
     }
-    $totals = $caseload->totals;
+    $calculated_fields = $caseload->calculatedFields ?? [];
+    if ($calculated_fields && !is_array($calculated_fields)) {
+      $calculated_fields = [
+        $calculated_fields->type => $calculated_fields,
+      ];
+    }
+    $totals = $caseload->totals + $calculated_fields;
     $candidates = array_filter($totals, function ($item) use ($type) {
       return (strtolower($item->type) == strtolower($type));
     });

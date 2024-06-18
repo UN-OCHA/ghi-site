@@ -287,6 +287,12 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
         'data_type' => 'integer',
         'theme' => 'hpc_amount',
       ],
+      'people_reached' => [
+        'label' => $this->t('People reached'),
+        'value_description' => $this->t('Enter amount as full integer to override the value from the API.'),
+        'data_type' => 'integer',
+        'theme' => 'hpc_amount',
+      ],
       'people_reached_percent' => [
         'label' => $this->t('People reached (%)'),
         'value_description' => $this->t('Enter ratio as decimal between 0 and 1.'),
