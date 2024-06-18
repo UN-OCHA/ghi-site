@@ -63,7 +63,9 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Ov
     $types = [
       'inNeed' => 'In need',
       'target' => 'Targeted',
-      'reached' => 'Reached',
+      'reached' => [
+        'type' => 'latestReach',
+      ],
     ];
     $caseload_values = $this->getPlanQuery()->getCaseloadTotalValues($types);
     return [
@@ -256,8 +258,11 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Ov
           'people_target' => [
             'label' => $this->t('People targeted'),
           ],
+          'people_reached' => [
+            'label' => $this->t('People latest reached'),
+          ],
           'people_reached_percent' => [
-            'label' => $this->t('People reached (%)'),
+            'label' => $this->t('People latest reached (%)'),
           ],
           'total_funding' => [
             'label' => $this->t('Total funding'),

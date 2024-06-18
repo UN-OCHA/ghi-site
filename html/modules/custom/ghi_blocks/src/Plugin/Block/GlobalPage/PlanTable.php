@@ -189,9 +189,14 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       // Setup the PiN values.
       $in_need = $plan->getCaseloadValue('inNeed');
       $target = $plan->getCaseloadValue('target');
-      // Look for "reached" but allow to fallback to "measure". See HPC-6044.
-      $reached = $plan->getCaseloadValue('reached', 'Reached') ?? $plan->getCaseloadValue('measure', 'Measure');
-      $reached_percent = !empty($reached) && !empty($target) ? 100 / $target * $reached : NULL;
+
+      // Take the latest reached, but allow to fallback to "cumulativeReach".
+      // @see caseload cleanup in HPC-9480 where the measurement metrics have
+      // been unified.
+      // Original see to: @see HPC-6044.
+      $latest_reached = $plan->getCaseloadValue('latestReach');
+
+      $reached_percent = !empty($latest_reached) && !empty($target) ? 100 / $target * $latest_reached : NULL;
       if ($plan instanceof PlanOverviewPlanMock) {
         $reached_percent = ((float) $plan->getCaseloadValue('reached_percent')) * 100;
       }
@@ -302,6 +307,12 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data-column-type' => 'amount',
           'data-progress-group' => 'people',
           'export_commentary' => $this->getFootnoteForProperty($footnotes, 'estimated_reach'),
+        ],
+        'latest_reached' => [
+          'data' => $value_latest_reached,
+          'data-raw-value' => $latest_reached,
+          'data-column-type' => 'amount',
+          'data-progress-group' => 'people',
         ],
         'reached' => [
           'data' => $value_reached,

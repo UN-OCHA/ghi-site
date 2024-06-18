@@ -15,10 +15,12 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
    */
   protected function map() {
     $measurement = $this->getRawData();
+    $totals = $measurement->measurementVersion->value->metrics->values->totals ?? [];
+    $calculated_fields = $measurement->measurementVersion->value->metrics->calculatedFields ?? [];
     $processed = (object) [
       'reporting_period' => $measurement->planReportingPeriodId,
       'metrics' => $measurement->measurementVersion->value->metrics,
-      'totals' => $measurement->measurementVersion->value->metrics->values->totals,
+      'totals' => array_merge($totals, $calculated_fields),
       'disaggregated' => $measurement->measurementVersion->value->metrics->values->disaggregated ?? NULL,
       'comment' => !empty($measurement->isCommentPublic) ? ($measurement->measurementVersion->value->commentsMonitoring ?? NULL) : NULL,
     ];
@@ -31,6 +33,13 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
    */
   public function getReportingPeriodId() {
     return $this->reporting_period;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDataPointValue($index) {
+    return $this->totals[$index]?->value ?? NULL;
   }
 
   /**
