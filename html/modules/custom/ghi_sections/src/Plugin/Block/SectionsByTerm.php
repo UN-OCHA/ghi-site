@@ -97,6 +97,7 @@ class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterfac
     }
 
     $cache_tags = [
+      'base_object_list',
       'base_object_list:plan',
       'node_list:section',
     ];

@@ -36,6 +36,7 @@ class AttachmentPrototype extends ApiObjectBase {
     $measurement_fields = array_map(function ($item) {
       return $item->name->en;
     }, $prototype->value->measureFields ?? []);
+    $calculated_fields = $prototype->value->calculatedFields ?? [];
     return (object) [
       'id' => $prototype->id,
       'name' => $prototype->value->name->en,
@@ -45,7 +46,8 @@ class AttachmentPrototype extends ApiObjectBase {
         array_map(function ($item) {
           return $item->name->en;
         }, $metrics),
-        $measurement_fields
+        $measurement_fields,
+        $calculated_fields
       ),
       'field_types' => array_merge(
         array_map(function ($item) {
@@ -58,6 +60,7 @@ class AttachmentPrototype extends ApiObjectBase {
       'entity_ref_codes' => $prototype->value->entities ?? [],
       'metric_fields' => $metric_fields,
       'measurement_fields' => $measurement_fields,
+      'calculated_fields' => $calculated_fields,
       'calculation_methods' => $prototype->value->calculationMethod ?? [],
     ];
   }

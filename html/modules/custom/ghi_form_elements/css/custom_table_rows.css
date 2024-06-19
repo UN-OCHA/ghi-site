@@ -2,12 +2,12 @@
   overflow-x: auto;
 }
 
-.form-type--custom_table_rows table td > .js-form-wrapper > div {
+.form-type--custom_table_rows table td .value-wrapper > .js-form-wrapper > div {
   display: inline-block;
   margin-right: 1rem;
 }
 
-.form-type--custom_table_rows table td > .js-form-wrapper > div svg.icon {
+.form-type--custom_table_rows table td .value-wrapper > .js-form-wrapper > div svg.icon {
   height: 0.7rem;
 }
 
@@ -26,6 +26,7 @@
 
 .form-type--custom_table_rows table td .custom-row-actions {
   display: flex !important;
+  width: 100%;
 }
 
 .form-type--custom_table_rows table td .custom-row-actions input.form-submit {

@@ -35,7 +35,7 @@ trait PlanFootnoteTrait {
       $footnotes[$property] = $values[$property] ?? NULL;
       // There are naming inconcistencies and we try to cater for them here.
       if ($property == 'estimated_reach') {
-        $footnotes['expected_reach'] = $values[$property] ?? NULL;
+        $footnotes['expected_reached'] = $values[$property] ?? NULL;
       }
     }
     return (object) $footnotes;
