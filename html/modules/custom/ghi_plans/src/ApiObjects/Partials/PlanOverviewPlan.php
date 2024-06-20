@@ -269,7 +269,8 @@ class PlanOverviewPlan extends BaseObject {
       $caseload_item = $this->getCaseloadItemByName($metric_name);
     }
     if ($caseload_item && property_exists($caseload_item, 'value')) {
-      return (int) $caseload_item->value;
+      $value = $caseload_item->value;
+      return $value !== NULL ? (int) $caseload_item->value : NULL;
     }
     if ($fallback_type !== NULL) {
       return $this->getCaseloadValue($fallback_type);
