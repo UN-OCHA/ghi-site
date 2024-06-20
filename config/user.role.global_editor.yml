@@ -61,7 +61,6 @@ permissions:
   - 'administer nodes'
   - 'administer orphaned content'
   - 'administer page templates'
-  - 'administer user roles'
   - 'administer users'
   - 'configure all homepage node layout overrides'
   - 'configure editable article node layout overrides'
