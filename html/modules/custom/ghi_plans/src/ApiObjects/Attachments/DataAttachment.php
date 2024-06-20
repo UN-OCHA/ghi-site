@@ -891,26 +891,19 @@ class DataAttachment extends AttachmentBase {
   /**
    * Fetch prototype data from the API.
    *
-   * @param object $attachment_data
-   *   The raw attachment data from the API.
+   * @param object $attachment
+   *   The attachment object from the API.
    *
    * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
    *   An attachment prototype object.
    */
-  protected function fetchPrototypeForAttachment($attachment_data) {
-    if (empty($attachment_data->attachmentPrototypeId)) {
-      return NULL;
-    }
+  protected function fetchPrototypeForAttachment($attachment) {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanAttachmentPrototypeQuery $query_handler */
     $query_handler = $this->getEndpointQueryManager()->createInstance('plan_attachment_prototype_query');
     if (!$query_handler) {
       return NULL;
     }
-    $plan_id = $this->getPlanId();
-    if (!$plan_id) {
-      return NULL;
-    }
-    return $query_handler->getPrototypeByPlanAndId($plan_id, $attachment_data->attachmentPrototypeId);
+    return $query_handler->getPrototypeByPlanAndId($attachment->planId, $attachment->attachmentPrototypeId);
   }
 
   /**

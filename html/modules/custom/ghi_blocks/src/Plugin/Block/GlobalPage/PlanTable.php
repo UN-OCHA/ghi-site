@@ -144,12 +144,8 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'data' => $this->t('People targeted'),
         'data-column-type' => 'amount',
       ],
-      'expected_reached' => [
+      'expected_reach' => [
         'data' => $this->t('Estimated Reach'),
-        'data-column-type' => 'amount',
-      ],
-      'latest_reached' => [
-        'data' => $this->t('People reached'),
         'data-column-type' => 'amount',
       ],
       'reached' => [
@@ -190,16 +186,11 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         $cache_tags = Cache::mergeTags($cache_tags, $plan_entity->getCacheTags());
       }
 
-      // Setup the PiN and reached values.
+      // Setup the PiN values.
       $in_need = $plan->getCaseloadValue('inNeed');
       $target = $plan->getCaseloadValue('target');
-      $latest_reached = $plan->getCaseloadValue('latestReach');
-
-      // Take the latest reached, but allow to fallback to "cumulativeReach".
-      // @see caseload cleanup in HPC-9480 where the measurement metrics have
-      // been unified.
-      // Original see to: @see HPC-6044.
-      $reached = $latest_reached ?? $plan->getCaseloadValue('cumulativeReach');
+      // Look for "reached" but allow to fallback to "measure". See HPC-6044.
+      $reached = $plan->getCaseloadValue('reached', 'Reached') ?? $plan->getCaseloadValue('measure', 'Measure');
       $reached_percent = !empty($reached) && !empty($target) ? 100 / $target * $reached : NULL;
       if ($plan instanceof PlanOverviewPlanMock) {
         $reached_percent = ((float) $plan->getCaseloadValue('reached_percent')) * 100;
@@ -241,14 +232,9 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       ] : [
         '#markup' => '-',
       ];
-      $value_expected_reached = [
+      $value_expected_reach = [
         '#theme' => 'hpc_amount',
         '#amount' => $expected_reached,
-        '#decimals' => $decimals,
-      ];
-      $value_latest_reached = [
-        '#theme' => 'hpc_amount',
-        '#amount' => $latest_reached,
         '#decimals' => $decimals,
       ];
       $value_reached = $reached_percent ? [
@@ -307,25 +293,15 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data-progress-group' => 'people',
           'export_commentary' => $this->getFootnoteForProperty($footnotes, 'target'),
         ],
-        'expected_reached' => [
+        'expected_reach' => [
           'data' => [
-            $value_expected_reached,
+            $value_expected_reach,
             $this->buildFootnoteTooltip($footnotes, 'estimated_reach'),
           ],
           'data-raw-value' => $expected_reached,
           'data-column-type' => 'amount',
           'data-progress-group' => 'people',
           'export_commentary' => $this->getFootnoteForProperty($footnotes, 'estimated_reach'),
-        ],
-        'latest_reached' => [
-          'data' => [
-            $value_latest_reached,
-            $this->buildFootnoteTooltip($footnotes, 'latest_reached'),
-          ],
-          'data-raw-value' => $latest_reached,
-          'data-column-type' => 'amount',
-          'data-progress-group' => 'people',
-          'export_commentary' => $this->getFootnoteForProperty($footnotes, 'latest_reached'),
         ],
         'reached' => [
           'data' => $value_reached,
@@ -604,12 +580,10 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     $tooltip_full_amount = ThemeHelper::render([
       '#theme' => 'hpc_tooltip',
       '#tooltip' => $this->t('Enter full integers without any number formatting, e.g. 1000000.'),
-      '#class' => 'label-tooltip',
     ], FALSE);
     $tooltip_full_decimal = ThemeHelper::render([
       '#theme' => 'hpc_tooltip',
       '#tooltip' => $this->t('Enter decimals between 0 and 1, using a point as the decimal separator, e.g. 0.4.'),
-      '#class' => 'label-tooltip',
     ], FALSE);
     $plan_types = $this->getAvailablePlanTypes(TRUE);
     $plan_status_options = FieldHelper::getBooleanFieldOptions('base_object', 'plan', 'field_plan_status');
@@ -675,8 +649,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         ],
         'people_in_need' => $this->t('In Need'),
         'people_target' => $this->t('Targeted'),
-        'people_estimated_reached' => $this->t('Estimated Reach'),
-        'people_latest_reached' => $this->t('Latest Reach'),
+        'estimated_reached' => $this->t('Estimated Reach'),
         'people_reached_percent' => $this->t('% Reached'),
         'total_funding' => $this->t('Funding'),
         'total_requirements' => $this->t('Required'),
@@ -689,8 +662,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       '#column_tooltips' => [
         'people_in_need' => $tooltip_full_amount,
         'people_target' => $tooltip_full_amount,
-        'people_estimated_reached' => $tooltip_full_amount,
-        'people_latest_reached' => $tooltip_full_amount,
+        'estimated_reached' => $tooltip_full_amount,
         'people_reached_percent' => $tooltip_full_decimal,
         'total_funding' => $tooltip_full_amount,
         'total_requirements' => $tooltip_full_amount,
@@ -702,6 +674,79 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         ],
       ],
     ];
+
+    // @codingStandardsIgnoreStart
+    // $global_plan_options = hpc_entities_get_available_global_plan_options();
+    // $include_global_plan_default = $this->getDefaultFormValueFromFormState($form_state, ['global_plan', 'global_plan']) ?: FALSE;
+    // $form['global_plan'] = [
+    //   '#type' => 'details',
+    //   '#title' => $this->t('Global plan'),
+    //   '#tree' => TRUE,
+    //   '#group' => 'tabs',
+    // ];
+    // $form['global_plan']['include_global_plan_columns'] = [
+    //   '#type' => 'checkbox',
+    //   '#title' => $this->t('Include columns for requirements against a global plan'),
+    //   '#default_value' => !empty($global_plan_options) && $include_global_plan_default,
+    //   '#disabled' => empty($global_plan_options),
+    //   '#description' => $this->t('Check this to add additional columns that show requirements for each plan against a global plan.'),
+    // ];
+    // if (empty($global_plan_options)) {
+    //   $form['global_plan']['include_global_plan_columns']['#description'] .= ' ' . $this->t('<em>Disabled because no global plan has been found.</em>');
+    // }
+    // $form['global_plan']['global_plan_select'] = [
+    //   '#type' => 'select',
+    //   '#title' => $this->t('Global plan'),
+    //   '#options' => $global_plan_options,
+    //   '#default_value' => array_key_exists('global_plan_columns', $conf) && !empty($conf['global_plan_columns']['global_plan_select']) ? $conf['global_plan_columns']['global_plan_select'] : '',
+    //   '#description' => $this->t('Select the global plan.'),
+    //   '#states' => [
+    //     'visible' => [
+    //       ':input[name="global_plan_columns[include_global_plan_columns]"]' => ['checked' => TRUE],
+    //     ],
+    //   ],
+    // ];
+    // $form['global_plan']['columns_select'] = [
+    //   '#type' => 'checkboxes',
+    //   '#title' => $this->t('Columns to be included'),
+    //   '#options' => [
+    //     'inside_global' => $this->t('Total requirements of each plan inside the global plan'),
+    //     'cluster_total' => $this->t('Total requirements of each plan against the global plan for a specific global cluster'),
+    //     'cluster_total_exclude' => $this->t('Total requirements of each plan against the global plan excluding a specific global cluster'),
+    //     'outside_global' => $this->t('Total requirements of each plan outside the global plan'),
+    //   ],
+    //   '#default_value' => array_key_exists('global_plan_columns', $conf) && !empty($conf['global_plan_columns']['columns_select']) ? $conf['global_plan_columns']['columns_select'] : '',
+    //   '#states' => [
+    //     'visible' => [
+    //       ':input[name="global_plan_columns[include_global_plan_columns]"]' => ['checked' => TRUE],
+    //     ],
+    //   ],
+    // ];
+    // $global_clusters = hpc_api_data_get_global_clusters();
+    // $form['global_plan']['cluster_select'] = [
+    //   '#type' => 'select',
+    //   '#title' => $this->t('Global cluster'),
+    //   '#options' => array_map(function ($item) {
+    //     return $item->name;
+    //   }, $global_clusters),
+    //   '#default_value' => array_key_exists('global_plan_columns', $conf) && !empty($conf['global_plan_columns']['cluster_select']) ? $conf['global_plan_columns']['cluster_select'] : '',
+    //   '#description' => $this->t('Select the global cluster.'),
+    //   '#states' => [
+    //     'visible' => [
+    //       [
+    //         [
+    //           ':input[name="global_plan_columns[include_global_plan_columns]"]' => ['checked' => TRUE],
+    //           ':input[name="global_plan_columns[columns_select][cluster_total]"]' => ['checked' => TRUE],
+    //         ],
+    //         [
+    //           ':input[name="global_plan_columns[include_global_plan_columns]"]' => ['checked' => TRUE],
+    //           ':input[name="global_plan_columns[columns_select][cluster_total_exclude]"]' => ['checked' => TRUE],
+    //         ],
+    //       ],
+    //     ],
+    //   ],
+    // ];
+    // @codingStandardsIgnoreEnd
 
     return $form;
   }
