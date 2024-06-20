@@ -384,13 +384,17 @@ trait GlobalSettingsTrait {
         '#title' => $this->t('Show coverage values'),
         '#description' => $this->t('Check to show coverage values on global pages.'),
       ],
-      'caseload_reached' => [
-        '#title' => $this->t('Show reached values'),
-        '#description' => $this->t('Check to show reached values on global pages.'),
-      ],
-      'caseload_expected_reach' => [
+      'caseload_expected_reached' => [
         '#title' => $this->t('Show estimated reached values'),
         '#description' => $this->t('Check to show estimated reached values on global pages.'),
+      ],
+      'caseload_latest_reached' => [
+        '#title' => $this->t('Show latest reached values'),
+        '#description' => $this->t('Check to show latest reached values on global pages. This is a calculated field from the API.'),
+      ],
+      'caseload_reached' => [
+        '#title' => $this->t('Show latest reach (%)'),
+        '#description' => $this->t('Check to show reach progress, calculated based on lastest reached and target, on global pages.'),
       ],
       'plan_status' => [
         '#title' => $this->t('Show plan status'),
