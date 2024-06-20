@@ -242,6 +242,13 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         '#amount' => $expected_reached,
         '#decimals' => $decimals,
       ];
+      $value_latest_reached = $latest_reached !== NULL ? [
+        '#theme' => 'hpc_amount',
+        '#amount' => $latest_reached,
+        '#decimals' => $decimals,
+      ] : [
+        '#markup' => $this->t('Pending'),
+      ];
       $value_reached = $reached_percent ? [
         '#theme' => 'hpc_percent',
         '#ratio' => $reached_percent / 100,
