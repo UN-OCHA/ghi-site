@@ -20,7 +20,8 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
     $processed = (object) [
       'reporting_period' => $measurement->planReportingPeriodId,
       'metrics' => $measurement->measurementVersion->value->metrics,
-      'totals' => array_merge($totals, $calculated_fields),
+      'totals' => $totals,
+      'calculated_fields' => $calculated_fields,
       'disaggregated' => $measurement->measurementVersion->value->metrics->values->disaggregated ?? NULL,
       'comment' => !empty($measurement->isCommentPublic) ? ($measurement->measurementVersion->value->commentsMonitoring ?? NULL) : NULL,
     ];
@@ -39,7 +40,9 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
    * {@inheritdoc}
    */
   public function getDataPointValue($index) {
-    return $this->totals[$index]?->value ?? NULL;
+    // We need to look at both the totals and the calculated fields together.
+    $totals = array_merge($this->totals, $this->calculated_fields);
+    return $totals[$index]?->value ?? NULL;
   }
 
   /**
