@@ -24,6 +24,7 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
  *  data_sources = {
  *    "entities" = "plan_entities_query",
  *    "project_search" = "plan_project_search_query",
+ *    "project_funding" = "plan_project_funding_query",
  *  },
  *  default_title = @Translation("Organizations overview"),
  *  context_definitions = {
