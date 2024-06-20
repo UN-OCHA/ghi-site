@@ -144,8 +144,7 @@ class PlanOverviewMap extends GHIBlockBase {
 
       $in_need = $plan->getCaseloadValue('inNeed');
       $target = $plan->getCaseloadValue('target');
-      $latest_reached = $plan->getCaseloadValue('latestReach');
-      $reached = $latest_reached ?? $plan->getCaseloadValue('cumulativeReach');
+      $reached = $plan->getCaseloadValue('reached', 'Reached') ?? $plan->getCaseloadValue('measure', 'Measure');
 
       if (empty($funding) && empty($requirements) && empty($in_need) && empty($target)) {
         continue;
@@ -399,7 +398,7 @@ class PlanOverviewMap extends GHIBlockBase {
     if (empty($global_config['coverage'])) {
       unset($items['funding_progress']);
     }
-    if (empty($global_config['caseload_expected_reached'])) {
+    if (empty($global_config['caseload_expected_reach'])) {
       unset($items['estimated_reach']);
     }
     if (empty($global_config['caseload_reached'])) {

@@ -67,6 +67,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     // See if we are in attachment select mode (or in data point configuration
     // mode).
     $attachment_select_mode = empty($attachment) || $triggered_by_change_request;
+
     if (!$attachment_select_mode) {
       $form_state->set('attachment', $attachment_select);
       $element['attachment_summary'] = [

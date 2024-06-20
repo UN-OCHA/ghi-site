@@ -182,8 +182,7 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
       'inNeed' => 'people_in_need',
       'target' => 'people_target',
       'reached_percent' => 'people_reached_percent',
-      'expectedReach' => 'people_estimated_reached',
-      'latestReach' => 'people_latest_reached',
+      'expectedReach' => 'estimated_reached',
     ];
     if (!array_key_exists($metric_type, $map)) {
       return NULL;
