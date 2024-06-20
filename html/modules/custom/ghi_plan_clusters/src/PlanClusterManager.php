@@ -215,7 +215,6 @@ class PlanClusterManager extends BaseSubpageManager {
         /** @var \Drupal\ghi_subpages\Entity\LogframeSubpage $logframe */
         $logframe = $node_storage->create([
           'type' => 'logframe',
-          'title' => $cluster_subpage->label() . ' logframe',
           'uid' => $cluster_subpage->uid,
           'status' => NodeInterface::NOT_PUBLISHED,
           'field_entity_reference' => [

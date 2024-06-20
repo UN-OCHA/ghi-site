@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Routing\RedirectDestinationInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
@@ -75,6 +76,13 @@ class SubpagesPagesForm extends FormBase {
   protected $moduleHandler;
 
   /**
+   * The redirect destination service.
+   *
+   * @var \Drupal\Core\Routing\RedirectDestinationInterface
+   */
+  protected $redirectDestination;
+
+  /**
    * The section manager.
    *
    * @var \Drupal\ghi_subpages\SubpageManager
@@ -84,13 +92,14 @@ class SubpagesPagesForm extends FormBase {
   /**
    * Constructs a SubpagesPages form.
    */
-  public function __construct(DateFormatter $date_formatter, EntityTypeManagerInterface $entity_type_manager, PublishContentAccess $publish_content_access, AccountProxyInterface $user, CsrfTokenGenerator $csrf_token, ModuleHandlerInterface $module_handler, SubpageManager $subpage_manager) {
+  public function __construct(DateFormatter $date_formatter, EntityTypeManagerInterface $entity_type_manager, PublishContentAccess $publish_content_access, AccountProxyInterface $user, CsrfTokenGenerator $csrf_token, ModuleHandlerInterface $module_handler, RedirectDestinationInterface $redirect_destination, SubpageManager $subpage_manager) {
     $this->dateFormatter = $date_formatter;
     $this->entityTypeManager = $entity_type_manager;
     $this->publishContentAccess = $publish_content_access;
     $this->currentUser = $user;
     $this->csrfToken = $csrf_token;
     $this->moduleHandler = $module_handler;
+    $this->redirectDestination = $redirect_destination;
     $this->subpageManager = $subpage_manager;
   }
 
@@ -105,6 +114,7 @@ class SubpagesPagesForm extends FormBase {
       $container->get('current_user'),
       $container->get('csrf_token'),
       $container->get('module_handler'),
+      $container->get('redirect.destination'),
       $container->get('ghi_subpages.manager')
     );
   }
@@ -456,6 +466,8 @@ class SubpagesPagesForm extends FormBase {
     // The token for the publishing links need to be generated manually here.
     $token = $this->csrfToken->get('node/' . $subpage->id() . '/toggleStatus');
 
+    $destination = $this->redirectDestination->getAsArray();
+
     if ($subpage->access('view')) {
       $links['view'] = [
         'title' => $this->t('View'),
@@ -466,6 +478,7 @@ class SubpagesPagesForm extends FormBase {
       $links['edit'] = [
         'title' => $this->t('Edit'),
         'url' => $subpage->toUrl('edit-form'),
+        'query' => $destination,
       ];
       if ($this->moduleHandler->moduleExists('layout_builder_operation_link')) {
         $links += layout_builder_operation_link_entity_operation($subpage);
@@ -477,7 +490,7 @@ class SubpagesPagesForm extends FormBase {
       $options = [
         'query' => [
           'token' => $token,
-        ],
+        ] + $destination,
       ];
       $links['toggle_status'] = [
         'title' => $subpage->isPublished() ? $this->t('Unpublish') : $this->t('Publish'),
