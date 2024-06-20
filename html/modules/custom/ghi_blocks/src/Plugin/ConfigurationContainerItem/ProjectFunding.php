@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -99,6 +100,14 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
   public function getValue($data_type = NULL) {
     $data_type = $data_type ?? $this->get('data_type');
     $organization = $this->getContextValue('organization');
+    $base_object = $this->getContextValue('base_object');
+    if ($base_object instanceof GoverningEntity) {
+      // If the base object in the current context is a governing entity, we
+      // add that to the query to fetch data restricted not only to the current
+      // plan, but also to the cluster.
+      // @see https://humanitarian.atlassian.net/browse/HPC-9500
+      $this->organizationFundingQuery->endpointQuery->setEndpointArgument('clusterid', $base_object->getSourceId());
+    }
     $value = NULL;
     switch ($data_type) {
       case 'original_requirements':
