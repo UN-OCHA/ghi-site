@@ -405,7 +405,7 @@ class PlanOverviewMap extends GHIBlockBase {
     if (empty($global_config['caseload_expected_reach'])) {
       unset($items['estimated_reach']);
     }
-    if (empty($global_config['caseload_latest_reached'])) {
+    if (empty($global_config['caseload_latest_reach'])) {
       unset($items['reached']);
     }
     if (empty($global_config['caseload_reached'])) {

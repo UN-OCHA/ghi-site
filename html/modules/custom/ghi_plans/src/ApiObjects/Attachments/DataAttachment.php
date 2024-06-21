@@ -47,9 +47,13 @@ class DataAttachment extends AttachmentBase {
     $unit = $metrics && is_object($metrics) && property_exists($metrics, 'unit') ? ($metrics->unit->object ?? NULL) : NULL;
     $prototype = $this->getPrototypeData();
     $period = $this->fetchReportingPeriodForAttachment();
+    $metric_fields = $metrics?->values?->totals ?? [];
     $measurement_fields = $metrics?->measureFields ?? [];
     $calculated_fields = $metrics?->calculatedFields ?? [];
     $references = property_exists($attachment, 'composedReference') ? explode('/', $attachment->composedReference) : [];
+
+    // Work around an issue with the API format for this.
+    $calculated_fields = is_array($calculated_fields) ? $calculated_fields : [$calculated_fields];
 
     $processed = (object) [
       'id' => $attachment->id,
@@ -74,7 +78,8 @@ class DataAttachment extends AttachmentBase {
       'fields' => $prototype->getFields(),
       'field_types' => $prototype->getFieldTypes(),
       'original_fields' => array_merge(
-        $metrics?->values?->totals ?? [],
+        $metric_fields,
+        $measurement_fields,
         $calculated_fields,
       ),
       'measurement_fields' => $measurement_fields ? array_map(function ($field) {
@@ -83,7 +88,7 @@ class DataAttachment extends AttachmentBase {
       'calculated_fields' => $calculated_fields ? array_map(function ($field) {
         return $field->name->en;
       }, $calculated_fields) : [],
-      'totals' => $metrics?->values?->totals ?? [],
+      'totals' => $metric_fields,
       'has_disaggregated_data' => !empty($attachment->attachmentVersion?->hasDisaggregatedData),
       'disaggregated' => $attachment->attachmentVersion?->value?->metrics?->values?->disaggregated ?? NULL,
       'calculation_method' => $attachment->attachmentVersion?->value?->metrics?->calculationMethod ?? NULL,
@@ -816,14 +821,19 @@ class DataAttachment extends AttachmentBase {
   protected function extractValues() {
     $prototype = $this->getPrototypeData();
     $metrics = $this->getMetrics();
+
     // Then get the measure fields.
     $measure_fields = $metrics?->measureFields ?? NULL;
     $calculated_fields = $metrics?->calculatedFields ?? NULL;
+
+    // Work around an issue with the API format for this.
+    $calculated_fields = is_array($calculated_fields) ? $calculated_fields : [$calculated_fields];
+
     // And merge metrics and measurements together.
     return array_pad(array_merge(
       array_map(function ($item) {
         return $item->value ?? NULL;
-      }, $metrics?->values->totals ?? []),
+      }, $metrics?->values?->totals ?? []),
       $measure_fields ? array_map(function ($item) {
         return $item->value ?? NULL;
       }, $measure_fields) : [],

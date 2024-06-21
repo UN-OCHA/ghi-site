@@ -289,20 +289,29 @@ trait GlobalSettingsTrait {
     }
 
     // Handle optional caseload columns.
-    if (empty($config['caseload_reached'])) {
-      // Hide the reached column.
-      unset($header['reached']);
-      $rows = array_map(function ($row) {
-        unset($row['reached']);
-        return $row;
-      }, $rows);
-    }
-
     if (empty($config['caseload_expected_reach'])) {
       // Hide the expected reach column.
       unset($header['expected_reach']);
       $rows = array_map(function ($row) {
         unset($row['expected_reach']);
+        return $row;
+      }, $rows);
+    }
+
+    if (empty($config['caseload_latest_reach'])) {
+      // Hide the reached column.
+      unset($header['latest_reach']);
+      $rows = array_map(function ($row) {
+        unset($row['latest_reach']);
+        return $row;
+      }, $rows);
+    }
+
+    if (empty($config['caseload_reached'])) {
+      // Hide the reached column.
+      unset($header['reached']);
+      $rows = array_map(function ($row) {
+        unset($row['reached']);
         return $row;
       }, $rows);
     }
@@ -384,17 +393,17 @@ trait GlobalSettingsTrait {
         '#title' => $this->t('Show coverage values'),
         '#description' => $this->t('Check to show coverage values on global pages.'),
       ],
-      'caseload_expected_reached' => [
-        '#title' => $this->t('Show estimated reached values'),
+      'caseload_expected_reach' => [
+        '#title' => $this->t('Show estimated reach values'),
         '#description' => $this->t('Check to show estimated reached values on global pages.'),
       ],
-      'caseload_latest_reached' => [
-        '#title' => $this->t('Show latest reached values'),
+      'caseload_latest_reach' => [
+        '#title' => $this->t('Show latest reach values'),
         '#description' => $this->t('Check to show latest reached values on global pages. This is a calculated field from the API.'),
       ],
       'caseload_reached' => [
         '#title' => $this->t('Show latest reach (%)'),
-        '#description' => $this->t('Check to show reach progress, calculated based on lastest reached and target, on global pages.'),
+        '#description' => $this->t('Check to show reach progress, calculated based on lastest reach (calculated field) and target, on global pages.'),
       ],
       'plan_status' => [
         '#title' => $this->t('Show plan status'),
