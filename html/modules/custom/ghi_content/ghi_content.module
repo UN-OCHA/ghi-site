@@ -194,22 +194,16 @@ function ghi_content_form_ghi_subpages_admin_views_form_alter(array &$form, Form
  *
  * Used to disable fields that are automatically populated.
  */
-function ghi_content_form_node_article_edit_form_alter(array &$form, FormStateInterface $form_state) {
-  /** @var \Drupal\ghi_content\ContentManager\ArticleManager $article_manager */
-  $article_manager = \Drupal::getContainer()->get('ghi_content.manager.article');
-  $article_manager->nodeEditFormAlter($form, $form_state);
-  return $form;
-}
-
-/**
- * Implements hook_form_FORM_ID_alter().
- *
- * Used to disable fields that are automatically populated.
- */
-function ghi_content_form_node_document_edit_form_alter(array &$form, FormStateInterface $form_state) {
-  /** @var \Drupal\ghi_content\ContentManager\DocumentManager $article_manager */
-  $document_manager = \Drupal::getContainer()->get('ghi_content.manager.document');
-  $document_manager->nodeEditFormAlter($form, $form_state);
+function ghi_content_form_node_form_alter(array &$form, FormStateInterface $form_state) {
+  /** @var \Drupal\node\NodeForm $form_object */
+  $form_object = $form_state->getFormObject();
+  /** @var \Drupal\node\NodeInterface $node */
+  $node = $form_object->getEntity();
+  if (!$node instanceof ContentBase) {
+    return;
+  }
+  $content_manager = $node->getContentManager();
+  $content_manager->nodeEditFormAlter($form, $form_state);
   return $form;
 }
 
