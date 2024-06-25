@@ -21,10 +21,17 @@
         <span class="label">{{ items.estimated_reach.label }}</span>
         <span class="value">{{ items.estimated_reach.value }}</span>
       </div>
-    {% elseif items.reached %}
+    {% endif %}
+    {% if items.reached %}
       <div class="section-row">
         <span class="label">{{ items.reached.label }}</span>
         <span class="value">{{ items.reached.value }}</span>
+      </div>
+    {% endif %}
+    {% if items.reached_percent %}
+      <div class="section-row">
+        <span class="label">{{ items.reached_percent.label }}</span>
+        <span class="value">{{ items.reached_percent.value }}</span>
       </div>
     {% endif %}
   </div>

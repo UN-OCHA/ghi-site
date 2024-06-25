@@ -47,8 +47,18 @@ class DataAttachment extends AttachmentBase {
     $unit = $metrics && is_object($metrics) && property_exists($metrics, 'unit') ? ($metrics->unit->object ?? NULL) : NULL;
     $prototype = $this->getPrototypeData();
     $period = $this->fetchReportingPeriodForAttachment();
-    $measurement_fields = $metrics?->measureFields ?? [];
     $references = property_exists($attachment, 'composedReference') ? explode('/', $attachment->composedReference) : [];
+
+    // Extract the values.
+    $totals = $metrics?->values?->totals ?? [];
+    $metric_fields = array_filter($totals, function ($index) use ($prototype) {
+      return !array_key_exists($index, $prototype->getMeasurementMetricFields());
+    }, ARRAY_FILTER_USE_KEY);
+    $measurement_fields = $metrics?->measureFields ?? [];
+    $calculated_fields = $metrics?->calculatedFields ?? [];
+
+    // Work around an issue with the API format for this.
+    $calculated_fields = is_array($calculated_fields) ? $calculated_fields : [$calculated_fields];
 
     $processed = (object) [
       'id' => $attachment->id,
@@ -70,12 +80,20 @@ class DataAttachment extends AttachmentBase {
         'group' => property_exists($unit, 'isGender') && $unit->isGender == 1 ? 'people' : 'amount',
       ] : NULL,
       'monitoring_period' => $period ?? NULL,
-      'fields' => $prototype->fields,
-      'field_types' => $prototype->field_types,
+      'fields' => $prototype->getFields(),
+      'field_types' => $prototype->getFieldTypes(),
+      'original_fields' => array_merge(
+        $metric_fields,
+        $measurement_fields,
+        $calculated_fields,
+      ),
       'measurement_fields' => $measurement_fields ? array_map(function ($field) {
         return $field->name->en;
       }, $measurement_fields) : [],
-      'totals' => $attachment->attachmentVersion?->value?->metrics?->values?->totals ?? [],
+      'calculated_fields' => $calculated_fields ? array_map(function ($field) {
+        return $field->name->en;
+      }, $calculated_fields) : [],
+      'totals' => $totals,
       'has_disaggregated_data' => !empty($attachment->attachmentVersion?->hasDisaggregatedData),
       'disaggregated' => $attachment->attachmentVersion?->value?->metrics?->values?->disaggregated ?? NULL,
       'calculation_method' => $attachment->attachmentVersion?->value?->metrics?->calculationMethod ?? NULL,
@@ -131,6 +149,35 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
+   * Get the original fields.
+   *
+   * @return array
+   *   An array of field items.
+   */
+  public function getOriginalFields() {
+    return $this->original_fields;
+  }
+
+  /**
+   * Get a data field by type.
+   *
+   * @param string $type
+   *   The type of data point to retrieve.
+   *
+   * @return object
+   *   The field as retrieved from the API.
+   */
+  public function getFieldByType($type) {
+    $candidates = array_filter($this->getOriginalFields(), function ($item) use ($type) {
+      return (strtolower($item->type) == strtolower($type));
+    });
+    if (count($candidates) != 1) {
+      return NULL;
+    }
+    return reset($candidates);
+  }
+
+  /**
    * Get the metric fields.
    *
    * @return string[]
@@ -164,6 +211,36 @@ class DataAttachment extends AttachmentBase {
     return array_filter($this->fields, function ($field) use ($measurements) {
       return in_array($field, $measurements);
     });
+  }
+
+  /**
+   * Get the fields that represent calculated metrics.
+   *
+   * @return string[]
+   *   An array of metric names.
+   */
+  public function getCalculatedMetricFields() {
+    $calculated_fields = $this->calculated_fields;
+    return array_filter($this->fields, function ($field) use ($calculated_fields) {
+      return in_array($field, $calculated_fields);
+    });
+  }
+
+  /**
+   * Get the source property for the calculated field.
+   *
+   * @param int $index
+   *   The index of the data point in the list of all fields.
+   *
+   * @return string|null
+   *   The source field type of the calculated field.
+   */
+  public function getSourceTypeForCalculatedField($index) {
+    if (!$this->isCalculatedIndex($index)) {
+      return NULL;
+    }
+    $original_fields = $this->getOriginalFields();
+    return $original_fields[$index]?->source ?? NULL;
   }
 
   /**
@@ -210,6 +287,58 @@ class DataAttachment extends AttachmentBase {
    */
   public function isMeasurementField($field_label) {
     return in_array($field_label, $this->getMeasurementMetricFields());
+  }
+
+  /**
+   * Check if the given data point index represens a measurement metric.
+   *
+   * @param int $index
+   *   The index of the data point to check.
+   *
+   * @return bool
+   *   TRUE if the index represents a measurement, FALSE otherwise.
+   */
+  public function isCalculatedIndex($index) {
+    return array_key_exists($index, $this->getCalculatedMetricFields());
+  }
+
+  /**
+   * Check if the given field label represens a calculated metric.
+   *
+   * @param string $field_label
+   *   The field label.
+   *
+   * @return bool
+   *   TRUE if the field is a calculated metric, FALSE otherwise.
+   */
+  public function isCalculatedField($field_label) {
+    return in_array($field_label, $this->getCalculatedMetricFields());
+  }
+
+  /**
+   * Check if the given data point index represents a calculated metric.
+   *
+   * @param int $index
+   *   The index of the data point to check.
+   *
+   * @return bool
+   *   TRUE if the index represents a calculated metric, FALSE otherwise.
+   */
+  public function isCalculatedMeasurementIndex($index) {
+    $calculated_fields = $this->getCalculatedMetricFields();
+    $fields = $this->getOriginalFields();
+    if (!array_key_exists($index, $calculated_fields) || !array_key_exists($index, $fields)) {
+      return FALSE;
+    }
+    $source = $this->getSourceTypeForCalculatedField($index);
+    if (!$source) {
+      return FALSE;
+    }
+    $source_field = $this->getFieldByType($source);
+    if (!$source_field) {
+      return FALSE;
+    }
+    return $this->isMeasurementField($source_field->name->en);
   }
 
   /**
@@ -698,16 +827,25 @@ class DataAttachment extends AttachmentBase {
   protected function extractValues() {
     $prototype = $this->getPrototypeData();
     $metrics = $this->getMetrics();
+
     // Then get the measure fields.
     $measure_fields = $metrics?->measureFields ?? NULL;
+    $calculated_fields = $metrics?->calculatedFields ?? NULL;
+
+    // Work around an issue with the API format for this.
+    $calculated_fields = is_array($calculated_fields) ? $calculated_fields : [$calculated_fields];
+
     // And merge metrics and measurements together.
     return array_pad(array_merge(
       array_map(function ($item) {
         return $item->value ?? NULL;
-      }, $metrics?->values->totals ?? []),
+      }, $metrics?->values?->totals ?? []),
       $measure_fields ? array_map(function ($item) {
         return $item->value ?? NULL;
-      }, $measure_fields) : []
+      }, $measure_fields) : [],
+      $calculated_fields ? array_map(function ($item) {
+        return $item->value ?? NULL;
+      }, $calculated_fields) : [],
     ), count($prototype->fields), NULL);
   }
 
@@ -826,7 +964,7 @@ class DataAttachment extends AttachmentBase {
    */
   public function getMeasurementMetricValue($data_point, $reporting_period = 'latest') {
     $measurement = $this->getMeasurementByReportingPeriod($reporting_period);
-    return $measurement->totals[$data_point]?->value ?? NULL;
+    return $measurement?->getDataPointValue($data_point) ?? NULL;
   }
 
   /**
@@ -1192,6 +1330,9 @@ class DataAttachment extends AttachmentBase {
    *   otherwise.
    */
   protected function isMeasurement(array $conf) {
+    if ($this->isCalculatedMeasurement($conf)) {
+      return TRUE;
+    }
     $data_points = $conf['data_points'];
     $data_point_1 = $data_points[0]['index'];
     $data_point_2 = $data_points[1]['index'];
@@ -1201,6 +1342,31 @@ class DataAttachment extends AttachmentBase {
 
       case 'calculated':
         return $this->isMeasurementIndex($data_point_1) || $this->isMeasurementIndex($data_point_2);
+
+    }
+    return FALSE;
+  }
+
+  /**
+   * Check if the given data point configuration involves measurement fields.
+   *
+   * @param array $conf
+   *   The data point configuration.
+   *
+   * @return bool
+   *   TRUE if any of the involved data points is a measurement, FALSE
+   *   otherwise.
+   */
+  protected function isCalculatedMeasurement(array $conf) {
+    $data_points = $conf['data_points'];
+    $data_point_1 = $data_points[0]['index'];
+    $data_point_2 = $data_points[1]['index'];
+    switch ($conf['processing']) {
+      case 'single':
+        return $this->isCalculatedMeasurementIndex($data_point_1);
+
+      case 'calculated':
+        return $this->isCalculatedMeasurementIndex($data_point_1) || $this->isCalculatedMeasurementIndex($data_point_2);
 
     }
     return FALSE;

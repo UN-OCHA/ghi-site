@@ -136,14 +136,17 @@ class PlanOverviewQuery extends EndpointQueryBase {
         }
 
         // Check caseLoads and respective totals property has value.
-        $caseload = $plan->getPlanCaseload($attachment_overrides[$plan->id()] ?? NULL);
-        if (empty($caseload) || empty($caseload->totals)) {
+        $caseload_items = $plan->getPlanCaseloadFields($attachment_overrides[$plan->id()] ?? NULL);
+        if (empty($caseload_items)) {
           continue;
         }
 
-        foreach ($types as $type => $type_label) {
-          $value = $plan->getCaseloadValue($type, $type_label);
-          $caseload_totals[$type] += $value ?? 0;
+        foreach ($types as $type_key => $type) {
+          $label = is_scalar($type) ? $type : ($type['label'] ?? NULL);
+          $key = is_array($type) && !empty($type['type']) ? $type['type'] : $type_key;
+          $fallback = is_array($type) && !empty($type['fallback']) ? $type['fallback'] : NULL;
+          $value = $plan->getCaseloadValue($key, $label, $fallback);
+          $caseload_totals[$type_key] += $value ?? 0;
         }
       }
     }

@@ -168,7 +168,11 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
     $footnote = $footnote ?? $this->get('footnote');
 
     $theme = $type['theme'] ?? 'hpc_amount';
-    $build = ThemeHelper::getThemeOptions($theme, $this->getValue($type, $use_custom_value, $custom_value, $sum), [
+    $value = $this->getValue($type, $use_custom_value, $custom_value, $sum);
+    if ($theme == 'hpc_percent') {
+      $value = $value * 100;
+    }
+    $build = ThemeHelper::getThemeOptions($theme, $value, [
       'decimals' => $theme == 'hpc_amount' ? 1 : 2,
     ]);
 
@@ -283,6 +287,12 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
       ],
       'people_target' => [
         'label' => $this->t('People targeted'),
+        'value_description' => $this->t('Enter amount as full integer to override the value from the API.'),
+        'data_type' => 'integer',
+        'theme' => 'hpc_amount',
+      ],
+      'people_reached' => [
+        'label' => $this->t('People latest reached'),
         'value_description' => $this->t('Enter amount as full integer to override the value from the API.'),
         'data_type' => 'integer',
         'theme' => 'hpc_amount',
