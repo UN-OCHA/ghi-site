@@ -193,11 +193,6 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       // Setup the PiN values.
       $in_need = $plan->getCaseloadValue('inNeed');
       $target = $plan->getCaseloadValue('target');
-
-      // Take the latest reached, but allow to fallback to "cumulativeReach".
-      // @see caseload cleanup in HPC-9480 where the measurement metrics have
-      // been unified.
-      // Original see to: @see HPC-6044.
       $latest_reached = $plan->getCaseloadValue('latestReach');
 
       $reached_percent = !empty($latest_reached) && !empty($target) ? 100 / $target * $latest_reached : NULL;

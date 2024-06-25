@@ -52,7 +52,7 @@ class DataAttachment extends AttachmentBase {
     // Extract the values.
     $totals = $metrics?->values?->totals ?? [];
     $metric_fields = array_filter($totals, function ($index) use ($prototype) {
-      return array_key_exists($index, $prototype->getMeasurementMetricFields());
+      return !array_key_exists($index, $prototype->getMeasurementMetricFields());
     }, ARRAY_FILTER_USE_KEY);
     $measurement_fields = $metrics?->measureFields ?? [];
     $calculated_fields = $metrics?->calculatedFields ?? [];
