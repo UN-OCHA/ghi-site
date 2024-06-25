@@ -57,7 +57,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Ov
     $data = parent::getData($source_key);
     $requirements = !empty($data->totals->revisedRequirements) ? $data->totals->revisedRequirements : NULL;
     $funding = !empty($data->totals->totalFunding) ? $data->totals->totalFunding : NULL;
-    $funding_progress = CommonHelper::calculateRatio($funding, $requirements) * 100;
+    $funding_progress = CommonHelper::calculateRatio($funding, $requirements);
 
     // Get the values of people in need and target from the caseload totals.
     $types = [
