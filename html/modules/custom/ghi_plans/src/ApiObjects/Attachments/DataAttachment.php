@@ -47,10 +47,15 @@ class DataAttachment extends AttachmentBase {
     $unit = $metrics && is_object($metrics) && property_exists($metrics, 'unit') ? ($metrics->unit->object ?? NULL) : NULL;
     $prototype = $this->getPrototypeData();
     $period = $this->fetchReportingPeriodForAttachment();
-    $metric_fields = $metrics?->values?->totals ?? [];
+    $references = property_exists($attachment, 'composedReference') ? explode('/', $attachment->composedReference) : [];
+
+    // Extract the values.
+    $totals = $metrics?->values?->totals ?? [];
+    $metric_fields = array_filter($totals, function ($index) use ($prototype) {
+      return array_key_exists($index, $prototype->getMeasurementMetricFields());
+    }, ARRAY_FILTER_USE_KEY);
     $measurement_fields = $metrics?->measureFields ?? [];
     $calculated_fields = $metrics?->calculatedFields ?? [];
-    $references = property_exists($attachment, 'composedReference') ? explode('/', $attachment->composedReference) : [];
 
     // Work around an issue with the API format for this.
     $calculated_fields = is_array($calculated_fields) ? $calculated_fields : [$calculated_fields];
@@ -88,7 +93,7 @@ class DataAttachment extends AttachmentBase {
       'calculated_fields' => $calculated_fields ? array_map(function ($field) {
         return $field->name->en;
       }, $calculated_fields) : [],
-      'totals' => $metric_fields,
+      'totals' => $totals,
       'has_disaggregated_data' => !empty($attachment->attachmentVersion?->hasDisaggregatedData),
       'disaggregated' => $attachment->attachmentVersion?->value?->metrics?->values?->disaggregated ?? NULL,
       'calculation_method' => $attachment->attachmentVersion?->value?->metrics?->calculationMethod ?? NULL,
@@ -311,7 +316,7 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
-   * Check if the given data point index represens a calculated metric.
+   * Check if the given data point index represents a calculated metric.
    *
    * @param int $index
    *   The index of the data point to check.
@@ -321,14 +326,15 @@ class DataAttachment extends AttachmentBase {
    */
   public function isCalculatedMeasurementIndex($index) {
     $calculated_fields = $this->getCalculatedMetricFields();
-    if (!array_key_exists($index, $calculated_fields)) {
-      return FALSE;
-    }
     $fields = $this->getOriginalFields();
-    if (!array_key_exists($index, $fields)) {
+    if (!array_key_exists($index, $calculated_fields) || !array_key_exists($index, $fields)) {
       return FALSE;
     }
-    $source_field = $this->getFieldByType($fields[$index]->source);
+    $source = $this->getSourceTypeForCalculatedField($index);
+    if (!$source) {
+      return FALSE;
+    }
+    $source_field = $this->getFieldByType($source);
     if (!$source_field) {
       return FALSE;
     }
