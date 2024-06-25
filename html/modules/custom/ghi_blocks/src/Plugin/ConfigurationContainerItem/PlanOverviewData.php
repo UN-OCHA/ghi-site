@@ -168,7 +168,11 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
     $footnote = $footnote ?? $this->get('footnote');
 
     $theme = $type['theme'] ?? 'hpc_amount';
-    $build = ThemeHelper::getThemeOptions($theme, $this->getValue($type, $use_custom_value, $custom_value, $sum), [
+    $value = $this->getValue($type, $use_custom_value, $custom_value, $sum);
+    if ($theme == 'hpc_percent') {
+      $value = $value * 100;
+    }
+    $build = ThemeHelper::getThemeOptions($theme, $value, [
       'decimals' => $theme == 'hpc_amount' ? 1 : 2,
     ]);
 
