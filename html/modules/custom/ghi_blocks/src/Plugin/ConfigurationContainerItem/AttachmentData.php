@@ -8,6 +8,7 @@ use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
+use Drupal\hpc_common\Helpers\StringHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -168,6 +169,9 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
 
     $data_point_index = $data_point_conf['data_points'][0]['index'];
     $property = $attachment->field_types[$data_point_index] ?? NULL;
+    if ($attachment->isCalculatedIndex($data_point_index) && $source = $attachment->getSourceTypeForCalculatedField($data_point_index)) {
+      $property = StringHelper::camelCaseToUnderscoreCase($source);
+    }
 
     /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
     $base_object = $this->getContextValue('base_object');

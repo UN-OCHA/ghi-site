@@ -29,35 +29,36 @@ class AttachmentPrototype extends ApiObjectBase {
    */
   protected function map() {
     $prototype = $this->getRawData();
-    $metrics = $prototype->value->metrics ?? [];
-    $metric_fields = array_map(function ($item) {
-      return $item->name->en;
-    }, $metrics ?? []);
-    $measurement_fields = array_map(function ($item) {
-      return $item->name->en;
-    }, $prototype->value->measureFields ?? []);
+    $metric_fields = $prototype->value->metrics ?? [];
+    $measurement_fields = $prototype->value->measureFields ?? [];
+    $calculated_fields = $prototype->value->calculatedFields ?? [];
+    $all_fields = array_merge(
+      $metric_fields,
+      $prototype->value->measureFields ?? [],
+      $prototype->value->calculatedFields ?? [],
+    );
     return (object) [
       'id' => $prototype->id,
       'name' => $prototype->value->name->en,
       'ref_code' => $prototype->refCode,
       'type' => strtolower($prototype->type),
-      'fields' => array_merge(
-        array_map(function ($item) {
-          return $item->name->en;
-        }, $metrics),
-        $measurement_fields
-      ),
-      'field_types' => array_merge(
-        array_map(function ($item) {
-          return StringHelper::camelCaseToUnderscoreCase($item->type);
-        }, $metrics),
-        array_map(function ($item) {
-          return StringHelper::camelCaseToUnderscoreCase($item->type);
-        }, $prototype->value->measureFields ?? [])
-      ),
+      'fields' => array_map(function ($item) {
+        return $item->name->en;
+      }, $all_fields),
+      'field_types' => array_map(function ($item) {
+        return StringHelper::camelCaseToUnderscoreCase($item->type);
+      }, $all_fields ?? []),
       'entity_ref_codes' => $prototype->value->entities ?? [],
-      'metric_fields' => $metric_fields,
-      'measurement_fields' => $measurement_fields,
+      'metric_fields' => array_map(function ($item) {
+        return $item->name->en;
+      }, $metric_fields),
+      'measurement_fields' => array_map(function ($item) {
+        return $item->name->en;
+      }, $measurement_fields),
+      'calculated_fields' => array_map(function ($item) {
+        return $item->name->en;
+      }, $calculated_fields),
+      'original_fields' => $all_fields,
       'calculation_methods' => $prototype->value->calculationMethod ?? [],
     ];
   }
@@ -113,6 +114,16 @@ class AttachmentPrototype extends ApiObjectBase {
   }
 
   /**
+   * Get the original field items from the API.
+   *
+   * @return array
+   *   An array of field items.
+   */
+  public function getOriginalFields() {
+    return $this->original_fields;
+  }
+
+  /**
    * Get the fields that represent measurement metrics.
    *
    * @return string[]
@@ -135,6 +146,19 @@ class AttachmentPrototype extends ApiObjectBase {
     $measurements = $this->measurement_fields;
     return array_filter($this->fields, function ($field) use ($measurements) {
       return in_array($field, $measurements);
+    });
+  }
+
+  /**
+   * Get the fields that represent calculated metrics.
+   *
+   * @return string[]
+   *   An array of metric names.
+   */
+  public function getCalculatedMetricFields() {
+    $calculated_fields = $this->calculated_fields;
+    return array_filter($this->fields, function ($field) use ($calculated_fields) {
+      return in_array($field, $calculated_fields);
     });
   }
 

@@ -253,11 +253,13 @@ class PlanOverviewPlan extends BaseObject {
    *   The metric type.
    * @param string $metric_name
    *   The english metric name.
+   * @param string $fallback_type
+   *   The metric type of a fallback.
    *
    * @return int
    *   The caseload value if found.
    */
-  public function getCaseloadValue($metric_type, $metric_name = NULL) {
+  public function getCaseloadValue($metric_type, $metric_name = NULL, $fallback_type = NULL) {
     if (!$this->hasCaseloads()) {
       return NULL;
     }
@@ -266,7 +268,14 @@ class PlanOverviewPlan extends BaseObject {
       // Fallback, see https://humanitarian.atlassian.net/browse/HPC-7838
       $caseload_item = $this->getCaseloadItemByName($metric_name);
     }
-    return $caseload_item && property_exists($caseload_item, 'value') ? (int) $caseload_item->value : NULL;
+    if ($caseload_item && property_exists($caseload_item, 'value')) {
+      $value = $caseload_item->value;
+      return $value !== NULL ? (int) $caseload_item->value : NULL;
+    }
+    if ($fallback_type !== NULL) {
+      return $this->getCaseloadValue($fallback_type);
+    }
+    return NULL;
   }
 
   /**
@@ -275,16 +284,16 @@ class PlanOverviewPlan extends BaseObject {
    * @param string $type
    *   The metric type.
    *
-   * @return object
+   * @return object|null
    *   A caseload item if found.
    */
   private function getCaseloadItemByType($type) {
-    $caseload = $this->getPlanCaseload();
-    if (!$caseload) {
+    $caseload_items = $this->getPlanCaseloadFields();
+    if (!$caseload_items) {
       return NULL;
     }
-    $totals = $caseload->totals;
-    $candidates = array_filter($totals, function ($item) use ($type) {
+
+    $candidates = array_filter($caseload_items, function ($item) use ($type) {
       return (strtolower($item->type) == strtolower($type));
     });
     if (count($candidates) != 1) {
@@ -299,15 +308,14 @@ class PlanOverviewPlan extends BaseObject {
    * @param string $name
    *   The metric name.
    *
-   * @return object
+   * @return object|null
    *   A caseload item if found.
    */
   private function getCaseloadItemByName($name) {
-    $caseload = $this->getPlanCaseload();
-    if (!$caseload) {
+    $caseload_items = $this->getPlanCaseloadFields();
+    if (!$caseload_items) {
       return NULL;
     }
-    $totals = $caseload->totals;
 
     // We support alternative names based on RPM.
     $alternative_names = [
@@ -328,7 +336,7 @@ class PlanOverviewPlan extends BaseObject {
       ],
     ];
 
-    $candidates = array_filter($totals, function ($item) use ($name, $alternative_names) {
+    $candidates = array_filter($caseload_items, function ($item) use ($name, $alternative_names) {
       if (!property_exists($item->name, 'en')) {
         return FALSE;
       }
@@ -345,6 +353,29 @@ class PlanOverviewPlan extends BaseObject {
       return NULL;
     }
     return reset($candidates);
+  }
+
+  /**
+   * Get the fields of the plan caseload attachment.
+   *
+   * @param int $attachment_id
+   *   Optional argument to retrieve a specific caseload.
+   *
+   * @return array
+   *   An array of caseload fields.
+   */
+  public function getPlanCaseloadFields($attachment_id = NULL) {
+    $caseload = $this->getPlanCaseload($attachment_id);
+    if (!$caseload) {
+      return [];
+    }
+    $calculated_fields = $caseload->calculatedFields ?? [];
+    if ($calculated_fields && !is_array($calculated_fields)) {
+      $calculated_fields = [
+        $calculated_fields->type => $calculated_fields,
+      ];
+    }
+    return array_merge($caseload->totals, $calculated_fields);
   }
 
   /**

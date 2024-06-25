@@ -40,7 +40,7 @@
 
 /* Use primary theme color for checkbox toggles. */
 body :not(.glb-form-checkboxes):not(td):not(.media-library-item__click-to-select-checkbox):not(.field-content) > .glb-form-type--checkbox input:checked ~ .glb-checkbox-toggle .glb-checkbox-toggle__inner,
-body :not(.form-checkboxes):not(td):not(.media-library-item__click-to-select-checkbox):not(.field-content) > .form-type--checkbox input:checked ~ .checkbox-toggle .checkbox-toggle__inner {
+body :not(.form-checkboxes):not(td):not(.tabledrag-cell-content__item):not(.media-library-item__click-to-select-checkbox):not(.field-content) > .form-type--checkbox :where(.form-type--checkbox:has(input:checked) .checkbox-toggle) .checkbox-toggle__inner {
   background-color: #fed83d !important;
 }
 

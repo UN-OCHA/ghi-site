@@ -236,12 +236,17 @@ class SectionNavigationForm extends FormBase {
       ],
     ] + $rows;
 
-    $form['save_order'] = [
+    $form['actions'] = [
+      '#type' => 'actions',
+      '#tree' => FALSE,
+    ];
+    $form['actions']['save_order'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save order'),
+      '#gin_action_item' => TRUE,
     ];
 
-    $form['reset'] = [
+    $form['actions']['reset'] = [
       '#type' => 'submit',
       '#value' => $this->t('Reset to defaults'),
     ];

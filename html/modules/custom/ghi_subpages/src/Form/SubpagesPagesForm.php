@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_subpages\Form;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Datetime\DateFormatter;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -10,14 +11,17 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Routing\RedirectDestinationInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
 use Drupal\ghi_sections\Entity\Section;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\SubpageManager;
 use Drupal\ghi_subpages\SubpageTrait;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\node\NodeInterface;
+use Drupal\node\NodeTypeInterface;
 use Drupal\publishcontent\Access\PublishContentAccess;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -72,6 +76,13 @@ class SubpagesPagesForm extends FormBase {
   protected $moduleHandler;
 
   /**
+   * The redirect destination service.
+   *
+   * @var \Drupal\Core\Routing\RedirectDestinationInterface
+   */
+  protected $redirectDestination;
+
+  /**
    * The section manager.
    *
    * @var \Drupal\ghi_subpages\SubpageManager
@@ -81,13 +92,14 @@ class SubpagesPagesForm extends FormBase {
   /**
    * Constructs a SubpagesPages form.
    */
-  public function __construct(DateFormatter $date_formatter, EntityTypeManagerInterface $entity_type_manager, PublishContentAccess $publish_content_access, AccountProxyInterface $user, CsrfTokenGenerator $csrf_token, ModuleHandlerInterface $module_handler, SubpageManager $subpage_manager) {
+  public function __construct(DateFormatter $date_formatter, EntityTypeManagerInterface $entity_type_manager, PublishContentAccess $publish_content_access, AccountProxyInterface $user, CsrfTokenGenerator $csrf_token, ModuleHandlerInterface $module_handler, RedirectDestinationInterface $redirect_destination, SubpageManager $subpage_manager) {
     $this->dateFormatter = $date_formatter;
     $this->entityTypeManager = $entity_type_manager;
     $this->publishContentAccess = $publish_content_access;
     $this->currentUser = $user;
     $this->csrfToken = $csrf_token;
     $this->moduleHandler = $module_handler;
+    $this->redirectDestination = $redirect_destination;
     $this->subpageManager = $subpage_manager;
   }
 
@@ -102,6 +114,7 @@ class SubpagesPagesForm extends FormBase {
       $container->get('current_user'),
       $container->get('csrf_token'),
       $container->get('module_handler'),
+      $container->get('redirect.destination'),
       $container->get('ghi_subpages.manager')
     );
   }
@@ -210,14 +223,12 @@ class SubpagesPagesForm extends FormBase {
         continue;
       }
 
-      /** @var \Drupal\node\NodeInterface[] $subpage_nodes */
-      $subpage_nodes = $this->subpageManager->getCustomSubpagesForBaseNode($node, $node_type);
+      $subpage_nodes = $this->subpageManager->getCustomSubpagesForBaseNode($node, $node_type) ?? [];
 
       // See if this subpage type has a base object associated.
       $bundle_class = $this->entityTypeManager->getStorage('node')->getEntityClass($node_type->id());
       $has_base_object = $bundle_class && is_subclass_of($bundle_class, BaseObjectAwareEntityInterface::class);
-
-      $header = array_filter([
+      $header = array_values(array_filter([
         $this->t('Page title'),
         $has_base_object ? $bundle_class::getBaseObjectType()->label() : NULL,
         $this->t('Status'),
@@ -225,49 +236,50 @@ class SubpagesPagesForm extends FormBase {
         $this->t('Created'),
         $this->t('Updated'),
         $this->t('Operations'),
-      ]);
+      ]));
       $rows = [];
-      if (!empty($subpage_nodes)) {
-        foreach ($subpage_nodes as $subpage_node) {
-          /** @var \Drupal\taxonomy\Entity\Term $subpage_team */
-          $subpage_team = !$subpage_node->field_team->isEmpty() ? $subpage_node->field_team->entity : NULL;
-          $row_classes = [];
-          $row = [];
-          $row[] = $subpage_node->toLink();
-          if ($has_base_object) {
-            /** @var \Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface $subpage_node */
-            $base_object = $subpage_node->getBaseObject();
-            $row[] = $base_object ? $this->t('@label (<a href="@url">@id</a>)', [
-              '@label' => $base_object->label(),
-              '@url' => $base_object->toUrl('edit-form')->toString(),
-              '@id' => $base_object->getSourceId(),
-            ]) : $this->t('Missing');
-            if (!$base_object) {
-              $row_classes[] = 'missing-base-object';
-            }
-            if ($base_object && (string) $base_object->label() != (string) $subpage_node->label()) {
-              $row_classes[] = 'title-mismatch';
-            }
+      foreach ($subpage_nodes as $subpage_node) {
+        /** @var \Drupal\taxonomy\Entity\Term $subpage_team */
+        $subpage_team = !$subpage_node->field_team->isEmpty() ? $subpage_node->field_team->entity : NULL;
+        $parent_subpage = $subpage_node->getParentNode()?->bundle() == $node_type->id() ? $subpage_node->getParentNode() : NULL;
+        $row_classes = [];
+        $row = [];
+        $row[] = $subpage_node->toLink();
+        if ($has_base_object) {
+          /** @var \Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface $subpage_node */
+          $base_object = $subpage_node instanceof BaseObjectAwareEntityInterface ? $subpage_node->getBaseObject() : NULL;
+          $row[] = $base_object ? $this->t('@label (<a href="@url">@id</a>)', [
+            '@label' => $base_object->label(),
+            '@url' => $base_object->toUrl('edit-form')->toString(),
+            '@id' => $base_object->getSourceId(),
+          ]) : ($parent_subpage ? FALSE : $this->t('Missing'));
+          if (!$parent_subpage && !$base_object) {
+            $row_classes[] = 'missing-base-object';
           }
-          $row[] = $subpage_node->isPublished() ? $this->t('Published') : $this->t('Unpublished');
-          $row[] = $subpage_team ? $subpage_team->getName() : $section_team . ' (' . $this->t('Inherit from section') . ')';
-          $row[] = $this->dateFormatter->format($subpage_node->getCreatedTime(), 'custom', 'F j, Y h:ia');
-          $row[] = $this->dateFormatter->format($subpage_node->getChangedTime(), 'custom', 'F j, Y h:ia');
-          $row[] = $this->getOperationLinks($subpage_node, $node);
-          $row['#attributes'] = [
-            'class' => $row_classes,
-          ];
+          if (!$parent_subpage && $base_object && (string) $base_object->label() != (string) $subpage_node->label()) {
+            $row_classes[] = 'title-mismatch';
+          }
+        }
+        $row[] = $subpage_node->isPublished() ? (string) $this->t('Published') : (string) $this->t('Unpublished');
+        $row[] = $subpage_team ? $subpage_team->getName() : $section_team . ' (' . $this->t('Inherit from section') . ')';
+        $row[] = $this->dateFormatter->format($subpage_node->getCreatedTime(), 'custom', 'F j, Y h:ia');
+        $row[] = $this->dateFormatter->format($subpage_node->getChangedTime(), 'custom', 'F j, Y h:ia');
+        $row[] = $this->getOperationLinks($subpage_node, $node);
+        $row['#attributes'] = [
+          'class' => $row_classes,
+        ];
+        if ($parent_subpage && array_key_exists($parent_subpage->id(), $rows)) {
+          $pos = array_search($parent_subpage->id(), array_keys($rows)) + 1;
+          $row['#disabled'] = TRUE;
+          $row['#attributes'] = ['class' => ['dependent-subpage-row']];
+          $rows = array_slice($rows, 0, $pos, TRUE) + [$subpage_node->id() => $row] + array_slice($rows, $pos, NULL, TRUE);
+        }
+        else {
           $rows[$subpage_node->id()] = $row;
         }
       }
-      $add_url = Url::fromRoute('node.add', [
-        'node_type' => $node_type->id(),
-      ], [
-        'query' => ['section' => $node->id()],
-      ]);
-      $add_label = $this->t('Create a @type', [
-        '@type' => strtolower($node_type->label()),
-      ]);
+
+      $header_links = $this->getHeaderLinks($node_type, $node);
       $form['subpages_' . $node_type->id() . '_header'] = [
         '#type' => 'container',
         '#attributes' => [
@@ -280,22 +292,8 @@ class SubpagesPagesForm extends FormBase {
             '@label' => $node_type->label(),
           ]),
         ],
-        'add_link' => $add_url->access() ? [
-          '#type' => 'html_tag',
-          '#tag' => 'a',
-          'markup' => [
-            '#markup' => $add_label,
-          ],
-          '#attributes' => [
-            'href' => $add_url->toString(),
-            'class' => [
-              'button',
-              'button--primary',
-              'button--action',
-            ],
-          ],
-        ] : NULL,
-      ];
+      ] + $header_links;
+
       $form['subpages_' . $node_type->id()] = [
         '#type' => 'tableselect',
         '#header' => $header,
@@ -304,10 +302,9 @@ class SubpagesPagesForm extends FormBase {
           $this->t('There is no <em>@type</em> content yet.', [
             '@type' => strtolower($node_type->label()),
           ]),
-          $add_url->access() ? Link::fromTextAndUrl($add_label, $add_url)->toString() : NULL,
+          $this->addLink($node_type, $node)?->toString() ?? NULL,
         ]))),
       ];
-
     }
 
     $bulk_form_actions = $this->getBulkFormActions();
@@ -379,6 +376,80 @@ class SubpagesPagesForm extends FormBase {
   }
 
   /**
+   * Get the add node link for the given node type.
+   *
+   * @param \Drupal\node\NodeTypeInterface $node_type
+   *   The node type in question.
+   * @param \Drupal\ghi_sections\Entity\SectionNodeInterface $section_node
+   *   The section node being the parent of the subpages.
+   *
+   * @return \Drupal\Core\Link|null
+   *   A link object or NULL.
+   */
+  protected function addLink(NodeTypeInterface $node_type, SectionNodeInterface $section_node) {
+    $add_url = Url::fromRoute('node.add', [
+      'node_type' => $node_type->id(),
+    ], [
+      'query' => ['section' => $section_node->id()],
+    ]);
+    $add_label = $this->t('Create a @type', [
+      '@type' => strtolower($node_type->label()),
+    ]);
+    return $add_url->access() ? Link::fromTextAndUrl($add_label, $add_url) : NULL;
+  }
+
+  /**
+   * Get the header links for the given node type.
+   *
+   * @param \Drupal\node\NodeTypeInterface $node_type
+   *   The node type for which to get the header links.
+   * @param \Drupal\ghi_sections\Entity\SectionNodeInterface $section_node
+   *   The section node being the parent of the subpages.
+   *
+   * @return array
+   *   A render array for links.
+   */
+  protected function getHeaderLinks(NodeTypeInterface $node_type, SectionNodeInterface $section_node) {
+    $header_links = [];
+    if ($add_link = $this->addLink($node_type, $section_node)) {
+      $header_links['add_link'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'a',
+        'markup' => [
+          '#markup' => $add_link->getText(),
+        ],
+        '#attributes' => [
+          'href' => $add_link->getUrl()->toString(),
+          'class' => [
+            'button',
+            'button--primary',
+            'button--action',
+          ],
+        ],
+      ];
+    }
+    foreach ($this->moduleHandler->invokeAll('subpage_admin_form_header_links', [$node_type, $section_node]) as $key => $link) {
+      /** @var \Drupal\Core\Link $link */
+      $header_links[$key] = [
+        '#type' => 'html_tag',
+        '#tag' => 'a',
+        'markup' => [
+          '#markup' => $link->getText(),
+        ],
+        '#attributes' => NestedArray::mergeDeep([
+          'href' => $link->getUrl()->toString(),
+          'class' => [
+            'button',
+            'button--primary',
+            'button--action',
+          ],
+        ], $link->getUrl()->getOption('attributes')),
+      ];
+    }
+    return $header_links;
+  }
+
+  /**
    * Get the operations links for the given subpage.
    *
    * @param \Drupal\node\NodeInterface $subpage
@@ -395,6 +466,8 @@ class SubpagesPagesForm extends FormBase {
     // The token for the publishing links need to be generated manually here.
     $token = $this->csrfToken->get('node/' . $subpage->id() . '/toggleStatus');
 
+    $destination = $this->redirectDestination->getAsArray();
+
     if ($subpage->access('view')) {
       $links['view'] = [
         'title' => $this->t('View'),
@@ -405,6 +478,7 @@ class SubpagesPagesForm extends FormBase {
       $links['edit'] = [
         'title' => $this->t('Edit'),
         'url' => $subpage->toUrl('edit-form'),
+        'query' => $destination,
       ];
       if ($this->moduleHandler->moduleExists('layout_builder_operation_link')) {
         $links += layout_builder_operation_link_entity_operation($subpage);
@@ -416,7 +490,7 @@ class SubpagesPagesForm extends FormBase {
       $options = [
         'query' => [
           'token' => $token,
-        ],
+        ] + $destination,
       ];
       $links['toggle_status'] = [
         'title' => $subpage->isPublished() ? $this->t('Unpublish') : $this->t('Publish'),

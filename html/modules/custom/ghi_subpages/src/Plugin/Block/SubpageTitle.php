@@ -5,6 +5,8 @@ namespace Drupal\ghi_subpages\Plugin\Block;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\ghi_subpages\SubpageTrait;
 use Drupal\node\NodeInterface;
@@ -74,21 +76,51 @@ class SubpageTitle extends BlockBase implements ContainerFactoryPluginInterface 
 
     $subpage_manager = SubpageHelper::getSubpageManager();
     $title = $node->type->entity->getThirdPartySetting('ghi_subpages', 'page_title') ?: $node->getTitle();
-    if ($subpage_manager->isBaseTypeNode($node) && $subpage_manager->getSectionOverviewLabel($node)) {
+    if ($node instanceof SectionNodeInterface && $subpage_manager->getSectionOverviewLabel($node)) {
       $title = $subpage_manager->getSectionOverviewLabel($node);
     }
-    if ($title) {
-      return [
-        '#markup' => new FormattableMarkup('<h2 class="content-width">@title</h2>', [
-          '@title' => $title,
-        ]),
-        '#full_width' => TRUE,
-        '#cache' => [
-          'tags' => $node->getCacheTags(),
-          'contexts' => $node->getCacheContexts(),
+
+    $build = [
+      '#full_width' => TRUE,
+      '#cache' => [
+        'tags' => $node->getCacheTags(),
+        'contexts' => $node->getCacheContexts(),
+      ],
+      '#attributes' => [
+        'class' => ['subpage-title-block'],
+      ],
+      'title' => [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => [
+            'subpage-title-wrapper',
+            'content-width',
+          ],
         ],
+      ],
+    ];
+
+    // If we have a parent context, we also want to add a breadcrumb.
+    $parent_node = $node instanceof SubpageNodeInterface ? $node->getParentNode() : NULL;
+    if ($parent_node && !$parent_node instanceof SectionNodeInterface) {
+      $title_prefix = new FormattableMarkup('<span class="document-link">@parent</span>', [
+        '@parent' => $parent_node->toLink($parent_node->label())->toString(),
+      ]);
+      $build['title'][] = [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#value' => $title_prefix,
       ];
+      $build['title']['#attributes']['class'][] = 'has-title-prefix';
     }
+
+    $build['title'][] = [
+      '#type' => 'html_tag',
+      '#tag' => 'h2',
+      '#value' => $title,
+    ];
+
+    return $build;
   }
 
 }

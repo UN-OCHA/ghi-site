@@ -113,7 +113,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
         'label' => 'hidden',
         'settings' => $this->getSettings(),
       ];
-      if ($entity instanceof SubpageNodeInterface && $parent_image = $entity->getParentNode()?->getImage()) {
+      if ($entity instanceof SubpageNodeInterface && $parent_image = $entity->getParentBaseNode()?->getImage()) {
         return $parent_image->view($build_settings);
       }
       elseif ($parent_image = $this->getParentImage($entity)) {

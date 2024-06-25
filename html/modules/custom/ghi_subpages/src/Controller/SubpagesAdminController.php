@@ -25,17 +25,12 @@ class SubpagesAdminController extends ControllerBase {
    *   The access result.
    */
   public function access(NodeInterface $node) {
-    if (!$this->isBaseTypeNode($node) && !$this->isSubpageTypeNode($node)) {
-      // We allow subpage listings on base type nodes and subpage nodes.
+    if (!$this->isBaseTypeNode($node)) {
+      // We allow subpage listings only on base type nodes.
       return AccessResult::forbidden();
     }
-    $base_type = $this->getBaseTypeNode($node);
-    if (!$base_type) {
-      // Base type node not found.
-      return AccessResult::forbidden();
-    }
-    // Then check if the current user has update rights on the base node.
-    return $base_type->access('update', NULL, TRUE);
+    // Check if the current user has update rights on the base node.
+    return $node->access('update', NULL, TRUE);
   }
 
   /**

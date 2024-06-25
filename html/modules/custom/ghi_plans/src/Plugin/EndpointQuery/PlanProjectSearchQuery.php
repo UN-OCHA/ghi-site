@@ -8,6 +8,7 @@ use Drupal\ghi_plans\ApiObjects\Project;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Traits\ProjectTrait;
 use Drupal\hpc_api\Query\EndpointQueryBase;
+use Drupal\hpc_common\Helpers\CommonHelper;
 
 /**
  * Provides a query plugin for project search.
@@ -254,6 +255,12 @@ class PlanProjectSearchQuery extends EndpointQueryBase {
 
       }
     }
+
+    // Alphabetical sort of Organizations.
+    uasort($organizations, function ($a, $b) {
+      return strcasecmp(CommonHelper::removeDiacritics($a->name), CommonHelper::removeDiacritics($b->name));
+    });
+
     $this->setCache($cache_key, $organizations);
     return $organizations;
   }

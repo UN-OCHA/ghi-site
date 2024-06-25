@@ -69,7 +69,11 @@ function ghi_sections_form_node_section_edit_form_alter(&$form, FormStateInterfa
     $form[$field_name]['widget'][0]['target_id']['#title'] .= ': ' . $object->type->entity->label();
     $form[$field_name]['widget'][0]['target_id']['#description'] = t('The base object cannot be changed after the initial creation of a @entity_type_label. <a href="@base_object_edit_url" target="_blank">Edit @label</a>', [
       '@entity_type_label' => strtolower($entity->type->entity->label()),
-      '@base_object_edit_url' => $object->toUrl('edit-form')->toString(),
+      '@base_object_edit_url' => $object->toUrl('edit-form', [
+        'query' => [
+          'destination' => $entity->toUrl('edit-form')->toString(),
+        ],
+      ])->toString(),
       '@label' => $object->label(),
     ]);
   }
@@ -112,4 +116,11 @@ function ghi_sections_preprocess_block__sections_by_term(&$variables) {
   $block = $block_manager->createInstance($variables['plugin_id'], $variables['configuration']);
   $variables['label'] = !empty($variables['configuration']['label_display']) ? $block->label() : '';
   $variables['title_attributes']['id'] = $block->getAriaId();
+}
+
+/**
+ * Implements hook_gin_ignore_sticky_form_actions_alter().
+ */
+function ghi_sections_gin_ignore_sticky_form_actions_alter(&$form_ids) {
+  $form_ids[] = 'ghi_sections_wizard';
 }

@@ -52,7 +52,11 @@
   z-index: 3;
   padding: 0 1rem;
   width: 100%;
+  border-top: 1px solid var(--colorGinLayerBorder);
   background-color: var(--colorGinAppBackground);
+}
+.form-type--configuration_container .actions-wrapper > *:first-child {
+  margin-right: 0 !important;
 }
 .form-type--configuration_container .actions-wrapper.parent-actions {
   z-index: 2;
@@ -70,8 +74,11 @@
 .form-type--configuration_container table.summary-table tbody tr td {
   text-align: left;
 }
+.form-type--configuration_container table.summary-table tbody tr td .cell-wrapper-inner,
 .form-type--configuration_container table.summary-table tbody tr td .value-wrapper {
   display: flex;
+  gap: 0.3rem;
+  align-items: center;
 }
 .form-type--configuration_container table.summary-table tbody tr td .value-wrapper .tooltip {
   display: inline-block;

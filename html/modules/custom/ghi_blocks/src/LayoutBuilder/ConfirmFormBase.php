@@ -54,6 +54,11 @@ abstract class ConfirmFormBase extends LayoutRebuildConfirmFormBase {
     $this->uuid = $uuid;
     $form = parent::buildForm($form, $form_state, $section_storage, $delta);
 
+    if ($this->isAjax()) {
+      // We overwrite the class on purpose so that this is not a button anymore.
+      $form['actions']['cancel']['#attributes']['class'] = ['dialog-cancel'];
+    }
+
     if ($this->moduleHandler->moduleExists('gin_lb')) {
       $form['#after_build'][] = [FormAlter::class, 'afterBuildAttachGinLbForm'];
       $form['#gin_lb_form'] = TRUE;

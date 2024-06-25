@@ -91,7 +91,7 @@ class LogoutRedirect {
     $params = $current_url->getRouteParameters();
     $node_id = $params['node'] ?? NULL;
     $node = $node_id ? $this->entityTypeManager->getStorage('node')->load($node_id) : NULL;
-    $parent = $node && $node instanceof SubpageNode ? $node->getParentNode() : NULL;
+    $parent = $node && $node instanceof SubpageNode ? $node->getParentBaseNode() : NULL;
     if ($parent && $parent->access('view')) {
       return $parent->toUrl();
     }

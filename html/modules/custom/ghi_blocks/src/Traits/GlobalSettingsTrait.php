@@ -150,8 +150,14 @@ trait GlobalSettingsTrait {
     $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($columns) {
       foreach ($columns as $column) {
         if (!is_array($row[$column])) {
-          $row[$column] = ['data' => [0 => ['#markup' => $row[$column]]]];
+          $row[$column] = ['data' => ['name' => ['#markup' => $row[$column]]]];
         }
+        $row[$column]['data'] += [
+          'tooltips' => [
+            '#theme' => 'hpc_tooltip_wrapper',
+            '#tooltips' => [],
+          ],
+        ];
       }
       return $row;
     }, $rows);
@@ -164,7 +170,7 @@ trait GlobalSettingsTrait {
         if (!$plan) {
           return $row;
         }
-        $row['type']['data'][0]['#markup'] = $plan->getTypeShortName(TRUE);
+        $row['type']['data']['name']['#markup'] = $plan->getTypeShortName(TRUE);
         $row['type']['data-value'] = $plan->getTypeShortName(TRUE);
         return $row;
       }, $rows);
@@ -178,7 +184,7 @@ trait GlobalSettingsTrait {
         if (!$plan || $plan instanceof PlanOverviewPlanMock) {
           return $row;
         }
-        $row['name']['data'][0]['#markup'] = $plan->getShortName();
+        $row['name']['data']['name']['#markup'] = $plan->getShortName();
         $row['name']['data-value'] = $plan->getShortName();
         return $row;
       }, $rows);
@@ -202,9 +208,30 @@ trait GlobalSettingsTrait {
         $row['status']['data']['content']['document'] = NULL;
         return $row;
       }
-      $row['name']['data'][0] = $section->toLink($row['name']['data'][0]['#markup'])->toRenderable();
+      $row['name']['data']['name'] = $section->toLink($row['name']['data']['name']['#markup'])->toRenderable();
       return $row;
     }, $rows);
+
+    if (!empty($config['plan_included_in_gho_tooltip'])) {
+      $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
+        /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
+        $plan = $plans[$plan_id] ?? NULL;
+        if (!$plan || $plan->isTypeIncluded()) {
+          return $row;
+        }
+        $row['name']['data']['tooltips']['#tooltips'][] = [
+          '#theme' => 'hpc_tooltip',
+          '#tooltip' => $this->t('This plan is not included in the GHO totals'),
+          '#class' => 'gho-included-tooltip',
+          '#tag_content' => [
+            '#theme' => 'hpc_icon',
+            '#icon' => 'warning',
+            '#tag' => 'span',
+          ],
+        ];
+        return $row;
+      }, $rows);
+    }
 
     if (!empty($config['plan_type_icons'])) {
       // Add plan type icons to plan name column.
@@ -217,7 +244,7 @@ trait GlobalSettingsTrait {
         if (!$plan) {
           return $row;
         }
-        $row['name']['data'][] = [
+        $row['name']['data']['tooltips']['#tooltips'][] = [
           '#theme' => 'hpc_tooltip',
           '#tooltip' => $plan->getTypeName($plan_type_short_name),
           '#tag' => 'span',
@@ -262,20 +289,29 @@ trait GlobalSettingsTrait {
     }
 
     // Handle optional caseload columns.
-    if (empty($config['caseload_reached'])) {
-      // Hide the reached column.
-      unset($header['reached']);
-      $rows = array_map(function ($row) {
-        unset($row['reached']);
-        return $row;
-      }, $rows);
-    }
-
     if (empty($config['caseload_expected_reach'])) {
       // Hide the expected reach column.
       unset($header['expected_reach']);
       $rows = array_map(function ($row) {
         unset($row['expected_reach']);
+        return $row;
+      }, $rows);
+    }
+
+    if (empty($config['caseload_latest_reach'])) {
+      // Hide the reached column.
+      unset($header['latest_reach']);
+      $rows = array_map(function ($row) {
+        unset($row['latest_reach']);
+        return $row;
+      }, $rows);
+    }
+
+    if (empty($config['caseload_reached'])) {
+      // Hide the reached column.
+      unset($header['reached']);
+      $rows = array_map(function ($row) {
+        unset($row['reached']);
         return $row;
       }, $rows);
     }
@@ -333,6 +369,10 @@ trait GlobalSettingsTrait {
         '#title' => $this->t('Use plan short names'),
         '#description' => $this->t('Check to display short names for plans on global pages. If no short name is set the normal plan name will be used as a fallback.'),
       ],
+      'plan_included_in_gho_tooltip' => [
+        '#title' => $this->t('Show tooltips when a plan is not included in the GHO'),
+        '#description' => $this->t('If checked, a tooltip is added to the plan name column, indicating that the plan is not included in the GHO totals.'),
+      ],
       'plan_type_icons' => [
         '#title' => $this->t('Show plan type icons'),
         '#description' => $this->t('If checked, icon-like flags will be added to the plan name column of plan tables on global pages. The label text is an automatically generated uppercased abbreviation based on the plan type initials, e.g. <em>Flash appeal</em> becomes <em>FA</em>.'),
@@ -353,13 +393,17 @@ trait GlobalSettingsTrait {
         '#title' => $this->t('Show coverage values'),
         '#description' => $this->t('Check to show coverage values on global pages.'),
       ],
-      'caseload_reached' => [
-        '#title' => $this->t('Show reached values'),
-        '#description' => $this->t('Check to show reached values on global pages.'),
-      ],
       'caseload_expected_reach' => [
-        '#title' => $this->t('Show estimated reached values'),
+        '#title' => $this->t('Show estimated reach values'),
         '#description' => $this->t('Check to show estimated reached values on global pages.'),
+      ],
+      'caseload_latest_reach' => [
+        '#title' => $this->t('Show latest reach values'),
+        '#description' => $this->t('Check to show latest reached values on global pages. This is a calculated field from the API.'),
+      ],
+      'caseload_reached' => [
+        '#title' => $this->t('Show latest reach (%)'),
+        '#description' => $this->t('Check to show reach progress, calculated based on lastest reach (calculated field) and target, on global pages.'),
       ],
       'plan_status' => [
         '#title' => $this->t('Show plan status'),

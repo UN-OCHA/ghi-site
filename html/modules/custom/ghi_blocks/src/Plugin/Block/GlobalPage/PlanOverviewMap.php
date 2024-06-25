@@ -144,7 +144,7 @@ class PlanOverviewMap extends GHIBlockBase {
 
       $in_need = $plan->getCaseloadValue('inNeed');
       $target = $plan->getCaseloadValue('target');
-      $reached = $plan->getCaseloadValue('reached', 'Reached') ?? $plan->getCaseloadValue('measure', 'Measure');
+      $reached = $plan->getCaseloadValue('latestReach');
 
       if (empty($funding) && empty($requirements) && empty($in_need) && empty($target)) {
         continue;
@@ -331,6 +331,10 @@ class PlanOverviewMap extends GHIBlockBase {
       ],
       'reached' => [
         'label' => $this->t('Reached'),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'latest_reach') . CommonHelper::renderValue($data->caseload->reached, 'amount', 'hpc_amount', $common_theme_args, NULL, $this->t('Pending')),
+      ],
+      'reached_percent' => [
+        'label' => $this->t('Reached (%)'),
         'value' => (!empty($data->reporting_period) ? ThemeHelper::render([
           '#theme' => 'hpc_tooltip',
           '#tooltip' => ThemeHelper::render([
@@ -401,8 +405,11 @@ class PlanOverviewMap extends GHIBlockBase {
     if (empty($global_config['caseload_expected_reach'])) {
       unset($items['estimated_reach']);
     }
-    if (empty($global_config['caseload_reached'])) {
+    if (empty($global_config['caseload_latest_reach'])) {
       unset($items['reached']);
+    }
+    if (empty($global_config['caseload_reached'])) {
+      unset($items['reached_percent']);
     }
 
     $build = [

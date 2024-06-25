@@ -18,6 +18,14 @@ interface MeasurementInterface extends ApiObjectInterface {
   public function getReportingPeriodId();
 
   /**
+   * Get the value for a data point.
+   *
+   * @return mixed|null
+   *   The value for the data point with the given index
+   */
+  public function getDataPointValue($index);
+
+  /**
    * Get the comment for the measurement.
    *
    * @return string|\Drupal\Component\Render\MarkupInterface|null

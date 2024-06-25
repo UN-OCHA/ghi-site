@@ -3,6 +3,7 @@
 namespace Drupal\ghi_sections\MenuItemType;
 
 use Drupal\Core\Cache\Cache;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 
 /**
  * A class for section dropdowns.
@@ -92,6 +93,11 @@ class SectionDropdown extends SectionMenuWidgetBase {
         $link['#attributes']['class'][] = 'node--unpublished';
       }
       if ($current_node && $current_node->toUrl() == $node->toUrl()) {
+        $link['#attributes']['class'][] = 'active';
+        $wrapper_attributes['class'][] = 'active';
+      }
+      $parent_node = $current_node instanceof SubpageNodeInterface ? $current_node->getParentNode() : NULL;
+      if ($parent_node instanceof SubpageNodeInterface && $parent_node->toUrl() == $node->toUrl()) {
         $link['#attributes']['class'][] = 'active';
         $wrapper_attributes['class'][] = 'active';
       }

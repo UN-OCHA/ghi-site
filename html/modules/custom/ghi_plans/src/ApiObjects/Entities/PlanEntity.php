@@ -24,6 +24,7 @@ class PlanEntity extends EntityObjectBase {
     return (object) [
       'id' => $entity?->id,
       'name' => $prototype ? $prototype->value->name->en->singular : NULL,
+      'singular_name' => $prototype ? $prototype->value->name->en->singular : NULL,
       'plural_name' => $prototype ? $prototype->value->name->en->plural : NULL,
       'group_name' => $prototype ? $prototype->value->name->en->plural : NULL,
       'display_name' => $prototype ? ($prototype->value->name->en->singular . ' ' . $entity_version?->customReference) : NULL,

@@ -13,14 +13,25 @@ use Drupal\node\Entity\Node;
 abstract class SubpageNode extends Node implements SubpageNodeInterface {
 
   /**
-   * Get the parent node.
-   *
-   * @return \Drupal\ghi_sections\Entity\SectionNodeInterface
-   *   The parent node.
+   * {@inheritdoc}
    */
   public function getParentNode() {
     $entity = $this->get('field_entity_reference')->entity;
-    return $entity instanceof SectionNodeInterface ? $entity : NULL;
+    return $entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getParentBaseNode() {
+    $entity = $this->getParentNode();
+    if ($entity instanceof SectionNodeInterface) {
+      return $entity;
+    }
+    if ($entity instanceof SubpageNodeInterface) {
+      return $entity->getParentNode();
+    }
+    return NULL;
   }
 
   /**
@@ -28,7 +39,7 @@ abstract class SubpageNode extends Node implements SubpageNodeInterface {
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
-    $parent = $this->getParentNode();
+    $parent = $this->getParentBaseNode();
     if ($parent) {
       Cache::invalidateTags($parent->getCacheTags());
     }

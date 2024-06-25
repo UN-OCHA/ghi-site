@@ -53,6 +53,7 @@ dependencies:
     - page_manager_publishable_variants
     - path
     - publishcontent
+    - role_delegation
     - social_api
     - system
     - taxonomy
@@ -76,6 +77,7 @@ permissions:
   - 'access toolbar'
   - 'access unpublished page variants'
   - 'access user profiles'
+  - 'administer account settings'
   - 'administer base object entities'
   - 'administer base_object_type labels'
   - 'administer content translation'
@@ -93,8 +95,8 @@ permissions:
   - 'administer social api widgets'
   - 'administer teams'
   - 'administer url aliases'
-  - 'administer user roles'
   - 'administer users'
+  - 'assign all roles'
   - 'configure all homepage node layout overrides'
   - 'configure any layout'
   - 'configure editable article node layout overrides'

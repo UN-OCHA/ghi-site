@@ -1,0 +1,39 @@
+ghi_plan_clusters.logframes.create:
+  path: '/node/{node}/cluster-logframes/create'
+  defaults:
+    _form: '\Drupal\ghi_plan_clusters\Form\LogframeCreateConfirmForm'
+  requirements:
+    _entity_access: node.update
+  options:
+    parameters:
+      node:
+        type: entity:node
+        bundle:
+          - section
+    _admin_route: TRUE
+ghi_plan_clusters.logframes.rebuild:
+  path: '/node/{node}/cluster-logframes/rebuild'
+  defaults:
+    _form: '\Drupal\ghi_plan_clusters\Form\LogframeRebuildConfirmForm'
+  requirements:
+    _entity_access: node.update
+  options:
+    parameters:
+      node:
+        type: entity:node
+        bundle:
+          - section
+    _admin_route: TRUE
+ghi_plan_clusters.logframes.delete:
+  path: '/node/{node}/cluster-logframes/delete'
+  defaults:
+    _form: '\Drupal\ghi_plan_clusters\Form\LogframeDeleteConfirmForm'
+  requirements:
+    _entity_access: node.update
+  options:
+    parameters:
+      node:
+        type: entity:node
+        bundle:
+          - section
+    _admin_route: TRUE

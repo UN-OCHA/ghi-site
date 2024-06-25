@@ -52,11 +52,14 @@ class ArticleTitle extends BlockBase {
         'tags' => $node->getCacheTags(),
         'contexts' => $node->getCacheContexts(),
       ],
+      '#attributes' => [
+        'class' => ['subpage-title-block'],
+      ],
       'title' => [
         '#type' => 'container',
         '#attributes' => [
           'class' => [
-            'article-title-wrapper',
+            'subpage-title-wrapper',
             'content-width',
           ],
         ],

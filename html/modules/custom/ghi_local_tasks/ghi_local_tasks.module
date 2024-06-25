@@ -12,6 +12,8 @@ use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 
 /**
@@ -103,14 +105,16 @@ function ghi_local_tasks_link_alter(&$variables) {
   if ($node) {
     $type = $node->type->entity->label();
     $subpage_manager = SubpageHelper::getSubpageManager();
-    if ($subpage_manager->isSubpageTypeNode($node) && $base_node = $subpage_manager->getBaseTypeNode($node)) {
+
+    $parent_node = $node instanceof SubpageNodeInterface ? $node->getParentNode() : NULL;
+    if ($node instanceof SubpageNodeInterface && $parent_node) {
       $variables['text'] = t('@parent_type subpage: @type @active_title', [
-        '@parent_type' => $base_node->type->entity->label(),
+        '@parent_type' => $parent_node->type->entity->label(),
         '@type' => $type,
         '@active_title' => $active_title ? '- ' . $active_title : NULL,
       ]);
     }
-    elseif ($subpage_manager->isBaseTypeNode($node) && $label = $subpage_manager->getSectionOverviewLabel($node)) {
+    elseif ($node instanceof SectionNodeInterface && $label = $subpage_manager->getSectionOverviewLabel($node)) {
       $variables['text'] = t('@parent_type: @label @active_title', [
         '@parent_type' => $node->type->entity->label(),
         '@label' => $label,

@@ -25,10 +25,14 @@ class GoverningEntity extends EntityObjectBase {
       'name' => $entity->composedReference . ': ' . $entity_version->name,
       'group_name' => $entity->composedReference . ': ' . $entity_version->name,
       'display_name' => $entity->composedReference . ': ' . $entity_version->name,
+      'singular_name' => $prototype->value->name->en->singular,
       'plural_name' => $prototype->value->name->en->plural,
       'description' => property_exists($entity_version->value, 'description') ? $entity_version->value->description : NULL,
       'entity_name' => $entity_version->name,
       'ref_code' => $prototype->refCode,
+      'ref_codes_children' => array_map(function ($child) {
+        return $child->refCode;
+      }, $prototype->value->possibleChildren ?: []),
       'entity_type' => $prototype->type,
       'entity_prototype_name' => $prototype->value->name->en->singular,
       'entity_prototype_id' => $prototype->id,
@@ -68,6 +72,19 @@ class GoverningEntity extends EntityObjectBase {
       '@name' => $this->name,
       '@custom_reference' => $this->custom_reference,
     ]);
+  }
+
+  /**
+   * Get valid ref codes for context management.
+   *
+   * @param bool $include_children
+   *   Whether to inlude possible children. Default is TRUE.
+   *
+   * @return string[]
+   *   An array of ref codes.
+   */
+  public function getValidRefCodes($include_children = TRUE) {
+    return array_merge([$this->ref_code], $this->ref_codes_children);
   }
 
   /**

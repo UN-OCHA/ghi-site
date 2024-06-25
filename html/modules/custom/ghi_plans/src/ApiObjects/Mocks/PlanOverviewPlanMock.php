@@ -172,11 +172,13 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
    *   The metric type.
    * @param string $metric_name
    *   The english metric name.
+   * @param string $fallback_type
+   *   The metric type of a fallback.
    *
    * @return int|float
    *   The caseload value if found.
    */
-  public function getCaseloadValue($metric_type, $metric_name = NULL) {
+  public function getCaseloadValue($metric_type, $metric_name = NULL, $fallback_type = NULL) {
     $raw_data = $this->getRawData();
     $map = [
       'inNeed' => 'people_in_need',
