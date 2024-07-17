@@ -284,8 +284,8 @@ class PlanClusterManager extends BaseSubpageManager {
       return NULL;
     }
 
-    $plan_object = $base_object->get('field_plan')->entity;
-    return $this->sectionManager->loadSectionForBaseObject($plan_object);
+    $plan_object = $base_object->get('field_plan')?->entity;
+    return $plan_object ? $this->sectionManager->loadSectionForBaseObject($plan_object) : NULL;
   }
 
   /**
