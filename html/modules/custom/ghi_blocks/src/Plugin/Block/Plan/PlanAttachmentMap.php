@@ -94,7 +94,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       return NULL;
     }
     $map_settings = [
-      // If the map data is empty, it is important to set it to NULL, otherwhise
+      // If the map data is empty, it is important to set it to NULL, otherwise
       // the empty array is simply ignored due to the way that Drupal merges the
       // given settings into the existing ones.
       'json' => !empty($map['data']) ? $map['data'] : NULL,
@@ -372,7 +372,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       $map['data']['attachment']['modal_contents'][$location_id] = $this->prepareModalContentDonut($location, $map['data']['attachment']['legend'], $unit_group, $unit_label, $decimal_format);
     }
 
-    // Add the measurments acrcoss different monitoring periods to be able to
+    // Add the measurements across different monitoring periods to be able to
     // create progress bar charts in the map modals.
     $location_variants = [];
     $measurements = $attachment->getMeasurements();
@@ -435,7 +435,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         // It is imported to get the disaggregated data for the location
         // variants (reporting periods) without filtering out empty locations.
         // We need the same amount of locations as for the current result set,
-        // otherwhise D3 will get confused, data binding will fail silently and
+        // otherwise D3 will get confused, data binding will fail silently and
         // produce strange outputs in the map.
         $disaggregated_data_multiple_periods = $attachment->getDisaggregatedDataMultiple($configured_reporting_periods);
         if (!empty($disaggregated_data_multiple_periods)) {
@@ -472,7 +472,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
                     }
                   }
                 }
-                // Overwrite only the measurment metric for this location.
+                // Overwrite only the measurement metric for this location.
                 $period_locations[$location_id]['attachment'][$metric_index] = $location['total'];
               }
             }
@@ -505,7 +505,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       foreach ($location_variants as &$location_variant) {
         $this->calulateDonutRadiusFactors($location_variant['locations']);
       }
-      // Add add them to the map data.
+      // Add them to the map data.
       $map['data']['attachment']['location_variants'] = $location_variants;
     }
 
@@ -1125,13 +1125,13 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       elseif (count($attachments)) {
         $attachment = reset($attachments);
       }
-      if (!$attachment || !$attachment instanceof DataAttachment || !$this->attachmentCanBeMapped($attachment)) {
+      $default_attachment = $attachment;
+      if (!$attachment instanceof DataAttachment || !$this->attachmentCanBeMapped($attachment)) {
         $default_attachment = FALSE;
       }
       if ($attachment && $attachment->getPlanId() != $this->getCurrentPlanId()) {
         $default_attachment = FALSE;
       }
-      $default_attachment = $attachment;
     }
     return $default_attachment;
   }
