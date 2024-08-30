@@ -1,15 +1,11 @@
 {
   "patches": {
     "drupal/core": {
-      "Issue #2820359: Add #element_submit and #limit_element_submit just like #element_validate and #limit_validation_errors": "https://www.drupal.org/files/issues/2023-10-20/2820359-117.patch",
       "Issue #3008924: Callers of LayoutEntityHelperTrait::getEntitySections() do not account for the view mode": "./patches/3008924-rerolled-24.patch",
-      "Issue #2902481: Add GROUP_CONCAT aggregate function to views": "https://www.drupal.org/files/issues/2021-07-26/add_group_concat_aggregate-2902481-33.patch",
       "Issue #151311: Split 'administer permissions' into a new administer roles permissions": "https://www.drupal.org/files/issues/2023-01-19/split_administer_permissions_151311-72.patch",
       "Issue #2585169: Unable to alter local actions prior to rendering": "https://git.drupalcode.org/project/drupal/-/merge_requests/744.patch",
-      "Issue #2663316: Broken title in modal dialog when title is a render array": "https://www.drupal.org/files/issues/2019-10-21/2663316-76.drupal.Broken-title-in-modal-dialog-when-title-is-a-render-array.patch",
       "Issue #2755791: Ajax error ajax.$form.ajaxSubmit() is not a function": "https://www.drupal.org/files/issues/2023-08-07/drupal-ajax-error-2755791-18_0.patch",
       "Issue #3001188: Make it possible to add relationships to layout builder": "./patches/3001188-make-it-possible-to-add-relationships-to-layout-builder.patch",
-      "Issue #2329253: Allow the ChangedItem to skip updating the entity's changed timestamp when synchronizing (f.e. when migrating)": "https://www.drupal.org/files/issues/2024-04-18/2329253-127-10.2.5.patch",
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch"
     },
     "drupal/flat_taxonomy": {
@@ -18,9 +14,6 @@
     "drupal/gin": {
       "Issue #3386486: Option to use compact or full breadcrumb navigation": "https://www.drupal.org/files/issues/2024-05-30/3386486-skip-gin-node-breadcrumbs.patch",
       "Issue #3281984: The breadcrumb shows 'Edit <label>' on all entity routes, even canonical/delete routes": "https://www.drupal.org/files/issues/2024-06-14/gin_3281984_cherrypick_for_rc11.patch"
-    },
-    "drupal/gin_lb": {
-      "Issue #??: Add alter hook for template suggestions trigger": "./patches/hook_gin_lb_add_suggestions_alter-1.0.0-rc6.patch"
     },
     "drupal/gin_toolbar": {
       "Issue #3121440: Add option for node local tasks in toolbar": "https://www.drupal.org/files/issues/2023-10-20/3121440-49.patch"
@@ -39,9 +32,6 @@
     },
     "drupal/publishcontent": {
       "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions": "https://www.drupal.org/files/issues/2020-07-22/2820867-7-permissions-for-bulk-operations.patch"
-    },
-    "drupal/seckit": {
-      "Issue #2844205: Provide hook_seckit_options_alter() D8": "https://www.drupal.org/files/issues/2021-09-13/2844205-alter-csp-directives-10.patch"
     },
     "drupal/config_default_image": {
       "Issue #2921908: Provide a 2nd formatter \"Responsive image or default image\"": "https://www.drupal.org/files/issues/2022-11-21/config_default_image-2921908-7.patch"
