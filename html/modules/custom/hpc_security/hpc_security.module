@@ -143,7 +143,8 @@ function hpc_security_hash_store($hash = NULL) {
  *
  * Make some modifications to the CSP that are not supported by the seckit UI.
  */
-function hpc_security_seckit_csp_directives_alter(&$directives) {
+function hpc_security_seckit_options_alter(array &$options) {
+  $directives = &$options['seckit_xss']['csp'];
 
   // Special rules for GA4, see:
   // https://developers.google.com/tag-platform/tag-manager/web/csp.
@@ -165,10 +166,10 @@ function hpc_security_seckit_csp_directives_alter(&$directives) {
   ];
 
   // Cache the google domains to prevent unnecessary roundtrips.
-  $google_domains = \Drupal::cache()->get('google_suuported_domains');
+  $google_domains = \Drupal::cache()->get('google_supported_domains');
   if (empty($google_domains->data)) {
     $google_supported_domains = file_get_contents('https://www.google.com/supported_domains');
-    \Drupal::cache()->set('google_suuported_domains', $google_supported_domains);
+    \Drupal::cache()->set('google_supported_domains', $google_supported_domains);
   }
   else {
     $google_supported_domains = $google_domains->data;
@@ -190,7 +191,7 @@ function hpc_security_seckit_csp_directives_alter(&$directives) {
 
     // Add CSP for inline scripts in element attributes, e.g. iframes for
     // external widgets.
-    $directives['script-src-attr'] = "script-src-attr 'unsafe-inline'";
+    $directives['script-src-attr'] = "'unsafe-inline'";
 
     if (hpc_security_can_use_nonce()) {
       // Add the nounce to the script-src rule. This cannot be cached.
@@ -213,7 +214,7 @@ function hpc_security_seckit_csp_directives_alter(&$directives) {
   }
 
   // Add a rule for the base-uri.
-  $directives['base-uri'] = "base-uri 'self'";
+  $directives['base-uri'] = "'self'";
 }
 
 /**
