@@ -90,7 +90,7 @@
         "drupal/imageapi_optimize": "^4.0",
         "drupal/imagecache_external": "^3.0",
         "drupal/imagemagick": "^3.3",
-        "drupal/layout_builder_ipe": "^1.0.x-dev",
+        "drupal/layout_builder_ipe": "dev-1.0.x",
         "drupal/layout_builder_lock": "^1.1",
         "drupal/layout_builder_modal": "^1.1",
         "drupal/layout_builder_operation_link": "^2.1",
