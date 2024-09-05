@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2a85a2972ed3654fd87371fbfa12fbcd",
+    "content-hash": "00da2681b15db0bc159c249ab17b1a2c",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -18787,8 +18787,14 @@
             "version": "2.3.1",
             "source": {
                 "type": "git",
-                "url": "https://git.drupalcode.org/project/dtt/",
+                "url": "https://git.drupalcode.org/project/dtt.git",
                 "reference": "5e3df23c93f4f3e4f34fd7677df10bc06616f4ce"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://git.drupalcode.org/api/v4/projects/project%2Fdtt/repository/archive.zip?sha=5e3df23c93f4f3e4f34fd7677df10bc06616f4ce",
+                "reference": "5e3df23c93f4f3e4f34fd7677df10bc06616f4ce",
+                "shasum": ""
             },
             "require": {
                 "php": ">=8.1"
@@ -18831,6 +18837,9 @@
                 }
             ],
             "description": "Traits for testing Drupal sites that have user content (versus unpopulated sites).",
+            "support": {
+                "source": "https://git.drupalcode.org/project/dtt/-/tree/2.3.1"
+            },
             "time": "2024-08-10T19:01:22+00:00"
         }
     ],
