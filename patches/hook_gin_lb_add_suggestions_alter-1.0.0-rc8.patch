@@ -29,10 +29,10 @@ index 2db241a..075d1ac 100644
   * @} End of "addtogroup hooks".
   */
 diff --git a/gin_lb.module b/gin_lb.module
-index bb32458..70ee12e 100644
+index 0322466..6da3c0d 100644
 --- a/gin_lb.module
 +++ b/gin_lb.module
-@@ -224,6 +224,17 @@ function gin_lb_theme(): array {
+@@ -231,6 +231,17 @@ function gin_lb_theme(): array {
    return $instance->themes();
  }
  
@@ -51,7 +51,7 @@ index bb32458..70ee12e 100644
   * Implements hook_theme_suggestions_alter().
   */
 diff --git a/src/HookHandler/ThemeSuggestionsAlter.php b/src/HookHandler/ThemeSuggestionsAlter.php
-index ff612ca..87e5124 100644
+index e43e4ce..185d8cb 100644
 --- a/src/HookHandler/ThemeSuggestionsAlter.php
 +++ b/src/HookHandler/ThemeSuggestionsAlter.php
 @@ -5,6 +5,7 @@ declare(strict_types=1);
@@ -92,7 +92,7 @@ index ff612ca..87e5124 100644
 +    ModuleHandlerInterface $moduleHandler,
      RouteMatchInterface $currentRouteMatch,
      RequestStack $requestStack,
-     ContextValidatorInterface $contextValidator
+     ContextValidatorInterface $contextValidator,
    ) {
 +    $this->moduleHandler = $moduleHandler;
      $this->currentRouteMatch = $currentRouteMatch;

@@ -11,3 +11,4 @@ name: 'Plan costing'
 vid: plan_costing
 description: 'Plan costing types imported from the HPC API'
 weight: 0
+new_revision: false

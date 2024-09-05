@@ -4,5 +4,5 @@ status: true
 dependencies: {  }
 id: basic
 label: 'Generic HTML'
-revision: 0
+revision: false
 description: 'Enter text/HTML content using a WYSIWYG editor.'

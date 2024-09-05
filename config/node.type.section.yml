@@ -11,7 +11,7 @@ third_party_settings:
 name: Section
 type: section
 description: "A section groups base objects and it's subpages and is managed by a team, with the possibility to assign management for specific subpages to other teams."
-help: ''
+help: null
 new_revision: true
 preview_mode: 0
 display_submitted: false

@@ -11,3 +11,4 @@ name: 'Operation categories'
 vid: operations_category
 description: 'Used to group objects in the operations menu'
 weight: 0
+new_revision: false
