@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "00da2681b15db0bc159c249ab17b1a2c",
+    "content-hash": "7ea0f2cd16d89b0fec7669e9a27d69ad",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3711,7 +3711,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/layout_builder_ipe.git",
-                "reference": "b54a0d205280440a10cd8eb1a772f247fa153556"
+                "reference": "bcd9b208ec9cbbf724efc2bf9be14ff13b8de2d9"
             },
             "require": {
                 "drupal/core": "^9.5 || ^10"
@@ -3722,8 +3722,8 @@
                     "dev-1.0.x": "1.0.x-dev"
                 },
                 "drupal": {
-                    "version": "1.0.0-beta9+6-dev",
-                    "datestamp": "1714728963",
+                    "version": "1.0.0-beta9+7-dev",
+                    "datestamp": "1725550815",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
