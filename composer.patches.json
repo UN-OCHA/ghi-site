@@ -9,6 +9,7 @@
       "Issue #2755791: Ajax error ajax.$form.ajaxSubmit() is not a function": "https://www.drupal.org/files/issues/2023-08-07/drupal-ajax-error-2755791-18_0.patch",
       "Issue #3001188: Make it possible to add relationships to layout builder": "./patches/3001188-make-it-possible-to-add-relationships-to-layout-builder.patch",
       "Issue #2329253: Allow the ChangedItem to skip updating the entity's changed timestamp when synchronizing (f.e. when migrating)": "https://www.drupal.org/files/issues/2024-07-30/2329253-10.x.patch",
+      "Issue #3467860: Ensure consistent library ordering between page an asset requests when calculating asset aggregates": "https://www.drupal.org/files/issues/2024-08-29/3467860-21.patch",
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch"
     },
     "drupal/flat_taxonomy": {
