@@ -11,3 +11,4 @@ name: 'Plan type'
 vid: plan_type
 description: 'Plan types imported from the HPC API'
 weight: 0
+new_revision: false

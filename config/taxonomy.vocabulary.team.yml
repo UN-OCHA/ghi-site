@@ -11,3 +11,4 @@ name: Team
 vid: team
 description: 'A team can be assigned to a user and to content to create ownership'
 weight: 0
+new_revision: false

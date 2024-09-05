@@ -6,3 +6,4 @@ name: 'Organization type'
 vid: organization_type
 description: 'Organization types imported from the HPC API'
 weight: 0
+new_revision: false

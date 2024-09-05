@@ -11,3 +11,4 @@ name: Tags
 vid: tags
 description: 'Tags imported from the Content Module'
 weight: 0
+new_revision: false

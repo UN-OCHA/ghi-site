@@ -11,3 +11,4 @@ name: 'Cluster tags'
 vid: cluster_tags
 description: 'A list of valid cluster tags. This is currently handled manually, but should really be retrieved from the API.'
 weight: 0
+new_revision: false
