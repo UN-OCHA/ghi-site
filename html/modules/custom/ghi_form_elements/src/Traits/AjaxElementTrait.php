@@ -2,9 +2,11 @@
 
 namespace Drupal\ghi_form_elements\Traits;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\OpenModalDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
@@ -106,6 +108,24 @@ trait AjaxElementTrait {
     $button_wrapper = $form['actions']['subforms']['#attributes']['id'] ?? NULL;
     if ($button_wrapper) {
       $response->addCommand(new ReplaceCommand('#' . $button_wrapper, $form['actions']['subforms']));
+    }
+
+    // Add error messages.
+    if (!empty($form_subset['#element_errors'])) {
+      $errors = array_filter(array_map(function ($error) {
+        if (!is_string($error) && !$error instanceof MarkupInterface) {
+          return NULL;
+        }
+        return ['#markup' => $error];
+      }, $form_subset['#element_errors']));
+      if (!empty($errors)) {
+        $response->addCommand(new OpenModalDialogCommand(t('Unexpected errors'), [$errors], [
+          'classes' => [
+            'ui-dialog' => 'ajax-block-error',
+          ],
+          'width' => '50%',
+        ]));
+      }
     }
 
     return $response;
