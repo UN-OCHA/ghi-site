@@ -150,6 +150,9 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     if (!$attachment instanceof DataAttachment) {
       return FALSE;
     }
+    if (!$attachment->hasDisaggregatedData()) {
+      return FALSE;
+    }
     $reporting_period = $this->getCurrentReportingPeriod();
     return $attachment->canBeMapped($reporting_period);
   }
@@ -1126,10 +1129,13 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         $attachment = reset($attachments);
       }
       $default_attachment = $attachment;
-      if (!$attachment instanceof DataAttachment || !$this->attachmentCanBeMapped($attachment)) {
+      if (!$attachment instanceof DataAttachment) {
         $default_attachment = FALSE;
       }
-      if ($attachment && $attachment->getPlanId() != $this->getCurrentPlanId()) {
+      elseif (!$this->attachmentCanBeMapped($attachment)) {
+        $default_attachment = FALSE;
+      }
+      elseif ($attachment->getPlanId() != $this->getCurrentPlanId()) {
         $default_attachment = FALSE;
       }
     }
@@ -1148,6 +1154,9 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       return [];
     }
     $attachments = $this->getConfiguredAttachments();
+    $attachments = array_filter($attachments, function (AttachmentInterface $attachment) {
+      return $this->attachmentCanBeMapped($attachment);
+    });
     return $attachments;
   }
 
