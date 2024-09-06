@@ -65,6 +65,12 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
       $attachment_select['attachment_id'] = $attachment_id;
     }
 
+    if (!$attachment && $trigger == 'submit_attachment') {
+      $element['#element_errors'] = [
+        $this->t('There was a problem loading the selected attachment. If the problem persists, please contact an administrator.'),
+      ];
+    }
+
     // See if we are in attachment select mode (or in data point configuration
     // mode).
     $attachment_select_mode = empty($attachment) || $triggered_by_change_request;
