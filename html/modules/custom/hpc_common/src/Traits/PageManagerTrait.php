@@ -24,8 +24,8 @@ trait PageManagerTrait {
    */
   private function getCurrentPageVariant(Request $request, RouteMatchInterface $route_match) {
 
-    if ($request->attributes->has('page_manager_page_variant')) {
-      return $request->attributes->get('page_manager_page_variant');
+    if ($request->attributes->has('_page_manager_page_variant')) {
+      return $request->attributes->get('_page_manager_page_variant');
     }
 
     // Otherwise we might be in the page manager config UI.
