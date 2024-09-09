@@ -133,7 +133,12 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     }
     $year = $this->getContextValue('year');
 
-    $header = [
+    $header = [];
+    if ($export) {
+      $header['plan_id'] = $this->t('Plan ID');
+    }
+
+    $header += [
       'name' => $this->t('Plans'),
       'type' => $this->t('Plan type'),
       'inneed' => [
@@ -177,6 +182,14 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     if ($export) {
       $header['document'] = [
         'data' => $this->t('Document'),
+        'data-column-type' => 'document',
+      ];
+      $header['link_ha'] = [
+        'data' => $this->t('Link to HA page'),
+        'data-column-type' => 'document',
+      ];
+      $header['link_fts'] = [
+        'data' => $this->t('Link to FTS page'),
         'data-column-type' => 'document',
       ];
     }
@@ -267,7 +280,13 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         '#ratio' => $coverage / 100,
       ];
 
-      $rows[$plan->id()] = [
+      $rows[$plan->id()] = [];
+
+      if ($export) {
+        $rows[$plan->id()]['plan_id'] = ['data' => $plan->id()];
+      }
+
+      $rows[$plan->id()] += [
         'name' => [
           'data' => [
             'name' => [
@@ -379,6 +398,13 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       if ($export) {
         $rows[$plan->id()]['document'] = [
           'data' => $document_uri,
+        ];
+        $section = $plan_entity ? $this->sectionManager->loadSectionForBaseObject($plan_entity) : NULL;
+        $rows[$plan->id()]['link_ha'] = [
+          'data' => $section ? 'https://humanitarianaction.info' . $section->toUrl()->toString() : NULL,
+        ];
+        $rows[$plan->id()]['link_fts'] = [
+          'data' => self::buildFtsUrl($plan_entity, 'summary'),
         ];
       }
     }
