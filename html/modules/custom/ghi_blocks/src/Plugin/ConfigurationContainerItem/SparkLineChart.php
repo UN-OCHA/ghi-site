@@ -45,9 +45,6 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
 
-    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
-    $plan_object = $this->getContextValue('plan_object');
-
     /** @var \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype */
     $attachment_prototype = $this->getContextValue('attachment_prototype');
 
@@ -75,21 +72,6 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
       // Might relate to https://www.drupal.org/project/drupal/issues/1100170.
       $element['use_calculation_method']['#attributes']['checked'] = 'checked';
     }
-    $element['monitoring_periods'] = [
-      '#type' => 'monitoring_periods',
-      '#title' => $this->t('Monitoring periods'),
-      '#default_value' => $this->getSubmittedValue($element, $form_state, 'monitoring_periods'),
-      '#default_all' => TRUE,
-      '#plan_id' => $plan_object->getSourceId(),
-      '#required' => TRUE,
-      '#access' => !$attachment_prototype->isIndicator(),
-    ];
-    $element['include_latest_period'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Always include the latest measurement'),
-      '#default_value' => $this->getSubmittedValue($element, $form_state, 'include_latest_period'),
-      '#access' => !$attachment_prototype->isIndicator(),
-    ];
     $element['show_baseline'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Include goal line'),
@@ -138,7 +120,11 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     if (!$attachment) {
       return NULL;
     }
-    $monitoring_periods = $this->get('monitoring_periods');
+
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
+    $plan_object = $this->getContextValue('plan_object');
+    $monitoring_periods = $attachment->getPlanReportingPeriods($plan_object->getSourceId(), TRUE);
+
     $data_point_conf = [
       'processing' => 'single',
       'calculation' => 'substraction',
@@ -171,7 +157,6 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
 
     // Get the configuration.
     $data_point = $this->get('data_point');
-    $monitoring_periods = $this->get('monitoring_periods');
     $include_latest_period = $this->get('include_latest_period');
     $show_baseline = $this->get('show_baseline');
     $use_calculation_method = $this->get('use_calculation_method');
@@ -190,9 +175,6 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     $tooltips = [];
     $accumulated_reporting_periods = [];
     foreach ($reporting_periods as $reporting_period) {
-      if (!$attachment instanceof IndicatorAttachment && is_array($monitoring_periods) && !in_array($reporting_period->id, $monitoring_periods)) {
-        continue;
-      }
       if ($attachment instanceof IndicatorAttachment) {
         if ($use_calculation_method) {
           $accumulated_reporting_periods[$reporting_period->id] = $reporting_period;
