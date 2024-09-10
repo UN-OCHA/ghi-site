@@ -45,6 +45,7 @@ class EntityAttachmentSelect extends FormElement {
       '#attachment_options' => NULL,
       '#attachment_type' => NULL,
       '#element_context' => [],
+      '#disagg_warning' => FALSE,
     ];
   }
 
@@ -165,6 +166,7 @@ class EntityAttachmentSelect extends FormElement {
       '#entity_ids' => $defaults['entities']['entity_ids'],
       '#available_options' => $element['#attachment_options'] ?? NULL,
       '#attachment_type' => $element['#attachment_type'] ?? NULL,
+      '#disagg_warning' => $element['#disagg_warning'] ?? FALSE,
     ];
     if ($current_action != 'select_attachments') {
       $element['attachments']['#hidden'] = TRUE;
