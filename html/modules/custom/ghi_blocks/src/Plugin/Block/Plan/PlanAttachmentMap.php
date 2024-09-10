@@ -866,6 +866,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       ],
       '#next_step' => 'map',
       '#container_wrapper' => $this->getContainerWrapper(),
+      '#disagg_warning' => TRUE,
     ];
     return $form;
   }
