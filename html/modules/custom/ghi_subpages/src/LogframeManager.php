@@ -140,8 +140,14 @@ class LogframeManager implements ContainerInjectionInterface {
       }
     }
 
+    // Add the headline figures component.
+    if ($node->getParentNode() instanceof SectionNodeInterface) {
+      $component = $this->buildHeadlineFiguresComponent($node);
+      $section->appendComponent($component);
+    }
+
     // Get entity types.
-    $entity_types = $this->getEntityTypesFromNode($node);
+    $entity_types = $this->getEntityTypesFromNode($node, TRUE);
     if (empty($entity_types)) {
       return NULL;
     }
@@ -155,10 +161,79 @@ class LogframeManager implements ContainerInjectionInterface {
     }
 
     // Add the cluster logframe links.
-    $component = $this->buildClusterLogframeLinksComponent($node);
-    $section->appendComponent($component);
+    if ($node->getParentNode() instanceof SectionNodeInterface) {
+      $component = $this->buildClusterLogframeLinksComponent($node);
+      $section->appendComponent($component);
+    }
 
     return $section_storage;
+  }
+
+  /**
+   * Build a headline figures section component for the given logframe node.
+   *
+   * @param \Drupal\ghi_subpages\Entity\LogframeSubpage $node
+   *   The logframe node to which the component should be added.
+   *
+   * @return \Drupal\layout_builder\SectionComponent
+   *   A section component object.
+   */
+  private function buildHeadlineFiguresComponent(LogframeSubpage $node) {
+    $plan = $node->getParentBaseNode()->getBaseObject();
+    $prototype = $this->getPlanPrototype($plan);
+
+    $definition = $this->blockManager->getDefinition('plan_headline_figures', FALSE);
+    $context_mapping = $this->buildContextMappingForBlock($definition, $node);
+
+    $configuration = [
+      'hpc' => [
+        'key_figures' => [
+          'items' => [
+            [
+              'id' => 1,
+              'item_type' => 'item_group',
+              'config' => [
+                'label' => 'Plan Entities',
+                'id' => 'plan_entities',
+              ],
+              'weight' => '0',
+              'pid' => NULL,
+            ],
+          ],
+        ],
+      ],
+    ];
+
+    // Assemble the key figures as entity counter items for all plan entity
+    // types.
+    foreach ($prototype->getEntityPrototypes() as $entity_prototype) {
+      if ($entity_prototype->type != 'PE') {
+        // Only show entity counter items for plan entities.
+        continue;
+      }
+      $configuration['hpc']['key_figures']['items'][] = [
+        'id' => count($configuration['hpc']['key_figures']['items']),
+        'item_type' => 'entity_counter',
+        'config' => [
+          'entity_type' => 'plan',
+          'entity_prototype' => $entity_prototype->id(),
+          'label' => '',
+          'value_preview' => '',
+        ],
+        'weight' => 0,
+        'pid' => 1,
+      ];
+    }
+    // Append a new component.
+    $config = array_filter([
+      'id' => $definition['id'],
+      'provider' => $definition['provider'],
+      'data_sources' => $definition['data_sources'] ?? NULL,
+      'label' => '<none>',
+      'label_display' => TRUE,
+    ]) + $context_mapping;
+    $config += $configuration;
+    return new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
   }
 
   /**
@@ -499,11 +574,30 @@ class LogframeManager implements ContainerInjectionInterface {
     if ($parent instanceof SectionNodeInterface) {
       // Logframes on plan level should only include the plan entities above
       // the first governing entity.
-      $ref_codes = ['SO', 'SP'];
+      $ref_codes = ['PL', 'SO', 'SP'];
       $entity_types = array_intersect_key($entity_types, array_flip($ref_codes));
     }
 
+    // Always filter out Humanitarian Conditions.
+    $ref_codes = ['HC'];
+    $entity_types = array_diff_key($entity_types, array_flip($ref_codes));
+
     return $entity_types;
+  }
+
+  /**
+   * Get the plan prototype.
+   *
+   * @param \Drupal\ghi_plans\Entity\Plan $plan
+   *   The plan base object.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\PlanPrototype
+   *   The prototype for the plan.
+   */
+  private function getPlanPrototype(Plan $plan) {
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanPrototypeQuery $prototype_query */
+    $prototype_query = $this->endpointQueryManager->createInstance('plan_prototype_query');
+    return $prototype_query->getPrototype($plan->getSourceId());
   }
 
   /**
@@ -516,9 +610,7 @@ class LogframeManager implements ContainerInjectionInterface {
    *   An array of entity types, keyed by ref code, value is the plural name.
    */
   public function getEntityTypesFromPlanObject(Plan $plan) {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanPrototypeQuery $prototype_query */
-    $prototype_query = $this->endpointQueryManager->createInstance('plan_prototype_query');
-    $prototype = $prototype_query->getPrototype($plan->getSourceId());
+    $prototype = $this->getPlanPrototype($plan);
 
     $entity_types = [
       'PL' => (string) $this->t('Plan'),
