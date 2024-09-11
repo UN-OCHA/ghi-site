@@ -1,0 +1,25 @@
+.ghi-block-plan-cluster-logframe-links {
+
+  .block-content {
+    .gho-related-article {
+      align-items: center;
+
+      .field--name-field-thumbnail-image {
+        width: auto;
+        min-width: auto;
+
+        .cluster-icon {
+          display: flex;
+          align-items: center;
+          width: 3rem;
+
+          svg {
+            top: 0;
+            left: 0;
+          }
+        }
+      }
+    }
+  }
+
+}

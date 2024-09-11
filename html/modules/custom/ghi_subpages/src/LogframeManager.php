@@ -145,85 +145,152 @@ class LogframeManager implements ContainerInjectionInterface {
     if (empty($entity_types)) {
       return NULL;
     }
-    foreach ($entity_types as $ref_code => $name) {
-      $entities = $this->getPlanEntities($node, $ref_code);
-      if (empty($entities)) {
+    // Build one entity logframe element for each entity type.
+    foreach (array_keys($entity_types) as $ref_code) {
+      $component = $this->buildEntityLogframeComponent($node, $ref_code);
+      if (!$component) {
         continue;
       }
-      $definition = $this->blockManager->getDefinition('plan_entity_logframe', FALSE);
-      $context_mapping = [
-        'context_mapping' => array_intersect_key([
-          'node' => 'layout_builder.entity',
-        ], $definition['context_definitions']),
-      ];
-      // And make sure that base objects are mapped too.
-      $base_objects = BaseObjectHelper::getBaseObjectsFromNode($node);
-      foreach ($base_objects as $_base_object) {
-        $contexts = [
-          EntityContext::fromEntity($_base_object),
-        ];
-        foreach ($definition['context_definitions'] as $context_key => $context_definition) {
-          $matching_contexts = $this->contextHandler->getMatchingContexts($contexts, $context_definition);
-          if (empty($matching_contexts)) {
-            continue;
-          }
-          $context_mapping['context_mapping'][$context_key] = $_base_object->getUniqueIdentifier();
-        }
-      }
-
-      // Set the basic configuration for a single plan entity logframe element.
-      $configuration = [
-        'hpc' => [
-          'entities' => [
-            'entity_ids' => array_fill_keys(array_keys($entities), 0),
-            'entity_ref_code' => $ref_code,
-            'id_type' => 'composed_reference',
-            'sort' => TRUE,
-            'sort_column' => 'id_ASC',
-          ],
-          'tables' => [
-            'attachment_tables' => [],
-          ],
-        ],
-      ];
-
-      // See if there are attachment tables to be added.
-      $attachment_prototypes = $this->getAttachmentPrototypesForEntityRefCode($node, $ref_code);
-      uasort($attachment_prototypes, function ($a, $b) {
-        return strnatcasecmp($a->type, $b->type);
-      });
-      foreach (array_values($attachment_prototypes) as $id => $attachment_prototype) {
-        $table_config = [
-          'id' => $id,
-          'item_type' => 'attachment_table',
-          'config' => [
-            'attachment_prototype' => $attachment_prototype->id(),
-          ],
-        ];
-        $columns = [];
-        if ($attachment_prototype->isIndicator()) {
-          $columns = $this->buildIndicatorColumns($attachment_prototype);
-        }
-        else {
-          $columns = $this->buildCaseloadColumns($attachment_prototype);
-        }
-        $table_config['config']['table_form']['columns'] = $columns;
-        $configuration['hpc']['tables']['attachment_tables'][] = $table_config;
-      }
-      // Append a new component.
-      $config = array_filter([
-        'id' => $definition['id'],
-        'provider' => $definition['provider'],
-        'data_sources' => $definition['data_sources'] ?? NULL,
-        'label' => '<none>',
-        'label_display' => TRUE,
-      ]) + $context_mapping;
-      $config += $configuration;
-      $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
       $section->appendComponent($component);
     }
 
+    // Add the cluster logframe links.
+    $component = $this->buildClusterLogframeLinksComponent($node);
+    $section->appendComponent($component);
+
     return $section_storage;
+  }
+
+  /**
+   * Build an entity logframe section component for the given logframe node.
+   *
+   * @param \Drupal\ghi_subpages\Entity\LogframeSubpage $node
+   *   The logframe node to which the component should be added.
+   * @param string $ref_code
+   *   The ref code for the component.
+   *
+   * @return \Drupal\layout_builder\SectionComponent
+   *   A section component object.
+   */
+  private function buildEntityLogframeComponent(LogframeSubpage $node, $ref_code) {
+    $entities = $this->getPlanEntities($node, $ref_code);
+    if (empty($entities)) {
+      return NULL;
+    }
+    $definition = $this->blockManager->getDefinition('plan_entity_logframe', FALSE);
+    $context_mapping = $this->buildContextMappingForBlock($definition, $node);
+
+    // Set the basic configuration for a single plan entity logframe element.
+    $configuration = [
+      'hpc' => [
+        'entities' => [
+          'entity_ids' => array_fill_keys(array_keys($entities), 0),
+          'entity_ref_code' => $ref_code,
+          'id_type' => 'composed_reference',
+          'sort' => TRUE,
+          'sort_column' => 'id_ASC',
+        ],
+        'tables' => [
+          'attachment_tables' => [],
+        ],
+      ],
+    ];
+
+    // See if there are attachment tables to be added.
+    $attachment_prototypes = $this->getAttachmentPrototypesForEntityRefCode($node, $ref_code);
+    uasort($attachment_prototypes, function ($a, $b) {
+      return strnatcasecmp($a->type, $b->type);
+    });
+    foreach (array_values($attachment_prototypes) as $id => $attachment_prototype) {
+      $table_config = [
+        'id' => $id,
+        'item_type' => 'attachment_table',
+        'config' => [
+          'attachment_prototype' => $attachment_prototype->id(),
+        ],
+      ];
+      $columns = [];
+      if ($attachment_prototype->isIndicator()) {
+        $columns = $this->buildIndicatorColumns($attachment_prototype);
+      }
+      else {
+        $columns = $this->buildCaseloadColumns($attachment_prototype);
+      }
+      $table_config['config']['table_form']['columns'] = $columns;
+      $configuration['hpc']['tables']['attachment_tables'][] = $table_config;
+    }
+    // Append a new component.
+    $config = array_filter([
+      'id' => $definition['id'],
+      'provider' => $definition['provider'],
+      'data_sources' => $definition['data_sources'] ?? NULL,
+      'label' => '<none>',
+      'label_display' => TRUE,
+    ]) + $context_mapping;
+    $config += $configuration;
+    return new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
+  }
+
+  /**
+   * Build a cluster logframe links section component for the logframe node.
+   *
+   * @param \Drupal\ghi_subpages\Entity\LogframeSubpage $node
+   *   The logframe node to which the component should be added.
+   *
+   * @return \Drupal\layout_builder\SectionComponent
+   *   A section component object.
+   */
+  private function buildClusterLogframeLinksComponent(LogframeSubpage $node) {
+    $definition = $this->blockManager->getDefinition('plan_cluster_logframe_links', FALSE);
+    $context_mapping = $this->buildContextMappingForBlock($definition, $node);
+
+    // Append a new component.
+    $config = array_filter([
+      'id' => $definition['id'],
+      'provider' => $definition['provider'],
+      'label' => NULL,
+      'label_display' => TRUE,
+      'hpc' => [
+        'label' => NULL,
+        'label_display' => TRUE,
+      ],
+    ]) + $context_mapping;
+
+    return new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
+  }
+
+  /**
+   * Build the context mapping for the given plugin definition and node object.
+   *
+   * @param array $definition
+   *   The plugin definition.
+   * @param \Drupal\node\NodeInterface $node
+   *   The node object to which the plugin should be added to.
+   *
+   * @return array
+   *   An array with context mapping information.
+   */
+  private function buildContextMappingForBlock($definition, $node) {
+    $context_mapping = [
+      'context_mapping' => array_intersect_key([
+        'node' => 'layout_builder.entity',
+      ], $definition['context_definitions']),
+    ];
+    // And make sure that base objects are mapped too.
+    $base_objects = BaseObjectHelper::getBaseObjectsFromNode($node);
+    foreach ($base_objects as $_base_object) {
+      $contexts = [
+        EntityContext::fromEntity($_base_object),
+      ];
+      foreach ($definition['context_definitions'] as $context_key => $context_definition) {
+        $matching_contexts = $this->contextHandler->getMatchingContexts($contexts, $context_definition);
+        if (empty($matching_contexts)) {
+          continue;
+        }
+        $context_mapping['context_mapping'][$context_key] = $_base_object->getUniqueIdentifier();
+      }
+    }
+    return $context_mapping;
   }
 
   /**
@@ -428,6 +495,12 @@ class LogframeManager implements ContainerInjectionInterface {
       if ($ref_codes) {
         $entity_types = array_intersect_key($entity_types, array_flip($ref_codes));
       }
+    }
+    if ($parent instanceof SectionNodeInterface) {
+      // Logframes on plan level should only include the plan entities above
+      // the first governing entity.
+      $ref_codes = ['SO', 'SP'];
+      $entity_types = array_intersect_key($entity_types, array_flip($ref_codes));
     }
 
     return $entity_types;

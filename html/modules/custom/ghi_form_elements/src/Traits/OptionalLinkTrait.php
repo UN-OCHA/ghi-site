@@ -36,7 +36,7 @@ trait OptionalLinkTrait {
    * @param string $label
    *   Optional label to use. If left empty, a default label will be build.
    *
-   * @return \Drupal\Core\Link
+   * @return \Drupal\Core\Link|null
    *   The link object.
    */
   protected function getLinkFromUri($uri, $label = NULL) {
