@@ -99,6 +99,7 @@ class Link extends ConfigurationContainerItemPluginBase {
     $element['tabs'] = [
       '#type' => 'vertical_tabs',
       '#parents' => array_merge($element['#parents'], ['tabs']),
+      '#default_tab' => 'link',
     ];
 
     $element['label'] = [
@@ -183,6 +184,8 @@ class Link extends ConfigurationContainerItemPluginBase {
         'file_validate_extensions' => ['jpg jpeg png gif'],
       ],
       '#default_value' => $this->config['image']['image'] ?? NULL,
+      // Add properties needed by value() and process() methods.
+      '#field_name' => $this->t('Image'),
     ];
     $image_selector = FormElementHelper::getStateSelector($element, ['image', 'image', 'fids']);
 
