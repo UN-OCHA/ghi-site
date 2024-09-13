@@ -134,7 +134,7 @@ class EntitySelect extends FormElement {
     $plan_object = $element['#element_context']['plan_object'] ?? NULL;
 
     $plan_id = $plan_object->getSourceId();
-    $plan_entities = self::getPlanEntitiesQuery($plan_id)->getPlanEntities($base_object);
+    $plan_entities = self::getPlanEntitiesQuery($plan_id)->getPlanEntities($base_object) ?? [];
     $plan_data = self::getPlanEntitiesQuery($plan_id)->getData();
 
     $is_hidden = array_key_exists('#hidden', $element) && $element['#hidden'];
