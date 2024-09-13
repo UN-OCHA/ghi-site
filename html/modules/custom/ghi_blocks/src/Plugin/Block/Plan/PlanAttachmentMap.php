@@ -1298,8 +1298,8 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
 
     $configured_entities = $this->getConfiguredEntities();
     $available_entities = $this->getAvailableEntities();
-    if (!empty($configured_entities)) {
-      $valid_entity_ids = array_intersect_key($configured_entities, $available_entities);
+    $valid_entity_ids = array_intersect_key($configured_entities, $available_entities);
+    if (!empty($configured_entities) && !empty($valid_entity_ids)) {
       $conf['attachments']['entity_attachments']['entities']['entity_ids'] = array_combine($valid_entity_ids, $valid_entity_ids);
     }
     else {
@@ -1328,8 +1328,10 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
             continue;
           }
           $filtered_attachments = $this->matchDataAttachments($attachment, $available_attachments);
-          $attachment_ids = array_keys($filtered_attachments);
-          $conf['attachments']['entity_attachments']['attachments']['attachment_id'] += array_combine($attachment_ids, $attachment_ids);
+          foreach ($filtered_attachments as $filtered_attachment) {
+            $conf['attachments']['entity_attachments']['attachments']['attachment_id'][$filtered_attachment->id()] = $filtered_attachment->id();
+            $conf['attachments']['entity_attachments']['entities']['entity_ids'][$filtered_attachment->source->entity_id] = $filtered_attachment->source->entity_id;
+          }
         }
       }
     }
