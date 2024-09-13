@@ -159,12 +159,12 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
    * {@inheritdoc}
    */
   public function postSave(EntityInterface $entity, $uuid) {
-    $files = $this->getFiles();
-    if (empty($files)) {
+    $submitted_files = $this->getFiles();
+    $stored_files = $this->getStoredFiles($entity, $uuid);
+    if (empty($submitted_files) && empty($stored_files)) {
       return;
     }
-    $files = $this->getFiles();
-    $this->persistFiles($files, $entity, $uuid);
+    $this->persistFiles($submitted_files, $entity, $uuid);
   }
 
   /**
