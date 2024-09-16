@@ -1173,6 +1173,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // GIN backend theme, this is not done automatically.
     $form['actions']['#type'] = 'actions';
     $form['actions']['#attributes']['class'][] = 'canvas-form__actions';
+    $form['actions']['#attributes']['class'] = array_unique($form['actions']['#attributes']['class']);
 
     $is_preview = $form_state->get('preview');
     $active_subform = $form_state->get('current_subform');
