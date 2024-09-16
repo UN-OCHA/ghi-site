@@ -196,6 +196,7 @@ function ghi_base_objects_migrate_plan_prepare_row(Row $row, MigrateSourceInterf
   $row->setSourceProperty('plan_cluster_type', !empty($plan_data->planVersion->planClusterType) ? $plan_data->planVersion->planClusterType : NULL);
   $row->setSourceProperty('plan_date_start', !empty($plan_data->planVersion->startDate) ? $plan_data->planVersion->startDate : NULL);
   $row->setSourceProperty('plan_date_end', !empty($plan_data->planVersion->endDate) ? $plan_data->planVersion->endDate : NULL);
+  $row->setSourceProperty('document_published_on', !empty($plan_data->planVersion->pdfPublishDate) ? $plan_data->planVersion->pdfPublishDate : NULL);
 
   // Parse the categories to retrieve the categories.
   if (!empty($plan_data->categories)) {

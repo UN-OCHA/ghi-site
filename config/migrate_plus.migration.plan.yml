@@ -88,6 +88,7 @@ process:
   field_plan_cluster_type: plan_cluster_type
   field_plan_date_range/value: plan_date_start
   field_plan_date_range/end_value: plan_date_end
+  field_document_published_on: document_published_on
 destination:
   plugin: 'entity:base_object'
   overwrite_properties:
@@ -106,6 +107,7 @@ destination:
     - field_language
     - field_plan_cluster_type
     - field_plan_date_range
+    - field_document_published_on
 migration_dependencies:
   required:
     - plan_type

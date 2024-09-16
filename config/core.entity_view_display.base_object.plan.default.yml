@@ -6,6 +6,7 @@ dependencies:
     - field.field.base_object.plan.field_country
     - field.field.base_object.plan.field_decimal_format
     - field.field.base_object.plan.field_description
+    - field.field.base_object.plan.field_document_published_on
     - field.field.base_object.plan.field_footnotes
     - field.field.base_object.plan.field_language
     - field.field.base_object.plan.field_link_to_fts
@@ -28,6 +29,7 @@ dependencies:
     - field.field.base_object.plan.field_year
     - ghi_base_objects.base_object_type.plan
   module:
+    - datetime
     - datetime_range
     - ghi_base_objects
     - ghi_plans
@@ -59,6 +61,15 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: 0
+    region: content
+  field_document_published_on:
+    type: datetime_default
+    label: above
+    settings:
+      timezone_override: ''
+      format_type: medium
+    third_party_settings: {  }
+    weight: 22
     region: content
   field_footnotes:
     type: ghi_footnotes
