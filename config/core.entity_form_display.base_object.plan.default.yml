@@ -7,6 +7,7 @@ dependencies:
     - field.field.base_object.plan.field_decimal_format
     - field.field.base_object.plan.field_description
     - field.field.base_object.plan.field_footnotes
+    - field.field.base_object.plan.field_language
     - field.field.base_object.plan.field_link_to_fts
     - field.field.base_object.plan.field_max_admin_level
     - field.field.base_object.plan.field_operations_category
@@ -41,6 +42,7 @@ third_party_settings:
         - field_plan_costing
         - field_year
         - field_restricted
+        - field_language
         - field_description
       label: 'Plan Properties'
       region: content
@@ -80,7 +82,6 @@ third_party_settings:
         - field_plan_caseload
         - field_plan_status
         - field_plan_document_link
-        - field_plan_type_label_override
         - field_decimal_format
         - field_max_admin_level
         - field_link_to_fts
@@ -159,7 +160,7 @@ content:
     third_party_settings: {  }
   field_description:
     type: string_textarea
-    weight: 12
+    weight: 13
     region: content
     settings:
       rows: 5
@@ -168,6 +169,12 @@ content:
   field_footnotes:
     type: ghi_footnotes
     weight: 11
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_language:
+    type: options_select
+    weight: 12
     region: content
     settings: {  }
     third_party_settings: {  }

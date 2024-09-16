@@ -192,6 +192,7 @@ function ghi_base_objects_migrate_plan_prepare_row(Row $row, MigrateSourceInterf
   $row->setSourceProperty('short_name', !empty($plan_data->planVersion->shortName) ? $plan_data->planVersion->shortName : NULL);
   $row->setSourceProperty('subtitle', !empty($plan_data->planVersion->subtitle) ? $plan_data->planVersion->subtitle : NULL);
   $row->setSourceProperty('comments', !empty($plan_data->planVersion->comments) ? $plan_data->planVersion->comments : NULL);
+  $row->setSourceProperty('language', !empty($plan_data->planVersion->planLanguage) ? $plan_data->planVersion->planLanguage : NULL);
 
   // Parse the categories to retrieve the categories.
   if (!empty($plan_data->categories)) {

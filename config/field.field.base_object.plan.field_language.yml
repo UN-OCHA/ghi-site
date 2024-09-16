@@ -1,0 +1,21 @@
+uuid: e138d06b-0960-468a-a25e-7d6d586b303c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_language
+    - ghi_base_objects.base_object_type.plan
+  module:
+    - options
+id: base_object.plan.field_language
+field_name: field_language
+entity_type: base_object
+bundle: plan
+label: Language
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

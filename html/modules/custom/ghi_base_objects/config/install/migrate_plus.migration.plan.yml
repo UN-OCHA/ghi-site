@@ -74,6 +74,7 @@ process:
     no_stub: true
   field_year: plan_year
   field_restricted: restricted
+  field_language: language
 destination:
   plugin: 'entity:base_object'
   overwrite_properties:
@@ -89,6 +90,7 @@ destination:
     - field_year
     - field_country
     - field_restricted
+    - field_language
 migration_dependencies:
   required:
     - plan_type
