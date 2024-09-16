@@ -1,0 +1,16 @@
+contexts:
+  -
+    context: ''
+    translations:
+      -
+        source: Publish
+        translation: Display
+      -
+        source: Published
+        translation: Displayed
+      -
+        source: Unpublished
+        translation: 'Not displayed'
+      -
+        source: Unpublish
+        translation: "Don't display"

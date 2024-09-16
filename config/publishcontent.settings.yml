@@ -4,5 +4,5 @@ ui_localtask: false
 ui_checkbox: true
 create_revision: false
 create_log_entry: true
-publish_text_value: Publish
-unpublish_text_value: Unpublish
+publish_text_value: Display
+unpublish_text_value: "Don't display"

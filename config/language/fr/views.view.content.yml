@@ -10,7 +10,6 @@ display:
           label: Title
         type:
           label: 'Content type'
-          separator: ', '
         name:
           label: Author
         status:
@@ -50,12 +49,12 @@ display:
           expose:
             label: Status
           group_info:
-            label: 'Published status'
+            label: 'Display status'
             group_items:
               1:
-                title: Published
+                title: Displayed
               2:
-                title: Unpublished
+                title: 'Not displayed'
         langcode:
           expose:
             label: Language
