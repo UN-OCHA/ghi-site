@@ -8,10 +8,8 @@ display:
       fields:
         info:
           label: 'Description du bloc'
-          separator: ', '
         type:
           label: 'Type de bloc'
-          separator: ', '
         changed:
           label: Updated
         operations:
