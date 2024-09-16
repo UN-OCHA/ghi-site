@@ -18,7 +18,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    */
   public function getPageTitleMetaData() {
     return array_filter([
-      $this->getPlanTypeLabel(),
+      $this->getPlanSubtitle(),
       $this->getPlanStatusLabel(),
     ]);
   }
@@ -47,24 +47,16 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
-   * Get the plan type label.
-   *
-   * @param bool $override
-   *   Whether the overridden label can be used if it's available.
+   * Get the plan subtitle.
    *
    * @return string|null
-   *   The label of the plan type.
+   *   The plan subtitle.
    */
-  public function getPlanTypeLabel($override = TRUE) {
-    if (!$this->hasField('field_plan_type_label_override')) {
+  public function getPlanSubtitle() {
+    if (!$this->hasField('field_subtitle')) {
       return NULL;
     }
-    $plan_type_label_override = $this->get('field_plan_type_label_override')->value;
-    if ($override && !empty($plan_type_label_override)) {
-      return $plan_type_label_override;
-    }
-    $plan_type = $this->getPlanType();
-    return $plan_type ? $plan_type->label() : NULL;
+    return $this->get('field_subtitle')->value;
   }
 
   /**
@@ -79,7 +71,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   public function getPlanTypeShortLabel($override = TRUE) {
     $plan_type = $this->getPlanType();
     $included_in_totals = $plan_type ? $plan_type->get('field_included_in_totals')->value : FALSE;
-    $plan_type_label = $this->getPlanTypeLabel($override);
+    $plan_type_label = $override ? $this->getPlanSubtitle() : $plan_type->label();
     return $plan_type_label ? $this->getPlanTypeShortName($plan_type_label, $included_in_totals) : NULL;
   }
 

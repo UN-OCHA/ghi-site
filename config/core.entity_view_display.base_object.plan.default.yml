@@ -16,11 +16,11 @@ dependencies:
     - field.field.base_object.plan.field_plan_document_link
     - field.field.base_object.plan.field_plan_status
     - field.field.base_object.plan.field_plan_type
-    - field.field.base_object.plan.field_plan_type_label_override
     - field.field.base_object.plan.field_plan_version_argument
     - field.field.base_object.plan.field_plan_version_tag
     - field.field.base_object.plan.field_restricted
     - field.field.base_object.plan.field_short_name
+    - field.field.base_object.plan.field_subtitle
     - field.field.base_object.plan.field_visible_on_global_pages
     - field.field.base_object.plan.field_year
     - ghi_base_objects.base_object_type.plan
@@ -144,14 +144,6 @@ content:
     third_party_settings: {  }
     weight: -3
     region: content
-  field_plan_type_label_override:
-    type: string
-    label: above
-    settings:
-      link_to_entity: false
-    third_party_settings: {  }
-    weight: 17
-    region: content
   field_plan_version_argument:
     type: list_default
     label: above
@@ -185,6 +177,14 @@ content:
     third_party_settings: {  }
     weight: 6
     region: content
+  field_subtitle:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 18
+    region: content
   field_visible_on_global_pages:
     type: boolean
     label: above
@@ -214,3 +214,4 @@ content:
     region: content
 hidden:
   langcode: true
+  search_api_excerpt: true
