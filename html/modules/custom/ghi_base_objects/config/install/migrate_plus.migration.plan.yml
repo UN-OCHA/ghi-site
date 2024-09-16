@@ -76,6 +76,8 @@ process:
   field_restricted: restricted
   field_language: language
   field_plan_cluster_type: plan_cluster_type
+  field_plan_date_range/value: plan_date_start
+  field_plan_date_range/end_value: plan_date_end
 destination:
   plugin: 'entity:base_object'
   overwrite_properties:
@@ -93,6 +95,7 @@ destination:
     - field_restricted
     - field_language
     - field_plan_cluster_type
+    - field_plan_date_range
 migration_dependencies:
   required:
     - plan_type

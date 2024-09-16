@@ -58,6 +58,8 @@ function ghi_plans_preprocess_page(array &$variables) {
  * Selectively allow specific fields on edit pages of plan base objects.
  */
 function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterface &$form_state) {
+  $form['#attached']['library'][] = 'ghi_plans/ghi_plans.admin.plan_edit_form';
+
   $allow_fields = [
     'field_decimal_format',
     'field_footnotes',

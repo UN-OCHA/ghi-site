@@ -1,0 +1,20 @@
+uuid: 26e0455e-bcad-4ef3-9100-782baa50b25d
+langcode: en
+status: true
+dependencies:
+  module:
+    - datetime_range
+    - ghi_base_objects
+id: base_object.field_plan_date_range
+field_name: field_plan_date_range
+entity_type: base_object
+type: daterange
+settings:
+  datetime_type: date
+module: datetime_range
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

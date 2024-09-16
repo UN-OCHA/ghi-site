@@ -15,6 +15,7 @@ dependencies:
     - field.field.base_object.plan.field_plan_caseload
     - field.field.base_object.plan.field_plan_cluster_type
     - field.field.base_object.plan.field_plan_costing
+    - field.field.base_object.plan.field_plan_date_range
     - field.field.base_object.plan.field_plan_document_link
     - field.field.base_object.plan.field_plan_status
     - field.field.base_object.plan.field_plan_type
@@ -27,6 +28,7 @@ dependencies:
     - field.field.base_object.plan.field_year
     - ghi_base_objects.base_object_type.plan
   module:
+    - datetime_range
     - ghi_base_objects
     - ghi_plans
     - link
@@ -129,6 +131,17 @@ content:
       link: true
     third_party_settings: {  }
     weight: 2
+    region: content
+  field_plan_date_range:
+    type: daterange_default
+    label: above
+    settings:
+      timezone_override: ''
+      format_type: medium
+      from_to: both
+      separator: '-'
+    third_party_settings: {  }
+    weight: 21
     region: content
   field_plan_document_link:
     type: link
