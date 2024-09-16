@@ -85,6 +85,7 @@ process:
   field_year: plan_year
   field_restricted: restricted
   field_language: language
+  field_plan_cluster_type: plan_cluster_type
 destination:
   plugin: 'entity:base_object'
   overwrite_properties:
@@ -101,6 +102,7 @@ destination:
     - field_country
     - field_restricted
     - field_language
+    - field_plan_cluster_type
 migration_dependencies:
   required:
     - plan_type
