@@ -51,6 +51,7 @@ process:
     source: updated
   field_original_id: original_id
   field_description: comments
+  field_short_name: short_name
   field_plan_version_tag: version_tag
   field_country:
     plugin: sub_process
@@ -79,6 +80,7 @@ destination:
     - created
     - changed
     - field_description
+    - field_short_name
     - field_plan_version_tag
     - field_plan_type
     - field_plan_costing

@@ -69,7 +69,6 @@ function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterf
     'field_plan_status',
     'field_plan_type_label_override',
     'field_plan_version_argument',
-    'field_short_name',
     'field_visible_on_global_pages',
   ];
   foreach (Element::children($form) as $element_key) {
