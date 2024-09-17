@@ -1,3 +1,4 @@
+label: Glossary
 description: 'Tous les contenus, triés par lettre.'
 display:
   default:
@@ -12,6 +13,9 @@ display:
           label: 'Dernière mise à jour'
       pager:
         options:
+          tags:
+            next: ››
+            previous: ‹‹
           expose:
             items_per_page_label: 'Éléments par page'
             items_per_page_options_all_label: '- Tout -'
@@ -27,3 +31,6 @@ display:
     display_title: 'Fichier attaché'
   page_1:
     display_title: Page
+    display_options:
+      menu:
+        title: Glossary

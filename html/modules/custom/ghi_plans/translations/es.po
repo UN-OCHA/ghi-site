@@ -1,0 +1,27 @@
+# Spanish translation of Humanitarian Action - GHI Plans
+
+msgid ""
+msgstr ""
+"Project-Id-Version: Custom\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\\n"
+
+msgid "<strong>From:</strong> @start_date to @end_date"
+msgstr "<strong>Del:</strong> @start_date al @end_date"
+
+msgid "<strong>Published on:</strong> @date"
+msgstr "<strong>Publicado en:</strong> @date"
+
+msgid "<strong>Unpublished</strong>"
+msgstr "<strong>No publicado</strong>"
+
+msgid ""
+"<span class=\"icon-wrapper\"><span class=\"icon "
+"plan-coordinator\"></span><strong>Coordinated by:</strong> "
+"@coordinator</span>"
+msgstr ""
+"<span class=\"icon-wrapper\"><span class=\"icon "
+"plan-coordinator\"></span><strong>Coordinado por:</strong> "
+"@coordinator</span>"

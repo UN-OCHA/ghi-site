@@ -2,6 +2,9 @@
 
 namespace Drupal\ghi_plans\Entity;
 
+use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
@@ -17,9 +20,23 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    * {@inheritdoc}
    */
   public function getPageTitleMetaData() {
+    $langcode = $this->getPlanLanguage() ?? 'en';
+    $document_published = $this->getPlanDocumentPublishedDate();
+    $t_options = ['langcode' => $langcode];
     return array_filter([
-      $this->getPlanSubtitle(),
-      $this->getPlanStatusLabel(),
+      $this->getPlanSubtitle() ? new FormattableMarkup('<span class="icon-wrapper"><span class="icon plan-subtitle"></span>@subtitle</span>', [
+        '@subtitle' => $this->getPlanSubtitle(),
+      ]) : NULL,
+      $this->getPlanStartDate() ? new TranslatableMarkup('<strong>From:</strong> @start_date to @end_date', [
+        '@start_date' => DrupalDateTime::createFromFormat('Y-m-d', $this->getPlanStartDate())->format('d/m/Y'),
+        '@end_date' => DrupalDateTime::createFromFormat('Y-m-d', $this->getPlanEndDate())->format('d/m/Y'),
+      ], $t_options) : NULL,
+      $document_published ? new TranslatableMarkup('<strong>Published on:</strong> @date', [
+        '@date' => DrupalDateTime::createFromFormat('Y-m-d', $document_published)->format('d/m/Y'),
+      ], $t_options) : new TranslatableMarkup('<strong>Unpublished</strong>', [], $t_options),
+      $this->getPlanCoordinator() ? new TranslatableMarkup('<span class="icon-wrapper"><span class="icon plan-coordinator"></span><strong>Coordinated by:</strong> @coordinator</span>', [
+        '@coordinator' => implode(' & ', $this->getPlanCoordinator()),
+      ], $t_options) : NULL,
     ]);
   }
 
@@ -31,6 +48,19 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    */
   public function getYear() {
     return $this->get('field_year')->value;
+  }
+
+  /**
+   * Get the plan language.
+   *
+   * @return string|null
+   *   The plan language.
+   */
+  public function getPlanLanguage() {
+    if (!$this->hasField('field_language')) {
+      return NULL;
+    }
+    return $this->get('field_language')?->value ?? NULL;
   }
 
   /**
@@ -57,6 +87,61 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
       return NULL;
     }
     return $this->get('field_subtitle')->value;
+  }
+
+  /**
+   * Get the plan start date.
+   *
+   * @return string|null
+   *   The plan start date.
+   */
+  public function getPlanStartDate() {
+    if (!$this->hasField('field_plan_date_range')) {
+      return NULL;
+    }
+    return $this->get('field_plan_date_range')->value;
+  }
+
+  /**
+   * Get the plan end date.
+   *
+   * @return string|null
+   *   The plan end date.
+   */
+  public function getPlanEndDate() {
+    if (!$this->hasField('field_plan_date_range')) {
+      return NULL;
+    }
+    return $this->get('field_plan_date_range')->end_value;
+  }
+
+  /**
+   * Get the plan document publication date.
+   *
+   * @return string|null
+   *   The plan end date.
+   */
+  public function getPlanDocumentPublishedDate() {
+    if (!$this->hasField('field_document_published_on')) {
+      return NULL;
+    }
+    return $this->get('field_document_published_on')->value;
+  }
+
+  /**
+   * Get the plan document coordinator(s).
+   *
+   * @return string[]|null
+   *   The plan coordinator(s).
+   */
+  public function getPlanCoordinator() {
+    if (!$this->hasField('field_plan_coordinator')) {
+      return NULL;
+    }
+    $value = $this->get('field_plan_coordinator')->getValue();
+    return !empty($value) ? array_filter(array_map(function ($item) {
+      return $item['value'];
+    }, $value)) : NULL;
   }
 
   /**

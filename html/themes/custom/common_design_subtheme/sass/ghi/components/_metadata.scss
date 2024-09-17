@@ -34,7 +34,23 @@ article.node--type-document .node__meta .node__submitted,
         width: 1px;
         height: 90%;
         content: " ";
-        background-color: var(--ghi-default-border-color);
+        background-color: var(--ghi-yellow);
+      }
+
+      .icon-wrapper {
+        .icon {
+          background-repeat: no-repeat;
+          padding-right: 1.2rem;
+          filter: var(--ghi-filter-grey--dark);
+
+          &.plan-subtitle {
+            background-image: url("../img/icons/document.svg");
+          }
+          &.plan-coordinator {
+            padding-right: 1.4rem;
+            background-image: url("../img/icons/coordination.svg");
+          }
+        }
       }
     }
   }
