@@ -1,0 +1,21 @@
+uuid: b39819b1-1e42-4ffc-9981-fee972a47fff
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+id: base_object.field_plan_coordinator
+field_name: field_plan_coordinator
+entity_type: base_object
+type: string
+settings:
+  max_length: 255
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

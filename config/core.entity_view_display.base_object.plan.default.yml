@@ -15,6 +15,7 @@ dependencies:
     - field.field.base_object.plan.field_original_id
     - field.field.base_object.plan.field_plan_caseload
     - field.field.base_object.plan.field_plan_cluster_type
+    - field.field.base_object.plan.field_plan_coordinator
     - field.field.base_object.plan.field_plan_costing
     - field.field.base_object.plan.field_plan_date_range
     - field.field.base_object.plan.field_plan_document_link
@@ -134,6 +135,14 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: 20
+    region: content
+  field_plan_coordinator:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 23
     region: content
   field_plan_costing:
     type: entity_reference_label

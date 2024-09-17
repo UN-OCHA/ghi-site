@@ -229,6 +229,14 @@ function ghi_base_objects_migrate_plan_prepare_row(Row $row, MigrateSourceInterf
     $row->setSourceProperty('countries', !empty($countries) ? $countries : []);
   }
 
+  // Country references.
+  if (!empty($plan_data->planVersion->coordinatingOrganizations)) {
+    $plan_coordinator = array_map(function ($organization) {
+      return $organization->abbreviation;
+    }, $plan_data->planVersion->coordinatingOrganizations);
+    $row->setSourceProperty('plan_coordinator', $plan_coordinator);
+  }
+
   // Then get the year.
   if (!empty($plan_data->years)) {
     // There should really be only one.

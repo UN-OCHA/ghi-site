@@ -1,16 +1,16 @@
-uuid: f21329e8-5cd7-4401-bf22-7f5a2974d9ed
+uuid: 8fc5bba4-f700-4f8e-b364-40e3722c25b9
 langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.base_object.field_short_name
+    - field.storage.base_object.field_plan_coordinator
     - ghi_base_objects.base_object_type.plan
-id: base_object.plan.field_short_name
-field_name: field_short_name
+id: base_object.plan.field_plan_coordinator
+field_name: field_plan_coordinator
 entity_type: base_object
 bundle: plan
-label: 'Short name'
-description: 'An optional short name for a plan.'
+label: 'Plan coordinator'
+description: ''
 required: true
 translatable: false
 default_value: {  }
