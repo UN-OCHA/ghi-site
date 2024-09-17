@@ -111,8 +111,10 @@ class PlanClusterLogframeLinks extends GHIBlockBase implements OverrideDefaultTi
       $rendered_items[] = [
         '#theme' => 'link_box',
         '#image' => Markup::create($icon),
-        '#title' => $cluster->label() . ' cluster logical framework',
-        '#description' => NULL,
+        '#title' => $this->t('@cluster_name cluster logical framework', [
+          '@cluster_name' => $cluster->label(),
+        ]),
+        '#description' => $this->t('See cluster framework'),
         '#link' => $link->toRenderable(),
       ];
     }

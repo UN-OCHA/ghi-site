@@ -1,23 +1,52 @@
 .ghi-block-plan-cluster-logframe-links {
 
   .block-content {
-    .gho-related-article {
-      align-items: center;
+
+    .item-list--links {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      margin-top: 0;
+
+      & > div.link-box {
+        gap: 1rem;
+        margin-top: 0;
+        padding: 1rem;
+        border: 1px solid var(--ghi-default-border-color);
+      }
 
       .field--name-field-thumbnail-image {
-        width: auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 5rem;
         min-width: auto;
 
         .cluster-icon {
           display: flex;
-          align-items: center;
-          width: 3rem;
+          min-width: 4rem;
 
           svg {
             top: 0;
             left: 0;
           }
         }
+      }
+
+      .title::after {
+        display: block;
+        width: 15%;
+        margin-top: 0.75rem;
+        margin-bottom: 0.75rem;
+        content: " ";
+        border-top: 4px solid var(--ghi-yellow);
+      }
+
+      .description-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
       }
     }
   }
