@@ -12,7 +12,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
  *  id = "generic_document_link_button",
  *  admin_label = @Translation("Document link button"),
  *  category = @Translation("Generic elements"),
- *  title = false
+ *  title = FALSE
  * )
  */
 class DocumentLinkButton extends GHIBlockBase {
