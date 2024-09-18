@@ -1704,7 +1704,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: field
-          label: Protected
+          label: 'Password required'
           exclude: false
           alter:
             alter_text: false
@@ -2135,7 +2135,7 @@ display:
           exposed: true
           expose:
             operator_id: field_protected_is_protected_op
-            label: Protected
+            label: 'Password required'
             description: ''
             use_operator: false
             operator: field_protected_is_protected_op
@@ -2152,7 +2152,7 @@ display:
             placeholder: ''
           is_grouped: true
           group_info:
-            label: Protected
+            label: 'Password required'
             description: ''
             identifier: protected
             optional: true
@@ -2635,7 +2635,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: field
-          label: Protected
+          label: 'Password required'
           exclude: false
           alter:
             alter_text: false
@@ -3029,7 +3029,7 @@ display:
             placeholder: null
           is_grouped: true
           group_info:
-            label: Protected
+            label: 'Password required'
             description: ''
             identifier: protected
             optional: true
@@ -3532,7 +3532,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: field
-          label: Protected
+          label: 'Password required'
           exclude: false
           alter:
             alter_text: false
@@ -3978,7 +3978,7 @@ display:
             placeholder: ''
           is_grouped: true
           group_info:
-            label: Protected
+            label: 'Password required'
             description: ''
             identifier: protected
             optional: true
@@ -5642,7 +5642,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: field
-          label: Protected
+          label: 'Password required'
           exclude: false
           alter:
             alter_text: false
@@ -6137,7 +6137,7 @@ display:
             placeholder: null
           is_grouped: true
           group_info:
-            label: Protected
+            label: 'Password required'
             description: ''
             identifier: protected
             optional: true
