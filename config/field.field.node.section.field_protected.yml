@@ -11,7 +11,7 @@ id: node.section.field_protected
 field_name: field_protected
 entity_type: node
 bundle: section
-label: Protected
+label: 'Password required'
 description: ''
 required: false
 translatable: false
