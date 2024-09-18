@@ -3,11 +3,14 @@
   // Attach behaviors.
   Drupal.behaviors.GhiHomepageSwitcher = {
     attach: function (context, settings) {
-      $yearSwitcherBlock = $('.ghi-block.has-year-switcher', context);
-      if (!$yearSwitcherBlock.length) {
+      $section_switcher = $('.section-switcher-wrapper', context);
+      if (!$section_switcher.length) {
         return;
       }
-      $homepageBlock = $yearSwitcherBlock.parents('.ghi-block-global-homepages');
+      $homepageBlock = $section_switcher.parents('.ghi-block-global-homepages.has-year-switcher');
+      if (!$homepageBlock.length) {
+        return;
+      }
       let block_uuid = $homepageBlock.attr('id').replace('block-', '');
 
       once('section-switcher', '.ghi-block.has-year-switcher .section-switcher-wrapper ul li a', context).forEach((item) => {
@@ -18,12 +21,12 @@
       });
       if (!!(window.history && history.pushState)) {
         // Replace the current history item in newer browser.
-        $yearSwitcherBlock.find('.section-switcher-wrapper ul li a').on('click', function () {
+        $section_switcher.find('ul li a').on('click', function () {
           window.history.replaceState(window.history.state, null, $(this).attr('original-href'));
         });
       };
 
-      Drupal.attachBehaviors($yearSwitcherBlock.get(0));
+      Drupal.attachBehaviors($section_switcher.get(0));
     }
   }
 }(jQuery, Drupal));

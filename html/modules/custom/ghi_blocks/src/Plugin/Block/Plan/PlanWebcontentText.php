@@ -17,7 +17,7 @@ use Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment;
  *    "entities" = "plan_entities_query",
  *    "attachment" = "attachment_query",
  *  },
- *  title = false,
+ *  title = FALSE,
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
  *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })

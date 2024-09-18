@@ -18,7 +18,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
  *    "entities" = "plan_entities_query",
  *    "attachment" = "attachment_query",
  *  },
- *  title = false,
+ *  title = FALSE,
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
  *    "plan_cluster" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "governing_entity" })

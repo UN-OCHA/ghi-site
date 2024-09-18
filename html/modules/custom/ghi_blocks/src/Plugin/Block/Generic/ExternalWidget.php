@@ -16,7 +16,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  id = "generic_external_widget",
  *  admin_label = @Translation("External Widget"),
  *  category = @Translation("Generic elements"),
- *  title = false,
+ *  title = FALSE,
  *  valid_source_elements = {
  *    "generic_external_widgets",
  *    "plan_external_widget"

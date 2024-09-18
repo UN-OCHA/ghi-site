@@ -31,7 +31,7 @@
     padding-top: 0;
   }
 
-  &.ghi-block--hidden-preview > *:not(.contextual) {
+  &.ghi-block--hidden-preview > *:not(.contextual,.layout-builder__link) {
     opacity: 0.5;
 
     .hpc-form-wrapper & {

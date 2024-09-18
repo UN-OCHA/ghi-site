@@ -85,6 +85,9 @@ trait HomepageBlockTrait {
     if ($node && $node instanceof Homepage) {
       $current_year = $node->getYear();
     }
+    else {
+      $current_year = $this->getPageArgument('year');
+    }
     $options = [];
     foreach ($years as $year) {
       $is_active = $year == $current_year;

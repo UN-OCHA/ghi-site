@@ -3,16 +3,29 @@ body.path-frontpage #main-content {
   padding-right: 0;
   padding-left: 0;
 
-  .ghi-block:first-child {
-    margin-top: 0;
-    padding-top: 0;
+  .block-system-main-block > .layout > .layout__region--content > .ghi-block:first-child {
+    margin-top: 2rem;
+
+    &.ghi-block-generic-link-carousel {
+      margin-top: 0;
+      padding-top: 0;
+    }
   }
 }
 .ghi-block-global-homepages {
-  & > .cd-block-title {
-    margin-bottom: 0.5rem;
+  & .title-wrapper > .cd-block-title {
+    margin-bottom: 1rem;
     font-size: var(--cd-font-size--2xbase);
     font-weight: 700;
+  }
+
+  &.has-year-switcher > .block-content > .title-wrapper{
+    display: flex;
+    gap: 1rem;
+
+    .section-switcher-wrapper {
+      top: 0;
+    }
   }
 
   .ghi-block:first-child {
