@@ -24,12 +24,14 @@ trait ManagedFileBlockTrait {
     // Make files permanent and add file usage.
     $usage_type = $this->getFileUsageType($entity);
     foreach ($files as $file) {
-      if ($file->isPermanent()) {
-        continue;
+      if (!$file->isPermanent()) {
+        $file->setPermanent();
+        $file->save();
       }
-      $file->setPermanent();
-      $file->save();
-      $this->getFileUsageService()->add($file, 'ghi_blocks', $usage_type, $uuid);
+      $usage = $this->getFileUsageService()->listUsage($file);
+      if (empty($usage['ghi_blocks'][$usage_type][$uuid])) {
+        $this->getFileUsageService()->add($file, 'ghi_blocks', $usage_type, $uuid);
+      }
     }
     $stored_files = $this->getStoredFiles($entity, $uuid);
     $removed_files = array_diff_key($stored_files, $files);
@@ -56,7 +58,10 @@ trait ManagedFileBlockTrait {
     $usage_type = $this->getFileUsageType($entity);
     foreach ($files as $file) {
       $this->getFileUsageService()->delete($file, 'ghi_blocks', $usage_type, $uuid);
-      $file->delete();
+      $usage = $this->getFileUsageService()->listUsage($file);
+      if (empty($usage['ghi_blocks'])) {
+        $file->delete();
+      }
     }
   }
 
