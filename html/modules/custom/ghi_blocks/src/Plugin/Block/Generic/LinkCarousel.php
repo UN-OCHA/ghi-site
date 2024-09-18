@@ -23,7 +23,7 @@ use Drupal\hpc_common\Helpers\ArrayHelper;
  *  id = "generic_link_carousel",
  *  admin_label = @Translation("Link Carousel"),
  *  category = @Translation("Generic elements"),
- *  title = false
+ *  title = FALSE
  * )
  */
 class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterface, ImageProviderBlockInterface {

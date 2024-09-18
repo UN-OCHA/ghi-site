@@ -1,15 +1,6 @@
 .ghi-block-global-key-figures,
 .ghi-block-plan-headline-figures {
 
-  &.has-year-switcher .cd-block-title {
-    display: flex;
-    gap: 1rem;
-
-    .section-switcher-wrapper {
-      top: -0.35rem;
-    }
-  }
-
   // These rules are here to position the key figures the same way independent
   // of whether they have a visible tab container or not.
   .tab-container-wrapper {

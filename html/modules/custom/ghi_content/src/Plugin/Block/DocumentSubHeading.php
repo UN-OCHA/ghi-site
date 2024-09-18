@@ -14,7 +14,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
  *  id = "document_subheading",
  *  admin_label = @Translation("Subheading"),
  *  category = @Translation("Narrative Content"),
- *  title = false,
+ *  title = FALSE,
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"))
  *  }
