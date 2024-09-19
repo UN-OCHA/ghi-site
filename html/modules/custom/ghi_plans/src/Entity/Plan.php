@@ -16,6 +16,9 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
 
   use PlanTypeTrait;
 
+  public const CLUSTER_TYPE_CLUSTER = 'cluster';
+  public const CLUSTER_TYPE_SECTOR = 'sector';
+
   /**
    * {@inheritdoc}
    */
@@ -74,6 +77,24 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
       return NULL;
     }
     return $this->get('field_plan_type')?->entity ?? NULL;
+  }
+
+  /**
+   * Get the plan cluster type.
+   *
+   * @return string|null
+   *   The plan cluster type.
+   */
+  public function getPlanClusterType() {
+    if (!$this->hasField('field_plan_cluster_type')) {
+      return NULL;
+    }
+    $allowed = [
+      self::CLUSTER_TYPE_CLUSTER,
+      self::CLUSTER_TYPE_SECTOR,
+    ];
+    $cluster_type = $this->get('field_plan_cluster_type')?->value ?? self::CLUSTER_TYPE_CLUSTER;
+    return in_array($cluster_type, $allowed) ? $cluster_type : self::CLUSTER_TYPE_CLUSTER;
   }
 
   /**

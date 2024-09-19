@@ -19,6 +19,7 @@ use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
+use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\ApiObjects\Plan as ApiObjectsPlan;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
@@ -221,6 +222,17 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
 
     if ($link = $this->getLinkFromConfiguration($this->getBlockConfig()['display']['link'] ?? [])) {
       $build[] = $link->toRenderable();
+    }
+    elseif (count($entities) && $first_entity instanceof GoverningEntity && $this->getCurrentBaseObject()->getSourceId() == $first_entity->id()) {
+      $plan_object = $this->getCurrentPlanObject();
+      $cluster_node = $this->getCurrentBaseEntity();
+      $title_args = ['langcode' => $plan_object->getPlanLanguage()];
+      $title_map = [
+        Plan::CLUSTER_TYPE_CLUSTER => $this->t('Go to cluster page', [], $title_args),
+        Plan::CLUSTER_TYPE_SECTOR => $this->t('Go to sector page', [], $title_args),
+      ];
+      $link_label = $title_map[$plan_object->getPlanClusterType()];
+      $build[] = $this->getLinkFromUri($cluster_node->toUrl()->toUriString(), $link_label)->toRenderable();
     }
 
     return $build;
