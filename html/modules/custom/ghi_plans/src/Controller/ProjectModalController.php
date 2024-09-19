@@ -147,7 +147,10 @@ class ProjectModalController extends ControllerBase {
   public function buildOrganizationProjectTable(BaseObjectInterface $base_object, $organization_id) {
     $organization = $this->getOrganization($organization_id);
     if (!$organization) {
-      return NULL;
+      $build = [
+        '#markup' => $this->t('An error occured. The requested ressource is not available.'),
+      ];
+      return $this->returnBuild($build, $this->t('Error'));
     }
     $project_search_query = $this->getProjectSearchQuery($base_object);
     $projects = $project_search_query->getOrganizationProjects($organization, $base_object);

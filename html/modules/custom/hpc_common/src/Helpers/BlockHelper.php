@@ -92,6 +92,9 @@ class BlockHelper {
    *   The block instances if it has been found.
    */
   public static function getBlockInstance($uri, $plugin_id, $block_uuid) {
+    if (empty($uri)) {
+      return NULL;
+    }
     /** @var \Drupal\Core\Routing\Router $router */
     $router = \Drupal::service('router.no_access_checks');
     try {
