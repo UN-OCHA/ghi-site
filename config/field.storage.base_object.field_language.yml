@@ -1,0 +1,30 @@
+uuid: 9372c733-578b-4fa6-83eb-581d31b6d538
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+    - options
+id: base_object.field_language
+field_name: field_language
+entity_type: base_object
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: en
+      label: English
+    -
+      value: fr
+      label: French
+    -
+      value: es
+      label: Spanish
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,21 @@
+uuid: 09ed0fef-3db5-4b08-976c-3344e4540e24
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_document_published_on
+    - ghi_base_objects.base_object_type.plan
+  module:
+    - datetime
+id: base_object.plan.field_document_published_on
+field_name: field_document_published_on
+entity_type: base_object
+bundle: plan
+label: 'Document published on'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: datetime

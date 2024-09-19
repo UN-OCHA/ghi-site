@@ -113,10 +113,11 @@ class PlanOverviewPlan extends BaseObject {
    *   The plan type name.
    */
   public function getOriginalTypeName($fetch_from_entity = FALSE) {
+    $type_name = $this->getTypeProperty('name');
     if ($fetch_from_entity && $plan = $this->getEntity()) {
-      return $plan->getPlanTypeLabel();
+      return $type_name = $plan->getPlanType()?->label();
     }
-    return $this->getTypeProperty('name');
+    return $type_name;
   }
 
   /**

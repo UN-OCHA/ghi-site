@@ -189,7 +189,14 @@ function ghi_base_objects_migrate_plan_prepare_row(Row $row, MigrateSourceInterf
 
   $row->setSourceProperty('version_tag', $published_version ? $published_version['name'] : NULL);
   $row->setSourceProperty('name', !empty($plan_data->planVersion->name) ? $plan_data->planVersion->name : NULL);
+  $row->setSourceProperty('short_name', !empty($plan_data->planVersion->shortName) ? $plan_data->planVersion->shortName : NULL);
+  $row->setSourceProperty('subtitle', !empty($plan_data->planVersion->subtitle) ? $plan_data->planVersion->subtitle : NULL);
   $row->setSourceProperty('comments', !empty($plan_data->planVersion->comments) ? $plan_data->planVersion->comments : NULL);
+  $row->setSourceProperty('language', !empty($plan_data->planVersion->planLanguage) ? $plan_data->planVersion->planLanguage : NULL);
+  $row->setSourceProperty('plan_cluster_type', !empty($plan_data->planVersion->planClusterType) ? $plan_data->planVersion->planClusterType : NULL);
+  $row->setSourceProperty('plan_date_start', !empty($plan_data->planVersion->startDate) ? $plan_data->planVersion->startDate : NULL);
+  $row->setSourceProperty('plan_date_end', !empty($plan_data->planVersion->endDate) ? $plan_data->planVersion->endDate : NULL);
+  $row->setSourceProperty('document_published_on', !empty($plan_data->planVersion->pdfPublishDate) ? $plan_data->planVersion->pdfPublishDate : NULL);
 
   // Parse the categories to retrieve the categories.
   if (!empty($plan_data->categories)) {
@@ -220,6 +227,14 @@ function ghi_base_objects_migrate_plan_prepare_row(Row $row, MigrateSourceInterf
       return $location['adminLevel'] == 0;
     });
     $row->setSourceProperty('countries', !empty($countries) ? $countries : []);
+  }
+
+  // Country references.
+  if (!empty($plan_data->planVersion->coordinatingOrganizations)) {
+    $plan_coordinator = array_map(function ($organization) {
+      return $organization->abbreviation;
+    }, $plan_data->planVersion->coordinatingOrganizations);
+    $row->setSourceProperty('plan_coordinator', $plan_coordinator);
   }
 
   // Then get the year.

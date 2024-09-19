@@ -61,6 +61,8 @@ process:
     source: updated
   field_original_id: original_id
   field_description: comments
+  field_short_name: short_name
+  field_subtitle: subtitle
   field_plan_version_tag: version_tag
   field_country:
     plugin: sub_process
@@ -82,6 +84,12 @@ process:
     no_stub: true
   field_year: plan_year
   field_restricted: restricted
+  field_language: language
+  field_plan_cluster_type: plan_cluster_type
+  field_plan_date_range/value: plan_date_start
+  field_plan_date_range/end_value: plan_date_end
+  field_document_published_on: document_published_on
+  field_plan_coordinator: plan_coordinator
 destination:
   plugin: 'entity:base_object'
   overwrite_properties:
@@ -89,12 +97,19 @@ destination:
     - created
     - changed
     - field_description
+    - field_short_name
+    - field_subtitle
     - field_plan_version_tag
     - field_plan_type
     - field_plan_costing
     - field_year
     - field_country
     - field_restricted
+    - field_language
+    - field_plan_cluster_type
+    - field_plan_date_range
+    - field_document_published_on
+    - field_plan_coordinator
 migration_dependencies:
   required:
     - plan_type

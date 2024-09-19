@@ -10,13 +10,14 @@ display:
           label: Title
         type:
           label: 'Content type'
+          separator: ', '
         name:
           label: Author
         status:
           label: Status
           settings:
-            format_custom_false: Unpublished
-            format_custom_true: Published
+            format_custom_false: 'Non publié'
+            format_custom_true: Displayed
         changed:
           label: Updated
         operations:
@@ -54,7 +55,7 @@ display:
               1:
                 title: Displayed
               2:
-                title: 'Not displayed'
+                title: 'Non publié'
         langcode:
           expose:
             label: Language

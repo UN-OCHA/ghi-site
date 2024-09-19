@@ -1,0 +1,27 @@
+uuid: 3df56b7c-2b3b-444a-9ade-22b706d7b540
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+    - options
+id: base_object.field_plan_cluster_type
+field_name: field_plan_cluster_type
+entity_type: base_object
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: cluster
+      label: Cluster
+    -
+      value: sector
+      label: Sector
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
