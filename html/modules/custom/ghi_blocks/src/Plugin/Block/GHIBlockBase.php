@@ -358,7 +358,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     // Handle the title display.
     // @todo This is confusing and needs cleanup.
-    if ($this->shouldDisplayTitle()) {
+    if ($this->shouldDisplayTitle() && empty($build_content['#title_processed'])) {
       $build['#title'] = $this->label();
       $display_label = $this->configuration['label_display'] ?? FALSE;
       if ($this instanceof AutomaticTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface) {
@@ -1045,7 +1045,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   TRUE if considered preview, FALSE otherwise.
    */
   protected function isPreview() {
-    return $this->isConfigurationPreview() || $this->isLayoutBuilder();
+    return $this->isConfigurationPreview() || ($this->isLayoutBuilder() && !$this->isLayoutBuilderFormSubmission());
   }
 
   /**
@@ -1056,6 +1056,17 @@ abstract class GHIBlockBase extends HPCBlockBase {
    */
   public function isLayoutBuilder() {
     return $this->routeMatch->getParameter('section_storage') instanceof SectionStorageBase;
+  }
+
+  /**
+   * Check if the current request is a form submission form layout builder.
+   *
+   * @return bool
+   *   TRUE if considered layout builder, FALSE otherwise.
+   */
+  public function isLayoutBuilderFormSubmission() {
+    $post_data = $this->requestStack->getCurrentRequest()->request;
+    return $post_data->has('op') && $post_data->has('toggle_content_preview');
   }
 
   /**

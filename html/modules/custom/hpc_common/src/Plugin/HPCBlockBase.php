@@ -13,6 +13,7 @@ use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Drupal\page_manager\Plugin\SectionStorage\PageManagerSectionStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -368,7 +369,6 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    */
   public function setPage($page_parameters = NULL) {
     $page_parameters = $this->getAllAvailablePageParameters($page_parameters);
-
     if (!empty($page_parameters['_page_manager_page'])) {
       // Page manager page.
       $this->page = $page_parameters['_page_manager_page']->id();
@@ -387,18 +387,18 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
       $node = is_object($page_parameters['node']) ? $page_parameters['node'] : $entity_storage->load($page_parameters['node']);
       $this->page = $node->bundle() . '_node';
     }
-    elseif (!empty($page_parameters['section_storage']) && $page_parameters['section_storage'] instanceof OverridesSectionStorage) {
-      // Layout builder editing context.
+    elseif (!empty($page_parameters['section_storage']) && $page_parameters['section_storage'] instanceof PageManagerSectionStorage) {
+      // Layout builder editing context on page manager pages.
       $entity = $page_parameters['section_storage']->getContextValue('entity');
-      if ($entity->bundle() == 'page_variant') {
-        // Page variant.
-        /** @var \Drupal\page_manager\Entity\PageVariant $entity */
-        $this->page = $entity->getPage()->id();
-      }
-      else {
-        // Content entity, e.g. node.
-        $this->page = $entity->bundle() . '_' . $entity->getEntityTypeId();
-      }
+      // Page variant.
+      /** @var \Drupal\page_manager\Entity\PageVariant $entity */
+      $this->page = $entity->getPage()->id();
+    }
+    elseif (!empty($page_parameters['section_storage']) && $page_parameters['section_storage'] instanceof OverridesSectionStorage) {
+      // Layout builder editing context on content entity pages.
+      $entity = $page_parameters['section_storage']->getContextValue('entity');
+      // Content entity, e.g. node.
+      $this->page = $entity->bundle() . '_' . $entity->getEntityTypeId();
     }
     elseif (!empty($page_parameters['entity'])) {
       // Content entity, e.g. node.

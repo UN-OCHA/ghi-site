@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 
 use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\HomepageBlockTrait;
@@ -19,6 +20,7 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadContainerInterface;
  *  category = @Translation("Global"),
  *  default_title = @Translation("Operations"),
  *  context_definitions = {
+ *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
  *    "year" = @ContextDefinition("integer", label = @Translation("Year"), required = FALSE)
  *  },
  * )
@@ -35,7 +37,37 @@ class Homepages extends GHIBlockBase implements OverrideDefaultTitleBlockInterfa
     if (!$homepage) {
       return [];
     }
-    $build = $this->entityTypeManager->getViewBuilder('node')->view($homepage, 'embed');
+    $build = [
+      '#type' => 'container',
+    ];
+
+    // Make sure that the block title doesn't display.
+    // @see GhiBlockBase::build() for details.
+    $build['#title_processed'] = TRUE;
+    $this->configuration['label_display'] = FALSE;
+
+    // Custom build the block title inside the block content so that it get's
+    // replaced when using the year switcher.
+    $build['title_wrapper'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => [
+          'title-wrapper',
+          'content-width',
+        ],
+      ],
+      'title' => [
+        '#markup' => Markup::create('<h2 class="cd-block-title">' . parent::label() . '</h2>'),
+      ],
+    ];
+    // Add a year switcher if available.
+    if ($year_switcher = $this->buildHomepageYearSwitcher()) {
+      $build['#block_attributes'] = [
+        'class' => ['has-year-switcher'],
+      ];
+      $build['title_wrapper']['title'][] = $year_switcher;
+    }
+    $build[] = $this->entityTypeManager->getViewBuilder('node')->view($homepage, 'embed');
     return $build;
   }
 
