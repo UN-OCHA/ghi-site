@@ -1,11 +1,12 @@
 diff --git a/core/core.libraries.yml b/core/core.libraries.yml
-index 9e34b6c95bd1fe2e2581c987be2dbfa53dace052..6bb1856b8e3d51a936797c58e5744a121db6a4fb 100644
+index 9e34b6c95bd1fe2e2581c987be2dbfa53dace052..aefb2db971777c71bfa1e03a728bea0dc504622a 100644
 --- a/core/core.libraries.yml
 +++ b/core/core.libraries.yml
-@@ -726,7 +726,7 @@ drupal.vertical-tabs:
+@@ -725,8 +725,7 @@ drupal.touchevents-test:
+ drupal.vertical-tabs:
    version: VERSION
    js:
-     # Load before core/drupal.collapse.
+-    # Load before core/drupal.collapse.
 -    misc/vertical-tabs.js: { weight: -1 }
 +    misc/vertical-tabs.js: {}
    css:
@@ -170,24 +171,16 @@ index 4d42f4235984e499e92a765f4cf8301415c69cad..e853f63b78c864210dd78c004b8a2b65
      // If all the libraries to load contained only CSS, there is nothing further
      // to do here, so return early.
 diff --git a/core/modules/ckeditor5/ckeditor5.libraries.yml b/core/modules/ckeditor5/ckeditor5.libraries.yml
-index 70ebcf51704a2e7562eead3e69925b5148cc5246..dc98fb949c3e9a94378bb88b025e3202d953324a 100644
+index 70ebcf51704a2e7562eead3e69925b5148cc5246..73d3e7ea00af1483e4b41e73793096410b3c08bc 100644
 --- a/core/modules/ckeditor5/ckeditor5.libraries.yml
 +++ b/core/modules/ckeditor5/ckeditor5.libraries.yml
 @@ -99,6 +99,7 @@ internal.drupal.ckeditor5.filter.admin:
      - core/once
      - core/drupal.ajax
      - core/drupalSettings
-+    - core/vertical-tabs
-
- internal.drupal.ckeditor5.table:
-   css:
-@@ -119,6 +120,7 @@ internal.admin:
-     - core/jquery
-     - core/once
-     - core/drupal.announce
 +    - core/drupal.vertical-tabs
 
- internal.admin.specialCharacters:
+ internal.drupal.ckeditor5.table:
    css:
 diff --git a/core/tests/Drupal/Tests/Core/Asset/AssetResolverTest.php b/core/tests/Drupal/Tests/Core/Asset/AssetResolverTest.php
 index faf3dcd3c8b31b556e1653ed8f471a1629adf0de..3ea3dc87c0c3e2a178e88256a414610e4f0e4291 100644
