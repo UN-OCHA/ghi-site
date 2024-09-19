@@ -1,0 +1,84 @@
+From 5d64d7828beac478a407b92f0563b7cb36025c50 Mon Sep 17 00:00:00 2001
+From: berliner <berliner@dev030.com>
+Date: Thu, 19 Sep 2024 22:25:26 +0200
+Subject: [PATCH] Revert "Issue #3454507 by hablat, catch: Aggregated asset
+ generation causes uncacheable assets"
+
+This reverts commit 572b08c076de102254547e6d53284656e6f44265.
+---
+ .../src/Controller/AssetControllerBase.php    | 19 ++++---------------
+ .../Asset/AssetOptimizationTest.php           | 12 ++++++++----
+ 2 files changed, 12 insertions(+), 19 deletions(-)
+
+diff --git a/core/modules/system/src/Controller/AssetControllerBase.php b/core/modules/system/src/Controller/AssetControllerBase.php
+index 4f8d5ad696..6d4b74c3a4 100644
+--- a/core/modules/system/src/Controller/AssetControllerBase.php
++++ b/core/modules/system/src/Controller/AssetControllerBase.php
+@@ -16,7 +16,6 @@
+ use Drupal\Core\Theme\ThemeManagerInterface;
+ use Drupal\system\FileDownloadController;
+ use Symfony\Component\HttpFoundation\BinaryFileResponse;
+-use Symfony\Component\HttpFoundation\RedirectResponse;
+ use Symfony\Component\HttpFoundation\Request;
+ use Symfony\Component\HttpFoundation\Response;
+ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+@@ -184,11 +183,6 @@ public function deliver(Request $request, string $file_name) {
+     $generated_hash = $this->generateHash($group);
+     $data = $this->optimizer->optimizeGroup($group);
+ 
+-    $response = new Response($data, 200, [
+-      'Cache-control' => static::CACHE_CONTROL,
+-      'Content-Type' => $this->contentType,
+-    ]);
+-
+     // However, the hash from the library definitions in code may not match the
+     // hash from the URL. This can be for three reasons:
+     // 1. Someone has requested an outdated URL, i.e. from a cached page, which
+@@ -204,15 +198,10 @@ public function deliver(Request $request, string $file_name) {
+     if (hash_equals($generated_hash, $received_hash)) {
+       $this->dumper->dumpToUri($data, $this->assetType, $uri);
+     }
+-    else {
+-      $expected_filename = $this->fileExtension . '_' . $generated_hash . '.' . $this->fileExtension;
+-      $response = new RedirectResponse(
+-        str_replace($file_name, $expected_filename, $request->getRequestUri()),
+-        301,
+-        ['Cache-Control' => 'public, max-age=3600, must-revalidate'],
+-      );
+-    }
+-    return $response;
++    return new Response($data, 200, [
++      'Cache-control' => static::CACHE_CONTROL,
++      'Content-Type' => $this->contentType,
++    ]);
+   }
+ 
+   /**
+diff --git a/core/tests/Drupal/FunctionalTests/Asset/AssetOptimizationTest.php b/core/tests/Drupal/FunctionalTests/Asset/AssetOptimizationTest.php
+index 0b298f2175..dd0fdbd961 100644
+--- a/core/tests/Drupal/FunctionalTests/Asset/AssetOptimizationTest.php
++++ b/core/tests/Drupal/FunctionalTests/Asset/AssetOptimizationTest.php
+@@ -187,12 +187,16 @@ protected function assertInvalidAggregates(string $url): void {
+     $session->visit($this->setInvalidLibrary($url));
+     $this->assertSession()->statusCodeEquals(200);
+ 
+-    // When an invalid asset hash name is given.
+     $session->visit($this->replaceGroupHash($url));
+     $this->assertSession()->statusCodeEquals(200);
+-    $current_url = $session->getCurrentUrl();
+-    // Redirect to the correct one.
+-    $this->assertEquals($url, $current_url);
++    $headers = $session->getResponseHeaders();
++    $this->assertEquals(['no-store, private'], $headers['Cache-Control']);
++
++    // And again to confirm it's not cached on disk.
++    $session->visit($this->replaceGroupHash($url));
++    $this->assertSession()->statusCodeEquals(200);
++    $headers = $session->getResponseHeaders();
++    $this->assertEquals(['no-store, private'], $headers['Cache-Control']);
+   }
+ 
+   /**
+-- 
+2.39.5 (Apple Git-154)
+
