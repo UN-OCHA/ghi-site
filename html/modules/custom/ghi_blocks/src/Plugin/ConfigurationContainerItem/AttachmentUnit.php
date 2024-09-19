@@ -3,7 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
+use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 
 /**
  * Provides an attachment unit item for configuration containers.
@@ -35,10 +35,11 @@ class AttachmentUnit extends ConfigurationContainerItemPluginBase {
    */
   public function getValue() {
     $attachment = $this->getContextValue('attachment');
-    if (!$attachment || !$attachment instanceof AttachmentInterface) {
+    if (!$attachment || !$attachment instanceof DataAttachment) {
       return NULL;
     }
-    return $attachment->unit->label ?? NULL;
+    $langcode = $attachment->getPlanObject()->getPlanLanguage();
+    return $attachment->getUnitLabel($langcode);
   }
 
 }

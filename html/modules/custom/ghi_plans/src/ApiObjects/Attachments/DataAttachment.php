@@ -78,6 +78,10 @@ class DataAttachment extends AttachmentBase {
         'label' => $unit->label ?? NULL,
         'type' => $unit->id == self::UNIT_TYPE_ID_PERCENTAGE ? 'percentage' : 'amount',
         'group' => property_exists($unit, 'isGender') && $unit->isGender == 1 ? 'people' : 'amount',
+        'locale' => [
+          'en' => $unit->label ?? NULL,
+          'fr' => $unit->labelFr ?? NULL,
+        ],
       ] : NULL,
       'monitoring_period' => $period ?? NULL,
       'fields' => $prototype->getFields(),
@@ -246,11 +250,24 @@ class DataAttachment extends AttachmentBase {
   /**
    * Get the type of unit for an attachment.
    *
-   * @return string
+   * @return string|null
    *   The unit type as a string.
    */
   public function getUnitType() {
     return $this->unit ? $this->unit->type : NULL;
+  }
+
+  /**
+   * Get the label of the unit for an attachment.
+   *
+   * @return string|null
+   *   The unit label as a string.
+   */
+  public function getUnitLabel($langcode = NULL) {
+    if ($langcode && !empty($this->unit->locale[$langcode])) {
+      return $this->unit->locale[$langcode];
+    }
+    return $this->unit->label ?? NULL;
   }
 
   /**
