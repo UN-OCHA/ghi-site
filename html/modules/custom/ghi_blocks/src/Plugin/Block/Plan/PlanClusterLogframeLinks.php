@@ -9,6 +9,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plans\Entity\GoverningEntity;
+use Drupal\ghi_plans\Entity\Plan;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -18,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  id = "plan_cluster_logframe_links",
  *  admin_label = @Translation("Cluster logframe links"),
  *  category = @Translation("Plan elements"),
- *  default_title = @Translation("Cluster Framework"),
+ *  default_title = @Translation("Cluster Frameworks"),
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), constraints = { "Bundle": "logframe" }),
  *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
@@ -108,13 +109,25 @@ class PlanClusterLogframeLinks extends GHIBlockBase implements OverrideDefaultTi
       }
       $icon = $cluster_base_object->getIconEmbedCode();
       $link = $this->getLinkFromUri($cluster_logframe->toUrl()->toUriString());
+      $title_args = [
+        '@cluster_name' => $cluster->label(),
+      ];
+      /** @var \Drupal\ghi_plans\Entity\Plan $plan */
+      $plan = $cluster->getParentNode()?->getBaseObject() ?? NULL;
+      $langcode = $plan->getPlanLanguage();
+      $title_map = [
+        Plan::CLUSTER_TYPE_CLUSTER => $this->t('@cluster_name cluster logical framework', $title_args, ['langcode' => $langcode]),
+        Plan::CLUSTER_TYPE_SECTOR => $this->t('@cluster_name sector logical framework', $title_args, ['langcode' => $langcode]),
+      ];
+      $description_map = [
+        Plan::CLUSTER_TYPE_CLUSTER => $this->t('See cluster framework', [], ['langcode' => $langcode]),
+        Plan::CLUSTER_TYPE_SECTOR => $this->t('See sector framework', [], ['langcode' => $langcode]),
+      ];
       $rendered_items[] = [
         '#theme' => 'link_box',
         '#image' => Markup::create($icon),
-        '#title' => $this->t('@cluster_name cluster logical framework', [
-          '@cluster_name' => $cluster->label(),
-        ]),
-        '#description' => $this->t('See cluster framework'),
+        '#title' => $title_map[$plan?->getPlanClusterType() ?? Plan::CLUSTER_TYPE_CLUSTER],
+        '#description' => $description_map[$plan?->getPlanClusterType() ?? Plan::CLUSTER_TYPE_CLUSTER],
         '#link' => $link->toRenderable(),
       ];
     }

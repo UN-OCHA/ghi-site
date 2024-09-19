@@ -25,3 +25,33 @@ msgstr ""
 "<span class=\"icon-wrapper\"><span class=\"icon "
 "plan-coordinator\"></span><strong>Coordonné par:</strong> "
 "@coordinator</span>"
+
+msgid "Cluster frameworks"
+msgstr "Cadres logiques des clusters"
+
+msgid "@cluster_name cluster logical framework"
+msgstr "Cadre logique du cluster @cluster_name"
+
+msgid "See cluster framework"
+msgstr "Voir le cadre logique"
+
+msgid "Sector frameworks"
+msgstr "Cadres logiques des secteurs"
+
+msgid "@cluster_name sector logical framework"
+msgstr "Cadre logique du secteur @cluster_name"
+
+msgid "See sector framework"
+msgstr "Voir le cadre logique"
+
+msgid "Progress"
+msgstr "Progrès"
+
+msgid "Go to sector page"
+msgstr "Aller à la page du secteur"
+
+msgid "Go to cluster page"
+msgstr "Aller à la page du cluster"
+
+msgid "Unit"
+msgstr "Unité"

@@ -255,6 +255,9 @@ class LogframeManager implements ContainerInjectionInterface {
     $definition = $this->blockManager->getDefinition('plan_entity_logframe', FALSE);
     $context_mapping = $this->buildContextMappingForBlock($definition, $node);
 
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan */
+    $plan = $node->getParentBaseNode()->getBaseObject();
+
     // Set the basic configuration for a single plan entity logframe element.
     $configuration = [
       'hpc' => [
@@ -286,10 +289,10 @@ class LogframeManager implements ContainerInjectionInterface {
       ];
       $columns = [];
       if ($attachment_prototype->isIndicator()) {
-        $columns = $this->buildIndicatorColumns($attachment_prototype);
+        $columns = $this->buildIndicatorColumns($attachment_prototype, $plan);
       }
       else {
-        $columns = $this->buildCaseloadColumns($attachment_prototype);
+        $columns = $this->buildCaseloadColumns($attachment_prototype, $plan);
       }
       $table_config['config']['table_form']['columns'] = $columns;
       $configuration['hpc']['tables']['attachment_tables'][] = $table_config;
@@ -318,12 +321,20 @@ class LogframeManager implements ContainerInjectionInterface {
   private function buildClusterLogframeLinksComponent(LogframeSubpage $node) {
     $definition = $this->blockManager->getDefinition('plan_cluster_logframe_links', FALSE);
     $context_mapping = $this->buildContextMappingForBlock($definition, $node);
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan */
+    $plan = $node->getParentBaseNode()->getBaseObject();
+    $langcode = $plan->getPlanLanguage();
+
+    $title_map = [
+      Plan::CLUSTER_TYPE_CLUSTER => $this->t('Cluster frameworks', [], ['langcode' => $langcode]),
+      Plan::CLUSTER_TYPE_SECTOR => $this->t('Sector frameworks', [], ['langcode' => $langcode]),
+    ];
 
     // Append a new component.
     $config = array_filter([
       'id' => $definition['id'],
       'provider' => $definition['provider'],
-      'label' => NULL,
+      'label' => $title_map[$plan->getPlanClusterType()],
       'label_display' => TRUE,
       'hpc' => [
         'label' => NULL,
@@ -373,12 +384,14 @@ class LogframeManager implements ContainerInjectionInterface {
    *
    * @param \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype
    *   The attachment prototype.
+   * @param \Drupal\ghi_plans\Entity\Plan $plan
+   *   The plan object that the attachment prototype belongs to.
    *
    * @return array
    *   Configuration array for table columns compatible with configuration
    *   container items.
    */
-  private function buildCaseloadColumns(AttachmentPrototype $attachment_prototype) {
+  private function buildCaseloadColumns(AttachmentPrototype $attachment_prototype, Plan $plan) {
     $columns = [];
     // Setup the columns.
     $columns[] = [
@@ -463,12 +476,15 @@ class LogframeManager implements ContainerInjectionInterface {
    *
    * @param \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype
    *   The attachment prototype.
+   * @param \Drupal\ghi_plans\Entity\Plan $plan
+   *   The plan object that the attachment prototype belongs to.
    *
    * @return array
    *   Configuration array for table columns compatible with configuration
    *   container items.
    */
-  private function buildIndicatorColumns(AttachmentPrototype $attachment_prototype) {
+  private function buildIndicatorColumns(AttachmentPrototype $attachment_prototype, Plan $plan) {
+
     $columns = [];
     // Setup the columns.
     $columns[] = [
@@ -480,7 +496,9 @@ class LogframeManager implements ContainerInjectionInterface {
     ];
     $columns[] = [
       'item_type' => 'attachment_unit',
-      'config' => [],
+      'config' => [
+        'label' => $this->t('Unit', [], ['langcode' => $plan->getPlanLanguage()]),
+      ],
       'id' => count($columns),
     ];
     // Take the first metric of type target and the last measurement.
@@ -524,7 +542,7 @@ class LogframeManager implements ContainerInjectionInterface {
         'id' => count($columns),
         'item_type' => 'spark_line_chart',
         'config' => [
-          'label' => $this->t('Progress'),
+          'label' => $this->t('Progress', [], ['langcode' => $plan->getPlanLanguage()]),
           'data_point' => $measure,
           'baseline' => $target,
           'use_calculation_method' => FALSE,
