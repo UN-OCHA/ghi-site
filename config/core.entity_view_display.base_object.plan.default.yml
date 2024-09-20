@@ -19,10 +19,10 @@ dependencies:
     - field.field.base_object.plan.field_plan_costing
     - field.field.base_object.plan.field_plan_date_range
     - field.field.base_object.plan.field_plan_document_link
-    - field.field.base_object.plan.field_plan_status
     - field.field.base_object.plan.field_plan_type
     - field.field.base_object.plan.field_plan_version_argument
     - field.field.base_object.plan.field_plan_version_tag
+    - field.field.base_object.plan.field_released
     - field.field.base_object.plan.field_restricted
     - field.field.base_object.plan.field_short_name
     - field.field.base_object.plan.field_subtitle
@@ -175,16 +175,6 @@ content:
     third_party_settings: {  }
     weight: 8
     region: content
-  field_plan_status:
-    type: boolean
-    label: above
-    settings:
-      format: default
-      format_custom_false: ''
-      format_custom_true: ''
-    third_party_settings: {  }
-    weight: 13
-    region: content
   field_plan_type:
     type: entity_reference_label
     label: above
@@ -207,6 +197,16 @@ content:
       link_to_entity: false
     third_party_settings: {  }
     weight: 1
+    region: content
+  field_released:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 24
     region: content
   field_restricted:
     type: boolean

@@ -48,10 +48,20 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * Get the plan status if an entity is available.
    *
+   * @return bool|null
+   *   The plan status as a boolean, or NULL.
+   */
+  public function getPlanStatus() {
+    return $this->getEntity()?->isReleased() ?? FALSE;
+  }
+
+  /**
+   * Get the plan status label if an entity is available.
+   *
    * @return string|null
    *   The plan status as a human readable string, or NULL.
    */
-  public function getPlanStatus() {
+  public function getPlanStatusLabel() {
     return $this->getEntity()?->getPlanStatusLabel() ?? NULL;
   }
 
