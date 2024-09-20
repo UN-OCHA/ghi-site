@@ -119,12 +119,7 @@ class NodeHelper extends EntityHelper {
       ->sort('nid', 'DESC')
       ->accessCheck()
       ->execute();
-    $nodes = Node::loadMultiple($nids);
-    $nodes = array_filter($nodes, function ($node) {
-      $restricted = self::getFieldProperty($node, 'field_restricted');
-      return empty($restricted) || $restricted === FALSE;
-    });
-    return $nodes;
+    return Node::loadMultiple($nids);
   }
 
   /**

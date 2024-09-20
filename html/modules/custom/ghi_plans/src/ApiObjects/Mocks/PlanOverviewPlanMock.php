@@ -87,14 +87,23 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
   /**
    * Get the plan status as stored.
    *
+   * @return bool
+   *   The plan status if available.
+   */
+  public function getPlanStatus() {
+    $raw_data = $this->getRawData();
+    return $raw_data->plan_status ?? FALSE;
+  }
+
+  /**
+   * Get the plan status label.
+   *
    * @return string
    *   The human readable plan status if available.
    */
-  public function getPlanStatus() {
-    $plan_status_options = FieldHelper::getBooleanFieldOptions('base_object', 'plan', 'field_plan_status');
-    $raw_data = $this->getRawData();
-    $plan_status = $raw_data->plan_status ?? NULL;
-    return $plan_status_options[$plan_status] ?? NULL;
+  public function getPlanStatusLabel() {
+    $plan_status_options = FieldHelper::getBooleanFieldOptions('base_object', 'plan', 'field_released');
+    return $plan_status_options[$this->getPlanStatus()] ?? NULL;
   }
 
   /**

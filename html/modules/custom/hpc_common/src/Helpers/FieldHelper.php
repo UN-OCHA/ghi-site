@@ -31,7 +31,11 @@ class FieldHelper {
     if ($field_definitions[$field_name]->getFieldStorageDefinition()->getType() != 'boolean') {
       return NULL;
     }
-    return array_values($field_definitions[$field_name]->getSettings());
+    $settings = $field_definitions[$field_name]->getSettings();
+    return [
+      TRUE => $settings['on_label'],
+      FALSE => $settings['off_label'],
+    ];
   }
 
 }

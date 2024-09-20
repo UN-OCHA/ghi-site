@@ -301,7 +301,6 @@ class PlanOverviewMap extends GHIBlockBase {
   private function buildCountryModal($data, $footnotes = NULL) {
     /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
     $plan = $data->plan;
-    $plan_status = $plan->getPlanStatus();
     $document_uri = $plan->getPlanDocumentUri();
 
     $common_theme_args = [
@@ -367,15 +366,15 @@ class PlanOverviewMap extends GHIBlockBase {
       ],
       'plan_status' => [
         'label' => $this->t('Status'),
-        'value' => $plan_status || $document_uri ? ThemeHelper::render([
+        'value' => ThemeHelper::render([
           '#type' => 'container',
           'content' => array_filter([
-            'plan_status' => $plan_status ? [
+            'plan_status' => [
               '#theme' => 'plan_status',
               '#compact' => FALSE,
-              '#status' => strtolower($plan_status),
-              '#status_label' => $plan_status,
-            ] : NULL,
+              '#status' => strtolower($plan->getPlanStatus() ? 'published' : 'unpublished'),
+              '#status_label' => $plan->getPlanStatusLabel(),
+            ],
             'document' => $document_uri ? [
               '#type' => 'html_tag',
               '#tag' => 'span',
@@ -388,7 +387,7 @@ class PlanOverviewMap extends GHIBlockBase {
               'content' => DownloadHelper::getDownloadIcon($document_uri),
             ] : NULL,
           ]),
-        ], FALSE) : NULL,
+        ], FALSE),
       ],
     ];
 
@@ -711,7 +710,7 @@ class PlanOverviewMap extends GHIBlockBase {
       $countries[$plan_country->id]['plans'][$plan->id()] = new FormattableMarkup('@plan_name (@plan_type, @plan_status)', [
         '@plan_name' => $plan->getName(),
         '@plan_type' => $plan->getTypeShortName(),
-        '@plan_status' => $plan->getPlanStatus(),
+        '@plan_status' => $plan->getPlanStatusLabel(),
       ]);
     }
     ArrayHelper::sortArrayByStringKey($countries, 'name', EndpointQuery::SORT_ASC);

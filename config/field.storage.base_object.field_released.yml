@@ -1,11 +1,11 @@
-uuid: 8615cbb3-fc62-44d7-b48e-0f3ad7f25031
+uuid: b15d35c3-fa8c-472f-9aad-5fd8757646f9
 langcode: en
 status: true
 dependencies:
   module:
     - ghi_base_objects
-id: base_object.field_plan_status
-field_name: field_plan_status
+id: base_object.field_released
+field_name: field_released
 entity_type: base_object
 type: boolean
 settings: {  }

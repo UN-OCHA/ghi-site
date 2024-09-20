@@ -231,7 +231,6 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       }
 
       $link_to_fts = $plan_entity ? $plan_entity->canLinkToFts() : FALSE;
-      $plan_status = $plan->getPlanStatus();
       $document_uri = $plan->getPlanDocumentUri();
 
       // Setup the column values.
@@ -374,11 +373,11 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data' => [
             '#type' => 'container',
             'content' => array_filter([
-              'plan_status' => $plan_status ? [
+              'plan_status' => [
                 '#theme' => 'plan_status',
-                '#status' => strtolower($plan_status),
-                '#status_label' => $plan_status,
-              ] : NULL,
+                '#status' => strtolower($plan->getPlanStatus() ? 'published' : 'unpublished'),
+                '#status_label' => $plan->getPlanStatusLabel(),
+              ],
               'document' => $document_uri ? [
                 '#type' => 'html_tag',
                 '#tag' => 'span',
@@ -629,7 +628,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       '#tooltip' => $this->t('Enter decimals between 0 and 1, using a point as the decimal separator, e.g. 0.4.'),
     ], FALSE);
     $plan_types = $this->getAvailablePlanTypes(TRUE);
-    $plan_status_options = FieldHelper::getBooleanFieldOptions('base_object', 'plan', 'field_plan_status');
+    $plan_status_options = FieldHelper::getBooleanFieldOptions('base_object', 'plan', 'field_released');
 
     $form['custom_rows'] = [
       '#type' => 'details',

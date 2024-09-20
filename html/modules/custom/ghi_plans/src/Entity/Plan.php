@@ -188,15 +188,15 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    *   A label for the plan status or NULL if the field is not found.
    */
   public function getPlanStatusLabel() {
-    if (!$this->hasField('field_plan_status')) {
+    if (!$this->hasField('field_released')) {
       return NULL;
     }
-    $plan_status = $this->get('field_plan_status') ?? NULL;
-    if (!$plan_status) {
+    $released = $this->get('field_released') ?? NULL;
+    if (!$released) {
       return NULL;
     }
-    $field_definition = $plan_status->getFieldDefinition();
-    return $plan_status->value ? $field_definition->getSetting('on_label') : $field_definition->getSetting('off_label');
+    $field_definition = $released->getFieldDefinition();
+    return $released->value ? $field_definition->getSetting('on_label') : $field_definition->getSetting('off_label');
   }
 
   /**
@@ -262,6 +262,32 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
       return NULL;
     }
     return $this->get('field_max_admin_level')->value ?? NULL;
+  }
+
+  /**
+   * Whether the plan is marked as restricted.
+   *
+   * @return bool
+   *   TRUE id the plan is marked as restricted, FALSE otherwhise.
+   */
+  public function isRestricted() {
+    if (!$this->hasField('field_restricted')) {
+      return NULL;
+    }
+    return $this->get('field_restricted')->value ?? FALSE;
+  }
+
+  /**
+   * Whether the plan is marked as restricted.
+   *
+   * @return bool
+   *   TRUE id the plan is marked as restricted, FALSE otherwhise.
+   */
+  public function isReleased() {
+    if (!$this->hasField('field_released')) {
+      return NULL;
+    }
+    return $this->get('field_released')->value ?? FALSE;
   }
 
   /**

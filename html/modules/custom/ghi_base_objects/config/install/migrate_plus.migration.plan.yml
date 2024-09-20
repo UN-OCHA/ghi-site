@@ -74,6 +74,7 @@ process:
     no_stub: true
   field_year: plan_year
   field_restricted: restricted
+  field_released: released
   field_language: language
   field_plan_cluster_type: plan_cluster_type
   field_plan_date_range/value: plan_date_start
@@ -95,6 +96,7 @@ destination:
     - field_year
     - field_country
     - field_restricted
+    - field_released
     - field_language
     - field_plan_cluster_type
     - field_plan_date_range

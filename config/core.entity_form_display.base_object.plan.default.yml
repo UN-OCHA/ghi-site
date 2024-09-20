@@ -19,10 +19,10 @@ dependencies:
     - field.field.base_object.plan.field_plan_costing
     - field.field.base_object.plan.field_plan_date_range
     - field.field.base_object.plan.field_plan_document_link
-    - field.field.base_object.plan.field_plan_status
     - field.field.base_object.plan.field_plan_type
     - field.field.base_object.plan.field_plan_version_argument
     - field.field.base_object.plan.field_plan_version_tag
+    - field.field.base_object.plan.field_released
     - field.field.base_object.plan.field_restricted
     - field.field.base_object.plan.field_short_name
     - field.field.base_object.plan.field_subtitle
@@ -49,6 +49,7 @@ third_party_settings:
         - field_plan_costing
         - field_year
         - field_plan_date_range
+        - field_released
         - field_restricted
         - field_document_published_on
         - field_language
@@ -170,7 +171,7 @@ content:
     third_party_settings: {  }
   field_description:
     type: string_textarea
-    weight: 17
+    weight: 18
     region: content
     settings:
       rows: 5
@@ -178,7 +179,7 @@ content:
     third_party_settings: {  }
   field_document_published_on:
     type: datetime_default
-    weight: 14
+    weight: 15
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -190,7 +191,7 @@ content:
     third_party_settings: {  }
   field_language:
     type: options_select
-    weight: 15
+    weight: 16
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -229,7 +230,7 @@ content:
     third_party_settings: {  }
   field_plan_cluster_type:
     type: options_select
-    weight: 16
+    weight: 17
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -265,13 +266,6 @@ content:
       placeholder_url: ''
       placeholder_title: ''
     third_party_settings: {  }
-  field_plan_status:
-    type: boolean_checkbox
-    weight: 10
-    region: content
-    settings:
-      display_label: false
-    third_party_settings: {  }
   field_plan_type:
     type: entity_reference_autocomplete
     weight: 8
@@ -296,9 +290,16 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
-  field_restricted:
+  field_released:
     type: boolean_checkbox
     weight: 13
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_restricted:
+    type: boolean_checkbox
+    weight: 14
     region: content
     settings:
       display_label: true
