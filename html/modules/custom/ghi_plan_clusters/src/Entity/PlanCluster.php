@@ -66,10 +66,7 @@ class PlanCluster extends SubpageNode implements PlanClusterInterface {
   }
 
   /**
-   * Get the logframe node associated to the plan cluster.
-   *
-   * @return \Drupal\ghi_subpages\Entity\LogframeSubpage|null
-   *   A logframe node object.
+   * {@inheritdoc}
    */
   public function getLogframeNode() {
     $nodes = $this->entityTypeManager()->getStorage($this->getEntityTypeId())->loadByProperties([

@@ -12,10 +12,12 @@ interface OptionalLinkBlockInterface {
    *
    * @param array $conf
    *   The configuration for the link item.
+   * @param array $contexts
+   *   The contexts for the link creation.
    *
    * @return \Drupal\Core\Link
    *   The link object.
    */
-  public function getLinkFromConfiguration(array $conf);
+  public function getLinkFromConfiguration(array $conf, array $contexts);
 
 }
