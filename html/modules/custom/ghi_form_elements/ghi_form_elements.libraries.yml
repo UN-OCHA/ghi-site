@@ -62,3 +62,8 @@ markup_select:
   dependencies:
     - core/sortable
     - common_design_subtheme/ghi-grid
+
+optional_link:
+  css:
+    component:
+      css/optional_link.css: {}

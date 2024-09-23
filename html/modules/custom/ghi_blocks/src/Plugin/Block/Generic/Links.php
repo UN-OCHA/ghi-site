@@ -195,7 +195,10 @@ class Links extends GHIBlockBase implements MultiStepFormBlockInterface, Optiona
    * {@inheritdoc}
    */
   public function getBlockContext() {
-    return [];
+    return [
+      'section_node' => $this->getCurrentBaseEntity(),
+      'page_node' => $this->getPageNode(),
+    ];
   }
 
   /**

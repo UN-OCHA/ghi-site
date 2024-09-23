@@ -141,6 +141,7 @@ form.ghi-glb-form.glb-canvas-form .hpc-form-wrapper .ghi-element-wrapper > .glb-
 form.ghi-glb-form.glb-canvas-form .hpc-form-wrapper .filter-container > .glb-form-item {
   margin-top: 0 !important;
 }
+form.ghi-glb-form.glb-canvas-form .hpc-form-wrapper .glb-fieldset__description,
 form.ghi-glb-form.glb-canvas-form .hpc-form-wrapper .glb-form-item__description {
   max-width: 100% !important;
 }

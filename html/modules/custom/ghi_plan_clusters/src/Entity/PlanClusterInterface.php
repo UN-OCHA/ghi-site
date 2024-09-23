@@ -23,4 +23,12 @@ interface PlanClusterInterface extends SubpageNodeInterface, BaseObjectAwareEnti
    */
   public function setTitleOverride($title_override);
 
+  /**
+   * Get the logframe node associated to the plan cluster.
+   *
+   * @return \Drupal\ghi_subpages\Entity\LogframeSubpage|null
+   *   A logframe node object.
+   */
+  public function getLogframeNode();
+
 }

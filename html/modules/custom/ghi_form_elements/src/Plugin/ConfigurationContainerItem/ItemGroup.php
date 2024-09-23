@@ -27,7 +27,7 @@ class ItemGroup extends ConfigurationContainerItemPluginBase implements Configur
     if (empty($this->config['link'])) {
       return NULL;
     }
-    return $this->getLinkFromConfiguration($this->config['link']);
+    return $this->getLinkFromConfiguration($this->config['link'], $this->getContext());
   }
 
   /**
@@ -52,6 +52,7 @@ class ItemGroup extends ConfigurationContainerItemPluginBase implements Configur
         '#type' => 'optional_link',
         '#title' => $this->t('Add a link to this element'),
         '#default_value' => $this->config['link'] ?? [],
+        '#element_context' => $this->getContext(),
       ];
     }
 

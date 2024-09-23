@@ -1,0 +1,4 @@
+.form-type--optional_link .form-type--link-type .form-boolean-group {
+  display: flex;
+  gap: 1rem;
+}
