@@ -140,6 +140,12 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
         if (($preview || $internal_preview) && in_array('gho-top-figures--small', $classes)) {
           $block_attributes['class'][] = 'gho-top-figures--small';
         }
+        if (in_array('gho-top-figures--small', $classes)) {
+          // Top figures (small) as standalone element has a top-border on the
+          // outer container. Without this content-width class it would break
+          // out of the content area, so we add that here.
+          $block_attributes['class'][] = 'content-width';
+        }
 
         $wrapper_attributes['class'] = $gho_classes;
         $attributes->getNamedItem('class')->nodeValue = implode(' ', array_diff($classes, $gho_classes));
@@ -260,11 +266,16 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
   public function getThemeComponents(RemoteParagraphInterface $paragraph) {
     $theme_components = [];
     $theme_components[] = 'common_design_subtheme/gho-' . Html::getClass($paragraph->getType());
+    if ($paragraph->getType() == 'top_figures_small') {
+      // Top figures (small) can be used on it's own, but still need the main
+      // component.
+      $theme_components[] = 'common_design_subtheme/gho-top-figures';
+    }
     if ($paragraph->getType() == 'bottom_figure_row') {
       $theme_components[] = 'common_design_subtheme/gho-needs-and-requirements';
       $theme_components[] = 'ghi_content/top_figures.tooltips';
     }
-    if ($paragraph->getType() == 'top_figures') {
+    if ($paragraph->getType() == 'top_figures' || $paragraph->getType() == 'top_figures_small') {
       $theme_components[] = 'ghi_content/top_figures.tooltips';
     }
     if ($paragraph->getPromoted() || $this->isPromoted()) {
@@ -286,11 +297,16 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
       $types = !empty($matches[1]) ? array_unique($matches[1]) : [];
       foreach ($types as $type) {
         $theme_components[] = 'common_design_subtheme/gho-' . $type;
+        if ($type == 'top-figures-small') {
+          // Top figures (small) can be used on it's own, but still need the
+          // main component.
+          $theme_components[] = 'common_design_subtheme/gho-top-figures';
+        }
         if ($type == 'bottom-figure-row') {
           $theme_components[] = 'common_design_subtheme/gho-needs-and-requirements';
           $theme_components[] = 'ghi_content/topfigures.tooltips';
         }
-        if ($type == 'top-figures') {
+        if ($type == 'top-figures' || $type == 'top-figures-small') {
           $theme_components[] = 'ghi_content/top_figures.tooltips';
         }
       }
@@ -300,7 +316,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
         $theme_components[] = 'common_design_subtheme/gho-promoted-paragraph';
       }
     }
-    return $theme_components;
+    return array_unique($theme_components);
   }
 
   /**
