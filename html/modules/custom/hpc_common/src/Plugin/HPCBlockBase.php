@@ -369,9 +369,9 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    */
   public function setPage($page_parameters = NULL) {
     $page_parameters = $this->getAllAvailablePageParameters($page_parameters);
-    if (!empty($page_parameters['_page_manager_page'])) {
+    if (!empty($page_parameters['page_manager_page'])) {
       // Page manager page.
-      $this->page = $page_parameters['_page_manager_page']->id();
+      $this->page = $page_parameters['page_manager_page']->id();
     }
     elseif (!empty($page_parameters['panels_storage_id'])) {
       // Used when in configuration editing context with Panels IPE.
