@@ -3,9 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
-use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
 use Drupal\ghi_blocks\Traits\HomepageBlockTrait;
@@ -27,21 +25,17 @@ use Drupal\hpc_common\Helpers\CommonHelper;
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
  *    "year" = @ContextDefinition("integer", label = @Translation("Year"))
  *  },
- *  default_title = @Translation("Overview"),
+ *  title = FALSE,
  *  config_forms = {
  *    "key_figures" = {
  *      "title" = @Translation("Key figures"),
  *      "callback" = "keyFiguresForm",
  *      "base_form" = TRUE
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm"
  *    }
  *  }
  * )
  */
-class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface {
+class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
 
   use GlobalPlanOverviewBlockTrait;
   use ConfigurationContainerTrait;
@@ -77,20 +71,6 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Ov
       'people_reached' => $caseload_values['reached'],
       'people_reached_percent' => CommonHelper::calculateRatio($caseload_values['reached'], $caseload_values['target']),
     ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function label() {
-    $label = parent::label();
-    if ($year_switcher = $this->buildHomepageYearSwitcher()) {
-      return [
-        ['#markup' => Markup::create($label)],
-        $year_switcher,
-      ];
-    }
-    return $label;
   }
 
   /**
@@ -162,12 +142,15 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Ov
       '#theme' => 'tab_container',
       '#tabs' => $tabs,
     ];
-    if ($this->buildHomepageYearSwitcher()) {
-      $build['#block_attributes'] = [
-        'class' => ['has-year-switcher'],
-      ];
-    }
     return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function shouldDisplayTitle() {
+    $this->configuration['label_display'] = FALSE;
+    return FALSE;
   }
 
   /**
@@ -189,13 +172,6 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Ov
    */
   public function getDefaultSubform($is_new = FALSE) {
     return 'key_figures';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getTitleSubform() {
-    return 'display';
   }
 
   /**
@@ -223,13 +199,6 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface, Ov
       '#max_items' => self::MAX_ITEMS,
       '#groups' => TRUE,
     ];
-    return $form;
-  }
-
-  /**
-   * Form callback for the display configuration form.
-   */
-  public function displayForm(array $form, FormStateInterface $form_state) {
     return $form;
   }
 
