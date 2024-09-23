@@ -631,6 +631,9 @@ class LogframeManager implements ContainerInjectionInterface {
    */
   public function getEntityTypesFromPlanObject(Plan $plan) {
     $prototype = $this->getPlanPrototype($plan);
+    if (!$prototype) {
+      return NULL;
+    }
 
     $entity_types = [
       'PL' => (string) $this->t('Plan'),
