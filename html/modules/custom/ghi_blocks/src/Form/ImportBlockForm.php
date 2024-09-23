@@ -7,7 +7,10 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Url;
+use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
+use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\GinLbModalTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\layout_builder\Form\ConfigureBlockFormBase;
@@ -81,6 +84,14 @@ class ImportBlockForm extends ConfigureBlockFormBase {
         // Only generate a new component once per form submission.
         if (!$component = $form_state->get('layout_builder__component')) {
           $component = new SectionComponent($this->uuidGenerator->generate(), $region, $plugin_config);
+          $plugin = $component->getPlugin();
+          if ($plugin instanceof GHIBlockBase && $plugin instanceof ConfigValidationInterface) {
+            $entity = $section_storage->getContextValue('entity');
+            $plugin->setContext('entity', EntityContext::fromEntity($entity, $entity->type->entity->label()));
+            $plugin->fixConfigErrors();
+            $configuration = $plugin->getConfiguration();
+            $component->setConfiguration($configuration);
+          }
           $section_storage->getSection($delta)->appendComponent($component);
           $form_state->set('layout_builder__component', $component);
         }
