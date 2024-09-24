@@ -1,0 +1,23 @@
+diff --git a/core/modules/system/src/Controller/AssetControllerBase.php b/core/modules/system/src/Controller/AssetControllerBase.php
+index 4f8d5ad696..f41fce7b1e 100644
+--- a/core/modules/system/src/Controller/AssetControllerBase.php
++++ b/core/modules/system/src/Controller/AssetControllerBase.php
+@@ -177,6 +177,9 @@ public function deliver(Request $request, string $file_name) {
+       $attached_assets->setAlreadyLoadedLibraries($exclude_libraries);
+     }
+     $groups = $this->getGroups($attached_assets, $request);
++    if ($this->assetType == 'js' && strpos(\Drupal::request()->server->get('HTTP_REFERER'), '?debug') && !\Drupal::request()->query->has('redirected')) {
++      \Drupal::logger('debug_aggregates')->info($file_name . "<br />" . UrlHelper::compressQueryParameter(json_encode($groups, JSON_FORCE_OBJECT)));
++    }
+ 
+     $group = $this->getGroup($groups, $request->query->get('delta'));
+     // Generate a hash based on the asset group, this uses the same method as
+@@ -207,7 +210,7 @@ public function deliver(Request $request, string $file_name) {
+     else {
+       $expected_filename = $this->fileExtension . '_' . $generated_hash . '.' . $this->fileExtension;
+       $response = new RedirectResponse(
+-        str_replace($file_name, $expected_filename, $request->getRequestUri()),
++        str_replace($file_name, $expected_filename, $request->getRequestUri()) . '&redirected',
+         301,
+         ['Cache-Control' => 'public, max-age=3600, must-revalidate'],
+       );

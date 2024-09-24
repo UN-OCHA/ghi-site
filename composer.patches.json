@@ -1,6 +1,7 @@
 {
   "patches": {
     "drupal/core": {
+      "Debug patch #1": "./patches/core-debug-aggregation.patch",
       "Issue #2820359: Add #element_submit and #limit_element_submit just like #element_validate and #limit_validation_errors": "https://www.drupal.org/files/issues/2024-09-04/2820359-121.patch",
       "Issue #3008924: Callers of LayoutEntityHelperTrait::getEntitySections() do not account for the view mode": "./patches/3008924-rerolled-24.patch",
       "Issue #2902481: Add GROUP_CONCAT aggregate function to views": "https://www.drupal.org/files/issues/2024-08-09/add_group_concat_aggregate-2902481-44.patch",
