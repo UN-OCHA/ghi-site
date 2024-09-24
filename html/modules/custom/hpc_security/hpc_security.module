@@ -42,6 +42,13 @@ function hpc_security_can_use_nonce() {
  *   TRUE if Security Kit is configured to send a CSP header, FALSE otherwhise.
  */
 function hpc_security_sends_csp_header() {
+  $blacklist = [
+    'system.js_asset',
+    'system.css_asset',
+  ];
+  if (in_array(\Drupal::routeMatch()->getRouteName(), $blacklist)) {
+    return FALSE;
+  }
   $config = \Drupal::config('seckit.settings');
   return $config->get('seckit_xss.csp.checkbox');
 }
