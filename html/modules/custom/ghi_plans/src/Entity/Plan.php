@@ -30,11 +30,11 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
       $this->getPlanSubtitle() ? new FormattableMarkup('<span class="icon-wrapper"><span class="icon plan-subtitle"></span>@subtitle</span>', [
         '@subtitle' => $this->getPlanSubtitle(),
       ]) : NULL,
-      $this->getPlanStartDate() ? new TranslatableMarkup('<strong>From:</strong> @start_date <strong>to</strong> @end_date', [
+      $this->getPlanStartDate() ? new TranslatableMarkup('<strong>From:</strong> @start_date <strong>to:</strong> @end_date', [
         '@start_date' => DrupalDateTime::createFromFormat('Y-m-d', $this->getPlanStartDate())->format('d/m/Y'),
         '@end_date' => DrupalDateTime::createFromFormat('Y-m-d', $this->getPlanEndDate())->format('d/m/Y'),
       ], $t_options) : NULL,
-      $document_published ? new TranslatableMarkup('<strong>Published on:</strong> @date', [
+      $document_published ? new TranslatableMarkup('<strong>Published:</strong> @date', [
         '@date' => DrupalDateTime::createFromFormat('Y-m-d', $document_published)->format('d/m/Y'),
       ], $t_options) : new TranslatableMarkup('<strong>Unpublished</strong>', [], $t_options),
       $this->getPlanCoordinator() ? new TranslatableMarkup('<span class="icon-wrapper"><span class="icon plan-coordinator"></span><strong>Coordinated by:</strong> @coordinator</span>', [

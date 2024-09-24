@@ -8,11 +8,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\\n"
 
-msgid "<strong>From:</strong> @start_date <strong>to</strong> @end_date"
-msgstr "<strong>Del:</strong> @start_date <strong>al</strong> @end_date"
+msgid "<strong>From:</strong> @start_date <strong>to:</strong> @end_date"
+msgstr "<strong>Del:</strong> @start_date <strong>al:</strong> @end_date"
 
-msgid "<strong>Published on:</strong> @date"
-msgstr "<strong>Publicado en:</strong> @date"
+msgid "<strong>Published:</strong> @date"
+msgstr "<strong>Publicado:</strong> @date"
 
 msgid "<strong>Unpublished</strong>"
 msgstr "<strong>No publicado</strong>"
