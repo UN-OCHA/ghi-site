@@ -30,7 +30,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
       $this->getPlanSubtitle() ? new FormattableMarkup('<span class="icon-wrapper"><span class="icon plan-subtitle"></span>@subtitle</span>', [
         '@subtitle' => $this->getPlanSubtitle(),
       ]) : NULL,
-      $this->getPlanStartDate() ? new TranslatableMarkup('<strong>From:</strong> @start_date to @end_date', [
+      $this->getPlanStartDate() ? new TranslatableMarkup('<strong>From:</strong> @start_date <strong>to</strong> @end_date', [
         '@start_date' => DrupalDateTime::createFromFormat('Y-m-d', $this->getPlanStartDate())->format('d/m/Y'),
         '@end_date' => DrupalDateTime::createFromFormat('Y-m-d', $this->getPlanEndDate())->format('d/m/Y'),
       ], $t_options) : NULL,
