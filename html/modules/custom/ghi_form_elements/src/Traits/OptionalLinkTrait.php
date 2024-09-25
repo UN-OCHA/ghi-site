@@ -8,8 +8,10 @@ use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plan_clusters\Entity\PlanClusterInterface;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\node\NodeInterface;
 
 /**
@@ -231,6 +233,9 @@ trait OptionalLinkTrait {
     if ($page_node instanceof PlanClusterInterface && $page_node->getLogframeNode()) {
       $targets['cluster_logframe'] = $page_node->getLogframeNode();
     }
+    if ($page_node instanceof LogframeSubpage && $page_node->getParentNode() instanceof PlanCluster) {
+      $targets['cluster_parent'] = $page_node->getParentNode();
+    }
     return $targets;
   }
 
@@ -255,6 +260,9 @@ trait OptionalLinkTrait {
       ];
       if ($key == 'cluster_logframe') {
         $options[$key] = ucfirst((string) new TranslatableMarkup('Cluster @type page (@uri)', $args));
+      }
+      if ($key == 'cluster_parent') {
+        $options[$key] = ucfirst((string) new TranslatableMarkup('Cluster page (@uri)', $args));
       }
       else {
         $options[$key] = ucfirst((string) new TranslatableMarkup('@type page (@uri)', $args));
