@@ -27,6 +27,8 @@ use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\ghi_plans\Entity\GoverningEntity;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_api\Helpers\ProfileHelper;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\BlockHelper;
@@ -1531,6 +1533,23 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
     $form_state->set('current_settings', $settings);
     return $settings;
+  }
+
+  /**
+   * Get the current section node.
+   *
+   * @return \Drupal\ghi_sections\Entity\SectionNodeInterface|null
+   *   The current section node.
+   */
+  public function getCurrentSectionNode() {
+    $page_node = $this->getPageNode();
+    if ($page_node instanceof SectionNodeInterface) {
+      return $page_node;
+    }
+    if ($page_node instanceof SubpageNodeInterface) {
+      return $page_node->getParentBaseNode();
+    }
+    return NULL;
   }
 
   /**
