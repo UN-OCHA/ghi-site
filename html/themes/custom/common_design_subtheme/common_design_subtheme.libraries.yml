@@ -164,6 +164,10 @@ gho-further-reading:
   css:
     theme:
       components/gho-further-reading/gho-further-reading.css: {}
+gho-heading:
+  css:
+    theme:
+      components/gho-heading/gho-heading.css: {}
 gho-image-with-text:
   css:
     theme:
