@@ -4,7 +4,7 @@ namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Url;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
@@ -16,7 +16,7 @@ use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
  *
  * @FormElement("optional_link")
  */
-class OptionalLink extends FormElement {
+class OptionalLink extends FormElementBase {
 
   use OptionalLinkTrait;
 
@@ -93,19 +93,27 @@ class OptionalLink extends FormElement {
       $state_selector_add_link = FormElementHelper::getStateSelector($element, ['add_link']);
     }
 
-    $element['label'] = [
-      '#type' => 'textfield',
-      '#title' => t('Label'),
-      '#description' => t('Enter an optional label for the link. If left empty, "Go to page" will be used for internal urls and "Open" for external urls.'),
-      '#default_value' => !empty($default_values['label']) ? $default_values['label'] : NULL,
+    $element['link'] = [
+      '#type' => 'fieldset',
+      '#collapsible' => FALSE,
+      '#attributes' => [
+        'class' => ['link-wrapper'],
+      ],
       '#states' => [
         'visible' => array_filter([
           'input[name="' . $state_selector_add_link . '"]' => !$required ? ['checked' => TRUE] : NULL,
         ]),
       ],
-      '#access' => empty($element['#no_label']),
     ];
-    $element['link_type'] = [
+
+    $element['link']['label'] = [
+      '#type' => 'textfield',
+      '#title' => t('Link label'),
+      '#description' => t('Enter an optional label for the link. If left empty, "Go to page" will be used for internal urls and "Open" for external urls.'),
+      '#default_value' => !empty($default_values['label']) ? $default_values['label'] : NULL,
+      '#access' => empty($element['link']['#no_label']),
+    ];
+    $element['link']['link_type'] = [
       '#type' => 'radios',
       '#title' => t('Link type'),
       '#options' => [
@@ -113,11 +121,6 @@ class OptionalLink extends FormElement {
         'custom' => t('Custom link'),
       ],
       '#default_value' => !empty($default_values['link_type']) ? $default_values['link_type'] : 'internal',
-      '#states' => [
-        'visible' => array_filter([
-          'input[name="' . $state_selector_add_link . '"]' => !$required ? ['checked' => TRUE] : NULL,
-        ]),
-      ],
       '#attributes' => [
         'class' => [
           'form-type--link-type',
@@ -125,22 +128,22 @@ class OptionalLink extends FormElement {
       ],
     ];
     if (empty($targets)) {
-      $element['link_type']['#default_value'] = 'custom';
-      $element['link_type']['#disabled'] = TRUE;
-      $element['link_type']['#description'] = t('<strong>Note:</strong> The link type is set to <em>custom</em> because there are no target links available in the current page context.');
+      $element['link']['link_type']['#default_value'] = 'custom';
+      $element['link']['link_type']['#disabled'] = TRUE;
+      $element['link']['link_type']['#description'] = t('<strong>Note:</strong> The link type is set to <em>custom</em> because there are no target links available in the current page context.');
     }
 
-    $state_selector = FormElementHelper::getStateSelector($element, ['link_type']);
-    $element['link_custom'] = [
+    $state_selector = FormElementHelper::getStateSelector($element, ['link', 'link_type']);
+    $element['link']['link_custom'] = [
       '#type' => 'container',
+      '#tree' => TRUE,
       '#states' => [
         'visible' => array_filter([
-          'input[name="' . $state_selector_add_link . '"]' => !$required ? ['checked' => TRUE] : NULL,
           'input[name="' . $state_selector . '"]' => !empty($targets) ? ['value' => 'custom'] : NULL,
         ]),
       ],
     ];
-    $element['link_custom']['url'] = [
+    $element['link']['link_custom']['url'] = [
       '#type' => 'entity_autocomplete',
       '#title' => t('Url'),
       '#default_value' => $display_url,
@@ -159,17 +162,17 @@ class OptionalLink extends FormElement {
       '#required' => FALSE,
     ];
 
-    $element['link_internal'] = [
+    $element['link']['link_internal'] = [
       '#type' => 'container',
+      '#tree' => TRUE,
       '#states' => [
         'visible' => array_filter([
-          'input[name="' . $state_selector_add_link . '"]' => !$required ? ['checked' => TRUE] : NULL,
           'input[name="' . $state_selector . '"]' => ['value' => 'internal'],
         ]),
       ],
       '#access' => !empty($targets),
     ];
-    $element['link_internal']['target'] = [
+    $element['link']['link_internal']['target'] = [
       '#type' => 'select',
       '#title' => t('Link target'),
       '#options' => $targets,
@@ -212,13 +215,28 @@ class OptionalLink extends FormElement {
       $url = $value['link_custom']['url'];
       $transformed_url = self::transformUrl($url);
       if (!$url || !$transformed_url) {
-        $form_state->setError($element['link_custom']['url'], t('The link URL must be valid and accessible.'));
+        $form_state->setError($element['link']['link_custom']['url'], t('The link URL must be valid and accessible.'));
       }
       if (!$form_state->hasAnyErrors() && $transformed_url !== $url) {
-        $element['#value']['link_custom']['url'] = $transformed_url;
+        $element['#value']['link']['link_custom']['url'] = $transformed_url;
         $form_state->setValueForElement($element, $element['#value']);
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
+    if (!$input) {
+      return NULL;
+    }
+    // Keep the configuration structure simple by removing the additional
+    // layer introduced by the fieldset.
+    $value = $input;
+    $value += $value['link'];
+    unset($value['link']);
+    return $value;
   }
 
 }
