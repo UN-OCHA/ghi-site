@@ -8,6 +8,11 @@
       margin-top: 0;
     }
 
+    .gho-text.content-width {
+      margin-left: auto !important;
+      margin-right: auto !important;
+    }
+
     & > div > a.read-more {
       margin-top: 2rem;
     }
