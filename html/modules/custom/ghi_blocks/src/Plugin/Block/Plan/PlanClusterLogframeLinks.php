@@ -10,6 +10,7 @@ use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -80,6 +81,9 @@ class PlanClusterLogframeLinks extends GHIBlockBase implements OverrideDefaultTi
       // Nothing to render.
       return NULL;
     }
+    $cluster_logframes = array_filter($cluster_logframes, function (LogframeSubpage $logframe) {
+      return $logframe->isPublished();
+    });
     return $cluster_logframes;
   }
 
@@ -96,9 +100,6 @@ class PlanClusterLogframeLinks extends GHIBlockBase implements OverrideDefaultTi
 
     $rendered_items = [];
     foreach ($cluster_logframes as $cluster_logframe) {
-      if (!$cluster_logframe->isPublished()) {
-        continue;
-      }
       $cluster = $cluster_logframe->getParentNode();
       if (!$cluster instanceof PlanCluster) {
         continue;
@@ -130,6 +131,10 @@ class PlanClusterLogframeLinks extends GHIBlockBase implements OverrideDefaultTi
         '#description' => $description_map[$plan?->getPlanClusterType() ?? Plan::CLUSTER_TYPE_CLUSTER],
         '#link' => $link->toRenderable(),
       ];
+    }
+
+    if (empty($rendered_items)) {
+      return;
     }
 
     $build = [
