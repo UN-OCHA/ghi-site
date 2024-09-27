@@ -16,12 +16,10 @@
           continue;
         }
         var options = {
-          donut_opts: {
-            min_radius_text: 16,
-            circle_opacity: 1,
-          },
+          base_radius: 3,
           popup_style: 'sidebar',
           map_tiles_url: map_config.map_tiles_url,
+          legend: typeof map_config.legend != 'undefined' ? map_config.legend : false,
         };
         if (typeof map_config.map_style != 'undefined') {
           options.map_style = map_config.map_style;

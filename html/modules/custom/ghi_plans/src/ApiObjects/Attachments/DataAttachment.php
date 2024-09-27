@@ -612,6 +612,7 @@ class DataAttachment extends AttachmentBase {
         }
         $disaggregated_data[$index]['locations'][$location_index] = (array) $location;
         $disaggregated_data[$index]['locations'][$location_index] += [
+          'object_id' => $location->id,
           'categories' => [],
           'total' => NULL,
         ];
@@ -863,6 +864,7 @@ class DataAttachment extends AttachmentBase {
         continue;
       }
       $locations[$location_key]->map_data = $coordinates->toArray();
+      $locations[$location_key]->map_data['object_id'] = $location->id;
       $locations[$location_key]->map_data['total'] = 0;
     }
     return $locations;
