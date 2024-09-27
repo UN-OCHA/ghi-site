@@ -100,7 +100,6 @@ function ghi_blocks_preprocess_plan_overview_map(&$variables) {
     'map-wrapper-' . $variables['chart_id'],
   ];
   $variables['outer_classes'] = implode(' ', $outer_classes);
-  $variables['map_type'] = 'donut';
 }
 
 /**

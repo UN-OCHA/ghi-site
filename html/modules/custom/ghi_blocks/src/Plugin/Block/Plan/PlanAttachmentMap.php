@@ -352,6 +352,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
           $map['data']['attachment']['locations'][$location['id']] = [
             'attachment' => [],
             'latLng' => $location['map_data']['latLng'],
+            'object_id' => $location['id'],
             'location_id' => $location['id'],
             'location_name' => $location['name'],
             'radius_factor' => 1,
@@ -662,10 +663,11 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       $location['categories'] = array_filter($location['categories'], function ($category) {
         return $category['data'] !== NULL;
       });
-      // The rendering is fully donw in the client, to save execution time on
+      // The rendering is fully done in the client, to save execution time on
       // plans with a huge number of locations.
       // See Drupal.hpc_map.planModalContent().
       $modal_contents[(string) $location['id']] = [
+        'object_id' => $location['id'],
         'location_id' => $location['id'],
         'title' => $location['name'],
         'admin_level' => $location['map_data']['admin_level'],
@@ -701,6 +703,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   private function prepareModalContentDonut($location, $legend, $unit_group, $unit_label, $decimal_format) {
     $modal_content = [
       'html' => '',
+      'object_id' => $location['location_id'],
       'location_id' => $location['location_id'],
       'title' => $location['location_name'],
       'admin_level' => $location['admin_level'],
