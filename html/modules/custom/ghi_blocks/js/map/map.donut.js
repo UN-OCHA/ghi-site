@@ -172,7 +172,7 @@
       if (map_state.options.popup_style == 'sidebar' && map_state.active_location) {
         // Check if the sidebar is currently open and showing the element that
         // should be unfocused.
-        if (map_state.sidebar.isVisible() && map_state.active_location.location_id == $(element).attr('location-id')) {
+        if (map_state.sidebar.isVisible() && map_state.active_location.object_id == $(element).attr('object-id')) {
           return;
         }
       }
@@ -197,8 +197,8 @@
     .outerRadius(function (d) {
       // Check if we have an active location and make it bigger.
       let state = Drupal.hpc_map.getMapState(d.object.map_id);
-      let is_focussed = state.focused_location && state.focused_location.location_id == d.object.location_id;
-      let is_active = state.active_location && state.active_location.location_id == d.object.location_id;
+      let is_focussed = state.focused_location && state.focused_location.object_id == d.object.object_id;
+      let is_active = state.active_location && state.active_location.object_id == d.object.object_id;
       if (is_focussed || is_active) {
         return d.radius + d.strokeWidth;
       }
@@ -257,7 +257,7 @@
       // This will hold the segments for this specific donut.
       var segments = [];
 
-      var donut_group = d3.select('.donut[location-id="' + object.location_id + '"] g');
+      var donut_group = d3.select('.donut[object-id="' + object.object_id + '"] g');
       var translate_x = r * 4;
       var translate_y = r * 4;
       var scale_x = 1 / scale;
@@ -374,17 +374,17 @@
           let group = enter.append("svg")
             .attr('opacity', donut_attrs.opacity)
             .attr('stroke', 'transparent')
-            .attr('location-id', d => d.object.location_id)
+            .attr('object-id', d => d.object.object_id)
             .attr('location-name', d => d.object.location_name)
             .attr('plan-type', d => d.object.plan_type ? d.object.plan_type.toLowerCase() : '')
             .attr('x', d => d.x)
             .attr('y', d => d.y)
-            .attr('id', d => map_id + '--' + d.object.location_id)
+            .attr('id', d => map_id + '--' + d.object.object_id)
           .append("g")
             .attr("class", d => Drupal.hpc_map_donut.hasData(d, state) ? 'has-data' : 'empty')
             .attr('width', d => d.width)
             .attr('height', d => d.height)
-            .attr('location-id', d => d.object.location_id)
+            .attr('object-id', d => d.object.object_id)
             .attr('stroke', donut_attrs.stroke)
             .attr('cursor', donut_attrs.cursor)
             .attr('opacity', donut_attrs.opacity)
@@ -396,7 +396,7 @@
             .attr('cursor', circle_attrs.cursor)
             .attr('opacity', circle_attrs.opacity)
             .attr("class", d => Drupal.hpc_map_donut.hasData(d, state) ? 'has-data' : 'empty')
-            .attr('location-id', d => d.object.location_id)
+            .attr('object-id', d => d.object.object_id)
             .attr('cx', 0)
             .attr('cy', 0)
             .attr('fill-opacity', donut_opts.hasOwnProperty('circle_opacity') ? donut_opts.circle_opacity : donut_attrs.opacity)
@@ -419,7 +419,7 @@
             .enter()
             .append("path")
               .attr("d", Drupal.hpc_map_donut.arc)
-              .attr('location-id', d => d.object.location_id)
+              .attr('object-id', d => d.object.object_id)
               .style("fill", d => d.color)
               .attr('opacity', d => d.value ? chart_attrs.opacity : 0)
             .each(function(d) {
@@ -427,7 +427,7 @@
             });
 
           group.append('text')
-            .attr('location-id', d => d.object.location_id)
+            .attr('object-id', d => d.object.object_id)
             .attr('class', 'donut-label')
             .attr('x', '0')
             .attr('y', '0')
@@ -463,7 +463,7 @@
               .attr('stroke', circle_attrs.stroke)
               .attr('cursor', circle_attrs.cursor)
               .attr('opacity', circle_attrs.opacity)
-              .attr('location-id', d => d.object.location_id)
+              .attr('object-id', d => d.object.object_id)
               .attr('fill-opacity', donut_opts.hasOwnProperty('circle_opacity') ? donut_opts.circle_opacity : donut_attrs.opacity)
               .attr('opacity', donut_opts.hasOwnProperty('circle_opacity') ? donut_opts.circle_opacity : donut_attrs.opacity)
               .attr('fill', d => Drupal.hpc_map_donut.hasData(d, state) ? '#fff' : Drupal.hpc_map_donut.config.empty_color)
@@ -487,11 +487,11 @@
               .attrTween("d", Drupal.hpc_map_donut.arcTween)
             .transition(t)
               .attr('opacity', d => d.value ? chart_attrs.opacity : 0)
-              .attr('location-id', d => d.object.location_id)
+              .attr('object-id', d => d.object.object_id)
               .style("fill", d => d.color)
 
           update.select('text')
-            .attr('location-id', d => d.object.location_id)
+            .attr('object-id', d => d.object.object_id)
             .transition()
               .duration(donut_opts.duration / 2)
               .attr('opacity', function(d, i, j) {
@@ -517,7 +517,7 @@
     }
 
     // Add event listeners.
-    sel.selectAll('#' + map_id + ' svg[location-id], #' + map_id + ' use').on('click', function(event, d) {
+    sel.selectAll('#' + map_id + ' svg[object-id], #' + map_id + ' use').on('click', function(event, d) {
       var state = Drupal.hpc_map.getMapStateFromContainedElement(this);
       if (!d && event.target) {
         location_object = Drupal.hpc_map.getLocationObjectFromUseElement(event.target);

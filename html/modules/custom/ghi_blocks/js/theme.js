@@ -73,7 +73,7 @@
           .html('<i class="material-icons">keyboard_arrow_left</i>');
         if (vars.previous) {
           previous_link
-            .attr('data-location-id', vars.previous.location_id)
+            .attr('data-object-id', vars.previous.object_id)
             .attr('title', vars.previous.location_name);
         }
         else {
@@ -86,7 +86,7 @@
           .html('<i class="material-icons">keyboard_arrow_right</i>');
         if (vars.next) {
           next_link
-            .attr('data-location-id', vars.next.location_id)
+            .attr('data-object-id', vars.next.object_id)
             .attr('title', vars.next.location_name);
         }
         else {

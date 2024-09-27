@@ -347,7 +347,8 @@
     }
   }
 
-  .donut {
+  .donut,
+  .circle {
     margin-top: 0.5rem;
 
     .map-legend {
@@ -391,6 +392,13 @@
           }
         }
       }
+    }
+
+    &.circle .legend-icon {
+      width: 1rem !important;
+      height: 1rem !important;
+      margin-top: 0 !important;
+      margin-right: 0 !important;
     }
 
     .has-donut-control {
