@@ -190,12 +190,11 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     $entities = $this->getMatchingEntities();
     if (!empty($entities)) {
       usort($entities, function ($a, $b) {
-        return strnatcmp($a->name, $b->name);
+        return strnatcmp($a->sort_key, $b->sort_key);
       });
       $items = array_map(function ($item) {
         return Markup::create($item->name . '<br /> ' . $item->description);
       }, $entities);
-
       $popover_content = [
         '#theme' => 'item_list',
         '#items' => $items,
@@ -206,7 +205,9 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
 
     return [
       '#theme' => 'hpc_tooltip',
-      '#tooltip' => $this->t('Click to see the list of clusters.'),
+      '#tooltip' => $this->t('Click to see the list of @label.', [
+        '@label' => $this->getLabel(),
+      ]),
       '#class' => 'popover-tooltip',
       '#tag_content' => [
         '#theme' => 'hpc_popover',
