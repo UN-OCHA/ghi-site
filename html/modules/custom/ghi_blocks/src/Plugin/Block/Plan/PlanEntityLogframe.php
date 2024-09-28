@@ -101,7 +101,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       return NULL;
     }
     if ($first_entity instanceof ApiObjectsPlan) {
-      return $this->t('Response plan');
+      return $this->t('Response plan', [], ['langcode' => $this->getCurrentPlanObject()?->getPlanLanguage()]);
     }
     return count($entities) > 1 ? $first_entity->plural_name : $first_entity->singular_name;
   }

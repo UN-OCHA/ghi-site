@@ -55,3 +55,6 @@ msgstr "Ir a la página del clúster"
 
 msgid "Unit"
 msgstr "Unidad"
+
+msgid "Response plan"
+msgstr "Plan de respuesta"
