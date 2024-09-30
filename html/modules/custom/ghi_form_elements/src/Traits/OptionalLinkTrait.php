@@ -8,8 +8,12 @@ use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\ghi_form_elements\LinkTarget\ExternalLinkTarget;
+use Drupal\ghi_form_elements\LinkTarget\InternalLinkTarget;
+use Drupal\ghi_form_elements\LinkTarget\LinkTargetInterface;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plan_clusters\Entity\PlanClusterInterface;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\node\NodeInterface;
@@ -38,13 +42,13 @@ trait OptionalLinkTrait {
       return $this->getLinkFromUri($conf['link_custom']['url'], $conf['label'] ?: NULL);
     }
     elseif (!empty($contexts['section_node']) && !empty($contexts['page_node'])) {
-      $targets = self::getInternalLinkUrls($contexts['section_node'], $contexts['page_node']);
+      $targets = self::getLinkTargetUrls($contexts['section_node'], $contexts['page_node']);
       $configured_target = $conf['link_internal']['target'];
       if (empty($targets[$configured_target])) {
         return NULL;
       }
-      $link = $targets[$configured_target];
-      return $this->getLinkFromUri($link->getUrl()->toUriString(), $conf['label'] ?: NULL);
+      $url = $targets[$configured_target];
+      return $this->getLinkFromUri($url->toUriString(), $conf['label'] ?: NULL);
     }
   }
 
@@ -62,11 +66,10 @@ trait OptionalLinkTrait {
   protected function getLinkFromUri($uri, $label = NULL) {
     $is_internal = strpos($uri, 'internal:') === 0;
     $label = $label ?? NULL;
+    $anonymous_access = FALSE;
     try {
       $url = Url::fromUri($uri);
-      if (!$url->access(new AnonymousUserSession())) {
-        return NULL;
-      }
+      $anonymous_access = $url->access(new AnonymousUserSession());
       $link = $url->access() ? Link::fromTextAndUrl($label, $url) : NULL;
     }
     catch (\InvalidArgumentException $e) {
@@ -94,6 +97,11 @@ trait OptionalLinkTrait {
 
     $classes = ['cd-button'];
     $classes[] = $link->getUrl()->isExternal() ? 'external' : 'read-more';
+    if (!$anonymous_access) {
+      $classes[] = 'no-public-access';
+      $attributes['data-tippy-content'] = $this->t('This link will not be displayed publicly because an anonymous user has no access to the targeted page.');
+      $attributes['data-toggle'] = 'tooltip';
+    }
     $attributes['class'] = $classes;
 
     $link->getUrl()->setOption('attributes', $attributes);
@@ -213,28 +221,67 @@ trait OptionalLinkTrait {
    * @param \Drupal\node\NodeInterface $page_node
    *   The page node.
    *
-   * @return \Drupal\node\NodeInterface[]
-   *   An array of node objects, keyed by internal name.
+   * @return \Drupal\ghi_form_elements\LinkTarget\LinkTargetInterface[]
+   *   An array of link target objects, keyed by internal name.
    */
-  public static function getInternalLinkTargets($section_node, $page_node) {
+  public static function getLinkTargets(SectionNodeInterface $section_node, NodeInterface $page_node) {
+    return self::getInternalLinkTargets($section_node, $page_node) + self::getExternalLinkTargets($section_node, $page_node);
+  }
+
+  /**
+   * Collect a set of available link targets based on the current context.
+   *
+   * @param \Drupal\ghi_sections\Entity\SectionNodeInterface $section_node
+   *   The section node.
+   * @param \Drupal\node\NodeInterface $page_node
+   *   The page node.
+   *
+   * @return \Drupal\ghi_form_elements\LinkTarget\LinkTargetInterface[]
+   *   An array of link target objects, keyed by internal name.
+   */
+  private static function getInternalLinkTargets(SectionNodeInterface $section_node, NodeInterface $page_node) {
     $targets = [];
-    if ($section_node instanceof SectionNodeInterface) {
-      // Add the main section page as a target.
-      if (!$page_node instanceof SectionNodeInterface) {
-        $targets[$section_node->bundle()] = $section_node;
-      }
-      // Load all standard subpages for the section.
-      $subpages = self::getSubpageManager()->loadSubpagesForBaseNode($section_node) ?? [];
-      foreach ($subpages as $subpage) {
-        $targets[$subpage->bundle()] = $subpage;
-      }
+    // Add the main section page as a target.
+    if (!$page_node instanceof SectionNodeInterface) {
+      $targets[$section_node->bundle()] = $section_node;
     }
+    // Load all standard subpages for the section.
+    $subpages = self::getSubpageManager()->loadSubpagesForBaseNode($section_node) ?? [];
+    foreach ($subpages as $subpage) {
+      $targets[$subpage->bundle()] = $subpage;
+    }
+
     // Add the cluster logframe as a target if currently on a cluster page.
     if ($page_node instanceof PlanClusterInterface && $page_node->getLogframeNode()) {
       $targets['cluster_logframe'] = $page_node->getLogframeNode();
     }
     if ($page_node instanceof LogframeSubpage && $page_node->getParentNode() instanceof PlanCluster) {
       $targets['cluster_parent'] = $page_node->getParentNode();
+    }
+
+    $targets = array_map(function (NodeInterface $node) {
+      return new InternalLinkTarget($node);
+    }, $targets);
+
+    return $targets;
+  }
+
+  /**
+   * Collect a set of available link targets based on the current context.
+   *
+   * @param \Drupal\ghi_sections\Entity\SectionNodeInterface $section_node
+   *   The section node.
+   * @param \Drupal\node\NodeInterface $page_node
+   *   The page node.
+   *
+   * @return \Drupal\ghi_form_elements\LinkTarget\LinkTargetInterface[]
+   *   An array of link target objects, keyed by internal name.
+   */
+  private static function getExternalLinkTargets(SectionNodeInterface $section_node, NodeInterface $page_node) {
+    $targets = [];
+    $base_object = $section_node->getBaseObject();
+    if ($base_object instanceof Plan) {
+      $targets['fts_summary'] = new ExternalLinkTarget(t('FTS Summary'), $base_object->toUrl('fts_summary'));
     }
     return $targets;
   }
@@ -250,22 +297,28 @@ trait OptionalLinkTrait {
    * @return array
    *   An array of link option labels, keyed by internal name, value is a label.
    */
-  public static function getInternalLinkOptions($section_node, $page_node) {
-    $targets = self::getInternalLinkTargets($section_node, $page_node);
-    $options = [];
+  public static function getLinkTargetOptions($section_node, $page_node) {
+    $targets = self::getLinkTargets($section_node, $page_node);
+    $internal_key = (string) t('Internal pages');
+    $external_key = (string) t('External pages');
+    $options = [
+      $internal_key => [],
+      $external_key => [],
+    ];
     foreach ($targets as $key => $target) {
+      $option_key = $target instanceof InternalLinkTarget ? $internal_key : $external_key;
       $args = [
-        '@type' => strtolower($target->bundle()),
-        '@uri' => $target->toUrl()->toString(),
+        '@type' => $target->getAdminLabel(),
+        '@uri' => $target->getUrl()->toString(),
       ];
       if ($key == 'cluster_logframe') {
-        $options[$key] = ucfirst((string) new TranslatableMarkup('Cluster @type page (@uri)', $args));
+        $options[$option_key][$key] = ucfirst((string) new TranslatableMarkup('Cluster @type page (@uri)', $args));
       }
       if ($key == 'cluster_parent') {
-        $options[$key] = ucfirst((string) new TranslatableMarkup('Cluster page (@uri)', $args));
+        $options[$option_key][$key] = ucfirst((string) new TranslatableMarkup('Cluster page (@uri)', $args));
       }
       else {
-        $options[$key] = ucfirst((string) new TranslatableMarkup('@type page (@uri)', $args));
+        $options[$option_key][$key] = ucfirst((string) new TranslatableMarkup('@type page (@uri)', $args));
       }
     }
     return $options;
@@ -279,13 +332,13 @@ trait OptionalLinkTrait {
    * @param \Drupal\node\NodeInterface $page_node
    *   The page node.
    *
-   * @return \Drupal\Core\Link[]
-   *   An array of link objects, keyed by internal name.
+   * @return \Drupal\Core\Url[]
+   *   An array of url objects, keyed by internal name.
    */
-  public static function getInternalLinkUrls(SectionNodeInterface $section_node, NodeInterface $page_node) {
-    $targets = self::getInternalLinkTargets($section_node, $page_node);
-    return array_map(function (NodeInterface $target) {
-      return $target->toLink();
+  public static function getLinkTargetUrls(SectionNodeInterface $section_node, NodeInterface $page_node) {
+    $targets = self::getLinkTargets($section_node, $page_node);
+    return array_map(function (LinkTargetInterface $target) {
+      return $target->getUrl();
     }, $targets);
   }
 

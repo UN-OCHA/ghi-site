@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ghi_blocks\Traits;
+namespace Drupal\ghi_plans\Traits;
 
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
@@ -21,7 +21,8 @@ trait FtsLinkTrait {
    *   A valid display in FTS Public, e.g. 'summary', 'recipients', 'flows' or
    *   'clusters'.
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
-   *   A node object that represents the current context.
+   *   A base object that represents the current context, e.g. a governing
+   *   entity.
    *
    * @return \Drupal\Core\Url
    *   A URL object.

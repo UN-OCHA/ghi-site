@@ -7,6 +7,7 @@ use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
+use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
 
 /**
@@ -15,9 +16,21 @@ use Drupal\ghi_plans\Traits\PlanTypeTrait;
 class Plan extends BaseObject implements BaseObjectMetaDataInterface {
 
   use PlanTypeTrait;
+  use FtsLinkTrait;
 
   public const CLUSTER_TYPE_CLUSTER = 'cluster';
   public const CLUSTER_TYPE_SECTOR = 'sector';
+
+  /**
+   * {@inheritdoc}
+   */
+  public function toUrl($rel = 'canonical', array $options = []) {
+    // Allow to link to FTS.
+    if ($rel == 'fts_summary') {
+      return self::buildFtsUrl($this, 'summary');
+    }
+    return parent::toUrl($rel, $options);
+  }
 
   /**
    * {@inheritdoc}

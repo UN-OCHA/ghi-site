@@ -8,12 +8,12 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
-use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock;
+use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\FieldHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
@@ -403,7 +403,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data' => $section ? 'https://humanitarianaction.info' . $section->toUrl()->toString() : NULL,
         ];
         $rows[$plan->id()]['link_fts'] = [
-          'data' => self::buildFtsUrl($plan_entity, 'summary'),
+          'data' => $plan_entity->toUrl('fts_summary'),
         ];
       }
     }
