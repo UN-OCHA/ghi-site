@@ -79,7 +79,7 @@ class OptionalLink extends FormElementBase {
 
     $section_node = $element['#element_context']['section_node'] ?? NULL;
     $page_node = $element['#element_context']['page_node'] ?? NULL;
-    $targets = self::getInternalLinkOptions($section_node, $page_node);
+    $targets = self::getLinkTargetOptions($section_node, $page_node);
     $required = $element['#required'];
     $state_selector_add_link = NULL;
 
