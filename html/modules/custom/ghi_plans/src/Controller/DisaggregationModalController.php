@@ -4,7 +4,6 @@ namespace Drupal\ghi_plans\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\Markup;
-use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\hpc_api\Query\EndpointQueryManager;
@@ -126,11 +125,11 @@ class DisaggregationModalController extends ControllerBase {
     ];
 
     $decimal_format = NULL;
-    $plan_id = $attachment->getPlanId();
-    if ($plan_id && $plan_object = BaseObjectHelper::getBaseObjectFromOriginalId($plan_id, 'plan')) {
-      /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
-      $decimal_format = $plan_object->getDecimalFormat();
-    }
+    $plan_object = $attachment->getPlanObject();
+    $decimal_format = $plan_object?->getDecimalFormat();
+    $plan_language = $plan_object?->getPlanLanguage();
+
+    $t_options = ['langcode' => $plan_language];
 
     // Retrieve disaggregated data form the attachment. The results is a
     // multi-dimensional array keyed by the metric in the first level. Each
@@ -140,7 +139,7 @@ class DisaggregationModalController extends ControllerBase {
       return [
         '#type' => 'html_tag',
         '#tag' => 'p',
-        '#value' => $this->t('We did not find the requested information. If you think that this an error, please get in touch.'),
+        '#value' => $this->t('We did not find the requested information. If you think that this an error, please get in touch.', [], $t_options),
       ];
     }
 
@@ -148,7 +147,7 @@ class DisaggregationModalController extends ControllerBase {
       return [
         '#type' => 'html_tag',
         '#tag' => 'p',
-        '#value' => $this->t('We could not find suitable information to display here.'),
+        '#value' => $this->t('We could not find suitable information to display here.', [], $t_options),
       ];
     }
 
@@ -159,7 +158,7 @@ class DisaggregationModalController extends ControllerBase {
     // Build the table.
     $header = [
       [
-        'data' => $this->t('Location'),
+        'data' => $this->t('Location', [], $t_options),
         'data-sort-type' => 'alfa',
         'data-sort-order' => 'ASC',
         'data-column-type' => 'string',
@@ -177,7 +176,7 @@ class DisaggregationModalController extends ControllerBase {
     }
     else {
       $header[] = [
-        'data' => $this->t('Totals'),
+        'data' => $this->t('Totals', [], $t_options),
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
         'data-formatting' => 'numeric-full',
@@ -248,7 +247,7 @@ class DisaggregationModalController extends ControllerBase {
 
     $total_row = [
       'data' => [
-        $this->t('Total'),
+        $this->t('Total', [], $t_options),
       ],
       'class' => 'totals-row',
     ];
@@ -283,7 +282,7 @@ class DisaggregationModalController extends ControllerBase {
       '#header' => $header,
       '#rows' => $rows,
       '#sticky_rows' => [$total_row],
-      '#empty' => $this->t('We could not find suitable information to display here.'),
+      '#empty' => $this->t('We could not find suitable information to display here.', [], $t_options),
       '#sortable' => TRUE,
     ];
   }
