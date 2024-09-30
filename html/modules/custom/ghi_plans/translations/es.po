@@ -58,3 +58,6 @@ msgstr "Unidad"
 
 msgid "Response plan"
 msgstr "Plan de respuesta"
+
+msgid "Projects"
+msgstr "Proyectos"

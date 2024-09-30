@@ -192,13 +192,17 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       return NULL;
     }
 
+    $plan_object = $this->getCurrentPlanObject();
+
     $fts_link = NULL;
     if ($selected_view == 'project' || $selected_view == 'organization') {
       $data_page = $selected_view == 'project' ? 'projects' : 'recipients';
       $link_title = $this->t('For more details, view on <img src="@logo_url" />', [
         '@logo_url' => ThemeHelper::getUriToFtsIcon(),
+      ], [
+        'langcode' => $plan_object?->getPlanLanguage(),
       ]);
-      $fts_link_build = self::buildFtsLink($link_title, $this->getCurrentPlanObject(), $data_page, $this->getCurrentBaseObject());
+      $fts_link_build = self::buildFtsLink($link_title, $plan_object, $data_page, $this->getCurrentBaseObject());
       $fts_link = ThemeHelper::render($fts_link_build, FALSE);
     }
 

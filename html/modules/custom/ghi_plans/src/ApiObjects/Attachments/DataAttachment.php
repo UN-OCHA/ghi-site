@@ -387,7 +387,7 @@ class DataAttachment extends AttachmentBase {
   /**
    * Extract the plan id from an attachment object.
    *
-   * @return int
+   * @return int|null
    *   The plan ID if any can be found.
    */
   public function getPlanId() {
@@ -416,13 +416,23 @@ class DataAttachment extends AttachmentBase {
   /**
    * Get the plan object for this attachment.
    *
-   * @return \Drupal\ghi_plans\Entity\Plan
-   *   The plan base object.
+   * @return \Drupal\ghi_plans\Entity\Plan|null
+   *   The plan base object or NULL.
    */
   public function getPlanObject() {
     $plan_id = $this->getPlanId();
     $base_object = $plan_id ? BaseObjectHelper::getBaseObjectFromOriginalId($plan_id, 'plan') : NULL;
     return $base_object && $base_object instanceof Plan ? $base_object : NULL;
+  }
+
+  /**
+   * Get the plan language.
+   *
+   * @return string|null
+   *   The plan language code as a string or NULL.
+   */
+  public function getPlanLanguage() {
+    return $this->getPlanObject()?->getPlanLanguage();
   }
 
   /**
@@ -1407,8 +1417,9 @@ class DataAttachment extends AttachmentBase {
     // Handle empty data by just "Pending" or "No data" for everything besides
     // percentage displays.
     if ($this->isNullValue($value) && $conf['formatting'] != 'percent') {
+      $t_options = ['langcode' => $this->getPlanLanguage()];
       return [
-        '#markup' => $this->isPendingDataEntry() ? $this->t('Pending') : $this->t('No data'),
+        '#markup' => $this->isPendingDataEntry() ? $this->t('Pending', [], $t_options) : $this->t('No data', [], $t_options),
       ];
     }
 
