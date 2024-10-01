@@ -271,6 +271,10 @@ class LogframeManager implements ContainerInjectionInterface {
         'tables' => [
           'attachment_tables' => [],
         ],
+        'display' => [
+          'label' => '',
+          'label_display' => TRUE,
+        ],
       ],
     ];
 
