@@ -5,7 +5,7 @@ namespace Drupal\ghi_form_elements\Plugin\ConfigurationContainerItem;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemGroupInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
+use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 
 /**
  * Provides an entity counter item for configuration containers.
@@ -18,7 +18,7 @@ use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
  */
 class ItemGroup extends ConfigurationContainerItemPluginBase implements ConfigurationContainerItemGroupInterface {
 
-  use OptionalLinkTrait;
+  use CustomLinkTrait;
 
   /**
    * {@inheritdoc}
@@ -35,6 +35,8 @@ class ItemGroup extends ConfigurationContainerItemPluginBase implements Configur
    */
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
+    $element['label']['#title'] = $this->t('Group label');
+
     $configuration = $this->getPluginConfiguration();
 
     $element['id'] = [
@@ -49,7 +51,7 @@ class ItemGroup extends ConfigurationContainerItemPluginBase implements Configur
 
     if (!empty($configuration['link'])) {
       $element['link'] = [
-        '#type' => 'optional_link',
+        '#type' => 'custom_link',
         '#title' => $this->t('Add a link to this element'),
         '#default_value' => $this->config['link'] ?? [],
         '#element_context' => $this->getContext(),

@@ -289,11 +289,11 @@ class LogframeManager implements ContainerInjectionInterface {
       $configuration['hpc']['display']['link'] = [
         'add_link' => TRUE,
         'label' => $link_label,
-        'link_type' => 'internal',
+        'link_type' => 'related',
         'link_custom' => [
           'url' => NULL,
         ],
-        'link_internal' => [
+        'link_related' => [
           'target' => 'cluster_parent',
         ],
       ];

@@ -3,9 +3,9 @@
 namespace Drupal\ghi_blocks\Interfaces;
 
 /**
- * Interface for block plugins that support optional links.
+ * Interface for block plugins that support custom links.
  */
-interface OptionalLinkBlockInterface {
+interface CustomLinkBlockInterface {
 
   /**
    * Get the configured link if any.
