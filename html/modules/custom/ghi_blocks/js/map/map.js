@@ -346,6 +346,16 @@
       state.sidebar = L.control.sidebar(sidebar_id, {
         position: 'right'
       });
+      // And also add an event handler for when it's closed again.
+      state.sidebar.on('hide', function() {
+        let map_id = this._map._container.id;
+        let state = Drupal.hpc_map.getMapState(map_id);
+        if (!state.active_location) {
+          return;
+        }
+        let element = Drupal.hpc_map.getElementFromDataObject(state.active_location, state);
+        Drupal.hpc_map.setActiveLocation(element, null, state);
+      });
       state.map.addControl(state.sidebar);
     }
 
@@ -684,7 +694,7 @@
     var contained_element = element.nodeName == 'use' ? Drupal.hpc_map.getElementFromUseElement(element) : $(element);
     if (object_id = $(contained_element).attr('object-id')) {
       var state = Drupal.hpc_map.getMapStateFromContainedElement(contained_element);
-      return Drupal.hpc_map.getLocationDataById(state, object_id);
+      return state ? Drupal.hpc_map.getLocationDataById(state, object_id) : null;
     }
     let parents = $(contained_element).parents('svg[object-id]');
     return parents.length ? d3.select(parents[0]).data()[0].object : null;
@@ -747,11 +757,10 @@
     }
     focus_state = typeof focus_state == 'undefined' ? 1 : focus_state;
     let contained_element = element.nodeName == 'use' ? Drupal.hpc_map.getElementFromUseElement(element) : element;
-    let object = Drupal.hpc_map.getLocationObjectFromContainedElement(contained_element);
+    let object = Drupal.hpc_map.getLocationObjectFromContainedElement(element);
     if (!object || (focus_state && state.focused_location && object.object_id == state.focused_location.object_id)) {
       return;
     }
-
     if (focus_state) {
       // If we want to focus a location, make sure there is no other currently
       // focused location on the map.
@@ -777,10 +786,10 @@
     if (focus_state) {
       Drupal.hpc_map.moveLocationToFront(contained_element);
     }
-    else if (state.active_location) {
-      let active_element = Drupal.hpc_map.getElementFromDataObject(state.active_location, state);
-      Drupal.hpc_map.moveLocationToFront(active_element);
-    }
+    // else if (state.active_location) {
+    //   let active_element = Drupal.hpc_map.getElementFromDataObject(state.active_location, state);
+    //   Drupal.hpc_map.moveLocationToFront(active_element);
+    // }
 
   }
 
@@ -1099,16 +1108,7 @@
 
       // Now show the sidebar.
       state.sidebar.show();
-      // And also add an event handler for when it's closed again.
-      state.sidebar.on('hidden', function() {
-        let map_id = this._map._container.id;
-        let state = Drupal.hpc_map.getMapState(map_id);
-        if (!state.active_location) {
-          return;
-        }
-        let element = Drupal.hpc_map.getElementFromDataObject(state.active_location, state);
-        Drupal.hpc_map.setActiveLocation(element, null, state);
-      });
+
       // Add navigation behavior.
       $(state.sidebar._container).find('.navigation .link').on('click', function() {
         let object_id = $(this).data('object-id');

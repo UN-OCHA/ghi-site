@@ -81,9 +81,6 @@
       let radius = Drupal.hpc_map.getRadius(location_data, scale, base_radius/scale);
       offset += radius + base_radius/scale * 2.5;
     }
-    if (d.location_id == 206) {
-      console.log(offset, d);
-    }
     return offset;
   }
 
@@ -281,77 +278,41 @@
     }
 
     // Add event listeners.
-    sel.selectAll('circle').on('click', function(event, d) {
-      if (!d) {
-        return;
-      }
+    sel.selectAll('#' + map_id + ' circle[object-id], #' + map_id + ' use').on('click', function(event, d) {
       var state = Drupal.hpc_map.getMapStateFromContainedElement(this);
-      Drupal.hpc_map.showPopup(d, state);
-      Drupal.hpc_map_circle.focusLocation(this, 1);
-    })
-    .on("mouseover", function(event, d) {
-      if (!d) {
-        return;
+      if (!d && event.target) {
+        location_object = Drupal.hpc_map.getLocationObjectFromUseElement(event.target);
       }
-      Drupal.hpc_map_circle.focusLocation(this, 1);
-      $('#' + map_id + ' .map-circle-tooltip').css("display", "");
+      else {
+        location_object = d;
+      }
+      Drupal.hpc_map.setActiveLocation(this, location_object, state);
+      Drupal.hpc_map.showPopup(location_object, state);
     })
     .on('mousemove', function(event, d) {
-      if (!d) {
+      if (!d && event.target) {
+        location_object = Drupal.hpc_map.getLocationObjectFromUseElement(event.target);
+      }
+      else {
+        location_object = d;
+      }
+      if (!location_object) {
         return;
       }
       var xPosition = event.layerX + 10;
       var yPosition = event.layerY + 10;
-      Drupal.hpc_map_circle.showLocationTooltip(map_id, state, d, xPosition, yPosition);
+      Drupal.hpc_map_circle.showLocationTooltip(map_id, state, location_object, xPosition, yPosition);
     })
-    .on('mouseout', function(event, d) {
-      if (!d) {
-        return;
-      }
-      Drupal.hpc_map_circle.focusLocation(this, 0);
-      $('#' + map_id + ' .map-circle-tooltip').css("display", "none");
-    });
-
-    // Special handling for the use element.
-    sel.selectAll('use').on('click', function(event) {
-      // let element = $(event.target.href.baseVal);
-      let element = Drupal.hpc_map.getElementFromUseElement($(event.target.href.baseVal));
-      if (!element) {
-        return;
-      }
-      var state = Drupal.hpc_map.getMapStateFromContainedElement(element);
-      let d = Drupal.hpc_map.getLocationObjectFromContainedElement(element);
-      Drupal.hpc_map.showPopup(d, state);
-      Drupal.hpc_map_circle.focusLocation(element, 1);
-    })
-    .on("mouseover", function(event) {
-      let element = Drupal.hpc_map.getElementFromUseElement($(event.target.href.baseVal));
-      if (!element) {
-        return;
-      }
-      Drupal.hpc_map_circle.focusLocation(element, 1);
+    .on('mouseenter', function(event, d) {
+      var state = Drupal.hpc_map.getMapStateFromContainedElement(this);
+      Drupal.hpc_map.focusLocation(this, state, 1);
       $('#' + map_id + ' .map-circle-tooltip').css("display", "");
     })
-    .on('mousemove', function(event) {
-      let element = Drupal.hpc_map.getElementFromUseElement($(event.target.href.baseVal));
-      if (!element) {
-        return;
-      }
-      var state = Drupal.hpc_map.getMapStateFromContainedElement(element);
-      let d = Drupal.hpc_map.getLocationObjectFromContainedElement(element);
-      var xPosition = event.layerX + 10;
-      var yPosition = event.layerY + 10;
-      Drupal.hpc_map_circle.showLocationTooltip(map_id, state, d, xPosition, yPosition);
-    })
-    .on('mouseout', function(event) {
-      let element = Drupal.hpc_map.getElementFromUseElement($(event.target.href.baseVal));
-      if (!element) {
-        return;
-      }
-      Drupal.hpc_map_circle.focusLocation(element, 0);
+    .on('mouseout', function(event, d) {
+      var state = Drupal.hpc_map.getMapStateFromContainedElement(this);
+      Drupal.hpc_map.focusLocation(this, state, 0);
       $('#' + map_id + ' .map-circle-tooltip').css("display", "none");
     });
-
   }
 
 })(jQuery, Drupal);
