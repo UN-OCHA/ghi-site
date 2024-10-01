@@ -9,14 +9,14 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
+use Drupal\ghi_blocks\Interfaces\CustomLinkBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
-use Drupal\ghi_blocks\Interfaces\OptionalLinkBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
-use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
+use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
@@ -63,11 +63,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  }
  * )
  */
-class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, OptionalLinkBlockInterface, TrustedCallbackInterface, ConfigValidationInterface {
+class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, CustomLinkBlockInterface, TrustedCallbackInterface, ConfigValidationInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
-  use OptionalLinkTrait;
+  use CustomLinkTrait;
   use ConfigValidationTrait;
 
   /**
@@ -581,7 +581,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    */
   public function displayForm(array $form, FormStateInterface $form_state) {
     $form['link'] = [
-      '#type' => 'optional_link',
+      '#type' => 'custom_link',
       '#title' => $this->t('Add a link to this element'),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'link'),
       '#element_context' => $this->getBlockContext(),

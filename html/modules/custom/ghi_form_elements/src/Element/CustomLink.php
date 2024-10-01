@@ -7,18 +7,18 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Url;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
-use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
+use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 use Drupal\link\LinkItemInterface;
 use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
 
 /**
  * Provides an attachment select element.
  *
- * @FormElement("optional_link")
+ * @FormElement("custom_link")
  */
-class OptionalLink extends FormElementBase {
+class CustomLink extends FormElementBase {
 
-  use OptionalLinkTrait;
+  use CustomLinkTrait;
 
   /**
    * {@inheritdoc}
@@ -30,11 +30,11 @@ class OptionalLink extends FormElementBase {
       '#input' => TRUE,
       '#tree' => TRUE,
       '#process' => [
-        [$class, 'processOptionalLink'],
+        [$class, 'processCustomLink'],
         [$class, 'processGroup'],
       ],
       '#pre_render' => [
-        [$class, 'preRenderOptionalLink'],
+        [$class, 'preRenderCustomLink'],
         [$class, 'preRenderGroup'],
       ],
       '#element_validate' => [
@@ -53,10 +53,10 @@ class OptionalLink extends FormElementBase {
    * This is called during form build. Note that it is not possible to store
    * any arbitrary data inside the form_state object.
    */
-  public static function processOptionalLink(array &$element, FormStateInterface $form_state) {
+  public static function processCustomLink(array &$element, FormStateInterface $form_state) {
     $default_values = (array) $element['#default_value'];
     $uri = $default_values['link_custom']['url'] ?? NULL;
-    $element['#attached']['library'][] = 'ghi_form_elements/optional_link';
+    $element['#attached']['library'][] = 'ghi_form_elements/custom_link';
 
     $display_url = NULL;
     if ($uri) {
@@ -99,6 +99,10 @@ class OptionalLink extends FormElementBase {
       '#attributes' => [
         'class' => ['link-wrapper'],
       ],
+      // Set the parents to be the same as the original element. It would make
+      // more sense to set #tree to false, but that somehow messes with the
+      // submission of the form values.
+      '#parents' => $element['#parents'],
       '#states' => [
         'visible' => array_filter([
           'input[name="' . $state_selector_add_link . '"]' => !$required ? ['checked' => TRUE] : NULL,
@@ -117,10 +121,10 @@ class OptionalLink extends FormElementBase {
       '#type' => 'radios',
       '#title' => t('Link type'),
       '#options' => [
-        'internal' => t('Associated pages'),
+        'related' => t('Associated pages'),
         'custom' => t('Custom link'),
       ],
-      '#default_value' => !empty($default_values['link_type']) ? $default_values['link_type'] : 'internal',
+      '#default_value' => !empty($default_values['link_type']) ? $default_values['link_type'] : 'related',
       '#attributes' => [
         'class' => [
           'form-type--link-type',
@@ -133,7 +137,7 @@ class OptionalLink extends FormElementBase {
       $element['link']['link_type']['#description'] = t('<strong>Note:</strong> The link type is set to <em>custom</em> because there are no target links available in the current page context.');
     }
 
-    $state_selector = FormElementHelper::getStateSelector($element, ['link', 'link_type']);
+    $state_selector = FormElementHelper::getStateSelector($element, ['link_type']);
     $element['link']['link_custom'] = [
       '#type' => 'container',
       '#tree' => TRUE,
@@ -162,21 +166,21 @@ class OptionalLink extends FormElementBase {
       '#required' => FALSE,
     ];
 
-    $element['link']['link_internal'] = [
+    $element['link']['link_related'] = [
       '#type' => 'container',
       '#tree' => TRUE,
       '#states' => [
         'visible' => array_filter([
-          'input[name="' . $state_selector . '"]' => ['value' => 'internal'],
+          'input[name="' . $state_selector . '"]' => ['value' => 'related'],
         ]),
       ],
       '#access' => !empty($targets),
     ];
-    $element['link']['link_internal']['target'] = [
+    $element['link']['link_related']['target'] = [
       '#type' => 'select',
       '#title' => t('Link target'),
       '#options' => $targets,
-      '#default_value' => !empty($default_values['link_internal']['target']) ? $default_values['link_internal']['target'] : array_key_first($targets),
+      '#default_value' => !empty($default_values['link_related']['target']) ? $default_values['link_related']['target'] : array_key_first($targets),
     ];
 
     unset($element['#title']);
@@ -186,13 +190,13 @@ class OptionalLink extends FormElementBase {
   /**
    * Prerender callback.
    */
-  public static function preRenderOptionalLink(array $element) {
-    $element['#attributes']['type'] = 'optional_link';
+  public static function preRenderCustomLink(array $element) {
+    $element['#attributes']['type'] = 'custom_link';
     Element::setAttributes($element, ['id', 'name', 'value']);
     // Sets the necessary attributes, such as the error class for validation.
     // Without this line the field will not be hightlighted, if an error
     // occurred.
-    static::setAttributes($element, ['form-optional-link']);
+    static::setAttributes($element, ['form-custom-link']);
     return $element;
   }
 
@@ -222,21 +226,6 @@ class OptionalLink extends FormElementBase {
         $form_state->setValueForElement($element, $element['#value']);
       }
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
-    if (!$input) {
-      return NULL;
-    }
-    // Keep the configuration structure simple by removing the additional
-    // layer introduced by the fieldset.
-    $value = $input;
-    $value += $value['link'];
-    unset($value['link']);
-    return $value;
   }
 
 }
