@@ -12,7 +12,7 @@ use Drupal\file\Entity\File;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
-use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
+use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -26,7 +26,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class Link extends ConfigurationContainerItemPluginBase {
 
-  use OptionalLinkTrait;
+  use CustomLinkTrait;
   use VerticalTabsTrait;
 
   const TITLE_MAX_LENGTH = 150;
@@ -98,7 +98,7 @@ class Link extends ConfigurationContainerItemPluginBase {
     ];
 
     $element['link']['link'] = [
-      '#type' => 'optional_link',
+      '#type' => 'custom_link',
       '#title' => $this->t('Add a link to this element'),
       '#default_value' => $this->config['link']['link'] ?? [],
       '#element_context' => $this->getContext(),
@@ -258,7 +258,7 @@ class Link extends ConfigurationContainerItemPluginBase {
     $form_state->setValue(array_merge($element['#parents'], ['image', 'image_crop']), $image_crop);
 
     // @todo This repeats logic from
-    // \Drupal\ghi_form_elements\Element\OptionalLink::elementValidate().
+    // \Drupal\ghi_form_elements\Element\CustomLink::elementValidate().
     $link_config = NestedArray::getValue($form_state->getValue($element['#parents']), ['link', 'link']) ?? [];
     if ($link_config['link_type'] == 'custom') {
       $url = NestedArray::getValue($link_config, ['link_custom', 'url']);
@@ -267,7 +267,7 @@ class Link extends ConfigurationContainerItemPluginBase {
         $form_state->setError($element['link']['link']['link_custom']['url'], t('The link URL must be valid and accessible.'));
       }
       if (!$form_state->hasAnyErrors() && $transformed_url !== $url) {
-        $form_state->setValue(array_merge($element['#parents'], ['link', 'link_custom', 'url']), $transformed_url);
+        $form_state->setValue(array_merge($element['#parents'], ['link', 'link', 'link_custom', 'url']), $transformed_url);
       }
     }
   }

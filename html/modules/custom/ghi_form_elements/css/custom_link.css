@@ -1,9 +1,9 @@
-.form-type--optional_link fieldset.link-wrapper {
+.form-type--custom_link fieldset.link-wrapper {
   padding-left: 2rem;
   padding-right: 2rem;
   border: 1px solid var(--ghi-default-border-color);
 }
-.form-type--optional_link .form-type--link-type .form-boolean-group {
+.form-type--custom_link .form-type--link-type .form-boolean-group {
   display: flex;
   gap: 1rem;
 }

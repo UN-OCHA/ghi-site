@@ -42,7 +42,7 @@ class LinkConfigurationUpdateHelper {
           'link_custom' => [
             'url' => $item['config']['link']['link']['url'] ?? NULL,
           ],
-          'link_internal' => [
+          'link_related' => [
             'target' => NULL,
           ],
         ];
@@ -56,7 +56,7 @@ class LinkConfigurationUpdateHelper {
           'link_custom' => [
             'url' => $item['config']['link']['url'] ?? NULL,
           ],
-          'link_internal' => [
+          'link_related' => [
             'target' => NULL,
           ],
         ];
@@ -105,7 +105,7 @@ class LinkConfigurationUpdateHelper {
           'link_custom' => [
             'url' => $item['config']['link']['url'] ?? NULL,
           ],
-          'link_internal' => [
+          'link_related' => [
             'target' => NULL,
           ],
         ],
@@ -140,7 +140,7 @@ class LinkConfigurationUpdateHelper {
       'link_custom' => [
         'url' => $item['link']['url'] ?? NULL,
       ],
-      'link_internal' => [
+      'link_related' => [
         'target' => NULL,
       ],
     ];

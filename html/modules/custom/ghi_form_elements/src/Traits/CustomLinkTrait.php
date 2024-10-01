@@ -19,9 +19,9 @@ use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\node\NodeInterface;
 
 /**
- * Helper trait for optional link support on form elements.
+ * Helper trait for custom link support on form elements.
  */
-trait OptionalLinkTrait {
+trait CustomLinkTrait {
 
   use StringTranslationTrait;
 
@@ -43,7 +43,7 @@ trait OptionalLinkTrait {
     }
     elseif (!empty($contexts['section_node']) && !empty($contexts['page_node'])) {
       $targets = self::getLinkTargetUrls($contexts['section_node'], $contexts['page_node']);
-      $configured_target = $conf['link_internal']['target'];
+      $configured_target = $conf['link_related']['target'];
       if (empty($targets[$configured_target])) {
         return NULL;
       }
