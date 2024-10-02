@@ -177,23 +177,23 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     foreach ($reporting_periods as $reporting_period) {
       if ($attachment instanceof IndicatorAttachment) {
         if ($use_calculation_method) {
-          $accumulated_reporting_periods[$reporting_period->id] = $reporting_period;
-          $data[$reporting_period->id] = $attachment->getSingleValue($data_point, $accumulated_reporting_periods);
+          $accumulated_reporting_periods[$reporting_period->id()] = $reporting_period;
+          $data[$reporting_period->id()] = $attachment->getSingleValue($data_point, $accumulated_reporting_periods);
         }
         else {
-          $data[$reporting_period->id] = $values[$reporting_period->id] ?? NULL;
+          $data[$reporting_period->id()] = $values[$reporting_period->id()] ?? NULL;
         }
       }
       else {
         // Caseloads.
-        $data[$reporting_period->id] = $attachment->getMeasurementMetricValue($data_point, $reporting_period->id);
+        $data[$reporting_period->id()] = $attachment->getMeasurementMetricValue($data_point, $reporting_period->id());
       }
 
       // Check if this measurement is an actual NULL, in which case we want to
       // hide the tooltip.
-      $null_measurement = $data[$reporting_period->id] === NULL;
+      $null_measurement = $data[$reporting_period->id()] === NULL;
       if ($null_measurement) {
-        $tooltips[$reporting_period->id] = NULL;
+        $tooltips[$reporting_period->id()] = NULL;
         continue;
       }
       $totals = $attachment->values;
@@ -217,14 +217,14 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
         'label' => $options[$data_point],
         'value' => [
           '#theme' => 'hpc_amount',
-          '#amount' => $data[$reporting_period->id],
+          '#amount' => $data[$reporting_period->id()],
           '#scale' => 'full',
           '#decimal_format' => $decimal_format,
         ],
       ];
 
       // And theme the tooltip.
-      $tooltips[$reporting_period->id] = ThemeHelper::render([
+      $tooltips[$reporting_period->id()] = ThemeHelper::render([
         '#theme' => 'hpc_sparkline_tooltip',
         '#title' => [
           '#theme' => 'hpc_reporting_period',
@@ -236,8 +236,8 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     }
 
     // Add in the latest measurement if not yet present.
-    if ($include_latest_period && $last_reporting_period && empty($data[$last_reporting_period->id])) {
-      $data[$last_reporting_period->id] = $attachment->getMeasurementMetricValue($data_point, $last_reporting_period->id);
+    if ($include_latest_period && $last_reporting_period && empty($data[$last_reporting_period->id()])) {
+      $data[$last_reporting_period->id()] = $attachment->getMeasurementMetricValue($data_point, $last_reporting_period->id());
 
       // Prepare the tooltip item.
       $tooltip_items = [];
@@ -246,13 +246,13 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
         'label' => $options[$data_point],
         'value' => [
           '#theme' => 'hpc_amount',
-          '#amount' => $data[$last_reporting_period->id],
+          '#amount' => $data[$last_reporting_period->id()],
           '#scale' => 'full',
           '#decimal_format' => $decimal_format,
         ],
       ];
 
-      $tooltips[$last_reporting_period->id] = ThemeHelper::render([
+      $tooltips[$last_reporting_period->id()] = ThemeHelper::render([
         '#theme' => 'hpc_sparkline_tooltip',
         '#title' => [
           '#theme' => 'hpc_reporting_period',
@@ -265,7 +265,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
 
     // Add a baseline if needed.
     if ($show_baseline) {
-      $baseline_value = $attachment->getMeasurementMetricValue($baseline, $last_reporting_period->id);
+      $baseline_value = $attachment->getMeasurementMetricValue($baseline, $last_reporting_period->id());
     }
 
     // Render the chart.

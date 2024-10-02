@@ -90,7 +90,7 @@ class IndicatorAttachment extends DataAttachment {
     if ($this->isMeasurement($conf)) {
       // Otherwise see if this is a measurement and if we can get a formatted
       // monitoring period for this data point.
-      $tooltip['monitoring_period'] = $this->formatMonitoringPeriod('icon', $last_reporting_period->id, 'as of date @end_date', ['langcode' => $this->getPlanLanguage()]);
+      $tooltip['monitoring_period'] = $this->formatMonitoringPeriod('icon', $last_reporting_period->id(), 'as of date @end_date', ['langcode' => $this->getPlanLanguage()]);
     }
 
     if ($this->isApiCalculated($index, $conf['data_points'][0]) && $conf['processing'] != 'calculated') {
@@ -105,18 +105,18 @@ class IndicatorAttachment extends DataAttachment {
   /**
    * Get a formatted calculation tooltip.
    *
-   * @param array $monitoring_period_id
-   *   The id of the monitoring period.
+   * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod $monitoring_period
+   *   The monitoring period.
    *
    * @return array|null
    *   Either a build array for the tooltip, or NULL.
    */
-  public function formatCalculationTooltip($monitoring_period_id) {
+  public function formatCalculationTooltip($monitoring_period) {
     $tooltip_icon = NULL;
     $tooltip_text = NULL;
     $reporting_period_text = ThemeHelper::render([
       '#theme' => 'hpc_reporting_period',
-      '#reporting_period' => $monitoring_period_id,
+      '#reporting_period' => $monitoring_period,
       '#format_string' => ', as of date @end_date',
     ], FALSE);
     $calculation_method = $this->getCalculationMethod();
