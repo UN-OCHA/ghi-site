@@ -15,7 +15,7 @@ trait PlanReportingPeriodTrait {
    * @param int $period_id
    *   The reporting period id.
    *
-   * @return object
+   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod
    *   A reporting period object.
    */
   public static function getPlanReportingPeriod($plan_id, $period_id) {
@@ -37,7 +37,7 @@ trait PlanReportingPeriodTrait {
    * @param bool $limit_to_published
    *   Whether to limit the reporting periods to the ones that are published.
    *
-   * @return objects[]
+   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[]
    *   An array of monitoring period objects.
    */
   public static function getPlanReportingPeriods($plan_id, $limit_to_published = FALSE) {
@@ -50,7 +50,7 @@ trait PlanReportingPeriodTrait {
     $periods = $query->getReportingPeriods();
     if ($limit_to_published && $last_published_period = self::getLatestPublishedReportingPeriod($plan_id)) {
       $periods = array_filter($periods, function ($period) use ($last_published_period) {
-        return $period->id <= $last_published_period;
+        return $period->id() <= $last_published_period;
       });
     }
     return $periods;

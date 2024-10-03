@@ -65,8 +65,8 @@ class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
     if (!$attachment) {
       return NULL;
     }
-    $period = $attachment->monitoring_period;
-    return $period ? $period->periodNumber : NULL;
+    $period = $attachment->getCurrentMonitoringPeriod();
+    return $period ? $period->getPeriodNumber() : NULL;
   }
 
   /**

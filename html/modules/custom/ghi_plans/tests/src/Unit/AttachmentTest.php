@@ -10,6 +10,7 @@ use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment;
+use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 
@@ -584,9 +585,15 @@ class AttachmentTest extends ApiObjectTestBase {
    * Build an array of dummy reporting periods for the caseload fixtures.
    */
   private function mockCaseloadReportingPeriods($ids) {
-    $reporting_periods = array_map(function ($id) {
-      return (object) ['id' => $id];
-    }, [2386, 2387, 2388, 2389]);
+    $reporting_periods = array_map(function ($id, $period_number) {
+      return new PlanReportingPeriod((object) [
+        'id' => $id,
+        'planId' => 1188,
+        'periodNumber' => $period_number,
+        'startDate' => '2024-0' . $period_number . '-01',
+        'endDate' => '2024-0' . $period_number . '-30',
+      ]);
+    }, [2386, 2387, 2388, 2389], [1, 2, 3, 4]);
     return array_combine($ids, $reporting_periods);
   }
 
