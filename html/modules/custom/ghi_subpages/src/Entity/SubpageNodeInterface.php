@@ -20,8 +20,8 @@ interface SubpageNodeInterface extends NodeInterface {
   /**
    * Get the parent section node.
    *
-   * @return \Drupal\ghi_sections\Entity\SectionNodeInterface
-   *   The parent section node.
+   * @return \Drupal\ghi_sections\Entity\SectionNodeInterface|null
+   *   The parent section node if found.
    */
   public function getParentBaseNode();
 
