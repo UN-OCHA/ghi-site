@@ -4,13 +4,15 @@ namespace Drupal\hpc_api\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Markup;
 use Drupal\hpc_api\Controller\BaseFileReportController;
+use Drupal\hpc_api\Traits\BulkFormTrait;
 
 /**
  * Provides a form for managing imported files.
  */
 class FileListForm extends FormBase {
+
+  use BulkFormTrait;
 
   /**
    * {@inheritdoc}
@@ -55,31 +57,9 @@ class FileListForm extends FormBase {
       '#empty' => $this->t('No files found.'),
     ];
 
-    // Build the bulk form. This is mainly done on a way to be compatible with
-    // the gin theme, see gin_form_alter() and gin/styles/base/_views.scss.
-    $form['#prefix'] = Markup::create('<div class="view-content"><div class="views-form">');
-    $form['#suffix'] = Markup::create('</div></div>');
-    $form['header'] = [
-      '#type' => 'container',
-      '#id' => 'edit-header',
-      'file_list_bulk_form' => [
-        '#type' => 'container',
-        '#id' => 'file-list-bulk-form',
-        'action' => [
-          '#type' => 'select',
-          '#title' => $this->t('Action'),
-          '#options' => $this->getBulkFormActions(),
-        ],
-        'actions' => [
-          '#type' => 'actions',
-          'submit' => [
-            '#type' => 'submit',
-            '#name' => 'bulk_submit',
-            '#value' => $this->t('Apply to files'),
-          ],
-        ],
-      ],
-    ];
+    if (!empty($rows)) {
+      $this->buildBulkForm($form, $this->getBulkFormActions());
+    }
 
     return $form;
   }
