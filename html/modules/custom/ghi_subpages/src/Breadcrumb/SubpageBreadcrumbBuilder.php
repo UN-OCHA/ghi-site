@@ -61,13 +61,19 @@ class SubpageBreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
     $parent = $node->getParentNode();
     while ($parent instanceof SubpageNodeInterface) {
+      /** @var \Drupal\ghi_subpages\Entity\SubpageNodeInterface $parent */
       $parents[] = $parent;
       $parent = $parent->getParentNode();
     }
-    $parents[] = $node->getParentBaseNode();
+    if ($parent = $node->getParentBaseNode()) {
+      $parents[] = $parent;
+    }
+
+    if (empty($parents)) {
+      return $breadcrumb;
+    }
 
     $section_list_route = SectionManager::SECTION_LIST_ROUTE;
-
     foreach (array_reverse($parents) as $parent) {
       if ($parent instanceof SectionNodeInterface && $this->router->getRouteCollection()->get($section_list_route) !== NULL) {
         $breadcrumb->addLink(Link::createFromRoute($this->t('Sections'), $section_list_route));
