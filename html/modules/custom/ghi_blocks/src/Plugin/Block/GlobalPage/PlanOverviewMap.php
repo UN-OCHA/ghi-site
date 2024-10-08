@@ -150,12 +150,12 @@ class PlanOverviewMap extends GHIBlockBase {
         continue;
       }
 
-      $location = $plan->getCountry();
+      $plan_entity = $plan->getEntity();
+      $location = $plan_entity->getFocusCountryMapLocation();
       if (!$location) {
         continue;
       }
 
-      $plan_entity = $plan->getEntity();
       if ($plan_entity) {
         $footnotes[$plan->id()] = $this->getFootnotesForPlanBaseobject($plan_entity);
       }

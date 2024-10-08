@@ -7,6 +7,7 @@ dependencies:
     - field.field.base_object.plan.field_decimal_format
     - field.field.base_object.plan.field_description
     - field.field.base_object.plan.field_document_published_on
+    - field.field.base_object.plan.field_focus_country
     - field.field.base_object.plan.field_footnotes
     - field.field.base_object.plan.field_language
     - field.field.base_object.plan.field_link_to_fts
@@ -72,6 +73,7 @@ third_party_settings:
     group_locations:
       children:
         - field_country
+        - field_focus_country
       label: Locations
       region: content
       parent_name: group_tabs
@@ -91,7 +93,6 @@ third_party_settings:
         - field_operations_category
         - field_plan_version_argument
         - field_plan_caseload
-        - field_plan_status
         - field_plan_document_link
         - field_decimal_format
         - field_max_admin_level
@@ -182,6 +183,16 @@ content:
     weight: 15
     region: content
     settings: {  }
+    third_party_settings: {  }
+  field_focus_country:
+    type: entity_reference_autocomplete
+    weight: 5
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
     third_party_settings: {  }
   field_footnotes:
     type: ghi_footnotes

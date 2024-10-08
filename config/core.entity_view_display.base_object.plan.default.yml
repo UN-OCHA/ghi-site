@@ -7,6 +7,7 @@ dependencies:
     - field.field.base_object.plan.field_decimal_format
     - field.field.base_object.plan.field_description
     - field.field.base_object.plan.field_document_published_on
+    - field.field.base_object.plan.field_focus_country
     - field.field.base_object.plan.field_footnotes
     - field.field.base_object.plan.field_language
     - field.field.base_object.plan.field_link_to_fts
@@ -71,6 +72,14 @@ content:
       format_type: medium
     third_party_settings: {  }
     weight: 22
+    region: content
+  field_focus_country:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 25
     region: content
   field_footnotes:
     type: ghi_footnotes

@@ -67,6 +67,37 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
+   * Get the focus country for the plan.
+   *
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
+   *   The country base object or NULL.
+   */
+  public function getFocusCountry() {
+    if (!$this->hasField('field_focus_country')) {
+      return NULL;
+    }
+    return $this->get('field_focus_country')->entity;
+  }
+
+  /**
+   * Get the focus country map location for the plan.
+   *
+   * @return object|null
+   *   An object describing the map location or NULL.
+   */
+  public function getFocusCountryMapLocation() {
+    $focus_country = $this->getFocusCountry();
+    return $focus_country ? (object) [
+      'id' => $focus_country->getSourceId(),
+      'name' => $focus_country->label(),
+      'latLng' => [
+        (string) $focus_country->get('field_latitude')->value,
+        (string) $focus_country->get('field_longitude')->value,
+      ],
+    ] : NULL;
+  }
+
+  /**
    * Get the plan language.
    *
    * @return string|null
