@@ -19,7 +19,7 @@ trait GlobalMapTrait {
    */
   public function getStaticTilesUrlTemplate($style_id = NULL) {
     if ($style_id === NULL) {
-      $style_id = 'clbfjni1x003m15nu67uwtbly';
+      $style_id = 'ck6kzlftu17uv1ilgsacalu17';
     }
     $map_config = $this->getGlobalMapSettings();
     $use_proxy = !empty($map_config['mapbox_proxy']);
