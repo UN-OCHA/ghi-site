@@ -53,6 +53,7 @@ class AttachmentSelect extends FormElement {
       ],
       '#entity_ids' => [],
       '#attachment_type' => NULL,
+      '#disagg_warning' => FALSE,
     ];
   }
 
@@ -231,6 +232,7 @@ class AttachmentSelect extends FormElement {
     $attachment_options = [];
     $entities_in_selection = [];
     foreach (ArrayHelper::filterArray($attachments, $attachment_filter) as $attachment) {
+      /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
       $entities_in_selection[$attachment->source->entity_id] = TRUE;
       $attachment_options[$attachment->id] = [
         'id' => $attachment->id,
@@ -240,6 +242,10 @@ class AttachmentSelect extends FormElement {
         'description' => $attachment->description,
         'sort_key' => $attachment->getSourceEntity()?->sort_key,
       ];
+
+      if (!empty($element['#disagg_warning'])) {
+        $attachment_options[$attachment->id]['disagg_data'] = $attachment->hasDisaggregatedData() ? '✓' : '✗';
+      }
     }
     ArrayHelper::sortArrayByStringKey($attachment_options, 'composed_reference');
     ArrayHelper::sortArrayByStringKey($attachment_options, 'sort_key');
@@ -343,6 +349,9 @@ class AttachmentSelect extends FormElement {
       'prototype' => t('Type'),
       'description' => t('Description'),
     ];
+    if (!empty($element['#disagg_warning'])) {
+      $columns['disagg_data'] = t('Disaggregated data');
+    }
 
     // Build the explanation that should show above the attachment select table.
     $header_parts[] = $element['#multiple'] ? t('Select the attachments that you want to use.') : t('Select the attachment that you want to use.');

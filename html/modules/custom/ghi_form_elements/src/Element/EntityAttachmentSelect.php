@@ -45,6 +45,7 @@ class EntityAttachmentSelect extends FormElement {
       '#attachment_options' => NULL,
       '#attachment_type' => NULL,
       '#element_context' => [],
+      '#disagg_warning' => FALSE,
     ];
   }
 
@@ -110,7 +111,7 @@ class EntityAttachmentSelect extends FormElement {
     // Remove invalid ids from the entity_ids passed in via #default_value.
     $context = $element['#element_context'];
     $plan_id = $context['plan_object']->get('field_original_id')->value;
-    $plan_entities = self::getPlanEntitiesQuery($plan_id)->getPlanEntities($context['base_object']);
+    $plan_entities = self::getPlanEntitiesQuery($plan_id)->getPlanEntities($context['base_object']) ?? [];
     $valid_entity_ids = array_merge([$plan_id], array_keys($plan_entities));
     $defaults['entities']['entity_ids'] = array_filter($defaults['entities']['entity_ids'] ?? [], function ($_entity_id) use ($valid_entity_ids) {
       return in_array($_entity_id, $valid_entity_ids);
@@ -165,6 +166,7 @@ class EntityAttachmentSelect extends FormElement {
       '#entity_ids' => $defaults['entities']['entity_ids'],
       '#available_options' => $element['#attachment_options'] ?? NULL,
       '#attachment_type' => $element['#attachment_type'] ?? NULL,
+      '#disagg_warning' => $element['#disagg_warning'] ?? FALSE,
     ];
     if ($current_action != 'select_attachments') {
       $element['attachments']['#hidden'] = TRUE;
