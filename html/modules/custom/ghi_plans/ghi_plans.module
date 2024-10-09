@@ -74,6 +74,7 @@ function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterf
     'field_plan_type_label_override',
     'field_plan_version_argument',
     'field_visible_on_global_pages',
+    'field_focus_country_override',
   ];
   foreach (Element::children($form) as $element_key) {
     if (!in_array($element_key, $allow_fields) && $form[$element_key]['#type'] != 'actions') {
@@ -127,6 +128,20 @@ function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterf
       '#required' => $form['field_plan_coordinator']['widget']['#required'],
     ];
     $form['field_plan_coordinator']['widget']['#access'] = FALSE;
+  }
+
+  if (!empty($form['field_focus_country_override'])) {
+    // Display the field description above the map instead of below.
+    $form['field_focus_country_override']['widget'][0]['value']['message'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#attributes' => [
+        'class' => ['fieldset__description'],
+      ],
+      '#value' => $form['field_focus_country_override']['widget'][0]['value']['#description'],
+      '#weight' => -1,
+    ];
+    $form['field_focus_country_override']['widget'][0]['value']['#description'] = NULL;
   }
 
   // Display disabled select dropdowns as simple textfields.

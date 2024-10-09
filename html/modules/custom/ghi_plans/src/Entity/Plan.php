@@ -80,6 +80,22 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
+   * Get the focus country override for the plan.
+   *
+   * @return object|null
+   *   A latLng object or NULL.
+   */
+  public function getFocusCountryOverride() {
+    if (!$this->hasField('field_focus_country_override') || $this->get('field_focus_country_override')->isEmpty()) {
+      return NULL;
+    }
+    return [
+      (string) $this->get('field_focus_country_override')->lat,
+      (string) $this->get('field_focus_country_override')->lon,
+    ];
+  }
+
+  /**
    * Get the focus country map location for the plan.
    *
    * @return object|null
@@ -87,14 +103,21 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    */
   public function getFocusCountryMapLocation() {
     $focus_country = $this->getFocusCountry();
-    return $focus_country ? (object) [
+    if (!$focus_country) {
+      return NULL;
+    }
+    $lat_lng = [
+      (string) $focus_country->get('field_latitude')->value,
+      (string) $focus_country->get('field_longitude')->value,
+    ];
+    if ($override = $this->getFocusCountryOverride()) {
+      $lat_lng = $override;
+    }
+    return (object) [
       'id' => $focus_country->getSourceId(),
       'name' => $focus_country->label(),
-      'latLng' => [
-        (string) $focus_country->get('field_latitude')->value,
-        (string) $focus_country->get('field_longitude')->value,
-      ],
-    ] : NULL;
+      'latLng' => $lat_lng,
+    ];
   }
 
   /**
