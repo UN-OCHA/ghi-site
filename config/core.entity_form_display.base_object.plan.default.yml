@@ -8,6 +8,7 @@ dependencies:
     - field.field.base_object.plan.field_description
     - field.field.base_object.plan.field_document_published_on
     - field.field.base_object.plan.field_focus_country
+    - field.field.base_object.plan.field_focus_country_override
     - field.field.base_object.plan.field_footnotes
     - field.field.base_object.plan.field_language
     - field.field.base_object.plan.field_link_to_fts
@@ -34,6 +35,7 @@ dependencies:
     - datetime
     - datetime_range
     - field_group
+    - geofield_map
     - ghi_base_objects
     - ghi_plans
     - link
@@ -74,6 +76,7 @@ third_party_settings:
       children:
         - field_country
         - field_focus_country
+        - field_focus_country_override
       label: Locations
       region: content
       parent_name: group_tabs
@@ -193,6 +196,49 @@ content:
       match_limit: 10
       size: 60
       placeholder: ''
+    third_party_settings: {  }
+  field_focus_country_override:
+    type: geofield_map
+    weight: 6
+    region: content
+    settings:
+      html5_geolocation: false
+      default_value:
+        lat: 0.0
+        lon: 0.0
+      map_library: leaflet
+      map_google_api_key: ''
+      map_google_places:
+        places_control: false
+        places_additional_options: ''
+      map_dimensions:
+        width: 100%
+        height: 450px
+      map_type_google: roadmap
+      map_type_leaflet: OpenStreetMap_Mapnik
+      map_type_selector: false
+      zoom_level: 5
+      zoom:
+        start: 2
+        focus: 2
+        min: 1
+        max: 5
+      click_to_find_marker: false
+      click_to_place_marker: false
+      click_to_remove_marker: true
+      hide_geocode_address: false
+      hide_coordinates: true
+      geoaddress_field:
+        field: '0'
+        hidden: false
+        disabled: true
+      map_geocoder:
+        control: 0
+        settings:
+          providers: {  }
+          min_terms: 4
+          delay: 800
+          options: ''
     third_party_settings: {  }
   field_footnotes:
     type: ghi_footnotes
