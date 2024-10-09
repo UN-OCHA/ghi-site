@@ -171,7 +171,7 @@ class PlanOverviewMap extends GHIBlockBase {
       }
 
       $plan_entity = $plan->getEntity();
-      $location = $plan_entity->getFocusCountryMapLocation();
+      $location = $plan_entity->getFocusCountryMapLocation() ?? $plan->getCountry();
       if (!$location) {
         continue;
       }
@@ -392,7 +392,7 @@ class PlanOverviewMap extends GHIBlockBase {
       }
 
       $plan_entity = $plan->getEntity();
-      $location = $plan_entity->getFocusCountryMapLocation();
+      $location = $plan_entity->getFocusCountryMapLocation() ?? $plan->getCountry();
       if (!$location) {
         continue;
       }
