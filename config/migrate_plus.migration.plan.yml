@@ -72,6 +72,11 @@ process:
         plugin: migration_lookup
         migration: country
         source: id
+  field_focus_country:
+    plugin: migration_lookup
+    migration: country
+    source: focus_country_id
+    no_stub: true
   field_plan_type:
     plugin: migration_lookup
     migration: plan_type
@@ -105,6 +110,7 @@ destination:
     - field_plan_costing
     - field_year
     - field_country
+    - field_focus_country
     - field_restricted
     - field_released
     - field_language

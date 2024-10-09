@@ -250,7 +250,7 @@
           let regex = new RegExp(search_text, "gi");
           let location_name = location_data.location_name.replace(regex, "<b>$&</b>");
           let tip = L.DomUtil.create('div');
-          tip.setAttribute('data-location-id', location_id);
+          tip.setAttribute('data-object-id', location_id);
           var subline = Drupal.t('Admin Level !level', {
             '!level': location_data.admin_level
           });

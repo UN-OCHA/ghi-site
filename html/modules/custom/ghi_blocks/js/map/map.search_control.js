@@ -89,13 +89,13 @@
     }
 
     let map_id = this._map._container.id;
-    let location_id = searchTips[this._tooltip.currentSelection]._text;
+    let object_id = searchTips[this._tooltip.currentSelection]._text;
 
-    let location_data = this.options.getLocationData(map_id, location_id);
+    let location_data = this.options.getLocationData(map_id, object_id);
     this._input.value = location_data.location_name;
 
     $('#' + map_id + ' .search-tip').removeClass('hover');
-    $('#' + map_id + ' .search-tip[data-location-id=' + location_id + ']').addClass('hover');
+    $('#' + map_id + ' .search-tip[data-object-id=' + object_id + ']').addClass('hover');
   }
   // Override the submit handler to use the location id instead of the
   // title shown in the input.
@@ -103,12 +103,12 @@
   L.Control.Search.prototype._handleSubmit = function() { //button and tooltip click and enter submit
 
     let searchTips = this._tooltip.hasChildNodes() ? this._tooltip.childNodes : [];
-    var location_id;
+    var object_id;
     if (typeof searchTips[this._tooltip.currentSelection] != 'undefined') {
-      location_id = searchTips[this._tooltip.currentSelection]._text;
+      object_id = searchTips[this._tooltip.currentSelection]._text;
     }
     else {
-      location_id = this._input.value;
+      object_id = this._input.value;
     }
 
     this._hideAutoType();
@@ -121,14 +121,14 @@
       if (this._input.value === '') { //hide _input only
         this.collapse();
       } else {
-        var loc = this._getLocation(location_id);
+        var loc = this._getLocation(object_id);
         if (loc == false) {
           this._fillRecordsCache();
           if (!this._tooltip.hasChildNodes()) {
             this.showAlert();
           }
         } else {
-          this.showLocation(loc, location_id);
+          this.showLocation(loc, object_id);
           this.fire('search:locationfound', {
               latlng: loc,
               text: this._input.value,

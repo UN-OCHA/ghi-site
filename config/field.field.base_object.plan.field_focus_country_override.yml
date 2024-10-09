@@ -1,0 +1,21 @@
+uuid: 53ae06ee-0faf-4235-8e1f-908ecbbd3e47
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_focus_country_override
+    - ghi_base_objects.base_object_type.plan
+  module:
+    - geofield
+id: base_object.plan.field_focus_country_override
+field_name: field_focus_country_override
+entity_type: base_object
+bundle: plan
+label: 'Focus country override'
+description: 'Override the map position of the focus country for this plan.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: geofield

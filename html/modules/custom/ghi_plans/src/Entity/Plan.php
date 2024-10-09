@@ -54,6 +54,60 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
+   * Get the focus country for the plan.
+   *
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
+   *   The country base object or NULL.
+   */
+  public function getFocusCountry() {
+    if (!$this->hasField('field_focus_country')) {
+      return NULL;
+    }
+    return $this->get('field_focus_country')->entity;
+  }
+
+  /**
+   * Get the focus country override for the plan.
+   *
+   * @return object|null
+   *   A latLng object or NULL.
+   */
+  public function getFocusCountryOverride() {
+    if (!$this->hasField('field_focus_country_override') || $this->get('field_focus_country_override')->isEmpty()) {
+      return NULL;
+    }
+    return [
+      (string) $this->get('field_focus_country_override')->lat,
+      (string) $this->get('field_focus_country_override')->lon,
+    ];
+  }
+
+  /**
+   * Get the focus country map location for the plan.
+   *
+   * @return object|null
+   *   An object describing the map location or NULL.
+   */
+  public function getFocusCountryMapLocation() {
+    $focus_country = $this->getFocusCountry();
+    if (!$focus_country) {
+      return NULL;
+    }
+    $lat_lng = [
+      (string) $focus_country->get('field_latitude')->value,
+      (string) $focus_country->get('field_longitude')->value,
+    ];
+    if ($override = $this->getFocusCountryOverride()) {
+      $lat_lng = $override;
+    }
+    return (object) [
+      'id' => $focus_country->getSourceId(),
+      'name' => $focus_country->label(),
+      'latLng' => $lat_lng,
+    ];
+  }
+
+  /**
    * Get the plan language.
    *
    * @return string|null
