@@ -44,6 +44,12 @@ msgstr "Marco lógico del sector @cluster_name"
 msgid "See sector framework"
 msgstr "Ver el marco lógico"
 
+msgid "People reached"
+msgstr "Personas atendidas"
+
+msgid "Measure"
+msgstr "Medida"
+
 msgid "Progress"
 msgstr "Progreso"
 

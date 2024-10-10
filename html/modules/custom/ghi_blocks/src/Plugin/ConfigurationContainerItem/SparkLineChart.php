@@ -5,6 +5,7 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
+use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\hpc_common\Helpers\ThemeHelper;
@@ -99,17 +100,21 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getDefaultLabel() {
-    /** @var \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype */
-    $attachment_prototype = $this->getContextValue('attachment_prototype');
+    // Get the protoype, as that is where the labels come from.
     $attachment = $this->getContextValue('attachment');
-    $data_point_options = $attachment_prototype->getMeasurementMetricFields();
-    $data_point = $this->get('data_point') ?? array_key_first($data_point_options);
-    if ($attachment) {
-      return $attachment->fields[$data_point];
-    }
     $attachment_prototype = $this->getContextValue('attachment_prototype');
-    $fields = array_merge($attachment_prototype->fields ?? []);
-    return $fields[$data_point];
+    if (!$attachment_prototype && $attachment instanceof DataAttachment) {
+      $attachment_prototype = $attachment->getPrototype();
+    }
+    if (!$attachment_prototype instanceof AttachmentPrototype) {
+      return NULL;
+    }
+    $data_point_options = $attachment_prototype->getMeasurementMetricFields();
+    $data_point_index = $this->get('data_point') ?? array_key_first($data_point_options);
+
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
+    $plan_object = $this->getContextValue('plan_object') ?? NULL;
+    return $attachment_prototype->getDefaultFieldLabel($data_point_index, $plan_object?->getPlanLanguage());
   }
 
   /**

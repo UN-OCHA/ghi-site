@@ -392,7 +392,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
       if (!$attachment instanceof DataAttachment) {
         return FALSE;
       }
-      if ($prototype_id && $prototype_id != $attachment->getPrototype()->id()) {
+      if ($prototype_id && $prototype_id != $attachment->getPrototype()?->id()) {
         return FALSE;
       }
       $source_entity = $attachment->getSourceEntity();

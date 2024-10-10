@@ -3,6 +3,7 @@
 namespace Drupal\hpc_api\ApiObjects;
 
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
@@ -11,6 +12,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 abstract class ApiObjectBase implements ApiObjectInterface {
 
   use StringTranslationTrait;
+  use DependencySerializationTrait;
 
   /**
    * The original data for an object from the HPC API.
@@ -105,7 +107,7 @@ abstract class ApiObjectBase implements ApiObjectInterface {
    *   The mapped data as an array.
    */
   public function toArray() {
-    return (array) $this->map;
+    return (array) $this->map ?? [];
   }
 
   /**
@@ -134,6 +136,32 @@ abstract class ApiObjectBase implements ApiObjectInterface {
    */
   public function getCacheTags() {
     return $this->cacheTags;
+  }
+
+  /**
+   * Serialize the data for this object.
+   *
+   * @return array
+   *   An array with serialized data for this object.
+   */
+  public function __serialize() {
+    return ['data' => serialize($this->data)];
+  }
+
+  /**
+   * Unserialize this object based on the given data.
+   *
+   * @param array $data
+   *   The serialized data.
+   */
+  public function __unserialize(array $data) {
+    if (empty($data['data'])) {
+      return;
+    }
+    $this->setRawData(unserialize($data['data']));
+    if ($this->data) {
+      $this->updateMap();
+    }
   }
 
 }

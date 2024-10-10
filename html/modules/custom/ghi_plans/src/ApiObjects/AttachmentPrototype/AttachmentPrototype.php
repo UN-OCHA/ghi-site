@@ -173,6 +173,33 @@ class AttachmentPrototype extends ApiObjectBase {
   }
 
   /**
+   * Get the default label for the field with the given index.
+   *
+   * @param int $index
+   *   The index of the field in the prototype.
+   * @param string|null $langcode
+   *   A language code.
+   *
+   * @return string|null
+   *   The (translated) field label or NULL.
+   */
+  public function getDefaultFieldLabel($index, $langcode = NULL) {
+    $field_types = $this->getFieldTypes();
+    if ($type = $field_types[$index]) {
+      // This is the place for special handling of some types.
+      switch ($type) {
+        case 'cumulative_reach':
+          return (string) $this->t('People reached', [], ['langcode' => $langcode]);
+
+        case 'measure':
+          return (string) $this->t('Measure', [], ['langcode' => $langcode]);
+      }
+    }
+    $fields = $this->getFields();
+    return $fields[$index] ?? NULL;
+  }
+
+  /**
    * Get the available calculation methods for measures in this prototype.
    *
    * @return array
