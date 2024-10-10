@@ -406,7 +406,6 @@ class LogframeManager implements ContainerInjectionInterface {
       'id' => 0,
     ];
     // Take the in need and target metrics and the first measurement.
-    $fields = $attachment_prototype->getFields();
     $field_types = $attachment_prototype->getFieldTypes();
     $in_need = array_search('in_need', $field_types);
     $target = array_search('target', $field_types);
@@ -418,7 +417,6 @@ class LogframeManager implements ContainerInjectionInterface {
       $target,
       $measure,
     ];
-
     $available_fields = array_filter($available_fields, function ($field) {
       return $field !== NULL;
     });
@@ -452,7 +450,7 @@ class LogframeManager implements ContainerInjectionInterface {
         'id' => count($columns),
         'item_type' => 'data_point',
         'config' => [
-          'label' => $fields[$measure] . ' %',
+          'label' => $attachment_prototype->getDefaultFieldLabel($index, $plan->getPlanLanguage()) . ' %',
           'data_point' => [
             'processing' => 'calculated',
             'calculation' => 'percentage',
