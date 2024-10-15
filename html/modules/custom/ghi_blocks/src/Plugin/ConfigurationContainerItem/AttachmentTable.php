@@ -193,12 +193,11 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   public function getColumns(array $conf = NULL) {
     $conf = $conf ?? ($this->getConfig()['table_form'] ?? []);
     if (empty($conf['columns'])) {
-      $prototype = $this->getAttachmentPrototype();
       $conf['columns'] = [
         [
           'item_type' => 'attachment_label',
           'config' => [
-            'label' => $prototype?->getName() ?? (string) $this->t('Indicator'),
+            'label' => NULL,
           ],
         ],
       ];

@@ -401,7 +401,7 @@ class LogframeManager implements ContainerInjectionInterface {
     $columns[] = [
       'item_type' => 'attachment_label',
       'config' => [
-        'label' => $this->t('Caseload', [], ['langcode' => $plan->getPlanLanguage()]),
+        'label' => NULL,
       ],
       'id' => 0,
     ];
@@ -486,13 +486,12 @@ class LogframeManager implements ContainerInjectionInterface {
    *   container items.
    */
   private function buildIndicatorColumns(AttachmentPrototype $attachment_prototype, Plan $plan) {
-
     $columns = [];
     // Setup the columns.
     $columns[] = [
       'item_type' => 'attachment_label',
       'config' => [
-        'label' => $this->t('Indicator', [], ['langcode' => $plan->getPlanLanguage()]),
+        'label' => NULL,
       ],
       'id' => count($columns),
     ];
