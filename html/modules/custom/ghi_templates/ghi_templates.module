@@ -7,6 +7,7 @@
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\ghi_templates\Entity\PageTemplateInterface;
 use Drupal\layout_builder\SectionStorageInterface;
@@ -91,6 +92,16 @@ function ghi_templates_entity_operation_alter(array &$operations, EntityInterfac
   /** @var \Drupal\ghi_templates\TemplateLinkBuilder $template_link_builder */
   $template_link_builder = \Drupal::service('ghi_templates.link_builder');
   $template_link_builder->alterEntityOperations($operations, $entity);
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function ghi_templates_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  if (!in_array($form_id, ['page_template_edit_form', 'page_template_form'])) {
+    return;
+  }
+  $form['status']['widget']['value']['#title'] = t('Active');
 }
 
 /**

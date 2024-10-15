@@ -258,8 +258,8 @@ display:
           type: boolean
           settings:
             format: custom
-            format_custom_false: Unpublished
-            format_custom_true: Published
+            format_custom_false: "Not displayed"
+            format_custom_true: Displayed
         changed:
           id: changed
           table: node_field_data
