@@ -55,7 +55,12 @@ class RemoveCheckLoggedIn implements EventSubscriberInterface {
     $query_args = $request->query->all();
     if (array_key_exists('check_logged_in', $query_args) && $this->currentUser->isAnonymous()) {
       unset($query_args['check_logged_in']);
-      $url = Url::createFromRequest($request);
+      try {
+        $url = Url::createFromRequest($request);
+      }
+      catch (\Exception $e) {
+        return;
+      }
       $url->setOption('query', $query_args);
       $event->setResponse(new CacheableRedirectResponse($url->toString()));
     }
