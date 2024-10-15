@@ -86,8 +86,11 @@ class ImportBlockForm extends ConfigureBlockFormBase {
           $component = new SectionComponent($this->uuidGenerator->generate(), $region, $plugin_config);
           $plugin = $component->getPlugin();
           if ($plugin instanceof GHIBlockBase && $plugin instanceof ConfigValidationInterface) {
+            /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
             $entity = $section_storage->getContextValue('entity');
-            $plugin->setContext('entity', EntityContext::fromEntity($entity, $entity->type->entity->label()));
+            $entity_type = $entity->getEntityType();
+            $entity_type_label = $entity_type->hasKey('bundle') ? $entity->type->entity->label() : $entity_type->getLabel();
+            $plugin->setContext('entity', EntityContext::fromEntity($entity, $entity_type_label));
             $plugin->fixConfigErrors();
             $configuration = $plugin->getConfiguration();
             $component->setConfiguration($configuration);
