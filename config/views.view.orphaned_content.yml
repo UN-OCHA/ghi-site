@@ -254,8 +254,8 @@ display:
           type: boolean
           settings:
             format: custom
-            format_custom_false: Unpublished
-            format_custom_true: Published
+            format_custom_false: 'Not displayed'
+            format_custom_true: Displayed
           group_column: value
           group_columns: {  }
           group_rows: true
