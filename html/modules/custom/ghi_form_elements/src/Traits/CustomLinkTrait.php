@@ -314,7 +314,7 @@ trait CustomLinkTrait {
       if ($key == 'cluster_logframe') {
         $options[$option_key][$key] = ucfirst((string) new TranslatableMarkup('Cluster @type page (@uri)', $args));
       }
-      if ($key == 'cluster_parent') {
+      elseif ($key == 'cluster_parent') {
         $options[$option_key][$key] = ucfirst((string) new TranslatableMarkup('Cluster page (@uri)', $args));
       }
       else {
