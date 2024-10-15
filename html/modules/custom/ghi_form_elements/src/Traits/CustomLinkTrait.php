@@ -83,20 +83,19 @@ trait CustomLinkTrait {
       $link->setUrl($node->toUrl());
     }
 
+    $is_external = $link->getUrl()->isExternal();
     $attributes = $link->getUrl()->getOption('attributes');
 
     if ($label === NULL) {
-      if ($link->getUrl()->isExternal()) {
-        $link->setText($this->t('Open'));
-        $attributes['target'] = '_blank';
-      }
-      else {
-        $link->setText($this->t('Go to page'));
-      }
+      $link->setText($is_external ? $this->t('Open') : $this->t('Go to page'));
+    }
+
+    if ($is_external) {
+      $attributes['target'] = '_blank';
     }
 
     $classes = ['cd-button'];
-    $classes[] = $link->getUrl()->isExternal() ? 'external' : 'read-more';
+    $classes[] = $is_external ? 'external' : 'read-more';
     if (!$anonymous_access) {
       $classes[] = 'no-public-access';
       $attributes['data-tippy-content'] = $this->t('This link will not be displayed publicly because an anonymous user has no access to the targeted page.');
