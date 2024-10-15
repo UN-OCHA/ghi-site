@@ -67,3 +67,9 @@ msgstr "Plan de réponse"
 
 msgid "Projects"
 msgstr "Projets"
+
+msgid "Caseload"
+msgstr "Données de population"
+
+msgid "Indicator"
+msgstr "Indicateur"
