@@ -186,7 +186,12 @@ class PlanOverviewMap extends GHIBlockBase {
 
       $country_objects[] = (object) [
         'plan' => $plan,
-        'title' => $section && $section->isPublished() ? $section->toLink($location->name)->toString() : $location->name,
+        'title' => $section && $section->isPublished() ? $section->toLink($plan_entity->getShortName())->toString() : $plan_entity->getShortName(),
+        'tooltip' => implode(' ', [
+          $plan_entity->getShortName(),
+          $plan_entity->getYear(),
+          $plan_entity->getPlanTypeShortLabel(FALSE),
+        ]),
         'location' => $location,
         'funding' => (object) [
           'total_funding' => $funding,
@@ -223,6 +228,7 @@ class PlanOverviewMap extends GHIBlockBase {
         'requirements' => $object->funding->total_requirements,
         'funding' => $object->funding->total_funding,
         'coverage' => $object->funding->funding_progress,
+        'tooltip' => $object->tooltip,
         'plan_type' => strtolower($plan->getTypeShortName()),
       ];
       $modal_contents[(string) $object_id] = [
