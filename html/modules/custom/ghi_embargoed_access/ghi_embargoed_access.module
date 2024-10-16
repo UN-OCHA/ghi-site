@@ -7,6 +7,7 @@
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\node\NodeInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -89,4 +90,16 @@ function ghi_embargoed_access_form_entity_access_password_password_submit(array 
   $path = \Drupal::request()->getPathInfo();
   $redirect = new RedirectResponse($path, Response::HTTP_SEE_OTHER);
   $form_state->setResponse($redirect);
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function ghi_embargoed_access_entity_operation(EntityInterface $entity) {
+  if (!$entity instanceof NodeInterface) {
+    return;
+  }
+  /** @var \Drupal\ghi_embargoed_access\EmbargoedAccessManager $embargoed_access_manager */
+  $embargoed_access_manager = \Drupal::service('ghi_embargoed_access.manager');
+  return $embargoed_access_manager->getOperationLinks($entity);
 }
