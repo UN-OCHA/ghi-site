@@ -277,5 +277,5 @@ function ghi_templates_theme_suggestions_alter(array &$suggestions, array $varia
     $suggestions[] = $hook . '__gin_lb';
     $suggestions = array_merge($suggestions, $additional_suggestions);
   }
-
+  $suggestions = array_unique($suggestions);
 }

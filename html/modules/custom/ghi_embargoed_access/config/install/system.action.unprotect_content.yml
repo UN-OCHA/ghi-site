@@ -4,7 +4,7 @@ dependencies:
   module:
     - node
 id: unprotect_content
-label: 'Unprotect Content'
+label: "Don’t password-protect"
 type: node
 plugin: unprotect_content
 configuration: {  }

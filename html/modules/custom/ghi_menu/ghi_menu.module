@@ -6,10 +6,12 @@
  */
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ghi_menu\Entity\GhiMenuLinkContent;
+use Drupal\node\NodeInterface;
 use Drupal\taxonomy\VocabularyInterface;
 
 /**
@@ -26,6 +28,27 @@ function ghi_menu_entity_type_alter(array &$entity_types) {
   /** @var \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type */
   $entity_type = $entity_types['menu_link_content'];
   $entity_type->setClass(GhiMenuLinkContent::class);
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function ghi_menu_entity_operation(EntityInterface $entity) {
+  if (!$entity instanceof NodeInterface) {
+    return;
+  }
+  /** @var \Drupal\ghi_menu\GhiEntityOperationsManager $operations_manager */
+  $operations_manager = \Drupal::service('ghi_menu.entity_operations_manager');
+  return $operations_manager->getOperationLinks($entity);
+}
+
+/**
+ * Implements hook_entity_operation_alter().
+ */
+function ghi_menu_entity_operation_alter(array &$operations, EntityInterface $entity) {
+  if ($entity instanceof NodeInterface) {
+    unset($operations['translate']);
+  }
 }
 
 /**

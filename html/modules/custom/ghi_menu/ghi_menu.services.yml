@@ -1,4 +1,7 @@
 services:
+  ghi_menu.entity_operations_manager:
+    class: Drupal\ghi_menu\GhiEntityOperationsManager
+    arguments: ['@publishcontent.access', '@csrf_token', '@redirect.destination', '@current_user']
   ghi_menu.route_subscriber:
     class: Drupal\ghi_menu\EventSubscriber\RouteSubscriber
     tags:
