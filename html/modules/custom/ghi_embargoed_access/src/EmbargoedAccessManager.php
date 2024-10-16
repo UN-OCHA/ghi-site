@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_embargoed_access;
 
+use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -9,7 +10,9 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RedirectDestinationInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
 use Drupal\entity_access_password\Cache\Context\EntityIsProtectedCacheContext;
 use Drupal\entity_access_password\Service\PasswordAccessManagerInterface;
 use Drupal\entity_access_password\Service\RouteParserInterface;
@@ -77,15 +80,31 @@ class EmbargoedAccessManager {
   protected $searchApiTrackingManager;
 
   /**
+   * The CSRF token generator.
+   *
+   * @var \Drupal\Core\Access\CsrfTokenGenerator
+   */
+  protected $csrfToken;
+
+  /**
+   * The redirect destination service.
+   *
+   * @var \Drupal\Core\Routing\RedirectDestinationInterface
+   */
+  protected $redirectDestination;
+
+  /**
    * Constructs an embargoed access manager class.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ConfigFactoryInterface $config_factory, RouteParserInterface $route_parser = NULL, PasswordAccessManagerInterface $password_access_manager = NULL, ContentEntityTrackingManager $search_api_tracking_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ConfigFactoryInterface $config_factory, RouteParserInterface $route_parser = NULL, PasswordAccessManagerInterface $password_access_manager = NULL, ContentEntityTrackingManager $search_api_tracking_manager, CsrfTokenGenerator $csrf_token, RedirectDestinationInterface $redirect_destination) {
     $this->entityTypeManager = $entity_type_manager;
     $this->entityFieldManager = $entity_field_manager;
     $this->configFactory = $config_factory;
     $this->routeParser = $route_parser;
     $this->passwordAccessManager = $password_access_manager;
     $this->searchApiTrackingManager = $search_api_tracking_manager;
+    $this->csrfToken = $csrf_token;
+    $this->redirectDestination = $redirect_destination;
   }
 
   /**
@@ -284,6 +303,19 @@ class EmbargoedAccessManager {
   }
 
   /**
+   * Checks if the given node supports protection.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to check.
+   *
+   * @return bool
+   *   TRUE if the node supports protectin, FALSE otherwise.
+   */
+  public function supportsProtections(NodeInterface $node) {
+    return $node->hasField(self::PROTECTED_FIELD);
+  }
+
+  /**
    * Check if the given node is protected.
    *
    * @param \Drupal\node\NodeInterface $node
@@ -388,6 +420,43 @@ class EmbargoedAccessManager {
       'type' => $node_type->id(),
       self::PROTECTED_FIELD . '.is_protected' => TRUE,
     ]);
+  }
+
+  /**
+   * Get the operations links for the given subpage.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node.
+   *
+   * @return array
+   *   An array of operations links.
+   */
+  public function getOperationLinks(NodeInterface $node) {
+    $links = [];
+
+    if (!$this->embargoedAccessEnabled() || !$this->supportsProtections($node)) {
+      return $links;
+    }
+
+    // The token for the publishing links need to be generated manually here.
+    $token = $this->csrfToken->get('node/' . $node->id() . '/embargoed-access/toggle');
+
+    $destination = $this->redirectDestination->getAsArray();
+
+    if ($node->access('update')) {
+      $route_args = ['node' => $node->id()];
+      $options = [
+        'query' => [
+          'token' => $token,
+        ] + $destination,
+      ];
+      $links['toggle_protected'] = [
+        'title' => !$this->isProtected($node) ? $this->t('Password-protect') : $this->t("Don't password-protect"),
+        'url' => Url::fromRoute('ghi_embargoed_access.toggle', $route_args, $options),
+        'weight' => 60,
+      ];
+    }
+    return $links;
   }
 
 }

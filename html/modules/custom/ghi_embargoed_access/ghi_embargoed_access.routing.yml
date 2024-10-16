@@ -1,3 +1,9 @@
+ghi_embargoed_access.toggle:
+  path: 'node/{node}/embargoed-access/toggle'
+  defaults:
+    _controller: 'Drupal\ghi_embargoed_access\Controller\EmbargoedAccessController::toggleStatus'
+  requirements:
+    _csrf_token: 'TRUE'
 ghi_embargoed_access.settings:
   path: 'admin/config/ghi/embargoed-access'
   defaults:

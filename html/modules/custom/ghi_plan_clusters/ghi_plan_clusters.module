@@ -88,10 +88,8 @@ function ghi_plan_clusters_section_post_save(SectionNodeInterface $section_node)
       $subpage->setUnpublished();
       $subpage->save();
 
-      \Drupal::messenger()->addStatus(t('Cluster subpage @subpage has been unpublished (@id, @revision_id).', [
+      \Drupal::messenger()->addStatus(t("Cluster subpage @subpage has been set to Don't display.", [
         '@subpage' => $subpage->label(),
-        '@id' => $subpage->id(),
-        '@revision_id' => $subpage->getRevisionId(),
       ]));
     }
   }
