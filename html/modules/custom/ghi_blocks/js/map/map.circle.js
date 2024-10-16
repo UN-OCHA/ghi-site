@@ -205,12 +205,15 @@
     $('#' + map_id + ' .map-circle-tooltip').css("top", y);
     $('#' + map_id + ' .map-circle-tooltip').css("left", x);
     $('#' + map_id + ' .map-circle-tooltip').css("z-index", 100000);
-    let tooltip = '<b>Location:</b> ' + d.location_name + '<br />';
-    if (d.hasOwnProperty('offset_chain') && d.offset_chain.length && d.hasOwnProperty('plan_type')) {
-      tooltip += '<b>Plan type :</b> ' + state.options.legend[d.plan_type];
-    }
-    if (typeof state.tab_data.metric != 'undefined') {
-      tooltip += '<b>Total ' + state.tab_data.metric.name.en.toLowerCase() +':</b> ' + Drupal.theme('number', d.total);
+    let tooltip = d.hasOwnProperty('tooltip') ? d.tooltip : null;
+    if (tooltip === null) {
+      tooltip = '<b>Location:</b> ' + d.location_name + '<br />';
+      if (d.hasOwnProperty('offset_chain') && d.offset_chain.length && d.hasOwnProperty('plan_type')) {
+        tooltip += '<b>Plan type :</b> ' + state.options.legend[d.plan_type];
+      }
+      if (typeof state.tab_data.metric != 'undefined') {
+        tooltip += '<b>Total ' + state.tab_data.metric.name.en.toLowerCase() +':</b> ' + Drupal.theme('number', d.total);
+      }
     }
     $('#' + map_id + ' .map-circle-tooltip').html(tooltip);
   }
