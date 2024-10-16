@@ -296,7 +296,7 @@ trait CustomLinkTrait {
    * @return array
    *   An array of link option labels, keyed by internal name, value is a label.
    */
-  public static function getLinkTargetOptions($section_node, $page_node) {
+  public static function getLinkTargetOptions(SectionNodeInterface $section_node, $page_node) {
     $targets = self::getLinkTargets($section_node, $page_node);
     $internal_key = (string) t('Internal pages');
     $external_key = (string) t('External pages');
