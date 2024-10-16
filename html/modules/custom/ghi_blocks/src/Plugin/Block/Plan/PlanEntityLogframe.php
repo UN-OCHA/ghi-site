@@ -727,8 +727,11 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       'sort' => TRUE,
       'sort_column' => 'id_ASC',
     ]);
+    // This can be any parent node, e.g. SectionNode or PlanClusterNode.
+    $base_entity = $this->getCurrentBaseEntity();
+    $section_node = $this->sectionManager->getCurrentSection($base_entity);
     return [
-      'section_node' => $this->getCurrentBaseEntity(),
+      'section_node' => $section_node,
       'page_node' => $this->getPageNode(),
       'plan_object' => $plan_object,
       'base_object' => $this->getCurrentBaseObject(),
