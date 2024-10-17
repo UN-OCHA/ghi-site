@@ -5,7 +5,7 @@ namespace Drupal\ghi_blocks\Element;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\FormElement;
-use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
+use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 use Drupal\link\LinkItemInterface;
 use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
 
@@ -16,7 +16,7 @@ use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
  */
 class CarouselItem extends FormElement {
 
-  use OptionalLinkTrait;
+  use CustomLinkTrait;
 
   const THUMBNAIL_DIRECTORY = 'public://content-panes/carousel-items/';
 

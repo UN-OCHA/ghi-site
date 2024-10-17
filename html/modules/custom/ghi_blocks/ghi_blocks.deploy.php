@@ -5,6 +5,7 @@
  * Contains deploy functions for the GHI Blocks module.
  */
 
+use Drupal\ghi_blocks\Helpers\LinkConfigurationUpdateHelper;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\SectionComponent;
 
@@ -216,4 +217,166 @@ function ghi_blocks_deploy_9005_remove_field_block_revisions(&$sandbox) {
   return t('Updated @count_nodes nodes', [
     '@count_nodes' => $count_revisions,
   ]);
+}
+
+/**
+ * Update link configuration for various elements on nodes.
+ */
+function ghi_blocks_deploy_9006_update_link_configuration_nodes(&$sandbox) {
+  set_time_limit(30);
+  if (!isset($sandbox['nodes'])) {
+    $result = \Drupal::database()->select('node__layout_builder__layout')
+      ->fields('node__layout_builder__layout', ['entity_id'])
+      ->condition('layout_builder__layout_section', "%link%", 'LIKE')
+      ->orderBy('entity_id')
+      ->execute();
+    $sandbox['nodes'] = array_map(function ($row) {
+      return $row->entity_id;
+    }, $result->fetchAll());
+    $sandbox['total'] = count($sandbox['nodes']);
+    $sandbox['updated'] = 0;
+  }
+  for ($i = 0; $i < 25; $i++) {
+    if (empty($sandbox['nodes'])) {
+      continue;
+    }
+    $node_id = array_shift($sandbox['nodes']);
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($node_id);
+    if (!$node) {
+      continue;
+    }
+
+    $changed = FALSE;
+    if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+      continue;
+    }
+    $sections = $node->get(OverridesSectionStorage::FIELD_NAME)->getValue();
+    if (empty($sections)) {
+      continue;
+    }
+    /** @var \Drupal\layout_builder\Section $section */
+    $section = &$sections[0]['section'];
+    $components = $section->getComponents();
+    if (empty($components)) {
+      continue;
+    }
+    foreach ($components as $component) {
+      switch ($component->getPluginId()) {
+        case 'plan_headline_figures':
+          $changed = LinkConfigurationUpdateHelper::updatePlanHeadlinerFiguresComponent($component) || $changed;
+          break;
+
+        case 'links':
+          $changed = LinkConfigurationUpdateHelper::updateLinksComponent($component) || $changed;
+          break;
+
+        case 'plan_entity_logframe':
+          $changed = LinkConfigurationUpdateHelper::updatePlanEntityTypesComponent($component) || $changed;
+          break;
+      }
+    }
+
+    if ($changed) {
+      $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+      $node->setNewRevision(FALSE);
+      $node->setSyncing(TRUE);
+      $node->save();
+      $sandbox['updated']++;
+    }
+  }
+
+  $sandbox['#finished'] = 1 / (count($sandbox['nodes']) + 1);
+  if ($sandbox['#finished'] === 1) {
+    return t('Updated link configurations in @count_changed / @count_total nodes', [
+      '@count_changed' => $sandbox['updated'],
+      '@count_total' => $sandbox['total'],
+    ]);
+  }
+  else {
+    return t('Processed @count_processed / @count_total nodes', [
+      '@count_processed' => $sandbox['total'] - count($sandbox['nodes']),
+      '@count_total' => $sandbox['total'],
+    ]);
+  }
+}
+
+/**
+ * Update link configuration for various elements on page templates.
+ */
+function ghi_blocks_deploy_9007_update_link_configuration_page_templates(&$sandbox) {
+  set_time_limit(30);
+  if (!isset($sandbox['page_templates'])) {
+    $result = \Drupal::database()->select('page_template__layout_builder__layout')
+      ->fields('page_template__layout_builder__layout', ['entity_id'])
+      ->condition('layout_builder__layout_section', "%link%", 'LIKE')
+      ->orderBy('entity_id')
+      ->execute();
+    $sandbox['page_templates'] = array_map(function ($row) {
+      return $row->entity_id;
+    }, $result->fetchAll());
+    $sandbox['total'] = count($sandbox['page_templates']);
+    $sandbox['updated'] = 0;
+  }
+  for ($i = 0; $i < 25; $i++) {
+    if (empty($sandbox['page_templates'])) {
+      continue;
+    }
+    $page_template_id = array_shift($sandbox['page_templates']);
+    /** @var \Drupal\ghi_templates\Entity\PageTemplateInterface $page_template */
+    $page_template = \Drupal::entityTypeManager()->getStorage('page_template')->load($page_template_id);
+    if (!$page_template) {
+      continue;
+    }
+
+    $changed = FALSE;
+    if (!$page_template->hasField(OverridesSectionStorage::FIELD_NAME)) {
+      continue;
+    }
+    $sections = $page_template->get(OverridesSectionStorage::FIELD_NAME)->getValue();
+    if (empty($sections)) {
+      continue;
+    }
+    /** @var \Drupal\layout_builder\Section $section */
+    $section = &$sections[0]['section'];
+    $components = $section->getComponents();
+    if (empty($components)) {
+      continue;
+    }
+    foreach ($components as $component) {
+      switch ($component->getPluginId()) {
+        case 'plan_headline_figures':
+          $changed = LinkConfigurationUpdateHelper::updatePlanHeadlinerFiguresComponent($component) || $changed;
+          break;
+
+        case 'links':
+          $changed = LinkConfigurationUpdateHelper::updateLinksComponent($component) || $changed;
+          break;
+
+        case 'plan_entity_logframe':
+          $changed = LinkConfigurationUpdateHelper::updatePlanEntityTypesComponent($component) || $changed;
+          break;
+      }
+    }
+
+    if ($changed) {
+      $page_template->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+      $page_template->save();
+      $sandbox['updated']++;
+    }
+  }
+
+  $sandbox['#finished'] = 1 / (count($sandbox['page_templates']) + 1);
+  if ($sandbox['#finished'] === 1) {
+    return t('Updated link configurations in @count_changed / @count_total page templates', [
+      '@count_changed' => $sandbox['updated'],
+      '@count_total' => $sandbox['total'],
+    ]);
+  }
+  else {
+    return t('Processed @count_processed / @count_total page templates', [
+      '@count_processed' => $sandbox['total'] - count($sandbox['page_templates']),
+      '@count_total' => $sandbox['total'],
+    ]);
+  }
 }
