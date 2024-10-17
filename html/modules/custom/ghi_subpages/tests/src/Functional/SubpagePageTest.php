@@ -3,14 +3,14 @@
 namespace Drupal\Tests\ghi_subpages\Functional;
 
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\ghi_subpages\Helpers\SubpageHelper;
-use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
+use Drupal\ghi_subpages\Helpers\SubpageHelper;
+use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

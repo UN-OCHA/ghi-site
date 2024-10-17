@@ -107,7 +107,7 @@ function ghi_templates_form_alter(array &$form, FormStateInterface $form_state, 
 /**
  * Implements hook_layout_builder_view_context_alter().
  */
-function ghi_templates_layout_builder_view_context_alter(array &$contexts, SectionStorageInterface $section_storage = NULL, $sample = FALSE) {
+function ghi_templates_layout_builder_view_context_alter(array &$contexts, ?SectionStorageInterface $section_storage = NULL, $sample = FALSE) {
 
   // See if there is a context.
   $entity_context = $contexts['layout_builder.entity'] ?? ($contexts['entity'] ?? ($contexts['page_template'] ?? NULL));

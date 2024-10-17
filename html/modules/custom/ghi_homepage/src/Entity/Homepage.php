@@ -26,7 +26,7 @@ class Homepage extends Node {
   /**
    * {@inheritdoc}
    */
-  public function access($operation = 'view', AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($operation = 'view', ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $account = $account ?? \Drupal::currentUser();
     if ($operation == 'view' && $account->isAnonymous()) {
       return $return_as_object ? new AccessResultForbidden() : FALSE;

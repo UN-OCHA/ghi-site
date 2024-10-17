@@ -82,7 +82,7 @@ class HeroImageManager {
    * @return array
    *   An array with the image properties.
    */
-  public function getImageProperties(FieldItemListInterface $items, FormatterInterface $formatter = NULL) {
+  public function getImageProperties(FieldItemListInterface $items, ?FormatterInterface $formatter = NULL) {
     $image_url = NULL;
     $file_uri = NULL;
     $credit = NULL;

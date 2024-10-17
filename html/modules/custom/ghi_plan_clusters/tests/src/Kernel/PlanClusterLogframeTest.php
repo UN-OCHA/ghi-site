@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\ghi_plan_clusters\Kernel;
 
-use Drupal\ghi_sections\Entity\SectionNodeInterface;
-use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\ghi_plan_clusters\Traits\PlanClusterTestTrait;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_subpages\Entity\LogframeSubpage;
 
 /**
  * Test class for section subpages tests.

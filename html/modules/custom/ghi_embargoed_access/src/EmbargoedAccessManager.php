@@ -59,20 +59,6 @@ class EmbargoedAccessManager {
   protected $configFactory;
 
   /**
-   * The route parser.
-   *
-   * @var \Drupal\entity_access_password\Service\RouteParserInterface
-   */
-  protected $routeParser;
-
-  /**
-   * The password access manager.
-   *
-   * @var \Drupal\entity_access_password\Service\PasswordAccessManagerInterface
-   */
-  protected $passwordAccessManager;
-
-  /**
    * The Search API tracking manager.
    *
    * @var \Drupal\search_api\Plugin\search_api\datasource\ContentEntityTrackingManager
@@ -94,17 +80,31 @@ class EmbargoedAccessManager {
   protected $redirectDestination;
 
   /**
+   * The route parser.
+   *
+   * @var \Drupal\entity_access_password\Service\RouteParserInterface
+   */
+  protected $routeParser;
+
+  /**
+   * The password access manager.
+   *
+   * @var \Drupal\entity_access_password\Service\PasswordAccessManagerInterface
+   */
+  protected $passwordAccessManager;
+
+  /**
    * Constructs an embargoed access manager class.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ConfigFactoryInterface $config_factory, RouteParserInterface $route_parser = NULL, PasswordAccessManagerInterface $password_access_manager = NULL, ContentEntityTrackingManager $search_api_tracking_manager, CsrfTokenGenerator $csrf_token, RedirectDestinationInterface $redirect_destination) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ConfigFactoryInterface $config_factory, ContentEntityTrackingManager $search_api_tracking_manager, CsrfTokenGenerator $csrf_token, RedirectDestinationInterface $redirect_destination, ?RouteParserInterface $route_parser = NULL, ?PasswordAccessManagerInterface $password_access_manager = NULL) {
     $this->entityTypeManager = $entity_type_manager;
     $this->entityFieldManager = $entity_field_manager;
     $this->configFactory = $config_factory;
-    $this->routeParser = $route_parser;
-    $this->passwordAccessManager = $password_access_manager;
     $this->searchApiTrackingManager = $search_api_tracking_manager;
     $this->csrfToken = $csrf_token;
     $this->redirectDestination = $redirect_destination;
+    $this->routeParser = $route_parser;
+    $this->passwordAccessManager = $password_access_manager;
   }
 
   /**

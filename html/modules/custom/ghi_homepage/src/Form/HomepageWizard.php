@@ -29,7 +29,7 @@ class HomepageWizard extends WizardBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?NodeInterface $node = NULL) {
     $form = parent::buildForm($form, $form_state, $node);
 
     // Get the team options.

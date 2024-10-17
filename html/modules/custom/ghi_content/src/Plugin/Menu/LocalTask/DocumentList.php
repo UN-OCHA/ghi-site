@@ -57,7 +57,7 @@ class DocumentList extends LocalTaskDefault implements ContainerFactoryPluginInt
   /**
    * {@inheritdoc}
    */
-  public function getTitle(Request $request = NULL) {
+  public function getTitle(?Request $request = NULL) {
     $node = $this->routeMatch->getParameter('node');
     if ($node && !$this->isSectionNode($node) && $this->getSectionNode($node)) {
       return $this->t('Section document pages');

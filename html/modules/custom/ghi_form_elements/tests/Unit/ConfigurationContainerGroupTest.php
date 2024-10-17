@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\ghi_form_elements\Unit;
 
-use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\Tests\UnitTestCase;
+use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 
 /**
  * @covers Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup

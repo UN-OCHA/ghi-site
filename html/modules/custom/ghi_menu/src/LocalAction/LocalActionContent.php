@@ -36,7 +36,7 @@ class LocalActionContent extends LocalActionDefault {
   /**
    * {@inheritdoc}
    */
-  public function getTitle(Request $request = NULL) {
+  public function getTitle(?Request $request = NULL) {
     $node_type = $this->entityTypeManager->getStorage('node_type')->load(self::DEFAULT_BUNDLE);
     if (!$node_type) {
       return parent::getTitle($request);

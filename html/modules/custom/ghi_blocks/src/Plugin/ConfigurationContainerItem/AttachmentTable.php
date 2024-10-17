@@ -190,7 +190,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    * @return array
    *   An array of column definitions.
    */
-  public function getColumns(array $conf = NULL) {
+  public function getColumns(?array $conf = NULL) {
     $conf = $conf ?? ($this->getConfig()['table_form'] ?? []);
     if (empty($conf['columns'])) {
       $conf['columns'] = [

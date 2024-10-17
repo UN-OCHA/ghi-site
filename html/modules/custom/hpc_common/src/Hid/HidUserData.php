@@ -47,7 +47,7 @@ class HidUserData {
   /**
    * Get HID ID of the given or current user.
    */
-  public function getId(AccountInterface $user = NULL) {
+  public function getId(?AccountInterface $user = NULL) {
     if ($user === NULL) {
       $user = $this->currentUser;
     }
@@ -79,7 +79,7 @@ class HidUserData {
    * @return string|null
    *   The access token if available.
    */
-  public function getAccessToken(AccountInterface $user = NULL) {
+  public function getAccessToken(?AccountInterface $user = NULL) {
     if ($user === NULL) {
       $user = $this->currentUser;
     }

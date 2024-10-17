@@ -71,7 +71,7 @@ class DocumentListController extends ContentBaseListController {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function access(NodeInterface $node = NULL) {
+  public function access(?NodeInterface $node = NULL) {
     if ($node) {
       return AccessResult::allowedIf($node instanceof SectionNodeInterface && $node->access('update'));
     }
@@ -155,7 +155,7 @@ class DocumentListController extends ContentBaseListController {
    *   A redirect to a batch url or a render array if the migration can't be
    *   found.
    */
-  public function updateDocuments(SectionNodeInterface $section = NULL) {
+  public function updateDocuments(?SectionNodeInterface $section = NULL) {
     $redirect_url = Url::fromRoute(self::DOCUMENT_LIST_ROUTE)->toString();
     $tags = NULL;
     if ($section) {

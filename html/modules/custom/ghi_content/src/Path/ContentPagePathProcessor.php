@@ -45,7 +45,7 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
   /**
    * {@inheritdoc}
    */
-  public function processOutbound($path, &$options = [], Request $request = NULL, BubbleableMetadata $bubbleable_metadata = NULL) {
+  public function processOutbound($path, &$options = [], ?Request $request = NULL, ?BubbleableMetadata $bubbleable_metadata = NULL) {
     if (!empty($options['custom_path'])) {
       $path = $options['custom_path'];
     }

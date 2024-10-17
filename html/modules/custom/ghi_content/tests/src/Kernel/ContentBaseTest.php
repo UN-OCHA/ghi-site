@@ -4,20 +4,20 @@ namespace Drupal\Tests\ghi_content\Kernel;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Url;
+use Drupal\KernelTests\KernelTestBase;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
+use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
+use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
+use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\ContentManager\DocumentManager;
 use Drupal\ghi_content\Controller\OrphanedContentController;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_sections\Entity\Section;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\Entity\Term;
-use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
-use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
-use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
-use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
  * Tests some features of the abstract ContentBase class.

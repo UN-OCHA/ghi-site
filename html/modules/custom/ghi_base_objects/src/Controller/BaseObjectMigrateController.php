@@ -56,7 +56,7 @@ class BaseObjectMigrateController extends ControllerBase {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function access(BaseObjectType $base_object_type = NULL) {
+  public function access(?BaseObjectType $base_object_type = NULL) {
     if (!$base_object_type) {
       return AccessResult::forbidden();
     }
@@ -75,7 +75,7 @@ class BaseObjectMigrateController extends ControllerBase {
    *   A redirect to a batch url or a render array if the migration can't be
    *   found.
    */
-  public function updateBaseObjects(BaseObjectType $base_object_type = NULL) {
+  public function updateBaseObjects(?BaseObjectType $base_object_type = NULL) {
     $redirect_url = Url::fromRoute('view.base_objects.' . $base_object_type->id())->toString();
     return $this->runBaseObjectMigration($base_object_type, $redirect_url);
   }

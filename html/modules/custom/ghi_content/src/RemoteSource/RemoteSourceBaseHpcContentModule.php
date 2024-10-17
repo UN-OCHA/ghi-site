@@ -478,7 +478,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
-  public function importArticles(array $tags = NULL) {
+  public function importArticles(?array $tags = NULL) {
     $this->disableCache();
     $query = '{
       articleExport ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
@@ -511,7 +511,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
-  public function importDocuments(array $tags = NULL) {
+  public function importDocuments(?array $tags = NULL) {
     $this->disableCache();
     $query = '{
       documentExport ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{

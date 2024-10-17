@@ -40,7 +40,7 @@ class PublishAction extends ActionPublishAction {
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     if ($object instanceof NodeInterface) {
       $result = $this->publishContentAccess->access($account, $object);
       return $return_as_object ? $result : $result->isAllowed();

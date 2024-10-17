@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\ghi_content\Traits;
 
+use Drupal\Tests\pathauto\Functional\PathautoTestHelperTrait;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentBase;
-use Drupal\Tests\pathauto\Functional\PathautoTestHelperTrait;
 
 /**
  * Provides methods to create content in tests.

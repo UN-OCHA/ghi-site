@@ -79,7 +79,7 @@ trait AttachmentTableTrait {
    * @return array
    *   An array of prototype names, keyed by the prototype id.
    */
-  public function getUniquePrototypes(array $attachments = NULL) {
+  public function getUniquePrototypes(?array $attachments = NULL) {
     $attachments = $attachments ?? ($this->getAttachments() ?? []);
     $prototype_opions = [];
     foreach ($attachments as $attachment) {

@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\hpc_common\Unit;
 
+use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
-use Drupal\Tests\UnitTestCase;
 
 /**
  * @covers Drupal\hpc_common\Helpers\ArrayHelper

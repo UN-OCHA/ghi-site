@@ -36,6 +36,6 @@ interface ConfigurableTableBlockInterface {
    * @return \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface
    *   The item type plugin.
    */
-  public function getItemTypePluginForColumn(array $column, array $context = NULL);
+  public function getItemTypePluginForColumn(array $column, ?array $context = NULL);
 
 }

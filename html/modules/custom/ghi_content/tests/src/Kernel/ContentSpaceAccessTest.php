@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ghi_content\Unit;
 
-use Drupal\ghi_teams\Entity\ContentSpace;
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\node\Entity\NodeType;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_teams\Traits\TeamTestTrait;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use Drupal\ghi_teams\Entity\ContentSpace;
+use Drupal\node\Entity\NodeType;
 
 /**
  * Tests node access records and grants.

@@ -39,7 +39,7 @@
       "Issue #3024997: Global password is requested multiple times for every protected page": "https://www.drupal.org/files/issues/2023-11-20/3024997-11-reroll-8.patch"
     },
     "drupal/publishcontent": {
-      "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions": "https://www.drupal.org/files/issues/2020-07-22/2820867-7-permissions-for-bulk-operations.patch"
+      "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions": "https://www.drupal.org/files/issues/2024-10-14/permissions-for-bulk-operations-2820867-9.patch"
     },
     "drupal/seckit": {
       "Issue #2844205: Provide hook_seckit_options_alter() D8": "./patches/2844205.mr.patch"

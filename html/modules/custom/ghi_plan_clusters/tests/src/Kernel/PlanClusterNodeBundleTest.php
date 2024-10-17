@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\ghi_plan_clusters\Kernel;
 
-use Drupal\ghi_plan_clusters\Entity\PlanCluster;
-use Drupal\ghi_plan_clusters\Entity\PlanClusterInterface;
-use Drupal\ghi_plan_clusters\PlanClusterManager;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
+use Drupal\ghi_plan_clusters\Entity\PlanCluster;
+use Drupal\ghi_plan_clusters\Entity\PlanClusterInterface;
+use Drupal\ghi_plan_clusters\PlanClusterManager;
 
 /**
  * Test class for plan cluster node bundles.

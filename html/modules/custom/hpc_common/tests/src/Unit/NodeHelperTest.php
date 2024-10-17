@@ -8,10 +8,10 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeRepositoryInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\NodeHelper;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeStorageInterface;
-use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 

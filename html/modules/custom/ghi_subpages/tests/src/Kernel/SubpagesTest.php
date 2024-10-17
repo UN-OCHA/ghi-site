@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\ghi_subpages\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
+use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_common\Helpers\StringHelper;
-use Drupal\KernelTests\KernelTestBase;
-use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
 
 /**
  * Test class for section subpages tests.

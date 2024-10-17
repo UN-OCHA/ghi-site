@@ -150,7 +150,7 @@ class ImportManager implements ContainerInjectionInterface {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    */
-  public function importTextfield(NodeInterface $node, RemoteContentImageInterface $content, $label, $method, $field_name, $format = 'plain_text', MessengerInterface $messenger = NULL) {
+  public function importTextfield(NodeInterface $node, RemoteContentImageInterface $content, $label, $method, $field_name, $format = 'plain_text', ?MessengerInterface $messenger = NULL) {
     if (!$node->hasField($field_name)) {
       return FALSE;
     }
@@ -194,7 +194,7 @@ class ImportManager implements ContainerInjectionInterface {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    */
-  public function importImage(NodeInterface $node, RemoteContentImageInterface $content, $field_name = 'field_image', MessengerInterface $messenger = NULL) {
+  public function importImage(NodeInterface $node, RemoteContentImageInterface $content, $field_name = 'field_image', ?MessengerInterface $messenger = NULL) {
     if (!$node->hasField($field_name)) {
       return FALSE;
     }
@@ -243,7 +243,7 @@ class ImportManager implements ContainerInjectionInterface {
    * @throws SyncException
    *   When an error occurs.
    */
-  public function importArticleParagraphs(NodeInterface $node, RemoteArticleInterface $article, array $paragraph_ids = [], MessengerInterface $messenger = NULL, $cleanup = FALSE) {
+  public function importArticleParagraphs(NodeInterface $node, RemoteArticleInterface $article, array $paragraph_ids = [], ?MessengerInterface $messenger = NULL, $cleanup = FALSE) {
 
     if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
       return FALSE;
@@ -376,7 +376,7 @@ class ImportManager implements ContainerInjectionInterface {
    * @throws SyncException
    *   When an error occurs.
    */
-  public function importDocumentChapters(NodeInterface $node, RemoteDocumentInterface $document, array $chapter_ids = [], MessengerInterface $messenger = NULL, $cleanup = FALSE) {
+  public function importDocumentChapters(NodeInterface $node, RemoteDocumentInterface $document, array $chapter_ids = [], ?MessengerInterface $messenger = NULL, $cleanup = FALSE) {
 
     if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
       return FALSE;
@@ -504,7 +504,7 @@ class ImportManager implements ContainerInjectionInterface {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    */
-  public function importTags(NodeInterface $node, RemoteContentInterface $content, $field_name = 'field_tags', MessengerInterface $messenger = NULL) {
+  public function importTags(NodeInterface $node, RemoteContentInterface $content, $field_name = 'field_tags', ?MessengerInterface $messenger = NULL) {
     if (!$node->hasField($field_name)) {
       return FALSE;
     }
@@ -558,7 +558,7 @@ class ImportManager implements ContainerInjectionInterface {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    */
-  public function importContentSpace(NodeInterface $node, RemoteContentInterface $content, $field_name = 'field_content_space', MessengerInterface $messenger = NULL) {
+  public function importContentSpace(NodeInterface $node, RemoteContentInterface $content, $field_name = 'field_content_space', ?MessengerInterface $messenger = NULL) {
     if (!$node->hasField($field_name)) {
       return FALSE;
     }
@@ -609,7 +609,7 @@ class ImportManager implements ContainerInjectionInterface {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    */
-  public function setupRelatedArticlesElement(NodeInterface $node, RemoteArticleInterface $article, MessengerInterface $messenger = NULL) {
+  public function setupRelatedArticlesElement(NodeInterface $node, RemoteArticleInterface $article, ?MessengerInterface $messenger = NULL) {
     if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
       return FALSE;
     }
@@ -766,7 +766,7 @@ class ImportManager implements ContainerInjectionInterface {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    */
-  public function layoutManagerDiscardChanges(NodeInterface $node, MessengerInterface $messenger = NULL) {
+  public function layoutManagerDiscardChanges(NodeInterface $node, ?MessengerInterface $messenger = NULL) {
     $section_storage = $this->getSectionStorageForEntity($node);
     // @todo See if the view mode can be retrieved somehow.
     $section_storage->setContextValue('view_mode', 'default');

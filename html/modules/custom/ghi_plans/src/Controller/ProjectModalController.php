@@ -182,7 +182,7 @@ class ProjectModalController extends ControllerBase {
    * @return array
    *   A render array.
    */
-  private function getProjectTable(array $projects, Plan $plan_object = NULL) {
+  private function getProjectTable(array $projects, ?Plan $plan_object = NULL) {
     $decimal_format = $plan_object?->getDecimalFormat();
     $t_options = [
       'langcode' => $plan_object?->getPlanLanguage(),
@@ -329,7 +329,7 @@ class ProjectModalController extends ControllerBase {
    * @return array
    *   A render array.
    */
-  private function getOrganizationProjectTable(array $projects, Plan $plan_object = NULL) {
+  private function getOrganizationProjectTable(array $projects, ?Plan $plan_object = NULL) {
     $decimal_format = $plan_object?->getDecimalFormat();
     $t_options = [
       'langcode' => $plan_object?->getPlanLanguage(),

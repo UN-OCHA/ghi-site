@@ -181,7 +181,7 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    * @return array
    *   An array of source identifiers.
    */
-  public function importArticles(array $tags = NULL);
+  public function importArticles(?array $tags = NULL);
 
   /**
    * Import documents from the remote system.
@@ -192,7 +192,7 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    * @return array
    *   An array of source identifiers.
    */
-  public function importDocuments(array $tags = NULL);
+  public function importDocuments(?array $tags = NULL);
 
   /**
    * Disable the cache.

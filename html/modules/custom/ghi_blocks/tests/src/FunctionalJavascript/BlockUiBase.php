@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\ghi_blocks\FunctionalJavascript;
 
-use Drupal\block_content\Entity\BlockContentType;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\block_content\Entity\BlockContentType;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 

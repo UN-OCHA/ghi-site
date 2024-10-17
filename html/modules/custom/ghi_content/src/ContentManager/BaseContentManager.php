@@ -266,7 +266,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
    * @return \Drupal\node\NodeInterface[]|null
    *   An array of entity objects indexed by their ids.
    */
-  public function loadNodesForTags(array $tags = NULL, NodeInterface $node = NULL, $op = 'AND', $limit = NULL, $published = TRUE) {
+  public function loadNodesForTags(?array $tags = NULL, ?NodeInterface $node = NULL, $op = 'AND', $limit = NULL, $published = TRUE) {
     if (empty($tags) && $node === NULL) {
       return NULL;
     }
