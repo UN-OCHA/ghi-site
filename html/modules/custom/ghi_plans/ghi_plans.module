@@ -131,14 +131,15 @@ function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterf
 
   // Display disabled select dropdowns as simple textfields.
   foreach (Element::children($form) as $element_key) {
-    if (empty($form[$element_key]['#disabled']) || $form[$element_key]['widget']['#type'] != 'select') {
+    if (empty($form[$element_key]['#disabled']) || ($form[$element_key]['widget']['#type'] ?? NULL) != 'select') {
       continue;
     }
+    $default = $form[$element_key]['widget']['#default_value'];
     $form[$element_key]['widget']['#access'] = FALSE;
     $form[$element_key]['summary'] = [
       '#type' => 'textfield',
       '#title' => $form[$element_key]['widget']['#title'],
-      '#default_value' => $form[$element_key]['widget']['#options'][$form[$element_key]['widget']['#default_value'][0]],
+      '#default_value' => !empty($default) ? $form[$element_key]['widget']['#options'][array_shift($default)] : NULL,
       '#required' => $form[$element_key]['widget']['#required'],
     ];
   }

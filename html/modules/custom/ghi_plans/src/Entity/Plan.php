@@ -162,7 +162,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
     $value = $this->get('field_plan_coordinator')->getValue();
     return !empty($value) ? array_filter(array_map(function ($item) {
       return $item['value'];
-    }, $value)) : NULL;
+    }, array_filter($value))) : NULL;
   }
 
   /**
