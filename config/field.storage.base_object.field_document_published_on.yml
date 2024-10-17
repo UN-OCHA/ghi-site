@@ -1,15 +1,17 @@
-uuid: 8615cbb3-fc62-44d7-b48e-0f3ad7f25031
+uuid: cb90e4b5-b79b-489c-a53e-703e050e596c
 langcode: en
 status: true
 dependencies:
   module:
+    - datetime
     - ghi_base_objects
-id: base_object.field_plan_status
-field_name: field_plan_status
+id: base_object.field_document_published_on
+field_name: field_document_published_on
 entity_type: base_object
-type: boolean
-settings: {  }
-module: core
+type: datetime
+settings:
+  datetime_type: date
+module: datetime
 locked: false
 cardinality: 1
 translatable: true

@@ -50,7 +50,7 @@ class PlanClusterManager extends BaseSubpageManager {
    * @param \Drupal\node\NodeInterface $node
    *   The section that plan clusters belong to.
    *
-   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface[]|null
+   * @return \Drupal\ghi_plans\Entity\GoverningEntity[]|null
    *   A list of base objects.
    */
   public function loadGoverningEntityBaseObjectsForSection(NodeInterface $node) {

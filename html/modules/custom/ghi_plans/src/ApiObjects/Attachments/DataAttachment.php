@@ -78,6 +78,10 @@ class DataAttachment extends AttachmentBase {
         'label' => $unit->label ?? NULL,
         'type' => $unit->id == self::UNIT_TYPE_ID_PERCENTAGE ? 'percentage' : 'amount',
         'group' => property_exists($unit, 'isGender') && $unit->isGender == 1 ? 'people' : 'amount',
+        'locale' => [
+          'en' => $unit->label ?? NULL,
+          'fr' => $unit->labelFr ?? NULL,
+        ],
       ] : NULL,
       'monitoring_period' => $period ?? NULL,
       'fields' => $prototype->getFields(),
@@ -149,6 +153,16 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
+   * Get the current monitoring period for this attachment.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
+   *   A reporting period object or NULL.
+   */
+  public function getCurrentMonitoringPeriod() {
+    return $this->monitoring_period;
+  }
+
+  /**
    * Get the original fields.
    *
    * @return array
@@ -175,6 +189,20 @@ class DataAttachment extends AttachmentBase {
       return NULL;
     }
     return reset($candidates);
+  }
+
+  /**
+   * Get a field by it's index in the field list.
+   *
+   * @param int $index
+   *   The index of the field to fetch.
+   *
+   * @return object|null
+   *   The field if found.
+   */
+  public function getFieldByIndex($index) {
+    $fields = $this->getOriginalFields();
+    return $fields[$index] ?? NULL;
   }
 
   /**
@@ -246,11 +274,24 @@ class DataAttachment extends AttachmentBase {
   /**
    * Get the type of unit for an attachment.
    *
-   * @return string
+   * @return string|null
    *   The unit type as a string.
    */
   public function getUnitType() {
     return $this->unit ? $this->unit->type : NULL;
+  }
+
+  /**
+   * Get the label of the unit for an attachment.
+   *
+   * @return string|null
+   *   The unit label as a string.
+   */
+  public function getUnitLabel($langcode = NULL) {
+    if ($langcode && !empty($this->unit->locale[$langcode])) {
+      return $this->unit->locale[$langcode];
+    }
+    return $this->unit->label ?? NULL;
   }
 
   /**
@@ -370,7 +411,7 @@ class DataAttachment extends AttachmentBase {
   /**
    * Extract the plan id from an attachment object.
    *
-   * @return int
+   * @return int|null
    *   The plan ID if any can be found.
    */
   public function getPlanId() {
@@ -399,13 +440,23 @@ class DataAttachment extends AttachmentBase {
   /**
    * Get the plan object for this attachment.
    *
-   * @return \Drupal\ghi_plans\Entity\Plan
-   *   The plan base object.
+   * @return \Drupal\ghi_plans\Entity\Plan|null
+   *   The plan base object or NULL.
    */
   public function getPlanObject() {
     $plan_id = $this->getPlanId();
     $base_object = $plan_id ? BaseObjectHelper::getBaseObjectFromOriginalId($plan_id, 'plan') : NULL;
     return $base_object && $base_object instanceof Plan ? $base_object : NULL;
+  }
+
+  /**
+   * Get the plan language.
+   *
+   * @return string|null
+   *   The plan language code as a string or NULL.
+   */
+  public function getPlanLanguage() {
+    return $this->getPlanObject()?->getPlanLanguage();
   }
 
   /**
@@ -1047,7 +1098,7 @@ class DataAttachment extends AttachmentBase {
   /**
    * Fetch the reporting period for the given attachment.
    *
-   * @return object|null
+   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
    *   A reporting period object or NULL.
    */
   protected function fetchReportingPeriodForAttachment() {
@@ -1119,7 +1170,7 @@ class DataAttachment extends AttachmentBase {
    *   The data point value, extracted from the attachment according to the
    *   given configuration.
    */
-  public function getSingleValue($index, array $reporting_periods = NULL, $data_point_conf = []) {
+  public function getSingleValue($index, ?array $reporting_periods = NULL, $data_point_conf = []) {
     return $this->getValueForDataPoint($index);
   }
 
@@ -1136,7 +1187,7 @@ class DataAttachment extends AttachmentBase {
    *   The data point value, extracted from the attachment according to the
    *   given configuration.
    */
-  private function getCalculatedValue(array $conf, array $reporting_periods = NULL) {
+  private function getCalculatedValue(array $conf, ?array $reporting_periods = NULL) {
     $value_1 = (float) $this->getSingleValue($conf['data_points'][0]['index'], $reporting_periods, $conf['data_points'][0]);
     $value_2 = (float) $this->getSingleValue($conf['data_points'][1]['index'], $reporting_periods, $conf['data_points'][1]);
 
@@ -1171,11 +1222,16 @@ class DataAttachment extends AttachmentBase {
    *   The index of the data point.
    * @param int|string $monitoring_period
    *   The id of the monitoring period or the string 'latest'.
+   * @param bool $cumulative_logic
+   *   Whether additional logic for data points of type cummulativeReach should
+   *   be applied. This must be set to TRUE if called for example from
+   *   self::getValuesForAllReportingPeriods() to prevent infinite recursion.
    *
    * @return mixed
    *   The data point value.
    */
-  public function getValueForDataPoint($data_point_index, $monitoring_period = 'latest') {
+  public function getValueForDataPoint($data_point_index, $monitoring_period = 'latest', $cumulative_logic = TRUE) {
+    $value = NULL;
     if ($monitoring_period) {
       $value = $this->getMeasurementMetricValue($data_point_index, $monitoring_period);
     }
@@ -1186,6 +1242,20 @@ class DataAttachment extends AttachmentBase {
       // haven't been copied over to the measurements. That last issue is why
       // we do this check.
       $value = $this->values[$data_point_index] ?? NULL;
+    }
+
+    $field = $this->getFieldByIndex($data_point_index);
+    if ($value === NULL && $field?->type == 'cumulativeReach' && $cumulative_logic) {
+      // We have some specific logic for data points of type cummulativeReach.
+      // If the current reporting period reports these as NULL, we want to
+      // fetch the last non-NULL value from the other reporting periods of the
+      // same attachment, if available.
+      $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
+      $period = $this->getLastNonEmptyReportingPeriod($data_point_index, $reporting_periods);
+      if ($period && ($monitoring_period == 'latest' || $monitoring_period == array_key_last($reporting_periods)) && $period->id() != $monitoring_period) {
+        $value = $this->getValueForDataPoint($data_point_index, $period->id());
+      }
+
     }
     return $value;
   }
@@ -1199,7 +1269,7 @@ class DataAttachment extends AttachmentBase {
    *   Whether the values should be filtered.
    * @param bool $filter_null
    *   Whether the values should be filtered.
-   * @param object[] $reporting_periods
+   * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[] $reporting_periods
    *   An optional array of reporting period objects. If not provided, all
    *   reporting periods from the plan will be used.
    *
@@ -1213,14 +1283,14 @@ class DataAttachment extends AttachmentBase {
     }
     $values = [];
     foreach ($reporting_periods as $reporting_period) {
-      $value = $this->getValueForDataPoint($index, $reporting_period->id);
+      $value = $this->getValueForDataPoint($index, $reporting_period->id(), FALSE);
       if (empty($value) && $filter_empty) {
         continue;
       }
       if (empty($value) && $value !== 0 && $value !== "0" && $filter_null) {
         continue;
       }
-      $values[$reporting_period->id] = (int) $value;
+      $values[$reporting_period->id()] = (int) $value;
     }
     return $values;
   }
@@ -1230,11 +1300,11 @@ class DataAttachment extends AttachmentBase {
    *
    * @param int $index
    *   The data point index.
-   * @param object[] $reporting_periods
+   * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[] $reporting_periods
    *   An optional array of reporting period objects. If not provided, all
    *   reporting periods from the plan will be used.
    *
-   * @return object|null
+   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
    *   The monitoring period object or NULL if not found.
    */
   public function getLastNonEmptyReportingPeriod($index, $reporting_periods = NULL) {
@@ -1304,7 +1374,15 @@ class DataAttachment extends AttachmentBase {
     // See if this is a measurement and if we can get a formatted monitoring
     // period for this data point.
     $monitoring_period_id = $conf['data_points'][0]['monitoring_period'] ?? NULL;
-    $monitoring_tooltip = $this->isMeasurement($conf) ? $this->formatMonitoringPeriod('icon', $monitoring_period_id) : NULL;
+    $field = $this->getFieldByIndex($index);
+    $format_string = NULL;
+    if ($field?->type == 'cumulativeReach' || ($this->isCalculatedMeasurementIndex($index) && $field?->source == 'cumulativeReach')) {
+      $format_string = '@data_range_cumulative';
+      if ($monitoring_period_id == 'latest') {
+        $monitoring_period_id = $this->getLastNonEmptyReportingPeriod($index)?->id();
+      }
+    }
+    $monitoring_tooltip = $this->isMeasurement($conf) ? $this->formatMonitoringPeriod('icon', $monitoring_period_id, $format_string) : NULL;
 
     // See if there is a comment.
     $comment = $this->isMeasurement($conf) ? $this->formatMeasurementCommentTooltip() : NULL;
@@ -1390,8 +1468,9 @@ class DataAttachment extends AttachmentBase {
     // Handle empty data by just "Pending" or "No data" for everything besides
     // percentage displays.
     if ($this->isNullValue($value) && $conf['formatting'] != 'percent') {
+      $t_options = ['langcode' => $this->getPlanLanguage()];
       return [
-        '#markup' => $this->isPendingDataEntry() ? $this->t('Pending') : $this->t('No data'),
+        '#markup' => $this->isPendingDataEntry() ? $this->t('Pending', [], $t_options) : $this->t('No data', [], $t_options),
       ];
     }
 
@@ -1520,7 +1599,7 @@ class DataAttachment extends AttachmentBase {
    *   A build array or NULL.
    */
   public function formatMonitoringPeriod($display_type, $monitoring_period_id = NULL, $format_string = NULL) {
-    $monitoring_period = $monitoring_period_id ? $this->getReportingPeriod($monitoring_period_id) : $this->monitoring_period;
+    $monitoring_period = $monitoring_period_id ? $this->getReportingPeriod($monitoring_period_id) : $this->getCurrentMonitoringPeriod();
     if (!$monitoring_period) {
       return NULL;
     }

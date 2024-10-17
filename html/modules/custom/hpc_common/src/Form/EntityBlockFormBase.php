@@ -61,7 +61,7 @@ abstract class EntityBlockFormBase extends FormBase {
    * @return bool
    *   Whether an element has been added or not.
    */
-  protected function addFormElementForFieldKey(array &$form = NULL, FormStateInterface $form_state, $field_key, object $context = NULL, $simple_numeric_widgets = FALSE) {
+  protected function addFormElementForFieldKey(array &$form, FormStateInterface $form_state, $field_key, ?object $context = NULL, $simple_numeric_widgets = FALSE) {
     $form_display = $this->entityTypeManager->getStorage('entity_form_display')->load($this->getFormDisplayId());
     $form_state->set('form_display', $form_display);
 

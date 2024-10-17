@@ -71,7 +71,7 @@ class ArticleListController extends ContentBaseListController {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function access(NodeInterface $node = NULL) {
+  public function access(?NodeInterface $node = NULL) {
     if ($node) {
       return AccessResult::allowedIf($node instanceof SectionNodeInterface && $node->access('update'));
     }
@@ -154,7 +154,7 @@ class ArticleListController extends ContentBaseListController {
    *   A redirect to a batch url or a render array if the migration can't be
    *   found.
    */
-  public function updateArticles(SectionNodeInterface $section = NULL) {
+  public function updateArticles(?SectionNodeInterface $section = NULL) {
     $redirect_url = Url::fromRoute(self::ARTICLE_LIST_ROUTE)->toString();
     $tags = NULL;
     if ($section) {

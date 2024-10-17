@@ -58,6 +58,11 @@ function ghi_plans_preprocess_page(array &$variables) {
  * Selectively allow specific fields on edit pages of plan base objects.
  */
 function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterface &$form_state) {
+  /** @var \Drupal\ghi_plans\Entity\Plan $plan */
+  $plan = $form['#entity'];
+
+  $form['#attached']['library'][] = 'ghi_plans/ghi_plans.admin.plan_edit_form';
+
   $allow_fields = [
     'field_decimal_format',
     'field_footnotes',
@@ -66,10 +71,8 @@ function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterf
     'field_operations_category',
     'field_plan_caseload',
     'field_plan_document_link',
-    'field_plan_status',
     'field_plan_type_label_override',
     'field_plan_version_argument',
-    'field_short_name',
     'field_visible_on_global_pages',
   ];
   foreach (Element::children($form) as $element_key) {
@@ -112,5 +115,32 @@ function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterf
       // Select fields.
       $widget['#default_value'] = $default_widget_value[0]['value'];
     }
+  }
+
+  // Better display of the plan coordinator in the form.
+  if (!empty($form['field_plan_coordinator']) && $form['field_plan_coordinator']['#disabled']) {
+    $form['field_plan_coordinator']['summary'] = [
+      '#type' => 'textfield',
+      '#title' => $form['field_plan_coordinator']['widget']['#title'],
+      '#default_value' => implode(', ', $plan->getPlanCoordinator()),
+      '#disabled' => TRUE,
+      '#required' => $form['field_plan_coordinator']['widget']['#required'],
+    ];
+    $form['field_plan_coordinator']['widget']['#access'] = FALSE;
+  }
+
+  // Display disabled select dropdowns as simple textfields.
+  foreach (Element::children($form) as $element_key) {
+    if (empty($form[$element_key]['#disabled']) || ($form[$element_key]['widget']['#type'] ?? NULL) != 'select') {
+      continue;
+    }
+    $default = $form[$element_key]['widget']['#default_value'];
+    $form[$element_key]['widget']['#access'] = FALSE;
+    $form[$element_key]['summary'] = [
+      '#type' => 'textfield',
+      '#title' => $form[$element_key]['widget']['#title'],
+      '#default_value' => !empty($default) ? $form[$element_key]['widget']['#options'][array_shift($default)] : NULL,
+      '#required' => $form[$element_key]['widget']['#required'],
+    ];
   }
 }

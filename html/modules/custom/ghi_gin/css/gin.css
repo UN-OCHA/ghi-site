@@ -29,3 +29,7 @@ table {
 .ui-dialog #drupal-modal {
   padding: 2rem 1.5rem;
 }
+
+table.gin--sticky-table-header thead th {
+  word-break: auto-phrase;
+}

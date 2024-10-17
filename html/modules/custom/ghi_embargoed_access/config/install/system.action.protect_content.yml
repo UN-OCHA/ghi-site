@@ -4,7 +4,7 @@ dependencies:
   module:
     - node
 id: protect_content
-label: 'Protect Content'
+label: 'Password-protect'
 type: node
 plugin: protect_content
 configuration: {  }

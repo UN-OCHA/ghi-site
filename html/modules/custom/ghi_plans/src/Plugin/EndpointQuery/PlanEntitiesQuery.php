@@ -70,7 +70,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    * @return array
    *   An array of attachment objects for the given context.
    */
-  private function getAttachments(ContentEntityInterface $context_object = NULL, array $filter = []) {
+  private function getAttachments(?ContentEntityInterface $context_object = NULL, array $filter = []) {
     $cache_key = $this->getCacheKey(array_filter(['id' => $context_object ? $context_object->id() : NULL] + $filter + $this->getPlaceholders()));
     $attachments = $this->getCache($cache_key);
     if ($attachments) {
@@ -180,7 +180,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
    *   An array of attachment objects for the given context.
    */
-  public function getDataAttachments(ContentEntityInterface $context_object = NULL, array $filter = NULL) {
+  public function getDataAttachments(?ContentEntityInterface $context_object = NULL, ?array $filter = NULL) {
     $allowed_types = [
       'caseload',
       'indicator',
@@ -224,7 +224,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
    *   An array of attachment objects for the given context.
    */
-  public function getContactAttachments(ContentEntityInterface $context_object = NULL) {
+  public function getContactAttachments(?ContentEntityInterface $context_object = NULL) {
     $attachments = [];
     foreach ($this->getAttachments($context_object, ['type' => 'contact']) as $attachment) {
       $attachments[$attachment->id] = AttachmentHelper::processAttachment($attachment);
@@ -241,7 +241,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment[]
    *   An array of attachment objects for the given context.
    */
-  public function getWebContentFileAttachments(ContentEntityInterface $context_object = NULL) {
+  public function getWebContentFileAttachments(?ContentEntityInterface $context_object = NULL) {
     $attachments = [];
     foreach ($this->getAttachments($context_object, ['type' => 'fileWebContent']) as $attachment) {
       if (empty($attachment->attachmentVersion->value->file->url)) {
@@ -285,7 +285,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]|null
    *   An array of plan entity objects for the given context or NULL.
    */
-  public function getPlanEntities(ContentEntityInterface $context_object = NULL, $entity_type = NULL, array $filters = NULL) {
+  public function getPlanEntities(?ContentEntityInterface $context_object = NULL, $entity_type = NULL, ?array $filters = NULL) {
     $cache_key = $this->getCacheKey(array_filter([
       'id' => $context_object ? $context_object->id() : NULL,
       'entity_type' => $entity_type,

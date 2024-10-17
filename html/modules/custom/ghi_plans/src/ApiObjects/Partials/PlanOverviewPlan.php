@@ -48,10 +48,20 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * Get the plan status if an entity is available.
    *
+   * @return bool|null
+   *   The plan status as a boolean, or NULL.
+   */
+  public function getPlanStatus() {
+    return $this->getEntity()?->isReleased() ?? FALSE;
+  }
+
+  /**
+   * Get the plan status label if an entity is available.
+   *
    * @return string|null
    *   The plan status as a human readable string, or NULL.
    */
-  public function getPlanStatus() {
+  public function getPlanStatusLabel() {
     return $this->getEntity()?->getPlanStatusLabel() ?? NULL;
   }
 
@@ -113,10 +123,11 @@ class PlanOverviewPlan extends BaseObject {
    *   The plan type name.
    */
   public function getOriginalTypeName($fetch_from_entity = FALSE) {
+    $type_name = $this->getTypeProperty('name');
     if ($fetch_from_entity && $plan = $this->getEntity()) {
-      return $plan->getPlanTypeLabel();
+      return $type_name = $plan->getPlanType()?->label();
     }
-    return $this->getTypeProperty('name');
+    return $type_name;
   }
 
   /**

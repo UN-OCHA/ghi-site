@@ -6,6 +6,8 @@ display:
     display_options:
       title: Média
       fields:
+        media_bulk_form:
+          action_title: Action
         thumbnail__target_id:
           label: Vignette
           separator: ', '
@@ -21,8 +23,8 @@ display:
         status:
           label: Status
           settings:
-            format_custom_false: Unpublished
-            format_custom_true: Published
+            format_custom_false: 'Non publié'
+            format_custom_true: Displayed
           separator: ', '
         changed:
           label: Updated
@@ -61,12 +63,12 @@ display:
           expose:
             label: Vrai
           group_info:
-            label: 'Published status'
+            label: 'Display status'
             group_items:
               1:
-                title: Published
+                title: Displayed
               2:
-                title: Unpublished
+                title: 'Non publié'
         langcode:
           expose:
             label: Language

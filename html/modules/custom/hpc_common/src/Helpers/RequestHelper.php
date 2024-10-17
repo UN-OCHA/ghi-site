@@ -124,7 +124,7 @@ class RequestHelper {
       return [];
     }
     $contexts = [];
-    if (empty($result['page_manager_page'])) {
+    if (empty($result['_page_manager_page'])) {
       if (!empty($result['node'])) {
         $contexts['node'] = EntityContext::fromEntity($result['node'], t('Node'));
       }
@@ -132,12 +132,12 @@ class RequestHelper {
     }
 
     $route = $result['_route_object'];
-    $page = $result['page_manager_page'];
+    $page = $result['_page_manager_page'];
 
     if ($route && $route_contexts = $route->getOption('parameters')) {
       foreach ($route_contexts as $route_context_name => $route_context) {
         // Skip this parameter.
-        if ($route_context_name == 'page_manager_page_variant' || $route_context_name == 'page_manager_page') {
+        if ($route_context_name == '_page_manager_page_variant' || $route_context_name == '_page_manager_page') {
           continue;
         }
 

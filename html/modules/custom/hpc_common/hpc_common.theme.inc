@@ -9,6 +9,7 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Template\Attribute;
+use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
@@ -381,46 +382,41 @@ function hpc_common_preprocess_hpc_reporting_period(array &$vars) {
     return;
   }
 
-  // We want to handle all times as UTC, because that's what we get from the
-  // API.
-  $timezone = new DateTimeZone('UTC');
+  $format_string = $vars['format_string'];
 
   if (is_array($reporting_period)) {
+    /** @var \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[] $reporting_period */
     // Handle multiple periods.
-    ArrayHelper::sortArrayByNumericKey($reporting_period, 'periodNumber', EndpointQuery::SORT_ASC);
+    ArrayHelper::sortObjectsByNumericProperty($reporting_period, 'getPeriodNumber', EndpointQuery::SORT_ASC);
     $first = reset($reporting_period);
     $last = end($reporting_period);
-    $start_date_string = $first->startDate;
-    $end_date_string = $last->endDate;
-    $period_number = $first != $last ? $first->periodNumber . ' - ' . $last->periodNumber : $first->periodNumber;
+    $period_number = $first != $last ? $first->getPeriodNumber() . ' - ' . $last->getPeriodNumber() : $first->getPeriodNumber();
+
+    $start_date = $first->formatStartDate();
+    $end_date = $last->formatEndDate();
+    if ($first->formatStartDate('Y') == $last->formatEndDate('Y')) {
+      $start_date = $first->formatStartDate(PlanReportingPeriod::FORMAT_DATE_SHORT);
+    }
+
+    $vars['output'] = new FormattableMarkup(trim($format_string), [
+      '@period_number' => $period_number,
+      '@date_range' => $start_date . ' - ' . $end_date,
+      '@plan_start_date' => $first->getPlanStartDate(),
+      '@start_date' => $start_date,
+      '@end_date' => $end_date,
+    ]);
   }
   else {
+    /** @var \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod $reporting_period */
     // Handle a single period.
-    $start_date_string = $reporting_period->startDate;
-    $end_date_string = $reporting_period->endDate;
-    $period_number = $reporting_period->periodNumber;
+    $vars['output'] = new FormattableMarkup(trim($format_string), [
+      '@period_number' => $reporting_period->getPeriodNumber(),
+      '@date_range' => $reporting_period->formatDateRange(),
+      '@data_range_cumulative' => $reporting_period->formatCumulativeDateRange(),
+      '@start_date' => $reporting_period->formatStartDate(),
+      '@end_date' => $reporting_period->formatEndDate(),
+    ]);
   }
-
-  $format_string = $vars['format_string'];
-  $format_date = 'j M Y';
-  $format_date_short = 'j M';
-
-  $start_date = new DateTime($start_date_string, $timezone);
-  $end_date = new DateTime($end_date_string, $timezone);
-
-  $start_date_formatted = $start_date->format($format_date);
-  $end_date_formatted = $end_date->format($format_date);
-
-  if ($start_date->format('Y') == $end_date->format('Y')) {
-    // Same year and month for both start and end date.
-    $start_date_formatted = $start_date->format($format_date_short);
-  }
-  $vars['output'] = new FormattableMarkup(trim($format_string), [
-    '@period_number' => $period_number,
-    '@date_range' => $start_date_formatted . ' - ' . $end_date_formatted,
-    '@start_date' => $start_date_formatted,
-    '@end_date' => $end_date_formatted,
-  ]);
 }
 
 /**

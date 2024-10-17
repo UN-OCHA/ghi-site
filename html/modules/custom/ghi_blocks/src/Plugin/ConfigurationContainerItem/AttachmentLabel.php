@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
+use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 
 /**
@@ -55,8 +56,16 @@ class AttachmentLabel extends ConfigurationContainerItemPluginBase {
    *   A default label.
    */
   public function getDefaultLabel() {
-    $configuration = $this->getPluginConfiguration();
-    return $configuration['default_label'] ?? $this->t('Attachment');
+    $attachment = $this->getContextValue('attachment');
+    $label = NULL;
+    if ($attachment && $attachment instanceof DataAttachment) {
+      $label = $attachment->getPrototype()?->getName();
+    }
+    if (!$label) {
+      $configuration = $this->getPluginConfiguration();
+      $label = $configuration['default_label'] ?? $this->t('Attachment');
+    }
+    return $label;
   }
 
   /**

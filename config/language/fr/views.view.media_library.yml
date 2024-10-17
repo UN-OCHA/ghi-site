@@ -1,9 +1,13 @@
+label: 'Media library'
 description: 'Trouver et gérer des media.'
 display:
   default:
     display_title: Maître
     display_options:
       title: Média
+      fields:
+        media_bulk_form:
+          action_title: Action
       pager:
         options:
           tags:
@@ -38,12 +42,12 @@ display:
           expose:
             label: 'Statut de publication'
           group_info:
-            label: Published
+            label: Displayed
             group_items:
               1:
-                title: Published
+                title: Displayed
               2:
-                title: Unpublished
+                title: 'Non publié'
         name:
           expose:
             label: Nom
@@ -59,6 +63,8 @@ display:
     display_title: Page
     display_options:
       fields:
+        media_bulk_form:
+          action_title: Action
         name:
           separator: ', '
         edit_media:
@@ -72,6 +78,7 @@ display:
             alt: 'Supprimer {{ name }}'
           text: Supprimer
   widget:
+    display_title: Widget
     display_options:
       arguments:
         bundle:

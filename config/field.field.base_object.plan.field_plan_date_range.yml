@@ -1,0 +1,21 @@
+uuid: 655b184b-7fc2-4dd1-b614-2a87607062c7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_plan_date_range
+    - ghi_base_objects.base_object_type.plan
+  module:
+    - datetime_range
+id: base_object.plan.field_plan_date_range
+field_name: field_plan_date_range
+entity_type: base_object
+bundle: plan
+label: 'Plan date range'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: daterange

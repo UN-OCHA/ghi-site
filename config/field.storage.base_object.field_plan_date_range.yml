@@ -1,18 +1,17 @@
-uuid: a0837dab-67ec-496f-a25c-647f7b0ae7cd
+uuid: 26e0455e-bcad-4ef3-9100-782baa50b25d
 langcode: en
 status: true
 dependencies:
   module:
+    - datetime_range
     - ghi_base_objects
-id: base_object.field_plan_type_label_override
-field_name: field_plan_type_label_override
+id: base_object.field_plan_date_range
+field_name: field_plan_date_range
 entity_type: base_object
-type: string
+type: daterange
 settings:
-  max_length: 50
-  case_sensitive: false
-  is_ascii: false
-module: core
+  datetime_type: date
+module: datetime_range
 locked: false
 cardinality: 1
 translatable: true

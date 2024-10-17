@@ -61,7 +61,7 @@ class SectionMenuStorage {
    *   directly during construction, this class will try to retrieve the
    *   current section from the current route match.
    */
-  public function __construct(SectionManager $section_manager, SectionMenuPluginManager $section_menu_plugin_manager, RouteMatchInterface $route_match, SectionNodeInterface $section = NULL) {
+  public function __construct(SectionManager $section_manager, SectionMenuPluginManager $section_menu_plugin_manager, RouteMatchInterface $route_match, ?SectionNodeInterface $section = NULL) {
     $this->sectionManager = $section_manager;
     $this->sectionMenuPluginManager = $section_menu_plugin_manager;
     $this->routeMatch = $route_match;

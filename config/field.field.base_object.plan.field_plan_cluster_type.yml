@@ -1,0 +1,21 @@
+uuid: 947cd2c7-57f1-438b-bd55-b2322481553b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_plan_cluster_type
+    - ghi_base_objects.base_object_type.plan
+  module:
+    - options
+id: base_object.plan.field_plan_cluster_type
+field_name: field_plan_cluster_type
+entity_type: base_object
+bundle: plan
+label: 'Plan cluster type'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

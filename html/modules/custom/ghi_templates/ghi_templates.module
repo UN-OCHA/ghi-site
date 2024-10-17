@@ -7,6 +7,7 @@
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\ghi_templates\Entity\PageTemplateInterface;
 use Drupal\layout_builder\SectionStorageInterface;
@@ -94,9 +95,19 @@ function ghi_templates_entity_operation_alter(array &$operations, EntityInterfac
 }
 
 /**
+ * Implements hook_form_alter().
+ */
+function ghi_templates_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  if (!in_array($form_id, ['page_template_edit_form', 'page_template_form'])) {
+    return;
+  }
+  $form['status']['widget']['value']['#title'] = t('Active');
+}
+
+/**
  * Implements hook_layout_builder_view_context_alter().
  */
-function ghi_templates_layout_builder_view_context_alter(array &$contexts, SectionStorageInterface $section_storage = NULL, $sample = FALSE) {
+function ghi_templates_layout_builder_view_context_alter(array &$contexts, ?SectionStorageInterface $section_storage = NULL, $sample = FALSE) {
 
   // See if there is a context.
   $entity_context = $contexts['layout_builder.entity'] ?? ($contexts['entity'] ?? ($contexts['page_template'] ?? NULL));
@@ -266,5 +277,5 @@ function ghi_templates_theme_suggestions_alter(array &$suggestions, array $varia
     $suggestions[] = $hook . '__gin_lb';
     $suggestions = array_merge($suggestions, $additional_suggestions);
   }
-
+  $suggestions = array_unique($suggestions);
 }

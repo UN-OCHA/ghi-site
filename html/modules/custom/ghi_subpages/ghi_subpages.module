@@ -76,7 +76,7 @@ function ghi_subpages_section_post_save(NodeInterface $section_node) {
       $subpage->setUnpublished();
       $subpage->save();
 
-      \Drupal::messenger()->addStatus(t('Subpage @subpage has been unpublished.', [
+      \Drupal::messenger()->addStatus(t("Subpage @subpage has been set to Don't display.", [
         '@subpage' => $node_type->get('name'),
       ]));
     }

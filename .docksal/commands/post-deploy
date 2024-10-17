@@ -77,6 +77,10 @@ drush cr
 echo "Run the deploy commands"
 drush deploy
 
+echo "Update translations"
+drush locale:check
+drush locale:update
+
 echo "Set maintenance mode to off"
 drush sset system.maintenance_mode 0 -y
 

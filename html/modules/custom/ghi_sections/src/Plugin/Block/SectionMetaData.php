@@ -52,11 +52,6 @@ class SectionMetaData extends BlockBase implements ContainerFactoryPluginInterfa
     if (!$metadata) {
       return NULL;
     }
-    if ($this->getPageNode()?->isPublished()) {
-      $metadata[] = [
-        '#theme' => 'social_links',
-      ];
-    }
     return [
       '#theme' => 'item_list',
       '#items' => $metadata,

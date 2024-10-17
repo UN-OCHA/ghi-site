@@ -1,0 +1,75 @@
+# Spanish translation of Humanitarian Action - GHI Plans
+
+msgid ""
+msgstr ""
+"Project-Id-Version: Custom\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\\n"
+
+msgid "<strong>From:</strong> @start_date <strong>to:</strong> @end_date"
+msgstr "<strong>Del:</strong> @start_date <strong>al:</strong> @end_date"
+
+msgid "<strong>Published:</strong> @date"
+msgstr "<strong>Publicado:</strong> @date"
+
+msgid "<strong>Unpublished</strong>"
+msgstr "<strong>No publicado</strong>"
+
+msgid ""
+"<span class=\"icon-wrapper\"><span class=\"icon "
+"plan-coordinator\"></span><strong>Coordinated by:</strong> "
+"@coordinator</span>"
+msgstr ""
+"<span class=\"icon-wrapper\"><span class=\"icon "
+"plan-coordinator\"></span><strong>Coordinado por:</strong> "
+"@coordinator</span>"
+
+msgid "Cluster frameworks"
+msgstr "Marcos lógicos de los clústers"
+
+msgid "@cluster_name cluster logical framework"
+msgstr "Marco lógico del clúster @cluster_name"
+
+msgid "See cluster framework"
+msgstr "Ver el marco lógico"
+
+msgid "Sector frameworks"
+msgstr "Marcos lógicos de los sectores"
+
+msgid "@cluster_name sector logical framework"
+msgstr "Marco lógico del sector @cluster_name"
+
+msgid "See sector framework"
+msgstr "Ver el marco lógico"
+
+msgid "People reached"
+msgstr "Personas atendidas"
+
+msgid "Measure"
+msgstr "Medida"
+
+msgid "Progress"
+msgstr "Progreso"
+
+msgid "Go to sector page"
+msgstr "Ir a la página del sector"
+
+msgid "Go to cluster page"
+msgstr "Ir a la página del clúster"
+
+msgid "Unit"
+msgstr "Unidad"
+
+msgid "Response plan"
+msgstr "Plan de respuesta"
+
+msgid "Projects"
+msgstr "Proyectos"
+
+msgid "Caseload"
+msgstr "Datos de Población"
+
+msgid "Indicator"
+msgstr "Indicador"

@@ -3,3 +3,8 @@ ghi_plans.admin.plan_structure:
   css:
     component:
       css/ghi_plans.admin.plan_structure.css: {}
+ghi_plans.admin.plan_edit_form:
+  version: VERSION
+  css:
+    component:
+      css/ghi_plans.admin.plan_edit_form.css: {}

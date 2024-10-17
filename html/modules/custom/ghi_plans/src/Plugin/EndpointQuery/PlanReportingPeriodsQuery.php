@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
+use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 use Drupal\hpc_common\Helpers\ArrayHelper;
@@ -23,7 +24,7 @@ class PlanReportingPeriodsQuery extends EndpointQueryBase {
   /**
    * Get the reporting periods for a plan.
    *
-   * @return array
+   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[]
    *   An array of reporting periods, keyed by period id and sorted by period
    *   number.
    */
@@ -38,12 +39,11 @@ class PlanReportingPeriodsQuery extends EndpointQueryBase {
     if (!$data) {
       return [];
     }
-    $period_ids = array_map(function ($period) {
-      return $period->id;
-    }, $data);
-    $periods = array_combine($period_ids, $data);
     ArrayHelper::sortObjectsByNumericProperty($data, 'periodNumber', EndpointQuery::SORT_ASC);
-
+    $periods = [];
+    foreach ($data as $period) {
+      $periods[$period->id] = new PlanReportingPeriod($period);
+    }
     $this->setCache($cache_key, $periods);
     return $periods;
   }
@@ -51,7 +51,7 @@ class PlanReportingPeriodsQuery extends EndpointQueryBase {
   /**
    * Get a specific reporting period for a plan.
    *
-   * @return object
+   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod
    *   The reporting period.
    */
   public function getReportingPeriod($id) {

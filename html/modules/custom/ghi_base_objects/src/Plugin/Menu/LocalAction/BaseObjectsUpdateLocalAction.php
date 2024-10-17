@@ -20,7 +20,7 @@ class BaseObjectsUpdateLocalAction extends LocalActionDefault {
   /**
    * {@inheritdoc}
    */
-  public function getTitle(Request $request = NULL) {
+  public function getTitle(?Request $request = NULL) {
     $page_title = NULL;
     if ($route = $request->attributes->get(RouteObjectInterface::ROUTE_OBJECT)) {
       $page_title = \Drupal::service('title_resolver')->getTitle($request, $route);

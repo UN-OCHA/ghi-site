@@ -2,17 +2,17 @@
 
 namespace Drupal\Tests\ghi_sections\Traits;
 
-use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
-use Drupal\ghi_sections\Entity\Section;
-use Drupal\ghi_sections\Entity\SectionNodeInterface;
-use Drupal\ghi_sections\Menu\SectionMenuStorage;
-use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_teams\Traits\TeamTestTrait;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\pathauto\Functional\PathautoTestHelperTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
+use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\ghi_sections\Entity\Section;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_sections\Menu\SectionMenuStorage;
+use Drupal\taxonomy\Entity\Vocabulary;
 
 /**
  * Provides methods to create sections in tests.

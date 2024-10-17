@@ -57,7 +57,7 @@ class ApiEntityHelper {
    * @return array
    *   An array of entity objects.
    */
-  public static function getMatchingPlanEntities($data, ContentEntityInterface $context_entity = NULL, $entity_type = NULL, array $filters = NULL) {
+  public static function getMatchingPlanEntities($data, ?ContentEntityInterface $context_entity = NULL, $entity_type = NULL, ?array $filters = NULL) {
 
     if (empty($data->planEntities) && empty($data->governingEntities)) {
       return FALSE;
@@ -321,7 +321,7 @@ class ApiEntityHelper {
    * @return array
    *   An array of entities of the given type. Processed for smaller footprint.
    */
-  public static function getProcessedPlanEntitesByType($data, $entity_type, array $limit = NULL) {
+  public static function getProcessedPlanEntitesByType($data, $entity_type, ?array $limit = NULL) {
     $property = $entity_type . 'Entities';
     if (empty($data->$property)) {
       return [];

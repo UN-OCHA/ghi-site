@@ -8,10 +8,10 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeRepositoryInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\NodeHelper;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeStorageInterface;
-use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 
@@ -425,29 +425,10 @@ class NodeHelperTest extends UnitTestCase {
    * @group NodeHelper
    */
   public function testGetNodesFromTitle() {
-    // Mock node.
+    // Mock nodes.
     $node1 = $this->prophesize(Node::class);
-    // Mock field.
-    $node1_field = $this->prophesize(FieldItemListInterface::class);
-    $node1_field->getValue()->willReturn([TRUE]);
-    $node1->hasField('field_restricted')->willReturn(TRUE);
-    $node1->get('field_restricted')->willReturn($node1_field->reveal());
-
-    // Mock node.
     $node2 = $this->prophesize(Node::class);
-    // Mock field.
-    $node2_field = $this->prophesize(FieldItemListInterface::class);
-    $node2_field->getValue()->willReturn([FALSE]);
-    $node2->hasField('field_restricted')->willReturn(TRUE);
-    $node2->get('field_restricted')->willReturn($node2_field->reveal());
-
-    // Mock node.
     $node3 = $this->prophesize(Node::class);
-    // Mock field.
-    $node3_field = $this->prophesize(FieldItemListInterface::class);
-    $node3_field->getValue()->willReturn([TRUE]);
-    $node3->hasField('field_restricted')->willReturn(TRUE);
-    $node3->get('field_restricted')->willReturn($node3_field->reveal());
 
     // Mock loadMultiple.
     $this->nodeStorage->expects($this->any())
@@ -455,9 +436,10 @@ class NodeHelperTest extends UnitTestCase {
       ->with(['1', '2', '3'])
       ->willReturn([$node1->reveal(), $node2->reveal(), $node3->reveal()]);
 
-    // Mock entityQuery methods.
-    $this->entityQuery->condition(Argument::any(), Argument::any(), Argument::any())->willReturn($this->entityQuery);
-    $this->entityQuery->sort(Argument::any(), Argument::any())->willReturn($this->entityQuery);
+    // Mock entityQuery methods to confirm that these are actually used.
+    $this->entityQuery->condition('title', Argument::any(), Argument::any())->willReturn($this->entityQuery);
+    $this->entityQuery->condition('type', Argument::any(), Argument::any())->willReturn($this->entityQuery);
+    $this->entityQuery->sort('nid', 'DESC')->willReturn($this->entityQuery);
     $this->entityQuery->accessCheck()->willReturn($this->entityQuery);
     $this->entityQuery->execute()->willReturn(['1', '2', '3']);
 
@@ -479,7 +461,7 @@ class NodeHelperTest extends UnitTestCase {
     \Drupal::getContainer()->set('entity_type.manager', $this->entityTypeManager);
     \Drupal::getContainer()->set('entity_type.repository', $entity_type_repository->reveal());
 
-    $this->assertEquals(['1' => $node2->reveal()], $this->nodeHelper->getNodesFromTitle('Test Title', 'Test bundle'));
+    $this->assertEquals(['0' => $node1->reveal(), '1' => $node2->reveal(), '2' => $node3->reveal()], $this->nodeHelper->getNodesFromTitle('Test Title', 'Test bundle'));
   }
 
 }

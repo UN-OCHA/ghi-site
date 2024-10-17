@@ -256,7 +256,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       $fts_link = $this->needsFtsLink() ? self::buildFtsLink($link_icon, $this->getContextValue('plan_object'), $data_type['fts_link_target'], $this->getContextValue('base_object')) : NULL;
       $fts_tooltip = $fts_link ? [
         '#theme' => 'hpc_tooltip',
-        '#tooltip' => $this->t('View this data in FTS'),
+        '#tooltip' => $this->t('View this data in FTS', [], ['langcode' => $plan_object?->getPlanLanguage()]),
         '#tag_content' => $fts_link,
       ] : NULL;
     }

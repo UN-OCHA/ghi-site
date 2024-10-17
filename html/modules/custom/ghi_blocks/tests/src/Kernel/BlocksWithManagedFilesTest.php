@@ -2,15 +2,15 @@
 
 namespace Drupal\Tests\ghi_content\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
+use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\file\Entity\File;
 use Drupal\ghi_image\CropManager;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
-use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
  * Tests aspects of the block logic.

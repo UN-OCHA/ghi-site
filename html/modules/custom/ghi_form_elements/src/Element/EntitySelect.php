@@ -351,7 +351,7 @@ class EntitySelect extends FormElement {
    *   Array with all entities of the plan, represented in a
    *   multi-dimensional, hierarchical structure.
    */
-  public static function sortEntitiesByPlanStructure(array $entity_options, $plan_data, $context_node = NULL, $hierarchical = FALSE, $label_only = TRUE, array $ple_structure = NULL) {
+  public static function sortEntitiesByPlanStructure(array $entity_options, $plan_data, $context_node = NULL, $hierarchical = FALSE, $label_only = TRUE, ?array $ple_structure = NULL) {
     $ple_structure = $ple_structure ?? PlanStructureHelper::getPlanEntityStructure($plan_data);
 
     $context_entity_original_id = $context_node ? NodeHelper::getOriginalIdFromNode($context_node) : NULL;

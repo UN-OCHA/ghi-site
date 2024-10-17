@@ -2,6 +2,9 @@
 
 namespace Drupal\ghi_plans\Entity;
 
+use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
@@ -13,13 +16,30 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
 
   use PlanTypeTrait;
 
+  public const CLUSTER_TYPE_CLUSTER = 'cluster';
+  public const CLUSTER_TYPE_SECTOR = 'sector';
+
   /**
    * {@inheritdoc}
    */
   public function getPageTitleMetaData() {
+    $langcode = $this->getPlanLanguage() ?? 'en';
+    $document_published = $this->getPlanDocumentPublishedDate();
+    $t_options = ['langcode' => $langcode];
     return array_filter([
-      $this->getPlanTypeLabel(),
-      $this->getPlanStatusLabel(),
+      $this->getPlanSubtitle() ? new FormattableMarkup('<span class="icon-wrapper"><span class="icon plan-subtitle"></span>@subtitle</span>', [
+        '@subtitle' => $this->getPlanSubtitle(),
+      ]) : NULL,
+      $this->getPlanStartDate() ? new TranslatableMarkup('<strong>From:</strong> @start_date <strong>to:</strong> @end_date', [
+        '@start_date' => DrupalDateTime::createFromFormat('Y-m-d', $this->getPlanStartDate())->format('d/m/Y'),
+        '@end_date' => DrupalDateTime::createFromFormat('Y-m-d', $this->getPlanEndDate())->format('d/m/Y'),
+      ], $t_options) : NULL,
+      $document_published ? new TranslatableMarkup('<strong>Published:</strong> @date', [
+        '@date' => DrupalDateTime::createFromFormat('Y-m-d', $document_published)->format('d/m/Y'),
+      ], $t_options) : new TranslatableMarkup('<strong>Unpublished</strong>', [], $t_options),
+      $this->getPlanCoordinator() ? new TranslatableMarkup('<span class="icon-wrapper"><span class="icon plan-coordinator"></span><strong>Coordinated by:</strong> @coordinator</span>', [
+        '@coordinator' => implode(' & ', $this->getPlanCoordinator()),
+      ], $t_options) : NULL,
     ]);
   }
 
@@ -31,6 +51,19 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    */
   public function getYear() {
     return $this->get('field_year')->value;
+  }
+
+  /**
+   * Get the plan language.
+   *
+   * @return string|null
+   *   The plan language.
+   */
+  public function getPlanLanguage() {
+    if (!$this->hasField('field_language')) {
+      return NULL;
+    }
+    return $this->get('field_language')?->value ?? NULL;
   }
 
   /**
@@ -47,24 +80,89 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
-   * Get the plan type label.
-   *
-   * @param bool $override
-   *   Whether the overridden label can be used if it's available.
+   * Get the plan cluster type.
    *
    * @return string|null
-   *   The label of the plan type.
+   *   The plan cluster type.
    */
-  public function getPlanTypeLabel($override = TRUE) {
-    if (!$this->hasField('field_plan_type_label_override')) {
+  public function getPlanClusterType() {
+    if (!$this->hasField('field_plan_cluster_type')) {
       return NULL;
     }
-    $plan_type_label_override = $this->get('field_plan_type_label_override')->value;
-    if ($override && !empty($plan_type_label_override)) {
-      return $plan_type_label_override;
+    $allowed = [
+      self::CLUSTER_TYPE_CLUSTER,
+      self::CLUSTER_TYPE_SECTOR,
+    ];
+    $cluster_type = $this->get('field_plan_cluster_type')?->value ?? self::CLUSTER_TYPE_CLUSTER;
+    return in_array($cluster_type, $allowed) ? $cluster_type : self::CLUSTER_TYPE_CLUSTER;
+  }
+
+  /**
+   * Get the plan subtitle.
+   *
+   * @return string|null
+   *   The plan subtitle.
+   */
+  public function getPlanSubtitle() {
+    if (!$this->hasField('field_subtitle')) {
+      return NULL;
     }
-    $plan_type = $this->getPlanType();
-    return $plan_type ? $plan_type->label() : NULL;
+    return $this->get('field_subtitle')->value;
+  }
+
+  /**
+   * Get the plan start date.
+   *
+   * @return string|null
+   *   The plan start date.
+   */
+  public function getPlanStartDate() {
+    if (!$this->hasField('field_plan_date_range')) {
+      return NULL;
+    }
+    return $this->get('field_plan_date_range')->value;
+  }
+
+  /**
+   * Get the plan end date.
+   *
+   * @return string|null
+   *   The plan end date.
+   */
+  public function getPlanEndDate() {
+    if (!$this->hasField('field_plan_date_range')) {
+      return NULL;
+    }
+    return $this->get('field_plan_date_range')->end_value;
+  }
+
+  /**
+   * Get the plan document publication date.
+   *
+   * @return string|null
+   *   The plan end date.
+   */
+  public function getPlanDocumentPublishedDate() {
+    if (!$this->hasField('field_document_published_on')) {
+      return NULL;
+    }
+    return $this->get('field_document_published_on')->value;
+  }
+
+  /**
+   * Get the plan document coordinator(s).
+   *
+   * @return string[]|null
+   *   The plan coordinator(s).
+   */
+  public function getPlanCoordinator() {
+    if (!$this->hasField('field_plan_coordinator')) {
+      return NULL;
+    }
+    $value = $this->get('field_plan_coordinator')->getValue();
+    return !empty($value) ? array_filter(array_map(function ($item) {
+      return $item['value'];
+    }, array_filter($value))) : NULL;
   }
 
   /**
@@ -79,7 +177,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   public function getPlanTypeShortLabel($override = TRUE) {
     $plan_type = $this->getPlanType();
     $included_in_totals = $plan_type ? $plan_type->get('field_included_in_totals')->value : FALSE;
-    $plan_type_label = $this->getPlanTypeLabel($override);
+    $plan_type_label = $override ? $this->getPlanSubtitle() : $plan_type->label();
     return $plan_type_label ? $this->getPlanTypeShortName($plan_type_label, $included_in_totals) : NULL;
   }
 
@@ -90,15 +188,15 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    *   A label for the plan status or NULL if the field is not found.
    */
   public function getPlanStatusLabel() {
-    if (!$this->hasField('field_plan_status')) {
+    if (!$this->hasField('field_released')) {
       return NULL;
     }
-    $plan_status = $this->get('field_plan_status') ?? NULL;
-    if (!$plan_status) {
+    $released = $this->get('field_released') ?? NULL;
+    if (!$released) {
       return NULL;
     }
-    $field_definition = $plan_status->getFieldDefinition();
-    return $plan_status->value ? $field_definition->getSetting('on_label') : $field_definition->getSetting('off_label');
+    $field_definition = $released->getFieldDefinition();
+    return $released->value ? $field_definition->getSetting('on_label') : $field_definition->getSetting('off_label');
   }
 
   /**
@@ -164,6 +262,32 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
       return NULL;
     }
     return $this->get('field_max_admin_level')->value ?? NULL;
+  }
+
+  /**
+   * Whether the plan is marked as restricted.
+   *
+   * @return bool
+   *   TRUE id the plan is marked as restricted, FALSE otherwhise.
+   */
+  public function isRestricted() {
+    if (!$this->hasField('field_restricted')) {
+      return NULL;
+    }
+    return $this->get('field_restricted')->value ?? FALSE;
+  }
+
+  /**
+   * Whether the plan is marked as restricted.
+   *
+   * @return bool
+   *   TRUE id the plan is marked as restricted, FALSE otherwhise.
+   */
+  public function isReleased() {
+    if (!$this->hasField('field_released')) {
+      return NULL;
+    }
+    return $this->get('field_released')->value ?? FALSE;
   }
 
   /**

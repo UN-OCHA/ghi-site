@@ -23,7 +23,7 @@ class IndicatorAttachment extends DataAttachment {
   /**
    * {@inheritdoc}
    */
-  public function getSingleValue($index, array $reporting_periods = NULL, $data_point_conf = []) {
+  public function getSingleValue($index, ?array $reporting_periods = NULL, $data_point_conf = []) {
     if (!$this->isApiCalculated($index, $data_point_conf)) {
       $monitoring_period = !empty($reporting_periods) ? array_key_last($reporting_periods) : 'latest';
       return $this->getValueForDataPoint($index, $monitoring_period);
@@ -90,7 +90,7 @@ class IndicatorAttachment extends DataAttachment {
     if ($this->isMeasurement($conf)) {
       // Otherwise see if this is a measurement and if we can get a formatted
       // monitoring period for this data point.
-      $tooltip['monitoring_period'] = $this->formatMonitoringPeriod('icon', $last_reporting_period->id, 'as of date @end_date');
+      $tooltip['monitoring_period'] = $this->formatMonitoringPeriod('icon', $last_reporting_period->id(), 'as of date @end_date', ['langcode' => $this->getPlanLanguage()]);
     }
 
     if ($this->isApiCalculated($index, $conf['data_points'][0]) && $conf['processing'] != 'calculated') {
@@ -105,39 +105,40 @@ class IndicatorAttachment extends DataAttachment {
   /**
    * Get a formatted calculation tooltip.
    *
-   * @param array $monitoring_period_id
-   *   The id of the monitoring period.
+   * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod $monitoring_period
+   *   The monitoring period.
    *
    * @return array|null
    *   Either a build array for the tooltip, or NULL.
    */
-  public function formatCalculationTooltip($monitoring_period_id) {
+  public function formatCalculationTooltip($monitoring_period) {
     $tooltip_icon = NULL;
     $tooltip_text = NULL;
     $reporting_period_text = ThemeHelper::render([
       '#theme' => 'hpc_reporting_period',
-      '#reporting_period' => $monitoring_period_id,
+      '#reporting_period' => $monitoring_period,
       '#format_string' => ', as of date @end_date',
     ], FALSE);
     $calculation_method = $this->getCalculationMethod();
+    $t_options = ['langcode' => $this->getPlanLanguage()];
     switch (strtolower($calculation_method)) {
       case self::CALCULATION_METHOD_SUM:
-        $tooltip_text = $this->t('This value is the sum of all monitoring periods values');
+        $tooltip_text = $this->t('This value is the sum of all monitoring periods values', [], $t_options);
         $tooltip_icon = 'functions';
         break;
 
       case self::CALCULATION_METHOD_AVERAGE:
-        $tooltip_text = $this->t('This value is the average of all monitoring periods values');
+        $tooltip_text = $this->t('This value is the average of all monitoring periods values', [], $t_options);
         $tooltip_icon = 'moving';
         break;
 
       case self::CALCULATION_METHOD_MAXIMUM:
-        $tooltip_text = $this->t('This value is the maximum of all monitoring periods values');
+        $tooltip_text = $this->t('This value is the maximum of all monitoring periods values', [], $t_options);
         $tooltip_icon = 'equalizer';
         break;
 
       case self::CALCULATION_METHOD_LATEST:
-        $tooltip_text = $this->t('This is the latest monitoring period value');
+        $tooltip_text = $this->t('This is the latest monitoring period value', [], $t_options);
         $tooltip_icon = 'watch_later';
         break;
     }

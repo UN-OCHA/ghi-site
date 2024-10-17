@@ -34,8 +34,8 @@ use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\hpc_downloads\DownloadSource\BlockSource;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPDFInterface;
-use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
 use Drupal\layout_builder\Form\AddBlockForm;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Plugin\SectionStorage\SectionStorageBase;
@@ -1184,6 +1184,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // GIN backend theme, this is not done automatically.
     $form['actions']['#type'] = 'actions';
     $form['actions']['#attributes']['class'][] = 'canvas-form__actions';
+    $form['actions']['#attributes']['class'] = array_unique($form['actions']['#attributes']['class']);
 
     $is_preview = $form_state->get('preview');
     $active_subform = $form_state->get('current_subform');

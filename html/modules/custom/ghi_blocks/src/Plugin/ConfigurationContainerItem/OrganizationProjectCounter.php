@@ -8,6 +8,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -132,6 +133,10 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
   private function getModalLink() {
     $base_object = $this->getContextValue('base_object');
     $organization = $this->getContextValue('organization');
+    $plan_object = $this->getContextValue('plan_object');
+    $t_options = [
+      'langcode' => $plan_object instanceof Plan ? $plan_object->getPlanLanguage() : NULL,
+    ];
 
     $route_name = 'ghi_plans.modal_content.organization_projects';
     $width = '80%';
@@ -148,7 +153,7 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
           'width' => $width,
           'title' => $this->t('@organization: Projects', [
             '@organization' => $organization->getName(),
-          ]),
+          ], $t_options),
           'classes' => [
             'ui-dialog' => 'project-count-modal ghi-modal-dialog',
           ],
@@ -165,7 +170,7 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
     $link = Link::fromTextAndUrl($text, $link_url);
     $tooltip = $this->t('Click to see detailed data for <em>@column_label</em>.', [
       '@column_label' => $this->getLabel(),
-    ]);
+    ], $t_options);
     $modal_link = [
       '#theme' => 'hpc_modal_link',
       '#link' => $link->toRenderable(),

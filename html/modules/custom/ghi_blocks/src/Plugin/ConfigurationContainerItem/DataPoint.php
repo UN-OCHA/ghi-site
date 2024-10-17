@@ -9,6 +9,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Element\DataPoint as ElementDataPoint;
+use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -70,18 +71,23 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getDefaultLabel() {
-    $attachment = $this->getContextValue('attachment');
     $data_point_conf = $this->getDataPointConfig();
     $data_point_index = $data_point_conf['data_points'][0]['index'] ?? NULL;
     if ($data_point_index === NULL) {
       return NULL;
     }
-    if ($attachment) {
-      return $attachment->fields[$data_point_index] ?? NULL;
-    }
+    // Get the protoype, as that is where the labels come from.
+    $attachment = $this->getContextValue('attachment');
     $attachment_prototype = $this->getContextValue('attachment_prototype');
-    $fields = array_merge($attachment_prototype->fields ?? []);
-    return $fields[$data_point_index] ?? NULL;
+    if (!$attachment_prototype && $attachment instanceof DataAttachment) {
+      $attachment_prototype = $attachment->getPrototype();
+    }
+    if (!$attachment_prototype instanceof AttachmentPrototype) {
+      return NULL;
+    }
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
+    $plan_object = $this->getContextValue('plan_object') ?? NULL;
+    return $attachment_prototype->getDefaultFieldLabel($data_point_index, $plan_object?->getPlanLanguage());
   }
 
   /**

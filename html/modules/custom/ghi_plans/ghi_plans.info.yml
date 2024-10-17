@@ -5,6 +5,9 @@ package: GHI
 type: module
 core_version_requirement: ^9 || ^10
 
+interface translation project: ghi_plans
+interface translation server pattern: modules/custom/ghi_plans/translations/%language.po
+
 dependencies:
   - hpc_api:hpc_api
   - ghi_base_objects:ghi_base_objects

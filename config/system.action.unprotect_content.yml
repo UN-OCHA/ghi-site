@@ -7,7 +7,7 @@ dependencies:
 _core:
   default_config_hash: 03CbUBTrNYTt7-XQZn1cwc4fMixXExZVVwVPjs5TQOM
 id: unprotect_content
-label: 'Unprotect Content'
+label: "Don’t password-protect"
 type: node
 plugin: unprotect_content
 configuration: {  }

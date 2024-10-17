@@ -214,7 +214,7 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup|null
    *   The value operation or NULL.
    */
-  public function getValueOperation(array $type = NULL) {
+  public function getValueOperation(?array $type = NULL) {
     $type = $type ?? $this->getType();
     $custom_value = $this->getCustomValue();
     if (!empty($type['allow_sum']) && $custom_value) {
@@ -240,7 +240,7 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
    * @return mixed
    *   The type-casted write-in value.
    */
-  public function getCustomValue(array $type = NULL, $use_custom_value = NULL, $custom_value = NULL) {
+  public function getCustomValue(?array $type = NULL, $use_custom_value = NULL, $custom_value = NULL) {
     $type = $type ?? $this->getType();
     $use_custom_value = $use_custom_value ?? $this->get('use_custom_value');
     $custom_value = $custom_value ?? $this->get('custom_value');

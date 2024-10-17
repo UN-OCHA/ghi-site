@@ -133,7 +133,12 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     }
     $year = $this->getContextValue('year');
 
-    $header = [
+    $header = [];
+    if ($export) {
+      $header['plan_id'] = $this->t('Plan ID');
+    }
+
+    $header += [
       'name' => $this->t('Plans'),
       'type' => $this->t('Plan type'),
       'inneed' => [
@@ -179,6 +184,14 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'data' => $this->t('Document'),
         'data-column-type' => 'document',
       ];
+      $header['link_ha'] = [
+        'data' => $this->t('Link to HA page'),
+        'data-column-type' => 'document',
+      ];
+      $header['link_fts'] = [
+        'data' => $this->t('Link to FTS page'),
+        'data-column-type' => 'document',
+      ];
     }
 
     $cache_tags = [];
@@ -218,7 +231,6 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       }
 
       $link_to_fts = $plan_entity ? $plan_entity->canLinkToFts() : FALSE;
-      $plan_status = $plan->getPlanStatus();
       $document_uri = $plan->getPlanDocumentUri();
 
       // Setup the column values.
@@ -267,7 +279,13 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         '#ratio' => $coverage / 100,
       ];
 
-      $rows[$plan->id()] = [
+      $rows[$plan->id()] = [];
+
+      if ($export) {
+        $rows[$plan->id()]['plan_id'] = ['data' => $plan->id()];
+      }
+
+      $rows[$plan->id()] += [
         'name' => [
           'data' => [
             'name' => [
@@ -355,11 +373,11 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data' => [
             '#type' => 'container',
             'content' => array_filter([
-              'plan_status' => $plan_status ? [
+              'plan_status' => [
                 '#theme' => 'plan_status',
-                '#status' => strtolower($plan_status),
-                '#status_label' => $plan_status,
-              ] : NULL,
+                '#status' => strtolower($plan->getPlanStatus() ? 'published' : 'unpublished'),
+                '#status_label' => $plan->getPlanStatusLabel(),
+              ],
               'document' => $document_uri ? [
                 '#type' => 'html_tag',
                 '#tag' => 'span',
@@ -379,6 +397,13 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       if ($export) {
         $rows[$plan->id()]['document'] = [
           'data' => $document_uri,
+        ];
+        $section = $plan_entity ? $this->sectionManager->loadSectionForBaseObject($plan_entity) : NULL;
+        $rows[$plan->id()]['link_ha'] = [
+          'data' => $section ? 'https://humanitarianaction.info' . $section->toUrl()->toString() : NULL,
+        ];
+        $rows[$plan->id()]['link_fts'] = [
+          'data' => self::buildFtsUrl($plan_entity, 'summary'),
         ];
       }
     }
@@ -603,7 +628,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       '#tooltip' => $this->t('Enter decimals between 0 and 1, using a point as the decimal separator, e.g. 0.4.'),
     ], FALSE);
     $plan_types = $this->getAvailablePlanTypes(TRUE);
-    $plan_status_options = FieldHelper::getBooleanFieldOptions('base_object', 'plan', 'field_plan_status');
+    $plan_status_options = FieldHelper::getBooleanFieldOptions('base_object', 'plan', 'field_released');
 
     $form['custom_rows'] = [
       '#type' => 'details',

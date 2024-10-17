@@ -1,0 +1,21 @@
+uuid: a727437f-c7de-447b-90a7-a25cafcc0bc6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_released
+    - ghi_base_objects.base_object_type.plan
+id: base_object.plan.field_released
+field_name: field_released
+entity_type: base_object
+bundle: plan
+label: Released
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  on_label: 'Confirmed data'
+  off_label: 'Estimated data'
+field_type: boolean

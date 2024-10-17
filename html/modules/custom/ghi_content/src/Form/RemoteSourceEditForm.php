@@ -29,7 +29,7 @@ class RemoteSourceEditForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, RemoteSourceInterface $remote_source = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?RemoteSourceInterface $remote_source = NULL) {
     $this->remoteSource = $remote_source;
 
     $form['settings'] = [

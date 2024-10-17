@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_subpages\Form;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Datetime\DateFormatter;
@@ -19,6 +20,7 @@ use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\SubpageManager;
 use Drupal\ghi_subpages\SubpageTrait;
+use Drupal\hpc_api\Traits\BulkFormTrait;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\node\NodeInterface;
 use Drupal\node\NodeTypeInterface;
@@ -32,6 +34,7 @@ class SubpagesPagesForm extends FormBase {
 
   use SubpageTrait;
   use LayoutEntityHelperTrait;
+  use BulkFormTrait;
 
   /**
    * The date formatter service.
@@ -131,9 +134,12 @@ class SubpagesPagesForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?NodeInterface $node = NULL) {
 
     $form['#attached']['library'][] = 'ghi_subpages/admin.subpages_form';
+
+    /** @var \Drupal\ghi_sections\Entity\SectionNodeInterface $node */
+    $node = $this->getBaseTypeNode($node);
     $form['#node'] = $node;
 
     $header = [
@@ -146,9 +152,6 @@ class SubpagesPagesForm extends FormBase {
     ];
 
     $rows = [];
-
-    /** @var \Drupal\ghi_sections\Entity\SectionNodeInterface $node */
-    $node = $this->getBaseTypeNode($node);
 
     if (!$node->isPublished()) {
       $this->messenger()->addWarning($this->t('This @type is currently unpublished. The subpages listed on this page can only be published once the @type itself is published.', [
@@ -298,6 +301,12 @@ class SubpagesPagesForm extends FormBase {
         '#type' => 'tableselect',
         '#header' => $header,
         '#options' => $rows,
+        '#attributes' => [
+          'class' => [Html::getClass('subpages_' . $node_type->id() . '_bulk_form')],
+        ],
+        '#wrapper_attributes' => [
+          'class' => [Html::getClass('subpages_' . $node_type->id() . '_bulk_form')],
+        ],
         '#empty' => Markup::create(implode(' ', array_filter([
           $this->t('There is no <em>@type</em> content yet.', [
             '@type' => strtolower($node_type->label()),
@@ -307,34 +316,7 @@ class SubpagesPagesForm extends FormBase {
       ];
     }
 
-    $bulk_form_actions = $this->getBulkFormActions();
-    if (!empty($bulk_form_actions)) {
-      // Build the bulk form. This is mainly done in a way to be compatible with
-      // the gin theme, see gin_form_alter() and gin/styles/base/_views.scss.
-      $form['#prefix'] = Markup::create('<div class="view-content"><div class="views-form">');
-      $form['#suffix'] = Markup::create('</div></div>');
-      $form['header'] = [
-        '#type' => 'container',
-        '#id' => 'edit-header',
-        'subpages_bulk_form' => [
-          '#type' => 'container',
-          '#id' => 'edit-node-bulk-form',
-          'action' => [
-            '#type' => 'select',
-            '#title' => $this->t('Action'),
-            '#options' => $this->getBulkFormActions(),
-          ],
-          'actions' => [
-            '#type' => 'actions',
-            'submit' => [
-              '#type' => 'submit',
-              '#name' => 'bulk_submit',
-              '#value' => $this->t('Apply to selected items'),
-            ],
-          ],
-        ],
-      ];
-    }
+    $this->buildBulkForm($form, $this->getBulkFormActions());
 
     return $form;
   }
@@ -373,6 +355,8 @@ class SubpagesPagesForm extends FormBase {
       $node->save();
     }
 
+    // Stay on the subpages form page.
+    $form_state->setIgnoreDestination();
   }
 
   /**

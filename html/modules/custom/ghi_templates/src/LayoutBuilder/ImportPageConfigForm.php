@@ -78,7 +78,7 @@ class ImportPageConfigForm extends TemplateFormBase {
    * @return array
    *   The form array.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, EntityInterface $entity = NULL, SectionStorageInterface $section_storage = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?EntityInterface $entity = NULL, ?SectionStorageInterface $section_storage = NULL) {
     $form = parent::buildForm($form, $form_state, $entity, $section_storage);
 
     $form['#title'] = $this->t('Import page configuration to @label', [
@@ -109,7 +109,7 @@ class ImportPageConfigForm extends TemplateFormBase {
   /**
    * Build the import form where the code can be inserted.
    */
-  private function importForm($form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL) {
+  private function importForm($form, FormStateInterface $form_state, ?SectionStorageInterface $section_storage = NULL) {
 
     $config = $this->getSubmittedConfig($form_state);
 
@@ -147,7 +147,7 @@ class ImportPageConfigForm extends TemplateFormBase {
   /**
    * Build the summary form where the code can be inserted.
    */
-  private function confirmForm($form, FormStateInterface $form_state, EntityInterface $entity = NULL, SectionStorageInterface $section_storage = NULL) {
+  private function confirmForm($form, FormStateInterface $form_state, ?EntityInterface $entity = NULL, ?SectionStorageInterface $section_storage = NULL) {
     $form_state->set('section_storage', $section_storage);
     $form_state->set('entity', $entity);
     $page_config = $form_state->get('page_config');

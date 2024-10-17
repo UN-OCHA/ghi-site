@@ -11,7 +11,7 @@ entity_type: base_object
 bundle: plan
 label: 'Short name'
 description: 'An optional short name for a plan.'
-required: false
+required: true
 translatable: false
 default_value: {  }
 default_value_callback: ''

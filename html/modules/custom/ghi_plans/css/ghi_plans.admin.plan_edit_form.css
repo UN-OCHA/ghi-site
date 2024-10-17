@@ -1,0 +1,15 @@
+.field--name-field-plan-date-range > fieldset {
+  border: 0;
+}
+.field--name-field-plan-date-range > fieldset > legend {
+  display: none;
+}
+.field--name-field-plan-date-range > fieldset > .fieldset__wrapper {
+  display: flex;
+  margin: 0;
+  gap: 1rem;
+}
+.field--name-field-plan-date-range > fieldset > .fieldset__wrapper > .form-datetime-wrapper {
+  margin-top: 0;
+  margin-bottom: 0;
+}

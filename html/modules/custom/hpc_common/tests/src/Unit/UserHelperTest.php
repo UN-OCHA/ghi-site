@@ -4,8 +4,8 @@ namespace Drupal\Tests\hpc_common\Unit;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\hpc_common\Helpers\UserHelper;
 use Drupal\Tests\UnitTestCase;
+use Drupal\hpc_common\Helpers\UserHelper;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 

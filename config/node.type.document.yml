@@ -11,7 +11,7 @@ third_party_settings:
 name: 'Document page'
 type: document
 description: 'A document is a collection of articles, optionally grouped into chapters.'
-help: ''
+help: null
 new_revision: true
 preview_mode: 0
 display_submitted: true

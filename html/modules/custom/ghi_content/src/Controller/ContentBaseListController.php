@@ -61,7 +61,7 @@ abstract class ContentBaseListController extends ControllerBase {
    *   A redirect to a batch url or a render array if the migration can't be
    *   found.
    */
-  protected function runMigration($redirect, array $tags = NULL) {
+  protected function runMigration($redirect, ?array $tags = NULL) {
     // @todo Make this work with more than a single migration. One way to do
     // this, would be to fetch all definitions and then filter by the source
     // plugin used (RemoteSourceGraphQL).

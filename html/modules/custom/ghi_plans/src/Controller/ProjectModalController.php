@@ -9,6 +9,7 @@ use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_plans\Entity\GoverningEntity;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -106,8 +107,9 @@ class ProjectModalController extends ControllerBase {
   public function buildProjectTable(BaseObjectInterface $base_object) {
     $project_search_query = $this->getProjectSearchQuery($base_object);
     $projects = $project_search_query->getProjects($base_object);
-    $build = $this->getProjectTable($projects, $this->getDecimalFormat($base_object));
-    return $this->returnBuild($build, $this->modalTitleBaseObject($base_object, $this->t('Projects')));
+    $plan_object = $this->getPlanObject($base_object);
+    $build = $this->getProjectTable($projects, $plan_object);
+    return $this->returnBuild($build, $this->modalTitleBaseObject($base_object, $this->t('Projects', [], ['langcode' => $plan_object?->getPlanLanguage()])));
   }
 
   /**
@@ -122,15 +124,19 @@ class ProjectModalController extends ControllerBase {
   public function buildOrganizationList(BaseObjectInterface $base_object) {
     $project_search_query = $this->getProjectSearchQuery($base_object);
     $organizations = $project_search_query->getOrganizations($base_object);
+    $plan_object = $this->getPlanObject($base_object);
+    $t_options = [
+      'langcode' => $plan_object?->getPlanLanguage(),
+    ];
     $build = $this->getOrganizationList($organizations);
     $fts_link = NULL;
     if ($base_object instanceof GoverningEntity) {
       $link_title = $this->t('For more details, view on <img src="@logo_url" />', [
         '@logo_url' => ThemeHelper::getUriToFtsIcon(),
-      ]);
-      $fts_link = self::buildFtsLink($link_title, $this->getPlanObject($base_object), 'recipients', $base_object);
+      ], $t_options);
+      $fts_link = self::buildFtsLink($link_title, $plan_object, 'recipients', $base_object);
     }
-    return $this->returnBuild($build, $this->modalTitleBaseObject($base_object, $this->t('Organizations')), $fts_link);
+    return $this->returnBuild($build, $this->modalTitleBaseObject($base_object, $this->t('Organizations', [], $t_options)), $fts_link);
   }
 
   /**
@@ -145,14 +151,23 @@ class ProjectModalController extends ControllerBase {
    *   A render array.
    */
   public function buildOrganizationProjectTable(BaseObjectInterface $base_object, $organization_id) {
+    $plan_object = $this->getPlanObject($base_object);
+    $t_options = [
+      'langcode' => $plan_object?->getPlanLanguage(),
+    ];
     $organization = $this->getOrganization($organization_id);
     if (!$organization) {
-      return NULL;
+      $build = [
+        '#markup' => $this->t('An error occured. The requested ressource is not available.', [], $t_options),
+      ];
+      return $this->returnBuild($build, $this->t('Error', [], $t_options));
     }
     $project_search_query = $this->getProjectSearchQuery($base_object);
     $projects = $project_search_query->getOrganizationProjects($organization, $base_object);
-    $build = $this->getOrganizationProjectTable($projects, $this->getDecimalFormat($base_object));
-    $title = $organization->getName() . ' | ' . $this->t('Projects');
+    $build = $this->getOrganizationProjectTable($projects, $plan_object?->getDecimalFormat());
+    $title = $this->t('@organization_name | Projects', [
+      '@organization_name' => $organization->getName(),
+    ], $t_options);
     return $this->returnBuild($build, $title);
   }
 
@@ -161,38 +176,42 @@ class ProjectModalController extends ControllerBase {
    *
    * @param \Drupal\ghi_plans\ApiObjects\Project[] $projects
    *   The projects to include in the table.
-   * @param string|null $decimal_format
-   *   The decimal format to use.
+   * @param \Drupal\ghi_plans\Entity\Plan|null $plan_object
+   *   The plan object for context.
    *
    * @return array
    *   A render array.
    */
-  private function getProjectTable(array $projects, $decimal_format = NULL) {
+  private function getProjectTable(array $projects, ?Plan $plan_object = NULL) {
+    $decimal_format = $plan_object?->getDecimalFormat();
+    $t_options = [
+      'langcode' => $plan_object?->getPlanLanguage(),
+    ];
     $header = [
       [
-        'data' => $this->t('Project code'),
+        'data' => $this->t('Project code', [], $t_options),
         'data-sort-type' => 'alfa',
         'data-sort-order' => 'ASC',
         'data-column-type' => 'string',
       ],
       [
-        'data' => $this->t('Project name'),
+        'data' => $this->t('Project name', [], $t_options),
         'data-sort-type' => 'alfa',
         'data-column-type' => 'string',
       ],
       [
-        'data' => $this->t('Organizations'),
+        'data' => $this->t('Organizations', [], $t_options),
         'data-sort-type' => 'alfa',
         'data-column-type' => 'string',
       ],
       [
-        'data' => $this->t('Project Target'),
+        'data' => $this->t('Project Target', [], $t_options),
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
         'data-formatting' => 'numeric-full',
       ],
       [
-        'data' => $this->t('Requirements'),
+        'data' => $this->t('Requirements', [], $t_options),
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
         'data-formatting' => 'numeric-full',
@@ -264,7 +283,7 @@ class ProjectModalController extends ControllerBase {
     $total_rows = [];
     $total_rows[] = [
       'data' => [
-        $this->t('Total'),
+        $this->t('Total', [], $t_options),
         NULL,
         count($organization_ids_unique),
         [
@@ -304,18 +323,22 @@ class ProjectModalController extends ControllerBase {
    *
    * @param array $projects
    *   The projects to include in the table.
-   * @param string|null $decimal_format
-   *   The decimal format to use.
+   * @param \Drupal\ghi_plans\Entity\Plan|null $plan_object
+   *   The plan object for context.
    *
    * @return array
    *   A render array.
    */
-  private function getOrganizationProjectTable(array $projects, $decimal_format) {
+  private function getOrganizationProjectTable(array $projects, ?Plan $plan_object = NULL) {
+    $decimal_format = $plan_object?->getDecimalFormat();
+    $t_options = [
+      'langcode' => $plan_object?->getPlanLanguage(),
+    ];
     $header = [
-      $this->t('Project code'),
-      $this->t('Project name'),
+      $this->t('Project code', [], $t_options),
+      $this->t('Project name', [], $t_options),
       [
-        'data' => $this->t('Requirements'),
+        'data' => $this->t('Requirements', [], $t_options),
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
         'data-formatting' => 'numeric-full',
@@ -358,7 +381,7 @@ class ProjectModalController extends ControllerBase {
     $total_rows = [];
     $total_rows[] = [
       'data' => [
-        $this->t('Total'),
+        $this->t('Total', [], $t_options),
         NULL,
         [
           'data' => [
@@ -436,20 +459,6 @@ class ProjectModalController extends ControllerBase {
     return array_values(array_map(function ($object) {
       return $object->name;
     }, $objects));
-  }
-
-  /**
-   * Get the decimal format to use for number formatting.
-   *
-   * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
-   *   The base object.
-   *
-   * @return string|null
-   *   Either 'comma', 'point' or NULL.
-   */
-  private function getDecimalFormat(BaseObjectInterface $base_object) {
-    $plan_object = $this->getPlanObject($base_object);
-    return $plan_object ? $plan_object->getDecimalFormat() : NULL;
   }
 
   /**

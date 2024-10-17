@@ -16,8 +16,8 @@ display:
         status:
           label: Status
           settings:
-            format_custom_false: Unpublished
-            format_custom_true: Published
+            format_custom_false: 'Non publié'
+            format_custom_true: Displayed
         changed:
           label: Updated
         operations:
@@ -50,12 +50,12 @@ display:
           expose:
             label: Status
           group_info:
-            label: 'Published status'
+            label: 'Display status'
             group_items:
               1:
-                title: Published
+                title: Displayed
               2:
-                title: Unpublished
+                title: 'Non publié'
         langcode:
           expose:
             label: Language

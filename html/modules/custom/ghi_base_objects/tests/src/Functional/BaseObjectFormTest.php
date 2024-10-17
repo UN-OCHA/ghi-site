@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\ghi_base_objects\Functional;
 
-use Drupal\ghi_base_objects\Form\BaseObjectForm;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
+use Drupal\ghi_base_objects\Form\BaseObjectForm;
 
 /**
  * Tests the node wizard pages.

@@ -61,7 +61,7 @@ class Metatags {
    *   'entity' - The entity being processed; passed by reference.
    */
   public function alter(array &$metatags, array &$context) {
-    $page_variant = $this->routeMatch->getParameter('page_manager_page_variant');
+    $page_variant = $this->routeMatch->getParameter('_page_manager_page_variant');
     if ($page_variant) {
       $this->pageVariantMetatagAlter($page_variant, $metatags, $context);
     }

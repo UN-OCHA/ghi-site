@@ -40,7 +40,7 @@ class LogframeBatchRebuildForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?NodeInterface $node = NULL) {
     $form['#node'] = $node;
     $form['message'] = [
       '#type' => 'html_tag',

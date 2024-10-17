@@ -358,7 +358,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
       return $page_parameters;
     }
     $page_parameters = array_filter($page_parameters, function ($key) {
-      return $key[0] != '_';
+      return $key[0] != '_' || strpos($key, '_page_manager') === 0;
     }, ARRAY_FILTER_USE_KEY);
 
     return $page_parameters;
@@ -369,9 +369,9 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    */
   public function setPage($page_parameters = NULL) {
     $page_parameters = $this->getAllAvailablePageParameters($page_parameters);
-    if (!empty($page_parameters['page_manager_page'])) {
+    if (!empty($page_parameters['_page_manager_page'])) {
       // Page manager page.
-      $this->page = $page_parameters['page_manager_page']->id();
+      $this->page = $page_parameters['_page_manager_page']->id();
     }
     elseif (!empty($page_parameters['panels_storage_id'])) {
       // Used when in configuration editing context with Panels IPE.
@@ -427,8 +427,8 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   public function setPageVariant($page_parameters = NULL) {
     $page_parameters = $this->getAllAvailablePageParameters($page_parameters);
 
-    if (!empty($page_parameters['page_manager_page_variant'])) {
-      $this->pageVariant = $page_parameters['page_manager_page_variant']->id();
+    if (!empty($page_parameters['_page_manager_page_variant'])) {
+      $this->pageVariant = $page_parameters['_page_manager_page_variant']->id();
     }
     elseif (!empty($page_parameters['panels_storage_id'])) {
       // Used when in configuration editing context with Panels IPE.
@@ -465,8 +465,8 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     if (!empty($page_parameters['node'])) {
       $this->pageTitle = $page_parameters['node']->getTitle();
     }
-    elseif (!empty($page_parameters['page_manager_page_variant'])) {
-      $variant_plugin = $page_parameters['page_manager_page_variant']->getVariantPlugin();
+    elseif (!empty($page_parameters['_page_manager_page_variant'])) {
+      $variant_plugin = $page_parameters['_page_manager_page_variant']->getVariantPlugin();
       try {
         // This build call might happen before contexts are initialized, so
         // better catch exceptions here.
@@ -477,8 +477,8 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
         $this->pageTitle = NULL;
       }
     }
-    elseif (!empty($page_parameters['page_manager_page'])) {
-      $this->pageTitle = $page_parameters['page_manager_page']->label();
+    elseif (!empty($page_parameters['_page_manager_page'])) {
+      $this->pageTitle = $page_parameters['_page_manager_page']->label();
     }
     else {
       $this->pageTitle = FALSE;

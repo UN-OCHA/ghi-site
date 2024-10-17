@@ -478,8 +478,8 @@ display:
           type: boolean
           settings:
             format: custom
-            format_custom_false: Unpublished
-            format_custom_true: Published
+            format_custom_false: 'Inactive'
+            format_custom_true: Active
           group_column: value
           group_columns: {  }
           group_rows: true
@@ -545,6 +545,7 @@ display:
         type: mini
         options:
           offset: 0
+          pagination_heading_level: h4
           items_per_page: 50
           total_pages: null
           id: 0
@@ -720,7 +721,7 @@ display:
           exposed: true
           expose:
             operator_id: ''
-            label: Published
+            label: Active
             description: ''
             use_operator: false
             operator: status_op
@@ -752,11 +753,11 @@ display:
             default_group_multiple: {  }
             group_items:
               1:
-                title: Published
+                title: Active
                 operator: '='
                 value: '1'
               2:
-                title: Unpublished
+                title: Inactive
                 operator: '='
                 value: '0'
               3:

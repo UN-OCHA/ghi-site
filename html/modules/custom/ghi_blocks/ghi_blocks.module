@@ -387,6 +387,7 @@ function ghi_blocks_link_alter(&$variables) {
       'height' => $config->get('modal_height'),
       'target' => 'layout-builder-modal',
       'autoResize' => $config->get('modal_autoresize'),
+      'drupalAutoButtons' => FALSE,
       'modal' => TRUE,
     ]);
     $variables['options']['attributes']['data-dialog-options'] = $data_dialog_options;

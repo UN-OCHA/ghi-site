@@ -3,8 +3,8 @@
 namespace Drupal\ghi_content\Plugin\migrate\source;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\migrate\Plugin\migrate\source\SourcePluginBase;
 use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate\Plugin\migrate\source\SourcePluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -47,7 +47,7 @@ class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPl
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     $instance = new static($configuration, $plugin_id, $plugin_definition, $migration);
     /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
     $remote_source_manager = $container->get('plugin.manager.remote_source');

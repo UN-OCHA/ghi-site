@@ -92,6 +92,9 @@ class BlockHelper {
    *   The block instances if it has been found.
    */
   public static function getBlockInstance($uri, $plugin_id, $block_uuid) {
+    if (empty($uri)) {
+      return NULL;
+    }
     /** @var \Drupal\Core\Routing\Router $router */
     $router = \Drupal::service('router.no_access_checks');
     try {
@@ -102,16 +105,15 @@ class BlockHelper {
     }
 
     $block = NULL;
-
     // We have 2 cases where we support our blocks:
     // 1. Page manager pages, which might also contain a content container with
     //    more elements defined in it.
     // 2. Node views that are build by layout_builder.
-    if (!empty($page_parameters['page_manager_page']) && !empty($page_parameters['page_manager_page_variant'])) {
+    if (!empty($page_parameters['_page_manager_page']) && !empty($page_parameters['_page_manager_page_variant'])) {
       // So this is a page manager page, so we get the page variant object and
       // extract the block from there.
       /** @var \Drupal\page_manager\Entity\PageVariant $page_variant */
-      $page_variant = $page_parameters['page_manager_page_variant'];
+      $page_variant = $page_parameters['_page_manager_page_variant'];
       $block = self::getBlockInstanceFromPageVariant($page_variant, $plugin_id, $block_uuid);
     }
     elseif (!empty($page_parameters['node'])) {

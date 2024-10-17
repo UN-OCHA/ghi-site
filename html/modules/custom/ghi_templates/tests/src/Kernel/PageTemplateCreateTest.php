@@ -2,16 +2,16 @@
 
 namespace Drupal\Tests\ghi_templates\Kernel;
 
-use Drupal\ghi_base_objects\Entity\BaseObject;
-use Drupal\ghi_sections\Entity\SectionNodeInterface;
-use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
-use Drupal\ghi_subpages\SubpageManager;
-use Drupal\ghi_templates\Entity\PageTemplate;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
 use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
+use Drupal\ghi_base_objects\Entity\BaseObject;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
+use Drupal\ghi_subpages\SubpageManager;
+use Drupal\ghi_templates\Entity\PageTemplate;
 
 /**
  * Tests the creation and validation of page template entities.

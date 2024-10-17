@@ -5,7 +5,7 @@ dependencies:
   module:
     - ghi_templates
 id: page_template_publish_action
-label: 'Publish page template'
+label: 'Activate page template'
 type: page_template
 plugin: 'entity:publish_action:page_template'
 configuration: {  }

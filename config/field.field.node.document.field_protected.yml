@@ -11,7 +11,7 @@ id: node.document.field_protected
 field_name: field_protected
 entity_type: node
 bundle: document
-label: Protected
+label: 'Password required'
 description: ''
 required: false
 translatable: false

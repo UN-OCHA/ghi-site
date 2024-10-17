@@ -1,0 +1,75 @@
+# French translation of Humanitarian Action - GHI Plans
+
+msgid ""
+msgstr ""
+"Project-Id-Version: Custom\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\\n"
+
+msgid "<strong>From:</strong> @start_date <strong>to:</strong> @end_date"
+msgstr "<strong>Du :</strong> @start_date <strong>au :</strong> @end_date"
+
+msgid "<strong>Published:</strong> @date"
+msgstr "<strong>Publié :</strong> @date"
+
+msgid "<strong>Unpublished</strong>"
+msgstr "<strong>Non publié</strong>"
+
+msgid ""
+"<span class=\"icon-wrapper\"><span class=\"icon "
+"plan-coordinator\"></span><strong>Coordinated by:</strong> "
+"@coordinator</span>"
+msgstr ""
+"<span class=\"icon-wrapper\"><span class=\"icon "
+"plan-coordinator\"></span><strong>Coordonné par :</strong> "
+"@coordinator</span>"
+
+msgid "Cluster frameworks"
+msgstr "Cadres logiques des clusters"
+
+msgid "@cluster_name cluster logical framework"
+msgstr "Cadre logique du cluster @cluster_name"
+
+msgid "See cluster framework"
+msgstr "Voir le cadre logique"
+
+msgid "Sector frameworks"
+msgstr "Cadres logiques des secteurs"
+
+msgid "@cluster_name sector logical framework"
+msgstr "Cadre logique du secteur @cluster_name"
+
+msgid "See sector framework"
+msgstr "Voir le cadre logique"
+
+msgid "People reached"
+msgstr "Personnes atteintes"
+
+msgid "Measure"
+msgstr "Mesure"
+
+msgid "Progress"
+msgstr "Progrès"
+
+msgid "Go to sector page"
+msgstr "Aller à la page du secteur"
+
+msgid "Go to cluster page"
+msgstr "Aller à la page du cluster"
+
+msgid "Unit"
+msgstr "Unité"
+
+msgid "Response plan"
+msgstr "Plan de réponse"
+
+msgid "Projects"
+msgstr "Projets"
+
+msgid "Caseload"
+msgstr "Données de population"
+
+msgid "Indicator"
+msgstr "Indicateur"

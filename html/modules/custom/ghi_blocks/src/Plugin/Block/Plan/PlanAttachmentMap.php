@@ -183,10 +183,10 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         '#format_string' => 'Monitoring period #@period_number: @date_range',
       ]);
     }, $reporting_periods);
-    $reporting_period = $this->getCurrentReportingPeriod();
+    $reporting_period_id = $this->getCurrentReportingPeriod();
     $configured_reporting_periods = $this->getConfiguredReportingPeriods();
 
-    $disaggregated_data = $attachment->getDisaggregatedData($reporting_period, TRUE);
+    $disaggregated_data = $attachment->getDisaggregatedData($reporting_period_id, TRUE);
     foreach ($disaggregated_data as $metric_index => $metric_item) {
       if (empty($metric_item['locations'])) {
         continue;
@@ -194,7 +194,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       $metric_label = $this->getMetricLabel($metric_index);
       $metric_type = strtolower($metric_item['metric']->type);
       $metric_map_key = $metric_type . '-' . $metric_index;
-      $metric_map_data = $this->prepareMetricItemMapData($metric_index, $metric_item, $decimal_format, $reporting_period ? $reporting_periods[$reporting_period] : NULL);
+      $metric_map_data = $this->prepareMetricItemMapData($metric_index, $metric_item, $decimal_format, $reporting_period_id ? $reporting_periods[$reporting_period_id] : NULL);
       $map['data'][$metric_map_key] = [
         'label' => $metric_label,
         'metric' => $metric_item['metric'],
@@ -215,11 +215,9 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     if (count($configured_reporting_periods) > 1) {
       $disaggregated_data_multiple_periods = $attachment->getDisaggregatedDataMultiple($configured_reporting_periods, FALSE, FALSE);
       if (!empty($disaggregated_data_multiple_periods)) {
-        foreach ($disaggregated_data_multiple_periods as $reporting_period_id => $period_data) {
-          // Using the reporting period id from the reporting period object,
-          // because $reporting_period_id can also be latest and we don't want
-          // duplicates in the list.
-          $reporting_period_id = $period_data['reporting_period']->id;
+        foreach ($disaggregated_data_multiple_periods as $period_data) {
+          /** @var \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod $reporting_period */
+          $reporting_period = $period_data['reporting_period'];
           foreach ($period_data['disaggregated_data'] as $metric_index => $metric_item) {
             $metric_type = strtolower($metric_item['metric']->type);
             $metric_map_key = $metric_type . '-' . $metric_index;
@@ -229,16 +227,16 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
             if (empty($metric_item['locations'])) {
               continue;
             }
-            if (!empty($map['data'][$metric_map_key]['variants'][$reporting_period_id])) {
+            if (!empty($map['data'][$metric_map_key]['variants'][$reporting_period->id()])) {
               continue;
             }
             if (!$attachment->isMeasurementField($metric_item['metric']->name->en)) {
               continue;
             }
-            $metric_map_data = $this->prepareMetricItemMapData($metric_index, $metric_item, $decimal_format, $period_data['reporting_period']);
-            $map['data'][$metric_map_key]['variants'][$reporting_period_id] = [
-              'label' => $reporting_periods_rendered[$reporting_period_id],
-              'tab_label' => $period_data['reporting_period']->periodNumber,
+            $metric_map_data = $this->prepareMetricItemMapData($metric_index, $metric_item, $decimal_format, $reporting_period);
+            $map['data'][$metric_map_key]['variants'][$reporting_period->id()] = [
+              'label' => $reporting_periods_rendered[$reporting_period->id()],
+              'tab_label' => $reporting_period->getPeriodNumber(),
               'locations' => $metric_map_data['location_data'],
               'modal_contents' => $metric_map_data['modal_contents'],
             ];
@@ -443,13 +441,14 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         $disaggregated_data_multiple_periods = $attachment->getDisaggregatedDataMultiple($configured_reporting_periods);
         if (!empty($disaggregated_data_multiple_periods)) {
           foreach ($disaggregated_data_multiple_periods as $period_data) {
-            $reporting_period_id = $period_data['reporting_period']->id;
-            $location_variants[$reporting_period_id] = [
+            /** @var \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod $reporting_period */
+            $reporting_period = $period_data['reporting_period'];
+            $location_variants[$reporting_period->id()] = [
               'locations' => [],
               'modal_contents' => [],
             ];
             // Get a shortcut to keep our code a bit easier to read.
-            $period_locations = &$location_variants[$reporting_period_id]['locations'];
+            $period_locations = &$location_variants[$reporting_period->id()]['locations'];
 
             foreach ($period_data['disaggregated_data'] as $metric_index => $metric_item) {
               if (!$attachment->isMeasurementField($metric_item['metric']->name->en)) {
@@ -483,13 +482,13 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
             $period_locations = array_values($period_locations);
 
             if (empty($period_locations)) {
-              unset($location_variants[$reporting_period_id]);
+              unset($location_variants[$reporting_period->id()]);
             }
             else {
               // Prepare the modal contents.
               foreach ($period_locations as $location) {
                 $location_id = $location['location_id'];
-                $location_variants[$reporting_period_id]['modal_contents'][$location_id] = $this->prepareModalContentDonut($location, $map['data']['attachment']['legend'], $unit_group, $unit_label, $decimal_format);
+                $location_variants[$reporting_period->id()]['modal_contents'][$location_id] = $this->prepareModalContentDonut($location, $map['data']['attachment']['legend'], $unit_group, $unit_label, $decimal_format);
               }
             }
           }
@@ -769,7 +768,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $periods = [];
     foreach ($configured_reporting_periods as $period_id) {
       if ($period_id == 'latest') {
-        $periods[$latest->id] = $latest->id;
+        $periods[$latest->id()] = $latest->id();
         continue;
       }
       $periods[$period_id] = $period_id;

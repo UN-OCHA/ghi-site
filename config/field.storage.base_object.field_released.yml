@@ -1,0 +1,18 @@
+uuid: b15d35c3-fa8c-472f-9aad-5fd8757646f9
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+id: base_object.field_released
+field_name: field_released
+entity_type: base_object
+type: boolean
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -11,3 +11,4 @@ name: 'Content space'
 vid: content_space
 description: 'Content spaces imported from the HPC API'
 weight: 0
+new_revision: false

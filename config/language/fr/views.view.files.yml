@@ -19,12 +19,15 @@ display:
           label: Status
           settings:
             format_custom_false: Temporaire
+            format_custom_true: Permanent
         created:
           label: 'Date de transfert'
         changed:
           label: 'Date de modification'
         count:
           label: 'Utilisé dans'
+          alter:
+            path: 'admin/content/files/usage/{{ fid }}'
           format_plural_string: !!binary QGNvdW50IGVtcGxhY2VtZW50A0Bjb3VudCBlbXBsYWNlbWVudHM=
       pager:
         options:
