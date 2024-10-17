@@ -114,7 +114,7 @@ class LocationsQuery extends EndpointQueryBase {
    * @return array
    *   A flat array of location objects.
    */
-  private function flattenLocationArray(array $array, $child_key = 'children', array &$flat_locations = NULL) {
+  private function flattenLocationArray(array $array, $child_key = 'children', ?array &$flat_locations = NULL) {
     if ($flat_locations === NULL) {
       $flat_locations = [];
     }

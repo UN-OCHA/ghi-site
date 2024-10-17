@@ -3,10 +3,10 @@
 namespace Drupal\Tests\ghi_teams\Traits;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
-use Drupal\ghi_teams\Entity\ContentSpace;
-use Drupal\ghi_teams\Entity\Team;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
+use Drupal\ghi_teams\Entity\ContentSpace;
+use Drupal\ghi_teams\Entity\Team;
 
 /**
  * Provides methods to create teams in tests.

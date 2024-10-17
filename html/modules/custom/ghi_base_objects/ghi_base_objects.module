@@ -40,7 +40,7 @@ function ghi_base_objects_help($route_name, RouteMatchInterface $route_match) {
 /**
  * Implements hook_layout_builder_view_context_alter().
  */
-function ghi_base_objects_layout_builder_view_context_alter(array &$contexts, SectionStorageInterface $section_storage = NULL, $sample = FALSE) {
+function ghi_base_objects_layout_builder_view_context_alter(array &$contexts, ?SectionStorageInterface $section_storage = NULL, $sample = FALSE) {
   // See if there is a context.
   $entity_context = $contexts['layout_builder.entity'] ?? ($contexts['entity'] ?? ($contexts['node'] ?? NULL));
   if (!$entity_context || !$entity_context->hasContextValue()) {

@@ -2,14 +2,14 @@
 
 namespace Drupal\Tests\ghi_subpages_custom\Traits;
 
-use Drupal\ghi_sections\Entity\Section;
-use Drupal\ghi_subpages_custom\Entity\CustomSubpage;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
 use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
 use Drupal\Tests\ghi_teams\Traits\TeamTestTrait;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
+use Drupal\ghi_sections\Entity\Section;
+use Drupal\ghi_subpages_custom\Entity\CustomSubpage;
 
 /**
  * Provides methods to create custom subpages in tests.

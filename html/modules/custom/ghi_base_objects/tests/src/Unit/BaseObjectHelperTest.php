@@ -8,12 +8,12 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Tests\UnitTestCase;
+use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\node\Entity\Node;
-use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
-use Drupal\Tests\UnitTestCase;
 use Prophecy\Prophecy\MethodProphecy;
 
 /**

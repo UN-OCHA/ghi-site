@@ -3,13 +3,13 @@
 namespace Drupal\Tests\ghi_content\Functional;
 
 use Drupal\Component\Serialization\Json;
-use Drupal\ghi_content\ContentManager\ArticleManager;
-use Drupal\node\Entity\Node;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_content\Traits\ContentTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
+use Drupal\ghi_content\ContentManager\ArticleManager;
+use Drupal\node\Entity\Node;
 
 /**
  * Tests the article wizard pages.

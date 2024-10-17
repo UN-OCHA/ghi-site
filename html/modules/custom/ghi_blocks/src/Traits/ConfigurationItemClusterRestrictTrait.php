@@ -18,7 +18,7 @@ trait ConfigurationItemClusterRestrictTrait {
    * @return array
    *   A form element array.
    */
-  public function buildClusterRestrictFormElement(array $default_value = NULL) {
+  public function buildClusterRestrictFormElement(?array $default_value = NULL) {
     return [
       '#type' => 'cluster_restrict',
       '#title' => $this->t('Restrict by cluster'),

@@ -2,17 +2,17 @@
 
 namespace Drupal\Tests\ghi_content\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
+use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\ghi_content\Import\ImportManager;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Section;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\taxonomy\Entity\Term;
-use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 
 /**
  * Tests the import manager.

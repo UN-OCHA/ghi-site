@@ -26,7 +26,7 @@ class FileListForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, BaseFileReportController $controller = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?BaseFileReportController $controller = NULL) {
     $form_state->set('file_report_controller', $controller);
     $files = $controller->getFiles();
     $header = [

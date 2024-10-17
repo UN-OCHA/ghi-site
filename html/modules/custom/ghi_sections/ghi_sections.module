@@ -82,7 +82,7 @@ function ghi_sections_form_node_section_edit_form_alter(&$form, FormStateInterfa
 /**
  * Implements hook_layout_builder_view_context_alter().
  */
-function ghi_sections_layout_builder_view_context_alter(array &$contexts, SectionStorageInterface $section_storage = NULL, $sample = FALSE) {
+function ghi_sections_layout_builder_view_context_alter(array &$contexts, ?SectionStorageInterface $section_storage = NULL, $sample = FALSE) {
   /** @var \Drupal\ghi_sections\SectionContextManager $section_context_manager */
   $section_context_manager = \Drupal::service('ghi_sections.context_manager');
 

@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\ghi_templates\FunctionalJavascript;
 
-use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_blocks\FunctionalJavascript\BlockUiBase;
+use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 
 /**
  * Tests the GHI templates.

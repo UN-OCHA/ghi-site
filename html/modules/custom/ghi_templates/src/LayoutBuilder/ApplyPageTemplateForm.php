@@ -75,7 +75,7 @@ class ApplyPageTemplateForm extends TemplateFormBase {
    * @return array
    *   The form array.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, EntityInterface $entity = NULL, SectionStorageInterface $section_storage = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?EntityInterface $entity = NULL, ?SectionStorageInterface $section_storage = NULL) {
     $form = parent::buildForm($form, $form_state, $entity, $section_storage);
     if ($entity === NULL || $section_storage === NULL) {
       return $form;

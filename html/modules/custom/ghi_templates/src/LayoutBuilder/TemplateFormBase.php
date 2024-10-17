@@ -53,7 +53,7 @@ abstract class TemplateFormBase extends FormBase {
   /**
    * Build form callback.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, EntityInterface $entity = NULL, SectionStorageInterface $section_storage = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?EntityInterface $entity = NULL, ?SectionStorageInterface $section_storage = NULL) {
     $form['settings'] = [
       '#type' => 'container',
     ];

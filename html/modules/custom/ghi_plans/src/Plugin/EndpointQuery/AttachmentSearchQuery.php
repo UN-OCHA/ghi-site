@@ -97,7 +97,7 @@ class AttachmentSearchQuery extends EndpointQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
    *   The matching (processed) attachment objects, keyed by the attachment id.
    */
-  public function getAttachmentsByObject($object_type, $object_ids, array $filter = NULL, $version = NULL) {
+  public function getAttachmentsByObject($object_type, $object_ids, ?array $filter = NULL, $version = NULL) {
     $object_ids = (array) $object_ids;
     sort($object_ids);
 

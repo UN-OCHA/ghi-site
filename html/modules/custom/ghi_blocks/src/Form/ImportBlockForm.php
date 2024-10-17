@@ -65,7 +65,7 @@ class ImportBlockForm extends ConfigureBlockFormBase {
    * @return array
    *   The form array.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL, $delta = NULL, $region = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?SectionStorageInterface $section_storage = NULL, $delta = NULL, $region = NULL) {
 
     $steps = self::STEPS;
     $current_step = $form_state->get('current_import_step') ?? reset($steps);
@@ -96,7 +96,7 @@ class ImportBlockForm extends ConfigureBlockFormBase {
   /**
    * Build the import form where the code can be inserted.
    */
-  private function importForm($form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL, $delta = NULL, $region = NULL) {
+  private function importForm($form, FormStateInterface $form_state, ?SectionStorageInterface $section_storage = NULL, $delta = NULL, $region = NULL) {
 
     $form['settings'] = [
       '#type' => 'container',

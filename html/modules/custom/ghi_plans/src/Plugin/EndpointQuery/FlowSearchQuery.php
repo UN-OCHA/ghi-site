@@ -57,7 +57,7 @@ class FlowSearchQuery extends EndpointQueryBase {
    * @return int[]
    *   An array of cluster ids.
    */
-  public function getClusterIds($data, array $cluster_ids = NULL) {
+  public function getClusterIds($data, ?array $cluster_ids = NULL) {
     if (!$this->isGrouped()) {
       return NULL;
     }

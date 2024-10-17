@@ -2,13 +2,13 @@
 
 namespace Drupal\Tests\ghi_plan_clusters\Traits;
 
+use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
+use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plan_clusters\Entity\PlanClusterInterface;
 use Drupal\ghi_plan_clusters\PlanClusterManager;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
-use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
-use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
 
 /**
  * Provides methods to create plan clusters in tests.
@@ -26,7 +26,7 @@ trait PlanClusterTestTrait {
    * @return \Drupal\ghi_plan_clusters\Entity\PlanCluster
    *   A plan cluster node object.
    */
-  public function createPlanCluster(SectionNodeInterface $section = NULL) {
+  public function createPlanCluster(?SectionNodeInterface $section = NULL) {
     // Create a plan object.
     if ($section === NULL) {
       $plan = $this->createBaseObject([

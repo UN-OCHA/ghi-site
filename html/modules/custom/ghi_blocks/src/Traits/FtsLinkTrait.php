@@ -26,7 +26,7 @@ trait FtsLinkTrait {
    * @return \Drupal\Core\Url
    *   A URL object.
    */
-  public static function buildFtsUrl(Plan $plan, $type, BaseObjectInterface $base_object = NULL) {
+  public static function buildFtsUrl(Plan $plan, $type, ?BaseObjectInterface $base_object = NULL) {
     $plan_id = $plan->getSourceId();
     $query_args = [];
     if (!empty($base_object) && is_object($base_object) && $base_object instanceof GoverningEntity) {
@@ -62,7 +62,7 @@ trait FtsLinkTrait {
    * @return array
    *   A fully build HTML link.
    */
-  public static function buildFtsLink($label, Plan $plan, $type, BaseObjectInterface $base_object = NULL) {
+  public static function buildFtsLink($label, Plan $plan, $type, ?BaseObjectInterface $base_object = NULL) {
     $fts_link_title = t('Link to the @plan_name page in FTS', [
       '@plan_name' => $plan->label(),
     ]);

@@ -4,9 +4,9 @@ namespace Drupal\Tests\hpc_common\Unit;
 
 use Drupal\Component\Plugin\Context\ContextInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\ContextHelper;
 use Drupal\node\NodeInterface;
-use Drupal\Tests\UnitTestCase;
 use Drupal\user\UserInterface;
 use Prophecy\PhpUnit\ProphecyTrait;
 

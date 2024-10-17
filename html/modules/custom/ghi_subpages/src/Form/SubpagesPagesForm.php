@@ -134,7 +134,7 @@ class SubpagesPagesForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?NodeInterface $node = NULL) {
 
     $form['#attached']['library'][] = 'ghi_subpages/admin.subpages_form';
 

@@ -2,13 +2,13 @@
 
 namespace Drupal\Tests\ghi_subpages_custom\Kernel;
 
-use Drupal\ghi_sections\Menu\SectionMenuItemInterface;
-use Drupal\ghi_subpages_custom\Plugin\SectionMenuItem\CustomSubpage as SectionMenuItemCustomSubpage;
-use Drupal\node\Entity\NodeType;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_sections\Kernel\SectionMenuTestBase;
 use Drupal\Tests\ghi_subpages_custom\Traits\CustomSubpageTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use Drupal\ghi_sections\Menu\SectionMenuItemInterface;
+use Drupal\ghi_subpages_custom\Plugin\SectionMenuItem\CustomSubpage as SectionMenuItemCustomSubpage;
+use Drupal\node\Entity\NodeType;
 
 /**
  * Tests the custom subpage manager.

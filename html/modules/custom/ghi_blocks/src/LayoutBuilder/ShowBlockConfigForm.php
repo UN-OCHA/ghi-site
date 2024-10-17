@@ -28,7 +28,7 @@ class ShowBlockConfigForm extends FormBase {
   /**
    * Build form callback.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL, $delta = NULL, $region = NULL, $uuid = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?SectionStorageInterface $section_storage = NULL, $delta = NULL, $region = NULL, $uuid = NULL) {
     $component = $section_storage->getSection($delta)->getComponent($uuid);
     $plugin = $component->getPlugin();
     if (!$plugin instanceof GHIBlockBase && !$plugin instanceof InlineBlock) {

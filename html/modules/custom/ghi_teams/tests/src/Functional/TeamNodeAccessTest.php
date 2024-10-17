@@ -2,13 +2,13 @@
 
 namespace Drupal\Tests\ghi_teams\Functional;
 
-use Drupal\ghi_teams\Entity\Team;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\EntityViewTrait;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_teams\Traits\TeamTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
+use Drupal\ghi_teams\Entity\Team;
 
 /**
  * Tests the team based access logic for nodes.

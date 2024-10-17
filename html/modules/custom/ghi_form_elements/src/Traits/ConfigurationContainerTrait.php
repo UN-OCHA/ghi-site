@@ -52,7 +52,7 @@ trait ConfigurationContainerTrait {
    * @return array
    *   An array of valid item configurations.
    */
-  public function getConfiguredItems(array $item_store = NULL) {
+  public function getConfiguredItems(?array $item_store = NULL) {
     if (empty($item_store)) {
       return NULL;
     }
@@ -76,7 +76,7 @@ trait ConfigurationContainerTrait {
    * @return \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface[]
    *   An array of configuration container plugin instances.
    */
-  public function getConfiguredItemPlugins(array $item_store = NULL, array $context) {
+  public function getConfiguredItemPlugins(array $item_store, array $context) {
     if (empty($item_store)) {
       return NULL;
     }
@@ -102,7 +102,7 @@ trait ConfigurationContainerTrait {
    * @return \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface
    *   The item type plugin.
    */
-  public function getItemTypePluginForColumn(array $column, array $context = NULL) {
+  public function getItemTypePluginForColumn(array $column, ?array $context = NULL) {
     // Check if this item is allowed. Do that lazy as this is called often.
     $allowed_items = &drupal_static(($this->getUuid() ?? rand()) . '_' . __FUNCTION__ . '_allowed_items', NULL);
     if ($allowed_items === NULL) {

@@ -31,7 +31,7 @@ class HpcAssetResolver implements AssetResolverInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCssAssets(AttachedAssetsInterface $assets, $optimize, LanguageInterface $language = NULL) {
+  public function getCssAssets(AttachedAssetsInterface $assets, $optimize, ?LanguageInterface $language = NULL) {
     // Don't do anything on CSS assets.
     return $this->assetResolver->getCssAssets($assets, $optimize);
   }
@@ -39,7 +39,7 @@ class HpcAssetResolver implements AssetResolverInterface {
   /**
    * {@inheritdoc}
    */
-  public function getJsAssets(AttachedAssetsInterface $assets, $optimize, LanguageInterface $language = NULL) {
+  public function getJsAssets(AttachedAssetsInterface $assets, $optimize, ?LanguageInterface $language = NULL) {
     [$js_assets_header, $js_assets_footer] = $this->assetResolver->getJsAssets($assets, $optimize);
     if (hpc_security_sends_csp_header()) {
       if (hpc_security_can_use_nonce()) {

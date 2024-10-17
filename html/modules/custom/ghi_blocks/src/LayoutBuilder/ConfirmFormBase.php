@@ -49,7 +49,7 @@ abstract class ConfirmFormBase extends LayoutRebuildConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL, $delta = NULL, $region = NULL, $uuid = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?SectionStorageInterface $section_storage = NULL, $delta = NULL, $region = NULL, $uuid = NULL) {
     $this->region = $region;
     $this->uuid = $uuid;
     $form = parent::buildForm($form, $form_state, $section_storage, $delta);

@@ -3,11 +3,11 @@
 namespace Drupal\Tests\ghi_sections\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\node\Entity\Node;
-use Drupal\pathauto\PathautoState;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
 use Drupal\Tests\pathauto\Functional\PathautoTestHelperTrait;
+use Drupal\node\Entity\Node;
+use Drupal\pathauto\PathautoState;
 
 /**
  * Test class for section aliases tests.

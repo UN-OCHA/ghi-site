@@ -4,8 +4,8 @@ namespace Drupal\Tests\hpc_common\Unit;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Render\RendererInterface;
-use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\Tests\UnitTestCase;
+use Drupal\hpc_common\Helpers\ThemeHelper;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Twig\Environment;
 

@@ -26,7 +26,7 @@ class ExportPageConfigForm extends TemplateFormBase {
   /**
    * Build form callback.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, EntityInterface $entity = NULL, SectionStorageInterface $section_storage = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?EntityInterface $entity = NULL, ?SectionStorageInterface $section_storage = NULL) {
     $form = parent::buildForm($form, $form_state, $entity, $section_storage);
 
     $entity = $entity ?? $section_storage->getContextValue('entity');

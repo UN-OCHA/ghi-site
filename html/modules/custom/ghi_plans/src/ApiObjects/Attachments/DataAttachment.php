@@ -1170,7 +1170,7 @@ class DataAttachment extends AttachmentBase {
    *   The data point value, extracted from the attachment according to the
    *   given configuration.
    */
-  public function getSingleValue($index, array $reporting_periods = NULL, $data_point_conf = []) {
+  public function getSingleValue($index, ?array $reporting_periods = NULL, $data_point_conf = []) {
     return $this->getValueForDataPoint($index);
   }
 
@@ -1187,7 +1187,7 @@ class DataAttachment extends AttachmentBase {
    *   The data point value, extracted from the attachment according to the
    *   given configuration.
    */
-  private function getCalculatedValue(array $conf, array $reporting_periods = NULL) {
+  private function getCalculatedValue(array $conf, ?array $reporting_periods = NULL) {
     $value_1 = (float) $this->getSingleValue($conf['data_points'][0]['index'], $reporting_periods, $conf['data_points'][0]);
     $value_2 = (float) $this->getSingleValue($conf['data_points'][1]['index'], $reporting_periods, $conf['data_points'][1]);
 

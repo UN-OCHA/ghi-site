@@ -112,7 +112,7 @@ class LogframeManager implements ContainerInjectionInterface {
    * @return \Drupal\layout_builder\SectionStorageInterface
    *   The section storage.
    */
-  public function setupLogframePage(LogframeSubpage $node, SectionStorageInterface $section_storage = NULL) {
+  public function setupLogframePage(LogframeSubpage $node, ?SectionStorageInterface $section_storage = NULL) {
     if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
       return FALSE;
     }

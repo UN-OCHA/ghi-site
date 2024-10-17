@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\ghi_homepage\Kernel;
 
-use Drupal\ghi_homepage\Entity\Homepage;
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\node\Entity\NodeType;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
+use Drupal\ghi_homepage\Entity\Homepage;
+use Drupal\node\Entity\NodeType;
 
 /**
  * Tests the creation and validation of homepage nodes.

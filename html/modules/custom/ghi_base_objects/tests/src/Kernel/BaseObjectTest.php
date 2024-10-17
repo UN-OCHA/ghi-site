@@ -3,9 +3,9 @@
 namespace Drupal\Tests\ghi_base_objects\Kernel;
 
 use Drupal\Core\Url;
-use Drupal\ghi_base_objects\Entity\BaseObjectType;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
+use Drupal\ghi_base_objects\Entity\BaseObjectType;
 
 /**
  * Tests the base object entity.

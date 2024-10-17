@@ -23,7 +23,7 @@ class IndicatorAttachment extends DataAttachment {
   /**
    * {@inheritdoc}
    */
-  public function getSingleValue($index, array $reporting_periods = NULL, $data_point_conf = []) {
+  public function getSingleValue($index, ?array $reporting_periods = NULL, $data_point_conf = []) {
     if (!$this->isApiCalculated($index, $data_point_conf)) {
       $monitoring_period = !empty($reporting_periods) ? array_key_last($reporting_periods) : 'latest';
       return $this->getValueForDataPoint($index, $monitoring_period);

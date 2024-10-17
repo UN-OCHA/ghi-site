@@ -3,14 +3,14 @@
 namespace Drupal\Tests\ghi_sections\Functional;
 
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
-use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
+use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

@@ -3,13 +3,13 @@
 namespace Drupal\Tests\ghi_sections\Kernel;
 
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\ghi_sections\Entity\Section;
-use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\node\NodeInterface;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
 use Drupal\Tests\pathauto\Functional\PathautoTestHelperTrait;
+use Drupal\ghi_sections\Entity\Section;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\node\NodeInterface;
 
 /**
  * Test class for section manager tests.
