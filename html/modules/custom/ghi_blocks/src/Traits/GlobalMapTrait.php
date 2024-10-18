@@ -19,13 +19,13 @@ trait GlobalMapTrait {
    */
   public function getStaticTilesUrlTemplate($style_id = NULL) {
     if ($style_id === NULL) {
-      $style_id = 'ck6kzlftu17uv1ilgsacalu17';
+      $style_id = 'cm22ao9fc008k01r23x146afi';
     }
     $map_config = $this->getGlobalMapSettings();
     $use_proxy = !empty($map_config['mapbox_proxy']);
     $host = $use_proxy ? '/mapbox' : 'https://api.mapbox.com';
     $token = $use_proxy ? 'token' : getenv('MAPBOX_TOKEN');
-    $style_url = 'styles/v1/reliefweb/' . $style_id . '/tiles/256/{z}/{x}/{y}?access_token=' . $token;
+    $style_url = 'styles/v1/ocha-hpc/' . $style_id . '/tiles/256/{z}/{x}/{y}?access_token=' . $token;
     return $host . '/' . $style_url;
   }
 
