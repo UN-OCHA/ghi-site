@@ -22,6 +22,8 @@
 
   &.expand-table,
   &.read-more,
+  &.expand-collapsible,
+  &.collaps-collapsible,
   &.external {
     position: relative;
     max-width: fit-content;
@@ -38,12 +40,25 @@
     }
   }
 
+  &.expand-collapsible,
+  &.collaps-collapsible {
+    margin-inline-start: 0;
+
+    &.hidden {
+      display: none;
+    }
+  }
+
   &.expand-table {
     margin-bottom: 2rem;
   }
 
-  &.expand-table::before {
+  &.expand-table::before,
+  &.expand-collapsible::before {
     background-image: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/arrow_downward/default/20px.svg");
+  }
+  &.collaps-collapsible::before {
+    background-image: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/arrow_upward/default/20px.svg");
   }
   &.read-more::before {
     background-image: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/arrow_forward/default/20px.svg");

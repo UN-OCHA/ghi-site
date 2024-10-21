@@ -185,8 +185,8 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
    * @param \Drupal\ghi_content\RemoteContent\RemoteContentInterface $content
    *   A content object from the remote source.
    *
-   * @return \Drupal\node\NodeInterface|null
-   *   The article node if found or NULL.
+   * @return \Drupal\ghi_content\Entity\ContentBase|null
+   *   A local node if found or NULL.
    */
   abstract public function loadNodeForRemoteContent(RemoteContentInterface $content);
 
