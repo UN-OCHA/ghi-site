@@ -51,7 +51,7 @@ class PlanOverviewMap extends GHIBlockBase {
    */
   public function buildContent() {
     $conf = $this->getBlockConfig();
-    $style = $conf['map']['style'] ?? 'donut';
+    $style = $conf['style'] ?? 'donut';
     if ($style == 'circle') {
       $map = $this->buildCircleMap();
     }
@@ -207,6 +207,8 @@ class PlanOverviewMap extends GHIBlockBase {
 
       $locations[$object_id] = [
         'object_id' => $object_id,
+        'object_title' => $plan_entity->getShortName(),
+        'sort_key' => $plan_entity->getShortName() . '-' . $plan_entity->getPlanTypeShortLabel(FALSE),
         'location_id' => $location->id(),
         'location_name' => $location->getName(),
         'latLng' => $location->getLatLng(),
@@ -321,8 +323,8 @@ class PlanOverviewMap extends GHIBlockBase {
       'map_tiles_url' => $this->getStaticTilesUrlTemplate(),
       'map_style' => 'circle',
       'legend' => $legend,
-      'search_enabled' => $conf['map']['search_enabled'],
-      'map_disclaimer' => $conf['map']['disclaimer'],
+      'search_enabled' => $conf['search_enabled'],
+      'map_disclaimer' => $conf['disclaimer'],
     ];
 
     return $map;
@@ -509,56 +511,11 @@ class PlanOverviewMap extends GHIBlockBase {
         'donut_whole_segments' => [0],
         'donut_partial_segments' => [1],
       ],
-      'search_enabled' => $conf['map']['search_enabled'],
-      'map_disclaimer' => $conf['map']['disclaimer'],
+      'search_enabled' => $conf['search_enabled'],
+      'map_disclaimer' => $conf['disclaimer'],
     ];
 
     return $map;
-  }
-
-  /**
-   * Look if there are multiple plans per country and reduce that to one.
-   *
-   * Which plan is kept, depends on the plan type.
-   *
-   * @param \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[] $plans
-   *   The array of plan objects to check.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[]
-   *   The array of plan objects, reduced to one plan per country.
-   */
-  private function reduceCountryPlans(array $plans) {
-    $countries = [];
-    foreach ($plans as $plan) {
-      $country = $plan->getCountry();
-      if (!$country) {
-        continue;
-      }
-      if (!array_key_exists($country->id, $countries)) {
-        $countries[$country->id] = [];
-      }
-      $countries[$country->id][$plan->id()] = $plan->getTypeName();
-    }
-    $plan_types = $this->getAvailablePlanTypes();
-    $plans = array_filter($plans, function ($plan) use ($countries, $plan_types) {
-      /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
-      $country = $plan->getCountry();
-      if (!$country) {
-        return TRUE;
-      }
-      if (count($countries[$country->id]) <= 1) {
-        return TRUE;
-      }
-      foreach ($plan_types as $type_name) {
-        $key = array_search($type_name, $countries[$country->id]);
-        if ($key === FALSE) {
-          continue;
-        }
-        return $key == $plan->id();
-      }
-      return TRUE;
-    });
-    return $plans;
   }
 
   /**
@@ -704,31 +661,10 @@ class PlanOverviewMap extends GHIBlockBase {
    */
   protected function getConfigurationDefaults() {
     return [
-      'plans' => [
-        'include_method' => 'plan_type',
-        'plan_types' => $this->getDefaultPlanTypes(),
-        'plan_select' => [],
-      ],
-      'map' => [
-        'style' => 'donut',
-        'search_enabled' => FALSE,
-        'disclaimer' => self::DEFAULT_DISCLAIMER,
-      ],
-    ];
-  }
-
-  /**
-   * Get the default plan types.
-   *
-   * @return array
-   *   An array with the term ids of the default plan types to be used.
-   */
-  private function getDefaultPlanTypes() {
-    $plan_types = $this->getAvailablePlanTypes();
-    $plan_types_flipped = array_flip($plan_types);
-    return [
-      $plan_types_flipped['Humanitarian response plan'],
-      $plan_types_flipped['Flash appeal'],
+      'style' => 'circle',
+      'search_enabled' => FALSE,
+      'disclaimer' => self::DEFAULT_DISCLAIMER,
+      'plan_select' => [],
     ];
   }
 
@@ -736,59 +672,53 @@ class PlanOverviewMap extends GHIBlockBase {
    * {@inheritdoc}
    */
   public function getConfigForm(array $form, FormStateInterface $form_state) {
-    $form['tabs'] = [
-      '#type' => 'vertical_tabs',
-    ];
 
-    $form['plans'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Plans'),
-      '#tree' => TRUE,
-      '#group' => 'tabs',
+    $form['description'] = [
+      '#type' => 'markup',
+      '#markup' => $this->t('The following settings allow you to toggle some features for <em>this single map instance</em>. More <em>global settings</em>, that apply to various page elements across a year, can be controlled on the <a href="@url" target="_blank">GHI Global settings page</a>.', [
+        '@url' => Url::fromRoute('ghi_blocks.global_config', [], ['query' => ['year' => $this->getContextValue('year')]])->toString(),
+      ]),
     ];
-
-    // As per HPC-7563, the user should be given an option to select which plan
-    // type is to be shown.
-    $form['plans']['include_method'] = [
-      '#type' => 'radios',
-      '#title' => $this->t('Include plans based on'),
+    $form['style'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Map style'),
       '#options' => [
-        'plan_type' => $this->t('Plan type'),
-        'plan_select' => $this->t('Select plans manually'),
+        'circle' => $this->t('Circles'),
+        'donut' => $this->t('Donuts'),
       ],
-      '#description' => $this->t('Only a single plan per country is currently supported.'),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'plans',
-        'include_method',
-      ]),
+        'style',
+      ]) ?? 'donut',
     ];
-    $form['plans']['plan_types'] = [
-      '#type' => 'checkboxes',
-      '#title' => $this->t('Plan type'),
-      '#description' => $this->t('Select the plan types to be included in the map. If there are multiple plans for a country in the dataset, only a single plan will be displayed. The plan to be retained is determined by the plan type in the order shown above.'),
-      '#options' => $this->getAvailablePlanTypes(TRUE),
+    $form['search_enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Add search box'),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'plans',
-        'plan_types',
+        'search_enabled',
       ]),
-      '#states' => [
-        'visible' => [
-          ':input[name="basic[plans][include_method]"]' => ['value' => 'plan_type'],
-        ],
-      ],
+      '#description' => $this->t('Check this if an additonal search box should be added to the top left corner of the map.'),
+    ];
+    $form['disclaimer'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Map disclaimer'),
+      '#description' => $this->t('You can override the default map disclaimer for this widget.'),
+      '#rows' => 4,
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+        'disclaimer',
+      ]),
     ];
 
     // Manual selection of plan type for country.
     $plans_by_country = $this->getPlansByCountry();
-    $form['plans']['plan_select'] = [
+    $form['plan_select'] = [
       '#type' => 'container',
       '#states' => [
         'visible' => [
-          ':input[name="basic[plans][include_method]"]' => ['value' => 'plan_select'],
+          ':input[name="basic[style]"]' => ['value' => 'donut'],
         ],
       ],
     ];
-    $form['plans']['plan_select']['countries'] = [
+    $form['plan_select']['countries'] = [
       '#type' => 'table',
       '#tree' => TRUE,
       '#header' => [
@@ -799,19 +729,18 @@ class PlanOverviewMap extends GHIBlockBase {
     ];
 
     foreach ($plans_by_country as $country_id => $country) {
-      if (empty($country['plans'])) {
+      if (empty($country)) {
         continue;
       }
-      $form['plans']['plan_select']['countries'][$country_id] = [];
-      $form['plans']['plan_select']['countries'][$country_id]['country'] = [
+      $form['plan_select']['countries'][$country_id] = [];
+      $form['plan_select']['countries'][$country_id]['country'] = [
         '#markup' => $country['name'],
       ];
-      $form['plans']['plan_select']['countries'][$country_id]['status'] = [
+      $form['plan_select']['countries'][$country_id]['status'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Enabled'),
         '#title_display' => 'invisible',
         '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-          'plans',
           'plan_select',
           'countries',
           $country_id,
@@ -819,69 +748,22 @@ class PlanOverviewMap extends GHIBlockBase {
         ]) ?? TRUE,
       ];
       $default_plan = $this->getDefaultFormValueFromFormState($form_state, [
-        'plans',
         'plan_select',
         'countries',
         $country_id,
         'plan',
       ]);
-      $form['plans']['plan_select']['countries'][$country_id]['plan'] = [
+      $form['plan_select']['countries'][$country_id]['plan'] = [
         '#type' => 'radios',
         '#title' => $country['name'],
         '#title_display' => 'invisible',
         '#options' => $country['plans'],
         '#default_value' => $default_plan !== NULL && in_array($default_plan, $country['plans']) ? $default_plan : array_key_first($country['plans']),
-        '#states' => [
-          'visible' => [
-            ':input[name="basic[plans][plan_select][countries][' . $country_id . '][status]"]' => ['checked' => TRUE],
-          ],
-        ],
       ];
       if (count($country['plans']) == 1) {
-        $form['plans']['plan_select']['countries'][$country_id]['plan']['#disabled'] = TRUE;
+        $form['plan_select']['countries'][$country_id]['plan']['#disabled'] = TRUE;
       }
     }
-
-    $form['map'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Map'),
-      '#description' => $this->t('The following settings allow you to toggle some features for <em>this single map instance</em>. More <em>global settings</em>, that apply to various page elements across a year, can be controlled on the <a href="@url" target="_blank">GHI Global settings page</a>.', [
-        '@url' => Url::fromRoute('ghi_blocks.global_config', [], ['query' => ['year' => $this->getContextValue('year')]])->toString(),
-      ]),
-      '#tree' => TRUE,
-      '#group' => 'tabs',
-    ];
-    $form['map']['style'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Map style'),
-      '#options' => [
-        'circle' => $this->t('Circles'),
-        'donut' => $this->t('Donuts'),
-      ],
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'map',
-        'style',
-      ]) ?? 'donut',
-    ];
-    $form['map']['search_enabled'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Add search box'),
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'map',
-        'search_enabled',
-      ]),
-      '#description' => $this->t('Check this if an additonal search box should be added to the top left corner of the map.'),
-    ];
-    $form['map']['disclaimer'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Map disclaimer'),
-      '#description' => $this->t('You can override the default map disclaimer for this widget.'),
-      '#rows' => 4,
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'map',
-        'disclaimer',
-      ]),
-    ];
     return $form;
   }
 
@@ -898,27 +780,15 @@ class PlanOverviewMap extends GHIBlockBase {
     }
     $config = $this->getBlockConfig();
 
-    if ($config['plans']['include_method'] == 'plan_select' && !empty($config['plans']['plan_select'])) {
+    if ($config['style'] == 'donut' && !empty($config['plan_select'])) {
       // Filter based on selected plans.
-      $plan_select = $config['plans']['plan_select']['countries'] ?? NULL;
+      $plan_select = $config['plan_select']['countries'] ?? NULL;
       $selected_plan_ids = $plan_select ? array_filter(array_map(function ($item) {
         return $item['status'] ? $item['plan'] : NULL;
       }, $plan_select)) : NULL;
       $plans = array_filter($plans, function ($plan) use ($selected_plan_ids) {
         return $selected_plan_ids === NULL || in_array($plan->id(), $selected_plan_ids);
       });
-    }
-    elseif (!empty($config['plans']['plan_types'])) {
-      // Filter based on selected plan types.
-      $selected_plan_type_tids = array_filter($config['plans']['plan_types']);
-      $plans = array_filter($plans, function ($plan) use ($selected_plan_type_tids) {
-        $term = $this->getTermObjectByName($plan->getOriginalTypeName());
-        return $term && in_array($term->id(), $selected_plan_type_tids);
-      });
-
-      if ($config['map']['style'] == 'donut') {
-        $plans = $this->reduceCountryPlans($plans);
-      }
     }
 
     // Apply the global configuration to limit the source data.
