@@ -181,7 +181,7 @@
         .attr('opacity', d => Drupal.hpc_map_circle.getOpacity(d, map_state, map_id));
     }
     else {
-
+      Drupal.hpc_map_circle.hideLocationTooltip(map_id);
       if (map_state.options.popup_style == 'sidebar' && typeof map_state.active_location != 'undefined' && map_state.active_location) {
         // Check if the sidebar is currently open and showing the element that
         // should be unfocused.
@@ -201,10 +201,11 @@
     }
   }
 
-  Drupal.hpc_map_circle.showLocationTooltip = function(map_id, state, d, x, y) {
-    $('#' + map_id + ' .map-circle-tooltip').css("top", y);
-    $('#' + map_id + ' .map-circle-tooltip').css("left", x);
-    $('#' + map_id + ' .map-circle-tooltip').css("z-index", 100000);
+  Drupal.hpc_map_circle.showLocationTooltip = function(map_id, state, d, event) {
+    $('#' + map_id + ' .map-circle-tooltip').css('position', 'fixed');
+    $('#' + map_id + ' .map-circle-tooltip').css('left', event.clientX + 10);
+    $('#' + map_id + ' .map-circle-tooltip').css('top', event.clientY + 10);
+    $('#' + map_id + ' .map-circle-tooltip').css('z-index', 100000);
     let tooltip = d.hasOwnProperty('tooltip') ? d.tooltip : null;
     if (tooltip === null) {
       tooltip = '<b>Location:</b> ' + d.location_name + '<br />';
@@ -216,6 +217,11 @@
       }
     }
     $('#' + map_id + ' .map-circle-tooltip').html(tooltip);
+    $('#' + map_id + ' .map-circle-tooltip').css('display', 'block');
+  }
+
+  Drupal.hpc_map_circle.hideLocationTooltip = function(map_id) {
+    $('#' + map_id + ' .map-circle-tooltip').css('display', 'none');
   }
 
   Drupal.hpc_map_circle.createLocations = function(data, sel, proj) {
@@ -273,8 +279,12 @@
         }
       );
 
-    $('.map-container #' + map_id).append("<div class='map-circle-tooltip' style='position: absolute;'></div>");
-    $('#' + map_id + ' .map-circle-tooltip').css("display", "none");
+    let $tooltip = $('.map-circle-tooltip');
+    if (!$tooltip.length) {
+      $('.map-container #' + map_id).append("<div class='map-circle-tooltip' style='position: absolute; top: 0; left: 0;'></div>");
+      $tooltip = $('.map-circle-tooltip');
+    }
+    $tooltip.css('display', 'none');
 
     if (!sel.selectAll('#' + map_id + ' use').size()) {
       sel.append('use');
@@ -302,19 +312,16 @@
       if (!location_object) {
         return;
       }
-      var xPosition = event.layerX + 10;
-      var yPosition = event.layerY + 10;
-      Drupal.hpc_map_circle.showLocationTooltip(map_id, state, location_object, xPosition, yPosition);
+      Drupal.hpc_map_circle.showLocationTooltip(map_id, state, location_object, event);
     })
     .on('mouseenter', function(event, d) {
       var state = Drupal.hpc_map.getMapStateFromContainedElement(this);
       Drupal.hpc_map.focusLocation(this, state, 1);
-      $('#' + map_id + ' .map-circle-tooltip').css("display", "");
+
     })
     .on('mouseout', function(event, d) {
       var state = Drupal.hpc_map.getMapStateFromContainedElement(this);
       Drupal.hpc_map.focusLocation(this, state, 0);
-      $('#' + map_id + ' .map-circle-tooltip').css("display", "none");
     });
   }
 
