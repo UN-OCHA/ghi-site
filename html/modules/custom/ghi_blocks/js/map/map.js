@@ -1159,8 +1159,8 @@
 
     // Sort alphabetically.
     current_locations.sort(function(a, b) {
-      var a_name = a.location_name.toLowerCase();
-      var b_name = b.location_name.toLowerCase();
+      var a_name = a.hasOwnProperty('sort_key') ? a.sort_key.toLowerCase() : a.location_name.toLowerCase();
+      var b_name = b.hasOwnProperty('sort_key') ? b.sort_key.toLowerCase() : b.location_name.toLowerCase();
       return ((a_name < b_name) ? -1 : ((a_name > b_name) ? 1 : 0));
     });
 
