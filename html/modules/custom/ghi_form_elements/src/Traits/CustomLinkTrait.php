@@ -35,14 +35,16 @@ trait CustomLinkTrait {
     if (empty($conf['link_type'])) {
       return NULL;
     }
+    $page_node = $contexts['page_node'] instanceof NodeInterface ? $contexts['page_node'] : NULL;
+    $section_node = $contexts['section_node'] instanceof SectionNodeInterface ? $contexts['section_node'] : NULL;
     if ($conf['link_type'] == 'custom') {
       if (empty($conf['link_custom']['url'])) {
         return NULL;
       }
       return $this->getLinkFromUri($conf['link_custom']['url'], $conf['label'] ?: NULL);
     }
-    elseif (!empty($contexts['section_node']) && !empty($contexts['page_node'])) {
-      $targets = self::getLinkTargetUrls($contexts['section_node'], $contexts['page_node']);
+    elseif ($section_node && $page_node) {
+      $targets = self::getLinkTargetUrls($section_node, $page_node);
       $configured_target = $conf['link_related']['target'];
       if (empty($targets[$configured_target])) {
         return NULL;
@@ -223,7 +225,7 @@ trait CustomLinkTrait {
    * @return \Drupal\ghi_form_elements\LinkTarget\LinkTargetInterface[]
    *   An array of link target objects, keyed by internal name.
    */
-  public static function getLinkTargets(SectionNodeInterface $section_node, NodeInterface $page_node) {
+  private static function getLinkTargets(SectionNodeInterface $section_node, NodeInterface $page_node) {
     return self::getInternalLinkTargets($section_node, $page_node) + self::getExternalLinkTargets($section_node, $page_node);
   }
 
@@ -296,7 +298,7 @@ trait CustomLinkTrait {
    * @return array
    *   An array of link option labels, keyed by internal name, value is a label.
    */
-  public static function getLinkTargetOptions(SectionNodeInterface $section_node, $page_node) {
+  public static function getLinkTargetOptions(SectionNodeInterface $section_node, NodeInterface $page_node) {
     $targets = self::getLinkTargets($section_node, $page_node);
     $internal_key = (string) t('Internal pages');
     $external_key = (string) t('External pages');
