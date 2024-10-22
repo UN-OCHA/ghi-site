@@ -8,8 +8,10 @@ use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Url;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\link\LinkItemInterface;
 use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
+use Drupal\node\NodeInterface;
 
 /**
  * Provides an attachment select element.
@@ -77,9 +79,10 @@ class CustomLink extends FormElementBase {
       }
     }
 
-    $section_node = $element['#element_context']['section_node'] ?? NULL;
-    $page_node = $element['#element_context']['page_node'] ?? NULL;
-    $targets = self::getLinkTargetOptions($section_node, $page_node);
+    $element_context = $element['#element_context'];
+    $section_node = $element_context['section_node'] instanceof SectionNodeInterface ? $element_context['section_node'] : NULL;
+    $page_node = $element_context['page_node'] instanceof NodeInterface ? $element_context['page_node'] : NULL;
+    $targets = $section_node && $page_node ? self::getLinkTargetOptions($page_node, $section_node) : [];
     $required = $element['#required'];
     $state_selector_add_link = NULL;
 
