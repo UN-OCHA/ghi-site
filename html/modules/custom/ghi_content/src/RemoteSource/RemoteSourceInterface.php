@@ -24,6 +24,19 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
   public function getPluginDescription();
 
   /**
+   * Get content by type id.
+   *
+   * @param string $type
+   *   The type of the content on the remote.
+   * @param int $id
+   *   The id of the content on the remote.
+   *
+   * @return \Drupal\ghi_content\RemoteContent\RemoteContentInterface
+   *   The content object.
+   */
+  public function getContent($type, $id);
+
+  /**
    * Get a document by id.
    *
    * @param int $id
