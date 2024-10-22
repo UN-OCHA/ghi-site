@@ -5,6 +5,7 @@ namespace Drupal\ghi_plans\Entity;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
@@ -98,7 +99,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   /**
    * Get the focus country map location for the plan.
    *
-   * @return object|null
+   * @return \Drupal\ghi_base_objects\ApiObjects\Country|null
    *   An object describing the map location or NULL.
    */
   public function getFocusCountryMapLocation() {
@@ -113,11 +114,11 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
     if ($override = $this->getFocusCountryOverride()) {
       $lat_lng = $override;
     }
-    return (object) [
+    return new Country((object) [
       'id' => $focus_country->getSourceId(),
       'name' => $focus_country->label(),
       'latLng' => $lat_lng,
-    ];
+    ]);
   }
 
   /**

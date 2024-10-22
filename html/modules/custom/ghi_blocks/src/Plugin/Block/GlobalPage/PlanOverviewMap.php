@@ -14,6 +14,7 @@ use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
+use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
@@ -155,8 +156,9 @@ class PlanOverviewMap extends GHIBlockBase {
       'cache_tags' => [],
     ];
 
-    // Prepare object data per per plan.
-    $country_objects = [];
+    // Assemble the locations and modal_contents arrays.
+    $locations = [];
+    $modal_contents = [];
     $footnotes = [];
     foreach ($plans as $plan) {
       $funding = $plan->getFunding();
@@ -184,61 +186,49 @@ class PlanOverviewMap extends GHIBlockBase {
         $map['cache_tags'] = Cache::mergeTags($map['cache_tags'], $section->getCacheTags());
       }
 
-      $country_objects[] = (object) [
-        'plan' => $plan,
-        'title' => $section && $section->isPublished() ? $section->toLink($plan_entity->getShortName())->toString() : $plan_entity->getShortName(),
+      $caseload = (object) [
+        'total_population' => $plan->getCaseloadValue('totalPopulation'),
+        'target' => $target,
+        'in_need' => $in_need,
+        'estimated_reach' => $plan->getCaseloadValue('expectedReach'),
+        'reached' => $reached,
+        'reached_percent' => !empty($reached) && !empty($target) ? 1 / $target * $reached : FALSE,
+      ];
+      $funding = (object) [
+        'total_funding' => $funding,
+        'total_requirements' => $requirements,
+        'funding_progress' => $plan->getCoverage(),
+      ];
+
+      $plan_id = $plan->id();
+      $object_id = count($locations) + 1;
+      $object_title = $section && $section->isPublished() ? $section->toLink($plan_entity->getShortName())->toString() : $plan_entity->getShortName();
+      $reporting_period = $reached ? $plan->getLastPublishedReportingPeriod() : NULL;
+
+      $locations[$object_id] = [
+        'object_id' => $object_id,
+        'location_id' => $location->id(),
+        'location_name' => $location->getName(),
+        'latLng' => $location->getLatLng(),
+        'in_need' => $caseload->in_need,
+        'target' => $caseload->target,
+        'requirements' => $funding->total_requirements,
+        'funding' => $funding->total_funding,
+        'coverage' => $funding->funding_progress,
         'tooltip' => implode(' ', [
           $plan_entity->getShortName(),
           $plan_entity->getYear(),
           $plan_entity->getPlanTypeShortLabel(FALSE),
         ]),
-        'location' => $location,
-        'funding' => (object) [
-          'total_funding' => $funding,
-          'total_requirements' => $requirements,
-          'funding_progress' => $plan->getCoverage(),
-        ],
-        'caseload' => (object) [
-          'total_population' => $plan->getCaseloadValue('totalPopulation'),
-          'target' => $target,
-          'in_need' => $in_need,
-          'estimated_reach' => $plan->getCaseloadValue('expectedReach'),
-          'reached' => $reached,
-          'reached_percent' => !empty($reached) && !empty($target) ? 1 / $target * $reached : FALSE,
-        ],
-        'reporting_period' => $reached ? $plan->getLastPublishedReportingPeriod() : NULL,
-      ];
-    }
-
-    // Assemble the locations and modal_contents arrays.
-    $locations = [];
-    $modal_contents = [];
-    foreach ($country_objects as $object) {
-      /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
-      $plan = $object->plan;
-      $plan_id = $plan->id();
-      $object_id = count($locations) + 1;
-      $location = [
-        'object_id' => $object_id,
-        'location_id' => $object->location->id,
-        'location_name' => $object->location->name,
-        'latLng' => $object->location->latLng,
-        'in_need' => $object->caseload->in_need,
-        'target' => $object->caseload->target,
-        'requirements' => $object->funding->total_requirements,
-        'funding' => $object->funding->total_funding,
-        'coverage' => $object->funding->funding_progress,
-        'tooltip' => $object->tooltip,
         'plan_type' => strtolower($plan->getTypeShortName()),
       ];
       $modal_contents[(string) $object_id] = [
         'object_id' => $object_id,
-        'location_id' => $object->location->id,
-        'title' => $object->title,
+        'location_id' => $location->id(),
+        'title' => $object_title,
         'tag_line' => $plan->getTypeName(),
-        'html' => $this->buildCountryModal($object, !empty($footnotes[$plan_id]) ? $footnotes[$plan_id] : NULL),
+        'html' => $this->buildCountryModal($plan, $caseload, $funding, $reporting_period, !empty($footnotes[$plan_id]) ? $footnotes[$plan_id] : NULL),
       ];
-      $locations[$object_id] = $location;
     }
 
     // Add the offsets chain to each location item, so that the map can display
@@ -382,8 +372,9 @@ class PlanOverviewMap extends GHIBlockBase {
       'cache_tags' => [],
     ];
 
-    // Prepare object data per per plan.
-    $country_objects = [];
+    // Assemble the locations and modal_contents arrays.
+    $locations = [];
+    $modal_contents = [];
     $footnotes = [];
     foreach ($plans as $plan) {
       $funding = $plan->getFunding();
@@ -411,62 +402,50 @@ class PlanOverviewMap extends GHIBlockBase {
         $map['cache_tags'] = Cache::mergeTags($map['cache_tags'], $section->getCacheTags());
       }
 
-      $country_objects[] = (object) [
-        'plan' => $plan,
-        'title' => $section && $section->isPublished() ? $section->toLink($location->name)->toString() : $location->name,
-        'location' => $location,
-        'funding' => (object) [
-          'total_funding' => $funding,
-          'total_requirements' => $requirements,
-          'funding_progress' => $plan->getCoverage(),
-        ],
-        'caseload' => (object) [
-          'total_population' => $plan->getCaseloadValue('totalPopulation'),
-          'target' => $target,
-          'in_need' => $in_need,
-          'estimated_reach' => $plan->getCaseloadValue('expectedReach'),
-          'reached' => $reached,
-          'reached_percent' => !empty($reached) && !empty($target) ? 1 / $target * $reached : FALSE,
-        ],
-        'reporting_period' => $reached ? $plan->getLastPublishedReportingPeriod() : NULL,
+      $caseload = (object) [
+        'total_population' => $plan->getCaseloadValue('totalPopulation'),
+        'target' => $target,
+        'in_need' => $in_need,
+        'estimated_reach' => $plan->getCaseloadValue('expectedReach'),
+        'reached' => $reached,
+        'reached_percent' => !empty($reached) && !empty($target) ? 1 / $target * $reached : FALSE,
       ];
-    }
+      $funding = (object) [
+        'total_funding' => $funding,
+        'total_requirements' => $requirements,
+        'funding_progress' => $plan->getCoverage(),
+      ];
 
-    // Assemble the locations and modal_contents arrays.
-    $locations = [];
-    $modal_contents = [];
-    foreach ($country_objects as $object) {
-      /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
-      $plan = $object->plan;
       $plan_id = $plan->id();
       $object_id = count($locations) + 1;
-      $location = [
+      $object_title = $section && $section->isPublished() ? $section->toLink($location->getName())->toString() : $location->getName();
+      $reporting_period = $reached ? $plan->getLastPublishedReportingPeriod() : NULL;
+      $locations[$object_id] = [
         'object_id' => $object_id,
-        'location_id' => $object->location->id,
-        'location_name' => $object->location->name,
-        'latLng' => $object->location->latLng,
+        'location_id' => $location->id(),
+        'location_name' => $location->getName(),
+        'latLng' => $location->getLatLng(),
         'caseload' => [
           // These values are used to construct the donuts, the order here is
           // important.
-          $object->caseload->in_need,
-          $object->caseload->target,
+          $caseload->in_need,
+          $caseload->target,
         ],
         'funding' => [
           // These values are used to construct the donuts, the order here is
           // important.
-          $object->funding->total_requirements,
-          $object->funding->total_funding,
+          $funding->total_requirements,
+          $funding->total_funding,
         ],
         'plan_type' => $plan->getTypeShortName(),
       ];
       $modal_contents[(string) $object_id] = [
         'object_id' => $object_id,
-        'location_id' => $object->location->id,
-        'title' => $object->title,
+        'location_id' => $location->id(),
+        'title' => $object_title,
         'tag_line' => $plan->getTypeName(),
-        'html' => $this->buildCountryModal($object, !empty($footnotes[$plan_id]) ? $footnotes[$plan_id] : NULL),
+        'html' => $this->buildCountryModal($plan, $caseload, $funding, $reporting_period, !empty($footnotes[$plan_id]) ? $footnotes[$plan_id] : NULL),
       ];
-      $locations[$object_id] = $location;
     }
 
     // Get the grouped value ranges for spot size calculation.
@@ -585,17 +564,21 @@ class PlanOverviewMap extends GHIBlockBase {
   /**
    * Build the content of the map modals.
    *
-   * @param object $data
-   *   The data object for the modal.
+   * @param object $plan
+   *   The plan object for the modal.
+   * @param object $caseload
+   *   The caseload object for the modal.
+   * @param object $funding
+   *   The funding object for the modal.
+   * @param object $reporting_period
+   *   The reporting period object for the modal.
    * @param object $footnotes
    *   The footnotes to be used if any.
    *
    * @return string|\Drupal\Component\Render\MarkupInterface
    *   The content of the modal.
    */
-  private function buildCountryModal($data, $footnotes = NULL) {
-    /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
-    $plan = $data->plan;
+  private function buildCountryModal(PlanOverviewPlan $plan, $caseload, $funding, $reporting_period, $footnotes = NULL) {
     $document_uri = $plan->getPlanDocumentUri();
 
     $common_theme_args = [
@@ -606,34 +589,34 @@ class PlanOverviewMap extends GHIBlockBase {
     $items = [
       'total_population' => [
         'label' => $this->t('Population'),
-        'value' => CommonHelper::renderValue($data->caseload->total_population, 'amount', 'hpc_amount', $common_theme_args),
+        'value' => CommonHelper::renderValue($caseload->total_population, 'amount', 'hpc_amount', $common_theme_args),
       ],
       'inneed' => [
         'label' => $this->t('In need'),
-        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'in_need') . CommonHelper::renderValue($data->caseload->in_need, 'amount', 'hpc_amount', $common_theme_args),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'in_need') . CommonHelper::renderValue($caseload->in_need, 'amount', 'hpc_amount', $common_theme_args),
       ],
       'target' => [
         'label' => $this->t('Targeted'),
-        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'target') . CommonHelper::renderValue($data->caseload->target, 'amount', 'hpc_amount', $common_theme_args),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'target') . CommonHelper::renderValue($caseload->target, 'amount', 'hpc_amount', $common_theme_args),
       ],
       // Note that due to space restrictions, the "estimated reach" and
       // "reached" values are mutually exclusive in the modal.
       // @see plan-overview-map-modal.tpl.php
       'estimated_reach' => [
         'label' => $this->t('Est. reach'),
-        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'estimated_reach') . CommonHelper::renderValue($data->caseload->estimated_reach, 'amount', 'hpc_amount', $common_theme_args),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'estimated_reach') . CommonHelper::renderValue($caseload->estimated_reach, 'amount', 'hpc_amount', $common_theme_args),
       ],
       'reached' => [
         'label' => $this->t('Reached'),
-        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'latest_reach') . CommonHelper::renderValue($data->caseload->reached, 'amount', 'hpc_amount', $common_theme_args, NULL, $this->t('Pending')),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'latest_reach') . CommonHelper::renderValue($caseload->reached, 'amount', 'hpc_amount', $common_theme_args, NULL, $this->t('Pending')),
       ],
       'reached_percent' => [
         'label' => $this->t('Reached (%)'),
-        'value' => (!empty($data->reporting_period) ? ThemeHelper::render([
+        'value' => (!empty($reporting_period) ? ThemeHelper::render([
           '#theme' => 'hpc_tooltip',
           '#tooltip' => ThemeHelper::render([
             '#theme' => 'hpc_reporting_period',
-            '#reporting_period' => $data->reporting_period,
+            '#reporting_period' => $reporting_period,
             '#format_string' => 'Monitoring period #@period_number<br>@date_range',
           ], FALSE),
           '#class' => 'monitoring period',
@@ -642,21 +625,21 @@ class PlanOverviewMap extends GHIBlockBase {
             '#icon' => 'calendar_today',
             '#tag' => 'span',
           ],
-        ], FALSE) : '') . CommonHelper::renderValue($data->caseload->reached_percent, 'ratio', 'hpc_percent'),
+        ], FALSE) : '') . CommonHelper::renderValue($caseload->reached_percent, 'ratio', 'hpc_percent'),
       ],
       'funding_required' => [
         'label' => (new TranslatableMarkup('Requirements')),
-        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'requirements') . CommonHelper::renderValue($data->funding->total_requirements, 'value', 'hpc_currency', $common_theme_args),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'requirements') . CommonHelper::renderValue($funding->total_requirements, 'value', 'hpc_currency', $common_theme_args),
       ],
       'funding_received' => [
         'label' => (new TranslatableMarkup('Funding')),
-        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'funding') . CommonHelper::renderValue($data->funding->total_funding, 'value', 'hpc_currency', $common_theme_args),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'funding') . CommonHelper::renderValue($funding->total_funding, 'value', 'hpc_currency', $common_theme_args),
       ],
       'funding_progress' => [
         'label' => $this->t('Coverage'),
         'value' => ThemeHelper::render([
           '#theme' => 'hpc_percent',
-          '#percent' => $data->funding->funding_progress,
+          '#percent' => $funding->funding_progress,
         ]),
       ],
       'plan_status' => [
