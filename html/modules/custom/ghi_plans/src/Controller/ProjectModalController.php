@@ -164,7 +164,7 @@ class ProjectModalController extends ControllerBase {
     }
     $project_search_query = $this->getProjectSearchQuery($base_object);
     $projects = $project_search_query->getOrganizationProjects($organization, $base_object);
-    $build = $this->getOrganizationProjectTable($projects, $plan_object?->getDecimalFormat());
+    $build = $this->getOrganizationProjectTable($projects, $plan_object);
     $title = $this->t('@organization_name | Projects', [
       '@organization_name' => $organization->getName(),
     ], $t_options);
