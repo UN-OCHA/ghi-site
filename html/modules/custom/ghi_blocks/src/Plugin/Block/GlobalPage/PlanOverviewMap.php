@@ -122,17 +122,17 @@ class PlanOverviewMap extends GHIBlockBase {
     // All tabs we have, including the legend we want to show.
     $tabs = [
       'in_need' => [
-        'group' => 'in_need',
+        'group' => 'caseload',
         'label' => $this->t('In Need'),
         'icon' => 'users',
       ],
       'target' => [
-        'group' => 'target',
+        'group' => 'caseload',
         'label' => $this->t('Targeted'),
         'icon' => 'users',
       ],
       'requirements' => [
-        'group' => 'requirements',
+        'group' => 'funding',
         'label' => $this->t('Requirements'),
         'icon' => 'attach-money',
       ],
@@ -266,54 +266,23 @@ class PlanOverviewMap extends GHIBlockBase {
 
     // Get the grouped value ranges for spot size calculation.
     $ranges_grouped = [
-      'in_need' => ['min' => 0, 'max' => 0],
-      'target' => ['min' => 0, 'max' => 0],
-      'requirements' => ['min' => 0, 'max' => 0],
+      'caseload' => ['min' => 0, 'max' => 0],
       'funding' => ['min' => 0, 'max' => 0],
       'coverage' => ['min' => 0, 'max' => 0],
     ];
-    foreach (array_keys($tabs) as $tab_key) {
-      $group = $tabs[$tab_key]['group'];
-      $tab_min = array_reduce($locations, function ($carry, $item) use ($tab_key) {
-        $value = is_numeric($item[$tab_key]) ? $item[$tab_key] : 0;
-        return $carry > $value ? $value : $carry;
-      }, 0);
-      $tab_max = array_reduce($locations, function ($carry, $item) use ($tab_key) {
-        $value = is_numeric($item[$tab_key]) ? $item[$tab_key] : 0;
-        return $carry < $value ? $value : $carry;
-      }, 0);
-
-      $ranges_grouped[$group]['min'] = min($ranges_grouped[$group]['min'], $tab_min);
-      $ranges_grouped[$group]['max'] = max($ranges_grouped[$group]['max'], $tab_max);
-    }
-
-    foreach ($locations as &$location) {
-      $radius_factors = [];
-      $empty_tab_values = [];
-      foreach (array_keys($tabs) as $tab_key) {
-        // Calculate the radius factor based on the value range in this group.
-        $group = $tabs[$tab_key]['group'];
-        $max = $ranges_grouped[$group]['max'];
-        $relative_size = $max > 0 ? 10 / $max * $location[$tab_key] : 1;
-        $radius_factors[$group] = $relative_size > 1 ? $relative_size : 1;
-        $empty_tab_values[$group] = empty($location[$tab_key]);
-      }
-      $location['radius_factors'] = $radius_factors;
-      $location['empty_tab_values'] = $empty_tab_values;
-    }
+    $this->calculateGroupedSizes($locations, $tabs, $ranges_grouped);
 
     foreach ($tabs as $key => $tab) {
+      $group = $tab['group'];
       // Set the radius factor for each location based on the predetermined
       // factors per map tab.
-      array_walk($locations, function (&$item) use ($key) {
-        $item['radius_factor'] = $item['radius_factors'][$key];
+      array_walk($locations, function (&$item) use ($group) {
+        $item['radius_factor'] = $item['radius_factors'][$group];
       });
-
       $map['data'][$key] = [
         'locations' => $locations,
         'modal_contents' => $modal_contents,
       ];
-
       $map['tabs'][] = Markup::create('<a href="#" class="map-tab" data-map-index="' . $key . '">' . $tab['label'] . '</a>');
     }
 
@@ -455,50 +424,21 @@ class PlanOverviewMap extends GHIBlockBase {
       'caseload' => ['min' => 0, 'max' => 0],
       'funding' => ['min' => 0, 'max' => 0],
     ];
-    foreach (array_keys($tabs) as $tab_key) {
-      $group = $tabs[$tab_key]['group'];
-      $tab_min = array_reduce($locations, function ($carry, $item) use ($tab_key) {
-        $value = is_numeric($item[$tab_key][0]) ? $item[$tab_key][0] : 0;
-        return $carry > $value ? $value : $carry;
-      }, 0);
-      $tab_max = array_reduce($locations, function ($carry, $item) use ($tab_key) {
-        $value = is_numeric($item[$tab_key][0]) ? $item[$tab_key][0] : 0;
-        return $carry < $value ? $value : $carry;
-      }, 0);
-
-      $ranges_grouped[$group]['min'] = min($ranges_grouped[$group]['min'], $tab_min);
-      $ranges_grouped[$group]['max'] = max($ranges_grouped[$group]['max'], $tab_max);
-    }
-
-    foreach ($locations as &$location) {
-      $radius_factors = [];
-      $empty_tab_values = [];
-      foreach (array_keys($tabs) as $tab_key) {
-        // Calculate the radius factor based on the value range in this group.
-        $group = $tabs[$tab_key]['group'];
-        $max = $ranges_grouped[$group]['max'];
-        $relative_size = $max > 0 ? 30 / $max * $location[$tab_key][0] : 1;
-        $radius_factors[$group] = $relative_size > 1 ? $relative_size : 1;
-        $empty_tab_values[$group] = empty(array_sum($location[$tab_key]));
-      }
-      $location['radius_factors'] = $radius_factors;
-      $location['empty_tab_values'] = $empty_tab_values;
-    }
+    $this->calculateGroupedSizes($locations, $tabs, $ranges_grouped);
 
     foreach ($tabs as $key => $tab) {
+      $group = $tab['group'];
       // Set the radius factor for each location based on the predetermined
       // factors per map tab.
-      array_walk($locations, function (&$item) use ($key) {
-        $item['radius_factor'] = $item['radius_factors'][$key];
+      array_walk($locations, function (&$item) use ($group) {
+        $item['radius_factor'] = $item['radius_factors'][$group];
       });
-
       $map['data'][$key] = [
         'locations' => array_values($locations),
         'modal_contents' => $modal_contents,
         'legend' => $tab['legend'],
         'legend_caption' => $tab['legend_caption'],
       ];
-
       $map['tabs'][] = Markup::create('<a href="#" class="map-tab" data-map-index="' . $key . '">' . $tab['label'] . '</a>');
     }
 
@@ -834,6 +774,48 @@ class PlanOverviewMap extends GHIBlockBase {
     }
     ArrayHelper::sortArrayByStringKey($countries, 'name', EndpointQuery::SORT_ASC);
     return $countries;
+  }
+
+  /**
+   * Calculate the grouped size of each location item based.
+   *
+   * @param array $locations
+   *   An array of location objects.
+   * @param array $tabs
+   *   The tabs used on the map.
+   * @param array $ranges_grouped
+   *   Grouped ranges.
+   */
+  private function calculateGroupedSizes(&$locations, $tabs, $ranges_grouped) {
+    foreach (array_keys($tabs) as $tab_key) {
+      $group = $tabs[$tab_key]['group'];
+      $tab_min = array_reduce($locations, function ($carry, $item) use ($tab_key) {
+        $value = is_numeric($item[$tab_key]) ? $item[$tab_key] : 0;
+        return $carry > $value ? $value : $carry;
+      }, 0);
+      $tab_max = array_reduce($locations, function ($carry, $item) use ($tab_key) {
+        $value = is_numeric($item[$tab_key]) ? $item[$tab_key] : 0;
+        return $carry < $value ? $value : $carry;
+      }, 0);
+
+      $ranges_grouped[$group]['min'] = min($ranges_grouped[$group]['min'], $tab_min);
+      $ranges_grouped[$group]['max'] = max($ranges_grouped[$group]['max'], $tab_max);
+    }
+
+    foreach ($locations as &$location) {
+      $radius_factors = [];
+      $empty_tab_values = [];
+      foreach (array_keys($tabs) as $tab_key) {
+        // Calculate the radius factor based on the value range in this group.
+        $group = $tabs[$tab_key]['group'];
+        $max = $ranges_grouped[$group]['max'];
+        $relative_size = $max > 0 ? 10 / $max * $location[$tab_key] : 1;
+        $radius_factors[$group] = $relative_size > 1 ? $relative_size : 1;
+        $empty_tab_values[$group] = empty($location[$tab_key]);
+      }
+      $location['radius_factors'] = $radius_factors;
+      $location['empty_tab_values'] = $empty_tab_values;
+    }
   }
 
 }
