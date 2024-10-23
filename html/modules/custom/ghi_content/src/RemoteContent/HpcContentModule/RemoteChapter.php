@@ -108,7 +108,7 @@ class RemoteChapter implements RemoteChapterInterface {
    * {@inheritdoc}
    */
   public function getConfiguration() {
-    return $this->data->configuration ? Yaml::decode($this->data->configuration) : [];
+    return ($this->data->configuration ?? NULL) ? Yaml::decode($this->data->configuration) : [];
   }
 
 }
