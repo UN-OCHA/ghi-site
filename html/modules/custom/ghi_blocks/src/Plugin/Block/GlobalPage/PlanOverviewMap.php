@@ -833,7 +833,7 @@ class PlanOverviewMap extends GHIBlockBase {
         // Calculate the radius factor based on the value range in this group.
         $group = $tabs[$tab_key]['group'];
         $max = $ranges_grouped[$group]['max'];
-        $relative_size = $max > 0 ? 10 / $max * $location[$tab_key] : 1;
+        $relative_size = ($max > 0 ? 10 / $max * $location[$tab_key] : 1) * 3;
         $radius_factors[$tab_key] = $relative_size > 1 ? $relative_size : 1;
         $empty_tab_values[$tab_key] = empty($location[$tab_key]);
       }
