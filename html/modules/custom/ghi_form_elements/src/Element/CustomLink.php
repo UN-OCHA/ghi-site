@@ -82,7 +82,7 @@ class CustomLink extends FormElementBase {
     $element_context = $element['#element_context'];
     $section_node = $element_context['section_node'] instanceof SectionNodeInterface ? $element_context['section_node'] : NULL;
     $page_node = $element_context['page_node'] instanceof NodeInterface ? $element_context['page_node'] : NULL;
-    $targets = $section_node && $page_node ? self::getLinkTargetOptions($page_node, $section_node) : [];
+    $targets = $section_node && $page_node ? self::getLinkTargetOptions($section_node, $page_node) : [];
     $required = $element['#required'];
     $state_selector_add_link = NULL;
 
