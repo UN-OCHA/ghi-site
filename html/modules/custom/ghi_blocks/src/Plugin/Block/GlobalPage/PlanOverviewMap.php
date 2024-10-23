@@ -172,12 +172,12 @@ class PlanOverviewMap extends GHIBlockBase {
         continue;
       }
 
-      $plan_entity = $plan->getEntity();
-      $location = $plan_entity->getFocusCountryMapLocation() ?? $plan->getCountry();
+      $location = $this->getPlanLocation($plan);
       if (!$location) {
         continue;
       }
 
+      $plan_entity = $plan->getEntity();
       if ($plan_entity) {
         $footnotes[$plan->id()] = $this->getFootnotesForPlanBaseobject($plan_entity);
       }
@@ -358,12 +358,12 @@ class PlanOverviewMap extends GHIBlockBase {
         continue;
       }
 
-      $plan_entity = $plan->getEntity();
-      $location = $plan_entity->getFocusCountryMapLocation() ?? $plan->getCountry();
+      $location = $this->getPlanLocation($plan);
       if (!$location) {
         continue;
       }
 
+      $plan_entity = $plan->getEntity();
       if ($plan_entity) {
         $footnotes[$plan->id()] = $this->getFootnotesForPlanBaseobject($plan_entity);
       }
@@ -388,10 +388,12 @@ class PlanOverviewMap extends GHIBlockBase {
 
       $plan_id = $plan->id();
       $object_id = count($locations) + 1;
-      $object_title = $section && $section->isPublished() ? $section->toLink($location->getName())->toString() : $location->getName();
+      $object_title = $section && $section->isPublished() ? $section->toLink($plan_entity->getShortName())->toString() : $plan_entity->getShortName();
       $reporting_period = $reached ? $plan->getLastPublishedReportingPeriod() : NULL;
       $locations[$object_id] = [
         'object_id' => $object_id,
+        'object_title' => $plan_entity->getShortName(),
+        'sort_key' => $plan_entity->getShortName() . '-' . $plan_entity->getPlanTypeShortLabel(FALSE),
         'location_id' => $location->id(),
         'location_name' => $location->getName(),
         'latLng' => $location->getLatLng(),
@@ -651,9 +653,29 @@ class PlanOverviewMap extends GHIBlockBase {
     $plans_by_country = $this->getPlansByCountry();
     $form['plan_select'] = [
       '#type' => 'container',
+      '#title' => $this->t('Disambiguation of multi-plan countries'),
       '#states' => [
         'visible' => [
           ':input[name="basic[style]"]' => ['value' => 'donut'],
+        ],
+      ],
+    ];
+    $form['plan_select']['description'] = [
+      'title' => [
+        '#type' => 'html_tag',
+        '#tag' => 'label',
+        '#value' => $this->t('Disambiguation of multi-plan countries'),
+        '#attributes' => ['class' => 'glb-form-item__label'],
+      ],
+      'description' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Donut maps do not support the display of multi-plan countries. For every country with multiple plans, you have to select which of the plans should be shown on the map.'),
+        '#attributes' => [
+          'class' => [
+            'description',
+            'glb-form-item__description',
+          ],
         ],
       ],
     ];
@@ -662,29 +684,17 @@ class PlanOverviewMap extends GHIBlockBase {
       '#tree' => TRUE,
       '#header' => [
         $this->t('Country'),
-        $this->t('Enabled'),
         $this->t('Available plans'),
       ],
     ];
 
     foreach ($plans_by_country as $country_id => $country) {
-      if (empty($country)) {
+      if (empty($country) || count($country['plans']) == 1) {
         continue;
       }
       $form['plan_select']['countries'][$country_id] = [];
       $form['plan_select']['countries'][$country_id]['country'] = [
         '#markup' => $country['name'],
-      ];
-      $form['plan_select']['countries'][$country_id]['status'] = [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Enabled'),
-        '#title_display' => 'invisible',
-        '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-          'plan_select',
-          'countries',
-          $country_id,
-          'status',
-        ]) ?? TRUE,
       ];
       $default_plan = $this->getDefaultFormValueFromFormState($form_state, [
         'plan_select',
@@ -697,11 +707,8 @@ class PlanOverviewMap extends GHIBlockBase {
         '#title' => $country['name'],
         '#title_display' => 'invisible',
         '#options' => $country['plans'],
-        '#default_value' => $default_plan !== NULL && in_array($default_plan, $country['plans']) ? $default_plan : array_key_first($country['plans']),
+        '#default_value' => $default_plan !== NULL && array_key_exists($default_plan, $country['plans']) ? $default_plan : array_key_first($country['plans']),
       ];
-      if (count($country['plans']) == 1) {
-        $form['plan_select']['countries'][$country_id]['plan']['#disabled'] = TRUE;
-      }
     }
     return $form;
   }
@@ -723,10 +730,18 @@ class PlanOverviewMap extends GHIBlockBase {
       // Filter based on selected plans.
       $plan_select = $config['plan_select']['countries'] ?? NULL;
       $selected_plan_ids = $plan_select ? array_filter(array_map(function ($item) {
-        return $item['status'] ? $item['plan'] : NULL;
+        return $item['plan'] ?? NULL;
       }, $plan_select)) : NULL;
-      $plans = array_filter($plans, function ($plan) use ($selected_plan_ids) {
-        return $selected_plan_ids === NULL || in_array($plan->id(), $selected_plan_ids);
+      $plans_by_country = $this->getPlansByCountry();
+      $plans = array_filter($plans, function (PlanOverviewPlan $plan) use ($selected_plan_ids, $plans_by_country) {
+        $plan_country = $this->getPlanLocation($plan);
+        if (!$plan_country) {
+          return FALSE;
+        }
+        if (count($plans_by_country[$plan_country->id()]['plans']) == 1) {
+          return TRUE;
+        }
+        return in_array($plan->id(), $selected_plan_ids);
       });
     }
 
@@ -752,20 +767,15 @@ class PlanOverviewMap extends GHIBlockBase {
     }
     $countries = [];
     foreach ($plans as $plan) {
-      $plan_countries = $plan->getCountries();
-      if (count($plan_countries) > 1) {
-        // Skip this.
-        continue;
-      }
-      $plan_country = reset($plan_countries);
-      if (!array_key_exists($plan_country->id, $countries)) {
-        $countries[$plan_country->id] = [
-          'id' => $plan_country->id,
-          'name' => $plan_country->name,
+      $plan_country = $this->getPlanLocation($plan);
+      if (!array_key_exists($plan_country->id(), $countries)) {
+        $countries[$plan_country->id()] = [
+          'id' => $plan_country->id(),
+          'name' => $plan_country->getName(),
           'plans' => [],
         ];
       }
-      $countries[$plan_country->id]['plans'][$plan->id()] = new FormattableMarkup('@plan_name (@plan_type, @plan_status)', [
+      $countries[$plan_country->id()]['plans'][$plan->id()] = (string) new FormattableMarkup('@plan_name (@plan_type, @plan_status)', [
         '@plan_name' => $plan->getName(),
         '@plan_type' => $plan->getTypeShortName(),
         '@plan_status' => $plan->getPlanStatusLabel(),
@@ -773,6 +783,21 @@ class PlanOverviewMap extends GHIBlockBase {
     }
     ArrayHelper::sortArrayByStringKey($countries, 'name', EndpointQuery::SORT_ASC);
     return $countries;
+  }
+
+  /**
+   * Get the location for the given plan partial.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan
+   *   The plan partial object.
+   *
+   * @return \Drupal\ghi_base_objects\ApiObjects\Country|null
+   *   An object describing the map location or NULL.
+   */
+  private function getPlanLocation(PlanOverviewPlan $plan) {
+    $plan_entity = $plan->getEntity();
+    $default_country = $plan->getCountry();
+    return $plan_entity->getFocusCountryMapLocation($default_country) ?? $default_country;
   }
 
   /**

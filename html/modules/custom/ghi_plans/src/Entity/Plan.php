@@ -102,22 +102,26 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    * @return \Drupal\ghi_base_objects\ApiObjects\Country|null
    *   An object describing the map location or NULL.
    */
-  public function getFocusCountryMapLocation() {
+  public function getFocusCountryMapLocation(?Country $default_country = NULL) {
     $focus_country = $this->getFocusCountry();
-    if (!$focus_country) {
+    if (!$focus_country && !$default_country) {
       return NULL;
     }
-    $lat_lng = [
+    $lat_lng = $focus_country ? [
       (string) $focus_country->get('field_latitude')->value,
       (string) $focus_country->get('field_longitude')->value,
-    ];
+    ] : NULL;
     if ($override = $this->getFocusCountryOverride()) {
       $lat_lng = $override;
     }
+    if (!$lat_lng) {
+      return NULL;
+    }
     return new Country((object) [
-      'id' => $focus_country->getSourceId(),
-      'name' => $focus_country->label(),
-      'latLng' => $lat_lng,
+      'id' => $focus_country?->getSourceId() ?? $default_country->id(),
+      'name' => $focus_country?->label() ?? $default_country->getName(),
+      'latitude' => $lat_lng[0],
+      'longitude' => $lat_lng[1],
     ]);
   }
 
