@@ -16,7 +16,7 @@
           continue;
         }
         var options = {
-          base_radius: 3,
+          base_radius: 7,
           popup_style: 'sidebar',
           map_tiles_url: map_config.map_tiles_url,
           legend: typeof map_config.legend != 'undefined' ? map_config.legend : false,

@@ -379,6 +379,7 @@ function ghi_blocks_deploy_9007_update_link_configuration_page_templates(&$sandb
       '@count_total' => $sandbox['total'],
     ]);
   }
+}
 
 /**
  * Update link configuration for plan headline figures element.
