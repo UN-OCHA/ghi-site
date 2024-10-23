@@ -43,7 +43,6 @@ class DataAttachment extends AttachmentBase {
    */
   const CUMULATIVE_REACH_FIELDS = [
     'cumulativeReach',
-    'optionIndirectCumulReach',
     'optionNonPlanCumulReach',
     'optionOverallCumulReach',
   ];
