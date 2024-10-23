@@ -9,17 +9,16 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
+use Drupal\ghi_blocks\Interfaces\CustomLinkBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
-use Drupal\ghi_blocks\Interfaces\OptionalLinkBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
-use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
+use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
-use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\ApiObjects\Plan as ApiObjectsPlan;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
@@ -64,11 +63,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  }
  * )
  */
-class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, OptionalLinkBlockInterface, TrustedCallbackInterface, ConfigValidationInterface {
+class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, CustomLinkBlockInterface, TrustedCallbackInterface, ConfigValidationInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
-  use OptionalLinkTrait;
+  use CustomLinkTrait;
   use ConfigValidationTrait;
 
   /**
@@ -207,7 +206,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
 
     $first_entity = reset($entities);
     $build = [];
-    $build[] = [
+    $build['content'] = [
       '#theme' => 'plan_entity_logframe',
       '#items' => $rendered_items,
       '#wrapper_attributes' => [
@@ -219,22 +218,21 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       ],
       '#gin_lb_theme_suggestions' => FALSE,
     ];
+    $build['links'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['link-wrapper'],
+      ],
+    ];
 
-    if ($link = $this->getLinkFromConfiguration($this->getBlockConfig()['display']['link'] ?? [])) {
-      $build[] = $link->toRenderable();
+    $display_conf = $this->getBlockConfig()['display'];
+    $link = $this->getLinkFromConfiguration($display_conf['link'] ?? [], [
+      'section_node' => $this->getCurrentSectionNode(),
+      'page_node' => $this->getPageNode(),
+    ]);
+    if ($link) {
+      $build['links'][] = $link->toRenderable();
     }
-    elseif (count($entities) && $first_entity instanceof GoverningEntity && $this->getCurrentBaseObject()->getSourceId() == $first_entity->id()) {
-      $plan_object = $this->getCurrentPlanObject();
-      $cluster_node = $this->getCurrentBaseEntity();
-      $title_args = ['langcode' => $plan_object->getPlanLanguage()];
-      $title_map = [
-        Plan::CLUSTER_TYPE_CLUSTER => $this->t('Go to cluster page', [], $title_args),
-        Plan::CLUSTER_TYPE_SECTOR => $this->t('Go to sector page', [], $title_args),
-      ];
-      $link_label = $title_map[$plan_object->getPlanClusterType()];
-      $build[] = $this->getLinkFromUri($cluster_node->toUrl()->toUriString(), $link_label)->toRenderable();
-    }
-
     return $build;
   }
 
@@ -583,9 +581,10 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    */
   public function displayForm(array $form, FormStateInterface $form_state) {
     $form['link'] = [
-      '#type' => 'optional_link',
+      '#type' => 'custom_link',
       '#title' => $this->t('Add a link to this element'),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'link'),
+      '#element_context' => $this->getBlockContext(),
     ];
     return $form;
   }
@@ -728,7 +727,11 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       'sort' => TRUE,
       'sort_column' => 'id_ASC',
     ]);
+    // This can be any parent node, e.g. SectionNode or PlanClusterNode.
+    $base_entity = $this->getCurrentBaseEntity();
+    $section_node = $this->sectionManager->getCurrentSection($base_entity);
     return [
+      'section_node' => $section_node,
       'page_node' => $this->getPageNode(),
       'plan_object' => $plan_object,
       'base_object' => $this->getCurrentBaseObject(),
@@ -838,7 +841,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   public function getConfigErrors() {
     $conf = $this->getBlockConfig();
     $errors = [];
-    $configured_entities = array_filter($conf['entities']['entity_ids']);
+    $configured_entities = array_filter($conf['entities']['entity_ids'] ?? []);
     $available_entities = $this->getPlanEntities($conf['entities']['entity_ref_code']);
 
     if (!empty($configured_entities) && $available_entities && count($configured_entities) != count(array_intersect_key($configured_entities, $available_entities))) {
@@ -870,7 +873,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     $conf = $this->getBlockConfig();
 
     $entities = $this->getRenderableEntities();
-    $configured_entities = array_filter($conf['entities']['entity_ids']);
+    $configured_entities = array_filter($conf['entities']['entity_ids'] ?? []);
     if (!empty($configured_entities)) {
       $available_entities = $this->getPlanEntities($conf['entities']['entity_ref_code']);
       $valid_entity_ids = array_intersect_key($configured_entities, $available_entities);
@@ -880,9 +883,11 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       $conf['entities']['entity_ids'] = array_fill_keys(array_keys($entities), 0);
     }
 
-    $entity_ref_code = $conf['entities']['entity_ref_code'] ?? [];
+    $entity_ref_code = $conf['entities']['entity_ref_code'] ?? NULL;
     $context = $this->getBlockContext();
-    $context['entity_types'] = array_intersect_key($context['entity_types'], [$entity_ref_code => TRUE]);
+    if (!empty($entity_ref_code)) {
+      $context['entity_types'] = array_intersect_key($context['entity_types'], [$entity_ref_code => TRUE]);
+    }
     $items = $this->getConfiguredItemPlugins($conf['tables']['attachment_tables'] ?? [], $context);
     if (empty($items)) {
       return;
