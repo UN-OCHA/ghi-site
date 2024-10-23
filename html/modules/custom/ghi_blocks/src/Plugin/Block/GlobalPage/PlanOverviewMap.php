@@ -273,11 +273,10 @@ class PlanOverviewMap extends GHIBlockBase {
     $this->calculateGroupedSizes($locations, $tabs, $ranges_grouped);
 
     foreach ($tabs as $key => $tab) {
-      $group = $tab['group'];
       // Set the radius factor for each location based on the predetermined
       // factors per map tab.
-      array_walk($locations, function (&$item) use ($group) {
-        $item['radius_factor'] = $item['radius_factors'][$group];
+      array_walk($locations, function (&$item) use ($key) {
+        $item['radius_factor'] = $item['radius_factors'][$key];
       });
       $map['data'][$key] = [
         'locations' => $locations,
@@ -810,8 +809,8 @@ class PlanOverviewMap extends GHIBlockBase {
         $group = $tabs[$tab_key]['group'];
         $max = $ranges_grouped[$group]['max'];
         $relative_size = $max > 0 ? 10 / $max * $location[$tab_key] : 1;
-        $radius_factors[$group] = $relative_size > 1 ? $relative_size : 1;
-        $empty_tab_values[$group] = empty($location[$tab_key]);
+        $radius_factors[$tab_key] = $relative_size > 1 ? $relative_size : 1;
+        $empty_tab_values[$tab_key] = empty($location[$tab_key]);
       }
       $location['radius_factors'] = $radius_factors;
       $location['empty_tab_values'] = $empty_tab_values;
