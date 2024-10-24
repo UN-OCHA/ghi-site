@@ -10,6 +10,7 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
+use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
 use Drupal\gho_footnotes\GhoFootnotes;
 
 /**
@@ -33,6 +34,8 @@ use Drupal\gho_footnotes\GhoFootnotes;
  * )
  */
 class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface, MultiStepFormBlockInterface, TrustedCallbackInterface {
+
+  use OptionalLinkTrait;
 
   /**
    * The CSS class used for promoted paragraphs. This comes from the NCMS.
@@ -101,15 +104,41 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
 
     // Move gho specific paragraph classes to the block wrapper attributes, so
     // that CSS logic that targets subsequent elements can be applied.
-    $wrapper_attributes = [];
-    $block_attributes = [];
+    $wrapper_attributes = ['class' => []];
+    $block_attributes = ['class' => []];
     $dom = Html::load($rendered);
+
+    // See if there are links to be replaced.
+    $links = $dom->getElementsByTagName('a') ?? [];
+    if (!empty($links)) {
+      $link_map = $paragraph->getSource()->getLinkMap($paragraph);
+      foreach ($links as $link) {
+        $href = $link->attributes->getNamedItem('href')?->value ?? NULL;
+        if (!$href) {
+          continue;
+        }
+        if (array_key_exists($href, $link_map)) {
+          $link->attributes->getNamedItem('href')->value = $link_map[$href];
+        }
+        elseif (strpos($href, '/') === 0) {
+          $link->parentNode->removeChild($link);
+        }
+      }
+    }
+
     if ($paragraph->getType() == 'sub_article') {
       // Remove the footer from sub articles.
       foreach (iterator_to_array($dom->getElementsByTagName('footer')) as $footer) {
         $footer->parentNode->removeChild($footer);
       }
+      // Add a link to the standalone article page if the article is
+      // collapsible.
+      $collapsible = (bool) $paragraph->getConfiguration()['collapsible'] ?? NULL;
+      if ($collapsible) {
+        $this->addArticleLinkToSubarticleParagraph($paragraph, $dom);
+      }
     }
+
     $child = $dom->getElementsByTagName('div')->item(0);
     if ($child) {
       $attributes = $child->attributes;
@@ -123,7 +152,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
         }) : [];
 
         // Set new classes specific to our system.
-        $block_attributes['class'] = array_map(function ($class) {
+        $block_attributes['class'] += array_map(function ($class) {
           return $this->getPluginId() . '--' . $class;
         }, $gho_classes);
 
@@ -147,26 +176,8 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
           $block_attributes['class'][] = 'content-width';
         }
 
-        $wrapper_attributes['class'] = $gho_classes;
+        $wrapper_attributes['class'] += $gho_classes;
         $attributes->getNamedItem('class')->nodeValue = implode(' ', array_diff($classes, $gho_classes));
-      }
-    }
-
-    // See if there are links to be replaced.
-    $links = $dom->getElementsByTagName('a') ?? [];
-    if (!empty($links)) {
-      $link_map = $paragraph->getSource()->getLinkMap($paragraph);
-      foreach ($links as $link) {
-        $href = $link->attributes->getNamedItem('href')?->value ?? NULL;
-        if (!$href) {
-          continue;
-        }
-        if (array_key_exists($href, $link_map)) {
-          $link->attributes->getNamedItem('href')->value = $link_map[$href];
-        }
-        elseif (strpos($href, '/') === 0) {
-          $link->parentNode->removeChild($link);
-        }
       }
     }
 
@@ -576,6 +587,28 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
       return FALSE;
     }
     return $article_page->id() == $page_node->id();
+  }
+
+  /**
+   * Make a subarticle paragraph collapsible.
+   *
+   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface $paragraph
+   *   The paragraph.
+   * @param \DOMDocument $dom
+   *   The dom object.
+   */
+  private function addArticleLinkToSubarticleParagraph($paragraph, $dom) {
+    $article_id = $paragraph->getConfiguration()['article_id'] ?? NULL;
+    $remote_sub_article = $article_id ? $paragraph->getSource()->getArticle($article_id) : NULL;
+    if (!$remote_sub_article) {
+      return;
+    }
+    $local_subarticle = $this->articleManager->loadNodeForRemoteContent($remote_sub_article);
+    if (!$local_subarticle) {
+      return;
+    }
+    $child = $dom->getElementsByTagName('div')->item(0);
+    $child->setAttribute('data-article-link', $local_subarticle->toUrl()->toString());
   }
 
   /**

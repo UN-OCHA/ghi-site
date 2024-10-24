@@ -39,6 +39,13 @@ abstract class ContentBlockBase extends GHIBlockBase {
   protected $renderer;
 
   /**
+   * The date formatter service.
+   *
+   * @var \Drupal\Core\Datetime\DateFormatterInterface
+   */
+  protected $dateFormatter;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -52,6 +59,7 @@ abstract class ContentBlockBase extends GHIBlockBase {
     $instance->articleManager = $container->get('ghi_content.manager.article');
     $instance->documentManager = $container->get('ghi_content.manager.document');
     $instance->renderer = $container->get('renderer');
+    $instance->dateFormatter = $container->get('date.formatter');
 
     return $instance;
   }

@@ -56,6 +56,45 @@
 }
 
 /**
+ * Collapsible subarticles.
+ */
+[data-article-collapsible="true"] {
+  margin-bottom: 2rem;
+}
+
+[data-article-collapsible="true"] .gho-sub-article__content > .paragraph.collapsible:not(.expanded).fade-out {
+  display: block;
+  height: 26rem;
+  overflow: hidden;
+}
+[data-article-collapsible="true"] .gho-sub-article__content > .paragraph.collapsible:not(.expanded).fade-out::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 40%;
+  width: 100%;
+  margin: 0;
+  background: linear-gradient(rgba(0,0,0,0), #FFF);
+}
+
+[data-article-collapsible="true"] .gho-sub-article__content > .paragraph.collapsible:not(.expanded).initially-hidden {
+  display: none;
+}
+
+[data-article-collapsible="true"] .collapsible-control--outer {
+  position: absolute;
+  bottom: -4rem;
+  width: 100%;
+}
+[data-article-collapsible="true"] .collapsible-control--outer .collapsible-control a.expand-table {
+  position: absolute;
+}
+[data-article-collapsible="true"] .collapsible-control--outer .collapsible-control a.hidden {
+  display: none;
+}
+
+/**
  * Social links.
  */
 .gho-sub-article__social-links {
