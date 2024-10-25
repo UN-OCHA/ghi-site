@@ -31,7 +31,7 @@
       margin-bottom: 0.8rem;
       padding-bottom: 0;
 
-      @media (max-width: 1024px) {
+      @include max-width("lg") {
         margin-right: auto;
         margin-left: auto;
       }
@@ -50,7 +50,7 @@
 
       form .mc-field-group {
         display: flex;
-        justify-content: flex-end;
+        justify-content: center;
         gap: 0;
 
         input {
@@ -83,15 +83,6 @@
             transition: opacity 0.1666s ease-in-out;
             opacity: 0.8;
           }
-        }
-
-        @media (max-width: 1024px) {
-          flex-direction: column;
-          justify-content: center;
-          max-width: 20rem;
-          margin-right: auto;
-          margin-left: auto;
-          gap: 0.5rem;
         }
       }
     }
