@@ -27,7 +27,6 @@ use Drupal\migrate\MigrateExecutable;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Plugin\MigrationPluginManager;
 use Drupal\migrate\Row;
-use Drupal\migrate_plus\Entity\Migration;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\TermInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -646,42 +645,10 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
       '@remote_source' => $this->getRemoteSource($node)?->getPluginLabel(),
     ];
 
-    // Add a global message about disabled fields.
-    if (empty($form_state->getUserInput())) {
-      $this->messenger->addWarning($this->t('Some of the fields in this form are disabled because their content is automatically synced from @remote_source.', $t_args));
-    }
+    // Disable the image field because we sync this automatically.
+    $form['field_image']['#disabled'] = 'disabled';
 
-    $migration = $this->getMigration($node);
-    $loaded_migration = $migration ? Migration::load($migration->id()) : NULL;
-    $destination = $loaded_migration?->get('destination') ?? NULL;
-    $disabled_field_text = $this->t('This field is disabled because it is automatically populated from the remote source.');
-
-    $field_keys = array_merge($destination ? $destination['overwrite_properties'] : [], ['field_image']);
-    foreach ($field_keys as $field_key) {
-      if (empty($form[$field_key])) {
-        continue;
-      }
-      if ($field_key == 'field_summary') {
-        $form[$field_key]['widget_copy'] = $form[$field_key]['widget'];
-        $form[$field_key]['widget_copy'][0]['#type'] = 'textarea';
-        $form[$field_key]['widget_copy'][0]['#format'] = 'plan_text';
-        $form[$field_key]['widget_copy'][0]['#disabled'] = TRUE;
-        $form[$field_key]['widget']['#access'] = FALSE;
-      }
-      // Add a condition to manage disabled relationship of terms.
-      elseif (isset($form['relations'][$field_key])) {
-        $form['relations'][$field_key]['#disabled'] = TRUE;
-        // Add a tooltip for disabled relationship of terms.
-        $form['relations'][$field_key]['#attributes']['title'] = $disabled_field_text;
-      }
-      else {
-        $form[$field_key]['#disabled'] = TRUE;
-        // Add a tooltip for each individual disabled field.
-        $form[$field_key]['#attributes']['title'] = $disabled_field_text;
-      }
-    }
-
-    // Also disable the remote field.
+    // Disable the remote field.
     $remote_field = $this->getRemoteFieldName();
     $form[$remote_field]['#disabled'] = TRUE;
     $form[$remote_field]['#attributes']['title'] = $this->t('This field cannot be edited anymore after the page has been created.');

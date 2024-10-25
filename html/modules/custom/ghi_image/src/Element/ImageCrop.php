@@ -105,11 +105,14 @@ class ImageCrop extends ImageWidgetCropImageCrop {
       ];
 
       /** @var \Drupal\Core\Config\Entity\ConfigEntityStorage $crop_type_storage */
-      $crop_type_storage = \Drupal::entityTypeManager()
-        ->getStorage('crop_type');
+      $crop_type_storage = \Drupal::entityTypeManager()->getStorage('crop_type');
 
-      /** @var \Drupal\crop\Entity\CropType[] $crop_types */
       if ($crop_types = $crop_type_storage->loadMultiple($crop_type_list)) {
+        $file_uri = $file->getFileUri();
+        $file_stats = stat($file_uri);
+        $local_file_exists = $file_stats && $file_stats['size'];
+
+        /** @var \Drupal\crop\Entity\CropType[] $crop_types */
         foreach ($crop_types as $type => $crop_type) {
           $ratio = $crop_type->getAspectRatio() ?: 'NaN';
           $title = self::isRequiredType($element, $type) ? t('@label (required)', ['@label' => $crop_type->label()]) : $crop_type->label();
@@ -125,8 +128,8 @@ class ImageCrop extends ImageWidgetCropImageCrop {
               'data-drupal-iwc-show-default-crop' => $element['#show_default_crop'] ? 'true' : 'false',
               'data-drupal-iwc-soft-limit' => Json::encode($crop_type->getSoftLimit()),
               'data-drupal-iwc-hard-limit' => Json::encode($crop_type->getHardLimit()),
-              'data-drupal-iwc-original-width' => ($file instanceof FileEntity) ? $file->getMetadata('width') : getimagesize($file->getFileUri())[0],
-              'data-drupal-iwc-original-height' => ($file instanceof FileEntity) ? $file->getMetadata('height') : getimagesize($file->getFileUri())[1],
+              'data-drupal-iwc-original-width' => ($file instanceof FileEntity) ? $file->getMetadata('width') : ($local_file_exists ? getimagesize($file_uri)[0] : NULL),
+              'data-drupal-iwc-original-height' => ($file instanceof FileEntity) ? $file->getMetadata('height') : ($local_file_exists ? getimagesize($file_uri)[1] : NULL),
             ],
           ];
 
@@ -145,7 +148,7 @@ class ImageCrop extends ImageWidgetCropImageCrop {
               'class' => ['crop-preview-wrapper__preview-image'],
               'data-drupal-iwc' => 'image',
             ],
-            '#uri' => $file->getFileUri(),
+            '#uri' => $file_uri,
             '#weight' => -10,
           ];
 
@@ -190,7 +193,7 @@ class ImageCrop extends ImageWidgetCropImageCrop {
           }
 
           /** @var \Drupal\crop\CropInterface $crop */
-          $crop = Crop::findCrop($file->getFileUri(), $type);
+          $crop = Crop::findCrop($file_uri, $type);
           if ($crop) {
             $edit = TRUE;
             /** @var \Drupal\image_widget_crop\ImageWidgetCropInterface $iwc_manager */
@@ -213,7 +216,7 @@ class ImageCrop extends ImageWidgetCropImageCrop {
         // Stock Original File Values.
         $element['file-uri'] = [
           '#type' => 'value',
-          '#value' => $file->getFileUri(),
+          '#value' => $file_uri,
         ];
       }
     }

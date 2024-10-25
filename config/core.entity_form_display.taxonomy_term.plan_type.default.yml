@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.taxonomy_term.plan_type.field_abbreviation
     - field.field.taxonomy_term.plan_type.field_included_in_totals
     - field.field.taxonomy_term.plan_type.field_original_id
     - taxonomy.vocabulary.plan_type
@@ -20,6 +21,14 @@ content:
     region: content
     settings:
       rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_abbreviation:
+    type: string_textfield
+    weight: 1
+    region: content
+    settings:
+      size: 60
       placeholder: ''
     third_party_settings: {  }
   field_included_in_totals:

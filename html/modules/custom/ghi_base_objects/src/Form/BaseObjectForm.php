@@ -5,7 +5,6 @@ namespace Drupal\ghi_base_objects\Form;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
-use Drupal\Core\Render\Element;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -36,27 +35,10 @@ class BaseObjectForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    // Just add the entity to the form array, so that modules can easily access
+    // the entity in form_later hooks.
     $form['#entity'] = $this->entity;
-    $form = parent::buildForm($form, $form_state);
-
-    // Disable all form elements except the listed ones.
-    $allow_editing = [
-      'form_id',
-      'form_build_id',
-      'form_token',
-      'field_content',
-      'status',
-      'actions',
-    ];
-    foreach (Element::children($form) as $element_key) {
-      if (in_array($element_key, $allow_editing)) {
-        continue;
-      }
-      $form[$element_key]['#disabled'] = 'disabled';
-    }
-
-    $this->messenger()->addWarning($this->t('Most of the data in this form is imported automatically from the HPC API and cannot be changed here.'));
-    return $form;
+    return parent::buildForm($form, $form_state);
   }
 
   /**

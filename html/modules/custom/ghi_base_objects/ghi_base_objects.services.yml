@@ -1,0 +1,4 @@
+services:
+  migrated_entity_manager:
+    class: Drupal\ghi_base_objects\Migrate\MigratedEntityManager
+    arguments: ['@plugin.manager.migration', '@plugin.manager.migrate.source', '@messenger']

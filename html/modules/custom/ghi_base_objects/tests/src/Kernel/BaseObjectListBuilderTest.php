@@ -21,6 +21,7 @@ class BaseObjectListBuilderTest extends KernelTestBase {
   protected static $modules = [
     'field',
     'user',
+    'migrate',
     'ghi_base_objects',
   ];
 

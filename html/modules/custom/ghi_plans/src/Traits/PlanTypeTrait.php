@@ -66,28 +66,6 @@ trait PlanTypeTrait {
   }
 
   /**
-   * Get the plan type name.
-   *
-   * This is only used to override one specific plan type "Other", because
-   * there are 2 plan types with identical names and they only differ in the
-   * includeTotals flag.
-   *
-   * @param string $name
-   *   The original name of the plan type.
-   * @param bool $include_totals
-   *   Whether the plan type has the includeTotals flag set.
-   *
-   * @return string
-   *   A name for the given plan type name.
-   */
-  public function getPlanTypeName($name, $include_totals) {
-    if (strtolower($name) == 'other' && !$include_totals) {
-      return (string) $this->t('Non Humanitarian Response Plan');
-    }
-    return $name;
-  }
-
-  /**
    * Get the plan type short name.
    *
    * This is only used to override one specific plan type "Other", because
@@ -96,17 +74,12 @@ trait PlanTypeTrait {
    *
    * @param string $name
    *   The original name of the plan type.
-   * @param bool $include_totals
-   *   Whether the plan type has the includeTotals flag set.
    *
    * @return string
    *   A short name for the given plan type name.
    */
-  public function getPlanTypeShortName($name, $include_totals) {
-    if (strtolower($name) == 'other' && !$include_totals) {
-      return (string) $this->t('Non-GHO');
-    }
-    return StringHelper::getAbbreviation($this->getPlanTypeName($name, $include_totals));
+  public function getPlanTypeShortName($name) {
+    return StringHelper::getAbbreviation($name);
   }
 
 }

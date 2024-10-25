@@ -258,7 +258,7 @@ display:
           type: boolean
           settings:
             format: custom
-            format_custom_false: "Not displayed"
+            format_custom_false: 'Not displayed'
             format_custom_true: Displayed
         changed:
           id: changed
