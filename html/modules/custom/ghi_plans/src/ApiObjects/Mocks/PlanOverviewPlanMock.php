@@ -133,7 +133,7 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
    *   The plan type name.
    */
   public function getTypeName($fetch_from_entity = FALSE) {
-    return $this->getPlanTypeName($this->getOriginalTypeName(), $this->isTypeIncluded());
+    return $this->getOriginalTypeName();
   }
 
   /**
@@ -143,7 +143,7 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
    *   The plan type name.
    */
   public function getTypeShortName($fetch_from_entity = FALSE) {
-    return $this->getPlanTypeShortName($this->getOriginalTypeName(), $this->isTypeIncluded());
+    return $this->getPlanTypeShortName($this->getOriginalTypeName());
   }
 
   /**

@@ -176,9 +176,8 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
    */
   public function getPlanTypeShortLabel($override = TRUE) {
     $plan_type = $this->getPlanType();
-    $included_in_totals = $plan_type ? $plan_type->get('field_included_in_totals')->value : FALSE;
     $plan_type_label = $override ? $this->getPlanSubtitle() : $plan_type->label();
-    return $plan_type_label ? $this->getPlanTypeShortName($plan_type_label, $included_in_totals) : NULL;
+    return $plan_type_label ? $this->getPlanTypeShortName($plan_type_label) : NULL;
   }
 
   /**

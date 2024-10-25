@@ -297,10 +297,10 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'type' => [
           'data' => [
             'name' => [
-              '#markup' => $plan->getTypeShortName(),
+              '#markup' => $plan->getTypeShortName(TRUE),
             ],
           ],
-          'data-value' => $plan->getTypeShortName(),
+          'data-value' => $plan->getTypeShortName(TRUE),
         ],
         'inneed' => [
           'data' => [
@@ -384,7 +384,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
                 '#attributes' => [
                   'data-toggle' => 'tooltip',
                   'data-tippy-content' => $this->t('Download the @type document', [
-                    '@type' => strtolower($plan->getTypeShortName()) == 'other' ? $this->t('plan') : $plan->getTypeShortName(),
+                    '@type' => strtolower($plan->getTypeShortName(TRUE)) == 'other' ? $this->t('plan') : $plan->getTypeShortName(TRUE),
                   ]),
                 ],
                 'content' => DownloadHelper::getDownloadIcon($document_uri),

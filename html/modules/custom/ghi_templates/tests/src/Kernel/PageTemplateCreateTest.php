@@ -44,6 +44,7 @@ class PageTemplateCreateTest extends KernelTestBase {
     'pathauto',
     'layout_builder',
     'layout_discovery',
+    'migrate',
     'hpc_api',
     'ghi_base_objects',
     'ghi_sections',
