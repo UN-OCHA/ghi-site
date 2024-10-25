@@ -478,7 +478,7 @@ display:
           type: boolean
           settings:
             format: custom
-            format_custom_false: 'Inactive'
+            format_custom_false: Inactive
             format_custom_true: Active
           group_column: value
           group_columns: {  }

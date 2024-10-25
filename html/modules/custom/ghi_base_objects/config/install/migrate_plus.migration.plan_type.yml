@@ -43,6 +43,7 @@ destination:
   overwrite_properties:
     - name
     - description
+    - field_original_id
     - field_included_in_totals
 migration_dependencies: {  }
 dependencies:

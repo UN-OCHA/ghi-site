@@ -1,0 +1,19 @@
+uuid: 10e6cccc-b357-4893-af2b-8ffea2cbe3c7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_abbreviation
+    - taxonomy.vocabulary.plan_type
+id: taxonomy_term.plan_type.field_abbreviation
+field_name: field_abbreviation
+entity_type: taxonomy_term
+bundle: plan_type
+label: Abbreviation
+description: 'An optional abbreviation for the plan type name, to be used for example in the global overview pages.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string
