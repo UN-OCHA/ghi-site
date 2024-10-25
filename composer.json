@@ -64,6 +64,7 @@
         "drupal/auto_entitylabel": "^3.0@beta",
         "drupal/autologout": "^1.4",
         "drupal/bert": "^2.0",
+        "drupal/better_permissions_page": "^1.0",
         "drupal/big_pipe_sessionless": "^2.0",
         "drupal/bigint": "^2.0",
         "drupal/cer": "^5.0.0",

@@ -3,7 +3,7 @@ langcode: en
 status: true
 dependencies: {  }
 id: ncms
-label: HPC Content Module
+label: 'HPC Content Module'
 description: 'Import data from the connected NCMS backends.'
 source_type: NCMS
 module: null
