@@ -7,7 +7,6 @@
   }
 
   .mega-menu {
-
     &.label-visible h2 {
       position: static !important;
       display: block;
@@ -88,9 +87,7 @@
   }
 
   nav.cd-nav {
-
     & > ul > li {
-
       & > span {
         font-weight: bold;
 
@@ -102,7 +99,6 @@
       }
 
       & > ul > li {
-
         & > span {
           opacity: 0.5;
         }
@@ -110,7 +106,6 @@
     }
 
     ul.menu li.menu-item .menu-link-contentmain nav[role="navigation"] {
-
       ul {
         padding: 0;
         list-style: none;
@@ -141,7 +136,6 @@
       position: unset;
 
       ul.menu li.menu-item {
-
         &:not(:last-child).right-border {
           border-right: 1px solid var(--ghi-default-border-color);
         }
@@ -163,7 +157,6 @@
             }
 
             nav[role="navigation"] > ul li {
-
               a,
               span {
                 display: inline-block;
@@ -223,12 +216,12 @@
 
             nav[role="navigation"],
             .vertical-tabs__panes {
-
               &[role="navigation"],
               details {
                 padding: 1rem;
                 column-count: 3;
-                column-rule: 1px solid var(--ghi-default-border-color-background);
+                column-rule: 1px solid
+                  var(--ghi-default-border-color-background);
                 background: var(--cd-white);
               }
 

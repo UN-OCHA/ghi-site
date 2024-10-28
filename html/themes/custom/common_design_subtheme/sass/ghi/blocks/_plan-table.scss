@@ -9,13 +9,11 @@
   table {
     tbody {
       td[data-column="name"] {
-
         .cell-wrapper-inner {
           justify-content: space-between;
         }
 
         .tooltip-wrapper {
-
           .gho-included-tooltip {
             color: var(--cd-primary-color);
             font-size: var(--cd-font-size--medium);
@@ -63,7 +61,6 @@
 }
 
 .ghi-block-global-plan-overview-map + .ghi-block-global-plan-table {
-
   /**
    * Bleed the background only.
    */

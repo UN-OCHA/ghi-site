@@ -1,7 +1,5 @@
 .ghi-block-plan-cluster-logframe-links {
-
   .block-content {
-
     .item-list--links {
       display: flex;
       flex-direction: column;
@@ -18,8 +16,8 @@
       .field--name-field-thumbnail-image {
         display: flex;
         flex-direction: column;
-        justify-content: center;
         align-items: center;
+        justify-content: center;
         width: 5rem;
         min-width: auto;
 
@@ -45,10 +43,9 @@
 
       .description-wrapper {
         display: flex;
-        justify-content: space-between;
         align-items: end;
+        justify-content: space-between;
       }
     }
   }
-
 }

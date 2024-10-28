@@ -48,15 +48,24 @@
     padding: 0 1.5rem;
     border-width: 0 0 0 1px;
   }
-  [dir="ltr"] .gho-top-figures:not(.gho-top-figures--small) .gho-figures .gho-figure:first-child {
+  [dir="ltr"]
+    .gho-top-figures:not(.gho-top-figures--small)
+    .gho-figures
+    .gho-figure:first-child {
     padding-left: 0;
     border-width: 0;
   }
-  [dir="rtl"] .gho-top-figures:not(.gho-top-figures--small) .gho-figures .gho-figure:first-child {
+  [dir="rtl"]
+    .gho-top-figures:not(.gho-top-figures--small)
+    .gho-figures
+    .gho-figure:first-child {
     padding-right: 0;
     border-width: 0 0 0 1px;
   }
-  [dir="rtl"] .gho-top-figures:not(.gho-top-figures--small) .gho-figures .gho-figure:last-child {
+  [dir="rtl"]
+    .gho-top-figures:not(.gho-top-figures--small)
+    .gho-figures
+    .gho-figure:last-child {
     border-width: 0;
   }
   .gho-top-figures .gho-figure__label {

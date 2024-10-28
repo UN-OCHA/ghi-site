@@ -2,18 +2,28 @@
   position: relative;
 }
 
-.has-progress-indicator tbody td[data-progress-group] .progress-indicator-wrapper {
+.has-progress-indicator
+  tbody
+  td[data-progress-group]
+  .progress-indicator-wrapper {
   position: absolute;
   bottom: -0.4rem;
   left: 0;
   width: 100%;
 }
 
-.has-progress-indicator tbody td[data-progress-group][data-column-type="percentage"] .progress-indicator-wrapper {
+.has-progress-indicator
+  tbody
+  td[data-progress-group][data-column-type="percentage"]
+  .progress-indicator-wrapper {
   background-color: var(--ghi-progress-color-bg);
 }
 
-.has-progress-indicator tbody td[data-progress-group] .progress-indicator-wrapper .progress-indicator {
+.has-progress-indicator
+  tbody
+  td[data-progress-group]
+  .progress-indicator-wrapper
+  .progress-indicator {
   display: block;
   height: 4px;
   background-color: var(--ghi-progress-color-fg);

@@ -35,27 +35,29 @@
 // `min-width` and `max-width` mixins are supplied, with convenience functions
 // for CD dimensions. All CD convenience functions are `min-width`.
 //——————————————————————————————————————————————————————————————————————————————
-@mixin min-width($breakpoint) {
-  @if map-has-key($grid-breakpoints, $breakpoint) {
-    @media (min-width: #{map-get($grid-breakpoints, $breakpoint)}) {
-      @content;
-    }
-  }
-
-  @else {
+@function breakpoint-value($breakpoint) {
+  @if map.has-key($grid-breakpoints, $breakpoint) {
+    @return map.get($grid-breakpoints, $breakpoint);
+  } @else {
     @warn "`#{$breakpoint}` not found in `$grid-breakpoints` map.";
   }
 }
 
-@mixin max-width($breakpoint) {
-  @if map-has-key($grid-breakpoints, $breakpoint) {
-    @media (max-width: #{map-get($grid-breakpoints, $breakpoint)-1}) {
+@mixin min-width($breakpoint) {
+  $breakpoint-value: breakpoint-value($breakpoint);
+  @if $breakpoint-value {
+    @media (min-width: #{$breakpoint-value}) {
       @content;
     }
   }
+}
 
-  @else {
-    @warn "`#{$breakpoint}` not found in `$grid-breakpoints` map.";
+@mixin max-width($breakpoint) {
+  $breakpoint-value: breakpoint-value($breakpoint);
+  @if $breakpoint-value {
+    @media (max-width: #{$breakpoint-value}) {
+      @content;
+    }
   }
 }
 
@@ -139,11 +141,9 @@
 // Usage: @include z-index(dropdown);
 //——————————————————————————————————————————————————————————————————————————————
 @mixin z-index($value: 0) {
-  @if map-has-key($zindex, $value) {
-    z-index: #{map-get($zindex, $value)};
-  }
-
-  @else {
+  @if map.has-key($zindex, $value) {
+    z-index: #{map.get($zindex, $value)};
+  } @else {
     @warn "`#{$value}` not found in `$zindex` map.";
   }
 }

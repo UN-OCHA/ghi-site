@@ -6,11 +6,13 @@
   ],
   "rules": {
     "alpha-value-notation": "number",
+    "at-rule-no-vendor-prefix": null,
     "color-function-notation": "legacy",
     "custom-property-pattern": "^(--)?[a-zA-Z0-9]+((-|--|__)?[a-zA-Z0-9]+)*$",
     "declaration-block-no-redundant-longhand-properties": null,
-    "max-line-length": 130,
     "no-descending-specificity": null,
+    "media-feature-range-notation": null,
+    "media-query-no-invalid": null,
     "property-no-vendor-prefix": null,
     "selector-class-pattern": "^[a-zA-Z0-9]+((-|--|__)?[a-zA-Z0-9]+)*$",
     "selector-no-vendor-prefix": null,
@@ -19,6 +21,7 @@
     "value-keyword-case": null,
     "value-no-vendor-prefix": null,
 
+    "font-family-no-missing-generic-family-keyword": null,
     "scss/at-else-empty-line-before": null,
     "scss/at-extend-no-missing-placeholder": null,
     "scss/at-if-closing-brace-newline-after": null,
