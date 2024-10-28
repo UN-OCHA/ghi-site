@@ -87,6 +87,15 @@
   bottom: -4rem;
   width: 100%;
 }
+[data-article-collapsible="true"] .collapsible-control--outer .collapsible-control {
+  display: flex;
+  white-space: nowrap;
+}
+@media (max-width: 576px) {
+  [data-article-collapsible="true"] .collapsible-control--outer {
+    zoom: 0.8;
+  }
+}
 [data-article-collapsible="true"] .collapsible-control--outer .collapsible-control a.expand-table {
   position: absolute;
 }
