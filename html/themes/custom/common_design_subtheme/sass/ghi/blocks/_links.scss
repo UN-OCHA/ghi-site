@@ -1,5 +1,4 @@
 .ghi-block-links {
-
   .item-list--links {
     display: flex;
     flex-direction: column;
@@ -13,7 +12,6 @@ div.link-box {
   border: 1px solid var(--ghi-default-border-color);
 
   & > .field--name-field-thumbnail-image {
-
     picture {
       display: block;
       margin-bottom: -0.5rem;

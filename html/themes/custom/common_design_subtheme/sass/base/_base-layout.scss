@@ -43,7 +43,6 @@
 
   .layout--onecol .layout__region,
   .region-content {
-
     & > div:not(.content-width) {
       max-width: var(--cd-max-page-width);
     }
@@ -89,7 +88,7 @@
 }
 .node--view-mode-grid.node--unpublished,
 .user-logged-in main[class*="--unpublished"] {
-  outline: 4px dashed  #ffc310;
+  outline: 4px dashed #ffc310;
 }
 .user-logged-in main[class*="--unpublished"] {
   margin-top: 4px;

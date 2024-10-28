@@ -2,15 +2,14 @@
   position: relative;
 
   .block-content {
-
     &.gho-text,
     &.gho-aside {
       margin-top: 0;
     }
 
     .gho-text.content-width {
-      margin-left: auto !important;
       margin-right: auto !important;
+      margin-left: auto !important;
     }
 
     & > div > a.read-more {

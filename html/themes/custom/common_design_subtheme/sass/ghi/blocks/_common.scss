@@ -25,13 +25,18 @@
     page-break-inside: avoid !important;
   }
 
-  #main-content.has-subpage-title .layout__region &:first-child:not(.block-plan-entity-logframe),
-  body.page-node-type-global-section #main-content .layout__region &:first-child {
+  #main-content.has-subpage-title
+    .layout__region
+    &:first-child:not(.block-plan-entity-logframe),
+  body.page-node-type-global-section
+    #main-content
+    .layout__region
+    &:first-child {
     margin-top: 0;
     padding-top: 0;
   }
 
-  &.ghi-block--hidden-preview > *:not(.contextual,.layout-builder__link) {
+  &.ghi-block--hidden-preview > *:not(.contextual, .layout-builder__link) {
     opacity: 0.5;
 
     .hpc-form-wrapper & {
@@ -42,7 +47,8 @@
   body.page-node-type-article .layout__region--content > &.block:first-child {
     margin-top: 2.5rem;
   }
-  .layout__region--content > &.block.block-highlighted:not(.content-width):first-child {
+  .layout__region--content
+    > &.block.block-highlighted:not(.content-width):first-child {
     &.block-highlighted:not(.content-width, .block-plan-entity-logframe) {
       margin-top: 0;
       padding-top: 4.5rem;
@@ -82,7 +88,6 @@
       }
 
       .block-download-links .download-item {
-
         a.link--download-dialog {
           position: relative;
           padding-left: 1.5rem;
@@ -93,7 +98,8 @@
             left: 0;
             padding: 10px;
             content: "";
-            background: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/download/default/20px.svg") no-repeat;
+            background: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/download/default/20px.svg")
+              no-repeat;
           }
         }
 

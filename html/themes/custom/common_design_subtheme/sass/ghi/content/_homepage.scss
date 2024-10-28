@@ -3,7 +3,10 @@ body.path-frontpage #main-content {
   padding-right: 0;
   padding-left: 0;
 
-  .block-system-main-block > .layout > .layout__region--content > .ghi-block:first-child {
+  .block-system-main-block
+    > .layout
+    > .layout__region--content
+    > .ghi-block:first-child {
     margin-top: 2rem;
 
     &.ghi-block-generic-link-carousel {
@@ -19,7 +22,7 @@ body.path-frontpage #main-content {
     font-weight: 700;
   }
 
-  &.has-year-switcher > .block-content > .title-wrapper{
+  &.has-year-switcher > .block-content > .title-wrapper {
     display: flex;
     gap: 1rem;
 

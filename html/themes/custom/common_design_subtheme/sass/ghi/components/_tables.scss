@@ -1,7 +1,6 @@
 #main-content,
 .layout-builder-configure-block div[data-block-preview],
 .ghi-modal-dialog {
-
   .table-wrapper {
     overflow-x: auto;
     max-width: calc(100vw - 1rem - 2 * var(--cd-container-padding)) !important;
@@ -112,7 +111,11 @@
           background-size: contain;
         }
 
-        &:not(.sorttable-sorted, .sorttable-sorted-reverse, .sorttable-nosort)::after {
+        &:not(
+            .sorttable-sorted,
+            .sorttable-sorted-reverse,
+            .sorttable-nosort
+          )::after {
           background-image: url("../img/table/ghi_sorting.svg");
         }
         &.sorttable-sorted::after {
@@ -133,7 +136,6 @@
       }
 
       tbody {
-
         tr {
           border-bottom: 1px solid var(--cd-default-border-color);
 
@@ -205,7 +207,9 @@
     }
 
     @media (min-width: 768px) {
-      max-width: calc(100vw - 1rem - 2 * var(--cd-container-padding-xlarge)) !important;
+      max-width: calc(
+        100vw - 1rem - 2 * var(--cd-container-padding-xlarge)
+      ) !important;
     }
   }
 }

@@ -1,3 +1,7 @@
+@function icon($name) {
+  @return url(map.get($sprites, $name));
+}
+
 #layout-builder .contextual-region.layout-builder-block,
 #layout-builder .contextual-region.layout-builder-block.focus {
   margin-top: 4.5rem;
