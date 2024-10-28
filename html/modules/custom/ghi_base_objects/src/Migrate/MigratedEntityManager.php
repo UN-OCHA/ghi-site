@@ -74,7 +74,7 @@ class MigratedEntityManager implements ContainerInjectionInterface {
    */
   public function entityFormAlter(array &$form, FormStateInterface $form_state) {
     $form_object = $form_state->getFormObject();
-    if (!$form_object instanceof ContentEntityForm) {
+    if (!$form_object instanceof ContentEntityForm || str_contains(get_class($form_object), 'Drupal\layout_builder')) {
       return;
     }
     $entity = $form_object->getEntity();
