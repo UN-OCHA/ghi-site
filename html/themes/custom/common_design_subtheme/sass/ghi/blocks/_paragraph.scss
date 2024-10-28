@@ -23,6 +23,11 @@
     &.gho-sub-article-paragraph {
       margin-top: 3rem;
       padding-top: 3rem;
+
+      .ghi-block,
+      .ghi-block-paragraph {
+        margin-top: 0;
+      }
     }
   }
 
