@@ -145,6 +145,9 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
     if ($comment) {
       $build['comment'] = $comment;
     }
+    $build['#block_attributes'] = [
+      'class' => ['not-collapsible'],
+    ];
     return $build;
   }
 

@@ -7,8 +7,8 @@
       once('collapsible-sub-article', '.paragraph--type--sub-article[data-article-collapsible="true"] article', context).forEach((subArticle) => {
         // Find collapsible paragraphs.
         let collapsed = false;
-        $(subArticle).find('.gho-sub-article__content > .paragraph').each(function (i, paragraph) {
-          if ($(paragraph).hasClass('gho-top-figures') && !collapsed) {
+        $(subArticle).find('.gho-sub-article__content > div').each(function (i, paragraph) {
+          if ($(paragraph).hasClass('not-collapsible') && !collapsed) {
             return;
           }
           $(paragraph).addClass('collapsible');
@@ -28,7 +28,7 @@
             e.preventDefault();
             $expandButton.addClass('hidden');
             $collapsButton.removeClass('hidden');
-            $(subArticle).find('.gho-sub-article__content > .paragraph.collapsible').addClass('expanded');
+            $(subArticle).find('.gho-sub-article__content > div.collapsible').addClass('expanded');
           });
 
           let $collapsButton = $('<a />').text(Drupal.t('Collapse content'))
@@ -40,10 +40,10 @@
             e.preventDefault();
             $expandButton.removeClass('hidden');
             $collapsButton.addClass('hidden');
-            let $scroolTarget = $(subArticle).find('.gho-sub-article__content > .paragraph:nth-child(2)');
+            let $scroolTarget = $(subArticle).find('.gho-sub-article__content > div:nth-child(2)');
             $scroolTarget.get(0).scrollIntoView({ behavior: 'smooth', block: 'center' });
             setTimeout(() => {
-              $(subArticle).find('.gho-sub-article__content > .paragraph.collapsible').removeClass('expanded');
+              $(subArticle).find('.gho-sub-article__content > div.collapsible').removeClass('expanded');
             }, 500);
 
           });

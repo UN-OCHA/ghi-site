@@ -12,6 +12,7 @@ use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
 use Drupal\gho_footnotes\GhoFootnotes;
+use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
  * Provides a 'Paragraph' block.
@@ -41,6 +42,13 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
    * The CSS class used for promoted paragraphs. This comes from the NCMS.
    */
   const PROMOTED_CLASS = 'gho-paragraph-promoted';
+
+  /**
+   * Whether sub articles should be rendered locally.
+   *
+   * This is for a proof of concept only and therefor disabled.
+   */
+  const SUB_ARTICLE_LOCAL_RENDER = FALSE;
 
   /**
    * {@inheritdoc}
@@ -127,6 +135,12 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     }
 
     if ($paragraph->getType() == 'sub_article') {
+      if (self::SUB_ARTICLE_LOCAL_RENDER) {
+        // Replace the rendered remote article with the local article, that
+        // might have customisations.
+        $this->replaceRemoteContentWithLocalContent($paragraph, $dom);
+      }
+
       // Remove the footer from sub articles.
       foreach (iterator_to_array($dom->getElementsByTagName('footer')) as $footer) {
         $footer->parentNode->removeChild($footer);
@@ -168,6 +182,9 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
         }
         if (($preview || $internal_preview) && in_array('gho-top-figures--small', $classes)) {
           $block_attributes['class'][] = 'gho-top-figures--small';
+        }
+        if (in_array('not-collapsible', $classes)) {
+          $block_attributes['class'][] = 'not-collapsible';
         }
         if (in_array('gho-top-figures--small', $classes)) {
           // Top figures (small) as standalone element has a top-border on the
@@ -587,6 +604,101 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
       return FALSE;
     }
     return $article_page->id() == $page_node->id();
+  }
+
+  /**
+   * Replace the remote content with the local article.
+   *
+   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface $paragraph
+   *   The paragraph.
+   * @param \DOMDocument $dom
+   *   The dom object.
+   */
+  private function replaceRemoteContentWithLocalContent($paragraph, $dom) {
+    $article_id = $paragraph->getConfiguration()['article_id'] ?? NULL;
+    $remote_sub_article = $article_id ? $paragraph->getSource()->getArticle($article_id) : NULL;
+    if (!$remote_sub_article) {
+      return;
+    }
+    $local_subarticle = $this->articleManager->loadNodeForRemoteContent($remote_sub_article);
+    if (!$local_subarticle) {
+      return;
+    }
+
+    $render_controller = \Drupal::entityTypeManager()->getViewBuilder($local_subarticle->getEntityTypeId());
+    $build = $render_controller->view($local_subarticle);
+    $render_output = ThemeHelper::render($build, FALSE);
+    $render_output = preg_replace('/<!--(.*)-->/Uis', '', $render_output);
+
+    // Create a new dom object with the local rendering result.
+    $new_dom = new \DOMDocument();
+    $new_dom->loadHTML($render_output, LIBXML_NOWARNING | LIBXML_NOERROR);
+    $content_node = $this->findArticleContentDomNode($new_dom->getElementsByTagName('article')->item(0), [
+      'layout--onecol',
+      'layout__region--content',
+    ]);
+    if (!$content_node) {
+      return;
+    }
+    $fragment = $dom->createDocumentFragment();
+    $fragment->appendXML($this->renderDomNode($content_node));
+
+    $article_content_node = $this->findArticleContentDomNode($dom->getElementsByTagName('article')->item(0), ['gho-sub-article__content']);
+    if (!$article_content_node) {
+      return;
+    }
+    while ($article_content_node->hasChildNodes()) {
+      $article_content_node->removeChild($article_content_node->firstChild);
+    }
+    $article_content_node->appendChild($fragment);
+  }
+
+  /**
+   * Find the DOM node that represents the article content based on classes.
+   *
+   * @param \DOMElement|\DOMNode|\DOMNameSpaceNode|null $node
+   *   The dom object.
+   * @param string[] $classes
+   *   The classes that identify the article content.
+   *
+   * @return \DOMNode|null
+   *   The dom node repesenting the article content.
+   */
+  private function findArticleContentDomNode($node, $classes) {
+    if (!$node || !$node->childNodes) {
+      return NULL;
+    }
+    foreach ($node->childNodes->getIterator() as $child_node) {
+      $class_attribute = $child_node->attributes?->getNamedItem('class')?->nodeValue;
+      if ($class_attribute && str_contains($class_attribute, $classes[0])) {
+        array_shift($classes);
+        if (empty($classes)) {
+          return $child_node;
+        }
+      }
+      $content_node = $this->findArticleContentDomNode($child_node, $classes);
+      if ($content_node) {
+        return $content_node;
+      }
+    }
+  }
+
+  /**
+   * Get the inner HTML of a DOM node.
+   *
+   * @param \DOMNode $node
+   *   Node from which to get the innerHTML.
+   *
+   * @return string
+   *   Inner HTML.
+   */
+  private function renderDomNode(\DOMNode $node) {
+    // PHP DOMElement don't have a innerHTML property so this is the current way
+    // of getting it.
+    // @see https://bugs.php.net/bug.php?id=44762
+    return implode('', array_map(function ($child) {
+      return $child->ownerDocument->saveXML($child);
+    }, iterator_to_array($node->childNodes)));
   }
 
   /**

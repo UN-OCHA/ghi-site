@@ -64,14 +64,14 @@
 
 [data-article-collapsible="true"]
   .gho-sub-article__content
-  > .paragraph.collapsible:not(.expanded).fade-out {
+  > div.collapsible:not(.expanded).fade-out {
   display: block;
   overflow: hidden;
   height: 26rem;
 }
 [data-article-collapsible="true"]
   .gho-sub-article__content
-  > .paragraph.collapsible:not(.expanded).fade-out::after {
+  > div.collapsible:not(.expanded).fade-out::after {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -84,7 +84,7 @@
 
 [data-article-collapsible="true"]
   .gho-sub-article__content
-  > .paragraph.collapsible:not(.expanded).initially-hidden {
+  > div.collapsible:not(.expanded).initially-hidden {
   display: none;
 }
 
