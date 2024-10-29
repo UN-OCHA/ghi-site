@@ -35,13 +35,13 @@ trait CustomLinkTrait {
     if (empty($conf['link_type'])) {
       return NULL;
     }
-    $page_node = $contexts['page_node'] instanceof NodeInterface ? $contexts['page_node'] : NULL;
-    $section_node = $contexts['section_node'] instanceof SectionNodeInterface ? $contexts['section_node'] : NULL;
+    $page_node = ($contexts['page_node'] ?? NULL) instanceof NodeInterface ? $contexts['page_node'] : NULL;
+    $section_node = ($contexts['section_node'] ?? NULL) instanceof SectionNodeInterface ? $contexts['section_node'] : NULL;
     if ($conf['link_type'] == 'custom') {
       if (empty($conf['link_custom']['url'])) {
         return NULL;
       }
-      return $this->getLinkFromUri($conf['link_custom']['url'], $conf['label'] ?: NULL);
+      return $this->getLinkFromUri($conf['link_custom']['url'], ($conf['label'] ?? NULL) ?: NULL);
     }
     elseif ($section_node && $page_node) {
       $targets = self::getLinkTargetUrls($section_node, $page_node);
@@ -50,7 +50,7 @@ trait CustomLinkTrait {
         return NULL;
       }
       $url = $targets[$configured_target];
-      return $this->getLinkFromUri($url->toUriString(), $conf['label'] ?: NULL);
+      return $this->getLinkFromUrl($url, ($conf['label'] ?? NULL) ?: NULL);
     }
   }
 
@@ -66,20 +66,40 @@ trait CustomLinkTrait {
    *   The link object.
    */
   protected function getLinkFromUri($uri, $label = NULL) {
-    $is_internal = strpos($uri, 'internal:') === 0;
     $label = $label ?? NULL;
-    $anonymous_access = FALSE;
     try {
       $url = Url::fromUri($uri);
-      $anonymous_access = $url->access(new AnonymousUserSession());
-      $link = $url->access() ? Link::fromTextAndUrl($label, $url) : NULL;
     }
     catch (\InvalidArgumentException $e) {
       return NULL;
     }
+    return $this->getLinkFromUrl($url, $label);
+  }
+
+  /**
+   * Get a link for the given URL and optional label.
+   *
+   * @param \Drupal\Core\Url $url
+   *   A URL object.
+   * @param string $label
+   *   Optional label to use. If left empty, a default label will be build.
+   *
+   * @return \Drupal\Core\Link
+   *   The link object.
+   */
+  protected function getLinkFromUrl(Url $url, $label = NULL) {
+    $anonymous_access = $url->access(new AnonymousUserSession());
+    if (!$anonymous_access) {
+      return NULL;
+    }
+    if (!$url->access()) {
+      return NULL;
+    }
+    $link = $url->access() ? Link::fromTextAndUrl($label, $url) : NULL;
     if (!$link) {
       return NULL;
     }
+    $is_internal = strpos($url->toUriString(), 'internal:') === 0;
     if (!$is_internal && $link->getUrl()->isRouted() && $node = $link->getUrl()->getRouteParameters()['node'] ?? NULL) {
       $node = $node instanceof NodeInterface ? $node : \Drupal::entityTypeManager()->getStorage('node')->load($node);
       $link->setUrl($node->toUrl());
@@ -107,7 +127,7 @@ trait CustomLinkTrait {
 
     $link->getUrl()->setOption('attributes', $attributes);
     if ($is_internal) {
-      $link->getUrl()->setOption('custom_path', str_replace('internal:', '', $uri));
+      $link->getUrl()->setOption('custom_path', str_replace('internal:', '', $url->toUriString()));
     }
     return $link;
   }
@@ -249,6 +269,9 @@ trait CustomLinkTrait {
     // Load all standard subpages for the section.
     $subpages = self::getSubpageManager()->loadSubpagesForBaseNode($section_node) ?? [];
     foreach ($subpages as $subpage) {
+      if ($subpage->id() == $page_node->id()) {
+        continue;
+      }
       $targets[$subpage->bundle()] = $subpage;
     }
 
@@ -263,7 +286,6 @@ trait CustomLinkTrait {
     $targets = array_map(function (NodeInterface $node) {
       return new InternalLinkTarget($node);
     }, $targets);
-
     return $targets;
   }
 
@@ -361,16 +383,6 @@ trait CustomLinkTrait {
    */
   protected static function getPathAliasManager() {
     return \Drupal::service('path_alias.manager');
-  }
-
-  /**
-   * Get the path validator service.
-   *
-   * @return \Drupal\Core\Path\PathValidator
-   *   The path validator.
-   */
-  protected static function getPathValidator() {
-    return \Drupal::service('path.validator');
   }
 
 }

@@ -39,8 +39,8 @@ interface SectionNodeInterface extends NodeInterface {
   /**
    * Get the base object for a section.
    *
-   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface
-   *   The base object set for this section node.
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
+   *   The base object set for this section node or NULL.
    */
   public function getBaseObject();
 
