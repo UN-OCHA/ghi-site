@@ -8,14 +8,11 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element\RenderElement;
 use Drupal\Core\Render\Element\VerticalTabs;
 use Drupal\Core\Render\Markup;
-use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
-use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
-use Drupal\link\LinkItemInterface;
-use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
+use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -29,7 +26,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class Link extends ConfigurationContainerItemPluginBase {
 
-  use OptionalLinkTrait;
+  use CustomLinkTrait;
   use VerticalTabsTrait;
 
   const TITLE_MAX_LENGTH = 150;
@@ -75,26 +72,6 @@ class Link extends ConfigurationContainerItemPluginBase {
     ];
 
     $element = parent::buildForm($element, $form_state);
-    $uri = $this->config['link']['url'] ?? NULL;
-
-    $display_url = NULL;
-    if ($uri) {
-      try {
-        // The current field value could have been entered by a different user.
-        // However, if it is inaccessible to the current user, do not display it
-        // to them.
-        $url = Url::fromUri($uri);
-        if (\Drupal::currentUser()->hasPermission('link to any page') || $url?->access()) {
-          $display_url = static::getUriAsDisplayableString($uri);
-        }
-      }
-      catch (\InvalidArgumentException $e) {
-        // If $uri is invalid, show value as is, so the user can see what
-        // to edit.
-        // @todo Add logging here in https://www.drupal.org/project/drupal/issues/3348020
-        $display_url = $uri;
-      }
-    }
 
     $element['tabs'] = [
       '#type' => 'vertical_tabs',
@@ -120,45 +97,40 @@ class Link extends ConfigurationContainerItemPluginBase {
       '#group' => 'tabs',
     ];
 
-    $element['link']['url'] = [
-      '#type' => 'entity_autocomplete',
-      '#title' => $this->t('Url'),
-      '#default_value' => $display_url,
-      '#description' => $this->t('Start typing the title of a piece of content to select it. You can also enter an external URL such as %url.', [
-        '%url' => 'http://example.com',
-      ]),
-      '#link_type' => LinkItemInterface::LINK_GENERIC,
-      '#target_type' => 'node',
-      '#attributes' => [
-        'data-autocomplete-first-character-blacklist' => '/#?',
-      ],
-      '#process_default_value' => FALSE,
-      '#element_validate' => [
-        [LinkWidget::class, 'validateUriElement'],
-      ],
-      '#maxlength' => 256,
+    $element['link']['link'] = [
+      '#type' => 'custom_link',
+      '#title' => $this->t('Add a link to this element'),
+      '#default_value' => $this->config['link']['link'] ?? [],
+      '#element_context' => $this->getContext(),
+      '#no_label' => TRUE,
       '#required' => TRUE,
     ];
 
-    $element['link']['date'] = [
+    $element['content'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Content and description'),
+      '#tree' => TRUE,
+      '#group' => 'tabs',
+    ];
+    $element['content']['date'] = [
       '#type' => 'date',
       '#title' => $this->t('Date'),
-      '#default_value' => $this->config['link']['date'] ?? date('Y-m-d'),
+      '#default_value' => $this->config['content']['date'] ?? date('Y-m-d'),
       '#required' => TRUE,
     ];
 
-    $element['link']['description_toggle'] = [
+    $element['content']['description_toggle'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Use free-text description instead of the date.'),
-      '#default_value' => $this->config['link']['description_toggle'] ?? NULL,
+      '#default_value' => $this->config['content']['description_toggle'] ?? NULL,
     ];
-    $toggle_selector = FormElementHelper::getStateSelector($element, ['link', 'description_toggle']);
-    $element['link']['description'] = [
+    $toggle_selector = FormElementHelper::getStateSelector($element, ['content', 'description_toggle']);
+    $element['content']['description'] = [
       '#type' => 'text_format',
       '#title' => $this->t('Description'),
       '#format' => 'wysiwyg_simple',
       '#allowed_formats' => ['wysiwyg_simple'],
-      '#default_value' => $this->config['link']['description']['value'] ?? NULL,
+      '#default_value' => $this->config['content']['description']['value'] ?? NULL,
       '#states' => [
         'visible' => [
           ':input[name="' . $toggle_selector . '"]' => ['checked' => TRUE],
@@ -286,16 +258,18 @@ class Link extends ConfigurationContainerItemPluginBase {
     $form_state->setValue(array_merge($element['#parents'], ['image', 'image_crop']), $image_crop);
 
     // @todo This repeats logic from
-    // \Drupal\ghi_form_elements\Element\OptionalLink::elementValidate().
-    $url = $form_state->getValue($element['#parents'])['link']['url'];
-    $transformed_url = self::transformUrl($url);
-    if (!$transformed_url) {
-      $form_state->setError($element['link']['url'], t('The link URL must be valid and accessible.'));
+    // \Drupal\ghi_form_elements\Element\CustomLink::elementValidate().
+    $link_config = NestedArray::getValue($form_state->getValue($element['#parents']), ['link', 'link']) ?? [];
+    if ($link_config['link_type'] == 'custom') {
+      $url = NestedArray::getValue($link_config, ['link_custom', 'url']);
+      $transformed_url = self::transformUrl($url);
+      if (!$transformed_url) {
+        $form_state->setError($element['link']['link']['link_custom']['url'], t('The link URL must be valid and accessible.'));
+      }
+      if (!$form_state->hasAnyErrors() && $transformed_url !== $url) {
+        $form_state->setValue(array_merge($element['#parents'], ['link', 'link', 'link_custom', 'url']), $transformed_url);
+      }
     }
-    if (!$form_state->hasAnyErrors() && $transformed_url !== $url) {
-      $form_state->setValue(array_merge($element['#parents'], ['link', 'url']), $transformed_url);
-    }
-
   }
 
   /**
@@ -318,7 +292,8 @@ class Link extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getRenderArray() {
-    $link = $this->getLinkFromUri($this->config['link']['url']);
+    $link_config = NestedArray::getValue($this->config, ['link', 'link']) ?? [];
+    $link = $this->getLinkFromConfiguration($link_config, $this->getContext());
     if (!$link) {
       return [];
     }
@@ -350,8 +325,8 @@ class Link extends ConfigurationContainerItemPluginBase {
    *   The string representation of the url.
    */
   public function getUrlString() {
-    $link = $this->getLinkFromUri($this->config['link']['url']);
-    return $link->getUrl()->toString();
+    $link = $this->getLinkFromConfiguration($this->config['link']['link'], $this->getContext());
+    return $link?->getUrl()?->toString();
   }
 
   /**
@@ -361,7 +336,7 @@ class Link extends ConfigurationContainerItemPluginBase {
    *   The formatted date of the link.
    */
   public function getFormattedDate() {
-    $date = $this->config['link']['date'];
+    $date = $this->config['content']['date'];
     $timestamp = strtotime($date);
     return $timestamp ? $this->dateFormatter->format($timestamp, 'custom', 'd M Y') : NULL;
   }
@@ -411,7 +386,7 @@ class Link extends ConfigurationContainerItemPluginBase {
    */
   public function getDescription() {
     if ($this->shouldDisplayDescription()) {
-      $description = $this->config['link']['description']['value'];
+      $description = $this->config['content']['description']['value'];
       return Markup::create($description);
     }
     else {
@@ -427,7 +402,7 @@ class Link extends ConfigurationContainerItemPluginBase {
    *   the date.
    */
   protected function shouldDisplayDescription() {
-    return !empty($this->config['link']['description_toggle']);
+    return !empty($this->config['content']['description_toggle']);
   }
 
   /**

@@ -49,6 +49,15 @@
     }
   }
 
+  &.no-public-access {
+    background-color: var(--ghi-grey);
+
+    &:hover,
+    &:focus {
+      background-color: var(--ghi-grey--medium);
+    }
+  }
+
   &.expand-table {
     margin-bottom: 2rem;
   }

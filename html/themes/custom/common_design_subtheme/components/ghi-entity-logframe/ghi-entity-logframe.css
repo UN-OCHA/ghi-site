@@ -3,7 +3,8 @@
   flex-direction: column;
   gap: 0.5rem;
 }
-.item-list--entity-logframe + .cd-button {
+.item-list--entity-logframe + .cd-button,
+.item-list--entity-logframe + .link-wrapper {
   margin-top: 1rem;
 }
 .item-list--entity-logframe > .item-wrapper {

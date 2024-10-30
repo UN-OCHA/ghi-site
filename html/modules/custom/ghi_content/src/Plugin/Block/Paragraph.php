@@ -10,7 +10,7 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
-use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
+use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 use Drupal\gho_footnotes\GhoFootnotes;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
@@ -36,7 +36,7 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
  */
 class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface, MultiStepFormBlockInterface, TrustedCallbackInterface {
 
-  use OptionalLinkTrait;
+  use CustomLinkTrait;
 
   /**
    * The CSS class used for promoted paragraphs. This comes from the NCMS.

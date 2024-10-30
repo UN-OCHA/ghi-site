@@ -29,7 +29,7 @@ abstract class SubpageNode extends Node implements SubpageNodeInterface {
       return $entity;
     }
     if ($entity instanceof SubpageNodeInterface) {
-      return $entity->getParentNode();
+      return $entity->getParentBaseNode();
     }
     return NULL;
   }

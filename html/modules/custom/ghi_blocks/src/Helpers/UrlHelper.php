@@ -2,16 +2,16 @@
 
 namespace Drupal\ghi_blocks\Helpers;
 
-use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
+use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 
 /**
  * Helper function for urls.
  *
- * @see \Drupal\ghi_form_elements\Traits\OptionalLinkTrait
+ * @see \Drupal\ghi_form_elements\Traits\CustomLinkTrait
  */
 class UrlHelper {
 
-  use OptionalLinkTrait;
+  use CustomLinkTrait;
 
   /**
    * Transform the given url to an entity uri if possible.
