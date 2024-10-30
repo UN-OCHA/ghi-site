@@ -621,7 +621,7 @@ class PlanOverviewMap extends GHIBlockBase {
       // Filter based on selected plan types.
       $selected_plan_type_tids = array_filter($config['plans']['plan_types']);
       $plans = array_filter($plans, function ($plan) use ($selected_plan_type_tids) {
-        $term = $this->getTermObjectByName($plan->getOriginalTypeName(), $plan->isTypeIncluded());
+        $term = $this->getTermObjectByName($plan->getOriginalTypeName());
         return $term && in_array($term->id(), $selected_plan_type_tids);
       });
       $plans = $this->reduceCountryPlans($plans);

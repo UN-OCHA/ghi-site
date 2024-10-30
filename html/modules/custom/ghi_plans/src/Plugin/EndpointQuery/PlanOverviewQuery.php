@@ -125,13 +125,13 @@ class PlanOverviewQuery extends EndpointQueryBase {
 
     // Since all plans are now populated with people in need and target values,
     // the total GHO people in need and people targeted can be calculated by
-    // summing these plans caseload values where the planType has the property
-    // includeTotals = true from this endpoint:
+    // summing these plans caseload values for all plans that have
+    // isPartOfGho = true from this endpoint:
     // https://api.hpc.tools/v2/plan/overview/{year}
     if (!empty($plans)) {
       foreach ($plans as $plan) {
-        // Include plans where the planType has includeTotals=true.
-        if (!$plan->isTypeIncluded()) {
+        // Include plans with isPartOfGho=true.
+        if (!$plan->isPartOfGho()) {
           continue;
         }
 

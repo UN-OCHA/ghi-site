@@ -172,16 +172,6 @@ class PlanOverviewPlan extends BaseObject {
   }
 
   /**
-   * Whether the plan is of a type with with the includeTotals property set.
-   *
-   * @return bool|null
-   *   The value of the includeTotals property or NULL if not set.
-   */
-  public function isTypeIncluded() {
-    return (boolean) $this->getTypeProperty('includeTotals');
-  }
-
-  /**
    * Check if the plan is an HRP.
    *
    * @return bool
