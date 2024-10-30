@@ -164,17 +164,6 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
   }
 
   /**
-   * Whether the plan is of a type with with the includeTotals property set.
-   *
-   * @return bool|null
-   *   The value of the includeTotals property or NULL if not set.
-   */
-  public function isTypeIncluded() {
-    $term = $this->getPlanType();
-    return $term->get('field_included_in_totals')->value;
-  }
-
-  /**
    * Get a caseload value.
    *
    * @param string $metric_type

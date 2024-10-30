@@ -783,7 +783,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         if ($custom_rows_config['ignore_filters'] && $plan instanceof PlanOverviewPlanMock) {
           return TRUE;
         }
-        $term = $this->getTermObjectByName($plan->getOriginalTypeName(), $plan->isTypeIncluded());
+        $term = $this->getTermObjectByName($plan->getOriginalTypeName());
         return $term && in_array($term->id(), $selected_plan_type_tids);
       });
     }

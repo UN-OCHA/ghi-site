@@ -21,10 +21,6 @@ source:
       name: description
       label: Description
       selector: description
-    -
-      name: included_in_totals
-      label: 'Included in totals'
-      selector: 'includeTotals'
   ids:
     original_id:
       type: integer
@@ -32,11 +28,6 @@ process:
   name: name
   description: description
   field_original_id: original_id
-  field_included_in_totals:
-    plugin: skip_on_empty
-    source: included_in_totals
-    method: process
-    value: true
 destination:
   plugin: 'entity:taxonomy_term'
   default_bundle: plan_type
@@ -44,7 +35,6 @@ destination:
     - name
     - description
     - field_original_id
-    - field_included_in_totals
 migration_dependencies: {  }
 dependencies:
   enforced:

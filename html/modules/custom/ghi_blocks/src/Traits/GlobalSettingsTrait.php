@@ -10,7 +10,6 @@ use Drupal\ghi_plans\Traits\PlanTypeTrait;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
-use Drupal\hpc_common\Helpers\TaxonomyHelper;
 
 /**
  * Trait for global settings.
@@ -79,20 +78,14 @@ trait GlobalSettingsTrait {
     if (!empty($config['sort_by_plan_type'])) {
       // Sort everything first by plan type, then by plan name.
       $type_order = $this->getAvailablePlanTypes();
-      $plan_types = TaxonomyHelper::loadMultipleTermsByVocabulary('plan_type');
 
       $grouped_plans = [];
-      foreach ($type_order as $plan_type_tid => $plan_type) {
-        $plan_type_term = $plan_types[$plan_type_tid] ?? NULL;
-        if (!$plan_type_term) {
-          continue;
-        }
-        $included_in_totals = $plan_type_term->get('field_included_in_totals')->value;
+      foreach ($type_order as $plan_type) {
         $plan_type_key = $plan_type;
 
         // Create a list of all plans for this plan type.
         foreach ($plans as $plan) {
-          if (!$plan->isType($plan_type) || $plan->isTypeIncluded() != $included_in_totals) {
+          if (!$plan->isType($plan_type)) {
             continue;
           }
           if (empty($grouped_plans[$plan_type_key])) {
@@ -211,7 +204,7 @@ trait GlobalSettingsTrait {
       $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
         /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
         $plan = $plans[$plan_id] ?? NULL;
-        if (!$plan || $plan->isTypeIncluded()) {
+        if (!$plan || $plan->isPartOfGho()) {
           return $row;
         }
         $row['name']['data']['tooltips']['#tooltips'][] = [

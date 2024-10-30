@@ -4,7 +4,6 @@ status: true
 dependencies:
   config:
     - field.field.taxonomy_term.plan_type.field_abbreviation
-    - field.field.taxonomy_term.plan_type.field_included_in_totals
     - field.field.taxonomy_term.plan_type.field_original_id
     - taxonomy.vocabulary.plan_type
   module:
@@ -30,13 +29,6 @@ content:
     settings:
       size: 60
       placeholder: ''
-    third_party_settings: {  }
-  field_included_in_totals:
-    type: boolean_checkbox
-    weight: 4
-    region: content
-    settings:
-      display_label: true
     third_party_settings: {  }
   field_original_id:
     type: number
