@@ -1,14 +1,16 @@
-(function ($, Drupal) {
+(($, Drupal) => {
 
-  $.expr[":"].contains_case_insensitive = $.expr.createPseudo(function(arg) {
-    return function( elem ) {
-        return $(elem).text().toUpperCase().indexOf(arg.toUpperCase()) >= 0;
+  'use strict';
+
+  $.expr[':'].containsCaseInsensitive = $.expr.createPseudo(function (arg) {
+    return function (elem) {
+      return $(elem).text().toUpperCase().indexOf(arg.toUpperCase()) >= 0;
     };
-});
+  });
 
   Drupal.TableSearch = {};
 
-  Drupal.TableSearch.init = function ($table, default_string) {
+  Drupal.TableSearch.init = function ($table, defaultString) {
 
     // First make sure we have an id for the table.
     $table.uniqueId();
@@ -18,69 +20,65 @@
     }
 
     // Create search field.
-    let $search_field = Drupal.TableSearch.createSearchField($table, default_string);
-    $search_field.on('input propertychange', function () {
-      Drupal.TableSearch.applySearch($table, this);
+    let $searchField = Drupal.TableSearch.createSearchField($table, defaultString);
+    $searchField.on('input propertychange', function () {
+      Drupal.TableSearch.applySearch($table);
     });
-    $input_wrapper = $('<div class="table-search-input-wrapper empty"></div>');
-    $input_wrapper.append($search_field);
-    $table.parent().prepend($input_wrapper);
-    if (default_string) {
-      $search_field.trigger('input');
+    let $inputWrapper = $('<div class="table-search-input-wrapper empty"></div>');
+    $inputWrapper.append($searchField);
+    $table.parent().prepend($inputWrapper);
+    if (defaultString) {
+      $searchField.trigger('input');
     }
+  };
 
-    // Update the list when sorting is used.
-    if ($table.hasClass('sortable')) {
-      $table.find('> thead th').on('click', function () {
-        Drupal.TableSearch.applySearch($table, $table.parent().find('input.table-search-input'));
-      });
-    }
-  }
-
-  Drupal.TableSearch.createSearchField = function ($table, search_string) {
+  Drupal.TableSearch.createSearchField = function ($table, searchString) {
     let $input = $('<input class="table-search-input" type="search" placeholder="' + Drupal.t('Filter by keyword') + '" aria-label="' + Drupal.t('Filter the table content by keyword') + '" aria-controls="' + $table.attr('id') + '" />');
-    if (search_string) {
-      $input.val(search_string);
+    if (searchString) {
+      $input.val(searchString);
     }
     return $input;
-  }
+  };
 
-  Drupal.TableSearch.applySearch = function ($table, input) {
-    let search_string = $(input).val();
+  Drupal.TableSearch.applySearch = function ($table, searchString) {
+    let $input = $table.parent().find('input.table-search-input');
+    if (typeof searchString == 'undefined') {
+      searchString = $input.val();
+    }
 
-    // See if this table is part of a block, in which case we want to trigger
-    // an event that the frontend settings for the block have been changed.
     $(document).trigger('ghi-block-setting', {
-      element: input,
+      element: $table,
       settings: {
-        search: search_string,
+        search: searchString
       }
     });
 
-    if (search_string.length == 0) {
+    if (searchString.length == 0) {
       $table.find('tbody tr').show();
       $table.trigger('tableReset');
       $table.parent().find('.table-search-input-wrapper').toggleClass('empty', true);
+      $table.toggleClass('filtered', false);
       return;
     }
     $table.find('tbody tr').hide();
-    $table.find('tbody tr td:contains_case_insensitive("' + search_string + '")').map(function() {
+    $table.find('tbody tr td:containsCaseInsensitive("' + searchString + '")').map(function () {
       return $(this).closest('tbody tr').show();
     });
     $table.parent().find('.table-search-input-wrapper').toggleClass('empty', false);
+    $table.toggleClass('filtered', true);
     $table.trigger('tableFiltered');
-  }
+  };
 
   Drupal.behaviors.TableSearch = {
     attach: function (context, settings) {
-      $tables = $('table.searchable', context);
-      $.each($tables, function(i, table) {
+      let $tables = $('table.searchable', context);
+      $.each($tables, function (i, table) {
         let block = $(table).parents('.ghi-block')[0] || null;
-        let block_id = block ? $(block).attr('id') : null;
-        let block_table_search = Drupal.GhiBlockSettings.getBlockSetting(block_id, 'search');
+        let blockId = block ? $(block).attr('id') : null;
+        let blockTableSearch = Drupal.GhiBlockSettings.getBlockSetting(blockId, 'search');
         // Initialise search for this table.
-        Drupal.TableSearch.init($(table), block_table_search);
+        Drupal.TableSearch.init($(table), blockTableSearch);
       });
     }
   };
-}(jQuery, Drupal));
+})(jQuery, Drupal);

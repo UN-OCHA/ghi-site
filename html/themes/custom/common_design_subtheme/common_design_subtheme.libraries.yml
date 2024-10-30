@@ -90,8 +90,6 @@ ghi-tab-container:
       components/ghi-tab-container/ghi-tab-container.css: {}
   js:
     components/ghi-tab-container/ghi-tab-container.js: {}
-  dependencies:
-    - common_design_subtheme/swiper
 ghi-link-carousel:
   css:
     theme:

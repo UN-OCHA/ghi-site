@@ -1,4 +1,6 @@
-(function ($, Swiper) {
+(($) => {
+
+  'use strict';
 
   Drupal.TabContainer = {};
 
@@ -13,8 +15,8 @@
 
   Drupal.behaviors.TabContainer = {
     attach: function (context, settings) {
-      $tab_container = $('.tab-container-wrapper', context);
-      $.each($tab_container, function(i, container) {
+      let $tabContainer = $('.tab-container-wrapper', context);
+      $.each($tabContainer, function(i, container) {
         Drupal.TabContainer.updateContent(container, 0);
 
         // Make the navigation work.
@@ -22,16 +24,22 @@
           if (e.type == 'keydown' && e.keyCode != 13) {
             return;
           }
-          target = $(this).data('tab-index');
-          Drupal.GhiBlockSettings.setBlockSettingForElement(container, 'target', target);
+          let target = $(this).data('tab-index');
+          $(document).trigger('ghi-block-setting', {
+            element: container,
+            settings: {
+              target: target
+            }
+          });
           Drupal.TabContainer.updateContent(container, target);
         });
 
         // See if stored settings are available.
-        if (target = Drupal.GhiBlockSettings.getBlockSettingForElement(container, 'target')) {
+        let target = Drupal.GhiBlockSettings.getBlockSettingForElement(container, 'target');
+        if (target !== null) {
           Drupal.TabContainer.updateContent(container, target);
         }
       });
     }
   };
-}(jQuery, Swiper));
+})(jQuery);

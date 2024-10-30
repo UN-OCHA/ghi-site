@@ -36,7 +36,7 @@ link_carousel:
       css/link_carousel.css: {}
 block.settings:
   js:
-    js/block.settings.js: {}
+    js/block.settings.js: { weight: -1 }
 block.preview:
   js:
     js/block.preview.js: {}
