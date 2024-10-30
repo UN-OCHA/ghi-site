@@ -1,37 +1,40 @@
-(function ($, Drupal) {
+(($, Drupal, sorttable, once) => {
+
+  'use strict';
 
   Drupal.CommonDesignSubtheme = {};
 
   Drupal.CommonDesignSubtheme.SoftLimit = {};
-  Drupal.CommonDesignSubtheme.SoftLimit.applyLimit = function($table) {
+  Drupal.CommonDesignSubtheme.SoftLimit.applyLimit = function ($table) {
     if ($table.hasClass('expanded')) {
       return;
     }
-    let soft_limit = $table.data('soft-limit');
+    let softLimit = $table.data('soft-limit');
     let $rows = $table.find('> tbody > tr');
-    if ($rows.length <= soft_limit) {
+    if ($rows.length <= softLimit) {
       return;
     }
+
     $rows.each(function () {
       $(this).show();
     });
     if ($table.parent().find('a.expand-table:visible').length) {
       // Hide all rows beyond the first ones defined by the soft limit.
-      $rows.slice(soft_limit).each(function () {
+      $rows.slice(softLimit).each(function () {
         $(this).hide();
       });
     }
-  }
+  };
 
-  Drupal.CommonDesignSubtheme.SoftLimit.addExpandButton = function($table) {
+  Drupal.CommonDesignSubtheme.SoftLimit.addExpandButton = function ($table) {
     if ($table.parent().find('.expand-table').length > 0) {
       return;
     }
     // Add a button to expand the rest of the rows.
-    $button = $('<a href="#">')
-      .addClass('expand-table')
-      .addClass('cd-button')
-      .text(Drupal.t('Show all rows'));
+    let $button = $('<a href="#">')
+    .addClass('expand-table')
+    .addClass('cd-button')
+    .text(Drupal.t('Show all rows'));
     $button.on('click', function (e) {
       $table.find('tr:hidden').slideDown();
       $(this).hide();
@@ -40,53 +43,58 @@
       // See if this table is part of a block, in which case we want to trigger
       // an event that the frontend settings for the block have been changed.
       if ($table.parents('.ghi-block').length > 0) {
-        Drupal.GhiBlockSettings.setBlockSettingForElement($table, 'soft_limit', 'expanded');
+        $(document).trigger('ghi-block-setting', {
+          element: $table,
+          settings: {
+            'soft_limit': 'expanded'
+          }
+        });
       }
 
       e.preventDefault();
     });
     $table.after($button);
-  }
+  };
 
   // Add overflow logic to entity navigation menus.
   Drupal.CommonDesignSubtheme.EntityNavigation = {};
-  Drupal.CommonDesignSubtheme.EntityNavigation.apply = function($container) {
+  Drupal.CommonDesignSubtheme.EntityNavigation.apply = function ($container) {
     var $primary = $container.find('> ul.links--entity-navigation');
-    var $primary_items = $container.find('> ul.links--entity-navigation > li:not(.overflow-item)');
-    $secondary = $container.find('.overflow-navigation');
-    $secondary_items = $secondary.find('> li');
-    $all_items = $container.find('li');
-    $overflow_item = $primary.find('.overflow-item');
-    $overflow_item.removeClass('active');
-    $toggle = $overflow_item.find('> button');
-    $all_items.each((i, item) => {
+    var $primaryItems = $container.find('> ul.links--entity-navigation > li:not(.overflow-item)');
+    let $secondary = $container.find('.overflow-navigation');
+    let $secondaryItems = $secondary.find('> li');
+    let $allItems = $container.find('li');
+    let $overflowItem = $primary.find('.overflow-item');
+    $overflowItem.removeClass('active');
+    let $toggle = $overflowItem.find('> button');
+    $allItems.each((i, item) => {
       $(item).removeClass('hidden');
     });
 
-    let hidden_primary_items = [];
-    let stop_width = 0;
-    const primary_width = $primary.get(0).offsetWidth;
-    $($primary_items.get().reverse()).each((i, item) => {
-      stop_width = $(item).position().left + item.offsetWidth + $toggle.get(0).offsetWidth;
-      if (primary_width < stop_width) {
+    let hiddenPrimaryItems = [];
+    let stopWidth = 0;
+    const primaryWidth = $primary.get(0).offsetWidth;
+    $($primaryItems.get().reverse()).each((i, item) => {
+      stopWidth = $(item).position().left + item.offsetWidth + $toggle.get(0).offsetWidth;
+      if (primaryWidth < stopWidth) {
         $(item).addClass('hidden');
-        hidden_primary_items.push(i);
+        hiddenPrimaryItems.push(i);
       }
     });
-    if (!hidden_primary_items.length) {
-      $overflow_item.addClass('hidden');
+    if (!hiddenPrimaryItems.length) {
+      $overflowItem.addClass('hidden');
     }
     else {
-      $($secondary_items.get().reverse()).each((i, item) => {
-        if (!hidden_primary_items.includes(i)) {
+      $($secondaryItems.get().reverse()).each((i, item) => {
+        if (!hiddenPrimaryItems.includes(i)) {
           $(item).addClass('hidden');
         }
         else if ($(item).hasClass('active')) {
-          $overflow_item.addClass('active');
+          $overflowItem.addClass('active');
         }
-      })
+      });
     }
-  }
+  };
 
   Drupal.behaviors.CommonDesignSubtheme = {
     attach: function (context, settings) {
@@ -96,7 +104,7 @@
 
       // For ghi images that can't be found, hide them completely so that the
       // captions or credits don't display all on their own.
-      $('.ghi-image-wrapper img').on('error', function() {
+      $('.ghi-image-wrapper img').on('error', function () {
         $(this).parents('.ghi-image-wrapper').hide();
       });
 
@@ -109,7 +117,7 @@
         $(this).select2({
           width: 'resolve',
           minimumResultsForSearch: 5,
-          dropdownAutoWidth: true,
+          dropdownAutoWidth: true
         });
       });
 
@@ -129,7 +137,7 @@
           if (context != document) {
             sorttable.makeSortable(element);
           }
-          column = $('th:not(.sorttable-nosort):first-child', element).get(0);
+          let column = $('th:not(.sorttable-nosort):first-child', element).get(0);
           if (column) {
             sorttable.innerSortFunction.apply(column, []);
           }
@@ -143,13 +151,13 @@
             return;
           }
           // First apply settings according to what the url requests.
-          let block_table_sort = Drupal.GhiBlockSettings.getBlockSettingForElement(this, 'sort');
-          if (block_table_sort) {
-            let block_id = $(this).parents('.ghi-block').attr('id');
-            let column_selector = '#' + block_id + ' table.sortable th:nth-child(' + (block_table_sort.column + 1) + ')';
-            let column = $(column_selector).get(0);
+          let blockTableSort = Drupal.GhiBlockSettings.getBlockSettingForElement(this, 'sort');
+          if (blockTableSort) {
+            let blockId = $(this).parents('.ghi-block').attr('id');
+            let columnSelector = '#' + blockId + ' table.sortable th:nth-child(' + (blockTableSort.column + 1) + ')';
+            let column = $(columnSelector).get(0);
             sorttable.innerSortFunction.apply(column, []);
-            if (block_table_sort.dir == 'desc') {
+            if (blockTableSort.dir == 'desc') {
               sorttable.innerSortFunction.apply(column, []);
             }
           }
@@ -162,9 +170,14 @@
               if ($(this).parents('.ghi-block').length == 0) {
                 return;
               }
-              Drupal.GhiBlockSettings.setBlockSettingForElement(this, 'sort', {
-                column: $(this).index(),
-                dir: $(this).hasClass('sorttable-sorted-reverse') ? 'desc' : 'asc',
+              $(document).trigger('ghi-block-setting', {
+                element: this,
+                settings: {
+                  sort: {
+                    column: $(element).index(),
+                    dir: $(element).hasClass('sorttable-sorted-reverse') ? 'desc' : 'asc'
+                  }
+                }
               });
             });
           });
@@ -174,7 +187,7 @@
 
       once('overflow-navigation', $('.block-section-navigation, .block-document-navigation', context)).forEach(element => {
         Drupal.CommonDesignSubtheme.EntityNavigation.apply($(element));
-        window.addEventListener('resize', function() {
+        window.addEventListener('resize', function () {
           Drupal.CommonDesignSubtheme.EntityNavigation.apply($(element));
         });
       });
@@ -182,8 +195,8 @@
       once('soft-limit-table', $('table.soft-limit', context)).forEach(element => {
         let $table = $(element);
         // Check if we have settings for this block element in the URL.
-        let block_soft_limit = Drupal.GhiBlockSettings.getBlockSettingForElement(element, 'soft_limit');
-        if (block_soft_limit != 'expanded') {
+        let blockSoftLimit = Drupal.GhiBlockSettings.getBlockSettingForElement(element, 'soft_limit');
+        if (blockSoftLimit != 'expanded') {
 
           Drupal.CommonDesignSubtheme.SoftLimit.addExpandButton($table);
           Drupal.CommonDesignSubtheme.SoftLimit.applyLimit($table);
@@ -191,6 +204,9 @@
           // Update the list when sorting is used.
           if ($table.hasClass('sortable')) {
             $table.find('> thead th').on('click', function () {
+              if ($table.hasClass('filtered')) {
+                return;
+              }
               Drupal.CommonDesignSubtheme.SoftLimit.applyLimit($table);
             });
           }
@@ -213,4 +229,4 @@
 
   };
 
-}(jQuery, Drupal));
+})(jQuery, Drupal, sorttable, once);
