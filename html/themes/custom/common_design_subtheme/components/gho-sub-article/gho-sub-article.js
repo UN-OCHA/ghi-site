@@ -7,14 +7,17 @@
       once('collapsible-sub-article', '.paragraph--type--sub-article[data-article-collapsible="true"] article', context).forEach((subArticle) => {
         // Find collapsible paragraphs.
         let collapsed = false;
+        let $wrapper = $('<div class="collapsed-wrapper" />');
+        $wrapper.addClass('collapsible');
+        $wrapper.addClass('fade-out');
         $(subArticle).find('.gho-sub-article__content > div').each(function (i, paragraph) {
           if ($(paragraph).hasClass('not-collapsible') && !collapsed) {
             return;
           }
-          $(paragraph).addClass('collapsible');
-          $(paragraph).addClass(collapsed ? 'initially-hidden' : 'fade-out');
+          $wrapper.append($(paragraph));
           collapsed = true;
         });
+        $(subArticle).find('.gho-sub-article__content').append($wrapper);
 
         if (collapsed) {
           // Add collapsible control.
