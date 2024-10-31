@@ -145,12 +145,6 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
       foreach (iterator_to_array($dom->getElementsByTagName('footer')) as $footer) {
         $footer->parentNode->removeChild($footer);
       }
-      // Add a link to the standalone article page if the article is
-      // collapsible.
-      $collapsible = (bool) $paragraph->getConfiguration()['collapsible'] ?? NULL;
-      if ($collapsible) {
-        $this->addArticleLinkToSubarticleParagraph($paragraph, $dom);
-      }
     }
 
     $child = $dom->getElementsByTagName('div')->item(0);
@@ -699,28 +693,6 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     return implode('', array_map(function ($child) {
       return $child->ownerDocument->saveXML($child);
     }, iterator_to_array($node->childNodes)));
-  }
-
-  /**
-   * Make a subarticle paragraph collapsible.
-   *
-   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface $paragraph
-   *   The paragraph.
-   * @param \DOMDocument $dom
-   *   The dom object.
-   */
-  private function addArticleLinkToSubarticleParagraph($paragraph, $dom) {
-    $article_id = $paragraph->getConfiguration()['article_id'] ?? NULL;
-    $remote_sub_article = $article_id ? $paragraph->getSource()->getArticle($article_id) : NULL;
-    if (!$remote_sub_article) {
-      return;
-    }
-    $local_subarticle = $this->articleManager->loadNodeForRemoteContent($remote_sub_article);
-    if (!$local_subarticle) {
-      return;
-    }
-    $child = $dom->getElementsByTagName('div')->item(0);
-    $child->setAttribute('data-article-link', $local_subarticle->toUrl()->toString());
   }
 
   /**
