@@ -25,3 +25,8 @@ ghi_content.orphaned_content_report.documents:
   route_parameters:
     node_type: document
   parent: ghi_content.orphaned_content_report
+ghi_content.config.article:
+  title: 'Article settings'
+  route_name: ghi_content.article_config
+  description: 'Configure article settings'
+  parent: system.admin_config_ghi

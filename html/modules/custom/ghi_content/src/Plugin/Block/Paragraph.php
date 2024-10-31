@@ -44,13 +44,6 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
   const PROMOTED_CLASS = 'gho-paragraph-promoted';
 
   /**
-   * Whether sub articles should be rendered locally.
-   *
-   * This is for a proof of concept only and therefor disabled.
-   */
-  const SUB_ARTICLE_LOCAL_RENDER = FALSE;
-
-  /**
    * {@inheritdoc}
    */
   public function getTitleSubform() {
@@ -135,21 +128,13 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     }
 
     if ($paragraph->getType() == 'sub_article') {
-      if (self::SUB_ARTICLE_LOCAL_RENDER) {
-        // Replace the rendered remote article with the local article, that
-        // might have customisations.
+      if ($this->config('ghi_content.article_settings')->get('subarticle_local_render')) {
         $this->replaceRemoteContentWithLocalContent($paragraph, $dom);
       }
 
       // Remove the footer from sub articles.
       foreach (iterator_to_array($dom->getElementsByTagName('footer')) as $footer) {
         $footer->parentNode->removeChild($footer);
-      }
-      // Add a link to the standalone article page if the article is
-      // collapsible.
-      $collapsible = (bool) $paragraph->getConfiguration()['collapsible'] ?? NULL;
-      if ($collapsible) {
-        $this->addArticleLinkToSubarticleParagraph($paragraph, $dom);
       }
     }
 
@@ -699,28 +684,6 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     return implode('', array_map(function ($child) {
       return $child->ownerDocument->saveXML($child);
     }, iterator_to_array($node->childNodes)));
-  }
-
-  /**
-   * Make a subarticle paragraph collapsible.
-   *
-   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface $paragraph
-   *   The paragraph.
-   * @param \DOMDocument $dom
-   *   The dom object.
-   */
-  private function addArticleLinkToSubarticleParagraph($paragraph, $dom) {
-    $article_id = $paragraph->getConfiguration()['article_id'] ?? NULL;
-    $remote_sub_article = $article_id ? $paragraph->getSource()->getArticle($article_id) : NULL;
-    if (!$remote_sub_article) {
-      return;
-    }
-    $local_subarticle = $this->articleManager->loadNodeForRemoteContent($remote_sub_article);
-    if (!$local_subarticle) {
-      return;
-    }
-    $child = $dom->getElementsByTagName('div')->item(0);
-    $child->setAttribute('data-article-link', $local_subarticle->toUrl()->toString());
   }
 
   /**

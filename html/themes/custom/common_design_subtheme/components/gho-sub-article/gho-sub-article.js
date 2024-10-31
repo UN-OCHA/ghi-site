@@ -54,16 +54,6 @@
           $collapseControl.append($expandButton);
           $collapseControl.append($collapsButton);
 
-          let articleUrl = $(subArticle).parents('.paragraph--type--sub-article').attr('data-article-link');
-          if (articleUrl) {
-            let $readmoreButton = $('<a />')
-            .text(Drupal.t('Go to article page'))
-            .attr('href', articleUrl)
-            .addClass('read-more')
-            .addClass('cd-button');
-            $collapseControl.append($readmoreButton);
-          }
-
           $collapseControlOuter.append($collapseControl);
           $(subArticle).append($collapseControlOuter);
           $(subArticle).addClass('collapsible');

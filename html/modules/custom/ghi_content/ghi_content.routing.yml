@@ -134,3 +134,13 @@ ghi_content.orphan_content:
       node_type:
         type: entity:node_type
     _admin_route: TRUE
+
+ghi_content.article_config:
+  path: '/admin/config/ghi/article-settings'
+  defaults:
+    _form: '\Drupal\ghi_content\Form\ArticleSettingsForm'
+    _title: 'Article settings'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer ghi article config'
