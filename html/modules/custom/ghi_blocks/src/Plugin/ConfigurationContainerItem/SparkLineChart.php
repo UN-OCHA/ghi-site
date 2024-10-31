@@ -270,7 +270,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
 
     // Add a baseline if needed.
     if ($show_baseline) {
-      $baseline_value = $attachment->getMeasurementMetricValue($baseline, $last_reporting_period->id());
+      $baseline_value = $attachment->getMeasurementMetricValue($baseline, $last_reporting_period?->id() ?? 'latest');
     }
 
     // Render the chart.
