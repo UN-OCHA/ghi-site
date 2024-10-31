@@ -82,6 +82,7 @@ permissions:
   - 'administer base object entities'
   - 'administer base_object_type labels'
   - 'administer content translation'
+  - 'administer ghi article config'
   - 'administer ghi embargoed access config'
   - 'administer ghi global config'
   - 'administer ghi table config'

@@ -44,13 +44,6 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
   const PROMOTED_CLASS = 'gho-paragraph-promoted';
 
   /**
-   * Whether sub articles should be rendered locally.
-   *
-   * This is for a proof of concept only and therefor disabled.
-   */
-  const SUB_ARTICLE_LOCAL_RENDER = FALSE;
-
-  /**
    * {@inheritdoc}
    */
   public function getTitleSubform() {
@@ -135,9 +128,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     }
 
     if ($paragraph->getType() == 'sub_article') {
-      if (self::SUB_ARTICLE_LOCAL_RENDER) {
-        // Replace the rendered remote article with the local article, that
-        // might have customisations.
+      if ($this->config('ghi_content.article_settings')->get('subarticle_local_render')) {
         $this->replaceRemoteContentWithLocalContent($paragraph, $dom);
       }
 
