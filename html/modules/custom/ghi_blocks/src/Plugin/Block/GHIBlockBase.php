@@ -11,6 +11,7 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
@@ -41,6 +42,7 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
 use Drupal\layout_builder\Form\AddBlockForm;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Plugin\SectionStorage\SectionStorageBase;
+use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -1536,6 +1538,74 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
+   * Get the node for the current page.
+   *
+   * @return \Drupal\node\NodeInterface
+   *   The page node if found.
+   */
+  public function getPageNode() {
+    $node = parent::getPageNode();
+    if ($node) {
+      return $node;
+    }
+
+    // Try to find a node from the page.
+    $entity = $this->getPageEntity(NodeInterface::class);
+    if ($entity instanceof NodeInterface) {
+      return $entity;
+    }
+
+    // Try to find another content entity and see if it has a reference to a
+    // node. This should support page templates, which are custom entities
+    // implementing ContentEntityInterface and which reference either section
+    // nodes or subpage nodes via an entity reference.
+    $entity = $this->getPageEntity();
+    if (!$entity || !$entity->hasField('field_entity_reference')) {
+      return NULL;
+    }
+    $referenced_entity_field = $entity->get('field_entity_reference');
+    if ($referenced_entity_field->isEmpty()) {
+      return NULL;
+    }
+    $entities = $referenced_entity_field->referencedEntities();
+    $referenced_entity = count($entities) == 1 ? reset($entities) : NULL;
+    return $referenced_entity instanceof NodeInterface ? $referenced_entity : NULL;
+  }
+
+  /**
+   * Retrieve the entity for the current page.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $expected_class
+   *   The class type that we are looking for.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface
+   *   The page entity.
+   */
+  public function getPageEntity($expected_class = ContentEntityInterface::class) {
+    $page_arguments = $this->getAllAvailablePageParameters();
+    if (!empty($page_arguments['section_storage']) && $page_arguments['section_storage'] instanceof SectionStorageInterface) {
+      /** @var \Drupal\layout_builder\SectionStorageInterface $section_storage */
+      $section_storage = $page_arguments['section_storage'];
+      $section_contexts = array_keys($section_storage->getContexts());
+      $entity = in_array('entity', $section_contexts) ? $section_storage->getContextValue('entity') : NULL;
+      return $entity instanceof $expected_class ? $entity : NULL;
+    }
+    if (!empty($page_arguments['node'])) {
+      return $page_arguments['node'];
+    }
+    if (!empty($page_arguments['node_from_original_id'])) {
+      return $page_arguments['node_from_original_id'];
+    }
+    foreach ($page_arguments as $page_argument) {
+      if (!$page_argument instanceof $expected_class) {
+        continue;
+      }
+      return $page_argument;
+    }
+    return NULL;
+  }
+
+  /**
    * Get the current section node.
    *
    * @return \Drupal\ghi_sections\Entity\SectionNodeInterface|null
@@ -1586,12 +1656,12 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
    *   A base object if it can be found.
    */
-  public function getCurrentBaseObject() {
-    $page_node = $this->getPageNode();
-    if ($page_node && $page_node->hasField('field_base_object')) {
-      return $page_node->get('field_base_object')->entity;
+  public function getCurrentBaseObject($entity = NULL) {
+    $page_entity = $entity instanceof ContentEntityInterface ? $entity : $this->getPageEntity();
+    if ($page_entity && $page_entity->hasField('field_base_object')) {
+      return $page_entity->get('field_base_object')->entity;
     }
-    elseif (($base_page = $this->getCurrentBaseEntity($page_node)) && $base_page->hasField('field_base_object')) {
+    elseif (($base_page = $this->getCurrentBaseEntity($page_entity)) && $base_page->hasField('field_base_object')) {
       return $base_page->get('field_base_object')->entity;
     }
     $contexts = $this->getContexts();
