@@ -208,13 +208,14 @@
     $('#' + map_id + ' .map-circle-tooltip').css('z-index', 100000);
     let tooltip = d.hasOwnProperty('tooltip') ? d.tooltip : null;
     if (tooltip === null) {
-      tooltip = '<b>Location:</b> ' + d.location_name + '<br />';
-      if (d.hasOwnProperty('offset_chain') && d.offset_chain.length && d.hasOwnProperty('plan_type')) {
-        tooltip += '<b>Plan type :</b> ' + state.options.legend[d.plan_type];
-      }
+      tooltip = '<b>Location:</b> ' + d.location_name;
       if (typeof state.tab_data.metric != 'undefined') {
-        tooltip += '<b>Total ' + state.tab_data.metric.name.en.toLowerCase() +':</b> ' + Drupal.theme('number', d.total);
+        tooltip += '<br /><b>Total ' + state.tab_data.metric.name.en.toLowerCase() +':</b> ' + Drupal.theme('number', d.total);
       }
+    }
+    let index = state.index;
+    if (d.hasOwnProperty('tooltip_values') && d.tooltip_values.hasOwnProperty(index) && d.hasOwnProperty(index)) {
+      tooltip += '<br />' + d.tooltip_values[index].label + ': ' + d.tooltip_values[index]['value'];
     }
     $('#' + map_id + ' .map-circle-tooltip').html(tooltip);
     $('#' + map_id + ' .map-circle-tooltip').css('display', 'block');

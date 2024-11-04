@@ -156,6 +156,11 @@ class PlanOverviewMap extends GHIBlockBase {
       'cache_tags' => [],
     ];
 
+    $common_theme_args = [
+      'scale' => 'full',
+      'use_abbreviation' => FALSE,
+    ];
+
     // Assemble the locations and modal_contents arrays.
     $locations = [];
     $modal_contents = [];
@@ -222,6 +227,28 @@ class PlanOverviewMap extends GHIBlockBase {
           $plan_entity->getYear(),
           $plan_entity->getPlanTypeShortLabel(FALSE),
         ]),
+        'tooltip_values' => [
+          'in_need' => [
+            'label' => $tabs['in_need']['label'],
+            'value' => CommonHelper::renderValue($caseload->in_need, 'amount', 'hpc_amount', $common_theme_args),
+          ],
+          'target' => [
+            'label' => $tabs['target']['label'],
+            'value' => CommonHelper::renderValue($caseload->target, 'amount', 'hpc_amount', $common_theme_args),
+          ],
+          'requirements' => [
+            'label' => $tabs['requirements']['label'],
+            'value' => CommonHelper::renderValue($funding->total_requirements, 'value', 'hpc_currency', $common_theme_args),
+          ],
+          'funding' => [
+            'label' => $tabs['funding']['label'],
+            'value' => CommonHelper::renderValue($funding->total_funding, 'value', 'hpc_currency', $common_theme_args),
+          ],
+          'coverage' => [
+            'label' => $tabs['coverage']['label'],
+            'value' => CommonHelper::renderValue($funding->funding_progress, 'percent', 'hpc_percent', $common_theme_args),
+          ],
+        ],
         'plan_type' => strtolower($plan->getTypeShortName()),
       ];
       $modal_contents[(string) $object_id] = [
