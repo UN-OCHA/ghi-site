@@ -79,7 +79,7 @@
       }
       let location_data = Drupal.hpc_map.getLocationDataById(state, object_id);
       let radius = Drupal.hpc_map.getRadius(location_data, scale, base_radius/scale);
-      offset += radius + base_radius/scale * 2.5;
+      offset += radius + (base_radius + 3)/scale;
     }
     return offset;
   }
