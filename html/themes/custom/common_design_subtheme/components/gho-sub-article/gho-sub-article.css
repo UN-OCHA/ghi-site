@@ -40,6 +40,7 @@
   font-size: 1.625rem;
   font-weight: 700;
   line-height: 1.75rem;
+  scroll-margin-top: 5rem;
 }
 
 @media (min-width: 768px) {

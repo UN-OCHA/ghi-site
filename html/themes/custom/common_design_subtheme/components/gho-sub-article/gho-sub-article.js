@@ -43,8 +43,8 @@
             e.preventDefault();
             $expandButton.removeClass('hidden');
             $collapsButton.addClass('hidden');
-            let $scroolTarget = $(subArticle).find('.gho-sub-article__content > div:nth-child(2)');
-            $scroolTarget.get(0).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            let $scroolTarget = $(subArticle).find('.gho-sub-article__title');
+            $scroolTarget.get(0).scrollIntoView({behavior: 'smooth', block: 'start'});
             setTimeout(() => {
               $(subArticle).find('.gho-sub-article__content > div.collapsible').removeClass('expanded');
             }, 500);
