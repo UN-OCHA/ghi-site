@@ -208,12 +208,13 @@ class LogframeManager implements ContainerInjectionInterface {
     // Assemble the key figures as entity counter items for all plan entity
     // types.
     foreach ($prototype->getEntityPrototypes() as $entity_prototype) {
-      if ($entity_prototype->type != 'PE') {
-        // Only show entity counter items for plan entities.
+      if (!$entity_prototype->isPlanEntity() || $entity_prototype->getRefCode() == 'CQ') {
+        // Only show entity counter items for plan entities and only if not
+        // humanitarian conditions.
         continue;
       }
       $configuration['hpc']['key_figures']['items'][] = [
-        'id' => count($configuration['hpc']['key_figures']['items']),
+        'id' => count($configuration['hpc']['key_figures']['items']) + 1,
         'item_type' => 'entity_counter',
         'config' => [
           'entity_type' => 'plan',
