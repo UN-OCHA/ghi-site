@@ -282,7 +282,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       $rows[$plan->id()] = [];
 
       if ($export) {
-        $rows[$plan->id()]['plan_id'] = ['data' => $plan->id()];
+        $rows[$plan->id()]['plan_id'] = ['data' => $plan_entity?->id()];
       }
 
       $rows[$plan->id()] += [
@@ -401,7 +401,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data' => $section ? 'https://humanitarianaction.info' . $section->toUrl()->toString() : NULL,
         ];
         $rows[$plan->id()]['link_fts'] = [
-          'data' => $plan_entity->toUrl('fts_summary'),
+          'data' => $plan_entity?->toUrl('fts_summary'),
         ];
       }
     }
