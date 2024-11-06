@@ -339,6 +339,11 @@ abstract class GHIBlockBase extends HPCBlockBase {
   public function build() {
     $plugin_configuration = $this->getConfiguration();
 
+    if ($this->isHidden() && !$this->isPreview()) {
+      // If the block is hidden and not in preview bail out.
+      return [];
+    }
+
     $build = [
       '#theme_wrappers' => [
         'container' => [
@@ -347,14 +352,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
       ],
     ];
 
-    if ($this->isHidden() && !$this->isPreview()) {
-      // If the block is hidden and not in preview bail out.
-      return [];
-    }
-
     // Otherwise build the full block. First get the actual block content.
     $profile_key = ProfileHelper::profileStart(static::class . ':buildContent');
-    $build_content = $this->buildContent();
+    $build_content = !$this->brokenForMissingBaseObject() ? $this->buildContent() : [];
     ProfileHelper::profileEnd($profile_key);
     if (!$build_content) {
       return $build_content ?? [];
@@ -575,13 +575,47 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   TRUE if the blocks base object can be configured, FASLE otherwise.
    */
   public function canConfigureContexts() {
-    $instance = $this->formState->get('block') ?? $this;
-    $base_objects_per_bundle = [];
-    $can_configure = FALSE;
+    if ($this->brokenForMissingBaseObject()) {
+      return TRUE;
+    }
+    $base_objects_per_bundle = $this->getAvailableBaseObjectsPerBundle();
+    $base_objects_per_bundle_mutiple = array_filter($base_objects_per_bundle, function ($base_objects) {
+      return count($base_objects) > 1;
+    });
+    return !empty($base_objects_per_bundle_mutiple);
+  }
 
+  /**
+   * Check if the current block instance is broken due to missing base objects.
+   *
+   * @return bool
+   *   TRUE if the block instance should be considered broken, FALSE otherwise.
+   */
+  protected function brokenForMissingBaseObject() {
+    $base_objects_per_bundle = $this->getAvailableBaseObjectsPerBundle();
+    $expected_base_object_types = $this->getExpectedBaseObjectTypes();
+    if (empty($base_objects_per_bundle) && !empty($expected_base_object_types)) {
+      return TRUE;
+    }
+
+    foreach ($expected_base_object_types as $object_type) {
+      if (empty($base_objects_per_bundle[$object_type])) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Get the expected base object types for a given block plugin.
+   *
+   * @return string[]
+   *   An array of base object bundle names.
+   */
+  private function getExpectedBaseObjectTypes() {
     // Get the expected base object types. This assumes that the context
     // definition contains a constraint on the base object bundle.
-    $expected_base_object_types = array_filter(array_map(function ($definition) {
+    return array_filter(array_map(function ($definition) {
       /** @var \Drupal\Core\Plugin\Context\ContextDefinitionInterface $definition */
       $data_type = $definition->getDataType();
       if (strpos($data_type, 'entity:') !== 0) {
@@ -593,7 +627,18 @@ abstract class GHIBlockBase extends HPCBlockBase {
       }
       return $definition->getConstraint('Bundle');
     }, $this->getContextDefinitions()));
+  }
 
+  /**
+   * Get the available base objects per base object bundle.
+   *
+   * @return array
+   *   An array of arrays of base object ids, keyed by bundle.
+   */
+  private function getAvailableBaseObjectsPerBundle() {
+    $instance = $this->formState?->get('block') ?? $this;
+    $base_objects_per_bundle = [];
+    $expected_base_object_types = $this->getExpectedBaseObjectTypes();
     foreach ($instance->getContexts() as $context) {
       if (!$context->hasContextValue()) {
         continue;
@@ -608,11 +653,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
       }
       $base_objects_per_bundle[$base_object->bundle()] = $base_objects_per_bundle[$base_object->bundle()] ?? [];
       $base_objects_per_bundle[$base_object->bundle()][$base_object->id()] = $base_object->id();
-      if (count($base_objects_per_bundle[$base_object->bundle()]) > 1) {
-        $can_configure = TRUE;
-      }
     }
-    return $can_configure;
+    return $base_objects_per_bundle;
   }
 
   /**
@@ -622,7 +664,12 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // We just reuse the context mapping from Drupal here. This is added in
     // self::blockFormAlter().
     // We can provide some context for the user though.
-    $message = $this->t('There are multiple context objects available on the current page. In order for this element to function correctly, you must select which object to use to retrieve the underlying data from the data source.');
+    if ($this->brokenForMissingBaseObject()) {
+      $message = $this->t('This element requires at least one context object, but there is none available. Consider manually adding a context object to this page or contact an administrator if you think this is an error.');
+    }
+    else {
+      $message = $this->t('There are multiple context objects available on the current page. In order for this element to function correctly, you must select which object to use to retrieve the underlying data from the data source.');
+    }
     $form['message'] = [
       '#type' => 'markup',
       '#markup' => new FormattableMarkup('<p>@message</p>', ['@message' => $message]),
@@ -1201,6 +1248,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
           continue;
         }
         $element['#required'] = FALSE;
+        $element['#default_value'] = $this->getDefaultFormValueFromFormState($form_state, [
+          'context_mapping',
+          $element_key,
+        ]);
         if (empty($element['#default_value']) && !empty($element['#options'])) {
           $element['#default_value'] = array_key_first($element['#options']);
         }
