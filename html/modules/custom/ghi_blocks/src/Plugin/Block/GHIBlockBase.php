@@ -42,6 +42,7 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
 use Drupal\layout_builder\Form\AddBlockForm;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Plugin\SectionStorage\SectionStorageBase;
+use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
