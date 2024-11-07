@@ -120,11 +120,13 @@ class MigratedEntityManager implements ContainerInjectionInterface {
       }
     }
 
-    if ($migration_group) {
-      $this->messenger->addWarning($this->t('Some of the fields in this form have been disabled because their content is automatically synced from @label.', $t_args));
-    }
-    else {
-      $this->messenger->addWarning($this->t('Some of the fields in this form have been disabled because their content is automatically synced from an external source.'));
+    if (empty($form_state->getUserInput())) {
+      if ($migration_group) {
+        $this->messenger->addWarning($this->t('Some of the fields in this form have been disabled because their content is automatically synced from @label.', $t_args));
+      }
+      else {
+        $this->messenger->addWarning($this->t('Some of the fields in this form have been disabled because their content is automatically synced from an external source.'));
+      }
     }
   }
 
