@@ -133,7 +133,7 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
    *   The plan type name.
    */
   public function getTypeName($fetch_from_entity = FALSE) {
-    return $this->getPlanTypeName($this->getOriginalTypeName(), $this->isTypeIncluded());
+    return $this->getOriginalTypeName();
   }
 
   /**
@@ -143,7 +143,7 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
    *   The plan type name.
    */
   public function getTypeShortName($fetch_from_entity = FALSE) {
-    return $this->getPlanTypeShortName($this->getOriginalTypeName(), $this->isTypeIncluded());
+    return $this->getPlanTypeShortName($this->getOriginalTypeName());
   }
 
   /**
@@ -161,17 +161,6 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
       return FALSE;
     }
     return $name == $type_name;
-  }
-
-  /**
-   * Whether the plan is of a type with with the includeTotals property set.
-   *
-   * @return bool|null
-   *   The value of the includeTotals property or NULL if not set.
-   */
-  public function isTypeIncluded() {
-    $term = $this->getPlanType();
-    return $term->get('field_included_in_totals')->value;
   }
 
   /**

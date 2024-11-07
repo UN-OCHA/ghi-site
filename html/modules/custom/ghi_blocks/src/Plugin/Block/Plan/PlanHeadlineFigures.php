@@ -145,6 +145,9 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
     if ($comment) {
       $build['comment'] = $comment;
     }
+    $build['#block_attributes'] = [
+      'class' => ['not-collapsible'],
+    ];
     return $build;
   }
 
@@ -213,6 +216,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
   public function getBlockContext() {
     $page_node = $this->getPageNode();
     return [
+      'section_node' => $this->getCurrentBaseEntity(),
       'page_node' => $page_node,
       'plan_object' => $this->getCurrentPlanObject(),
       'base_object' => $this->getCurrentBaseObject(),

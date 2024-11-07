@@ -8,12 +8,12 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
-use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock;
+use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\FieldHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
@@ -282,7 +282,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       $rows[$plan->id()] = [];
 
       if ($export) {
-        $rows[$plan->id()]['plan_id'] = ['data' => $plan->id()];
+        $rows[$plan->id()]['plan_id'] = ['data' => $plan_entity?->id()];
       }
 
       $rows[$plan->id()] += [
@@ -297,10 +297,10 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'type' => [
           'data' => [
             'name' => [
-              '#markup' => $plan->getTypeShortName(),
+              '#markup' => $plan->getTypeShortName(TRUE),
             ],
           ],
-          'data-value' => $plan->getTypeShortName(),
+          'data-value' => $plan->getTypeShortName(TRUE),
         ],
         'inneed' => [
           'data' => [
@@ -383,9 +383,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
                 '#tag' => 'span',
                 '#attributes' => [
                   'data-toggle' => 'tooltip',
-                  'data-tippy-content' => $this->t('Download the @type document', [
-                    '@type' => strtolower($plan->getTypeShortName()) == 'other' ? $this->t('plan') : $plan->getTypeShortName(),
-                  ]),
+                  'data-tippy-content' => $this->t('Download the document'),
                 ],
                 'content' => DownloadHelper::getDownloadIcon($document_uri),
               ] : NULL,
@@ -403,7 +401,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data' => $section ? 'https://humanitarianaction.info' . $section->toUrl()->toString() : NULL,
         ];
         $rows[$plan->id()]['link_fts'] = [
-          'data' => self::buildFtsUrl($plan_entity, 'summary'),
+          'data' => $plan_entity?->toUrl('fts_summary'),
         ];
       }
     }
@@ -785,7 +783,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         if ($custom_rows_config['ignore_filters'] && $plan instanceof PlanOverviewPlanMock) {
           return TRUE;
         }
-        $term = $this->getTermObjectByName($plan->getOriginalTypeName(), $plan->isTypeIncluded());
+        $term = $this->getTermObjectByName($plan->getOriginalTypeName());
         return $term && in_array($term->id(), $selected_plan_type_tids);
       });
     }

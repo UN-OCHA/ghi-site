@@ -16,7 +16,8 @@
 .gho-achievement__icon img {
   width: auto;
   height: 100%;
-  filter: invert(27%) sepia(9%) saturate(0%) hue-rotate(188deg) brightness(93%) contrast(80%);
+  filter: invert(27%) sepia(9%) saturate(0%) hue-rotate(188deg) brightness(93%)
+    contrast(80%);
 }
 
 .gho-achievement__title {
@@ -25,7 +26,6 @@
 }
 
 .gho-achievement__summary {
-
   /* Since we changed the flex order, margin collapse doesn't occur between this
   element and the previous Title element. Remove margin manually */
   margin-top: 0;

@@ -8,7 +8,7 @@
 id: ncms
 
 # A human-friendly label for the group.
-label: NCMS
+label: HPC Content Module
 
 # More information about the group.
 description: Import data from the connected NCMS backends.

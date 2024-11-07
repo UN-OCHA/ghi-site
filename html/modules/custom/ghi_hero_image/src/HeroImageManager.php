@@ -83,6 +83,10 @@ class HeroImageManager {
    *   An array with the image properties.
    */
   public function getImageProperties(FieldItemListInterface $items, ?FormatterInterface $formatter = NULL) {
+    if (PHP_SAPI === 'cli') {
+      // Don't do anything when run from the command line.
+      return NULL;
+    }
     $image_url = NULL;
     $file_uri = NULL;
     $credit = NULL;

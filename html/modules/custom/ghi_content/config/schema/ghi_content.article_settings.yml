@@ -1,0 +1,7 @@
+ghi_content.article_settings:
+  type: config_object
+  label: 'GHI Article settings'
+  mapping:
+    subarticle_local_render:
+      type: boolean
+      label: 'Render sub articles locally'

@@ -48,7 +48,6 @@ ul.links--entity-navigation {
     }
 
     &.expandable {
-
       &.dropdown {
         position: relative;
       }
@@ -79,7 +78,7 @@ ul.links--entity-navigation {
         }
       }
 
-      &.dropdown > div[data-cd-hidden=false] {
+      &.dropdown > div[data-cd-hidden="false"] {
         position: absolute;
         z-index: z-index(dropdown);
         top: 3.5rem;
@@ -93,8 +92,7 @@ ul.links--entity-navigation {
 
       &.megamenu,
       &.second-level {
-
-        & > div[data-cd-hidden=false] {
+        & > div[data-cd-hidden="false"] {
           position: absolute;
           z-index: z-index(dropdown);
           top: 3.5rem;
@@ -120,7 +118,8 @@ ul.links--entity-navigation {
               margin-bottom: 1rem;
               padding-top: 1rem;
               padding-bottom: 1rem;
-              border-bottom: 1px solid var(--ghi-default-border-color-background);
+              border-bottom: 1px solid
+                var(--ghi-default-border-color-background);
 
               h3 {
                 margin-bottom: 0;
@@ -204,7 +203,7 @@ ul.links--entity-navigation {
           }
         }
 
-        &.megamenu > div[data-cd-hidden=false] {
+        &.megamenu > div[data-cd-hidden="false"] {
           border-bottom: 2px solid var(--ghi-yellow);
         }
 
@@ -250,7 +249,6 @@ ul.links--entity-navigation {
 
 .block-document-navigation,
 .block-section-navigation {
-
   html:not(.js) & {
     overflow-x: auto;
     overflow-y: hidden;
@@ -262,7 +260,7 @@ ul.links--entity-navigation {
       &.hidden {
         display: none;
       }
-      &.overflow-item.expandable > div[data-cd-hidden=false] {
+      &.overflow-item.expandable > div[data-cd-hidden="false"] {
         padding-top: 0;
         padding-bottom: 0;
         border-top: 1px solid var(--ghi-yellow);
@@ -275,7 +273,7 @@ ul.links--entity-navigation {
           padding-left: var(--cd-container-padding);
           background-color: var(--ghi-primary-background-color);
 
-          div[data-cd-hidden=false] {
+          div[data-cd-hidden="false"] {
             border-bottom: 0;
           }
 
@@ -285,7 +283,7 @@ ul.links--entity-navigation {
             padding-right: initial;
             padding-left: initial;
 
-            div[data-cd-hidden=false] {
+            div[data-cd-hidden="false"] {
               border-bottom: 2px solid var(--ghi-yellow);
             }
           }
@@ -296,7 +294,7 @@ ul.links--entity-navigation {
           padding-left: 0;
           background-color: var(--cd-white);
 
-          div[data-cd-hidden=false] {
+          div[data-cd-hidden="false"] {
             position: relative;
             top: 0;
             width: calc(100vw - 3 * var(--cd-container-padding));
@@ -358,9 +356,13 @@ ul.links--entity-navigation {
       }
 
       @include max-width("md") {
-        &.expandable.dropdown div[data-cd-hidden=false] {
-          width: calc(100vw - 3*var(--cd-container-padding) + 2rem) !important;
-          max-width: calc(100vw - 3*var(--cd-container-padding) + 2rem) !important;
+        &.expandable.dropdown div[data-cd-hidden="false"] {
+          width: calc(
+            100vw - 3 * var(--cd-container-padding) + 2rem
+          ) !important;
+          max-width: calc(
+            100vw - 3 * var(--cd-container-padding) + 2rem
+          ) !important;
           padding: 0;
           background-color: var(--cd-white);
           row-gap: 2px;
@@ -373,7 +375,7 @@ ul.links--entity-navigation {
             }
           }
         }
-        &.expandable.megamenu div[data-cd-hidden=false] {
+        &.expandable.megamenu div[data-cd-hidden="false"] {
           left: -0.5rem;
           width: 100vw !important;
           max-width: 100vw !important;
@@ -394,9 +396,13 @@ ul.links--entity-navigation {
       }
 
       @include tablet {
-        &.expandable.megamenu > div[data-cd-hidden=false] {
-          width: calc(100vw - 3*var(--cd-container-padding) + 2rem) !important;
-          max-width: calc(100vw - 3*var(--cd-container-padding) + 2rem) !important;
+        &.expandable.megamenu > div[data-cd-hidden="false"] {
+          width: calc(
+            100vw - 3 * var(--cd-container-padding) + 2rem
+          ) !important;
+          max-width: calc(
+            100vw - 3 * var(--cd-container-padding) + 2rem
+          ) !important;
         }
       }
     }
@@ -410,7 +416,7 @@ ul.links--entity-navigation {
       li.expandable.megamenu {
         position: static;
 
-        div[data-cd-hidden=false] {
+        div[data-cd-hidden="false"] {
           width: 100%;
           max-width: 100%;
         }

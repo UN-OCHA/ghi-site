@@ -89,15 +89,15 @@
   @include max-width(lg) {
     // Fix offset for mobile device when toolbar is present.
     .gin--horizontal-toolbar & .cd-nav[data-cd-hidden="false"] {
-      top: calc(var(--ginHorizontalToolbarOffset) + #{$cd-global-header-height} + #{$cd-site-header-height});
+      top: calc(
+        var(--ginHorizontalToolbarOffset) + #{$cd-global-header-height} + #{$cd-site-header-height}
+      );
     }
   }
 
   // Active trail for mobile menu.
   @include max-width(lg) {
-
     .cd-nav > ul > li {
-
       > a.is-active::before,
       > button.is-active::before {
         background: $implementation-highlight;
@@ -150,7 +150,6 @@
   @include desktop {
     .cd-nav > .menu {
       > .menu-item {
-
         > a,
         > span,
         button {

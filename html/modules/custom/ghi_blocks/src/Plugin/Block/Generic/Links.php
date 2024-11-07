@@ -12,6 +12,7 @@ use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\Link;
 use Drupal\ghi_blocks\Traits\ManagedFileBlockTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 
 /**
  * Provides a 'Links' block.
@@ -195,7 +196,11 @@ class Links extends GHIBlockBase implements MultiStepFormBlockInterface, Optiona
    * {@inheritdoc}
    */
   public function getBlockContext() {
-    return [];
+    $base_entity = $this->getCurrentBaseEntity();
+    return [
+      'section_node' => $base_entity instanceof SectionNodeInterface ? $base_entity : NULL,
+      'page_node' => $this->getPageNode(),
+    ];
   }
 
   /**

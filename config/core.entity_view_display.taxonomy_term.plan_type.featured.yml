@@ -4,7 +4,7 @@ status: true
 dependencies:
   config:
     - core.entity_view_mode.taxonomy_term.featured
-    - field.field.taxonomy_term.plan_type.field_included_in_totals
+    - field.field.taxonomy_term.plan_type.field_abbreviation
     - field.field.taxonomy_term.plan_type.field_original_id
     - taxonomy.vocabulary.plan_type
   module:
@@ -22,6 +22,7 @@ content:
     weight: 0
     region: content
 hidden:
-  field_included_in_totals: true
+  field_abbreviation: true
   field_original_id: true
   langcode: true
+  search_api_excerpt: true

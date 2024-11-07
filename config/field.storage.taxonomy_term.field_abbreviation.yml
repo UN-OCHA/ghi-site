@@ -1,14 +1,17 @@
-uuid: 2dcfd313-7f2f-4a08-8ec8-d9c458224cb0
+uuid: d6b277a4-cc67-4fde-8d4f-1df302753347
 langcode: en
 status: true
 dependencies:
   module:
     - taxonomy
-id: taxonomy_term.field_included_in_totals
-field_name: field_included_in_totals
+id: taxonomy_term.field_abbreviation
+field_name: field_abbreviation
 entity_type: taxonomy_term
-type: boolean
-settings: {  }
+type: string
+settings:
+  max_length: 15
+  case_sensitive: false
+  is_ascii: false
 module: core
 locked: false
 cardinality: 1

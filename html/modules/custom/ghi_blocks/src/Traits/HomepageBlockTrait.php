@@ -113,7 +113,7 @@ trait HomepageBlockTrait {
    *   The url object.
    */
   protected function getHomepageUrlForYear($year) {
-    $page = $this->getPageEntity();
+    $page = $this->getHomepageEntity();
     return Url::fromUserInput(str_replace('{year}', $year, $page->getPath()));
   }
 
@@ -123,7 +123,7 @@ trait HomepageBlockTrait {
    * @return \Drupal\page_manager\Entity\Page
    *   The page entity.
    */
-  private function getPageEntity() {
+  private function getHomepageEntity() {
     $page = &drupal_static(__FUNCTION__, NULL);
     if ($page === NULL) {
       /** @var \Drupal\page_manager\Entity\Page $page */

@@ -1,12 +1,12 @@
 // HPC colors
 :root {
-
   // GHI colors.
 
   // Primary colors.
   --ghi-yellow: #fed83d;
   --ghi-grey--dark: #4d4d4d;
-  --ghi-filter-grey--dark: invert(27%) sepia(0%) saturate(3%) hue-rotate(236deg) brightness(90%) contrast(77%);
+  --ghi-filter-grey--dark: invert(27%) sepia(0%) saturate(3%) hue-rotate(236deg)
+    brightness(90%) contrast(77%);
 
   // Dropdown menu background Hero background?
   --ghi-yellow--light: #fffbec;
@@ -60,7 +60,7 @@
   --hpc-blue-light: #e6ecf1;
   --green: #62b445;
   --hpc-border-color: #e1e1e1;
-  --cd-font-size--extra-tiny: 0.625rem;      /* 10px */
+  --cd-font-size--extra-tiny: 0.625rem; /* 10px */
 
   // Border styles for ui dialogs.
   --ghi-ui-dialog-border-radius: 1rem;

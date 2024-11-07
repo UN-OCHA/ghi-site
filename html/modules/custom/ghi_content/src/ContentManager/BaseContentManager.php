@@ -15,6 +15,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Import\ImportManager;
 use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
@@ -26,7 +27,6 @@ use Drupal\migrate\MigrateExecutable;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Plugin\MigrationPluginManager;
 use Drupal\migrate\Row;
-use Drupal\migrate_plus\Entity\Migration;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\TermInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -184,8 +184,8 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
    * @param \Drupal\ghi_content\RemoteContent\RemoteContentInterface $content
    *   A content object from the remote source.
    *
-   * @return \Drupal\node\NodeInterface|null
-   *   The article node if found or NULL.
+   * @return \Drupal\ghi_content\Entity\ContentBase|null
+   *   A local node if found or NULL.
    */
   abstract public function loadNodeForRemoteContent(RemoteContentInterface $content);
 
@@ -636,47 +636,19 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
     $form_object = $form_state->getFormObject();
     /** @var \Drupal\node\NodeInterface $node */
     $node = $form_object->getEntity();
+    if (!$node instanceof ContentBase) {
+      return;
+    }
     $bundle_label = $node->type->entity->label();
     $t_args = [
       '@label' => strtolower($bundle_label),
+      '@remote_source' => $this->getRemoteSource($node)?->getPluginLabel(),
     ];
 
-    // Add a global message about disabled fields.
-    if (empty($form_state->getUserInput())) {
-      $this->messenger->addWarning($this->t('Some of the fields in this form are disabled because their content is automatically synced from the remote source.'));
-    }
+    // Disable the image field because we sync this automatically.
+    $form['field_image']['#disabled'] = 'disabled';
 
-    $migration = $this->getMigration($node);
-    $loaded_migration = $migration ? Migration::load($migration->id()) : NULL;
-    $destination = $loaded_migration?->get('destination') ?? NULL;
-    $disabled_field_text = $this->t('This field is disabled because it is automatically populated from the remote source.');
-
-    $field_keys = array_merge($destination ? $destination['overwrite_properties'] : [], ['field_image']);
-    foreach ($field_keys as $field_key) {
-      if (empty($form[$field_key])) {
-        continue;
-      }
-      if ($field_key == 'field_summary') {
-        $form[$field_key]['widget_copy'] = $form[$field_key]['widget'];
-        $form[$field_key]['widget_copy'][0]['#type'] = 'textarea';
-        $form[$field_key]['widget_copy'][0]['#format'] = 'plan_text';
-        $form[$field_key]['widget_copy'][0]['#disabled'] = TRUE;
-        $form[$field_key]['widget']['#access'] = FALSE;
-      }
-      // Add a condition to manage disabled relationship of terms.
-      elseif (isset($form['relations'][$field_key])) {
-        $form['relations'][$field_key]['#disabled'] = TRUE;
-        // Add a tooltip for disabled relationship of terms.
-        $form['relations'][$field_key]['#attributes']['title'] = $disabled_field_text;
-      }
-      else {
-        $form[$field_key]['#disabled'] = TRUE;
-        // Add a tooltip for each individual disabled field.
-        $form[$field_key]['#attributes']['title'] = $disabled_field_text;
-      }
-    }
-
-    // Also disable the remote field.
+    // Disable the remote field.
     $remote_field = $this->getRemoteFieldName();
     $form[$remote_field]['#disabled'] = TRUE;
     $form[$remote_field]['#attributes']['title'] = $this->t('This field cannot be edited anymore after the page has been created.');
@@ -721,21 +693,21 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
     $form['remote_content_info']['status'] = [
       '#type' => 'item',
       '#title' => $this->t('Up to date'),
-      '#markup' => '<p>' . $this->t('This @label is up to date with its source content on the remote system.', $t_args) . '</p>',
+      '#markup' => '<p>' . $this->t('This @label is up to date with its source content on @remote_source.', $t_args) . '</p>',
       '#weight' => 1,
     ];
 
     if (!$content) {
       $form['remote_content_info']['status']['#title'] = $this->t('Deleted');
-      $form['remote_content_info']['status']['#markup'] = '<p>' . $this->t('The source of this @label page has been removed on the remote system.', $t_args) . '</p>';
+      $form['remote_content_info']['status']['#markup'] = '<p>' . $this->t('The source of this @label page has been removed on @remote_source.', $t_args) . '</p>';
     }
     elseif (!$content_in_sync) {
       $form['remote_content_info']['status']['#title'] = $this->t('Outdated');
-      $form['remote_content_info']['status']['#markup'] = '<p>' . $this->t('The source of this @label page has changed on the remote system. It will be automatically updated the next time that the @label import will run. To apply the changes immediately use the button below.', $t_args) . '</p>';
+      $form['remote_content_info']['status']['#markup'] = '<p>' . $this->t('The source of this @label page has changed on @remote_source. It will be automatically updated the next time that the @label import will run. To apply the changes immediately use the button below.', $t_args) . '</p>';
 
       $form['remote_content_info']['apply_changes'] = [
         '#type' => 'submit',
-        '#value' => $this->t('Apply changes from remote'),
+        '#value' => $this->t('Apply changes from @remote_source', $t_args),
         '#submit' => [[$this, 'applyChangesSubmit']],
         '#weight' => 2,
         '#limit_validation_errors' => [],
@@ -751,7 +723,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
       $this->redirectDestination->set($redirect_url->toString());
       $form['remote_content_info']['link_label'] = [
         '#type' => 'item',
-        '#title' => $this->t('Go to remote system'),
+        '#title' => $this->t('Go to @remote_source', $t_args),
         '#weight' => 3,
       ];
       $view_builder = $this->entityTypeManager->getViewBuilder('node');
@@ -759,7 +731,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
         'label' => 'hidden',
         'type' => $this->getRemoteSourceLinkType(),
         'settings' => [
-          'link_label' => $this->t('Edit this @label on the remote system', $t_args),
+          'link_label' => $this->t('Edit this @label on @remote_source', $t_args),
           'link_to_edit' => TRUE,
           'include_publisher_destination' => TRUE,
         ],
@@ -770,7 +742,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
       $form['remote_content_reset'] = [
         '#type' => 'details',
         '#title' => $this->t('Reset @label', $t_args),
-        '#description' => $this->t('Reset the content paragraphs to the initial state. This will remove any customizations made to this @label page and re-import all content paragraphs in the order defined on the remote system.', $t_args),
+        '#description' => $this->t('Reset the content paragraphs to the initial state. This will remove any customizations made to this @label page and re-import all content paragraphs in the order defined on @remote_source.', $t_args),
         '#open' => FALSE,
         '#group' => 'advanced',
       ];
@@ -803,7 +775,10 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
 
     $form_state->setRebuild(FALSE);
 
-    $this->messenger->addStatus($this->t('The changes from the remote system have been applied.'));
+    $this->messenger->addStatus($this->t('The changes from @remote_source have been applied to <em>@label</em>.', [
+      '@label' => $node->label(),
+      '@remote_source' => $this->getRemoteSource($node)?->getPluginLabel(),
+    ]));
   }
 
   /**
@@ -822,7 +797,28 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
 
     $form_state->setRebuild(FALSE);
 
-    $this->messenger->addStatus($this->t('The page has been reset to the initial state of the remote system.'));
+    $this->messenger->addStatus($this->t('<em>@label</em> has been reset to the initial state of @remote_source.', [
+      '@label' => $node->label(),
+      '@remote_source' => $this->getRemoteSource($node)?->getPluginLabel(),
+    ]));
+  }
+
+  /**
+   * Get the remote source plugin for the content node.
+   *
+   * @param \Drupal\ghi_content\Entity\ContentBase $node
+   *   The content node object.
+   *
+   * @return \Drupal\ghi_content\RemoteSource\RemoteSourceInterface
+   *   The remote source instance.
+   */
+  private function getRemoteSource(ContentBase $node) {
+    $remote_field = $this->getRemoteFieldName();
+    if (!$node->hasField($remote_field)) {
+      return NULL;
+    }
+    $remote_source = $node->get($remote_field)->remote_source;
+    return $this->remoteSourceManager->createInstance($remote_source);
   }
 
 }

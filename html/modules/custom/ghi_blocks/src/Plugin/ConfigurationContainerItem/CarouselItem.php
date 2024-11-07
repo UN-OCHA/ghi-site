@@ -7,7 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
+use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 
 /**
  * Provides a carousel item for configuration containers.
@@ -20,7 +20,7 @@ use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
  */
 class CarouselItem extends ConfigurationContainerItemPluginBase {
 
-  use OptionalLinkTrait;
+  use CustomLinkTrait;
 
   /**
    * {@inheritdoc}
@@ -51,7 +51,7 @@ class CarouselItem extends ConfigurationContainerItemPluginBase {
    */
   public static function validateElement(&$element, FormStateInterface $form_state, &$complete_form) {
     // @todo This repeats logic from
-    // \Drupal\ghi_form_elements\Element\OptionalLink::elementValidate().
+    // \Drupal\ghi_form_elements\Element\CustomLink::elementValidate().
     $url = $form_state->getValue($element['#parents'])['value']['url'];
     $transformed_url = self::transformUrl($url);
     if (!$transformed_url) {

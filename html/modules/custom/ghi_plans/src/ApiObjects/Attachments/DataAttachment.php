@@ -39,6 +39,15 @@ class DataAttachment extends AttachmentBase {
   const UNIT_TYPE_ID_PERCENTAGE = 17;
 
   /**
+   * Define a list of field types that should be considered cumulative reach.
+   */
+  const CUMULATIVE_REACH_FIELDS = [
+    'cumulativeReach',
+    'optionNonPlanCumulReach',
+    'optionOverallCumulReach',
+  ];
+
+  /**
    * {@inheritdoc}
    */
   protected function map() {
@@ -380,6 +389,19 @@ class DataAttachment extends AttachmentBase {
       return FALSE;
     }
     return $this->isMeasurementField($source_field->name->en);
+  }
+
+  /**
+   * Check if the given field type string is considered cumulative reach.
+   *
+   * @param string $type
+   *   The type string to check.
+   *
+   * @return bool
+   *   TRUE if the type should be considered cumulative reach, FALSE otherwise.
+   */
+  private function isCumulativeReachFieldType($type) {
+    return in_array($type, self::CUMULATIVE_REACH_FIELDS);
   }
 
   /**
@@ -1245,7 +1267,11 @@ class DataAttachment extends AttachmentBase {
     }
 
     $field = $this->getFieldByIndex($data_point_index);
-    if ($value === NULL && $field?->type == 'cumulativeReach' && $cumulative_logic) {
+    if ($value !== NULL || !$field) {
+      return $value;
+    }
+
+    if ($this->isCumulativeReachFieldType($field->type) && $cumulative_logic) {
       // We have some specific logic for data points of type cummulativeReach.
       // If the current reporting period reports these as NULL, we want to
       // fetch the last non-NULL value from the other reporting periods of the
@@ -1376,7 +1402,9 @@ class DataAttachment extends AttachmentBase {
     $monitoring_period_id = $conf['data_points'][0]['monitoring_period'] ?? NULL;
     $field = $this->getFieldByIndex($index);
     $format_string = NULL;
-    if ($field?->type == 'cumulativeReach' || ($this->isCalculatedMeasurementIndex($index) && $field?->source == 'cumulativeReach')) {
+    $cumulative_reach_field = $field ? $this->isCumulativeReachFieldType($field->type) : FALSE;
+    $cumulative_reach_source = $field ? $this->isCalculatedMeasurementIndex($index) && $this->isCumulativeReachFieldType($field->source) : FALSE;
+    if ($cumulative_reach_field || $cumulative_reach_source) {
       $format_string = '@data_range_cumulative';
       if ($monitoring_period_id == 'latest') {
         $monitoring_period_id = $this->getLastNonEmptyReportingPeriod($index)?->id();

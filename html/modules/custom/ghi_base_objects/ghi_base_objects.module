@@ -6,6 +6,7 @@
  */
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Render\Element;
@@ -267,4 +268,17 @@ function ghi_base_objects_migrate_prepare_row(Row $row, MigrateSourceInterface $
     $row->setSourceProperty('name', Unicode::truncate($raw_data->description, 255, TRUE, TRUE));
   }
 
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function ghi_base_objects_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof ContentEntityForm) {
+    return;
+  }
+  /** @var \Drupal\ghi_base_objects\Migrate\MigratedEntityManager $migrated_entity_manager */
+  $migrated_entity_manager = \Drupal::service('migrated_entity_manager');
+  $migrated_entity_manager->entityFormAlter($form, $form_state);
 }

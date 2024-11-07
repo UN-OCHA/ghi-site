@@ -137,7 +137,7 @@ class PlanOverviewPlan extends BaseObject {
    *   The plan type name.
    */
   public function getTypeName($fetch_from_entity = FALSE) {
-    return $this->getPlanTypeName($this->getOriginalTypeName($fetch_from_entity), $this->isTypeIncluded());
+    return $this->getOriginalTypeName($fetch_from_entity);
   }
 
   /**
@@ -147,7 +147,11 @@ class PlanOverviewPlan extends BaseObject {
    *   The plan type name.
    */
   public function getTypeShortName($fetch_from_entity = FALSE) {
-    return $this->getPlanTypeShortName($this->getOriginalTypeName($fetch_from_entity), $this->isTypeIncluded());
+    $plan_type_short_name = $this->getPlanTypeShortName($this->getOriginalTypeName($fetch_from_entity));
+    if ($fetch_from_entity && $plan_type = $this->getEntity()?->getPlanType()) {
+      $plan_type_short_name = $plan_type->get('field_abbreviation')->value ?? $plan_type_short_name;
+    }
+    return $plan_type_short_name;
   }
 
   /**
@@ -165,16 +169,6 @@ class PlanOverviewPlan extends BaseObject {
       return FALSE;
     }
     return $name == $type_name;
-  }
-
-  /**
-   * Whether the plan is of a type with with the includeTotals property set.
-   *
-   * @return bool|null
-   *   The value of the includeTotals property or NULL if not set.
-   */
-  public function isTypeIncluded() {
-    return (boolean) $this->getTypeProperty('includeTotals');
   }
 
   /**
@@ -215,6 +209,16 @@ class PlanOverviewPlan extends BaseObject {
    */
   public function isOther() {
     return empty($this->getTypeName()) || $this->isType('Other');
+  }
+
+  /**
+   * Check if the plan is part of the GHO.
+   *
+   * @return bool
+   *   TRUE if the plan is partof the GHO, FALSE otherwise.
+   */
+  public function isPartOfGho() {
+    return $this->getRawData()->isPartOfGHO ?? FALSE;
   }
 
   /**

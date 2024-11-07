@@ -31,6 +31,7 @@ dependencies:
     - node.type.progress
     - node.type.section
     - taxonomy.vocabulary.operations_category
+    - taxonomy.vocabulary.plan_type
     - taxonomy.vocabulary.team
   module:
     - auto_entitylabel
@@ -81,6 +82,7 @@ permissions:
   - 'administer base object entities'
   - 'administer base_object_type labels'
   - 'administer content translation'
+  - 'administer ghi article config'
   - 'administer ghi embargoed access config'
   - 'administer ghi global config'
   - 'administer ghi table config'
@@ -165,6 +167,7 @@ permissions:
   - 'edit own progress content'
   - 'edit own section content'
   - 'edit terms in operations_category'
+  - 'edit terms in plan_type'
   - 'edit terms in team'
   - 'import block from configuration code'
   - 'import page layout configuration code'

@@ -63,6 +63,11 @@ body .glb-form-boolean--type-radio:hover {
 }
 body .glb-form-boolean--type-radio:disabled,
 body .glb-form-boolean--type-radio:disabled:hover {
+  border-color: var(--gin-border-color-form-element) !important;
+  box-shadow: none !important;
+}
+body .glb-form-boolean--type-radio:checked:disabled,
+body .glb-form-boolean--type-radio:checked:disabled:hover {
   box-shadow: inset 0 0 0 5px var(--colorGinDisabled) !important;
 }
 body .glb-form-boolean--type-radio:checked:not(:disabled),

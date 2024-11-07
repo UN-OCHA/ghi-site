@@ -9,13 +9,11 @@
   table {
     tbody {
       td[data-column="name"] {
-
         .cell-wrapper-inner {
           justify-content: space-between;
         }
 
         .tooltip-wrapper {
-
           .gho-included-tooltip {
             color: var(--cd-primary-color);
             font-size: var(--cd-font-size--medium);
@@ -43,10 +41,6 @@
             &.plan-type-rrp {
               background-color: rgb(230, 103, 81);
             }
-            &.plan-type-non-hrp {
-              padding: 0 5px;
-              background-color: rgb(119, 119, 119);
-            }
           }
         }
       }
@@ -63,7 +57,6 @@
 }
 
 .ghi-block-global-plan-overview-map + .ghi-block-global-plan-table {
-
   /**
    * Bleed the background only.
    */

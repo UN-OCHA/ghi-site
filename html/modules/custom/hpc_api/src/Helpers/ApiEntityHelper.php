@@ -35,8 +35,17 @@ class ApiEntityHelper {
    *   The entity version property, should be an object.
    */
   public static function getEntityVersion($entity) {
-    $version_property = (!empty($entity->entityPrototype) ? ($entity->entityPrototype->type == 'PE' ? 'planEntity' : 'governingEntity') : 'plan') . 'Version';
-    return !empty($entity->$version_property) ? $entity->$version_property : NULL;
+    $version_properties = [
+      'planVersion',
+      'planEntityVersion',
+      'governingEntityVersion',
+    ];
+    foreach ($version_properties as $version_property) {
+      if (property_exists($entity, $version_property)) {
+        return $entity->{$version_property};
+      }
+    }
+    return NULL;
   }
 
   /**

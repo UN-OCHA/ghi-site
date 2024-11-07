@@ -41,6 +41,7 @@ class SectionManagerTest extends KernelTestBase {
     'pathauto',
     'layout_builder',
     'layout_discovery',
+    'migrate',
     'hpc_api',
     'hpc_common',
     'ghi_base_objects',

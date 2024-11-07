@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\Helpers;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\ApiObjects\PlanPrototype;
 use Drupal\ghi_plans\Traits\PlanVersionArgument;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
@@ -57,7 +58,7 @@ class PlanStructureHelper {
             if (!array_key_exists($ple_id, $plan_entities)) {
               $plan_entities[$ple_id] = PlanEntityHelper::getPlanEntity($ple_id, $version_argument);
             }
-            if ($plan_entities[$ple_id]->entity_type == 'PE') {
+            if ($plan_entities[$ple_id] instanceof PlanEntity) {
               $ple_structure[$plan_entity->id] = $plan_entity;
             }
             else {
@@ -114,17 +115,18 @@ class PlanStructureHelper {
       'governing_entities' => [],
     ];
 
-    foreach ($prototype->items as $entity_prototype) {
-      if ($entity_prototype->type != 'PE' || !in_array($entity_prototype->ref_code, $main_ref_codes)) {
+    foreach ($prototype->getEntityPrototypes() as $entity_prototype) {
+      if (!$entity_prototype->isPlanEntity() || !in_array($entity_prototype->getRefCode(), $main_ref_codes)) {
         continue;
       }
       // There is always a main plan entity.
-      $main_level_ple = empty($entity_prototype->can_support);
-      $structure['plan_entities'][$entity_prototype->id] = (object) [
-        'label' => $entity_prototype->name_plural,
-        'label_singular' => $entity_prototype->name_singular,
-        'entity_type' => $entity_prototype->type,
-        'entity_prototype_id' => $entity_prototype->id,
+      $main_level_ple = empty($entity_prototype->getSupportedPrototypeIds());
+      $structure['plan_entities'][$entity_prototype->id()] = (object) [
+        'label' => $entity_prototype->getNamePlural(),
+        'label_singular' => $entity_prototype->getNameSingular(),
+        'entity_type' => $entity_prototype->getType(),
+        'entity_prototype_id' => $entity_prototype->id(),
+        'entity_prototype_child_ids' => $entity_prototype->getChildrenPrototypeIds(),
         'drupal_entity_type' => 'plan_entity',
         'subpage' => $main_level_ple ? 'pe' : NULL,
       ];
@@ -132,31 +134,24 @@ class PlanStructureHelper {
 
     // And then there are usually one or more governing entities.
     $ge_index = 0;
-    foreach ($prototype->items as $entity_prototype) {
-      if ($entity_prototype->type == 'GVE') {
+    foreach ($prototype->getEntityPrototypes() as $entity_prototype) {
+      if ($entity_prototype->isGoverningEntity()) {
         $ge_index++;
         $subpage = 'ge' . (($ge_index == 1) ? '' : ('-' . $ge_index));
-        $structure['governing_entities'][$entity_prototype->id] = (object) [
+        $structure['governing_entities'][$entity_prototype->id()] = (object) [
           'subpage' => $subpage,
-          'label' => $entity_prototype->name_plural,
-          'label_singular' => $entity_prototype->name_singular,
-          'entity_type' => $entity_prototype->type,
-          'entity_prototype_id' => $entity_prototype->id,
-          'entity_prototype_child_ids' => !empty($entity_prototype->children) ? array_map(function ($item) {
-            return $item->id;
-          }, $entity_prototype->children) : [],
+          'label' => $entity_prototype->getNamePlural(),
+          'label_singular' => $entity_prototype->getNameSingular(),
+          'entity_type' => $entity_prototype->getType(),
+          'entity_prototype_id' => $entity_prototype->id(),
+          'entity_prototype_child_ids' => $entity_prototype->getChildrenPrototypeIds(),
           'drupal_entity_type' => 'governing_entity',
         ];
       }
-      if ($entity_prototype->type == 'PE' && !empty($entity_prototype->can_support)) {
+      if ($entity_prototype->isPlanEntity() && !empty($entity_prototype->getSupportedPrototypeIds())) {
         // Some plan entities can support other plan entities.
-        foreach ($entity_prototype->can_support as $supported_prototype) {
-          if (!is_object($supported_prototype)) {
-            // Ignore this, it's probably an "xor" thing that we don't want to
-            // handle at the moment.
-            continue;
-          }
-          $parent_entity_id = $supported_prototype->id;
+        foreach ($entity_prototype->getSupportedPrototypeIds() as $supported_prototype_id) {
+          $parent_entity_id = $supported_prototype_id;
           if (empty($structure['plan_entities'][$parent_entity_id])) {
             // Not sure what this means, skip it for the moment.
             // @todo Research why this happens.
@@ -165,7 +160,7 @@ class PlanStructureHelper {
           if (empty($structure['plan_entities'][$parent_entity_id]->entity_prototype_child_ids)) {
             $structure['plan_entities'][$parent_entity_id]->entity_prototype_child_ids = [];
           }
-          $structure['plan_entities'][$parent_entity_id]->entity_prototype_child_ids[] = $entity_prototype->id;
+          $structure['plan_entities'][$parent_entity_id]->entity_prototype_child_ids[] = $entity_prototype->id();
         }
       }
     }

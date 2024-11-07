@@ -12,6 +12,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
+use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
@@ -207,12 +208,13 @@ class LogframeManager implements ContainerInjectionInterface {
     // Assemble the key figures as entity counter items for all plan entity
     // types.
     foreach ($prototype->getEntityPrototypes() as $entity_prototype) {
-      if ($entity_prototype->type != 'PE') {
-        // Only show entity counter items for plan entities.
+      if (!$entity_prototype->isPlanEntity() || $entity_prototype->getRefCode() == 'CQ') {
+        // Only show entity counter items for plan entities and only if not
+        // humanitarian conditions.
         continue;
       }
       $configuration['hpc']['key_figures']['items'][] = [
-        'id' => count($configuration['hpc']['key_figures']['items']),
+        'id' => count($configuration['hpc']['key_figures']['items']) + 1,
         'item_type' => 'entity_counter',
         'config' => [
           'entity_type' => 'plan',
@@ -257,6 +259,7 @@ class LogframeManager implements ContainerInjectionInterface {
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
     $plan = $node->getParentBaseNode()->getBaseObject();
+    $parent_node = $node->getParentNode();
 
     // Set the basic configuration for a single plan entity logframe element.
     $configuration = [
@@ -277,6 +280,25 @@ class LogframeManager implements ContainerInjectionInterface {
         ],
       ],
     ];
+    if ($parent_node instanceof PlanCluster && $ref_code == 'CL') {
+      $title_args = ['langcode' => $plan->getPlanLanguage()];
+      $title_map = [
+        Plan::CLUSTER_TYPE_CLUSTER => $this->t('Go to cluster page', [], $title_args),
+        Plan::CLUSTER_TYPE_SECTOR => $this->t('Go to sector page', [], $title_args),
+      ];
+      $link_label = $title_map[$plan->getPlanClusterType()];
+      $configuration['hpc']['display']['link'] = [
+        'add_link' => TRUE,
+        'label' => $link_label,
+        'link_type' => 'related',
+        'link_custom' => [
+          'url' => NULL,
+        ],
+        'link_related' => [
+          'target' => 'cluster_parent',
+        ],
+      ];
+    }
 
     // See if there are attachment tables to be added.
     $attachment_prototypes = $this->getAttachmentPrototypesForEntityRefCode($node, $ref_code);
@@ -630,6 +652,9 @@ class LogframeManager implements ContainerInjectionInterface {
    */
   public function getEntityTypesFromPlanObject(Plan $plan) {
     $prototype = $this->getPlanPrototype($plan);
+    if (!$prototype) {
+      return NULL;
+    }
 
     $entity_types = [
       'PL' => (string) $this->t('Plan'),

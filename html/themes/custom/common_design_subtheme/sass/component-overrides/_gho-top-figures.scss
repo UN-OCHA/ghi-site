@@ -25,9 +25,9 @@
 }
 
 /* Hide the border when the figures follow another figures paragraph. */
-.paragraph--gho-needs-and-requirements-paragraph + .paragraph--gho-bottom-figure-row,
+.paragraph--gho-needs-and-requirements-paragraph
+  + .paragraph--gho-bottom-figure-row,
 .paragraph--gho-top-figures + .paragraph--gho-top-figures {
-
   body:not(.layout-builder-ipe-editing) & {
     margin-top: -2rem !important;
   }

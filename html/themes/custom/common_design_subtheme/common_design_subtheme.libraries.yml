@@ -90,8 +90,6 @@ ghi-tab-container:
       components/ghi-tab-container/ghi-tab-container.css: {}
   js:
     components/ghi-tab-container/ghi-tab-container.js: {}
-  dependencies:
-    - common_design_subtheme/swiper
 ghi-link-carousel:
   css:
     theme:
@@ -218,6 +216,8 @@ gho-sub-article:
   css:
     theme:
       components/gho-sub-article/gho-sub-article.css: {}
+  js:
+      components/gho-sub-article/gho-sub-article.js: {}
   dependencies:
     - common_design_subtheme/gho-appeals-tags
 gho-text:

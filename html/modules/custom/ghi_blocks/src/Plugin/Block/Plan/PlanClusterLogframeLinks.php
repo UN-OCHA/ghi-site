@@ -6,7 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\ghi_form_elements\Traits\OptionalLinkTrait;
+use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
@@ -29,7 +29,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class PlanClusterLogframeLinks extends GHIBlockBase implements OverrideDefaultTitleBlockInterface {
 
-  use OptionalLinkTrait;
+  use CustomLinkTrait;
 
   /**
    * The block plugin manager.

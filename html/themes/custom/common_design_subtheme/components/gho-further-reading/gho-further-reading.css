@@ -100,7 +100,9 @@
  * of margin-collapse on first link.
  */
 .gho-further-reading__link:first-child .gho-further-reading__arrow {
-  top: calc(50% + 0.5rem); /* margin-collapse on other links is 1rem so split it in half */
+  top: calc(
+    50% + 0.5rem
+  ); /* margin-collapse on other links is 1rem so split it in half */
 }
 
 /**

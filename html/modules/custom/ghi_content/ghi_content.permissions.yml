@@ -10,3 +10,7 @@ administer orphaned content:
   title: 'Administer orphaned content'
   description: 'Allow administration of orphaned content.'
   restrict access: true
+administer ghi article config:
+  title: 'Administer GHI article config'
+  description: 'Allow to access the GHI article administration pages.'
+  restrict access: true

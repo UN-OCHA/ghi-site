@@ -10,10 +10,10 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
-use Drupal\ghi_blocks\Traits\FtsLinkTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery;
+use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
