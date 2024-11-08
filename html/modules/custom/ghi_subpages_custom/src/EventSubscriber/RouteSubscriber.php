@@ -27,6 +27,7 @@ class RouteSubscriber extends RouteSubscriberBase {
       $wizard_route->setRequirement('_entity_create_access', 'node:' . CustomSubpageManager::BUNDLE);
       $wizard_route->setDefault('_form', '\Drupal\ghi_subpages_custom\Form\CustomSubpageWizard');
       $wizard_route->setDefault('node_type', CustomSubpageManager::BUNDLE);
+      $wizard_route->setOption('_node_operation_route', TRUE);
       $collection->add('ghi_subpages_custom.wizard.custom_subpage', $wizard_route);
     }
   }
