@@ -180,6 +180,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       ],
     ];
     if ($export) {
+      $header['in_gho'] = $this->t('In GHO');
       $header['document'] = [
         'data' => $this->t('Document'),
         'data-column-type' => 'document',
@@ -282,7 +283,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       $rows[$plan->id()] = [];
 
       if ($export) {
-        $rows[$plan->id()]['plan_id'] = ['data' => $plan_entity?->id()];
+        $rows[$plan->id()]['plan_id'] = ['data' => $plan->id()];
       }
 
       $rows[$plan->id()] += [
@@ -293,6 +294,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
             ],
           ],
           'data-value' => $plan->getName(),
+          'data-raw-value' => $plan->getName(),
         ],
         'type' => [
           'data' => [
@@ -393,6 +395,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         ],
       ];
       if ($export) {
+        $rows[$plan->id()]['in_gho'] = $plan->isPartOfGho() ? $this->t('Yes') : $this->t('No');
         $rows[$plan->id()]['document'] = [
           'data' => $document_uri,
         ];
