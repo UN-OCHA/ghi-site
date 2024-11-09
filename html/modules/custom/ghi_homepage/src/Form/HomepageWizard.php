@@ -91,6 +91,10 @@ class HomepageWizard extends WizardBase {
       ];
     }
 
+    $form['actions'] = [
+      '#type' => 'actions',
+    ];
+
     if ($step > 0) {
       $form['actions']['back'] = [
         '#type' => 'button',

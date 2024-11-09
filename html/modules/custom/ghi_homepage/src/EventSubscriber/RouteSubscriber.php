@@ -27,6 +27,7 @@ class RouteSubscriber extends RouteSubscriberBase {
       $wizard_route->setRequirement('_entity_create_access', 'node:' . Homepage::BUNDLE);
       $wizard_route->setDefault('_form', '\Drupal\ghi_homepage\Form\HomepageWizard');
       $wizard_route->setDefault('node_type', Homepage::BUNDLE);
+      $wizard_route->setOption('_node_operation_route', TRUE);
       $collection->add('ghi_homepage.wizard.homepage', $wizard_route);
     }
   }

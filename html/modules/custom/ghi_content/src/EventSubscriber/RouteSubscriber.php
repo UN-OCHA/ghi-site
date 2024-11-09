@@ -28,6 +28,7 @@ class RouteSubscriber extends RouteSubscriberBase {
       $wizard_route->setRequirement('_entity_create_access', 'node:article');
       $wizard_route->setDefault('_form', '\Drupal\ghi_content\Form\ArticleWizard');
       $wizard_route->setDefault('node_type', ArticleManager::ARTICLE_BUNDLE);
+      $wizard_route->setOption('_node_operation_route', TRUE);
       $collection->add('ghi_content.wizard.article', $wizard_route);
 
       $wizard_route = clone $route;
@@ -35,6 +36,7 @@ class RouteSubscriber extends RouteSubscriberBase {
       $wizard_route->setRequirement('_entity_create_access', 'node:document');
       $wizard_route->setDefault('_form', '\Drupal\ghi_content\Form\DocumentWizard');
       $wizard_route->setDefault('node_type', DocumentManager::DOCUMENT_BUNDLE);
+      $wizard_route->setOption('_node_operation_route', TRUE);
       $collection->add('ghi_content.wizard.document', $wizard_route);
     }
   }

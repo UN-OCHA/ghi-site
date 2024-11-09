@@ -46,3 +46,10 @@ function ghi_homepage_preprocess_page(&$variables) {
 
   $variables['page']['help'] = ['message' => $message];
 }
+
+/**
+ * Implements hook_gin_ignore_sticky_form_actions_alter().
+ */
+function ghi_homepage_gin_ignore_sticky_form_actions_alter(&$form_ids) {
+  $form_ids[] = 'ghi_homepage_wizard';
+}

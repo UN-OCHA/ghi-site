@@ -2,19 +2,22 @@
 
 namespace Drupal\Tests\ghi_homepage\Functional;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
+use Drupal\ghi_homepage\Entity\Homepage;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Tests the node wizard pages.
  *
- * @group ghi_sections
+ * @group ghi_homepage
  */
 class WizardTest extends BrowserTestBase {
 
@@ -29,13 +32,23 @@ class WizardTest extends BrowserTestBase {
    * @var array
    */
   protected static $modules = [
+    'gin_lb',
     'ghi_homepage',
+  ];
+
+  /**
+   * Declare modules that the used theme depends on.
+   *
+   * @var array
+   */
+  protected static $themeDependencies = [
+    'gin_lb',
   ];
 
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'stark';
+  protected $defaultTheme = 'common_design_subtheme';
 
   /**
    * {@inheritdoc}
@@ -43,20 +56,78 @@ class WizardTest extends BrowserTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    $this->assertTrue(\Drupal::service('theme_installer')->install(['gin']));
+    $this->container->get('config.factory')
+      ->getEditable('system.theme')
+      ->set('default', 'common_design_subtheme')
+      ->set('admin', 'gin')
+      ->save();
+
+    $this->container->get('config.factory')
+      ->getEditable('node.settings')
+      ->set('use_admin_theme', TRUE)
+      ->save();
+
+    $this->container->get('config.factory')
+      ->getEditable('gin.settings')
+      ->merge([
+        'preset_accent_color' => 'custom',
+        'preset_focus_color' => 'gin',
+        'enable_darkmode' => '0',
+        'classic_toolbar' => 'horizontal',
+        'secondary_toolbar_frontend' => FALSE,
+        'high_contrast_mode' => FALSE,
+        'accent_color' => '#4D4D4D',
+        'focus_color' => '',
+        'layout_density' => 'default',
+        'show_description_toggle' => FALSE,
+        'show_user_theme_settings' => FALSE,
+        'sticky_action_buttons' => TRUE,
+      ])
+      ->save();
+
     $this->setupContent();
 
-    // Create a user with permission to view the actions administration pages.
+    // Create a user with permission to view the administration pages.
     $this->drupalLogin($this->drupalCreateUser([
+      'access administration pages',
+      'administer themes',
+      'access toolbar',
+      'access administration pages',
       'administer nodes',
       'bypass node access',
+      'view the administration theme',
     ]));
+
+    \Drupal::service('router.builder')->rebuildIfNeeded();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function installDefaultThemeFromClassProperty(ContainerInterface $container) {
+    // We install the theme dependencies first, otherwhise our custom theme
+    // refuses to install.
+    $modules = static::$themeDependencies;
+    $success = $container->get('module_installer')->install($modules, TRUE);
+    $this->assertTrue($success, new FormattableMarkup('Enabled modules: %modules', ['%modules' => implode(', ', $modules)]));
+
+    // And we need to clear the config cache so that the theme installer is
+    // aware of the newly installed modules.
+    /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
+    $config_factory = $container->get('config.factory');
+    $config_factory->clearStaticCache();
+
+    parent::installDefaultThemeFromClassProperty($container);
   }
 
   /**
    * Tests homepage wizard page.
    */
   public function testHomepageWizard() {
-    $this->drupalGet('/node/add/homepage');
+    $this->drupalGet('/admin/appearance');
+
+    $this->drupalGet('/node/add/' . Homepage::BUNDLE);
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextNotContains('No teams found. You must import teams before sections can be created.');
     $this->assertSession()->pageTextContains('Create Homepage');
@@ -91,13 +162,13 @@ class WizardTest extends BrowserTestBase {
     ])->save();
 
     Node::create([
-      'type' => 'homepage',
+      'type' => Homepage::BUNDLE,
       'title' => '2023',
       'field_year' => '2023',
       'field_team' => $team,
     ])->save();
 
-    $this->drupalGet('/node/add/homepage');
+    $this->drupalGet('/node/add/' . Homepage::BUNDLE);
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->fieldExists('Year');
     $this->assertSession()->buttonExists('Next');
@@ -118,11 +189,11 @@ class WizardTest extends BrowserTestBase {
    */
   private function setupContent() {
     $this->drupalCreateContentType([
-      'type' => 'homepage',
+      'type' => Homepage::BUNDLE,
       'name' => 'Homepage',
     ]);
 
-    $this->createField('node', 'homepage', 'integer', 'field_year', 'Year');
+    $this->createField('node', Homepage::BUNDLE, 'integer', 'field_year', 'Year');
 
     // Create team vocabulary and fields.
     Vocabulary::create([
@@ -134,7 +205,7 @@ class WizardTest extends BrowserTestBase {
         'team' => 'team',
       ],
     ];
-    $this->createEntityReferenceField('node', 'homepage', 'field_team', 'Team', 'taxonomy_term', 'default', $handler_settings);
+    $this->createEntityReferenceField('node', Homepage::BUNDLE, 'field_team', 'Team', 'taxonomy_term', 'default', $handler_settings);
     Term::create([
       'name' => $this->randomMachineName(),
       'vid' => 'team',

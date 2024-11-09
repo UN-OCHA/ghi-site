@@ -74,6 +74,7 @@ abstract class BlockUiBase extends WebDriverTestBase {
         'layout_density' => 'default',
         'show_description_toggle' => FALSE,
         'show_user_theme_settings' => FALSE,
+        'sticky_action_buttons' => TRUE,
       ])
       ->save();
 
