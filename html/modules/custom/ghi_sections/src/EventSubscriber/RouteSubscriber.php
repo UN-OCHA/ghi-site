@@ -27,6 +27,7 @@ class RouteSubscriber extends RouteSubscriberBase {
       $wizard_route->setRequirement('_entity_create_access', 'node:' . Section::BUNDLE);
       $wizard_route->setDefault('_form', '\Drupal\ghi_sections\Form\SectionWizard');
       $wizard_route->setDefault('node_type', Section::BUNDLE);
+      $wizard_route->setOption('_node_operation_route', TRUE);
       $collection->add('ghi_sections.wizard.section', $wizard_route);
     }
   }
