@@ -115,7 +115,11 @@ class EntityPrototype extends BaseObject {
     if (empty($this->can_support)) {
       return [];
     }
-    $can_support = array_filter($this->can_support, function ($item) {
+    // The value of can support is either an array or some kind of logical
+    // wrapper object. We need an array, so if it's an object, let's see if
+    // it's one we know, like xor, and then get it's sub items as an array.
+    $can_support = is_array($this->can_support) ? $this->can_support : (is_object($this->can_support) && property_exists($this->can_support, 'xor') ? $this->can_support->xor : []);
+    $can_support = array_filter($can_support, function ($item) {
       // Ignore items that are not objects, it's probably an "xor" thing that
       // we don't want to handle at the moment.
       return is_object($item) && property_exists($item, 'id');
