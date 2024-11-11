@@ -94,7 +94,7 @@ class CustomLinkTraitTest extends UnitTestCase {
   }
 
   /**
-   * Test getLinkFromUri for external links.
+   * Test getLinkFromConfiguration for external links.
    */
   public function testGetLinkFromUriBasics() {
     $class = new CustomLinkTestClass();
@@ -118,7 +118,7 @@ class CustomLinkTraitTest extends UnitTestCase {
   }
 
   /**
-   * Test getLinkFromUri for external links.
+   * Test getLinkFromConfiguration for external links.
    */
   public function testGetLinkFromUriExternal() {
     $class = new CustomLinkTestClass();
@@ -160,9 +160,28 @@ class CustomLinkTraitTest extends UnitTestCase {
   }
 
   /**
-   * Test getLinkFromUri for internal links.
+   * Test getLinkFromConfiguration for internal links.
    */
   public function testGetLinkFromUriInternal() {
+    $class = new CustomLinkTestClass();
+    $contexts = [];
+    $conf = [
+      'add_link' => TRUE,
+      'link_type' => 'custom',
+      'link_custom' => [
+        'url' => 'internal:/node/' . $this->financialsNode->id(),
+      ],
+    ];
+    $link = $class->getLinkFromConfiguration($conf, $contexts);
+    $this->assertInstanceOf(Link::class, $link);
+    $this->assertEquals('/node/' . $this->financialsNode->id(), $link->getUrl()->getOption('custom_path'));
+    $this->assertEquals('Go to page', $link->getText());
+  }
+
+  /**
+   * Test getLinkFromConfiguration for related target links.
+   */
+  public function testGetLinkFromRelatedTarget() {
     $class = new CustomLinkTestClass();
     $conf = [
       'add_link' => TRUE,
@@ -336,7 +355,8 @@ class CustomLinkTraitTest extends UnitTestCase {
     $path = '/node/' . $entity->id();
     $url = $this->prophesize(Url::class);
     $url->toString()->willReturn($path);
-    $url->toUriString()->willReturn('internal:' . ltrim($path, '/'));
+    // $url->toUriString()->willReturn('internal:' . ltrim($path, '/'));
+    $url->toUriString()->willReturn('route:entity.node.canonical;node=' . $entity->id());
     $url->isRouted()->willReturn(TRUE);
     $url->getRouteParameters()->willReturn(['node' => $entity]);
     $url->access()->willReturn(TRUE);
@@ -345,6 +365,7 @@ class CustomLinkTraitTest extends UnitTestCase {
     $url->getOption('attributes')->willReturn([]);
     $url->setOption('attributes', ["class" => ["cd-button", "read-more"]])->willReturn();
     $url->setOption('custom_path', ltrim($path, '/'))->willReturn();
+    $url->getOption('custom_path')->willReturn(ltrim($path, '/'));
     return $url;
   }
 
