@@ -681,8 +681,8 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     // PHP DOMElement don't have a innerHTML property so this is the current way
     // of getting it.
     // @see https://bugs.php.net/bug.php?id=44762
-    return implode('', array_map(function ($child) {
-      return $child->ownerDocument->saveXML($child);
+    return implode('', array_map(function (\DOMNode $child) {
+      return mb_convert_encoding($child->ownerDocument->saveXML($child), 'ISO-8859-1');
     }, iterator_to_array($node->childNodes)));
   }
 
