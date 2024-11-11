@@ -73,6 +73,9 @@ trait CustomLinkTrait {
     catch (\InvalidArgumentException $e) {
       return NULL;
     }
+    if ($this->isInternalUri($uri)) {
+      $url->setOption('custom_path', str_replace('internal:', '', $uri));
+    }
     return $this->getLinkFromUrl($url, $label);
   }
 
@@ -99,8 +102,9 @@ trait CustomLinkTrait {
     if (!$link) {
       return NULL;
     }
-    $is_internal = strpos($url->toUriString(), 'internal:') === 0;
-    if (!$is_internal && $link->getUrl()->isRouted() && $node = $link->getUrl()->getRouteParameters()['node'] ?? NULL) {
+    // It's an internal uri if the custom path is set.
+    $is_internal_uri = $url->getOption('custom_path');
+    if (!$is_internal_uri && $link->getUrl()->isRouted() && $node = $link->getUrl()->getRouteParameters()['node'] ?? NULL) {
       $node = $node instanceof NodeInterface ? $node : \Drupal::entityTypeManager()->getStorage('node')->load($node);
       $link->setUrl($node->toUrl());
     }
@@ -124,12 +128,21 @@ trait CustomLinkTrait {
       $attributes['data-toggle'] = 'tooltip';
     }
     $attributes['class'] = $classes;
-
     $link->getUrl()->setOption('attributes', $attributes);
-    if ($is_internal) {
-      $link->getUrl()->setOption('custom_path', str_replace('internal:', '', $url->toUriString()));
-    }
     return $link;
+  }
+
+  /**
+   * Check if the given uri should be considered an internal uri.
+   *
+   * @param string $uri
+   *   The URI string.
+   *
+   * @return bool
+   *   TRUE if the uri string should be considered internal, FALSE otherwise.
+   */
+  private function isInternalUri($uri) {
+    return str_starts_with($uri, 'internal:');
   }
 
   /**
