@@ -4,6 +4,7 @@ mode: simple
 ignored_config_entities:
   - 'entity_access_password.settings:global_password'
   - ghi_blocks.global_settings
+  - ghi_content.article_settings
   - ghi_content.remote_sources
   - ghi_embargoed_access.settings
   - ghi_hero_image.config
