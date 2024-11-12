@@ -163,10 +163,12 @@ function ghi_teams_form_alter(&$form, FormStateInterface $form_state, $form_id) 
   }
 
   $user = \Drupal::currentUser();
-  $form['field_team']['#disabled'] = !$user->hasPermission('administer teams');
-  $form['field_team']['widget']['#description'] = t('You do not have permission to change the team for this @bundle.', [
-    '@bundle' => strtolower($entity->type->entity->label()),
-  ]);
+  if (!empty($form['field_team']) && !$user->hasPermission('administer teams')) {
+    $form['field_team']['#disabled'] = TRUE;
+    $form['field_team']['widget']['#description'] = t('You do not have permission to change the team for this @bundle.', [
+      '@bundle' => strtolower($entity->type->entity->label()),
+    ]);
+  }
 }
 
 /**
