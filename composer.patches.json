@@ -1,5 +1,9 @@
 {
   "patches": {
+    "drupal/active_tags": {
+      "Issue #3481823: HTML tags appear in 'Not exist' and 'Not found' messages": "https://www.drupal.org/files/issues/2024-11-08/3481823-3.patch",
+      "Issue #3486362: Limit 0 for select dropdowns is not respected": "https://git.drupalcode.org/project/active_tags/-/merge_requests/2.patch"
+    },
     "drupal/core": {
       "Issue #2820359: Add #element_submit and #limit_element_submit just like #element_validate and #limit_validation_errors": "https://www.drupal.org/files/issues/2024-09-04/2820359-121.patch",
       "Issue #3008924: Callers of LayoutEntityHelperTrait::getEntitySections() do not account for the view mode": "./patches/3008924-rerolled-24.patch",
