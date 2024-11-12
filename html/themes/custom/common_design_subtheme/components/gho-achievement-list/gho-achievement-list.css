@@ -10,19 +10,29 @@
 }
 
 @media (min-width: 504px) {
-  .gho-achievement-list .field__item {
+  .gho-achievement-list .field__items.col-3 > .field__item,
+  .gho-achievement-list .field__items.col-4 > .field__item {
     flex: 0 0 calc((100% - 1rem) / 2);
   }
 }
 
 @media (min-width: 734px) {
-  .gho-achievement-list .field__item {
+  .gho-achievement-list .field__items.col-2 > .field__item {
+    /* Full size col-2 */
+    flex: 0 0 calc((100% - 2rem) / 2);
+  }
+  .gho-achievement-list .field__items.col-4 > .field__items {
     flex: 0 0 calc((100% - 2rem) / 3);
   }
 }
 
 @media (min-width: 960px) {
-  .gho-achievement-list .field__item {
+  .gho-achievement-list .field__items.col-3 > .field__item {
+    /* Full size col-3 */
+    flex: 0 0 calc((100% - 2rem) / 3);
+  }
+  .gho-achievement-list .field__items.col-4 > .field__item {
+    /* Full size col-4 */
     flex: 0 0 calc((100% - 3rem) / 4);
   }
 }
