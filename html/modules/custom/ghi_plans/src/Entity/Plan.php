@@ -124,6 +124,63 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
+   * Check if the plan is of the given type.
+   *
+   * @param string $type_name
+   *   The type name to check.
+   *
+   * @return bool
+   *   TRUE if the plan is of the given type, FALSE otherwise.
+   */
+  private function isType($type_name) {
+    $name = $this->getPlanType()?->label();
+    if (empty($name)) {
+      return FALSE;
+    }
+    return $name == $type_name;
+  }
+
+  /**
+   * Check if the plan is an HRP.
+   *
+   * @return bool
+   *   TRUE if the plan is an HRP, FALSE otherwise.
+   */
+  public function isHrp() {
+    return $this->isType('Humanitarian response plan');
+  }
+
+  /**
+   * Check if the plan is an RRP.
+   *
+   * @return bool
+   *   TRUE if the plan is an RRP, FALSE otherwise.
+   */
+  public function isRrp() {
+    return $this->isType('Regional response plan');
+  }
+
+  /**
+   * Check if the plan is a Flash Appeal.
+   *
+   * @return bool
+   *   TRUE if the plan is a Flash Appeal, FALSE otherwise.
+   */
+  public function isFlashAppeal() {
+    return $this->isType('Flash appeal');
+  }
+
+  /**
+   * Check if the plan is of type Other.
+   *
+   * @return bool
+   *   TRUE if the plan is of type Other, FALSE otherwise.
+   */
+  public function isOther() {
+    return $this->isType('Other');
+  }
+
+  /**
    * Get the plan cluster type.
    *
    * @return string|null
