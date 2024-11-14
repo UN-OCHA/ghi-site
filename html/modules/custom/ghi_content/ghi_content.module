@@ -26,6 +26,9 @@ use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\layout_builder\SectionStorageInterface;
+use Drupal\migrate\Plugin\MigrateSourceInterface;
+use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate\Row;
 use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
 
@@ -615,4 +618,24 @@ function ghi_content_node_grants(AccountInterface $account, $op) {
     $grants['ghi_content_access'][] = $content_space->id();
   }
   return $grants;
+}
+
+/**
+ * Implements hook_migrate_MIGRATE_ID_prepare_row().
+ */
+function ghi_content_migrate_articles_hpc_content_module_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
+  /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source_instance */
+  $remote_source_instance = \Drupal::service('plugin.manager.remote_source')->createInstance($row->getSource()['remote_source']);
+  $remote_article = $remote_source_instance?->getArticle($row->getSource()['id']);
+  $row->setSourceProperty('content_space_title', $remote_article?->getContentSpace() ?? NULL);
+}
+
+/**
+ * Implements hook_migrate_MIGRATE_ID_prepare_row().
+ */
+function ghi_content_migrate_documents_hpc_content_module_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
+  /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source_instance */
+  $remote_source_instance = \Drupal::service('plugin.manager.remote_source')->createInstance($row->getSource()['remote_source']);
+  $remote_article = $remote_source_instance?->getArticle($row->getSource()['id']);
+  $row->setSourceProperty('content_space_title', $remote_article?->getContentSpace() ?? NULL);
 }
