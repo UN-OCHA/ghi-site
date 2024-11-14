@@ -48,7 +48,8 @@ function ghi_base_objects_layout_builder_view_context_alter(array &$contexts, ?S
     return;
   }
   $entity = $entity_context->getContextValue();
-  if (!$entity->id() || strpos(\Drupal::routeMatch()->getRouteName(), 'entity.entity_view_display.') === 0) {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if (!$entity->id() || !$route_name || strpos($route_name, 'entity.entity_view_display.') === 0) {
     // This is the manage display form or some other config form with a sample
     // entity. We only want to make sure that we provide some dummy context so
     // that page elements that depend on a base object can be selected.
@@ -188,6 +189,10 @@ function ghi_base_objects_migrate_plan_prepare_row(Row $row, MigrateSourceInterf
     throw new MigrateSkipRowException();
   }
 
+  $start_date = !empty($plan_data->planVersion->startDate) ? date('Y-m-d', strtotime($plan_data->planVersion->startDate)) : NULL;
+  $end_date = !empty($plan_data->planVersion->endDate) ? date('Y-m-d', strtotime($plan_data->planVersion->endDate)) : NULL;
+  $document_published_date = !empty($plan_data->planVersion->pdfPublishDate) ? date('Y-m-d', strtotime($plan_data->planVersion->pdfPublishDate)) : NULL;
+
   $row->setSourceProperty('version_tag', $published_version ? $published_version['name'] : NULL);
   $row->setSourceProperty('released', !empty($plan_data->isReleased) ? $plan_data->isReleased : FALSE);
   $row->setSourceProperty('name', !empty($plan_data->planVersion->name) ? $plan_data->planVersion->name : NULL);
@@ -196,9 +201,9 @@ function ghi_base_objects_migrate_plan_prepare_row(Row $row, MigrateSourceInterf
   $row->setSourceProperty('comments', !empty($plan_data->planVersion->comments) ? $plan_data->planVersion->comments : NULL);
   $row->setSourceProperty('language', !empty($plan_data->planVersion->planLanguage) ? $plan_data->planVersion->planLanguage : NULL);
   $row->setSourceProperty('plan_cluster_type', !empty($plan_data->planVersion->planClusterType) ? $plan_data->planVersion->planClusterType : NULL);
-  $row->setSourceProperty('plan_date_start', !empty($plan_data->planVersion->startDate) ? $plan_data->planVersion->startDate : NULL);
-  $row->setSourceProperty('plan_date_end', !empty($plan_data->planVersion->endDate) ? $plan_data->planVersion->endDate : NULL);
-  $row->setSourceProperty('document_published_on', !empty($plan_data->planVersion->pdfPublishDate) ? $plan_data->planVersion->pdfPublishDate : NULL);
+  $row->setSourceProperty('plan_date_start', $start_date);
+  $row->setSourceProperty('plan_date_end', $end_date);
+  $row->setSourceProperty('document_published_on', $document_published_date);
 
   // Parse the categories to retrieve the categories.
   if (!empty($plan_data->categories)) {
@@ -230,6 +235,7 @@ function ghi_base_objects_migrate_plan_prepare_row(Row $row, MigrateSourceInterf
     });
     $row->setSourceProperty('countries', !empty($countries) ? $countries : []);
   }
+  $row->setSourceProperty('focus_country_id', $plan_data->focusCountry?->id ?? NULL);
 
   // Country references.
   if (!empty($plan_data->planVersion->coordinatingOrganizations)) {

@@ -67,6 +67,37 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
+   * Get the focus country for the plan.
+   *
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
+   *   The country base object or NULL.
+   */
+  public function getFocusCountry() {
+    if (!$this->hasField('field_focus_country')) {
+      return NULL;
+    }
+    return $this->get('field_focus_country')->entity;
+  }
+
+  /**
+   * Get the focus country map location for the plan.
+   *
+   * @return object|null
+   *   An object describing the map location or NULL.
+   */
+  public function getFocusCountryMapLocation() {
+    $focus_country = $this->getFocusCountry();
+    return $focus_country ? (object) [
+      'id' => $focus_country->getSourceId(),
+      'name' => $focus_country->label(),
+      'latLng' => [
+        (string) $focus_country->get('field_latitude')->value,
+        (string) $focus_country->get('field_longitude')->value,
+      ],
+    ] : NULL;
+  }
+
+  /**
    * Get the plan language.
    *
    * @return string|null
@@ -90,6 +121,63 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
       return NULL;
     }
     return $this->get('field_plan_type')?->entity ?? NULL;
+  }
+
+  /**
+   * Check if the plan is of the given type.
+   *
+   * @param string $type_name
+   *   The type name to check.
+   *
+   * @return bool
+   *   TRUE if the plan is of the given type, FALSE otherwise.
+   */
+  private function isType($type_name) {
+    $name = $this->getPlanType()?->label();
+    if (empty($name)) {
+      return FALSE;
+    }
+    return $name == $type_name;
+  }
+
+  /**
+   * Check if the plan is an HRP.
+   *
+   * @return bool
+   *   TRUE if the plan is an HRP, FALSE otherwise.
+   */
+  public function isHrp() {
+    return $this->isType('Humanitarian response plan');
+  }
+
+  /**
+   * Check if the plan is an RRP.
+   *
+   * @return bool
+   *   TRUE if the plan is an RRP, FALSE otherwise.
+   */
+  public function isRrp() {
+    return $this->isType('Regional response plan');
+  }
+
+  /**
+   * Check if the plan is a Flash Appeal.
+   *
+   * @return bool
+   *   TRUE if the plan is a Flash Appeal, FALSE otherwise.
+   */
+  public function isFlashAppeal() {
+    return $this->isType('Flash appeal');
+  }
+
+  /**
+   * Check if the plan is of type Other.
+   *
+   * @return bool
+   *   TRUE if the plan is of type Other, FALSE otherwise.
+   */
+  public function isOther() {
+    return $this->isType('Other');
   }
 
   /**
