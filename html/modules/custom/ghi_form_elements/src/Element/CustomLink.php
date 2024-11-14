@@ -167,6 +167,7 @@ class CustomLink extends FormElementBase {
         [LinkWidget::class, 'validateUriElement'],
       ],
       '#required' => FALSE,
+      '#maxlength' => 255,
     ];
 
     $element['link']['link_related'] = [
