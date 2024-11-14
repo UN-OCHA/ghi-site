@@ -93,9 +93,7 @@ class MigratedEntityManager implements ContainerInjectionInterface {
     $disabled_field_text = $this->t('This field is disabled because it is automatically populated from @label.', $t_args);
 
     $overwrite_properties = $migration_definition['destination']['overwrite_properties'] ?? [];
-    $process_fields = array_keys($migration_definition['process'] ?? []);
-    $fields = array_unique(array_merge($overwrite_properties, $process_fields));
-    foreach ($fields as $field_key) {
+    foreach ($overwrite_properties as $field_key) {
       if (!array_key_exists($field_key, $form)) {
         continue;
       }
