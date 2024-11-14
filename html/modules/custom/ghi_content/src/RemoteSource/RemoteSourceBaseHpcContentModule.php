@@ -491,9 +491,6 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
           created
           updated
           tags
-          content_space {
-            title
-          }
           autoVisible
           forceUpdate
         }
@@ -524,9 +521,6 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
           created
           updated
           tags
-          content_space {
-            title
-          }
           autoVisible
           forceUpdate
         }
