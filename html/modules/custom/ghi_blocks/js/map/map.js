@@ -207,6 +207,7 @@
       },
       pcodes_enabled: true,
       legend: false,
+      interactive_legend: false,
     };
     options = Object.assign({}, defaults, options);
 
@@ -214,6 +215,7 @@
     state.map_id = map_id;
     state.options = options;
     state.disabled = false;
+    state.hiddenTypes = [];
 
     Drupal.hpc_map.states[map_id] = state;
 
@@ -954,12 +956,7 @@
         }
       }
     }
-    if (state.options.map_style == 'donut') {
-      Drupal.hpc_map_donut.updateLegend(state);
-    }
-    if (state.options.map_style == 'circle' && state.options.legend) {
-      Drupal.hpc_map_circle.updateLegend(state);
-    }
+    Drupal.hpc_map.updateLegend(state);
   }
 
   // Switch to a different variant of a map tab.
@@ -1156,6 +1153,9 @@
       // Optionally filter by admin level.
       current_locations = current_locations.filter((d) => d.admin_level == state.admin_level);
     }
+
+    // Filter by visibility.
+    current_locations = current_locations.filter((d) => $('#' + state.map_id + ' .d3-overlay > [object-id="' + d.object_id + '"]').is(":visible"));
 
     // Sort alphabetically.
     current_locations.sort(function(a, b) {
@@ -1457,15 +1457,67 @@
     // Adds new locations.
     if (state.options.map_style == 'donut') {
       Drupal.hpc_map_donut.createLocations(data, sel, proj);
-      Drupal.hpc_map_donut.updateLegend(state);
+      Drupal.hpc_map.updateLegend(state);
     }
     else {
       Drupal.hpc_map_circle.createLocations(data, sel, proj);
-      if (state.options.legend) {
-        Drupal.hpc_map_circle.updateLegend(state);
-      }
+      Drupal.hpc_map.updateLegend(state);
     }
   };
+
+  Drupal.hpc_map.closeDetails = function (state) {
+    if (state.options.popup_style == 'modal') {
+      state.map.closeModal();
+    }
+    else {
+      state.sidebar.hide();
+    }
+  }
+
+  Drupal.hpc_map.updateLegend = function (state) {
+    if (state.options.map_style == 'donut') {
+      Drupal.hpc_map_donut.updateLegend(state);
+    }
+    if (state.options.map_style == 'circle' && state.options.legend) {
+      Drupal.hpc_map_circle.updateLegend(state);
+    }
+    // Add an interactive legend.
+    if ((state.options.map_style == 'donut' || state.options.legend) && state.options.interactive_legend) {
+      let map_id = state.map_id;
+      let items = d3.selectAll('#' + map_id + '-legend ul li.legend-item');
+      if (state.hiddenTypes.length > 0) {
+        state.hiddenTypes.forEach(function (type) {
+          $('#' + map_id + '-legend ul .legend-item[data-type="' + type + '"]').attr('disabled', true);
+          $('#' + map_id + '-legend ul .legend-item[data-type="' + type + '"]').css('opacity', '0.4');
+          $('#' + map_id + ' .d3-overlay > [legend-type="' + type + '"]').css('display', 'none');
+        })
+      }
+      $('#' + map_id + '-legend ul').addClass('interactive-legend');
+      items.on('click', function (event) {
+        // First close the map cards.
+        Drupal.hpc_map.closeDetails(state);
+        // The get the data type and the disabled state.
+        let $legendItem = $(event.target).parent('.legend-item');
+        let dataType = $legendItem.attr('data-type');
+        let disabled = $legendItem.attr('disabled');
+
+        if (!disabled) {
+          // Let's disable this.
+          $legendItem.attr('disabled', true);
+          $('#' + map_id + '-legend ul .legend-item[data-type="' + dataType + '"]').css('opacity', '0.4');
+          $('#' + map_id + ' .d3-overlay > [legend-type="' + dataType + '"]').css('display', 'none');
+          state.hiddenTypes.push(dataType);
+        }
+        else {
+          // Let's enable this again.
+          $legendItem.attr('disabled', false);
+          $('#' + map_id + '-legend ul .legend-item[data-type="' + dataType + '"]').css('opacity', '1');
+          $('#' + map_id + ' .d3-overlay > [legend-type="' + dataType + '"]').css('display', 'inline');
+          state.hiddenTypes = state.hiddenTypes.filter(function(type) { return type !== dataType });
+        }
+      });
+    }
+  }
 
   Drupal.hpc_map.transform = function(transform) {
     // Create a dummy g for calculation purposes only. This will never

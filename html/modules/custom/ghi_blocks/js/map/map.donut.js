@@ -70,8 +70,8 @@
       .remove();
 
     let dedicated_plan_types = ['hrp', 'fa'];
-    let plan_types = $('#' + map_id + ' .leaflet-overlay-pane svg[plan-type]').map(function() {
-      let plan_type = $(this).attr('plan-type');
+    let plan_types = $('#' + map_id + ' .leaflet-overlay-pane svg[legend-type]').map(function() {
+      let plan_type = $(this).attr('legend-type');
       return dedicated_plan_types.indexOf(plan_type) != -1 ? plan_type.toUpperCase() : Drupal.t('Other');
     }).toArray().filter(function (value, index, self) {
       return self.indexOf(value) === index;
@@ -118,10 +118,11 @@
 
     // Build new legend items.
     items.each(function(d, i) {
-
       d3.select(this)
+      .attr('data-type', d.type)
         .append('div')
         .style('background-color', colors[colors.length - 1 - i])
+        .attr('data-type', d.type)
         .attr('class', function() {
           let classes = [
             'legend-icon',
@@ -376,7 +377,7 @@
             .attr('stroke', 'transparent')
             .attr('object-id', d => d.object.object_id)
             .attr('location-name', d => d.object.location_name)
-            .attr('plan-type', d => d.object.plan_type ? d.object.plan_type.toLowerCase() : '')
+            .attr('legend-type', d => d.object.plan_type ? d.object.plan_type.toLowerCase() : '')
             .attr('x', d => d.x)
             .attr('y', d => d.y)
             .attr('id', d => map_id + '--' + d.object.object_id)

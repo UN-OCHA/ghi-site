@@ -52,10 +52,10 @@
   --ghi-primary-button-color-hover: var(--ghi-orange-dark);
 
   // Plan type colors.
-  --ghi-plan-type-hrp: #828282;
-  --ghi-plan-type-fa: #ff716e;
-  --ghi-plan-type-rrp: #fee477;
-  --ghi-plan-type-other: #dbdbdb;
+  --ghi-plan-type-hrp: var(--ghi-yellow);
+  --ghi-plan-type-fa: #f7941e;
+  --ghi-plan-type-rrp: var(--ghi-grey--dark);
+  --ghi-plan-type-other: #ccc;
 
   // Legacy Hum Insight colors.
   --hpc-brown: #464646;

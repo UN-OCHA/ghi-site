@@ -20,6 +20,7 @@
           popup_style: 'sidebar',
           map_tiles_url: map_config.map_tiles_url,
           legend: typeof map_config.legend != 'undefined' ? map_config.legend : false,
+          interactive_legend: true,
         };
         if (typeof map_config.map_style != 'undefined') {
           options.map_style = map_config.map_style;

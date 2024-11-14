@@ -96,16 +96,6 @@
       .exit()
       .remove();
 
-    let dedicated_plan_types = ['hrp', 'fa'];
-    let plan_types = $('#' + map_id + ' .leaflet-overlay-pane svg[plan-type]').map(function() {
-      let plan_type = $(this).attr('plan-type');
-      return dedicated_plan_types.indexOf(plan_type) != -1 ? plan_type.toUpperCase() : Drupal.t('Other');
-    }).toArray().filter(function (value, index, self) {
-      return self.indexOf(value) === index;
-    });
-    sorted_plan_types = ['HRP', 'FA', 'Other'];
-    plan_types = sorted_plan_types.filter(v => plan_types.includes(v));
-
     var legend_items = [];
     for (legend_key of Object.keys(state.options.legend)) {
       legend_items.push({
@@ -134,6 +124,7 @@
     // Build new legend items.
     items.each(function(d, i) {
       d3.select(this)
+        .attr('data-type', d.type)
         .append('div')
         .style('background-color', colors[d.type])
         .attr('class', function() {
@@ -252,6 +243,7 @@
           .attr('opacity', 0)
           .attr('r', 0)
           .attr('object-id', d => d.object_id)
+          .attr('legend-type', d => state.options.legend ? d.plan_type : null)
           .attr('id', d => map_id + '--' + d.object_id)
           .transition()
           .duration(500)
@@ -324,6 +316,18 @@
       var state = Drupal.hpc_map.getMapStateFromContainedElement(this);
       Drupal.hpc_map.focusLocation(this, state, 0);
     });
+
+    // Make sure that tooltips are hidden and spots are unfocused when not
+    // hovering over any circle.
+    $('#' + map_id).on('mousemove', function(event) {
+      let state = Drupal.hpc_map.getMapState(map_id);
+      let location_object = Drupal.hpc_map.getLocationObjectFromUseElement(event.target);
+      let focused_element = state.focused_location ? Drupal.hpc_map.getElementFromDataObject(state.focused_location, state) : null;
+      if (!location_object && focused_element) {
+        Drupal.hpc_map.focusLocation(focused_element, state, 0);
+        return;
+      }
+    })
   }
 
 })(jQuery, Drupal);
