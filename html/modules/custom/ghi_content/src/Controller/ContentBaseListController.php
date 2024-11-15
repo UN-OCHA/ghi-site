@@ -8,8 +8,8 @@ use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\migrate\MigrateMessage;
 use Drupal\migrate\Plugin\Migration;
-use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
 use Drupal\migrate_tools\MigrateBatchExecutable;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
@@ -25,10 +25,28 @@ abstract class ContentBaseListController extends ControllerBase {
   protected $migrationPluginManager;
 
   /**
-   * Public constructor.
+   * The route match service.
+   *
+   * @var \Drupal\Core\Routing\RouteMatchInterface
    */
-  public function __construct(MigrationPluginManagerInterface $migration_plugin_manager) {
-    $this->migrationPluginManager = $migration_plugin_manager;
+  protected $routeMatch;
+
+  /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    $instance = new static();
+    $instance->migrationPluginManager = $container->get('plugin.manager.migration');
+    $instance->routeMatch = $container->get('current_route_match');
+    $instance->time = $container->get('datetime.time');
+    return $instance;
   }
 
   /**
@@ -77,9 +95,12 @@ abstract class ContentBaseListController extends ControllerBase {
     }
     $options = [
       'update' => 0,
+      'configuration' => [
+        'cache_base_time' => $this->time->getRequestTime(),
+      ],
     ];
     if ($tags !== NULL) {
-      $options['configuration'] = ['source_tags' => $tags];
+      $options['configuration']['source_tags'] = $tags;
     }
     $executable = new MigrateBatchExecutable($migration, new MigrateMessage(), $options);
     $executable->batchImport();

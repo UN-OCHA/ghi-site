@@ -233,7 +233,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
 
     // See if we have a cached version already for this request.
     $cache_key = $this->getCacheKey(['url' => $this->getRemoteEndpointUrl()] + ['body' => $post_args['body']]);
-    if (!$this->disableCache && $response = $this->cache($cache_key)) {
+    if (!$this->disableCache && $response = $this->cache($cache_key, NULL, FALSE, $this->cacheBaseTime ?? NULL)) {
       // If we have a cached version, use that.
       return $response;
     }
@@ -269,7 +269,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       // Just catch it for the moment.
     }
     // Store the response in the cache.
-    $this->cache($cache_key, $response);
+    $this->cache($cache_key, $response, FALSE, $this->cacheBaseTime ?? NULL);
     return $response;
   }
 
@@ -478,59 +478,23 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
-  public function importArticles(?array $tags = NULL) {
-    $this->disableCache();
+  public function getImportIds($type, ?array $tags, $cache_base_time = NULL) {
+    $query_name = match ($type) {
+      'article' => 'articleExport',
+      'document' => 'documentExport',
+    };
+    $this->setCacheBaseTime($cache_base_time);
     $query = '{
-      articleExport ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
+      ' . $query_name . ' ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
         count
-        items {
-          id
-          title
-          title_short
-          summary
-          created
-          updated
-          autoVisible
-          forceUpdate
-        }
+        ids
       }
     }';
     $response = $this->query($query);
-    if (!$response->has('articleExport') || !$response->get('articleExport')->items) {
+    if (!$response->has($query_name) || !$response->get($query_name)->count) {
       return [];
     }
-    return array_map(function ($item) {
-      return (array) $item;
-    }, $response->get('articleExport')->items);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function importDocuments(?array $tags = NULL) {
-    $this->disableCache();
-    $query = '{
-      documentExport ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
-        count
-        items {
-          id
-          title
-          title_short
-          summary
-          created
-          updated
-          autoVisible
-          forceUpdate
-        }
-      }
-    }';
-    $response = $this->query($query);
-    if (!$response->has('documentExport') || !$response->get('documentExport')->items) {
-      return [];
-    }
-    return array_map(function ($item) {
-      return (array) $item;
-    }, $response->get('documentExport')->items);
+    return $response->get($query_name)->ids;
   }
 
 }

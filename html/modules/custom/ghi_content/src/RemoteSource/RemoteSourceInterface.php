@@ -186,26 +186,32 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
   public function getLinkMap(RemoteParagraphInterface $paragraph);
 
   /**
-   * Import articles from the remote system.
+   * Get the ids to import for the given type.
    *
-   * @param array $tags
+   * @param string $type
+   *   The type of content.
+   * @param string[] $tags
    *   Optional argument to filter the source data by tag names.
+   * @param int $cache_base_time
+   *   Optional cache base time for the queries.
    *
-   * @return array
-   *   An array of source identifiers.
+   * @return int[]
+   *   An array of ids from the remote source.
    */
-  public function importArticles(?array $tags = NULL);
+  public function getImportIds($type, ?array $tags, $cache_base_time = NULL);
 
   /**
-   * Import documents from the remote system.
+   * Get the ids to import for the given type.
    *
-   * @param array $tags
+   * @param string $type
+   *   The type of content.
+   * @param string[] $tags
    *   Optional argument to filter the source data by tag names.
    *
-   * @return array
-   *   An array of source identifiers.
+   * @return \Iterator
+   *   An iterator object.
    */
-  public function importDocuments(?array $tags = NULL);
+  public function getIterator($type, $tags = NULL);
 
   /**
    * Disable the cache.
@@ -214,5 +220,13 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    *   TRUE to disable the cache, FALSE to use the cache.
    */
   public function disableCache($status = TRUE);
+
+  /**
+   * Set the cache base time for queries..
+   *
+   * @param int $cache_base_time
+   *   The cache base time to use for queries.
+   */
+  public function setCacheBaseTime($cache_base_time);
 
 }

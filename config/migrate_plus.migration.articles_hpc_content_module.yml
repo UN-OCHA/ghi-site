@@ -45,7 +45,7 @@ source:
       label: Tags
       selector: tags
     -
-      name: content_space
+      name: content_space_title
       label: 'Content space'
       selector: content_space/title
   ids:

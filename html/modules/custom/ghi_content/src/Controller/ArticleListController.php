@@ -4,9 +4,7 @@ namespace Drupal\ghi_content\Controller;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Url;
-use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
-use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
 use Drupal\node\NodeInterface;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
@@ -45,21 +43,12 @@ class ArticleListController extends ContentBaseListController {
   protected $articleManager;
 
   /**
-   * Public constructor.
-   */
-  public function __construct(ArticleManager $article_manager, MigrationPluginManagerInterface $migration_plugin_manager) {
-    parent::__construct($migration_plugin_manager);
-    $this->articleManager = $article_manager;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('ghi_content.manager.article'),
-      $container->get('plugin.manager.migration'),
-    );
+    $instance = parent::create($container);
+    $instance->articleManager = $container->get('ghi_content.manager.article');
+    return $instance;
   }
 
   /**
@@ -157,7 +146,8 @@ class ArticleListController extends ContentBaseListController {
   public function updateArticles(?SectionNodeInterface $section = NULL) {
     $redirect_url = Url::fromRoute(self::ARTICLE_LIST_ROUTE)->toString();
     $tags = NULL;
-    if ($section) {
+    $section = $section ?? $this->routeMatch->getParameter('node');
+    if ($section instanceof SectionNodeInterface) {
       $redirect_url = Url::fromRoute('ghi_content.node.articles', ['node' => $section->id()])->toString();
       $tags = $this->articleManager->getTags($section);
     }

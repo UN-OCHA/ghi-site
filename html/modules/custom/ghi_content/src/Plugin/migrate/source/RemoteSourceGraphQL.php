@@ -52,7 +52,6 @@ class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPl
     /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
     $remote_source_manager = $container->get('plugin.manager.remote_source');
     $instance->remoteSource = $remote_source_manager->createInstance($configuration['remote_source']);
-    $instance->sourceTags = $configuration['source_tags'] ?? NULL;
     return $instance;
   }
 
@@ -80,15 +79,12 @@ class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPl
     if (!$type) {
       return [];
     }
-    $tags = property_exists($this->migration, 'configuration') ? ($this->migration->configuration['source_tags'] ?? NULL) : NULL;
-    $this->setSourceTags($tags ?? []);
 
-    $results = match ($type) {
-      'article' => $this->remoteSource->importArticles($tags),
-      'document' => $this->remoteSource->importDocuments($tags),
-    };
-    $object = new \ArrayObject($results);
-    return $object->getIterator();
+    $cache_base_time = $this->migration->configuration['cache_base_time'] ?? NULL;
+    $tags = property_exists($this->migration, 'configuration') ? ($this->migration->configuration['source_tags'] ?? []) : [];
+    $this->setSourceTags($tags);
+    $this->remoteSource->setCacheBaseTime($cache_base_time);
+    return $this->remoteSource->getIterator($type, $tags);
   }
 
   /**
