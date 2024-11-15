@@ -55,12 +55,12 @@ abstract class RemoteContentBase implements RemoteContentInterface {
   /**
    * {@inheritdoc}
    */
-  abstract public function getMajorTags();
+  abstract public function getContentSpaceTags();
 
   /**
    * {@inheritdoc}
    */
-  abstract public function getMinorTags();
+  abstract public function getContentTags();
 
   /**
    * {@inheritdoc}

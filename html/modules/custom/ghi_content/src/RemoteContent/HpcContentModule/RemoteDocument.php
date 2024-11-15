@@ -153,14 +153,14 @@ class RemoteDocument extends RemoteDocumentBase {
   /**
    * {@inheritdoc}
    */
-  public function getMajorTags() {
+  public function getContentSpaceTags() {
     return $this->data->content_space ? $this->data->content_space->tags : [];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getMinorTags() {
+  public function getContentTags() {
     return $this->data->tags ?? [];
   }
 

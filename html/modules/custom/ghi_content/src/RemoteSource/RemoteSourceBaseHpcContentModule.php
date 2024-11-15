@@ -490,7 +490,6 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
           summary
           created
           updated
-          tags
           autoVisible
           forceUpdate
         }
@@ -520,7 +519,6 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
           summary
           created
           updated
-          tags
           autoVisible
           forceUpdate
         }

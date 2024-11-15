@@ -510,8 +510,8 @@ class ImportManager implements ContainerInjectionInterface {
     }
 
     // Get the tags.
-    $main_tags = $content->getMajorTags() ?? [];
-    $content_tags = $content->getMinorTags() ?? [];
+    $content_space_tags = $content->getContentSpaceTags() ?? [];
+    $content_tags = $content->getContentTags() ?? [];
 
     $update = !$node->get($field_name)->isEmpty();
 
@@ -535,7 +535,7 @@ class ImportManager implements ContainerInjectionInterface {
         $term->save();
       }
       return $term->id() ? $term : NULL;
-    }, array_unique(array_merge($main_tags, $content_tags))));
+    }, array_unique(array_merge($content_space_tags, $content_tags))));
 
     $node->get($field_name)->setValue($terms);
 
