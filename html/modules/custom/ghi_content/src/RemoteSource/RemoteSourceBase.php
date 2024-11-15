@@ -177,7 +177,12 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
   /**
    * {@inheritdoc}
    */
-  abstract public function getImportIds($type, ?array $tags, $cache_base_time = NULL);
+  abstract public function getImportIds($type, ?array $tags);
+
+  /**
+   * {@inheritdoc}
+   */
+  abstract public function getImportData($type, $id);
 
   /**
    * {@inheritdoc}
@@ -210,8 +215,15 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
   /**
    * {@inheritdoc}
    */
-  public function setCacheBaseTime($cache_base_time) {
-    $this->cacheBaseTime = $cache_base_time;
+  public function setCacheBaseTime($timestamp) {
+    $this->cacheBaseTime = $timestamp;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheBaseTime() {
+    return $this->cacheBaseTime;
   }
 
 }
