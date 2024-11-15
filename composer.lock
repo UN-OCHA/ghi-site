@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ab0adeb566aba2ff03c9eab3999ccfb3",
+    "content-hash": "342708cc64222993ef2e3b0c61e74b4b",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -9022,10 +9022,10 @@
         },
         {
             "name": "npm-asset/leaflet-search",
-            "version": "2.9.11",
+            "version": "3.0.11",
             "dist": {
                 "type": "tar",
-                "url": "https://registry.npmjs.org/leaflet-search/-/leaflet-search-2.9.11.tgz"
+                "url": "https://registry.npmjs.org/leaflet-search/-/leaflet-search-3.0.11.tgz"
             },
             "require": {
                 "npm-asset/leaflet": "*"

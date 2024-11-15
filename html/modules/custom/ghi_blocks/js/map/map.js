@@ -404,6 +404,9 @@
               });
             }
           }
+          else if (location_data.plan_type) {
+            location_name = (location_data.location_name + ' ' + location_data.plan_type.toUpperCase()).replace(regex, "<b>$&</b>");
+          }
 
           if (subline) {
             tip.innerHTML = '<span class="location-name">' + location_name + '</span><br />' + '<span class="subline">' + subline + '</span>';
@@ -427,12 +430,18 @@
           I = this.options.initial ? '^' : '';  // Search only initial text.
           icase = !this.options.casesensitive ? 'i' : undefined;
           regSearch = new RegExp(I + text, icase);
-
           for (var object_id in records) {
             let location_data = Drupal.hpc_map.getLocationDataById(state, object_id);
             if (state.options.pcodes_enabled && typeof location_data.pcode != 'undefined') {
               // Search for loccation name annd pcode
               if (regSearch.test(location_data.location_name) || regSearch.test(location_data.pcode)) {
+                frecords[object_id] = records[object_id];
+                found = true;
+              }
+            }
+            else if (location_data.plan_type) {
+              // Search only for location name.
+              if (regSearch.test(location_data.location_name + ' ' + location_data.plan_type)) {
                 frecords[object_id] = records[object_id];
                 found = true;
               }
@@ -457,14 +466,14 @@
           return frecords;
         },
         // Callback for format data to indexed data.
-        formatData: function(json) {
-          var self = this,
-          propName = this.options.propertyName,
-          propLoc = this.options.propertyLoc,
-          i, jsonret = {};
+        formatData: function(obj, json) {
+          // var self = this,
+          let propName = this.options.propertyName;
+          let propLoc = this.options.propertyLoc;
+          let i, jsonret = {};
           for (i in json) {
-            let object_id = self._getPath(json[i], propName);
-            jsonret[object_id] = L.latLng(self._getPath(json[i], propLoc));
+            let object_id = obj._getPath(json[i], propName);
+            jsonret[object_id] = L.latLng(obj._getPath(json[i], propLoc));
           }
           return jsonret;
         },

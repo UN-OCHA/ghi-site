@@ -136,7 +136,7 @@
         "npm-asset/leaflet": "^1.7",
         "npm-asset/leaflet-modal": "^0.2.0",
         "npm-asset/leaflet-providers": "^1.13",
-        "npm-asset/leaflet-search": "^2.9",
+        "npm-asset/leaflet-search": "^3",
         "npm-asset/leaflet-sidebar": "^0.2.2",
         "npm-asset/select2": "^4.0",
         "npm-asset/swiper": "^8.1",
