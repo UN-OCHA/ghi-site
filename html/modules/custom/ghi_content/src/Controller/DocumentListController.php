@@ -4,9 +4,7 @@ namespace Drupal\ghi_content\Controller;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Url;
-use Drupal\ghi_content\ContentManager\DocumentManager;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
-use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
 use Drupal\node\NodeInterface;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
@@ -45,21 +43,12 @@ class DocumentListController extends ContentBaseListController {
   protected $documentManager;
 
   /**
-   * Public constructor.
-   */
-  public function __construct(DocumentManager $document_manager, MigrationPluginManagerInterface $migration_plugin_manager) {
-    parent::__construct($migration_plugin_manager);
-    $this->documentManager = $document_manager;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('ghi_content.manager.document'),
-      $container->get('plugin.manager.migration'),
-    );
+    $instance = parent::create($container);
+    $instance->documentManager = $container->get('ghi_content.manager.document');
+    return $instance;
   }
 
   /**
@@ -158,7 +147,8 @@ class DocumentListController extends ContentBaseListController {
   public function updateDocuments(?SectionNodeInterface $section = NULL) {
     $redirect_url = Url::fromRoute(self::DOCUMENT_LIST_ROUTE)->toString();
     $tags = NULL;
-    if ($section) {
+    $section = $section ?? $this->routeMatch->getParameter('node');
+    if ($section instanceof SectionNodeInterface) {
       $redirect_url = Url::fromRoute('ghi_content.node.documents', ['node' => $section->id()])->toString();
       $tags = $this->documentManager->getTags($section);
     }
