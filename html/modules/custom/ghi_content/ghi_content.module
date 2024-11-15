@@ -628,6 +628,7 @@ function ghi_content_migrate_articles_hpc_content_module_prepare_row(Row $row, M
   $remote_source_instance = \Drupal::service('plugin.manager.remote_source')->createInstance($row->getSource()['remote_source']);
   $remote_article = $remote_source_instance?->getArticle($row->getSource()['id']);
   $row->setSourceProperty('content_space_title', $remote_article?->getContentSpace() ?? NULL);
+  $row->setSourceProperty('tags', $remote_article?->getContentTags() ?? NULL);
 }
 
 /**
@@ -636,6 +637,7 @@ function ghi_content_migrate_articles_hpc_content_module_prepare_row(Row $row, M
 function ghi_content_migrate_documents_hpc_content_module_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
   /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source_instance */
   $remote_source_instance = \Drupal::service('plugin.manager.remote_source')->createInstance($row->getSource()['remote_source']);
-  $remote_article = $remote_source_instance?->getArticle($row->getSource()['id']);
-  $row->setSourceProperty('content_space_title', $remote_article?->getContentSpace() ?? NULL);
+  $remote_document = $remote_source_instance?->getDocument($row->getSource()['id']);
+  $row->setSourceProperty('content_space_title', $remote_document?->getContentSpace() ?? NULL);
+  $row->setSourceProperty('tags', $remote_document?->getContentTags() ?? NULL);
 }
