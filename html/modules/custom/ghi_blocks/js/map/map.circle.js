@@ -321,7 +321,7 @@
     // hovering over any circle.
     $('#' + map_id).on('mousemove', function(event) {
       let state = Drupal.hpc_map.getMapState(map_id);
-      let location_object = Drupal.hpc_map.getLocationObjectFromUseElement(event.target);
+      let location_object = Drupal.hpc_map.getLocationObjectFromContainedElement(event.target);
       let focused_element = state.focused_location ? Drupal.hpc_map.getElementFromDataObject(state.focused_location, state) : null;
       if (!location_object && focused_element) {
         Drupal.hpc_map.focusLocation(focused_element, state, 0);
