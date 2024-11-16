@@ -192,13 +192,24 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    *   The type of content.
    * @param string[] $tags
    *   Optional argument to filter the source data by tag names.
-   * @param int $cache_base_time
-   *   Optional cache base time for the queries.
    *
    * @return int[]
    *   An array of ids from the remote source.
    */
-  public function getImportIds($type, ?array $tags, $cache_base_time = NULL);
+  public function getImportIds($type, ?array $tags);
+
+  /**
+   * Get the import data for a single content item.
+   *
+   * @param string $type
+   *   The type of content.
+   * @param int $id
+   *   The content id.
+   *
+   * @return array
+   *   Raw import data from the remote source.
+   */
+  public function getImportData($type, $id);
 
   /**
    * Get the ids to import for the given type.
@@ -222,11 +233,19 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
   public function disableCache($status = TRUE);
 
   /**
-   * Set the cache base time for queries..
+   * Set the cache base time for queries.
    *
-   * @param int $cache_base_time
+   * @param int $timestamp
    *   The cache base time to use for queries.
    */
-  public function setCacheBaseTime($cache_base_time);
+  public function setCacheBaseTime($timestamp);
+
+  /**
+   * Get the cache base time for queries.
+   *
+   * @return int
+   *   The cache base time to use for queries.
+   */
+  public function getCacheBaseTime();
 
 }

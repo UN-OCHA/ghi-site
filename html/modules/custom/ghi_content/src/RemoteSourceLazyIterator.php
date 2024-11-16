@@ -17,13 +17,6 @@ class RemoteSourceLazyIterator implements \Iterator {
   private int $index = 0;
 
   /**
-   * The raw data from the remote source for a specific item.
-   *
-   * @var array
-   */
-  private array $data;
-
-  /**
    * The array of ids to fetch.
    *
    * @var array
@@ -48,7 +41,7 @@ class RemoteSourceLazyIterator implements \Iterator {
    * Public constructor for the iterator.
    *
    * @param \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source
-   *   The renmote source.
+   *   The remote source.
    * @param string $type
    *   The type of content as a string.
    * @param array $tags
@@ -67,14 +60,13 @@ class RemoteSourceLazyIterator implements \Iterator {
    *   The raw data.
    */
   public function current(): mixed {
-    return $this->data;
+    return $this->remoteSource->getImportData($this->type, $this->ids[$this->index]);
   }
 
   /**
    * Get the next item.
    */
   public function next(): void {
-    $this->data = $this->getItem() ?? [];
     $this->index++;
   }
 
@@ -95,7 +87,7 @@ class RemoteSourceLazyIterator implements \Iterator {
    *   TRUE if valid, FALSE otherwise.
    */
   public function valid(): bool {
-    return !empty($this->data);
+    return isset($this->ids[$this->index]);
   }
 
   /**
@@ -103,17 +95,6 @@ class RemoteSourceLazyIterator implements \Iterator {
    */
   public function rewind(): void {
     $this->index = 0;
-    $this->data = $this->getItem() ?? [];
-  }
-
-  /**
-   * Get the data for the current item.
-   *
-   * @return array
-   *   The raw data from the remote.
-   */
-  private function getItem() {
-    return $this->remoteSource->getContent($this->type, $this->ids[$this->index])?->getRawData() ?? NULL;
   }
 
 }
