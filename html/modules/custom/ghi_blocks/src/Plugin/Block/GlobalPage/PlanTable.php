@@ -158,7 +158,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'data-column-type' => 'percentage',
       ],
       'reached' => [
-        'data' => $this->t('Reached'),
+        'data' => $this->t('% Reached'),
         'data-column-type' => 'percentage',
       ],
       'requirements' => [
@@ -170,7 +170,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'data-column-type' => 'currency',
       ],
       'coverage' => [
-        'data' => $this->t('Coverage'),
+        'data' => $this->t('% Covered'),
         'data-column-type' => 'percentage',
       ],
       'status' => [
@@ -697,7 +697,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'people_reached_percent' => $this->t('% Reached'),
         'total_funding' => $this->t('Funding'),
         'total_requirements' => $this->t('Required'),
-        'funding_progress' => $this->t('Coverage'),
+        'funding_progress' => $this->t('% Covered'),
         'required_footnote' => [
           '#type' => 'textarea',
           '#title' => $this->t('Required footnote'),
