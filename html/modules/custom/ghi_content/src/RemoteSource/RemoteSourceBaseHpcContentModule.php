@@ -496,6 +496,39 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
+  public function getImportMetaData($type, ?array $tags) {
+    $query_name = match ($type) {
+      'article' => 'articleExport',
+      'document' => 'documentExport',
+    };
+    $query = '{
+      ' . $query_name . ' ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
+        count
+        metaData {
+          id
+          title
+          title_short
+          summary
+          created
+          updated
+          status
+          autoVisible
+          forceUpdate
+        }
+      }
+    }';
+    $response = $this->query($query);
+    if (!$response->has($query_name) || !$response->get($query_name)->count) {
+      return [];
+    }
+    return array_map(function ($item) {
+      return (array) $item;
+    }, $response->get($query_name)->metaData);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getImportData($type, $id) {
     $fields = [
       'id',
@@ -504,6 +537,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'summary',
       'created',
       'updated',
+      'status',
       'autoVisible',
       'forceUpdate',
     ];
