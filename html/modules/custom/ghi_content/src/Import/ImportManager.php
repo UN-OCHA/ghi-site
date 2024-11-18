@@ -204,14 +204,20 @@ class ImportManager implements ContainerInjectionInterface {
       $caption = $content->getImageCaptionPlain();
       $image_name = basename($image_url);
       $data = $content->getSource()->getFileContent($image_url);
-      $file = $this->fileRepository->writeData($data, ArticleManager::IMAGE_DIRECTORY . '/' . $image_name, FileSystem::EXISTS_REPLACE);
-      $update = !$node->get($field_name)->isEmpty();
-      $node->get($field_name)->setValue([
-        'target_id' => $file->id(),
-        'alt' => $caption ? Unicode::truncate($caption, 512, TRUE, TRUE) : $node->getTitle(),
-        'title' => NULL,
-      ]);
-      $message = $update ? $this->t('Updated image') : $this->t('Imported image');
+      if (!empty($data)) {
+        $file = $this->fileRepository->writeData($data, ArticleManager::IMAGE_DIRECTORY . '/' . $image_name, FileSystem::EXISTS_REPLACE);
+        $update = !$node->get($field_name)->isEmpty();
+        $node->get($field_name)->setValue([
+          'target_id' => $file->id(),
+          'alt' => $caption ? Unicode::truncate($caption, 512, TRUE, TRUE) : $node->getTitle(),
+          'title' => NULL,
+        ]);
+        $message = $update ? $this->t('Updated image') : $this->t('Imported image');
+      }
+      else {
+        $message = $this->t('Error retrieving image');
+        $node->get($field_name)->setValue(NULL);
+      }
     }
     else {
       if (!$node->get($field_name)->isEmpty()) {
