@@ -3,6 +3,8 @@
 namespace Drupal\ghi_content\Plugin\migrate\source;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\migrate\Event\ImportAwareInterface;
+use Drupal\migrate\Event\MigrateImportEvent;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Plugin\migrate\source\SourcePluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -28,7 +30,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   title = @Translation("Remote Source via GraphQL")
  * )
  */
-class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPluginInterface {
+class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPluginInterface, ImportAwareInterface {
 
   /**
    * The remote source for this migration.
@@ -38,11 +40,18 @@ class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPl
   private $remoteSource;
 
   /**
-   * Optional source tags for a given migration using this source.
+   * The private tempstore.
    *
-   * @var array
+   * @var \Drupal\Core\TempStore\PrivateTempStore
    */
-  private $sourceTags;
+  private $store;
+
+  /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
 
   /**
    * {@inheritdoc}
@@ -52,6 +61,8 @@ class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPl
     /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
     $remote_source_manager = $container->get('plugin.manager.remote_source');
     $instance->remoteSource = $remote_source_manager->createInstance($configuration['remote_source']);
+    $instance->store = $container->get('tempstore.private')->get($migration->id());
+    $instance->time = $container->get('datetime.time');
     return $instance;
   }
 
@@ -79,12 +90,8 @@ class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPl
     if (!$type) {
       return [];
     }
-
-    $cache_base_time = $this->migration->configuration['cache_base_time'] ?? NULL;
-    $tags = property_exists($this->migration, 'configuration') ? ($this->migration->configuration['source_tags'] ?? []) : [];
-    $this->setSourceTags($tags);
-    $this->remoteSource->setCacheBaseTime($cache_base_time);
-    return $this->remoteSource->getIterator($type, $tags);
+    $this->remoteSource->setCacheBaseTime($this->getCacheBaseTime());
+    return $this->remoteSource->getIterator($type, $this->getSourceTags());
   }
 
   /**
@@ -108,13 +115,34 @@ class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPl
   }
 
   /**
+   * Forwarded pre-import event.
+   *
+   * @param \Drupal\migrate\Event\MigrateImportEvent $event
+   *   The import event.
+   */
+  public function preImport(MigrateImportEvent $event) {
+    $this->setCacheBaseTime($this->time->getRequestTime());
+  }
+
+  /**
+   * Forwarded post-import event.
+   *
+   * @param \Drupal\migrate\Event\MigrateImportEvent $event
+   *   The import event.
+   */
+  public function postImport(MigrateImportEvent $event) {
+    $this->store->delete('source_tags');
+    $this->store->delete('cache_base_time');
+  }
+
+  /**
    * Set the tags used to limit the source data.
    *
    * @param array $tags
    *   An array of tag names keyed by tag id.
    */
   public function setSourceTags(array $tags) {
-    $this->sourceTags = $tags;
+    $this->store->set('source_tags', $tags);
   }
 
   /**
@@ -124,7 +152,27 @@ class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPl
    *   An array of tag names keyed by tag id.
    */
   public function getSourceTags() {
-    return $this->sourceTags;
+    return $this->store->get('source_tags');
+  }
+
+  /**
+   * Set the tags used to limit the source data.
+   *
+   * @param int $cache_base_time
+   *   A timestamp to use as the base time for cacheing.
+   */
+  public function setCacheBaseTime($cache_base_time) {
+    $this->store->set('cache_base_time', $cache_base_time);
+  }
+
+  /**
+   * Set the tags used to limit the source data.
+   *
+   * @return int
+   *   A timestamp to use as the base time for cacheing.
+   */
+  public function getCacheBaseTime() {
+    return $this->store->get('cache_base_time');
   }
 
 }
