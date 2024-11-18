@@ -103,6 +103,8 @@ class MigrationBatchController {
         '@updated' => $context['sandbox']['updated'],
         '@name' => $migration->id(),
       ];
+      $source = $migration->getSourcePlugin();
+      $source->cleanup();
     }
 
   }

@@ -133,7 +133,12 @@ class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPl
    * @param \Drupal\migrate\Event\MigrateImportEvent $event
    *   The import event.
    */
-  public function postImport(MigrateImportEvent $event) {
+  public function postImport(MigrateImportEvent $event) {}
+
+  /**
+   * Cleanup our private storage for the current migration.
+   */
+  public function cleanup() {
     $this->store->delete('source_tags');
     $this->store->delete('cache_base_time');
   }
