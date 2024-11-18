@@ -288,3 +288,17 @@ function ghi_base_objects_form_alter(array &$form, FormStateInterface $form_stat
   $migrated_entity_manager = \Drupal::service('migrated_entity_manager');
   $migrated_entity_manager->entityFormAlter($form, $form_state);
 }
+
+/**
+ * Implements hook_autologout_prevent().
+ *
+ * Don't logout using while on a batch processing page.
+ */
+function ghi_base_objects_autologout_prevent() {
+  // getPath is used because Url::fromRoute('<current>')->toString() doesn't
+  // give correct path for XHR request.
+  $url = ltrim(\Drupal::service('path.current')->getPath(), '/');
+  if (str_starts_with($url, 'batch')) {
+    return TRUE;
+  }
+}
