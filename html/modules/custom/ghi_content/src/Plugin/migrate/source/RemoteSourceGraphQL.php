@@ -91,7 +91,10 @@ class RemoteSourceGraphQL extends SourcePluginBase implements ContainerFactoryPl
       return [];
     }
     $this->remoteSource->setCacheBaseTime($this->getCacheBaseTime());
-    return $this->remoteSource->getIterator($type, $this->getSourceTags());
+    $tags = $this->getSourceTags();
+    $results = $this->remoteSource->getImportMetaData($type, $tags);
+    $object = new \ArrayObject($results);
+    return $object->getIterator();
   }
 
   /**

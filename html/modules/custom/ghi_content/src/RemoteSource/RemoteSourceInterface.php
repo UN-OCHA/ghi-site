@@ -199,6 +199,19 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
   public function getImportIds($type, ?array $tags);
 
   /**
+   * Get the import meta data for the given type.
+   *
+   * @param string $type
+   *   The type of content.
+   * @param string[] $tags
+   *   Optional argument to filter the source data by tag names.
+   *
+   * @return array[]
+   *   An array of arrays for the meta data of each article.
+   */
+  public function getImportMetaData($type, ?array $tags);
+
+  /**
    * Get the import data for a single content item.
    *
    * @param string $type
