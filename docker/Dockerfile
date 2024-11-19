@@ -62,7 +62,7 @@ COPY --from=builder /srv/www/docker/etc/nginx/custom /etc/nginx/custom/
 COPY --from=builder /srv/www/docker/etc/nginx/sites-enabled/02_mapbox_proxy_cache.conf /etc/nginx/sites-enabled/02_mapbox_proxy_cache.conf
 COPY --from=builder /srv/www/docker/99-elastic-apm-custom.ini /tmp/99-elastic-apm-custom.ini
 
-RUN APM_ARCH=$(uname -m | sed 's/x86_64/amd64/') && \
+RUN APM_ARCH=$(uname -m) && \
     curl -L -o /tmp/apm-agent-php_1.14.1_${APM_ARCH}.apk https://github.com/elastic/apm-agent-php/releases/download/v1.14.1/apm-agent-php_1.14.1_${APM_ARCH}.apk && \
     apk add --allow-untrusted /tmp/apm-agent-php_1.14.1_${APM_ARCH}.apk && \
     rm -f /tmp/apm-agent-php_1.14.1_${APM_ARCH}.apk && \
