@@ -60,3 +60,9 @@ COPY --from=builder /srv/www/scripts /srv/www/scripts
 COPY --from=builder /srv/www/docker/etc/nginx/ratelimit.conf.template /etc/nginx/ratelimit.conf.template
 COPY --from=builder /srv/www/docker/etc/nginx/custom /etc/nginx/custom/
 COPY --from=builder /srv/www/docker/etc/nginx/sites-enabled/02_mapbox_proxy_cache.conf /etc/nginx/sites-enabled/02_mapbox_proxy_cache.conf
+COPY --from=builder /srv/www/docker/99-elastic-apm-custom.ini /tmp/99-elastic-apm-custom.ini
+
+RUN  curl -L -o /tmp/apm-agent-php_1.14.1_x86_64.apkpm-agent-php_1.14.1_x86_64.apk https://github.com/elastic/apm-agent-php/releases/download/v1.14.1/apm-agent-php_1.14.1_x86_64.apk && \
+     apk add --allow-untrusted /tmp/apm-agent-php_1.14.1_x86_64.apk && \
+     rm -f /tmp/apm-agent-php_1.14.1_x86_64.apk && \
+     mv -f /tmp/99-elastic-apm-custom.ini /etc/php83/conf.d/99-elastic-apm-custom.ini
