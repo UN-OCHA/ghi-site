@@ -1,0 +1,171 @@
+diff --git a/dist/css/components/settings_tray.css b/dist/css/components/settings_tray.css
+index 6c23225..331d484 100644
+--- a/dist/css/components/settings_tray.css
++++ b/dist/css/components/settings_tray.css
+@@ -1,20 +1,20 @@
+-#gin-toolbar-bar.js-settings-tray-edit-mode button.toolbar-icon.toolbar-icon-edit.toolbar-item.is-active {
++#toolbar-bar.gin-toolbar-bar.js-settings-tray-edit-mode button.toolbar-icon.toolbar-icon-edit.toolbar-item.is-active {
+   color: var(--gin-bg-app);
+ }
+ 
+-#gin-toolbar-bar.js-settings-tray-edit-mode {
++#toolbar-bar.gin-toolbar-bar.js-settings-tray-edit-mode {
+   background: var(--gin-color-primary);
+ }
+ 
+-#gin-toolbar-bar.js-settings-tray-edit-mode button.toolbar-icon.toolbar-icon-edit.toolbar-item.is-active:hover {
++#toolbar-bar.gin-toolbar-bar.js-settings-tray-edit-mode button.toolbar-icon.toolbar-icon-edit.toolbar-item.is-active:hover {
+   background: var(--gin-color-primary-hover);
+ }
+ 
+-#gin-toolbar-bar {
++#toolbar-bar.gin-toolbar-bar {
+   position: fixed;
+ }
+ 
+-#gin-toolbar-bar .contextual-toolbar-tab {
++#toolbar-bar.gin-toolbar-bar .contextual-toolbar-tab {
+   order: 100;
+ }
+ 
+@@ -37,4 +37,3 @@
+ #toolbar-bar.toolbar-bar.js-settings-tray-edit-mode button.toolbar-icon.toolbar-icon-edit.toolbar-item.is-active:hover {
+   background-image: none;
+ }
+-
+diff --git a/dist/css/layout/toolbar.css b/dist/css/layout/toolbar.css
+index 4d6522f..8eb3824 100644
+--- a/dist/css/layout/toolbar.css
++++ b/dist/css/layout/toolbar.css
+@@ -176,7 +176,7 @@
+   color: var(--gin-color-text);
+ }
+ 
+-#gin-toolbar-bar.js-settings-tray-edit-mode {
++#toolbar-bar.gin-toolbar-bar.js-settings-tray-edit-mode {
+   justify-content: flex-end;
+ }
+ 
+@@ -760,4 +760,3 @@ a.toolbar-menu__trigger,
+ .toolbar-loading #toolbar-item-administration-tray {
+   box-shadow: none;
+ }
+-
+diff --git a/dist/js/toolbar.js b/dist/js/toolbar.js
+index 87371a2..3912e61 100644
+--- a/dist/js/toolbar.js
++++ b/dist/js/toolbar.js
+@@ -13,11 +13,11 @@
+     }
+   }, Drupal.ginToolbar = {
+     init: function(context) {
+-      once("ginToolbarInit", "#gin-toolbar-bar", context).forEach((() => {
++      once("ginToolbarInit", "#toolbar-bar.gin-toolbar-bar", context).forEach((() => {
+         const toolbarTrigger = document.querySelector(".toolbar-menu__trigger");
+-        "classic" != toolbarVariant && localStorage.getItem("Drupal.toolbar.trayVerticalLocked") && localStorage.removeItem("Drupal.toolbar.trayVerticalLocked"), 
+-        "true" === localStorage.getItem("Drupal.gin.toolbarExpanded") ? (document.body.setAttribute("data-toolbar-menu", "open"), 
+-        toolbarTrigger.classList.add("is-active")) : (document.body.setAttribute("data-toolbar-menu", ""), 
++        "classic" != toolbarVariant && localStorage.getItem("Drupal.toolbar.trayVerticalLocked") && localStorage.removeItem("Drupal.toolbar.trayVerticalLocked"),
++        "true" === localStorage.getItem("Drupal.gin.toolbarExpanded") ? (document.body.setAttribute("data-toolbar-menu", "open"),
++        toolbarTrigger.classList.add("is-active")) : (document.body.setAttribute("data-toolbar-menu", ""),
+         toolbarTrigger.classList.remove("is-active")), document.addEventListener("keydown", (e => {
+           !0 === e.altKey && "KeyT" === e.code && this.toggleToolbar();
+         })), this.initDisplace();
+@@ -26,7 +26,7 @@
+       }))));
+     },
+     initDisplace: () => {
+-      const toolbar = document.querySelector("#gin-toolbar-bar .toolbar-menu-administration");
++      const toolbar = document.querySelector("#toolbar-bar.gin-toolbar-bar .toolbar-menu-administration");
+       toolbar && ("vertical" === toolbarVariant ? toolbar.setAttribute("data-offset-left", "") : toolbar.setAttribute("data-offset-top", ""));
+     },
+     toggleToolbar: function() {
+@@ -34,13 +34,13 @@
+       toolbarTrigger.classList.toggle("is-active"), toolbarTrigger.classList.contains("is-active") ? this.showToolbar() : this.collapseToolbar();
+     },
+     showToolbar: function() {
+-      document.body.setAttribute("data-toolbar-menu", "open"), localStorage.setItem("Drupal.gin.toolbarExpanded", "true"), 
++      document.body.setAttribute("data-toolbar-menu", "open"), localStorage.setItem("Drupal.gin.toolbarExpanded", "true"),
+       this.dispatchToolbarEvent("true"), this.displaceToolbar(), window.innerWidth < 1280 && "vertical" === toolbarVariant && Drupal.ginSidebar.collapseSidebar();
+     },
+     collapseToolbar: function() {
+       const toolbarTrigger = document.querySelector(".toolbar-menu__trigger"), elementToRemove = document.querySelector(".gin-toolbar-inline-styles");
+-      toolbarTrigger.classList.remove("is-active"), document.body.setAttribute("data-toolbar-menu", ""), 
+-      elementToRemove && elementToRemove.parentNode.removeChild(elementToRemove), localStorage.setItem("Drupal.gin.toolbarExpanded", "false"), 
++      toolbarTrigger.classList.remove("is-active"), document.body.setAttribute("data-toolbar-menu", ""),
++      elementToRemove && elementToRemove.parentNode.removeChild(elementToRemove), localStorage.setItem("Drupal.gin.toolbarExpanded", "false"),
+       this.dispatchToolbarEvent("false"), this.displaceToolbar();
+     },
+     dispatchToolbarEvent: active => {
+diff --git a/js/toolbar.js b/js/toolbar.js
+index aa50459..aa76be0 100644
+--- a/js/toolbar.js
++++ b/js/toolbar.js
+@@ -31,7 +31,7 @@
+ 
+   Drupal.ginToolbar = {
+     init: function (context) {
+-      once('ginToolbarInit', '#gin-toolbar-bar', context).forEach(() => {
++      once('ginToolbarInit', '#toolbar-bar.gin-toolbar-bar', context).forEach(() => {
+         const toolbarTrigger = document.querySelector('.toolbar-menu__trigger');
+ 
+         // Check for Drupal trayVerticalLocked and remove it.
+diff --git a/styles/components/settings_tray.scss b/styles/components/settings_tray.scss
+index 9df1f21..40d307a 100644
+--- a/styles/components/settings_tray.scss
++++ b/styles/components/settings_tray.scss
+@@ -1,16 +1,16 @@
+-#gin-toolbar-bar.js-settings-tray-edit-mode button.toolbar-icon.toolbar-icon-edit.toolbar-item.is-active {
++#toolbar-bar.gin-toolbar-bar.js-settings-tray-edit-mode button.toolbar-icon.toolbar-icon-edit.toolbar-item.is-active {
+   color: var(--gin-bg-app);
+ }
+ 
+-#gin-toolbar-bar.js-settings-tray-edit-mode {
++#toolbar-bar.gin-toolbar-bar.js-settings-tray-edit-mode {
+   background: var(--gin-color-primary);
+ }
+ 
+-#gin-toolbar-bar.js-settings-tray-edit-mode button.toolbar-icon.toolbar-icon-edit.toolbar-item.is-active:hover {
++#toolbar-bar.gin-toolbar-bar.js-settings-tray-edit-mode button.toolbar-icon.toolbar-icon-edit.toolbar-item.is-active:hover {
+   background: var(--gin-color-primary-hover);
+ }
+ 
+-#gin-toolbar-bar {
++#toolbar-bar.gin-toolbar-bar {
+   position: fixed;
+ 
+   .contextual-toolbar-tab {
+@@ -36,4 +36,3 @@
+     background-image: none;
+   }
+ }
+-
+diff --git a/styles/layout/toolbar.scss b/styles/layout/toolbar.scss
+index 6e51cf5..d537490 100644
+--- a/styles/layout/toolbar.scss
++++ b/styles/layout/toolbar.scss
+@@ -156,7 +156,7 @@
+   color: var(--gin-color-text);
+ }
+ 
+-#gin-toolbar-bar.js-settings-tray-edit-mode {
++#toolbar-bar.gin-toolbar-bar.js-settings-tray-edit-mode {
+   justify-content: flex-end;
+ }
+ 
+diff --git a/templates/navigation/toolbar--gin.html.twig b/templates/navigation/toolbar--gin.html.twig
+index 908d3eb..2c7829a 100644
+--- a/templates/navigation/toolbar--gin.html.twig
++++ b/templates/navigation/toolbar--gin.html.twig
+@@ -20,9 +20,9 @@
+  * @see template_preprocess_toolbar()
+  */
+ #}
+-{% set gin_toolbar_id = toolbar_variant != 'classic' ? 'gin-toolbar-bar' : 'toolbar-bar' %}
++{% set gin_toolbar_class = toolbar_variant != 'classic' ? 'gin-toolbar-bar' : 'toolbar-bar' %}
+ <div{{ attributes.addClass('toolbar') }}>
+-  <nav{{ toolbar_attributes.addClass('toolbar-bar', 'clearfix').setAttribute('id', gin_toolbar_id) }}>
++  <nav{{ toolbar_attributes.addClass('toolbar-bar', 'clearfix', gin_toolbar_class).setAttribute('id', 'toolbar-bar') }}>
+     <h2 class="visually-hidden">{{ toolbar_heading }}</h2>
+     {% for key, tab in tabs %}
+       {% set tray = trays[key] %}

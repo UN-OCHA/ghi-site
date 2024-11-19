@@ -1,0 +1,13 @@
+diff --git a/webp.module b/webp.module
+index bdd4e35..7b6c056 100644
+--- a/webp.module
++++ b/webp.module
+@@ -109,7 +109,7 @@ function webp_flush_webp_derivatives(EntityInterface $entity) {
+         $file_system = ($file_system) ?: \Drupal::service('file_system'); // Only load once.
+         foreach ($styles as $style) {
+           $derivative_uri = $style->buildUri($file_uri);
+-          $derivative_webp_uri = preg_replace('/\.(png|jpg|jpeg)$/i', '.webp', $derivative_uri);
++          $derivative_webp_uri = $derivative_uri . '.webp';
+ 
+           if (file_exists($derivative_webp_uri)) {
+             try {
