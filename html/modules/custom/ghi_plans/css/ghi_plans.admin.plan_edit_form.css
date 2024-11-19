@@ -30,6 +30,7 @@
 .field--name-field-focus-country-override > fieldset > .fieldset__wrapper > fieldset > .fieldset__wrapper {
   margin: 0;
 }
-.field--name-field-focus-country-override > fieldset > .fieldset__wrapper > fieldset > .fieldset__wrapper > .geofield-map-message{
+.field--name-field-focus-country-override > fieldset > .fieldset__wrapper > fieldset > .fieldset__wrapper > .geofield-map-message,
+.field--name-field-focus-country-override > fieldset > .fieldset__wrapper > fieldset > .fieldset__wrapper .leaflet-control-attribution {
   display: none;
 }

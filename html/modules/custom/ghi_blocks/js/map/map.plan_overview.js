@@ -29,8 +29,8 @@
         if (typeof map_config.search_enabled != 'undefined' && map_config.search_enabled) {
           options.search_enabled = true;
           options.search_options = {
-            placeholder: Drupal.t('Filter by country name'),
-            empty_message: Drupal.t('Be sure to enter a valid country name.'),
+            placeholder: Drupal.t('Search for country or plan'),
+            empty_message: Drupal.t('Try with a different search term.'),
           };
         }
         if (typeof map_config.map_disclaimer != 'undefined') {
