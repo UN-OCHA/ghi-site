@@ -432,6 +432,29 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
+  public function getFileSize($uri) {
+    $options = [
+      'http' => [
+        'method' => 'HEAD',
+      ],
+    ];
+    if ($basic_auth = $this->getRemoteBasicAuth()) {
+      $options['http'] = [
+        'header' => 'Authorization: Basic ' . base64_encode($basic_auth['user'] . ':' . $basic_auth['pass']),
+      ];
+    }
+    $context = stream_context_create($options);
+    $headers = @get_headers($uri, 1, $context);
+    if (!$headers) {
+      return NULL;
+    }
+    $headers = array_change_key_case($headers);
+    return $headers['content-length'] ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getFileContent($uri) {
     $options = [];
     if ($basic_auth = $this->getRemoteBasicAuth()) {
