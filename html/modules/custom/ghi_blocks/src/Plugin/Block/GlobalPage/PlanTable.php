@@ -344,7 +344,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data' => $value_reached,
           'data-raw-value' => $reached_percent,
           'data-column-type' => 'percentage',
-          'data-progress-group' => 'people',
+          'data-progress-group' => 'coverage',
         ],
         'requirements' => [
           'data' => [
