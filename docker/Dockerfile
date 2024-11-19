@@ -1,5 +1,5 @@
 # Build the code.
-FROM public.ecr.aws/unocha/php-k8s:8.3-stable as builder
+FROM public.ecr.aws/unocha/php-k8s:8.3-stable AS builder
 
 ARG  BRANCH_ENVIRONMENT
 ENV  NODE_ENV=$BRANCH_ENVIRONMENT
@@ -55,14 +55,15 @@ COPY --from=builder /srv/www/vendor /srv/www/vendor/
 COPY --from=builder /srv/www/composer.json /srv/www/composer.json
 COPY --from=builder /srv/www/composer.patches.json /srv/www/composer.patches.json
 COPY --from=builder /srv/www/composer.lock /srv/www/composer.lock
-COPY --from=builder /srv/www/patches /srv/www/patches
+COPY --from=builder /srv/www/PATCHES /srv/www/PATCHES
 COPY --from=builder /srv/www/scripts /srv/www/scripts
 COPY --from=builder /srv/www/docker/etc/nginx/ratelimit.conf.template /etc/nginx/ratelimit.conf.template
 COPY --from=builder /srv/www/docker/etc/nginx/custom /etc/nginx/custom/
 COPY --from=builder /srv/www/docker/etc/nginx/sites-enabled/02_mapbox_proxy_cache.conf /etc/nginx/sites-enabled/02_mapbox_proxy_cache.conf
 COPY --from=builder /srv/www/docker/99-elastic-apm-custom.ini /tmp/99-elastic-apm-custom.ini
 
-RUN  curl -L -o /tmp/apm-agent-php_1.14.1_x86_64.apkpm-agent-php_1.14.1_x86_64.apk https://github.com/elastic/apm-agent-php/releases/download/v1.14.1/apm-agent-php_1.14.1_x86_64.apk && \
-     apk add --allow-untrusted /tmp/apm-agent-php_1.14.1_x86_64.apk && \
-     rm -f /tmp/apm-agent-php_1.14.1_x86_64.apk && \
-     mv -f /tmp/99-elastic-apm-custom.ini /etc/php83/conf.d/99-elastic-apm-custom.ini
+RUN APM_ARCH=$(uname -m | sed 's/x86_64/amd64/') && \
+    curl -L -o /tmp/apm-agent-php_1.14.1_${APM_ARCH}.apk https://github.com/elastic/apm-agent-php/releases/download/v1.14.1/apm-agent-php_1.14.1_${APM_ARCH}.apk && \
+    apk add --allow-untrusted /tmp/apm-agent-php_1.14.1_${APM_ARCH}.apk && \
+    rm -f /tmp/apm-agent-php_1.14.1_${APM_ARCH}.apk && \
+    mv -f /tmp/99-elastic-apm-custom.ini /etc/php83/conf.d/99-elastic-apm-custom.ini
