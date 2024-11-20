@@ -596,13 +596,16 @@ class LogframeManager implements ContainerInjectionInterface {
   public function getEntityTypesFromNode(LogframeSubpage $node) {
     $section = $node->getParentBaseNode();
     if (!$section instanceof SectionNodeInterface) {
-      return NULL;
+      return [];
     }
     $plan_object = $section->getBaseObject();
     if (!$plan_object instanceof Plan) {
-      return NULL;
+      return [];
     }
     $entity_types = $this->getEntityTypesFromPlanObject($plan_object);
+    if (empty($entity_types)) {
+      return [];
+    }
     $entity_types = array_filter($entity_types, function ($ref_code) use ($node) {
       return !empty($this->getPlanEntities($node, $ref_code));
     }, ARRAY_FILTER_USE_KEY);
@@ -659,7 +662,7 @@ class LogframeManager implements ContainerInjectionInterface {
   public function getEntityTypesFromPlanObject(Plan $plan) {
     $prototype = $this->getPlanPrototype($plan);
     if (!$prototype) {
-      return NULL;
+      return [];
     }
 
     $entity_types = [
