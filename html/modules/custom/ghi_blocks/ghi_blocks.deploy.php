@@ -382,7 +382,7 @@ function ghi_blocks_deploy_9007_update_link_configuration_page_templates(&$sandb
 }
 
 /**
- * Update link configuration for plan headline figures element.
+ * Update configuration for plan overview map.
  */
 function ghi_blocks_deploy_9008_update_plan_overview_map(&$sandbox) {
   $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
