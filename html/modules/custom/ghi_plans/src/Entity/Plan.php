@@ -5,6 +5,7 @@ namespace Drupal\ghi_plans\Entity;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
@@ -80,21 +81,48 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
-   * Get the focus country map location for the plan.
+   * Get the focus country override for the plan.
    *
    * @return object|null
+   *   A latLng object or NULL.
+   */
+  public function getFocusCountryOverride() {
+    if (!$this->hasField('field_focus_country_override') || $this->get('field_focus_country_override')->isEmpty()) {
+      return NULL;
+    }
+    return [
+      (string) $this->get('field_focus_country_override')->lat,
+      (string) $this->get('field_focus_country_override')->lon,
+    ];
+  }
+
+  /**
+   * Get the focus country map location for the plan.
+   *
+   * @return \Drupal\ghi_base_objects\ApiObjects\Country|null
    *   An object describing the map location or NULL.
    */
-  public function getFocusCountryMapLocation() {
+  public function getFocusCountryMapLocation(?Country $default_country = NULL) {
     $focus_country = $this->getFocusCountry();
-    return $focus_country ? (object) [
-      'id' => $focus_country->getSourceId(),
-      'name' => $focus_country->label(),
-      'latLng' => [
-        (string) $focus_country->get('field_latitude')->value,
-        (string) $focus_country->get('field_longitude')->value,
-      ],
+    if (!$focus_country && !$default_country) {
+      return NULL;
+    }
+    $lat_lng = $focus_country ? [
+      (string) $focus_country->get('field_latitude')->value,
+      (string) $focus_country->get('field_longitude')->value,
     ] : NULL;
+    if ($override = $this->getFocusCountryOverride()) {
+      $lat_lng = $override;
+    }
+    if (!$lat_lng) {
+      return NULL;
+    }
+    return new Country((object) [
+      'id' => $focus_country?->getSourceId() ?? $default_country->id(),
+      'name' => $focus_country?->label() ?? $default_country->getName(),
+      'latitude' => $lat_lng[0],
+      'longitude' => $lat_lng[1],
+    ]);
   }
 
   /**

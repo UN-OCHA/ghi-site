@@ -102,4 +102,5 @@ $settings['config_exclude_modules'] = [
   'debug_tools',
   'views_ui',
   'upgrade_status',
+  'stage_file_proxy',
 ];

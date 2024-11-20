@@ -16,12 +16,11 @@
           continue;
         }
         var options = {
-          donut_opts: {
-            min_radius_text: 16,
-            circle_opacity: 1,
-          },
+          base_radius: 7,
           popup_style: 'sidebar',
           map_tiles_url: map_config.map_tiles_url,
+          legend: typeof map_config.legend != 'undefined' ? map_config.legend : false,
+          interactive_legend: true,
         };
         if (typeof map_config.map_style != 'undefined') {
           options.map_style = map_config.map_style;
@@ -30,8 +29,8 @@
         if (typeof map_config.search_enabled != 'undefined' && map_config.search_enabled) {
           options.search_enabled = true;
           options.search_options = {
-            placeholder: Drupal.t('Filter by country name'),
-            empty_message: Drupal.t('Be sure to enter a valid country name.'),
+            placeholder: Drupal.t('Search for country or plan'),
+            empty_message: Drupal.t('Try with a different search term.'),
           };
         }
         if (typeof map_config.map_disclaimer != 'undefined') {
