@@ -7,6 +7,8 @@ dependencies:
     - field.field.base_object.plan.field_decimal_format
     - field.field.base_object.plan.field_description
     - field.field.base_object.plan.field_document_published_on
+    - field.field.base_object.plan.field_focus_country
+    - field.field.base_object.plan.field_focus_country_override
     - field.field.base_object.plan.field_footnotes
     - field.field.base_object.plan.field_language
     - field.field.base_object.plan.field_link_to_fts
@@ -32,6 +34,7 @@ dependencies:
   module:
     - datetime
     - datetime_range
+    - geofield
     - ghi_base_objects
     - ghi_plans
     - link
@@ -71,6 +74,23 @@ content:
       format_type: medium
     third_party_settings: {  }
     weight: 22
+    region: content
+  field_focus_country:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 25
+    region: content
+  field_focus_country_override:
+    type: geofield_default
+    label: above
+    settings:
+      output_format: wkt
+      output_escape: true
+    third_party_settings: {  }
+    weight: 26
     region: content
   field_footnotes:
     type: ghi_footnotes

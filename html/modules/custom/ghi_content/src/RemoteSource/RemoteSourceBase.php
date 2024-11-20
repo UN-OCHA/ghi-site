@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
+use Drupal\ghi_content\RemoteSourceLazyIterator;
 use Drupal\hpc_common\Hid\HidUserData;
 use GuzzleHttp\ClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -66,6 +67,16 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
   protected $disableCache;
 
   /**
+   * The cache base time as a timestamp.
+   *
+   * If set, cached data created before this time will not be used. This is
+   * useful in batch contexts.
+   *
+   * @var int
+   */
+  protected $cacheBaseTime;
+
+  /**
    * Constructs a new remote source object.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, ClientInterface $http_client, RequestStack $request, ConfigFactoryInterface $config_factory, HidUserData $hid_user_data, ArticleManager $article_manager) {
@@ -78,6 +89,7 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
 
     // Set some flags.
     $this->disableCache = FALSE;
+    $this->cacheBaseTime = NULL;
 
     // Init the configuration based on stored values.
     $config = $this->configFactory->get('ghi_content.remote_sources')->getOriginal($this->getPluginId());
@@ -165,6 +177,28 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
   /**
    * {@inheritdoc}
    */
+  abstract public function getImportIds($type, ?array $tags);
+
+  /**
+   * {@inheritdoc}
+   */
+  abstract public function getImportMetaData($type, ?array $tags);
+
+  /**
+   * {@inheritdoc}
+   */
+  abstract public function getImportData($type, $id);
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getIterator($type, $tags = NULL) {
+    return new RemoteSourceLazyIterator($this, $type, $tags ?? []);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getFileContent($uri) {
     return file_get_contents($uri);
   }
@@ -181,6 +215,20 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
    */
   public function disableCache($status = TRUE) {
     $this->disableCache = $status;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setCacheBaseTime($timestamp) {
+    $this->cacheBaseTime = $timestamp;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheBaseTime() {
+    return $this->cacheBaseTime;
   }
 
 }

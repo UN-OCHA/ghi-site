@@ -40,6 +40,8 @@ module:
   file_mdm_font: 0
   filter: 0
   flat_taxonomy: 0
+  geofield: 0
+  geofield_map: 0
   ghi_base_objects: 0
   ghi_blocks: 0
   ghi_content: 0

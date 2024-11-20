@@ -13,3 +13,24 @@
   margin-top: 0;
   margin-bottom: 0;
 }
+
+.field--name-field-focus-country-override > fieldset {
+  border: 0;
+}
+.field--name-field-focus-country-override > fieldset > legend > .fieldset__label {
+  padding: 0;
+}
+.field--name-field-focus-country-override > fieldset > .fieldset__wrapper {
+  margin: 0;
+}
+.field--name-field-focus-country-override > fieldset > .fieldset__wrapper > fieldset {
+  border: 0;
+  margin: 0;
+}
+.field--name-field-focus-country-override > fieldset > .fieldset__wrapper > fieldset > .fieldset__wrapper {
+  margin: 0;
+}
+.field--name-field-focus-country-override > fieldset > .fieldset__wrapper > fieldset > .fieldset__wrapper > .geofield-map-message,
+.field--name-field-focus-country-override > fieldset > .fieldset__wrapper > fieldset > .fieldset__wrapper .leaflet-control-attribution {
+  display: none;
+}

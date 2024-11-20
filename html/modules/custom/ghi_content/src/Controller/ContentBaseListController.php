@@ -4,12 +4,13 @@ namespace Drupal\ghi_content\Controller;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\ghi_content\Plugin\migrate\source\RemoteSourceGraphQL;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\migrate\MigrateMessage;
 use Drupal\migrate\Plugin\Migration;
-use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
 use Drupal\migrate_tools\MigrateBatchExecutable;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
@@ -25,10 +26,28 @@ abstract class ContentBaseListController extends ControllerBase {
   protected $migrationPluginManager;
 
   /**
-   * Public constructor.
+   * The route match service.
+   *
+   * @var \Drupal\Core\Routing\RouteMatchInterface
    */
-  public function __construct(MigrationPluginManagerInterface $migration_plugin_manager) {
-    $this->migrationPluginManager = $migration_plugin_manager;
+  protected $routeMatch;
+
+  /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    $instance = new static();
+    $instance->migrationPluginManager = $container->get('plugin.manager.migration');
+    $instance->routeMatch = $container->get('current_route_match');
+    $instance->time = $container->get('datetime.time');
+    return $instance;
   }
 
   /**
@@ -75,13 +94,14 @@ abstract class ContentBaseListController extends ControllerBase {
       $this->messenger()->addWarning($this->t('The import is currently running. Please try again later.'));
       return new RedirectResponse($redirect);
     }
-    $options = [
-      'update' => 0,
-    ];
-    if ($tags !== NULL) {
-      $options['configuration'] = ['source_tags' => $tags];
+    $source_plugin = $migration->getSourcePlugin();
+    if ($source_plugin instanceof RemoteSourceGraphQL) {
+      $source_plugin->setSourceTags($tags ?? []);
+      // Not quite sure why this is necessary, as it should be done already by
+      // RemoteSourceGraphQL::preImport().
+      $source_plugin->setCacheBaseTime($this->time->getRequestTime());
     }
-    $executable = new MigrateBatchExecutable($migration, new MigrateMessage(), $options);
+    $executable = new MigrateBatchExecutable($migration, new MigrateMessage());
     $executable->batchImport();
     batch_process($redirect);
     $batch = batch_get();

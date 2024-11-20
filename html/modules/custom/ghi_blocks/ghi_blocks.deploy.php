@@ -380,3 +380,55 @@ function ghi_blocks_deploy_9007_update_link_configuration_page_templates(&$sandb
     ]);
   }
 }
+
+/**
+ * Update configuration for plan overview map.
+ */
+function ghi_blocks_deploy_9008_update_plan_overview_map(&$sandbox) {
+  $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+    'type' => 'homepage',
+  ]);
+  /** @var \Drupal\ghi_homepage\Entity\Homepage[] $nodes */
+  foreach ($nodes as $node) {
+    $changed = FALSE;
+    if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+      continue;
+    }
+    $sections = $node->get(OverridesSectionStorage::FIELD_NAME)->getValue();
+    if (empty($sections)) {
+      continue;
+    }
+    /** @var \Drupal\layout_builder\Section $section */
+    $section = &$sections[0]['section'];
+    $components = $section->getComponents();
+    if (empty($components)) {
+      continue;
+    }
+    foreach ($components as $component) {
+      if ($component->getPluginId() !== 'global_plan_overview_map') {
+        continue;
+      }
+      $configuration = $component->get('configuration');
+      if (array_key_exists('style', $configuration['hpc'])) {
+        continue;
+      }
+      $configuration['hpc'] = [
+        'style' => $node->getYear() == date('Y') ? 'circle' : 'donut',
+        'search_enabled' => TRUE,
+        'disclaimer' => $configuration['hpc']['map']['disclaimer'],
+        'plan_select' => $configuration['hpc']['plans']['plan_select'],
+        'label' => $configuration['hpc']['label'],
+        'label_display' => $configuration['hpc']['label_display'],
+      ];
+      $component->setConfiguration($configuration);
+      $changed = TRUE;
+    }
+    if ($changed) {
+      $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+      $node->setSyncing(TRUE);
+      $node->save();
+    }
+  }
+
+  return t('Updated map configuration for all homepage nodes');
+}

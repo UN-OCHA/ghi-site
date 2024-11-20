@@ -15,6 +15,9 @@
     "drupal/flat_taxonomy": {
       "Issue #3427628: Hide 'Add child' link from entity operations": "https://www.drupal.org/files/issues/2024-03-13/3427628-hide-add-child-link-2.patch"
     },
+    "drupal/geofield_map": {
+      "Issue #3479680: Hide marker button when the map position is reset": "https://git.drupalcode.org/project/geofield_map/-/merge_requests/22.patch"
+    },
     "drupal/gin": {
       "Issue #3386486: Option to use compact or full breadcrumb navigation": "https://www.drupal.org/files/issues/2024-05-30/3386486-skip-gin-node-breadcrumbs.patch",
       "Issue #3281984: The breadcrumb shows 'Edit <label>' on all entity routes, even canonical/delete routes": "https://www.drupal.org/files/issues/2024-06-14/gin_3281984_cherrypick_for_rc11.patch",

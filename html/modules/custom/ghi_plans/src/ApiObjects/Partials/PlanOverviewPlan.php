@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\ApiObjects\Partials;
 
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
+use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
@@ -451,7 +452,7 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * Get the countries associated to a plan partial.
    *
-   * @return array
+   * @return \Drupal\ghi_base_objects\ApiObjects\Country[]
    *   An array of country objects, keyed by the country id.
    *   Each item has the properties "id", "name" and "latLng".
    */
@@ -461,11 +462,7 @@ class PlanOverviewPlan extends BaseObject {
       return $countries;
     }
     foreach ($this->getRawData()->countries as $country) {
-      $countries[$country->id] = (object) [
-        'id' => $country->id,
-        'name' => $country->name,
-        'latLng' => [(string) $country->latitude, (string) $country->longitude],
-      ];
+      $countries[$country->id] = new Country($country);
     }
     return $countries;
   }
@@ -473,8 +470,8 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * Get the country for a plan.
    *
-   * @return object
-   *   A country object, see self::getCountries() for details.
+   * @return \Drupal\ghi_base_objects\ApiObjects\Country
+   *   A country object.
    */
   public function getCountry() {
     $countries = $this->getCountries();

@@ -63,11 +63,13 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    *
    * @param int $id
    *   The id of the article on the remote.
+   * @param bool $rendered
+   *   Allow to switch off rendering.
    *
    * @return \Drupal\ghi_content\RemoteContent\RemoteArticleInterface
    *   The article object.
    */
-  public function getArticle($id);
+  public function getArticle($id, $rendered = TRUE);
 
   /**
    * Search articles by title.
@@ -85,11 +87,13 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    *
    * @param int $id
    *   The id of the paragraph on the remote.
+   * @param bool $rendered
+   *   Allow to switch off rendering.
    *
    * @return \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface
    *   The result object.
    */
-  public function getParagraph($id);
+  public function getParagraph($id, $rendered = TRUE);
 
   /**
    * Issue a query against a remote source.
@@ -163,7 +167,20 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
   public function getContentUrl($id, $type = 'canonical');
 
   /**
-   * Get the file data for the given url.
+   * Get the file size for the given url.
+   *
+   * This should be done without transferring the file.
+   *
+   * @param string $uri
+   *   The URI as a string.
+   *
+   * @return int
+   *   The size of the file content.
+   */
+  public function getFileSize($uri);
+
+  /**
+   * Get the file content for the given url.
    *
    * @param string $uri
    *   The URI as a string.
@@ -186,26 +203,56 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
   public function getLinkMap(RemoteParagraphInterface $paragraph);
 
   /**
-   * Import articles from the remote system.
+   * Get the ids to import for the given type.
    *
-   * @param array $tags
+   * @param string $type
+   *   The type of content.
+   * @param string[] $tags
    *   Optional argument to filter the source data by tag names.
    *
-   * @return array
-   *   An array of source identifiers.
+   * @return int[]
+   *   An array of ids from the remote source.
    */
-  public function importArticles(?array $tags = NULL);
+  public function getImportIds($type, ?array $tags);
 
   /**
-   * Import documents from the remote system.
+   * Get the import meta data for the given type.
    *
-   * @param array $tags
+   * @param string $type
+   *   The type of content.
+   * @param string[] $tags
    *   Optional argument to filter the source data by tag names.
    *
-   * @return array
-   *   An array of source identifiers.
+   * @return array[]
+   *   An array of arrays for the meta data of each article.
    */
-  public function importDocuments(?array $tags = NULL);
+  public function getImportMetaData($type, ?array $tags);
+
+  /**
+   * Get the import data for a single content item.
+   *
+   * @param string $type
+   *   The type of content.
+   * @param int $id
+   *   The content id.
+   *
+   * @return array
+   *   Raw import data from the remote source.
+   */
+  public function getImportData($type, $id);
+
+  /**
+   * Get the ids to import for the given type.
+   *
+   * @param string $type
+   *   The type of content.
+   * @param string[] $tags
+   *   Optional argument to filter the source data by tag names.
+   *
+   * @return \Iterator
+   *   An iterator object.
+   */
+  public function getIterator($type, $tags = NULL);
 
   /**
    * Disable the cache.
@@ -214,5 +261,21 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    *   TRUE to disable the cache, FALSE to use the cache.
    */
   public function disableCache($status = TRUE);
+
+  /**
+   * Set the cache base time for queries.
+   *
+   * @param int $timestamp
+   *   The cache base time to use for queries.
+   */
+  public function setCacheBaseTime($timestamp);
+
+  /**
+   * Get the cache base time for queries.
+   *
+   * @return int
+   *   The cache base time to use for queries.
+   */
+  public function getCacheBaseTime();
 
 }

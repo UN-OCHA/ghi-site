@@ -22,6 +22,29 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   use SimpleCacheTrait;
 
   /**
+   * Fetch data from a query.
+   *
+   * @param string $query_name
+   *   The name of the graphql query.
+   * @param array $arguments
+   *   A set of arguments as key value pairs. Can be empty.
+   * @param array $fields
+   *   An set of fields.
+   *
+   * @return mixed
+   *   The resuklt of the query. Most often an object.
+   */
+  private function fetchData($query_name, array $arguments, array $fields) {
+    $argument_string = $this->getArgumentString($arguments);
+    $field_string = $this->getFieldString($fields);
+    $response = $this->query("{ $query_name $argument_string { $field_string }}");
+    if (!$response->has($query_name)) {
+      return NULL;
+    }
+    return $response->get($query_name);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getDocument($id) {
@@ -58,29 +81,14 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'location',
       'text',
     ];
-    $document_data = $this->fetchDocumentData($id, $fields);
+    $document_data = $this->fetchData('document', ['id' => $id], $fields);
     return $document_data ? new RemoteDocument($document_data, $this) : NULL;
-  }
-
-  /**
-   * Fetch data for an article identified by $id.
-   */
-  private function fetchDocumentData($id, array $fields) {
-    $query = '{
-      document(id:' . $id . ') {' . $this->getFieldString($fields) . '}
-    }';
-
-    $response = $this->query($query);
-    if (!$response->has('document')) {
-      return NULL;
-    }
-    return $response->get('document');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getArticle($id) {
+  public function getArticle($id, $rendered = TRUE) {
     $fields = [
       'id',
       'title',
@@ -95,15 +103,15 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'title',
       'tags',
     ];
-    $fields['content'] = [
+    $fields['content'] = array_filter([
       'id',
       'uuid',
       'type',
       'typeLabel',
       'promoted',
-      'rendered',
+      $rendered ? 'rendered' : NULL,
       'configuration',
-    ];
+    ]);
     $fields['image'] = [
       'credits',
       'imageUrl',
@@ -112,55 +120,25 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'location',
       'text',
     ];
-    $article_data = $this->fetchArticleData($id, $fields);
+    $article_data = $this->fetchData('article', ['id' => $id], $fields);
     return $article_data ? new RemoteArticle($article_data, $this) : NULL;
-  }
-
-  /**
-   * Fetch data for an article identified by $id.
-   */
-  private function fetchArticleData($id, array $fields) {
-    $query = '{
-      article(id:' . $id . ') {' . $this->getFieldString($fields) . '}
-    }';
-
-    $response = $this->query($query);
-    if (!$response->has('article')) {
-      return NULL;
-    }
-    return $response->get('article');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getParagraph($id) {
-    $fields = [
+  public function getParagraph($id, $rendered = TRUE) {
+    $fields = array_filter([
       'id',
       'uuid',
       'type',
       'typeLabel',
       'promoted',
-      'rendered',
+      $rendered ? 'rendered' : NULL,
       'configuration',
-    ];
-    $paragraph_data = $this->fetchParagraphData($id, $fields);
+    ]);
+    $paragraph_data = $this->fetchData('paragraph', ['id' => $id], $fields);
     return new RemoteParagraph($paragraph_data, $this);
-  }
-
-  /**
-   * Fetch data for an article identified by $id.
-   */
-  private function fetchParagraphData($id, array $fields) {
-    $query = '{
-      paragraph(id:' . $id . ') {' . $this->getFieldString($fields) . '}
-    }';
-
-    $response = $this->query($query);
-    if (!$response->has('paragraph')) {
-      return NULL;
-    }
-    return $response->get('paragraph');
   }
 
   /**
@@ -233,7 +211,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
 
     // See if we have a cached version already for this request.
     $cache_key = $this->getCacheKey(['url' => $this->getRemoteEndpointUrl()] + ['body' => $post_args['body']]);
-    if (!$this->disableCache && $response = $this->cache($cache_key)) {
+    if (!$this->disableCache && $response = $this->cache($cache_key, NULL, FALSE, $this->cacheBaseTime ?? NULL)) {
       // If we have a cached version, use that.
       return $response;
     }
@@ -252,7 +230,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       $response->setCode($e->getCode());
       return $response;
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       // Just fail silently.
     }
 
@@ -283,6 +261,25 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     $string = str_replace(' /sites/default/files', $base_url . '/sites/default/files', $string);
     $string = str_replace('"/media/oembed', '"' . $base_url . '/media/oembed', $string);
     return $string;
+  }
+
+  /**
+   * Transform an arguments array into a string for use in a GraphQL query.
+   *
+   * @param array $arguments
+   *   The input array.
+   *
+   * @return string
+   *   The resulting string.
+   */
+  private function getArgumentString(array $arguments) {
+    if (empty($arguments)) {
+      return '';
+    }
+    $argument_string = implode(',', array_map(function ($key, $value) {
+      return "$key:$value";
+    }, array_keys($arguments), array_values($arguments)));
+    return $argument_string ? '(' . $argument_string . ')' : '';
   }
 
   /**
@@ -435,6 +432,29 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
+  public function getFileSize($uri) {
+    $options = [
+      'http' => [
+        'method' => 'HEAD',
+      ],
+    ];
+    if ($basic_auth = $this->getRemoteBasicAuth()) {
+      $options['http'] = [
+        'header' => 'Authorization: Basic ' . base64_encode($basic_auth['user'] . ':' . $basic_auth['pass']),
+      ];
+    }
+    $context = stream_context_create($options);
+    $headers = @get_headers($uri, 1, $context);
+    if (!$headers) {
+      return NULL;
+    }
+    $headers = array_change_key_case($headers);
+    return $headers['content-length'] ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getFileContent($uri) {
     $options = [];
     if ($basic_auth = $this->getRemoteBasicAuth()) {
@@ -478,67 +498,73 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
-  public function importArticles(?array $tags = NULL) {
-    $this->disableCache();
+  public function getImportIds($type, ?array $tags) {
+    $query_name = match ($type) {
+      'article' => 'articleExport',
+      'document' => 'documentExport',
+    };
     $query = '{
-      articleExport ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
+      ' . $query_name . ' ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
         count
-        items {
-          id
-          title
-          title_short
-          summary
-          created
-          updated
-          tags
-          content_space {
-            title
-          }
-          autoVisible
-          forceUpdate
-        }
+        ids
       }
     }';
     $response = $this->query($query);
-    if (!$response->has('articleExport') || !$response->get('articleExport')->items) {
+    if (!$response->has($query_name) || !$response->get($query_name)->count) {
       return [];
     }
-    return array_map(function ($item) {
-      return (array) $item;
-    }, $response->get('articleExport')->items);
+    return $response->get($query_name)->ids;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function importDocuments(?array $tags = NULL) {
-    $this->disableCache();
+  public function getImportMetaData($type, ?array $tags) {
+    $query_name = match ($type) {
+      'article' => 'articleExport',
+      'document' => 'documentExport',
+    };
     $query = '{
-      documentExport ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
+      ' . $query_name . ' ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
         count
-        items {
+        metaData {
           id
           title
           title_short
           summary
           created
           updated
-          tags
-          content_space {
-            title
-          }
+          status
           autoVisible
           forceUpdate
         }
       }
     }';
     $response = $this->query($query);
-    if (!$response->has('documentExport') || !$response->get('documentExport')->items) {
+    if (!$response->has($query_name) || !$response->get($query_name)->count) {
       return [];
     }
     return array_map(function ($item) {
       return (array) $item;
-    }, $response->get('documentExport')->items);
+    }, $response->get($query_name)->metaData);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getImportData($type, $id) {
+    $fields = [
+      'id',
+      'title',
+      'title_short',
+      'summary',
+      'created',
+      'updated',
+      'status',
+      'autoVisible',
+      'forceUpdate',
+    ];
+    return (array) $this->fetchData($type, ['id' => $id], $fields);
   }
 
 }

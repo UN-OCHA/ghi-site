@@ -66,6 +66,7 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
         'chart_id' => NULL,
         'map_tabs' => NULL,
         'legend' => FALSE,
+        'map_type' => NULL,
       ],
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'plan-overview-map',

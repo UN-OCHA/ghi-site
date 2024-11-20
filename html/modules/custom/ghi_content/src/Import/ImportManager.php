@@ -200,18 +200,38 @@ class ImportManager implements ContainerInjectionInterface {
     }
     $message = NULL;
     $image_url = $content->getImageUri();
+    /** @var \Drupal\file\FileInterface $local_file */
+    $local_file = !$node->get($field_name)->isEmpty() ? $this->entityTypeManager->getStorage('file')->load($node->get($field_name)->target_id) : NULL;
     if (!empty($image_url)) {
       $caption = $content->getImageCaptionPlain();
       $image_name = basename($image_url);
+
+      // Get the remote and local file size.
+      $file_size_remote = $content->getSource()->getFileSize($image_url);
+      // Use PHPs built-in filesize instead of File::getFielSize because like
+      // that we check if the file is actually there.
+      $file_size_local = $local_file ? @filesize($local_file->getFileUri()) : NULL;
+      if ($file_size_remote == $file_size_local) {
+        // Image already present and downloaded or both images unavailable. No
+        // need for further action.
+        return FALSE;
+      }
+
       $data = $content->getSource()->getFileContent($image_url);
-      $file = $this->fileRepository->writeData($data, ArticleManager::IMAGE_DIRECTORY . '/' . $image_name, FileSystem::EXISTS_REPLACE);
-      $update = !$node->get($field_name)->isEmpty();
-      $node->get($field_name)->setValue([
-        'target_id' => $file->id(),
-        'alt' => $caption ? Unicode::truncate($caption, 512, TRUE, TRUE) : $node->getTitle(),
-        'title' => NULL,
-      ]);
-      $message = $update ? $this->t('Updated image') : $this->t('Imported image');
+      if (!empty($data)) {
+        $file = $this->fileRepository->writeData($data, ArticleManager::IMAGE_DIRECTORY . '/' . $image_name, FileSystem::EXISTS_REPLACE);
+        $update = !$node->get($field_name)->isEmpty();
+        $node->get($field_name)->setValue([
+          'target_id' => $file->id(),
+          'alt' => $caption ? Unicode::truncate($caption, 512, TRUE, TRUE) : $node->getTitle(),
+          'title' => NULL,
+        ]);
+        $message = $update ? $this->t('Updated image') : $this->t('Imported image');
+      }
+      else {
+        $message = $this->t('Error retrieving image');
+        $node->get($field_name)->setValue(NULL);
+      }
     }
     else {
       if (!$node->get($field_name)->isEmpty()) {
@@ -510,8 +530,8 @@ class ImportManager implements ContainerInjectionInterface {
     }
 
     // Get the tags.
-    $main_tags = $content->getMajorTags() ?? [];
-    $content_tags = $content->getMinorTags() ?? [];
+    $content_space_tags = $content->getContentSpaceTags() ?? [];
+    $content_tags = $content->getContentTags() ?? [];
 
     $update = !$node->get($field_name)->isEmpty();
 
@@ -535,7 +555,7 @@ class ImportManager implements ContainerInjectionInterface {
         $term->save();
       }
       return $term->id() ? $term : NULL;
-    }, array_unique(array_merge($main_tags, $content_tags))));
+    }, array_unique(array_merge($content_space_tags, $content_tags))));
 
     $node->get($field_name)->setValue($terms);
 

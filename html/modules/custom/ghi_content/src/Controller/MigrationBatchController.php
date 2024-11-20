@@ -29,8 +29,7 @@ class MigrationBatchController {
   public static function batchProcessCleanup($migration_id, array $options, BaseContentManager $content_manager, &$context) {
     /** @var \Drupal\migrate\Plugin\MigrationInterface $migration */
     $migration = \Drupal::getContainer()->get('plugin.manager.migration')->createInstance($migration_id, $options['configuration'] ?? []);
-
-    if (empty($context['sandbox']['nodes']) || empty($context['sandbox']['source_ids'])) {
+    if (!array_key_exists('nodes', $context['sandbox'])) {
       /** @var \Drupal\ghi_content\Plugin\migrate\source\RemoteSourceGraphQL $source */
       $source = $migration->getSourcePlugin();
       $source_iterator = $source->initializeIterator();
@@ -104,6 +103,8 @@ class MigrationBatchController {
         '@updated' => $context['sandbox']['updated'],
         '@name' => $migration->id(),
       ];
+      $source = $migration->getSourcePlugin();
+      $source->cleanup();
     }
 
   }

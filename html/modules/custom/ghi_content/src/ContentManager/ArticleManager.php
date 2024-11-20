@@ -67,7 +67,7 @@ class ArticleManager extends BaseContentManager {
   /**
    * {@inheritdoc}
    */
-  public function loadRemoteContentForNode(NodeInterface $node, $refresh = FALSE) {
+  public function loadRemoteContentForNode(NodeInterface $node, $refresh = FALSE, $rendered = TRUE) {
     $remote_field = $this->getRemoteFieldName();
     if (!$node->hasField($remote_field)) {
       return;
@@ -81,7 +81,7 @@ class ArticleManager extends BaseContentManager {
     if ($refresh) {
       $remote_source_instance->disableCache();
     }
-    return $remote_source_instance->getArticle($article_id);
+    return $remote_source_instance->getArticle($article_id, $rendered);
   }
 
   /**
@@ -172,7 +172,7 @@ class ArticleManager extends BaseContentManager {
    */
   public function updateNodeFromRemote(NodeInterface $node, $dry_run = FALSE, $reset = FALSE) {
     $remote_field = self::REMOTE_ARTICLE_FIELD;
-    $article = $this->loadRemoteContentForNode($node, TRUE);
+    $article = $this->loadRemoteContentForNode($node, TRUE, FALSE);
     if (!$article) {
       return;
     }

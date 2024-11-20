@@ -89,19 +89,19 @@ interface RemoteDocumentInterface extends RemoteContentInterface {
   public function getImageCaptionMarkup($add_credits = FALSE);
 
   /**
-   * Get the major tags.
+   * Get the content space tags.
    *
    * @return array
-   *   The major tags.
+   *   The content space tags.
    */
-  public function getMajorTags();
+  public function getContentSpaceTags();
 
   /**
-   * Get the minor tags.
+   * Get the tags.
    *
    * @return object[]
-   *   The minor tags.
+   *   The tags.
    */
-  public function getMinorTags();
+  public function getContentTags();
 
 }

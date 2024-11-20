@@ -194,6 +194,13 @@
     return default_monitoring_period;
   }
 
+  /**
+   * Check if the given object is currently visible on the map.
+   */
+  Drupal.hpc_map.objectIsVisible = function(state, object_id) {
+    return $('#' + state.map_id + ' .d3-overlay > [object-id="' + object_id + '"]').is(':visible');
+  }
+
   // Initialize the map.
   Drupal.hpc_map.init = function (map_id, data, options) {
     let defaults = {
@@ -206,6 +213,8 @@
         placeholder: Drupal.t('Filter by location name'),
       },
       pcodes_enabled: true,
+      legend: false,
+      interactive_legend: false,
     };
     options = Object.assign({}, defaults, options);
 
@@ -213,6 +222,7 @@
     state.map_id = map_id;
     state.options = options;
     state.disabled = false;
+    state.hiddenTypes = [];
 
     Drupal.hpc_map.states[map_id] = state;
 
@@ -345,6 +355,16 @@
       state.sidebar = L.control.sidebar(sidebar_id, {
         position: 'right'
       });
+      // And also add an event handler for when it's closed again.
+      state.sidebar.on('hide', function() {
+        let map_id = this._map._container.id;
+        let state = Drupal.hpc_map.getMapState(map_id);
+        if (!state.active_location) {
+          return;
+        }
+        let element = Drupal.hpc_map.getElementFromDataObject(state.active_location, state);
+        Drupal.hpc_map.setActiveLocation(element, null, state);
+      });
       state.map.addControl(state.sidebar);
     }
 
@@ -353,15 +373,15 @@
       search_options = state.options.search_options;
       state.map.addControl( new L.Control.Search({
         sourceData: Drupal.hpc_map.searchSourceData,
-        propertyName: 'location_id',
+        propertyName: 'object_id',
         marker: false,
         collapsed: false,
         initial: false,
         autoCollapseTime: 5 * 60 * 1000, // 5 minutes
         textPlaceholder: search_options.placeholder,
-        getLocationData: function(map_id, location_id) {
+        getLocationData: function(map_id, object_id) {
           let state = Drupal.hpc_map.getMapState(map_id);
-          let location_data = Drupal.hpc_map.getLocationDataById(state, location_id);
+          let location_data = Drupal.hpc_map.getLocationDataById(state, object_id);
           return location_data;
         },
         textErr: function(e) {
@@ -371,14 +391,14 @@
           }) + (search_options.empty_message ? '<br /><span class="subline">' + search_options.empty_message + '</span>' : '');
         },
         // Callback to build every item in the dropdown.
-        buildTip: function(location_id, val) {
+        buildTip: function(object_id, val) {
           let state = Drupal.hpc_map.getMapState(this._map._container.id);
-          let location_data = Drupal.hpc_map.getLocationDataById(state, location_id);
+          let location_data = Drupal.hpc_map.getLocationDataById(state, object_id);
           let search_text = this._input.value.replace(/[.*+?^${}()|[\]\\]/g, '');
           let regex = new RegExp(search_text, "gi");
-          let location_name = location_data.location_name.replace(regex, "<b>$&</b>");
+          let object_title = location_data.object_title.replace(regex, "<b>$&</b>");
           let tip = L.DomUtil.create('div');
-          tip.setAttribute('data-location-id', location_id);
+          tip.setAttribute('data-object-id', object_id);
           var subline = null;
           if (location_data.admin_level) {
             var subline = Drupal.t('Admin Level !level', {
@@ -391,12 +411,15 @@
               });
             }
           }
+          else if (location_data.plan_type) {
+            object_title = (location_data.object_title + ' ' + location_data.plan_type.toUpperCase()).replace(regex, "<b>$&</b>");
+          }
 
           if (subline) {
-            tip.innerHTML = '<span class="location-name">' + location_name + '</span><br />' + '<span class="subline">' + subline + '</span>';
+            tip.innerHTML = '<span class="location-name">' + object_title + '</span><br />' + '<span class="subline">' + subline + '</span>';
           }
           else {
-            tip.innerHTML = '<span class="location-name">' + location_name + '</span>';
+            tip.innerHTML = '<span class="location-name">' + object_title + '</span>';
           }
           return tip;
         },
@@ -404,7 +427,6 @@
         filterData: function(text, records) {
           let state = Drupal.hpc_map.getMapState(this._map._container.id);
           var I, icase, regSearch, frecords = {};
-          var found = false;
 
           text = text.replace(/[.*+?^${}()|[\]\\]/g, '');  // Sanitize remove all special characters.
           if (text === '') {
@@ -414,26 +436,29 @@
           I = this.options.initial ? '^' : '';  // Search only initial text.
           icase = !this.options.casesensitive ? 'i' : undefined;
           regSearch = new RegExp(I + text, icase);
-
-          for (var location_id in records) {
-            let location_data = Drupal.hpc_map.getLocationDataById(state, location_id);
+          for (var object_id in records) {
+            let location_data = Drupal.hpc_map.getLocationDataById(state, object_id);
             if (state.options.pcodes_enabled && typeof location_data.pcode != 'undefined') {
-              // Search for loccation name annd pcode
-              if (regSearch.test(location_data.location_name) || regSearch.test(location_data.pcode)) {
-                frecords[location_id] = records[location_id];
-                found = true;
+              // Search for location name and pcode
+              if (regSearch.test(location_data.object_title) || regSearch.test(location_data.pcode)) {
+                frecords[object_id] = records[object_id];
+              }
+            }
+            else if (location_data.plan_type) {
+              // Search for location name and plan type.
+              if (regSearch.test(location_data.object_title) || regSearch.test(location_data.plan_type)) {
+                frecords[object_id] = records[object_id];
               }
             }
             else {
               // Search only for location name.
-              if (regSearch.test(location_data.location_name)) {
-                frecords[location_id] = records[location_id];
-                found = true;
+              if (regSearch.test(location_data.object_title)) {
+                frecords[object_id] = records[object_id];
               }
             }
           }
 
-          if (found) {
+          if (Object.keys(frecords).length > 0) {
             // Hide the error alert in case it is currently shown.
             this.hideAlert();
           }
@@ -444,22 +469,29 @@
           return frecords;
         },
         // Callback for format data to indexed data.
-        formatData: function(json) {
-          var self = this,
-          propName = this.options.propertyName,
-          propLoc = this.options.propertyLoc,
-          i, jsonret = {};
+        formatData: function(obj, json) {
+          // var self = this,
+          let propName = this.options.propertyName;
+          let propLoc = this.options.propertyLoc;
+          let i, jsonret = {};
           for (i in json) {
-            let location_id = self._getPath(json[i], propName);
-            jsonret[location_id] = L.latLng(self._getPath(json[i], propLoc));
+            let object_id = obj._getPath(json[i], propName);
+            jsonret[object_id] = L.latLng(obj._getPath(json[i], propLoc));
           }
           return jsonret;
         },
-        moveToLocation: function(latlng, location_id, map) {
+        moveToLocation: function(latlng, object_id, map) {
           let map_id = this._map._container.id;
           let state = Drupal.hpc_map.getMapState(map_id);
-          let location_data = Drupal.hpc_map.getLocationDataById(state, location_id);
+          let location_data = Drupal.hpc_map.getLocationDataById(state, object_id);
           this._input.value = location_data.location_name;
+          if (!Drupal.hpc_map.objectIsVisible(state, object_id) && state.hiddenTypes.length > 0) {
+            // Show all legend items again.
+            state.hiddenTypes.forEach(function (type) {
+              Drupal.hpc_map.enableLegendItem(state, type);
+            });
+            Drupal.hpc_map.updateLegend(state);
+          }
           if (!location_data.admin_level || state.admin_level == location_data.admin_level) {
             Drupal.hpc_map.moveToLocation(latlng, state);
             Drupal.hpc_map.showPopup(location_data, state);
@@ -625,7 +657,7 @@
       });
     }
     // Sort the locations to create a defined order.
-    locations.sort((a, b) => a.location_id - b.location_id);
+    locations.sort((a, b) => a.object_id - b.object_id);
 
     // And finally trigger the creation on the map.
     Drupal.hpc_map.createLocations(locations, sel, proj);
@@ -638,7 +670,7 @@
         let location_data = state.tab_data.locations[i];
         state.search_index.push({
           loc: location_data.latLng,
-          location_id: location_data.location_id,
+          object_id: location_data.object_id,
           location_name: location_data.location_name,
           pcode: location_data.pcode,
           admin_level: location_data.admin_level,
@@ -666,26 +698,26 @@
 
   // Get a dom element based on the given data object.
   Drupal.hpc_map.getElementFromDataObject = function(object, state) {
-    let elements = $('#' + state.map_id).find('svg[location-id=' + object.location_id + '],circle[location-id=' + object.location_id + ']');
+    let elements = $('#' + state.map_id).find('svg[object-id=' + object.object_id + '],circle[object-id=' + object.object_id + ']');
     return elements.length ? elements[0] : null;
   }
 
   // Get a location data object by it's ID.
-  Drupal.hpc_map.getLocationDataById = function(state, location_id) {
+  Drupal.hpc_map.getLocationDataById = function(state, object_id) {
     let filtered_locations = state.tab_data.locations.filter(function(location) {
-      return location.location_id == location_id;
+      return location.object_id == object_id;
     });
     return filtered_locations.length ? filtered_locations[0] : null;
   }
 
-  // Get a location data object from the HTML element or on of its childs.
+  // Get a location data object from the HTML element or one of its childs.
   Drupal.hpc_map.getLocationObjectFromContainedElement = function(element) {
     var contained_element = element.nodeName == 'use' ? Drupal.hpc_map.getElementFromUseElement(element) : $(element);
-    if (location_id = $(contained_element).attr('location-id')) {
+    if (object_id = $(contained_element).attr('object-id')) {
       var state = Drupal.hpc_map.getMapStateFromContainedElement(contained_element);
-      return Drupal.hpc_map.getLocationDataById(state, location_id);
+      return state ? Drupal.hpc_map.getLocationDataById(state, object_id) : null;
     }
-    let parents = $(contained_element).parents('svg[location-id]');
+    let parents = $(contained_element).parents('svg[object-id]');
     return parents.length ? d3.select(parents[0]).data()[0].object : null;
   }
 
@@ -705,8 +737,8 @@
       return null;
     }
     var state = Drupal.hpc_map.getMapStateFromContainedElement(element);
-    let location_id = $(svg_element).attr('location-id');
-    return Drupal.hpc_map.getLocationDataById(state, location_id);
+    let object_id = $(svg_element).attr('object-id');
+    return Drupal.hpc_map.getLocationDataById(state, object_id);
   }
 
   // See if the given data point is empty for the current map state.
@@ -746,11 +778,10 @@
     }
     focus_state = typeof focus_state == 'undefined' ? 1 : focus_state;
     let contained_element = element.nodeName == 'use' ? Drupal.hpc_map.getElementFromUseElement(element) : element;
-    let object = Drupal.hpc_map.getLocationObjectFromContainedElement(contained_element);
-    if (!object || (focus_state && state.focused_location && object.location_id == state.focused_location.location_id)) {
+    let object = Drupal.hpc_map.getLocationObjectFromContainedElement(element);
+    if (!object || (focus_state && state.focused_location && object.object_id == state.focused_location.object_id)) {
       return;
     }
-
     if (focus_state) {
       // If we want to focus a location, make sure there is no other currently
       // focused location on the map.
@@ -776,10 +807,10 @@
     if (focus_state) {
       Drupal.hpc_map.moveLocationToFront(contained_element);
     }
-    else if (state.active_location) {
-      let active_element = Drupal.hpc_map.getElementFromDataObject(state.active_location, state);
-      Drupal.hpc_map.moveLocationToFront(active_element);
-    }
+    // else if (state.active_location) {
+    //   let active_element = Drupal.hpc_map.getElementFromDataObject(state.active_location, state);
+    //   Drupal.hpc_map.moveLocationToFront(active_element);
+    // }
 
   }
 
@@ -804,7 +835,7 @@
     // Move the element to the front.
     // See https://developer.mozilla.org/en-US/docs/Web/SVG/Element/use
     let map_id = Drupal.hpc_map.getMapIdFromContainedElement(element);
-    $(element).parent().find('use').attr('href', '#' + map_id + '--' + object.location_id);
+    $(element).parent().find('use').attr('href', '#' + map_id + '--' + object.object_id);
   }
 
   // Set an element as the currently active one.
@@ -815,7 +846,7 @@
       Drupal.hpc_map.focusLocation(element, state, 0);
       return;
     }
-    if ($(element).attr('data-map-status') == 'active-location' && state.active_location && state.active_location.location_id == object.location_id) {
+    if ($(element).attr('data-map-status') == 'active-location' && state.active_location && state.active_location.object_id == object.object_id) {
       // Just focus the location item on the map.
       Drupal.hpc_map.focusLocation(element, state);
       return;
@@ -858,7 +889,7 @@
     if (!element) {
       return false;
     }
-    return state.active_location.location_id == object.location_id && $(element).attr('data-map-status') == 'active-location';
+    return state.active_location.object_id == object.object_id && $(element).attr('data-map-status') == 'active-location';
   }
 
   // Get the factor for the radius.
@@ -944,9 +975,7 @@
         }
       }
     }
-    if (state.options.map_style == 'donut') {
-      Drupal.hpc_map_donut.updateLegend(state);
-    }
+    Drupal.hpc_map.updateLegend(state);
   }
 
   // Switch to a different variant of a map tab.
@@ -1095,22 +1124,13 @@
 
       // Now show the sidebar.
       state.sidebar.show();
-      // And also add an event handler for when it's closed again.
-      state.sidebar.on('hidden', function() {
-        let map_id = this._map._container.id;
-        let state = Drupal.hpc_map.getMapState(map_id);
-        if (!state.active_location) {
-          return;
-        }
-        let element = Drupal.hpc_map.getElementFromDataObject(state.active_location, state);
-        Drupal.hpc_map.setActiveLocation(element, null, state);
-      });
+
       // Add navigation behavior.
       $(state.sidebar._container).find('.navigation .link').on('click', function() {
-        let location_id = $(this).data('location-id');
+        let object_id = $(this).data('object-id');
         var new_active_location = null;
         $.each(state.tab_data.locations, function(i) {
-          if (state.tab_data.locations[i].location_id == location_id) {
+          if (state.tab_data.locations[i].object_id == object_id) {
             new_active_location = state.tab_data.locations[i];
           }
         });
@@ -1132,11 +1152,11 @@
   Drupal.hpc_map.planModal = function(d, state) {
     var content = Drupal.hpc_map.planModalContent(d, state);
     var tab_data = state.tab_data;
-    var location_id = parseInt(d.location_id);
+    var object_id = parseInt(d.object_id);
 
-    var location_data = tab_data.modal_contents[location_id];
+    var location_data = tab_data.modal_contents[object_id];
     if (state.variant_id && Drupal.hpc_map.dataHasVariant(tab_data, state.variant_id)) {
-      location_data = tab_data.variants[state.variant_id].modal_contents[location_id];
+      location_data = tab_data.variants[state.variant_id].modal_contents[object_id];
     }
     if (!location_data) {
       // The new tab has no data for the currently active location.
@@ -1153,14 +1173,18 @@
       current_locations = current_locations.filter((d) => d.admin_level == state.admin_level);
     }
 
+    // Filter by visibility.
+    current_locations = current_locations.filter((d) => Drupal.hpc_map.objectIsVisible(state, d.object_id));
+
     // Sort alphabetically.
     current_locations.sort(function(a, b) {
-      var a_name = a.location_name.toLowerCase();
-      var b_name = b.location_name.toLowerCase();
+      var a_name = a.hasOwnProperty('sort_key') ? a.sort_key.toLowerCase() : a.location_name.toLowerCase();
+      var b_name = b.hasOwnProperty('sort_key') ? b.sort_key.toLowerCase() : b.location_name.toLowerCase();
       return ((a_name < b_name) ? -1 : ((a_name > b_name) ? 1 : 0));
     });
+
     // Get the current index in the sorted list.
-    let current_location = current_locations.filter((l) => l.location_id == d.location_id)[0];
+    let current_location = current_locations.filter((l) => l.object_id == d.object_id)[0];
     var current_index = current_locations.indexOf(current_location);
 
     let next_index = current_index < current_locations.length - 1 ? current_index + 1 : 0;
@@ -1189,19 +1213,19 @@
   // Create the content for the plan modal.
   Drupal.hpc_map.planModalContent = function(d, state) {
     var tab_data = state.tab_data;
-    var location_id = parseInt(d.location_id);
+    var object_id = parseInt(d.object_id);
 
     var base_data = null;
     if (state.variant_id != null && Drupal.hpc_map.dataHasVariant(tab_data, state.variant_id)) {
       base_data = tab_data.variants[state.variant_id];
     }
-    else if (typeof tab_data.modal_contents[location_id] != 'undefined') {
+    else if (typeof tab_data.modal_contents[object_id] != 'undefined') {
       base_data = tab_data;
     }
     if (!base_data) {
       return false;
     }
-    let modal_content = base_data.modal_contents[location_id];
+    let modal_content = base_data.modal_contents[object_id];
     if (typeof modal_content == 'undefined') {
       return false;
     }
@@ -1251,8 +1275,8 @@
         continue;
       }
       let measurement = measurements[i];
-      let full_segment = measurement.locations[location.location_id][metric_indexes[0]];
-      let partial_segment = measurement.locations[location.location_id][metric_indexes[1]];
+      let full_segment = measurement.locations[location.object_id][metric_indexes[0]];
+      let partial_segment = measurement.locations[location.object_id][metric_indexes[1]];
       let bar_values = {
         'period': measurement.id,
         'measurement': measurement,
@@ -1353,8 +1377,8 @@
         var tooltip = $(event.srcElement).parents('.measurement-bar-chart-container').find('.measurement-bar-chart-tooltip');
         var tooltip_lines = [];
         tooltip_lines.push(d.data.measurement.reporting_period);
-        tooltip_lines.push('<span>' + legend[metric_indexes[0]] + ':</span><span>' + Drupal.theme('number', d.data.measurement.locations[location.location_id][metric_indexes[0]]) + '</span>');
-        tooltip_lines.push('<span>' + legend[metric_indexes[1]] + ':</span><span>' + Drupal.theme('number', d.data.measurement.locations[location.location_id][metric_indexes[1]]) + '</span>');
+        tooltip_lines.push('<span>' + legend[metric_indexes[0]] + ':</span><span>' + Drupal.theme('number', d.data.measurement.locations[location.object_id][metric_indexes[0]]) + '</span>');
+        tooltip_lines.push('<span>' + legend[metric_indexes[1]] + ':</span><span>' + Drupal.theme('number', d.data.measurement.locations[location.object_id][metric_indexes[1]]) + '</span>');
         $(tooltip).html('<div>' + tooltip_lines.join('</div><div>') + '</div>');
 
         $(tooltip).css("display", "block");
@@ -1452,12 +1476,109 @@
     // Adds new locations.
     if (state.options.map_style == 'donut') {
       Drupal.hpc_map_donut.createLocations(data, sel, proj);
-      Drupal.hpc_map_donut.updateLegend(state);
+      Drupal.hpc_map.updateLegend(state);
     }
     else {
       Drupal.hpc_map_circle.createLocations(data, sel, proj);
+      Drupal.hpc_map.updateLegend(state);
     }
   };
+
+  Drupal.hpc_map.closeDetails = function (state) {
+    if (state.options.popup_style == 'modal') {
+      state.map.closeModal();
+    }
+    else {
+      state.sidebar.hide();
+    }
+  }
+
+  Drupal.hpc_map.updateLegend = function (state) {
+    if (state.options.map_style == 'donut') {
+      Drupal.hpc_map_donut.updateLegend(state);
+    }
+    if (state.options.map_style == 'circle' && state.options.legend) {
+      Drupal.hpc_map_circle.updateLegend(state);
+    }
+    // Add an interactive legend.
+    if ((state.options.map_style == 'donut' || state.options.legend) && state.options.interactive_legend) {
+      let map_id = state.map_id;
+      let items = d3.selectAll('#' + map_id + '-legend ul li.legend-item');
+      if (state.hiddenTypes.length > 0) {
+        state.hiddenTypes.forEach(function (type) {
+          Drupal.hpc_map.disableLegendItem(state, type);
+        })
+      }
+      $('#' + map_id + '-legend ul').addClass('interactive-legend');
+      items.on('click', function (event) {
+        $('#' + map_id + ' .d3-overlay > [legend-type]').css('opacity', '1');
+        // First close the map cards.
+        Drupal.hpc_map.closeDetails(state);
+        // The get the data type and the disabled state.
+        let $legendItem = $(event.target).hasClass('legend-item') ? $(event.target) : $(event.target).parent('.legend-item');
+        let dataType = $legendItem.attr('data-type');
+        let disabled = $legendItem.attr('disabled');
+
+        let dataTypes = $('#' + map_id + '-legend ul .legend-item[data-type]').toArray().map((item) => {
+          return $(item).attr('data-type');
+        });
+        if (!disabled && state.hiddenTypes.length == 0) {
+          dataTypes.filter((type) => type != dataType).forEach((type) => {
+            Drupal.hpc_map.disableLegendItem(state, type);
+          });
+        }
+        else if (!disabled && state.hiddenTypes.length == dataTypes.length - 1) {
+          dataTypes.filter((type) => type != dataType).forEach((type) => {
+            Drupal.hpc_map.enableLegendItem(state, type);
+          });
+        }
+        else if (!disabled) {
+          // Let's disable this.
+          Drupal.hpc_map.disableLegendItem(state, dataType);
+        }
+        else {
+          // Let's enable this again.
+          Drupal.hpc_map.enableLegendItem(state, dataType);
+        }
+      });
+
+      // Add a hover effect to the legend items.
+      $('#' + map_id + '-legend ul li.legend-item').hover(function (event) {
+        if (state.hiddenTypes.length > 0) {
+          return;
+        }
+        let dataType = $(event.target).attr('data-type');
+        $('#' + map_id + ' .d3-overlay > :not([legend-type="' + dataType + '"])').css('opacity', '0.4');
+      }, function (event) {
+        if (state.hiddenTypes.length > 0) {
+          return;
+        }
+        $('#' + map_id + ' .d3-overlay > [legend-type]').css('opacity', '1');
+      });
+    }
+  }
+
+  /**
+   * Disable the given legend item type.
+   */
+  Drupal.hpc_map.disableLegendItem = function (state, dataType) {
+    $('#' + state.map_id + '-legend ul li.legend-item[data-type="' + dataType + '"').attr('disabled', true);
+    $('#' + state.map_id + '-legend ul li.legend-item[data-type="' + dataType + '"]').css('opacity', '0.4');
+    $('#' + state.map_id + ' .d3-overlay > [legend-type="' + dataType + '"]').css('display', 'none');
+    if (state.hiddenTypes.indexOf(dataType) == -1) {
+      state.hiddenTypes.push(dataType);
+    }
+  }
+
+  /**
+   * Enable the given legend item type.
+   */
+  Drupal.hpc_map.enableLegendItem = function (state, dataType) {
+    $('#' + state.map_id + '-legend ul li.legend-item[data-type="' + dataType + '"').attr('disabled', false);
+    $('#' + state.map_id + '-legend ul li.legend-item[data-type="' + dataType + '"]').css('opacity', '1');
+    $('#' + state.map_id + ' .d3-overlay > [legend-type="' + dataType + '"]').css('display', 'inline');
+    state.hiddenTypes = state.hiddenTypes.filter(function(type) { return dataType != type });
+  }
 
   Drupal.hpc_map.transform = function(transform) {
     // Create a dummy g for calculation purposes only. This will never

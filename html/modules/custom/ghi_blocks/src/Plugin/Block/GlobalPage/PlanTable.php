@@ -158,7 +158,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'data-column-type' => 'percentage',
       ],
       'reached' => [
-        'data' => $this->t('Reached'),
+        'data' => $this->t('% Reached'),
         'data-column-type' => 'percentage',
       ],
       'requirements' => [
@@ -170,7 +170,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'data-column-type' => 'currency',
       ],
       'coverage' => [
-        'data' => $this->t('Coverage'),
+        'data' => $this->t('% Covered'),
         'data-column-type' => 'percentage',
       ],
       'status' => [
@@ -344,7 +344,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data' => $value_reached,
           'data-raw-value' => $reached_percent,
           'data-column-type' => 'percentage',
-          'data-progress-group' => 'people',
+          'data-progress-group' => 'coverage',
         ],
         'requirements' => [
           'data' => [
@@ -486,9 +486,6 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
   protected function getConfigurationDefaults() {
     return [
       'plans' => [
-        'include' => 'hrp_status',
-        'hrp_status' => 'hrp',
-        'plan_types' => NULL,
         'hide_unpublished' => FALSE,
         'hide_empty_requirements' => FALSE,
       ],
@@ -520,50 +517,6 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       '#tree' => TRUE,
       '#group' => 'tabs',
     ];
-    $form['plans']['include'] = [
-      '#type' => 'radios',
-      '#title' => $this->t('Include plans based on'),
-      '#options' => [
-        'plan_type' => $this->t('Plan type'),
-        'hrp_status' => $this->t('HRP status'),
-      ],
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'plans',
-        'include',
-      ]),
-    ];
-    $form['plans']['hrp_status'] = [
-      '#type' => 'radios',
-      '#title' => $this->t('Plan category'),
-      '#options' => [
-        'hrp' => $this->t('Plans with HRPs'),
-        'nohrp' => $this->t('Plans without HRPs'),
-        'rrp' => $this->t('Regional response plans'),
-      ],
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'plans',
-        'hrp_status',
-      ]),
-      '#states' => [
-        'visible' => [
-          ':input[name="basic[plans][include]"]' => ['value' => 'hrp_status'],
-        ],
-      ],
-    ];
-    $form['plans']['plan_types'] = [
-      '#type' => 'checkboxes',
-      '#title' => $this->t('Plan types'),
-      '#options' => $this->getAvailablePlanTypes(TRUE),
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'plans',
-        'plan_types',
-      ]),
-      '#states' => [
-        'visible' => [
-          ':input[name="basic[plans][include]"]' => ['value' => 'plan_type'],
-        ],
-      ],
-    ];
 
     $form['plans']['hide_unpublished'] = [
       '#type' => 'checkbox',
@@ -572,7 +525,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'plans',
         'hide_unpublished',
       ]),
-      '#description' => $this->t('Check this if plans that have not been imported into HPC Viewer, or that have not been published, should be hidden from the table output.'),
+      '#description' => $this->t('Check this if plans that have not been imported yet, or that have not been published, should be hidden from the table output.'),
     ];
     $form['plans']['hide_empty_requirements'] = [
       '#type' => 'checkbox',
@@ -697,7 +650,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'people_reached_percent' => $this->t('% Reached'),
         'total_funding' => $this->t('Funding'),
         'total_requirements' => $this->t('Required'),
-        'funding_progress' => $this->t('Coverage'),
+        'funding_progress' => $this->t('% Covered'),
         'required_footnote' => [
           '#type' => 'textarea',
           '#title' => $this->t('Required footnote'),
@@ -712,11 +665,6 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'total_funding' => $tooltip_full_amount,
         'total_requirements' => $tooltip_full_amount,
         'funding_progress' => $tooltip_full_decimal,
-      ],
-      '#states' => [
-        'visible' => [
-          ':input[name="basic[plans][include]"]' => ['value' => 'hrp_status'],
-        ],
       ],
     ];
     return $form;
@@ -749,47 +697,6 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     }
 
     $plans_config = $config['plans'] ?? [];
-
-    if (empty($plans_config['include']) || $plans_config['include'] == 'hrp_status') {
-      if (!empty($plans_config['hrp_status']) && $plans_config['hrp_status'] == 'rrp') {
-        // Filter for regional response plans.
-        $plans = array_filter($plans, function ($plan) use ($custom_rows_config) {
-          if ($custom_rows_config['ignore_filters'] && $plan instanceof PlanOverviewPlanMock) {
-            return TRUE;
-          }
-          return $plan->isRrp();
-        });
-      }
-      elseif (!empty($plans_config['hrp_status']) && $plans_config['hrp_status'] == 'nohrp') {
-        // Filter for other plans.
-        $plans = array_filter($plans, function ($plan) use ($custom_rows_config) {
-          if ($custom_rows_config['ignore_filters'] && $plan instanceof PlanOverviewPlanMock) {
-            return TRUE;
-          }
-          return $plan->isOther();
-        });
-      }
-      else {
-        // Filter for HRPs and Flash appeals.
-        $plans = array_filter($plans, function ($plan) use ($custom_rows_config) {
-          if ($custom_rows_config['ignore_filters'] && $plan instanceof PlanOverviewPlanMock) {
-            return TRUE;
-          }
-          return $plan->isHrp() || $plan->isFlashAppeal();
-        });
-      }
-    }
-    elseif (!empty($plans_config['plan_types'])) {
-      // Filter based on selected plan types.
-      $selected_plan_type_tids = array_filter($plans_config['plan_types']);
-      $plans = array_filter($plans, function ($plan) use ($selected_plan_type_tids, $custom_rows_config) {
-        if ($custom_rows_config['ignore_filters'] && $plan instanceof PlanOverviewPlanMock) {
-          return TRUE;
-        }
-        $term = $this->getTermObjectByName($plan->getOriginalTypeName());
-        return $term && in_array($term->id(), $selected_plan_type_tids);
-      });
-    }
 
     // Filter out plans without requirements.
     if (array_key_exists('hide_empty_requirements', $plans_config) && $plans_config['hide_empty_requirements']) {

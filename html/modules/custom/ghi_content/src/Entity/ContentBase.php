@@ -4,6 +4,7 @@ namespace Drupal\ghi_content\Entity;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -51,6 +52,22 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
       }
     }
     return parent::access($operation, $account, $return_as_object);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preSave(EntityStorageInterface $storage) {
+    if ($this->isNew()) {
+      return;
+    }
+    // Make sure that we create new revisions whenever the status changes,
+    // otherwise our logic to determine if a node has been manually unpublished
+    // before in self::unpublishedManually() doesn't work properly.
+    $original = $storage->loadUnchanged($this->id());
+    if ($original instanceof ContentBase && $original->isPublished() != $this->isPublished()) {
+      $this->setNewRevision();
+    }
   }
 
   /**

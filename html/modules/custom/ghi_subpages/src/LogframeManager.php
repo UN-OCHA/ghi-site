@@ -118,6 +118,11 @@ class LogframeManager implements ContainerInjectionInterface {
       return FALSE;
     }
 
+    // Restrict to the sections based on plan objects for now.
+    if (!$node->getParentBaseNode()?->getBaseObject() instanceof Plan) {
+      return FALSE;
+    }
+
     if ($section_storage === NULL) {
       $section_storage = $this->getSectionStorageForEntity($node);
     }
@@ -142,8 +147,7 @@ class LogframeManager implements ContainerInjectionInterface {
     }
 
     // Add the headline figures component.
-    if ($node->getParentNode() instanceof SectionNodeInterface) {
-      $component = $this->buildHeadlineFiguresComponent($node);
+    if ($node->getParentNode() instanceof SectionNodeInterface && $component = $this->buildHeadlineFiguresComponent($node)) {
       $section->appendComponent($component);
     }
 
@@ -162,8 +166,7 @@ class LogframeManager implements ContainerInjectionInterface {
     }
 
     // Add the cluster logframe links.
-    if ($node->getParentNode() instanceof SectionNodeInterface) {
-      $component = $this->buildClusterLogframeLinksComponent($node);
+    if ($node->getParentNode() instanceof SectionNodeInterface && $component = $this->buildClusterLogframeLinksComponent($node)) {
       $section->appendComponent($component);
     }
 
@@ -176,12 +179,15 @@ class LogframeManager implements ContainerInjectionInterface {
    * @param \Drupal\ghi_subpages\Entity\LogframeSubpage $node
    *   The logframe node to which the component should be added.
    *
-   * @return \Drupal\layout_builder\SectionComponent
-   *   A section component object.
+   * @return \Drupal\layout_builder\SectionComponent|null
+   *   A section component object or NULL.
    */
   private function buildHeadlineFiguresComponent(LogframeSubpage $node) {
     $plan = $node->getParentBaseNode()->getBaseObject();
     $prototype = $this->getPlanPrototype($plan);
+    if (!$prototype) {
+      return NULL;
+    }
 
     $definition = $this->blockManager->getDefinition('plan_headline_figures', FALSE);
     $context_mapping = $this->buildContextMappingForBlock($definition, $node);
@@ -246,8 +252,8 @@ class LogframeManager implements ContainerInjectionInterface {
    * @param string $ref_code
    *   The ref code for the component.
    *
-   * @return \Drupal\layout_builder\SectionComponent
-   *   A section component object.
+   * @return \Drupal\layout_builder\SectionComponent|null
+   *   A section component object or NULL.
    */
   private function buildEntityLogframeComponent(LogframeSubpage $node, $ref_code) {
     $entities = $this->getPlanEntities($node, $ref_code);
@@ -590,13 +596,16 @@ class LogframeManager implements ContainerInjectionInterface {
   public function getEntityTypesFromNode(LogframeSubpage $node) {
     $section = $node->getParentBaseNode();
     if (!$section instanceof SectionNodeInterface) {
-      return NULL;
+      return [];
     }
     $plan_object = $section->getBaseObject();
     if (!$plan_object instanceof Plan) {
-      return NULL;
+      return [];
     }
     $entity_types = $this->getEntityTypesFromPlanObject($plan_object);
+    if (empty($entity_types)) {
+      return [];
+    }
     $entity_types = array_filter($entity_types, function ($ref_code) use ($node) {
       return !empty($this->getPlanEntities($node, $ref_code));
     }, ARRAY_FILTER_USE_KEY);
@@ -653,7 +662,7 @@ class LogframeManager implements ContainerInjectionInterface {
   public function getEntityTypesFromPlanObject(Plan $plan) {
     $prototype = $this->getPlanPrototype($plan);
     if (!$prototype) {
-      return NULL;
+      return [];
     }
 
     $entity_types = [

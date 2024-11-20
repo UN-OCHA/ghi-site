@@ -40,6 +40,7 @@
           margin-left: auto;
           padding: 0.5rem;
           text-align: center;
+          background: rgba(251, 251, 251, 0.9);
 
           @include max-width(sm) {
             padding-bottom: 0.3rem;
@@ -140,11 +141,11 @@
             fill: var(--ghi-grey--medium) !important;
           }
 
-          &[plan-type="hrp"] g path:nth-of-type(1) {
+          &[legend-type="hrp"] g path:nth-of-type(1) {
             fill: var(--cd-primary-color) !important;
           }
 
-          &[plan-type="fa"] g path:nth-of-type(1) {
+          &[legend-type="fa"] g path:nth-of-type(1) {
             fill: var(--ghi-widget-color--dark) !important;
           }
         }
@@ -166,34 +167,64 @@
     }
   }
 
-  .map-wrapper-outer .donut .map-legend {
-    top: unset;
-    right: unset;
-    bottom: 3rem;
-    left: 1rem;
+  .map-wrapper-outer {
+    .map-legend {
+      top: unset !important;
+      right: unset !important;
+      bottom: 3rem;
+      left: 1rem;
 
-    ul {
-      flex-direction: column;
-      gap: 0.1rem;
+      ul {
+        flex-direction: column;
+        gap: 0;
 
-      li.legend-item {
-        margin: 0;
-        gap: 0.5rem;
+        li.legend-item {
+          margin: 0 !important;
+          padding: 0.2rem 0.4rem !important;
+          gap: 0.5rem;
 
-        .legend-icon {
-          width: 1rem;
-          height: 1rem;
-          margin-top: 0;
-
-          &.legend-icon-hrp {
-            background-color: var(--cd-primary-color) !important;
+          .legend-icon {
+            width: 1rem !important;
+            height: 1rem !important;
+            margin: 0 !important;
           }
-          &.legend-icon-fa {
-            background-color: var(--ghi-widget-color--dark) !important;
-          }
-          &.legend-icon-other {
-            background-color: var(--ghi-grey--medium) !important;
-          }
+        }
+      }
+    }
+
+    & > .donut .legend-icon {
+      &.legend-icon-hrp {
+        background-color: var(--cd-primary-color) !important;
+      }
+      &.legend-icon-fa {
+        background-color: var(--ghi-widget-color--dark) !important;
+      }
+      &.legend-icon-other {
+        background-color: var(--ghi-grey--medium) !important;
+      }
+    }
+
+    & > .circle .legend-item {
+      &.legend-icon-hrp {
+        background-color: var(--ghi-plan-type-hrp) !important;
+      }
+      &.legend-icon-fa {
+        background-color: var(--ghi-plan-type-fa) !important;
+      }
+      &.legend-icon-rrp {
+        background-color: var(--ghi-plan-type-rrp) !important;
+      }
+      &.legend-icon-other {
+        background-color: var(--ghi-plan-type-other) !important;
+      }
+    }
+
+    ul.interactive-legend {
+      .legend-item {
+        cursor: pointer;
+        &:hover {
+          border-radius: 3px;
+          background-color: var(--ghi-grey--background);
         }
       }
     }
