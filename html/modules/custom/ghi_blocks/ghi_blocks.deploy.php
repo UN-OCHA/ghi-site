@@ -414,7 +414,7 @@ function ghi_blocks_deploy_9008_update_plan_overview_map(&$sandbox) {
       }
       $configuration['hpc'] = [
         'style' => $node->getYear() == date('Y') ? 'circle' : 'donut',
-        'search_enabled' => $configuration['hpc']['map']['search_enabled'],
+        'search_enabled' => TRUE,
         'disclaimer' => $configuration['hpc']['map']['disclaimer'],
         'plan_select' => $configuration['hpc']['plans']['plan_select'],
         'label' => $configuration['hpc']['label'],
