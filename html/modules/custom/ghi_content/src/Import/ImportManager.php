@@ -200,9 +200,23 @@ class ImportManager implements ContainerInjectionInterface {
     }
     $message = NULL;
     $image_url = $content->getImageUri();
+    /** @var \Drupal\file\FileInterface $local_file */
+    $local_file = !$node->get($field_name)->isEmpty() ? $this->entityTypeManager->getStorage('file')->load($node->get($field_name)->target_id) : NULL;
     if (!empty($image_url)) {
       $caption = $content->getImageCaptionPlain();
       $image_name = basename($image_url);
+
+      // Get the remote and local file size.
+      $file_size_remote = $content->getSource()->getFileSize($image_url);
+      // Use PHPs built-in filesize instead of File::getFielSize because like
+      // that we check if the file is actually there.
+      $file_size_local = $local_file ? @filesize($local_file->getFileUri()) : NULL;
+      if ($file_size_remote == $file_size_local) {
+        // Image already present and downloaded or both images unavailable. No
+        // need for further action.
+        return FALSE;
+      }
+
       $data = $content->getSource()->getFileContent($image_url);
       if (!empty($data)) {
         $file = $this->fileRepository->writeData($data, ArticleManager::IMAGE_DIRECTORY . '/' . $image_name, FileSystem::EXISTS_REPLACE);

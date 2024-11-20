@@ -163,7 +163,20 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
   public function getContentUrl($id, $type = 'canonical');
 
   /**
-   * Get the file data for the given url.
+   * Get the file size for the given url.
+   *
+   * This should be done without transferring the file.
+   *
+   * @param string $uri
+   *   The URI as a string.
+   *
+   * @return int
+   *   The size of the file content.
+   */
+  public function getFileSize($uri);
+
+  /**
+   * Get the file content for the given url.
    *
    * @param string $uri
    *   The URI as a string.
