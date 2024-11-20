@@ -50,7 +50,7 @@ class HpcContentModuleTest extends RemoteSourceBaseHpcContentModule implements R
   /**
    * {@inheritdoc}
    */
-  public function getArticle($id) {
+  public function getArticle($id, $rendered = TRUE) {
     $json = $this->getFixture('article', $id);
     return $json->article ? new RemoteArticle($json->article, $this) : NULL;
   }
@@ -66,7 +66,7 @@ class HpcContentModuleTest extends RemoteSourceBaseHpcContentModule implements R
   /**
    * {@inheritdoc}
    */
-  public function getParagraph($id) {
+  public function getParagraph($id, $rendered = TRUE) {
     // @todo Implement this.
     return (object) [];
   }
