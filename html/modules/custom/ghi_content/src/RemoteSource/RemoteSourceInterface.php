@@ -63,11 +63,13 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    *
    * @param int $id
    *   The id of the article on the remote.
+   * @param bool $rendered
+   *   Allow to switch off rendering.
    *
    * @return \Drupal\ghi_content\RemoteContent\RemoteArticleInterface
    *   The article object.
    */
-  public function getArticle($id);
+  public function getArticle($id, $rendered = TRUE);
 
   /**
    * Search articles by title.
@@ -85,11 +87,13 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    *
    * @param int $id
    *   The id of the paragraph on the remote.
+   * @param bool $rendered
+   *   Allow to switch off rendering.
    *
    * @return \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface
    *   The result object.
    */
-  public function getParagraph($id);
+  public function getParagraph($id, $rendered = TRUE);
 
   /**
    * Issue a query against a remote source.

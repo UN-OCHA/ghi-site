@@ -88,7 +88,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
-  public function getArticle($id) {
+  public function getArticle($id, $rendered = TRUE) {
     $fields = [
       'id',
       'title',
@@ -103,15 +103,15 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'title',
       'tags',
     ];
-    $fields['content'] = [
+    $fields['content'] = array_filter([
       'id',
       'uuid',
       'type',
       'typeLabel',
       'promoted',
-      'rendered',
+      $rendered ? 'rendered' : NULL,
       'configuration',
-    ];
+    ]);
     $fields['image'] = [
       'credits',
       'imageUrl',
@@ -127,16 +127,16 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
-  public function getParagraph($id) {
-    $fields = [
+  public function getParagraph($id, $rendered = TRUE) {
+    $fields = array_filter([
       'id',
       'uuid',
       'type',
       'typeLabel',
       'promoted',
-      'rendered',
+      $rendered ? 'rendered' : NULL,
       'configuration',
-    ];
+    ]);
     $paragraph_data = $this->fetchData('paragraph', ['id' => $id], $fields);
     return new RemoteParagraph($paragraph_data, $this);
   }
