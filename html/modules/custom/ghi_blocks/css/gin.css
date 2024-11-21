@@ -33,3 +33,16 @@ body[data-gin-accent] .dialog-off-canvas-main-canvas form .messages-list .messag
 .ui-dialog *:focus {
   box-shadow: none !important;
 }
+
+#layout-builder-modal ul.ui-widget.ui-autocomplete .ui-menu-item-wrapper {
+  display: block;
+  padding: 0.75rem 0.9375rem;
+}
+
+#layout-builder-modal ul.ui-widget.ui-autocomplete .ui-menu-item-wrapper:hover,
+#layout-builder-modal ul.ui-widget.ui-autocomplete .ui-menu-item-wrapper.ui-state-active {
+  color: black;
+  background-color: lightgray;
+  border: 1px solid lightgray;
+  margin: -1px;
+}
