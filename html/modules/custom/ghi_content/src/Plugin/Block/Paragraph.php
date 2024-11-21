@@ -617,7 +617,9 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
 
     // Create a new dom object with the local rendering result.
     $new_dom = new \DOMDocument();
-    $new_dom->loadHTML($render_output, LIBXML_NOWARNING | LIBXML_NOERROR);
+    // Append an xml tag specifying the encoding, see
+    // https://stackoverflow.com/a/8218649
+    $new_dom->loadHTML('<?xml encoding="' . $dom->encoding . '" ?>' . $render_output, LIBXML_NOWARNING | LIBXML_NOERROR);
     $content_node = $this->findArticleContentDomNode($new_dom->getElementsByTagName('article')->item(0), [
       'layout--onecol',
       'layout__region--content',
@@ -682,7 +684,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     // of getting it.
     // @see https://bugs.php.net/bug.php?id=44762
     return implode('', array_map(function (\DOMNode $child) {
-      return mb_convert_encoding($child->ownerDocument->saveXML($child), 'ISO-8859-1');
+      return $child->ownerDocument->saveXML($child);
     }, iterator_to_array($node->childNodes)));
   }
 
