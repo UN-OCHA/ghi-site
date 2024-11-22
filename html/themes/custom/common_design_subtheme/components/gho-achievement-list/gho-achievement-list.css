@@ -21,7 +21,7 @@
     /* Full size col-2 */
     flex: 0 0 calc((100% - 2rem) / 2);
   }
-  .gho-achievement-list .field__items.col-4 > .field__items {
+  .gho-achievement-list .field__items.col-4 > .field__item {
     flex: 0 0 calc((100% - 2rem) / 3);
   }
 }

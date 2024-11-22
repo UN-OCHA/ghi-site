@@ -25,8 +25,11 @@ class GhoFootnotes implements TrustedCallbackInterface {
   public static function updateFootnotes($html, $build) {
     $dom = Html::load($html);
 
+    // Define view modes that should not use accumulated.
+    $single_view_modes = ['preview', 'facts_and_figures'];
+
     $accumulator = [];
-    $accumulated = ($build['#view_mode'] ?? NULL) !== 'preview';
+    $accumulated = !in_array(($build['#view_mode'] ?? NULL), $single_view_modes);
 
     // Process the texts with footnotes.
     foreach (iterator_to_array($dom->getElementsByTagName('gho-footnotes-text')) as $node) {
