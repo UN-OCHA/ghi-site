@@ -45,9 +45,9 @@ source:
       label: Tags
       selector: tags
     -
-      name: content_space_title
+      name: content_space
       label: 'Content space'
-      selector: content_space/title
+      selector: content_space
   ids:
     id:
       type: integer
@@ -92,11 +92,11 @@ process:
     -
       plugin: skip_on_empty
       method: process
-      source: content_space_title
+      source: content_space
     -
       plugin: entity_lookup
       entity_type: taxonomy_term
-      source: content_space_title
+      source: content_space
       bundle_key: vid
       value_key: name
       bundle: content_space
