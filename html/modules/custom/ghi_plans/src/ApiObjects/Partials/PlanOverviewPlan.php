@@ -118,6 +118,16 @@ class PlanOverviewPlan extends BaseObject {
   }
 
   /**
+   * Get the plan type.
+   *
+   * @return \Drupal\taxonomy\TermInterface|null
+   *   The plan type.
+   */
+  public function getPlanType() {
+    return $this->getEntity()?->getPlanType();
+  }
+
+  /**
    * Get the type of a plan.
    *
    * @return string
@@ -125,8 +135,8 @@ class PlanOverviewPlan extends BaseObject {
    */
   public function getOriginalTypeName($fetch_from_entity = FALSE) {
     $type_name = $this->getTypeProperty('name');
-    if ($fetch_from_entity && $plan = $this->getEntity()) {
-      return $type_name = $plan->getPlanType()?->label();
+    if ($fetch_from_entity && $plan_type = $this->getPlanType()) {
+      $type_name = $plan_type->label();
     }
     return $type_name;
   }
@@ -149,7 +159,7 @@ class PlanOverviewPlan extends BaseObject {
    */
   public function getTypeShortName($fetch_from_entity = FALSE) {
     $plan_type_short_name = $this->getPlanTypeShortName($this->getOriginalTypeName($fetch_from_entity));
-    if ($fetch_from_entity && $plan_type = $this->getEntity()?->getPlanType()) {
+    if ($fetch_from_entity && $plan_type = $this->getPlanType()) {
       $plan_type_short_name = $plan_type->get('field_abbreviation')->value ?? $plan_type_short_name;
     }
     return $plan_type_short_name;
