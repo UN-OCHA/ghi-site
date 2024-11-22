@@ -39,6 +39,7 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
       // We support to pass in a value structure from an entity reference (or
       // entity_autocomplete for that matter). We assume it's a node reference.
       'target_node_id' => NestedArray::getValue($link, [0, 'target_id']),
+      'in_gho' => $data->in_gho ?? FALSE,
     ];
   }
 
@@ -107,12 +108,9 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
   }
 
   /**
-   * Get the plan type according to the selection.
-   *
-   * @return \Drupal\taxonomy\Entity\Term
-   *   The term object.
+   * {@inheritdoc}
    */
-  private function getPlanType() {
+  public function getPlanType() {
     return TaxonomyHelper::getTermById($this->getRawData()->plan_type, 'plan_type');
   }
 
@@ -124,26 +122,6 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
    */
   public function getOriginalTypeName($fetch_from_entity = FALSE) {
     return $this->getPlanType()->label();
-  }
-
-  /**
-   * Get the type of a plan.
-   *
-   * @return string
-   *   The plan type name.
-   */
-  public function getTypeName($fetch_from_entity = FALSE) {
-    return $this->getOriginalTypeName();
-  }
-
-  /**
-   * Get the type of a plan.
-   *
-   * @return string
-   *   The plan type name.
-   */
-  public function getTypeShortName($fetch_from_entity = FALSE) {
-    return $this->getPlanTypeShortName($this->getOriginalTypeName());
   }
 
   /**
@@ -161,6 +139,16 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
       return FALSE;
     }
     return $name == $type_name;
+  }
+
+  /**
+   * Check if the plan is part of the GHO.
+   *
+   * @return bool
+   *   TRUE if the plan is partof the GHO, FALSE otherwise.
+   */
+  public function isPartOfGho() {
+    return $this->in_gho ?? FALSE;
   }
 
   /**
