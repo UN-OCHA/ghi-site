@@ -651,6 +651,10 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'total_funding' => $this->t('Funding'),
         'total_requirements' => $this->t('Required'),
         'funding_progress' => $this->t('% Covered'),
+        'in_gho' => [
+          '#type' => 'checkbox',
+          '#title' => $this->t('Part of GHO'),
+        ],
         'required_footnote' => [
           '#type' => 'textarea',
           '#title' => $this->t('Required footnote'),

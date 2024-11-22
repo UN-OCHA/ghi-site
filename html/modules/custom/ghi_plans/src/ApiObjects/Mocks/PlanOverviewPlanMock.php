@@ -39,6 +39,7 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
       // We support to pass in a value structure from an entity reference (or
       // entity_autocomplete for that matter). We assume it's a node reference.
       'target_node_id' => NestedArray::getValue($link, [0, 'target_id']),
+      'in_gho' => $data->in_gho ?? FALSE,
     ];
   }
 
@@ -138,6 +139,16 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
       return FALSE;
     }
     return $name == $type_name;
+  }
+
+  /**
+   * Check if the plan is part of the GHO.
+   *
+   * @return bool
+   *   TRUE if the plan is partof the GHO, FALSE otherwise.
+   */
+  public function isPartOfGho() {
+    return $this->in_gho ?? FALSE;
   }
 
   /**
