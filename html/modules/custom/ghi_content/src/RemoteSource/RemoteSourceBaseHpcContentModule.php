@@ -148,18 +148,19 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     $query = '{
       documentSearch(title:"' . $title . '") {
         count
-        items {
+        metaData {
           id
+          title
         }
       }
     }';
     $response = $this->query($query);
-    if (!$response->has('documentSearch') || !$response->get('documentSearch')->items) {
+    if (!$response->has('documentSearch') || !$response->get('documentSearch')->metaData) {
       return [];
     }
     return array_filter(array_map(function ($item) {
       return $this->getDocument($item->id);
-    }, $response->get('documentSearch')->items));
+    }, $response->get('documentSearch')->metaData));
   }
 
   /**
@@ -169,18 +170,19 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     $query = '{
       articleSearch(title:"' . $title . '") {
         count
-        items {
+        metaData {
           id
+          title
         }
       }
     }';
     $response = $this->query($query);
-    if (!$response->has('articleSearch') || !$response->get('articleSearch')->items) {
+    if (!$response->has('articleSearch') || !$response->get('articleSearch')->metaData) {
       return [];
     }
     return array_filter(array_map(function ($item) {
-      return $this->getArticle($item->id);
-    }, $response->get('articleSearch')->items));
+      return new RemoteArticle($item, $this);
+    }, $response->get('articleSearch')->metaData));
   }
 
   /**
