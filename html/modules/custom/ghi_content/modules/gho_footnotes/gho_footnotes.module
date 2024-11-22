@@ -51,6 +51,9 @@ function gho_footnotes_theme() {
  * Implements hook_node_view_alter().
  */
 function gho_footnotes_node_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  if (!empty($build['#skip_footnotes_processing'])) {
+    return;
+  }
   gho_footnotes_prepare_build($build, $entity);
 }
 
