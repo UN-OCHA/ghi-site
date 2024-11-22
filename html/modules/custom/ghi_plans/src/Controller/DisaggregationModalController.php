@@ -169,7 +169,7 @@ class DisaggregationModalController extends ControllerBase {
         $header[] = [
           'data' => $category,
           'data-sort-type' => 'numeric',
-          'data-column-type' => 'amount',
+          'data-column-type' => $unit_type,
           'data-formatting' => 'numeric-full',
         ];
       }
@@ -178,7 +178,7 @@ class DisaggregationModalController extends ControllerBase {
       $header[] = [
         'data' => $this->t('Totals', [], $t_options),
         'data-sort-type' => 'numeric',
-        'data-column-type' => 'amount',
+        'data-column-type' => $unit_type,
         'data-formatting' => 'numeric-full',
       ];
     }
@@ -217,7 +217,7 @@ class DisaggregationModalController extends ControllerBase {
             ],
             'sorttable_customkey' => $category['data'],
             'data-sort-type' => 'numeric',
-            'data-column-type' => 'amount',
+            'data-column-type' => $unit_type,
             'data-formatting' => 'numeric-full',
           ];
         }
@@ -236,7 +236,7 @@ class DisaggregationModalController extends ControllerBase {
           ],
           'sorttable_customkey' => $location['total'],
           'data-sort-type' => 'numeric',
-          'data-column-type' => 'amount',
+          'data-column-type' => $unit_type,
           'data-formatting' => 'numeric-full',
         ];
         $totals[0] = ($totals[0] ?? 0) + (int) $location['total'];
@@ -255,29 +255,38 @@ class DisaggregationModalController extends ControllerBase {
       foreach ($location['categories'] as $key => $category) {
         $total_row['data'][] = [
           'data' => [
-            '#theme' => 'hpc_amount',
-            '#amount' => $totals[$key],
-            '#scale' => 'full',
+            '#theme' => 'hpc_autoformat_value',
+            '#value' => $totals[$key],
+            '#unit_type' => $unit_type,
+            '#unit_defaults' => $unit_defaults,
             '#decimal_format' => $decimal_format,
           ],
-          'data-column-type' => 'amount',
+          'data-sort-type' => 'numeric',
+          'data-column-type' => $unit_type,
+          'data-formatting' => 'numeric-full',
         ];
       }
     }
     else {
       $total_row['data'][] = [
         'data' => [
-          '#theme' => 'hpc_amount',
-          '#amount' => $totals[0],
-          '#scale' => 'full',
+          '#theme' => 'hpc_autoformat_value',
+          '#value' => $totals[0],
+          '#unit_type' => $unit_type,
+          '#unit_defaults' => $unit_defaults,
           '#decimal_format' => $decimal_format,
         ],
-        'data-column-type' => 'amount',
+        'data-sort-type' => 'numeric',
+        'data-column-type' => $unit_type,
+        'data-formatting' => 'numeric-full',
       ];
     }
 
     return [
       '#theme' => 'table',
+      '#attributes' => [
+        'class' => ['disaggregation-table'],
+      ],
       '#cell_wrapping' => FALSE,
       '#header' => $header,
       '#rows' => $rows,

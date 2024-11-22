@@ -18,7 +18,7 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
  * Preprocess a value using automatic formatting based on the unit.
  */
 function hpc_common_preprocess_hpc_autoformat_value(array &$vars) {
-  $value = $vars['value'];
+  $value = $vars['value'] ?: 0;
   $unit_type = !empty($vars['unit_type']) ? $vars['unit_type'] : 'amount';
 
   $unit_defaults = $vars['unit_defaults'];
