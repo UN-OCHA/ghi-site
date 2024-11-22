@@ -526,8 +526,13 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
    *   A normalized array based on the given node object.
    */
   protected function normalizeContentNodeData(NodeInterface $node) {
+    $migration = $this->getMigration($node);
+    $expected_fields = array_map(function ($item) {
+      return str_contains($item, '/') ? explode('/', $item)[0] : $item;
+    }, array_keys($migration->getProcess()));
+
     $data = $node->toArray();
-    unset($data['changed']);
+    $data = array_intersect_key($data, array_flip($expected_fields));
     ArrayHelper::sortMultiDimensionalArrayByKeys($data);
     ArrayHelper::reduceArray($data);
     $this->moduleHandler->alter('normalize_content', $data);
