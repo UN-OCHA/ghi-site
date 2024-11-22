@@ -8,6 +8,7 @@
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\gho_footnotes\GhoFootnotes;
 
 /**
@@ -61,7 +62,7 @@ function gho_footnotes_node_view_alter(array &$build, EntityInterface $entity, E
  * Implements hook_paragraph_view_alter().
  */
 function gho_footnotes_paragraph_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
-  if ($entity->bundle() === 'text') {
+  if ($entity instanceof FieldableEntityInterface && $entity->hasField('field_text') && $entity->hasField('field_footnotes')) {
     gho_footnotes_prepare_build($build, $entity);
   }
 }
@@ -113,7 +114,16 @@ function gho_footnotes_prepare_build(array &$build, EntityInterface $entity) {
     }
   }
 
-  if ($build['#view_mode'] === 'preview' || $build['#view_mode'] === 'full') {
+  // On edit pages, we want to support different view modes, so that the
+  // footnotes appear rendered more or less correctly in the paragraph preview.
+  $is_edit_page = \Drupal::routeMatch()->getRouteName() == 'entity.node.edit_form';
+  $full_view_modes = array_filter([
+    'preview',
+    'full',
+    $is_edit_page ? 'default' : NULL,
+    $is_edit_page ? 'facts_and_figures' : NULL,
+  ]);
+  if (in_array($build['#view_mode'], $full_view_modes)) {
     // Create a footnote list placeholder.
     $build['footnotes'] = [
       '#type' => 'inline_template',
