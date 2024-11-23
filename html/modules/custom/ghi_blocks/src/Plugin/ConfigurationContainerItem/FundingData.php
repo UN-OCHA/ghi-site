@@ -386,7 +386,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       ],
       'funding_coverage' => [
         'title' => $this->t('Coverage (%)'),
-        'default_label' => $this->t('Coverage'),
+        'default_label' => $this->t('% Funded'),
         'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'funding_coverage',
