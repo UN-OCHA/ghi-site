@@ -230,20 +230,25 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
           ],
           'people_reached' => [
             'label' => $this->t('People latest reached'),
+            'default_label' => $this->t('People reached'),
           ],
           'people_reached_percent' => [
             'label' => $this->t('People latest reached (%)'),
+            'default_label' => $this->t('People reached %'),
           ],
           'total_funding' => [
             'label' => $this->t('Total funding'),
+            'default_label' => $this->t('Funding (US$)'),
             'global_plan_restrict' => TRUE,
           ],
           'total_requirements' => [
             'label' => $this->t('Total requirements'),
+            'default_label' => $this->t('Requirements (US$)'),
             'global_plan_restrict' => TRUE,
           ],
           'funding_progress' => [
-            'label' => $this->t('Funding coverage'),
+            'label' => $this->t('Funding Coverage'),
+            'default_label' => $this->t('% Funded'),
             'global_plan_restrict' => TRUE,
           ],
           'countries_affected' => [

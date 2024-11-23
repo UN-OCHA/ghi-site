@@ -143,7 +143,7 @@ class PlanOverviewMap extends GHIBlockBase {
       ],
       'coverage' => [
         'group' => 'coverage',
-        'label' => $this->t('Coverage'),
+        'label' => $this->t('% Funded'),
         'icon' => 'attach-money',
       ],
     ];
@@ -561,7 +561,7 @@ class PlanOverviewMap extends GHIBlockBase {
         'value' => $this->getRenderedFootnoteTooltip($footnotes, 'funding') . CommonHelper::renderValue($funding->total_funding, 'value', 'hpc_currency', $common_theme_args),
       ],
       'funding_progress' => [
-        'label' => $this->t('Coverage'),
+        'label' => $this->t('% Funded'),
         'value' => ThemeHelper::render([
           '#theme' => 'hpc_percent',
           '#percent' => $funding->funding_progress,
