@@ -12,7 +12,9 @@ use Drupal\ghi_content\RemoteResponse\RemoteResponse;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\ServerException;
+use GuzzleHttp\RequestOptions;
 
 /**
  * HPC Content Module specific remote source base class.
@@ -148,18 +150,19 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     $query = '{
       documentSearch(title:"' . $title . '") {
         count
-        items {
+        metaData {
           id
+          title
         }
       }
     }';
     $response = $this->query($query);
-    if (!$response->has('documentSearch') || !$response->get('documentSearch')->items) {
+    if (!$response->has('documentSearch') || !$response->get('documentSearch')->metaData) {
       return [];
     }
     return array_filter(array_map(function ($item) {
       return $this->getDocument($item->id);
-    }, $response->get('documentSearch')->items));
+    }, $response->get('documentSearch')->metaData));
   }
 
   /**
@@ -169,18 +172,19 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     $query = '{
       articleSearch(title:"' . $title . '") {
         count
-        items {
+        metaData {
           id
+          title
         }
       }
     }';
     $response = $this->query($query);
-    if (!$response->has('articleSearch') || !$response->get('articleSearch')->items) {
+    if (!$response->has('articleSearch') || !$response->get('articleSearch')->metaData) {
       return [];
     }
     return array_filter(array_map(function ($item) {
-      return $this->getArticle($item->id);
-    }, $response->get('articleSearch')->items));
+      return new RemoteArticle($item, $this);
+    }, $response->get('articleSearch')->metaData));
   }
 
   /**
@@ -433,23 +437,19 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
    * {@inheritdoc}
    */
   public function getFileSize($uri) {
-    $options = [
-      'http' => [
-        'method' => 'HEAD',
-      ],
-    ];
     if ($basic_auth = $this->getRemoteBasicAuth()) {
-      $options['http'] = [
-        'header' => 'Authorization: Basic ' . base64_encode($basic_auth['user'] . ':' . $basic_auth['pass']),
+      $options[RequestOptions::AUTH] = [
+        $basic_auth['user'],
+        $basic_auth['pass'],
       ];
     }
-    $context = stream_context_create($options);
-    $headers = @get_headers($uri, 1, $context);
-    if (!$headers) {
+    try {
+      $response = $this->httpClient->head($uri, $options);
+    }
+    catch (GuzzleException $e) {
       return NULL;
     }
-    $headers = array_change_key_case($headers);
-    return $headers['content-length'] ?? NULL;
+    return $response->getHeader('content-length') ?? NULL;
   }
 
   /**
@@ -458,13 +458,13 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   public function getFileContent($uri) {
     $options = [];
     if ($basic_auth = $this->getRemoteBasicAuth()) {
-      $options['http'] = [
-        'method' => 'GET',
-        'header' => 'Authorization: Basic ' . base64_encode($basic_auth['user'] . ':' . $basic_auth['pass']),
+      $options[RequestOptions::AUTH] = [
+        $basic_auth['user'],
+        $basic_auth['pass'],
       ];
     }
-    $context = stream_context_create($options);
-    return @file_get_contents($uri, FALSE, $context);
+    $response = $this->httpClient->get($uri, $options);
+    return $response->getBody();
   }
 
   /**
@@ -532,6 +532,8 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
           title
           title_short
           summary
+          content_space
+          tags
           created
           updated
           status

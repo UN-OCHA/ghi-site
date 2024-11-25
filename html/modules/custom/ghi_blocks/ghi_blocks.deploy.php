@@ -5,6 +5,7 @@
  * Contains deploy functions for the GHI Blocks module.
  */
 
+use Drupal\ghi_blocks\Helpers\FundingDataConfigurationUpdateHelper;
 use Drupal\ghi_blocks\Helpers\LinkConfigurationUpdateHelper;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\SectionComponent;
@@ -264,7 +265,7 @@ function ghi_blocks_deploy_9006_update_link_configuration_nodes(&$sandbox) {
     foreach ($components as $component) {
       switch ($component->getPluginId()) {
         case 'plan_headline_figures':
-          $changed = LinkConfigurationUpdateHelper::updatePlanHeadlinerFiguresComponent($component) || $changed;
+          $changed = LinkConfigurationUpdateHelper::updatePlanHeadlineFiguresComponent($component) || $changed;
           break;
 
         case 'links':
@@ -346,7 +347,7 @@ function ghi_blocks_deploy_9007_update_link_configuration_page_templates(&$sandb
     foreach ($components as $component) {
       switch ($component->getPluginId()) {
         case 'plan_headline_figures':
-          $changed = LinkConfigurationUpdateHelper::updatePlanHeadlinerFiguresComponent($component) || $changed;
+          $changed = LinkConfigurationUpdateHelper::updatePlanHeadlineFiguresComponent($component) || $changed;
           break;
 
         case 'links':
@@ -431,4 +432,88 @@ function ghi_blocks_deploy_9008_update_plan_overview_map(&$sandbox) {
   }
 
   return t('Updated map configuration for all homepage nodes');
+}
+
+/**
+ * Update link configuration for various elements on page templates.
+ */
+function ghi_blocks_deploy_9009_update_funding_coverage_default_label_nodes(&$sandbox) {
+  set_time_limit(30);
+  if (!isset($sandbox['nodes'])) {
+    $result = \Drupal::database()->select('node__layout_builder__layout')
+      ->fields('node__layout_builder__layout', ['entity_id'])
+      ->condition('layout_builder__layout_section', '%"Coverage"%', 'LIKE')
+      ->orderBy('entity_id')
+      ->execute();
+    $sandbox['nodes'] = array_map(function ($row) {
+      return $row->entity_id;
+    }, $result->fetchAll());
+    $sandbox['total'] = count($sandbox['nodes']);
+    $sandbox['updated'] = 0;
+  }
+  for ($i = 0; $i < 25; $i++) {
+    if (empty($sandbox['nodes'])) {
+      continue;
+    }
+    $node_id = array_shift($sandbox['nodes']);
+    if (FundingDataConfigurationUpdateHelper::updateNode($node_id)) {
+      $sandbox['updated']++;
+    }
+  }
+
+  $sandbox['#finished'] = 1 / (count($sandbox['nodes']) + 1);
+  if ($sandbox['#finished'] === 1) {
+    return t('Updated funding data configurations in @count_changed / @count_total nodes', [
+      '@count_changed' => $sandbox['updated'],
+      '@count_total' => $sandbox['total'],
+    ]);
+  }
+  else {
+    return t('Processed @count_processed / @count_total nodes', [
+      '@count_processed' => $sandbox['total'] - count($sandbox['nodes']),
+      '@count_total' => $sandbox['total'],
+    ]);
+  }
+}
+
+/**
+ * Update link configuration for various elements on page templates.
+ */
+function ghi_blocks_deploy_90010_update_funding_coverage_default_label_page_templates(&$sandbox) {
+  set_time_limit(30);
+  if (!isset($sandbox['page_templates'])) {
+    $result = \Drupal::database()->select('page_template__layout_builder__layout')
+      ->fields('page_template__layout_builder__layout', ['entity_id'])
+      ->condition('layout_builder__layout_section', '%"Coverage"%', 'LIKE')
+      ->orderBy('entity_id')
+      ->execute();
+    $sandbox['page_templates'] = array_map(function ($row) {
+      return $row->entity_id;
+    }, $result->fetchAll());
+    $sandbox['total'] = count($sandbox['page_templates']);
+    $sandbox['updated'] = 0;
+  }
+  for ($i = 0; $i < 25; $i++) {
+    if (empty($sandbox['page_templates'])) {
+      continue;
+    }
+    $page_template_id = array_shift($sandbox['page_templates']);
+    if (FundingDataConfigurationUpdateHelper::updatePageTemplate($page_template_id)) {
+      $sandbox['updated']++;
+    }
+  }
+
+  $sandbox['#finished'] = 1 / (count($sandbox['page_templates']) + 1);
+  if ($sandbox['#finished'] === 1) {
+    return t('Updated funding data configurations in @count_changed / @count_total page templates', [
+      '@count_changed' => $sandbox['updated'],
+      '@count_total' => $sandbox['total'],
+    ]);
+  }
+  else {
+    return t('Processed @count_processed / @count_total page templates', [
+      '@count_processed' => $sandbox['total'] - count($sandbox['page templates']),
+      '@count_total' => $sandbox['total'],
+    ]);
+  }
 }

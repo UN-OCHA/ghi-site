@@ -119,6 +119,9 @@ class PlanOverviewQuery extends EndpointQueryBase {
 
     // Setting up the array keyed by the types and values as 0.
     $caseload_totals = array_fill_keys(array_keys($types), 0);
+    $plan_caseloads = [];
+    $caseload_totals['target_custom'] = 0;
+    $caseload_totals['reached_custom'] = 0;
 
     // Load the override settings per plan.
     $attachment_overrides = $this->getPlanCaseloadOverridesByPlanId();
@@ -131,7 +134,7 @@ class PlanOverviewQuery extends EndpointQueryBase {
     if (!empty($plans)) {
       foreach ($plans as $plan) {
         // Include plans with isPartOfGho=true.
-        if (!$plan->isPartOfGho()) {
+        if (!$plan->isPartOfGho() || $plan->isRrp()) {
           continue;
         }
 
@@ -141,14 +144,32 @@ class PlanOverviewQuery extends EndpointQueryBase {
           continue;
         }
 
+        $plan_caseloads[$plan->id()] = [];
+
         foreach ($types as $type_key => $type) {
           $label = is_scalar($type) ? $type : ($type['label'] ?? NULL);
           $key = is_array($type) && !empty($type['type']) ? $type['type'] : $type_key;
           $fallback = is_array($type) && !empty($type['fallback']) ? $type['fallback'] : NULL;
           $value = $plan->getCaseloadValue($key, $label, $fallback);
           $caseload_totals[$type_key] += $value ?? 0;
+          $plan_caseloads[$plan->id()][$type_key] = $value;
         }
       }
+    }
+
+    // Calculate custom target and reached values, to be used for percentage
+    // calculations in KeyFigures::getData(), based on additional business
+    // logic.
+    foreach ($plan_caseloads as $caseload) {
+      if (empty($caseload['target']) || empty($caseload['reached'])) {
+        // Only add target and reached to the totals for percentage if both are
+        // non-NULL.
+        continue;
+      }
+      $caseload_totals['target_custom'] += $caseload['target'];
+      // If reached is higher than target, use target instead, so that the
+      // final percentage per plan can't get over 100%.
+      $caseload_totals['reached_custom'] += min($caseload['reached'], $caseload['target']);
     }
 
     return $caseload_totals;

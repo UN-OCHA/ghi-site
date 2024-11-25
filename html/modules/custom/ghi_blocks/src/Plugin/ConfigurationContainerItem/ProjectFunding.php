@@ -46,8 +46,9 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
 
-    $data_type_options = $this->getDataTypes();
-    $data_type = $this->getSubmittedOptionsValue($element, $form_state, 'data_type', $data_type_options);
+    $data_type_options = $this->getDataTypeOptions();
+    $type_key = $this->getSubmittedOptionsValue($element, $form_state, 'data_type', $data_type_options);
+    $data_type = $this->getType($type_key);
 
     $element['data_type'] = [
       '#type' => 'select',
@@ -61,12 +62,16 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
         'wrapper' => $this->wrapperId,
       ],
     ];
-    $element['label']['#weight'] = 1;
+
+    $element['label']['#description'] = $this->t('Leave empty to use the default label: <em>%default_label</em>', [
+      '%default_label' => $this->getDefaultLabel($data_type),
+    ]);
     $element['label']['#placeholder'] = $this->getDefaultLabel($data_type);
+    $element['label']['#weight'] = 1;
 
     // Add a preview.
     if ($this->shouldDisplayPreview()) {
-      $preview_value = $this->getValue($data_type);
+      $preview_value = $this->getValue($type_key);
       $element['value_preview'] = $this->buildValuePreviewFormElement($preview_value);
     }
 
@@ -88,9 +93,8 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
    *   A default label or NULL.
    */
   public function getDefaultLabel($data_type = NULL) {
-    $data_type = $data_type ?: $this->get('data_type');
-    $default_map = $this->getDataTypes();
-    return $data_type ? $default_map[$data_type] : NULL;
+    $data_type = $data_type ?? $this->getType();
+    return $data_type['default_label'] ?? ($data_type['label'] ?? NULL);
   }
 
   /**
@@ -158,6 +162,19 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * Get the data type options.
+   *
+   * @return array
+   *   An array of data types, suitable to use as options in a form element.
+   */
+  private function getDataTypeOptions() {
+    $data_types = $this->getDataTypes();
+    return array_map(function ($type) {
+      return $type['label'];
+    }, $data_types);
+  }
+
+  /**
    * Get the data types that this item can show.
    *
    * @return array
@@ -165,12 +182,38 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
    */
   private function getDataTypes() {
     return [
-      'original_requirements' => $this->t('Original requirements'),
-      'current_requirements' => $this->t('Current requirements'),
-      'total_funding' => $this->t('Current funding'),
-      'coverage' => $this->t('Current coverage'),
-      'requirements_changes' => $this->t('Requirements changes'),
+      'original_requirements' => [
+        'label' => $this->t('Original requirements'),
+      ],
+      'current_requirements' => [
+        'label' => $this->t('Current requirements'),
+      ],
+      'total_funding' => [
+        'label' => $this->t('Current funding'),
+      ],
+      'coverage' => [
+        'label' => $this->t('Current coverage'),
+        'default_label' => $this->t('% Funded'),
+      ],
+      'requirements_changes' => [
+        'label' => $this->t('Requirements changes'),
+      ],
     ];
+  }
+
+  /**
+   * Get a specific data type definition.
+   *
+   * @param string $type
+   *   The key of the type.
+   *
+   * @return array|null
+   *   A definition array if the type is found.
+   */
+  private function getType($type = NULL) {
+    $type = $type ?? $this->get('data_type');
+    $types = $this->getDataTypes();
+    return $type && array_key_exists($type, $types) ? $types[$type] : NULL;
   }
 
 }

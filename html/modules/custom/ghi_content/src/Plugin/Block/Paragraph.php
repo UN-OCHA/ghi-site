@@ -224,7 +224,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
       '#full_width' => $full_width,
     ];
 
-    if ($this->moduleHandler->moduleExists('gho_footnotes')) {
+    if ($this->moduleHandler->moduleExists('gho_footnotes') && !$paragraph->getType() == 'sub_article') {
       // Make sure to add the gho-footnotes component.
       $theme_components[] = 'common_design_subtheme/gho-footnotes';
       if ($preview || $internal_preview) {
@@ -293,10 +293,6 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     }
     if ($paragraph->getPromoted() || $this->isPromoted()) {
       $theme_components[] = 'common_design_subtheme/gho-promoted-paragraph';
-    }
-    if ($paragraph->getType() == 'story') {
-      // Stories always use the gho-aside component.
-      $theme_components[] = 'common_design_subtheme/gho-aside';
     }
     if ($paragraph->getType() == 'interactive_content_2_columns') {
       // Interactive content in 2 columns still needs styles.
@@ -610,17 +606,18 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
       return;
     }
 
-    $render_controller = \Drupal::entityTypeManager()->getViewBuilder($local_subarticle->getEntityTypeId());
-    $build = $render_controller->view($local_subarticle);
-    $render_output = ThemeHelper::render($build, FALSE);
-    $render_output = preg_replace('/<!--(.*)-->/Uis', '', $render_output);
+    /** @var \Drupal\Core\Entity\EntityViewBuilder $view_builder */
+    $view_builder = \Drupal::entityTypeManager()->getViewBuilder($local_subarticle->getEntityTypeId());
+    $build = $view_builder->view($local_subarticle);
+    $build['#skip_footnotes_processing'] = TRUE;
+    $build = $view_builder->build($build);
+
+    $html = ThemeHelper::render($build, FALSE);
+    $html = preg_replace('/<!--(.*)-->/Uis', '', $html);
 
     // Create a new dom object with the local rendering result.
-    $new_dom = new \DOMDocument();
-    // Append an xml tag specifying the encoding, see
-    // https://stackoverflow.com/a/8218649
-    $new_dom->loadHTML('<?xml encoding="' . $dom->encoding . '" ?>' . $render_output, LIBXML_NOWARNING | LIBXML_NOERROR);
-    $content_node = $this->findArticleContentDomNode($new_dom->getElementsByTagName('article')->item(0), [
+    $new_dom = Html::load($html);
+    $content_node = $this->getElementByClass($new_dom->getElementsByTagName('article')->item(0), [
       'layout--onecol',
       'layout__region--content',
     ]);
@@ -630,7 +627,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     $fragment = $dom->createDocumentFragment();
     $fragment->appendXML($this->renderDomNode($content_node));
 
-    $article_content_node = $this->findArticleContentDomNode($dom->getElementsByTagName('article')->item(0), ['gho-sub-article__content']);
+    $article_content_node = $this->getElementByClass($dom->getElementsByTagName('article')->item(0), ['gho-sub-article__content']);
     if (!$article_content_node) {
       return;
     }
@@ -641,33 +638,69 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
   }
 
   /**
-   * Find the DOM node that represents the article content based on classes.
+   * Find a DOM element based on the given classes.
    *
    * @param \DOMElement|\DOMNode|\DOMNameSpaceNode|null $node
    *   The dom object.
-   * @param string[] $classes
-   *   The classes that identify the article content.
+   * @param string|string[] $classes
+   *   The class(es) that identify the article content. Either a single class
+   *   as a string, or an array of strings. If an array of strings is given,
+   *   the method will traverse the full dom tree of the given node until all
+   *   classes have been found. Note there is no logic that checks the class
+   *   hierarchy, so if all classes are present on the root element, this will
+   *   be returned as a valid result.
    *
    * @return \DOMNode|null
    *   The dom node repesenting the article content.
    */
-  private function findArticleContentDomNode($node, $classes) {
+  private function getElementByClass($node, $classes) {
     if (!$node || !$node->childNodes) {
       return NULL;
     }
+    $classes = !is_array($classes) ? [$classes] : $classes;
+
+    if ($this->matchClasses($node, $classes) && empty($classes)) {
+      return $node;
+    }
+
     foreach ($node->childNodes->getIterator() as $child_node) {
-      $class_attribute = $child_node->attributes?->getNamedItem('class')?->nodeValue;
-      if ($class_attribute && str_contains($class_attribute, $classes[0])) {
+      if ($this->matchClasses($child_node, $classes[0])) {
         array_shift($classes);
         if (empty($classes)) {
           return $child_node;
         }
       }
-      $content_node = $this->findArticleContentDomNode($child_node, $classes);
-      if ($content_node) {
-        return $content_node;
+      $found_node = $this->getElementByClass($child_node, $classes);
+      if ($found_node) {
+        return $found_node;
       }
     }
+  }
+
+  /**
+   * Match classes on the given dom object.
+   *
+   * @param \DOMElement|\DOMNode|\DOMNameSpaceNode $node
+   *   The dom object.
+   * @param string|string[] $class
+   *   The class or classes to look for.
+   *
+   * @return bool
+   *   TRUE if at least on of the classes has been found on the node.
+   */
+  private function matchClasses($node, $class) {
+    $class_attribute = $node->attributes?->getNamedItem('class')?->nodeValue;
+    if (!$class_attribute) {
+      return FALSE;
+    }
+    $classes = is_array($class) ? $class : [$class];
+    $found_classes = [];
+    foreach ($classes as $class) {
+      if (str_contains($class_attribute, $class)) {
+        $found_classes[] = $class;
+      }
+    }
+    return count($found_classes) == count($classes);
   }
 
   /**

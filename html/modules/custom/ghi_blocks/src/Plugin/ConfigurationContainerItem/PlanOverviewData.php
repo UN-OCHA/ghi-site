@@ -40,12 +40,19 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
       '#title' => $this->t('Data type'),
       '#options' => $this->getTypeOptions(),
       '#default_value' => $type_key,
+      '#weight' => 0,
       '#ajax' => [
         'event' => 'change',
         'callback' => [static::class, 'updateAjax'],
         'wrapper' => $this->wrapperId,
       ],
     ];
+
+    $element['label']['#description'] = $this->t('Leave empty to use the default label: <em>%default_label</em>', [
+      '%default_label' => $this->getDefaultLabel($type),
+    ]);
+    $element['label']['#placeholder'] = $this->getDefaultLabel($type);
+    $element['label']['#weight'] = 0;
 
     $element['api_value'] = [
       '#type' => 'textfield',
@@ -135,12 +142,15 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
   /**
    * Provide a default label for the current item.
    *
+   * @param array|null $data_type
+   *   The data type as optional parameter.
+   *
    * @return string
    *   A default label.
    */
-  public function getDefaultLabel() {
-    $data_type = $this->getType();
-    return $data_type['label'] ?? NULL;
+  public function getDefaultLabel($data_type = NULL) {
+    $data_type = $data_type ?? $this->getType();
+    return $data_type['default_label'] ?? ($data_type['label'] ?? NULL);
   }
 
   /**
@@ -319,6 +329,7 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
       ],
       'funding_progress' => [
         'label' => $this->t('Funding coverage'),
+        'default_label' => $this->t('% Funded'),
         'value_description' => $this->t('Enter a percentage value as a decimal between 0 and 100. <strong>Note that write-in values are ignored if you limit the data to include or exclude a global plan.</strong>'),
         'data_type' => 'float',
         'theme' => 'hpc_percent',
