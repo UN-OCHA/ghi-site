@@ -211,12 +211,27 @@ class BlocksWithManagedFilesTest extends KernelTestBase {
               'config' => [
                 'label' => 'Test link with image',
                 'link' => [
-                  'url' => 'https://google.com',
-                  'date' => '2024-05-22',
-                  'description_toggle' => 0,
+                  'link' => [
+                    'label' => NULL,
+                    'link_type' => 'custom',
+                    'link_custom' => [
+                      'url' => 'https://google.com',
+                    ],
+                    'link_related' => [
+                      'target' => NULL,
+                    ],
+                  ],
                 ],
                 'image' => [
                   'image' => [$file->id()],
+                ],
+                'content' => [
+                  'date' => '2024-05-22',
+                  'description' => [
+                    'value' => '',
+                    'format' => 'wysiwyg_simple',
+                  ],
+                  'description_toggle' => 0,
                 ],
               ],
             ],
