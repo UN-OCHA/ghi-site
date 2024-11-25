@@ -152,6 +152,8 @@ gho-facts-and-figures:
   css:
     theme:
       components/gho-facts-and-figures/gho-facts-and-figures.css: {}
+  dependencies:
+    - common_design_subtheme/gho-aside
 gho-footnotes:
   js:
     components/gho-footnotes/gho-footnotes.js: {}
@@ -212,6 +214,8 @@ gho-story:
   css:
     theme:
       components/gho-story/gho-story.css: {}
+  dependencies:
+    - common_design_subtheme/gho-aside
 gho-sub-article:
   css:
     theme:

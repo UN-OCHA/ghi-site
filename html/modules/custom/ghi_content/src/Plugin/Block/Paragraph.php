@@ -294,10 +294,6 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     if ($paragraph->getPromoted() || $this->isPromoted()) {
       $theme_components[] = 'common_design_subtheme/gho-promoted-paragraph';
     }
-    if ($paragraph->getType() == 'story') {
-      // Stories always use the gho-aside component.
-      $theme_components[] = 'common_design_subtheme/gho-aside';
-    }
     if ($paragraph->getType() == 'interactive_content_2_columns') {
       // Interactive content in 2 columns still needs styles.
       $theme_components[] = 'common_design_subtheme/gho-interactive-content';
