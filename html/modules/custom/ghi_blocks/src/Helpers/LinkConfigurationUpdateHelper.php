@@ -18,7 +18,7 @@ class LinkConfigurationUpdateHelper {
    * @return bool
    *   TRUE if a change has been made, FALSE otherwise.
    */
-  public static function updatePlanHeadlinerFiguresComponent(SectionComponent $component) {
+  public static function updatePlanHeadlineFiguresComponent(SectionComponent $component) {
     $changed = FALSE;
     $configuration = $component->get('configuration');
     if (empty($configuration['hpc']['key_figures']['items'])) {
