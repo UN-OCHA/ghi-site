@@ -70,11 +70,6 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
   ];
 
   /**
-   * The style id from the reliefweb mapbox account.
-   */
-  const MAP_STYLE_ID = 'clboapwyi000714muft627goq';
-
-  /**
    * The icon query.
    *
    * @var \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery
@@ -112,7 +107,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     $map_settings = [
       'json' => $map_data,
       'id' => $chart_id,
-      'map_tiles_url' => $this->getStaticTilesUrlTemplate(self::MAP_STYLE_ID),
+      'map_tiles_url' => $this->getStaticTilesUrlTemplate(),
       'disclaimer' => $conf['display']['disclaimer'] ?? self::DEFAULT_DISCLAIMER,
       'pcodes_enabled' => $conf['display']['pcodes_enabled'] ?? TRUE,
     ];
