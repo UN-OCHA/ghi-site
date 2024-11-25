@@ -69,7 +69,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
       'people_in_need' => $caseload_values['inNeed'],
       'people_target' => $caseload_values['target'],
       'people_reached' => $caseload_values['reached'],
-      'people_reached_percent' => CommonHelper::calculateRatio($caseload_values['reached'], $caseload_values['target']),
+      'people_reached_percent' => CommonHelper::calculateRatio($caseload_values['reached_custom'], $caseload_values['target_custom']),
     ];
   }
 
