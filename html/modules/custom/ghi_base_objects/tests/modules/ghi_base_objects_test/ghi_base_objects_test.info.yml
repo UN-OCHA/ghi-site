@@ -1,0 +1,5 @@
+name: 'GHI Base Objects test'
+type: module
+description: 'Support module for GHI Base Objects tests.'
+package: Testing
+version: VERSION
