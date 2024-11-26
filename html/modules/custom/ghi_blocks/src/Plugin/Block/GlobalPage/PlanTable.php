@@ -15,6 +15,7 @@ use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_common\Helpers\FieldHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
@@ -153,6 +154,10 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'data' => $this->t('Estimated Reach'),
         'data-column-type' => 'amount',
       ],
+      'expected_reached' => [
+        'data' => $this->t('% Estimated Reached'),
+        'data-column-type' => 'amount',
+      ],
       'latest_reach' => [
         'data' => $this->t('People reached'),
         'data-column-type' => 'percentage',
@@ -213,7 +218,8 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       if ($plan instanceof PlanOverviewPlanMock) {
         $reached_percent = ((float) $plan->getCaseloadValue('reached_percent')) * 100;
       }
-      $expected_reached = $plan->getCaseloadValue('expectedReach', 'Expected Reach');
+      $expected_reach = $plan->getCaseloadValue('expectedReach', 'Expected Reach');
+      $expected_reached = CommonHelper::calculateRatio($expected_reach, $target) * 100;
 
       // Setup the financial values.
       $requirements = $plan->getRequirements($plan);
@@ -251,8 +257,12 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       ];
       $value_expected_reach = [
         '#theme' => 'hpc_amount',
-        '#amount' => $expected_reached,
+        '#amount' => $expected_reach,
         '#decimals' => $decimals,
+      ];
+      $value_expected_reached = [
+        '#theme' => 'hpc_percent',
+        '#ratio' => $expected_reached / 100,
       ];
       $value_latest_reached = $latest_reached !== NULL ? [
         '#theme' => 'hpc_amount',
@@ -329,10 +339,16 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
             $value_expected_reach,
             $this->buildFootnoteTooltip($footnotes, 'estimated_reach'),
           ],
-          'data-raw-value' => $expected_reached,
+          'data-raw-value' => $expected_reach,
           'data-column-type' => 'amount',
           'data-progress-group' => 'people',
           'export_commentary' => $this->getFootnoteForProperty($footnotes, 'estimated_reach'),
+        ],
+        'expected_reached' => [
+          'data' => $value_expected_reached,
+          'data-raw-value' => $expected_reached,
+          'data-column-type' => 'percentage',
+          'data-progress-group' => 'coverage',
         ],
         'latest_reach' => [
           'data' => $value_latest_reached,

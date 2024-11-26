@@ -16,10 +16,16 @@
       <span class="label">{{ items.target.label }}</span>
       <span class="value">{{ items.target.value }}</span>
     </div>
-    {% if items.estimated_reach %}
+    {% if items.expected_reach %}
       <div class="section-row">
-        <span class="label">{{ items.estimated_reach.label }}</span>
-        <span class="value">{{ items.estimated_reach.value }}</span>
+        <span class="label">{{ items.expected_reach.label }}</span>
+        <span class="value">{{ items.expected_reach.value }}</span>
+      </div>
+    {% endif %}
+    {% if items.expected_reached %}
+      <div class="section-row">
+        <span class="label">{{ items.expected_reached.label }}</span>
+        <span class="value">{{ items.expected_reached.value }}</span>
       </div>
     {% endif %}
     {% if items.reached %}
