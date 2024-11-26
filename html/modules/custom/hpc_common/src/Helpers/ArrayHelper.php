@@ -59,22 +59,28 @@ class ArrayHelper extends ApiArrayHelper {
    *
    * @param array $array
    *   The array to process.
+   * @param array $exclude_keys
+   *   An optional array of keys to exclude from the mapping.
    *
    * @return array
    *   The processed array.
    */
-  public static function mapObjectsToString(array $array) {
+  public static function mapObjectsToString(array $array, $exclude_keys = []) {
     foreach ($array as $key => $value) {
+      if (in_array($key, $exclude_keys)) {
+        unset($array[$key]);
+        continue;
+      }
       if (is_object($value)) {
         if ($value instanceof \Stringable) {
           $array[$key] = (string) $value;
         }
         else {
-          $array[$key] = self::mapObjectsToString((array) $value);
+          $array[$key] = self::mapObjectsToString((array) $value, $exclude_keys);
         }
       }
       if (is_array($value)) {
-        $array[$key] = self::mapObjectsToString($value);
+        $array[$key] = self::mapObjectsToString($value, $exclude_keys);
       }
     }
     return $array;

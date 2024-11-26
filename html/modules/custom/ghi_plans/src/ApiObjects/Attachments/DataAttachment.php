@@ -583,7 +583,7 @@ class DataAttachment extends AttachmentBase {
       // data for the same attachment id, like when the attachment data is
       // retrieved by an anonymous user vs a logged-in user, where both might
       // see different data, depending on their access level.
-      'hash' => md5(Yaml::encode(ArrayHelper::mapObjectsToString([$attachment_data]))),
+      'hash' => md5(Yaml::encode(ArrayHelper::mapObjectsToString([$attachment_data], ['disaggregated']))),
     ]);
 
     $cached_data = $this->cache($cache_key);
