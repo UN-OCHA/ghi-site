@@ -60,6 +60,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
       'reached' => [
         'type' => 'latestReach',
       ],
+      'expectedReach' => 'Expected reach',
     ];
     $caseload_values = $this->getPlanQuery()->getCaseloadTotalValues($types);
     return [
@@ -70,6 +71,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
       'people_target' => $caseload_values['target'],
       'people_reached' => $caseload_values['reached'],
       'people_reached_percent' => CommonHelper::calculateRatio($caseload_values['reached_custom'], $caseload_values['target_custom']),
+      'people_expected_reach' => $caseload_values['expectedReach'],
     ];
   }
 
@@ -227,6 +229,10 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
           ],
           'people_target' => [
             'label' => $this->t('People targeted'),
+          ],
+          'people_expected_reach' => [
+            'label' => $this->t('People estimated reach'),
+            'default_label' => $this->t('People estimated reach'),
           ],
           'people_reached' => [
             'label' => $this->t('People latest reached'),
