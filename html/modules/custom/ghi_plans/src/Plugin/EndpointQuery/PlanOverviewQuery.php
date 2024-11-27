@@ -83,7 +83,7 @@ class PlanOverviewQuery extends EndpointQueryBase {
    *   Whether the plans should be filtered or not.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[]
-   *   An array of plan objects.
+   *   An array of plan overview plan objects keyed by plan id.
    */
   public function getPlans($filter = TRUE) {
     if ($this->plans === NULL) {
@@ -134,7 +134,7 @@ class PlanOverviewQuery extends EndpointQueryBase {
     if (!empty($plans)) {
       foreach ($plans as $plan) {
         // Include plans with isPartOfGho=true.
-        if (!$plan->isPartOfGho() || $plan->isRrp()) {
+        if (!$plan->isPartOfGho()) {
           continue;
         }
 
@@ -160,7 +160,11 @@ class PlanOverviewQuery extends EndpointQueryBase {
     // Calculate custom target and reached values, to be used for percentage
     // calculations in KeyFigures::getData(), based on additional business
     // logic.
-    foreach ($plan_caseloads as $caseload) {
+    foreach ($plan_caseloads as $plan_id => $caseload) {
+      $plan = $plans[$plan_id];
+      if ($plan->isRrp()) {
+        continue;
+      }
       if (empty($caseload['target']) || empty($caseload['reached'])) {
         // Only add target and reached to the totals for percentage if both are
         // non-NULL.
