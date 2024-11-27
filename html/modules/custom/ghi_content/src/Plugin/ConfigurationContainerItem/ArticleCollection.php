@@ -5,6 +5,7 @@ namespace Drupal\ghi_content\Plugin\ConfigurationContainerItem;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_content\Entity\Article;
+use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_form_elements\ConfigurationContainerItemCustomActionsInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
@@ -74,26 +75,36 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
    * Build the article selection subform.
    */
   public function articleSelectionForm($element, FormStateInterface $form_state) {
-    $section = $this->getContextValue('section');
-    $section_tags = $section ? $this->articleManager->getTags($section) : [];
-    $section_tag_ids = array_keys($section_tags);
+    $page_node = $this->getContextValue('page_node');
+    $page_tags = $page_node ? $this->articleManager->getTags($page_node) : [];
+    $page_tags_ids = array_keys($page_tags);
+    $disabled_tags = [];
+    $disabled_tags_ids = [];
 
+    $section = $this->getContextValue('section');
     if ($section && $this->isSectionNode($section)) {
       // Get the available tags, section tags will be first.
       $available_nodes = $this->articleManager->loadNodesForSection($section);
+      $disabled_tags = $this->articleManager->getTags($section);
+      $disabled_tags_ids = array_keys($disabled_tags);
+    }
+    elseif ($page_node instanceof Document) {
+      $available_nodes = $this->articleManager->loadNodesForTags($page_tags_ids);
+      $disabled_tags = $page_tags;
+      $disabled_tags_ids = $page_tags_ids;
     }
     else {
       // This is a global section or a global landing page. Get all available
       // tags and nodes.
       $available_nodes = $this->articleManager->loadAllNodes();
     }
-    $available_tags = $section_tags + $this->articleManager->getAvailableTags($available_nodes);
+    $available_tags = $disabled_tags + $page_tags + $this->articleManager->getAvailableTags($available_nodes);
     $node_ids_by_tag = $this->articleManager->getNodeIdsGroupedByTag($available_nodes);
     $node_previews = $this->articleManager->getNodePreviews($available_nodes, 'grid');
 
     // Get the defaults.
     $default_tags = $this->getSubmittedValue($element, $form_state, 'tags') ?? ($this->config['article_selection_form']['tags'] ?? []);
-    $default_tags['tag_ids'] = array_combine($section_tag_ids, $section_tag_ids) + ($default_tags['tag_ids'] ?? []);
+    $default_tags['tag_ids'] = array_combine($disabled_tags_ids, $disabled_tags_ids) + array_combine($page_tags_ids, $page_tags_ids) + ($default_tags['tag_ids'] ?? []);
 
     $element['tags'] = [
       '#type' => 'tag_selection',
@@ -110,7 +121,7 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
       ],
       // Section tags can't be unselected because they define the basic content
       // "universe".
-      '#disabled_tags' => $section_tag_ids,
+      '#disabled_tags' => $disabled_tags_ids,
     ];
     return $element;
   }
@@ -327,13 +338,20 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
    */
   private function getArticles($limit = NULL, $published = TRUE) {
     $section = $this->getContextValue('section');
+    $page_node = $this->getContextValue('page_node');
     $tag_ids = $this->getApplicableTagIds();
     if (empty($tag_ids)) {
       return NULL;
     }
     $tag_conjunction = $this->getTagConjunction();
-    if ($section || $tag_ids) {
+    if ($section) {
       return $this->articleManager->loadNodesForTags($tag_ids, $section, $tag_conjunction, $limit, $published);
+    }
+    elseif ($page_node instanceof Document) {
+      return $this->articleManager->loadNodesForTags($tag_ids, $page_node, $tag_conjunction, $limit, $published);
+    }
+    elseif ($tag_ids) {
+      return $this->articleManager->loadNodesForTags($tag_ids, NULL, $tag_conjunction, $limit, $published);
     }
     return $this->articleManager->loadAllNodes($limit);
   }
@@ -346,9 +364,16 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
    */
   private function getApplicableTagIds() {
     $section = $this->getContextValue('section');
-    $section_tags = $section ? $this->articleManager->getTags($section) : [];
-    $section_tag_ids = array_keys($section_tags);
-    $tag_ids = array_combine($section_tag_ids, $section_tag_ids) + array_filter($this->config['article_selection_form']['tags']['tag_ids'] ?? []);
+    $page_node = $this->getContextValue('page_node');
+    $additional_tags = [];
+    if ($section) {
+      $additional_tags = $this->articleManager->getTags($section);
+    }
+    elseif ($page_node instanceof Document) {
+      $additional_tags = $this->articleManager->getTags($page_node);
+    }
+    $additional_tag_ids = array_keys($additional_tags);
+    $tag_ids = array_combine($additional_tag_ids, $additional_tag_ids) + array_filter($this->config['article_selection_form']['tags']['tag_ids'] ?? []);
     return $tag_ids;
   }
 
