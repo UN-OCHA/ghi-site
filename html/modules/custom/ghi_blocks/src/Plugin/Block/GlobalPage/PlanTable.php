@@ -155,7 +155,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'data-column-type' => 'amount',
       ],
       'expected_reached' => [
-        'data' => $this->t('% Estimated Reached'),
+        'data' => $this->t('% Reached'),
         'data-column-type' => 'amount',
       ],
       'latest_reach' => [
