@@ -9,6 +9,7 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\ghi_blocks\Controller\BaseObjectReferenceController;
 use Drupal\ghi_blocks\Controller\LayoutBuilderBlockController;
 use Drupal\ghi_blocks\Helpers\GlobalSettingsHelper;
@@ -17,6 +18,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\hpc_common\Helpers\UserHelper;
 use Drupal\layout_builder\Plugin\Block\InlineBlock;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
 
 /**
@@ -381,7 +383,7 @@ function ghi_blocks_link_alter(&$variables) {
     return;
   }
 
-  if (in_array('use-ajax', $variables['options']['attributes']['class'])) {
+  if (in_array('use-ajax', ($variables['options']['attributes']['class'] ?? []))) {
     $config = \Drupal::config('layout_builder_modal.settings');
     $data_dialog_options = Json::encode([
       'width' => $config->get('modal_width'),
@@ -537,6 +539,61 @@ function ghi_blocks_page_attachments(array &$attachments) {
     $attachments['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
   }
   $attachments['#attached']['library'][] = 'ghi_blocks/gin';
+}
+
+/**
+ * Implements hook_layout_builder_ipe_links_alter().
+ *
+ * This a discard changes link if there are layout changes that can be
+ * discarded. This might be necessary if a page is broken and can't be opened
+ * for editing anymore.
+ */
+function ghi_blocks_layout_builder_ipe_links_alter(array &$links, SectionStorageInterface $section_storage, EntityInterface $entity) {
+  /** @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface $layout_tempstore_repository */
+  $layout_tempstore_repository = \Drupal::service('layout_builder.tempstore_repository');
+  /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
+  $module_handler = \Drupal::service('module_handler');
+  if ($layout_tempstore_repository->has($section_storage)) {
+    $modal_settings = [
+      'width' => 600,
+      'height' => 400,
+      'autoResize' => TRUE,
+    ];
+    if ($module_handler->moduleExists('layout_builder_modal')) {
+      $modal_config = \Drupal::config('layout_builder_modal.settings');
+      $modal_settings = [
+        'width' => $modal_config->get('modal_width'),
+        'height' => $modal_config->get('modal_height'),
+        'autoResize' => $modal_config->get('modal_autoresize'),
+      ];
+    }
+    $customize_link = $links['customize'];
+    $links['customize'] = [
+      '#type' => 'dropbutton',
+      '#links' => [
+        'customize' => [
+          'title' => $customize_link->getText(),
+          'url' => $customize_link->getUrl(),
+          'attributes' => $customize_link->getUrl()->getOption('attributes'),
+        ],
+        'discard' => [
+          'title' => t('Discard changes'),
+          'url' => Url::fromRoute('layout_builder.' . $section_storage->getPluginId() . '.' . $entity->getEntityTypeId() . '.discard_changes', [
+            $entity->getEntityTypeId() => $entity->id(),
+          ], [
+            'attributes' => [
+              'class' => ['use-ajax'],
+              'data-dialog-type' => 'dialog',
+              'data-dialog-options' => Json::encode([
+                'target' => 'layout-builder-modal',
+                'modal' => TRUE,
+              ] + $modal_settings),
+            ],
+          ]),
+        ],
+      ],
+    ];
+  }
 }
 
 /**
