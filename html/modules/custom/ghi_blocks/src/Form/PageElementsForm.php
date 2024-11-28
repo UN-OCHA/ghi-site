@@ -1,0 +1,214 @@
+<?php
+
+namespace Drupal\ghi_blocks\Form;
+
+use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\hpc_api\Traits\BulkFormTrait;
+use Drupal\layout_builder\LayoutEntityHelperTrait;
+use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\layout_builder\SectionComponent;
+use Drupal\node\NodeInterface;
+
+/**
+ * Page elements form.
+ */
+class PageElementsForm extends FormBase {
+
+  use LayoutEntityHelperTrait;
+  use BulkFormTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId() {
+    return 'ghi_blocks_page_elements_form';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state, ?NodeInterface $node = NULL) {
+    $form = [];
+    if (!$node || !$this->isLayoutCompatibleEntity($node)) {
+      return $form;
+    }
+
+    $form['#node'] = $node;
+
+    $form['description'] = [
+      '#prefix' => '<p>',
+      '#suffix' => '</p>',
+      '#markup' => $this->t('On this page you can see all page elements that are currently configured for this @page_type page.', [
+        '@page_type' => $node->type->entity->label(),
+      ]),
+    ];
+
+    $section_storage = $this->getSectionStorageForEntity($node);
+    $sections = $node->get(OverridesSectionStorage::FIELD_NAME)->getValue();
+    foreach (array_keys($sections) as $delta) {
+      $section = $sections[$delta]['section'];
+      $layout_settings = $section->getLayoutSettings();
+      $region = $section->getDefaultRegion();
+
+      $rows = [];
+      $components = $section->getComponents();
+      uasort($components, function (SectionComponent $a, SectionComponent $b) {
+        return $a->getWeight() <=> $b->getWeight();
+      });
+
+      foreach ($components as $uuid => $component) {
+        $plugin = $component->getPlugin();
+        if (!$plugin instanceof GHIBlockBase) {
+          continue;
+        }
+        $route_args = [
+          'section_storage_type' => $section_storage->getStorageType(),
+          'section_storage' => $section_storage->getStorageId(),
+          'delta' => $delta,
+          'region' => $region,
+          'uuid' => $uuid,
+        ];
+        $rows[$uuid] = [
+          $plugin->getPluginDefinition()['admin_label'],
+          $plugin->label() ?? '',
+          $plugin->isHidden() ? $this->t('Hidden') : $this->t('Shown'),
+          [
+            'data' => [
+              '#type' => 'dropbutton',
+              '#dropbutton_type' => 'small',
+              '#links' => [
+                'show_config' => $this->getBlockActionLink($this->t('Show config'), $plugin, 'ghi_blocks.show_block_config', $route_args),
+              ],
+            ],
+          ],
+        ];
+      }
+
+      $form[$region] = [
+        '#type' => 'container',
+      ];
+      $form[$region]['label'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'h2',
+        '#value' => $this->t('Region name: @label', [
+          '@label' => $layout_settings['label'],
+        ]),
+        '#access' => count($sections) > 1,
+      ];
+      $form[$region]['elements'] = [
+        '#type' => 'tableselect',
+        '#header' => [
+          $this->t('Element type'),
+          $this->t('Label'),
+          $this->t('Visibility'),
+          $this->t('Operations'),
+        ],
+        '#options' => $rows,
+        '#empty' => $this->t('No elements found in this region'),
+      ];
+    }
+    $this->buildBulkForm($form, $this->getBulkFormActions());
+    return $form;
+  }
+
+  /**
+   * Get an action link to be added to the operations dropbutton.
+   *
+   * @param string|\Drupal\Core\StringTranslation\TranslatableMarkup $label
+   *   The label for the link.
+   * @param \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $plugin
+   *   The plugin.
+   * @param string $route_name
+   *   The route name for the link.
+   * @param array $route_args
+   *   The route arguments.
+   *
+   * @return array
+   *   A link array to be used by dropbutton.
+   */
+  private function getBlockActionLink($label, GHIBlockBase $plugin, $route_name, array $route_args = []) {
+    if ($route_name == 'ghi_blocks.hide_block' && $plugin->isHidden()) {
+      return NULL;
+    }
+    if ($route_name == 'ghi_blocks.unhide_block' && !$plugin->isHidden()) {
+      return NULL;
+    }
+    return [
+      'url' => Url::fromRoute($route_name, $route_args),
+      'title' => $label,
+      'attributes' => [
+        'class' => [
+          'dialog-cancel',
+          'use-ajax',
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * Get the bulk form actions.
+   *
+   * @return array
+   *   An array of action key - label pairs.
+   */
+  private function getBulkFormActions() {
+    return [
+      'unhide' => $this->t('Show'),
+      'hide' => $this->t('Hide'),
+      'remove' => $this->t('Remove'),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    if ($form_state->getTriggeringElement()['#name'] != 'bulk_submit') {
+      return;
+    }
+    $action = $form_state->getValue('action');
+    if (!array_key_exists($action, $this->getBulkFormActions())) {
+      return;
+    }
+
+    $node = $form['#node'];
+    $sections = $node->get(OverridesSectionStorage::FIELD_NAME)->getValue();
+    $uuids = array_filter($form_state->getValue('elements'));
+    $components = [];
+    foreach (array_keys($sections) as $delta) {
+      /** @var \Drupal\layout_builder\Section $section */
+      $section = &$sections[$delta]['section'];
+      $components = $section->getComponents();
+      if (!array_intersect_key($components, $uuids)) {
+        continue;
+      }
+      foreach ($uuids as $uuid) {
+        if ($action == 'remove') {
+          $section->removeComponent($uuid);
+          continue;
+        }
+        $component = &$components[$uuid];
+        $configuration = $component->get('configuration');
+        switch ($action) {
+          case 'hide':
+            $configuration['visibility_status'] = 'hidden';
+            break;
+
+          case 'unhide':
+            $configuration['visibility_status'] = NULL;
+            break;
+        }
+        $component->setConfiguration($configuration);
+      }
+    }
+    $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+    $node->save();
+
+    // Stay on the page elements form page.
+    $form_state->setIgnoreDestination();
+  }
+
+}

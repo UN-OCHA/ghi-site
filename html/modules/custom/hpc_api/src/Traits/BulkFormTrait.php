@@ -158,16 +158,19 @@ trait BulkFormTrait {
     foreach (Element::children($form) as $element_key) {
       $element = &$form[$element_key];
       if (empty($element['#type']) || $element['#type'] != 'tableselect') {
+        if (!empty(Element::children($element))) {
+          // Check if any of the children is a tableselect.
+          $element = self::afterBuild($element, $form_state);
+        }
         continue;
       }
-
-      $element['#pre_render'][] = function (array $element) {
+      $element['#pre_render'][] = function (array $element) use ($form) {
         // Add a class to the checkbox column of each row, so that the logic in
         // core/themes/claro/js/tableselect.js can find the checkboxes.
         foreach ($element['#rows'] as &$row) {
           $row['data'][0] = [
             'data' => $row['data'][0],
-            'class' => 'subpages-bulk-form',
+            'class' => $form['#id'] . '-bulk-form',
           ];
         }
         return $element;

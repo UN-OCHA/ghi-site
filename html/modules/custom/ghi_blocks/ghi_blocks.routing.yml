@@ -104,3 +104,16 @@ ghi_blocks.unhide_block:
     parameters:
       section_storage:
         layout_builder_tempstore: TRUE
+
+ghi_blocks.node.page_elements:
+  path: '/node/{node}/page-elements'
+  defaults:
+    _form: '\Drupal\ghi_blocks\Form\PageElementsForm'
+    _title_callback: '\Drupal\ghi_blocks\Controller\PageElementsController::title'
+  options:
+    parameters:
+      node:
+        type: entity:node
+    _admin_route: TRUE
+  requirements:
+    _custom_access: '\Drupal\ghi_blocks\Controller\PageElementsController::access'

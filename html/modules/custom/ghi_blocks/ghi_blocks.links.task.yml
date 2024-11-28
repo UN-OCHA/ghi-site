@@ -1,0 +1,5 @@
+entity.node.page_elements:
+  title: Page elements
+  route_name: ghi_blocks.node.page_elements
+  base_route: entity.node.canonical
+  weight: 10
