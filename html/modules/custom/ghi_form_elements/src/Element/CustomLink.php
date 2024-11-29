@@ -226,7 +226,7 @@ class CustomLink extends FormElementBase {
         $form_state->setError($element['link']['link_custom']['url'], t('The link URL must be valid and accessible.'));
       }
       if (!$form_state->hasAnyErrors() && $transformed_url !== $url) {
-        $element['#value']['link']['link_custom']['url'] = $transformed_url;
+        $element['#value']['link_custom']['url'] = $transformed_url;
         $form_state->setValueForElement($element, $element['#value']);
       }
     }
