@@ -207,7 +207,7 @@ form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions input[disabled],
 }
 
 #layout-builder-modal .confirmation {
-  padding-top: 2rem;
+  min-height: auto !important;
   margin-left: 0;
   margin-right: 0;
 }
