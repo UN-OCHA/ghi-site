@@ -18,6 +18,8 @@ class CommonHelper {
    * Round the value to 3 decimal places by default.
    */
   public static function calculateRatio($value1, $value2, $round = 3) {
+    $value1 = is_string($value1) ? (float) $value1 : $value1;
+    $value2 = is_string($value2) ? (float) $value2 : $value2;
     $ratio = !empty($value2) ? $value1 / $value2 : 0;
     return round($ratio, $round);
   }

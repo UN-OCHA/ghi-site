@@ -239,7 +239,7 @@ class PlanOverviewPlan extends BaseObject {
    *   The plan funding.
    */
   public function getFunding() {
-    return $this->funding;
+    return (int) $this->funding;
   }
 
   /**
@@ -249,7 +249,7 @@ class PlanOverviewPlan extends BaseObject {
    *   The coverage for a plan.
    */
   public function getCoverage() {
-    return $this->coverage;
+    return (float) $this->coverage;
   }
 
   /**
@@ -259,7 +259,7 @@ class PlanOverviewPlan extends BaseObject {
    *   The plan funding.
    */
   public function getRequirements() {
-    return $this->requirements;
+    return (int) $this->requirements;
   }
 
   /**
