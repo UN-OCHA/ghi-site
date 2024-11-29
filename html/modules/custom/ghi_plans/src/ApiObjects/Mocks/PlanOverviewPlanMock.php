@@ -175,7 +175,7 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
     if (!array_key_exists($metric_type, $map)) {
       return NULL;
     }
-    return $raw_data->{$map[$metric_type]} ?? NULL;
+    return (int) $raw_data->{$map[$metric_type]} ?? NULL;
   }
 
   /**
