@@ -122,7 +122,7 @@ class PageElementsForm extends FormBase {
         '#empty' => $this->t('No elements found in this region'),
       ];
     }
-    $this->buildBulkForm($form, $this->getBulkFormActions());
+    $this->buildBulkForm($form, $form_state, !empty($rows) ? $this->getBulkFormActions() : []);
     return $form;
   }
 
@@ -173,7 +173,7 @@ class PageElementsForm extends FormBase {
     return [
       'unhide' => $this->t('Unhide'),
       'hide' => $this->t('Hide'),
-      'remove' => $this->t('Remove'),
+      // 'remove' => $this->t('Remove'),
     ];
   }
 

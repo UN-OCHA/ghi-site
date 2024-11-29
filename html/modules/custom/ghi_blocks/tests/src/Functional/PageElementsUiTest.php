@@ -100,12 +100,18 @@ class PageElementsUiTest extends BrowserTestBase {
     // Confirm the bulk operations dropdown and it's options.
     $assert_session->elementTextContains('css', 'select#edit-action option[value="unhide"]', 'Unhide');
     $assert_session->elementTextContains('css', 'select#edit-action option[value="hide"]', 'Hide');
-    $assert_session->elementTextContains('css', 'select#edit-action option[value="remove"]', 'Remove');
 
     // Remove the first of the 2 elements.
     $remove_link = $assert_session->elementExists('css', 'table#edit-elements tbody tr:first-child td:last-child li.remove > a');
     $remove_link->click();
-    $this->drupalGet('/node/' . $section_node->id() . '/page-elements');
+
+    $assert_session->pageTextContains('Are you sure you want to remove the page element?');
+    $assert_session->pageTextContains('This will permanently remove the page element from this page. This cannot be undone.');
+    $assert_session->elementExists('css', '#ghi-blocks-page-elements-action-confirm a.dialog-cancel');
+    $confirm_link = $assert_session->elementExists('css', '#ghi-blocks-page-elements-action-confirm input[value="Remove the page element"]');
+    $confirm_link->click();
+
+    // $this->drupalGet('/node/' . $section_node->id() . '/page-elements');
     $assert_session->elementsCount('css', 'table#edit-elements tbody tr', 1);
 
   }

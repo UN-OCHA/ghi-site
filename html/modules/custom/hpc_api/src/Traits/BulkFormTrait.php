@@ -18,24 +18,27 @@ trait BulkFormTrait {
    *
    * @param array $form
    *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
    * @param array $bulk_form_actions
    *   An array of actions as simple key - label pairs.
    */
-  protected function buildBulkForm(array &$form, array $bulk_form_actions) {
-    if (empty($bulk_form_actions)) {
-      return;
-    }
-
-    $form['#after_build'][] = [self::class, 'afterBuild'];
-
+  protected function buildBulkForm(array &$form, FormStateInterface $form_state, array $bulk_form_actions) {
     // Build the bulk form. This is mainly done in a way to be compatible with
     // the gin theme, see gin_form_alter() and gin/styles/base/_views.scss.
     $form['#prefix'] = Markup::create('<div class="view-content"><div class="views-form">');
     $form['#suffix'] = Markup::create('</div></div>');
+
+    if (empty($bulk_form_actions)) {
+      return;
+    }
+    $form_id = $form_state->getFormObject()->getFormId();
+    $form['#after_build'][] = [self::class, 'afterBuild'];
+
     $form['header'] = [
       '#type' => 'container',
       '#id' => 'edit-header',
-      'subpages_bulk_form' => [
+      $form_id . '_bulk_form' => [
         '#type' => 'container',
         '#id' => 'edit-node-bulk-form',
         'action' => [
@@ -54,7 +57,7 @@ trait BulkFormTrait {
       ],
     ];
 
-    self::imitateViewBulkForm($form, 'subpages_bulk_form', $this->t('Section subpages'));
+    self::imitateViewBulkForm($form, $form_id . '_bulk_form', $this->t('Bulk update listed items'));
   }
 
   /**

@@ -108,7 +108,8 @@ ghi_blocks.unhide_block:
 ghi_blocks.hide_entity_block:
   path: '/layout_builder/hide-entity-block/{entity_type}/{entity}/{uuid}'
   defaults:
-    _controller: 'Drupal\ghi_blocks\Controller\LayoutBuilderBlockController::hideEntityBlock'
+    _form: '\Drupal\ghi_blocks\Form\PageElementsConfirmForm'
+    action: 'hide'
   requirements:
     _entity_access: 'entity.update'
   options:
@@ -119,7 +120,8 @@ ghi_blocks.hide_entity_block:
 ghi_blocks.unhide_entity_block:
   path: '/layout_builder/unhide-entity-block/{entity_type}/{entity}/{uuid}'
   defaults:
-    _controller: 'Drupal\ghi_blocks\Controller\LayoutBuilderBlockController::unhideEntityBlock'
+    _form: '\Drupal\ghi_blocks\Form\PageElementsConfirmForm'
+    action: 'unhide'
   requirements:
     _entity_access: 'entity.update'
   options:
@@ -130,7 +132,8 @@ ghi_blocks.unhide_entity_block:
 ghi_blocks.remove_entity_block:
   path: '/layout_builder/remove-entity-block/{entity_type}/{entity}/{uuid}'
   defaults:
-    _controller: 'Drupal\ghi_blocks\Controller\LayoutBuilderBlockController::removeEntityBlock'
+    _form: '\Drupal\ghi_blocks\Form\PageElementsConfirmForm'
+    action: 'remove'
   requirements:
     _entity_access: 'entity.update'
   options:

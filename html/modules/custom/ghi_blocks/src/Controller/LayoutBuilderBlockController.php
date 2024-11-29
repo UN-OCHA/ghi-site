@@ -4,14 +4,11 @@ namespace Drupal\ghi_blocks\Controller;
 
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\OpenDialogCommand;
-use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\ghi_blocks\Traits\PageElementsTrait;
 use Drupal\layout_builder\Controller\MoveBlockController;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\SectionStorageInterface;
@@ -28,7 +25,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class LayoutBuilderBlockController extends ControllerBase implements ContainerInjectionInterface {
 
   use LayoutEntityHelperTrait;
-  use PageElementsTrait;
 
   /**
    * The container.
@@ -195,79 +191,6 @@ class LayoutBuilderBlockController extends ControllerBase implements ContainerIn
         $response->addCommand(new OpenDialogCommand($command['selector'], $command['dialogOptions']['title'], $command['data']));
       }
     }
-    return $response;
-  }
-
-  /**
-   * Hide a block on an entity.
-   *
-   * This is done immediately without confirmation or passing by the tempstore.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The entity to update.
-   * @param string $uuid
-   *   The uuid of the component that should be hidden.
-   *
-   * @return \Drupal\Core\Ajax\AjaxResponse
-   *   An ajax response object.
-   */
-  public function hideEntityBlock(EntityInterface $entity, $uuid) {
-    $this->actionComponentOnEntity('hide', $entity, [$uuid]);
-    return $this->redirectEntityRouteResponse($entity, 'ghi_blocks.node.page_elements');
-  }
-
-  /**
-   * Unhide a block on an entity.
-   *
-   * This is done immediately without confirmation or passing by the tempstore.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The entity to update.
-   * @param string $uuid
-   *   The uuid of the component that should be hidden.
-   *
-   * @return \Drupal\Core\Ajax\AjaxResponse
-   *   An ajax response object.
-   */
-  public function unhideEntityBlock(EntityInterface $entity, $uuid) {
-    $this->actionComponentOnEntity('unhide', $entity, [$uuid]);
-    return $this->redirectEntityRouteResponse($entity, 'ghi_blocks.node.page_elements');
-  }
-
-  /**
-   * Remove a block from an entity.
-   *
-   * This is done immediately without confirmation or passing by the tempstore.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The entity to update.
-   * @param string $uuid
-   *   The uuid of the component that should be hidden.
-   *
-   * @return \Drupal\Core\Ajax\AjaxResponse
-   *   An ajax response object.
-   */
-  public function removeEntityBlock(EntityInterface $entity, $uuid) {
-    $this->actionComponentOnEntity('remove', $entity, [$uuid]);
-    return $this->redirectEntityRouteResponse($entity, 'ghi_blocks.node.page_elements');
-  }
-
-  /**
-   * Create a redirect to the current page.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The entity to redirect to.
-   * @param string $route_name
-   *   The route name.
-   *
-   * @return \Drupal\Core\Ajax\AjaxResponse
-   *   An ajax response object.
-   */
-  private function redirectEntityRouteResponse(EntityInterface $entity, $route_name) {
-    $response = new AjaxResponse();
-    $response->addCommand(new RedirectCommand(Url::fromRoute($route_name, [
-      $entity->getEntityTypeId() => $entity->id(),
-    ])->toString()));
     return $response;
   }
 
