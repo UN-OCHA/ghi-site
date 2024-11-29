@@ -105,6 +105,40 @@ ghi_blocks.unhide_block:
       section_storage:
         layout_builder_tempstore: TRUE
 
+ghi_blocks.hide_entity_block:
+  path: '/layout_builder/hide-entity-block/{entity_type}/{entity}/{uuid}'
+  defaults:
+    _controller: 'Drupal\ghi_blocks\Controller\LayoutBuilderBlockController::hideEntityBlock'
+  requirements:
+    _entity_access: 'entity.update'
+  options:
+    parameters:
+      entity:
+        type: entity:{entity_type}
+
+ghi_blocks.unhide_entity_block:
+  path: '/layout_builder/unhide-entity-block/{entity_type}/{entity}/{uuid}'
+  defaults:
+    _controller: 'Drupal\ghi_blocks\Controller\LayoutBuilderBlockController::unhideEntityBlock'
+  requirements:
+    _entity_access: 'entity.update'
+  options:
+    parameters:
+      entity:
+        type: entity:{entity_type}
+
+ghi_blocks.remove_entity_block:
+  path: '/layout_builder/remove-entity-block/{entity_type}/{entity}/{uuid}'
+  defaults:
+    _controller: 'Drupal\ghi_blocks\Controller\LayoutBuilderBlockController::removeEntityBlock'
+  requirements:
+    _entity_access: 'entity.update'
+  options:
+    parameters:
+      entity:
+        type: entity:{entity_type}
+
+
 ghi_blocks.node.page_elements:
   path: '/node/{node}/page-elements'
   defaults:
