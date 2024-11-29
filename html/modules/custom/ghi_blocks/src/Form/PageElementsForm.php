@@ -142,13 +142,13 @@ class PageElementsForm extends FormBase {
    *   A link array to be used by dropbutton.
    */
   private function getBlockActionLink($label, BlockPluginInterface $plugin, $route_name, array $route_args = []) {
-    if (!$plugin instanceof GHIBlockBase) {
+    if ($route_name == 'ghi_blocks.hide_entity_block' && (!$plugin instanceof GHIBlockBase || $plugin->isHidden())) {
       return NULL;
     }
-    if ($route_name == 'ghi_blocks.hide_entity_block' && $plugin->isHidden()) {
+    if ($route_name == 'ghi_blocks.unhide_entity_block' && (!$plugin instanceof GHIBlockBase || !$plugin->isHidden())) {
       return NULL;
     }
-    if ($route_name == 'ghi_blocks.unhide_entity_block' && !$plugin->isHidden()) {
+    if ($route_name == 'ghi_blocks.show_block_config' && !$plugin instanceof GHIBlockBase) {
       return NULL;
     }
     return [
