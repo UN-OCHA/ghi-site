@@ -2,10 +2,12 @@
 
 namespace Drupal\ghi_blocks\Form;
 
+use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\PageElementsTrait;
 use Drupal\hpc_api\Traits\BulkFormTrait;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -19,6 +21,7 @@ class PageElementsForm extends FormBase {
 
   use LayoutEntityHelperTrait;
   use BulkFormTrait;
+  use PageElementsTrait;
 
   /**
    * {@inheritdoc}
@@ -37,12 +40,13 @@ class PageElementsForm extends FormBase {
     }
 
     $form['#node'] = $node;
+    $node_type = $node->type->entity->label();
 
     $form['description'] = [
       '#prefix' => '<p>',
       '#suffix' => '</p>',
       '#markup' => $this->t('On this page you can see all page elements that are currently configured for this @page_type page.', [
-        '@page_type' => $node->type->entity->label(),
+        '@page_type' => str_ends_with($node_type, ' page') ? str_replace(' page', '', $node_type) : $node_type,
       ]),
     ];
 
@@ -61,7 +65,7 @@ class PageElementsForm extends FormBase {
 
       foreach ($components as $uuid => $component) {
         $plugin = $component->getPlugin();
-        if (!$plugin instanceof GHIBlockBase) {
+        if (!$plugin instanceof BlockPluginInterface) {
           continue;
         }
         $route_args = [
@@ -71,17 +75,25 @@ class PageElementsForm extends FormBase {
           'region' => $region,
           'uuid' => $uuid,
         ];
+        $entity_args = [
+          'entity_type' => 'node',
+          'entity' => $node->id(),
+          'uuid' => $uuid,
+        ];
         $rows[$uuid] = [
           $plugin->getPluginDefinition()['admin_label'],
           $plugin->label() ?? '',
-          $plugin->isHidden() ? $this->t('Hidden') : $this->t('Shown'),
+          $plugin instanceof GHIBlockBase && $plugin->isHidden() ? $this->t('Hidden') : $this->t('Visible'),
           [
             'data' => [
               '#type' => 'dropbutton',
               '#dropbutton_type' => 'small',
-              '#links' => [
+              '#links' => array_filter([
+                'hide' => $this->getBlockActionLink($this->t('Hide'), $plugin, 'ghi_blocks.hide_entity_block', $entity_args),
+                'unhide' => $this->getBlockActionLink($this->t('Unhide'), $plugin, 'ghi_blocks.unhide_entity_block', $entity_args),
+                'remove' => $this->getBlockActionLink($this->t('Remove'), $plugin, 'ghi_blocks.remove_entity_block', $entity_args),
                 'show_config' => $this->getBlockActionLink($this->t('Show config'), $plugin, 'ghi_blocks.show_block_config', $route_args),
-              ],
+              ]),
             ],
           ],
         ];
@@ -103,7 +115,7 @@ class PageElementsForm extends FormBase {
         '#header' => [
           $this->t('Element type'),
           $this->t('Label'),
-          $this->t('Visibility'),
+          $this->t('Status'),
           $this->t('Operations'),
         ],
         '#options' => $rows,
@@ -129,11 +141,14 @@ class PageElementsForm extends FormBase {
    * @return array
    *   A link array to be used by dropbutton.
    */
-  private function getBlockActionLink($label, GHIBlockBase $plugin, $route_name, array $route_args = []) {
-    if ($route_name == 'ghi_blocks.hide_block' && $plugin->isHidden()) {
+  private function getBlockActionLink($label, BlockPluginInterface $plugin, $route_name, array $route_args = []) {
+    if (!$plugin instanceof GHIBlockBase) {
       return NULL;
     }
-    if ($route_name == 'ghi_blocks.unhide_block' && !$plugin->isHidden()) {
+    if ($route_name == 'ghi_blocks.hide_entity_block' && $plugin->isHidden()) {
+      return NULL;
+    }
+    if ($route_name == 'ghi_blocks.unhide_entity_block' && !$plugin->isHidden()) {
       return NULL;
     }
     return [
@@ -156,7 +171,7 @@ class PageElementsForm extends FormBase {
    */
   private function getBulkFormActions() {
     return [
-      'unhide' => $this->t('Show'),
+      'unhide' => $this->t('Unhide'),
       'hide' => $this->t('Hide'),
       'remove' => $this->t('Remove'),
     ];
@@ -173,39 +188,8 @@ class PageElementsForm extends FormBase {
     if (!array_key_exists($action, $this->getBulkFormActions())) {
       return;
     }
-
-    $node = $form['#node'];
-    $sections = $node->get(OverridesSectionStorage::FIELD_NAME)->getValue();
     $uuids = array_filter($form_state->getValue('elements'));
-    $components = [];
-    foreach (array_keys($sections) as $delta) {
-      /** @var \Drupal\layout_builder\Section $section */
-      $section = &$sections[$delta]['section'];
-      $components = $section->getComponents();
-      if (!array_intersect_key($components, $uuids)) {
-        continue;
-      }
-      foreach ($uuids as $uuid) {
-        if ($action == 'remove') {
-          $section->removeComponent($uuid);
-          continue;
-        }
-        $component = &$components[$uuid];
-        $configuration = $component->get('configuration');
-        switch ($action) {
-          case 'hide':
-            $configuration['visibility_status'] = 'hidden';
-            break;
-
-          case 'unhide':
-            $configuration['visibility_status'] = NULL;
-            break;
-        }
-        $component->setConfiguration($configuration);
-      }
-    }
-    $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
-    $node->save();
+    $this->actionComponentOnEntity($action, $form['#node'], $uuids);
 
     // Stay on the page elements form page.
     $form_state->setIgnoreDestination();

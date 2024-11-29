@@ -16,6 +16,7 @@ use Drupal\ghi_blocks\Helpers\GlobalSettingsHelper;
 use Drupal\ghi_blocks\Interfaces\DeprecatedBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\hpc_common\Helpers\UserHelper;
+use Drupal\layout_builder\OverridesSectionStorageInterface;
 use Drupal\layout_builder\Plugin\Block\InlineBlock;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\SectionStorageInterface;
@@ -266,6 +267,9 @@ function ghi_blocks_library_info_alter(&$libraries, $extension) {
  * Implements hook_gin_lb_add_suggestions_alter().
  */
 function ghi_blocks_gin_lb_add_suggestions_alter(&$add_suggestions, $variables, $hook) {
+  if ($hook == 'confirm_form') {
+    $add_suggestions = FALSE;
+  }
   $route_name = \Drupal::routeMatch()->getRouteName();
   if ($route_name == 'layout_builder.add_block' && $add_suggestions) {
     $add_suggestions = FALSE;
@@ -549,51 +553,57 @@ function ghi_blocks_page_attachments(array &$attachments) {
  * for editing anymore.
  */
 function ghi_blocks_layout_builder_ipe_links_alter(array &$links, SectionStorageInterface $section_storage, EntityInterface $entity) {
+  if (!$section_storage instanceof OverridesSectionStorageInterface) {
+    // Don't do this for page manager pages for now, as there are some issues
+    // with that.
+    return;
+  }
   /** @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface $layout_tempstore_repository */
   $layout_tempstore_repository = \Drupal::service('layout_builder.tempstore_repository');
-  /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
-  $module_handler = \Drupal::service('module_handler');
-  if ($layout_tempstore_repository->has($section_storage)) {
-    $modal_settings = [
-      'width' => 600,
-      'height' => 400,
-      'autoResize' => TRUE,
-    ];
-    if ($module_handler->moduleExists('layout_builder_modal')) {
-      $modal_config = \Drupal::config('layout_builder_modal.settings');
-      $modal_settings = [
-        'width' => $modal_config->get('modal_width'),
-        'height' => $modal_config->get('modal_height'),
-        'autoResize' => $modal_config->get('modal_autoresize'),
-      ];
-    }
-    $customize_link = $links['customize'];
-    $links['customize'] = [
-      '#type' => 'dropbutton',
-      '#links' => [
-        'customize' => [
-          'title' => $customize_link->getText(),
-          'url' => $customize_link->getUrl(),
-          'attributes' => $customize_link->getUrl()->getOption('attributes'),
-        ],
-        'discard' => [
-          'title' => t('Discard changes'),
-          'url' => Url::fromRoute('layout_builder.' . $section_storage->getPluginId() . '.' . $entity->getEntityTypeId() . '.discard_changes', [
-            $entity->getEntityTypeId() => $entity->id(),
-          ], [
-            'attributes' => [
-              'class' => ['use-ajax'],
-              'data-dialog-type' => 'dialog',
-              'data-dialog-options' => Json::encode([
-                'target' => 'layout-builder-modal',
-                'modal' => TRUE,
-              ] + $modal_settings),
-            ],
-          ]),
-        ],
-      ],
-    ];
+  if (!$layout_tempstore_repository->has($section_storage)) {
+    return;
   }
+
+  $modal_settings = [
+    'target' => 'layout-builder-modal',
+    'modal' => TRUE,
+    'width' => 650,
+    'height' => 'auto',
+    'autoResize' => TRUE,
+  ];
+  $customize_link = $links['customize'];
+  $route_name = 'layout_builder.' . $section_storage->getPluginId() . '.' . $entity->getEntityTypeId() . '.discard_changes';
+  if (empty(\Drupal::service('router.route_provider')->getRoutesByNames([$route_name]))) {
+    return;
+  }
+  $links['customize'] = [
+    '#type' => 'dropbutton',
+    '#links' => [
+      'customize' => [
+        'title' => $customize_link->getText(),
+        'url' => $customize_link->getUrl(),
+        'attributes' => $customize_link->getUrl()->getOption('attributes'),
+      ],
+      'discard' => [
+        'title' => t('Discard changes'),
+        'url' => Url::fromRoute($route_name, [
+          $entity->getEntityTypeId() => $entity->id(),
+        ], [
+          'attributes' => [
+            'class' => ['use-ajax'],
+            'data-dialog-type' => 'dialog',
+            'data-dialog-options' => Json::encode($modal_settings),
+          ],
+          'query' => [
+            'current_path' => Url::fromRoute('<current>')->toString(),
+          ],
+        ]),
+      ],
+    ],
+    '#attached' => [
+      'library' => ['ghi_blocks/ipe.links'],
+    ],
+  ];
 }
 
 /**
