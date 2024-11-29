@@ -126,3 +126,10 @@ block_config.links:
   css:
     component:
       css/block-config/links.css: {}
+
+ipe.links:
+  css:
+    component:
+      css/ipe.links.css: {}
+  js:
+    js/ipe.links.js: {}

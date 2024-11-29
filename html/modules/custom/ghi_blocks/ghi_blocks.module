@@ -9,14 +9,18 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
+use Drupal\Core\Url;
 use Drupal\ghi_blocks\Controller\BaseObjectReferenceController;
 use Drupal\ghi_blocks\Controller\LayoutBuilderBlockController;
 use Drupal\ghi_blocks\Helpers\GlobalSettingsHelper;
 use Drupal\ghi_blocks\Interfaces\DeprecatedBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\hpc_common\Helpers\UserHelper;
+use Drupal\layout_builder\OverridesSectionStorageInterface;
 use Drupal\layout_builder\Plugin\Block\InlineBlock;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
 
 /**
@@ -264,6 +268,9 @@ function ghi_blocks_library_info_alter(&$libraries, $extension) {
  * Implements hook_gin_lb_add_suggestions_alter().
  */
 function ghi_blocks_gin_lb_add_suggestions_alter(&$add_suggestions, $variables, $hook) {
+  if ($hook == 'confirm_form') {
+    $add_suggestions = FALSE;
+  }
   $route_name = \Drupal::routeMatch()->getRouteName();
   if ($route_name == 'layout_builder.add_block' && $add_suggestions) {
     $add_suggestions = FALSE;
@@ -368,6 +375,8 @@ function ghi_blocks_link_alter(&$variables) {
 
   $route_name = $url->getRouteName();
 
+  // @todo This could also be done via the route definition, at least for our
+  // custom ones.
   $allowed_routes = [
     'layout_builder.choose_block',
     'layout_builder.remove_block',
@@ -375,13 +384,16 @@ function ghi_blocks_link_alter(&$variables) {
     'ghi_blocks.show_block_config',
     'ghi_blocks.hide_block',
     'ghi_blocks.unhide_block',
+    'ghi_blocks.hide_entity_block',
+    'ghi_blocks.unhide_entity_block',
+    'ghi_blocks.remove_entity_block',
   ];
   if (!in_array($route_name, $allowed_routes)) {
     // All other routes are already handled by the Layout Buidler Modal module.
     return;
   }
 
-  if (in_array('use-ajax', $variables['options']['attributes']['class'])) {
+  if (in_array('use-ajax', ($variables['options']['attributes']['class'] ?? []))) {
     $config = \Drupal::config('layout_builder_modal.settings');
     $data_dialog_options = Json::encode([
       'width' => $config->get('modal_width'),
@@ -428,7 +440,8 @@ function ghi_blocks_form_alter(array &$form, FormStateInterface $form_state, $fo
 
   if ($form['#theme'] == 'confirm_form') {
     $form['#after_build'][] = 'ghi_blocks_confirm_form_after_build';
-
+    $form['#prefix'] = Markup::create('<div class="gin-confirm-form">');
+    $form['#suffix'] = Markup::create('</div>');
   }
 }
 
@@ -537,6 +550,67 @@ function ghi_blocks_page_attachments(array &$attachments) {
     $attachments['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
   }
   $attachments['#attached']['library'][] = 'ghi_blocks/gin';
+}
+
+/**
+ * Implements hook_layout_builder_ipe_links_alter().
+ *
+ * This a discard changes link if there are layout changes that can be
+ * discarded. This might be necessary if a page is broken and can't be opened
+ * for editing anymore.
+ */
+function ghi_blocks_layout_builder_ipe_links_alter(array &$links, SectionStorageInterface $section_storage, EntityInterface $entity) {
+  if (!$section_storage instanceof OverridesSectionStorageInterface) {
+    // Don't do this for page manager pages for now, as there are some issues
+    // with that.
+    return;
+  }
+  /** @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface $layout_tempstore_repository */
+  $layout_tempstore_repository = \Drupal::service('layout_builder.tempstore_repository');
+  if (!$layout_tempstore_repository->has($section_storage)) {
+    return;
+  }
+
+  $modal_settings = [
+    'target' => 'layout-builder-modal',
+    'modal' => TRUE,
+    'width' => 650,
+    'height' => 'auto',
+    'autoResize' => TRUE,
+  ];
+  $customize_link = $links['customize'];
+  $route_name = 'layout_builder.' . $section_storage->getPluginId() . '.' . $entity->getEntityTypeId() . '.discard_changes';
+  if (empty(\Drupal::service('router.route_provider')->getRoutesByNames([$route_name]))) {
+    return;
+  }
+  $links['customize'] = [
+    '#type' => 'dropbutton',
+    '#links' => [
+      'customize' => [
+        'title' => $customize_link->getText(),
+        'url' => $customize_link->getUrl(),
+        'attributes' => $customize_link->getUrl()->getOption('attributes'),
+      ],
+      'discard' => [
+        'title' => t('Discard changes'),
+        'url' => Url::fromRoute($route_name, [
+          $entity->getEntityTypeId() => $entity->id(),
+        ], [
+          'attributes' => [
+            'class' => ['use-ajax'],
+            'data-dialog-type' => 'dialog',
+            'data-dialog-options' => Json::encode($modal_settings),
+          ],
+          'query' => [
+            'current_path' => Url::fromRoute('<current>')->toString(),
+          ],
+        ]),
+      ],
+    ],
+    '#attached' => [
+      'library' => ['ghi_blocks/ipe.links'],
+    ],
+  ];
 }
 
 /**

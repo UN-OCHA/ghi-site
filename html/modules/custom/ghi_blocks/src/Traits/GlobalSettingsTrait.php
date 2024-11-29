@@ -285,6 +285,16 @@ trait GlobalSettingsTrait {
       }, $rows);
     }
 
+    // Handle optional caseload columns.
+    if (empty($config['caseload_expected_reached'])) {
+      // Hide the expected reach column.
+      unset($header['expected_reached']);
+      $rows = array_map(function ($row) {
+        unset($row['expected_reached']);
+        return $row;
+      }, $rows);
+    }
+
     if (empty($config['caseload_latest_reach'])) {
       // Hide the reached column.
       unset($header['latest_reach']);
@@ -379,6 +389,10 @@ trait GlobalSettingsTrait {
       'caseload_expected_reach' => [
         '#title' => $this->t('Show estimated reach values'),
         '#description' => $this->t('Check to show estimated reached values on global pages.'),
+      ],
+      'caseload_expected_reached' => [
+        '#title' => $this->t('Show estimated reach (%)'),
+        '#description' => $this->t('Check to show estimated reached %, calculated based on estimated reach and target, on global pages.'),
       ],
       'caseload_latest_reach' => [
         '#title' => $this->t('Show latest reach values'),

@@ -9,6 +9,7 @@ use Drupal\ghi_blocks\Form\ImportBlockForm;
 use Drupal\ghi_blocks\Traits\GinLbModalTrait;
 use Drupal\layout_builder\Form\AddBlockForm;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\page_manager\Plugin\SectionStorage\PageManagerSectionStorage;
 
 /**
  * Service class for helping with altering the layout builder form.
@@ -29,7 +30,7 @@ class LayoutBuilderFormAlter {
   public function alterConfirmationForm(array &$form, FormStateInterface $form_state) {
     /** @var \Drupal\layout_builder\SectionStorageInterface $section_storage */
     $section_storage = reset($form_state->getBuildInfo()['args']);
-    if ($section_storage instanceof OverridesSectionStorage) {
+    if ($section_storage instanceof OverridesSectionStorage || $section_storage instanceof PageManagerSectionStorage) {
       $this->makeGinLbForm($form, $form_state);
     }
   }

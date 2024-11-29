@@ -40,7 +40,7 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
       '#title' => $this->t('Data type'),
       '#options' => $this->getTypeOptions(),
       '#default_value' => $type_key,
-      '#weight' => 0,
+      '#weight' => -1,
       '#ajax' => [
         'event' => 'change',
         'callback' => [static::class, 'updateAjax'],
@@ -297,6 +297,12 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
       ],
       'people_target' => [
         'label' => $this->t('People targeted'),
+        'value_description' => $this->t('Enter amount as full integer to override the value from the API.'),
+        'data_type' => 'integer',
+        'theme' => 'hpc_amount',
+      ],
+      'people_expected_reach' => [
+        'label' => $this->t('People expected reach'),
         'value_description' => $this->t('Enter amount as full integer to override the value from the API.'),
         'data_type' => 'integer',
         'theme' => 'hpc_amount',

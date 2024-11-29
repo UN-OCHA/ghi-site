@@ -57,10 +57,7 @@ class FileListForm extends FormBase {
       '#empty' => $this->t('No files found.'),
     ];
 
-    if (!empty($rows)) {
-      $this->buildBulkForm($form, $this->getBulkFormActions());
-    }
-
+    $this->buildBulkForm($form, $form_state, !empty($rows) ? $this->getBulkFormActions() : []);
     return $form;
   }
 

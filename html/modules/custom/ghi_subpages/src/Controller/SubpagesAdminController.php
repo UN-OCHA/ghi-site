@@ -9,7 +9,7 @@ use Drupal\node\NodeInterface;
 use Drupal\node\NodeTypeInterface;
 
 /**
- * Controller for autocomplete plan loading.
+ * Controller for subpage backend page access and title.
  */
 class SubpagesAdminController extends ControllerBase {
 

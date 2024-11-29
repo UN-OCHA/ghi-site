@@ -106,3 +106,13 @@
 .form-type--configuration_container table.summary-table .operation-buttons {
   white-space: nowrap;
 }
+
+.form-type--configuration_container .item-type-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.form-type--configuration_container .item-type-title-wrapper > .glb-button {
+  margin: 0 !important;
+  font-size: 14px !important;
+}

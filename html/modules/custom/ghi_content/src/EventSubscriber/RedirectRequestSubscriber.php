@@ -75,6 +75,8 @@ class RedirectRequestSubscriber implements EventSubscriberInterface {
       '/layout/discard-changes',
       '/layout/revert',
       '/layout/disable',
+      '/page-elements',
+      '/translations',
       '/revisions',
       '/delete',
     ];

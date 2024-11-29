@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\LayoutBuilder;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\ghi_blocks\Traits\GinLbModalTrait;
 use Drupal\gin_lb\HookHandler\FormAlter;
 use Drupal\layout_builder\Form\LayoutRebuildConfirmFormBase;
@@ -67,6 +68,13 @@ abstract class ConfirmFormBase extends LayoutRebuildConfirmFormBase {
 
     $this->makeGinLbForm($form, $form_state);
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCancelUrl() {
+    return Url::fromRoute('ghi_blocks.node.page_elements', ['node' => 14657]);
   }
 
 }

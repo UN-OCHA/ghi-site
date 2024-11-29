@@ -1151,6 +1151,7 @@ class ConfigurationContainer extends FormElement {
         $element['item_config']['description'] = [
           '#type' => 'item',
           '#title' => $item_type->getPluginLabel(),
+          '#title_display' => 'hidden',
           '#markup' => $plugin_description,
           '#wrapper_attributes' => [
             'class' => ['plugin-description'],
@@ -1166,21 +1167,26 @@ class ConfigurationContainer extends FormElement {
         // If there are more than one type, allow to change it when still
         // adding.
         if (count($item_type_options) > 1) {
-          $element['item_config']['change_item_type'] = [
-            '#type' => 'submit',
-            '#value' => t('Change @item_type_label type', [
-              '@item_type_label' => strtolower($element['#item_type_label']),
-            ]),
-            '#ajax' => [
-              'event' => 'click',
-              'callback' => [static::class, 'updateAjax'],
-              'wrapper' => $wrapper_id,
+          $element['title_wrapper'] = [
+            '#type' => 'container',
+            '#attributes' => [
+              'class' => ['item-type-title-wrapper'],
             ],
-          ];
-
-          $element['title'] = [
-            '#markup' => Markup::create('<h3>' . t('Selected type: %type', ['%type' => $item_type->getPluginLabel()]) . '</h3>'),
             '#weight' => -1,
+            'title' => [
+              '#markup' => Markup::create('<h3>' . t('Selected type: %type', ['%type' => $item_type->getPluginLabel()]) . '</h3>'),
+            ],
+            'change_item_type' => [
+              '#type' => 'submit',
+              '#value' => t('Change @item_type_label type', [
+                '@item_type_label' => strtolower($element['#item_type_label']),
+              ]),
+              '#ajax' => [
+                'event' => 'click',
+                'callback' => [static::class, 'updateAjax'],
+                'wrapper' => $wrapper_id,
+              ],
+            ],
           ];
         }
       }

@@ -8,12 +8,11 @@
    */
    Drupal.behaviors.templateFrontendLinks = {
     attach: function (context, settings) {
-      once('template-frontend-links', '.dropbutton-wrapper[tabindex="1"]').forEach((el) => {
+      once('ipe-frontend-links', '.layout-builder-ipe--link.dropbutton-wrapper[tabindex="1"]').forEach((el) => {
         $(el).on('keypress', (event) => {
-          console.log(event.which);
           if (event.which == 13) {
             $(el).find('.dropbutton-toggle button').trigger('click');
-            $(el).find('a:first').trigger('focus');
+          $(el).find('a:first').trigger('focus');
           }
         });
       });

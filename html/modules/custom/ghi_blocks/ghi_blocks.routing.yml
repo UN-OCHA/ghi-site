@@ -104,3 +104,53 @@ ghi_blocks.unhide_block:
     parameters:
       section_storage:
         layout_builder_tempstore: TRUE
+
+ghi_blocks.hide_entity_block:
+  path: '/layout_builder/hide-entity-block/{entity_type}/{entity}/{uuid}'
+  defaults:
+    _form: '\Drupal\ghi_blocks\Form\PageElementsConfirmForm'
+    action: 'hide'
+  requirements:
+    _entity_access: 'entity.update'
+  options:
+    parameters:
+      entity:
+        type: entity:{entity_type}
+
+ghi_blocks.unhide_entity_block:
+  path: '/layout_builder/unhide-entity-block/{entity_type}/{entity}/{uuid}'
+  defaults:
+    _form: '\Drupal\ghi_blocks\Form\PageElementsConfirmForm'
+    action: 'unhide'
+  requirements:
+    _entity_access: 'entity.update'
+  options:
+    parameters:
+      entity:
+        type: entity:{entity_type}
+
+ghi_blocks.remove_entity_block:
+  path: '/layout_builder/remove-entity-block/{entity_type}/{entity}/{uuid}'
+  defaults:
+    _form: '\Drupal\ghi_blocks\Form\PageElementsConfirmForm'
+    action: 'remove'
+  requirements:
+    _entity_access: 'entity.update'
+  options:
+    parameters:
+      entity:
+        type: entity:{entity_type}
+
+
+ghi_blocks.node.page_elements:
+  path: '/node/{node}/page-elements'
+  defaults:
+    _form: '\Drupal\ghi_blocks\Form\PageElementsForm'
+    _title_callback: '\Drupal\ghi_blocks\Controller\PageElementsController::title'
+  options:
+    parameters:
+      node:
+        type: entity:node
+    _admin_route: TRUE
+  requirements:
+    _custom_access: '\Drupal\ghi_blocks\Controller\PageElementsController::access'

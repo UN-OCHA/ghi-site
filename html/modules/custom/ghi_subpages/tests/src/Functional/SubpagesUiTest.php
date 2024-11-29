@@ -91,7 +91,7 @@ class SubpagesUiTest extends BrowserTestBase {
     $assert_session->elementsCount('css', '#edit-subpages-standard tbody tr', count(self::SUBPAGE_BUNDLES));
     // Confirm the first columns are checkboxes and that their tds have the
     // right class.
-    $assert_session->elementsCount('css', '#edit-subpages-standard tbody tr td:first-child.subpages-bulk-form input[type="checkbox"]', count(self::SUBPAGE_BUNDLES));
+    $assert_session->elementsCount('css', '#edit-subpages-standard tbody tr td:first-child.ghi-subpages-admin-views-form-bulk-form input[type="checkbox"]', count(self::SUBPAGE_BUNDLES));
   }
 
 }

@@ -18,24 +18,27 @@ trait BulkFormTrait {
    *
    * @param array $form
    *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
    * @param array $bulk_form_actions
    *   An array of actions as simple key - label pairs.
    */
-  protected function buildBulkForm(array &$form, array $bulk_form_actions) {
-    if (empty($bulk_form_actions)) {
-      return;
-    }
-
-    $form['#after_build'][] = [self::class, 'afterBuild'];
-
+  protected function buildBulkForm(array &$form, FormStateInterface $form_state, array $bulk_form_actions) {
     // Build the bulk form. This is mainly done in a way to be compatible with
     // the gin theme, see gin_form_alter() and gin/styles/base/_views.scss.
     $form['#prefix'] = Markup::create('<div class="view-content"><div class="views-form">');
     $form['#suffix'] = Markup::create('</div></div>');
+
+    if (empty($bulk_form_actions)) {
+      return;
+    }
+    $form_id = $form_state->getFormObject()->getFormId();
+    $form['#after_build'][] = [self::class, 'afterBuild'];
+
     $form['header'] = [
       '#type' => 'container',
       '#id' => 'edit-header',
-      'subpages_bulk_form' => [
+      $form_id . '_bulk_form' => [
         '#type' => 'container',
         '#id' => 'edit-node-bulk-form',
         'action' => [
@@ -54,7 +57,7 @@ trait BulkFormTrait {
       ],
     ];
 
-    self::imitateViewBulkForm($form, 'subpages_bulk_form', $this->t('Section subpages'));
+    self::imitateViewBulkForm($form, $form_id . '_bulk_form', $this->t('Bulk update listed items'));
   }
 
   /**
@@ -158,16 +161,19 @@ trait BulkFormTrait {
     foreach (Element::children($form) as $element_key) {
       $element = &$form[$element_key];
       if (empty($element['#type']) || $element['#type'] != 'tableselect') {
+        if (!empty(Element::children($element))) {
+          // Check if any of the children is a tableselect.
+          $element = self::afterBuild($element, $form_state);
+        }
         continue;
       }
-
-      $element['#pre_render'][] = function (array $element) {
+      $element['#pre_render'][] = function (array $element) use ($form) {
         // Add a class to the checkbox column of each row, so that the logic in
         // core/themes/claro/js/tableselect.js can find the checkboxes.
         foreach ($element['#rows'] as &$row) {
           $row['data'][0] = [
             'data' => $row['data'][0],
-            'class' => 'subpages-bulk-form',
+            'class' => $form['#id'] . '-bulk-form',
           ];
         }
         return $element;

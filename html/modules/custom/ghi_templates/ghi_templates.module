@@ -177,7 +177,7 @@ function ghi_templates_layout_builder_ipe_links_alter(array &$links, SectionStor
       ],
       '#attached' => [
         'library' => [
-          'ghi_templates/import_page',
+          'ghi_blocks/ipe.links',
         ],
       ],
     ];
@@ -200,7 +200,7 @@ function ghi_templates_layout_builder_ipe_links_alter(array &$links, SectionStor
         ],
         '#attached' => [
           'library' => [
-            'ghi_templates/import_page',
+            'ghi_blocks/ipe.links',
           ],
         ],
       ];

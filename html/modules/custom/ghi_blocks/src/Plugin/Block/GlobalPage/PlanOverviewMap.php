@@ -172,6 +172,7 @@ class PlanOverviewMap extends GHIBlockBase {
       $in_need = $plan->getCaseloadValue('inNeed');
       $target = $plan->getCaseloadValue('target');
       $reached = $plan->getCaseloadValue('latestReach');
+      $expected_reach = $plan->getCaseloadValue('expectedReach');
 
       if (empty($funding) && empty($requirements) && empty($in_need) && empty($target)) {
         continue;
@@ -195,9 +196,10 @@ class PlanOverviewMap extends GHIBlockBase {
         'total_population' => $plan->getCaseloadValue('totalPopulation'),
         'target' => $target,
         'in_need' => $in_need,
-        'estimated_reach' => $plan->getCaseloadValue('expectedReach'),
+        'expected_reach' => $expected_reach,
+        'expected_reached' => !empty($expected_reach) && !empty($target) ? $expected_reach / $target : FALSE,
         'reached' => $reached,
-        'reached_percent' => !empty($reached) && !empty($target) ? 1 / $target * $reached : FALSE,
+        'reached_percent' => !empty($reached) && !empty($target) ? $reached / $target : FALSE,
       ];
       $funding = (object) [
         'total_funding' => $funding,
@@ -380,6 +382,7 @@ class PlanOverviewMap extends GHIBlockBase {
       $in_need = $plan->getCaseloadValue('inNeed');
       $target = $plan->getCaseloadValue('target');
       $reached = $plan->getCaseloadValue('latestReach');
+      $expected_reach = $plan->getCaseloadValue('expectedReach');
 
       if (empty($funding) && empty($requirements) && empty($in_need) && empty($target)) {
         continue;
@@ -403,7 +406,8 @@ class PlanOverviewMap extends GHIBlockBase {
         'total_population' => $plan->getCaseloadValue('totalPopulation'),
         'target' => $target,
         'in_need' => $in_need,
-        'estimated_reach' => $plan->getCaseloadValue('expectedReach'),
+        'expected_reach' => $expected_reach,
+        'expected_reached' => !empty($expected_reach) && !empty($target) ? $expected_reach / $target : FALSE,
         'reached' => $reached,
         'reached_percent' => !empty($reached) && !empty($target) ? 1 / $target * $reached : FALSE,
       ];
@@ -524,12 +528,13 @@ class PlanOverviewMap extends GHIBlockBase {
         'label' => $this->t('Targeted'),
         'value' => $this->getRenderedFootnoteTooltip($footnotes, 'target') . CommonHelper::renderValue($caseload->target, 'amount', 'hpc_amount', $common_theme_args),
       ],
-      // Note that due to space restrictions, the "estimated reach" and
-      // "reached" values are mutually exclusive in the modal.
-      // @see plan-overview-map-modal.tpl.php
-      'estimated_reach' => [
+      'expected_reach' => [
         'label' => $this->t('Est. reach'),
-        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'estimated_reach') . CommonHelper::renderValue($caseload->estimated_reach, 'amount', 'hpc_amount', $common_theme_args),
+        'value' => $this->getRenderedFootnoteTooltip($footnotes, 'expected_reach') . CommonHelper::renderValue($caseload->expected_reach, 'amount', 'hpc_amount', $common_theme_args),
+      ],
+      'expected_reached' => [
+        'label' => $this->t('Est. reach (%)'),
+        'value' => CommonHelper::renderValue($caseload->expected_reached, 'ratio', 'hpc_percent'),
       ],
       'reached' => [
         'label' => $this->t('Reached'),
@@ -605,7 +610,10 @@ class PlanOverviewMap extends GHIBlockBase {
       unset($items['funding_progress']);
     }
     if (empty($global_config['caseload_expected_reach'])) {
-      unset($items['estimated_reach']);
+      unset($items['expected_reach']);
+    }
+    if (empty($global_config['caseload_expected_reached'])) {
+      unset($items['expected_reached']);
     }
     if (empty($global_config['caseload_latest_reach'])) {
       unset($items['reached']);
