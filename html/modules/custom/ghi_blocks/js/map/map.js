@@ -807,11 +807,6 @@
     if (focus_state) {
       Drupal.hpc_map.moveLocationToFront(contained_element);
     }
-    // else if (state.active_location) {
-    //   let active_element = Drupal.hpc_map.getElementFromDataObject(state.active_location, state);
-    //   Drupal.hpc_map.moveLocationToFront(active_element);
-    // }
-
   }
 
   // Change the admin level.
@@ -893,12 +888,15 @@
   }
 
   // Get the factor for the radius.
-  Drupal.hpc_map.getRadiusFactor = function(d) {
+  Drupal.hpc_map.getRadiusFactor = function(d, state) {
     if (typeof d == 'undefined') {
       return 1;
     }
     if (typeof d.radius_factor_grouped != 'undefined') {
       return d.radius_factor_grouped;
+    }
+    if (typeof d.radius_factors != 'undefined' && typeof d.radius_factors[state.index] != 'undefined') {
+      return d.radius_factors[state.index];
     }
     if (typeof d.radius_factor != 'undefined') {
       return d.radius_factor;
@@ -907,10 +905,10 @@
   }
 
   // Calculate the radius for the given data point.
-  Drupal.hpc_map.getRadius = function(d, scale, base_radius, radius_factor, min_radius) {
+  Drupal.hpc_map.getRadius = function(state, d, scale, base_radius, radius_factor, min_radius) {
     var admin_level = typeof d.admin_level != 'undefined' ? d.admin_level : 1;
     if (typeof radius_factor == 'undefined') {
-      radius_factor = Drupal.hpc_map.getRadiusFactor(d);
+      radius_factor = Drupal.hpc_map.getRadiusFactor(d, state);
     }
     let radius = (base_radius + (radius_factor / scale)) / admin_level;
     return (typeof min_radius != 'undefined') ? (radius > min_radius ? radius : min_radius) : radius;

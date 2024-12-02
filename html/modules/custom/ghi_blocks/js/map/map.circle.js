@@ -78,7 +78,7 @@
         continue;
       }
       let location_data = Drupal.hpc_map.getLocationDataById(state, object_id);
-      let radius = Drupal.hpc_map.getRadius(location_data, scale, base_radius/scale);
+      let radius = Drupal.hpc_map.getRadius(state, location_data, scale, base_radius/scale);
       offset += radius + (base_radius + 3)/scale;
     }
     return offset;
@@ -168,7 +168,7 @@
         .transition()
         .duration(250)
         .attr('fill', d => Drupal.hpc_map_circle.getColor(d, map_state, map_id))
-        .attr('r', d => Drupal.hpc_map.getRadius(d, scale, radius) + base_radius/scale)
+        .attr('r', d => Drupal.hpc_map.getRadius(map_state, d, scale, radius) + base_radius/scale)
         .attr('opacity', d => Drupal.hpc_map_circle.getOpacity(d, map_state, map_id));
     }
     else {
@@ -188,7 +188,7 @@
         .attr('cursor', attrs.cursor)
         .attr('opacity', d => Drupal.hpc_map_circle.getOpacity(d, map_state, map_id))
         .attr('fill', d => Drupal.hpc_map_circle.getColor(d, map_state, map_id))
-        .attr('r', d => Drupal.hpc_map.getRadius(d, scale, radius));
+        .attr('r', d => Drupal.hpc_map.getRadius(map_state, d, scale, radius));
     }
   }
 
@@ -249,7 +249,7 @@
           .duration(500)
           .attr('cursor', attrs.cursor)
           .attr('fill', d => Drupal.hpc_map_circle.getColor(d, state, map_id))
-          .attr('r', d => Drupal.hpc_map.getRadius(d, scale, radius))
+          .attr('r', d => Drupal.hpc_map.getRadius(state, d, scale, radius))
           .attr('stroke-width', strokeWidth)
           .attr('opacity', d => Drupal.hpc_map_circle.getOpacity(d, state, map_id));
         },
@@ -260,7 +260,7 @@
           .attr('stroke', attrs.stroke)
           .attr('cursor', attrs.cursor)
           .attr('fill', d => Drupal.hpc_map_circle.getColor(d, state, map_id))
-          .attr('r', d => Drupal.hpc_map.getRadius(d, scale, radius))
+          .attr('r', d => Drupal.hpc_map.getRadius(state, d, scale, radius))
           .attr('stroke-width', strokeWidth)
           .attr('opacity', d => Drupal.hpc_map_circle.getOpacity(d, state, map_id));
         },
