@@ -251,7 +251,7 @@
       let group_keys = Object.keys(object[state.index]);
       let primary_key = group_keys[0];
 
-      let r = object[state.index][primary_key] > 0 ? Drupal.hpc_map.getRadius(object, 1, base_radius, object.radius_factor / scale, min_radius / Math.sqrt(scale)) : min_radius;
+      let r = object[state.index][primary_key] > 0 ? Drupal.hpc_map.getRadius(state, object, 1, base_radius, object.radius_factor / scale, min_radius / Math.sqrt(scale)) : min_radius;
       let x = proj.latLngToLayerPoint(object.latLng).x;
       let y = proj.latLngToLayerPoint(object.latLng).y;
 
