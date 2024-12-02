@@ -304,6 +304,10 @@
                 }
               }
             }
+
+            &.mega-menu--gho-menu details.vertical-tabs__pane > ul > li {
+              break-inside: avoid-column;
+            }
           }
         }
       }
