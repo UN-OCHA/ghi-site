@@ -1,7 +1,7 @@
 /**
  * Override some stuff from gho-aside specifically for Facts and Figures.
  */
- .gho-facts-and-figures.gho-aside .gho-aside__title {
+.gho-facts-and-figures.gho-aside .gho-aside__title {
   margin-bottom: 1.25rem;
 }
 
