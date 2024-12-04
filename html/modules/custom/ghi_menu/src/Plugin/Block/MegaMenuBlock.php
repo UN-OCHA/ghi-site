@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_menu\Plugin\Block;
 
+use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
@@ -13,6 +14,7 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\RenderElement;
 use Drupal\Core\Render\Element\VerticalTabs;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
+use Drupal\menu_link_content\Plugin\Menu\MenuLinkContent;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -57,6 +59,13 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
   protected $menuTree;
 
   /**
+   * The menu tree manipulators.
+   *
+   * @var \Drupal\Core\Menu\DefaultMenuLinkTreeManipulators
+   */
+  protected $menuTreeManipulators;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -66,6 +75,7 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
     $instance->entityFieldManager = $container->get('entity_field.manager');
     $instance->moduleHandler = $container->get('module_handler');
     $instance->menuTree = $container->get('menu.link_tree');
+    $instance->menuTreeManipulators = $container->get('menu.default_tree_manipulators');
     return $instance;
   }
 
@@ -206,6 +216,8 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
     $parameters = $this->menuTree->getCurrentRouteMenuTreeParameters('main');
     $parameters->expandedParents = [];
     $menu_tree = $this->menuTree->load($menu->id(), $parameters);
+    $this->filterBrokenItems($menu_tree);
+
     // Transform the tree using the manipulators you want.
     $manipulators = [
       // Only show links that are accessible for the current user.
@@ -215,6 +227,31 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
     ];
     $menu_tree = $this->menuTree->transform($menu_tree, $manipulators);
     return $menu_tree;
+  }
+
+  /**
+   * Filter broken menu links from the tree.
+   *
+   * @param \Drupal\Core\Menu\MenuLinkTreeElement[] $menu_tree
+   *   The menu tree to filter.
+   */
+  private function filterBrokenItems(array &$menu_tree) {
+    foreach ($menu_tree as $key => &$item) {
+      $link = $item->link;
+      if (!$link instanceof MenuLinkContent) {
+        continue;
+      }
+      try {
+        $this->menuTreeManipulators->checkAccess([$item]);
+      }
+      catch (PluginException $e) {
+        unset($menu_tree[$key]);
+        continue;
+      }
+      if ($item->hasChildren) {
+        $this->filterBrokenItems($item->subtree);
+      }
+    }
   }
 
   /**
