@@ -143,3 +143,12 @@ function ghi_menu_deploy_add_pages_item_to_admin_menu(&$sandbox) {
   $menu_link->set('parent', 'system.admin_content');
   $menu_link->save();
 }
+
+/**
+ * Fix broken menu items.
+ */
+function ghi_menu_deploy_cleanup_broken_menu_items(&$sandbox) {
+  /** @var \Drupal\ghi_menu\GhiMenuStorageHelper $menu_tree_storage_helper */
+  $menu_tree_storage_helper = \Drupal::service('ghi_menu.menu_tree_storage_helper');
+  $menu_tree_storage_helper->cleanupMenuStorage();
+}

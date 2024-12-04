@@ -2,7 +2,15 @@ services:
   ghi_menu.entity_operations_manager:
     class: Drupal\ghi_menu\GhiEntityOperationsManager
     arguments: ['@publishcontent.access', '@csrf_token', '@redirect.destination', '@current_user']
+  ghi_menu.menu_tree_storage_helper:
+    class: Drupal\ghi_menu\GhiMenuStorageHelper
+    arguments: ['@menu.link_tree', '@menu.tree_storage']
   ghi_menu.route_subscriber:
     class: Drupal\ghi_menu\EventSubscriber\RouteSubscriber
+    tags:
+      - { name: event_subscriber }
+  ghi_menu.menu_rebuild_subscriber:
+    class: Drupal\ghi_menu\EventSubscriber\MenuRouterRebuildSubscriber
+    arguments: ['@ghi_menu.menu_tree_storage_helper']
     tags:
       - { name: event_subscriber }
