@@ -42,6 +42,10 @@
         url("../../../custom/common_design_subtheme/img/logos/logo-humanitarian-action.svg")
           center no-repeat;
       background-position: 0 center;
+
+      img {
+        display: none;
+      }
     }
 
     @include min-width(md) {
