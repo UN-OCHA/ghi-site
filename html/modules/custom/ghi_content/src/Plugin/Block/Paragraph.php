@@ -177,6 +177,13 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
           // out of the content area, so we add that here.
           $block_attributes['class'][] = 'content-width';
         }
+        if (in_array('gho-interactive-content--full-width', $gho_classes)) {
+          // Remove the full width classes from the content, but don't add the
+          // content-width class. This will lead to the paragraph to take as
+          // much place as the hero image.
+          $gho_classes = array_diff($gho_classes, ['gho-interactive-content--full-width']);
+          $classes = array_diff($classes, ['gho-interactive-content--full-width']);
+        }
 
         $wrapper_attributes['class'] += $gho_classes;
         $attributes->getNamedItem('class')->nodeValue = implode(' ', array_diff($classes, $gho_classes));
