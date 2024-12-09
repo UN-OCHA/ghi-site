@@ -19,6 +19,7 @@ use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
+use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Form\ImportBlockForm;
@@ -1584,19 +1585,19 @@ abstract class GHIBlockBase extends HPCBlockBase {
    */
   public function getPageEntity($expected_class = ContentEntityInterface::class) {
     $page_arguments = $this->getAllAvailablePageParameters();
+    $page_entity = NULL;
     if (!empty($page_arguments['section_storage']) && $page_arguments['section_storage'] instanceof SectionStorageInterface) {
       /** @var \Drupal\layout_builder\SectionStorageInterface $section_storage */
       $section_storage = $page_arguments['section_storage'];
       $section_contexts = array_keys($section_storage->getContexts());
       $entity = in_array('entity', $section_contexts) ? $section_storage->getContextValue('entity') : NULL;
-      return $entity instanceof $expected_class ? $entity : NULL;
+      $page_entity = $entity instanceof $expected_class ? $entity : NULL;
     }
-    if (!empty($page_arguments['node'])) {
-      return $page_arguments['node'];
+
+    if ($page_entity) {
+      return $page_entity;
     }
-    if (!empty($page_arguments['node_from_original_id'])) {
-      return $page_arguments['node_from_original_id'];
-    }
+
     foreach ($page_arguments as $page_argument) {
       if (!$page_argument instanceof $expected_class) {
         continue;
@@ -1659,11 +1660,12 @@ abstract class GHIBlockBase extends HPCBlockBase {
    */
   public function getCurrentBaseObject($entity = NULL) {
     $page_entity = $entity instanceof ContentEntityInterface ? $entity : $this->getPageEntity();
-    if ($page_entity && $page_entity->hasField('field_base_object')) {
-      return $page_entity->get('field_base_object')->entity;
+    if ($page_entity instanceof BaseObjectAwareEntityInterface) {
+      return $page_entity->getBaseObject();
     }
-    elseif (($base_page = $this->getCurrentBaseEntity($page_entity)) && $base_page->hasField('field_base_object')) {
-      return $base_page->get('field_base_object')->entity;
+    $base_page = $this->getCurrentBaseEntity($page_entity);
+    if ($base_page instanceof BaseObjectAwareEntityInterface) {
+      return $base_page->getBaseObject();
     }
     $contexts = $this->getContexts();
     foreach ($this->getContextMapping() as $context_name) {
