@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
@@ -1201,11 +1202,12 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    *   An array with context data or query handlers.
    */
   public function getBlockContext() {
+    $page_node = $this->getPageNode();
     return [
-      'page_node' => $this->getPageNode(),
+      'page_node' => $page_node,
       'plan_object' => $this->getCurrentPlanObject(),
-      'base_object' => $this->getCurrentBaseObject(),
-      'context_node' => $this->getPageNode(),
+      'base_object' => $this->getCurrentBaseObject($page_node instanceof BaseObjectAwareEntityInterface ? $page_node : NULL),
+      'context_node' => $page_node,
       'attachment_prototype' => $this->getAttachmentPrototype(),
     ];
   }

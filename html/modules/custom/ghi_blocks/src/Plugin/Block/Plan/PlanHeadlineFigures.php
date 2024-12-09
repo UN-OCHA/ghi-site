@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
@@ -219,7 +220,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
       'section_node' => $this->getCurrentBaseEntity(),
       'page_node' => $page_node,
       'plan_object' => $this->getCurrentPlanObject(),
-      'base_object' => $this->getCurrentBaseObject(),
+      'base_object' => $this->getCurrentBaseObject($page_node instanceof BaseObjectAwareEntityInterface ? $page_node : NULL),
       'context_node' => $page_node,
     ];
   }

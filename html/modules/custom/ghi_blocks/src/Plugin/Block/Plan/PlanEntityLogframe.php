@@ -7,6 +7,7 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\CustomLinkBlockInterface;
@@ -612,7 +613,8 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    *   An array of plan entity objects for the current context.
    */
   private function getPlanEntities($entity_ref_code = NULL) {
-    $context_object = $this->getCurrentBaseObject();
+    $page_node = $this->getPageNode();
+    $context_object = $this->getCurrentBaseObject($page_node instanceof BaseObjectAwareEntityInterface ? $page_node : NULL);
 
     if ($entity_ref_code == 'PL' && $context_object instanceof Plan) {
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $query */
@@ -730,12 +732,13 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     // This can be any parent node, e.g. SectionNode or PlanClusterNode.
     $base_entity = $this->getCurrentBaseEntity();
     $section_node = $this->sectionManager->getCurrentSection($base_entity);
+    $page_node = $this->getPageNode();
     return [
       'section_node' => $section_node,
-      'page_node' => $this->getPageNode(),
+      'page_node' => $page_node,
       'plan_object' => $plan_object,
-      'base_object' => $this->getCurrentBaseObject(),
-      'context_node' => $this->getPageNode(),
+      'base_object' => $this->getCurrentBaseObject($page_node instanceof BaseObjectAwareEntityInterface ? $page_node : NULL),
+      'context_node' => $page_node,
       'entities' => $plan_entities,
       'entity_types' => $this->logframeManager->getEntityTypesFromPlanObject($plan_object),
       'attachment_prototypes' => $this->getAttachmentPrototypes(),
