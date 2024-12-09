@@ -115,7 +115,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
       $link_url = Url::fromRoute('ghi_plans.modal_content.dissaggregation', [
         'attachment' => $attachment->id(),
         'metric' => $data_point_index,
-        'reporting_period' => $attachment->getLatestPublishedReportingPeriod($attachment->getPlanId()) ?? 'latest',
+        'reporting_period' => $build['#reporting_period'] ?: 'latest',
       ]);
       $link_url->setOptions([
         'attributes' => [

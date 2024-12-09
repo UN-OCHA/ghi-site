@@ -1360,6 +1360,7 @@ class DataAttachment extends AttachmentBase {
     // Prepare the build.
     $build = [
       '#type' => 'container',
+      '#reporting_period' => $this->getLatestPublishedReportingPeriod($this->getPlanId()) ?? 'latest',
     ];
     // Create a render array for the actual value.
     if (empty($conf['widget']) || $conf['widget'] == 'none') {
@@ -1367,6 +1368,13 @@ class DataAttachment extends AttachmentBase {
     }
     else {
       $build[] = $this->formatAsWidget($conf);
+    }
+
+    $data_point_index = $conf['data_points'][0]['index'];
+    $field = $this->getFieldByIndex($data_point_index);
+    if ($this->isCumulativeReachFieldType($field->type)) {
+      $period = $this->getLastNonEmptyReportingPeriod($data_point_index);
+      $build['#reporting_period'] = $period?->id ?? $build['#reporting_period'];
     }
 
     // Prepare the tooltips.
@@ -1409,7 +1417,7 @@ class DataAttachment extends AttachmentBase {
     if ($cumulative_reach_field || $cumulative_reach_source) {
       $format_string = '@data_range_cumulative';
       if ($monitoring_period_id == 'latest') {
-        $monitoring_period_id = $this->getLastNonEmptyReportingPeriod($index)?->id();
+        $monitoring_period_id = $this->getLastNonEmptyReportingPeriod($index)?->id() ?? $monitoring_period_id;
       }
     }
     $monitoring_tooltip = $this->isMeasurement($conf) ? $this->formatMonitoringPeriod('icon', $monitoring_period_id, $format_string) : NULL;
