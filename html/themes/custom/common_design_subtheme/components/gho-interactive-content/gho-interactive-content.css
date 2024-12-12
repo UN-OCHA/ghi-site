@@ -12,7 +12,8 @@
   margin-left: calc(-50vw + (var(--scrollbar-width, 15px) / 2));
 }
 
-.paragraph--type--interactive-content-2-columns .gho-interactive-content--full-width {
+.paragraph--type--interactive-content-2-columns
+  .gho-interactive-content--full-width {
   position: relative;
   right: unset;
   left: unset;
@@ -92,7 +93,7 @@
 /**
  * Support for 3-col interactive content.
  */
- .layout--threecol--interactive-content {
+.layout--threecol--interactive-content {
   display: flex;
   flex-wrap: wrap;
 }
