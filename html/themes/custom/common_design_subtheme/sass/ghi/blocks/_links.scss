@@ -8,7 +8,7 @@
 
 div.link-box {
   gap: 1rem;
-  padding: 0;
+  padding: 0 !important;
   border: 1px solid var(--ghi-default-border-color);
 
   & > .field--name-field-thumbnail-image {
