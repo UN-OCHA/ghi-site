@@ -12,10 +12,12 @@ div.link-box {
   border: 1px solid var(--ghi-default-border-color) !important;
 
   & > .field--name-field-thumbnail-image {
+    line-height: 0;
+
     picture {
       display: block;
-      margin-top: -1px;
-      margin-bottom: -1px;
+      margin-top: 0;
+      margin-bottom: 0;
     }
   }
 
