@@ -3,12 +3,13 @@
 namespace Drupal\ghi_plan_clusters\Entity;
 
 use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
+use Drupal\ghi_subpages\Entity\SubpageIconInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 
 /**
  * Interface class for plan cluster nodes.
  */
-interface PlanClusterInterface extends SubpageNodeInterface, BaseObjectAwareEntityInterface {
+interface PlanClusterInterface extends SubpageNodeInterface, SubpageIconInterface, BaseObjectAwareEntityInterface {
 
   const BUNDLE = 'plan_cluster';
   const BASE_OBJECT_FIELD_NAME = 'field_base_object';

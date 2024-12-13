@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plan_clusters\Entity;
 
+use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
@@ -13,6 +14,33 @@ use Drupal\ghi_subpages\Entity\SubpageNode;
 class PlanCluster extends SubpageNode implements PlanClusterInterface {
 
   use StringTranslationTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function toLink($text = NULL, $rel = 'canonical', array $options = []) {
+    if (!isset($text) && !self::getAdminContext()->isAdminRoute() && $icon = $this->getIcon()) {
+      $text = [
+        'icon' => $icon,
+        'label' => ['#markup' => $this->label()],
+      ];
+      $options['attributes']['class'][] = 'has-icon';
+      $options['html'] = TRUE;
+    }
+    return parent::toLink($text, $rel, $options);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getIcon() {
+    $governing_entity = $this->getBaseObject();
+    if (!$governing_entity instanceof GoverningEntity) {
+      return NULL;
+    }
+    $icon = $governing_entity->getIconEmbedCode();
+    return ['#markup' => Markup::create($icon)];
+  }
 
   /**
    * {@inheritdoc}
@@ -102,6 +130,16 @@ class PlanCluster extends SubpageNode implements PlanClusterInterface {
    */
   private static function getPlanClusterManager() {
     return \Drupal::service('ghi_plan_clusters.manager');
+  }
+
+  /**
+   * Get the admin context service.
+   *
+   * @return \Drupal\Core\Routing\AdminContext
+   *   The admin context service.
+   */
+  private static function getAdminContext() {
+    return \Drupal::service('router.admin_context');
   }
 
 }

@@ -6,6 +6,7 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_subpages\Entity\SubpageIconInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\ghi_subpages\SubpageTrait;
@@ -104,7 +105,7 @@ class SubpageTitle extends BlockBase implements ContainerFactoryPluginInterface 
     $parent_node = $node instanceof SubpageNodeInterface ? $node->getParentNode() : NULL;
     if ($parent_node && !$parent_node instanceof SectionNodeInterface) {
       $title_prefix = new FormattableMarkup('<span class="document-link">@parent</span>', [
-        '@parent' => $parent_node->toLink($parent_node->label())->toString(),
+        '@parent' => $parent_node->toLink()->toString(),
       ]);
       $build['title'][] = [
         '#type' => 'html_tag',
@@ -114,11 +115,21 @@ class SubpageTitle extends BlockBase implements ContainerFactoryPluginInterface 
       $build['title']['#attributes']['class'][] = 'has-title-prefix';
     }
 
-    $build['title'][] = [
+    $title_tag = [
       '#type' => 'html_tag',
       '#tag' => 'h2',
       '#value' => $title,
     ];
+    if ($node instanceof SubpageIconInterface) {
+      $build['title'][] = [
+        'icon' => $node->getIcon(),
+        'title' => $title_tag,
+      ];
+      $build['title']['#attributes']['class'][] = 'has-icon';
+    }
+    else {
+      $build['title'][] = $title_tag;
+    }
 
     return $build;
   }

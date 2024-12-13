@@ -107,9 +107,9 @@ class StorePageTemplateForm extends TemplateFormBase {
       'field_entity_reference' => $form_state->get('entity'),
     ]);
     if ($page_template->save()) {
-      $this->messenger()->addStatus($this->t('The page template <a href="@url">@label</a> has been saved.', [
+      $this->messenger()->addStatus($this->t('The page template <a href=":url">@label</a> has been saved.', [
         '@label' => $page_template->label(),
-        '@url' => $page_template->toUrl('canonical')->toString(),
+        ':url' => $page_template->toUrl('canonical')->toString(),
       ]));
     }
     else {
