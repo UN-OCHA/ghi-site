@@ -30,7 +30,7 @@
     &.has-icon,
     a.has-icon {
       display: flex;
-      gap: 0.5rem;
+      gap: 1rem;
       align-items: baseline;
 
       .icon {
@@ -42,8 +42,12 @@
         }
       }
     }
-    a.has-icon .icon {
-      height: var(--cd-font-size--small);
+    a.has-icon {
+      gap: 0.5rem;
+
+      .icon {
+        height: var(--cd-font-size--small);
+      }
     }
   }
 }
