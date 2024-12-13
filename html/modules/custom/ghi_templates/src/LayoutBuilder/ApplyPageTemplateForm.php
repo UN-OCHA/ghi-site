@@ -135,9 +135,9 @@ class ApplyPageTemplateForm extends TemplateFormBase {
         'source' => $this->t('Source page'),
       ],
       '#options' => $page_template_options,
-      '#empty' => ($this->currentUser()->hasPermission('administer page templates') ? new TranslatableMarkup('<p>There no page templates available to apply to the current page. You can see a list of available templates on the <a href="@url_collection">Page templates</a> page.</p><p>You can create a page template either manually using the <a href="@url_add">Add page template</a> page, or create one from any supported content page using the frontend controls.</p>', [
-        '@url_collection' => Url::fromRoute('entity.page_template.collection')->toString(),
-        '@url_add' => Url::fromRoute('entity.page_template.add_page')->toString(),
+      '#empty' => ($this->currentUser()->hasPermission('administer page templates') ? new TranslatableMarkup('<p>There no page templates available to apply to the current page. You can see a list of available templates on the <a href=":url_collection">Page templates</a> page.</p><p>You can create a page template either manually using the <a href=":url_add">Add page template</a> page, or create one from any supported content page using the frontend controls.</p>', [
+        ':url_collection' => Url::fromRoute('entity.page_template.collection')->toString(),
+        ':url_add' => Url::fromRoute('entity.page_template.add_page')->toString(),
       ]) : new TranslatableMarkup('<p>There no page templates available to apply to the current page. Please contact an administrator if you think that this is an error.</p>')),
       '#default_value' => $this->getSubmittedPageTemplate($form_state)?->id() ?? array_key_first($page_template_options),
     ];

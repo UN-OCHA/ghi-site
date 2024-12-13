@@ -26,5 +26,24 @@
         font-weight: lighter;
       }
     }
+
+    &.has-icon,
+    a.has-icon {
+      display: flex;
+      gap: 0.5rem;
+      align-items: baseline;
+
+      .icon {
+        height: var(--cd-font-size--2xbase);
+
+        svg {
+          position: static;
+          height: 100%;
+        }
+      }
+    }
+    a.has-icon .icon {
+      height: var(--cd-font-size--small);
+    }
   }
 }
