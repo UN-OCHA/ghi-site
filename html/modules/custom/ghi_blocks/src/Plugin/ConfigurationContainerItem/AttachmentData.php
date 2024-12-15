@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\hpc_common\Helpers\StringHelper;
@@ -232,33 +233,86 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function fixConfigurationErrors() {
-    $conf = $this->config['attachment'];
-    $attachment = $this->getAttachmentObject();
+    $conf = &$this->config;
+    $attachment_id = &$conf['attachment']['attachment_id'];
+
+    $original_attachment = $this->getAttachmentObject();
+
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
     $plan = $this->getContextValue('plan_object');
-    if ($attachment && $plan && $attachment->getPlanId() != $plan->getSourceId()) {
-      $conf['attachment_id'] = NULL;
+    if ($original_attachment && $plan && $original_attachment->getPlanId() != $plan->getSourceId()) {
+      $attachment_id = NULL;
     }
 
-    if ($attachment) {
+    if ($original_attachment) {
       // Let's see if we can find an alternative attachment.
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
       $query = $this->endpointQueryManager->createInstance('plan_entities_query');
       $query->setPlaceholder('plan_id', $plan->getSourceId());
       $attachments = $query->getDataAttachments($this->getContextValue('base_object'));
-      $filtered_attachments = $this->matchDataAttachments($attachment, $attachments);
+      $filtered_attachments = $this->matchDataAttachments($original_attachment, $attachments);
 
       // Use the default plan caseload if available.
       $caseload_id = $plan->getPlanCaseloadId();
-      if ($caseload_id && $attachment->getType() == 'caseload' && array_key_exists($caseload_id, $filtered_attachments)) {
-        $conf['attachment_id'] = $caseload_id;
+      if ($caseload_id && $original_attachment->getType() == 'caseload' && array_key_exists($caseload_id, $filtered_attachments)) {
+        $attachment_id = $caseload_id;
       }
       elseif (count($filtered_attachments) == 1) {
-        $conf['attachment_id'] = array_key_first($filtered_attachments);
+        $attachment_id = array_key_first($filtered_attachments);
       }
     }
 
-    $this->config['attachment'] = $conf;
+    if (!empty($attachment_id)) {
+      // Lets see if we can assure that the data points are properly translated
+      // if needed.
+      $new_attachment = $filtered_attachments[$attachment_id];
+      $data_point_conf = &$this->config['data_point'];
+      $data_points = &$data_point_conf['data_points'];
+      $data_points[0]['index'] = $this->matchDataPointOnAttachments($data_points[0]['index'], $original_attachment, $new_attachment);
+      if ($data_point_conf['processing'] != 'single') {
+        $data_points[1]['index'] = $this->matchDataPointOnAttachments($data_points[1]['index'], $original_attachment, $new_attachment);
+      }
+    }
+  }
+
+  /**
+   * Match a data point index on the given attachments.
+   *
+   * Matching is done by type, such that a data point of attachment 2 is
+   * returned that has the same type as the given data point in attachment 1.
+   *
+   * @param int $data_point_index
+   *   The data point index to match.
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment_1
+   *   The first or original attachment.
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment_2
+   *   The second or new attachment.
+   *
+   * @return int
+   *   Either the original index if no match can be found or a new index.
+   */
+  private function matchDataPointOnAttachments($data_point_index, DataAttachment $attachment_1, DataAttachment $attachment_2) {
+    // First get the original and the new fields. These are the types keyed by
+    // the field index.
+    $original_fields = $attachment_1->getPrototype()->getFieldTypes();
+    $new_fields = $attachment_2->getPrototype()->getFieldTypes();
+    if (!array_key_exists($data_point_index, $original_fields)) {
+      // This is fishy.
+      return $data_point_index;
+    }
+
+    // Compare the types.
+    if ($original_fields[$data_point_index] == ($new_fields[$data_point_index] ?? NULL)) {
+      // If they are the same, there is no need to go further.
+      return $data_point_index;
+    }
+    // It's referring to a different type now, let's see if we can find the
+    // same as the original type in the set of new fields.
+    $new_index = array_search($original_fields[$data_point_index], $new_fields);
+
+    // We either found a new index and can return it, or we didn't and we
+    // return the original.
+    return $new_index !== FALSE ? $new_index : $data_point_index;
   }
 
 }
