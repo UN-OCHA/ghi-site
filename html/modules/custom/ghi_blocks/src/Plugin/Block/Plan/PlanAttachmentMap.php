@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
@@ -1330,7 +1331,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
           if (!$attachment instanceof DataAttachment) {
             continue;
           }
-          $filtered_attachments = $this->matchDataAttachments($attachment, $available_attachments);
+          $filtered_attachments = AttachmentMatcher::matchDataAttachments($attachment, $available_attachments);
           foreach ($filtered_attachments as $filtered_attachment) {
             $conf['attachments']['entity_attachments']['attachments']['attachment_id'][$filtered_attachment->id()] = $filtered_attachment->id();
             $conf['attachments']['entity_attachments']['entities']['entity_ids'][$filtered_attachment->source->entity_id] = $filtered_attachment->source->entity_id;
