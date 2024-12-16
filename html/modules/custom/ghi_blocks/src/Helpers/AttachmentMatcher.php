@@ -60,8 +60,12 @@ class AttachmentMatcher {
    *   Either the original index if no match can be found or a new index.
    */
   public static function matchDataPointOnAttachments($data_point_index, DataAttachment $attachment_1, DataAttachment $attachment_2) {
-    $prototype_1 = $attachment_1->getPrototype();
-    $prototype_2 = $attachment_2->getPrototype();
+    // Reload the prototypes, because depending on how the attachments have
+    // been loaded, they might not have the full attachment prototype set up,
+    // some are missing the calculated fields.
+    // E.g. plan/:ID?content=entities .
+    $prototype_1 = $attachment_1->getPrototype()?->id() ? self::getPrototype($attachment_1->getPrototype()->id()) : NULL;
+    $prototype_2 = $attachment_2->getPrototype()?->id() ? self::getPrototype($attachment_2->getPrototype()->id()) : NULL;
     if (!$prototype_1 || !$prototype_2) {
       return $data_point_index;
     }
@@ -103,6 +107,24 @@ class AttachmentMatcher {
     // We either found a new index and can return it, or we didn't and we
     // return the original.
     return $new_index !== FALSE ? $new_index : $data_point_index;
+  }
+
+  /**
+   * Fetch prototype data from the API.
+   *
+   * @param int $prototype_id
+   *   The id of the attachment prototype to load.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
+   *   An attachment prototype object.
+   */
+  private static function getPrototype($prototype_id) {
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query_handler */
+    $query_handler = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('attachment_prototype_query');
+    if (!$query_handler) {
+      return NULL;
+    }
+    return $query_handler->getPrototypeById($prototype_id);
   }
 
 }
