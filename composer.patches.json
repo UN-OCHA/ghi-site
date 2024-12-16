@@ -2,6 +2,7 @@
   "patches": {
     "drupal/core": {
       "Issue #2820359: Add #element_submit and #limit_element_submit just like #element_validate and #limit_validation_errors": "https://www.drupal.org/files/issues/2024-09-04/2820359-121.patch",
+      "Issue #2844620: Automatically split headers into multiple lines when they exceed 8k": "https://www.drupal.org/files/issues/2024-12-02/automatically-split-headers-into-multiple-lines-when-they-exceed-8k-2844620.patch",
       "Issue #3008924: Callers of LayoutEntityHelperTrait::getEntitySections() do not account for the view mode": "./patches/3008924-rerolled-24.patch",
       "Issue #2902481: Add GROUP_CONCAT aggregate function to views": "https://www.drupal.org/files/issues/2024-08-09/add_group_concat_aggregate-2902481-44.patch",
       "Issue #151311: Split 'administer permissions' into a new administer roles permissions": "https://www.drupal.org/files/issues/2023-01-19/split_administer_permissions_151311-72.patch",
@@ -58,7 +59,7 @@
       "Issue #2958568: Add a search api processor for view unpublished": "./patches/2958568-view-unpublished-search-api-access-18.patch"
     },
     "drupal/webp": {
-      "Issue #3325808: Webp Image not generated for styles using original image.": "https://www.drupal.org/files/issues/2023-12-07/webp-3325808-11.patch",
+      "Issue #3325808: Webp Image not generated for styles using original image.": "https://git.drupalcode.org/project/webp/-/merge_requests/35.patch",
       "Issue #3281606: Rendering duplicate images when the original images have the same name but different extension": "https://git.drupalcode.org/project/webp/-/merge_requests/30.patch",
       "Issue #3153137: Using Image Widget Crop in responsive images does not refresh webp image": "./patches/3153137-custom-fix-3281606.patch"
     }

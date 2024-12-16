@@ -227,7 +227,8 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
   public function getValueOperation(?array $type = NULL) {
     $type = $type ?? $this->getType();
     $custom_value = $this->getCustomValue();
-    if (!empty($type['allow_sum']) && $custom_value) {
+    $sum = ($sum ?? $this->get('sum')) && !empty($type['allow_sum']);
+    if ($sum && $custom_value) {
       return $this->t('Sum');
     }
     elseif ($custom_value) {
@@ -293,24 +294,28 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
         'label' => $this->t('People in need'),
         'value_description' => $this->t('Enter amount as full integer to override the value from the API.'),
         'data_type' => 'integer',
+        'allow_sum' => TRUE,
         'theme' => 'hpc_amount',
       ],
       'people_target' => [
         'label' => $this->t('People targeted'),
         'value_description' => $this->t('Enter amount as full integer to override the value from the API.'),
         'data_type' => 'integer',
+        'allow_sum' => TRUE,
         'theme' => 'hpc_amount',
       ],
       'people_expected_reach' => [
         'label' => $this->t('People expected reach'),
         'value_description' => $this->t('Enter amount as full integer to override the value from the API.'),
         'data_type' => 'integer',
+        'allow_sum' => TRUE,
         'theme' => 'hpc_amount',
       ],
       'people_reached' => [
         'label' => $this->t('People latest reached'),
         'value_description' => $this->t('Enter amount as full integer to override the value from the API.'),
         'data_type' => 'integer',
+        'allow_sum' => TRUE,
         'theme' => 'hpc_amount',
       ],
       'people_reached_percent' => [
@@ -334,7 +339,7 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
         'theme' => 'hpc_currency',
       ],
       'funding_progress' => [
-        'label' => $this->t('Funding coverage'),
+        'label' => $this->t('Funding coverage (%)'),
         'default_label' => $this->t('% Funded'),
         'value_description' => $this->t('Enter a percentage value as a decimal between 0 and 100. <strong>Note that write-in values are ignored if you limit the data to include or exclude a global plan.</strong>'),
         'data_type' => 'float',
@@ -343,6 +348,7 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
       'countries_affected' => [
         'label' => $this->t('Countries affected'),
         'data_type' => 'integer',
+        'allow_sum' => TRUE,
         'theme' => 'hpc_amount',
       ],
     ];

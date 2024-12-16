@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
@@ -1201,11 +1202,12 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    *   An array with context data or query handlers.
    */
   public function getBlockContext() {
+    $page_node = $this->getPageNode();
     return [
-      'page_node' => $this->getPageNode(),
+      'page_node' => $page_node,
       'plan_object' => $this->getCurrentPlanObject(),
       'base_object' => $this->getCurrentBaseObject(),
-      'context_node' => $this->getPageNode(),
+      'context_node' => $page_node,
       'attachment_prototype' => $this->getAttachmentPrototype(),
     ];
   }
@@ -1329,7 +1331,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
           if (!$attachment instanceof DataAttachment) {
             continue;
           }
-          $filtered_attachments = $this->matchDataAttachments($attachment, $available_attachments);
+          $filtered_attachments = AttachmentMatcher::matchDataAttachments($attachment, $available_attachments);
           foreach ($filtered_attachments as $filtered_attachment) {
             $conf['attachments']['entity_attachments']['attachments']['attachment_id'][$filtered_attachment->id()] = $filtered_attachment->id();
             $conf['attachments']['entity_attachments']['entities']['entity_ids'][$filtered_attachment->source->entity_id] = $filtered_attachment->source->entity_id;
@@ -1338,8 +1340,14 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       }
     }
 
-    $default_attachment = array_key_first($conf['attachments']['entity_attachments']['attachments']['attachment_id']);
-    $conf['map']['common']['default_attachment'] = $default_attachment;
+    // Check the configured default attachment.
+    $default_attachment = $conf['map']['common']['default_attachment'] ?? NULL;
+    $attachment_ids = $conf['attachments']['entity_attachments']['attachments']['attachment_id'] ?? [];
+    if ($default_attachment && !array_key_exists($default_attachment, $attachment_ids)) {
+      // Just unset the default attachment, so that the rendering can decide
+      // which one to use.
+      $conf['map']['common']['default_attachment'] = NULL;
+    }
 
     $this->setBlockConfig($conf);
   }

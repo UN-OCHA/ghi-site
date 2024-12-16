@@ -651,8 +651,8 @@ class PlanOverviewMap extends GHIBlockBase {
 
     $form['description'] = [
       '#type' => 'markup',
-      '#markup' => $this->t('The following settings allow you to toggle some features for <em>this single map instance</em>. More <em>global settings</em>, that apply to various page elements across a year, can be controlled on the <a href="@url" target="_blank">GHI Global settings page</a>.', [
-        '@url' => Url::fromRoute('ghi_blocks.global_config', [], ['query' => ['year' => $this->getContextValue('year')]])->toString(),
+      '#markup' => $this->t('The following settings allow you to toggle some features for <em>this single map instance</em>. More <em>global settings</em>, that apply to various page elements across a year, can be controlled on the <a href=":url" target="_blank">GHI Global settings page</a>.', [
+        ':url' => Url::fromRoute('ghi_blocks.global_config', [], ['query' => ['year' => $this->getContextValue('year')]])->toString(),
       ]),
     ];
     $form['style'] = [

@@ -555,8 +555,8 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     $form['table'] = [
       '#type' => 'details',
       '#title' => $this->t('Table'),
-      '#description' => $this->t('The following settings allow you to toggle some features for <em>this single table instance</em>. More <em>global settings</em>, that apply to various page elements across a year, can be controlled on the <a href="@url" target="_blank">GHI Global settings page</a>.', [
-        '@url' => Url::fromRoute('ghi_blocks.global_config', [], ['query' => ['year' => $this->getContextValue('year')]])->toString(),
+      '#description' => $this->t('The following settings allow you to toggle some features for <em>this single table instance</em>. More <em>global settings</em>, that apply to various page elements across a year, can be controlled on the <a href=":url" target="_blank">GHI Global settings page</a>.', [
+        ':url' => Url::fromRoute('ghi_blocks.global_config', [], ['query' => ['year' => $this->getContextValue('year')]])->toString(),
       ]),
       '#tree' => TRUE,
       '#group' => 'tabs',

@@ -33,6 +33,7 @@ class GhoFootnotes implements TrustedCallbackInterface {
 
     // Process the texts with footnotes.
     foreach (iterator_to_array($dom->getElementsByTagName('gho-footnotes-text')) as $node) {
+      /** @var \DOMNode $node */
       $id = $node->getAttribute('data-id');
       $node_inner_html = gho_footnotes_get_inner_html($node);
       $node_inner_html = preg_replace('/<!--(.|\s)*?-->\s*/', '', $node_inner_html);
@@ -74,6 +75,9 @@ class GhoFootnotes implements TrustedCallbackInterface {
 
       // Update the footnote references and remove the containing div.
       $node_inner_html = gho_footnotes_update_text($id, $node_inner_html, $references, $footnotes);
+      // We do some back and forth for special characters to prevent XML
+      // parsing errors.
+      $node_inner_html = htmlspecialchars_decode(htmlspecialchars($node_inner_html, ENT_DISALLOWED), ENT_XML1);
       $fragment = $dom->createDocumentFragment();
       // Note that we add a newline here. This is made to prevent a strange
       // issue with the caption credits, that are sometimes appearing spaceless

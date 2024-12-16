@@ -5,6 +5,7 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
@@ -556,9 +557,32 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    */
   public function fixConfigErrors() {
     $conf = $this->getBlockConfig();
+    $original_prototype_id = $conf['base']['prototype_id'] ?? NULL;
     $prototype_options = $this->getUniquePrototypeOptions();
     if (count($prototype_options) == 1) {
       $conf['base']['prototype_id'] = array_key_first($prototype_options);
+    }
+    if ($original_prototype_id && !empty($conf['base']['prototype_id'])) {
+      $new_prototype_id = $conf['base']['prototype_id'];
+      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
+      $query = $this->endpointQueryManager->createInstance('attachment_prototype_query');
+      $original_prototype = $query->getPrototypeById($original_prototype_id);
+      $new_prototype = $query->getPrototypeById($new_prototype_id);
+      foreach ($conf['table']['columns'] as &$column) {
+        if ($column['item_type'] == 'data_point') {
+          $data_points = &$column['config']['data_point']['data_points'];
+          $data_points[0]['index'] = AttachmentMatcher::matchDataPointOnAttachmentPrototypes($data_points[0]['index'], $original_prototype, $new_prototype);
+          if ($column['config']['data_point']['processing'] != 'single') {
+            $data_points[1]['index'] = AttachmentMatcher::matchDataPointOnAttachmentPrototypes($data_points[1]['index'], $original_prototype, $new_prototype);
+          }
+        }
+        if ($column['item_type'] == 'spark_line_chart') {
+          $column['config']['data_point'] = AttachmentMatcher::matchDataPointOnAttachmentPrototypes($column['config']['data_point'], $original_prototype, $new_prototype);
+          if ($column['config']['show_baseline']) {
+            $column['config']['baseline'] = AttachmentMatcher::matchDataPointOnAttachmentPrototypes($column['config']['baseline'], $original_prototype, $new_prototype);
+          }
+        }
+      }
     }
     $this->setBlockConfig($conf);
   }

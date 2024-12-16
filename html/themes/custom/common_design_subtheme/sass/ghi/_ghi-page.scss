@@ -26,7 +26,8 @@
     padding-right: var(--cd-container-padding);
     padding-left: var(--cd-container-padding);
 
-    & > .block-section-navigation {
+    & > .block-section-navigation,
+    & > .block-document-navigation {
       position: unset;
     }
 
@@ -37,7 +38,8 @@
     }
   }
 
-  .block-wrapper--sectionnavigation {
+  .block-wrapper--sectionnavigation,
+  .block-wrapper--documentnavigation {
     position: relative;
   }
 }

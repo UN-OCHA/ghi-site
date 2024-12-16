@@ -3,6 +3,7 @@
 **/.sass-cache/
 **/*.css.map
 **/build
+npm-debug.log
 
 # mac stuff
 **/.DS_Store

@@ -194,9 +194,9 @@ class DocumentWizard extends ContentWizardBase {
     if ($action != 'back' && $form_state->get('step') == 1 && $document) {
       $node = $this->documentManager->loadNodeForRemoteContent($document);
       if ($node) {
-        $form_state->setErrorByName('document', $this->t('An @type for the selected document already exists: <a href="@url">@title</a>.', [
+        $form_state->setErrorByName('document', $this->t('An @type for the selected document already exists: <a href=":url">@title</a>.', [
           '@type' => $node->type->entity->label(),
-          '@url' => $node->toUrl()->toString(),
+          ':url' => $node->toUrl()->toString(),
           '@title' => $node->label(),
         ]));
       }

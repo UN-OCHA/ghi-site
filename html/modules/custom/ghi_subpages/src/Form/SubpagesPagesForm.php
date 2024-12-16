@@ -251,9 +251,9 @@ class SubpagesPagesForm extends FormBase {
         if ($has_base_object) {
           /** @var \Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface $subpage_node */
           $base_object = $subpage_node instanceof BaseObjectAwareEntityInterface ? $subpage_node->getBaseObject() : NULL;
-          $row[] = $base_object ? $this->t('@label (<a href="@url">@id</a>)', [
+          $row[] = $base_object ? $this->t('@label (<a href=":url">@id</a>)', [
             '@label' => $base_object->label(),
-            '@url' => $base_object->toUrl('edit-form')->toString(),
+            ':url' => $base_object->toUrl('edit-form')->toString(),
             '@id' => $base_object->getSourceId(),
           ]) : ($parent_subpage ? FALSE : $this->t('Missing'));
           if (!$parent_subpage && !$base_object) {

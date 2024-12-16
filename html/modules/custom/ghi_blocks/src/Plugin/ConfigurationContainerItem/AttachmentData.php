@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Entity\Plan;
@@ -232,33 +233,45 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function fixConfigurationErrors() {
-    $conf = $this->config['attachment'];
-    $attachment = $this->getAttachmentObject();
+    $conf = &$this->config;
+    $attachment_id = &$conf['attachment']['attachment_id'];
+    $original_attachment = $this->getAttachmentObject();
+
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
     $plan = $this->getContextValue('plan_object');
-    if ($attachment && $plan && $attachment->getPlanId() != $plan->getSourceId()) {
-      $conf['attachment_id'] = NULL;
+    if ($original_attachment && $plan && $original_attachment->getPlanId() != $plan->getSourceId()) {
+      $attachment_id = NULL;
     }
 
-    if ($attachment) {
+    if ($original_attachment) {
       // Let's see if we can find an alternative attachment.
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
       $query = $this->endpointQueryManager->createInstance('plan_entities_query');
       $query->setPlaceholder('plan_id', $plan->getSourceId());
       $attachments = $query->getDataAttachments($this->getContextValue('base_object'));
-      $filtered_attachments = $this->matchDataAttachments($attachment, $attachments);
+      $filtered_attachments = AttachmentMatcher::matchDataAttachments($original_attachment, $attachments);
 
       // Use the default plan caseload if available.
       $caseload_id = $plan->getPlanCaseloadId();
-      if ($caseload_id && $attachment->getType() == 'caseload' && array_key_exists($caseload_id, $filtered_attachments)) {
-        $conf['attachment_id'] = $caseload_id;
+      if ($caseload_id && $original_attachment->getType() == 'caseload' && array_key_exists($caseload_id, $filtered_attachments)) {
+        $attachment_id = $caseload_id;
       }
       elseif (count($filtered_attachments) == 1) {
-        $conf['attachment_id'] = array_key_first($filtered_attachments);
+        $attachment_id = array_key_first($filtered_attachments);
       }
     }
 
-    $this->config['attachment'] = $conf;
+    if (!empty($attachment_id)) {
+      // Lets see if we can assure that the data points are properly translated
+      // if needed.
+      $new_attachment = $filtered_attachments[$attachment_id];
+      $data_point_conf = &$this->config['data_point'];
+      $data_points = &$data_point_conf['data_points'];
+      $data_points[0]['index'] = AttachmentMatcher::matchDataPointOnAttachments($data_points[0]['index'], $original_attachment, $new_attachment);
+      if ($data_point_conf['processing'] != 'single') {
+        $data_points[1]['index'] = AttachmentMatcher::matchDataPointOnAttachments($data_points[1]['index'], $original_attachment, $new_attachment);
+      }
+    }
   }
 
 }

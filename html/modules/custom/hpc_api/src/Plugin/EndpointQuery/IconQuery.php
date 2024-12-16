@@ -64,7 +64,7 @@ class IconQuery extends EndpointQueryBase {
       $svg_content = $svg_data?->svg ?? NULL;
       $this->fileSystem->saveData($svg_content, $file_uri);
     }
-    return '<div class="cluster-icon">' . $svg_content . '</div>';
+    return '<span class="cluster-icon icon">' . $svg_content . '</span>';
   }
 
 }

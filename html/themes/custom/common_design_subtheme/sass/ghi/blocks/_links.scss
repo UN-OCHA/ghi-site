@@ -8,13 +8,16 @@
 
 div.link-box {
   gap: 1rem;
-  padding: 0;
-  border: 1px solid var(--ghi-default-border-color);
+  padding: 0 !important;
+  border: 1px solid var(--ghi-default-border-color) !important;
 
   & > .field--name-field-thumbnail-image {
+    line-height: 0;
+
     picture {
       display: block;
-      margin-bottom: -0.5rem;
+      margin-top: 0;
+      margin-bottom: 0;
     }
   }
 
