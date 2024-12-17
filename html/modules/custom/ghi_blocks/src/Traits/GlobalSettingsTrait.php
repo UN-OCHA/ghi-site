@@ -172,8 +172,10 @@ trait GlobalSettingsTrait {
         if (!$plan || $plan instanceof PlanOverviewPlanMock) {
           return $row;
         }
-        $row['name']['data']['name']['#markup'] = $plan->getShortName();
-        $row['name']['data-value'] = $plan->getShortName();
+        $short_name = $plan->getShortName();
+        $row['name']['data']['name']['#markup'] = $short_name;
+        $row['name']['data-value'] = $short_name;
+        $row['name']['data-raw-value'] = $short_name;
         return $row;
       }, $rows);
     }
