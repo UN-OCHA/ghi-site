@@ -1,46 +1,17 @@
 .block-plan-operational-presence-map {
-  .pane-content {
-    margin-top: 0.5rem;
 
-    .pane-plan-operational-presence-map {
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .download-link-wrapper {
-      top: -2rem;
-      margin-top: 0;
-    }
-  }
-
-  .pane-title {
-    margin-bottom: 0;
-
-    .collapsed-text {
-      a.read-more {
-        position: relative;
-        top: -1rem;
-      }
-    }
-
-    // So long titles don't hide the map tabs.
-    @include tablet {
-      max-width: 80%;
+  &:not(.has-comment) {
+    div.block-links {
+      border-top: 0;
     }
   }
 
   .plan-operational-presence-map-wrapper {
     .map-container {
-      position: relative;
-      width: 100%;
-      min-height: 400px;
-      margin: 0;
-      padding: 0;
-      border: 1px solid var(--hpc-border-color);
 
       .map-legend {
         position: absolute;
-        z-index: 90;
+        z-index: 1;
         top: 10px;
         right: 10px;
         font-size: var(--cd-font-size--small);
@@ -73,23 +44,11 @@
           }
         }
       }
-
-      .leaflet-container {
-        width: 100%;
-        height: 100%;
-      }
     }
-  }
-
-  .leaflet-sidebar {
-    width: 350px !important;
   }
 
   .modal,
-  .leaflet-sidebar {
-    .modal-content {
-      max-width: 350px;
-    }
+  .map-sidebar {
     .modal-inner {
       overflow-y: auto;
       max-height: 350px;

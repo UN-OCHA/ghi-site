@@ -1,0 +1,7 @@
+hpc_api.purge_files:
+  route_name: hpc_api.reports.purge_files
+  title: Purge files
+  appears_on:
+    - hpc_api.reports.files.data_source
+    - hpc_api.reports.files.icons
+    - hpc_api.reports.files.geojson

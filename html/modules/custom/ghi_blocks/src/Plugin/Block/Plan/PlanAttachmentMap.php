@@ -18,7 +18,6 @@ use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
-use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 
@@ -61,11 +60,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   use AttachmentFilterTrait;
 
   const STYLE_CIRCLE = 'circle';
-  const STYLE_DONUT = 'donut';
-
-  const DONUT_DISPLAY_VALUE_FULL = 'full';
-  const DONUT_DISPLAY_VALUE_PERCENTAGE = 'percentage';
-  const DONUT_DISPLAY_VALUE_PARTIAL = 'partial';
 
   const DEFAULT_DISCLAIMER = 'The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations.';
 
@@ -80,15 +74,9 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     }
 
     $conf = $this->getBlockConfig();
-    $map_style = $conf['map']['appearance']['style'];
-    $chart_id = Html::getUniqueId('plan-attachment-map--' . $map_style);
-
-    if ($map_style == self::STYLE_CIRCLE) {
-      $map = $this->buildCircleMap();
-    }
-    else {
-      $map = $this->buildDonutMap();
-    }
+    $style = self::STYLE_CIRCLE;
+    $chart_id = Html::getUniqueId('plan-attachment-map--' . $style);
+    $map = $this->buildCircleMap();
 
     if (empty($map['data'])) {
       // Nothing to show.
@@ -100,10 +88,9 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       // given settings into the existing ones.
       'json' => !empty($map['data']) ? $map['data'] : NULL,
       'id' => $chart_id,
-      'map_tiles_url' => $this->getStaticTilesUrlTemplate(),
       'disclaimer' => $conf['map']['common']['disclaimer'] ?? self::DEFAULT_DISCLAIMER,
       'pcodes_enabled' => $conf['map']['common']['pcodes_enabled'] ?? TRUE,
-      'map_style' => $map_style,
+      'style' => $style,
     ] + $map['settings'];
 
     $attachment_switcher = $this->getAttachmentSwitcher();
@@ -115,11 +102,11 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       '#theme' => 'plan_attachment_map',
       '#chart_id' => $chart_id,
       '#map_tabs' => $map['tabs'] ?? NULL,
-      '#map_type' => $map_style,
+      '#map_type' => $style,
       '#attachment_switcher' => $attachment_switcher,
-      '#legend' => $map_style == self::STYLE_CIRCLE ? FALSE : TRUE,
+      '#legend' => $style == self::STYLE_CIRCLE ? FALSE : TRUE,
       '#attached' => [
-        'library' => ['ghi_blocks/map.plan'],
+        'library' => ['ghi_blocks/map.gl.plan'],
         'drupalSettings' => [
           'plan_attachment_map' => [
             $chart_id => $map_settings,
@@ -245,6 +232,11 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         }
       }
     }
+
+    // Calculate the grouped sizes, so that the circle sizes are relative to a
+    // common max value on all available map tabs.
+    $this->calculateGroupedSizes($map['data']);
+
     // Build the map tabs.
     foreach ($map['data'] as $key => $item) {
       // Display a variant drop-down for measurement metrics if variants are
@@ -270,6 +262,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
             '#type' => 'html_tag',
             '#tag' => 'a',
             '#attributes' => [
+              'href' => '#',
               'class' => ['map-tab'],
               'data-map-index' => $key,
             ],
@@ -291,6 +284,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
             '#type' => 'html_tag',
             '#tag' => 'a',
             '#attributes' => [
+              'href' => '#',
               'class' => ['map-tab'],
               'data-map-index' => $key,
             ],
@@ -306,283 +300,33 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   }
 
   /**
-   * Map builder for donut maps.
-   */
-  private function buildDonutMap() {
-    $map = [
-      'data' => [
-        'attachment' => [
-          'locations' => [],
-          'modal_contents' => [],
-          'measurements' => [],
-          'measurement_metrics' => [],
-          'legend' => [],
-        ],
-      ],
-      'tabs' => NULL,
-      'settings' => [],
-    ];
-
-    $attachment = $this->getDefaultAttachment();
-    $plan_base_object = $this->getCurrentPlanObject();
-    $plan_id = $this->getCurrentPlanId();
-    $decimal_format = $plan_base_object->getDecimalFormat();
-    $reporting_periods = $this->getPlanReportingPeriods($plan_id);
-    $reporting_periods_rendered = array_map(function ($reporting_period) {
-      return ThemeHelper::render([
-        '#theme' => 'hpc_reporting_period',
-        '#reporting_period' => $reporting_period,
-        '#format_string' => '#@period_number: @date_range',
-      ]);
-    }, $reporting_periods);
-    $reporting_period = $this->getCurrentReportingPeriod();
-    $configured_reporting_periods = $this->getConfiguredReportingPeriods();
-
-    $unit_label = $attachment->unit->label ?? NULL;
-    $unit_group = $attachment->unit->group ?? NULL;
-
-    $disaggregated_data = $attachment->getDisaggregatedData($reporting_period, TRUE);
-
-    foreach ($disaggregated_data as $metric_index => $metric_item) {
-      $map['data']['attachment']['legend'][$metric_index] = $this->getMetricLabel($metric_index);
-      if (empty($metric_item['locations'])) {
-        continue;
-      }
-      foreach ($metric_item['locations'] as $location) {
-        if (empty($map['data']['attachment']['locations'][$location['id']])) {
-          $map['data']['attachment']['locations'][$location['id']] = [
-            'attachment' => [],
-            'latLng' => $location['map_data']['latLng'],
-            'object_id' => $location['id'],
-            'location_id' => $location['id'],
-            'location_name' => $location['name'],
-            'radius_factor' => 1,
-            'radius_factors' => [
-              'attachment' => 1,
-            ],
-            'admin_level' => $location['map_data']['admin_level'],
-            'pcode' => $location['map_data']['pcode'],
-          ];
-        }
-        $map['data']['attachment']['locations'][$location['id']]['attachment'][$metric_index] = $location['total'];
-      }
-    }
-
-    // Prepare the modal contents.
-    foreach ($map['data']['attachment']['locations'] as $location) {
-      $location_id = $location['location_id'];
-      $map['data']['attachment']['locations'][$location_id]['attachment'] = array_filter($location['attachment']);
-      $map['data']['attachment']['modal_contents'][$location_id] = $this->prepareModalContentDonut($location, $map['data']['attachment']['legend'], $unit_group, $unit_label, $decimal_format);
-    }
-
-    // Add the measurements across different monitoring periods to be able to
-    // create progress bar charts in the map modals.
-    $location_variants = [];
-    $measurements = $attachment->getMeasurements();
-    if (!empty($measurements)) {
-      foreach ($measurements as $measurement) {
-        $reporting_period = $measurement->getReportingPeriodId();
-        if (!array_key_exists($reporting_period, $reporting_periods)) {
-          // If the measurements reporting period is not part of the
-          // $reporting_periods array, then this measurement has not been
-          // published yet, so we can safely skip it here.
-          continue;
-        }
-        if (empty($measurement->disaggregated)) {
-          continue;
-        }
-        $metric_count = count((array) $measurement->totals);
-        $category_count = count((array) $measurement->disaggregated->categories);
-        $data_matrix = $measurement->disaggregated->dataMatrix;
-        $locations = $measurement->disaggregated->locations;
-
-        // Filter out first item if it's completely empty, in which case this is
-        // the country location, which has no disaggregated data anyways and
-        // doesn't figure in the locations array.
-        if (empty(array_filter($data_matrix[0]))) {
-          array_shift($data_matrix);
-        }
-
-        foreach ($locations as $location_index => $location) {
-          if (empty($map['data']['attachment']['modal_contents'][$location->id])) {
-            continue;
-          }
-
-          if (empty($map['data']['attachment']['measurements'][$reporting_period])) {
-            $map['data']['attachment']['measurements'][$reporting_period] = [
-              'id' => $reporting_period,
-              'reporting_period' => $reporting_periods_rendered[$reporting_period],
-              'locations' => [],
-            ];
-          }
-          foreach ($measurement->totals as $metric_index => $metric_item) {
-            // Add information about measurement metrics, so that the frontend
-            // can distinguish them.
-            if ($attachment->isMeasurementField($metric_item->name->en) && !in_array($metric_index, $map['data']['attachment']['measurement_metrics'])) {
-              $map['data']['attachment']['measurement_metrics'][] = $metric_index;
-            }
-            if (empty($map['data']['attachment']['measurements'][$reporting_period]['locations'][$location->id])) {
-              $map['data']['attachment']['measurements'][$reporting_period]['locations'][$location->id] = [];
-            }
-            $data_matrix_location = $data_matrix[$location_index];
-            $data_matrix_index = $metric_count * $category_count + $metric_index;
-            $location_total = array_key_exists($data_matrix_index, $data_matrix_location) ? (int) $data_matrix_location[$data_matrix_index] : NULL;
-            $map['data']['attachment']['measurements'][$reporting_period]['locations'][$location->id][$metric_index] = $location_total;
-          }
-        }
-      }
-
-      // If multiple monitoring periods are configured, we need to setup the
-      // disaggregated data for each of them.
-      if (count($configured_reporting_periods) > 1) {
-        // It is imported to get the disaggregated data for the location
-        // variants (reporting periods) without filtering out empty locations.
-        // We need the same amount of locations as for the current result set,
-        // otherwise D3 will get confused, data binding will fail silently and
-        // produce strange outputs in the map.
-        $disaggregated_data_multiple_periods = $attachment->getDisaggregatedDataMultiple($configured_reporting_periods);
-        if (!empty($disaggregated_data_multiple_periods)) {
-          foreach ($disaggregated_data_multiple_periods as $period_data) {
-            /** @var \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod $reporting_period */
-            $reporting_period = $period_data['reporting_period'];
-            $location_variants[$reporting_period->id()] = [
-              'locations' => [],
-              'modal_contents' => [],
-            ];
-            // Get a shortcut to keep our code a bit easier to read.
-            $period_locations = &$location_variants[$reporting_period->id()]['locations'];
-
-            foreach ($period_data['disaggregated_data'] as $metric_index => $metric_item) {
-              if (!$attachment->isMeasurementField($metric_item['metric']->name->en)) {
-                continue;
-              }
-              if (empty($metric_item['locations'])) {
-                // No location data for this monitoring period.
-                continue;
-              }
-              foreach ($metric_item['locations'] as $location) {
-                $location_id = $location['id'];
-                if (!array_key_exists($location_id, $map['data']['attachment']['locations'])) {
-                  continue;
-                }
-
-                if (empty($period_locations[$location_id])) {
-                  // Create a copy of the original location object, that
-                  // contains all relevant information for the map rendering.
-                  $period_locations[$location_id] = $map['data']['attachment']['locations'][$location_id];
-                  foreach ($period_locations[$location_id]['attachment'] as $_index => $_value) {
-                    if ($attachment->isMeasurementField($period_data['disaggregated_data'][$_index]['metric']->name->en)) {
-                      $period_locations[$location_id]['attachment'][$_index] = NULL;
-                    }
-                  }
-                }
-                // Overwrite only the measurement metric for this location.
-                $period_locations[$location_id]['attachment'][$metric_index] = $location['total'];
-              }
-            }
-
-            $period_locations = array_values($period_locations);
-
-            if (empty($period_locations)) {
-              unset($location_variants[$reporting_period->id()]);
-            }
-            else {
-              // Prepare the modal contents.
-              foreach ($period_locations as $location) {
-                $location_id = $location['location_id'];
-                $location_variants[$reporting_period->id()]['modal_contents'][$location_id] = $this->prepareModalContentDonut($location, $map['data']['attachment']['legend'], $unit_group, $unit_label, $decimal_format);
-              }
-            }
-          }
-
-        }
-      }
-    }
-    $map['data']['attachment']['locations'] = array_values($map['data']['attachment']['locations']);
-
-    // Set the radius factors.
-    $this->calulateDonutRadiusFactors($map['data']['attachment']['locations']);
-
-    if (!empty($location_variants)) {
-      // If we have location variants for measurement values, also do the
-      // radius calculation.
-      foreach ($location_variants as &$location_variant) {
-        $this->calulateDonutRadiusFactors($location_variant['locations']);
-      }
-      // Add them to the map data.
-      $map['data']['attachment']['location_variants'] = $location_variants;
-    }
-
-    $map['settings']['map_style_config'] = $this->getDonutMapSettings();
-
-    return $map;
-  }
-
-  /**
-   * Get the settings for a donut map.
+   * Calculate the grouped size of each location item based.
    *
-   * @return array
-   *   A settings array.
+   * @param array $data
+   *   A map data array with tab data keyed by the tab key.
    */
-  private function getDonutMapSettings() {
-    $conf = $this->getBlockConfig()['map']['appearance'][self::STYLE_DONUT];
+  private function calculateGroupedSizes(&$data) {
+    $ranges = ['min' => 0, 'max' => 0];
+    foreach ($data as $tab_data) {
+      $tab_min = array_reduce($tab_data['locations'], function ($carry, $item) {
+        $value = is_numeric($item['total']) ? $item['total'] : 0;
+        return $carry > $value ? $value : $carry;
+      }, 0);
+      $tab_max = array_reduce($tab_data['locations'], function ($carry, $item) {
+        $value = is_numeric($item['total']) ? $item['total'] : 0;
+        return $carry < $value ? $value : $carry;
+      }, 0);
 
-    $donut_whole_segments = array_filter(array_map(function ($item) {
-      return (int) $item;
-    }, $conf['whole_segments']));
-    $donut_partial_segments = array_filter(array_map(function ($item) {
-      return (int) $item;
-    }, $conf['partial_segments']));
-    $available_metric_items = array_keys($this->getDefaultAttachment()->getMetricFields());
-    $reporting_periods = $this->getPlanReportingPeriods($this->getCurrentPlanId(), TRUE);
-    $configured_monitoring_periods = is_object($conf['monitoring_period']) ? $conf['monitoring_period']->monitoring_period : $conf['monitoring_period'];
-
-    $map_style_config = [
-      'donut_whole_segments' => array_values(array_intersect($available_metric_items, $donut_whole_segments)),
-      'donut_whole_segment_default' => (int) $conf['whole_segment_default'],
-      'donut_partial_segments' => array_values(array_intersect($available_metric_items, $donut_partial_segments)),
-      'donut_partial_segment_default' => (int) $conf['partial_segment_default'],
-      'donut_monitoring_periods' => array_values(array_filter($configured_monitoring_periods, function ($item) use ($reporting_periods) {
-        return $item != 'latest' && $item != 'none' && array_key_exists($item, $reporting_periods);
-      })),
-      'donut_display_value' => $conf['display_value'] ?? 'percentage',
-    ];
-
-    if (!in_array($map_style_config['donut_whole_segment_default'], $available_metric_items)) {
-      $map_style_config['donut_whole_segment_default'] = reset($map_style_config['donut_whole_segments']);
-    }
-    // Check that the default segments are actually available. If not, default
-    // to the first available segment.
-    if (!in_array($map_style_config['donut_partial_segment_default'], $available_metric_items)) {
-      $map_style_config['donut_partial_segment_default'] = reset($map_style_config['donut_partial_segments']);
+      $ranges['min'] = min($ranges['min'], $tab_min);
+      $ranges['max'] = max($ranges['max'], $tab_max);
     }
 
-    return $map_style_config;
-  }
-
-  /**
-   * Calculate radius factors for a set of locations.
-   *
-   * @param array $locations
-   *   An array with locations to calculate the radius factor for.
-   */
-  private function calulateDonutRadiusFactors(array &$locations) {
-    $max = 0;
-
-    // First, get the maximum values across all locations.
-    foreach ($locations as $location) {
-      $base_value = (int) reset($location['attachment']);
-      $max = $base_value > $max ? $base_value : $max;
-    }
-
-    // Then calculate a radius factor for each location, based on the maximum.
-    foreach ($locations as &$location) {
-      $base_value = (int) reset($location['attachment']);
-      $radius_factor = $max > 0 ? 30 / $max * $base_value : 1;
-      $radius_factor = $radius_factor > 1 ? $radius_factor : 1;
-      $location['radius_factor'] = $radius_factor;
-      $location['radius_factors']['attachment'] = $radius_factor;
-      $location['total'] = $base_value;
+    foreach ($data as &$item) {
+      foreach ($item['locations'] as &$location) {
+        $max = $ranges['max'];
+        $relative_size = ($max > 0 ? 10 / $max * $location['total'] : 1) * 4;
+        $location['radius_factor'] = $relative_size > 1 ? $relative_size : 1;
+      }
     }
   }
 
@@ -636,17 +380,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    */
   private function prepareMetricItemMapData($metric_index, $metric_item, $decimal_format, $reporting_period = NULL) {
     $locations = $metric_item['locations'];
-
-    // Foreach location, calculate a radius factor that will be used to draw
-    // the map circles.
-    $total_values = array_map(function ($item) {
-      return (int) $item['total'];
-    }, $metric_item['locations']);
-
-    // Set the min and max weighing factors for the radius.
-    $radius_factor_max = 40;
-    $radius_factor_min = 1;
-
     $metric_label = $this->getMetricLabel($metric_index);
 
     $location_data = [];
@@ -657,9 +390,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         continue;
       }
       $location_data[$key] = $location['map_data'];
-      $total_value = !empty($location['total']) ? (int) $location['total'] : 0;
-      $radius_factor = $total_value > 0 ? ceil($radius_factor_max / max($total_values) * $total_value) : $radius_factor_min;
-      $location_data[$key]['radius_factor'] = $radius_factor;
 
       $location['categories'] = array_filter($location['categories'], function ($category) {
         return $category['data'] !== NULL;
@@ -699,55 +429,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   }
 
   /**
-   * Prepare the content for a plan modal window showing disaggregated data.
-   */
-  private function prepareModalContentDonut($location, $legend, $unit_group, $unit_label, $decimal_format) {
-    $modal_content = [
-      'html' => '',
-      'object_id' => $location['location_id'],
-      'location_id' => $location['location_id'],
-      'title' => $location['location_name'],
-      'admin_level' => $location['admin_level'],
-      'pcode' => $location['pcode'],
-    ];
-
-    $unit_defaults = [
-      'amount' => [
-        '#scale' => 'full',
-      ],
-    ];
-
-    $items = [];
-
-    // Add the group header.
-    switch ($unit_group) {
-      case 'people':
-        $items[] = '<div class="section-header"><i class="material-icons group">group</i><span>' . $unit_label . '</span></div>';
-        break;
-
-      default:
-        $items[] = '<div class="section-header"><i class="material-icons grain">grain</i><span>' . $unit_label . '</span></div>';
-        break;
-    }
-
-    foreach ($legend as $metric_index => $metric_label) {
-      $total_value = !empty($location['attachment'][$metric_index]) ? $location['attachment'][$metric_index] : FALSE;
-      $content = '<div class="map-card-metric-wrapper" data-metric-index="' . $metric_index . '">';
-      $content .= '  <div class="metric-label"><div class="metric-color-code"></div>' . $metric_label . '</div>';
-      $content .= '  <div class="metric-value">' . CommonHelper::renderValue($total_value, 'value', 'hpc_autoformat_value', [
-        'unit_type' => 'amount',
-        'unit_defaults' => $unit_defaults,
-        'decimal_format' => $decimal_format,
-      ]) . '</div>';
-      $content .= '</div>';
-      $items[] = $content;
-    }
-    $modal_content['html'] = Markup::create(implode('', $items));
-
-    return $modal_content;
-  }
-
-  /**
    * Get the reporting periods to show in the map.
    *
    * @return array
@@ -756,8 +437,8 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    */
   private function getConfiguredReportingPeriods() {
     $conf = $this->getBlockConfig();
-    $map_style = $conf['map']['appearance']['style'];
-    $monitoring_periods = $conf['map']['appearance'][$map_style]['monitoring_period'];
+    $style = self::STYLE_CIRCLE;
+    $monitoring_periods = $conf['map']['appearance'][$style]['monitoring_period'];
     $monitoring_periods = is_object($monitoring_periods) ? $monitoring_periods->monitoring_period : $monitoring_periods;
     $configured_reporting_periods = array_filter($monitoring_periods);
     if (empty($configured_reporting_periods)) {
@@ -808,14 +489,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
           'style' => self::STYLE_CIRCLE,
           self::STYLE_CIRCLE => [
             'monitoring_period' => ['latest' => 'latest'],
-          ],
-          self::STYLE_DONUT => [
-            'whole_segments' => [],
-            'whole_segment_default' => NULL,
-            'partial_segments' => [],
-            'partial_segment_default' => NULL,
-            'monitoring_period' => ['latest' => 'latest'],
-            'display_value' => NULL,
           ],
         ],
         'common' => [
@@ -889,28 +562,10 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       '#tree' => TRUE,
       '#group' => 'tabs',
     ];
-    $form['appearance']['style'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Map style'),
-      '#description' => $this->t('Select which type of map will be used.'),
-      '#options' => [
-        self::STYLE_CIRCLE => $this->t('Circle'),
-        self::STYLE_DONUT => $this->t('Donut'),
-      ],
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'appearance',
-        'style',
-      ]) ?? self::STYLE_CIRCLE,
-    ];
 
     $form['appearance'][self::STYLE_CIRCLE] = [
       '#type' => 'container',
       '#tree' => TRUE,
-      '#states' => [
-        'visible' => [
-          ':input[name="map[appearance][style]"]' => ['value' => self::STYLE_CIRCLE],
-        ],
-      ],
     ];
     $form['appearance'][self::STYLE_CIRCLE]['monitoring_period'] = [
       '#type' => 'monitoring_periods',
@@ -923,88 +578,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         'monitoring_period',
       ]),
       '#include_none' => TRUE,
-    ];
-
-    $form['appearance'][self::STYLE_DONUT] = [
-      '#type' => 'container',
-      '#tree' => TRUE,
-      '#states' => [
-        'visible' => [
-          ':input[name="map[appearance][style]"]' => ['value' => self::STYLE_DONUT],
-        ],
-      ],
-    ];
-    $form['appearance'][self::STYLE_DONUT]['whole_segments'] = [
-      '#type' => 'checkboxes',
-      '#title' => $this->t('Whole segments data points'),
-      '#description' => $this->t('Select the goal metrics that are available for the whole segments.'),
-      '#options' => $attachment->getGoalMetricFields(),
-      '#default_value' => array_filter($this->getDefaultFormValueFromFormState($form_state, [
-        'appearance',
-        self::STYLE_DONUT,
-        'whole_segments',
-      ])) ?? [array_key_first($attachment->getGoalMetricFields())],
-      '#multiple' => TRUE,
-    ];
-    $form['appearance'][self::STYLE_DONUT]['whole_segment_default'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Default data point for the full segment'),
-      '#options' => $attachment->getGoalMetricFields(),
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'appearance',
-        self::STYLE_DONUT,
-        'whole_segment_default',
-      ]) ?? array_key_first($attachment->getGoalMetricFields()),
-    ];
-    $form['appearance'][self::STYLE_DONUT]['partial_segments'] = [
-      '#type' => 'checkboxes',
-      '#title' => $this->t('Partial segments data points'),
-      '#description' => $this->t('Select the goal or measurement metrics that are available for the partial segments.'),
-      '#options' => $attachment->getMetricFields(),
-      '#default_value' => array_filter($this->getDefaultFormValueFromFormState($form_state, [
-        'appearance',
-        self::STYLE_DONUT,
-        'partial_segments',
-      ])) ?? [array_key_first($attachment->getMeasurementMetricFields())],
-      '#multiple' => TRUE,
-    ];
-    $form['appearance'][self::STYLE_DONUT]['partial_segment_default'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Default data point for the partial segment'),
-      '#options' => $attachment->getMetricFields(),
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'appearance',
-        self::STYLE_DONUT,
-        'partial_segment_default',
-      ]) ?? array_key_first($attachment->getMeasurementMetricFields()),
-    ];
-    $form['appearance'][self::STYLE_DONUT]['monitoring_period'] = [
-      '#type' => 'monitoring_periods',
-      '#title' => $this->t('Monitoring periods'),
-      '#plan_id' => $this->getCurrentPlanId(),
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'appearance',
-        self::STYLE_DONUT,
-        'monitoring_period',
-      ]),
-      '#default_all' => TRUE,
-      '#include_latest' => TRUE,
-      '#include_none' => TRUE,
-    ];
-    $form['appearance'][self::STYLE_DONUT]['display_value'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Display value for the donut center'),
-      '#description' => $this->t('Select the default value to display in the donut center. This can be changed interactively by the frontend user.'),
-      '#options' => [
-        self::DONUT_DISPLAY_VALUE_PERCENTAGE => $this->t('Proportion of partial vs. full segment'),
-        self::DONUT_DISPLAY_VALUE_PARTIAL => $this->t('Absolute value of the partial segment'),
-        self::DONUT_DISPLAY_VALUE_FULL => $this->t('Absolute value of the full segment'),
-      ],
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'appearance',
-        self::STYLE_DONUT,
-        'display_value',
-      ]),
     ];
 
     $form['common'] = [

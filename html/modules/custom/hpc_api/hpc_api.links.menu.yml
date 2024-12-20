@@ -11,7 +11,7 @@ hpc_api.endpoint_report:
 hpc_api.files_report:
   title: HPC files
   description: 'List files imported from HPC.'
-  route_name: hpc_api.reports.files
+  route_name: hpc_api.reports.files.data_source
   parent: system.admin_reports
 hpc_api.files_report.data_source:
   title: Data source files
@@ -22,4 +22,9 @@ hpc_api.icon_files_report:
   title: Icon files
   description: 'List the currently imported icon files.'
   route_name: hpc_api.reports.files.icons
+  parent: hpc_api.files_report
+hpc_api.geojson_files_report:
+  title: GeoJSON files
+  description: 'List the currently imported GeoJSON files.'
+  route_name: hpc_api.reports.files.geojson
   parent: hpc_api.files_report

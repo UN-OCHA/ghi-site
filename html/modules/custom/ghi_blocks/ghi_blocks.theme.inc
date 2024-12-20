@@ -9,7 +9,10 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
+use Drupal\Core\Template\Attribute;
 use Drupal\Core\Url;
+use Drupal\ghi_blocks\Helpers\GlobalMapHelper;
 use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\DocumentLink;
 use Drupal\ghi_plans\Entity\Plan;
 
@@ -94,12 +97,21 @@ function ghi_blocks_preprocess_document_link_button(&$variables) {
 /**
  * Preprocess a plan attachment map.
  */
-function ghi_blocks_preprocess_plan_overview_map(&$variables) {
+function ghi_blocks_preprocess_map(&$variables) {
   $outer_classes = [
     'map-wrapper-outer',
     'map-wrapper-' . $variables['chart_id'],
   ];
-  $variables['outer_classes'] = implode(' ', $outer_classes);
+  $variables['attributes'] = new Attribute(['class' => $outer_classes]);
+  $variables['#attached']['drupalSettings']['map_config'] = GlobalMapHelper::getGlobalMapSettings();
+  $variables['#attached']['drupalSettings']['mapbox'] = GlobalMapHelper::getMapboxConfig();
+}
+
+/**
+ * Preprocess a plan attachment map.
+ */
+function ghi_blocks_preprocess_plan_overview_map(&$variables) {
+  ghi_blocks_preprocess_map($variables);
 }
 
 /**
@@ -121,14 +133,11 @@ function ghi_blocks_preprocess_plan_overview_map_modal(&$variables) {
  * Preprocess a plan attachment map.
  */
 function ghi_blocks_preprocess_plan_attachment_map(&$variables) {
-  $outer_classes = [
-    'map-wrapper-outer',
-    'map-wrapper-' . $variables['chart_id'],
-  ];
+  ghi_blocks_preprocess_map($variables);
+
   if (!empty($variables['attachment_switcher'])) {
-    $outer_classes[] = Html::getClass('has-attachment-switcher');
+    $variables['attributes']['class'][] = Html::getClass('has-attachment-switcher');
   }
-  $variables['outer_classes'] = implode(' ', $outer_classes);
   $variables['attachment_select'] = $variables['attachment_switcher'] ?? '';
 }
 
@@ -136,17 +145,13 @@ function ghi_blocks_preprocess_plan_attachment_map(&$variables) {
  * Preprocess a plan attachment map.
  */
 function ghi_blocks_preprocess_plan_operational_presence_map(&$variables) {
-  $outer_classes = [
-    'map-wrapper-outer',
-    'map-wrapper-' . $variables['chart_id'],
-  ];
+  ghi_blocks_preprocess_map($variables);
   if (!empty($variables['view_switcher'])) {
-    $outer_classes[] = Html::getClass('has-view-switcher');
+    $variables['attributes']['class'][] = Html::getClass('has-view-switcher');
   }
   if (!empty($variables['object_switcher'])) {
-    $outer_classes[] = Html::getClass('has-object-switcher');
+    $variables['attributes']['class'][] = Html::getClass('has-object-switcher');
   }
-  $variables['outer_classes'] = implode(' ', $outer_classes);
   $variables['view_select'] = $variables['view_switcher'] ?? '';
   $variables['object_select'] = $variables['object_switcher'] ?? '';
 }
@@ -178,7 +183,7 @@ function ghi_blocks_build_document_download_link(array $document, $language = NU
   // Get the filesize.
   $filesize = NULL;
   if (!empty($document['filesize'])) {
-    $filesize = format_size($document['filesize']);
+    $filesize = ByteSizeMarkup::create($document['filesize']);
   }
 
   // Link title.

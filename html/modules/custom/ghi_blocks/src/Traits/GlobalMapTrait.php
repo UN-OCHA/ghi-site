@@ -4,29 +4,55 @@ namespace Drupal\ghi_blocks\Traits;
 
 /**
  * Common logic for map elements.
- *
- * Allows to retrieve a static tiles url template to be used in leaflet maps.
- * This takes care of handling the mapbox token depending on whether or not the
- * use of a local proxy is enabled.
  */
 trait GlobalMapTrait {
 
+  public const STYLE_ID = 'cm3rtb8gi00b801rw6e7tbl4s';
+
   /**
-   * Get the default url template for static tiles.
+   * Get the necessary configuration for mapbox.
+   *
+   * @return array
+   *   An options array.
+   */
+  public static function getMapboxConfig() {
+    return [
+      'token' => self::getToken(),
+      'style_url' => self::getStyleUrl(),
+    ];
+  }
+
+  /**
+   * Check whether to use country outlines.
+   *
+   * @return bool
+   *   TRUE if country outlines should be used, FALSE otherwise.
+   */
+  public static function useCountryOutlines() {
+    $map_config = self::getGlobalMapSettings();
+    return !empty($map_config['country_outlines']);
+  }
+
+  /**
+   * Get the mapbox token.
    *
    * @return string
-   *   The URL template to use for leaflet maps.
+   *   The mapbox token or the string 'token'.
    */
-  public function getStaticTilesUrlTemplate($style_id = NULL) {
-    if ($style_id === NULL) {
-      $style_id = 'ck6kzlftu17uv1ilgsacalu17';
-    }
-    $map_config = $this->getGlobalMapSettings();
+  private static function getToken() {
+    $map_config = self::getGlobalMapSettings();
     $use_proxy = !empty($map_config['mapbox_proxy']);
-    $host = $use_proxy ? '/mapbox' : 'https://api.mapbox.com';
-    $token = $use_proxy ? 'token' : getenv('MAPBOX_TOKEN');
-    $style_url = 'styles/v1/reliefweb/' . $style_id . '/tiles/256/{z}/{x}/{y}?access_token=' . $token;
-    return $host . '/' . $style_url;
+    return $use_proxy ? 'token' : getenv('MAPBOX_TOKEN');
+  }
+
+  /**
+   * Get the style url for maps.
+   *
+   * @return string
+   *   A mapbox style url as a string.
+   */
+  public static function getStyleUrl() {
+    return 'mapbox://styles/ocha-hpc/' . self::STYLE_ID . '?optimize=true';
   }
 
   /**
@@ -35,7 +61,7 @@ trait GlobalMapTrait {
    * @return array
    *   An array of relevant cache tags.
    */
-  public function getMapConfigCacheTags() {
+  public static function getMapConfigCacheTags() {
     return [
       'config:ghi_blocks.map_settings',
     ];
@@ -46,7 +72,7 @@ trait GlobalMapTrait {
    *
    * @see \Drupal\ghi_blocks\Form\MapSettingsForm
    */
-  private function getGlobalMapSettings() {
+  public static function getGlobalMapSettings() {
     return \Drupal::config('ghi_blocks.map_settings')->get();
   }
 
