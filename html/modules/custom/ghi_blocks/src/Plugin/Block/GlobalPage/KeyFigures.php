@@ -63,6 +63,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
       'expectedReach' => 'Expected reach',
     ];
     $caseload_values = $this->getPlanQuery()->getCaseloadTotalValues($types);
+    $affected_countries = $this->getPlanQuery()->getNumerOfGhoCountries();
     return [
       'total_funding' => $funding,
       'total_requirements' => $requirements,
@@ -72,6 +73,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
       'people_reached' => $caseload_values['reached'],
       'people_reached_percent' => CommonHelper::calculateRatio($caseload_values['reached_custom'], $caseload_values['target_custom']),
       'people_expected_reach' => $caseload_values['expectedReach'],
+      'countries_affected' => $affected_countries,
     ];
   }
 
