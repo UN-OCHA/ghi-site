@@ -75,7 +75,7 @@ final class UpdateMonitoringPeriodQueue extends QueueWorkerBase implements Conta
     $entity_type_id = $data->entity_type_id;
     $entity_id = $data->entity_id;
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-    $entity = \Drupal::entityTypeManager()->getStorage($entity_type_id)->loadUnchanged($entity_id);
+    $entity = $this->entityTypeManager->getStorage($entity_type_id)->loadUnchanged($entity_id);
 
     $section_storage = $this->getSectionStorageForEntity($entity);
     if (!$section_storage || !$section_storage instanceof OverridesSectionStorageInterface) {

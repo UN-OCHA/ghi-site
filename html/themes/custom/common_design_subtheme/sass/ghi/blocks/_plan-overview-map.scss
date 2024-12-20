@@ -21,149 +21,98 @@
     margin-bottom: 1rem;
     padding: 0 0.5rem;
 
-    .leaflet-container {
-      position: relative;
-      min-height: 400px;
-      border-width: 1px;
-      border-style: solid;
-      border-color: var(--hpc-border-color);
+    @include tablet {
+      padding: 0;
+    }
+  }
 
-      .leaflet-control-container {
-        .leaflet-bottom {
-          width: 100%;
+  .map-sidebar--wrapper .map-sidebar {
+    .modal-header {
+      .title {
+        margin-bottom: 0;
+        color: var(--ghi-default-text-color);
+        font-size: var(--cd-font-size--base);
+        font-weight: bold;
+
+        a {
+          color: var(--ghi-default-text-color);
         }
-
-        .leaflet-control-attribution {
-          float: none;
-          width: 100%;
-          margin-right: auto;
-          margin-left: auto;
-          padding: 0.5rem;
-          text-align: center;
-          background: rgba(251, 251, 251, 0.9);
-
-          @include max-width(sm) {
-            padding-bottom: 0.3rem;
-          }
-        }
-
-        .modal-header {
-          .title {
-            margin-bottom: 0;
-            color: var(--ghi-default-text-color);
-            font-size: var(--cd-font-size--base);
-            font-weight: bold;
-
-            a {
-              color: var(--ghi-default-text-color);
-            }
-          }
-        }
-
-        .modal-content {
-          .modal-inner {
-            padding: 1.2rem 1.6rem 0.5rem 1.4rem;
-            cursor: default;
-          }
-          strong {
-            font-weight: bold;
-          }
-
-          .section-wrapper {
-            margin-bottom: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--ghi-default-border-color);
-
-            .section-row {
-              display: flex;
-              justify-content: space-between;
-              width: 100%;
-
-              .label {
-                position: relative;
-                display: inline;
-                margin-bottom: 3px;
-                text-align: left;
-                font-size: var(--cd-font-size--small);
-                font-weight: normal;
-              }
-
-              .value {
-                display: flex;
-                gap: 0.3rem;
-                font-size: var(--cd-font-size--small);
-                font-weight: bold;
-
-                i.tooltip.info {
-                  position: relative;
-                  top: 3px;
-                }
-                i.tooltip.monitoring-period {
-                  position: relative;
-                  top: 1px;
-                }
-
-                .hpc-percent-progress-bar-wrapper {
-                  margin-top: 2px;
-                  cursor: default;
-                }
-              }
-              .note {
-                font-size: var(--cd-font-size--tiny);
-              }
-
-              &.section-row-plan-status {
-                margin: 4px 0 4px 4px;
-
-                .label {
-                  display: flex;
-                  gap: 0.5rem;
-                  font-weight: bold;
-                }
-
-                .value {
-                  text-transform: none;
-
-                  & > div {
-                    display: flex;
-                    gap: 0.5rem;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-      .leaflet-overlay-pane {
-        svg svg {
-          g path:nth-of-type(1) {
-            fill: var(--ghi-grey--medium) !important;
-          }
-
-          &[legend-type="hrp"] g path:nth-of-type(1) {
-            fill: var(--cd-primary-color) !important;
-          }
-
-          &[legend-type="fa"] g path:nth-of-type(1) {
-            fill: var(--ghi-widget-color--dark) !important;
-          }
-        }
-
-        text.donut-label {
-          font-family: var(--cd-font--roboto);
-          font-weight: 500;
-        }
-      }
-
-      @include tablet {
-        min-height: 500px;
-        border: 0 none;
       }
     }
 
-    @include tablet {
-      padding: 0;
+    .modal-content {
+      .modal-inner {
+        padding: 1.2rem 1.6rem 0.5rem 1.4rem;
+        cursor: default;
+      }
+      strong {
+        font-weight: bold;
+      }
+
+      .section-wrapper {
+        margin-bottom: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--ghi-default-border-color);
+
+        .section-row {
+          display: flex;
+          justify-content: space-between;
+          width: 100%;
+
+          .label {
+            position: relative;
+            display: inline;
+            margin-bottom: 3px;
+            text-align: left;
+            font-size: var(--cd-font-size--small);
+            font-weight: normal;
+          }
+
+          .value {
+            display: flex;
+            gap: 0.3rem;
+            font-size: var(--cd-font-size--small);
+            font-weight: bold;
+
+            i.tooltip.info {
+              position: relative;
+              top: 3px;
+              height: fit-content;
+            }
+            i.tooltip.monitoring-period {
+              position: relative;
+              top: 1px;
+            }
+
+            .hpc-percent-progress-bar-wrapper {
+              margin-top: 2px;
+              cursor: default;
+            }
+          }
+          .note {
+            font-size: var(--cd-font-size--tiny);
+          }
+
+          &.section-row-plan-status {
+            margin: 4px 0 4px 4px;
+
+            .label {
+              display: flex;
+              gap: 0.5rem;
+              font-weight: bold;
+            }
+
+            .value {
+              text-transform: none;
+
+              & > div {
+                display: flex;
+                gap: 0.5rem;
+              }
+            }
+          }
+        }
+      }
     }
   }
 
@@ -171,8 +120,8 @@
     .map-legend {
       top: unset !important;
       right: unset !important;
-      bottom: 3rem;
-      left: 1rem;
+      bottom: 0.5rem;
+      left: 0.5rem;
 
       ul {
         flex-direction: column;

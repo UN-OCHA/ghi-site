@@ -70,11 +70,6 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
   ];
 
   /**
-   * The style id from the reliefweb mapbox account.
-   */
-  const MAP_STYLE_ID = 'clboapwyi000714muft627goq';
-
-  /**
    * The icon query.
    *
    * @var \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery
@@ -112,7 +107,6 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     $map_settings = [
       'json' => $map_data,
       'id' => $chart_id,
-      'map_tiles_url' => $this->getStaticTilesUrlTemplate(self::MAP_STYLE_ID),
       'disclaimer' => $conf['display']['disclaimer'] ?? self::DEFAULT_DISCLAIMER,
       'pcodes_enabled' => $conf['display']['pcodes_enabled'] ?? TRUE,
     ];
@@ -124,7 +118,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       '#view_switcher' => $this->getViewSwitcher($selected_view),
       '#object_switcher' => $this->getObjectSwitcher($selected_view),
       '#attached' => [
-        'library' => ['ghi_blocks/map.chloropleth'],
+        'library' => ['ghi_blocks/map.gl.operational_presence'],
         'drupalSettings' => [
           'plan_operational_presence_map' => [
             $chart_id => $map_settings,
@@ -210,9 +204,13 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     foreach ($locations as $location) {
       $objects = $objects_by_location[$location->location_id] ?? [];
       $location_data = (object) $location->toArray();
-
+      $location_data->object_id = $location->location_id;
       $location_data->object_count = count($objects);
       $location_data->modal_content = $this->buildModalContent($location, $objects, $selected_view, $fts_link);
+
+      if (empty($location_data->filepath)) {
+        continue;
+      }
 
       $map_data['locations'][] = clone $location_data;
     }
