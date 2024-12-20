@@ -103,6 +103,44 @@ class PlanOverviewQuery extends EndpointQueryBase {
   /**
    * Get the caseload total values for the supplied types.
    *
+   * @return int
+   *   The number of unique countries of all GHO plans.
+   */
+  public function getNumerOfGhoCountries() {
+    // Get the plans, but make sure they are not filtered for visibility. The
+    // number of affected countries will appear only in the key figures
+    // element, where we want the number of countries for all GHO plans
+    // independently of whether specific plans are hidden from global pages or
+    // not.
+    $plans = $this->getPlans(FALSE);
+    if (empty($plans)) {
+      return 0;
+    }
+
+    $countries = [];
+    foreach ($plans as $plan) {
+      // Only include plans with isPartOfGho=true.
+      if (!$plan->isPartOfGho()) {
+        continue;
+      }
+      $plan_countries = $plan->getCountries();
+      if (empty($plan_countries)) {
+        continue;
+      }
+      foreach ($plan_countries as $plan_country) {
+        if (array_key_exists($plan_country->id(), $countries)) {
+          continue;
+        }
+        $countries[$plan_country->id()] = $plan_country;
+      }
+    }
+
+    return count($countries);
+  }
+
+  /**
+   * Get the caseload total values for the supplied types.
+   *
    * @param array $types
    *   The types of caseload of which the sum is to be returned. The keys
    *   should be the expected metric type, the values the metric label.
