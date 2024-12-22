@@ -11,6 +11,7 @@
       "Issue #3001188: Make it possible to add relationships to layout builder": "./patches/3001188-make-it-possible-to-add-relationships-to-layout-builder.patch",
       "Issue #2329253: Allow the ChangedItem to skip updating the entity's changed timestamp when synchronizing (f.e. when migrating)": "https://www.drupal.org/files/issues/2024-07-30/2329253-10.x.patch",
       "Issue #3467860: Ensure consistent library ordering between page an asset requests when calculating asset aggregates": "./patches/3467860.mr-9219.patch",
+      "Issue #3487488: ExtensionMimeTypeGuesser::guessMimeType must support file names with '0' (zero) in the extension parts like foo.0.zip": "https://git.drupalcode.org/project/drupal/-/commit/0475ceccefc.patch",
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch"
     },
     "drupal/flat_taxonomy": {
