@@ -6,12 +6,9 @@
       "Issue #3008924: Callers of LayoutEntityHelperTrait::getEntitySections() do not account for the view mode": "./patches/3008924-rerolled-24.patch",
       "Issue #2902481: Add GROUP_CONCAT aggregate function to views": "https://www.drupal.org/files/issues/2024-08-09/add_group_concat_aggregate-2902481-44.patch",
       "Issue #151311: Split 'administer permissions' into a new administer roles permissions": "https://www.drupal.org/files/issues/2023-01-19/split_administer_permissions_151311-72.patch",
-      "Issue #2585169: Unable to alter local actions prior to rendering": "https://www.drupal.org/files/issues/2024-11-21/2585169-alter-local-actions-render.patch",
       "Issue #2755791: Ajax error ajax.$form.ajaxSubmit() is not a function": "https://www.drupal.org/files/issues/2023-08-07/drupal-ajax-error-2755791-18_0.patch",
       "Issue #3001188: Make it possible to add relationships to layout builder": "./patches/3001188-make-it-possible-to-add-relationships-to-layout-builder.patch",
       "Issue #2329253: Allow the ChangedItem to skip updating the entity's changed timestamp when synchronizing (f.e. when migrating)": "https://www.drupal.org/files/issues/2024-07-30/2329253-10.x.patch",
-      "Issue #3467860: Ensure consistent library ordering between page an asset requests when calculating asset aggregates": "./patches/3467860.mr-9219.patch",
-      "Issue #3487488: ExtensionMimeTypeGuesser::guessMimeType must support file names with '0' (zero) in the extension parts like foo.0.zip": "https://git.drupalcode.org/project/drupal/-/commit/0475ceccefc.patch",
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch"
     },
     "drupal/flat_taxonomy": {
@@ -19,11 +16,6 @@
     },
     "drupal/geofield_map": {
       "Issue #3479680: Hide marker button when the map position is reset": "https://git.drupalcode.org/project/geofield_map/-/merge_requests/22.patch"
-    },
-    "drupal/gin": {
-      "Issue #3386486: Option to use compact or full breadcrumb navigation": "https://www.drupal.org/files/issues/2024-05-30/3386486-skip-gin-node-breadcrumbs.patch",
-      "Issue #3281984: The breadcrumb shows 'Edit <label>' on all entity routes, even canonical/delete routes": "https://www.drupal.org/files/issues/2024-11-21/gin_3281984_cherrypick_for_rc14.patch",
-      "Issue #3486743: Cannot opt out buttons using #gin_action_item = TRUE": "https://git.drupalcode.org/project/gin/-/merge_requests/531.patch"
     },
     "drupal/gin_lb": {
       "Issue #??: Add alter hook for template suggestions trigger": "./patches/hook_gin_lb_add_suggestions_alter-1.0.0-rc8.patch"
