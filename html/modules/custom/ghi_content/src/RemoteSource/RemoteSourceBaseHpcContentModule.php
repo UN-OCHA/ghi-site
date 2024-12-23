@@ -463,8 +463,14 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
         $basic_auth['pass'],
       ];
     }
-    $response = $this->httpClient->get($uri, $options);
-    return $response->getBody();
+    try {
+      $response = $this->httpClient->get($uri, $options);
+      return $response->getBody();
+    }
+    catch (ClientException $e) {
+      // The image wasn't found or something similar.
+      return NULL;
+    }
   }
 
   /**
