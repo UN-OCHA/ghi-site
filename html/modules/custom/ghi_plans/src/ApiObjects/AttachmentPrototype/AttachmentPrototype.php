@@ -191,6 +191,8 @@ class AttachmentPrototype extends ApiObjectBase {
         case 'cumulative_reach':
           return (string) $this->t('People reached', [], ['langcode' => $langcode]);
 
+        case 'periodical_measure':
+        case 'cumulative_measure':
         case 'measure':
           return (string) $this->t('Measure', [], ['langcode' => $langcode]);
       }
