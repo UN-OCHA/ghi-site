@@ -351,6 +351,12 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
         'allow_sum' => TRUE,
         'theme' => 'hpc_amount',
       ],
+      'plans_inside_gho' => [
+        'label' => $this->t('Number of GHO plans'),
+        'data_type' => 'integer',
+        'allow_sum' => TRUE,
+        'theme' => 'hpc_amount',
+      ],
     ];
     $configuration = $this->getPluginConfiguration();
     if (array_key_exists('item_types', $configuration)) {
