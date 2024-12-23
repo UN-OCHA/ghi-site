@@ -93,9 +93,11 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
       '#default_value' => $this->getSubmittedValue($element, $form_state, 'label'),
     ];
 
-    if (method_exists($this, 'getDefaultLabel')) {
-      $element['label']['#description'] = $this->t('Leave empty to use a default label');
-      $element['label']['#placeholder'] = $this->getDefaultLabel();
+    if (method_exists($this, 'getDefaultLabel') && $label = $this->getDefaultLabel()) {
+      $element['label']['#description'] = $this->t('Leave empty to use the default label "%default_label".', [
+        '%default_label' => $label,
+      ]);
+      $element['label']['#placeholder'] = $label;
     }
 
     return $element;

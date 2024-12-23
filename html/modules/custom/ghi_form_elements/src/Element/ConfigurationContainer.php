@@ -382,7 +382,7 @@ class ConfigurationContainer extends FormElement {
         $id = self::get($element, $form_state, 'edit_item');
         $index = self::getItemIndexById($items, $id);
 
-        $values = $form_state->getValue(array_merge($parents));
+        $values = $form_state->getValue($parents);
         $values = $values['item_config'] ?? $values;
 
         if ($mode == 'add_item') {

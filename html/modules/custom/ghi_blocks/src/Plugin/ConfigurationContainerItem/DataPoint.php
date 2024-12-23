@@ -45,6 +45,10 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
+    $element['label']['#access'] = FALSE;
+    $element['label']['#default_value'] = '';
+    $element['label']['#value'] = '';
+
     $attachment = $this->getContextValue('attachment');
     $plan_object = $this->getContextValue('plan_object');
     $configuration = $this->getPluginConfiguration();
@@ -88,6 +92,17 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
     $plan_object = $this->getContextValue('plan_object') ?? NULL;
     return $attachment_prototype->getDefaultFieldLabel($data_point_index, $plan_object?->getPlanLanguage());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLabel() {
+    $data_point_conf = $this->get('data_point');
+    if (array_key_exists('label', $data_point_conf) && !empty($data_point_conf['label'])) {
+      return trim($data_point_conf['label']);
+    }
+    return parent::getLabel();
   }
 
   /**

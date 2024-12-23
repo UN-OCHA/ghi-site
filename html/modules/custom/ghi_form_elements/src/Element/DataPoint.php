@@ -103,6 +103,7 @@ class DataPoint extends FormElement {
    */
   public static function processDataPoint(array &$element, FormStateInterface $form_state) {
     $attachment = $element['#attachment'];
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
     $plan_object = $element['#plan_object'] ?? NULL;
     /** @var \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype */
     $attachment_prototype = $attachment ? $attachment->prototype : $element['#attachment_prototype'];
@@ -126,6 +127,7 @@ class DataPoint extends FormElement {
         ],
         1 => array_key_exists('data_points', $values) && array_key_exists(1, $values['data_points']) ? $values['data_points'][1] : NULL,
       ],
+      'label' => !empty($values['label']) ? $values['label'] : '',
       'formatting' => !empty($values['formatting']) ? $values['formatting'] : array_key_first(DataAttachment::getFormattingOptions()),
       'widget' => !empty($values['widget']) ? $values['widget'] : 'none',
     ];
@@ -322,6 +324,18 @@ class DataPoint extends FormElement {
         ],
       ];
     }
+
+    $data_point_index = $defaults['data_points'][0]['index'] ?? NULL;
+    $default_label = $data_point_index !== NULL ? $attachment_prototype->getDefaultFieldLabel($data_point_index, $plan_object->getPlanLanguage()) : NULL;
+    $element['label'] = [
+      '#type' => 'textfield',
+      '#title' => t('Label'),
+      '#default_value' => $defaults['label'],
+      '#description' => t('Leave empty to use the default label "%default_label".', [
+        '%default_label' => $default_label,
+      ]),
+      '#placeholder' => $default_label,
+    ];
 
     $element['formatting'] = [
       '#type' => 'select',
