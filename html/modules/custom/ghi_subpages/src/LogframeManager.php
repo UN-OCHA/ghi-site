@@ -478,7 +478,7 @@ class LogframeManager implements ContainerInjectionInterface {
         'id' => count($columns),
         'item_type' => 'data_point',
         'config' => [
-          'label' => $attachment_prototype->getDefaultFieldLabel($index, $plan->getPlanLanguage()) . ' %',
+          'label' => $attachment_prototype->getDefaultFieldLabel($measure, $plan->getPlanLanguage()) . ' %',
           'data_point' => [
             'processing' => 'calculated',
             'calculation' => 'percentage',
