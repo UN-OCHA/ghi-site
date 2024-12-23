@@ -134,8 +134,11 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     ];
 
     $element['label']['#access'] = !$attachment_select_mode;
+
     if ($attachment) {
-      $element['label']['#weight'] = 4;
+      $element['label']['#access'] = FALSE;
+      $element['label']['#default_value'] = '';
+      $element['label']['#value'] = '';
       $element['data_point'] = [
         '#type' => 'data_point',
         '#attachment' => $attachment,
@@ -155,6 +158,33 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * Get a default label.
+   *
+   * @return string|null
+   *   A default label or NULL.
+   */
+  public function getDefaultLabel() {
+    $attachment = $this->getAttachmentObject();
+    $data_point_conf = $this->get('data_point');
+    $data_point_index = $data_point_conf ? $data_point_conf['data_points'][0]['index'] : NULL;
+    if ($data_point_index === NULL) {
+      return NULL;
+    }
+    return $attachment->getPrototype()->getDefaultFieldLabel($data_point_index, $attachment->getPlanLanguage());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLabel() {
+    $data_point_conf = $this->get('data_point');
+    if (array_key_exists('label', $data_point_conf) && !empty($data_point_conf['label'])) {
+      return trim($data_point_conf['label']);
+    }
+    return parent::getLabel();
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getValue() {
@@ -171,7 +201,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
 
-    $data_point_conf = $this->get(['data_point']);
+    $data_point_conf = $this->get('data_point');
     $build = $attachment->formatValue($data_point_conf);
 
     $data_point_index = $data_point_conf['data_points'][0]['index'];
