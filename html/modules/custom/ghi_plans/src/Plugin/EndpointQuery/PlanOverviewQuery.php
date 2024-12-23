@@ -101,28 +101,44 @@ class PlanOverviewQuery extends EndpointQueryBase {
   }
 
   /**
-   * Get the caseload total values for the supplied types.
+   * Get the GHO plans.
+   *
+   * @param bool $filter
+   *   Whether the plans should be filtered or not.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[]
+   *   An array of GHO plans.
+   */
+  public function getGhoPlans($filter = FALSE) {
+    $plans = $this->getPlans($filter);
+    if (empty($plans)) {
+      return [];
+    }
+    $plans = array_filter($plans, function (PlanOverviewPlan $plan) {
+      return $plan->isPartOfGho();
+    });
+    return $plans;
+  }
+
+  /**
+   * Get the number of affected countries for the GHO plans.
    *
    * @return int
    *   The number of unique countries of all GHO plans.
    */
   public function getNumerOfGhoCountries() {
-    // Get the plans, but make sure they are not filtered for visibility. The
-    // number of affected countries will appear only in the key figures
+    // Get the GHO plans, but make sure they are not filtered for visibility.
+    // The number of affected countries will appear only in the key figures
     // element, where we want the number of countries for all GHO plans
     // independently of whether specific plans are hidden from global pages or
     // not.
-    $plans = $this->getPlans(FALSE);
+    $plans = $this->getGhoPlans(FALSE);
     if (empty($plans)) {
       return 0;
     }
 
     $countries = [];
     foreach ($plans as $plan) {
-      // Only include plans with isPartOfGho=true.
-      if (!$plan->isPartOfGho()) {
-        continue;
-      }
       $plan_countries = $plan->getCountries();
       if (empty($plan_countries)) {
         continue;
@@ -149,11 +165,11 @@ class PlanOverviewQuery extends EndpointQueryBase {
    *   An array keyed by the type and valued by the total sum of that type
    */
   public function getCaseloadTotalValues(array $types) {
-    // Get the plans, but make sure they are not filtered for visibility. The
-    // caseload totals will appear only in the key figures element, where we
-    // want the full GHO figures independently of whether specific plans are
+    // Get the GHO plans, but make sure they are not filtered for visibility.
+    // The caseload totals will appear only in the key figures element, where
+    // we want the full GHO figures independently of whether specific plans are
     // hidden from global pages or not.
-    $plans = $this->getPlans(FALSE);
+    $plans = $this->getGhoPlans(FALSE);
 
     // Setting up the array keyed by the types and values as 0.
     $caseload_totals = array_fill_keys(array_keys($types), 0);
@@ -169,29 +185,23 @@ class PlanOverviewQuery extends EndpointQueryBase {
     // summing these plans caseload values for all plans that have
     // isPartOfGho = true from this endpoint:
     // https://api.hpc.tools/v2/plan/overview/{year}
-    if (!empty($plans)) {
-      foreach ($plans as $plan) {
-        // Include plans with isPartOfGho=true.
-        if (!$plan->isPartOfGho()) {
-          continue;
-        }
+    foreach ($plans as $plan) {
 
-        // Check caseLoads and respective totals property has value.
-        $caseload_items = $plan->getPlanCaseloadFields($attachment_overrides[$plan->id()] ?? NULL);
-        if (empty($caseload_items)) {
-          continue;
-        }
+      // Check caseLoads and respective totals property has value.
+      $caseload_items = $plan->getPlanCaseloadFields($attachment_overrides[$plan->id()] ?? NULL);
+      if (empty($caseload_items)) {
+        continue;
+      }
 
-        $plan_caseloads[$plan->id()] = [];
+      $plan_caseloads[$plan->id()] = [];
 
-        foreach ($types as $type_key => $type) {
-          $label = is_scalar($type) ? $type : ($type['label'] ?? NULL);
-          $key = is_array($type) && !empty($type['type']) ? $type['type'] : $type_key;
-          $fallback = is_array($type) && !empty($type['fallback']) ? $type['fallback'] : NULL;
-          $value = $plan->getCaseloadValue($key, $label, $fallback);
-          $caseload_totals[$type_key] += $value ?? 0;
-          $plan_caseloads[$plan->id()][$type_key] = $value;
-        }
+      foreach ($types as $type_key => $type) {
+        $label = is_scalar($type) ? $type : ($type['label'] ?? NULL);
+        $key = is_array($type) && !empty($type['type']) ? $type['type'] : $type_key;
+        $fallback = is_array($type) && !empty($type['fallback']) ? $type['fallback'] : NULL;
+        $value = $plan->getCaseloadValue($key, $label, $fallback);
+        $caseload_totals[$type_key] += $value ?? 0;
+        $plan_caseloads[$plan->id()][$type_key] = $value;
       }
     }
 
