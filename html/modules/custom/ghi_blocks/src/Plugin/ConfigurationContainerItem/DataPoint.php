@@ -45,6 +45,13 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
+    $data_point = $this->getSubmittedValue($element, $form_state, 'data_point');
+
+    // Move legacy labels into the data point and hide default label for
+    // configuration items.
+    if (!empty($element['label']['#default_value'])) {
+      $data_point['label'] = $element['label']['#default_value'];
+    }
     $element['label']['#access'] = FALSE;
     $element['label']['#default_value'] = '';
     $element['label']['#value'] = '';
@@ -54,8 +61,6 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     $configuration = $this->getPluginConfiguration();
     /** @var \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype */
     $attachment_prototype = $configuration['attachment_prototype'];
-
-    $data_point = $this->getSubmittedValue($element, $form_state, 'data_point');
 
     $element['data_point'] = [
       '#type' => 'data_point',

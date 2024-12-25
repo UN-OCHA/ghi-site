@@ -136,6 +136,11 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     $element['label']['#access'] = !$attachment_select_mode;
 
     if ($attachment) {
+      // Move legacy labels into the data point and hide default label for
+      // configuration items.
+      if (!empty($element['label']['#default_value'])) {
+        $data_point['label'] = $element['label']['#default_value'];
+      }
       $element['label']['#access'] = FALSE;
       $element['label']['#default_value'] = '';
       $element['label']['#value'] = '';
