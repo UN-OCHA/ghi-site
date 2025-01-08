@@ -8,6 +8,8 @@ use Drupal\hpc_downloads\Helpers\FileHelper;
 
 /**
  * Create PDF documents.
+ *
+ * @phpcs:disable Drupal.NamingConventions.ValidClassName
  */
 class PDF {
 

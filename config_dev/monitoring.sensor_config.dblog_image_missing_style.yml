@@ -3,6 +3,7 @@ langcode: en
 status: false
 dependencies:
   module:
+    - dblog
     - image
 _core:
   default_config_hash: Uu1kUcL4Mv1YbMv-JLLPhOXVbfedWiQnZgEB9se6YFA
