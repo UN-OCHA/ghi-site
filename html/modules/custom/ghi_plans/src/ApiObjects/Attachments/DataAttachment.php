@@ -772,7 +772,7 @@ class DataAttachment extends AttachmentBase {
     }
     else {
       $base_metrics = $this->totals;
-    };
+    }
     return $base_metrics;
   }
 
