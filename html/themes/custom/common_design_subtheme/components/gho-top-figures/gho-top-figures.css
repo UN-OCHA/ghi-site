@@ -39,11 +39,11 @@
   .gho-top-figures .gho-figures--large::after {
     display: block;
     flex: unset;
-    content: "";
     width: 100%;
+    margin-left: 1.5rem;
+    content: "";
     border-top: 1px solid #d8d8d8;
     border-bottom: 0;
-    margin-left: 1.5rem;
   }
   .gho-top-figures .gho-figures--large::after {
     border-top: 0;
