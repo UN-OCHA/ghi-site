@@ -15,5 +15,14 @@
     /* The 2.25rem are for the padding of the text */
     width: calc(40% - 2.25rem);
     min-width: 320px;
+
+    [dir="ltr"] .gho-related-article .field--name-field-image {
+      padding-left: 0;
+      padding-right: 2.25rem;
+    }
+    [dir="rtl"] .gho-related-article .field--name-field-image {
+      padding-left: 2.25rem;
+      padding-right: 0;
+    }
   }
 }
