@@ -11,9 +11,25 @@
  * Thumbnail image
  */
 @media screen and (min-width: 768px) {
+  [dir="ltr"] .gho-related-article .gho-related-article__content {
+    padding-left: 0;
+  }
+  [dir="rtl"] .gho-related-article .gho-related-article__content {
+    padding-right: 0;
+  }
+
   .gho-related-article .field--name-field-image {
     /* The 2.25rem are for the padding of the text */
     width: calc(40% - 2.25rem);
     min-width: 320px;
+
+    [dir="ltr"] .gho-related-article .field--name-field-image {
+      padding-right: 2.25rem;
+      padding-left: 0;
+    }
+    [dir="rtl"] .gho-related-article .field--name-field-image {
+      padding-right: 0;
+      padding-left: 2.25rem;
+    }
   }
 }
