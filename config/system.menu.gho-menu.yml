@@ -4,5 +4,5 @@ status: true
 dependencies: {  }
 id: gho-menu
 label: 'GHO Menu'
-description: ''
+description: 'The menu structure for the GHO mega menu'
 locked: false

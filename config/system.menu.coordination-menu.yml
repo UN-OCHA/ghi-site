@@ -1,0 +1,8 @@
+uuid: e17055fe-0ee4-412e-bdf0-916fc50b4af4
+langcode: en
+status: true
+dependencies: {  }
+id: coordination-menu
+label: 'Coordination Menu'
+description: 'The menu structure for the Coordination mega menu'
+locked: false

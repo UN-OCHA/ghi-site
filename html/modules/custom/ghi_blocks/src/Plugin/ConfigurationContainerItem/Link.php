@@ -5,7 +5,7 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\Core\Render\Element\VerticalTabs;
 use Drupal\Core\Render\Markup;
 use Drupal\file\Entity\File;
@@ -224,7 +224,7 @@ class Link extends ConfigurationContainerItemPluginBase {
 
     // Let the tab element set itself up.
     VerticalTabs::processVerticalTabs($element['tabs'], $form_state, $form_state->getCompleteForm());
-    RenderElement::processGroup($element['tabs']['group'], $form_state, $form_state->getCompleteForm());
+    RenderElementBase::processGroup($element['tabs']['group'], $form_state, $form_state->getCompleteForm());
 
     $this->processVerticalTabs($element, $form_state);
 
