@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_menu\Entity;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\menu_item_extras\Entity\MenuItemExtrasMenuLinkContent;
 
 /**
@@ -20,6 +21,17 @@ class GhiMenuLinkContent extends MenuItemExtrasMenuLinkContent {
     $definition = parent::getPluginDefinition();
     $definition['class'] = 'Drupal\ghi_menu\Plugin\Menu\GhiMenuLinkContent';
     return $definition;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTagsToInvalidate() {
+    $tags = parent::getCacheTagsToInvalidate();
+    // Add cache tags for the menu, so that changes are immediately visible.
+    $menu = $this->entityTypeManager()->getStorage('menu')->load($this->getMenuName());
+    $tags = Cache::mergeTags($tags, $menu?->getCacheTags() ?? []);
+    return $tags;
   }
 
 }

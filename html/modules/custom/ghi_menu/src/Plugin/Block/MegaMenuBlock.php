@@ -93,13 +93,18 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
   public function build() {
     $build = [];
 
+    $build['#cache'] = [
+      'contexts' => [],
+      'tags' => $this->getMenuCacheTags(),
+    ];
+
     $menu_tree = $this->getMenuItems();
     if (empty($menu_tree)) {
       return $build;
     }
 
-    $cache_contexts = [];
-    $cache_tags = [];
+    $cache_contexts = &$build['#cache']['contexts'];
+    $cache_tags = &$build['#cache']['tags'];
 
     $tabs = [
       '#theme' => 'item_list',
@@ -147,6 +152,7 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
           'mega-menu--' . $this->configuration['menu'],
         ],
       ],
+      '#cache' => $build['#cache'],
     ];
 
     $build['tabs'] = [
@@ -194,11 +200,6 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
     }
     $this->processVerticalTabs($build, $form_state);
 
-    $build['#cache'] = [
-      'contexts' => $cache_contexts,
-      'tags' => $cache_tags,
-    ];
-
     return $build;
   }
 
@@ -240,6 +241,20 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
     ];
     $menu_tree = $this->menuTree->transform($menu_tree, $manipulators);
     return $menu_tree;
+  }
+
+  /**
+   * Get the cache tags for the configured menu.
+   *
+   * @return array
+   *   An array of cache tags.
+   */
+  public function getMenuCacheTags() {
+    if (empty($this->configuration['menu'])) {
+      return [];
+    }
+    $menu = $this->entityTypeManager->getStorage('menu')->load($this->configuration['menu']);
+    return $menu?->getCacheTags() ?? [];
   }
 
   /**
