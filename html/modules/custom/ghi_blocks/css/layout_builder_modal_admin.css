@@ -210,6 +210,11 @@ form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions input[disabled],
   min-height: auto !important;
   margin-left: 0;
   margin-right: 0;
+  padding-top: 0;
+}
+#layout-builder-modal .confirmation .glb-canvas-form__settings {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 #layout-builder-modal form.glb-canvas-form .glb-canvas-form__actions > a,

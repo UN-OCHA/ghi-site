@@ -145,7 +145,7 @@ class RelatedArticles extends ContentBlockBase implements OptionalTitleBlockInte
         if ($article->isPartOfSection($section)) {
           $article->setContextNode($section);
         }
-      };
+      }
     }
     return $articles;
   }

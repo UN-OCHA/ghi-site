@@ -11,7 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\Core\Render\Element\VerticalTabs;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\menu_link_content\Plugin\Menu\MenuLinkContent;
@@ -93,19 +93,26 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
   public function build() {
     $build = [];
 
+    $build['#cache'] = [
+      'contexts' => [],
+      'tags' => $this->getMenuCacheTags(),
+    ];
+
     $menu_tree = $this->getMenuItems();
     if (empty($menu_tree)) {
       return $build;
     }
 
-    $cache_contexts = [];
-    $cache_tags = [];
+    $cache_contexts = &$build['#cache']['contexts'];
+    $cache_tags = &$build['#cache']['tags'];
 
     $tabs = [
       '#theme' => 'item_list',
     ];
+
+    $tab_items = [];
     foreach ($menu_tree as $plugin_id => $item) {
-      if (!$item->hasChildren) {
+      if (!$item->count()) {
         continue;
       }
 
@@ -114,19 +121,27 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
       $cache_tags = Cache::mergeTags($cache_tags, $_tree['#cache']['tags']);
       unset($_tree['#cache']);
 
-      $tabs[$plugin_id] = $_tree;
-      $tabs[$plugin_id]['#title'] = $item->link->getTitle();
-      $tabs[$plugin_id]['#group'] = 'tabs';
-      $tabs[$plugin_id]['#weight'] = $item->link->getWeight();
+      $tab_items[$plugin_id] = $_tree;
+      $tab_items[$plugin_id]['#title'] = $item->link->getTitle();
+      $tab_items[$plugin_id]['#group'] = 'tabs';
+      $tab_items[$plugin_id]['#weight'] = $item->link->getWeight();
 
       // Add classes to child items that themselves do not have child items.
-      foreach ($tabs[$plugin_id]['#items'] ?? [] as &$_item) {
+      foreach ($tab_items[$plugin_id]['#items'] ?? [] as &$_item) {
         $_item['attributes']['class'] = $_item['attributes']['class'] ?? [];
         if (empty($_item['below'])) {
           $_item['attributes']['class'][] = 'leaf';
         }
       }
     }
+
+    if (empty($tab_items)) {
+      return $build;
+    }
+
+    $tabs = [
+      '#theme' => 'item_list',
+    ] + $tab_items;
 
     $build = [
       '#type' => 'container',
@@ -137,11 +152,12 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
           'mega-menu--' . $this->configuration['menu'],
         ],
       ],
+      '#cache' => $build['#cache'],
     ];
 
     $build['tabs'] = [
       '#type' => 'vertical_tabs',
-      '#default_tab' => array_key_first($tabs),
+      '#default_tab' => array_key_first($tab_items),
       '#attributes' => [
         'class' => [$this->configuration['label_display'] ? Html::getClass('label-visible') : NULL],
       ],
@@ -160,12 +176,12 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
     $form_state = new FormState();
     $complete_form = [];
     VerticalTabs::processVerticalTabs($build['tabs'], $form_state, $complete_form);
-    RenderElement::processGroup($build['tabs']['group'], $form_state, $complete_form);
+    RenderElementBase::processGroup($build['tabs']['group'], $form_state, $complete_form);
 
     // Default tab is the first one. We have to set #value instead of the
     // #default_value, because this is not a real form and the normal form
     // processing doesn't work.
-    $build['tabs']['tabs__active_tab']['#value'] = reset($tabs);
+    $build['tabs']['tabs__active_tab']['#value'] = array_key_first($tab_items);
 
     foreach (Element::children($build['tab_content']) as $element_key) {
       $build['tab_content'][$element_key] = [
@@ -180,14 +196,9 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
         ],
         'content' => $build['tab_content'][$element_key],
       ];
-      RenderElement::processGroup($build['tab_content'][$element_key], $form_state, $complete_form);
+      RenderElementBase::processGroup($build['tab_content'][$element_key], $form_state, $complete_form);
     }
     $this->processVerticalTabs($build, $form_state);
-
-    $build['#cache'] = [
-      'contexts' => $cache_contexts,
-      'tags' => $cache_tags,
-    ];
 
     return $build;
   }
@@ -213,6 +224,9 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
       return [];
     }
     $menu = $this->entityTypeManager->getStorage('menu')->load($this->configuration['menu']);
+    if (!$menu) {
+      return [];
+    }
     $parameters = $this->menuTree->getCurrentRouteMenuTreeParameters('main');
     $parameters->expandedParents = [];
     $menu_tree = $this->menuTree->load($menu->id(), $parameters);
@@ -227,6 +241,20 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
     ];
     $menu_tree = $this->menuTree->transform($menu_tree, $manipulators);
     return $menu_tree;
+  }
+
+  /**
+   * Get the cache tags for the configured menu.
+   *
+   * @return array
+   *   An array of cache tags.
+   */
+  public function getMenuCacheTags() {
+    if (empty($this->configuration['menu'])) {
+      return [];
+    }
+    $menu = $this->entityTypeManager->getStorage('menu')->load($this->configuration['menu']);
+    return $menu?->getCacheTags() ?? [];
   }
 
   /**

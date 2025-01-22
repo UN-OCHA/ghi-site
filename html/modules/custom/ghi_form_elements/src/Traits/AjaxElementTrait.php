@@ -67,9 +67,9 @@ trait AjaxElementTrait {
   }
 
   /**
-   * Assuming inheritance from Drupal\Core\Render\Element\RenderElement.
+   * Assuming inheritance from Drupal\Core\Render\Element\RenderElementBase.
    *
-   * @see RenderElement::processAjaxForm
+   * @see RenderElementBase::processAjaxForm
    */
   public static function processAjaxForm(&$element, FormStateInterface $form_state, &$complete_form) {
     self::setElementParents($element);

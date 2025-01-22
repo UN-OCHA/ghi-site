@@ -478,7 +478,7 @@ class LogframeManager implements ContainerInjectionInterface {
         'id' => count($columns),
         'item_type' => 'data_point',
         'config' => [
-          'label' => $attachment_prototype->getDefaultFieldLabel($index, $plan->getPlanLanguage()) . ' %',
+          'label' => $attachment_prototype->getDefaultFieldLabel($measure, $plan->getPlanLanguage()) . ' %',
           'data_point' => [
             'processing' => 'calculated',
             'calculation' => 'percentage',
@@ -514,8 +514,8 @@ class LogframeManager implements ContainerInjectionInterface {
    *   container items.
    */
   private function buildIndicatorColumns(AttachmentPrototype $attachment_prototype, Plan $plan) {
-    $columns = [];
     // Setup the columns.
+    $columns = [];
     $columns[] = [
       'item_type' => 'attachment_label',
       'config' => [
@@ -530,16 +530,27 @@ class LogframeManager implements ContainerInjectionInterface {
       ],
       'id' => count($columns),
     ];
-    // Take the first metric of type target and the last measurement.
+
+    // Take the first metric of type target.
     $field_types = $attachment_prototype->getFieldTypes();
     $target = array_search('target', $field_types);
-    $measure = array_search('measure', array_reverse($field_types, TRUE));
-    $available_fields = [
-      $target,
-      $measure,
+
+    // Take the last measurement from a pool of valid candidates.
+    $field_types_reversed = array_reverse($field_types, TRUE);
+    $measure_candidates = [
+      'periodical_measure',
+      'measure',
+      'cumulative_measure',
     ];
-    $available_fields = array_filter($available_fields, function ($field) {
-      return $field !== NULL;
+    foreach ($measure_candidates as $measure_candidate) {
+      if ($measure = array_search($measure_candidate, $field_types_reversed)) {
+        break;
+      }
+    }
+
+    // Collect the available fields.
+    $available_fields = array_filter([$target, $measure], function ($field) {
+      return is_int($field);
     });
     foreach ($available_fields as $index) {
       $columns[] = [

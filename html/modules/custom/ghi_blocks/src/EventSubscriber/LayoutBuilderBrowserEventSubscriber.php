@@ -5,7 +5,7 @@ namespace Drupal\ghi_blocks\EventSubscriber;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\Core\Render\Element\VerticalTabs;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -80,7 +80,7 @@ class LayoutBuilderBrowserEventSubscriber implements EventSubscriberInterface {
 
         // Let the tab element set itself up.
         VerticalTabs::processVerticalTabs($form['tabs'], $form_state, $complete_form);
-        RenderElement::processGroup($form['tabs']['group'], $form_state, $complete_form);
+        RenderElementBase::processGroup($form['tabs']['group'], $form_state, $complete_form);
 
         // Default tab is the first one. We have to set #value instead of the
         // #default_value, because this is not a real form and the normal form
@@ -112,7 +112,7 @@ class LayoutBuilderBrowserEventSubscriber implements EventSubscriberInterface {
             $url->setOptions($url_options);
           }
 
-          RenderElement::processGroup($form['block_categories'][$element_key], $form_state, $complete_form);
+          RenderElementBase::processGroup($form['block_categories'][$element_key], $form_state, $complete_form);
         }
 
         // Add a section for admin specific links.
@@ -135,7 +135,7 @@ class LayoutBuilderBrowserEventSubscriber implements EventSubscriberInterface {
             '#links' => [],
           ],
         ];
-        RenderElement::processGroup($form['block_categories']['admin'], $form_state, $complete_form);
+        RenderElementBase::processGroup($form['block_categories']['admin'], $form_state, $complete_form);
 
         if ($this->currentUser->hasPermission('import block from configuration code')) {
           $route_params = $request->attributes->get('_route_params');

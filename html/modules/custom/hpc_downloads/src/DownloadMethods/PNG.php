@@ -8,6 +8,8 @@ use Drupal\hpc_downloads\Helpers\FileHelper;
 
 /**
  * Create PNG files.
+ *
+ * @phpcs:disable Drupal.NamingConventions.ValidClassName
  */
 class PNG {
 

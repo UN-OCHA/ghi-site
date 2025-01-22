@@ -45,13 +45,22 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   public function buildForm($element, FormStateInterface $form_state) {
     $element = parent::buildForm($element, $form_state);
+    $data_point = $this->getSubmittedValue($element, $form_state, 'data_point');
+
+    // Move legacy labels into the data point and hide default label for
+    // configuration items.
+    if (!empty($element['label']['#default_value'])) {
+      $data_point['label'] = $element['label']['#default_value'];
+    }
+    $element['label']['#access'] = FALSE;
+    $element['label']['#default_value'] = '';
+    $element['label']['#value'] = '';
+
     $attachment = $this->getContextValue('attachment');
     $plan_object = $this->getContextValue('plan_object');
     $configuration = $this->getPluginConfiguration();
     /** @var \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype */
     $attachment_prototype = $configuration['attachment_prototype'];
-
-    $data_point = $this->getSubmittedValue($element, $form_state, 'data_point');
 
     $element['data_point'] = [
       '#type' => 'data_point',
@@ -88,6 +97,17 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
     $plan_object = $this->getContextValue('plan_object') ?? NULL;
     return $attachment_prototype->getDefaultFieldLabel($data_point_index, $plan_object?->getPlanLanguage());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLabel() {
+    $data_point_conf = $this->get('data_point');
+    if (array_key_exists('label', $data_point_conf) && !empty($data_point_conf['label'])) {
+      return trim($data_point_conf['label']);
+    }
+    return parent::getLabel();
   }
 
   /**
