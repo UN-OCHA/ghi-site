@@ -223,6 +223,9 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
       return [];
     }
     $menu = $this->entityTypeManager->getStorage('menu')->load($this->configuration['menu']);
+    if (!$menu) {
+      return [];
+    }
     $parameters = $this->menuTree->getCurrentRouteMenuTreeParameters('main');
     $parameters->expandedParents = [];
     $menu_tree = $this->menuTree->load($menu->id(), $parameters);
