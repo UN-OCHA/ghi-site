@@ -261,7 +261,6 @@
 
                 &.leaf {
                   padding-bottom: 2rem;
-                  font-weight: normal;
 
                   a:hover,
                   a:focus,
@@ -305,7 +304,7 @@
               }
             }
 
-            &.mega-menu--gho-menu details.vertical-tabs__pane > ul > li {
+            details.vertical-tabs__pane > ul > li {
               break-inside: avoid-column;
             }
           }
