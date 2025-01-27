@@ -172,7 +172,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     $attachment = $this->getAttachmentObject();
     $data_point_conf = $this->get('data_point');
     $data_point_index = $data_point_conf ? $data_point_conf['data_points'][0]['index'] : NULL;
-    if ($data_point_index === NULL) {
+    if (!$attachment || $data_point_index === NULL) {
       return NULL;
     }
     return $attachment->getPrototype()->getDefaultFieldLabel($data_point_index, $attachment->getPlanLanguage());
