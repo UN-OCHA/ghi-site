@@ -65,6 +65,9 @@ class CarouselItem extends ConfigurationContainerItemPluginBase {
 
   /**
    * Get the tag line.
+   *
+   * @return string|null
+   *   The tag line string or NULL.
    */
   public function getTagLine() {
     return $this->config['value']['tag_line'] ?? NULL;
@@ -72,6 +75,9 @@ class CarouselItem extends ConfigurationContainerItemPluginBase {
 
   /**
    * Get the description.
+   *
+   * @return string
+   *   The description string.
    */
   public function getDescription() {
     return $this->config['value']['description'];
@@ -118,8 +124,8 @@ class CarouselItem extends ConfigurationContainerItemPluginBase {
   /**
    * Get the link.
    *
-   * @return \Drupal\Core\Link
-   *   A link object.
+   * @return \Drupal\Core\Link|null
+   *   A link object or NULL.
    */
   public function getLink() {
     $label = $this->getButtonLabel() ?? $this->t('Read more');
@@ -129,8 +135,8 @@ class CarouselItem extends ConfigurationContainerItemPluginBase {
   /**
    * Get the url.
    *
-   * @return \Drupal\Core\Url
-   *   A url object.
+   * @return \Drupal\Core\Url|null
+   *   A url object or NULL.
    */
   public function getUrl() {
     try {
@@ -145,8 +151,8 @@ class CarouselItem extends ConfigurationContainerItemPluginBase {
   /**
    * Get the url as a string.
    *
-   * @return string
-   *   The url as a string.
+   * @return string|null
+   *   The url as a string or NULL.
    */
   public function getUrlString() {
     $url = $this->getUrl();

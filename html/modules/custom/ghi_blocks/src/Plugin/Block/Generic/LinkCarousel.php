@@ -74,6 +74,9 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
       }
 
       $link = $item_type->getLink();
+      if (!$link) {
+        continue;
+      }
       $attributes = $link->getUrl()->getOption('attributes');
       $attributes['class'] = ['cd-button', 'read-more'];
       $link->getUrl()->setOption('attributes', $attributes);

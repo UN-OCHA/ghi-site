@@ -161,12 +161,6 @@
               span {
                 display: inline-block;
                 padding: 0;
-
-                // &:focus,
-                // &:hover {
-                //   color: inherit;
-                //   background: inherit;
-                // }
               }
 
               a:focus,
@@ -244,10 +238,6 @@
                       display: none;
                     }
                   }
-
-                  span {
-                    padding-bottom: 0.5rem;
-                  }
                 }
               }
 
@@ -255,7 +245,8 @@
               details > ul > li {
                 font-weight: bold;
 
-                & > a {
+                & > a,
+                & > span {
                   margin-bottom: 0.5rem;
                 }
 

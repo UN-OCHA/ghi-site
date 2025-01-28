@@ -62,8 +62,8 @@ trait CustomLinkTrait {
    * @param string $label
    *   Optional label to use. If left empty, a default label will be build.
    *
-   * @return \Drupal\Core\Link
-   *   The link object.
+   * @return \Drupal\Core\Link|null
+   *   The link object or NULL.
    */
   protected function getLinkFromUri($uri, $label = NULL) {
     $label = $label ?? NULL;
