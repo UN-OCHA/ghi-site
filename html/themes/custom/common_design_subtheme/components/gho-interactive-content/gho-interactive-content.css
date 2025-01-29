@@ -165,7 +165,7 @@
 /**
  * Support for 4-col interactive content.
  */
- .layout--fourcol--interactive-content {
+.layout--fourcol--interactive-content {
   display: flex;
   flex-wrap: wrap;
 }
