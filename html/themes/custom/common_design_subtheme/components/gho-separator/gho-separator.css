@@ -1,0 +1,14 @@
+.gho-separator {
+  margin: 2rem 0;
+}
+.gho-separator__separator {
+  width: 100%;
+  max-width: none;
+  height: 1px;
+  margin: 0;
+  border: none;
+  background: #d8d8d8;
+}
+.gho-separator__separator--half {
+  width: var(--reading-width);
+}
