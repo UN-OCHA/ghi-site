@@ -210,6 +210,10 @@ gho-related-articles:
   css:
     theme:
       components/gho-related-articles/gho-related-articles.css: {}
+gho-separator:
+  css:
+    theme:
+      components/gho-separator/gho-separator.css: {}
 gho-story:
   css:
     theme:
