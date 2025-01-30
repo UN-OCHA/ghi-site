@@ -1,7 +1,7 @@
 /**
  * Base field.
  */
-.gho-top-figures--small {
+ .gho-top-figures--small {
   margin-top: 2rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
@@ -15,6 +15,7 @@
   border-top: 1px solid #d8d8d8;
 }
 /* Hide the border when the figures follow another top figures paragraph. */
+.gho-caption--article + .gho-top-figures--small::before,
 .gho-top-figures + .gho-top-figures--small::before {
   content: none;
 }
@@ -30,6 +31,7 @@
   padding-top: 0;
   padding-bottom: 2rem;
   border-top: 0;
+  border-bottom: 1px solid #d8d8d8;
 }
 
 .gho-top-figures--small .gho-figures * {
