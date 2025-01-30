@@ -1,5 +1,7 @@
 .gho-top-figures .gho-figures {
   padding-bottom: 2rem;
+}
+.gho-top-figures .gho-figures--large {
   border-bottom: 1px solid #d8d8d8;
 }
 .gho-top-figures:not(.gho-top-figures--small) .gho-figures .gho-figure {
@@ -29,21 +31,42 @@
   font-weight: bold;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 576px) {
+  .gho-top-figures .gho-figures--large {
+    border-bottom: 0;
+  }
+  .gho-top-figures .gho-figures--large::before,
+  .gho-top-figures .gho-figures--large::after {
+    display: block;
+    flex: unset;
+    content: "";
+    width: 100%;
+    border-top: 1px solid #d8d8d8;
+    border-bottom: 0;
+    margin-left: 1.5rem;
+  }
+  .gho-top-figures .gho-figures--large::after {
+    border-top: 0;
+    border-bottom: 1px solid #d8d8d8;
+  }
   .gho-top-figures .gho-figures {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
-    padding-top: 2rem;
-    border-top: 1px solid #d8d8d8;
+    margin-left: -1.5rem;
+    padding-top: 0;
+    padding-bottom: 0;
   }
-  /* hide border-top when NaR immediately follows a Hero image caption */
-  .gho-caption--article + .gho-top-figures .gho-figures {
+  /* hide border-top when top figures immediately follows a Hero image caption */
+  .gho-caption--article + .gho-top-figures .gho-figures,
+  .gho-caption--article + .gho-top-figures .gho-figures::before {
     border-top: 0;
   }
   .gho-top-figures:not(.gho-top-figures--small) .gho-figures .gho-figure {
     display: inline-block;
     flex-grow: 1;
-    flex-shrink: 0;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
     padding: 0 1.5rem;
     border-width: 0 0 0 1px;
   }
@@ -51,7 +74,6 @@
     .gho-top-figures:not(.gho-top-figures--small)
     .gho-figures
     .gho-figure:first-child {
-    padding-left: 0;
     border-width: 0;
   }
   [dir="ltr"]
@@ -64,19 +86,6 @@
     .gho-top-figures:not(.gho-top-figures--small)
     .gho-figures
     .gho-figure:first-child {
-    padding-right: 0;
-    border-width: 0 0 0 1px;
-  }
-  [dir="rtl"]
-    .gho-top-figures:not(.gho-top-figures--small)
-    .gho-figures
-    .gho-figure:last-child {
-    padding-left: 0;
-  }
-  [dir="rtl"]
-    .gho-top-figures:not(.gho-top-figures--small)
-    .gho-figures
-    .gho-figure:last-child {
     border-width: 0;
   }
   .gho-top-figures .gho-figure__label {

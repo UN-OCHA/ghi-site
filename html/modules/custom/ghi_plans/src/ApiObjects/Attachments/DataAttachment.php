@@ -1372,7 +1372,7 @@ class DataAttachment extends AttachmentBase {
 
     $data_point_index = $conf['data_points'][0]['index'];
     $field = $this->getFieldByIndex($data_point_index);
-    if ($this->isCumulativeReachFieldType($field->type)) {
+    if ($field && $this->isCumulativeReachFieldType($field->type)) {
       $period = $this->getLastNonEmptyReportingPeriod($data_point_index);
       $build['#reporting_period'] = $period?->id ?? $build['#reporting_period'];
     }

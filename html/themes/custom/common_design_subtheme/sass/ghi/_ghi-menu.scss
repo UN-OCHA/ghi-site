@@ -161,12 +161,6 @@
               span {
                 display: inline-block;
                 padding: 0;
-
-                // &:focus,
-                // &:hover {
-                //   color: inherit;
-                //   background: inherit;
-                // }
               }
 
               a:focus,
@@ -244,10 +238,6 @@
                       display: none;
                     }
                   }
-
-                  span {
-                    padding-bottom: 0.5rem;
-                  }
                 }
               }
 
@@ -255,13 +245,13 @@
               details > ul > li {
                 font-weight: bold;
 
-                & > a {
+                & > a,
+                & > span {
                   margin-bottom: 0.5rem;
                 }
 
                 &.leaf {
                   padding-bottom: 2rem;
-                  font-weight: normal;
 
                   a:hover,
                   a:focus,
@@ -305,7 +295,7 @@
               }
             }
 
-            &.mega-menu--gho-menu details.vertical-tabs__pane > ul > li {
+            details.vertical-tabs__pane > ul > li {
               break-inside: avoid-column;
             }
           }
