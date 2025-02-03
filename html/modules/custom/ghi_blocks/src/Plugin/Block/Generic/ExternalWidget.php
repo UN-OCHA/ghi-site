@@ -199,7 +199,7 @@ class ExternalWidget extends GHIBlockBase {
       $form['widgets'][$i]['widget_url'] = [
         '#type' => 'textfield',
         '#title' => $this->t('iframe URL'),
-        '#description' => $this->t('Supported external widgets are @first_supported and @last_supported. Please note that in the case of HDX Quick Charts, the following parameters will be automatically overwritten: <em>externalCss</em>, <em>chartSettings</em>, <em>chartShare</em> and <em>allowBiteSwitch</em>', [
+        '#description' => $this->t('Supported external widgets are @first_supported and @last_supported. Please note that in the case of HDX Quick Charts, the following parameters will be automatically overwritten: <em>externalCss</em>, <em>chartSettings</em>, <em>chartShare</em> and <em>allowBiteSwitch</em>. For Tableau widget integration, make sure you edit the URL so that all the content after the “?” is replaced by <em>:showVizHome=no&:embed=true</em>', [
           '@first_supported' => implode(', ', array_slice($allowed_hosts, 0, -1)),
           '@last_supported' => end($allowed_hosts),
         ]),
