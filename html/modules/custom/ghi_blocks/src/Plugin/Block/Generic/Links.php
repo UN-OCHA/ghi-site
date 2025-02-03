@@ -62,9 +62,15 @@ class Links extends GHIBlockBase implements MultiStepFormBlockInterface, Optiona
       $item_type = $this->getItemTypePluginForColumn($item, $context);
       $rendered[] = $item_type->getRenderArray();
     }
+
+    $rendered = array_filter($rendered);
+    if (empty($rendered)) {
+      return NULL;
+    }
+
     $build = [
       '#theme' => 'item_list',
-      '#items' => array_filter($rendered),
+      '#items' => $rendered,
       '#attributes' => [
         'class' => ['links'],
       ],
