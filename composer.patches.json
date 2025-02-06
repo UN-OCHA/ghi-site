@@ -44,10 +44,6 @@
     "drupal/config_default_image": {
       "Issue #2921908: Provide a 2nd formatter \"Responsive image or default image\"": "https://www.drupal.org/files/issues/2022-11-21/config_default_image-2921908-7.patch"
     },
-    "drupal/smugmug_api": {
-      "Issue #3285444: Add support for image search": "https://www.drupal.org/files/issues/2022-06-13/3285444-2.patch",
-      "Issue #3396521: Fix PHP 8.2 deprecations": "https://www.drupal.org/files/issues/2023-10-25/3396521-2.patch"
-    },
     "drupal/view_unpublished": {
       "Issue #2958568: Add a search api processor for view unpublished": "./patches/2958568-view-unpublished-search-api-access-18.patch"
     },
