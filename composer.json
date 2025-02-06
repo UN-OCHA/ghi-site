@@ -178,6 +178,11 @@
             "phpstan/extension-installer": true,
             "php-http/discovery": true,
             "tbachert/spi": true
+        },
+        "audit": {
+            "ignore": {
+                "CVE-2025-24374": "Believed not to affect Drupal core see https://www.drupal.org/project/drupal/issues/3503195."
+            }
         }
     },
     "autoload": {

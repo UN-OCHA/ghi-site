@@ -304,7 +304,7 @@ class Link extends ConfigurationContainerItemPluginBase {
       '#link' => $link->toRenderable(),
     ];
     $file = $this->loadFile();
-    if ($file) {
+    if ($file && file_exists($file->getFileUri())) {
       $image_style = 'card_hero';
       if ($this->config['image']['crop_type'] == 'paper_size') {
         $image_style = 'paper_size';
@@ -430,6 +430,17 @@ class Link extends ConfigurationContainerItemPluginBase {
   private function loadFile($file_id = NULL) {
     $file_id = $file_id ?? $this->getImageFileId();
     return $file_id ? $this->entityTypeManager->getStorage('file')->load($file_id) : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigurationErrors() {
+    $errors = [];
+    if (!$this->getRenderArray()) {
+      $errors[] = $this->t('The link cannot be rendered. Verify that the target page is publicly available.');
+    }
+    return $errors;
   }
 
 }
