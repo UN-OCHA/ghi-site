@@ -38,7 +38,6 @@ permissions:
   - 'access contextual links'
   - 'access remote content'
   - 'access toolbar'
-  - 'administer nodes'
   - 'configure editable article node layout overrides'
   - 'configure editable custom_subpage node layout overrides'
   - 'configure editable document node layout overrides'

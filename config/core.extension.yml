@@ -3,12 +3,10 @@ _core:
 module:
   admin_denied: 0
   admin_toolbar: 0
-  admin_toolbar_links_access_filter: 0
   admin_toolbar_tools: 0
   auto_entitylabel: 0
   autologout: 0
   bert: 0
-  better_permissions_page: 0
   big_pipe: 0
   big_pipe_sessionless: 0
   block: 0
@@ -40,6 +38,7 @@ module:
   file_mdm_font: 0
   filter: 0
   flat_taxonomy: 0
+  fpa: 0
   geofield: 0
   geofield_map: 0
   ghi_base_objects: 0

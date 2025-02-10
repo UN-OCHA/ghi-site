@@ -1,0 +1,20 @@
+uuid: ed463ad2-3733-4efb-bb4e-7cdef509dd3c
+langcode: en
+status: true
+dependencies:
+  module:
+    - fpa
+id: core_requirements_fpa
+label: 'Module fpa'
+description: 'Requirements of the fpa module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: fpa
+  exclude_keys: {  }
+thresholds:
+  type: none

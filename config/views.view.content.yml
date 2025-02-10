@@ -364,7 +364,7 @@ display:
       access:
         type: perm
         options:
-          perm: 'administer nodes'
+          perm: 'access content overview'
       cache:
         type: tag
       empty:
@@ -5337,7 +5337,7 @@ display:
         weight: -10
         menu_name: admin
     cache_metadata:
-      max-age: -1
+      max-age: 0
       contexts:
         - 'languages:language_content'
         - 'languages:language_interface'

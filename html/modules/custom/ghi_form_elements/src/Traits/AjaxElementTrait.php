@@ -21,7 +21,7 @@ trait AjaxElementTrait {
    *
    * @var array
    */
-  protected static $elementParentsFormKey;
+  protected static $elementParentsFormKey = [];
 
   /**
    * Get a wrapper ID for an element.
