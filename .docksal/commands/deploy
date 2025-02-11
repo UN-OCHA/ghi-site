@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #: exec_target = cli
 
-## Run the typical commands for the post-deployment
+## Run the typical commands for the deployment
 ##
-## Usage: fin post-deploy
+## Usage: fin deploy
 
 # Environment variables passed from fin:
 #
@@ -19,7 +19,7 @@ usage="$(basename "$0") [-h] [-i]
 
 where:
     -h  show this help text
-    -i  import a local backup before executing the post-deploy steps"
+    -i  import a local backup before executing the deploy steps"
 
 IMPORT_BACKUP=false
 
