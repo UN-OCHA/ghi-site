@@ -177,6 +177,7 @@ class CustomSubpageWizard extends FormBase {
       '#description' => $this->t('Select the section to which the custom subpage will be added.'),
       '#default_value' => $section,
       '#tags' => TRUE,
+      '#selection_handler' => 'default',
       '#selection_settings' => [
         'target_bundles' => $section_type ? [$section_type->id()] : NULL,
       ],

@@ -42,7 +42,6 @@ permissions:
   - 'access user profiles'
   - 'administer base object entities'
   - 'administer ghi global config'
-  - 'administer nodes'
   - 'configure all homepage node layout overrides'
   - 'configure editable homepage node layout overrides'
   - 'create homepage content'

@@ -30,10 +30,9 @@ class GhiEntityAutocompleteMatcher extends EntityAutocompleteMatcher {
     }
     // Get the matches with different limits based on type of referenced entity.
     /** @var \Drupal\node\Plugin\EntityReferenceSelection\NodeSelection $handler */
-    $handler = $this->selectionManager->getInstance([
+    $handler = $this->selectionManager->getInstance($selection_settings + [
       'target_type' => $target_id,
       'handler' => $selection_handler,
-      'handler_settings' => $selection_settings,
     ]);
     $match_operator = !empty($selection_settings['match_operator']) ? $selection_settings['match_operator'] : 'CONTAINS';
     $entity_labels = $handler->getReferenceableEntities($string, $match_operator, 100);
