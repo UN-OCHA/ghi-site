@@ -19,7 +19,7 @@ use Drupal\node\NodeStorageInterface;
 use Drupal\taxonomy\TermInterface;
 
 /**
- * Bundle class for section nodes.
+ * Bundle base class for content nodes, e.g. articles or documents.
  */
 abstract class ContentBase extends Node implements NodeInterface, ImageNodeInterface {
 

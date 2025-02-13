@@ -4,16 +4,16 @@ namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 
 /**
  * Provides an attachment select element.
- *
- * @FormElement("entity_attachment_select")
  */
-class EntityAttachmentSelect extends FormElement {
+#[FormElement('entity_attachment_select')]
+class EntityAttachmentSelect extends FormElementBase {
 
   use AjaxElementTrait;
 

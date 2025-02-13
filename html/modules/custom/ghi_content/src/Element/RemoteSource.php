@@ -3,6 +3,7 @@
 namespace Drupal\ghi_content\Element;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element\Select;
 use Drupal\ghi_content\Traits\RemoteElementTrait;
 
@@ -16,9 +17,8 @@ use Drupal\ghi_content\Traits\RemoteElementTrait;
  *  '#default_value' => 'hpc_content_module',
  * ];
  * @endcode
- *
- * @FormElement("remote_source")
  */
+#[FormElement('remote_source')]
 class RemoteSource extends Select {
 
   use RemoteElementTrait;

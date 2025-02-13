@@ -3,6 +3,7 @@
 namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\Select;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
@@ -11,9 +12,8 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
  * Provides a monitoring period form element.
- *
- * @FormElement("monitoring_period")
  */
+#[FormElement('monitoring_period')]
 class MonitoringPeriod extends Select {
 
   use AjaxElementTrait;

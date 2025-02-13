@@ -5,17 +5,17 @@ namespace Drupal\ghi_form_elements\Element;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 
 /**
  * Provides a SmugMug image element.
- *
- * @FormElement("smugmug_image")
  */
-class SmugmugImage extends FormElement {
+#[FormElement('smugmug_image')]
+class SmugmugImage extends FormElementBase {
 
   use AjaxElementTrait;
 
