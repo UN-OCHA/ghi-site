@@ -517,3 +517,92 @@ function ghi_blocks_deploy_90010_update_funding_coverage_default_label_page_temp
     ]);
   }
 }
+
+/**
+ * Fix broken configuration for headline figure elements on nodes.
+ */
+function ghi_blocks_deploy_9010_fix_broken_block_config(&$sandbox) {
+  set_time_limit(30);
+  if (!isset($sandbox['nodes'])) {
+    $result = \Drupal::database()->select('node__layout_builder__layout')
+      ->fields('node__layout_builder__layout', ['entity_id'])
+      ->condition('layout_builder__layout_section', '%processing";s:0%', 'LIKE')
+      ->orderBy('entity_id')
+      ->execute();
+    $sandbox['nodes'] = array_map(function ($row) {
+      return $row->entity_id;
+    }, $result->fetchAll());
+    $sandbox['total'] = count($sandbox['nodes']);
+    $sandbox['updated'] = 0;
+  }
+  for ($i = 0; $i < 25; $i++) {
+    if (empty($sandbox['nodes'])) {
+      continue;
+    }
+    $node_id = array_shift($sandbox['nodes']);
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($node_id);
+    if (!$node) {
+      continue;
+    }
+
+    $changed = FALSE;
+    if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+      continue;
+    }
+    $sections = $node->get(OverridesSectionStorage::FIELD_NAME)->getValue();
+    if (empty($sections)) {
+      continue;
+    }
+    /** @var \Drupal\layout_builder\Section $section */
+    $section = &$sections[0]['section'];
+    $components = $section->getComponents();
+    if (empty($components)) {
+      continue;
+    }
+    foreach ($components as $component) {
+      if ($component->getPluginId() != 'plan_headline_figures') {
+        continue;
+      }
+      $configuration = $component->get('configuration');
+      if (empty($configuration['hpc']['key_figures']['items'])) {
+        return $changed;
+      }
+
+      $items = &$configuration['hpc']['key_figures']['items'];
+      $original_count = count($items);
+      $items = array_filter($items, function ($item) {
+        if ($item['item_type'] != 'attachment_data') {
+          return TRUE;
+        }
+        return !empty($item['config']['data_point']['processing']);
+      });
+      if (count($items) != $original_count) {
+        $changed = TRUE;
+        $component->setConfiguration($configuration);
+      }
+    }
+
+    if ($changed) {
+      $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+      $node->setNewRevision(FALSE);
+      $node->setSyncing(TRUE);
+      $node->save();
+      $sandbox['updated']++;
+    }
+  }
+
+  $sandbox['#finished'] = 1 / (count($sandbox['nodes']) + 1);
+  if ($sandbox['#finished'] === 1) {
+    return t('Updated configurations in @count_changed / @count_total nodes', [
+      '@count_changed' => $sandbox['updated'],
+      '@count_total' => $sandbox['total'],
+    ]);
+  }
+  else {
+    return t('Processed @count_processed / @count_total nodes', [
+      '@count_processed' => $sandbox['total'] - count($sandbox['nodes']),
+      '@count_total' => $sandbox['total'],
+    ]);
+  }
+}

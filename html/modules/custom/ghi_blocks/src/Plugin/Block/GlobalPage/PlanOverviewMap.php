@@ -227,7 +227,7 @@ class PlanOverviewMap extends GHIBlockBase {
         'tooltip' => implode(' ', [
           $plan_entity->getShortName(),
           $plan_entity->getYear(),
-          $plan_entity->getPlanTypeShortLabel(FALSE),
+          $plan->getTypeShortName(TRUE),
         ]),
         'tooltip_values' => [
           'in_need' => [
