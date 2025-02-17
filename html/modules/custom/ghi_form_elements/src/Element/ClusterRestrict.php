@@ -3,18 +3,18 @@
 namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 
 /**
  * Provides a cluster restrict element.
- *
- * @FormElement("cluster_restrict")
  */
-class ClusterRestrict extends FormElement {
+#[FormElement('cluster_restrict')]
+class ClusterRestrict extends FormElementBase {
 
   use AjaxElementTrait;
 

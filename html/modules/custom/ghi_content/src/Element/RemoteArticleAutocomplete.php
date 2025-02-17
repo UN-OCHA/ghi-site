@@ -3,6 +3,7 @@
 namespace Drupal\ghi_content\Element;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element\Textfield;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
@@ -29,9 +30,8 @@ use Drupal\ghi_content\Traits\RemoteElementTrait;
  *  '#default_value' => $article,
  * ];
  * @endcode
- *
- * @FormElement("remote_article_autocomplete")
  */
+#[FormElement('remote_article_autocomplete')]
 class RemoteArticleAutocomplete extends Textfield {
 
   use RemoteElementTrait;

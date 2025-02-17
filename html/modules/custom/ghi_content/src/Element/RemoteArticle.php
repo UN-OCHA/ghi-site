@@ -3,7 +3,8 @@
 namespace Drupal\ghi_content\Element;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Attribute\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\Traits\RemoteElementTrait;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
@@ -25,10 +26,9 @@ use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
  *  '#default_value' => $article,
  * ];
  * @endcode
- *
- * @FormElement("remote_article")
  */
-class RemoteArticle extends FormElement {
+#[FormElement('remote_article')]
+class RemoteArticle extends FormElementBase {
 
   use AjaxElementTrait;
   use RemoteElementTrait;

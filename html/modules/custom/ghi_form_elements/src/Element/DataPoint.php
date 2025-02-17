@@ -4,8 +4,9 @@ namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
@@ -14,10 +15,9 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
  * Provides a data point element.
- *
- * @FormElement("data_point")
  */
-class DataPoint extends FormElement {
+#[FormElement('data_point')]
+class DataPoint extends FormElementBase {
 
   use AjaxElementTrait;
 

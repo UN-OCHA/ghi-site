@@ -67,3 +67,8 @@ custom_link:
   css:
     component:
       css/custom_link.css: {}
+
+entity_browser:
+  css:
+    component:
+      css/entity_browser.css: {}

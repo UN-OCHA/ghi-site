@@ -3,14 +3,14 @@
 namespace Drupal\ghi_enforce_alias_pattern\Element;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\Textfield;
 
 /**
  * Provides an enfoced_alias element.
- *
- * @FormElement("enforced_alias")
  */
+#[FormElement('enforced_alias')]
 class EnforcedAlias extends Textfield {
 
   /**

@@ -7,8 +7,9 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_form_elements\ConfigurationContainerItemCustomActionsInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface;
@@ -20,10 +21,9 @@ use Drupal\hpc_common\Helpers\StringHelper;
 
 /**
  * Provides a configuration container element.
- *
- * @FormElement("configuration_container")
  */
-class ConfigurationContainer extends FormElement {
+#[FormElement('configuration_container')]
+class ConfigurationContainer extends FormElementBase {
 
   use AjaxElementTrait {
     updateAjax as traitUpdateAjax;

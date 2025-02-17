@@ -111,6 +111,7 @@
     let featured = Drupal.EntityPreviewSelect.getFeatured($wrapper);
     let limit_selected = Drupal.EntityPreviewSelect.getSelectLimit($wrapper);
     let limit_featured = $wrapper.data('config').allow_featured;
+    let allow_selected = $wrapper.data('config').allow_selected;
     var summary_selected = null;
     var summary_featured = null;
     if (limit_selected) {
@@ -119,7 +120,7 @@
         '!limit': limit_selected,
       });
     }
-    else {
+    else if (allow_selected) {
       summary_selected = Drupal.t('!selected selected', {
         '!selected': selected.length,
       });

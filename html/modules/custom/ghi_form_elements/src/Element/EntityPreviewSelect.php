@@ -4,15 +4,15 @@ namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 
 /**
  * Provides an element for selecting from entity previews.
- *
- * @FormElement("entity_preview_select")
  */
-class EntityPreviewSelect extends FormElement {
+#[FormElement('entity_preview_select')]
+class EntityPreviewSelect extends FormElementBase {
 
   /**
    * {@inheritdoc}
@@ -30,6 +30,8 @@ class EntityPreviewSelect extends FormElement {
       '#show_filter' => NULL,
       '#allow_selected' => NULL,
       '#allow_featured' => NULL,
+      '#empty' => NULL,
+      '#required' => FALSE,
       '#process' => [
         [$class, 'processEntityPreviewSelect'],
         [$class, 'processAjaxForm'],
@@ -62,7 +64,7 @@ class EntityPreviewSelect extends FormElement {
    * @todo Check if this is actually needed.
    */
   public static function elementValidate(array &$element, FormStateInterface $form_state, array $form) {
-    if ($element['#required']) {
+    if ($element['#required'] && !empty($element['#entities'])) {
       $values = $form_state->getValue($element['#parents']);
       if ($element['#limit_field'] && $limit = $form_state->getValue($element['#limit_field'])) {
         if (count($values['selected']) < $limit) {
@@ -71,7 +73,7 @@ class EntityPreviewSelect extends FormElement {
           ]));
         }
       }
-      elseif (!count($values['selected'])) {
+      elseif ($element['#required'] && !count($values['selected'])) {
         $form_state->setError($element, t('At least 1 card must be selected.'));
       }
     }
@@ -137,21 +139,32 @@ class EntityPreviewSelect extends FormElement {
    * any arbitrary data inside the form_state object.
    */
   public static function processEntityPreviewSelect(array &$element, FormStateInterface $form_state) {
-
     // Get a name that let's us identify this element.
     $name = Html::getUniqueId(implode('-', array_merge(['edit'], $element['#parents'])));
+    $entity_type_manager = \Drupal::entityTypeManager();
 
     $element['#wrapper_attributes']['data-drupal-selector'] = $name;
 
+    /** @var \Drupal\Core\Entity\EntityInterface[] $entities */
     $entities = $element['#entities'] ?? [];
     $entity_type = $element['#entity_type'];
+    if (empty($entities)) {
+      $element['empty_message'] = [
+        '#markup' => $element['#empty'] ?? t('No items available. Please add some items first.'),
+        '#weight' => 10,
+      ];
+      unset($element['#title']);
+      unset($element['#description']);
+      return $element;
+    }
+
     $view_mode = $element['#view_mode'];
     $allow_selected = !empty($element['#allow_selected']) && is_int($element['#allow_selected']) ? (int) $element['#allow_selected'] : NULL;
     $allow_featured = !empty($element['#allow_featured']) && is_int($element['#allow_featured']) ? (int) $element['#allow_featured'] : NULL;
 
     $previews = [];
     foreach ($entities as $entity) {
-      $entity_view = \Drupal::entityTypeManager()->getViewBuilder($entity_type)->view($entity, $view_mode);
+      $entity_view = $entity_type_manager->getViewBuilder($entity_type)->view($entity, $view_mode);
       $previews[$entity->id()] = \Drupal::service('renderer')->render($entity_view);
     }
 

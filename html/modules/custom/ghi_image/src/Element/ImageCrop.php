@@ -4,6 +4,7 @@ namespace Drupal\ghi_image\Element;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\crop\Entity\Crop;
 use Drupal\crop\Entity\CropType;
 use Drupal\file_entity\Entity\FileEntity;
@@ -14,9 +15,8 @@ use Drupal\image_widget_crop\Element\ImageCrop as ImageWidgetCropImageCrop;
  *
  * This extends the ImageCrop element to remove a failing validation check that
  * would prevent cropping to work with externally hosted images.
- *
- * @FormElement("ghi_image_crop")
  */
+#[FormElement('ghi_image_crop')]
 class ImageCrop extends ImageWidgetCropImageCrop {
 
   /**

@@ -79,6 +79,8 @@
         "drupal/ctools": "^3.7",
         "drupal/editor_advanced_link": "^2.2",
         "drupal/entity_access_password": "^1.0",
+        "drupal/entity_browser": "^2.12",
+        "drupal/entity_browser_table": "^1.4",
         "drupal/field_group": "^3.1",
         "drupal/flat_taxonomy": "^2.0",
         "drupal/fpa": "^4.0.0",

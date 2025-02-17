@@ -3,8 +3,9 @@
 namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
@@ -13,10 +14,9 @@ use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
  * Provides an attachment select element.
- *
- * @FormElement("attachment_select")
  */
-class AttachmentSelect extends FormElement {
+#[FormElement('attachment_select')]
+class AttachmentSelect extends FormElementBase {
 
   use AjaxElementTrait;
   use SimpleCacheTrait;
