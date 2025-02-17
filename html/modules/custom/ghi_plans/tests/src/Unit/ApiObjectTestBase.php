@@ -87,14 +87,45 @@ abstract class ApiObjectTestBase extends UnitTestCase {
       ],
     ]);
 
+    // Mock twig.
+    $twig = $this->getMockBuilder('Drupal\Core\Template\TwigEnvironment')
+      ->disableOriginalConstructor()
+      ->getMock();
+
+    // Mock renderer.
+    $renderer = $this->getMockBuilder('Drupal\Core\Render\RendererInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+
     $container = new ContainerBuilder();
     $container->set('plugin.manager.endpoint_query_manager', $endpoint_query_manager);
     $container->set('entity_type.manager', $entity_type_manager);
     $container->set('cache.default', $cache);
     $container->set('datetime.time', $time);
     $container->set('config.factory', $config_factory);
+    $container->set('twig', $twig);
+    $container->set('renderer', $renderer);
     $container->set('string_translation', $this->getStringTranslationStub());
     \Drupal::setContainer($container);
+  }
+
+  /**
+   * Call a private or protected method on the given class.
+   *
+   * @param object $class
+   *   The object.
+   * @param string $method_name
+   *   The method name.
+   * @param array $arguments
+   *   Optional arguments for the method.
+   *
+   * @return mixed
+   *   The return of the method call.
+   */
+  protected function callPrivateMethod($class, $method_name, $arguments = NULL) {
+    // Make the private method callable.
+    $method = (new \ReflectionClass($class::class))->getMethod($method_name);
+    return $arguments ? $method->invokeArgs($class, $arguments) : $method->invoke($class);
   }
 
 }

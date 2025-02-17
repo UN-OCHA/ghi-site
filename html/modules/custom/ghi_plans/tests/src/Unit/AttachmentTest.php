@@ -522,6 +522,34 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertTrue($attachment->isPendingDataEntry());
     $this->assertEquals(1112, $attachment->getPlanId());
     $this->assertFalse($attachment->hasDisaggregatedData());
+    $this->assertEquals(IndicatorAttachment::CALCULATION_METHOD_SUM, $attachment->getCalculationMethod());
+
+    $monitoring_periods = $this->getPlanReportingPeriodsFromFixture(1112);
+    $this->assertEquals(183000, $attachment->getSingleValue(0, $monitoring_periods));
+    $this->assertNull($attachment->getSingleValue(1, $monitoring_periods));
+
+    $data_point_conf = [
+      'processing' => 'single',
+      'formatting' => 'auto',
+      'data_points' => [
+        0 => ['index' => 2],
+        1 => ['index' => 0],
+      ],
+    ];
+    $this->callPrivateMethod($attachment, 'getTooltip', [$data_point_conf]);
+    $data_point_conf['use_calculation_method'] = FALSE;
+    $this->assertFalse($this->callPrivateMethod($attachment, 'isApiCalculated', [1, $data_point_conf]));
+
+    $this->assertTrue($this->callPrivateMethod($attachment, 'isValidCalculatedMethod', [IndicatorAttachment::CALCULATION_METHOD_AVERAGE]));
+    $this->assertTrue($this->callPrivateMethod($attachment, 'isValidCalculatedMethod', [IndicatorAttachment::CALCULATION_METHOD_LATEST]));
+    $this->assertTrue($this->callPrivateMethod($attachment, 'isValidCalculatedMethod', [IndicatorAttachment::CALCULATION_METHOD_MAXIMUM]));
+    $this->assertTrue($this->callPrivateMethod($attachment, 'isValidCalculatedMethod', [IndicatorAttachment::CALCULATION_METHOD_SUM]));
+    $this->assertFalse($this->callPrivateMethod($attachment, 'isValidCalculatedMethod', ['something_else']));
+
+    $tooltip = $attachment->formatCalculationTooltip($monitoring_periods[1]);
+    $this->assertEquals('hpc_tooltip', $tooltip['#theme']);
+    $this->assertEquals('This value is the sum of all monitoring periods values', $tooltip['#tooltip']);
+    $this->assertEquals('functions', $tooltip['#tag_content']['#icon']);
   }
 
   /**
@@ -579,6 +607,24 @@ class AttachmentTest extends ApiObjectTestBase {
     $attachment_data = $this->getApiObjectFixture('Attachments', $type);
     $this->assertNotEmpty($attachment_data);
     return AttachmentHelper::processAttachment($attachment_data);
+  }
+
+  /**
+   * Load an attachment from the fixtures.
+   *
+   * @param int $plan_id
+   *   The plan id.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[]
+   *   An array of plan reporting periods.
+   */
+  private function getPlanReportingPeriodsFromFixture($plan_id) {
+    $data = $this->getApiObjectFixture('PlanReportingPeriods', $plan_id);
+    $this->assertNotEmpty($data);
+    $this->assertIsArray($data);
+    return array_map(function ($period_data) {
+      return new PlanReportingPeriod($period_data);
+    }, $data);
   }
 
   /**

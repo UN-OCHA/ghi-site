@@ -31,10 +31,10 @@ COVERAGE=false
 args=""
 while [ "$1" != "" ]; do
   case $1 in
-    --open-coverage )  COVERAGE=true
-                       ;;
-    *)                 args="$args $1"
-                       ;;
+    --open-coverage )   COVERAGE=true
+                        ;;
+    *)                  args="$args $1"
+                        ;;
   esac
   shift
 done
