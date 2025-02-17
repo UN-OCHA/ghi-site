@@ -1,0 +1,82 @@
+[
+  {
+    "id": 2386,
+    "planId": 1112,
+    "measurementsGenerated": true,
+    "periodNumber": 1,
+    "expiryDate": null,
+    "startDate": "2023-01-01",
+    "endDate": "2023-03-31",
+    "createdAt": "2022-09-27T09:22:40.211Z",
+    "updatedAt": "2023-04-12T11:14:19.383Z",
+    "plan": {
+      "id": 1112,
+      "restricted": false,
+      "revisionState": "none",
+      "isReleased": true,
+      "releasedDate": null,
+      "createdAt": "2022-09-27T09:22:19.859Z",
+      "updatedAt": "2024-09-20T07:34:56.641Z"
+    }
+  },
+  {
+    "id": 2387,
+    "planId": 1112,
+    "measurementsGenerated": true,
+    "periodNumber": 2,
+    "expiryDate": null,
+    "startDate": "2023-04-01",
+    "endDate": "2023-06-30",
+    "createdAt": "2022-09-27T09:22:40.211Z",
+    "updatedAt": "2023-07-17T09:25:25.978Z",
+    "plan": {
+      "id": 1112,
+      "restricted": false,
+      "revisionState": "none",
+      "isReleased": true,
+      "releasedDate": null,
+      "createdAt": "2022-09-27T09:22:19.859Z",
+      "updatedAt": "2024-09-20T07:34:56.641Z"
+    }
+  },
+  {
+    "id": 2388,
+    "planId": 1112,
+    "measurementsGenerated": true,
+    "periodNumber": 3,
+    "expiryDate": null,
+    "startDate": "2023-07-01",
+    "endDate": "2023-09-30",
+    "createdAt": "2022-09-27T09:22:40.211Z",
+    "updatedAt": "2023-10-12T07:14:18.400Z",
+    "plan": {
+      "id": 1112,
+      "restricted": false,
+      "revisionState": "none",
+      "isReleased": true,
+      "releasedDate": null,
+      "createdAt": "2022-09-27T09:22:19.859Z",
+      "updatedAt": "2024-09-20T07:34:56.641Z"
+    }
+  },
+  {
+    "id": 2389,
+    "planId": 1112,
+    "measurementsGenerated": true,
+    "periodNumber": 4,
+    "expiryDate": null,
+    "startDate": "2023-10-01",
+    "endDate": "2023-12-31",
+    "createdAt": "2022-09-27T09:22:40.211Z",
+    "updatedAt": "2024-01-10T11:45:11.773Z",
+    "plan": {
+      "id": 1112,
+      "restricted": false,
+      "revisionState": "none",
+      "isReleased": true,
+      "releasedDate": null,
+      "createdAt": "2022-09-27T09:22:19.859Z",
+      "updatedAt": "2024-09-20T07:34:56.641Z"
+    }
+  }
+]
