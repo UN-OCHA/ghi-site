@@ -44,6 +44,12 @@ form.entity-browser-form > div.view > .view-content {
   margin: 0;
 }
 
+form.entity-browser-form > div.view > .view-content .entity-browser-selection-counter {
+  position: absolute;
+  bottom: 1rem;
+  z-index: 1;
+}
+
 form.entity-browser-form > div.view > nav {
   margin: 0;
 }
