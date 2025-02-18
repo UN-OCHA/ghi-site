@@ -55,6 +55,16 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   }
 
   /**
+   * Check if the entity is currently protected.
+   *
+   * @return bool
+   *   TRUE if the entity is currently protected, FALSE otherwise.
+   */
+  public function isProtected() {
+    return $this->getEmbargoedAccessManager()?->isProtected($this) ?? FALSE;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
@@ -475,6 +485,17 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    */
   protected static function getDateFormatter() {
     return \Drupal::service('date.formatter');
+  }
+
+  /**
+   * Get the embargoed access manager service.
+   *
+   * @return \Drupal\ghi_embargoed_access\EmbargoedAccessManager|null
+   *   The embargoed access manager service or NULL.
+   */
+  protected static function getEmbargoedAccessManager() {
+    $service = 'ghi_embargoed_access.manager';
+    return \Drupal::hasService($service) ? \Drupal::service($service) : NULL;
   }
 
   /**
