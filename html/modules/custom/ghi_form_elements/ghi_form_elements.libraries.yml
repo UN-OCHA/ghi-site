@@ -72,3 +72,9 @@ entity_browser:
   css:
     component:
       css/entity_browser.css: {}
+  js:
+    js/entity_browser.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
