@@ -49,12 +49,7 @@ class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInte
     $conf = $this->getBlockConfig();
     $options = [];
 
-    $articles = $this->getArticles();
-    if (empty($articles)) {
-      // Nothing to show.
-      return [];
-    }
-
+    $articles = $this->getArticles(TRUE);
     $display = $conf['display']['select'];
 
     // If articles have been selected, use only those, otherwise use all.
@@ -66,6 +61,11 @@ class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInte
       $articles = array_filter(array_map(function ($id) use ($articles) {
         return $articles[$id] ?? NULL;
       }, $display['order']));
+    }
+
+    if (empty($articles)) {
+      // Nothing to show.
+      return NULL;
     }
 
     // Build the render array.
@@ -104,7 +104,7 @@ class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInte
    * {@inheritdoc}
    */
   public function getDefaultSubform($is_new = FALSE) {
-    return 'articles';
+    return empty($this->getArticles()) ? 'articles' : 'display';
   }
 
   /**
@@ -154,10 +154,10 @@ class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInte
   /**
    * Get the articles that this block should display.
    *
-   * @return \Drupal\Core\Entity\EntityInterface[]|null
+   * @return \Drupal\ghi_content\Entity\Article[]
    *   An array of entity objects indexed by their ids.
    */
-  private function getArticles() {
+  private function getArticles($check_access = FALSE) {
     $conf = $this->getBlockConfig();
     $entity_keys = $conf['articles']['article_select']['entity_ids'] ?? [];
     /** @var \Drupal\ghi_content\Entity\Article[] $articles */
@@ -181,6 +181,11 @@ class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInte
           $article->setContextNode($section);
         }
       }
+    }
+    if ($check_access) {
+      $articles = array_filter($articles, function (Article $article) {
+        return $article->access() && !$article->isProtected();
+      });
     }
     return $articles;
   }

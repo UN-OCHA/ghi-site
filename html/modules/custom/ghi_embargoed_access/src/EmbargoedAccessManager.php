@@ -263,8 +263,14 @@ class EmbargoedAccessManager {
     unset($variables['label']);
     unset($variables['metadata']);
     unset($variables['content']['field_image']);
+    unset($variables['content']['field_summary']);
     $variables['display_submitted'] = FALSE;
-    $variables['attributes']['class'][] = 'content-width';
+
+    if ($variables['view_mode'] == 'password_protected') {
+      $variables['attributes']['class'][] = 'content-width';
+    }
+
+    $variables['attributes']['class'][] = 'protected';
 
     $cacheableMetadata = new CacheableMetadata();
     $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);

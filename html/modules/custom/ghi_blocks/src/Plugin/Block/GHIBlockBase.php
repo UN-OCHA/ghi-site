@@ -894,7 +894,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
       ]));
       $this->configuration['is_preview'] = TRUE;
       $build = $this->build();
-      $form['container']['preview'] = [
+      $form['container']['preview'] = $build ? [
         '#theme' => 'block',
         '#attributes' => [
           'data-block-preview' => $this->getPluginId(),
@@ -908,7 +908,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
           'library' => ['ghi_blocks/block.preview'],
         ],
         'content' => $build,
-      ];
+      ] : NULL;
     }
 
     return $form;

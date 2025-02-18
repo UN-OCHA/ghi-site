@@ -4,6 +4,21 @@ article.node--view-mode-grid {
   height: 100%;
   border: 1px solid var(--cd-default-border-color);
 
+  #layout-builder-modal &.protected::before {
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    width: calc(100% + 6px);
+    content: 'Protected';
+    text-align: center;
+    color: white;
+    border-radius: inherit;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+    background-color: var(--cd-contrast-red);
+    font-size: 0.8rem;
+  }
+
   .cd-teaser__image {
     max-width: unset;
     margin-top: 0;
