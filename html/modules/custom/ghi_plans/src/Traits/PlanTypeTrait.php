@@ -117,4 +117,63 @@ trait PlanTypeTrait {
     return StringHelper::getAbbreviation($name);
   }
 
+  /**
+   * Prepare plans to be grouped by plan type.
+   *
+   * @param array $plans
+   *   Array of plans.
+   *
+   * @return array
+   *   Grouped plans.
+   */
+  public static function preparePlansGroupedByType(array $plans): array {
+    $plan_types = TaxonomyHelper::loadMultipleTermsByVocabulary('plan_type');
+    array_walk($plan_types, function ($term) use (&$grouped_plans_types) {
+      if ($term->field_group_key->value) {
+        $grouped_plans_types[$term->field_group_key->value][$term->tid->value] = $term->name->value;
+      }
+      else {
+        $grouped_plans_types[$term->tid->value] = $term->name->value;
+      }
+    });
+
+    $grouped_plans = [];
+    foreach ($grouped_plans_types as $key => $plan_type) {
+      $plan_type_key = $plan_type;
+
+      // Create a list of all plans for this plan type.
+      foreach ($plans as $plan) {
+        if (!is_array($plan_type)) {
+          if (!$plan->isType($plan_type)) {
+            continue;
+          }
+          if (empty($grouped_plans[$plan_type_key])) {
+            $grouped_plans[$plan_type_key] = [];
+          }
+          $grouped_plans[$plan_type_key][] = $plan;
+        }
+        else {
+          foreach ($plan_type as $type) {
+            if (!$plan->isType($type)) {
+              continue;
+            }
+
+            if (empty($grouped_plans[$key])) {
+              $grouped_plans[$key] = [];
+            }
+            $grouped_plans[$key][] = $plan;
+          }
+        }
+      }
+      // And sort it by plan name.
+      if ($grouped_plans[$key]) {
+        $use_shortname = $config['plan_short_names'] ?? FALSE;
+        ArrayHelper::sortObjectsByCallback($grouped_plans[$key], function ($item) use ($use_shortname) {
+          return $use_shortname ? $item->getShortName() : $item->getName();
+        }, EndpointQuery::SORT_ASC, SORT_STRING);
+      }
+    }
+    return $grouped_plans;
+  }
+
 }
