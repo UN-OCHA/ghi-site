@@ -78,4 +78,8 @@ entity_browser:
     - core/jquery
     - core/drupal
     - core/once
-    - gin/gin
+
+article_select:
+  css:
+    component:
+      css/article_select.css: {}

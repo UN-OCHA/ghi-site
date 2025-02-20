@@ -144,7 +144,7 @@ class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInte
     }
     if ($check_access) {
       $articles = array_filter($articles, function (Article $article) {
-        return $article->access() && !$article->isProtected();
+        return $article->access();
       });
     }
     return $articles;

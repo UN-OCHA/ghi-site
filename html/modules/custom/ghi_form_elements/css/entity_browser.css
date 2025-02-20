@@ -35,6 +35,15 @@ form.entity-browser-form > div.view > .view-filters > div {
   box-shadow: none;
   background-color: transparent;
 }
+@media screen and (min-width: 1024px) {
+  form.entity-browser-form > div.view > .view-filters > div {
+    flex-wrap: nowrap;
+  }
+}
+
+form.entity-browser-form > div.view > .view-filters .form-item__label {
+  white-space: nowrap;
+}
 
 form.entity-browser-form > div.view > .view-content {
   display: block;

@@ -133,7 +133,7 @@ display:
           click_sort_column: value
           type: string
           settings:
-            link_to_entity: true
+            link_to_entity: false
           group_column: value
           group_columns: {  }
           group_rows: true
@@ -458,7 +458,18 @@ display:
       cache:
         type: tag
         options: {  }
-      empty: {  }
+      empty:
+        area_text_custom:
+          id: area_text_custom
+          table: views
+          field: area_text_custom
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: text_custom
+          empty: true
+          content: 'No content available.'
+          tokenize: false
       sorts:
         created:
           id: created
@@ -488,6 +499,44 @@ display:
           value:
             article: article
           group: 1
+        nid:
+          id: nid
+          table: node_access
+          field: nid
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: node_access
+          operator: '='
+          value: ''
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: ''
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
         title:
           id: title
           table: node_field_data
@@ -708,6 +757,44 @@ display:
                   min: ''
                   max: ''
                   value: ''
+        field_orphaned_value:
+          id: field_orphaned_value
+          table: node__field_orphaned
+          field: field_orphaned_value
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: boolean
+          operator: '='
+          value: '0'
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: ''
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
       filter_groups:
         operator: AND
         groups:
@@ -719,10 +806,46 @@ display:
           row_class: ''
           default_row_class: true
           columns:
+            entity_browser_select: entity_browser_select
             title: title
+            term_node_tid: term_node_tid
+            status: status
+            field_protected: field_protected
+            changed: changed
           default: '-1'
           info:
+            entity_browser_select:
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
             title:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            term_node_tid:
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            status:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            field_protected:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            changed:
               sortable: false
               default_sort_order: asc
               align: ''
@@ -732,7 +855,7 @@ display:
           override: true
           sticky: false
           summary: ''
-          empty_table: false
+          empty_table: true
           caption: ''
           description: ''
       row:

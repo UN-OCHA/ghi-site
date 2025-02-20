@@ -141,6 +141,7 @@ class ArticleSelect extends FormElementBase {
     ];
 
     $element['#attached']['library'][] = 'ghi_form_elements/entity_browser';
+    $element['#attached']['library'][] = 'ghi_form_elements/article_select';
     return $element;
   }
 
