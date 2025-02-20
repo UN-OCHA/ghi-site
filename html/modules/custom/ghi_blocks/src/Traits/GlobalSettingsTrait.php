@@ -10,6 +10,8 @@ use Drupal\ghi_plans\Traits\PlanTypeTrait;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\hpc_common\Helpers\TaxonomyHelper;
 
 /**
  * Trait for global settings.
@@ -76,31 +78,7 @@ trait GlobalSettingsTrait {
 
     // Sort by plan type.
     if (!empty($config['sort_by_plan_type'])) {
-      // Sort everything first by plan type, then by plan name.
-      $type_order = $this->getAvailablePlanTypes();
-
-      $grouped_plans = [];
-      foreach ($type_order as $plan_type) {
-        $plan_type_key = $plan_type;
-
-        // Create a list of all plans for this plan type.
-        foreach ($plans as $plan) {
-          if (!$plan->isType($plan_type)) {
-            continue;
-          }
-          if (empty($grouped_plans[$plan_type_key])) {
-            $grouped_plans[$plan_type_key] = [];
-          }
-          $grouped_plans[$plan_type_key][] = $plan;
-        }
-        // And sort it by plan name.
-        if (!empty($grouped_plans[$plan_type_key])) {
-          $use_shortname = $config['plan_short_names'] ?? FALSE;
-          ArrayHelper::sortObjectsByCallback($grouped_plans[$plan_type_key], function ($item) use ($use_shortname) {
-            return $use_shortname ? $item->getShortName() : $item->getName();
-          }, EndpointQuery::SORT_ASC, SORT_STRING);
-        }
-      }
+      $grouped_plans = $this->preparePlansGroupedByType($plans);
 
       // Put the plans together, additionally grouped by them being included in
       // the GHO, with GHO plans coming first.
@@ -120,7 +98,7 @@ trait GlobalSettingsTrait {
       $plans = $plans_gho + $plans_non_gho;
     }
     else {
-      // Otherwhise sort by plan name only.
+      // Otherwise sort by plan name only.
       ArrayHelper::sortObjectsByProperty($plans, 'getName', EndpointQuery::SORT_ASC, SORT_STRING);
     }
   }
@@ -352,11 +330,19 @@ trait GlobalSettingsTrait {
    *   value is an array with a part of the form element definition.
    */
   private function getCheckboxOptions() {
+    // Get dynamically grouped plan types.
+    $plan_types = TaxonomyHelper::loadMultipleTermsByVocabulary('plan_type');
+    array_walk($plan_types, function ($term) use (&$grouped) {
+      $term_abbreviation = StringHelper::getAbbreviation($term->name->value);
+      $key = $term->field_group_key->value ?: $term_abbreviation;
+      $grouped[$key][] = $term->field_group_key->value ? $term_abbreviation : $key;
+    });
+    $grouped_plan_types = array_map(fn($item) => is_array($item) ? implode('/', array_unique($item)) : $item, $grouped);
     return [
       'sort_by_plan_type' => [
         '#title' => $this->t('Sort by plan type'),
-        '#description' => $this->t('If checked, the table will be sorted first by plans beeing part of the GHO, then by the plan type and then by the plan name. Plan type order is: <em>@plan_types</em>. This order can be changed on the  <a href="@plan_type_url">Plan type taxonnomy page</a>.', [
-          '@plan_types' => implode(', ', array_values($this->getAvailablePlanTypes())),
+        '#description' => $this->t('If checked, the table will be sorted first by plans being part of the GHO, then by the plan type and then by the plan name. Plan type order is: <em>@plan_types</em>. This order can be changed on the  <a href="@plan_type_url">Plan type taxonnomy page</a>.', [
+          '@plan_types' => implode(', ', $grouped_plan_types),
           '@plan_type_url' => Url::fromRoute('entity.taxonomy_vocabulary.overview_form', ['taxonomy_vocabulary' => 'plan_type'])->toString(),
         ]),
       ],
