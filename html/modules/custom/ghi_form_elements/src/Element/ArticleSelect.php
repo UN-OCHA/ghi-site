@@ -4,6 +4,7 @@ namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
@@ -138,6 +139,15 @@ class ArticleSelect extends FormElementBase {
       ],
       '#wrapper_id' => $wrapper_id,
       '#default_value' => $selected_articles,
+      '#widget_context' => [
+        // This is used to exclude already selected articles from the selection
+        // view. Technically, this feeds into the default value for a
+        // contextual filter.
+        // @see https://www.drupal.org/project/entity_browser/issues/2865928
+        'selected_ids' => array_map(function (EntityInterface $entity) {
+          return $entity->id();
+        }, $selected_articles),
+      ],
     ];
 
     $element['#attached']['library'][] = 'ghi_form_elements/entity_browser';
