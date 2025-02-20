@@ -10,6 +10,7 @@ gin_toolbar:
   css:
     component:
       css/gin_toolbar.css: {}
+      css/gin_status_chips.css: {}
   js:
     js/gin_toolbar.js: { minified: true, preprocess: false }
   dependencies:

@@ -1,0 +1,5 @@
+.form-type--article_select .tabledrag-toggle-weight-wrapper,
+.form-type--article_select .tabledrag-changed-warning,
+.form-type--article_select .tabledrag-changed {
+  display: none !important;
+}
