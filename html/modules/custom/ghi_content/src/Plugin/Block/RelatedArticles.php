@@ -46,23 +46,7 @@ class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInte
       return;
     }
 
-    $conf = $this->getBlockConfig();
-    $options = [];
-
     $articles = $this->getArticles(TRUE);
-    $display = $conf['display']['select'];
-
-    // If articles have been selected, use only those, otherwise use all.
-    if (!empty($display['selected'])) {
-      $articles = array_intersect_key($articles, array_flip($display['selected']));
-    }
-    // If an order has been set, use that.
-    if (!empty($display['order'])) {
-      $articles = array_filter(array_map(function ($id) use ($articles) {
-        return $articles[$id] ?? NULL;
-      }, $display['order']));
-    }
-
     if (empty($articles)) {
       // Nothing to show.
       return NULL;
@@ -73,7 +57,6 @@ class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInte
       '#theme' => 'related_articles_cards',
       '#title' => $this->label(),
       '#articles' => $articles,
-      '#options' => $options,
     ];
     return $build;
   }
@@ -91,12 +74,7 @@ class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInte
           'entity_ids' => [],
         ],
       ],
-      'display' => [
-        'select' => [
-          'order' => NULL,
-          'selected' => [],
-        ],
-      ],
+      'display' => [],
     ];
   }
 
@@ -104,7 +82,7 @@ class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInte
    * {@inheritdoc}
    */
   public function getDefaultSubform($is_new = FALSE) {
-    return empty($this->getArticles()) ? 'articles' : 'display';
+    return 'articles';
   }
 
   /**
@@ -130,24 +108,6 @@ class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInte
    * Form callback for the display configuration form.
    */
   public function displayForm(array $form, FormStateInterface $form_state) {
-    $articles = $this->getArticles();
-    $form['select'] = [
-      '#type' => 'entity_preview_select',
-      '#title' => $this->t('Cards'),
-      '#description' => $this->t('This is a preview of the articles that will be shown in this element. You can move the cards around to reorder them. Clicking on a card selects the article for display. If no article is selected, all available articles will be shown.'),
-      '#entities' => $articles,
-      '#entity_type' => 'node',
-      '#view_mode' => 'grid',
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'select',
-      ]),
-      '#empty' => $this->t('No articles added yet. Go to the "Articles" screen and add some articles first.'),
-    ];
-
-    $form['#attached'] = [
-      'library' => ['ghi_content/admin.related_articles'],
-    ];
-
     return $form;
   }
 
@@ -199,16 +159,9 @@ class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInte
       return FALSE;
     }
     $entity_ids = &$configuration['hpc']['articles']['article_select']['entity_ids'];
-    $order = &$configuration['hpc']['display']['select']['order'];
-    $order = [];
     $selected = &$configuration['hpc']['select']['selected'];
     foreach (($selected ?? []) as $entity_id) {
       $entity_ids[] = 'node:' . $entity_id;
-    }
-    foreach ($configuration['hpc']['select']['order'] ?? [] as $entity_id) {
-      if (in_array($entity_id, $selected)) {
-        $order[] = $entity_id;
-      }
     }
     $configuration['hpc']['display']['label'] = $configuration['hpc']['label'] ?? NULL;
     $configuration['hpc'] = array_intersect_key($configuration['hpc'], array_flip(['articles', 'display']));

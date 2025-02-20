@@ -109,7 +109,11 @@ class ArticleSelect extends FormElementBase {
       '#header' => [
         t('Title'),
         t('Tags'),
+        t('Status'),
+        t('Password required'),
+        t('Updated'),
         t('Operations'),
+        t('Weight'),
       ],
       '#empty' => t('No articles added yet. Use the <em>@button_label</em> button to add articles.', $empty_text_args),
       '#process' => [
@@ -117,6 +121,13 @@ class ArticleSelect extends FormElementBase {
       ],
       '#wrapper_id' => $wrapper_id,
       '#entities' => $selected_articles,
+      '#tabledrag' => [
+        [
+          'action' => 'order',
+          'relationship' => 'sibling',
+          'group' => 'weight',
+        ],
+      ],
     ];
 
     $element['container']['browser'] = [
@@ -176,12 +187,39 @@ class ArticleSelect extends FormElementBase {
         return $tag->label();
       }, $entity->getTags());
       sort($tags);
+
+      $delta = count(Element::children($element));
       $element[$id] = [
         '#attributes' => [
           'data-entity-id' => $id,
+          'class' => ['draggable'],
         ],
+        '#weight' => $delta,
         'title' => ['#markup' => $entity->label()],
         'tags' => ['#markup' => Markup::create(implode(', ', $tags))],
+        'status' => [
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          '#attributes' => [
+            'class' => [
+              'gin-status',
+              $entity->isPublished() ? 'gin-status--success' : 'gin-status--danger',
+            ],
+          ],
+          ['#markup' => $entity->isPublished() ? t('Displayed') : t('Not displayed')],
+        ],
+        'protected' => [
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          '#attributes' => [
+            'class' => array_filter([
+              'gin-status',
+              $entity->isProtected() ? 'gin-status--danger' : NULL,
+            ]),
+          ],
+          ['#markup' => $entity->isProtected() ? t('Yes') : t('No')],
+        ],
+        'updated' => ['#markup' => self::dateFormatter()->format($entity->getChangedTime(), 'short')],
         'operations' => [
           'remove' => [
             '#type' => 'submit',
@@ -192,6 +230,15 @@ class ArticleSelect extends FormElementBase {
               'callback' => [self::class, 'updateEntityBrowserContainer'],
               'wrapper' => $element['#wrapper_id'],
             ],
+          ],
+        ],
+        'weight' => [
+          '#type' => 'weight',
+          '#title' => t('Weight for @title', ['@title' => $entity->label()]),
+          '#title_display' => 'invisible',
+          '#default_value' => $delta,
+          '#attributes' => [
+            'class' => ['weight'],
           ],
         ],
       ];
@@ -252,6 +299,16 @@ class ArticleSelect extends FormElementBase {
    */
   private static function entityTypeManager() {
     return \Drupal::entityTypeManager();
+  }
+
+  /**
+   * Get the date formatter service.
+   *
+   * @return \Drupal\Core\Datetime\DateFormatterInterface
+   *   The date formatter service.
+   */
+  private static function dateFormatter() {
+    return \Drupal::service('date.formatter');
   }
 
 }

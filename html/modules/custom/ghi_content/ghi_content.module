@@ -23,11 +23,14 @@ use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_content\RemoteContent\RemoteContentImageInterface;
 use Drupal\ghi_sections\Entity\Section;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
+use Drupal\taxonomy\TermInterface;
 use Drupal\user\Entity\User;
+use Drupal\views\ViewExecutable;
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -466,6 +469,57 @@ function ghi_content_preprocess_views_view_field__field_tags(&$variables) {
   }, $items));
   $variables['output'] = $build;
 
+}
+
+/**
+ * Implements hook_views_pre_view().
+ *
+ * Pre-populate the tag filter on article selection entity browsers if opening
+ * the selection dialog for the first time.
+ */
+function ghi_content_views_pre_view(ViewExecutable $view, $display_id, array &$args) {
+  if ($view->id() != 'article_selection') {
+    return;
+  }
+  $exposed_input = $view->getExposedInput();
+  if (array_key_exists('tags', $exposed_input)) {
+    return;
+  }
+  // Get the path to get the node entity.
+  $original_path = \Drupal::requestStack()->getCurrentRequest()->query->get('original_path');
+  if (!$original_path) {
+    return;
+  }
+  $node_key = array_values(array_filter(explode('/', $original_path), function ($part) {
+    return str_starts_with($part, 'node.') ? $part : NULL;
+  }))[0] ?? NULL;
+  if (!$node_key) {
+    return;
+  }
+  [$entity_type_id, $entity_id] = explode('.', $node_key);
+  $node = \Drupal::entityTypeManager()->getStorage($entity_type_id)->load($entity_id);
+
+  // Now see if we have qualified nodes and if these have tags.
+  $tags = [];
+  if ($node instanceof SectionNodeInterface) {
+    $section_tags = $node->getTags();
+    foreach ($section_tags as $term_id => $label) {
+      $tags[] = $label . ' (' . $term_id . ')';
+    }
+  }
+  elseif ($node instanceof Document) {
+    $tags = array_map(function (TermInterface $term) {
+      return $term->label() . ' (' . $term->id() . ')';
+    }, $node->getTags(TRUE));
+  }
+  if (empty($tags)) {
+    return;
+  }
+
+  // Populate the exposed tag filter with these found tags.
+  $exposed_input = $view->getExposedInput();
+  $exposed_input['tags'] = implode(', ', $tags);
+  $view->setExposedInput($exposed_input);
 }
 
 /**

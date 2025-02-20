@@ -5,6 +5,23 @@
   margin: 0;
   padding: 0;
   border-top: 0;
+
+  .node--unpublished .gho-related-article {
+    outline: 4px dashed #ffc310;
+  }
+
+  .gho-related-article picture {
+    display: flex;
+    margin-bottom: 1rem;
+
+    img {
+      width: 100%;
+    }
+
+    @media screen and (min-width: 768px) {
+      margin-bottom: 0;
+    }
+  }
 }
 
 /**
