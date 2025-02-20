@@ -78,3 +78,4 @@ entity_browser:
     - core/jquery
     - core/drupal
     - core/once
+    - gin/gin
