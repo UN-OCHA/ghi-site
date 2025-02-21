@@ -53,6 +53,16 @@ form.entity-browser-form > div.view > .view-content {
   margin: 0;
 }
 
+form.entity-browser-form > div.view > .view-content table th {
+  white-space: nowrap;
+}
+form.entity-browser-form > div.view > .view-content table th > a,
+form.entity-browser-form > div.view > .view-content table th > a:active,
+form.entity-browser-form > div.view > .view-content table th > a:focus {
+  box-shadow: none !important;
+}
+
+
 form.entity-browser-form > div.view > .view-content .entity-browser-selection-counter {
   position: absolute;
   bottom: 1rem;
