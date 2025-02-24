@@ -6,11 +6,11 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     permissions:
-      contents: write 
+      contents: write
       checks: write
-      pull-requests: write 
-      actions: read 
-      statuses: write 
+      pull-requests: write
+      actions: read
+      statuses: write
 
     steps:
       - name: Checkout Code
@@ -103,6 +103,7 @@ jobs:
         with:
           run: |
             docker compose -f .github/tests/docker-compose.yml exec -w /srv/www -T drupal /usr/bin/composer run sub-theme
+
       - name: PHPCS
         id: phpcs
         uses: cafuego/command-output@main
@@ -133,7 +134,7 @@ jobs:
             docker compose -f .github/tests/docker-compose.yml exec -T drupal chmod -R 777 /srv/www/html/build/logs
             docker compose -f .github/tests/docker-compose.yml exec -T drupal mkdir -p /srv/www/html/sites/simpletest/browser_output
             docker compose -f .github/tests/docker-compose.yml exec -T drupal chmod -R 777 /srv/www/html/sites/simpletest
-            docker compose -f .github/tests/docker-compose.yml exec -T -u appuser -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/tmp -e BROWSERTEST_OUTPUT_BASE_URL=http://127.0.0.1:8081 -e DTT_BASE_URL=http://127.0.0.1 -e SIMPLETEST_BASE_URL=http://127.0.0.1 -e SIMPLETEST_DB=mysql://ghi:ghi@mysql/ghi drupal ./vendor/bin/phpunit --coverage-clover /srv/www/html/build/logs/clover.xml --debug -c /srv/www
+            docker compose -f .github/tests/docker-compose.yml exec -T -u appuser -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/tmp -e BROWSERTEST_OUTPUT_BASE_URL=http://127.0.0.1:8081 -e DTT_BASE_URL=http://127.0.0.1 -e SIMPLETEST_BASE_URL=http://127.0.0.1 -e SIMPLETEST_DB=mysql://ghi:ghi@mysql/ghi drupal ./vendor/bin/paraunit coverage --clover /srv/www/html/build/logs/clover.xml -c /srv/www
         env:
           fail-fast: true
 
@@ -166,7 +167,6 @@ jobs:
         uses: peter-evans/find-comment@v2
         id: fc
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
           body-includes: Build output
@@ -174,7 +174,6 @@ jobs:
       - name: Create or update comment
         uses: peter-evans/create-or-update-comment@v2
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
