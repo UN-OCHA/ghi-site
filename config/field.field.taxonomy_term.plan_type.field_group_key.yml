@@ -1,0 +1,19 @@
+uuid: a5545663-dbdf-483b-b771-694629030880
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_group_key
+    - taxonomy.vocabulary.plan_type
+id: taxonomy_term.plan_type.field_group_key
+field_name: field_group_key
+entity_type: taxonomy_term
+bundle: plan_type
+label: 'Group key'
+description: 'Optional group key. Leave empty to use the name of the plan type for grouping. Using the same value for 2 or more plan types will group them together in grouped plan listings, e.g. the plan overview table.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string
