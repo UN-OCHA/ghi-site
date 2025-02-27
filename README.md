@@ -156,6 +156,17 @@ The tests can be optionally filtered down very specifically, e.g.:
 
     fin phpunit --filter testImportParagraphs
 
+Testing against chromium browser via selenium grid should be setup and ready to use out of the box.
+
+Local VNC to observe the browser actions in real time:
+
+    http://ghi-site.docksal.site::7900
+
+Access to the Selenium Grid UI:
+
+    http://ghi-site.docksal.site:4444/ui
+
+
 
 REFERENCES
 ----------

@@ -59,8 +59,8 @@ $settings['hash_salt'] = 'ghi-test-site-salt';
 // Use the dev config.
 $config['config_split.config_split.config_dev']['status'] = TRUE;
 
-$config['system.performance']['css']['preprocess'] = FALSE;
-$config['system.performance']['js']['preprocess'] = FALSE;
+// $config['system.performance']['css']['preprocess'] = FALSE;
+// $config['system.performance']['js']['preprocess'] = FALSE;
 
 // Memcache.
 $settings['memcache']['servers'] = ['memcached:11211' => 'default'];
