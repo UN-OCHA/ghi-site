@@ -7,6 +7,7 @@ use Drupal\Core\Entity\Element\EntityAutocomplete;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\node\NodeInterface;
 use Drupal\views\ViewExecutable;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -129,6 +130,9 @@ class ArticleSelection implements ContainerInjectionInterface {
   private function getTagsFromNode(NodeInterface $node) {
     if ($node instanceof SectionNodeInterface) {
       return $node->getTagEntities();
+    }
+    if ($node instanceof SubpageNodeInterface) {
+      return $node->getParentBaseNode()?->getTagEntities();
     }
     if ($node instanceof Document) {
       return $node->getTags(TRUE);
