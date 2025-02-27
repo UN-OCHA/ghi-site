@@ -5,3 +5,6 @@ ghi_blocks.map_settings:
     mapbox_proxy:
       type: boolean
       label: 'Proxy requests to mapbox.com'
+    country_outlines:
+      type: boolean
+      label: 'Show country outlines'

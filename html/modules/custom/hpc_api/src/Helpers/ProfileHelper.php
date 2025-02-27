@@ -2,6 +2,8 @@
 
 namespace Drupal\hpc_api\Helpers;
 
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
+
 /**
  * Helper class for profiling runtime code.
  */
@@ -62,7 +64,7 @@ class ProfileHelper {
       return $_b['memory_usage'] - $_a['memory_usage'];
     });
     foreach ($profile_summary as $key => $profile_item) {
-      $summary[] = sprintf('%10s %8.4f %s', (string) format_size($profile_item['memory_usage']), $profile_item['duration'], $key);
+      $summary[] = sprintf('%10s %8.4f %s', (string) ByteSizeMarkup::create($profile_item['memory_usage'] ?? 0), $profile_item['duration'], $key);
     }
     return $summary;
   }

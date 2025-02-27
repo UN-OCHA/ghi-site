@@ -166,6 +166,22 @@ class PlanOverviewPlan extends BaseObject {
   }
 
   /**
+   * Get the order number for the type.
+   *
+   * This is the numerical order based on the current plan type term order,
+   * that should be used to sort plans belonging to the same focus location.
+   *
+   * @return int
+   *   The order number according to the manually selected sort order of the
+   *   plan type term objects.
+   */
+  public function getTypeOrder() {
+    $plan_type = $this->getPlanType();
+    $type_order = $this->getAvailablePlanTypes();
+    return array_flip($type_order)[$plan_type->label()];
+  }
+
+  /**
    * Check if the plan is of the given type.
    *
    * @param string $type_name
