@@ -29,10 +29,14 @@ if [[ ! -f "$phpunit_path" ]]; then
 fi
 
 COVERAGE=false
+CLEAR_LOGS=false
 PARALLEL=true
 args=""
 while [ "$1" != "" ]; do
   case $1 in
+    -c | --clear-logs)
+      CLEAR_LOGS=true
+      ;;
     --open-coverage)
       COVERAGE=true
       ;;
@@ -56,12 +60,14 @@ fi
 timestamp=`date +%s`
 COVERAGE_FILE="$path/$DOCROOT/sites/simpletest/coverage/coverage-${timestamp}.cov"
 
-# fin exec "mkdir -p $path/$DOCROOT/sites/simpletest/coverage"
+fin exec "mkdir -p $path/$DOCROOT/sites/simpletest/coverage"
 
-if [ "${#args}" -eq 0 ]; then
+if [ "${#args}" -eq 0 ] || $CLEAR_LOGS; then
   # Clear coverage repository if the full test suite is run, meaning phpunit is
   # invoked without any argument.
-  fin exec "rm -r $path/$DOCROOT/sites/simpletest/coverage/*"
+  fin exec "rm -r $path/$DOCROOT/sites/simpletest/browser-output/Drupal_* 2> /dev/null"
+  fin exec "rm -r $path/$DOCROOT/sites/simpletest/coverage/* 2> /dev/null"
+  fin exec "rm -r $path/$DOCROOT/sites/simpletest/coverage-html/* 2> /dev/null"
 fi
 
 # Always create a dedicated coverage file for each test run. They get later
@@ -76,5 +82,5 @@ fi
 fin exec "phpcov merge --html $path/$DOCROOT/sites/simpletest/coverage-html $path/$DOCROOT/sites/simpletest/coverage"
 
 if $COVERAGE; then
-  fin utils/open-link "http://ghi-site.docksal.site/sites/simpletest/test-coverage/dashboard.html"
+  fin utils/open-link "http://${VIRTUAL_HOST}/sites/simpletest/coverage-html/dashboard.html"
 fi
