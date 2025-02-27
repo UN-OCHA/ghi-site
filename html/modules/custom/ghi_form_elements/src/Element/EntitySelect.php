@@ -4,8 +4,9 @@ namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
@@ -15,10 +16,9 @@ use Drupal\hpc_common\Helpers\NodeHelper;
 
 /**
  * Provides an entity select element.
- *
- * @FormElement("entity_select")
  */
-class EntitySelect extends FormElement {
+#[FormElement('entity_select')]
+class EntitySelect extends FormElementBase {
 
   use AjaxElementTrait;
 

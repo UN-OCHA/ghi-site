@@ -61,6 +61,13 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
   /**
    * {@inheritdoc}
    */
+  public function getTagEntities() {
+    return $this->get('field_tags')->referencedEntities() ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getImage() {
     return $this->get('field_hero_image');
   }

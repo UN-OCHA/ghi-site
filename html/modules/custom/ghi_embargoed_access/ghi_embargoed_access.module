@@ -103,3 +103,28 @@ function ghi_embargoed_access_entity_operation(EntityInterface $entity) {
   $embargoed_access_manager = \Drupal::service('ghi_embargoed_access.manager');
   return $embargoed_access_manager->getOperationLinks($entity);
 }
+
+/**
+ * Implements hook_preprocess_views_view_field().
+ *
+ * Output the values of the protected fields as gin-style chips, same as for
+ * the published status.
+ */
+function ghi_embargoed_access_preprocess_views_view_field__field_protected(&$variables) {
+  /** @var \Drupal\views\Plugin\views\field\EntityField $field */
+  $field = $variables['field'];
+  $value = $field->getValue($variables['row']);
+  $variables['output'] = [
+    '#type' => 'html_tag',
+    '#tag' => 'span',
+    '#attributes' => [
+      'class' => array_filter([
+        'gin-status',
+        $value ? 'gin-status--danger' : NULL,
+      ]),
+    ],
+    [
+      '#markup' => $variables['output'],
+    ],
+  ];
+}

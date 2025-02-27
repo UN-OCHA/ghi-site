@@ -3,7 +3,8 @@
 namespace Drupal\ghi_content\Element;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Attribute\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
 use Drupal\ghi_content\Traits\RemoteElementTrait;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
@@ -25,10 +26,9 @@ use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
  *  '#default_value' => $document,
  * ];
  * @endcode
- *
- * @FormElement("remote_document")
  */
-class RemoteDocument extends FormElement {
+#[FormElement('remote_document')]
+class RemoteDocument extends FormElementBase {
 
   use AjaxElementTrait;
   use RemoteElementTrait;

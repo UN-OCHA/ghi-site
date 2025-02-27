@@ -2,8 +2,6 @@
 
 namespace Drupal\Tests\ghi_blocks\FunctionalJavascript;
 
-use Drupal\block_content\Entity\BlockContentType;
-
 /**
  * Tests the GHI specific block UI.
  *
@@ -15,10 +13,7 @@ class BlockUiTest extends BlockUiBase {
    * Tests the block configuration page.
    */
   public function testBlockConfiguration() {
-    $node = $this->createNode([
-      'type' => 'page',
-    ]);
-
+    $node = $this->createNode();
     $this->loginEditor();
 
     $assert_session = $this->assertSession();
@@ -30,6 +25,7 @@ class BlockUiTest extends BlockUiBase {
     // Click the customize link.
     $assert_session->elementExists('css', '#layout-builder-ipe-wrapper');
     $assert_session->elementExists('css', '.layout-builder-ipe-actions');
+    $assert_session->elementExists('css', '.layout-builder-ipe--link-customize');
     $assert_session->linkExists('Customize');
     $page->clickLink('Customize');
     $this->waitForAjaxToFinish();
@@ -89,24 +85,6 @@ class BlockUiTest extends BlockUiBase {
     $cancel_link->click();
     $this->waitForAjaxToFinish();
     $assert_session->waitForElementRemoved('css', '#layout-builder-modal');
-  }
-
-  /**
-   * Creates a block content type.
-   *
-   * @param string $id
-   *   The block type id.
-   * @param string $label
-   *   The block type label.
-   */
-  protected function createBlockContentType($id, $label) {
-    $bundle = BlockContentType::create([
-      'id' => $id,
-      'label' => $label,
-      'revision' => 1,
-    ]);
-    $bundle->save();
-    block_content_add_body_field($bundle->id());
   }
 
 }

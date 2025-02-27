@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - core.entity_view_display.node.homepage.default
+    - entity_browser.browser.articles
     - node.type.article
     - node.type.custom_subpage
     - node.type.document
@@ -19,6 +20,7 @@ dependencies:
     - node.type.section
   module:
     - contextual
+    - entity_browser
     - ghi_base_objects
     - ghi_blocks
     - ghi_content
@@ -35,6 +37,7 @@ weight: -4
 is_admin: null
 permissions:
   - 'access administration pages'
+  - 'access articles entity browser pages'
   - 'access content overview'
   - 'access contextual links'
   - 'access remote content'

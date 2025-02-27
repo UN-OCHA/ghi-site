@@ -4,18 +4,18 @@ namespace Drupal\ghi_blocks\Element;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
 
 /**
  * Provides a document link element with meta data and multiple languages.
- *
- * @FormElement("document_link")
  */
-class DocumentLink extends FormElement {
+#[FormElement('document_link')]
+class DocumentLink extends FormElementBase {
 
   use VerticalTabsTrait;
 

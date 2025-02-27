@@ -3,9 +3,12 @@
 namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_blocks\Interfaces\ConfigurationUpdateInterface;
+use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\hpc_common\Traits\EntityHelperTrait;
 
 /**
  * Provides an 'RelatedArticles' block.
@@ -16,10 +19,23 @@ use Drupal\ghi_sections\Entity\SectionNodeInterface;
  *  category = @Translation("Narrative Content"),
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *   }
+ *  },
+ *  config_forms = {
+ *    "articles" = {
+ *      "title" = @Translation("Articles"),
+ *      "callback" = "articlesForm",
+ *      "base_form" = TRUE
+ *    },
+ *    "display" = {
+ *      "title" = @Translation("Display"),
+ *      "callback" = "displayForm"
+ *    }
+ *  }
  * )
  */
-class RelatedArticles extends ContentBlockBase implements OptionalTitleBlockInterface {
+class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInterface, OptionalTitleBlockInterface, ConfigurationUpdateInterface {
+
+  use EntityHelperTrait;
 
   /**
    * {@inheritdoc}
@@ -30,35 +46,18 @@ class RelatedArticles extends ContentBlockBase implements OptionalTitleBlockInte
       return;
     }
 
-    $conf = $this->getBlockConfig();
-    $options = [];
-
-    $articles = $this->getArticles();
+    $articles = $this->getArticles(TRUE);
     if (empty($articles)) {
       // Nothing to show.
-      return [];
+      return NULL;
     }
 
-    if ($conf['mode'] == 'fixed') {
-      if (empty($conf['select']) || empty($conf['select']['selected'])) {
-        // Nothing selected.
-        return [];
-      }
-      $articles = array_intersect_key($articles, array_flip($conf['select']['selected']));
-      if (!empty($conf['select']['order'])) {
-        $articles = array_filter(array_map(function ($id) use ($articles) {
-          return $articles[$id] ?? NULL;
-        }, $conf['select']['order']));
-      }
-    }
-
+    // Build the render array.
     $build = [
       '#theme' => 'related_articles_cards',
       '#title' => $this->label(),
       '#articles' => $articles,
-      '#options' => $options,
     ];
-
     return $build;
   }
 
@@ -70,75 +69,71 @@ class RelatedArticles extends ContentBlockBase implements OptionalTitleBlockInte
    */
   protected function getConfigurationDefaults() {
     return [
-      'mode' => 'fixed',
-      'count' => 6,
-      'select' => [
-        'order' => NULL,
-        'selected' => [],
+      'articles' => [
+        'article_select' => [
+          'entity_ids' => [],
+        ],
       ],
+      'display' => [],
     ];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getConfigForm(array $form, FormStateInterface $form_state) {
+  public function getDefaultSubform($is_new = FALSE) {
+    return 'articles';
+  }
 
-    $form['mode'] = [
-      '#type' => 'radios',
-      '#title' => $this->t('Mode'),
-      '#options' => [
-        'fixed' => $this->t('Fixed'),
-      ],
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'mode'),
-      '#access' => FALSE,
-    ];
-    $form['count'] = [
-      '#type' => 'number',
-      '#title' => $this->t('Number of cards'),
-      '#min' => 0,
-      '#max' => 9,
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'count'),
-    ];
+  /**
+   * {@inheritdoc}
+   */
+  public function getTitleSubform() {
+    return 'display';
+  }
 
-    $form['select'] = [
-      '#type' => 'entity_preview_select',
-      '#title' => $this->t('Cards'),
-      '#description' => $this->t('Select the articles that should be shown. The article cards can be re-ordered by moving the cards.'),
-      '#entities' => $this->getArticles(),
-      '#entity_type' => 'node',
-      '#view_mode' => 'grid',
-      '#limit_field' => array_merge($form['#parents'], ['count']),
-      '#show_filter' => TRUE,
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'select',
-      ]),
-      '#required' => TRUE,
+  /**
+   * Form callback for the articles configuration form.
+   */
+  public function articlesForm(array $form, FormStateInterface $form_state) {
+    $entity_ids = $this->getDefaultFormValueFromFormState($form_state, ['article_select', 'entity_ids']) ?? [];
+    $form['article_select'] = [
+      '#type' => 'article_select',
+      '#default_value' => $entity_ids,
     ];
+    return $form;
+  }
 
-    $form['#attached'] = [
-      'library' => ['ghi_content/admin.related_articles'],
-    ];
-
+  /**
+   * Form callback for the display configuration form.
+   */
+  public function displayForm(array $form, FormStateInterface $form_state) {
     return $form;
   }
 
   /**
    * Get the articles that this block should display.
    *
-   * @param int $limit
-   *   An optional limit.
-   *
-   * @return \Drupal\Core\Entity\EntityInterface[]|null
+   * @return \Drupal\ghi_content\Entity\Article[]
    *   An array of entity objects indexed by their ids.
    */
-  private function getArticles($limit = NULL) {
+  private function getArticles($check_access = FALSE) {
+    $conf = $this->getBlockConfig();
+    $entity_keys = $conf['articles']['article_select']['entity_ids'] ?? [];
     /** @var \Drupal\ghi_content\Entity\Article[] $articles */
-    $articles = $this->articleManager->loadAllNodes();
+    $articles = self::loadEntitiesByCompositeIds($entity_keys);
+    // Articles are now keyed like this: [entity_type_id:entity_id]. Let's
+    // re-key them by the entity id.
+    $articles = array_reduce($articles, function ($result, $entity) {
+      $result[$entity->id()] = $entity;
+      return $result;
+    }, []);
+    // Exclude the current article node if any.
     $node = $this->getPageNode();
     if ($node && $node instanceof Article && array_key_exists($node->id(), $articles)) {
       unset($articles[$node->id()]);
     }
+    // And add the section context if available.
     $section = $this->getCurrentBaseEntity();
     if ($section instanceof SectionNodeInterface) {
       foreach ($articles as $article) {
@@ -147,7 +142,30 @@ class RelatedArticles extends ContentBlockBase implements OptionalTitleBlockInte
         }
       }
     }
+    if ($check_access) {
+      $articles = array_filter($articles, function (Article $article) {
+        return $article->access();
+      });
+    }
     return $articles;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function updateConfiguration() {
+    $configuration = &$this->configuration;
+    if (!empty($configuration['hpc']['articles']['article_select']['entity_ids'])) {
+      return FALSE;
+    }
+    $entity_ids = &$configuration['hpc']['articles']['article_select']['entity_ids'];
+    $selected = &$configuration['hpc']['select']['selected'];
+    foreach (($selected ?? []) as $entity_id) {
+      $entity_ids[] = 'node:' . $entity_id;
+    }
+    $configuration['hpc']['display']['label'] = $configuration['hpc']['label'] ?? NULL;
+    $configuration['hpc'] = array_intersect_key($configuration['hpc'], array_flip(['articles', 'display']));
+    return TRUE;
   }
 
 }

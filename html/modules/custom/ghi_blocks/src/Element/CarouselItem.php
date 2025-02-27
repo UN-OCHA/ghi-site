@@ -3,18 +3,18 @@
 namespace Drupal\ghi_blocks\Element;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 use Drupal\link\LinkItemInterface;
 use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
 
 /**
  * Provides a carousel item element.
- *
- * @FormElement("carousel_item")
  */
-class CarouselItem extends FormElement {
+#[FormElement('carousel_item')]
+class CarouselItem extends FormElementBase {
 
   use CustomLinkTrait;
 

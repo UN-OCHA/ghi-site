@@ -1,8 +1,11 @@
 (function ($) {
 
   // Attach behaviors.
-  Drupal.behaviors.hpc_plan_map = {
+  Drupal.behaviors.planAttachmentMap = {
     attach: function(context, settings) {
+      if (!ghi || !ghi.mapbox || !ghi.map) {
+        return;
+      }
       if (!settings.plan_attachment_map || !Object.keys(settings.plan_attachment_map).length) {
         return;
       }
@@ -17,30 +20,26 @@
         }
         var options = {
           admin_level_selector: true,
-          popup_style: 'sidebar',
           search_enabled: true,
           search_options: {
             placeholder: Drupal.t('Filter by location name'),
             empty_message: Drupal.t('Be sure to enter a location name within the current response plan.'),
           },
-          map_tiles_url: map_config.map_tiles_url,
+          pcodes_enabled: map_config.pcodes_enabled ?? false,
         };
-        if (typeof map_config.pcodes_enabled != 'undefined') {
-          options.pcodes_enabled = map_config.pcodes_enabled;
+        if (options.pcodes_enabled) {
           options.search_options.placeholder = Drupal.t('Filter by location name or pcode');
+          options.search_options.search_button_title = Drupal.t('Filter by location name or pcode');
           options.search_options.empty_message = Drupal.t('Be sure to enter a location name or pcode within the current response plan.');
         }
-        if (typeof map_config.map_style != 'undefined') {
-          options.map_style = map_config.map_style;
-          options.map_style_config = map_config.map_style_config;
+        if (typeof map_config.style != 'undefined') {
+          options.style = map_config.style;
+          options.style_config = map_config.style_config;
         }
-        if (typeof map_config.disclaimer != 'undefined') {
-          options.disclaimer = {
-            text: map_config.disclaimer,
-            position: 'bottomright',
-          };
+        if (typeof map_config.map_disclaimer != 'undefined') {
+          options.disclaimer = map_config.map_disclaimer ?? null;
         }
-        Drupal.hpc_map.init(map_config.id, map_config.json, options);
+        ghi.map.init(map_config.id, map_config.json, options);
       }
     }
   }

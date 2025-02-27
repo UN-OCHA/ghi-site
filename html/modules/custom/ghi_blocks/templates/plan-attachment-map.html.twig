@@ -1,12 +1,6 @@
-{%
-  set map_container_classes = [
-    'map-container'
-  ]
-%}
-
 {{ attach_library('common_design/cd-dropdown') }}
 
-<div class="{{ outer_classes }}">
+<div {{ attributes }}>
  {{ attachment_select }}
   <div class="plan-attachment-map-wrapper pane-{{ chart_id }} {{ map_type }}">
     {% if map_tabs %}
@@ -14,9 +8,9 @@
         <div class="map-tabs--inner">{{ map_tabs }}</div>
       </div>
     {% endif %}
-    <div {{ attributes.addClass(map_container_classes) }}">
+    <div class="map-container">
       {% if legend %}
-        <div id="{{ chart_id }}-legend" class="map-legend"><ul></ul></div>
+        <div id="{{ chart_id }}-legend" class="map-legend"></div>
       {% endif %}
       <div id="{{ chart_id }}">
       </div>

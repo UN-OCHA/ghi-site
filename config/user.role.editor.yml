@@ -15,10 +15,12 @@ dependencies:
     - core.entity_view_display.node.progress.default
     - core.entity_view_display.node.section.default
     - core.entity_view_display.page_template.page_template.default
+    - entity_browser.browser.articles
     - filter.format.html_text
     - node.type.custom_subpage
   module:
     - contextual
+    - entity_browser
     - filter
     - ghi_content
     - ghi_templates
@@ -34,6 +36,7 @@ weight: -5
 is_admin: null
 permissions:
   - 'access administration pages'
+  - 'access articles entity browser pages'
   - 'access content overview'
   - 'access contextual links'
   - 'access remote content'

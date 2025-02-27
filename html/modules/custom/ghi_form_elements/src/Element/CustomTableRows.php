@@ -4,18 +4,18 @@ namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\node\NodeInterface;
 
 /**
  * Provides a custom table rows element.
- *
- * @FormElement("custom_table_rows")
  */
-class CustomTableRows extends FormElement {
+#[FormElement('custom_table_rows')]
+class CustomTableRows extends FormElementBase {
 
   use AjaxElementTrait;
 

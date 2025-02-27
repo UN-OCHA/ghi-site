@@ -4,15 +4,15 @@ namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 
 /**
  * Provides an element for selecting from rendered markup.
- *
- * @FormElement("markup_select")
  */
-class MarkupSelect extends FormElement {
+#[FormElement('markup_select')]
+class MarkupSelect extends FormElementBase {
 
   /**
    * {@inheritdoc}
