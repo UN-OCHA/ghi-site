@@ -11,9 +11,6 @@
       "Issue #2329253: Allow the ChangedItem to skip updating the entity's changed timestamp when synchronizing (f.e. when migrating)": "https://www.drupal.org/files/issues/2024-07-30/2329253-10.x.patch",
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch"
     },
-    "drupal/admin_toolbar": {
-      "Issue #3507579: Controller for URI /en/admin/flush is not callable": "./patches/3507579.patch"
-    },
     "drupal/flat_taxonomy": {
       "Issue #3427628: Hide 'Add child' link from entity operations": "https://www.drupal.org/files/issues/2024-03-13/3427628-hide-add-child-link-2.patch"
     },
