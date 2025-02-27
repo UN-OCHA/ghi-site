@@ -36,9 +36,6 @@
     <exclude>
       <directory suffix=".php">./html/modules/custom/**/tests</directory>
     </exclude>
-    <report>
-      <html outputDirectory="./logs" lowUpperBound="35" highLowerBound="70"/>
-    </report>
   </coverage>
   <testsuites>
     <testsuite name="unit">
