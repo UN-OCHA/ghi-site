@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "24dd1aa4c7842da4aa43fc6fbd84c1d2",
+    "content-hash": "19da91821402a5530b8ba601341a1af7",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -9219,72 +9219,6 @@
             "type": "npm-asset",
             "license": [
                 "ISC"
-            ]
-        },
-        {
-            "name": "npm-asset/leaflet",
-            "version": "1.9.4",
-            "dist": {
-                "type": "tar",
-                "url": "https://registry.npmjs.org/leaflet/-/leaflet-1.9.4.tgz"
-            },
-            "type": "npm-asset",
-            "license": [
-                "BSD-2-Clause"
-            ]
-        },
-        {
-            "name": "npm-asset/leaflet-modal",
-            "version": "0.2.0",
-            "dist": {
-                "type": "tar",
-                "url": "https://registry.npmjs.org/leaflet-modal/-/leaflet-modal-0.2.0.tgz"
-            },
-            "require": {
-                "npm-asset/leaflet": ">=1.6.0,<2.0.0"
-            },
-            "type": "npm-asset",
-            "license": [
-                "MIT"
-            ]
-        },
-        {
-            "name": "npm-asset/leaflet-providers",
-            "version": "1.13.0",
-            "dist": {
-                "type": "tar",
-                "url": "https://registry.npmjs.org/leaflet-providers/-/leaflet-providers-1.13.0.tgz"
-            },
-            "type": "npm-asset",
-            "license": [
-                "BSD-2-Clause"
-            ]
-        },
-        {
-            "name": "npm-asset/leaflet-search",
-            "version": "3.0.11",
-            "dist": {
-                "type": "tar",
-                "url": "https://registry.npmjs.org/leaflet-search/-/leaflet-search-3.0.11.tgz"
-            },
-            "require": {
-                "npm-asset/leaflet": "*"
-            },
-            "type": "npm-asset",
-            "license": [
-                "MIT"
-            ]
-        },
-        {
-            "name": "npm-asset/leaflet-sidebar",
-            "version": "0.2.4",
-            "dist": {
-                "type": "tar",
-                "url": "https://registry.npmjs.org/leaflet-sidebar/-/leaflet-sidebar-0.2.4.tgz"
-            },
-            "type": "npm-asset",
-            "license": [
-                "MIT"
             ]
         },
         {
@@ -19920,7 +19854,7 @@
     },
     "prefer-stable": true,
     "prefer-lowest": false,
-    "platform": {},
-    "platform-dev": {},
+    "platform": [],
+    "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }

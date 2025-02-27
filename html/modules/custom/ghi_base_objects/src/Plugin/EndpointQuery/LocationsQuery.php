@@ -37,20 +37,22 @@ class LocationsQuery extends EndpointQueryBase {
    * @param bool $include_expired
    *   Include expired locations.
    *
-   * @return object
-   *   An unprocessed response object from the API.
+   * @return \Drupal\ghi_base_objects\ApiObjects\Location|null
+   *   A location.
    */
-  private function getCountryLocationData($country_id, $max_level = NULL, $include_expired = TRUE) {
+  public function getCountryLocationData($country_id, $max_level = NULL, $include_expired = TRUE) {
     $this->setPlaceholder('country_id', $country_id);
     $this->endpointQuery->setEndpointArguments(array_filter([
       'maxLevel' => $max_level ?? self::MAX_LEVEL,
       'includeExpired' => $include_expired ? 'true' : NULL,
-    ]));
+    ], function ($item) {
+      return $item !== NULL;
+    }));
     $data = $this->getData();
     if (empty($data)) {
       return NULL;
     }
-    return $data ?? NULL;
+    return $data ? new Location($data) : NULL;
   }
 
   /**
@@ -75,7 +77,7 @@ class LocationsQuery extends EndpointQueryBase {
     }
 
     $data = $this->getCountryLocationData($country->id, $max_level);
-    if (empty($data) || empty($data->children) || !is_array($data->children)) {
+    if (!$data || empty($data->children) || !is_array($data->children)) {
       $this->setCache($cache_key, []);
       return [];
     }

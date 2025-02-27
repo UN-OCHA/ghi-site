@@ -583,7 +583,7 @@ class DataAttachment extends AttachmentBase {
       // data for the same attachment id, like when the attachment data is
       // retrieved by an anonymous user vs a logged-in user, where both might
       // see different data, depending on their access level.
-      'hash' => md5(Yaml::encode(ArrayHelper::mapObjectsToString([$attachment_data]))),
+      'hash' => md5(Yaml::encode(ArrayHelper::mapObjectsToString([$attachment_data->attachmentVersion]))),
     ]);
 
     $cached_data = $this->cache($cache_key);
@@ -650,6 +650,7 @@ class DataAttachment extends AttachmentBase {
         }
 
         $total = array_key_exists($offset + $index, $location_data_matrix) ? $location_data_matrix[$offset + $index] : NULL;
+        $total = $total !== NULL ? intval($total) : NULL;
         $disaggregated_data[$index]['locations'][$location_index]['total'] = $total;
         $disaggregated_data[$index]['locations'][$location_index]['map_data']['total'] = $total;
       }
@@ -658,6 +659,7 @@ class DataAttachment extends AttachmentBase {
         $category_index = count($base_metrics) * $category_index + $index;
         $first_row = reset($data_matrix);
         $category_total = array_key_exists($category_index, $first_row) ? $first_row[$category_index] : NULL;
+        $category_total = $category_total !== NULL ? intval($category_total) : NULL;
         if (!empty($category_total)) {
           $disaggregated_data[$index]['category_totals'][$category->name] = $category_total;
         }

@@ -48,7 +48,8 @@ abstract class BaseFileReportController extends ControllerBase {
    * Get the list of currently imported files.
    *
    * @return array
-   *   Array of file objects.
+   *   An associative array of objects with 'uri', 'filename', and 'name'
+   *   properties corresponding to the matched files.
    */
   abstract public function getFiles();
 

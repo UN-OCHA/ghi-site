@@ -438,10 +438,10 @@ class ArrayHelper {
       $a_value = $callback($a) ?? NULL;
       $b_value = $callback($b) ?? NULL;
       if ($sort == EndpointQuery::SORT_ASC) {
-        return $sort_type == SORT_NUMERIC ? $a_value - $b_value : strcasecmp($a_value, $b_value);
+        return $sort_type == SORT_NUMERIC ? $a_value - $b_value : strnatcasecmp($a_value, $b_value);
       }
       if ($sort == EndpointQuery::SORT_DESC) {
-        return $sort_type == SORT_NUMERIC ? $a_value - $b_value : strcasecmp($b_value, $a_value);
+        return $sort_type == SORT_NUMERIC ? $a_value - $b_value : strnatcasecmp($b_value, $a_value);
       }
     });
   }
