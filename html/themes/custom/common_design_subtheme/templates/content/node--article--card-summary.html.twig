@@ -84,22 +84,23 @@
     node.isSticky() ? 'node--sticky',
     not node.isPublished() ? 'node--unpublished',
     view_mode ? 'node--view-mode-' ~ view_mode|clean_class,
-    'gho-related-article',
     'clearfix',
   ]
 %}
 <article{{ attributes.addClass(classes) }}>
-  {{ content.field_image }}
-  <div class="gho-related-article__content">
-    <h3{{ title_attributes.addClass('gho-related-article__title') }}>
-      <a href="{{ url }}" rel="bookmark">{{ label }}</a>
-    </h3>
-    {{ content|without('field_image') }}
-    <a href="{{ url }}" class="gho-related-article__read-article read-article">
-      {{- 'Read article'|t -}}
-      <svg class="cd-icon cd-icon--arrow-right gho-related-article__arrow" width="16" height="16" aria-hidden="true" focusable="false">
-        <use xlink:href="#cd-icon--arrow-right"></use>
-      </svg>
-    </a>
+  <div class="gho-related-article">
+    {{ content.field_image }}
+    <div class="gho-related-article__content">
+      <h3{{ title_attributes.addClass('gho-related-article__title') }}>
+        <a href="{{ url }}" rel="bookmark">{{ label }}</a>
+      </h3>
+      {{ content|without('field_image') }}
+      <a href="{{ url }}" class="gho-related-article__read-article read-article">
+        {{- 'Read article'|t -}}
+        <svg class="cd-icon cd-icon--arrow-right gho-related-article__arrow" width="16" height="16" aria-hidden="true" focusable="false">
+          <use xlink:href="#cd-icon--arrow-right"></use>
+        </svg>
+      </a>
+    </div>
   </div>
 </article>

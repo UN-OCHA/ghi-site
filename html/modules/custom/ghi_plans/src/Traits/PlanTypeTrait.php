@@ -3,6 +3,8 @@
 namespace Drupal\ghi_plans\Traits;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\StringHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 
@@ -12,6 +14,48 @@ use Drupal\hpc_common\Helpers\TaxonomyHelper;
 trait PlanTypeTrait {
 
   use StringTranslationTrait;
+
+  /**
+   * Sort the given plans by plan type and name.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[] $plans
+   *   An array of plan objects.
+   * @param bool $use_shortname
+   *   Whether to use the shortname for sorting or not.
+   */
+  public function sortPlansByPlanType(array &$plans, $use_shortname = FALSE) {
+    // Sort everything first by plan type, then by plan name.
+    $type_order = $this->getAvailablePlanTypes();
+
+    $grouped_plans = [];
+    foreach ($type_order as $plan_type) {
+      $plan_type_key = $plan_type;
+
+      // Create a list of all plans for this plan type.
+      foreach ($plans as $plan) {
+        if (!$plan->isType($plan_type)) {
+          continue;
+        }
+        if (empty($grouped_plans[$plan_type_key])) {
+          $grouped_plans[$plan_type_key] = [];
+        }
+        $grouped_plans[$plan_type_key][] = $plan;
+      }
+      // And sort it by plan name.
+      if (!empty($grouped_plans[$plan_type_key])) {
+        ArrayHelper::sortObjectsByCallback($grouped_plans[$plan_type_key], function ($item) use ($use_shortname) {
+          return $use_shortname ? $item->getShortName() : $item->getName();
+        }, EndpointQuery::SORT_ASC, SORT_STRING);
+      }
+    }
+
+    $plans = [];
+    foreach ($grouped_plans as $group) {
+      foreach ($group as $plan) {
+        $plans[$plan->id()] = $plan;
+      }
+    }
+  }
 
   /**
    * Get the available plan types.
@@ -28,7 +72,7 @@ trait PlanTypeTrait {
       return [];
     }
     // Sort by weight.
-    uasort($terms, function ($a, $b) {
+    usort($terms, function ($a, $b) {
       return $a->getWeight() - $b->getWeight();
     });
     return array_map(function ($term) use ($include_description) {

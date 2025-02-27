@@ -4,15 +4,15 @@ namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 
 /**
  * Provides an element for tag selection.
- *
- * @FormElement("tag_selection")
  */
-class TagSelect extends FormElement {
+#[FormElement('tag_selection')]
+class TagSelect extends FormElementBase {
 
   /**
    * {@inheritdoc}

@@ -3,6 +3,7 @@
 namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Url;
@@ -14,10 +15,9 @@ use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
 use Drupal\node\NodeInterface;
 
 /**
- * Provides an attachment select element.
- *
- * @FormElement("custom_link")
+ * Provides a custom link element.
  */
+#[FormElement('custom_link')]
 class CustomLink extends FormElementBase {
 
   use CustomLinkTrait;

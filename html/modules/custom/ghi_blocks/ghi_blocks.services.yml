@@ -21,3 +21,6 @@ services:
     arguments: ['@current_user']
     tags:
       - { name: event_subscriber }
+  ghi_blocks.node_queue:
+    class: Drupal\ghi_blocks\Services\NodeQueue
+    arguments: ['@entity_type.manager', '@database', '@queue']

@@ -3,15 +3,15 @@
 namespace Drupal\ghi_form_elements\Element;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 
 /**
- * Provides an attachment select element.
- *
- * @FormElement("webcontent_file_select")
+ * Provides a webcontent file select element.
  */
-class WebcontentFileSelect extends FormElement {
+#[FormElement('webcontent_file_select')]
+class WebcontentFileSelect extends FormElementBase {
 
   /**
    * {@inheritdoc}

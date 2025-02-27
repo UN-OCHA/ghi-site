@@ -43,77 +43,86 @@ block.preview:
 theme:
   js:
     js/theme.js: {}
-leaflet:
-  version: 0.7.3
-  js:
-    /libraries/leaflet/dist/leaflet.js: {}
-  css:
-    component:
-      /libraries/leaflet/dist/leaflet.css: {}
-leaflet.d3svgoverlay:
-  version: 3.0.0
-  js:
-    js/assets/L.D3SvgOverlay.js: {}
-leaflet.modal:
-  version: 0.2.0
-  js:
-    /libraries/leaflet-modal/dist/L.Modal.min.js: {}
-  css:
-    component:
-      /libraries/leaflet-modal/dist/leaflet.modal.min.css: {}
-leaflet.search:
-  version: 2.9.8
-  js:
-    /libraries/leaflet-search/dist/leaflet-search.src.js: {}
-  css:
-    component:
-      /libraries/leaflet-search/dist/leaflet-search.min.css: {}
-leaflet.sidebar:
-  version: 0.2.2
-  js:
-    /libraries/leaflet-sidebar/src/L.Control.Sidebar.js: {}
-  css:
-    component:
-      /libraries/leaflet-sidebar/src/L.Control.Sidebar.css: {}
 
-map.base:
+mapbox_gl:
+  version: 3.8.0
   js:
-    js/map/map.search_control.js: {}
+    https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.js: {}
+  css:
+    component:
+      https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css: {}
+
+map.gl.sidebar:
+  js:
+    js/map.gl/map.sidebar.js: {}
   dependencies:
-    - hpc_common/tooltip
-    - hpc_common/d3
+    - core/jquery
+    - core/once
     - ghi_blocks/theme
-    - ghi_blocks/leaflet
-    - ghi_blocks/leaflet.d3svgoverlay
-    - ghi_blocks/leaflet.modal
-    - ghi_blocks/leaflet.search
-    - ghi_blocks/leaflet.sidebar
 
-map:
+map.gl.interactive_legend:
   js:
-    js/map/map.circle.js: {}
-    js/map/map.donut.js: {}
-    js/map/map.js: {}
+    js/map.gl/map.interactive_legend.js: {}
   dependencies:
-    - ghi_blocks/map.base
+    - core/jquery
 
-map.plan:
+map.gl.control.admin_level:
   js:
-    js/map/map.plan.js: {}
+    js/map.gl/controls/map.control.admin_level.js: {}
   dependencies:
-    - ghi_blocks/map
+    - core/jquery
 
-map.plan_overview:
+map.gl.control.disclaimer:
   js:
-    js/map/map.plan_overview.js: {}
-  dependencies:
-    - ghi_blocks/map
+    js/map.gl/controls/map.control.disclaimer.js: {}
 
-map.chloropleth:
+map.gl.control.search:
   js:
-    js/map/map.chloropleth.js: {}
+    js/map.gl/controls/map.control.search.js: {}
   dependencies:
-    - ghi_blocks/map.base
+    - core/jquery
+
+map.gl.state:
+  js:
+    js/map.gl/map.state.js: {}
+  dependencies:
+    - core/jquery
+
+map.gl:
+  js:
+    js/map.gl/map.mapbox.js: {}
+    js/map.gl/styles/map.circle.js: {}
+    js/map.gl/styles/map.chloropleth.js: {}
+    js/map.gl/map.js: {}
+  dependencies:
+    - core/jquery
+    - ghi_blocks/mapbox_gl
+    - ghi_blocks/map.gl.state
+    - ghi_blocks/map.gl.sidebar
+    - ghi_blocks/map.gl.interactive_legend
+    - ghi_blocks/map.gl.control.admin_level
+    - ghi_blocks/map.gl.control.disclaimer
+    - ghi_blocks/map.gl.control.search
+
+
+
+map.gl.plan_overview:
+  js:
+    js/map.gl/map.plan_overview.js: {}
+  dependencies:
+    - ghi_blocks/map.gl
+
+map.gl.plan:
+  js:
+    js/map.gl/map.plan_attachment.js: {}
+  dependencies:
+    - ghi_blocks/map.gl
+
+map.gl.operational_presence:
+  js:
+    js/map.gl/map.plan_operational_presence.js: {}
+  dependencies:
+    - ghi_blocks/map.gl
 
 modal:
   js:

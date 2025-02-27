@@ -130,7 +130,7 @@ class ArticleCollection extends GHIBlockBase implements MultiStepFormBlockInterf
   }
 
   /**
-   * {@inheritdoc}
+   * Form callback for the tab configuration form.
    */
   public function tabsForm(array $form, FormStateInterface $form_state) {
     $form['article_collections'] = [

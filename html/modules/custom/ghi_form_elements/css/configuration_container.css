@@ -35,7 +35,8 @@
   padding-bottom: 1rem;
 }
 
-.form-type--configuration_container .tabledrag-toggle-weight-wrapper {
+.form-type--configuration_container .tabledrag-toggle-weight-wrapper,
+.form-type--configuration_container .tabledrag-changed {
   display: none;
 }
 

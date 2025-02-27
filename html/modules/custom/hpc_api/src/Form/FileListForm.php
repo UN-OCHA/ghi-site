@@ -4,8 +4,10 @@ namespace Drupal\hpc_api\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\hpc_api\Controller\BaseFileReportController;
 use Drupal\hpc_api\Traits\BulkFormTrait;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a form for managing imported files.
@@ -13,6 +15,22 @@ use Drupal\hpc_api\Traits\BulkFormTrait;
 class FileListForm extends FormBase {
 
   use BulkFormTrait;
+
+  /**
+   * The file url generator service.
+   *
+   * @var \Drupal\Core\File\FileUrlGeneratorInterface
+   */
+  protected $fileUrlGenerator;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    $instance = parent::create($container);
+    $instance->fileUrlGenerator = $container->get('file_url_generator');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -35,21 +53,29 @@ class FileListForm extends FormBase {
       'size' => $this->t('Size'),
     ];
     $rows = [];
+
+    usort($files, function ($file_1, $file_2) use ($controller) {
+      $filepath_1 = $controller->fileSystem->realpath($file_1->uri);
+      $filepath_2 = $controller->fileSystem->realpath($file_2->uri);
+      return filectime($filepath_2) - filectime($filepath_1);
+    });
+
     foreach ($files as $file) {
       $filepath = $controller->fileSystem->realpath($file->uri);
       $filename = urldecode(basename($file->uri));
       $row = [];
-      $row['filename'] = $filename;
+      $row['filename'] = [
+        'data' => [
+          '#type' => 'link',
+          '#title' => $filename,
+          '#url' => $this->fileUrlGenerator->generate($file->uri),
+        ],
+      ];
       $row['date'] = date('d.m.Y H:i:s', filectime($filepath));
-      $row['size'] = format_size(filesize($filepath));
+      $row['size'] = ByteSizeMarkup::create(filesize($filepath));
       $rows[$filename] = $row;
     }
 
-    $form['table_header'] = [
-      '#type' => 'html_tag',
-      '#tag' => 'h2',
-      '#value' => $this->t('Local files'),
-    ];
     $form['file_list'] = [
       '#type' => 'tableselect',
       '#header' => $header,

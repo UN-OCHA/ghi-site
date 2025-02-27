@@ -37,6 +37,14 @@ interface SectionNodeInterface extends NodeInterface {
   public function getTags();
 
   /**
+   * Get the tags associated to the section.
+   *
+   * @return \Drupal\taxonomy\TermInterface[]
+   *   An array of tag terms, keyed by the tag id.
+   */
+  public function getTagEntities();
+
+  /**
    * Get the base object for a section.
    *
    * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null

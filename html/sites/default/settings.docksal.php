@@ -59,8 +59,8 @@ $settings['hash_salt'] = 'ghi-test-site-salt';
 // Use the dev config.
 $config['config_split.config_split.config_dev']['status'] = TRUE;
 
-$config['system.performance']['css']['preprocess'] = FALSE;
-$config['system.performance']['js']['preprocess'] = FALSE;
+// $config['system.performance']['css']['preprocess'] = FALSE;
+// $config['system.performance']['js']['preprocess'] = FALSE;
 
 // Memcache.
 $settings['memcache']['servers'] = ['memcached:11211' => 'default'];
@@ -93,7 +93,7 @@ $settings['trusted_host_patterns'] = array(
 // Disable seckit locally until the header size exceed problem can be adressed.
 // This doesn't seem to be an issue on the dev environments for some reason
 // CONFIRM!.
-$config['seckit.settings']['seckit_xss']['csp']['checkbox'] = FALSE;
+// $config['seckit.settings']['seckit_xss']['csp']['checkbox'] = FALSE;
 
 ini_set('session.cookie_samesite', 'lax');
 

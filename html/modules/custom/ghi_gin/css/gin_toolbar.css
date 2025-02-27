@@ -111,3 +111,8 @@ body.layout-builder-ipe-editing .gin-secondary-toolbar .meta-sidebar__trigger {
 body.layout-builder-ipe-editing #gin_sidebar {
   display: none;
 }
+
+/* Small improvement to gin status chips. */
+.gin-status, .views-field .marker {
+  white-space: nowrap;
+}

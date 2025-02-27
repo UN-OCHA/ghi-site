@@ -9,6 +9,7 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\Url;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
@@ -81,7 +82,7 @@ class DownloadReportController extends ControllerBase {
         $row = [];
         $row[] = Link::fromTextAndUrl($filename, Url::fromUri($this->fileUrlGenerator->generate($file->uri)));
         $row[] = date('d.m.Y H:i:s', filectime($filepath));
-        $row[] = format_size(filesize($filepath));
+        $row[] = ByteSizeMarkup::create(filesize($filepath));
         $row[] = $download_record ? $this->t('Yes') : $this->t('No');
         $rows[] = $row;
       }

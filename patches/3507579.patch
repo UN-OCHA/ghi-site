@@ -1,0 +1,86 @@
+diff --git a/admin_toolbar_tools/admin_toolbar_tools.routing.yml b/admin_toolbar_tools/admin_toolbar_tools.routing.yml
+index ca9d57d339af4679d63fd46a45f16a37d02d86a3..e97bb5f2d64fe46b85e49cef54bb1290a95c6f54 100644
+--- a/admin_toolbar_tools/admin_toolbar_tools.routing.yml
++++ b/admin_toolbar_tools/admin_toolbar_tools.routing.yml
+@@ -104,3 +104,4 @@ admin_toolbar.run.reindex.site:
+   requirements:
+     _permission: 'administer site configuration'
+     _csrf_token: 'TRUE'
++    _module_dependencies: 'search'
+diff --git a/admin_toolbar_tools/src/Controller/ToolbarController.php b/admin_toolbar_tools/src/Controller/ToolbarController.php
+index fcd3ac3893e5b461cfbf2996be850aab8af37aaf..f580caf1beb960e5a97e0beafd3b10a9e2265998 100644
+--- a/admin_toolbar_tools/src/Controller/ToolbarController.php
++++ b/admin_toolbar_tools/src/Controller/ToolbarController.php
+@@ -143,7 +143,7 @@ class ToolbarController extends ControllerBase {
+    *   A TwigEnvironment instance.
+    * @param \Drupal\Core\Theme\Registry $theme_registry
+    *   The theme.registry service.
+-   * @param \Drupal\search\SearchPageRepositoryInterface $search_page_repository
++   * @param \Drupal\search\SearchPageRepositoryInterface|null $search_page_repository
+    *   The search page repository service.
+    */
+   public function __construct(
+@@ -160,7 +160,7 @@ class ToolbarController extends ControllerBase {
+     TwigEnvironment $twig,
+     Registry $theme_registry,
+     // phpcs:ignore Drupal.Functions.MultiLineFunctionDeclaration.MissingTrailingComma
+-    SearchPageRepositoryInterface $search_page_repository
++    ?SearchPageRepositoryInterface $search_page_repository = NULL
+   ) {
+     $this->cron = $cron;
+     $this->menuLinkManager = $menuLinkManager;
+@@ -174,14 +174,16 @@ class ToolbarController extends ControllerBase {
+     $this->cacheMenu = $cache_menu;
+     $this->twig = $twig;
+     $this->themeRegistry = $theme_registry;
+-    $this->searchPageRepository = $search_page_repository;
++    if ($search_page_repository) {
++      $this->searchPageRepository = $search_page_repository;
++    }
+   }
+ 
+   /**
+    * {@inheritdoc}
+    */
+   public static function create(ContainerInterface $container) {
+-    return new static(
++    $instance = new static(
+       $container->get('cron'),
+       $container->get('plugin.manager.menu.link'),
+       $container->get('plugin.manager.menu.contextual_link'),
+@@ -194,8 +196,11 @@ class ToolbarController extends ControllerBase {
+       $container->get('cache.menu'),
+       $container->get('twig'),
+       $container->get('theme.registry'),
+-      $container->get('search.search_page_repository')
+     );
++    if ($container->has('search.search_page_repository')) {
++      $instance->searchPageRepository = $container->get('search.search_page_repository');
++    }
++    return $instance;
+   }
+ 
+   /**
+@@ -310,13 +315,16 @@ class ToolbarController extends ControllerBase {
+    * Reindexes all active search pages.
+    */
+   public function runReindexSite() {
+-    // Ask each active search page to mark itself for re-index.
+-    foreach ($this->searchPageRepository->getIndexableSearchPages() as $entity) {
+-      $entity->getPlugin()->markForReindex();
++    if ($this->searchPageRepository) {
++      // Ask each active search page to mark itself for re-index.
++      foreach ($this->searchPageRepository->getIndexableSearchPages() as $entity) {
++        $entity->getPlugin()->markForReindex();
++      }
++      // Run the cron to process the reindexing.
++      $this->cron->run();
++      $this->messenger()
++        ->addMessage($this->t('All search indexes have been rebuilt.'));
+     }
+-    // Run the cron to process the reindexing.
+-    $this->cron->run();
+-    $this->messenger()->addMessage($this->t('All search indexes have been rebuilt.'));
+     return new RedirectResponse($this->reloadPage());
+   }
+ 

@@ -29,6 +29,8 @@ module:
   editor: 0
   entity_access_password: 0
   entity_access_password_session_backend: 0
+  entity_browser: 0
+  entity_browser_table: 0
   field: 0
   field_group: 0
   field_ui: 0

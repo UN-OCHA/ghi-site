@@ -76,45 +76,19 @@ trait GlobalSettingsTrait {
 
     // Sort by plan type.
     if (!empty($config['sort_by_plan_type'])) {
-      // Sort everything first by plan type, then by plan name.
-      $type_order = $this->getAvailablePlanTypes();
+      $this->sortPlansByPlanType($plans, $config['plan_short_names'] ?? FALSE);
 
-      $grouped_plans = [];
-      foreach ($type_order as $plan_type) {
-        $plan_type_key = $plan_type;
-
-        // Create a list of all plans for this plan type.
-        foreach ($plans as $plan) {
-          if (!$plan->isType($plan_type)) {
-            continue;
-          }
-          if (empty($grouped_plans[$plan_type_key])) {
-            $grouped_plans[$plan_type_key] = [];
-          }
-          $grouped_plans[$plan_type_key][] = $plan;
-        }
-        // And sort it by plan name.
-        if (!empty($grouped_plans[$plan_type_key])) {
-          $use_shortname = $config['plan_short_names'] ?? FALSE;
-          ArrayHelper::sortObjectsByCallback($grouped_plans[$plan_type_key], function ($item) use ($use_shortname) {
-            return $use_shortname ? $item->getShortName() : $item->getName();
-          }, EndpointQuery::SORT_ASC, SORT_STRING);
-        }
-      }
-
-      // Put the plans together, additionally grouped by them being included in
-      // the GHO, with GHO plans coming first.
+      // Additionally group the plans by them being included in the GHO, with
+      // GHO plans coming first.
       $plans_gho = [];
       $plans_non_gho = [];
-      foreach ($grouped_plans as $group) {
-        foreach ($group as $plan) {
-          /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
-          if ($plan->isPartOfGho()) {
-            $plans_gho[$plan->id()] = $plan;
-          }
-          else {
-            $plans_non_gho[$plan->id()] = $plan;
-          }
+      foreach ($plans as $plan) {
+        /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
+        if ($plan->isPartOfGho()) {
+          $plans_gho[$plan->id()] = $plan;
+        }
+        else {
+          $plans_non_gho[$plan->id()] = $plan;
         }
       }
       $plans = $plans_gho + $plans_non_gho;

@@ -16,15 +16,6 @@ hpc_api.reports.endpoints:
     _permission: 'access site reports'
   options:
     _admin_route: TRUE
-hpc_api.reports.files:
-  path: '/admin/reports/hpc-api-files'
-  defaults:
-    _controller: '\Drupal\hpc_api\Controller\DataSourceFileReportController::buildListPage'
-    _title: 'HPC Files'
-  requirements:
-    _permission: 'administer site configuration'
-  options:
-    _admin_route: TRUE
 hpc_api.reports.files.data_source:
   path: '/admin/reports/hpc-api-files/data-source'
   defaults:
@@ -39,6 +30,24 @@ hpc_api.reports.files.icons:
   defaults:
     _controller: '\Drupal\hpc_api\Controller\IconFileReportController::buildListPage'
     _title: 'Icon files'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+hpc_api.reports.files.geojson:
+  path: '/admin/reports/hpc-api-files/geojson'
+  defaults:
+    _controller: '\Drupal\hpc_api\Controller\GeoJsonFileReportController::buildListPage'
+    _title: 'GeoJSON files'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+hpc_api.reports.purge_files:
+  path: '/admin/reports/hpc-api-files/purge-files'
+  defaults:
+    _controller: '\Drupal\hpc_api\Controller\FileListActionController::purgeFiles'
+    _title: 'GeoJSON files'
   requirements:
     _permission: 'administer site configuration'
   options:

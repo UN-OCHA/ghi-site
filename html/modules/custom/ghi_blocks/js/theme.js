@@ -67,7 +67,7 @@
         // Add a navigation footer.
         let navigation = $('<div></div>').addClass('navigation');
 
-        let previous_link = $('<span></span>')
+        let previous_link = $('<span tabindex="0"></span>')
           .addClass('link')
           .addClass('previous')
           .html('<i class="material-icons">keyboard_arrow_left</i>');
@@ -80,7 +80,7 @@
           previous_link.addClass('disabled');
         }
 
-        let next_link = $('<span></span>')
+        let next_link = $('<span tabindex="0"></span>')
           .addClass('link')
           .addClass('next')
           .html('<i class="material-icons">keyboard_arrow_right</i>');
@@ -144,71 +144,6 @@
       $(container).append(header);
       $(container).append(content);
       return container[0].outerHTML;
-    },
-
-    mapDonutControlForm: function(state) {
-      let legend = state.data[state.index].legend;
-      var container = $('<div></div>').addClass('map-plan-card-settings-container');
-      var header = $('<div></div>').addClass('modal-header');
-      var content = $('<div></div>').addClass('modal-content donut-control-form');
-
-      header.append($('<div></div>').addClass('title').html(Drupal.t('Map configuration'))); // Creates title div.
-
-      // Add select form for the whole segment.
-      var options = [];
-      for (var metric_index of state.options.map_style_config.donut_whole_segments) {
-        options.push({value: metric_index, label: legend[metric_index]});
-      }
-      $(content).append(Drupal.theme('donutControlOption', Drupal.t('Full segment'), 'donut-whole-segment', options, parseInt(state.active_donut_segments[0])));
-
-      // Add select form for the partial segment.
-      var options = [];
-      for (var metric_index of state.options.map_style_config.donut_partial_segments) {
-        options.push({value: metric_index, label: legend[metric_index]});
-      }
-      $(content).append(Drupal.theme('donutControlOption', Drupal.t('Partial segment'), 'donut-partial-segment', options, parseInt(state.active_donut_segments[1])));
-
-      // Add a selector for the monitoring periods.
-      if (state.options.map_style_config.donut_monitoring_periods.length > 1 && state.data[state.index].hasOwnProperty('location_variants')) {
-        let partial_metric_index = $('.donut-partial-segment select', content).val();
-        let options = Drupal.hpc_map.buildMonitoringPeriodOptions(state, partial_metric_index);
-        $(content).append(Drupal.theme('donutControlOption', Drupal.t('Monitoring period'), 'monitoring-period', options, parseInt(state.active_monitoring_period)));
-      }
-
-      // Selector for the value that displays in the donut center.
-      var options = [
-        {value: 'percentage', label: Drupal.t('Proportion')},
-        {value: 'partial', label: Drupal.t('Partial amount')},
-        {value: 'full', label: Drupal.t('Full amount')}
-      ];
-      $(content).append(Drupal.theme('donutControlOption', Drupal.t('Display value'), 'donut-display-value', options, state.active_donut_display_value));
-
-      // Add the apply button.
-      let button = $('<button></button>').addClass('btn apply-donut-settings').html(Drupal.t('Apply settings'));
-      $(content).append(button);
-
-      $(container).append(header);
-      $(container).append(content);
-      return container[0].outerHTML;
-    },
-
-    // Theme a single select box and wrapper for the donut control form.
-    donutControlOption: function(title, classes, options, selected_key) {
-      var outer_wrapper = $('<div></div>').addClass('form-item').addClass(classes);
-      $(outer_wrapper).append($('<label></label>').addClass('form-label').html(title));
-      var inner_wrapper = $('<div></div>').addClass(classes);
-      var select = $('<select></select>').addClass('form-select');
-      for (var option of options) {
-        var option_element = $('<option></option>').attr('value', option.value).html(option.label);
-        if (typeof selected_key != 'undefined' && selected_key == option.value) {
-          $(option_element).attr('selected', 'selected');
-        }
-        $(select).append(option_element);
-      }
-
-      $(inner_wrapper).append(select);
-      $(outer_wrapper).append(inner_wrapper);
-      return outer_wrapper;
     },
 
     number: function(amount, short) {

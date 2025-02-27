@@ -32,6 +32,9 @@ services:
   ghi_content.contextual_links.block_handler:
     class: Drupal\ghi_content\ContextualLinks\BlockHandler
     arguments: ['@entity_type.manager', '@layout_builder.tempstore_repository']
+  ghi_content.entity_browser.article_selection:
+    class: Drupal\ghi_content\EntityBrowser\ArticleSelection
+    arguments: ['@entity_type.manager', '@request_stack']
   ghi_content.breadcrumb:
     class: Drupal\ghi_content\Breadcrumb\AdminContentBreadcrumbBuilder
     arguments: ['@entity_type.manager']
