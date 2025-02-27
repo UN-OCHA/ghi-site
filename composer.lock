@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "19da91821402a5530b8ba601341a1af7",
+    "content-hash": "99f862a2f25c5d841a5972e43d0913e6",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -15266,6 +15266,99 @@
             }
         },
         {
+            "name": "facile-it/paraunit",
+            "version": "1.3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/facile-it/paraunit.git",
+                "reference": "76f0c9d365df565e5a75492f30a5de2905317f3a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/facile-it/paraunit/zipball/76f0c9d365df565e5a75492f30a5de2905317f3a",
+                "reference": "76f0c9d365df565e5a75492f30a5de2905317f3a",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "ext-json": "*",
+                "jean85/pretty-package-versions": "^1.5.1||^2.0.1",
+                "php": "^7.3||^8.0",
+                "phpunit/php-code-coverage": "^9.0",
+                "phpunit/php-file-iterator": "^3.0",
+                "phpunit/phpunit": "^9.3",
+                "psr/event-dispatcher": "^1.0",
+                "symfony/console": "^4.4||^5.0||^6.0",
+                "symfony/dependency-injection": "^4.4||^5.0||^6.0",
+                "symfony/event-dispatcher": "^4.4||^5.0||^6.0",
+                "symfony/process": "^4.4||^5.0||^6.0",
+                "symfony/stopwatch": "^4.4||^5.0||^6.0"
+            },
+            "conflict": {
+                "composer/package-versions-deprecated": "<1.11.99"
+            },
+            "require-dev": {
+                "facile-it/facile-coding-standard": "^0.5.1",
+                "jangregor/phpstan-prophecy": "^1.0.0",
+                "phpspec/prophecy": "^1.12",
+                "phpspec/prophecy-phpunit": "^2.0",
+                "phpstan/extension-installer": "^1.0",
+                "phpstan/phpstan": "^1.7",
+                "phpstan/phpstan-phpunit": "^1.1",
+                "phpunit/php-invoker": "^3.0",
+                "psalm/plugin-phpunit": "^0.16.1",
+                "psalm/plugin-symfony": "^3.1",
+                "symfony/expression-language": "^4.4||^5.0||^6.0",
+                "symfony/phpunit-bridge": "^6.1",
+                "vimeo/psalm": "^4.23"
+            },
+            "suggest": {
+                "dama/doctrine-test-bundle": "Useful for Symfony+Doctrine functional testing, providing DB isolation",
+                "ext-pcov": "A coverage driver for faster collection"
+            },
+            "bin": [
+                "src/Bin/paraunit"
+            ],
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-0.12.x": "0.12-dev",
+                    "dev-master": "1.2-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Paraunit\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Francesco Panina",
+                    "email": "francesco.panina@gmail.com"
+                },
+                {
+                    "name": "Alessandro Lai",
+                    "email": "alessandro.lai85@gmail.com"
+                }
+            ],
+            "description": "paraunit",
+            "homepage": "https://github.com/facile-it/paraunit",
+            "keywords": [
+                "parallel test",
+                "phpunit",
+                "testing"
+            ],
+            "support": {
+                "issues": "https://github.com/facile-it/paraunit/issues",
+                "source": "https://github.com/facile-it/paraunit/tree/1.3.1"
+            },
+            "time": "2024-10-03T07:59:18+00:00"
+        },
+        {
             "name": "google/protobuf",
             "version": "v4.29.3",
             "source": {
@@ -15308,6 +15401,65 @@
                 "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.29.3"
             },
             "time": "2025-01-08T21:00:13+00:00"
+        },
+        {
+            "name": "jean85/pretty-package-versions",
+            "version": "2.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Jean85/pretty-package-versions.git",
+                "reference": "3c4e5f62ba8d7de1734312e4fff32f67a8daaf10"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Jean85/pretty-package-versions/zipball/3c4e5f62ba8d7de1734312e4fff32f67a8daaf10",
+                "reference": "3c4e5f62ba8d7de1734312e4fff32f67a8daaf10",
+                "shasum": ""
+            },
+            "require": {
+                "composer-runtime-api": "^2.1.0",
+                "php": "^7.4|^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.2",
+                "jean85/composer-provided-replaced-stub-package": "^1.0",
+                "phpstan/phpstan": "^1.4",
+                "phpunit/phpunit": "^7.5|^8.5|^9.6",
+                "vimeo/psalm": "^4.3 || ^5.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Jean85\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Alessandro Lai",
+                    "email": "alessandro.lai85@gmail.com"
+                }
+            ],
+            "description": "A library to get pretty versions strings of installed dependencies",
+            "keywords": [
+                "composer",
+                "package",
+                "release",
+                "versions"
+            ],
+            "support": {
+                "issues": "https://github.com/Jean85/pretty-package-versions/issues",
+                "source": "https://github.com/Jean85/pretty-package-versions/tree/2.1.0"
+            },
+            "time": "2024-11-18T16:19:46+00:00"
         },
         {
             "name": "justinrainbow/json-schema",
@@ -19616,6 +19768,68 @@
                 }
             ],
             "time": "2024-09-09T11:45:10+00:00"
+        },
+        {
+            "name": "symfony/stopwatch",
+            "version": "v6.4.13",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/stopwatch.git",
+                "reference": "2cae0a6f8d04937d02f6d19806251e2104d54f92"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/stopwatch/zipball/2cae0a6f8d04937d02f6d19806251e2104d54f92",
+                "reference": "2cae0a6f8d04937d02f6d19806251e2104d54f92",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1",
+                "symfony/service-contracts": "^2.5|^3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\Stopwatch\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Provides a way to profile code",
+            "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/stopwatch/tree/v6.4.13"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2024-09-25T14:18:03+00:00"
         },
         {
             "name": "tbachert/spi",

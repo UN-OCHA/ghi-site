@@ -15,6 +15,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 abstract class BlockUiBase extends WebDriverTestBase {
 
+  const BUNDLE = 'page';
+
   /**
    * Modules to enable.
    *
@@ -53,15 +55,24 @@ abstract class BlockUiBase extends WebDriverTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    $this->assertFalse(str_starts_with($this->getSession()->getDriver()->getCurrentUrl(), 'https://'), $this->getSession()->getDriver()->getCurrentUrl());
+
     $this->assertTrue(\Drupal::service('theme_installer')->install(['gin']));
-    $this->container->get('config.factory')
-      ->getEditable('system.theme')
+
+    $this->config('system.theme')
       ->set('default', 'common_design_subtheme')
       ->set('admin', 'gin')
       ->save();
 
-    $this->container->get('config.factory')
-      ->getEditable('gin.settings')
+    $this->config('system.performance')
+      ->set('js.preprocess', TRUE);
+    $this->assertTrue($this->config('system.performance')->get('js.preprocess'), 'JS aggregation is on');
+
+    $this->config('system.performance')
+      ->set('css.preprocess', TRUE);
+    $this->assertTrue($this->config('system.performance')->get('css.preprocess'), 'CSS aggregation is on');
+
+    $this->config('gin.settings')
       ->merge([
         'preset_accent_color' => 'custom',
         'preset_focus_color' => 'gin',
@@ -82,7 +93,7 @@ abstract class BlockUiBase extends WebDriverTestBase {
     $this->createBlockContentType('basic', 'Basic block');
 
     // Create a layout builder enabled content type.
-    $this->createLayoutBuilderContentType('page');
+    $this->createLayoutBuilderContentType(self::BUNDLE);
   }
 
   /**
@@ -121,9 +132,9 @@ abstract class BlockUiBase extends WebDriverTestBase {
       'create and edit custom blocks',
       'use inline blocks',
       'view the administration theme',
-      'edit any page content',
-      'configure editable page node layout overrides',
-      'use layout builder ipe on editable page node layout overrides',
+      'edit any ' . self::BUNDLE . ' content',
+      'configure editable ' . self::BUNDLE . ' node layout overrides',
+      'use layout builder ipe on editable ' . self::BUNDLE . ' node layout overrides',
     ], $permissions)));
   }
 
@@ -160,6 +171,15 @@ abstract class BlockUiBase extends WebDriverTestBase {
       ->setOverridable()
       ->setThirdPartySetting('layout_builder_ipe', 'enabled', TRUE)
       ->save();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function createNode(array $values = []) {
+    return parent::createNode($values + [
+      'type' => self::BUNDLE,
+    ]);
   }
 
   /**
