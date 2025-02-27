@@ -17,6 +17,7 @@ use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanGoverningEntitiesCaseloadsTable' block.
@@ -53,6 +54,23 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
   use ConfigValidationTrait;
+
+  /**
+   * The section manager.
+   *
+   * @var \Drupal\ghi_subpages\SubpageManager
+   */
+  protected $subpageManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var static $instance */
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->subpageManager = $container->get('ghi_subpages.manager');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}

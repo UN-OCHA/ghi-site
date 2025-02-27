@@ -110,13 +110,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
   protected $sectionManager;
 
   /**
-   * The section manager.
-   *
-   * @var \Drupal\ghi_subpages\SubpageManager
-   */
-  protected $subpageManager;
-
-  /**
    * The selection criteria argument service.
    *
    * @var \Drupal\ghi_blocks\LayoutBuilder\SelectionCriteriaArgument
@@ -177,7 +170,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $instance->layoutTempstoreRepository = $container->get('layout_builder.tempstore_repository');
     $instance->configurationContainerItemManager = $container->get('plugin.manager.configuration_container_item_manager');
     $instance->sectionManager = $container->get('ghi_sections.manager');
-    $instance->subpageManager = $container->get('ghi_subpages.manager');
     $instance->selectionCriteriaArgument = $container->get('ghi_blocks.layout_builder_edit_page.selection_criteria_argument');
     $instance->moduleHandler = $container->get('module_handler');
     $instance->controllerResolver = $container->get('controller_resolver');
@@ -577,7 +569,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   TRUE if the blocks base object can be configured, FASLE otherwise.
    */
   public function canConfigureContexts() {
-    $instance = $this->formState->get('block') ?? $this;
+    $instance = $this->formState?->get('block') ?? $this;
     $base_objects_per_bundle = [];
     $can_configure = FALSE;
 
@@ -1147,6 +1139,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
   public function isPreviewSubmit(FormStateInterface $form_state) {
     $current_subform = $form_state->get('current_subform');
     $triggering_element = $form_state->getTriggeringElement();
+    if (!$triggering_element) {
+      return FALSE;
+    }
     $action = end($triggering_element['#parents']);
     $values = $form_state->getValues();
     return $action == 'preview' && !array_key_exists($current_subform, $values);
@@ -1719,7 +1714,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    */
   public function getContextValue($name) {
     $contexts = $this->getContexts();
-    return $contexts[$name] ? $contexts[$name]->getContextValue() : NULL;
+    return array_key_exists($name, $contexts) ? $contexts[$name]->getContextValue() : NULL;
   }
 
   /**

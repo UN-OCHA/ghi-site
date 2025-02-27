@@ -111,6 +111,7 @@ class DataAttachment extends AttachmentBase {
       'disaggregated' => $attachment->attachmentVersion?->value?->metrics?->values?->disaggregated ?? NULL,
       'calculation_method' => $attachment->attachmentVersion?->value?->metrics?->calculationMethod ?? NULL,
     ];
+    $processed->calculation_method = is_string($processed->calculation_method) ? strtolower($processed->calculation_method) : NULL;
 
     // Cleanup the values.
     $processed->values = array_map(function ($value) {
@@ -1185,7 +1186,7 @@ class DataAttachment extends AttachmentBase {
    *
    * @param int $index
    *   The data point index.
-   * @param object[] $reporting_periods
+   * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[] $reporting_periods
    *   An optional array of reporting period objects. If not provided, all
    *   reporting periods from the plan will be used.
    * @param array $data_point_conf

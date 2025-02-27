@@ -59,7 +59,9 @@ class AttachmentPrototype extends ApiObjectBase {
         return $item->name->en;
       }, $calculated_fields),
       'original_fields' => $all_fields,
-      'calculation_methods' => $prototype->value->calculationMethod ?? [],
+      'calculation_methods' => array_map(function ($item) {
+        return strtolower($item);
+      }, $prototype->value->calculationMethod ?? []),
     ];
   }
 

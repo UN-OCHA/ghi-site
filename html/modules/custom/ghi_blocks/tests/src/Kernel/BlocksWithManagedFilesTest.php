@@ -1,23 +1,21 @@
 <?php
 
-namespace Drupal\Tests\ghi_content\Kernel;
+namespace Drupal\Tests\ghi_blocks\Kernel;
 
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\file\Entity\File;
 use Drupal\ghi_image\CropManager;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Section;
-use Drupal\layout_builder\SectionComponent;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 
 /**
- * Tests aspects of the block logic.
+ * Tests blocks that can have with managed files uploaded.
  *
  * @group ghi_blocks
  */
-class BlocksWithManagedFilesTest extends KernelTestBase {
+class BlocksWithManagedFilesTest extends BlockKernelTestBase {
 
   use UserCreationTrait;
 
@@ -32,9 +30,6 @@ class BlocksWithManagedFilesTest extends KernelTestBase {
     'node',
     'taxonomy',
     'field',
-    'layout_builder',
-    'layout_discovery',
-    'layout_builder',
     'text',
     'filter',
     'file',
@@ -42,12 +37,6 @@ class BlocksWithManagedFilesTest extends KernelTestBase {
     'path',
     'path_alias',
     'pathauto',
-    'hpc_api',
-    // 'hpc_common',
-    'ghi_form_elements',
-    'ghi_subpages',
-    'ghi_sections',
-    'ghi_blocks',
   ];
 
   const BUNDLE = 'page';
@@ -198,41 +187,35 @@ class BlocksWithManagedFilesTest extends KernelTestBase {
    */
   private function addLinkBlockWithFileToNode($node, $file) {
     $configuration = [
-      'id' => 'links',
-      'label' => '<none>',
-      'label_display' => FALSE,
-      'provider' => 'ghi_blocks',
-      'hpc' => [
+      'links' => [
         'links' => [
-          'links' => [
-            [
-              'id' => 1,
-              'item_type' => 'link',
-              'config' => [
-                'label' => 'Test link with image',
+          [
+            'id' => 1,
+            'item_type' => 'link',
+            'config' => [
+              'label' => 'Test link with image',
+              'link' => [
                 'link' => [
-                  'link' => [
-                    'label' => NULL,
-                    'link_type' => 'custom',
-                    'link_custom' => [
-                      'url' => 'https://google.com',
-                    ],
-                    'link_related' => [
-                      'target' => NULL,
-                    ],
+                  'label' => NULL,
+                  'link_type' => 'custom',
+                  'link_custom' => [
+                    'url' => 'https://google.com',
+                  ],
+                  'link_related' => [
+                    'target' => NULL,
                   ],
                 ],
-                'image' => [
-                  'image' => [$file->id()],
+              ],
+              'image' => [
+                'image' => [$file->id()],
+              ],
+              'content' => [
+                'date' => '2024-05-22',
+                'description' => [
+                  'value' => '',
+                  'format' => 'wysiwyg_simple',
                 ],
-                'content' => [
-                  'date' => '2024-05-22',
-                  'description' => [
-                    'value' => '',
-                    'format' => 'wysiwyg_simple',
-                  ],
-                  'description_toggle' => 0,
-                ],
+                'description_toggle' => 0,
               ],
             ],
           ],
@@ -245,7 +228,7 @@ class BlocksWithManagedFilesTest extends KernelTestBase {
       0 => ['section' => new Section('layout_onecol', [], [])],
     ];
     // Add a new component to the section with delta 0.
-    $component = new SectionComponent('10000000-0000-1000-a000-000000000000', 'content', $configuration);
+    $component = $this->createSectionComponent('links', $configuration);
     $sections[0]['section']->appendComponent($component);
 
     // Store the modified sections in the node.

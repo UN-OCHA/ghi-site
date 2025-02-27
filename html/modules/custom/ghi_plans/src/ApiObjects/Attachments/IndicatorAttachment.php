@@ -34,7 +34,7 @@ class IndicatorAttachment extends DataAttachment {
       return $value;
     }
     $calculation_method = $this->getCalculationMethod();
-    switch (strtolower($calculation_method)) {
+    switch ($calculation_method) {
       case self::CALCULATION_METHOD_SUM:
         $value = array_sum($values);
         break;
@@ -121,7 +121,7 @@ class IndicatorAttachment extends DataAttachment {
     ], FALSE);
     $calculation_method = $this->getCalculationMethod();
     $t_options = ['langcode' => $this->getPlanLanguage()];
-    switch (strtolower($calculation_method)) {
+    switch ($calculation_method) {
       case self::CALCULATION_METHOD_SUM:
         $tooltip_text = $this->t('This value is the sum of all monitoring periods values', [], $t_options);
         $tooltip_icon = 'functions';
