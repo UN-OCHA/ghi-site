@@ -12,11 +12,9 @@ class Location extends BaseObject {
    *
    * The paths are relative to the module directory.
    *
-   * The UN dataset which unfortunately has quite some issues and renders a lot
-   * of artefacts. It comes from:
-   * https://geoportal.un.org/arcgis/apps/sites/#/geohub/datasets/d7caaff3ef4b4f7c82689b7c4694ad92/about.
+   * The UN dataset that is the base for the mapbox style.
    */
-  const GEOJSON_FALLBACK_FILE_UN = 'assets/geojson/UN_Geodata_simplified.geojson';
+  const GEOJSON_FALLBACK_FILE_UN = 'assets/geojson/wrl_all_country_1m.geojson';
 
   /**
    * An alternative source.
@@ -112,22 +110,37 @@ class Location extends BaseObject {
       return $geojson_service->getLocalFileContent($local_filename);
     }
 
-    $geojson_file = self::moduleHandler()->getModule('ghi_base_objects')->getPath() . '/' . self::GEOJSON_FALLBACK_FILE_OTHER;
-    if (!file_exists($geojson_file)) {
-      return FALSE;
+    $features = NULL;
+    $geojson_feature_file = self::moduleHandler()->getModule('ghi_base_objects')->getPath() . '/assets/geojson/countries/' . $local_filename;
+    if (file_exists($geojson_feature_file)) {
+      $lines = array_filter(explode("\n", file_get_contents($geojson_feature_file)));
+      $features = !empty($lines) ? array_map(function ($line) {
+        return json_decode($line);
+      }, $lines) : NULL;
     }
-    // Extract the features for the current location based on the iso3 code.
-    $content = json_decode(file_get_contents($geojson_file));
-    $features = array_filter($content->features, function ($item) {
-      return property_exists($item->properties, 'iso3cd') && $item->properties->iso3cd == $this->iso3 || property_exists($item->properties, 'ISO_A3') && $item->properties->ISO_A3 == $this->iso3;
-    });
-    if (empty($features)) {
-      return FALSE;
+    if ($features === NULL) {
+      $geojson_file = self::moduleHandler()->getModule('ghi_base_objects')->getPath() . '/' . self::GEOJSON_FALLBACK_FILE_UN;
+      if (!file_exists($geojson_file)) {
+        return FALSE;
+      }
+
+      // Extract the features for the current location based on the iso3 code.
+      $content = json_decode(file_get_contents($geojson_file));
+
+      $features = $content ? array_filter($content->features, function ($item) {
+        return property_exists($item->properties, 'iso3cd') && $item->properties->iso3cd == $this->iso3
+            || property_exists($item->properties, 'ISO_A3') && $item->properties->ISO_A3 == $this->iso3
+            || property_exists($item->properties, 'ISO3_CODE') && $item->properties->ISO3_CODE == $this->iso3;
+      }) : [];
+      if (empty($features)) {
+        return FALSE;
+      }
+      $features = array_values(array_map(function ($feature) {
+        unset($feature->properties);
+        return $feature;
+      }, $features));
     }
-    $features = array_values(array_map(function ($feature) {
-      unset($feature->properties);
-      return $feature;
-    }, $features));
+
     $geojson = (object) [
       'type' => 'Feature',
       'geometry' => (object) [
