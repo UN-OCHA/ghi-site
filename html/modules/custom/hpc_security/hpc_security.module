@@ -230,6 +230,18 @@ function hpc_security_seckit_options_alter(array &$options) {
 }
 
 /**
+ * Implements hook_preprocess_page().
+ */
+function hpc_security_preprocess_page(&$variables) {
+  if (!hpc_security_sends_csp_header()) {
+    return;
+  }
+  foreach ($variables['page']['#attached']['html_head'] as &$attachment) {
+    hpc_security_process_attachment($attachment);
+  }
+}
+
+/**
  * Implements hook_page_attachments().
  */
 function hpc_security_page_attachments(array &$attachments) {
@@ -257,19 +269,30 @@ function hpc_security_page_attachments(array &$attachments) {
 }
 
 /**
+ * Process a page attachment.
+ *
+ * @param array $attachment
+ *   Page attachment array.
+ */
+function hpc_security_process_attachment(&$attachment) {
+  if (hpc_security_can_use_nonce()) {
+    hpc_security_set_nonce($attachment[0]);
+  }
+  else {
+    hpc_security_add_hash($attachment[0]);
+  }
+}
+
+/**
  * Implements hook_page_attachments_alter().
  */
 function hpc_security_page_attachments_alter(array &$page) {
+  d('hpc_security_page_attachments_alter');
   if (!hpc_security_sends_csp_header()) {
     return;
   }
   foreach ($page['#attached']['html_head'] as &$attachment) {
-    if (hpc_security_can_use_nonce()) {
-      hpc_security_set_nonce($attachment[0]);
-    }
-    else {
-      hpc_security_add_hash($attachment[0]);
-    }
+    hpc_security_process_attachment($attachment);
   }
 }
 
@@ -281,6 +304,9 @@ function hpc_security_set_nonce(array &$asset) {
     return;
   }
   $attributes = array_key_exists('#attributes', $asset) ? $asset['#attributes'] : [];
+  if (array_key_exists('nonce', $attributes)) {
+    return;
+  }
   $attributes['nonce'] = hpc_security_get_nonce();
   $asset['#attributes'] = $attributes;
 }

@@ -309,9 +309,9 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   }
 
   /**
-   * Get the base url of the remote source.
+   * {@inheritdoc}
    */
-  private function getRemoteBaseUrl() {
+  public function getRemoteBaseUrl() {
     $config = $this->getConfiguration();
     return rtrim($config['base_url'], '/');
   }

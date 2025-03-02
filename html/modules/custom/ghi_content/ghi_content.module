@@ -628,3 +628,22 @@ function ghi_content_node_grants(AccountInterface $account, $op) {
   }
   return $grants;
 }
+
+/**
+ * Implements hook_seckit_options_alter().
+ *
+ * Make some modifications to the CSP that are not supported by the seckit UI.
+ */
+function ghi_content_seckit_options_alter(array &$options) {
+  $directives = &$options['seckit_xss']['csp'];
+
+  /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
+  $remote_source_manager = \Drupal::service('plugin.manager.remote_source');
+  $definitions = $remote_source_manager->getDefinitions();
+  foreach (array_keys($definitions) as $plugin_id) {
+    /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $plugin */
+    $plugin = $remote_source_manager->createInstance($plugin_id);
+    $directives['img-src'] = $plugin->getRemoteBaseUrl() . ' ' . $directives['img-src'];
+  }
+
+}
