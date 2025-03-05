@@ -16,6 +16,24 @@ use Drupal\node\NodeInterface;
 trait ContentPathTrait {
 
   /**
+   * Get a content node from the given path.
+   *
+   * @param string $path
+   *   The url path.
+   *
+   * @return \Drupal\node\NodeInterface|null
+   *   A node object or NULL.
+   */
+  protected function getContentNodeFromPath($path) {
+    $node = NULL;
+    $node = $node ?? $this->getArticleNodeFromPath($path);
+    $node = $node ?? $this->getDocumentNodeFromPath($path);
+    $node = $node ?? $this->getSectionNodeFromPath($path);
+    $node = $node ?? $this->getNodeByUrlAlias($path);
+    return $node;
+  }
+
+  /**
    * Get the current article node if available.
    *
    * @return \Drupal\ghi_content\Entity\Article|null

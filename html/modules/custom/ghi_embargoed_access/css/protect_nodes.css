@@ -1,0 +1,33 @@
+/** Page level: For articles and documents. */
+.path-protected .node--view-mode-full footer.node__meta .node__submitted > ul > li:first-child::before,
+/** Page level: For sections and section subpages. */
+.section-protected .block-section-switcher .cd-dropdown__btn-label::before,
+.section-protected .block-section-switcher .cd-dropdown ul li.active::before,
+/** For article lists. */
+article.node.protected:not(.section-internal-protected).node--view-mode-grid .cd-teaser__title::before,
+/** For the global menus. */
+.cd-header a.protected::before,
+/** Links inside the content are, but only for links to outside the section. */
+body:not(.section-protected) .links--entity-navigation .megamenu a.protected::before,
+body:not(.section-protected) #main-content a.protected::before {
+  content: '';
+  background-color: currentColor;
+  -webkit-mask-image: url("../assets/lock.svg");
+  mask-image: url("../assets/lock.svg");
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-right: 0.3rem;
+  display: inline-block;
+  /** Work around issues with the vertical tabs in the mega menus. */
+  position: relative !important;
+  top: unset !important;
+  left: unset !important;
+}
+
+article.node.protected.node--view-mode-grid .cd-teaser__title::before {
+  margin-right: 0rem;
+}
+
+article.node.protected.node--view-mode-grid .cd-teaser__title > a {
+  display: inline;
+}

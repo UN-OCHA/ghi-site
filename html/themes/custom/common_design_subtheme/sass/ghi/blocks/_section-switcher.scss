@@ -35,13 +35,16 @@
 
     .cd-dropdown {
       position: absolute;
+      right: 0;
       left: 0;
       min-width: 5.25rem;
       background-color: var(--ghi-primary-background-color);
 
       ul {
+        width: fit-content;
         margin: 0.5rem 0;
         padding: 0;
+        background-color: var(--ghi-primary-background-color);
 
         li {
           padding: 0.5rem 1.2rem;

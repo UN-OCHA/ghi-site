@@ -28,7 +28,7 @@ function ghi_sections_preprocess_page_title(&$variables) {
   $is_admin_route = \Drupal::service('router.admin_context')->isAdminRoute();
   /** @var \Drupal\ghi_sections\SectionManager $section_manager */
   $section_manager = \Drupal::service('ghi_sections.manager');
-  if ($is_admin_route || !$node instanceof NodeInterface || !empty($variables['#protected'])) {
+  if ($is_admin_route || !$node instanceof NodeInterface) {
     return;
   }
   if (\Drupal::routeMatch()->getRouteName() == 'entity.node.canonical') {

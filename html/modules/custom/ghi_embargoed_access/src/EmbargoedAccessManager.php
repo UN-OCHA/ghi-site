@@ -18,6 +18,7 @@ use Drupal\entity_access_password\Service\PasswordAccessManagerInterface;
 use Drupal\entity_access_password\Service\RouteParserInterface;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Traits\ContentPathTrait;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeForm;
@@ -194,62 +195,83 @@ class EmbargoedAccessManager {
   }
 
   /**
+   * Alter theme suggestions for node views.
+   */
+  public function alterNodeThemeSuggestions(&$suggestions, $variables) {
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $variables['elements']['#node'];
+    $view_mode = $variables['elements']['#view_mode'];
+    if ($view_mode == 'password_protected') {
+      $suggestions[] = 'node__' . $node->bundle() . '__full';
+    }
+  }
+
+  /**
+   * Add cache contexts for the entity to the given theme variables.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity for which the cache contexts should be added.
+   * @param array $variables
+   *   The variables array to add the cache contexts to.
+   */
+  private function addCacheContextsToThemeVariables(EntityInterface $entity, &$variables) {
+    $cacheableMetadata = new CacheableMetadata();
+    $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);
+    $cacheableMetadata->applyTo($variables);
+  }
+
+  /**
    * Alter variables for the page.
    */
   public function alterHtml(&$variables) {
-    $entity = $this->routeParser?->getEntityFromCurrentRoute();
-    if (!$entity instanceof NodeInterface || $this->entityAccess($entity)) {
-      return NULL;
+    if ($this->embargoedAccessEnabled()) {
+      $variables['#attached']['library'][] = 'ghi_embargoed_access/protect_nodes';
     }
 
-    $variables['attributes']['class'][] = 'path-protected';
-
-    $cacheableMetadata = new CacheableMetadata();
-    $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);
-    $cacheableMetadata->applyTo($variables);
-  }
-
-  /**
-   * Alter variables for the page.
-   */
-  public function alterPage(&$variables) {
-    $entity = $this->routeParser?->getEntityFromCurrentRoute();
-    if (!$entity instanceof NodeInterface || $this->entityAccess($entity)) {
-      return NULL;
-    }
-
-    unset($variables['page']['page_title']['sectionswitcher']);
-    unset($variables['page']['page_image']);
-    unset($variables['page']['page_subtitle']);
-    unset($variables['page']['page_navigation']);
-    unset($variables['page']['content']['subpagetitle']);
-    unset($variables['page']['content']['articletitle']);
-
-    $cacheableMetadata = new CacheableMetadata();
-    $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);
-    $cacheableMetadata->applyTo($variables);
-  }
-
-  /**
-   * Alter variables for the page title.
-   */
-  public function alterPageTitle(&$variables) {
-    $entity = $this->routeParser?->getEntityFromCurrentRoute();
+    $entity = $this->getCurrentNode();
     if (!$entity instanceof NodeInterface) {
-      return NULL;
+      return;
     }
 
-    if ($this->entityAccess($entity)) {
-      $variables['title'] = $entity instanceof ContentBase ? $entity->getPageTitle() : $entity->label();
-      return NULL;
+    if ($this->isProtectedEntityInSection($entity)) {
+      $variables['attributes']['class'][] = 'section-protected';
     }
 
-    $variables['title'] = $this->t('Embargoed content');
-    $variables['#protected'] = TRUE;
+    if ($this->isProtected($entity)) {
+      $variables['attributes']['class'][] = 'path-protected';
+    }
 
-    $cacheableMetadata = new CacheableMetadata();
-    $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);
-    $cacheableMetadata->applyTo($variables);
+    $this->addCacheContextsToThemeVariables($entity, $variables);
+  }
+
+  /**
+   * Alter variables for links to nodes.
+   */
+  public function alterLink(&$variables) {
+    /** @var \Drupal\Core\Url  $url */
+    $url = $variables['url'];
+    $node = NULL;
+    if ($url->isRouted() && $node_id = ($url->getRouteParameters()['node'] ?? NULL)) {
+      $node = $this->entityTypeManager->getStorage('node')->load($node_id);
+    }
+    if ($url->isRouted() && !$node) {
+      return;
+    }
+
+    $node = $this->getContentNodeFromPath($url->toString());
+    if (!$node instanceof NodeInterface) {
+      return;
+    }
+
+    if ($this->isProtectedEntityInSection($node)) {
+      $variables['options']['attributes']['class'][] = 'section-internal-protected';
+    }
+
+    if ($this->isProtected($node)) {
+      $variables['options']['attributes']['class'][] = 'protected';
+    }
+
+    $this->addCacheContextsToThemeVariables($node, $variables);
   }
 
   /**
@@ -257,24 +279,29 @@ class EmbargoedAccessManager {
    */
   public function alterNode(&$variables) {
     $entity = $variables['node'] ?? NULL;
-    if (!$entity instanceof NodeInterface || $this->entityAccess($entity)) {
+    if (!$entity instanceof NodeInterface || !$this->isProtected($entity)) {
       return NULL;
     }
-    unset($variables['label']);
-    unset($variables['metadata']);
-    unset($variables['content']['field_image']);
-    unset($variables['content']['field_summary']);
-    $variables['display_submitted'] = FALSE;
-
     if ($variables['view_mode'] == 'password_protected') {
-      $variables['attributes']['class'][] = 'content-width';
+      unset($variables['label']);
+    }
+    else {
+      $variables['label'] = $entity->label();
     }
 
+    // Protect nothing but the summary.
+    unset($variables['content']['field_summary']);
+    if ($variables['view_mode'] == 'password_protected') {
+      $variables['attributes']['class'][] = 'content-width';
+      $variables['attributes']['class'][] = 'node--view-mode-full';
+    }
+
+    if ($this->isProtectedEntityInSection($entity)) {
+      $variables['attributes']['class'][] = '#';
+    }
     $variables['attributes']['class'][] = 'protected';
 
-    $cacheableMetadata = new CacheableMetadata();
-    $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);
-    $cacheableMetadata->applyTo($variables);
+    $this->addCacheContextsToThemeVariables($entity, $variables);
   }
 
   /**
@@ -331,10 +358,38 @@ class EmbargoedAccessManager {
    *   TRUE if the node is currently protected, FALSE otherwise.
    */
   public function isProtected(NodeInterface $node) {
-    if (!$node->hasField(self::PROTECTED_FIELD)) {
+    $is_protected = FALSE;
+    $section = $this->getCurrentSectionNode();
+    if ($node instanceof ContentBase && $section) {
+      $is_protected = $node->isPartOfSection($section) && $this->isProtected($section);
+    }
+    if ($node instanceof SubpageNodeInterface && $section) {
+      $is_protected = $node->getParentBaseNode()->id() == $section->id() && $this->isProtected($section);
+    }
+    if (!$is_protected && !$node->hasField(self::PROTECTED_FIELD)) {
       return FALSE;
     }
-    return !empty($node->get(self::PROTECTED_FIELD)->is_protected);
+    return $is_protected || !empty($node->get(self::PROTECTED_FIELD)->is_protected);
+  }
+
+  /**
+   * Check if the given node is protected as part of a section (indirectly).
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to check.
+   *
+   * @return bool
+   *   TRUE if the node is currently indirectly protected, FALSE otherwise.
+   */
+  private function isProtectedEntityInSection($node) {
+    $current_section = $this->getCurrentSectionNode();
+    if (!$current_section || !$this->isProtected($current_section)) {
+      return FALSE;
+    }
+    $is_same_section = $current_section && $node instanceof SectionNodeInterface && $node->id() == $current_section->id();
+    $is_subpage_of_current_section = $current_section && $node instanceof SubpageNodeInterface && $node->getParentBaseNode()->id() == $current_section->id();
+    $is_content_in_section = $current_section && $node instanceof ContentBase && $node->isPartOfSection($current_section);
+    return $is_same_section || $is_subpage_of_current_section || $is_content_in_section;
   }
 
   /**
