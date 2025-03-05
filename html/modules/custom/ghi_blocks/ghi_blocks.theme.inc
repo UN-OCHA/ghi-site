@@ -261,7 +261,10 @@ function ghi_blocks_preprocess_section_switcher(&$variables) {
       $label .= ' (' . $label_additions[$key] . ')';
     }
     if ($current_section->id() == $section->id()) {
-      $option_value = ['#markup' => $label];
+      $option_value = [
+        '#markup' => $label,
+        '#wrapper_attributes' => ['class' => ['active']],
+      ];
       $variables['title'] = $label;
     }
     else {

@@ -24,6 +24,7 @@ body.page-node-type-document {
 
       .node__submitted {
         display: flex;
+        align-items: center;
         gap: 1rem;
         font-size: var(--cd-font-size--small);
       }
