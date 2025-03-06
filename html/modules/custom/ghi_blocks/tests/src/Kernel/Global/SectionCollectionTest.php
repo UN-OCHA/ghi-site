@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\ghi_blocks\Kernel;
+namespace Drupal\Tests\ghi_blocks\Kernel\Global;
 
 use Drupal\Core\Form\FormState;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
@@ -9,6 +9,7 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Section\SectionCollection;
 use Drupal\node\NodeInterface;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
+use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
 use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 

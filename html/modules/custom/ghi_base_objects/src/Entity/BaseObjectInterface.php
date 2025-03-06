@@ -6,7 +6,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
 
 /**
- * Provides an interface for defining Base object entities.
+ * Provides an interface for defining base object entities.
  *
  * @ingroup ghi_base_objects
  */

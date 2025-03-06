@@ -1,12 +1,13 @@
 <?php
 
-namespace Drupal\Tests\ghi_blocks\Kernel;
+namespace Drupal\Tests\ghi_blocks\Kernel\Global;
 
 use Drupal\Core\Form\FormState;
 use Drupal\file\Entity\File;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Generic\LinkCarousel;
 use Drupal\ghi_blocks\Plugin\Block\ImageProviderBlockInterface;
+use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
 
 /**
  * Tests the link carousel block plugin.

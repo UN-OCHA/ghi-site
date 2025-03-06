@@ -3,7 +3,7 @@
 namespace Drupal\ghi_base_objects\Entity;
 
 /**
- * Provides an interface for defining Base object entities.
+ * Provides an interface for defining base object entities with meta data.
  *
  * @ingroup ghi_base_objects
  */

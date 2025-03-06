@@ -19,7 +19,7 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
 /**
  * Abstraction for API data attachment objects.
  */
-class DataAttachment extends AttachmentBase {
+class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
 
   use PlanReportingPeriodTrait;
   use SimpleCacheTrait;
@@ -69,6 +69,13 @@ class DataAttachment extends AttachmentBase {
     // Work around an issue with the API format for this.
     $calculated_fields = is_array($calculated_fields) ? $calculated_fields : [$calculated_fields];
 
+    // Put all fields together.
+    $all_fields = array_merge(
+      $metric_fields,
+      $measurement_fields,
+      $calculated_fields,
+    );
+
     $processed = (object) [
       'id' => $attachment->id,
       'type' => strtolower($attachment->type),
@@ -77,7 +84,7 @@ class DataAttachment extends AttachmentBase {
         'entity_id' => $attachment->objectId ?? NULL,
         'plan_id' => $attachment->planId ?? NULL,
       ],
-      'custom_id' => $attachment->attachmentVersion?->value?->customId ?? ($attachment->customReference ?? NULL),
+      'custom_id' => $attachment->attachmentVersion?->value?->customId ?? ($attachment->attachmentVersion?->customReference ?? NULL),
       'custom_id_prefixed_refcode' => end($references),
       'composed_reference' => $attachment->composedReference ?? NULL,
       'description' => $attachment->attachmentVersion?->value?->description ?? NULL,
@@ -95,11 +102,10 @@ class DataAttachment extends AttachmentBase {
       'monitoring_period' => $period ?? NULL,
       'fields' => $prototype->getFields(),
       'field_types' => $prototype->getFieldTypes(),
-      'original_fields' => array_merge(
-        $metric_fields,
-        $measurement_fields,
-        $calculated_fields,
-      ),
+      'original_fields' => $all_fields,
+      'original_field_types' => array_map(function ($item) {
+        return $item->type;
+      }, $all_fields ?? []),
       'measurement_fields' => $measurement_fields ? array_map(function ($field) {
         return $field->name->en;
       }, $measurement_fields) : [],
@@ -133,6 +139,13 @@ class DataAttachment extends AttachmentBase {
    */
   public function getDescription() {
     return $this->description;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCustomId() {
+    return $this->custom_id;
   }
 
   /**
@@ -173,13 +186,17 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
-   * Get the original fields.
-   *
-   * @return array
-   *   An array of field items.
+   * {@inheritdoc}
    */
   public function getOriginalFields() {
     return $this->original_fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOriginalFieldTypes() {
+    return $this->original_field_types;
   }
 
   /**
