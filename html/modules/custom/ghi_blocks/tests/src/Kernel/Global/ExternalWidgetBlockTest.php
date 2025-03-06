@@ -1,10 +1,11 @@
 <?php
 
-namespace Drupal\Tests\ghi_blocks\Kernel;
+namespace Drupal\Tests\ghi_blocks\Kernel\Global;
 
 use Drupal\Core\Form\FormState;
 use Drupal\ghi_blocks\Plugin\Block\Generic\ExternalWidget;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
+use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
 
 /**
  * Tests the external widget block plugin.

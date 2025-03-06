@@ -103,6 +103,7 @@ class PlanClusterNodeBundleTest extends KernelTestBase {
     // Create a plan object.
     $plan = $this->createBaseObject([
       'type' => 'plan',
+      'field_year' => 2025,
     ]);
 
     // Create a GVE object associated to that plan.
@@ -157,6 +158,7 @@ class PlanClusterNodeBundleTest extends KernelTestBase {
     // Create a plan object.
     $plan = $this->createBaseObject([
       'type' => 'plan',
+      'field_year' => 2025,
     ]);
 
     // Create a GVE object associated to that plan.

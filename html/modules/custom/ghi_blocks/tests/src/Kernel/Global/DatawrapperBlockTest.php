@@ -1,9 +1,10 @@
 <?php
 
-namespace Drupal\Tests\ghi_blocks\Kernel;
+namespace Drupal\Tests\ghi_blocks\Kernel\Global;
 
 use Drupal\Core\Form\FormState;
 use Drupal\ghi_blocks\Plugin\Block\Generic\Datawrapper;
+use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
 
 /**
  * Tests the datawrapper block plugin.

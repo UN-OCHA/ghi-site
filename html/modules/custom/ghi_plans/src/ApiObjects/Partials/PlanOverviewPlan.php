@@ -5,10 +5,9 @@ namespace Drupal\ghi_plans\ApiObjects\Partials;
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
-use Drupal\hpc_api\Query\EndpointQuery;
-use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
  * Abstraction class for a plan partial object.
@@ -21,6 +20,7 @@ class PlanOverviewPlan extends BaseObject {
 
   use PlanReportingPeriodTrait;
   use PlanTypeTrait;
+  use AttachmentFilterTrait;
 
   /**
    * Map the raw data.
@@ -36,6 +36,9 @@ class PlanOverviewPlan extends BaseObject {
       'funding' => $data->funding->totalFunding ?? 0,
       'requirements' => $data->requirements ? $data->requirements->revisedRequirements : 0,
       'coverage' => $data->funding->progress ?? 0,
+      'caseloads' => array_map(function ($item) {
+        return new PlanOverviewCaseload($item);
+      }, $data->caseLoads ?? []),
     ];
   }
 
@@ -285,7 +288,7 @@ class PlanOverviewPlan extends BaseObject {
    *   TRUE of the plan has caseloads, FALSE otherwise.
    */
   private function hasCaseloads() {
-    return !empty($this->getRawData()->caseLoads);
+    return !empty($this->caseloads);
   }
 
   /**
@@ -408,16 +411,7 @@ class PlanOverviewPlan extends BaseObject {
    */
   public function getPlanCaseloadFields($attachment_id = NULL) {
     $caseload = $this->getPlanCaseload($attachment_id);
-    if (!$caseload) {
-      return [];
-    }
-    $calculated_fields = $caseload->calculatedFields ?? [];
-    if ($calculated_fields && !is_array($calculated_fields)) {
-      $calculated_fields = [
-        $calculated_fields->type => $calculated_fields,
-      ];
-    }
-    return array_merge($caseload->totals, $calculated_fields);
+    return $caseload?->getOriginalFields() ?? [];
   }
 
   /**
@@ -426,39 +420,11 @@ class PlanOverviewPlan extends BaseObject {
    * @param int $attachment_id
    *   Optional argument to retrieve a specific caseload.
    *
-   * @return object|null
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface|null
    *   A caseload object or NULL.
    */
   public function getPlanCaseload($attachment_id = NULL) {
-    $caseload = NULL;
-
-    $caseloads = $this->getRawData()->caseLoads ?? [];
-    if (empty($caseloads)) {
-      return $caseload;
-    }
-
-    $plan_entity = $this->getEntity();
-    $selected_caseload_id = $plan_entity ? $plan_entity->getPlanCaseloadId() : NULL;
-
-    // Try to either get the requested caseload, or the one selected in the
-    // base object.
-    $attachment_id = $attachment_id ?? $selected_caseload_id;
-    // We have 2 options here. Either a specific attachment has been
-    // requested and we use that if it is part of the available attachments.
-    if ($attachment_id !== NULL) {
-      $matching_caseloads = array_filter($caseloads, function ($caseload) use ($attachment_id) {
-        return $caseload->attachmentId == $attachment_id;
-      });
-      $caseload = !empty($matching_caseloads) && is_array($matching_caseloads) ? reset($matching_caseloads) : NULL;
-    }
-
-    // Or we try to deduce the suitable attachment by selecting the one with
-    // the lowest custom reference.
-    if ($caseload === NULL) {
-      ArrayHelper::sortObjectsByProperty($caseloads, 'customReference', EndpointQuery::SORT_ASC, SORT_STRING);
-      $caseload = count($caseloads) ? reset($caseloads) : NULL;
-    }
-    return $caseload;
+    return $this->findPlanCaseload($this->caseloads, $attachment_id ?? $this->getEntity()?->getPlanCaseloadId());
   }
 
   /**

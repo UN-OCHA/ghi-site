@@ -31,6 +31,7 @@ trait PlanClusterTestTrait {
     if ($section === NULL) {
       $plan = $this->createBaseObject([
         'type' => 'plan',
+        'field_year' => 2025,
       ]);
       $plan->save();
     }
@@ -74,10 +75,7 @@ trait PlanClusterTestTrait {
     $this->createBaseObjectType([
       'id' => PlanClusterManager::BASE_OBJECT_BUNDLE_GOVERNING_ENTITY,
       'label' => 'Governing entity',
-    ]);
-
-    $this->createEntityReferenceField('base_object', PlanClusterManager::BASE_OBJECT_BUNDLE_GOVERNING_ENTITY, 'field_plan', 'Plan', 'base_object', 'default', [
-      'target_bundles' => ['plan'],
+      'field_plan' => 'Plan',
     ]);
 
     // Create the section bundle.

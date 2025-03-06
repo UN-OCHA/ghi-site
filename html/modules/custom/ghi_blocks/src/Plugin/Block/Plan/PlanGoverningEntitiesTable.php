@@ -309,7 +309,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
    */
   public function getDefaultSubform($is_new = FALSE) {
     $conf = $this->getBlockConfig();
-    if (!empty($conf['table']) && !empty($conf['table'])) {
+    if (!empty($conf['table']) && !empty($conf['table']['columns'])) {
       return 'table';
     }
     return 'base';
@@ -397,8 +397,8 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   /**
    * Get all governing entity objects for the current block instance.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
-   *   An array of entity objects, aka clusters.
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]|null
+   *   An array of entity objects, aka clusters or NULL.
    */
   private function getEntityObjects() {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
@@ -426,7 +426,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   /**
    * Get the first entity node for column configuration.
    *
-   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
    *   The first entity node available.
    */
   private function getFirstEntityObject() {

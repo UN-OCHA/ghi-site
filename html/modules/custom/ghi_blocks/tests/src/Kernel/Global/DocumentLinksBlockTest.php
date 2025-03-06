@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\ghi_blocks\Kernel;
+namespace Drupal\Tests\ghi_blocks\Kernel\Global;
 
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Url;
@@ -9,6 +9,7 @@ use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Generic\DocumentLinks;
+use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
 
 /**
  * Tests the document links block plugin.

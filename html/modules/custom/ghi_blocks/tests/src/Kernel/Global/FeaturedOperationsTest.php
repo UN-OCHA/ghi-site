@@ -1,9 +1,10 @@
 <?php
 
-namespace Drupal\Tests\ghi_blocks\Kernel;
+namespace Drupal\Tests\ghi_blocks\Kernel\Global;
 
 use Drupal\Core\Form\FormState;
 use Drupal\ghi_blocks\Plugin\Block\GlobalPage\FeaturedOperations;
+use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
 
 /**
  * Tests the featured operations block plugin.
