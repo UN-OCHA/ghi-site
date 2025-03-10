@@ -149,16 +149,6 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
   }
 
   /**
-   * Validate handler for portlet configuration form.
-   */
-  public function blockValidate($form, FormStateInterface $form_state) {
-    if ($this->isPreviewSubmit($form_state)) {
-      return;
-    }
-
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function postSave(EntityInterface $entity, $uuid) {
