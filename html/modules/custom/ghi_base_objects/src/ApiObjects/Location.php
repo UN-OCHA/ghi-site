@@ -8,27 +8,6 @@ namespace Drupal\ghi_base_objects\ApiObjects;
 class Location extends BaseObject {
 
   /**
-   * Define the paths to the fallback files for geojson country data.
-   *
-   * The paths are relative to the module directory.
-   *
-   * The UN dataset which unfortunately has quite some issues and renders a lot
-   * of artefacts. It comes from:
-   * https://geoportal.un.org/arcgis/apps/sites/#/geohub/datasets/d7caaff3ef4b4f7c82689b7c4694ad92/about.
-   */
-  const GEOJSON_FALLBACK_FILE_UN = 'assets/geojson/UN_Geodata_simplified.geojson';
-
-  /**
-   * An alternative source.
-   *
-   * This comes from
-   * https://github.com/datasets/geo-countries via
-   * https://datahub.io/core/geo-countries and
-   * https://www.naturalearthdata.com/downloads/10m-cultural-vectors/.
-   */
-  const GEOJSON_FALLBACK_FILE_OTHER = 'assets/geojson/countries.geojson';
-
-  /**
    * {@inheritdoc}
    */
   protected function map() {
@@ -52,26 +31,26 @@ class Location extends BaseObject {
    * @param bool $refresh
    *   Whether to refresh stored data.
    *
-   * @return string
+   * @return string|null
    *   A local path.
    */
   public function getGeoJsonLocalFilePath($refresh = FALSE) {
     $geojson_service = self::getGeoJsonService();
     $file_url_generator = self::fileUrlGenerator();
-    if ($this->filepath && $uri = $geojson_service->getGeoJsonLocalFilePath($this->filepath, $refresh)) {
-      // If we have a filepath, let's point to it. This comes from the API and
-      // we store local copies of it.
+    if ($this->admin_level > 0 && $this->filepath && $uri = $geojson_service->getGeoJsonLocalFilePath($this->filepath, $refresh)) {
+      // For admin level 1+, if we have a filepath, let's point to it. This
+      // comes from the API and we store local copies of it.
       return $uri ? $file_url_generator->generate($uri)->toString() : NULL;
-    }
-    if (!$this->iso3) {
-      return NULL;
     }
     // Otherwise let's see if we can get another type of local file that is
     // extracted from a static geojson source and fetched via
-    // self::getGeoJsonFallback().
-    $local_filename = $this->iso3 . '.json';
+    // self::getSelfHostedGeoJson().
+    $local_filename = $this->getGeoJsonFilename();
+    if (!$local_filename) {
+      return NULL;
+    }
     if (!$geojson_service->localFileExists($local_filename)) {
-      $this->getGeoJsonFallback();
+      $this->getSelfHostedGeoJson();
     }
     $filepath = $geojson_service->getLocalFilePath($local_filename);
     return $filepath ? $file_url_generator->generate($filepath)->toString() : NULL;
@@ -88,11 +67,10 @@ class Location extends BaseObject {
    */
   public function getGeoJson($refresh = FALSE) {
     $geojson_service = self::getGeoJsonService();
-    $geojson = $this->filepath ? $geojson_service->getGeoJson($this->filepath, $refresh) : FALSE;
-    if (!$geojson) {
-      $geojson = $this->getGeoJsonFallback();
+    if ($this->admin_level == 0) {
+      return $this->getSelfHostedGeoJson();
     }
-    return $geojson;
+    return $this->filepath ? $geojson_service->getGeoJson($this->filepath, $refresh) : FALSE;
   }
 
   /**
@@ -101,47 +79,49 @@ class Location extends BaseObject {
    * @return object|false
    *   The geo json data object or FALSE.
    */
-  private function getGeoJsonFallback() {
+  private function getSelfHostedGeoJson() {
     if ($this->admin_level > 0) {
       // The fallback is available only for admin level 0 locations.
       return FALSE;
     }
     $geojson_service = self::getGeoJsonService();
-    $local_filename = $this->iso3 . '.json';
+    $local_filename = $this->getGeoJsonFilename();
     if ($geojson_service->localFileExists($local_filename)) {
       return $geojson_service->getLocalFileContent($local_filename);
     }
 
-    $geojson_file = self::moduleHandler()->getModule('ghi_base_objects')->getPath() . '/' . self::GEOJSON_FALLBACK_FILE_OTHER;
-    if (!file_exists($geojson_file)) {
+    $geojson_feature_file = self::moduleHandler()->getModule('ghi_base_objects')->getPath() . '/assets/geojson/' . $this->iso3 . '/current/' . $local_filename;
+    if (!file_exists($geojson_feature_file)) {
       return FALSE;
     }
-    // Extract the features for the current location based on the iso3 code.
-    $content = json_decode(file_get_contents($geojson_file));
-    $features = array_filter($content->features, function ($item) {
-      return property_exists($item->properties, 'iso3cd') && $item->properties->iso3cd == $this->iso3 || property_exists($item->properties, 'ISO_A3') && $item->properties->ISO_A3 == $this->iso3;
-    });
-    if (empty($features)) {
+
+    $geojson = json_decode(file_get_contents($geojson_feature_file));
+    if (empty($geojson)) {
       return FALSE;
     }
-    $features = array_values(array_map(function ($feature) {
-      unset($feature->properties);
-      return $feature;
-    }, $features));
-    $geojson = (object) [
-      'type' => 'Feature',
-      'geometry' => (object) [
-        'type' => 'GeometryCollection',
-        'geometries' => array_map(function ($feature) {
-          return $feature->geometry;
-        }, $features),
-      ],
-      'properties' => (object) [
-        'location_id' => $this->id(),
-      ],
-    ];
+
     $geojson_service->writeGeoJsonFile($local_filename, json_encode($geojson));
     return $geojson;
+  }
+
+  /**
+   * Get the file name for a self hosted geojson file.
+   *
+   * @return string|null
+   *   The pattern is [ISO3]_[ADMIN_LEVEL].geojson for admin 0,
+   *   [ISO3]_[ADMIN_LEVEL]_[PCODE].geojson for admin 1+.
+   */
+  private function getGeoJsonFilename() {
+    if (empty($this->iso3)) {
+      return NULL;
+    }
+    if ($this->admin_level == 0) {
+      return $this->iso3 . '_0.geojson';
+    }
+    if (empty($this->admin_level) || empty($this->pcode)) {
+      return NULL;
+    }
+    return $this->iso3 . '_' . $this->admin_level . '_' . $this->pcode . '.geojson';
   }
 
   /**
