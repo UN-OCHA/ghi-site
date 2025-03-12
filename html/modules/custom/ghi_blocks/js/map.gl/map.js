@@ -80,9 +80,11 @@
             if (!type || !feature) {
               return;
             }
-            feature.properties.object_id = location.location_id;
-            feature.properties.location_id = location.location_id;
-            feature.properties.location_name = location.location_name;
+            feature.properties = {
+              object_id: location.location_id,
+              location_id: location.location_id,
+              location_name: location.location_name,
+            };
             if (featureCallback) {
               feature = featureCallback(feature, location);
             }
