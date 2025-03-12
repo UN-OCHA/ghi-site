@@ -23,11 +23,11 @@ trait ConfigurationItemClusterRestrictTrait {
       '#type' => 'cluster_restrict',
       '#title' => $this->t('Restrict by cluster'),
       '#default_value' => $default_value,
-      '#ajax' => [
+      '#ajax' => property_exists($this, 'wrapperId') ? [
         'event' => 'change',
         'callback' => [static::class, 'updateAjax'],
         'wrapper' => $this->wrapperId,
-      ],
+      ] : NULL,
     ];
   }
 

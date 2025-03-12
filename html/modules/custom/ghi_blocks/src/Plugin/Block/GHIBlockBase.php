@@ -284,7 +284,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * Get the default title.
    *
-   * @return string
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup|string
    *   The default title if one is set in the plugin definition.
    */
   public function getDefaultTitle() {

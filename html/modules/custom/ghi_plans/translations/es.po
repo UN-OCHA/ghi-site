@@ -73,3 +73,24 @@ msgstr "Datos de Población"
 
 msgid "Indicator"
 msgstr "Indicador"
+
+msgid "Evolution of the humanitarian response"
+msgstr "Evolución de la respuesta humanitaria"
+
+msgid "Year"
+msgstr "Año"
+
+msgid "People in need"
+msgstr "Personas en necesidad"
+
+msgid "People targeted"
+msgstr "Población meta"
+
+msgid "Requirements ($)"
+msgstr "Requerimientos financieros ($)"
+
+msgid "Funding ($)"
+msgstr "Financiación ($)"
+
+msgid "% Funded"
+msgstr "% Financiado"

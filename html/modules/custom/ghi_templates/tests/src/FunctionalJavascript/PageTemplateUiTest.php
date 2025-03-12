@@ -37,7 +37,7 @@ class PageTemplateUiTest extends BlockUiBase {
     $this->createBaseObjectType([
       'id' => 'plan',
       'label' => 'Plan',
-      'hasYear' => TRUE,
+      'field_year' => 'Year',
     ]);
     $this->createLayoutBuilderContentType('section');
     $handler_settings = [

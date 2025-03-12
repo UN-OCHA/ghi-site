@@ -3,7 +3,6 @@
 namespace Drupal\Tests\hpc_common\Unit;
 
 use Drupal\Tests\UnitTestCase;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
@@ -12,627 +11,125 @@ use Drupal\hpc_common\Helpers\ArrayHelper;
 class ArrayHelperTest extends UnitTestCase {
 
   /**
-   * The array helper class.
-   *
-   * @var \Drupal\hpc_common\Helpers\ArrayHelper
+   * Data provider for testSwapArray.
    */
-  protected $arrayHelper;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-    $this->arrayHelper = new ArrayHelper();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function tearDown(): void {
-    parent::tearDown();
-    unset($this->arrayHelper);
-  }
-
-  /**
-   * Data provider for filterArrayByProperties.
-   */
-  public function filterArrayByPropertiesDataProvider() {
-    $array = [];
-    $outputWithPopulationFilter = [];
-    $outputWithContinentFilter = [];
-    // Object 1.
-    $object1 = (object) [
-      'id' => 1,
-      'name' => 'India',
-      'population' => '1.3 bn',
-    ];
-    array_push($array, $object1);
-    // Object 2.
-    $object2 = (object) [
-      'id' => 2,
-      'name' => 'Germany',
-      'continent' => 'Europe',
-    ];
-    array_push($array, $object2);
-    // Object 3.
-    $object3 = (object) [
-      'id' => 3,
-      'name' => 'France',
-      'population' => '40 mn',
-    ];
-    array_push($array, $object3);
-
-    // Expected output when filter of population is applied.
-    $outputWithPopulationFilter[0] = $object1;
-    $outputWithPopulationFilter[2] = $object3;
-    // Expected output when filter of continent is applied.
-    $outputWithContinentFilter[1] = $object2;
-
-    return [
-      [$array, ['population'], $outputWithPopulationFilter],
-      [$array, ['continent'], $outputWithContinentFilter],
-    ];
-  }
-
-  /**
-   * Test filter array by property.
-   *
-   * @group ArrayHelper
-   * @dataProvider filterArrayByPropertiesDataProvider
-   */
-  public function testFilterArrayByProperties($array, $properties, $result) {
-    $this->assertEquals($result, $this->arrayHelper->filterArrayByProperties($array, $properties));
-  }
-
-  /**
-   * Data provider for filterArrayBySearchArray.
-   */
-  public function filterArrayBySearchArrayDataProvider() {
-    // Prepare a mock array.
+  public function swapArrayDataProvider() {
     $array = [
-      [
-        'field' => 'flow_property_simple',
-        'property' => 'id',
-      ],
-      [
-        'field' => 'flow_property_directional',
-        'object_type' => 'organizations',
-        'direction' => 'source',
-      ],
-      [
-        'field' => 'flow_property_simple',
-        'property' => 'description',
-      ],
-      [
-        'field' => 'flow_property_simple',
-        'property' => 'amountUSD',
-      ],
-      [
-        'field' => 'flow_property_directional',
-        'object_type' => 'plans',
-        'direction' => 'destination',
-      ],
-      [
-        'field' => 'flow_property_directional',
-        'object_type' => 'locations',
-        'direction' => 'destination',
-      ],
-    ];
-
-    // Prepare mock search array.
-    $search_array_1 = [
-      'field' => 'flow_property_simple',
-      'property' => 'amountUSD',
-    ];
-
-    // Prepare mock result for the above search.
-    $result_1 = [
-      3 => [
-        'field' => 'flow_property_simple',
-        'property' => 'amountUSD',
-      ],
-    ];
-
-    // Prepare mock search array.
-    $search_array_2 = ['direction' => 'destination'];
-
-    // Prepare mock result for the above search.
-    $result_2 = [
-      4 => [
-        'field' => 'flow_property_directional',
-        'object_type' => 'plans',
-        'direction' => 'destination',
-      ],
-      5 => [
-        'field' => 'flow_property_directional',
-        'object_type' => 'locations',
-        'direction' => 'destination',
-      ],
+      1 => 'one',
+      2 => 'two',
+      'one' => 'second one',
+      'two' => 'second two',
     ];
 
     return [
-      [$array, $search_array_1, $result_1],
-      [$array, $search_array_2, $result_2],
+      [$array, 1, 2, FALSE, [2, 1, 'one', 'two'], NULL],
+      [$array, 1, 'one', FALSE, ['one', 2, 1, 'two'], NULL],
+      [$array, 1, 3, FALSE, [1, 2, 'one', 'two'], FALSE],
+      [$array, '1', 2, TRUE, [1, 2, 'one', 'two'], FALSE],
+      [$array, 1, '2', TRUE, [1, 2, 'one', 'two'], FALSE],
     ];
   }
 
   /**
-   * Test filter array by search array.
+   * Test swap array function.
    *
    * @group ArrayHelper
-   * @dataProvider filterArrayBySearchArrayDataProvider
+   * @dataProvider swapArrayDataProvider
    */
-  public function testFilterArrayBySearchArray($array, $search_array, $result) {
-    $this->assertEquals($result, $this->arrayHelper->filterArrayBySearchArray($array, $search_array));
+  public function testSwapArray($data, $key1, $key2, $strict, $result_order, $return_value) {
+    $this->assertEquals($return_value, ArrayHelper::swap($data, $key1, $key2, $strict));
+    $expected = array_combine($result_order, array_map(function ($key) use ($data) {
+      return $data[$key];
+    }, $result_order));
+    $this->assertEquals($expected, $data);
   }
 
   /**
-   * Data provider for sortArray.
+   * Test arrayMapAssoc function.
+   *
+   * @group ArrayHelper
    */
-  public function sortArrayDataProvider() {
+  public function testArrayMapAssoc() {
     $array = [
-      'apple' => [
-        'total' => 200,
-        'name' => 'Apple',
-      ],
-      'strawberry' => [
-        'total' => 500,
-        'name' => 'Strawberry',
-      ],
-      'orange' => [
-        'total' => 250,
-        'name' => 'Orange',
-      ],
+      6 => ['six'],
+      2 => ['two'],
+      3 => ['three'],
+      10 => ['ten'],
     ];
-
-    // Result sorted by total.
-    $result_1 = [
-      'apple' => $array['apple'],
-      'orange' => $array['orange'],
-      'strawberry' => $array['strawberry'],
+    $result = ArrayHelper::arrayMapAssoc(function ($item) {
+      return $item[0];
+    }, $array);
+    $expected = [
+      6 => 'six',
+      2 => 'two',
+      3 => 'three',
+      10 => 'ten',
     ];
-    $result_2 = array_reverse($result_1, TRUE);
-
-    // Result sorted by name.
-    $result_3 = [
-      'apple' => $array['apple'],
-      'orange' => $array['orange'],
-      'strawberry' => $array['strawberry'],
-    ];
-    $result_4 = array_reverse($result_3);
-
-    return [
-      [$array, 'total', EndpointQuery::SORT_ASC, SORT_NUMERIC, $result_1],
-      [$array, 'total', EndpointQuery::SORT_DESC, SORT_NUMERIC, $result_2],
-      [$array, 'name', EndpointQuery::SORT_ASC, SORT_STRING, $result_3],
-      [$array, 'name', EndpointQuery::SORT_DESC, SORT_STRING, $result_4],
-    ];
+    $this->assertSame($expected, $result);
   }
 
   /**
-   * Test sort array.
+   * Test mapObjectsToString function.
    *
    * @group ArrayHelper
-   * @dataProvider sortArrayDataProvider
    */
-  public function testSortArray($data, $order, $sort, $sort_type, $result) {
-    $this->arrayHelper->sortArray($data, $order, $sort, $sort_type);
-    $this->assertEquals($result, $data);
-  }
-
-  /**
-   * Data provider for sortArrayByProgress.
-   */
-  public function sortArrayByProgressDataProvider() {
+  public function testMapObjectsToString() {
+    $class = function ($value) {
+      // @codingStandardsIgnoreStart
+      return new class ($value) {
+        private $value;
+        public function __construct($value) {
+          $this->value = $value;
+        }
+        public function __toString() { return $this->value; }
+      };
+      // @codingStandardsIgnoreEnd
+    };
     $array = [
-      ['total' => 200, 'name' => 'Apple'],
-      ['total' => 500, 'name' => 'Strawberry'],
-      ['total' => 250, 'name' => 'Orange'],
+      6 => [6 => 'six', 5 => $class('eleven'), 9 => ['one', 'three', $class('two')]],
+      2 => [2 => 'two', 7 => 'seven', 5 => 'five'],
     ];
-
-    // Result for 1st set of options.
-    $result_1 = [
-      0 => ['total' => 200, 'name' => 'Apple'],
-      2 => ['total' => 250, 'name' => 'Orange'],
-      1 => ['total' => 500, 'name' => 'Strawberry'],
+    $expected = [
+      6 => [6 => 'six', 5 => 'eleven', 9 => ['one', 'three', 'two']],
+      2 => [2 => 'two', 7 => 'seven', 5 => 'five'],
     ];
-
-    // Result for 2nd set of options.
-    $result_2 = [
-      1 => ['total' => 500, 'name' => 'Strawberry'],
-      2 => ['total' => 250, 'name' => 'Orange'],
-      0 => ['total' => 200, 'name' => 'Apple'],
-    ];
-
-    return [
-      [$array, 'total', EndpointQuery::SORT_ASC, 100, $result_1],
-      [$array, 'total', EndpointQuery::SORT_DESC, 100, $result_2],
-    ];
+    $this->assertSame($expected, ArrayHelper::mapObjectsToString($array));
   }
 
   /**
-   * Test sort array by progress.
+   * Test sortMultiDimensionalArrayByKeys function.
    *
    * @group ArrayHelper
-   * @dataProvider sortArrayByProgressDataProvider
    */
-  public function testSortArrayByProgress($data, $order, $sort, $total, $result) {
-    $this->arrayHelper->sortArrayByProgress($data, $order, $sort, $total);
-    $this->assertEquals($result, $data);
-  }
-
-  /**
-   * Data provider for sortArrayByCompositeArrayKey.
-   */
-  public function sortArrayByCompositeArrayKeyDataProvider() {
+  public function testSortMultiDimensionalArrayByKeys() {
     $array = [
-      0 => [
-        'name' => 'WASH Emergency Rapid Response to Conflict Affected Populations',
-        'organizations' => ['2178:Norwegian Refugee Council'],
-        'code' => 'NGA-18/WS/122391/5834',
-      ],
-      1 => [
-        'name' => 'Emergency shelter and Camp Management to support displaced population',
-        'organizations' => ['3244:INTERSOS Humanitarian Aid Organization'],
-        'code' => 'NGA-18/CCCM/120179/5660',
-      ],
-      2 => [
-        'name' => 'Provision of Humanitarian Air Services in Nigeria',
-        'organizations' => ['3049:World Food Programme'],
-        'code' => 'NGA-18/LOG/122420/561',
-      ],
-      3 => [
-        'name' => 'Provision of safe and equitable access to inclusive education',
-        'organizations' => ['2915:United Nations Children Fund'],
-        'code' => 'NGA-18/E/122686/124',
-      ],
+      6 => [6 => 'six', 5 => 'five', 9 => ['one', 'three', 'two']],
+      2 => [2 => 'two', 7 => 'seven', 5 => 'five'],
     ];
-
-    // Result for 1st data set.
-    $result_1 = [
-      1 => [
-        'name' => 'Emergency shelter and Camp Management to support displaced population',
-        'organizations' => ['3244:INTERSOS Humanitarian Aid Organization'],
-        'code' => 'NGA-18/CCCM/120179/5660',
-      ],
-      0 => [
-        'name' => 'WASH Emergency Rapid Response to Conflict Affected Populations',
-        'organizations' => ['2178:Norwegian Refugee Council'],
-        'code' => 'NGA-18/WS/122391/5834',
-      ],
-      3 => [
-        'name' => 'Provision of safe and equitable access to inclusive education',
-        'organizations' => ['2915:United Nations Children Fund'],
-        'code' => 'NGA-18/E/122686/124',
-      ],
-      2 => [
-        'name' => 'Provision of Humanitarian Air Services in Nigeria',
-        'organizations' => ['3049:World Food Programme'],
-        'code' => 'NGA-18/LOG/122420/561',
-      ],
+    $expected = [
+      2 => [2 => 'two', 5 => 'five', 7 => 'seven'],
+      6 => [5 => 'five', 6 => 'six', 9 => ['one', 'three', 'two']],
     ];
-
-    // Result for 2nd data set.
-    $result_2 = [
-      2 => [
-        'name' => 'Provision of Humanitarian Air Services in Nigeria',
-        'organizations' => ['3049:World Food Programme'],
-        'code' => 'NGA-18/LOG/122420/561',
-      ],
-      3 => [
-        'name' => 'Provision of safe and equitable access to inclusive education',
-        'organizations' => ['2915:United Nations Children Fund'],
-        'code' => 'NGA-18/E/122686/124',
-      ],
-      0 => [
-        'name' => 'WASH Emergency Rapid Response to Conflict Affected Populations',
-        'organizations' => ['2178:Norwegian Refugee Council'],
-        'code' => 'NGA-18/WS/122391/5834',
-      ],
-      1 => [
-        'name' => 'Emergency shelter and Camp Management to support displaced population',
-        'organizations' => ['3244:INTERSOS Humanitarian Aid Organization'],
-        'code' => 'NGA-18/CCCM/120179/5660',
-      ],
-    ];
-
-    return [
-      [$array, 'organizations', EndpointQuery::SORT_ASC, $result_1],
-      [$array, 'organizations', EndpointQuery::SORT_DESC, $result_2],
-    ];
+    ArrayHelper::sortMultiDimensionalArrayByKeys($array);
+    $this->assertSame($expected, $array);
   }
 
   /**
-   * Test sort array by composite array key.
+   * Test reduceArray function.
    *
    * @group ArrayHelper
-   * @dataProvider sortArrayByCompositeArrayKeyDataProvider
    */
-  public function testSortArrayByCompositeArrayKey($data, $order, $sort, $result) {
-    $this->arrayHelper->sortArrayByCompositeArrayKey($data, $order, $sort);
-    $this->assertEquals($result, $data);
-  }
-
-  /**
-   * Data provider for sortArrayByObjectListProperty.
-   */
-  public function sortArrayByObjectListPropertyDataProvider() {
+  public function testReduceArray() {
     $array = [
-      0 => [
-        'name' => 'WASH Emergency Rapid Response to Conflict Affected Populations',
-        'fields' => [
-          (object) ['name' => 'Gender Marker', 'value' => 'Mark females'],
-          (object) ['name' => 'Project Priority', 'value' => 'High'],
-        ],
-      ],
-      1 => [
-        'name' => 'Emergency shelter and Camp Management to support displaced population',
-        'fields' => [
-          (object) ['name' => 'Gender Marker', 'value' => 'Highlight Males'],
-          (object) ['name' => 'Project Priority', 'value' => 'Low'],
-        ],
-      ],
-      2 => [
-        'name' => 'Provision of Humanitarian Air Services in Nigeria',
-        'fields' => [
-          (object) ['name' => 'Gender Marker', 'value' => 'Not specified'],
-          (object) ['name' => 'Project Priority', 'value' => 'High'],
-        ],
-      ],
+      6 => [6 => 'six', 5 => 0, 9 => [], 10 => [1 => 'one', 2 => FALSE]],
+      2 => [2 => 'two', 7 => NULL, 5 => 'five'],
     ];
-
-    // Result for 1st data set.
-    $result_1 = [
-      0 => [
-        'name' => 'Emergency shelter and Camp Management to support displaced population',
-        'fields' => [
-          (object) ['name' => 'Gender Marker', 'value' => 'Highlight Males'],
-          (object) ['name' => 'Project Priority', 'value' => 'Low'],
-        ],
-      ],
-      1 => [
-        'name' => 'WASH Emergency Rapid Response to Conflict Affected Populations',
-        'fields' => [
-          (object) ['name' => 'Gender Marker', 'value' => 'Mark females'],
-          (object) ['name' => 'Project Priority', 'value' => 'High'],
-        ],
-      ],
-      2 => [
-        'name' => 'Provision of Humanitarian Air Services in Nigeria',
-        'fields' => [
-          (object) ['name' => 'Gender Marker', 'value' => 'Not specified'],
-          (object) ['name' => 'Project Priority', 'value' => 'High'],
-        ],
-      ],
+    $expected = [
+      6 => [6 => 'six', 10 => [1 => 'one']],
+      2 => [2 => 'two', 5 => 'five'],
     ];
-
-    // Result for 2nd data set.
-    $result_2 = [
-      0 => [
-        'name' => 'Provision of Humanitarian Air Services in Nigeria',
-        'fields' => [
-          (object) ['name' => 'Gender Marker', 'value' => 'Not specified'],
-          (object) ['name' => 'Project Priority', 'value' => 'High'],
-        ],
-      ],
-      1 => [
-        'name' => 'WASH Emergency Rapid Response to Conflict Affected Populations',
-        'fields' => [
-          (object) ['name' => 'Gender Marker', 'value' => 'Mark females'],
-          (object) ['name' => 'Project Priority', 'value' => 'High'],
-        ],
-      ],
-      2 => [
-        'name' => 'Emergency shelter and Camp Management to support displaced population',
-        'fields' => [
-          (object) ['name' => 'Gender Marker', 'value' => 'Highlight Males'],
-          (object) ['name' => 'Project Priority', 'value' => 'Low'],
-        ],
-      ],
-    ];
-
-    return [
-      [$array, 'Gender Marker', EndpointQuery::SORT_ASC, $result_1],
-      [$array, 'Gender Marker', EndpointQuery::SORT_DESC, $result_2],
-    ];
-  }
-
-  /**
-   * Test sort array by object list property.
-   *
-   * @group ArrayHelper
-   * @dataProvider sortArrayByObjectListPropertyDataProvider
-   */
-  public function testSortArrayByObjectListProperty($data, $order, $sort, $result) {
-    $this->arrayHelper->sortArrayByObjectListProperty($data, $order, $sort);
-    $this->assertEquals($result, $data);
-  }
-
-  /**
-   * Data provider for findFirstItemByProperties.
-   */
-  public function findFirstItemByPropertiesDataProvider() {
-    $array = [
-      [
-        'name' => 'Bill',
-        'surname' => 'Gates',
-        'country' => 'USA',
-      ],
-      [
-        'name' => 'Abdul',
-        'surname' => 'Kalam',
-        'country' => 'India',
-      ],
-      [
-        'name' => 'Abdul',
-        'surname' => 'Hafiz',
-        'country' => 'Pakistan',
-      ],
-    ];
-
-    // Result of 1st data set.
-    $result_1 = [
-      'name' => 'Bill',
-      'surname' => 'Gates',
-      'country' => 'USA',
-    ];
-
-    // Result of 2nd data set.
-    $result_2 = [
-      'name' => 'Abdul',
-      'surname' => 'Kalam',
-      'country' => 'India',
-    ];
-
-    // Result of 3rd data set.
-    $result_3 = [
-      'name' => 'Abdul',
-      'surname' => 'Hafiz',
-      'country' => 'Pakistan',
-    ];
-
-    return [
-      [$array, ['name' => 'Bill'], $result_1],
-      [$array, ['name' => 'Abdul'], $result_2],
-      [$array, ['name' => 'Abdul', 'country' => 'Pakistan'], $result_3],
-    ];
-  }
-
-  /**
-   * Test find first by property.
-   *
-   * @group ArrayHelper
-   * @dataProvider findFirstItemByPropertiesDataProvider
-   */
-  public function testFindFirstItemByProperties($data, $parameters, $result) {
-    $this->assertEquals($result, $this->arrayHelper->findFirstItemByProperties($data, $parameters));
-  }
-
-  /**
-   * Data provider for extendAssociativeArray.
-   */
-  public function extendAssociativeArrayDataProvider() {
-    $array = [
-      'name' => 'Bill',
-      'surname' => 'Gates',
-      'country' => 'USA',
-    ];
-
-    // Result for 1st data set.
-    $result_1 = [
-      'name' => 'Bill',
-      'surname' => 'Gates',
-      'country' => 'USA',
-      'company' => 'Microsoft',
-    ];
-
-    // Result for 2nd data set.
-    $result_2 = [
-      'name' => 'Bill',
-      'surname' => 'Gates',
-      'job' => 'CEO',
-      'country' => 'USA',
-    ];
-
-    return [
-      [$array, 'company', 'Microsoft', NULL, $result_1],
-      [$array, 'job', 'CEO', 2, $result_2],
-    ];
-  }
-
-  /**
-   * Test extending an associative array.
-   *
-   * @group ArrayHelper
-   * @dataProvider extendAssociativeArrayDataProvider
-   */
-  public function testExtendAssociativeArray($data, $key, $value, $pos, $result) {
-    $this->arrayHelper->extendAssociativeArray($data, $key, $value, $pos);
-    $this->assertEquals($result, $data);
-  }
-
-  /**
-   * Data provider for sumObjectsByProperty.
-   */
-  public function sumObjectsByPropertyDataProvider() {
-    $array = [
-      (object) ['item' => 'mobile', 'cost' => 1500],
-      (object) ['item' => 'tshirt', 'cost' => 200],
-      (object) ['item' => 'laptop', 'cost' => 2000],
-    ];
-
-    return [
-      [$array, 'cost', 3700],
-      [[], 'cost', 0],
-    ];
-  }
-
-  /**
-   * Test sum objects by property.
-   *
-   * @group ArrayHelper
-   * @dataProvider sumObjectsByPropertyDataProvider
-   */
-  public function testSumObjectsByProperty($data, $property, $result) {
-    $this->assertEquals($result, $this->arrayHelper->sumObjectsByProperty($data, $property));
-  }
-
-  /**
-   * Data provider for sortObjectsByProperty.
-   */
-  public function sortObjectsByPropertyDataProvider() {
-    $array = [
-      0 => (object) ['item' => 'mobile', 'cost' => 1500],
-      1 => (object) ['item' => 'tshirt', 'cost' => 200],
-      2 => (object) ['item' => 'laptop', 'cost' => 2000],
-    ];
-
-    // Result for 1st data set.
-    $result_1 = [
-      1 => (object) ['item' => 'tshirt', 'cost' => 200],
-      0 => (object) ['item' => 'mobile', 'cost' => 1500],
-      2 => (object) ['item' => 'laptop', 'cost' => 2000],
-    ];
-
-    // Result for 2nd data set.
-    $result_2 = [
-      2 => (object) ['item' => 'laptop', 'cost' => 2000],
-      0 => (object) ['item' => 'mobile', 'cost' => 1500],
-      1 => (object) ['item' => 'tshirt', 'cost' => 200],
-    ];
-
-    // Result for 3rd data set.
-    $result_3 = [
-      2 => (object) ['item' => 'laptop', 'cost' => 2000],
-      0 => (object) ['item' => 'mobile', 'cost' => 1500],
-      1 => (object) ['item' => 'tshirt', 'cost' => 200],
-    ];
-
-    // Result for 4th data set.
-    $result_4 = [
-      1 => (object) ['item' => 'tshirt', 'cost' => 200],
-      0 => (object) ['item' => 'mobile', 'cost' => 1500],
-      2 => (object) ['item' => 'laptop', 'cost' => 2000],
-    ];
-
-    return [
-      [$array, 'cost', EndpointQuery::SORT_ASC, SORT_NUMERIC, $result_1],
-      [$array, 'cost', EndpointQuery::SORT_DESC, SORT_NUMERIC, $result_2],
-      [$array, 'item', EndpointQuery::SORT_ASC, SORT_STRING, $result_3],
-      [$array, 'item', EndpointQuery::SORT_DESC, SORT_STRING, $result_4],
-    ];
-  }
-
-  /**
-   * Test sort objects by property.
-   *
-   * @group ArrayHelper
-   * @dataProvider sortObjectsByPropertyDataProvider
-   */
-  public function testSortObjectsByProperty($data, $property, $sort, $sort_type, $result) {
-    $this->arrayHelper->sortObjectsByProperty($data, $property, $sort, $sort_type);
-    $this->assertEquals($result, $data);
+    ArrayHelper::reduceArray($array);
+    $this->assertSame($expected, $array);
   }
 
 }

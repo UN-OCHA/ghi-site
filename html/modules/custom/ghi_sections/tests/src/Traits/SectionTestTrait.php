@@ -12,6 +12,7 @@ use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_sections\Menu\SectionMenuStorage;
+use Drupal\node\Entity\NodeType;
 use Drupal\taxonomy\Entity\Vocabulary;
 
 /**
@@ -37,10 +38,14 @@ trait SectionTestTrait {
    *   The created node type.
    */
   public function createSectionType() {
+    if ($section_type = NodeType::load(self::SECTION_BUNDLE)) {
+      return $section_type;
+    }
+
     $this->createBaseObjectType([
       'id' => 'plan',
       'label' => 'Plan',
-      'hasYear' => TRUE,
+      'field_year' => 'Year',
     ]);
 
     // Create a team.
@@ -113,6 +118,7 @@ trait SectionTestTrait {
     if (empty($values['field_base_object'])) {
       $base_object = $this->createBaseObject([
         'type' => 'plan',
+        'field_year' => 2025,
       ]);
       $values['field_base_object'] = [
         'target_id' => $base_object->id(),

@@ -129,7 +129,7 @@ class PlanClusterLogframeLinks extends GHIBlockBase implements OverrideDefaultTi
         '#image' => Markup::create($icon),
         '#title' => $title_map[$plan?->getPlanClusterType() ?? Plan::CLUSTER_TYPE_CLUSTER],
         '#description' => $description_map[$plan?->getPlanClusterType() ?? Plan::CLUSTER_TYPE_CLUSTER],
-        '#link' => $link->toRenderable(),
+        '#link' => $link?->toRenderable(),
       ];
     }
 
