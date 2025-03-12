@@ -71,7 +71,7 @@ class WizardTest extends BrowserTestBase {
     $this->createBaseObjectType([
       'id' => 'plan',
       'label' => 'Plan',
-      'hasYear' => TRUE,
+      'field_year' => 'Year',
     ]);
     $this->drupalCreateContentType([
       'type' => 'section',

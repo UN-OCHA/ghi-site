@@ -7,6 +7,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\hpc_api\Query\EndpointQueryPluginInterface;
 use Drupal\hpc_common\Helpers\ContextHelper;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -118,6 +119,13 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    * @var \Drupal\Core\File\FileSystemInterface
    */
   protected $fileSystem;
+
+  /**
+   * Stores instantiated query handlers.
+   *
+   * @var \Drupal\hpc_api\Query\EndpointQueryPluginInterface[]
+   */
+  protected $queryHandlers = [];
 
   /**
    * {@inheritdoc}
@@ -617,7 +625,9 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    *   The query handler class.
    */
   protected function getQueryHandler($source_key = 'data') {
-
+    if (!empty($this->queryHandlers[$source_key])) {
+      return $this->queryHandlers[$source_key];
+    }
     $configuration = $this->getPluginDefinition();
     if (empty($configuration['data_sources'])) {
       return NULL;
@@ -658,8 +668,20 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
         }
       }
     }
-
+    $this->queryHandlers[$source_key] = $query_handler;
     return $query_handler;
+  }
+
+  /**
+   * Set a query handler plugin to be used for the given source key.
+   *
+   * @param string $source_key
+   *   The source key for which the given query plugin should be used.
+   * @param \Drupal\hpc_api\Query\EndpointQueryPluginInterface $query_handler
+   *   The query plugin.
+   */
+  public function setQueryHandler($source_key, EndpointQueryPluginInterface $query_handler) {
+    $this->queryHandlers[$source_key] = $query_handler;
   }
 
   /**

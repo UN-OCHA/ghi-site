@@ -7,17 +7,20 @@ use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_base_objects\Entity\BaseObject;
+use Drupal\ghi_base_objects\Entity\BaseObjectFocusCountryInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
+use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
 
 /**
  * Bundle class for plan base objects.
  */
-class Plan extends BaseObject implements BaseObjectMetaDataInterface {
+class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObjectFocusCountryInterface {
 
   use PlanTypeTrait;
   use FtsLinkTrait;
+  use AttachmentFilterTrait;
 
   public const CLUSTER_TYPE_CLUSTER = 'cluster';
   public const CLUSTER_TYPE_SECTOR = 'sector';
@@ -68,10 +71,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
-   * Get the focus country for the plan.
-   *
-   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
-   *   The country base object or NULL.
+   * {@inheritdoc}
    */
   public function getFocusCountry() {
     if (!$this->hasField('field_focus_country')) {
@@ -81,10 +81,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
-   * Get the focus country override for the plan.
-   *
-   * @return object|null
-   *   A latLng object or NULL.
+   * {@inheritdoc}
    */
   public function getFocusCountryOverride() {
     if (!$this->hasField('field_focus_country_override') || $this->get('field_focus_country_override')->isEmpty()) {
@@ -97,10 +94,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
   }
 
   /**
-   * Get the focus country map location for the plan.
-   *
-   * @return \Drupal\ghi_base_objects\ApiObjects\Country|null
-   *   An object describing the map location or NULL.
+   * {@inheritdoc}
    */
   public function getFocusCountryMapLocation(?Country $default_country = NULL) {
     $focus_country = $this->getFocusCountry();
@@ -351,6 +345,19 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface {
       return NULL;
     }
     return $this->get('field_plan_caseload')?->attachment_id ?: NULL;
+  }
+
+  /**
+   * Get the plan caseload attachment.
+   *
+   * @param array $caseloads
+   *   The caseloads to choose from.
+   *
+   * @return object|null
+   *   A caseload object or NULL.
+   */
+  public function getPlanCaseload(array $caseloads) {
+    return $this->findPlanCaseload($caseloads, $this->getPlanCaseloadId());
   }
 
   /**

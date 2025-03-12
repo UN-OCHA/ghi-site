@@ -5,7 +5,6 @@ namespace Drupal\Tests\ghi_base_objects\Kernel;
 use Drupal\Core\Url;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
-use Drupal\ghi_base_objects\Entity\BaseObjectType;
 
 /**
  * Tests the base object entity.
@@ -112,15 +111,11 @@ class BaseObjectTest extends KernelTestBase {
     $this->assertEquals(20, $base_object->getSourceId());
     $this->assertEquals('plan--20', $base_object->getUniqueIdentifier());
 
-    $base_object_type_incomplete = BaseObjectType::create([
-      'id' => $this->randomMachineName(),
-      'label' => $this->randomString(),
-      'hasYear' => FALSE,
-    ]);
+    $base_object_type_incomplete = $this->createBaseObjectType();
     $base_object = $this->createBaseObject([
       'type' => $base_object_type_incomplete->id(),
       'name' => 'base_object_name',
-      'field_original_id' => 20,
+      'field_original_id' => NULL,
     ]);
     $this->assertNull($base_object->getSourceId());
   }
@@ -129,20 +124,12 @@ class BaseObjectTest extends KernelTestBase {
    * Tests base object needsYear() method.
    */
   public function testBaseObjectNeedsYear() {
-    $base_object_type = $this->createBaseObjectType([
-      'hasYear' => FALSE,
-    ]);
-    $base_object = $this->createBaseObject([
-      'type' => $base_object_type->id(),
-    ]);
+    $base_object_type = $this->createBaseObjectType();
+    $base_object = $this->createBaseObject(['type' => $base_object_type->id()]);
     $this->assertTrue($base_object->needsYear());
 
-    $base_object_type = $this->createBaseObjectType([
-      'hasYear' => TRUE,
-    ]);
-    $base_object = $this->createBaseObject([
-      'type' => $base_object_type->id(),
-    ]);
+    $base_object_type = $this->createBaseObjectType(['field_year' => 'Year']);
+    $base_object = $this->createBaseObject(['type' => $base_object_type->id()]);
     $this->assertFalse($base_object->needsYear());
   }
 
@@ -156,6 +143,30 @@ class BaseObjectTest extends KernelTestBase {
     $timestamp = time() - 10000;
     $base_object->setCreatedTime($timestamp);
     $this->assertEquals($timestamp, $base_object->getCreatedTime());
+  }
+
+  /**
+   * Tests base object created timestamps.
+   */
+  public function testApiCacheTagsToInvalidate() {
+    $this->createBaseObjectType(['id' => 'custom_base_object_type']);
+    $base_object = $this->createBaseObject([
+      'type' => 'custom_base_object_type',
+      'field_original_id' => 20,
+    ]);
+    $cache_tags = $base_object->getApiCacheTagsToInvalidate();
+    $this->assertNotEmpty($cache_tags);
+    $this->assertIsArray($cache_tags);
+    $this->assertArrayHasKey(0, $cache_tags);
+    $this->assertEquals('custom_base_object_type_id:20', $cache_tags[0]);
+
+    $base_object = $this->createBaseObject([
+      'type' => 'custom_base_object_type',
+      'field_original_id' => NULL,
+    ]);
+    $cache_tags = $base_object->getApiCacheTagsToInvalidate();
+    $this->assertEmpty($cache_tags);
+    $this->assertIsArray($cache_tags);
   }
 
 }

@@ -23,7 +23,6 @@ abstract class BlockKernelTestBase extends KernelTestBase {
     'migrate',
     'hpc_api',
     'ghi_form_elements',
-    // 'ghi_subpages',
     'ghi_sections',
     'ghi_blocks',
     'ghi_base_objects',
@@ -62,6 +61,8 @@ abstract class BlockKernelTestBase extends KernelTestBase {
    *   The plugin id.
    * @param array $configuration
    *   The hpc-specific configuration.
+   * @param array $contexts
+   *   An array of context objects.
    * @param string $label
    *   The label.
    * @param bool $label_display
@@ -70,8 +71,9 @@ abstract class BlockKernelTestBase extends KernelTestBase {
    * @return \Drupal\hpc_common\Plugin\HPCPluginInterface
    *   The block plugin.
    */
-  protected function createBlockPlugin($plugin_id, $configuration, $label = '<none>', $label_display = FALSE) {
-    return $this->createSectionComponent($plugin_id, $configuration, $label, $label_display)?->getPlugin();
+  protected function createBlockPlugin($plugin_id, $configuration, array $contexts = [], $label = '<none>', $label_display = FALSE) {
+    $plugin = $this->createSectionComponent($plugin_id, $configuration, $label, $label_display)?->getPlugin($contexts);
+    return $plugin;
   }
 
   /**
