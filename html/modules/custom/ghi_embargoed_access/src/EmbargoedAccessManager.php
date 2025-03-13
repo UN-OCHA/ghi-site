@@ -135,14 +135,10 @@ class EmbargoedAccessManager {
       return FALSE;
     }
     if ($entity instanceof SubpageNodeInterface && $parent = $entity->getParentBaseNode()) {
-      if ($this->isProtected($parent) && !$this->passwordAccessManager?->hasUserAccessToEntity($parent)) {
-        return FALSE;
-      }
+      return $this->entityAccess($parent);
     }
     if ($entity instanceof ContentBase && $section = $this->getCurrentSectionNode()) {
-      if ($this->isProtected($section) && !$this->passwordAccessManager?->hasUserAccessToEntity($section)) {
-        return FALSE;
-      }
+      return $this->entityAccess($section);
     }
     return TRUE;
   }
@@ -239,6 +235,10 @@ class EmbargoedAccessManager {
 
     if ($this->isProtected($entity)) {
       $variables['attributes']['class'][] = 'path-protected';
+    }
+
+    if ($this->entityAccess($entity)) {
+      $variables['attributes']['class'][] = 'access-granted';
     }
 
     $this->addCacheContextsToThemeVariables($entity, $variables);
