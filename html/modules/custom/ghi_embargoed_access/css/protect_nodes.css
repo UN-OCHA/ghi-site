@@ -1,7 +1,7 @@
 /** Page level: For articles and documents. */
 .path-protected .node--view-mode-full footer.node__meta .node__submitted > ul > li:first-child::before,
 /** Page level: For sections and section subpages. */
-.section-protected .block-section-switcher .cd-dropdown__btn-label::before,
+.section-protected .cd-page-title::before,
 .section-protected .block-section-switcher .cd-dropdown ul li.active::before,
 /** For article lists. */
 article.node.protected:not(.section-internal-protected).node--view-mode-grid .cd-teaser__title::before,
@@ -22,6 +22,18 @@ body:not(.section-protected) #main-content a.protected::before {
   position: relative !important;
   top: unset !important;
   left: unset !important;
+}
+
+.section-protected .cd-page-title::before {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
+.section-protected:not(.access-granted) .block-wrapper--sectionmetadata,
+.section-protected:not(.access-granted) .block-wrapper--sectionnavigation,
+.section-protected:not(.access-granted) .subpage-title-wrapper {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 article.node.protected.node--view-mode-grid .cd-teaser__title::before {
