@@ -12,6 +12,7 @@
   window.ghi.map = {
 
     states: {},
+    storage: {},
     config: {
       map: {
         padding: 50,
@@ -61,37 +62,68 @@
      *
      * @param {Object} location
      *   The location object.
+     * @param {Callable} featureCallback
+     *   An optional callback for the retrieved features.
+     * @param {Boolean} async
+     *   Whether to retrieve the feature data blocking or non-blocking.
      *
      * @returns {Object}
      *   The feature data.
      */
-    getGeoJSON: function(location, featureCallback = null) {
-      if (typeof this.storage == 'undefined') {
-        this.storage = []
+    getGeoJSON: function(location, featureCallback = null, async = true) {
+      let self = this;
+      if (!location.filepath) {
+        return null;
       }
-      if (location.filepath && typeof this.storage[location.filepath] == 'undefined') {
-        let feature = null;
+      if (typeof this.storage[location.filepath] == 'undefined') {
+        this.storage[location.filepath] = null;
         $.ajax({
           dataType: 'json',
           url: location.filepath,
           success: function (data) {
             let type = data.type ?? null;
-            feature = type == 'FeatureCollection' ? (data.features[0] ?? null) : data;
+            let feature = type == 'FeatureCollection' ? (data.features[0] ?? null) : data;
             if (!type || !feature) {
               return;
             }
-            feature.properties.object_id = location.location_id;
-            feature.properties.location_id = location.location_id;
-            feature.properties.location_name = location.location_name;
+            feature.id = Number(location.location_id);
+            feature.properties = {
+              object_id: location.location_id,
+              location_id: location.location_id,
+              location_name: location.location_name,
+            };
             if (featureCallback) {
               feature = featureCallback(feature, location);
             }
+            self.storage[location.filepath] = feature;
           },
-          async: false
+          complete: function () {
+            self.storage[location.filepath] = self.storage[location.filepath] ?? FALSE;
+          },
+          async: async
         });
-        this.storage[location.filepath] = feature;
       }
       return this.storage[location.filepath];
+    },
+
+    /**
+     * Load features for the given locations asynchronously.
+     *
+     * @param {Array} locations
+     *   A locations array.
+     * @param {Callable} callback
+     *   A callback function.
+     */
+    loadFeaturesAsync: function (locations, callback) {
+      let self = this;
+      let geojson_features = locations.map(item => this.getGeoJSON(item)).filter(d => d);
+      let intervall = setInterval(() => {
+        let storage = Object.values(self.storage);
+        if (storage.filter((d) => d !== null).length == storage.length) {
+          clearInterval(intervall);
+          callback(storage);
+        }
+      }, 500);
     },
 
     /**

@@ -175,31 +175,6 @@
     }
 
     /**
-     * Build the country features.
-     *
-     * @returns {Array}
-     *   An array of feature objects.
-     */
-    buildCountryFeatures = function () {
-      let state = this.state;
-      let data = state.getData();
-      let geojson = data.geojson ?? {};
-
-      let country_features = [];
-      for (let location_id in geojson) {
-        let country_feature = state.getMapController().getGeoJSON(geojson[location_id]);
-        if (!country_feature) {
-          continue;
-        }
-        country_feature.id = Number(location_id);
-        country_feature.properties.location_id = Number(location_id);
-        country_feature.properties.object_id = Number(location_id);
-        country_features.push(country_feature);
-      }
-      return country_features;
-    }
-
-    /**
      * Update the features in the current map.
      *
      * @returns {Array}
@@ -421,10 +396,10 @@
 
       // Build the country features and add them to the source, but do it
       // non-blocking.
-      setTimeout(() => {
-        self.updateMapData(geojson_source_id, self.buildCountryFeatures());
-      }, 1000);
-
+      let locations = Object.values(state.getData().geojson ?? {});
+      state.getMapController().loadFeaturesAsync(locations, (features) => {
+        self.updateMapData(geojson_source_id, features);
+      });
     }
 
     /**
@@ -456,11 +431,9 @@
 
       // Build the admin area features and add them to the source, but do it
       // non-blocking.
-      setTimeout(() => {
-        // Add the admin area outlines.
-        let geojson_features = state.getLocations().map(item => state.getMapController().getGeoJSON(item)).filter(d => d);
-        self.updateMapData(geojson_source_id, geojson_features);
-      }, 1000);
+      state.getMapController().loadFeaturesAsync(state.getLocations(), (features) => {
+        self.updateMapData(geojson_source_id, features);
+      });
     }
 
     /**
