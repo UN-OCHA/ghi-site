@@ -69,6 +69,9 @@ class SectionMegaMenu extends SectionMenuWidgetBase {
 
   /**
    * Set this menu to be active.
+   *
+   * @param bool $state
+   *   The new status for this menu.
    */
   public function setActive($state = FALSE) {
     $this->isActive = $state;
@@ -103,6 +106,10 @@ class SectionMegaMenu extends SectionMenuWidgetBase {
         '#markup' => $this->getLabel(),
       ],
     ];
+
+    if ($this->isProtected()) {
+      $build['#attributes']['class'][] = 'protected';
+    }
 
     if ($header = $this->getHeader()) {
       $build['header'] = [
@@ -178,7 +185,7 @@ class SectionMegaMenu extends SectionMenuWidgetBase {
         '#gin_lb_theme_suggestions' => FALSE,
       ],
       '#cache' => [
-        'tags' => $groups_cache_tags,
+        'tags' => Cache::mergeTags($groups_cache_tags, $this->getCacheTags()),
       ],
     ];
     return $build;

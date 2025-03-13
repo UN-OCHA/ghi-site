@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_sections\MenuItemType;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\node\NodeInterface;
 
@@ -55,6 +56,7 @@ class SectionNode extends SectionMenuWidgetBase {
       $link['#attributes']['class'][] = 'active';
       $link['#wrapper_attributes']['class'][] = 'active';
     }
+    $link['#cache']['tags'] = Cache::mergeTags($link['#cache']['tags'] ?? [], $subpage->getCacheTags());
     return $link;
   }
 
