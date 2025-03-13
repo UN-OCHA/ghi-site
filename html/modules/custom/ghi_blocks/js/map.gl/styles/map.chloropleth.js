@@ -124,7 +124,7 @@
         feature.properties.object_count = location.object_count;
         feature.properties.admin_level = location.admin_level;
         return feature;
-      })).filter(d => d);
+      }, false)).filter(d => d);
       return geojson_features;
     }
 
