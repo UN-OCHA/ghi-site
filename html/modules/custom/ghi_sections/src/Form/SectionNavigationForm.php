@@ -188,7 +188,16 @@ class SectionNavigationForm extends FormBase {
         ],
         '#weight' => $delta,
         'label' => [
-          '#markup' => Markup::create($item_label),
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          '#attributes' => [
+            'class' => [
+              'menu-label',
+            ],
+          ],
+          'value' => [
+            '#markup' => Markup::create($item_label),
+          ],
         ],
         'type' => [
           '#markup' => $plugin->getPluginLabel(),

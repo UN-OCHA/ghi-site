@@ -8,8 +8,12 @@ article.node.protected:not(.section-internal-protected).node--view-mode-grid .cd
 /** For the global menus. */
 .cd-header a.protected::before,
 /** Links inside the content are, but only for links to outside the section. */
-body:not(.section-protected) .links--entity-navigation .megamenu a.protected::before,
-body:not(.section-protected) #main-content a.protected::before {
+body:not(.section-protected) #main-content .links--entity-navigation .megamenu a.protected::before,
+body:not(.section-protected) #main-content .links--entity-navigation .dropdown.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
+body:not(.section-protected) #main-content .links--entity-navigation .megamenu.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
+body:not(.section-protected) #main-content a.protected::before,
+/** Backend views */
+.view .view-content .views-field-title a.protected::before {
   content: '';
   background-color: currentColor;
   -webkit-mask-image: url("../assets/lock.svg");
@@ -24,9 +28,44 @@ body:not(.section-protected) #main-content a.protected::before {
   left: unset !important;
 }
 
+body:not(.section-protected) #main-content .links--entity-navigation .dropdown.protected a.protected::before {
+  display: none;
+}
+
+/** For the global menus. */
+.cd-header a.protected::before {
+  width: 0.55rem;
+  height: 0.55rem;
+}
+
+.path-protected .node--view-mode-full footer.node__meta .node__submitted > ul > li:first-child::before {
+  width: 0.65rem;
+  height: 0.65rem;
+}
+
+.view .view-content .views-field-title a.protected::before {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/** Section navigation mega menu label. */
+body:not(.section-protected) #main-content .links--entity-navigation li > .link-wrapper > a.protected::before,
+body:not(.section-protected) #main-content .links--entity-navigation .dropdown.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
+body:not(.section-protected) #main-content .links--entity-navigation .megamenu.protected .cd-dropdown__btn .cd-dropdown__btn-label::before {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+/** Section navigation mega menu links inside the mega menu. */
+body:not(.section-protected) #main-content .links--entity-navigation .megamenu a.protected::before {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+/** Section page title. */
 .section-protected .cd-page-title::before {
-  width: 1.8rem;
-  height: 1.8rem;
+  width: 1.7rem;
+  height: 1.7rem;
 }
 
 .section-protected:not(.access-granted) .block-wrapper--sectionmetadata,

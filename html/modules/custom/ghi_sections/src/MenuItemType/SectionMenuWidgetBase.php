@@ -24,6 +24,20 @@ abstract class SectionMenuWidgetBase {
   protected $label;
 
   /**
+   * Whether this mega menu is currently protected.
+   *
+   * @var bool
+   */
+  private $protected = FALSE;
+
+  /**
+   * An array of cache tags to associate to the widget.
+   *
+   * @var array
+   */
+  protected $cacheTags;
+
+  /**
    * Set the current node for the menu item.
    *
    * @param \Drupal\node\NodeInterface $current_node
@@ -61,6 +75,46 @@ abstract class SectionMenuWidgetBase {
    */
   public function setLabel($label) {
     $this->label = $label;
+  }
+
+  /**
+   * Set this menu to be protected.
+   *
+   * @param bool $state
+   *   The new status for this menu.
+   */
+  public function setProtected($state = FALSE) {
+    $this->protected = $state;
+  }
+
+  /**
+   * Check if this menu is protected.
+   *
+   * @return bool
+   *   The new status for this menu.
+   */
+  public function isProtected() {
+    return $this->protected;
+  }
+
+  /**
+   * Set the cache tags for the menu item.
+   *
+   * @param string[] $cache_tags
+   *   The cache tags.
+   */
+  public function setCacheTags(array $cache_tags) {
+    $this->cacheTags = $cache_tags;
+  }
+
+  /**
+   * Get the cache tags for the menu item.
+   *
+   * @return string[]
+   *   The cache tags.
+   */
+  public function getCacheTags() {
+    return $this->cacheTags ?? [];
   }
 
   /**
