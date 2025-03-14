@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
 ## Cleanup the solr core data.
+##
+## Usage: fin solr cleanup [-h]
+##
 
 # Environment variables passed from fin:
 #
@@ -11,5 +14,11 @@
 #   $SOLR_HOST -- (string) the hostname
 #   $SOLR_PORT -- (integer) the port
 #   $SOLR_CORE -- (string) the core name
+
+usage="$(basename "$0") [-h]
+
+where:
+    -h  show this help text"
+
 
 fin exec --in=solr "solr delete -c $SOLR_CORE -p $SOLR_PORT"

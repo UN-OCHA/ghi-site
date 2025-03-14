@@ -191,9 +191,10 @@ class SectionNavigationForm extends FormBase {
           '#type' => 'html_tag',
           '#tag' => 'span',
           '#attributes' => [
-            'class' => [
+            'class' => array_filter([
               'menu-label',
-            ],
+              $plugin->getWidget()->isProtected() ? 'protected' : NULL,
+            ]),
           ],
           'value' => [
             '#markup' => Markup::create($item_label),

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-## Run project's PHPUnit tests.
+## Run the data migration.
 ##
 ## Usage: fin update-data
+##
 
 # Environment variables passed from fin:
 #
@@ -10,6 +11,11 @@
 #   $VIRTUAL_HOST - (string) ex. projectname.docksal
 #   $DOCROOT - name of the docroot folder
 #   $DOCKER_RUNNING - (string) "true" or "false"
+
+usage="$(basename "$0") [-h] update-data
+
+where:
+    -h  show this help text"
 
 fin drush migrate:import --group hpc_api_data --update
 fin drush migrate:import --group ncms
