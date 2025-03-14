@@ -13,7 +13,9 @@ body:not(.section-protected) #main-content .links--entity-navigation .dropdown.p
 body:not(.section-protected) #main-content .links--entity-navigation .megamenu.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
 body:not(.section-protected) #main-content a.protected::before,
 /** Backend views */
-.view .view-content .views-field-title a.protected::before {
+.view .view-content .views-field-title a.protected::before,
+/** Section navigation backend page */
+.ghi-sections-section-navigation-form .menu-label.protected::before {
   content: '';
   background-color: currentColor;
   -webkit-mask-image: url("../assets/lock.svg");
