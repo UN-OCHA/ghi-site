@@ -13,7 +13,7 @@ body:not(.section-protected) #main-content .links--entity-navigation .dropdown.p
 body:not(.section-protected) #main-content .links--entity-navigation .megamenu.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
 body:not(.section-protected) #main-content a.protected::before,
 /** Backend views */
-.view .view-content .views-field-title a.protected::before,
+.view .view-content tr.protected .views-field-title::before,
 /** Section navigation backend page */
 .ghi-sections-section-navigation-form .menu-label.protected::before {
   content: '';
@@ -36,18 +36,20 @@ body:not(.section-protected) #main-content .links--entity-navigation .dropdown.p
 
 /** For the global menus. */
 .cd-header a.protected::before {
-  width: 0.55rem;
-  height: 0.55rem;
+  width: 0.53rem;
+  height: 0.53rem;
+  top: 0 !important;
 }
 
 .path-protected .node--view-mode-full footer.node__meta .node__submitted > ul > li:first-child::before {
-  width: 0.65rem;
-  height: 0.65rem;
+  width: 0.6rem;
+  height: 0.6rem;
 }
 
-.view .view-content .views-field-title a.protected::before {
+.view .view-content tr.protected .views-field-title::before {
   width: 0.75rem;
   height: 0.75rem;
+  margin-right: 0;
 }
 
 /** Section navigation mega menu label. */

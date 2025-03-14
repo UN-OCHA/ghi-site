@@ -101,6 +101,14 @@ function ghi_embargoed_access_entity_operation(EntityInterface $entity) {
 }
 
 /**
+ * Implements hook_preprocess_views_view_table().
+ */
+function ghi_embargoed_access_preprocess_views_view_table(&$variables) {
+  $embargoed_access_manager = ghi_embargoed_access_get_access_manager();
+  $embargoed_access_manager->preprocessViewsTable($variables);
+}
+
+/**
  * Implements hook_preprocess_views_view_field().
  *
  * Output the values of the protected fields as gin-style chips, same as for
