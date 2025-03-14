@@ -336,6 +336,36 @@ class EmbargoedAccessManager {
   }
 
   /**
+   * Preprocess a views table display.
+   *
+   * Marks all rows representing protected entities with a class 'protected'.
+   *
+   * @param array $variables
+   *   The variables passed in from hook_preprocess_views_view_table.
+   */
+  public function preprocessViewsTable(&$variables) {
+    if (!$this->embargoedAccessEnabled()) {
+      return;
+    }
+
+    /** @var \Drupal\views\ViewExecutable $view */
+    $view = $variables['view'];
+    foreach ($variables['rows'] as $row_key => &$row) {
+      $entity = $view->result[$row_key]->_entity;
+      if (!$entity instanceof NodeInterface || !$this->isProtected($entity)) {
+        continue;
+      }
+      $variables['rows'][$row_key]['attributes']->addClass('protected');
+    }
+
+    // Adding the library here is necessary in order to also support entity
+    // browser views that are embedded in an iframe. Unfortunately, these do
+    // not go through the typical rendering process and hook_preprocess_html
+    // does not get called.
+    $variables['#attached']['library'][] = 'ghi_embargoed_access/protect_nodes';
+  }
+
+  /**
    * Checks if the given node supports protection.
    *
    * @param \Drupal\node\NodeInterface $node
