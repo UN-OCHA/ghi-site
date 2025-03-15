@@ -1,3 +1,7 @@
+.path-protected .field--type-entity-access-password-password {
+  margin-top: 4rem;
+}
+
 .path-protected .field--type-entity-access-password-password > form {
   margin-top: 2rem;
   margin-bottom: 2rem;

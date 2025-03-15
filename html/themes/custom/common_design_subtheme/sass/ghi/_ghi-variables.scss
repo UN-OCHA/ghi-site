@@ -5,6 +5,8 @@
   // Primary colors.
   --ghi-yellow: #fed83d;
   --ghi-grey--dark: #4d4d4d;
+
+  // Filters from https://angel-rs.github.io/css-color-filter-generator/.
   --ghi-filter-grey--dark: invert(27%) sepia(0%) saturate(3%) hue-rotate(236deg)
     brightness(90%) contrast(77%);
 
@@ -38,6 +40,7 @@
 
   // GHI Semantic color definitions.
   --ghi-default-text-color: var(--ghi-grey--dark);
+  --ghi-disabled-text-color: var(--ghi-grey);
   --ghi-default-border-color: var(--ghi-grey--light);
   --ghi-default-border-color-background: var(--ghi-grey);
   --ghi-default-background-color: var(--ghi-grey--background);
