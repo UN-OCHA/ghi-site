@@ -196,10 +196,6 @@
                     padding: 1rem;
                   }
 
-                  a::before {
-                    display: none;
-                  }
-
                   a:hover .vertical-tabs__menu-item-title,
                   a:focus .vertical-tabs__menu-item-title {
                     text-decoration: none;
@@ -233,10 +229,6 @@
                   span {
                     padding-top: 0;
                     padding-bottom: 0;
-
-                    &::before {
-                      display: none;
-                    }
                   }
                 }
               }

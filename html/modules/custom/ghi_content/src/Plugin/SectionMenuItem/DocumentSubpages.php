@@ -111,6 +111,8 @@ class DocumentSubpages extends SectionMenuPluginBase implements OptionalSectionM
         $widget->setActive($same_page || $contained_page);
       }
     }
+    $widget->setCacheTags($document->getCacheTags());
+    $widget->setProtected($document->isProtected());
     return $widget;
   }
 

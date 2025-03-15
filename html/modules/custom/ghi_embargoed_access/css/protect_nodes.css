@@ -1,0 +1,88 @@
+/** Page level: For articles and documents. */
+.path-protected .node--view-mode-full footer.node__meta .node__submitted > ul > li:first-child::before,
+/** Page level: For sections and section subpages. */
+.section-protected .cd-page-title::before,
+.section-protected .block-section-switcher .cd-dropdown ul li.active::before,
+/** For article lists. */
+article.node.protected:not(.section-internal-protected).node--view-mode-grid .cd-teaser__title::before,
+/** For the global menus. */
+.cd-header a.protected::before,
+/** Links inside the content are, but only for links to outside the section. */
+body:not(.section-protected) #main-content .links--entity-navigation .megamenu a.protected::before,
+body:not(.section-protected) #main-content .links--entity-navigation .dropdown.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
+body:not(.section-protected) #main-content .links--entity-navigation .megamenu.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
+body:not(.section-protected) #main-content a.protected::before,
+/** Backend views */
+.view .view-content tr.protected .views-field-title::before,
+/** Section navigation backend page */
+.ghi-sections-section-navigation-form .menu-label.protected::before {
+  content: '';
+  background-color: currentColor;
+  -webkit-mask-image: url("../assets/lock.svg");
+  mask-image: url("../assets/lock.svg");
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-right: 0.3rem;
+  display: inline-block;
+  /** Work around issues with the vertical tabs in the mega menus. */
+  position: relative !important;
+  top: unset !important;
+  left: unset !important;
+}
+
+body:not(.section-protected) #main-content .links--entity-navigation .dropdown.protected a.protected::before {
+  display: none;
+}
+
+/** For the global menus. */
+.cd-header a.protected::before {
+  width: 0.53rem;
+  height: 0.53rem;
+  top: 0 !important;
+}
+
+.path-protected .node--view-mode-full footer.node__meta .node__submitted > ul > li:first-child::before {
+  width: 0.6rem;
+  height: 0.6rem;
+}
+
+.view .view-content tr.protected .views-field-title::before {
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-right: 0;
+}
+
+/** Section navigation mega menu label. */
+body:not(.section-protected) #main-content .links--entity-navigation li > .link-wrapper > a.protected::before,
+body:not(.section-protected) #main-content .links--entity-navigation .dropdown.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
+body:not(.section-protected) #main-content .links--entity-navigation .megamenu.protected .cd-dropdown__btn .cd-dropdown__btn-label::before {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+/** Section navigation mega menu links inside the mega menu. */
+body:not(.section-protected) #main-content .links--entity-navigation .megamenu a.protected::before {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+/** Section page title. */
+.section-protected .cd-page-title::before {
+  width: 1.7rem;
+  height: 1.7rem;
+}
+
+.section-protected:not(.access-granted) .block-wrapper--sectionmetadata,
+.section-protected:not(.access-granted) .block-wrapper--sectionnavigation,
+.section-protected:not(.access-granted) .subpage-title-wrapper {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+article.node.protected.node--view-mode-grid .cd-teaser__title::before {
+  margin-right: 0rem;
+}
+
+article.node.protected.node--view-mode-grid .cd-teaser__title > a {
+  display: inline;
+}

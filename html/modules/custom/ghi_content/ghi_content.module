@@ -365,7 +365,7 @@ function ghi_content_preprocess_page(&$variables) {
 function ghi_content_preprocess_page_title(&$variables) {
   $node = RequestHelper::getCurrentNodeObject();
   $is_admin_route = \Drupal::service('router.admin_context')->isAdminRoute();
-  if ($is_admin_route || !$node instanceof Article || !empty($variables['#protected'])) {
+  if ($is_admin_route || !$node instanceof Article) {
     return;
   }
   if ($node->getContextNode()) {
