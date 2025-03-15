@@ -49,7 +49,6 @@ body:not(.section-protected) #main-content .links--entity-navigation .dropdown.p
 .view .view-content tr.protected .views-field-title::before {
   width: 0.75rem;
   height: 0.75rem;
-  margin-right: 0;
 }
 
 /** Section navigation mega menu label. */
