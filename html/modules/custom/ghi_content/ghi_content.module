@@ -27,6 +27,7 @@ use Drupal\ghi_sections\SectionManager;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
+use Drupal\taxonomy\TermInterface;
 use Drupal\user\Entity\User;
 use Drupal\views\ViewExecutable;
 
@@ -209,6 +210,48 @@ function ghi_content_form_node_form_alter(array &$form, FormStateInterface $form
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Used to disable fields that are automatically populated.
+ */
+function ghi_content_form_taxonomy_term_form_alter(array &$form, FormStateInterface $form_state) {
+  /** @var \Drupal\node\NodeForm $form_object */
+  $form_object = $form_state->getFormObject();
+  /** @var \Drupal\taxonomy\TermInterface $term */
+  $term = $form_object->getEntity();
+  if (!$term instanceof TermInterface || $term->bundle() != 'tags' || !isset($form['field_type'])) {
+    return;
+  }
+  $form['field_type']['#disabled'] = TRUE;
+  $form['field_type']['widget'][0]['value']['#description'] = t('This field is automatically populated based on data from the content backend.');
+  return $form;
+}
+
+/**
+ * Implements hook_datalayer_alter().
+ */
+function ghi_content_datalayer_alter(&$data_layer) {
+  // Split tags into their CM specific categories.
+  if (!empty($data_layer['entityTaxonomy']) && !empty($data_layer['entityTaxonomy']['tags'])) {
+    $tags = &$data_layer['entityTaxonomy']['tags'];
+    $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadMultiple(array_keys($tags));
+    foreach ($terms as $tid => $term) {
+      if ($type = $term->get('field_type')?->value) {
+        $data_layer['entityTaxonomy'][$type] = $data_layer['entityTaxonomy'][$type] ?? [];
+        $data_layer['entityTaxonomy'][$type][] = $term->label();
+        unset($tags[$tid]);
+      }
+    }
+    $tags = array_values($tags);
+    if (empty($tags)) {
+      unset($data_layer['entityTaxonomy']['tags']);
+    }
+  }
+  // Don't expose the user id.
+  unset($data_layer['userUid']);
+}
+
+/**
  * Implements hook_entity_build_defaults_alter().
  *
  * This is used to add cache keys for context nodes to entity builds of content
@@ -357,6 +400,20 @@ function ghi_content_preprocess_page(&$variables) {
     $variables['page'][$region_name] = ['hero_image' => $image_build] + $variables['page'][$region_name];
   }
 
+}
+
+/**
+ * Implements hook_metatags_alter().
+ */
+function ghi_content_metatags_alter(&$metatags, $context) {
+  $entity = $context['entity'];
+  if ($entity instanceof ContentBase && $context_node = $entity->getContextNode()) {
+    $title = implode(' | ', [
+      $entity->label(),
+      $context_node->label(),
+    ]);
+    $metatags['title'] = str_replace('[node:title]', $title, $metatags['title']);
+  }
 }
 
 /**
