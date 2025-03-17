@@ -132,6 +132,8 @@ function ghi_base_objects_theme_suggestions_base_object(array $variables) {
  *
  * Add the description to administrative term listings of plan type terms, so
  * that the 2 "Other" types can be told apart.
+ * Adjust the help message in case the flat taxonomy module is used and the
+ * vocabulary is set to "flat".
  */
 function ghi_base_objects_form_taxonomy_overview_terms_alter(&$form, FormStateInterface &$form_state) {
   foreach (Element::children($form['terms']) as $key) {
@@ -139,6 +141,15 @@ function ghi_base_objects_form_taxonomy_overview_terms_alter(&$form, FormStateIn
     $term = $form['terms'][$key]['#term'];
     if (!empty($term->getDescription())) {
       $form['terms'][$key]['term']['#title'] .= ' (' . $term->getDescription() . ')';
+    }
+  }
+  /** @var \Drupal\taxonomy\VocabularyInterface $vocabulary */
+  $vocabulary = $form_state->get(['taxonomy', 'vocabulary']);
+  if ($vocabulary) {
+    if ($vocabulary->getThirdPartySetting('flat_taxonomy', 'flat')) {
+      $form['help']['message']['#markup'] = t('You can reorganize the terms in %capital_name using their drag-and-drop handles.', [
+        '%capital_name' => Unicode::ucfirst($vocabulary->label()),
+      ]);
     }
   }
 }

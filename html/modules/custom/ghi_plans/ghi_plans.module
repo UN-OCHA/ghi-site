@@ -11,6 +11,7 @@ use Drupal\Core\Render\Element;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_plans\Entity\PlanType;
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -20,6 +21,8 @@ function ghi_plans_entity_bundle_info_alter(array &$bundles) {
   $bundles['base_object']['plan']['label'] = t('Plan');
   $bundles['base_object']['governing_entity']['class'] = GoverningEntity::class;
   $bundles['base_object']['governing_entity']['label'] = t('Governing Entity');
+  $bundles['taxonomy_term']['plan_type']['class'] = PlanType::class;
+  $bundles['taxonomy_term']['plan_type']['label'] = t('Plan type');
 }
 
 /**
