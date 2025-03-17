@@ -8,6 +8,7 @@
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\ContentManager\DocumentManager;
 use Drupal\ghi_content\Entity\ContentBase;
+use Drupal\taxonomy\TermInterface;
 
 /**
  * Populate the new orphaned field.
@@ -75,4 +76,27 @@ function ghi_content_deploy_queue_related_articles_block_configuration_update(&$
     $node_queue->queueNodeRevisionsForPlugin($sandbox['plugin_id'], $sandbox['queue_id']);
   }
   return $context['message'];
+}
+
+/**
+ * Import the tag types from the remote source.
+ */
+function ghi_content_deploy_update_tag_type_data(&$sandbox) {
+  if (!isset($sandbox['tag_ids'])) {
+    // Get existing tags.
+    $tags = \Drupal::entityQuery('taxonomy_term')->condition('vid', 'tags')->accessCheck(FALSE)->execute();
+    $sandbox['tag_ids'] = $tags;
+  }
+
+  /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source */
+  $remote_source = \Drupal::service('plugin.manager.remote_source')->createInstance('hpc_content_module');
+  $tag_id = array_shift($sandbox['tag_ids']);
+  $tag = $tag_id ? \Drupal::entityTypeManager()->getStorage('taxonomy_term')->load($tag_id) : NULL;
+  if ($tag instanceof TermInterface && $remote_tag = $remote_source->getTag($tag->label())) {
+    $tag->set('field_type', $remote_tag->getType());
+    $tag->setNewRevision(FALSE);
+    $tag->setSyncing(TRUE);
+    $tag->save();
+  }
+  $sandbox['#finished'] = 1 / (count($sandbox['tag_ids']) + 1);
 }
