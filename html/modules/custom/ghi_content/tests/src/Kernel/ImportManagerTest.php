@@ -4,8 +4,6 @@ namespace Drupal\Tests\ghi_content\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
-use Drupal\field\Entity\FieldConfig;
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\ghi_content\Import\ImportManager;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -13,6 +11,8 @@ use Drupal\layout_builder\Section;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\taxonomy\Entity\Term;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
+use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 
 /**
  * Tests the import manager.
@@ -22,6 +22,8 @@ use Drupal\taxonomy\Entity\Term;
 class ImportManagerTest extends KernelTestBase {
 
   use TaxonomyTestTrait;
+  use FieldTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
    * Modules to enable.
@@ -49,6 +51,7 @@ class ImportManagerTest extends KernelTestBase {
   ];
 
   const BUNDLE = 'page';
+  const TAGS_VID = 'tags';
 
   /**
    * {@inheritdoc}
@@ -63,7 +66,9 @@ class ImportManagerTest extends KernelTestBase {
     $this->installConfig(['system', 'field', 'file']);
 
     NodeType::create(['type' => self::BUNDLE])->save();
-    $this->createVocabulary();
+    $this->createVocabulary([
+      'vid' => self::TAGS_VID,
+    ]);
   }
 
   /**
@@ -151,21 +156,12 @@ class ImportManagerTest extends KernelTestBase {
     $import_manager = \Drupal::service('ghi_content.import');
 
     // Setup the tags field on our node type.
-    $field_storage = FieldStorageConfig::create([
-      'field_name' => 'field_tags',
-      'entity_type' => 'node',
-      'type' => 'entity_reference',
-      'settings' => [
-        'target_type' => 'taxonomy_term',
+    $this->createField('taxonomy_term', self::TAGS_VID, 'string', 'field_type', 'Type');
+    $this->createEntityReferenceField('node', self::BUNDLE, 'field_tags', 'Tags', 'taxonomy_term', 'default', [
+      'target_bundles' => [
+        self::TAGS_VID => self::TAGS_VID,
       ],
     ]);
-    $field_storage->save();
-    $field = FieldConfig::create([
-      'field_name' => 'field_tags',
-      'field_storage' => $field_storage,
-      'bundle' => self::BUNDLE,
-    ]);
-    $field->save();
 
     // Create a node.
     $node = Node::create([

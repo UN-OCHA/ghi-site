@@ -27,6 +27,7 @@ use Drupal\ghi_sections\SectionManager;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
+use Drupal\taxonomy\TermInterface;
 use Drupal\user\Entity\User;
 use Drupal\views\ViewExecutable;
 
@@ -206,6 +207,47 @@ function ghi_content_form_node_form_alter(array &$form, FormStateInterface $form
   $content_manager = $node->getContentManager();
   $content_manager->nodeEditFormAlter($form, $form_state);
   return $form;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Used to disable fields that are automatically populated.
+ */
+function ghi_content_form_taxonomy_term_form_alter(array &$form, FormStateInterface $form_state) {
+  /** @var \Drupal\node\NodeForm $form_object */
+  $form_object = $form_state->getFormObject();
+  /** @var \Drupal\taxonomy\TermInterface $term */
+  $term = $form_object->getEntity();
+  if (!$term instanceof TermInterface || $term->bundle() != 'tags' || !isset($form['field_type'])) {
+    return;
+  }
+  $form['field_type']['#disabled'] = TRUE;
+  $form['field_type']['widget'][0]['value']['#description'] = t('This field is automatically populated based on data from the content backend.');
+  return $form;
+}
+
+/**
+ * Implements hook_datalayer_alter().
+ */
+function ghi_content_datalayer_alter(&$data_layer) {
+  // Make the title lowercase on some node type.
+  if (!empty($data_layer['entityTaxonomy']) && !empty($data_layer['entityTaxonomy']['tags'])) {
+    $tags = &$data_layer['entityTaxonomy']['tags'];
+    $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadMultiple(array_keys($tags));
+    foreach ($terms as $tid => $term) {
+      if ($type = $term->get('field_type')?->value) {
+        $data_layer['entityTaxonomy'][$type] = $data_layer['entityTaxonomy'][$type] ?? [];
+        $data_layer['entityTaxonomy'][$type][] = $term->label();
+        unset($tags[$tid]);
+      }
+    }
+    $tags = array_values($tags);
+    if (empty($tags)) {
+      unset($data_layer['entityTaxonomy']['tags']);
+    }
+  }
+  unset($data_layer['userUid']);
 }
 
 /**
