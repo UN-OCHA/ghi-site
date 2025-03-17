@@ -96,6 +96,17 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
   public function getParagraph($id, $rendered = TRUE);
 
   /**
+   * Get a tag by name.
+   *
+   * @param int $name
+   *   The name of the tag on the remote.
+   *
+   * @return \Drupal\ghi_content\RemoteContent\RemoteTagInterface
+   *   The result object.
+   */
+  public function getTag($name);
+
+  /**
    * Issue a query against a remote source.
    *
    * @param string $payload

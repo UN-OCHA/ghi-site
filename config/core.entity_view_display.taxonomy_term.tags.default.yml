@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.taxonomy_term.tags.field_structural_tag
+    - field.field.taxonomy_term.tags.field_type
     - taxonomy.vocabulary.tags
   module:
     - text
@@ -29,5 +30,14 @@ content:
     third_party_settings: {  }
     weight: 1
     region: content
+  field_type:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 2
+    region: content
 hidden:
   langcode: true
+  search_api_excerpt: true
