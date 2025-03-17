@@ -231,7 +231,7 @@ function ghi_content_form_taxonomy_term_form_alter(array &$form, FormStateInterf
  * Implements hook_datalayer_alter().
  */
 function ghi_content_datalayer_alter(&$data_layer) {
-  // Make the title lowercase on some node type.
+  // Split tags into their CM specific categories.
   if (!empty($data_layer['entityTaxonomy']) && !empty($data_layer['entityTaxonomy']['tags'])) {
     $tags = &$data_layer['entityTaxonomy']['tags'];
     $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadMultiple(array_keys($tags));
@@ -247,6 +247,7 @@ function ghi_content_datalayer_alter(&$data_layer) {
       unset($data_layer['entityTaxonomy']['tags']);
     }
   }
+  // Don't expose the user id.
   unset($data_layer['userUid']);
 }
 
@@ -399,6 +400,20 @@ function ghi_content_preprocess_page(&$variables) {
     $variables['page'][$region_name] = ['hero_image' => $image_build] + $variables['page'][$region_name];
   }
 
+}
+
+/**
+ * Implements hook_metatags_alter().
+ */
+function ghi_content_metatags_alter(&$metatags, $context) {
+  $entity = $context['entity'];
+  if ($entity instanceof ContentBase && $context_node = $entity->getContextNode()) {
+    $title = implode(' | ', [
+      $entity->label(),
+      $context_node->label(),
+    ]);
+    $metatags['title'] = str_replace('[node:title]', $title, $metatags['title']);
+  }
 }
 
 /**
