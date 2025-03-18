@@ -47,7 +47,7 @@ abstract class ApiObjectBase implements ApiObjectInterface {
    * {@inheritdoc}
    */
   public function id() {
-    return (int) $this->id ?? $this->data->id;
+    return (int) ($this->map?->id ?? $this->data->id);
   }
 
   /**
