@@ -14,7 +14,7 @@ class RemoteTag extends RemoteEntityBase implements RemoteTagInterface {
    * {@inheritdoc}
    */
   public function getType() {
-    return $this->data->type;
+    return $this->data?->type;
   }
 
 }
