@@ -20,6 +20,11 @@ entity_select:
     component:
       css/entity_select.css: {}
 
+active_tags:
+  css:
+    component:
+      css/active_tags.css: {}
+
 attachment_select:
   css:
     component:
