@@ -350,6 +350,10 @@ class EmbargoedAccessManager {
 
     /** @var \Drupal\views\ViewExecutable $view */
     $view = $variables['view'];
+    if (empty($view->result)) {
+      return NULL;
+    }
+
     foreach ($variables['rows'] as $row_key => &$row) {
       $entity = $view->result[$row_key]->_entity;
       if (!$entity instanceof NodeInterface || !$this->isProtected($entity)) {
