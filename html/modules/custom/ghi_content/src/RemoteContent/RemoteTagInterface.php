@@ -10,8 +10,8 @@ interface RemoteTagInterface {
   /**
    * Get the type string of the tag.
    *
-   * @return string
-   *   The tag type.
+   * @return string|null
+   *   The tag type or NULL.
    */
   public function getType();
 
