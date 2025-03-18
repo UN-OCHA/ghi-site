@@ -1,0 +1,14 @@
+.form-type--entity-autocomplete-active-tags > div > tags {
+  flex-wrap: nowrap;
+  min-width: 25rem;
+  margin-inline-end: 0rem !important;
+}
+.form-type--entity-autocomplete-active-tags > div > tags > tag {
+  margin-block: auto;
+}
+.form-type--entity-autocomplete-active-tags > div > tags > tag .active-tags__tag__text {
+  white-space: nowrap;
+}
+.form-type--entity-autocomplete-active-tags > div > tags > * {
+  padding: 0;
+}

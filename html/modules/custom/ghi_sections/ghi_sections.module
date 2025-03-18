@@ -5,7 +5,6 @@
  * Contains hook implementations for the GHI Sections module.
  */
 
-use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_sections\Entity\Section;
@@ -124,25 +123,4 @@ function ghi_sections_preprocess_block__sections_by_term(&$variables) {
  */
 function ghi_sections_gin_ignore_sticky_form_actions_alter(&$form_ids) {
   $form_ids[] = 'ghi_sections_wizard';
-}
-
-/**
- * Implements hook_preprocess_form_element().
- *
- * The active_tags module adds additional info to the description of it's
- * elements and changes the display for the description to an item list.
- * As this looks a bit noisy in the forms, let's simplify this.
- */
-function ghi_sections_preprocess_form_element(&$variables) {
-  $type = $variables['type'] ?? NULL;
-  if (!$type || !str_ends_with($type, '_active_tags')) {
-    return;
-  }
-  $theme_key_parents = ['description', 'content', '#theme'];
-  $theme = NestedArray::getValue($variables, $theme_key_parents);
-  if ($theme == 'item_list') {
-    $variables['description']['content'] = [
-      '#markup' => (string) reset($variables['description']['content']['#items']),
-    ];
-  }
 }
