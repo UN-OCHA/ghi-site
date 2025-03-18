@@ -102,6 +102,7 @@ destination:
     - name
     - created
     - changed
+    - field_original_id
     - field_description
     - field_short_name
     - field_subtitle
