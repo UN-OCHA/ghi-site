@@ -2,7 +2,7 @@ label: Guardián
 description: 'Mensajes recientes del registro'
 display:
   default:
-    display_title: 'Por defecto'
+    display_title: Máster
     display_options:
       title: 'Mensajes recientes del registro'
       fields:

@@ -2,7 +2,7 @@ label: 'Página inicio'
 description: 'Todo el contenido promovido a la página principal.'
 display:
   default:
-    display_title: 'Por defecto'
+    display_title: Máster
     display_options:
       pager:
         options:

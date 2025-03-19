@@ -206,6 +206,7 @@ function ghi_base_objects_migrate_plan_prepare_row(Row $row, MigrateSourceInterf
 
   $row->setSourceProperty('version_tag', $published_version ? $published_version['name'] : NULL);
   $row->setSourceProperty('released', !empty($plan_data->isReleased) ? $plan_data->isReleased : FALSE);
+  $row->setSourceProperty('is_part_of_gho', !empty($plan_data->planVersion->isPartOfGHO) ? $plan_data->planVersion->isPartOfGHO : FALSE);
   $row->setSourceProperty('name', !empty($plan_data->planVersion->name) ? $plan_data->planVersion->name : NULL);
   $row->setSourceProperty('short_name', !empty($plan_data->planVersion->shortName) ? $plan_data->planVersion->shortName : NULL);
   $row->setSourceProperty('subtitle', !empty($plan_data->planVersion->subtitle) ? $plan_data->planVersion->subtitle : NULL);

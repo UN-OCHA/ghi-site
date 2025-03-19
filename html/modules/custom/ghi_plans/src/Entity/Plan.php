@@ -67,7 +67,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
    *   The plan year.
    */
   public function getYear() {
-    return $this->get('field_year')->value;
+    return (int) $this->get('field_year')->value;
   }
 
   /**
@@ -200,6 +200,19 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
    */
   public function isOther() {
     return $this->isType('Other');
+  }
+
+  /**
+   * Check if the plan is part of the GHO.
+   *
+   * @return bool
+   *   TRUE if the plan is part of the GHO, FALSE otherwise.
+   */
+  public function isPartOfGho() {
+    if (!$this->hasField('field_is_part_of_gho')) {
+      return FALSE;
+    }
+    return $this->get('field_is_part_of_gho')->value ?? FALSE;
   }
 
   /**
