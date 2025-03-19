@@ -1017,9 +1017,9 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       return NULL;
     }
     $measurements = array_filter($measurements, function ($measurement) use ($latest_published_period_id) {
-      return $measurement->reporting_period <= $latest_published_period_id;
+      return $measurement->reporting_period == $latest_published_period_id;
     });
-    return !empty($measurements) ? end($measurements) : NULL;
+    return !empty($measurements) ? reset($measurements) : NULL;
   }
 
   /**

@@ -30,7 +30,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertInstanceOf(HPCDownloadExcelInterface::class, $plugin);
     $this->assertInstanceOf(HPCDownloadPNGInterface::class, $plugin);
 
-    $this->assertEquals(5, $plugin->getBlockConfig()['years']);
+    $this->assertEquals(10, $plugin->getBlockConfig()['soft_limit']);
     $this->assertEquals('Evolution of the humanitarian response', $plugin->label());
   }
 
@@ -55,7 +55,9 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $form_state = new FormState();
     $form_state->set('block', $plugin);
     $form = $plugin->getConfigForm([], $form_state);
-    $this->assertEquals(array_combine(range(3, 10), range(3, 10)), $form['years']['#options']);
+    $this->assertArrayHasKey('columns', $form);
+    $this->assertEquals(3, $form['soft_limit']['#min']);
+    $this->assertEquals(10, $form['soft_limit']['#max']);
   }
 
   /**
@@ -76,20 +78,21 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->injectApiQueryStubs($plugin);
     $table_data = $this->callPrivateMethod($plugin, 'buildTableData');
     $this->assertNotEmpty($table_data);
-    $this->assertCount(6, $table_data['header']);
+    $this->assertCount(7, $table_data['header']);
     $this->assertCount(1, $table_data['rows']);
+    $this->assertCount(7, $table_data['rows'][0]);
 
-    $requirements_cell = $table_data['rows'][0][3];
+    $requirements_cell = $table_data['rows'][0]['requirements'];
     $this->assertEquals(3000, $requirements_cell['data-raw-value']);
     $this->assertEquals('currency', $requirements_cell['data-column-type']);
     $this->assertEquals('financial', $requirements_cell['data-progress-group']);
 
-    $funding_cell = $table_data['rows'][0][4];
+    $funding_cell = $table_data['rows'][0]['funding'];
     $this->assertEquals(1000, $funding_cell['data-raw-value']);
     $this->assertEquals('currency', $funding_cell['data-column-type']);
     $this->assertEquals('financial', $funding_cell['data-progress-group']);
 
-    $coverage_cell = $table_data['rows'][0][5];
+    $coverage_cell = $table_data['rows'][0]['coverage'];
     $this->assertEquals('hpc_percent', $coverage_cell['data']['#theme']);
     $this->assertEquals(0.333, $coverage_cell['data']['#percent']);
     $this->assertEquals(0.333, $coverage_cell['data-raw-value']);
@@ -115,12 +118,62 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $source_data = $this->callPrivateMethod($plugin, 'buildSourceData');
     $this->assertNotEmpty($source_data);
     $this->assertCount(1, $source_data);
-    $this->assertEquals('2025', $source_data[0]['label']);
+    $this->assertEquals('2025', $source_data[0]['year']);
+    $this->assertNotEmpty($source_data[0]['plan_type']);
+    $this->assertNotEmpty($source_data[0]['plan_type_link']);
+    $this->assertNotEmpty($source_data[0]['plan_type_tooltip']);
     $this->assertEquals(300, $source_data[0]['in_need']);
     $this->assertEquals(100, $source_data[0]['target']);
-    $this->assertEquals(3000, $source_data[0]['current_requirements']);
-    $this->assertEquals(1000, $source_data[0]['total_funding']);
-    $this->assertEquals(0.333, $source_data[0]['funding_coverage']);
+    $this->assertEquals(round(100 / 3, 1), round($source_data[0]['target_percent'], 1));
+    $this->assertEquals(80, $source_data[0]['reached']);
+    $this->assertEquals(80.0, $source_data[0]['reached_percent']);
+    $this->assertEquals(3000, $source_data[0]['requirements']);
+    $this->assertEquals(1000, $source_data[0]['funding']);
+    $this->assertEquals(0.333, $source_data[0]['coverage']);
+    $this->assertNull($source_data[0]['footnotes']);
+  }
+
+  /**
+   * Tests the source data for multiple rows.
+   */
+  public function testBuildSourceDataMultipleRows() {
+    $plugin = $this->getBlockPlugin();
+    $this->injectApiQueryStubs($plugin);
+
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan */
+    $plan = $plugin->getContextValue('plan');
+    // Create a 2024 and a 2022 plan section besides the existing 2025 one.
+    // This will create source data with one entry for 2023 and all other
+    // values NULL.
+    $this->createSection([
+      'label' => 'Section node 2024',
+      'field_base_object' => $this->createPlanBaseObject([
+        'field_year' => 2024,
+        'field_focus_country' => ['target_id' => $plan->getFocusCountry()->id()],
+      ]),
+    ]);
+    $this->createSection([
+      'label' => 'Section node 2022',
+      'field_base_object' => $this->createPlanBaseObject([
+        'field_year' => 2022,
+        'field_focus_country' => ['target_id' => $plan->getFocusCountry()->id()],
+      ]),
+    ]);
+
+    $source_data = $this->callPrivateMethod($plugin, 'buildSourceData');
+    $this->assertCount(4, $source_data);
+
+    $this->assertEquals('2025', $source_data[0]['year']);
+    $this->assertNotNull($source_data[0]['plan_type']);
+
+    $this->assertEquals('2024', $source_data[1]['year']);
+    $this->assertNotNull($source_data[1]['plan_type']);
+
+    $this->assertEquals('2023', $source_data[2]['year']);
+    $this->assertNull($source_data[2]['plan_type']);
+
+    $this->assertEquals('2022', $source_data[3]['year']);
+    $this->assertNotNull($source_data[3]['plan_type']);
   }
 
   /**
@@ -133,7 +186,8 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertEquals($build['#theme'], 'table');
     $this->assertEquals($build['#progress_groups'], TRUE);
     $this->assertEquals($build['#sortable'], TRUE);
-    $this->assertCount(6, $build['#header']);
+    $this->assertEquals($build['#soft_limit'], 0);
+    $this->assertCount(7, $build['#header']);
     $this->assertCount(1, $build['#rows']);
   }
 
@@ -145,7 +199,17 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    */
   private function getBlockPlugin() {
     $configuration = [
-      'years' => 5,
+      'columns' => [
+        'in_need' => 'in_need',
+        'target' => 'target',
+        'target_percent' => 0,
+        'reached' => 0,
+        'reached_percent' => 0,
+        'requirements' => 'requirements',
+        'funding' => 'funding',
+        'coverage' => 'coverage',
+      ],
+      'soft_limit' => 10,
     ];
     $contexts = $this->getPlanSectionContexts(['field_year' => 2025]);
     return $this->createBlockPlugin('plan_caseload_trends_table', $configuration, $contexts);
@@ -169,6 +233,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $caseload = $this->prophesize(CaseloadAttachment::class);
     $caseload->getFieldByType('inNeed')->willReturn((object) ['value' => 300]);
     $caseload->getFieldByType('target')->willReturn((object) ['value' => 100]);
+    $caseload->getCaseloadValue('latestReach')->willReturn(80);
     $attachment_search_query = $this->prophesize(AttachmentSearchQuery::class);
     $attachment_search_query->getAttachmentsByObject(Argument::cetera())->willReturn([$caseload->reveal()]);
     $plugin->setQueryHandler('attachment_search', $attachment_search_query->reveal());

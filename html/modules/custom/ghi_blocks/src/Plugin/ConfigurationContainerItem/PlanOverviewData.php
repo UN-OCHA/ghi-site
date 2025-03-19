@@ -6,7 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
-use Drupal\hpc_common\Helpers\ThemeHelper;
+use Drupal\hpc_common\Traits\RenderArrayTrait;
 
 /**
  * Provides a plan overview data item for configuration containers.
@@ -20,6 +20,7 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
 class PlanOverviewData extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemValuePreviewTrait;
+  use RenderArrayTrait;
 
   /**
    * {@inheritdoc}
@@ -182,7 +183,7 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
     if ($theme == 'hpc_percent') {
       $value = $value * 100;
     }
-    $build = ThemeHelper::getThemeOptions($theme, $value, [
+    $build = $this->buildRenderArray($theme, $value, [
       'decimals' => $theme == 'hpc_amount' ? 1 : 2,
     ]);
 
