@@ -91,7 +91,7 @@
 
   .plan-attachment-map-wrapper {
     .map-tabs--inner {
-      overflow-x: auto;
+      // overflow-x: auto;
       max-width: calc(100vw - 2* var(--cd-container-padding));
 
       ul {
