@@ -120,3 +120,12 @@
     }
   }
 }
+
+.ghi-block-plan-caseload-trends-table .ghi-table tbody tr td {
+  &:first-child {
+    white-space: nowrap;
+  }
+  &[data-content="Type"] a {
+    word-break: normal;
+  }
+}

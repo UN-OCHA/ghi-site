@@ -7,7 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\hpc_common\Helpers\ThemeHelper;
+use Drupal\hpc_common\Traits\RenderArrayTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -23,6 +23,7 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemClusterRestrictTrait;
   use ConfigurationItemValuePreviewTrait;
+  use RenderArrayTrait;
 
   /**
    * The project search query.
@@ -138,15 +139,15 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
       case 'original_requirements':
       case 'current_requirements':
       case 'total_funding':
-        $build = ThemeHelper::getThemeOptions('hpc_currency', $this->getValue(), $additional_theme_options);
+        $build = $this->buildRenderArray('hpc_currency', $this->getValue(), $additional_theme_options);
         break;
 
       case 'coverage':
-        $build = ThemeHelper::getThemeOptions('hpc_percent', $this->getValue(), $additional_theme_options);
+        $build = $this->buildRenderArray('hpc_percent', $this->getValue(), $additional_theme_options);
         break;
 
       case 'requirements_changes':
-        $build = ThemeHelper::getThemeOptions('hpc_currency', $this->getValue(), $additional_theme_options);
+        $build = $this->buildRenderArray('hpc_currency', $this->getValue(), $additional_theme_options);
         break;
     }
     return $build;

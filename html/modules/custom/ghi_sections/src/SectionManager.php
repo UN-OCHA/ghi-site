@@ -294,10 +294,6 @@ class SectionManager {
       $sections = $this->getSectionsByBaseObjectCountryReference($section);
     }
 
-    if (empty($sections)) {
-      return NULL;
-    }
-
     return $sections;
   }
 

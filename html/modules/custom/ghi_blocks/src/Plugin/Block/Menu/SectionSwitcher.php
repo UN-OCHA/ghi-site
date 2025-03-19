@@ -120,7 +120,7 @@ class SectionSwitcher extends BlockBase implements ContainerFactoryPluginInterfa
     if (!$section_node) {
       return NULL;
     }
-    return $this->sectionManager->getRelatedSections($section_node);
+    return $this->sectionManager->getRelatedSections($section_node) ?: NULL;
   }
 
   /**
