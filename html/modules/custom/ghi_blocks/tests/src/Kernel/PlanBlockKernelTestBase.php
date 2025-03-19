@@ -90,11 +90,15 @@ abstract class PlanBlockKernelTestBase extends BlockKernelTestBase {
     $this->createEntityReferenceField('base_object', 'plan', 'field_country', 'Country', 'base_object', 'default', [
       'target_bundles' => ['country'],
     ]);
+    $this->createEntityReferenceField('base_object', 'plan', 'field_focus_country', 'Focus country', 'base_object', 'default', [
+      'target_bundles' => ['country'],
+    ]);
     $this->createVocabulary(['vid' => 'plan_type']);
     $this->createEntityReferenceField('base_object', 'plan', 'field_plan_type', 'Plan type', 'taxonomy_term', 'default', [
       'target_bundles' => ['plan_type'],
     ]);
     $this->createField('base_object', 'plan', 'string', 'field_plan_version_argument', 'Plan version');
+    $this->createField('base_object', 'plan', 'string', 'field_footnotes', 'Footnotes');
   }
 
   /**
@@ -112,11 +116,13 @@ abstract class PlanBlockKernelTestBase extends BlockKernelTestBase {
       $values['field_year'] = 2024;
     }
     if (empty($values['field_country'])) {
-      $country_base_object = $this->createBaseObject([
-        'type' => 'country',
-      ]);
       $values['field_country'] = [
-        'target_id' => $country_base_object->id(),
+        'target_id' => $this->createBaseObject(['type' => 'country'])->id(),
+      ];
+    }
+    if (empty($values['field_focus_country'])) {
+      $values['field_focus_country'] = [
+        'target_id' => $this->createBaseObject(['type' => 'country'])->id(),
       ];
     }
     if (empty($values['field_plan_type'])) {

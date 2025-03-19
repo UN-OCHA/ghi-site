@@ -12,16 +12,21 @@ trait TableSoftLimitTrait {
    *
    * @param int $default_value
    *   The default value to set.
+   * @param int $min
+   *   The minimum value to set.
+   * @param int $max
+   *   The maximum value to set.
    *
    * @return array
    *   A form array.
    */
-  public function buildSoftLimitFormElement($default_value) {
+  public function buildSoftLimitFormElement($default_value, $min = 5, $max = NULL) {
     return [
       '#type' => 'number',
       '#title' => $this->t('Soft limit'),
       '#description' => $this->t('Leave empty to not apply a limit'),
-      '#min' => 5,
+      '#min' => $min,
+      '#max' => $max,
       '#default_value' => $default_value,
     ];
   }

@@ -54,8 +54,12 @@ function hpc_common_preprocess_hpc_currency(array &$vars) {
   $scale = $vars['scale'] != 'auto' ? $vars['scale'] : NULL;
   $use_abbreviation = $vars['use_abbreviation'];
   $decimal_format = !empty($vars['decimal_format']) ? $vars['decimal_format'] : ThemeHelper::DECIMALS_POINT;
-
   $export = $vars['export'];
+
+  if ($value !== NULL && !is_numeric($value)) {
+    $vars['output'] = $value;
+    return;
+  }
 
   // If the value is NULL, print it as 0.
   if (empty($value)) {
@@ -182,12 +186,13 @@ function hpc_common_preprocess_hpc_percent(array &$vars) {
   $export = $vars['export'];
   $decimal_format = !empty($vars['decimal_format']) ? $vars['decimal_format'] : ThemeHelper::DECIMALS_POINT;
   $precision = $vars['precision'];
-  if (!empty($vars['percent'])) {
-    $percent = $vars['percent'];
+  $percent = $vars['percent'] ?? ((float) ($vars['ratio'] ?? 0)) * 100;
+
+  if ($percent !== NULL && !is_numeric($percent)) {
+    $vars['output'] = $percent;
+    return;
   }
-  else {
-    $percent = ((float) $vars['ratio']) * 100;
-  }
+
   $precision = !empty($precision) ? $precision : ($percent == intval($percent) ? 0 : 1);
   // Percentages higher than 100 don't need precision. Numbers like 151.2% also
   // produce visual problems sometimes, e.g. in tables.
