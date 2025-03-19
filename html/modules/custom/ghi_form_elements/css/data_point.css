@@ -1,11 +1,23 @@
-.form-type--data_point .data-points-wrapper > div {
+.form-type--data_point .data-points-wrapper > div,
+.form-type--configuration_container .data-point-wrapper {
   display: flex;
   gap: 1rem;
   align-items: baseline;
   flex-wrap: wrap;
 }
 
-.form-type--data_point .data-points-wrapper > div > .js-form-type-checkbox {
+.form-type--configuration_container .data-point-wrapper {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-type--configuration_container .data-point-wrapper > .glb-form-item {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.form-type--data_point .data-points-wrapper > div > .js-form-type-checkbox,
+  .form-type--configuration_container .data-point-wrapper > .js-form-type-checkbox {
   top: calc(1.5em + 17px) !important;
 }
 

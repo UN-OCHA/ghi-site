@@ -31,7 +31,7 @@ class MeasurementQuery extends EndpointQueryBase implements ContainerFactoryPlug
   /**
    * Get the unprocessed measurements for the given attachment.
    *
-   * @param Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
    *   The attachment to query.
    * @param bool $disaggregation
    *   Whether to fetch disaggregation data or not.
