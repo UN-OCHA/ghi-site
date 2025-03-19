@@ -47,6 +47,9 @@ msgstr "Ver el marco lógico"
 msgid "People reached"
 msgstr "Personas atendidas"
 
+msgid "People reached (%)"
+msgstr "Personas atendidas (%)"
+
 msgid "Measure"
 msgstr "Medida"
 
@@ -85,6 +88,9 @@ msgstr "Personas en necesidad"
 
 msgid "People targeted"
 msgstr "Población meta"
+
+msgid "People targeted (%)"
+msgstr "Población meta (%)"
 
 msgid "Requirements ($)"
 msgstr "Requerimientos financieros ($)"
