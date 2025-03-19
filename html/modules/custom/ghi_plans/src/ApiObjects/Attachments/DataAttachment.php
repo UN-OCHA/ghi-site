@@ -988,10 +988,9 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     if (!$attachment || !is_object($attachment)) {
       return NULL;
     }
-    $measurements = property_exists($attachment, 'measurements') ? $attachment->measurements : [];
-    if (!property_exists($attachment, 'measurements') && $measurements_query = $this->getEndpointQueryManager()->createInstance('measurement_query')) {
+    $measurements = property_exists($attachment, 'measurements') ? $attachment->measurements : NULL;
+    if ($measurements === NULL && $measurements_query = $this->getEndpointQueryManager()->createInstance('measurement_query')) {
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\MeasurementQuery $measurements_query */
-      $measurements_query->setPlaceholder('attachment_id', $attachment->id);
       $measurements = $measurements_query->getUnprocessedMeasurements($this, TRUE);
       $attachment->measurements = $measurements;
       $this->setRawData($attachment);
@@ -1130,6 +1129,31 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
+   * Get the reporting periods for the attachment.
+   *
+   * Can be optionally limited up to a specific monitoring period id.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[]|null $reporting_periods
+   *   The initial array of reporting periods or NULL.
+   * @param string $monitoring_period
+   *   A monitoring period identifier or 'latest'.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[]
+   *   An array of reporting period objects.
+   */
+  public function getReportingPeriods(?array $reporting_periods = NULL, $monitoring_period = 'latest') {
+    if ($reporting_periods === NULL) {
+      $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
+    }
+    if (is_array($reporting_periods) && $monitoring_period != 'latest') {
+      while (!empty($reporting_periods) && array_key_last($reporting_periods) != $monitoring_period) {
+        array_pop($reporting_periods);
+      }
+    }
+    return $reporting_periods;
+  }
+
+  /**
    * Fetch prototype data from the API.
    *
    * @param object $attachment
@@ -1223,7 +1247,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   given configuration.
    */
   public function getSingleValue($index, ?array $reporting_periods = NULL, $data_point_conf = []) {
-    return $this->getValueForDataPoint($index);
+    return $this->getValueForDataPoint($index, $data_point_conf['monitoring_period'] ?? NULL);
   }
 
   /**
@@ -1396,6 +1420,10 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     }
     else {
       $build[] = $this->formatAsWidget($conf);
+    }
+
+    if (!empty($conf['data_points'][0]['monitoring_period'])) {
+      $build['#reporting_period'] = $conf['data_points'][0]['monitoring_period'];
     }
 
     $data_point_index = $conf['data_points'][0]['index'];

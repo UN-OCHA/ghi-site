@@ -587,7 +587,6 @@ class LogframeManager implements ContainerInjectionInterface {
           'baseline' => $target,
           'use_calculation_method' => FALSE,
           'monitoring_periods' => [],
-          'include_latest_period' => 0,
           'show_baseline' => 0,
         ],
       ];
