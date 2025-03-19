@@ -52,6 +52,7 @@ class MonitoringPeriod extends Select {
       ],
       '#theme' => $info['#theme'],
       '#theme_wrappers' => $info['#theme_wrappers'],
+      '#add_wrapper' => TRUE,
     ];
   }
 
@@ -78,9 +79,11 @@ class MonitoringPeriod extends Select {
    * any arbitrary data inside the form_state object.
    */
   public static function processMonitoringPeriod(array &$element, FormStateInterface $form_state) {
-    $wrapper_id = self::getWrapperId($element);
-    $element['#prefix'] = '<div id="' . $wrapper_id . '">';
-    $element['#suffix'] = '</div>';
+    if (!empty($element['#add_wrapper'])) {
+      $wrapper_id = self::getWrapperId($element);
+      $element['#prefix'] = '<div id="' . $wrapper_id . '">';
+      $element['#suffix'] = '</div>';
+    }
 
     $monitoring_period_options = self::getReportingPeriodOptions($element['#plan_id']);
     if ($element['#include_latest']) {

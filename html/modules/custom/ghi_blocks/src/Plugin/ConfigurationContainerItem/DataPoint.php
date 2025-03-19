@@ -68,7 +68,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
       '#attachment' => $attachment,
       '#attachment_prototype' => $attachment_prototype,
       '#plan_object' => $plan_object,
-      '#select_monitoring_period' => $configuration['select_monitoring_period'] && !$attachment_prototype->isIndicator(),
+      '#select_monitoring_period' => $configuration['select_monitoring_period'],
       '#default_value' => $data_point,
       '#weight' => 5,
     ] + ($configuration['presets'] ?? []);
