@@ -47,6 +47,9 @@ msgstr "Voir le cadre logique"
 msgid "People reached"
 msgstr "Personnes atteintes"
 
+msgid "People reached (%)"
+msgstr "Personnes atteintes (%)"
+
 msgid "Measure"
 msgstr "Mesure"
 
@@ -85,6 +88,9 @@ msgstr "Personnes dans le besoin"
 
 msgid "People targeted"
 msgstr "Personnes ciblées"
+
+msgid "People targeted (%)"
+msgstr "Personnes ciblées (%)"
 
 msgid "Requirements ($)"
 msgstr "Besoins financiers ($)"

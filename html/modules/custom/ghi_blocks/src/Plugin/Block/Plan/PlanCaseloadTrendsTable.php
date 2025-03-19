@@ -8,6 +8,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_blocks\Traits\TableTrait;
+use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_common\Traits\RenderArrayTrait;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
@@ -82,7 +83,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       return $item['year'];
     }, $source_data);
     $soft_limit = $this->getBlockConfig()['soft_limit'];
-    $index = $soft_limit ? array_search((int) date('Y') - (int) $soft_limit, $years) : NULL;
+    $index = $soft_limit ? array_search((int) date('Y') - (int) $soft_limit, $years) : 0;
     return [
       '#theme' => 'table',
       '#header' => $table['header'],
@@ -108,14 +109,18 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     $plan_object = $this->getCurrentPlanObject();
     $langcode = $plan_object?->getPlanLanguage() ?? 'en';
     $t_options = ['langcode' => $langcode];
+
     $header = [
-      $this->buildHeaderColumn($this->t('Year', [], $t_options), 'number'),
-      $this->t('Type'),
-      $this->buildHeaderColumn($this->t('People in need', [], $t_options), 'amount'),
-      $this->buildHeaderColumn($this->t('People targeted', [], $t_options), 'amount'),
-      $this->buildHeaderColumn($this->t('Requirements ($)', [], $t_options), 'currency'),
-      $this->buildHeaderColumn($this->t('Funding ($)', [], $t_options), 'currency'),
-      $this->buildHeaderColumn($this->t('% Funded', [], $t_options), 'percentage'),
+      'year' => $this->buildHeaderColumn($this->t('Year', [], $t_options), 'number'),
+      'plan_type' => $this->t('Type'),
+      'in_need' => $this->buildHeaderColumn($this->t('People in need', [], $t_options), 'amount'),
+      'target' => $this->buildHeaderColumn($this->t('People targeted', [], $t_options), 'amount'),
+      'target_percent' => $this->buildHeaderColumn($this->t('People targeted (%)', [], $t_options), 'amount'),
+      'reached' => $this->buildHeaderColumn($this->t('People reached', [], $t_options), 'amount'),
+      'reached_percent' => $this->buildHeaderColumn($this->t('People reached (%)', [], $t_options), 'amount'),
+      'requirements' => $this->buildHeaderColumn($this->t('Requirements ($)', [], $t_options), 'currency'),
+      'funding' => $this->buildHeaderColumn($this->t('Funding ($)', [], $t_options), 'currency'),
+      'coverage' => $this->buildHeaderColumn($this->t('% Funded', [], $t_options), 'percentage'),
     ];
     $rows = [];
 
@@ -126,12 +131,12 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
 
     foreach ($data as $item) {
       $row = [
-        [
+        'year' => [
           'data' => $item['year'],
           'data-raw-value' => $item['year'],
           'data-column-type' => 'string',
         ],
-        [
+        'plan_type' => [
           'data' => array_filter([
             $item['plan_type_link'],
             $item['plan_type_tooltip'] ? [
@@ -148,7 +153,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
           'data-raw-value' => $item['plan_type'],
           'data-column-type' => 'string',
         ],
-        [
+        'in_need' => [
           'data' => [
             $this->buildRenderArray('hpc_amount', $item['in_need'] ?? FALSE, $theme_options),
             $this->buildFootnoteTooltip($item['footnotes'], 'in_need'),
@@ -159,7 +164,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
           'export_value' => $item['in_need'],
           'export_commentary' => $this->getFootnoteForProperty($item['footnotes'], 'in_need'),
         ],
-        [
+        'target' => [
           'data' => [
             $this->buildRenderArray('hpc_amount', $item['target'] ?? FALSE, $theme_options),
             $this->buildFootnoteTooltip($item['footnotes'], 'target'),
@@ -170,34 +175,55 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
           'export_value' => $item['target'],
           'export_commentary' => $this->getFootnoteForProperty($item['footnotes'], 'target'),
         ],
-        [
+        'target_percent' => [
+          'data' => $this->buildRenderArray('hpc_percent', $item['target_percent'] ?? FALSE, $theme_options),
+          'data-raw-value' => $item['target_percent'] ?? 0,
+          'data-column-type' => 'amount',
+          'data-progress-group' => 'target_percent',
+          'export_value' => $item['target_percent'],
+        ],
+        'reached' => [
+          'data' => $this->buildRenderArray('hpc_amount', $item['reached'] ?? FALSE, $theme_options),
+          'data-raw-value' => $item['reached'] ?? 0,
+          'data-column-type' => 'amount',
+          'data-progress-group' => 'people',
+          'export_value' => $item['reached'],
+        ],
+        'reached_percent' => [
+          'data' => $this->buildRenderArray('hpc_percent', $item['reached_percent'] ?? FALSE, $theme_options),
+          'data-raw-value' => $item['reached_percent'] ?? 0,
+          'data-column-type' => 'amount',
+          'data-progress-group' => 'reached_percent',
+          'export_value' => $item['reached_percent'],
+        ],
+        'requirements' => [
           'data' => [
-            $this->buildRenderArray('hpc_currency', $item['current_requirements'] ?? FALSE, $theme_options),
+            $this->buildRenderArray('hpc_currency', $item['requirements'] ?? FALSE, $theme_options),
             $this->buildFootnoteTooltip($item['footnotes'], 'requirements'),
           ],
-          'data-raw-value' => $item['current_requirements'] ?? 0,
+          'data-raw-value' => $item['requirements'] ?? 0,
           'data-column-type' => 'currency',
           'data-progress-group' => 'financial',
-          'export_value' => $item['current_requirements'],
+          'export_value' => $item['requirements'],
           'export_commentary' => $this->getFootnoteForProperty($item['footnotes'], 'requirements'),
         ],
-        [
+        'funding' => [
           'data' => [
-            $this->buildRenderArray('hpc_currency', $item['total_funding'] ?? FALSE, $theme_options),
+            $this->buildRenderArray('hpc_currency', $item['funding'] ?? FALSE, $theme_options),
             $this->buildFootnoteTooltip($item['footnotes'], 'funding'),
           ],
-          'data-raw-value' => $item['total_funding'] ?? 0,
+          'data-raw-value' => $item['funding'] ?? 0,
           'data-column-type' => 'currency',
           'data-progress-group' => 'financial',
-          'export_value' => $item['total_funding'],
+          'export_value' => $item['funding'],
           'export_commentary' => $this->getFootnoteForProperty($item['footnotes'], 'funding'),
         ],
-        [
-          'data' => $this->buildRenderArray('hpc_percent', $item['funding_coverage'] ?? FALSE, $theme_options),
-          'data-raw-value' => $item['funding_coverage'] ?? 0,
+        'coverage' => [
+          'data' => $this->buildRenderArray('hpc_percent', $item['coverage'] ?? FALSE, $theme_options),
+          'data-raw-value' => $item['coverage'] ?? 0,
           'data-column-type' => 'percentage',
           'data-progress-group' => 'coverage',
-          'export_value' => $item['funding_coverage'],
+          'export_value' => $item['coverage'],
         ],
       ];
       $rows[] = $row;
@@ -205,6 +231,19 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
 
     if (empty($rows)) {
       return NULL;
+    }
+
+    $columns = $this->getBlockConfig()['columns'];
+    if (!empty(array_filter($columns))) {
+      foreach ($columns as $key => $enabled) {
+        if ($enabled) {
+          continue;
+        }
+        unset($header[$key]);
+        foreach ($rows as &$row) {
+          unset($row[$key]);
+        }
+      }
     }
 
     return [
@@ -248,6 +287,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
 
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment[] $caseloads */
       $caseloads = $attachments_query->getAttachmentsByObject('plan', $plan->getSourceId(), ['type' => 'caseload']);
+      /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $caseload */
       $caseload = count($caseloads) > 1 ? $plan->getPlanCaseload($caseloads) : (!empty($caseloads) ? reset($caseloads) : NULL);
       $funding_data = $funding_query->getData(['plan_id' => $plan->getSourceId()]);
 
@@ -255,16 +295,23 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       // the same type.
       $plan_type_label = $plan_types[$plan_year][$plan_type] > 1 ? $plan_type . ' - ' . $plan->getShortName() : $plan_type;
 
+      $in_need = $caseload?->getFieldByType('inNeed')?->value;
+      $target = $caseload?->getFieldByType('target')?->value;
+      $reached = $caseload?->getCaseloadValue('latestReach');
+
       $plan_data[] = [
         'year' => $plan_year,
         'plan_type' => $plan_type_label,
         'plan_type_link' => $section->access('view') ? $section->toLink($plan_type_label)->toRenderable() : ['#markup' => $plan_type_label],
         'plan_type_tooltip' => !$plan->isPartOfGho(),
-        'in_need' => $caseload?->getFieldByType('inNeed')?->value,
-        'target' => $caseload?->getFieldByType('target')?->value,
-        'current_requirements' => $funding_data['current_requirements'],
-        'total_funding' => $funding_data['total_funding'],
-        'funding_coverage' => $funding_data['funding_coverage'],
+        'in_need' => $in_need,
+        'target' => $target,
+        'target_percent' => $target ? CommonHelper::calculateRatio($target, $in_need) * 100 : NULL,
+        'reached' => $reached,
+        'reached_percent' => $reached ? CommonHelper::calculateRatio($reached, $target) * 100 : NULL,
+        'requirements' => $funding_data['current_requirements'],
+        'funding' => $funding_data['total_funding'],
+        'coverage' => $funding_data['funding_coverage'],
         'footnotes' => $plan ? $this->getFootnotesForPlanBaseobject($plan) : NULL,
       ];
     }
@@ -289,9 +336,12 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
           'plan_type_tooltip' => NULL,
           'in_need' => NULL,
           'target' => NULL,
-          'current_requirements' => NULL,
-          'total_funding' => NULL,
-          'funding_coverage' => NULL,
+          'target_percent' => NULL,
+          'reached' => NULL,
+          'reached_percent' => NULL,
+          'requirements' => NULL,
+          'funding' => NULL,
+          'coverage' => NULL,
           'footnotes' => NULL,
         ];
       }
@@ -315,7 +365,17 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
    */
   public function getConfigurationDefaults() {
     return [
-      'soft_limit' => NULL,
+      'columns' => [
+        'in_need' => 'in_need',
+        'target' => 'target',
+        'target_percent' => 0,
+        'reached' => 0,
+        'reached_percent' => 0,
+        'requirements' => 'requirements',
+        'funding' => 'funding',
+        'coverage' => 'coverage',
+      ],
+      'soft_limit' => self::DEFAULT_MAX_YEARS,
     ];
   }
 
@@ -323,9 +383,23 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
    * {@inheritdoc}
    */
   public function getConfigForm(array $form, FormStateInterface $form_state) {
-    $form['soft_limit'] = $this->buildSoftLimitFormElement($this->getDefaultFormValueFromFormState($form_state, [
-      'soft_limit',
-    ]) ?? self::DEFAULT_MAX_YEARS, 3, 10);
+    $form['columns'] = [
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Columns'),
+      '#description' => $this->t('Select the columns to display in the table. If no column is checked, all will be displayed'),
+      '#options' => [
+        'in_need' => $this->t('People in need'),
+        'target' => $this->t('People targeted'),
+        'target_percent' => $this->t('People targeted (%)'),
+        'reached' => $this->t('People reached'),
+        'reached_percent' => $this->t('People reached (%)'),
+        'requirements' => $this->t('Requirements ($)'),
+        'funding' => $this->t('Funding ($)'),
+        'coverage' => $this->t('% Funded'),
+      ],
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'columns'),
+    ];
+    $form['soft_limit'] = $this->buildSoftLimitFormElement($this->getDefaultFormValueFromFormState($form_state, 'soft_limit') ?? self::DEFAULT_MAX_YEARS, 3, 10);
     $form['soft_limit']['#description'] = $this->t('Choose how many years will be shown initially. If there is data for more years, the table can be expanded by the user.') . ' ' . $form['soft_limit']['#description'];
     return $form;
   }

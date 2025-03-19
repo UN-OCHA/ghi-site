@@ -125,7 +125,7 @@
   &:first-child {
     white-space: nowrap;
   }
-  &[data-content="Type"] a {
+  &[data-column="plan_type"] a {
     word-break: normal;
   }
 }

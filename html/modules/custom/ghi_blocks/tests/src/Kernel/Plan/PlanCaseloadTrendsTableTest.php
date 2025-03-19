@@ -55,8 +55,9 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $form_state = new FormState();
     $form_state->set('block', $plugin);
     $form = $plugin->getConfigForm([], $form_state);
+    $this->assertArrayHasKey('columns', $form);
     $this->assertEquals(3, $form['soft_limit']['#min']);
-    $this->assertEquals(10, $form['soft_limit']['#min']);
+    $this->assertEquals(10, $form['soft_limit']['#max']);
   }
 
   /**
@@ -79,18 +80,19 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertNotEmpty($table_data);
     $this->assertCount(7, $table_data['header']);
     $this->assertCount(1, $table_data['rows']);
+    $this->assertCount(7, $table_data['rows'][0]);
 
-    $requirements_cell = $table_data['rows'][0][4];
+    $requirements_cell = $table_data['rows'][0]['requirements'];
     $this->assertEquals(3000, $requirements_cell['data-raw-value']);
     $this->assertEquals('currency', $requirements_cell['data-column-type']);
     $this->assertEquals('financial', $requirements_cell['data-progress-group']);
 
-    $funding_cell = $table_data['rows'][0][5];
+    $funding_cell = $table_data['rows'][0]['funding'];
     $this->assertEquals(1000, $funding_cell['data-raw-value']);
     $this->assertEquals('currency', $funding_cell['data-column-type']);
     $this->assertEquals('financial', $funding_cell['data-progress-group']);
 
-    $coverage_cell = $table_data['rows'][0][6];
+    $coverage_cell = $table_data['rows'][0]['coverage'];
     $this->assertEquals('hpc_percent', $coverage_cell['data']['#theme']);
     $this->assertEquals(0.333, $coverage_cell['data']['#percent']);
     $this->assertEquals(0.333, $coverage_cell['data-raw-value']);
@@ -122,9 +124,12 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertNotEmpty($source_data[0]['plan_type_tooltip']);
     $this->assertEquals(300, $source_data[0]['in_need']);
     $this->assertEquals(100, $source_data[0]['target']);
-    $this->assertEquals(3000, $source_data[0]['current_requirements']);
-    $this->assertEquals(1000, $source_data[0]['total_funding']);
-    $this->assertEquals(0.333, $source_data[0]['funding_coverage']);
+    $this->assertEquals(round(100 / 3, 1), round($source_data[0]['target_percent'], 1));
+    $this->assertEquals(80, $source_data[0]['reached']);
+    $this->assertEquals(80.0, $source_data[0]['reached_percent']);
+    $this->assertEquals(3000, $source_data[0]['requirements']);
+    $this->assertEquals(1000, $source_data[0]['funding']);
+    $this->assertEquals(0.333, $source_data[0]['coverage']);
     $this->assertNull($source_data[0]['footnotes']);
   }
 
@@ -181,7 +186,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertEquals($build['#theme'], 'table');
     $this->assertEquals($build['#progress_groups'], TRUE);
     $this->assertEquals($build['#sortable'], TRUE);
-    $this->assertEquals($build['#soft_limit'], 10);
+    $this->assertEquals($build['#soft_limit'], 0);
     $this->assertCount(7, $build['#header']);
     $this->assertCount(1, $build['#rows']);
   }
@@ -194,6 +199,16 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    */
   private function getBlockPlugin() {
     $configuration = [
+      'columns' => [
+        'in_need' => 'in_need',
+        'target' => 'target',
+        'target_percent' => 0,
+        'reached' => 0,
+        'reached_percent' => 0,
+        'requirements' => 'requirements',
+        'funding' => 'funding',
+        'coverage' => 'coverage',
+      ],
       'soft_limit' => 10,
     ];
     $contexts = $this->getPlanSectionContexts(['field_year' => 2025]);
@@ -218,6 +233,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $caseload = $this->prophesize(CaseloadAttachment::class);
     $caseload->getFieldByType('inNeed')->willReturn((object) ['value' => 300]);
     $caseload->getFieldByType('target')->willReturn((object) ['value' => 100]);
+    $caseload->getCaseloadValue('latestReach')->willReturn(80);
     $attachment_search_query = $this->prophesize(AttachmentSearchQuery::class);
     $attachment_search_query->getAttachmentsByObject(Argument::cetera())->willReturn([$caseload->reveal()]);
     $plugin->setQueryHandler('attachment_search', $attachment_search_query->reveal());
