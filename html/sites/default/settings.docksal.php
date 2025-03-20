@@ -83,7 +83,7 @@ if (PHP_SAPI !== 'cli') {
   }
 }
 
-$config['ocha_snap.settings']['url'] = getenv('VIRTUAL_HOST') . ':8442/snap';
+$config['ocha_snap.settings']['url'] = getenv('SNAP_URL');
 
 $settings['trusted_host_patterns'] = array(
   '^' . addslashes(getenv('VIRTUAL_HOST')) . '$',
