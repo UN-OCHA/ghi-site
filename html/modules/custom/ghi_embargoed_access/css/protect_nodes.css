@@ -6,6 +6,7 @@
 /** For article lists. */
 article.node.protected:not(.section-internal-protected).node--view-mode-grid .cd-teaser__title::before,
 article.node.protected:not(.section-internal-protected).ghi-section-teaser h2 a::before,
+article.node.protected:not(.section-internal-protected).node--view-mode-card-summary .gho-related-article__title a::before,
 /** For the global menus. */
 .cd-header a.protected::before,
 /** Links inside the content are, but only for links to outside the section. */
@@ -18,6 +19,8 @@ ul.ui-autocomplete > li > a > span.protected::before,
 /** Backend views */
 .view .view-content tr.protected .views-field-title::before,
 .menu-edit-form table tbody tr td a.protected::before,
+/** Backend configuration */
+.hpc-form-wrapper table.ghi-table tbody tr td span.protected::before,
 /** Section navigation backend page */
 .ghi-sections-section-navigation-form .menu-label.protected::before {
   content: '';
