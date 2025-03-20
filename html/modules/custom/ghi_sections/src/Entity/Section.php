@@ -114,6 +114,13 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
   /**
    * {@inheritdoc}
    */
+  public function isProtected() {
+    return $this->getEmbargoedAccessManager()?->isProtected($this) ?? FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
 
@@ -185,6 +192,17 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
       return [];
     }
     return $base_object->getApiCacheTagsToInvalidate();
+  }
+
+  /**
+   * Get the embargoed access manager service.
+   *
+   * @return \Drupal\ghi_embargoed_access\EmbargoedAccessManager|null
+   *   The embargoed access manager service or NULL.
+   */
+  protected static function getEmbargoedAccessManager() {
+    $service = 'ghi_embargoed_access.manager';
+    return \Drupal::hasService($service) ? \Drupal::service($service) : NULL;
   }
 
 }

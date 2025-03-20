@@ -5,6 +5,7 @@
 .section-protected .block-section-switcher .cd-dropdown ul li.active::before,
 /** For article lists. */
 article.node.protected:not(.section-internal-protected).node--view-mode-grid .cd-teaser__title::before,
+article.node.protected:not(.section-internal-protected).ghi-section-teaser h2 a::before,
 /** For the global menus. */
 .cd-header a.protected::before,
 /** Links inside the content are, but only for links to outside the section. */
@@ -12,8 +13,11 @@ body:not(.section-protected) #main-content .links--entity-navigation .megamenu a
 body:not(.section-protected) #main-content .links--entity-navigation .dropdown.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
 body:not(.section-protected) #main-content .links--entity-navigation .megamenu.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
 body:not(.section-protected) #main-content a.protected::before,
+/** Autocomplete results */
+ul.ui-autocomplete > li > a > span.protected::before,
 /** Backend views */
 .view .view-content tr.protected .views-field-title::before,
+.menu-edit-form table tbody tr td a.protected::before,
 /** Section navigation backend page */
 .ghi-sections-section-navigation-form .menu-label.protected::before {
   content: '';
@@ -30,8 +34,9 @@ body:not(.section-protected) #main-content a.protected::before,
   left: unset !important;
 }
 
-body:not(.section-protected) #main-content .links--entity-navigation .dropdown.protected a.protected::before {
-  display: none;
+body:not(.section-protected) #main-content .links--entity-navigation .dropdown.protected a.protected::before,
+article.node.protected:not(.section-internal-protected).ghi-section-teaser .ghi-section-teaser__image a.protected::before {
+  display: none !important;
 }
 
 /** For the global menus. */
