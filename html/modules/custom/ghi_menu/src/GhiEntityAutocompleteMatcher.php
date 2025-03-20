@@ -2,12 +2,15 @@
 
 namespace Drupal\ghi_menu;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Tags;
 use Drupal\Core\Entity\EntityAutocompleteMatcher;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_content\Entity\Article;
+use Drupal\ghi_content\Entity\ContentBase;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 
 /**
@@ -57,6 +60,12 @@ class GhiEntityAutocompleteMatcher extends EntityAutocompleteMatcher {
 
         if ($entity instanceof EntityPublishedInterface && !$entity->isPublished()) {
           $custom_label = $custom_label . ' - Unpublished';
+        }
+
+        if (($entity instanceof SectionNodeInterface || $entity instanceof ContentBase) && $entity->isProtected()) {
+          $custom_label = new FormattableMarkup('<span class="protected">@label</span>', [
+            '@label' => $custom_label,
+          ]);
         }
 
         // Create a sanitized key.

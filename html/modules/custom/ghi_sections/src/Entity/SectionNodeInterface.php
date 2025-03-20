@@ -68,4 +68,12 @@ interface SectionNodeInterface extends NodeInterface {
    */
   public function getApiCacheTagsToInvalidate();
 
+  /**
+   * Check if the entity is currently protected.
+   *
+   * @return bool
+   *   TRUE if the entity is currently protected, FALSE otherwise.
+   */
+  public function isProtected();
+
 }
