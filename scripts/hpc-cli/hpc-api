@@ -1,0 +1,133 @@
+#!/bin/bash
+
+CURRENT_DIR="$( dirname -- "${BASH_SOURCE[0]}"; )";
+source ${CURRENT_DIR}/hpc.env
+
+# declare URL_MAP
+URL_MAP_PROD="https://api.hpc.tools"
+URL_MAP_DEMO="https://demo.api-hpc-tools.ahconu.org"
+URL_MAP_STAGE="https://stage.api-hpc-tools.ahconu.org"
+URL_MAP_DEV_BLUE="https://blue.dev.api-hpc-tools.ahconu.org"
+URL_MAP_DEV_RED="https://red.dev.api-hpc-tools.ahconu.org"
+
+hid-login() {
+  MAIL="${1:-${HID_MAIL}}"
+  if [ "$MAIL" != "" ]; then
+    read -p "Enter your HID mail address [${MAIL}]: " mail
+    MAIL=${mail:-${MAIL}}
+  else
+    read -p "Enter your HID mail address: " MAIL
+  fi
+
+  echo "Using ${MAIL} for the HID login."
+  read -s -p "Password:" PASSWORD
+  echo
+  USER_DATA=$(curl -s -X POST "https://api.humanitarian.id/api/v3/jsonwebtoken" -H "accept: application/json" -H "Content-Type: application/json" -d "{\"email\":\"${MAIL}\",\"password\":\"${PASSWORD}\"}" | jq '.')
+  HID_USER_ID=$(echo $USER_DATA | jq -r '.user.user_id')
+  HID_USER_NAME=$(echo $USER_DATA | jq -r '.user.name')
+  HID_USER_MAIL=$(echo $USER_DATA | jq -r '.user.email')
+  HID_ACCESS_TOKEN=$(echo $USER_DATA | jq -r '.token')
+  if [ $HID_USER_ID == "0" ]; then
+    echo $USER_DATA | jq -r '.message'
+  else
+    echo "Logged in as ${HID_USER_NAME} (${HID_USER_MAIL})"
+  fi
+}
+
+# Calls using API key authentication.
+api-backend() {
+  API_KEY="${HPC_API_KEY}"
+  URL=$1
+  JQ_COMMAND="${2:-.}"
+  curl --header "Authorization: Bearer ${API_KEY}" -s "${URL}" | jq "${JQ_COMMAND}"
+}
+
+# Calls to public endpoints.
+api-public() {
+  url=$1
+  url_with_credentials=${url/https:\/\//https:/\/$HPC_BASIC_AUTH_USER:$HPC_BASIC_AUTH_PASS@}
+  jr "$url_with_credentials"
+}
+
+# Calls to non-public endpoints.
+api-hid() {
+  ACCESS_TOKEN="${HID_ACCESS_TOKEN}"
+  USER_ID="${HID_USER_ID}"
+  URL=$1
+  JQ_COMMAND="${2:-.}"
+  if [[ ${URL} == *"?"* ]]; then
+    USER_ID_STRING="&userid=${USER_ID}"
+  else
+    USER_ID_STRING="?userid=${USER_ID}"
+  fi
+  curl -s --header "Authorization: Bearer ${ACCESS_TOKEN}" "${URL}${USER_ID_STRING}" | jq "${JQ_COMMAND}"
+}
+
+# Generic function for api calls, using the previously declared functions.
+api() {
+  OPTIND=1
+  env="prod"
+  api_version="2"
+  backend_call=0
+  hid_call=0
+  show_url=0
+
+  usage="Usages:
+  api <endpoint path>
+  api login
+
+Endpoint requests:
+  api -e demo -v2 <endpoint path>
+    [ -e PROD|DEMO|STAGE|DEV_BLUE|DEV_RED ]
+    [ -v 1|2 ]
+    [ -b Issue a backend request with API key]
+    [ -h Issue an HID authenticated request]
+    [ -s Show the resulting URL, but don't actually send the request]
+
+Login via HID:
+  api login
+    "
+
+  if [ "$1" == "login" ]; then
+    hid-login
+    return
+  fi
+
+  while getopts "bhse:v:" opt; do
+    case "$opt" in
+      e) env=${OPTARG};;
+      v) api_version=${OPTARG};;
+      b) backend_call=1;;
+      h) hid_call=1;;
+      s) show_url=1;;
+    esac
+  done
+
+  shift $((OPTIND-1))
+
+  if [[ $# -eq 0 ]]; then
+    echo "$usage"
+    return
+  fi
+
+  endpoint=${@: -1}
+  # Remove leading and trailing slashes.
+  endpoint=${endpoint#/}
+  endpoint=${endpoint%/}
+
+  url_key="URL_MAP_$(echo "$env" | awk '{print toupper($0)}')"
+  url="${!url_key}/v${api_version}/${endpoint}"
+
+  if [ $show_url -eq 1 ]; then
+    echo $url
+    return
+  fi
+
+  if [ $backend_call -eq 1 ]; then
+    api-backend ${url}
+  elif [ $hid_call -eq 1 ]; then
+    api-hid ${url}
+  else
+    api-public ${url}
+  fi
+}
