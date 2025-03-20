@@ -2,8 +2,10 @@
 
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 
 /**
  * Provides a section teaser item for configuration containers.
@@ -47,7 +49,16 @@ class SectionTeaser extends ConfigurationContainerItemPluginBase {
   public function getLabel() {
     $value = $this->getValue();
     $entity = $this->entityTypeManager->getStorage('node')->load($value);
-    return $entity ? $entity->label() : $this->t('<em>Unavailable</em>');
+    if (!$entity) {
+      return $this->t('<em>Unavailable</em>');
+    }
+    $label = $entity->label();
+    if ($entity instanceof SectionNodeInterface && $entity->isProtected()) {
+      $label = new FormattableMarkup('<span class="protected">@label</span>', [
+        '@label' => $label,
+      ]);
+    }
+    return $label;
   }
 
   /**
