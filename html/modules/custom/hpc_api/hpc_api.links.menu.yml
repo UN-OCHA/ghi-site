@@ -23,8 +23,3 @@ hpc_api.icon_files_report:
   description: 'List the currently imported icon files.'
   route_name: hpc_api.reports.files.icons
   parent: hpc_api.files_report
-hpc_api.geojson_files_report:
-  title: GeoJSON files
-  description: 'List the currently imported GeoJSON files.'
-  route_name: hpc_api.reports.files.geojson
-  parent: hpc_api.files_report

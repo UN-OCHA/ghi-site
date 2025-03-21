@@ -7,6 +7,15 @@ namespace Drupal\ghi_base_objects\ApiObjects;
  */
 class Location extends BaseObject {
 
+  const GEO_JSON_DIR = 'public://geojson';
+
+  /**
+   * The parent country.
+   *
+   * @var \Drupal\ghi_base_objects\ApiObjects\Location
+   */
+  private $parentCountry = NULL;
+
   /**
    * {@inheritdoc}
    */
@@ -19,10 +28,40 @@ class Location extends BaseObject {
       'pcode' => $data->pcode,
       'iso3' => $data->iso3,
       'latLng' => [(string) $data->latitude, (string) $data->longitude],
-      'filepath' => !empty($data->filepath) ? $data->filepath : NULL,
       'parent_id' => $data->parentId,
+      'valid_on' => $data->validOn,
       'children' => $data->children ?? [],
     ];
+  }
+
+  /**
+   * Set the parent country for a location.
+   *
+   * @param \Drupal\ghi_base_objects\ApiObjects\Location $country
+   *   The parent country.
+   */
+  public function setParentCountry(Location $country) {
+    $this->parentCountry = $country;
+  }
+
+  /**
+   * Get the parent country for a location.
+   *
+   * @return \Drupal\ghi_base_objects\ApiObjects\Location
+   *   The parent country.
+   */
+  public function getParentCountry() {
+    return $this->parentCountry;
+  }
+
+  /**
+   * Get the iso3 code.
+   *
+   * @return string
+   *   The iso3 code.
+   */
+  public function getIso3() {
+    return $this->isCountry() ? $this->iso3 : $this->getParentCountry()->getIso3();
   }
 
   /**
@@ -36,6 +75,49 @@ class Location extends BaseObject {
   }
 
   /**
+   * Get the pcode.
+   *
+   * @return string
+   *   The pcode.
+   */
+  public function getPcode() {
+    return $this->pcode;
+  }
+
+  /**
+   * Get the lat/lng coordinates.
+   *
+   * @return array
+   *   Array with 2 items: [latitude, longitude].
+   */
+  public function getLatLng() {
+    return [
+      $this->getLatitude(),
+      $this->getLongitude(),
+    ];
+  }
+
+  /**
+   * Get the latitude.
+   *
+   * @return string
+   *   The latitude.
+   */
+  public function getLatitude() {
+    return $this->latLng[0];
+  }
+
+  /**
+   * Get the longitude.
+   *
+   * @return string
+   *   The longitude.
+   */
+  public function getLongitude() {
+    return $this->latLng[1];
+  }
+
+  /**
    * Check if the location represents a country.
    *
    * @return bool
@@ -46,82 +128,93 @@ class Location extends BaseObject {
   }
 
   /**
+   * Check if we have a geojson file for this location.
+   *
+   * @return bool
+   *   TRUE if a geojson file is there, FALSE otherwise.
+   */
+  public function hasGeoJsonFile() {
+    return $this->getGeoJsonSourceFilePath() !== NULL;
+  }
+
+  /**
    * Get the path to the geojson shape file for the location.
    *
    * @return string|null
-   *   The path to the locally stored file inside the geojson directory in the
-   *   public file system. Or NULL if the file can't be found.
+   *   The path to the locally stored file inside our module directory. Or NULL
+   *   if the file can't be found.
    */
-  private function getGeoJsonFilePath() {
-    $geojson_service = self::getGeoJsonService();
-    if ($this->isCountry()) {
-      // The source file for countries comes from a local asset.
-      $filename = $this->getLocalAssetGeoJsonFilename();
-      if (!$filename) {
-        return NULL;
-      }
-      $directory = self::moduleHandler()->getModule('ghi_base_objects')->getPath() . '/assets/geojson/' . $this->iso3 . '/current';
-      $filepath_asset = $directory . '/' . $filename;
-      if (!file_exists($filepath_asset)) {
-        return NULL;
-      }
-      // We still want the file to served from the geojson directory in the
-      // public file system.
-      if (!$geojson_service->localFileExists($filename)) {
-        // Copy to the geojson directory in the public file system.
-        $geojson_service->writeGeoJsonFile($filename, file_get_contents($filepath_asset));
-      }
-      return $geojson_service->getLocalFilePath($filename);
+  public function getGeoJsonSourceFilePath() {
+    $directory = self::moduleHandler()->getModule('ghi_base_objects')->getPath() . '/assets/geojson';
+
+    // The source file for countries comes from a local asset.
+    $filepath = $this->buildGeoJsonSourceFilePath();
+    if (!$filepath) {
+      return NULL;
     }
-    else {
-      return $geojson_service->getGeoJsonLocalFilePath($this->filepath);
+
+    $filepath_asset = $directory . '/' . $filepath;
+    if (!file_exists($filepath_asset)) {
+      return NULL;
     }
+    return $filepath_asset;
   }
 
   /**
-   * Get the URL to the geosjon shape file.
+   * Build the path to the geojson source files inside this modules directory.
+   *
+   * @param string $version
+   *   The version to retrieve.
+   * @param bool $minified
+   *   Whether a minified file should be retrieved.
    *
    * @return string
-   *   The URL to the locally stored file inside the geojson directory in the
-   *   public file system. Or NULL if the no such file exists.
+   *   A path relative to the this modules geojson asset file directory in
+   *   [MODULE_PATH]/assets/geojson.
    */
-  private function getGeoJsonFileUrl() {
-    $filepath = $this->getGeoJsonFilePath();
-    return $filepath ? self::fileUrlGenerator()->generate($filepath)->toString() : NULL;
+  private function buildGeoJsonSourceFilePath($version = 'current', $minified = TRUE) {
+    if (!$this->getIso3()) {
+      return NULL;
+    }
+    $path_parts = [
+      $this->getIso3(),
+      $version,
+    ];
+    if ($this->isCountry()) {
+      // Country shape files are directly in the root level.
+      $path_parts[] = $this->getIso3() . '_0' . ($minified ? '.min' : '') . '.geojson';
+    }
+    elseif (!empty($this->getAdminLevel()) && !empty($this->getPcode())) {
+      // Admin 1+ shape files are inside a level specific subdirectory.
+      $path_parts[] = 'adm' . $this->getAdminLevel();
+      // And they are simply named like their pcode.
+      $path_parts[] = $this->getPcode() . '.geojson';
+    }
+    else {
+      return NULL;
+    }
+    return implode('/', $path_parts);
   }
 
   /**
-   * Get the geo json data for the location if available.
+   * Get the path to the geojson file inside the public file directory.
    *
-   * @param bool $refresh
-   *   Whether to refresh stored data.
+   * This checks if a geojson file for this location is present in the source,
+   * and if so, it makes sure to copy it over to the public file system.
    *
-   * @return object|false
-   *   The geo json data object or FALSE.
+   * @return string
+   *   The path to the geojson file inside the public file directory.
    */
-  public function getGeoJson($refresh = FALSE) {
-    $filepath = $this->getGeoJsonFilePath();
-    return $filepath ? json_decode(file_get_contents($filepath)) : NULL;
-  }
-
-  /**
-   * Get the file name for a self hosted geojson file.
-   *
-   * @return string|null
-   *   The pattern is [ISO3]_[ADMIN_LEVEL].geojson for admin 0,
-   *   [ISO3]_[ADMIN_LEVEL]_[PCODE].geojson for admin 1+.
-   */
-  private function getLocalAssetGeoJsonFilename($minified = TRUE) {
-    if (empty($this->iso3)) {
+  private function getGeoJsonPublicFilePath() {
+    $filepath = $this->getGeoJsonSourceFilePath();
+    if (!$filepath) {
       return NULL;
     }
-    if ($this->admin_level == 0) {
-      return $this->iso3 . '_0' . ($minified ? '.min' : '') . '.geojson';
+    $public_filepath = self::GEO_JSON_DIR . '/' . md5($this->id() . '_' . $this->valid_on) . '.geojson';
+    if (!file_exists($public_filepath)) {
+      copy($filepath, $public_filepath);
     }
-    if (empty($this->admin_level) || empty($this->pcode)) {
-      return NULL;
-    }
-    return $this->iso3 . '_' . $this->admin_level . '_' . $this->pcode . ($minified ? '.min' : '') . '.geojson';
+    return $public_filepath;
   }
 
   /**
@@ -129,18 +222,9 @@ class Location extends BaseObject {
    */
   public function toArray() {
     $array = parent::toArray();
-    $array['filepath'] = $this->getGeoJsonFileUrl();
+    $geojson_public_path = $this->getGeoJsonPublicFilePath();
+    $array['filepath'] = $geojson_public_path ? $this->fileUrlGenerator()->generate($geojson_public_path)->toString() : NULL;
     return $array;
-  }
-
-  /**
-   * Get the geojson service.
-   *
-   * @return \Drupal\hpc_api\GeoJsonService
-   *   The geojson service.
-   */
-  public static function getGeoJsonService() {
-    return \Drupal::service('hpc_api.geojson');
   }
 
   /**

@@ -6,7 +6,7 @@
 # We ignore generated css files (styles*.css), sass and javascript files which
 # are linted separately, images and XSL files.
 include='^html/(modules|themes)/custom'
-exclude='(\.(js|ico|png|jpg|gif|svg|scss|xsl)$)'
+exclude='(\.(js|ico|png|jpg|gif|svg|scss|xsl|geojson)$)'
 
 # Assume that the php command is global.
 linter="php"

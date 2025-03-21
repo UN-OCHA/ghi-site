@@ -6,7 +6,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Controller class for a geojson files.
+ * Controller class for a file list actions.
  */
 class FileListActionController extends ControllerBase {
 
@@ -32,6 +32,13 @@ class FileListActionController extends ControllerBase {
   protected $router;
 
   /**
+   * The route provider service.
+   *
+   * @var \Drupal\Core\Routing\RouteProviderInterface
+   */
+  protected $routeProvider;
+
+  /**
    * The service container.
    *
    * @var \Symfony\Component\DependencyInjection\ContainerInterface
@@ -46,6 +53,7 @@ class FileListActionController extends ControllerBase {
     $instance->fileSystem = $container->get('file_system');
     $instance->stack = $container->get('request_stack');
     $instance->router = $container->get('router.no_access_checks');
+    $instance->routeProvider = $container->get('router.route_provider');
     $instance->container = $container;
     return $instance;
   }
@@ -59,19 +67,16 @@ class FileListActionController extends ControllerBase {
   public function purgeFiles() {
     $redirect = $this->redirect('hpc_api.reports.files.data_source');
 
+    // Check the referrer to see if we can consider this a valid request.
     $referer = $this->stack->getCurrentRequest()->headers->get('referer');
-    $allowed = [
-      'data-source',
-      'icons',
-      'geojson',
-    ];
 
+    $allowed_pages = $this->getAllowedRefererPages();
     if (empty($referer)) {
       return $redirect;
     }
     $parts = explode('/', $referer);
     $type = end($parts);
-    if (!in_array($type, $allowed)) {
+    if (!in_array($type, $allowed_pages)) {
       return $redirect;
     }
 
@@ -99,6 +104,25 @@ class FileListActionController extends ControllerBase {
       '@count' => count($files),
     ]));
     return $this->redirect($original_route_name);
+  }
+
+  /**
+   * Get the allowed referer pages.
+   *
+   * Allowed are all pages under the hpc_api.reports.files.* routing namespace.
+   *
+   * @return string[]
+   *   An array of route part strings.
+   */
+  private function getAllowedRefererPages() {
+    $routes = $this->routeProvider->getAllRoutes();
+    $route_names = array_filter(array_keys((array) $routes), function ($route_name) {
+      return str_starts_with($route_name, 'hpc_api.reports.files');
+    });
+    return array_map(function ($route_name) {
+      $parts = explode('.', $route_name);
+      return end($parts);
+    }, $route_names);
   }
 
 }

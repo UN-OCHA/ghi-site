@@ -82,3 +82,17 @@ function hpc_api_query_projects(array $args = []) {
   ]);
   return $query_handler->query();
 }
+
+/**
+ * Implements hook_menu_local_actions_alter().
+ *
+ * Make sure that all routes under the hpc_api.reports.files routing namespace
+ * show the purge link.
+ */
+function hpc_api_menu_local_actions_alter(&$local_actions) {
+  $routes = \Drupal::service('router.route_provider')->getAllRoutes();
+  $route_names = array_filter(array_keys((array) $routes), function ($route_name) {
+    return str_starts_with($route_name, 'hpc_api.reports.files');
+  });
+  $local_actions['hpc_api.purge_files']['appears_on'] = array_values($route_names);
+}
