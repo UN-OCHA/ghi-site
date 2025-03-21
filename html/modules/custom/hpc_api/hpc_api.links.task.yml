@@ -9,8 +9,3 @@ hpc_file_report.icons:
   route_name: hpc_api.reports.files.icons
   base_route: hpc_api.reports.files.data_source
   title: 'Icon files'
-
-hpc_file_report.geojson:
-  route_name: hpc_api.reports.files.geojson
-  base_route: hpc_api.reports.files.data_source
-  title: 'GeoJSON files'
