@@ -12,3 +12,9 @@ entity.base_object_type.collection:
   route_name: entity.base_object_type.collection
   description: 'Manage base object types'
   parent: system.admin_structure
+
+geojson_files_report:
+  title: GeoJSON files
+  description: 'List the currently imported GeoJSON files.'
+  route_name: hpc_api.reports.files.geojson
+  parent: hpc_api.files_report

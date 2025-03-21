@@ -13,7 +13,7 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  *   id = "locations_query",
  *   label = @Translation("Locations query"),
  *   endpoint = {
- *     "api_key" = "location/nested/{country_id}",
+ *     "api_key" = "location/nested/{location_id}",
  *     "version" = "v2",
  *     "query" = {
  *       "scopes" = "locations",
@@ -28,20 +28,20 @@ class LocationsQuery extends EndpointQueryBase {
   const MAX_LEVEL = 5;
 
   /**
-   * Get the country locations.
+   * Get a country.
    *
    * @param int $country_id
-   *   A country object as returned by the API.
+   *   A country id known to the API.
    * @param int $max_level
    *   A maximum level of nested locations to retrieve.
    * @param bool $include_expired
    *   Include expired locations.
    *
    * @return \Drupal\ghi_base_objects\ApiObjects\Location|null
-   *   A location.
+   *   A country location.
    */
-  public function getCountryLocationData($country_id, $max_level = NULL, $include_expired = TRUE) {
-    $this->setPlaceholder('country_id', $country_id);
+  public function getCountry($country_id, $max_level = NULL, $include_expired = TRUE) {
+    $this->setPlaceholder('location_id', $country_id);
     $this->endpointQuery->setEndpointArguments(array_filter([
       'maxLevel' => $max_level ?? self::MAX_LEVEL,
       'includeExpired' => $include_expired ? 'true' : NULL,
@@ -49,10 +49,41 @@ class LocationsQuery extends EndpointQueryBase {
       return $item !== NULL;
     }));
     $data = $this->getData();
+    return $data ? new Location($data) : NULL;
+  }
+
+  /**
+   * Get a location inside a country.
+   *
+   * @param int $country_id
+   *   A country id known to the API.
+   * @param int $location_id
+   *   A location id known to the API.
+   *
+   * @return \Drupal\ghi_base_objects\ApiObjects\Location|null
+   *   A location.
+   */
+  public function getCountryLocation($country_id, $location_id) {
+    // First get the location.
+    $this->setPlaceholder('location_id', $location_id);
+    $this->endpointQuery->setEndpointArguments(array_filter([
+      'maxLevel' => 0,
+      'includeExpired' => 'true',
+    ], function ($item) {
+      return $item !== NULL;
+    }));
+    $data = $this->getData();
     if (empty($data)) {
       return NULL;
     }
-    return $data ? new Location($data) : NULL;
+    $location = new Location($data);
+    // Then get the country and make a simple sanity check.
+    $country = $this->getCountry($country_id, 0);
+    if (!$country || !str_starts_with($location->getPcode(), $country->getPcode())) {
+      return NULL;
+    }
+    $location->setParentCountry($country);
+    return $location;
   }
 
   /**
@@ -76,14 +107,14 @@ class LocationsQuery extends EndpointQueryBase {
       return $locations;
     }
 
-    $data = $this->getCountryLocationData($country->id, $max_level);
-    if (!$data || empty($data->children) || !is_array($data->children)) {
+    $country_data = $this->getCountry($country->id, $max_level);
+    if (!$country_data || empty($country_data->children) || !is_array($country_data->children)) {
       $this->setCache($cache_key, []);
       return [];
     }
 
     // Make it a flat array.
-    $flat_locations = $this->flattenLocationArray($data->children);
+    $flat_locations = $this->flattenLocationArray($country_data->children);
     $locations = [];
     // Now look at each location and prepare the full set of location data.
     foreach ($flat_locations as $item) {
@@ -92,11 +123,12 @@ class LocationsQuery extends EndpointQueryBase {
         continue;
       }
       $locations[$item->id] = new Location($item);
+      $locations[$item->id]->setParentCountry(new Location($country_data));
     }
 
     // We filter the locations for empty coordinates and for admin level 0.
-    $locations = array_filter($locations, function ($location) {
-      return !empty($location->latLng[0]) && !empty($location->latLng[1]) && $location->admin_level != 0;
+    $locations = array_filter($locations, function (Location $location) {
+      return !empty($location->latLng[0]) && !empty($location->latLng[1]) && !$location->isCountry();
     });
     $this->setCache($cache_key, $locations);
     return $locations;
