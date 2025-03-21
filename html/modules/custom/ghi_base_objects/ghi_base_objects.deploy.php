@@ -35,22 +35,3 @@ function ghi_base_objects_deploy_base_object_bundles_admin_menu_2() {
     ])->save();
   }
 }
-
-/**
- * Import country outlines from the fallback source.
- */
-function ghi_base_objects_deploy_import_country_outlines_from_fallback(&$sandbox) {
-  /** @var \Drupal\hpc_api\Query\EndpointQueryManager $endpoint_query_manager */
-  $endpoint_query_manager = \Drupal::service('plugin.manager.endpoint_query_manager');
-  /** @var \Drupal\ghi_base_objects\Plugin\EndpointQuery\CountryQuery $country_query */
-  $country_query = $endpoint_query_manager->createInstance('country_query');
-  $countries = $country_query->getCountries();
-  foreach ($countries as $country) {
-    \Drupal::queue('ghi_base_objects_download_country_geojson')->createItem((object) [
-      'country_id' => $country->id(),
-    ]);
-  }
-  return (string) t('Enqueued @total countries for downloading their GeoJson country outline.', [
-    '@total' => \Drupal::queue('ghi_base_objects_download_country_geojson')->numberOfItems(),
-  ]);
-}
