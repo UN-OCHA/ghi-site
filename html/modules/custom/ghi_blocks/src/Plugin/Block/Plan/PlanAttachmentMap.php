@@ -32,6 +32,7 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
  *    "entities" = "plan_entities_query",
  *    "attachment" = "attachment_query",
  *    "attachment_search" = "attachment_search_query",
+ *    "locations" = "locations_query",
  *  },
  *  default_title = @Translation("Data by location"),
  *  context_definitions = {
@@ -78,6 +79,15 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $chart_id = Html::getUniqueId('plan-attachment-map--' . $style);
     $map = $this->buildCircleMap();
 
+    $outline_country = NULL;
+    $focus_country = $this->getCurrentPlanObject()->getFocusCountry();
+    if ($focus_country) {
+      /** @var \Drupal\ghi_base_objects\Plugin\EndpointQuery\LocationsQuery $locations_query */
+      $locations_query = $this->getQueryHandler('locations');
+      $country = $locations_query->getCountry($focus_country->getSourceId(), 0);
+      $outline_country = $country?->toArray();
+    }
+
     if (empty($map['data'])) {
       // Nothing to show.
       return NULL;
@@ -91,6 +101,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       'disclaimer' => $conf['map']['common']['disclaimer'] ?? self::DEFAULT_DISCLAIMER,
       'pcodes_enabled' => $conf['map']['common']['pcodes_enabled'] ?? TRUE,
       'style' => $style,
+      'outlineCountry' => $outline_country,
     ] + $map['settings'];
 
     $attachment_switcher = $this->getAttachmentSwitcher();
