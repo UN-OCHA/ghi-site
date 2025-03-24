@@ -78,8 +78,8 @@ trait GlobalSettingsTrait {
     if (!empty($config['sort_by_plan_type'])) {
       $this->sortPlansByPlanType($plans, $config['plan_short_names'] ?? FALSE);
 
-      // Additionally group the plans by them being included in the GHO, with
-      // GHO plans coming first.
+      // Put the plans together, additionally grouped by them being included in
+      // the GHO, with GHO plans coming first.
       $plans_gho = [];
       $plans_non_gho = [];
       foreach ($plans as $plan) {
@@ -94,7 +94,7 @@ trait GlobalSettingsTrait {
       $plans = $plans_gho + $plans_non_gho;
     }
     else {
-      // Otherwhise sort by plan name only.
+      // Otherwise sort by plan name only.
       ArrayHelper::sortObjectsByProperty($plans, 'getName', EndpointQuery::SORT_ASC, SORT_STRING);
     }
   }
@@ -326,11 +326,12 @@ trait GlobalSettingsTrait {
    *   value is an array with a part of the form element definition.
    */
   private function getCheckboxOptions() {
+    // Get dynamically grouped plan types.
     return [
       'sort_by_plan_type' => [
         '#title' => $this->t('Sort by plan type'),
-        '#description' => $this->t('If checked, the table will be sorted first by plans beeing part of the GHO, then by the plan type and then by the plan name. Plan type order is: <em>@plan_types</em>. This order can be changed on the  <a href="@plan_type_url">Plan type taxonnomy page</a>.', [
-          '@plan_types' => implode(', ', array_values($this->getAvailablePlanTypes())),
+        '#description' => $this->t('If checked, the table will be sorted first by plans being part of the GHO, then by the plan type and then by the plan name. Plan type order is: <em>@plan_types</em>. This order can be changed on the  <a href="@plan_type_url">Plan type taxonnomy page</a>.', [
+          '@plan_types' => $this->getPlanTypeOrderSummary(),
           '@plan_type_url' => Url::fromRoute('entity.taxonomy_vocabulary.overview_form', ['taxonomy_vocabulary' => 'plan_type'])->toString(),
         ]),
       ],

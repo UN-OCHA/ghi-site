@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\Traits;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\ghi_plans\Entity\PlanType;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\StringHelper;
@@ -25,15 +26,15 @@ trait PlanTypeTrait {
    */
   public function sortPlansByPlanType(array &$plans, $use_shortname = FALSE) {
     // Sort everything first by plan type, then by plan name.
-    $type_order = $this->getAvailablePlanTypes();
+    $type_order = $this->getAvailablePlanTypeEntities();
 
     $grouped_plans = [];
     foreach ($type_order as $plan_type) {
-      $plan_type_key = $plan_type;
+      $plan_type_key = $plan_type->getGroupKey();
 
       // Create a list of all plans for this plan type.
       foreach ($plans as $plan) {
-        if (!$plan->isType($plan_type)) {
+        if (!$plan->isType($plan_type->label())) {
           continue;
         }
         if (empty($grouped_plans[$plan_type_key])) {
@@ -63,18 +64,11 @@ trait PlanTypeTrait {
    * @param bool $include_description
    *   Whether to include the term description.
    *
-   * @return array
+   * @return string[]
    *   The plan types as a simple id-label pair array.
    */
   public function getAvailablePlanTypes($include_description = FALSE) {
-    $terms = TaxonomyHelper::loadMultipleTermsByVocabulary('plan_type');
-    if (empty($terms)) {
-      return [];
-    }
-    // Sort by weight.
-    usort($terms, function ($a, $b) {
-      return $a->getWeight() - $b->getWeight();
-    });
+    $terms = $this->getAvailablePlanTypeEntities();
     return array_map(function ($term) use ($include_description) {
       /** @var \Drupal\taxonomy\Entity\Term $term */
       if ($include_description) {
@@ -85,12 +79,48 @@ trait PlanTypeTrait {
   }
 
   /**
+   * Get the available plan type entities.
+   *
+   * @return \Drupal\ghi_plans\Entity\PlanType[]
+   *   An array of plan type entity objects.
+   */
+  public function getAvailablePlanTypeEntities() {
+    $terms = TaxonomyHelper::loadMultipleTermsByVocabulary('plan_type');
+    if (empty($terms)) {
+      return [];
+    }
+    // Sort by weight.
+    usort($terms, function ($a, $b) {
+      return $a->getWeight() - $b->getWeight();
+    });
+    return $terms;
+  }
+
+  /**
+   * Get a summary of the plan type order.
+   *
+   * @return string
+   *   An summary string in the form "HRP/HNRP, FA, REG".
+   */
+  public function getPlanTypeOrderSummary() {
+    $plan_types = $this->getAvailablePlanTypeEntities();
+    $grouped_plan_types = [];
+    array_walk($plan_types, function (PlanType $term) use (&$grouped_plan_types) {
+      $grouped_plan_types[$term->getGroupKey()] = $grouped_plan_types[$term->getGroupKey()] ?? [];
+      $grouped_plan_types[$term->getGroupKey()][] = $term->getAbbreviation();
+    });
+    return implode(', ', array_map(function ($plan_types) {
+      return implode('/', $plan_types);
+    }, $grouped_plan_types));
+  }
+
+  /**
    * Get a plan type taxonomy entity by name.
    *
    * @param string $name
    *   The term name to search for.
    *
-   * @return \Drupal\taxonomy\Entity\Term|null
+   * @return \Drupal\ghi_plans\Entities\PlanType|null
    *   The term entity or NULL if not found.
    */
   public function getTermObjectByName($name) {
