@@ -717,13 +717,15 @@
      *   The feature id to look up.
      * @param {String} layer_id
      *   Optional: Specify the layer id in which to look for the feature.
+     * @param {String} source_id
+     *   Optional: Specify the source id in which to look for the feature.
      *
      * @returns {Object}|null
      *   A feature object or NULL.
      */
-    getFeatureById = function (id, layer_id = null) {
+    getFeatureById = function (id, layer_id = null, source_id = null) {
       layer_id = layer_id ?? this.style.getFeatureLayerId();
-      let source_id = this.getMapId();
+      source_id = source_id ?? this.getMapId();
       let features = this.querySourceFeatures(layer_id, source_id, ["==", ["id"], id]);
       return features.length ? features[0] : null;
     }
@@ -837,18 +839,29 @@
       );
       let feature = this.getFeatureById(id, source_id);
       if (feature) {
-        let geojson_source_id = source_id + '-geojson';
-        let location = this.getLocationById(feature.properties.object_id);
-        let highlight_countries = location?.highlight_countries;
-        let filter = highlight_countries ? ['in', ['get', 'location_id'], ['literal', location.highlight_countries]] : null;
-        let geojson_features = this.querySourceFeatures(geojson_source_id, geojson_source_id, filter);
-        geojson_features.forEach(item => {
-          map.setFeatureState(
-            { source: geojson_source_id, id: item.id },
-            values
-          );
-        })
-
+        if (this.shouldShowCountryOutlines()) {
+          let geojson_source_id = source_id + '-geojson';
+          let location = this.getLocationById(feature.properties.object_id);
+          let highlight_countries = location?.highlight_countries;
+          let filter = highlight_countries ? ['in', ['get', 'location_id'], ['literal', location.highlight_countries]] : null;
+          let geojson_features = this.querySourceFeatures(geojson_source_id, geojson_source_id, filter);
+          geojson_features.forEach(item => {
+            map.setFeatureState(
+              { source: geojson_source_id, id: item.id },
+              values
+            );
+          });
+        }
+        else {
+          let geojson_source_id = source_id + '-geojson';
+          let geojson_feature = this.getFeatureById(id, geojson_source_id + '-fill', geojson_source_id);
+          if (geojson_feature) {
+            map.setFeatureState(
+              { source: geojson_source_id, id: geojson_feature.id },
+              values
+            );
+          }
+        }
       }
     }
 
