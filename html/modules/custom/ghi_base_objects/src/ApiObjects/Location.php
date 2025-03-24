@@ -140,22 +140,28 @@ class Location extends BaseObject {
   /**
    * Get the path to the geojson shape file for the location.
    *
+   * @param string $version
+   *   The version to retrieve.
+   * @param bool $minified
+   *   Whether a minified file should be retrieved.
+   *
    * @return string|null
    *   The path to the locally stored file inside our module directory. Or NULL
    *   if the file can't be found.
    */
-  public function getGeoJsonSourceFilePath() {
+  public function getGeoJsonSourceFilePath($version = 'current', $minified = TRUE) {
     $directory = self::moduleHandler()->getModule('ghi_base_objects')->getPath() . '/assets/geojson';
 
     // The source file for countries comes from a local asset.
-    $filepath = $this->buildGeoJsonSourceFilePath();
+    $filepath = $this->buildGeoJsonSourceFilePath($version, $minified);
     if (!$filepath) {
       return NULL;
     }
 
     $filepath_asset = $directory . '/' . $filepath;
     if (!file_exists($filepath_asset)) {
-      return NULL;
+      // If the file is not found, try the non-minified version once.
+      return $minified ? $this->getGeoJsonSourceFilePath($version, FALSE) : NULL;
     }
     return $filepath_asset;
   }
