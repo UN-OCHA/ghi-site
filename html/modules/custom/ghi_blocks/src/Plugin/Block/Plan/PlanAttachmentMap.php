@@ -907,7 +907,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
           $filtered_attachments = AttachmentMatcher::matchDataAttachments($attachment, $available_attachments);
           foreach ($filtered_attachments as $filtered_attachment) {
             $conf['attachments']['entity_attachments']['attachments']['attachment_id'][$filtered_attachment->id()] = $filtered_attachment->id();
-            $conf['attachments']['entity_attachments']['entities']['entity_ids'][$filtered_attachment->source->entity_id] = $filtered_attachment->source->entity_id;
+            $conf['attachments']['entity_attachments']['entities']['entity_ids'][$filtered_attachment->getSourceEntityId()] = $filtered_attachment->getSourceEntityId();
           }
         }
       }

@@ -17,12 +17,12 @@ class AttachmentMatcher {
    * This checks the attachment type and the attachment source to find
    * attachments that correspond in their function.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $original_attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface $original_attachment
    *   The original attachment to match against.
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $available_attachments
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface[] $available_attachments
    *   The attachments to match.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface[]
    *   The result set of matched attachments.
    */
   public static function matchDataAttachments(AttachmentInterface $original_attachment, array $available_attachments) {
@@ -31,7 +31,7 @@ class AttachmentMatcher {
         // Check the attachment type, e.g. "caseload" vs "indicator".
         return FALSE;
       }
-      if ($original_attachment->source->entity_type != $attachment->source->entity_type) {
+      if ($original_attachment->getSourceEntityType() != $attachment->getSourceEntityType()) {
         // Check the source entity type, e.g. "governingEntity" vs "plan".
         return FALSE;
       }

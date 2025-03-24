@@ -15,7 +15,7 @@ interface AttachmentTableInterface {
    * @param int $prototype_id
    *   An optional prototype id to filter for.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface[]
    *   The matching (processed) attachment objects, keyed by the attachment id.
    */
   public function getAttachmentsForEntities(array $entities, $prototype_id = NULL);
