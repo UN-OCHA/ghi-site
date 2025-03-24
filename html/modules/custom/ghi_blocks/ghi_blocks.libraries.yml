@@ -44,6 +44,11 @@ theme:
   js:
     js/theme.js: {}
 
+turf:
+  version: 7
+  js:
+    https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js: {}
+
 mapbox_gl:
   version: 3.8.0
   js:
@@ -97,6 +102,7 @@ map.gl:
   dependencies:
     - core/jquery
     - ghi_blocks/mapbox_gl
+    - ghi_blocks/turf
     - ghi_blocks/map.gl.state
     - ghi_blocks/map.gl.sidebar
     - ghi_blocks/map.gl.interactive_legend

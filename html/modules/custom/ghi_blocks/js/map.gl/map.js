@@ -160,13 +160,17 @@
 
       // Set the bounds.
       var bounds = new mapboxgl.LngLatBounds();
-      state.getLocations().forEach(function(d) {
-        // Note that mapbox expects lnglat when we use latlng internally. Also
-        // see https://github.com/Turfjs/turf/issues/182 for a discussion in an
-        // unrelated project that get's some details about latlng vs lnglat.
-        bounds.extend([d.latLng[1], d.latLng[0]]);
-      });
-      if (state.getLocations().length) {
+      let outline_country = typeof options.outlineCountry != 'undefined' ? this.getGeoJSON(options.outlineCountry, null, false) : null;
+      if (outline_country) {
+        map.fitBounds(turf.envelope(outline_country).bbox, { padding: 50 });
+      }
+      else if (state.getLocations().length) {
+        state.getLocations().forEach(function(d) {
+          // Note that mapbox expects lnglat when we use latlng internally. Also
+          // see https://github.com/Turfjs/turf/issues/182 for a discussion in an
+          // unrelated project that get's some details about latlng vs lnglat.
+          bounds.extend([d.latLng[1], d.latLng[0]]);
+        });
         map.fitBounds(bounds, { padding: 50 });
       }
       if (state.getLocations().length == 1) {
