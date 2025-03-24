@@ -149,37 +149,44 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Get the type of attachment.
-   *
-   * @return string
-   *   The type as string.
+   * {@inheritdoc}
    */
   public function getType() {
     return $this->type;
   }
 
   /**
-   * Get the source entity.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\PlanEntityInterface|null
-   *   The entity object.
+   * {@inheritdoc}
+   */
+  public function getSourceEntityType() {
+    return $this->source?->entity_type ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSourceEntityId() {
+    return $this->source?->entity_id ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function getSourceEntity() {
-    if (empty($this->source->entity_type) || empty($this->source->entity_id)) {
+    $entity_type = $this->getSourceEntityType();
+    $entity_id = $this->getSourceEntityId();
+    if (!$entity_type || !$entity_id) {
       return NULL;
     }
     if (empty($this->sourceEntity) && $entityQuery = $this->getEndpointQueryManager()->createInstance('entity_query')) {
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $entityQuery */
-      $this->sourceEntity = $entityQuery->getEntity($this->source->entity_type, $this->source->entity_id);
+      $this->sourceEntity = $entityQuery->getEntity($entity_type, $entity_id);
     }
     return $this->sourceEntity;
   }
 
   /**
-   * Get the current monitoring period for this attachment.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
-   *   A reporting period object or NULL.
+   * {@inheritdoc}
    */
   public function getCurrentMonitoringPeriod() {
     return $this->monitoring_period;
@@ -200,13 +207,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Get a data field by type.
-   *
-   * @param string $type
-   *   The type of data point to retrieve.
-   *
-   * @return object
-   *   The field as retrieved from the API.
+   * {@inheritdoc}
    */
   public function getFieldByType($type) {
     $candidates = array_filter($this->getOriginalFields(), function ($item) use ($type) {
@@ -219,13 +220,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Get a field by it's index in the field list.
-   *
-   * @param int $index
-   *   The index of the field to fetch.
-   *
-   * @return object|null
-   *   The field if found.
+   * {@inheritdoc}
    */
   public function getFieldByIndex($index) {
     $fields = $this->getOriginalFields();
@@ -233,20 +228,14 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Get the metric fields.
-   *
-   * @return string[]
-   *   An array of metric names.
+   * {@inheritdoc}
    */
   public function getMetricFields() {
     return $this->fields;
   }
 
   /**
-   * Get the fields that represent goal metrics.
-   *
-   * @return string[]
-   *   An array of metric names.
+   * {@inheritdoc}
    */
   public function getGoalMetricFields() {
     $measurements = $this->measurement_fields;
@@ -256,10 +245,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Get the fields that represent measurement metrics.
-   *
-   * @return string[]
-   *   An array of metric names.
+   * {@inheritdoc}
    */
   public function getMeasurementMetricFields() {
     $measurements = $this->measurement_fields;
@@ -269,10 +255,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Get the fields that represent calculated metrics.
-   *
-   * @return string[]
-   *   An array of metric names.
+   * {@inheritdoc}
    */
   public function getCalculatedMetricFields() {
     $calculated_fields = $this->calculated_fields;
@@ -282,13 +265,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Get the source property for the calculated field.
-   *
-   * @param int $index
-   *   The index of the data point in the list of all fields.
-   *
-   * @return string|null
-   *   The source field type of the calculated field.
+   * {@inheritdoc}
    */
   public function getSourceTypeForCalculatedField($index) {
     if (!$this->isCalculatedIndex($index)) {
@@ -299,20 +276,14 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Get the type of unit for an attachment.
-   *
-   * @return string|null
-   *   The unit type as a string.
+   * {@inheritdoc}
    */
   public function getUnitType() {
     return $this->unit ? $this->unit->type : NULL;
   }
 
   /**
-   * Get the label of the unit for an attachment.
-   *
-   * @return string|null
-   *   The unit label as a string.
+   * {@inheritdoc}
    */
   public function getUnitLabel($langcode = NULL) {
     if ($langcode && !empty($this->unit->locale[$langcode])) {
@@ -322,62 +293,35 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Get the prototype for an attachment.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype
-   *   The attachment prototype object.
+   * {@inheritdoc}
    */
   public function getPrototype() {
     return $this->prototype;
   }
 
   /**
-   * Check if the given data point index represens a measurement metric.
-   *
-   * @param int $index
-   *   The index of the data point to check.
-   *
-   * @return bool
-   *   TRUE if the index represents a measurement, FALSE otherwise.
+   * {@inheritdoc}
    */
   public function isMeasurementIndex($index) {
     return array_key_exists($index, $this->getMeasurementMetricFields());
   }
 
   /**
-   * Check if the given field label represens a measurement metric.
-   *
-   * @param string $field_label
-   *   The field label.
-   *
-   * @return bool
-   *   TRUE if the field is a measurement, FALSE otherwise.
+   * {@inheritdoc}
    */
   public function isMeasurementField($field_label) {
     return in_array($field_label, $this->getMeasurementMetricFields());
   }
 
   /**
-   * Check if the given data point index represens a measurement metric.
-   *
-   * @param int $index
-   *   The index of the data point to check.
-   *
-   * @return bool
-   *   TRUE if the index represents a measurement, FALSE otherwise.
+   * {@inheritdoc}
    */
   public function isCalculatedIndex($index) {
     return array_key_exists($index, $this->getCalculatedMetricFields());
   }
 
   /**
-   * Check if the given field label represens a calculated metric.
-   *
-   * @param string $field_label
-   *   The field label.
-   *
-   * @return bool
-   *   TRUE if the field is a calculated metric, FALSE otherwise.
+   * {@inheritdoc}
    */
   public function isCalculatedField($field_label) {
     return in_array($field_label, $this->getCalculatedMetricFields());
@@ -392,7 +336,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @return bool
    *   TRUE if the index represents a calculated metric, FALSE otherwise.
    */
-  public function isCalculatedMeasurementIndex($index) {
+  private function isCalculatedMeasurementIndex($index) {
     $calculated_fields = $this->getCalculatedMetricFields();
     $fields = $this->getOriginalFields();
     if (!array_key_exists($index, $calculated_fields) || !array_key_exists($index, $fields)) {

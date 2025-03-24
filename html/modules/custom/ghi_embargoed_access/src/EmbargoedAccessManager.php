@@ -2,20 +2,15 @@
 
 namespace Drupal\ghi_embargoed_access;
 
-use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Routing\RedirectDestinationInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\entity_access_password\Cache\Context\EntityIsProtectedCacheContext;
 use Drupal\entity_access_password\Service\PasswordAccessManagerInterface;
-use Drupal\entity_access_password\Service\RouteParserInterface;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Traits\ContentPathTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
@@ -23,12 +18,12 @@ use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeForm;
 use Drupal\node\NodeInterface;
-use Drupal\search_api\Plugin\search_api\datasource\ContentEntityTrackingManager;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Embargoed access manager service class.
  */
-class EmbargoedAccessManager {
+class EmbargoedAccessManager implements ContainerInjectionInterface {
 
   use StringTranslationTrait;
   use ContentPathTrait;
@@ -95,17 +90,19 @@ class EmbargoedAccessManager {
   protected $passwordAccessManager;
 
   /**
-   * Constructs an embargoed access manager class.
+   * {@inheritdoc}
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ConfigFactoryInterface $config_factory, ContentEntityTrackingManager $search_api_tracking_manager, CsrfTokenGenerator $csrf_token, RedirectDestinationInterface $redirect_destination, ?RouteParserInterface $route_parser = NULL, ?PasswordAccessManagerInterface $password_access_manager = NULL) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->entityFieldManager = $entity_field_manager;
-    $this->configFactory = $config_factory;
-    $this->searchApiTrackingManager = $search_api_tracking_manager;
-    $this->csrfToken = $csrf_token;
-    $this->redirectDestination = $redirect_destination;
-    $this->routeParser = $route_parser;
-    $this->passwordAccessManager = $password_access_manager;
+  public static function create(ContainerInterface $container) {
+    $instance = new static();
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->entityFieldManager = $container->get('entity_field.manager');
+    $instance->configFactory = $container->get('config.factory');
+    $instance->searchApiTrackingManager = $container->get('search_api.entity_datasource.tracking_manager');
+    $instance->csrfToken = $container->get('csrf_token');
+    $instance->redirectDestination = $container->get('redirect.destination');
+    $instance->routeParser = $container->has('entity_access_password.route_parser') ? $container->get('entity_access_password.route_parser') : NULL;
+    $instance->passwordAccessManager = $container->has('entity_access_password.password_access_manager') ? $container->get('entity_access_password.password_access_manager') : NULL;
+    return $instance;
   }
 
   /**
