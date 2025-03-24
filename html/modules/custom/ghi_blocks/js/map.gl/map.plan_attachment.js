@@ -36,6 +36,9 @@
           options.style = map_config.style;
           options.style_config = map_config.style_config;
         }
+        if (typeof map_config.outlineCountry != 'undefined') {
+          options.outlineCountry = map_config.outlineCountry;
+        }
         if (typeof map_config.map_disclaimer != 'undefined') {
           options.disclaimer = map_config.map_disclaimer ?? null;
         }

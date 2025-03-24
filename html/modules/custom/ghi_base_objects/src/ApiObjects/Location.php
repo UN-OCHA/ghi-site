@@ -211,7 +211,7 @@ class Location extends BaseObject {
    * @return string
    *   The path to the geojson file inside the public file directory.
    */
-  private function getGeoJsonPublicFilePath() {
+  public function getGeoJsonPublicFilePath() {
     $filepath = $this->getGeoJsonSourceFilePath();
     if (!$filepath) {
       return NULL;
