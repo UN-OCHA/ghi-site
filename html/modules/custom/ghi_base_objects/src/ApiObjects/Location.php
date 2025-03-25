@@ -2,6 +2,8 @@
 
 namespace Drupal\ghi_base_objects\ApiObjects;
 
+use Drupal\Core\Cache\Cache;
+
 /**
  * Abstraction class for API location objects.
  */
@@ -35,6 +37,16 @@ class Location extends BaseObject {
   }
 
   /**
+   * Get a UUID for this location.
+   *
+   * @return string
+   *   A string representing a UUID.
+   */
+  public function getUuid() {
+    return md5($this->id() . '_' . $this->valid_on);
+  }
+
+  /**
    * Set the parent country for a location.
    *
    * @param \Drupal\ghi_base_objects\ApiObjects\Location $country
@@ -47,21 +59,21 @@ class Location extends BaseObject {
   /**
    * Get the parent country for a location.
    *
-   * @return \Drupal\ghi_base_objects\ApiObjects\Location
+   * @return \Drupal\ghi_base_objects\ApiObjects\Location|null
    *   The parent country.
    */
   public function getParentCountry() {
-    return $this->parentCountry;
+    return $this->parentCountry ?? NULL;
   }
 
   /**
    * Get the iso3 code.
    *
-   * @return string
-   *   The iso3 code.
+   * @return string|null
+   *   The iso3 code or NULL if not found.
    */
   public function getIso3() {
-    return $this->isCountry() ? $this->iso3 : $this->getParentCountry()->getIso3();
+    return $this->isCountry() ? $this->iso3 : $this->getParentCountry()?->getIso3();
   }
 
   /**
@@ -216,7 +228,7 @@ class Location extends BaseObject {
     if (!$filepath) {
       return NULL;
     }
-    $public_filepath = self::GEO_JSON_DIR . '/' . md5($this->id() . '_' . $this->valid_on) . '.geojson';
+    $public_filepath = self::GEO_JSON_DIR . '/' . $this->getUuid() . '.geojson';
     if (!file_exists($public_filepath)) {
       copy($filepath, $public_filepath);
     }
@@ -231,6 +243,13 @@ class Location extends BaseObject {
     $geojson_public_path = $this->getGeoJsonPublicFilePath();
     $array['filepath'] = $geojson_public_path ? $this->fileUrlGenerator()->generate($geojson_public_path)->toString() : NULL;
     return $array;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    return Cache::mergeTags($this->cacheTags, [$this->getUuid()]);
   }
 
   /**

@@ -24,18 +24,18 @@
   background-color: var(--colorGinAppBackground) !important;
 }
 
-.ghi-glb-form > :not([data-block-preview]) table {
+.ghi-glb-form > :not([data-block-preview]) table.ghi-table {
   width: 100%;
   margin-top: 0;
   margin-bottom: 1.5rem;
   border-collapse: collapse;
 }
-.ghi-glb-form > :not([data-block-preview]) table thead {
+.ghi-glb-form > :not([data-block-preview]) table.ghi-table thead {
   border-radius: 6px;
   -webkit-box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
   box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
 }
-.ghi-glb-form > :not([data-block-preview]) table th {
+.ghi-glb-form > :not([data-block-preview]) table.ghi-table th {
   color: var(--colorGinText);
   background: var(--colorGinTableHeader);
   position: relative;
@@ -48,45 +48,45 @@
   line-height: 1.25rem;
   white-space: nowrap;
 }
-.ghi-glb-form > :not([data-block-preview]) table th:first-child {
+.ghi-glb-form > :not([data-block-preview]) table.ghi-table th:first-child {
   border-top-left-radius: 6px;
   border-bottom-left-radius: 6px;
 }
-.ghi-glb-form > :not([data-block-preview]) table th:last-child {
+.ghi-glb-form > :not([data-block-preview]) table.ghi-table th:last-child {
   border-top-right-radius: 6px;
   border-bottom-right-radius: 6px;
 }
-.ghi-glb-form > :not([data-block-preview]) table tbody tr {
+.ghi-glb-form > :not([data-block-preview]) table.ghi-table tbody tr {
   border-bottom: 1px solid var(--colorGinTableBorder);
   color: var(--colorGinText);
   background-color: transparent;
 }
-.ghi-glb-form > :not([data-block-preview]) table tbody tr:hover,
-.ghi-glb-form > :not([data-block-preview]) table tbody tr:focus {
+.ghi-glb-form > :not([data-block-preview]) table.ghi-table tbody tr:hover,
+.ghi-glb-form > :not([data-block-preview]) table.ghi-table tbody tr:focus {
   color: #222330;
   background: #f0f5fd;
 }
-.ghi-glb-form > :not([data-block-preview]) table tbody tr td {
+.ghi-glb-form > :not([data-block-preview]) table.ghi-table tbody tr td {
   box-sizing: border-box;
   height: 4rem;
   padding: 0.5rem 1rem;
   text-align: left;
   vertical-align: inherit;
 }
-.ghi-glb-form > :not([data-block-preview]) table tbody tr.draggable {
+.ghi-glb-form > :not([data-block-preview]) table.ghi-table tbody tr.draggable {
   position: relative;
 }
-.ghi-glb-form > :not([data-block-preview]) table tbody tr.draggable td:first-child {
+.ghi-glb-form > :not([data-block-preview]) table.ghi-table tbody tr.draggable td:first-child {
   padding-left: 2rem;
 }
-.ghi-glb-form > :not([data-block-preview]) table tbody tr.draggable td:first-child a.tabledrag-handle {
+.ghi-glb-form > :not([data-block-preview]) table.ghi-table tbody tr.draggable td:first-child a.tabledrag-handle {
   float: none;
   position: absolute;
   top: calc(50% - 12px);
   left: 0.5rem;
   height: 37px;
 }
-.ghi-glb-form > :not([data-block-preview]) table tbody tr.draggable td:first-child a.tabledrag-handle .handle {
+.ghi-glb-form > :not([data-block-preview]) table.ghi-table tbody tr.draggable td:first-child a.tabledrag-handle .handle {
   background-position-y: center;
 }
 

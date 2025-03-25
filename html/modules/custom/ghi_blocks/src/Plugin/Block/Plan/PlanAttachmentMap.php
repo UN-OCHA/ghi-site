@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
@@ -133,6 +134,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       $comment['#attributes']['class'][] = 'content-width';
       $build['comment'] = $comment;
     }
+    CacheableMetadata::createFromRenderArray($map)->applyTo($build);
     return $build;
   }
 
@@ -202,6 +204,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         'modal_contents' => $metric_map_data['modal_contents'],
         'variants' => [],
       ];
+      CacheableMetadata::createFromObject($attachment)->applyTo($map);
     }
 
     if (empty($map['data'])) {
@@ -239,6 +242,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
               'locations' => $metric_map_data['location_data'],
               'modal_contents' => $metric_map_data['modal_contents'],
             ];
+            CacheableMetadata::createFromObject($attachment)->applyTo($map);
           }
         }
       }

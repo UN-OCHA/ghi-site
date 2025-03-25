@@ -98,7 +98,7 @@
             self.storage[location.filepath] = feature;
           },
           complete: function () {
-            self.storage[location.filepath] = self.storage[location.filepath] ?? FALSE;
+            self.storage[location.filepath] = self.storage[location.filepath] ?? false;
           },
           async: async
         });
