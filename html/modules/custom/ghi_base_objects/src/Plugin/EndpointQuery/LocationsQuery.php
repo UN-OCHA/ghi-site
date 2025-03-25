@@ -124,6 +124,7 @@ class LocationsQuery extends EndpointQueryBase {
       }
       $locations[$item->id] = new Location($item);
       $locations[$item->id]->setParentCountry(new Location($country_data));
+      $this->setCacheTags($locations[$item->id]->getCacheTags());
     }
 
     // We filter the locations for empty coordinates and for admin level 0.
