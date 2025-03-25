@@ -3,6 +3,8 @@
 namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
 use Drupal\Component\Serialization\Yaml;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
@@ -609,6 +611,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       return $cached_data;
     }
 
+    $cache_tags = [];
+
     // No, so we need to do it now. Extract the base metrics and base data.
     $base_metrics = $this->getBaseMetricTotals($reporting_period);
     $base_data = $this->getBaseData($reporting_period);
@@ -650,6 +654,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
         if (empty($location->map_data)) {
           continue;
         }
+        $cache_tags = Cache::mergeTags($cache_tags, $location->cache_meta_data->getCacheTags());
+
         $disaggregated_data[$index]['locations'][$location_index] = (array) $location;
         $disaggregated_data[$index]['locations'][$location_index] += [
           'object_id' => $location->id,
@@ -730,7 +736,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       }
     }
 
-    return $this->cache($cache_key, $disaggregated_data);
+    $this->setCacheTags($cache_tags);
+    return $this->cache($cache_key, $disaggregated_data, FALSE, NULL, $cache_tags);
   }
 
   /**
@@ -893,21 +900,22 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
 
     // Then we get the coordinates for all locations that the API knows for this
     // country. The coordinates are keyed by the location id.
-    /** @var \Drupal\ghi_base_objects\ApiObjects\Location[] $location_coordinates */
-    $location_coordinates = $country && $locations_query ? $locations_query->getCountryLocations($country, $max_level) : [];
+    /** @var \Drupal\ghi_base_objects\ApiObjects\Location[] $country_locations */
+    $country_locations = $country && $locations_query ? $locations_query->getCountryLocations($country, $max_level) : [];
 
     foreach ($locations as $location_key => $location) {
       $locations[$location_key]->country_id = $country->id;
       if (empty($location->id)) {
         continue;
       }
-      $coordinates = !empty($location_coordinates[$location->id]) ? $location_coordinates[$location->id] : NULL;
-      if (empty($coordinates)) {
+      $_location = !empty($country_locations[$location->id]) ? $country_locations[$location->id] : NULL;
+      if (empty($_location)) {
         continue;
       }
-      $locations[$location_key]->map_data = $coordinates->toArray();
+      $locations[$location_key]->map_data = $_location->toArray();
       $locations[$location_key]->map_data['object_id'] = $location->id;
       $locations[$location_key]->map_data['total'] = 0;
+      $locations[$location_key]->cache_meta_data = CacheableMetadata::createFromObject($_location);
     }
     return $locations;
   }

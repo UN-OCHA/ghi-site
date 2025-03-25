@@ -2,6 +2,7 @@
 
 namespace Drupal\hpc_api\Controller;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -39,6 +40,13 @@ class FileListActionController extends ControllerBase {
   protected $routeProvider;
 
   /**
+   * The cache tags invalidator service.
+   *
+   * @var \Drupal\Core\Cache\CacheTagsInvalidatorInterface
+   */
+  protected $cacheTagsInvalidator;
+
+  /**
    * The service container.
    *
    * @var \Symfony\Component\DependencyInjection\ContainerInterface
@@ -54,6 +62,7 @@ class FileListActionController extends ControllerBase {
     $instance->stack = $container->get('request_stack');
     $instance->router = $container->get('router.no_access_checks');
     $instance->routeProvider = $container->get('router.route_provider');
+    $instance->cacheTagsInvalidator = $container->get('cache_tags.invalidator');
     $instance->container = $container;
     return $instance;
   }
@@ -80,6 +89,8 @@ class FileListActionController extends ControllerBase {
       return $redirect;
     }
 
+    $cache_tags = [];
+
     // Get the route match to find the controller responsible for collecting
     // the files.
     $original_url = $referer;
@@ -97,12 +108,15 @@ class FileListActionController extends ControllerBase {
     $instance = $controller::create($this->container);
     $files = $instance->getFiles();
     foreach ($files as $file) {
+      $filename = pathinfo($file->uri, PATHINFO_FILENAME);
+      $cache_tags = Cache::mergeTags($cache_tags, [$filename]);
       $this->fileSystem->delete($file->uri);
     }
 
     $this->messenger()->addStatus($this->t('@count files have been deleted.', [
       '@count' => count($files),
     ]));
+    $this->cacheTagsInvalidator->invalidateTags($cache_tags);
     return $this->redirect($original_route_name);
   }
 

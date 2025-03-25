@@ -603,6 +603,7 @@
         location_data: location_data,
         title: location_data.title,
         tag_line: location_data.tag_line,
+        pcodes_enabled: this.options.pcodes_enabled ?? false,
         monitoring_period: monitoring_period ? '<div class="monitoring-period">' + location_data.monitoring_period + '</div>' : '',
         content: this.buildSidebarContent(object),
         template: [
