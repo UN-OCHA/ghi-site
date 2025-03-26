@@ -16,6 +16,9 @@ body:not(.section-protected):not(.document-protected) #main-content .links--enti
 body:not(.section-protected):not(.document-protected) #main-content .links--entity-navigation .dropdown.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
 body:not(.section-protected):not(.document-protected) #main-content .links--entity-navigation .megamenu.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
 body:not(.section-protected):not(.document-protected) #main-content a.protected::before,
+/** Protected blocks */
+.ghi-block-document.protected > h2.cd-block-title::before,
+.ghi-block-document-chapter.protected > h2.cd-block-title::before,
 /** Autocomplete results */
 ul.ui-autocomplete > li > a > span.protected::before,
 /** Backend views */
@@ -71,6 +74,17 @@ body:not(.document-protected) #main-content .links--entity-navigation .dropdown.
 body:not(.document-protected) #main-content .links--entity-navigation .megamenu.protected .cd-dropdown__btn .cd-dropdown__btn-label::before {
   width: 0.8rem;
   height: 0.8rem;
+}
+
+.ghi-block-document.protected > h2.cd-block-title::before,
+.ghi-block-document-chapter.protected > h2.cd-block-title::before {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.ghi-block-document.protected > .block-content,
+.ghi-block-document-chapter.protected > .block-content {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 /** Section navigation mega menu links inside the mega menu. */

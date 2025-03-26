@@ -40,6 +40,9 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
       return NULL;
     }
     $document_node = $this->documentManager->loadNodeForRemoteContent($document);
+    if (!$document_node) {
+      return NULL;
+    }
     $cache_tags = [];
 
     $cache_tags = Cache::mergeTags($cache_tags, $document_node->getCacheTags());
@@ -88,6 +91,11 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
       $build[] = [
         '#theme' => 'tab_container',
         '#tabs' => $tabs,
+      ];
+    }
+    if ($document_node->isProtected()) {
+      $build['#attributes'] = [
+        'class' => ['protected'],
       ];
     }
     return $build;
