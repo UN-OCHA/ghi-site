@@ -39,7 +39,7 @@ class DocumentManager extends BaseContentManager {
   /**
    * {@inheritdoc}
    */
-  protected function getRemoteFieldName() {
+  public function getRemoteFieldName() {
     return self::REMOTE_DOCUMENT_FIELD;
   }
 

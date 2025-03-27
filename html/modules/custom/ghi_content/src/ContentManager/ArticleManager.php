@@ -41,7 +41,7 @@ class ArticleManager extends BaseContentManager {
   /**
    * {@inheritdoc}
    */
-  protected function getRemoteFieldName() {
+  public function getRemoteFieldName() {
     return self::REMOTE_ARTICLE_FIELD;
   }
 
