@@ -901,7 +901,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     // Then we get the coordinates for all locations that the API knows for this
     // country. The coordinates are keyed by the location id.
     /** @var \Drupal\ghi_base_objects\ApiObjects\Location[] $country_locations */
-    $country_locations = $country && $locations_query ? $locations_query->getCountryLocations($country, $max_level) : [];
+    $country_locations = $country && $locations_query ? $locations_query->getCountryLocations($country->id, $max_level) : [];
 
     foreach ($locations as $location_key => $location) {
       $locations[$location_key]->country_id = $country->id;
