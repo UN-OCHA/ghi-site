@@ -2,6 +2,8 @@
 
 namespace Drupal\ghi_content\Entity;
 
+use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
+
 /**
  * Bundle class for section nodes.
  */
@@ -54,6 +56,28 @@ class Article extends ContentBase {
       }
     }
     return NULL;
+  }
+
+  /**
+   * Check if the given articles is a sub-article of the current one.
+   *
+   * @param \Drupal\ghi_content\Entity\Article $article
+   *   The article to check.
+   *
+   * @return bool
+   *   TRUE if the given article is a sub-article of the current article, FALSE
+   *   otherwise.
+   */
+  public function hasSubarticle(Article $article) {
+    $remote_current = $this->getContentManager()->loadRemoteContentForNode($this);
+    if (!$remote_current instanceof RemoteArticleInterface) {
+      return FALSE;
+    }
+    $remote_article = $article->getContentManager()->loadRemoteContentForNode($article);
+    if (!$remote_article instanceof RemoteArticleInterface) {
+      return FALSE;
+    }
+    return $remote_current->hasSubarticle($remote_article);
   }
 
 }

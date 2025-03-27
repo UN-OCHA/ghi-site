@@ -4,10 +4,13 @@ namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_content\Traits\ContentPathTrait;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'DocumentNavigation' block.
@@ -21,9 +24,26 @@ use Drupal\ghi_content\Traits\ContentPathTrait;
  *  }
  * )
  */
-class DocumentNavigation extends BlockBase {
+class DocumentNavigation extends BlockBase implements ContainerFactoryPluginInterface {
 
   use ContentPathTrait;
+
+  /**
+   * The article manager.
+   *
+   * @var \Drupal\ghi_content\ContentManager\ArticleManager
+   */
+  protected $articleManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var \Drupal\ghi_content\Plugin\Block\DocumentNavigation $instance */
+    $instance = new static($configuration, $plugin_id, $plugin_definition);
+    $instance->articleManager = $container->get('ghi_content.manager.article');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -134,6 +154,12 @@ class DocumentNavigation extends BlockBase {
       if ($current_node->id() == $node->id()) {
         $link['#attributes']['class'][] = 'active';
         $wrapper_attributes['class'][] = 'active';
+      }
+      elseif ($node instanceof Article && $current_node instanceof Article) {
+        if ($node->hasSubarticle($current_node)) {
+          $link['#attributes']['class'][] = 'active';
+          $wrapper_attributes['class'][] = 'active';
+        }
       }
       $links[] = $link;
     }

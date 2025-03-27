@@ -53,12 +53,20 @@ class Link extends ConfigurationContainerItemPluginBase {
   public $cropManager;
 
   /**
+   * The embargoed access manager service.
+   *
+   * @var \Drupal\ghi_embargoed_access\EmbargoedAccessManager
+   */
+  protected $embargoedAccessManager;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->dateFormatter = $container->get('date.formatter');
     $instance->cropManager = $container->get('ghi_image.crop_manager');
+    $instance->embargoedAccessManager = $container->has('ghi_embargoed_access.manager') ? $container->get('ghi_embargoed_access.manager') : NULL;
     return $instance;
   }
 
@@ -326,7 +334,18 @@ class Link extends ConfigurationContainerItemPluginBase {
    */
   public function getUrlString() {
     $link = $this->getLinkFromConfiguration($this->config['link']['link'], $this->getContext());
-    return $link?->getUrl()?->toString();
+    $url = $link?->getUrl() ?? NULL;
+    $url_string = $url?->toString();
+    $classes = [];
+    if ($url && $this->embargoedAccessManager && $this->embargoedAccessManager->isProtectedUrl($url)) {
+      $classes[] = 'protected';
+    }
+    return [
+      '#type' => 'html_tag',
+      '#tag' => 'span',
+      '#value' => $url_string,
+      '#attributes' => ['class' => $classes],
+    ];
   }
 
   /**
