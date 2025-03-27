@@ -224,15 +224,11 @@ class Location extends BaseObject {
    *   The path to the geojson file inside the public file directory.
    */
   public function getGeoJsonPublicFilePath() {
-    $filepath = $this->getGeoJsonSourceFilePath();
-    if (!$filepath) {
-      return NULL;
-    }
     $public_filepath = self::GEO_JSON_DIR . '/' . $this->getUuid() . '.geojson';
-    if (!file_exists($public_filepath)) {
+    if (!file_exists($public_filepath) && $filepath = $this->getGeoJsonSourceFilePath()) {
       copy($filepath, $public_filepath);
     }
-    return $public_filepath;
+    return file_exists($public_filepath) ? $public_filepath : NULL;
   }
 
   /**
