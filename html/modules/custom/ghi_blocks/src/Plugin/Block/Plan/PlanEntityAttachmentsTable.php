@@ -188,9 +188,9 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
 
       $context['attachment'] = $attachment;
 
-      if (!$this->isGroupedTable() && (empty($current_entity_id) || $current_entity_id != $attachment->source->entity_id) && in_array($attachment->source->entity_id, $entity_id_options)) {
+      if (!$this->isGroupedTable() && (empty($current_entity_id) || $current_entity_id != $attachment->getSourceEntityId()) && in_array($attachment->getSourceEntityId(), $entity_id_options)) {
         $entity = $attachment->getSourceEntity();
-        $current_entity_id = $attachment->source->entity_id;
+        $current_entity_id = $attachment->getSourceEntityId();
         $rows[] = [
           [
             'data' => new FormattableMarkup('@composed_reference: @description', [
@@ -240,7 +240,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
   /**
    * Get the attachments for the current entity.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface[]
    *   The currently available attachments.
    */
   private function getAttachmentsForCurrentEntity() {

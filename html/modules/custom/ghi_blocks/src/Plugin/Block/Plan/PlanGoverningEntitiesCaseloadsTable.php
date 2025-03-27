@@ -421,17 +421,17 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   /**
    * Group the given attachments by the governing entity id.
    *
-   * @param array $attachments
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface[] $attachments
    *   An array of attachment objects as returned by
    *   AttachmentSearchQuery::getAttachmentsByObject().
    *
-   * @return array
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface[]
    *   An array of arrays of attachment objects, keyed by the entity id.
    */
   private function groupAttachmentsByEntityId(array $attachments) {
     $grouped_attachements = [];
     foreach ($attachments as $attachment) {
-      $entity_id = $attachment->source->entity_id;
+      $entity_id = $attachment->getSourceEntityId();
       if (!array_key_exists($entity_id, $grouped_attachements)) {
         $grouped_attachements[$entity_id] = [];
       }
@@ -444,12 +444,12 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   /**
    * Filter the given set of attachments by the given prototype id.
    *
-   * @param object[] $attachments
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface[] $attachments
    *   The attachments to filter.
    * @param int $prototype_id
    *   The prototype id to filter for.
    *
-   * @return array
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface[]
    *   An array of attachment objects that passed the filter.
    */
   private function filterAttachmentsByPrototype(array $attachments, $prototype_id) {
@@ -461,10 +461,10 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   /**
    * Filter attachments with empty description.
    *
-   * @param array $grouped_attachments
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface[] $grouped_attachments
    *   An array of arrays of attachment objects, keyed by the entity id.
    *
-   * @return array
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface[]
    *   An array of arrays of attachment objects, keyed by the entity id.
    */
   private function filterEmptyDescriptionInGroupedAttachments(array $grouped_attachments) {

@@ -12,6 +12,8 @@ use Drupal\node\NodeInterface;
 
 /**
  * Trait for handling content paths.
+ *
+ * @todo This should be made a service for better testing.
  */
 trait ContentPathTrait {
 
