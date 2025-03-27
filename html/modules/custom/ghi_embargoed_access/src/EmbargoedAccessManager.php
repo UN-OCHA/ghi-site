@@ -433,6 +433,9 @@ class EmbargoedAccessManager {
    *   TRUE if the node is currently protected, FALSE otherwise.
    */
   public function isProtected(NodeInterface $node) {
+    if (!$this->embargoedAccessEnabled()) {
+      return FALSE;
+    }
     $is_protected = FALSE;
     if ($this->getProtectedParent($node)) {
       $is_protected = TRUE;

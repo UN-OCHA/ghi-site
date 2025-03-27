@@ -168,7 +168,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
    * @return string
    *   The field name.
    */
-  abstract protected function getRemoteFieldName();
+  abstract public function getRemoteFieldName();
 
   /**
    * Get the machine name of the element to be used for source links.
