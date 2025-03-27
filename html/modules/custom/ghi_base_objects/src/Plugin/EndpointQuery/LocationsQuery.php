@@ -89,17 +89,17 @@ class LocationsQuery extends EndpointQueryBase {
   /**
    * Get the coordinations for all locations of the country.
    *
-   * @param object $country
-   *   An object that needs to have the id property set to the countries id.
+   * @param int $country_id
+   *   The country id.
    * @param int $max_level
    *   A maximum level of nested locations to retrieve.
    *
    * @return \Drupal\ghi_base_objects\ApiObjects\Location[]
    *   An array of location objects keyed by the location id.
    */
-  public function getCountryLocations($country, $max_level = self::MAX_LEVEL) {
+  public function getCountryLocations($country_id, $max_level = self::MAX_LEVEL) {
     $cache_key = $this->getCacheKey([
-      'country_id' => $country->id,
+      'country_id' => $country_id,
       'max_level' => $max_level,
     ]);
     $locations = $this->getCache($cache_key);
@@ -107,14 +107,14 @@ class LocationsQuery extends EndpointQueryBase {
       return $locations;
     }
 
-    $country_data = $this->getCountry($country->id, $max_level);
-    if (!$country_data || empty($country_data->children) || !is_array($country_data->children)) {
+    $country = $this->getCountry($country_id, $max_level);
+    if (!$country || empty($country->children) || !is_array($country->children)) {
       $this->setCache($cache_key, []);
       return [];
     }
 
     // Make it a flat array.
-    $flat_locations = $this->flattenLocationArray($country_data->children);
+    $flat_locations = $this->flattenLocationArray($country->children);
     $locations = [];
     // Now look at each location and prepare the full set of location data.
     foreach ($flat_locations as $item) {
@@ -123,7 +123,7 @@ class LocationsQuery extends EndpointQueryBase {
         continue;
       }
       $locations[$item->id] = new Location($item);
-      $locations[$item->id]->setParentCountry(new Location($country_data));
+      $locations[$item->id]->setParentCountry($country);
       $this->setCacheTags($locations[$item->id]->getCacheTags());
     }
 
