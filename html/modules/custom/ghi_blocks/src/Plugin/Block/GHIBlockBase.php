@@ -708,6 +708,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
         // This block plugin provides a default title, so the label field is
         // optional and the display toggle can be hidden.
         $settings_form['label']['#default_value'] = $settings_form['label']['#default_value'] == '<none>' ? '' : $settings_form['label']['#default_value'];
+        if ($settings_form['label']['#default_value'] == $this->getDefaultTitle()) {
+          $settings_form['label']['#default_value'] = '';
+        }
         $settings_form['label']['#required'] = FALSE;
         $settings_form['label']['#description'] = $this->t('Leave empty to use the default title "%default_title".', [
           '%default_title' => $this->getDefaultTitle(),

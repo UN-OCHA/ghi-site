@@ -422,12 +422,10 @@ function ghi_content_metatags_alter(&$metatags, $context) {
 function ghi_content_preprocess_page_title(&$variables) {
   $node = RequestHelper::getCurrentNodeObject();
   $is_admin_route = \Drupal::service('router.admin_context')->isAdminRoute();
-  if ($is_admin_route || !$node instanceof Article) {
+  if ($is_admin_route || !$node instanceof ContentBase) {
     return;
   }
-  if ($node->getContextNode()) {
-    $variables['title'] = $node->getContextNode()->label();
-  }
+  $variables['title'] = $node->getContextNode()?->label() ?? $node->label();
 }
 
 /**

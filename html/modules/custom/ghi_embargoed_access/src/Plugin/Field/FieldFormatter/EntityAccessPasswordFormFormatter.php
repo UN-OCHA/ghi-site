@@ -6,10 +6,8 @@ namespace Drupal\ghi_embargoed_access\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\entity_access_password\Plugin\Field\FieldFormatter\EntityAccessPasswordFormFormatter as FieldFormatterEntityAccessPasswordFormFormatter;
-use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Traits\ContentPathTrait;
-use Drupal\ghi_sections\Entity\SectionNodeInterface;
-use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation override of 'entity_access_password_form' formatter.
@@ -17,6 +15,22 @@ use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 class EntityAccessPasswordFormFormatter extends FieldFormatterEntityAccessPasswordFormFormatter {
 
   use ContentPathTrait;
+
+  /**
+   * The embargoed access manager service.
+   *
+   * @var \Drupal\ghi_embargoed_access\EmbargoedAccessManager
+   */
+  protected $embargoedAccessManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->embargoedAccessManager = $container->get('ghi_embargoed_access.manager');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -27,21 +41,11 @@ class EntityAccessPasswordFormFormatter extends FieldFormatterEntityAccessPasswo
       return $elements;
     }
     $entity = $items->getEntity();
-    $parent = NULL;
-    if ($entity instanceof SubpageNodeInterface) {
-      $parent = $entity->getParentBaseNode();
+    if ($parent = $this->embargoedAccessManager->getProtectedParent($entity)) {
+      $field_name = $this->fieldDefinition->getName();
+      $parent_items = $parent->get($field_name);
+      $elements = parent::viewElements($parent_items, $langcode);
     }
-    elseif ($entity instanceof ContentBase) {
-      $parent = $this->getCurrentSectionNode();
-    }
-
-    if (!$parent instanceof SectionNodeInterface) {
-      return $elements;
-    }
-    $field_name = $this->fieldDefinition->getName();
-    $parent_items = $parent->get($field_name);
-    $elements = parent::viewElements($parent_items, $langcode);
-
     return $elements;
   }
 

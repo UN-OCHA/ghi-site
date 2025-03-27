@@ -1,26 +1,42 @@
 /** Page level: For articles and documents. */
-.path-protected .node--view-mode-full footer.node__meta .node__submitted > ul > li:first-child::before,
-/** Page level: For sections and section subpages. */
+.path-protected:not(.document-protected) .node--view-mode-full footer.node__meta .node__submitted > ul > li:first-child::before,
+
+/** Page level: For sections and section subpages and documents and articles. */
 .section-protected .cd-page-title::before,
 .section-protected .block-section-switcher .cd-dropdown ul li.active::before,
+.document-protected .cd-page-title::before,
+
 /** For article lists. */
-article.node.protected:not(.section-internal-protected).node--view-mode-grid .cd-teaser__title::before,
-article.node.protected:not(.section-internal-protected).ghi-section-teaser h2 a::before,
-article.node.protected:not(.section-internal-protected).node--view-mode-card-summary .gho-related-article__title a::before,
+article.node.protected:not(.page-internal-protected).node--view-mode-grid .cd-teaser__title::before,
+article.node.protected:not(.page-internal-protected).ghi-section-teaser h2 a::before,
+article.node.protected:not(.page-internal-protected).node--view-mode-card-summary .gho-related-article__title a::before,
+
 /** For the global menus. */
 .cd-header a.protected::before,
+
 /** Links inside the content are, but only for links to outside the section. */
-body:not(.section-protected) #main-content .links--entity-navigation .megamenu a.protected::before,
-body:not(.section-protected) #main-content .links--entity-navigation .dropdown.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
-body:not(.section-protected) #main-content .links--entity-navigation .megamenu.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
-body:not(.section-protected) #main-content a.protected::before,
+body:not(.section-protected):not(.document-protected) #main-content .links--entity-navigation a.protected::before,
+body:not(.section-protected):not(.document-protected) #main-content .links--entity-navigation .megamenu a.protected::before,
+body:not(.section-protected):not(.document-protected) #main-content .links--entity-navigation .dropdown.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
+body:not(.section-protected):not(.document-protected) #main-content .links--entity-navigation .megamenu.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
+body:not(.section-protected):not(.document-protected) #main-content a.protected::before,
+
+/** Protected blocks */
+.ghi-block-document.protected > h2.cd-block-title::before,
+.ghi-block-document-chapter.protected > h2.cd-block-title::before,
+.paragraph--gho-sub-article-paragraph.protected .gho-sub-article__heading > h2.gho-sub-article__title::before,
+
 /** Autocomplete results */
 ul.ui-autocomplete > li > a > span.protected::before,
+
 /** Backend views */
 .view .view-content tr.protected .views-field-title::before,
 .menu-edit-form table tbody tr td a.protected::before,
+
 /** Backend configuration */
 .hpc-form-wrapper table.ghi-table tbody tr td span.protected::before,
+.hpc-form-wrapper div[data-block-preview] a.protected::before,
+
 /** Section navigation backend page */
 .ghi-sections-section-navigation-form .menu-label.protected::before {
   content: '';
@@ -38,7 +54,7 @@ ul.ui-autocomplete > li > a > span.protected::before,
 }
 
 body:not(.section-protected) #main-content .links--entity-navigation .dropdown.protected a.protected::before,
-article.node.protected:not(.section-internal-protected).ghi-section-teaser .ghi-section-teaser__image a.protected::before {
+article.node.protected:not(.page-internal-protected).ghi-section-teaser .ghi-section-teaser__image a.protected::before {
   display: none !important;
 }
 
@@ -59,12 +75,26 @@ article.node.protected:not(.section-internal-protected).ghi-section-teaser .ghi-
   height: 0.75rem;
 }
 
-/** Section navigation mega menu label. */
+/** Section and document navigation mega menu label. */
 body:not(.section-protected) #main-content .links--entity-navigation li > .link-wrapper > a.protected::before,
 body:not(.section-protected) #main-content .links--entity-navigation .dropdown.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
-body:not(.section-protected) #main-content .links--entity-navigation .megamenu.protected .cd-dropdown__btn .cd-dropdown__btn-label::before {
+body:not(.section-protected) #main-content .links--entity-navigation .megamenu.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
+body:not(.document-protected) #main-content .links--entity-navigation li > .link-wrapper > a.protected::before,
+body:not(.document-protected) #main-content .links--entity-navigation .dropdown.protected .cd-dropdown__btn .cd-dropdown__btn-label::before,
+body:not(.document-protected) #main-content .links--entity-navigation .megamenu.protected .cd-dropdown__btn .cd-dropdown__btn-label::before {
   width: 0.8rem;
   height: 0.8rem;
+}
+
+.ghi-block-document.protected > h2.cd-block-title::before,
+.ghi-block-document-chapter.protected > h2.cd-block-title::before {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.ghi-block-document.protected > .block-content,
+.ghi-block-document-chapter.protected > .block-content {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 /** Section navigation mega menu links inside the mega menu. */
@@ -73,15 +103,26 @@ body:not(.section-protected) #main-content .links--entity-navigation .megamenu a
   height: 1.35rem;
 }
 
+/** Protected sub-article headings */
+.paragraph--gho-sub-article-paragraph.protected .gho-sub-article__heading > h2.gho-sub-article__title::before {
+  width: 1.65rem;
+  height: 1.65rem;
+}
+
 /** Section page title. */
-.section-protected .cd-page-title::before {
+.section-protected .cd-page-title::before,
+.document-protected .cd-page-title::before {
   width: 1.7rem;
   height: 1.7rem;
 }
 
 .section-protected:not(.access-granted) .block-wrapper--sectionmetadata,
 .section-protected:not(.access-granted) .block-wrapper--sectionnavigation,
-.section-protected:not(.access-granted) .subpage-title-wrapper {
+.section-protected:not(.access-granted) .subpage-title-wrapper,
+.document-protected:not(.access-granted) .block-wrapper--documentmetadata,
+.document-protected:not(.access-granted) .block-wrapper--documentnavigation,
+.document-protected:not(.access-granted) .subpage-title-wrapper,
+.document-protected:not(.access-granted) .node__meta {
   opacity: 0.5;
   pointer-events: none;
 }

@@ -440,7 +440,9 @@ class ImportManager implements ContainerInjectionInterface {
           ],
           'chapter' => [
             'chapter_id' => $chapter->getId(),
-            'show_title' => $existing_component ? ($existing_configuration['chapter']['show_title'] ?? count($chapters) > 1) : count($chapters) > 1,
+          ],
+          'display' => [
+            'label' => $existing_configuration['display']['label'] ?? NULL,
           ],
         ],
         'lock_document' => TRUE,
