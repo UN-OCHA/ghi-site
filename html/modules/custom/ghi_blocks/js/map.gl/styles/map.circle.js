@@ -137,6 +137,7 @@
         this.updateActiveFeature(active_feature);
       }
 
+      this.addAdminAreaOutlines();
     }
 
     /**
@@ -411,51 +412,50 @@
       let map = state.getMap();
 
       let geojson_source_id = this.sourceId + '-geojson';
-      if (map.getSource(geojson_source_id)) {
-        map.removeLayer(geojson_source_id + '-outline');
-        map.removeSource(geojson_source_id);
-      }
 
-      map.addSource(geojson_source_id, this.state.buildGeoJsonSource(null));
-      // Fill the polygon.
-      map.addLayer({
-        'id': geojson_source_id + '-fill',
-        'type': 'fill',
-        'source': geojson_source_id,
-        'layout': {},
-        'paint': {
-          'fill-color': [
-            'case',
-            ['boolean', ['feature-state', 'hover'], false],
-            '#FFF6D7', // Color when hovered.
-            ['boolean', ['feature-state', 'focus'], false],
-            '#FFE691', // Color when focused.
-            '#FFF6D7', // Default color.
-          ],
-          'fill-opacity': [
-            'case',
-            ['boolean', ['feature-state', 'hover'], false],
-            1,  // 1 opacity when hovering.
-            ['boolean', ['feature-state', 'focus'], false],
-            1,  // 1 opacity when focused.
-            ['boolean', ['feature-state', 'hidden'], false],
-            0,  // 0 opacity when hidden.
-            0,
-          ],
-        }
-      });
-      // Add an outline around the polygon.
-      map.addLayer({
-        'id': geojson_source_id + '-outline',
-        'type': 'line',
-        'source': geojson_source_id,
-        'layout': {},
-        'paint': {
-          'line-color': root_styles.getPropertyValue('--ghi-grey'),
-          'line-width': 1,
-          'line-opacity': 0.5,
-        }
-      });
+      if (!map.getSource(geojson_source_id)) {
+        map.addSource(geojson_source_id, this.state.buildGeoJsonSource(null));
+
+        // Fill the polygon.
+        map.addLayer({
+          'id': geojson_source_id + '-fill',
+          'type': 'fill',
+          'source': geojson_source_id,
+          'layout': {},
+          'paint': {
+            'fill-color': [
+              'case',
+              ['boolean', ['feature-state', 'hover'], false],
+              '#FFF6D7', // Color when hovered.
+              ['boolean', ['feature-state', 'focus'], false],
+              '#FFE691', // Color when focused.
+              '#FFF6D7', // Default color.
+            ],
+            'fill-opacity': [
+              'case',
+              ['boolean', ['feature-state', 'hover'], false],
+              1,  // 1 opacity when hovering.
+              ['boolean', ['feature-state', 'focus'], false],
+              1,  // 1 opacity when focused.
+              ['boolean', ['feature-state', 'hidden'], false],
+              0,  // 0 opacity when hidden.
+              0,
+            ],
+          }
+        });
+        // Add an outline around the polygon.
+        map.addLayer({
+          'id': geojson_source_id + '-outline',
+          'type': 'line',
+          'source': geojson_source_id,
+          'layout': {},
+          'paint': {
+            'line-color': root_styles.getPropertyValue('--ghi-grey'),
+            'line-width': 1,
+            'line-opacity': 0.5,
+          }
+        });
+      }
 
       // Build the admin area features and add them to the source, but do it
       // non-blocking.
