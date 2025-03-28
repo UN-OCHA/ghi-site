@@ -100,6 +100,7 @@
           // Also redraw on zoom. This is mainly important for the offset
           // locations on the plan overview map.
           self.renderLocations();
+          this.updateActiveFeatures();
         });
       });
     }
@@ -137,6 +138,7 @@
         this.updateActiveFeature(active_feature);
       }
 
+      // Needed for changes to the admin level.
       this.addAdminAreaOutlines();
     }
 
@@ -555,6 +557,46 @@
       let features = [hover_feature, focus_feature].filter(d => d !== null);
       self.updateMapData(layer_id, features);
       map.setLayoutProperty(layer_id, 'visibility', features.length ? 'visible' : 'none');
+      if (focus_feature) {
+        // There was an issue when selecting a feature, then moving and zooming
+        // the map so that the selected feature wouldn't be visible anymore,
+        // then selecting another feature in the new viewport, which would then
+        // not unset the feature state of the previously active feature. So we
+        // need to make sure to unset the feature state of that older feature
+        // anytime it becomes visible.
+        let source_id = state.getMapId();
+        let geojson_source_id = source_id + '-geojson';
+        let existing = [];
+        if (state.shouldShowCountryOutlines()) {
+          let location = state.getLocationById(focus_feature.properties.object_id);
+          let highlight_countries = location?.highlight_countries;
+          let filter = highlight_countries ? ['in', ['get', 'location_id'], ['literal', location.highlight_countries]] : null;
+          let geojson_features_ids = state.querySourceFeatures(geojson_source_id, geojson_source_id, filter)
+            .map((d) => d.id);
+          existing = state.querySourceFeatures(geojson_source_id + '-fill', geojson_source_id)
+            .filter((d) => !geojson_features_ids.length || geojson_features_ids.indexOf(d.id) == -1)
+            .filter((d) => (map.getFeatureState({
+              source: geojson_source_id,
+              id: d.id
+            })['focus'] ?? false) === true);
+        }
+        else {
+          existing = state.querySourceFeatures(geojson_source_id + '-fill', geojson_source_id)
+            .filter((d) => !focus_feature || d.id != focus_feature.id)
+            .filter((d) => (map.getFeatureState({
+              source: geojson_source_id,
+              id: d.id
+            })['focus'] ?? false) === true);
+        }
+        if (existing.length) {
+          existing.forEach(item => {
+            map.setFeatureState(
+              { source: geojson_source_id, id: item.id },
+              { 'focus': false}
+            );
+          });
+        }
+      }
     }
 
     /**
