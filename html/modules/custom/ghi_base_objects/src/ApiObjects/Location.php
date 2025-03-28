@@ -31,7 +31,8 @@ class Location extends BaseObject {
       'iso3' => $data->iso3,
       'latLng' => [(string) $data->latitude, (string) $data->longitude],
       'parent_id' => $data->parentId,
-      'valid_on' => $data->validOn,
+      'status' => $data->status,
+      'valid_on' => $data->validOn ? substr($data->validOn, 0, strlen($data->validOn) - 3) : NULL,
       'children' => $data->children ?? [],
     ];
   }
@@ -43,7 +44,11 @@ class Location extends BaseObject {
    *   A string representing a UUID.
    */
   public function getUuid() {
-    return md5($this->id() . '_' . $this->valid_on);
+    return md5(implode('_', [
+      $this->id(),
+      $this->status,
+      ($this->valid_on ?: 'current'),
+    ]));
   }
 
   /**
@@ -162,7 +167,21 @@ class Location extends BaseObject {
    *   if the file can't be found.
    */
   public function getGeoJsonSourceFilePath($version = 'current', $minified = TRUE) {
-    $directory = self::moduleHandler()->getModule('ghi_base_objects')->getPath() . '/assets/geojson';
+    if (!$this->getIso3()) {
+      return NULL;
+    }
+    $directory = self::moduleHandler()->getModule('ghi_base_objects')->getPath() . '/assets/geojson/' . $this->getIso3();
+    if ($version != 'current') {
+      $directories = glob($directory . '/[0-9][0-9][0-9][0-9]', GLOB_ONLYDIR);
+      $directory_years = array_map(function ($dirname) {
+        return basename($dirname);
+      }, $directories);
+      $versions = array_filter($directory_years, function ($directory_year) use ($version) {
+        return (int) $directory_year >= (int) $version;
+      });
+      rsort($versions, SORT_NUMERIC);
+      $version = reset($versions) ?: 'current';
+    }
 
     // The source file for countries comes from a local asset.
     $filepath = $this->buildGeoJsonSourceFilePath($version, $minified);
@@ -195,7 +214,6 @@ class Location extends BaseObject {
       return NULL;
     }
     $path_parts = [
-      $this->getIso3(),
       $version,
     ];
     if ($this->isCountry()) {
@@ -225,7 +243,11 @@ class Location extends BaseObject {
    */
   public function getGeoJsonPublicFilePath() {
     $public_filepath = self::GEO_JSON_DIR . '/' . $this->getUuid() . '.geojson';
-    if (!file_exists($public_filepath) && $filepath = $this->getGeoJsonSourceFilePath()) {
+    $version = 'current';
+    if ($this->valid_on && $this->status == 'expired') {
+      $version = date('Y', $this->valid_on);
+    }
+    if (!file_exists($public_filepath) && $filepath = $this->getGeoJsonSourceFilePath($version)) {
       copy($filepath, $public_filepath);
     }
     return file_exists($public_filepath) ? $public_filepath : NULL;
