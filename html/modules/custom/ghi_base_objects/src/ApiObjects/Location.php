@@ -33,7 +33,6 @@ class Location extends BaseObject {
       'parent_id' => $data->parentId,
       'status' => $data->status,
       'valid_on' => $data->validOn ? substr($data->validOn, 0, strlen($data->validOn) - 3) : NULL,
-      'children' => $data->children ?? [],
     ];
   }
 
@@ -68,7 +67,7 @@ class Location extends BaseObject {
    *   The parent country.
    */
   public function getParentCountry() {
-    return $this->parentCountry ?? NULL;
+    return $this->parentCountry ?? $this->fetchParentCountry();
   }
 
   /**
@@ -99,6 +98,17 @@ class Location extends BaseObject {
    */
   public function getPcode() {
     return $this->pcode;
+  }
+
+  /**
+   * Get the location children.
+   *
+   * @return array
+   *   An array of raw location objects.
+   */
+  public function getChildren() {
+    $data = $this->getRawData();
+    return $data->children ?? [];
   }
 
   /**
@@ -264,6 +274,26 @@ class Location extends BaseObject {
   }
 
   /**
+   * Fetch the parent country recursively.
+   *
+   * @param int $parent_id
+   *   A location id.
+   *
+   * @return \Drupal\ghi_base_objects\ApiObjects\Location|null
+   *   A location object or NULL.
+   */
+  private function fetchParentCountry($parent_id = NULL) {
+    $parent_location = NULL;
+    $parent_id = $parent_id ?? $this->parent_id;
+    while (!empty($parent_id)) {
+      $parent_location = $this->locationsQuery()->getLocation($parent_id);
+      $parent_id = $parent_location?->parent_id;
+    }
+    $this->parentCountry = $parent_location;
+    return $parent_location?->getAdminLevel() == 0 ? $parent_location : NULL;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getCacheTags() {
@@ -288,6 +318,18 @@ class Location extends BaseObject {
    */
   public static function moduleHandler() {
     return \Drupal::service('module_handler');
+  }
+
+  /**
+   * Get the locations query.
+   *
+   * @return \Drupal\ghi_base_objects\Plugin\EndpointQuery\LocationsQuery
+   *   The locations query.
+   */
+  public static function locationsQuery() {
+    /** @var \Drupal\hpc_api\Query\EndpointQueryManager $endpoint_query_manager */
+    $endpoint_query_manager = \Drupal::service('plugin.manager.endpoint_query_manager');
+    return $endpoint_query_manager->createInstance('locations_query');
   }
 
 }
