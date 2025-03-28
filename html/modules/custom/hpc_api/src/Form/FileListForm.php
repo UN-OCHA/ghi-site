@@ -76,6 +76,14 @@ class FileListForm extends FormBase {
       $rows[$filename] = $row;
     }
 
+    $form['file_summary'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'p',
+      '#value' => $this->t('Showing @count files', [
+        '@count' => count($rows),
+      ]),
+      '#access' => !empty($rows),
+    ];
     $form['file_list'] = [
       '#type' => 'tableselect',
       '#header' => $header,
