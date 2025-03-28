@@ -116,12 +116,23 @@
      */
     loadFeaturesAsync: function (locations, callback) {
       let self = this;
-      let geojson_features = locations.map(item => this.getGeoJSON(item)).filter(d => d);
+      let filepaths = locations.map((d) => d.filepath).filter((d) => d !== null);
+      // Trigger loading of the geojson files.
+      locations.map(item => this.getGeoJSON(item)).filter(d => d);
+      // And wait until all are available before calling the callback.
       let intervall = setInterval(() => {
-        let storage = Object.values(self.storage);
-        if (storage.filter((d) => d !== null).length == storage.length) {
+        // Filter storage down to the requested entries.
+        let storage = Object.keys(self.storage)
+          .filter(key => filepaths.includes(key))
+          .reduce((obj, key) => {
+            obj[key] = self.storage[key];
+            return obj;
+          }, {});
+        // Check if all files have finished loading (either a string or false,
+        // but not null).
+        if (Object.values(storage).filter((d) => d !== null).length == filepaths.length) {
           clearInterval(intervall);
-          callback(storage);
+          callback(Object.values(storage));
         }
       }, 500);
     },
