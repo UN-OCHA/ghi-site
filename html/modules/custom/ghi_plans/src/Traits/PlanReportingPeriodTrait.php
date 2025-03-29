@@ -30,7 +30,7 @@ trait PlanReportingPeriodTrait {
   }
 
   /**
-   * Get the attachment query service.
+   * Get the reporting periods for the given plan.
    *
    * @param int $plan_id
    *   The plan id.
