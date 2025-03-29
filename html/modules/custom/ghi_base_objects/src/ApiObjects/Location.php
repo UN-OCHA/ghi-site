@@ -234,7 +234,7 @@ class Location extends BaseObject {
       // Admin 1+ shape files are inside a level specific subdirectory.
       $path_parts[] = 'adm' . $this->getAdminLevel();
       // And they are simply named like their pcode.
-      $path_parts[] = $this->getPcode() . '.geojson';
+      $path_parts[] = $this->getPcode() . ($minified ? '.min' : '') . '.geojson';
     }
     else {
       return NULL;
