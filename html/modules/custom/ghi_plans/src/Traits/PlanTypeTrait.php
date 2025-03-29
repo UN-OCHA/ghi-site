@@ -100,7 +100,7 @@ trait PlanTypeTrait {
    * Get a summary of the plan type order.
    *
    * @return string
-   *   An summary string in the form "HRP/HNRP, FA, REG".
+   *   A summary string in the form "HRP/HNRP, FA, REG".
    */
   public function getPlanTypeOrderSummary() {
     $plan_types = $this->getAvailablePlanTypeEntities();
