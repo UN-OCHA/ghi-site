@@ -2,3 +2,9 @@ services:
   migrated_entity_manager:
     class: Drupal\ghi_base_objects\Migrate\MigratedEntityManager
     arguments: ['@plugin.manager.migration', '@plugin.manager.migrate.source', '@messenger']
+  ghi_base_objects.restrict_cluster_by_plan_autocomplete_matcher:
+    class: Drupal\ghi_base_objects\RestrictClusterByPlanAutocompleteMatcher
+    decorates: entity.autocomplete_matcher
+    decoration_priority: 9
+    public: false
+    arguments: ['@ghi_base_objects.restrict_cluster_by_plan_autocomplete_matcher.inner', '@plugin.manager.entity_reference_selection', '@entity_type.manager']
