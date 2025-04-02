@@ -142,6 +142,8 @@
     }
 
     & > .donut .legend-icon {
+      &.legend-icon-srp,
+      &.legend-icon-hnarp,
       &.legend-icon-hrp {
         background-color: var(--cd-primary-color) !important;
       }
@@ -154,6 +156,8 @@
     }
 
     & > .circle .legend-item {
+      &.legend-icon-srp,
+      &.legend-icon-hnarp,
       &.legend-icon-hrp {
         background-color: var(--ghi-plan-type-hrp) !important;
       }

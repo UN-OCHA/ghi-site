@@ -102,10 +102,12 @@ class PlanOverviewMap extends GHIBlockBase {
     $conf = $this->getBlockConfig();
     $chart_id = Html::getUniqueId('plan-overview-map');
     $plans = $this->getPlans();
-    $plan_type_names = $this->getAvailablePlanTypes();
+    $plan_type_names = array_filter(array_unique(array_map(function (PlanOverviewPlan $plan) {
+      return $plan->getPlanType()?->label();
+    }, $plans)));
 
     $plan_type_keys = array_map(function ($plan_type_name) {
-      return strtolower($this->getPlanTypeShortName($plan_type_name, TRUE));
+      return strtolower($this->getPlanTypeShortName($plan_type_name));
     }, $plan_type_names);
 
     $legend = array_combine($plan_type_keys, $plan_type_names);
