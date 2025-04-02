@@ -20,6 +20,7 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
+use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Form\ImportBlockForm;
@@ -29,6 +30,7 @@ use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\ghi_plans\Entity\GoverningEntity;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_api\Helpers\ProfileHelper;
@@ -214,6 +216,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
   protected function baseConfigurationDefaults() {
     return [
       'hpc' => $this->getConfigurationDefaults(),
+      'contexts' => [
+        'data_object' => NULL,
+        'context_mapping' => [],
+      ],
     ] + parent::baseConfigurationDefaults();
   }
 
@@ -556,22 +562,42 @@ abstract class GHIBlockBase extends HPCBlockBase {
    */
   public function needsContextConfiguration() {
     $instance = $this->formState->get('block') ?? $this;
-    return empty($instance->getCurrentBaseObject());
+    return !empty($instance->getContextMapping()) && empty($instance->getCurrentBaseObject());
   }
 
   /**
-   * See if the block can configure the base object it works with.
+   * See if the block allows to select the base object it works with.
    *
-   * This is the case if for any of the expected base objects, more than one is
-   * available.
+   * This is the case if more than one base object is available.
    *
    * @return bool
-   *   TRUE if the blocks base object can be configured, FASLE otherwise.
+   *   TRUE if the blocks base object can be selected, FALSE otherwise.
    */
-  public function canConfigureContexts() {
+  public function canSelectBaseObject() {
+    $current_base_entity = $this->getCurrentBaseObject();
+    if ($current_base_entity instanceof GoverningEntity) {
+      // This prevents the context form to be visible on cluster subpages, as
+      // these do have both the governing entity object and the plan object
+      // available.
+      return FALSE;
+    }
+    $base_objects_per_bundle = $this->getBaseObjectsPerBundle();
+    $count_objects = array_reduce($base_objects_per_bundle, function ($carry, $item) {
+      return count($item) + $carry;
+    });
+    return $count_objects > 1;
+  }
+
+  /**
+   * Get the available base objects per bundle.
+   *
+   * @return array
+   *   An array of base object bundles, with the values being an array of base
+   *   object ids.
+   */
+  private function getBaseObjectsPerBundle() {
     $instance = $this->formState?->get('block') ?? $this;
     $base_objects_per_bundle = [];
-    $can_configure = FALSE;
 
     // Get the expected base object types. This assumes that the context
     // definition contains a constraint on the base object bundle.
@@ -602,24 +628,39 @@ abstract class GHIBlockBase extends HPCBlockBase {
       }
       $base_objects_per_bundle[$base_object->bundle()] = $base_objects_per_bundle[$base_object->bundle()] ?? [];
       $base_objects_per_bundle[$base_object->bundle()][$base_object->id()] = $base_object->id();
-      if (count($base_objects_per_bundle[$base_object->bundle()]) > 1) {
-        $can_configure = TRUE;
-      }
     }
-    return $can_configure;
+    return $base_objects_per_bundle;
   }
 
   /**
    * The context select form callback.
+   *
+   * See self::blockFormAlter() for changes to the context_mapping.
    */
   protected function contextForm($form, FormStateInterface $form_state) {
-    // We just reuse the context mapping from Drupal here. This is added in
-    // self::blockFormAlter().
-    // We can provide some context for the user though.
     $message = $this->t('There are multiple context objects available on the current page. In order for this element to function correctly, you must select which object to use to retrieve the underlying data from the data source.');
     $form['message'] = [
       '#type' => 'markup',
       '#markup' => new FormattableMarkup('<p>@message</p>', ['@message' => $message]),
+    ];
+
+    $base_objects_per_bundle = $this->getBaseObjectsPerBundle();
+    $options = [];
+    foreach ($base_objects_per_bundle as $ids) {
+      $objects = $this->entityTypeManager->getStorage('base_object')->loadMultiple($ids);
+      foreach ($objects as $object) {
+        $bundle = $object->type->entity->label();
+        $options[$bundle] = $options[$bundle] ?? [];
+        $options[$bundle][$object->id()] = (string) ($object instanceof BaseObjectChildInterface ? $object->labelWithParent() : $object->label());
+      }
+    }
+
+    $form['data_object'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Data object'),
+      '#options' => $options,
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'data_object') ?? $this->getCurrentBaseObjectId(),
+      '#access' => count($options) > 0,
     ];
     return $form;
   }
@@ -632,22 +673,26 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   title" and "callback" keys that hold strings.
    */
   public function getSubforms() {
-    $definition = $this->getPluginDefinition();
-    $plugin_subforms = $definition['config_forms'] ?? [];
-    $subforms = [];
-    if ($this->canConfigureContexts()) {
-      $subforms[self::CONTEXTS_FORM_KEY] = [
-        'title' => $this->t('Context'),
-        'callback' => 'contextForm',
-      ];
+    $subforms = &drupal_static(__FUNCTION__, NULL);
+    if ($subforms === NULL) {
+      $definition = $this->getPluginDefinition();
+      $plugin_subforms = $definition['config_forms'] ?? [];
+      $subforms = [];
+      if ($this->canSelectBaseObject()) {
+        $subforms[self::CONTEXTS_FORM_KEY] = [
+          'title' => $this->t('Context'),
+          'callback' => 'contextForm',
+        ];
+      }
+      if (!$this->isMultistepForm()) {
+        $subforms[self::DEFAULT_FORM_KEY] = [
+          'title' => $this->t('Configuration'),
+          'callback' => 'getConfigForm',
+        ];
+      }
+      $subforms = $subforms + $plugin_subforms;
     }
-    if (!$this->isMultistepForm()) {
-      $subforms[self::DEFAULT_FORM_KEY] = [
-        'title' => $this->t('Configuration'),
-        'callback' => 'getConfigForm',
-      ];
-    }
-    return $subforms + $plugin_subforms;
+    return $subforms;
   }
 
   /**
@@ -934,7 +979,11 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
 
     // Get the values for that subform and.
-    $step_values = $form_state->cleanValues()->getValue($current_subform ?? []);
+    $step_values = $form_state->cleanValues()->getValue($current_subform ?? []) ?? [];
+    // Also get all other values formerly stored and fill in the blanks.
+    $values = $this->getTemporarySettings($form_state);
+    $step_values += $values[$current_subform];
+
     if ($step_values === NULL) {
       $form_state->setRebuild($action == 'preview');
       return;
@@ -981,6 +1030,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     if (array_key_exists(self::CONTEXTS_FORM_KEY, $values)) {
       $context_mapping = $values[self::CONTEXTS_FORM_KEY]['context_mapping'] ?? $this->configuration['context_mapping'];
+      if (!empty($values[self::CONTEXTS_FORM_KEY]['data_object']) && $base_object = $this->getSelectedDataObject()) {
+        // Update the context mapping based on the selected data object.
+        $this->updateContextMapping($context_mapping, $base_object);
+      }
       $form_state->setValue('context_mapping', $context_mapping);
       unset($values[self::CONTEXTS_FORM_KEY]['context_mapping']);
     }
@@ -1190,11 +1243,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $form['actions']['#attributes']['class'][] = 'canvas-form__actions';
     $form['actions']['#attributes']['class'] = array_unique($form['actions']['#attributes']['class']);
 
+    $this->setFormState($form_state);
     $is_preview = $form_state->get('preview');
     $active_subform = $form_state->get('current_subform');
 
     if ($active_subform == self::CONTEXTS_FORM_KEY) {
-      // Add the context mapping widget to the subform.
+      // Add the context mapping widget to the subform but don't allow access.
+      $form['settings']['context_mapping']['#access'] = FALSE;
       foreach (Element::children($form['settings']['context_mapping']) as $element_key) {
         $element = &$form['settings']['context_mapping'][$element_key];
         if ($element['#type'] != 'select') {
@@ -1204,11 +1259,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
         if (empty($element['#default_value']) && !empty($element['#options'])) {
           $element['#default_value'] = array_key_first($element['#options']);
         }
+        if (count($element['#options']) <= 1) {
+          $element['#access'] = FALSE;
+        }
       }
       $form['settings']['container']['context_mapping'] = $form['settings']['context_mapping'];
     }
 
-    $this->setFormState($form_state);
     $this->setElementValidateOnAjaxElements($form['settings']['container']);
 
     // Assemble the subform buttons.
@@ -1380,7 +1437,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $block_instance->setFormState($form_state);
     $subforms = $block_instance->getSubforms();
     $requested_subform = array_key_exists('#next_step', $triggering_element) ? $triggering_element['#next_step'] : end($parents);
-    if (array_key_exists($requested_subform, $subforms) && $block_instance->canShowSubform($element, $form_state, $requested_subform)) {
+    if (array_key_exists($requested_subform, $subforms) && ($block_instance->canShowSubform($element, $form_state, $requested_subform) || $requested_subform == self::CONTEXTS_FORM_KEY)) {
       // Update the current subform.
       $form_state->set('current_subform', $requested_subform);
     }
@@ -1533,6 +1590,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $this->setContextMapping($context_mapping);
       }
     }
+
     $form_state->set('current_settings', $settings);
     return $settings;
   }
@@ -1665,17 +1723,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
     if ($base_page instanceof BaseObjectAwareEntityInterface) {
       return $base_page->getBaseObject();
     }
-    $contexts = $this->getContexts();
-    foreach ($this->getContextMapping() as $context_name) {
-      $context = $contexts[$context_name] ?? NULL;
-      if (!$context || !$context->hasContextValue()) {
-        continue;
-      }
-      if (!$context->getContextValue() instanceof BaseObjectInterface) {
-        continue;
-      }
-      return $context->getContextValue();
-    }
+    $base_objects = $this->getBaseObjectsFromContext();
+    return $this->getSelectedDataObject() ?? (reset($base_objects) ?: NULL);
   }
 
   /**
@@ -1686,10 +1735,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    */
   public function getCurrentBaseObjectId() {
     $base_object = $this->getCurrentBaseObject();
-    if (!$base_object) {
-      return NULL;
-    }
-    return $base_object->field_original_id->value;
+    return $base_object?->getSourceId() ?? NULL;
   }
 
   /**
@@ -1699,25 +1745,14 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   A plan object if it can be found.
    */
   public function getCurrentPlanObject() {
-    $this->getContexts();
-    if ($this->hasContext('plan')) {
-      return $this->getContext('plan')->getContextValue();
+    $base_object = $this->getCurrentBaseObject();
+    if ($base_object instanceof Plan) {
+      return $base_object;
     }
-    if ($this->hasContext('plan_cluster')) {
-      $plan_cluster = $this->getContext('plan_cluster')->getContextValue();
-      if ($plan_cluster instanceof GoverningEntity) {
-        return $plan_cluster->getPlan();
-      }
+    if ($base_object instanceof BaseObjectChildInterface && $base_object->getParentBaseObject() instanceof Plan) {
+      return $base_object->getParentBaseObject();
     }
     return NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getContextValue($name) {
-    $contexts = $this->getContexts();
-    return array_key_exists($name, $contexts) ? $contexts[$name]->getContextValue() : NULL;
   }
 
   /**
@@ -1732,6 +1767,91 @@ abstract class GHIBlockBase extends HPCBlockBase {
       return NULL;
     }
     return $plan_object->getSourceId();
+  }
+
+  /**
+   * Get the base objects from the current context.
+   *
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface[]
+   *   An array of base objects.
+   */
+  public function getBaseObjectsFromContext() {
+    $contexts = $this->getContexts();
+    $base_objects = [];
+    foreach ($contexts as $context) {
+      if (!$context->hasContextValue()) {
+        continue;
+      }
+      if (!$context->getContextValue() instanceof BaseObjectInterface) {
+        continue;
+      }
+      $base_object = $context->getContextValue();
+      $base_objects[$base_object->id()] = $base_object;
+    }
+    return $base_objects;
+  }
+
+  /**
+   * Get the selected data object if any.
+   *
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
+   *   A base object to be used as a data object or NULL.
+   */
+  public function getSelectedDataObject() {
+    $selected_data_object = $this->getSelectedDataObjectId();
+    if (!$selected_data_object) {
+      return NULL;
+    }
+    $base_objects = $this->getBaseObjectsFromContext();
+    return $base_objects[$selected_data_object] ?? NULL;
+  }
+
+  /**
+   * Get the id of the selected data object if any.
+   *
+   * @return int|null
+   *   A base object id to be used for the data object or NULL.
+   */
+  public function getSelectedDataObjectId() {
+    return $this->getBlockConfig()[self::CONTEXTS_FORM_KEY]['data_object'] ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContextValue($name) {
+    $contexts = $this->getContexts();
+    return array_key_exists($name, $contexts) ? $contexts[$name]->getContextValue() : NULL;
+  }
+
+  /**
+   * Update the context mapping based on the given base object.
+   *
+   * @param array $context_mapping
+   *   An context mapping array.
+   * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
+   *   The base object to use.
+   */
+  protected function updateContextMapping(array &$context_mapping, BaseObjectInterface $base_object) {
+    if (!$base_object) {
+      return;
+    }
+    foreach ($context_mapping as $key => $uuid) {
+      $context_value = $this->getContextValue($key);
+      if (!$context_value) {
+        continue;
+      }
+      // We assume that we have at most one base object per bundle as contexts.
+      if ($context_value->bundle() != $base_object->bundle()) {
+        continue;
+      }
+      if ($context_value->id() != $base_object->id()) {
+        $context_mapping[$key] = $base_object->getUniqueIdentifier();
+        if ($base_object instanceof BaseObjectChildInterface && $parent_object = $base_object->getParentBaseObject()) {
+          $this->updateContextMapping($context_mapping, $parent_object);
+        }
+      }
+    }
   }
 
   /**

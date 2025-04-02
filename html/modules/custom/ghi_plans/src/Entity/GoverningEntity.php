@@ -18,6 +18,13 @@ class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function labelWithParent() {
+    return $this->getParentBaseObject()->label() . ': ' . $this->label();
+  }
+
+  /**
    * Get the plan object that this governing entity belongs to.
    *
    * @return \Drupal\ghi_plans\Entity\Plan

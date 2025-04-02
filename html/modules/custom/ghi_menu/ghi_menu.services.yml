@@ -14,3 +14,9 @@ services:
     arguments: ['@ghi_menu.menu_tree_storage_helper']
     tags:
       - { name: event_subscriber }
+  ghi_menu.entity_autocomplete_matcher:
+    class: Drupal\ghi_menu\GhiEntityAutocompleteMatcher
+    decorates: entity.autocomplete_matcher
+    decoration_priority: 9
+    public: false
+    arguments: ['@ghi_menu.entity_autocomplete_matcher.inner', '@plugin.manager.entity_reference_selection', '@entity_type.manager']

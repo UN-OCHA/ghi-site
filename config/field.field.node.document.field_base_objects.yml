@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.storage.node.field_base_objects
+    - ghi_base_objects.base_object_type.governing_entity
     - ghi_base_objects.base_object_type.plan
     - node.type.document
 id: node.document.field_base_objects
@@ -20,12 +21,13 @@ settings:
   handler: 'bert:base_object'
   handler_settings:
     target_bundles:
+      governing_entity: governing_entity
       plan: plan
     sort:
       field: _none
       direction: ASC
     auto_create: 0
-    auto_create_bundle: ''
+    auto_create_bundle: governing_entity
     label_formatter: title_bundle
     result_amount: '0'
     same_language_only: 0
