@@ -14,6 +14,7 @@ use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
+use Drupal\ghi_plans\Entity\PlanType;
 use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
@@ -102,16 +103,6 @@ class PlanOverviewMap extends GHIBlockBase {
     $conf = $this->getBlockConfig();
     $chart_id = Html::getUniqueId('plan-overview-map');
     $plans = $this->getPlans();
-    $plan_type_names = array_filter(array_unique(array_map(function (PlanOverviewPlan $plan) {
-      return $plan->getPlanType()?->label();
-    }, $plans)));
-
-    $plan_type_keys = array_map(function ($plan_type_name) {
-      return strtolower($this->getPlanTypeShortName($plan_type_name));
-    }, $plan_type_names);
-
-    $legend = array_combine($plan_type_keys, $plan_type_names);
-    unset($legend['cap']);
 
     // All tabs we have, including the legend we want to show.
     $tabs = [
@@ -266,7 +257,7 @@ class PlanOverviewMap extends GHIBlockBase {
             'value' => CommonHelper::renderValue($funding->funding_progress, 'percent', 'hpc_percent', $common_theme_args),
           ],
         ],
-        'plan_type' => strtolower($plan->getTypeShortName()),
+        'plan_type' => strtolower($plan->getPlanType()?->getAbbreviation() ?? ''),
       ];
       $modal_contents[(string) $object_id] = [
         'object_id' => $object_id,
@@ -349,12 +340,41 @@ class PlanOverviewMap extends GHIBlockBase {
       'json' => !empty($map['data']) ? $map['data'] : NULL,
       'id' => $chart_id,
       'style' => 'circle',
-      'legend' => $legend,
+      'legend' => $this->buildLegendItems(),
       'search_enabled' => $conf['search_enabled'],
       'map_disclaimer' => $conf['disclaimer'],
     ];
 
     return $map;
+  }
+
+  /**
+   * Build the legend items.
+   *
+   * @return array
+   *   An array of legend items. The keys are the plan type abbreviations, the
+   *   values the labels.
+   */
+  private function buildLegendItems() {
+    $plans = $this->getPlans();
+
+    $plan_types = [];
+    foreach ($plans as $plan) {
+      if (!$plan->getPlanType() || !empty($plan_types[$plan->getPlanType()->id()])) {
+        continue;
+      }
+      $plan_types[$plan->getPlanType()->id()] = $plan->getPlanType();
+    }
+    $plan_type_names = array_map(function (PlanType $plan_type) {
+      return $plan_type->label();
+    }, $plan_types);
+    $plan_type_keys = array_map(function (PlanType $plan_type) {
+      return strtolower($plan_type->getAbbreviation());
+    }, $plan_types);
+
+    $legend = array_combine($plan_type_keys, $plan_type_names);
+    unset($legend['cap']);
+    return $legend;
   }
 
   /**
