@@ -7,8 +7,11 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
+use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_plans\Entity\GoverningEntity;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\node\NodeInterface;
@@ -36,6 +39,7 @@ class BaseObjectReferenceController extends ControllerBase implements ContainerI
    */
   public function nodeFormAlter(array &$form, FormStateInterface $form_state) {
     $node = $form_state->getFormObject()->getEntity();
+    $base_object_storage = $this->entityTypeManager()->getStorage('base_object');
     $entity_ids_current = [];
     if (array_key_exists('list', $form['field_base_objects']['widget'])) {
       $widget_list = &$form['field_base_objects']['widget']['list'];
@@ -48,36 +52,73 @@ class BaseObjectReferenceController extends ControllerBase implements ContainerI
     }, $node->get('field_base_objects')->referencedEntities() ?? []);
     $removed_entity_ids = array_diff($entity_ids_original, $entity_ids_current);
     if (!empty($removed_entity_ids)) {
-      $base_objects = $this->entityTypeManager()->getStorage('base_object')->loadMultiple($removed_entity_ids);
-      $object_blocks = [];
+      $base_objects = $base_object_storage->loadMultiple($removed_entity_ids);
+      $blocks = [];
       foreach ($base_objects as $base_object) {
         $components = $this->getComponentsByBaseObject($node, $base_object);
         if (empty($components)) {
           continue;
         }
-        $blocks = [];
         foreach ($components as $component) {
           $plugin = $component->getPlugin();
-          $blocks[] = $plugin->label() ?? $plugin->getPluginDefinition()['admin_label'];
-        }
-        if (!empty($blocks)) {
-          $object_blocks[] = $this->t('@object: @blocks', [
-            '@object' => $base_object->label(),
-            '@blocks' => implode(', ', $blocks),
-          ]);
+          if (!$plugin instanceof GHIBlockBase) {
+            continue;
+          }
+          $blocks[$plugin->getUuid()] = $blocks[$plugin->getUuid()] ?? [
+            'block_label' => $plugin->label() ?? $plugin->getPluginDefinition()['admin_label'],
+            'base_object_labels' => [],
+          ];
+          $blocks[$plugin->getUuid()]['base_object_labels'][] = $base_object instanceof BaseObjectChildInterface ? $base_object->labelWithParent() : $base_object->label();
         }
       }
       if (!empty($blocks)) {
+        $block_notifications = array_map(function ($block) {
+          return [
+            '#markup' => $block['block_label'],
+            'children' => [
+              '#theme' => 'item_list',
+              '#items' => $block['base_object_labels'],
+            ],
+          ];
+        }, $blocks);
         $this->messenger()->addWarning($this->t('The following data elements will be permanently removed from this page:<br />@blocks', [
           '@blocks' => Markup::create(ThemeHelper::render([
             '#theme' => 'item_list',
-            '#items' => $object_blocks,
+            '#items' => $block_notifications,
           ], FALSE)),
         ]));
         $form['field_base_objects']['widget']['warning'] = [
           '#type' => 'status_messages',
           '#weight' => -10,
         ];
+      }
+    }
+
+    // Add the already added plan ids to the selection settings.
+    if (!empty($form['field_base_objects']['widget']['add'])) {
+      $base_objects = $base_object_storage->loadMultiple($entity_ids_current);
+      $plan_objects = array_filter($base_objects, function (BaseObjectInterface $base_object) {
+        return $base_object instanceof Plan;
+      });
+      $form['field_base_objects']['widget']['add']['entity']['#selection_settings']['selected_plans'] = array_keys($plan_objects);
+    }
+
+    $base_objects = !empty($entity_ids_current) ? $base_object_storage->loadMultiple($entity_ids_current) : [];
+    if (!empty($base_objects)) {
+      $governing_entity_objects = array_filter($base_objects, function (BaseObjectInterface $base_object) {
+        return $base_object instanceof GoverningEntity;
+      });
+      $required_plan_entity_ids = array_map(function (GoverningEntity $base_object) {
+        return $base_object->getPlan()->id();
+      }, $governing_entity_objects);
+      $widget_list = &$form['field_base_objects']['widget']['list'];
+      foreach (Element::children($widget_list) as $element_key) {
+        $element = &$widget_list[$element_key];
+        $base_object = $base_object_storage->load($element['entity']['#value']);
+        if ($base_object instanceof Plan && in_array($base_object->id(), $required_plan_entity_ids)) {
+          $element['remove']['#disabled'] = 'disabled';
+          $element['#attributes']['title'] = $this->t('This plan object cannot be removed until the dependant governing entity objects are removed.');
+        }
       }
     }
   }
@@ -96,8 +137,11 @@ class BaseObjectReferenceController extends ControllerBase implements ContainerI
   public function extractBaseObjectComponentsFromSection(array $sections, BaseObjectInterface $base_object) {
     $components = [];
     foreach ($sections as $section) {
-      $component = $section->getComponents();
-      foreach ($component as $component) {
+      $section_components = $section->getComponents();
+      uasort($section_components, function ($a, $b) {
+        return $a->getWeight() - $b->getWeight();
+      });
+      foreach ($section_components as $component) {
         $plugin = $component->getPlugin();
         if (!$plugin instanceof GHIBlockBase) {
           continue;
@@ -106,17 +150,32 @@ class BaseObjectReferenceController extends ControllerBase implements ContainerI
         if (empty($context_mapping)) {
           continue;
         }
-        foreach ($context_mapping as $context_key) {
-          if (!strpos($context_key, '--')) {
-            continue;
+        $selected_data_object_id = $plugin->getSelectedDataObjectId();
+        if ($selected_data_object_id !== NULL) {
+          // If a data object has been actively selected, use that as our only
+          // requirement.
+          if ($selected_data_object_id == $base_object->id()) {
+            $components[] = $component;
           }
-          if ($base_object->getUniqueIdentifier() != $context_key) {
-            continue;
+        }
+        else {
+          // Otherwhise go over the context mapping compare the context_key
+          // with the base object's identifier.
+          foreach ($context_mapping as $context_key) {
+            if (!strpos($context_key, '--')) {
+              continue;
+            }
+            if ($base_object->getUniqueIdentifier() != $context_key) {
+              continue;
+            }
+            $components[] = $component;
           }
-          $components[] = $component;
         }
       }
     }
+    uasort($components, function ($a, $b) {
+      return $a->getWeight() - $b->getWeight();
+    });
     return $components;
   }
 
