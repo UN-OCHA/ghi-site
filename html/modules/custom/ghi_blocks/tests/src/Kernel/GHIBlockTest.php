@@ -46,8 +46,8 @@ class GHIBlockTest extends BlockKernelTestBase {
     $this->assertEquals('"Datawrapper" block', $plugin->getPreviewFallbackString());
     $this->assertTrue($plugin->canShowSubform([], $form_state, 'test'));
     // @todo This should return FALSE for blocks like datawrapper.
-    $this->assertTrue($plugin->needsContextConfiguration());
-    $this->assertFalse($plugin->canConfigureContexts());
+    $this->assertFalse($plugin->needsContextConfiguration());
+    $this->assertFalse($this->callPrivateMethod($plugin, 'canSelectBaseObject'));
     $this->assertCount(1, $plugin->getSubforms());
     $this->assertArrayHasKey('basic', $plugin->getSubforms());
     $this->assertIsString($this->callPrivateMethod($plugin, 'getContainerWrapper'));
@@ -73,11 +73,16 @@ class GHIBlockTest extends BlockKernelTestBase {
     $this->assertContains('user', $cache_contexts);
 
     $this->assertContains($plugin->getPluginId() . ':' . $plugin->getUuid(), $plugin->getCacheTags());
+    $form_state->set('block', $plugin);
     $context_form = $this->callPrivateMethod($plugin, 'contextForm', [[], $form_state]);
-    $this->assertCount(1, $context_form);
+    $this->assertCount(2, $context_form);
     $this->assertArrayHasKey('message', $context_form);
+
     $this->assertEquals('markup', $context_form['message']['#type']);
     $this->assertInstanceOf(FormattableMarkup::class, $context_form['message']['#markup']);
+
+    $this->assertArrayHasKey('data_object', $context_form);
+    $this->assertFalse($context_form['data_object']['#access']);
 
     $admin_icons = $plugin->getAdminIcons();
     $this->assertCount(1, $admin_icons);

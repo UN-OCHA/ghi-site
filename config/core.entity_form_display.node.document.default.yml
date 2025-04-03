@@ -91,8 +91,9 @@ third_party_settings:
         classes: ''
         show_empty_fields: false
         id: ''
+        label_as_html: false
         formatter: closed
-        description: ''
+        description: 'Associating this document page with data objects allows the use of data driven page elements that require an object context, e.g. plan based elements like headline figures or attachment maps/tables. In order to add governing entity objects of a plan, you first need to add the plan object.'
         required_fields: true
 id: node.document.default
 targetEntityType: node
@@ -110,7 +111,7 @@ content:
     weight: 27
     region: content
     settings:
-      list: title_bundle
+      list: title_bundle_with_hierarchy
       add: auto_complete
       add_placeholder: 'Start typing to add a data object'
       disable_duplicate_selection: '1'
