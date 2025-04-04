@@ -8,6 +8,7 @@ use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
+use Drupal\hpc_common\Helpers\StringHelper;
 
 /**
  * Abstraction class for a plan partial object.
@@ -136,36 +137,24 @@ class PlanOverviewPlan extends BaseObject {
    * @return string
    *   The plan type name.
    */
-  public function getOriginalTypeName($fetch_from_entity = FALSE) {
-    $type_name = $this->getTypeProperty('name');
-    if ($fetch_from_entity && $plan_type = $this->getPlanType()) {
-      $type_name = $plan_type->label();
-    }
-    return $type_name;
-  }
-
-  /**
-   * Get the type of a plan.
-   *
-   * @return string
-   *   The plan type name.
-   */
   public function getTypeName($fetch_from_entity = FALSE) {
-    return $this->getOriginalTypeName($fetch_from_entity);
+    if ($fetch_from_entity && $plan_type = $this->getPlanType()) {
+      return $plan_type->label();
+    }
+    return $this->getTypeProperty('name');
   }
 
   /**
-   * Get the type of a plan.
+   * Get the shortname type of a plan.
    *
    * @return string
    *   The plan type name.
    */
-  public function getTypeShortName($fetch_from_entity = FALSE) {
-    $plan_type_short_name = $this->getPlanTypeShortName($this->getOriginalTypeName($fetch_from_entity));
-    if ($fetch_from_entity && $plan_type = $this->getPlanType()) {
-      $plan_type_short_name = $plan_type->get('field_abbreviation')->value ?? $plan_type_short_name;
+  public function getTypeShortName() {
+    if ($plan_type = $this->getPlanType()) {
+      return $plan_type->getAbbreviation();
     }
-    return $plan_type_short_name;
+    return StringHelper::getAbbreviation($this->getTypeName(TRUE));
   }
 
   /**
@@ -194,7 +183,7 @@ class PlanOverviewPlan extends BaseObject {
    *   TRUE if the plan is of the given type, FALSE otherwise.
    */
   public function isType($type_name) {
-    $name = $this->getOriginalTypeName();
+    $name = $this->getTypeName();
     if (empty($name)) {
       return FALSE;
     }
