@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\node\Entity\Node;
 
 /**
@@ -36,6 +37,44 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
    */
   public function getPageTitle() {
     return $this->label();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSectionSwitcherTitle() {
+    return $this->getSectionSwitcherOption()['label'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSectionSwitcherOption() {
+    $option = [
+      'label' => NULL,
+      'label_long' => NULL,
+      'label_full' => NULL,
+    ];
+    $base_object = $this->getBaseObject();
+    if ($base_object instanceof Plan) {
+      $option['label'] = $base_object->getYear();
+      $option['label_long'] = implode(' ', array_filter([
+        $option['label'],
+        $base_object->getPlanType()?->getAbbreviation(),
+      ]));
+      $option['label_full'] = implode(' ', array_filter([
+        $option['label'],
+        $base_object->getPlanType()?->getAbbreviation(),
+        $base_object->getShortName(),
+      ]));
+    }
+    elseif (!$base_object->type->needsYear && $base_object->hasField('field_year')) {
+      $option['label'] = $base_object->get('field_year')->value;
+    }
+    else {
+      $option['label'] = $this->getShortName($base_object, TRUE, TRUE) ?? $this->label();
+    }
+    return $option;
   }
 
   /**

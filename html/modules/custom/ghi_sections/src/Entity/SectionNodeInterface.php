@@ -13,6 +13,23 @@ interface SectionNodeInterface extends NodeInterface {
   const BASE_OBJECT_FIELD_NAME = 'field_base_object';
 
   /**
+   * Get the title to be used in the section switcher.
+   *
+   * @return string
+   *   The title to be used in the section switcher.
+   */
+  public function getSectionSwitcherTitle();
+
+  /**
+   * Get the label to be used in the section switcher options.
+   *
+   * @return array
+   *   An array with 2 key-value pairs, one for the label and one for the long
+   *   label to be used for disambiguation.
+   */
+  public function getSectionSwitcherOption();
+
+  /**
    * Get the page title.
    *
    * @return \Drupal\Component\Render\MarkupInterface
