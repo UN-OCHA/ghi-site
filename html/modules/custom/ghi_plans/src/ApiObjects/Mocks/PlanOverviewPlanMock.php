@@ -120,8 +120,8 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
    * @return string
    *   The plan type name.
    */
-  public function getOriginalTypeName($fetch_from_entity = FALSE) {
-    return $this->getPlanType()->label();
+  public function getTypeName($fetch_from_entity = FALSE) {
+    return $this->getPlanType()?->label();
   }
 
   /**
@@ -134,7 +134,7 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
    *   TRUE if the plan is of the given type, FALSE otherwise.
    */
   public function isType($type_name) {
-    $name = $this->getOriginalTypeName();
+    $name = $this->getTypeName();
     if (empty($name)) {
       return FALSE;
     }

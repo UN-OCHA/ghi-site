@@ -240,7 +240,9 @@ function ghi_blocks_preprocess_section_switcher(&$variables) {
       $base_object = $section->get('field_base_object')->entity;
       if ($base_object instanceof Plan) {
         $label = $base_object->getYear();
-        $label_additions[$key] = $base_object->getPlanTypeShortLabel(FALSE);
+        if ($plan_type = $base_object->getPlanType()) {
+          $label_additions[$key] = $plan_type->getAbbreviation();
+        }
       }
       elseif (!$base_object->type->needsYear && $base_object->hasField('field_year')) {
         $label = $base_object->get('field_year')->value;

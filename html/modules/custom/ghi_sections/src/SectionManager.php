@@ -190,7 +190,9 @@ class SectionManager {
         $tags[] = $shortname;
       }
       $tags[] = $base_object->getYear();
-      $tags[] = $base_object->getPlanTypeShortLabel();
+      if ($plan_type = $base_object->getPlanType()) {
+        $tags[] = $plan_type->getAbbreviation();
+      }
     }
 
     $tags = array_filter($tags);

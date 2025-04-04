@@ -209,12 +209,12 @@ trait GlobalSettingsTrait {
         }
         $row['name']['data']['tooltips']['#tooltips'][] = [
           '#theme' => 'hpc_tooltip',
-          '#tooltip' => $plan->getTypeName(TRZE),
+          '#tooltip' => $plan->getTypeName(TRUE),
           '#tag' => 'span',
-          '#tag_content' => $plan->getTypeShortName(TRUE),
+          '#tag_content' => $plan->getTypeShortName(),
           '#class' => [
             'plan-type-icon',
-            Html::getClass('plan-type-' . $plan->getTypeShortName(TRUE)),
+            Html::getClass('plan-type-' . $plan->getTypeShortName()),
           ],
         ];
         return $row;

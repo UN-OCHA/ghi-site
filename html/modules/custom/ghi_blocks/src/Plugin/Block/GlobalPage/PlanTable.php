@@ -265,10 +265,10 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'type' => [
           'data' => [
             'name' => [
-              '#markup' => $plan->getTypeShortName(TRUE),
+              '#markup' => $plan->getTypeShortName(),
             ],
           ],
-          'data-value' => $plan->getTypeShortName(TRUE),
+          'data-value' => $plan->getTypeShortName(),
         ],
         'inneed' => [
           'data' => [
