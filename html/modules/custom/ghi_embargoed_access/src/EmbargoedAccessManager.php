@@ -483,7 +483,7 @@ class EmbargoedAccessManager {
    */
   private function isProtectedEntityInSection($node) {
     $current_section = $this->getCurrentSectionNode();
-    if (!$current_section || ($node->id() != $current_section->id() && !$this->isProtected($current_section))) {
+    if (!$current_section || !$this->isProtected($current_section)) {
       return FALSE;
     }
     $is_same_section = $current_section && $node instanceof SectionNodeInterface && $node->id() == $current_section->id();
@@ -503,7 +503,7 @@ class EmbargoedAccessManager {
    */
   private function isProtectedEntityInDocument($node) {
     $current_document = $this->getCurrentDocumentNode();
-    if (!$current_document || ($node->id() != $current_document->id() && !$this->isProtected($current_document))) {
+    if (!$current_document || !$this->isProtected($current_document)) {
       return FALSE;
     }
     $is_same_document = $current_document && $node instanceof Document && $node->id() == $current_document->id();
