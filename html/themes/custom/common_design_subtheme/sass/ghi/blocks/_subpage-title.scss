@@ -49,5 +49,10 @@
         height: var(--cd-font-size--small);
       }
     }
+
+    &.has-revision-info p.revision-info {
+      position: absolute;
+      top: 2rem;
+    }
   }
 }
