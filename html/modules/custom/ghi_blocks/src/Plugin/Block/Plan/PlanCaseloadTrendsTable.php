@@ -275,7 +275,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       /** @var \Drupal\ghi_plans\Entity\Plan $plan */
       $plan = $section->getBaseObject();
       $plan_year = $plan->getYear();
-      $plan_type = $plan->getPlanTypeShortLabel(FALSE);
+      $plan_type = $plan->getPlanType()->getAbbreviation();
       $plan_types[$plan_year][$plan_type] = !empty($plan_types[$plan_year][$plan_type]) ? $plan_types[$plan_year][$plan_type] + 1 : 1;
     }
 
@@ -283,7 +283,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       /** @var \Drupal\ghi_plans\Entity\Plan $plan */
       $plan = $section->getBaseObject();
       $plan_year = $plan->getYear();
-      $plan_type = $plan->getPlanTypeShortLabel(FALSE);
+      $plan_type = $plan->getPlanType()->getAbbreviation();
 
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment[] $caseloads */
       $caseloads = $attachments_query->getAttachmentsByObject('plan', $plan->getSourceId(), ['type' => 'caseload']);
@@ -357,6 +357,9 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
    */
   private function getRelatedSections() {
     $section = $this->getCurrentSectionNode();
+    if (!$section && $plan_object = $this->getCurrentPlanObject()) {
+      $section = $this->sectionManager->loadSectionForBaseObject($plan_object);
+    }
     return $section ? $this->sectionManager->getRelatedSections($section) : [];
   }
 
