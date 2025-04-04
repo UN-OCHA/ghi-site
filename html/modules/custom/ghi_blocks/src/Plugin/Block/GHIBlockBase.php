@@ -982,7 +982,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $step_values = $form_state->cleanValues()->getValue($current_subform ?? []) ?? [];
     // Also get all other values formerly stored and fill in the blanks.
     $values = $this->getTemporarySettings($form_state);
-    $step_values += $values[$current_subform];
+    $step_values += $values[$current_subform] ?? [];
 
     if ($step_values === NULL) {
       $form_state->setRebuild($action == 'preview');
