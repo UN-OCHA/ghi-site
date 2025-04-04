@@ -302,21 +302,6 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   }
 
   /**
-   * Get the short version of the plan type label.
-   *
-   * @param bool $override
-   *   Whether the overridden label can be used if it's available.
-   *
-   * @return string|null
-   *   The short label of the plan type.
-   */
-  public function getPlanTypeShortLabel($override = TRUE) {
-    $plan_type = $this->getPlanType();
-    $plan_type_label = $override ? $this->getPlanSubtitle() : $plan_type->label();
-    return $plan_type_label ? $this->getPlanTypeShortName($plan_type_label) : NULL;
-  }
-
-  /**
    * Get the plan status label.
    *
    * @return string|null

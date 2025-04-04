@@ -6,7 +6,6 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_plans\Entity\PlanType;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
-use Drupal\hpc_common\Helpers\StringHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 
 /**
@@ -132,19 +131,6 @@ trait PlanTypeTrait {
       return $term;
     }
     return NULL;
-  }
-
-  /**
-   * Get the plan type short name.
-   *
-   * @param string $name
-   *   The original name of the plan type.
-   *
-   * @return string
-   *   A short name for the given plan type name.
-   */
-  public function getPlanTypeShortName($name) {
-    return StringHelper::getAbbreviation($name);
   }
 
 }
