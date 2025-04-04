@@ -12,6 +12,7 @@ use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Template\Attribute;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 
@@ -329,7 +330,7 @@ function common_design_subtheme_preprocess_page(&$variables) {
 }
 
 /**
- * Implements hook_preprocess_node().
+ * Implements hook_preprocess_user().
  */
 function common_design_subtheme_preprocess_user(&$variables) {
   $variables['attributes']['class'][] = 'content-width';
@@ -338,12 +339,37 @@ function common_design_subtheme_preprocess_user(&$variables) {
 /**
  * Implements hook_preprocess_node().
  */
+function common_design_subtheme_preprocess_node(&$variables) {
+  /** @var \Drupal\node\NodeInterface $node */
+  $node = $variables['node'];
+
+  // Check if we are on a full-page node revision view.
+  $route_match = \Drupal::routeMatch();
+  $is_revision_full_page = $route_match->getRouteName() == 'entity.node.revision' && $route_match->getParameter('node')?->id() === $node->id();
+
+  // The 'page' variable is set to TRUE here in two occasions:
+  // - Drupal has already decided that this is a full page view of the node.
+  // - The view mode is 'full' and we are on the entity.node.revision route for
+  //   this node.
+  $variables['page'] = $variables['page'] || ($variables['view_mode'] == 'full' && $is_revision_full_page);
+  if ($is_revision_full_page && !empty($variables['metadata'])) {
+    array_unshift($variables['metadata']['#items'], [
+      '#markup' => new TranslatableMarkup('Rev #@id', [
+        '@id' => $node->getRevisionId(),
+      ]),
+    ]);
+  }
+}
+
+/**
+ * Implements hook_preprocess_node__page().
+ */
 function common_design_subtheme_preprocess_node__page(&$variables) {
   $variables['attributes']['class'][] = 'content-width';
 }
 
 /**
- * Implements hook_preprocess_node().
+ * Implements hook_preprocess_node__article().
  */
 function common_design_subtheme_preprocess_node__article(&$variables) {
   $variables['social_links'] = [

@@ -5,6 +5,7 @@ namespace Drupal\ghi_subpages\Plugin\Block;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageIconInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
@@ -113,6 +114,18 @@ class SubpageTitle extends BlockBase implements ContainerFactoryPluginInterface 
         '#value' => $title_prefix,
       ];
       $build['title']['#attributes']['class'][] = 'has-title-prefix';
+    }
+
+    if (!$node->isDefaultRevision()) {
+      $build['title'][] = [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#attributes' => ['class' => ['revision-info']],
+        '#value' => new TranslatableMarkup('Rev #@id', [
+          '@id' => $node->getRevisionId(),
+        ]),
+      ];
+      $build['title']['#attributes']['class'][] = 'has-revision-info';
     }
 
     $title_tag = [
