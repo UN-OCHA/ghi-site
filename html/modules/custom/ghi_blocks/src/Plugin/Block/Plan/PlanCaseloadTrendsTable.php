@@ -8,6 +8,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_blocks\Traits\TableTrait;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_common\Traits\RenderArrayTrait;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
@@ -268,6 +269,13 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
 
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery $funding_query */
     $funding_query = $this->getQueryHandler('plan_funding');
+
+    // Filter out sections without a plan type.
+    $related_sections = array_filter($related_sections, function (SectionNodeInterface $section) {
+      /** @var \Drupal\ghi_plans\Entity\Plan $plan */
+      $plan = $section->getBaseObject();
+      return $plan->getPlanType() !== NULL;
+    });
 
     $plan_data = [];
     $plan_types = [];

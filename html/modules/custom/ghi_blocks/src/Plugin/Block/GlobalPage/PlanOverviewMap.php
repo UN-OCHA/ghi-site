@@ -233,7 +233,7 @@ class PlanOverviewMap extends GHIBlockBase {
         'tooltip' => implode(' ', [
           $plan_entity->getShortName(),
           $plan_entity->getYear(),
-          $plan->getTypeShortName(TRUE),
+          $plan->getTypeShortName(),
         ]),
         'tooltip_values' => [
           'in_need' => [
@@ -380,7 +380,7 @@ class PlanOverviewMap extends GHIBlockBase {
   /**
    * Build the content of the map modals.
    *
-   * @param object $plan
+   * @param \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan
    *   The plan object for the modal.
    * @param object $caseload
    *   The caseload object for the modal.
@@ -476,7 +476,7 @@ class PlanOverviewMap extends GHIBlockBase {
               '#attributes' => [
                 'data-toggle' => 'tooltip',
                 'data-tippy-content' => $this->t('Download the @type document', [
-                  '@type' => strtolower($plan->getTypeShortName()) == 'other' ? $this->t('plan') : $plan->getTypeShortName(),
+                  '@type' => strtolower($plan->getTypeName()) == 'other' ? $this->t('plan') : $plan->getTypeShortName(),
                 ]),
               ],
               'content' => DownloadHelper::getDownloadIcon($document_uri),

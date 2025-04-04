@@ -17,7 +17,7 @@ class TaxonomyHelper extends EntityHelper {
    * @param string $vid
    *   The vocabulary that the term belongs to.
    *
-   * @return \Drupal\taxonomy\Entity\TermInterface
+   * @return \Drupal\taxonomy\Entity\TermInterface|null
    *   The taxonomy term object if found.
    */
   public static function getTermById($tid, $vid) {
