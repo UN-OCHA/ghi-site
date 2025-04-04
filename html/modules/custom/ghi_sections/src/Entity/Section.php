@@ -4,6 +4,7 @@ namespace Drupal\ghi_sections\Entity;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
 use Drupal\node\Entity\Node;
@@ -43,6 +44,13 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
   public function getPageTitleMetaData() {
     $base_object = $this->getBaseObject();
     $meta_data = $base_object instanceof BaseObjectMetaDataInterface ? $base_object->getPageTitleMetaData() : NULL;
+    if ($meta_data && !$this->isDefaultRevision()) {
+      array_unshift($meta_data, [
+        '#markup' => new TranslatableMarkup('Rev #@id', [
+          '@id' => $this->getRevisionId(),
+        ]),
+      ]);
+    }
     return $meta_data;
   }
 
