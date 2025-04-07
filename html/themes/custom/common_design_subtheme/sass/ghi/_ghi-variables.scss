@@ -53,8 +53,10 @@
 
   // Plan type colors.
   --ghi-plan-type-hrp: var(--ghi-yellow);
+  --ghi-plan-type-hnrp: var(--ghi-plan-type-hrp);
+  --ghi-plan-type-srp: var(--ghi-plan-type-hrp);
   --ghi-plan-type-fa: #f7941e;
-  --ghi-plan-type-rrp: var(--ghi-grey--dark);
+  --ghi-plan-type-reg: var(--ghi-grey--dark);
   --ghi-plan-type-other: #ccc;
 
   // Legacy Hum Insight colors.

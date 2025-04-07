@@ -120,7 +120,7 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * Get the plan type.
    *
-   * @return \Drupal\taxonomy\TermInterface|null
+   * @return \Drupal\ghi_plans\Entity\PlanType|null
    *   The plan type.
    */
   public function getPlanType() {
