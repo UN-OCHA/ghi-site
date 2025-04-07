@@ -37,8 +37,10 @@
         ],
         plan_type_colors: {
           'hrp': root_styles.getPropertyValue('--ghi-plan-type-hrp'),
+          'hnrp': root_styles.getPropertyValue('--ghi-plan-type-hnrp'),
+          'srp': root_styles.getPropertyValue('--ghi-plan-type-srp'),
           'fa': root_styles.getPropertyValue('--ghi-plan-type-fa'),
-          'rrp': root_styles.getPropertyValue('--ghi-plan-type-rrp'),
+          'reg': root_styles.getPropertyValue('--ghi-plan-type-reg'),
           'other': root_styles.getPropertyValue('--ghi-plan-type-other'),
         },
         attrs: {
