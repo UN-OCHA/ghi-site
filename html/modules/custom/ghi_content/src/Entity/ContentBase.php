@@ -287,7 +287,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     $metadata = [];
     $metadata[] = [
       '#markup' => new TranslatableMarkup('Published on @date', [
-        '@date' => $this->getDateFormatter()->format($this->getCreatedTime(), 'custom', 'j F Y'),
+        '@date' => $this->getDateFormatter()->format($this->getCreatedTime(), 'custom', 'j F Y', 'UTC'),
       ]),
     ];
     $tags = $this->getDisplayTags();

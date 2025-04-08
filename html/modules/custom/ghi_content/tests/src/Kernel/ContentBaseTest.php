@@ -478,7 +478,7 @@ class ContentBaseTest extends KernelTestBase {
     $article = Article::create([
       'title' => 'Article title',
       'status' => NodeInterface::PUBLISHED,
-      'created' => strtotime('2024-06-01'),
+      'created' => strtotime('2024-06-01 UTC'),
       'field_tags' => [
         $this->createTerm($this->vocabulary, ['name' => 'Tag 1']),
         $this->createTerm($this->vocabulary, ['name' => 'Tag 2']),
