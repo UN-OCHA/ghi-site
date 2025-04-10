@@ -81,6 +81,8 @@
 
       .ui-dialog-title {
         display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
         align-items: self-start;
         color: var(--ghi-default-text-color) !important;
 
@@ -96,8 +98,9 @@
         }
 
         .title-additional-info {
-          float: right;
-          margin-right: 3rem;
+          display: flex;
+          flex-grow: 1;
+          justify-content: flex-end;
         }
       }
     }
