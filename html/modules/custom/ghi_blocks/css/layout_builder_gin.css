@@ -96,7 +96,7 @@ input[type="checkbox"][disabled="disabled"]:not(:checked) {
 }
 
 /**
- * Fix issues z-index issues introduced mainly by GIN Layout Builder.
+ * Fix z-index issues introduced mainly by GIN Layout Builder.
  */
 .ui-widget-overlay.ui-front {
   z-index: 1003;
@@ -117,4 +117,7 @@ input[type="checkbox"][disabled="disabled"]:not(:checked) {
   display: flex;
   align-items: center;
   box-sizing: border-box;
+}
+body.layout-builder-ipe-editing .d3-sparkline-tooltip {
+  z-index: 1005;
 }
