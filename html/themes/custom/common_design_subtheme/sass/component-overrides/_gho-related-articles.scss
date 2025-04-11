@@ -6,6 +6,10 @@
   padding: 0;
   border-top: 0;
 
+  .gho-related-articles__list article:first-child .gho-related-article {
+    margin-top: 0;
+  }
+
   .node--unpublished .gho-related-article {
     outline: 4px dashed #ffc310;
   }
