@@ -317,7 +317,7 @@ class SubpagesPagesForm extends FormBase {
       ];
     }
 
-    $this->buildBulkForm($form, $form_state, !empty($rows) ? $this->getBulkFormActions() : []);
+    $this->buildBulkForm($form, $form_state, $this->getBulkFormActions());
 
     return $form;
   }

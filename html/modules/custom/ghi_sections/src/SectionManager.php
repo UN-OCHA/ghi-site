@@ -147,7 +147,7 @@ class SectionManager {
     if (empty($tags)) {
       return FALSE;
     }
-    if ($this->loadSectionForBaseObject($base_object)) {
+    if ($this->loadSectionForBaseObject($base_object, $values['year'] ?? NULL)) {
       // There is already a section for this base object.
       return FALSE;
     }
