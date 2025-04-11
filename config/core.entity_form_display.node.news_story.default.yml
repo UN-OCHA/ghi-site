@@ -7,9 +7,11 @@ dependencies:
     - field.field.node.news_story.field_display_author
     - field.field.node.news_story.field_image
     - field.field.node.news_story.field_news_story_tags
+    - image.style.thumbnail
     - node.type.news_story
   module:
-    - file
+    - active_tags
+    - image
     - path
     - text
 id: node.news_story.default
@@ -42,14 +44,15 @@ content:
       placeholder: ''
     third_party_settings: {  }
   field_image:
-    type: file_generic
+    type: image_image
     weight: 4
     region: content
     settings:
       progress_indicator: throbber
+      preview_image_style: thumbnail
     third_party_settings: {  }
   field_news_story_tags:
-    type: entity_reference_autocomplete
+    type: entity_reference_autocomplete_active_tags
     weight: 121
     region: content
     settings:
@@ -57,6 +60,25 @@ content:
       match_limit: 10
       size: 60
       placeholder: ''
+      autocomplete_route_name: active_tags.entity_autocomplete
+      style: rectangle
+      selection_handler: default
+      min_length: 1
+      delimiter: ''
+      show_entity_id: 0
+      show_avatar: 1
+      convert_uppercase: 0
+      string_override: 0
+      show_info_label: 0
+      info_label: ''
+      not_exist_message: "No matches found, Press Enter to add <strong>'@term'</strong>."
+      not_found_message: "No matching suggestions found for <strong>'@term'</strong>."
+      limit_tag_message: 'Allowed number of values limited to <strong>@cardinality</strong>.'
+    third_party_settings: {  }
+  image_crop:
+    weight: -2
+    region: content
+    settings: {  }
     third_party_settings: {  }
   langcode:
     type: language_select
@@ -109,5 +131,10 @@ content:
       match_limit: 10
       size: 60
       placeholder: ''
+    third_party_settings: {  }
+  url_redirects:
+    weight: 50
+    region: content
+    settings: {  }
     third_party_settings: {  }
 hidden: {  }

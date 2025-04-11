@@ -14,3 +14,4 @@ dependencies:
   - publishcontent:publishcontent
   - pathauto:pathauto
   - layout_builder_modal:layout_builder_modal
+  - active_tags:active_tags
