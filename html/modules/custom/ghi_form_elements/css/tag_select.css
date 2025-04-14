@@ -1,6 +1,6 @@
 .form-type--tag_selection .glb-form-checkboxes {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
 }
 .form-type--tag_selection .glb-form-checkboxes .glb-form-type--checkbox {
   margin-top: .5em !important;
