@@ -24,7 +24,13 @@ active_tags:
   css:
     component:
       css/active_tags.css: {}
+      css/tag_autocomplete.css: {}
+  js:
+    js/tag_autocomplete.js: {}
   dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
     - active_tags/assets.gin
 
 attachment_select:

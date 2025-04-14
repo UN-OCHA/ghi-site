@@ -81,6 +81,9 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
     // Get the defaults.
     $default_tags = $this->getSubmittedValue($element, $form_state, 'tags') ?? ($this->config['article_selection_form']['tags'] ?? []);
     $default_tags['tag_ids'] = array_combine($section_tag_ids, $section_tag_ids) + ($default_tags['tag_ids'] ?? []);
+    $default_tags['tag_ids'] = array_map(function ($tag_id) {
+      return ['target_id' => $tag_id];
+    }, $default_tags['tag_ids']);
 
     $element['tags'] = [
       '#type' => 'tag_autocomplete',
