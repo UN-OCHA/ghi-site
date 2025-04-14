@@ -57,7 +57,7 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
    */
   public function getCustomActions() {
     return [
-      'article_selection_form' => $this->t('Articles'),
+      'article_selection_form' => $this->t('Article tags'),
       'display_form' => $this->t('Display'),
     ];
   }
@@ -78,38 +78,15 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
     $section_tags = $section ? $this->articleManager->getTags($section) : [];
     $section_tag_ids = array_keys($section_tags);
 
-    if ($section && $this->isSectionNode($section)) {
-      // Get the available tags, section tags will be first.
-      $available_nodes = $this->articleManager->loadNodesForSection($section);
-    }
-    else {
-      // This is a global section or a global landing page. Get all available
-      // tags and nodes.
-      $available_nodes = $this->articleManager->loadAllNodes();
-    }
-    $available_tags = $section_tags + $this->articleManager->getAvailableTags($available_nodes);
-    $node_ids_by_tag = $this->articleManager->getNodeIdsGroupedByTag($available_nodes);
-    $node_previews = $this->articleManager->getNodePreviews($available_nodes, 'grid');
-
     // Get the defaults.
     $default_tags = $this->getSubmittedValue($element, $form_state, 'tags') ?? ($this->config['article_selection_form']['tags'] ?? []);
     $default_tags['tag_ids'] = array_combine($section_tag_ids, $section_tag_ids) + ($default_tags['tag_ids'] ?? []);
 
     $element['tags'] = [
-      '#type' => 'tag_selection',
+      '#type' => 'tag_autocomplete',
       '#title' => $this->t('Tags'),
-      '#tags' => $available_tags,
+      // '#tags' => $available_tags,
       '#default_value' => $default_tags,
-      '#preview_summary' => [
-        'ids_by_tag' => $node_ids_by_tag,
-        'previews' => $node_previews,
-        'labels' => [
-          'singular' => $this->t('1 article'),
-          'plural' => $this->t('@count articles'),
-        ],
-      ],
-      // Section tags can't be unselected because they define the basic content
-      // "universe".
       '#disabled_tags' => $section_tag_ids,
     ];
     return $element;
@@ -120,13 +97,9 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
    */
   public function displayForm($element, FormStateInterface $form_state) {
     $element['type'] = [
-      '#type' => 'radios',
-      '#title' => $this->t('Display type'),
-      '#options' => $this->getDisplayTypeOptions(),
-      '#default_value' => $this->getSubmittedValue($element, $form_state, 'type') ?? ($this->config['display_form']['type'] ?? self::DISPLAY_TYPE_CARDS),
+      '#type' => 'value',
+      '#value' => array_key_first($this->getDisplayTypeOptions()),
     ];
-    $element['type']['table']['#disabled'] = TRUE;
-    $element['type']['table']['#attributes']['title'] = $this->t('Not yet supported');
 
     $type_selector = FormElementHelper::getStateSelector($element, ['type']);
     $element['cards'] = [
@@ -136,6 +109,7 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
     $element['cards']['populate'] = [
       '#type' => 'radios',
       '#title' => $this->t('Population method'),
+      '#description' => $this->t('Automatic selection will show the N most recently published articles, in reverse date order. Manual selection allows you to choose which articles to show (and which to highlight).'),
       '#options' => $this->getCardPopulateOptions(),
       '#default_value' => $this->getSubmittedValue($element, $form_state, [
         'cards',
@@ -339,6 +313,29 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
   }
 
   /**
+   * Get the currently configured tag ids.
+   *
+   * This works with both the old style configuration of an array of ids as
+   * well as with the new style configuration with an array of arrays having a
+   * target_id key.
+   *
+   * @return int[]
+   *   An array of tag ids keyed by tag id.
+   */
+  private function getConfiguredTagIds() {
+    $tag_ids = [];
+    foreach ($this->config['article_selection_form']['tags']['tag_ids'] ?? [] as $item) {
+      if (is_int($item)) {
+        $tag_ids[$item] = $item;
+      }
+      if (is_array($item) && !empty($item['target_id'])) {
+        $tag_ids[$item['target_id']] = $item['target_id'];
+      }
+    }
+    return $tag_ids;
+  }
+
+  /**
    * Get the applicabble tags for this block.
    *
    * @return array
@@ -348,7 +345,8 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
     $section = $this->getContextValue('section');
     $section_tags = $section ? $this->articleManager->getTags($section) : [];
     $section_tag_ids = array_keys($section_tags);
-    $tag_ids = array_combine($section_tag_ids, $section_tag_ids) + array_filter($this->config['article_selection_form']['tags']['tag_ids'] ?? []);
+    $configured_tags = array_filter($this->getConfiguredTagIds());
+    $tag_ids = array_combine($section_tag_ids, $section_tag_ids) + $configured_tags;
     return $tag_ids;
   }
 
