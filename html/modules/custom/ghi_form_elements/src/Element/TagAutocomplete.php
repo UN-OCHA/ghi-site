@@ -111,9 +111,7 @@ class TagAutocomplete extends FormElementBase {
     unset($element['#title']);
 
     if (!empty($element['#disabled_tags'])) {
-      foreach ($element['#disabled_tags'] as $id) {
-        $element['tag_ids'][$id]['#disabled'] = TRUE;
-      }
+      $element['#wrapper_attributes']['disabled-tags'] = implode('-', $element['#disabled_tags']);
     }
 
     $element['tag_op'] = [
