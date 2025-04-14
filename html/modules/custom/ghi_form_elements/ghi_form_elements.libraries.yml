@@ -24,6 +24,8 @@ active_tags:
   css:
     component:
       css/active_tags.css: {}
+  dependencies:
+    - active_tags/assets.gin
 
 attachment_select:
   css:
