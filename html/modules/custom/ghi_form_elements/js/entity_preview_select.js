@@ -115,27 +115,27 @@
     var summary_selected = null;
     var summary_featured = null;
     if (limit_selected) {
-      summary_selected = Drupal.t('!selected/!limit selected', {
+      summary_selected = Drupal.t('<strong>Selected:</strong> !selected / !limit', {
         '!selected': selected.length,
         '!limit': limit_selected,
       });
     }
     else if (allow_selected) {
-      summary_selected = Drupal.t('!selected selected', {
+      summary_selected = Drupal.t('<strong>Selected:</strong> !selected', {
         '!selected': selected.length,
       });
     }
     if (limit_featured) {
-      summary_featured = Drupal.t('!selected/!limit featured', {
+      summary_featured = Drupal.t('<strong>Featured:</strong> !selected / !limit', {
         '!selected': featured.length,
         '!limit': limit_featured,
       });
     }
     if (summary_selected || summary_featured) {
-      $wrapper.find('.preview-summary').html(' (' + [
+      $wrapper.find('.preview-summary').html([
         summary_selected,
         summary_featured
-      ].filter((x) => x).join(', ') + ')');
+      ].filter((x) => x).join(', '));
     }
     else {
       $wrapper.find('.preview-summary').html();

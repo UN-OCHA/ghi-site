@@ -130,6 +130,11 @@ class EntityPreviewSelect extends FormElementBase {
       }
       $input[$value_key] = array_filter(explode(',', $input[$value_key]));
     }
+    if (!empty($input['order']) && !empty($input['selected'])) {
+      $selected_order = array_values(array_intersect($input['order'], $input['selected']));
+      $input['order'] = array_diff($input['order'], $selected_order);
+      $input['order'] = array_merge($selected_order, $input['order']);
+    }
   }
 
   /**
@@ -166,6 +171,7 @@ class EntityPreviewSelect extends FormElementBase {
     foreach ($entities as $entity) {
       $entity_view = $entity_type_manager->getViewBuilder($entity_type)->view($entity, $view_mode);
       $previews[$entity->id()] = \Drupal::service('renderer')->render($entity_view);
+      unset($entity_view);
     }
 
     $element['#attached']['library'][] = 'ghi_form_elements/entity_preview_select';

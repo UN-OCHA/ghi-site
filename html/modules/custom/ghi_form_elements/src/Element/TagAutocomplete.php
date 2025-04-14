@@ -11,8 +11,8 @@ use Drupal\Core\Render\Element\FormElementBase;
 /**
  * Provides an element for tag selection.
  */
-#[FormElement('tag_selection')]
-class TagSelect extends FormElementBase {
+#[FormElement('tag_autocomplete')]
+class TagAutocomplete extends FormElementBase {
 
   /**
    * {@inheritdoc}
@@ -27,12 +27,12 @@ class TagSelect extends FormElementBase {
       '#input' => TRUE,
       '#tree' => TRUE,
       '#process' => [
-        [$class, 'processTagSelect'],
+        [$class, 'processTagAutocomplete'],
         [$class, 'processAjaxForm'],
         [$class, 'processGroup'],
       ],
       '#pre_render' => [
-        [$class, 'preRenderTagSelect'],
+        [$class, 'preRenderTagAutocomplete'],
         [$class, 'preRenderGroup'],
       ],
       '#element_submit' => [
@@ -67,7 +67,6 @@ class TagSelect extends FormElementBase {
       if (!array_key_exists('tag_op', $input) || $input['tag_op'] === NULL) {
         $input['tag_op'] = 'OR';
       }
-      $input['tag_content_selected'] = array_filter(!is_array($input['tag_content_selected']) ? explode(',', $input['tag_content_selected']) : $input['tag_content_selected']);
       return $input;
     }
     return NULL;
@@ -79,20 +78,35 @@ class TagSelect extends FormElementBase {
    * This is called during form build. Note that it is not possible to store
    * any arbitrary data inside the form_state object.
    */
-  public static function processTagSelect(array &$element, FormStateInterface $form_state) {
-
+  public static function processTagAutocomplete(array &$element, FormStateInterface $form_state) {
     // Get a name that let's us identify this element.
     $name = Html::getUniqueId(implode('-', array_merge(['edit'], $element['#parents'])));
+    $default_tag_ids = !empty($element['#default_value']['tag_ids']) ? array_map(function ($item) {
+      return $item['target_id'];
+    }, $element['#default_value']['tag_ids']) : NULL;
+    $default_tags = $default_tag_ids ? \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadMultiple($default_tag_ids) : [];
 
     $element['#wrapper_attributes']['data-drupal-selector'] = $name;
     $element['tag_ids'] = [
-      '#type' => 'checkboxes',
-      '#title' => $element['#title'],
-      '#options' => $element['#tags'],
-      '#default_value' => $element['#default_value']['tag_ids'] ?? [],
-      '#attached' => [
-        'library' => ['ghi_form_elements/tag_select.preview'],
+      '#type' => 'entity_autocomplete_active_tags',
+      '#title' => t('Tags'),
+      '#description' => t('Select the tags associated with this section. This controls the content that will be available.'),
+      '#target_type' => 'taxonomy_term',
+      '#selection_handler' => 'default',
+      '#selection_settings' => [
+        'target_bundles' => ['tags'],
       ],
+      '#autocreate' => [
+        'bundle' => 'tags',
+        'uid' => \Drupal::currentUser()->id(),
+      ],
+      '#tags' => TRUE,
+      '#default_value' => $default_tags,
+      '#attached' => [
+        'library' => ['ghi_form_elements/active_tags'],
+      ],
+      '#element_validate' => ['ghi_form_elements_entity_autocomplete_active_tags_element_validate'],
+      '#maxlength' => NULL,
     ];
     unset($element['#title']);
 
@@ -100,11 +114,6 @@ class TagSelect extends FormElementBase {
       foreach ($element['#disabled_tags'] as $id) {
         $element['tag_ids'][$id]['#disabled'] = TRUE;
       }
-    }
-
-    if (!empty($element['#preview_summary']) && !empty($element['#preview_summary']['ids_by_tag'])) {
-      $element['#attached']['library'][] = 'ghi_form_elements/tag_select.preview';
-      $element['#attached']['drupalSettings']['tag_select'][$name] = $element['#preview_summary'];
     }
 
     $element['tag_op'] = [
@@ -115,25 +124,19 @@ class TagSelect extends FormElementBase {
       '#default_value' => $element['#default_value']['tag_op'] ?? FALSE,
     ];
 
-    $element['tag_content_selected'] = [
-      '#type' => 'hidden',
-      '#default_value' => implode(',', $element['#default_value']['tag_content_selected'] ?? []),
-      '#attributes' => ['class' => Html::getClass('selected_items')],
-    ];
-
     return $element;
   }
 
   /**
    * Prerender callback.
    */
-  public static function preRenderTagSelect(array $element) {
-    $element['#attributes']['type'] = 'tag_select';
+  public static function preRenderTagAutocomplete(array $element) {
+    $element['#attributes']['type'] = 'tag_autocomplete';
     Element::setAttributes($element, ['id', 'name', 'value']);
     // Sets the necessary attributes, such as the error class for validation.
     // Without this line the field will not be hightlighted, if an error
     // occurred.
-    static::setAttributes($element, ['form-tag-select']);
+    static::setAttributes($element, ['form-tag-autocomplete']);
     return $element;
   }
 

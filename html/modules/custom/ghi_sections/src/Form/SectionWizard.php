@@ -141,7 +141,7 @@ class SectionWizard extends WizardBase {
     $form['tags'] = [
       '#type' => 'entity_autocomplete_active_tags',
       '#title' => $this->t('Tags'),
-      '#description' => $this->t('Select the tags associated with this section. This controls the content that will be available. Enter multiple tags separated by comma.'),
+      '#description' => $this->t('Select the tags associated with this section. This controls the content that will be available.'),
       '#target_type' => 'taxonomy_term',
       '#selection_handler' => 'default',
       '#selection_settings' => [
