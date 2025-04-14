@@ -24,8 +24,10 @@ class IndicatorAttachment extends DataAttachment {
    * {@inheritdoc}
    */
   public function getSingleValue($index, ?array $reporting_periods = NULL, $data_point_conf = []) {
+    $monitoring_period = $data_point_conf['monitoring_period'] ?? 'latest';
+    $reporting_periods = $this->getReportingPeriods($reporting_periods, $monitoring_period);
     if (!$this->isApiCalculated($index, $data_point_conf)) {
-      $monitoring_period = !empty($reporting_periods) ? array_key_last($reporting_periods) : 'latest';
+      $monitoring_period = !empty($reporting_periods) ? array_key_last($reporting_periods) : $monitoring_period;
       return $this->getValueForDataPoint($index, $monitoring_period);
     }
     $value = NULL;
@@ -73,8 +75,10 @@ class IndicatorAttachment extends DataAttachment {
   protected function getTooltip($conf) {
     $tooltip = parent::getTooltip($conf);
 
-    // Get the last published monitoring period.
-    $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
+    // Get the last published monitoring period based on the selected periods
+    // if any.
+    $monitoring_period = $conf['data_points'][0]['monitoring_period'] ?? 'latest';
+    $reporting_periods = $this->getReportingPeriods(NULL, $monitoring_period);
     $last_reporting_period = end($reporting_periods);
     if (!$last_reporting_period) {
       return $tooltip;
