@@ -177,7 +177,8 @@ class ArticleCollection extends GHIBlockBase implements MultiStepFormBlockInterf
    */
   public function getBlockContext() {
     return [
-      'section' => $this->getCurrentBaseEntity(),
+      'page_node' => $this->getCurrentBaseEntity(),
+      'section' => $this->getCurrentSectionNode(),
     ];
   }
 
