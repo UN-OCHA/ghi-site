@@ -7,7 +7,6 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\hpc_api\Query\EndpointQueryManager;
-use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -41,7 +40,7 @@ class DisaggregationModalController extends ControllerBase {
   /**
    * Get the title for the modal.
    */
-  private function modalTitle(DataAttachment $attachment, $metric, $reporting_period) {
+  private function modalTitle(DataAttachment $attachment, $metric, $reporting_period_id) {
     $metrics = $attachment->getMetricFields();
     $entity = $attachment->getSourceEntity();
     $icon = $entity instanceof GoverningEntity ? $entity->icon : NULL;
@@ -52,11 +51,8 @@ class DisaggregationModalController extends ControllerBase {
     $title .= $entity->getName() . ' | ' . $metrics[$metric];
 
     if ($attachment->isMeasurementField($metrics[$metric])) {
-      $title .= ThemeHelper::render([
-        '#theme' => 'hpc_reporting_period',
-        '#reporting_period' => $attachment->getReportingPeriod($reporting_period),
-        '#format_string' => '<span class="title-additional-info">Monitoring period @period_number: @date_range</span>',
-      ], FALSE);
+      $reporting_period = $attachment->getReportingPeriod($reporting_period_id);
+      $title .= $reporting_period->format('<span class="title-additional-info">Monitoring period @period_number: @date_range</span>');
     }
     return Markup::create($title);
   }

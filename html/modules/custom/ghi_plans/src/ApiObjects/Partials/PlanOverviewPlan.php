@@ -419,7 +419,7 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * Get the last published reporting period.
    *
-   * @return object|null
+   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
    *   The reporting period object or NULL.
    */
   public function getLastPublishedReportingPeriod() {

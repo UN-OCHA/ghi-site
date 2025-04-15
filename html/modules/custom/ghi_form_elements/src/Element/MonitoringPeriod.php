@@ -8,7 +8,6 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\Select;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
-use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
  * Provides a monitoring period form element.
@@ -133,10 +132,7 @@ class MonitoringPeriod extends Select {
   public static function getReportingPeriodOptions($plan_id) {
     $monitoring_periods = self::getPlanReportingPeriods($plan_id, TRUE);
     return array_map(function ($period) {
-      return ThemeHelper::render([
-        '#theme' => 'hpc_reporting_period',
-        '#reporting_period' => $period,
-      ], FALSE);
+      return $period->format('#@period_number: @date_range');
     }, $monitoring_periods);
   }
 

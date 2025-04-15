@@ -2,8 +2,6 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
-use Drupal\hpc_common\Helpers\ThemeHelper;
-
 /**
  * Abstraction for API data attachment objects.
  */
@@ -118,11 +116,7 @@ class IndicatorAttachment extends DataAttachment {
   public function formatCalculationTooltip($monitoring_period) {
     $tooltip_icon = NULL;
     $tooltip_text = NULL;
-    $reporting_period_text = ThemeHelper::render([
-      '#theme' => 'hpc_reporting_period',
-      '#reporting_period' => $monitoring_period,
-      '#format_string' => ', as of date @end_date',
-    ], FALSE);
+    $reporting_period_text = $monitoring_period->format(', as of date @end_date');
     $calculation_method = $this->getCalculationMethod();
     $t_options = ['langcode' => $this->getPlanLanguage()];
     switch ($calculation_method) {

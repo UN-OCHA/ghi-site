@@ -548,7 +548,7 @@ class AttachmentTest extends ApiObjectTestBase {
 
     $tooltip = $attachment->formatCalculationTooltip($monitoring_periods[1]);
     $this->assertEquals('hpc_tooltip', $tooltip['#theme']);
-    $this->assertEquals('This value is the sum of all monitoring periods values', $tooltip['#tooltip']);
+    $this->assertEquals('This value is the sum of all monitoring periods values, as of date 30 Jun 2023', $tooltip['#tooltip']);
     $this->assertEquals('functions', $tooltip['#tag_content']['#icon']);
   }
 

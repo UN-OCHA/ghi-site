@@ -16,7 +16,6 @@ use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
-use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
  * Abstraction for API data attachment objects.
@@ -1120,8 +1119,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @param int $period_id
    *   The reporting period id.
    *
-   * @return object
-   *   A reporting period object.
+   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
+   *   A reporting period object or NULL.
    */
   public function getReportingPeriod($period_id) {
     $plan_id = $this->getPlanId();
@@ -1218,6 +1217,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @throws \Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException
    */
   public function getValue(array $conf) {
+    $this->handleKnownConfigIssues($conf);
     switch ($conf['processing']) {
       case 'single':
         return $this->getSingleValue($conf['data_points'][0]['index'], NULL, $conf['data_points'][0]);
@@ -1414,6 +1414,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       '#type' => 'container',
       '#reporting_period' => $this->getLatestPublishedReportingPeriod($this->getPlanId()) ?? 'latest',
     ];
+    $this->handleKnownConfigIssues($conf);
     // Create a render array for the actual value.
     if (empty($conf['widget']) || $conf['widget'] == 'none') {
       $build[] = $this->formatAsText($conf);
@@ -1702,11 +1703,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       case 'icon':
         $build = [
           '#theme' => 'hpc_tooltip',
-          '#tooltip' => ThemeHelper::render(array_filter([
-            '#theme' => 'hpc_reporting_period',
-            '#reporting_period' => $monitoring_period,
-            '#format_string' => $format_string,
-          ]), FALSE),
+          '#tooltip' => $monitoring_period->format($format_string),
           '#tag_content' => [
             '#theme' => 'hpc_icon',
             '#icon' => 'calendar_today',
@@ -1716,11 +1713,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
         break;
 
       case 'text':
-        $build = array_filter([
-          '#theme' => 'hpc_reporting_period',
-          '#reporting_period' => $monitoring_period,
-          '#format_string' => $format_string,
-        ]);
+        $build = $monitoring_period->format($format_string);
         break;
     }
     return $build;
@@ -1742,6 +1735,22 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       '#tooltip' => $comment,
       '#tooltip_theme' => 'measurement-comment',
     ];
+  }
+
+  /**
+   * Fix some known issues with existing config.
+   *
+   * @param array $conf
+   *   A configuration object for a data point.
+   */
+  private function handleKnownConfigIssues(array &$conf) {
+    // Sanity check to cope with invalid configuration.
+    if (!empty($conf['data_points'][0]['monitoring_period']) && is_object($conf['data_points'][0]['monitoring_period'])) {
+      $conf['data_points'][0]['monitoring_period'] = $conf['data_points'][0]['monitoring_period']->monitoring_period ?? 'latest';
+    }
+    if (!empty($conf['data_points'][1]['monitoring_period']) && is_object($conf['data_points'][1]['monitoring_period'])) {
+      $conf['data_points'][1]['monitoring_period'] = $conf['data_points'][1]['monitoring_period']->monitoring_period ?? 'latest';
+    }
   }
 
   /**

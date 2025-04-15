@@ -70,6 +70,7 @@
 
           .value {
             display: flex;
+            align-items: center;
             gap: 0.3rem;
             font-size: var(--cd-font-size--small);
             font-weight: bold;
@@ -81,7 +82,7 @@
             }
             i.tooltip.monitoring-period {
               position: relative;
-              top: 1px;
+              top: -1px;
             }
 
             .hpc-percent-progress-bar-wrapper {
