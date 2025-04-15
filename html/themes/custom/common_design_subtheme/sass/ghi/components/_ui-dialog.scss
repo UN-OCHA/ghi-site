@@ -35,14 +35,14 @@
     max-width: 1280px;
     margin: 1rem;
     border: 0 none !important;
-    border-radius: var(--ghi-ui-dialog-border-radius);
+    border-radius: var(--ghi-ui-dialog-border-radius) !important;
     background: var(--ghi-grey--background) !important;
 
     .ui-dialog-titlebar {
       padding: 24px;
       border: 1px solid var(--cd-default-border-color);
-      border-top-left-radius: var(--ghi-ui-dialog-border-radius);
-      border-top-right-radius: var(--ghi-ui-dialog-border-radius);
+      border-top-left-radius: var(--ghi-ui-dialog-border-radius) !important;
+      border-top-right-radius: var(--ghi-ui-dialog-border-radius) !important;
       background: var(--cd-white) !important;
       line-height: 1.2;
 
@@ -85,6 +85,7 @@
         flex-wrap: wrap;
         align-items: self-start;
         color: var(--ghi-default-text-color) !important;
+        font-weight: 500 !important;
 
         .cluster-icon {
           display: inline-block;

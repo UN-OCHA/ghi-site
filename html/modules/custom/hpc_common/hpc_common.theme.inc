@@ -9,9 +9,6 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Template\Attribute;
-use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
-use Drupal\hpc_api\Query\EndpointQuery;
-use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
@@ -375,53 +372,6 @@ function hpc_common_preprocess_hpc_icon(array &$vars) {
     $attributes->addClass('cd-button--icon');
   }
   $vars['attributes'] = $attributes;
-}
-
-/**
- * Preprocess a reporting period as text.
- */
-function hpc_common_preprocess_hpc_reporting_period(array &$vars) {
-  $vars['output'] = NULL;
-  $reporting_period = $vars['reporting_period'];
-  if (!$reporting_period) {
-    return;
-  }
-
-  $format_string = $vars['format_string'];
-
-  if (is_array($reporting_period)) {
-    /** @var \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[] $reporting_period */
-    // Handle multiple periods.
-    ArrayHelper::sortObjectsByNumericProperty($reporting_period, 'getPeriodNumber', EndpointQuery::SORT_ASC);
-    $first = reset($reporting_period);
-    $last = end($reporting_period);
-    $period_number = $first != $last ? $first->getPeriodNumber() . ' - ' . $last->getPeriodNumber() : $first->getPeriodNumber();
-
-    $start_date = $first->formatStartDate();
-    $end_date = $last->formatEndDate();
-    if ($first->formatStartDate('Y') == $last->formatEndDate('Y')) {
-      $start_date = $first->formatStartDate(PlanReportingPeriod::FORMAT_DATE_SHORT);
-    }
-
-    $vars['output'] = new FormattableMarkup(trim($format_string), [
-      '@period_number' => $period_number,
-      '@date_range' => $start_date . ' - ' . $end_date,
-      '@plan_start_date' => $first->getPlanStartDate(),
-      '@start_date' => $start_date,
-      '@end_date' => $end_date,
-    ]);
-  }
-  else {
-    /** @var \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod $reporting_period */
-    // Handle a single period.
-    $vars['output'] = new FormattableMarkup(trim($format_string), [
-      '@period_number' => $reporting_period->getPeriodNumber(),
-      '@date_range' => $reporting_period->formatDateRange(),
-      '@data_range_cumulative' => $reporting_period->formatCumulativeDateRange(),
-      '@start_date' => $reporting_period->formatStartDate(),
-      '@end_date' => $reporting_period->formatEndDate(),
-    ]);
-  }
 }
 
 /**
