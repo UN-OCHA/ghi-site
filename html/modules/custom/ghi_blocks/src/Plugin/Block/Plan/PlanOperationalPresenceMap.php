@@ -906,7 +906,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
 
       // Filter out all locations which do not have a GEOJSON file.
       $locations = array_filter($locations, function ($location) {
-        return !empty($location->filepath);
+        return $location->hasGeoJsonFile();
       });
 
       // Done.
