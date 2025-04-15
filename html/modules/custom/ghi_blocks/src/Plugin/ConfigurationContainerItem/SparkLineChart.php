@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
@@ -211,7 +212,6 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     $baseline = $show_baseline ? $this->get('baseline') : NULL;
     $options = $attachment->getMetricFields();
     $decimal_format = $plan_object->getDecimalFormat();
-    $tooltip_format = (string) $this->t('Monitoring period #@period_number<br />@date_range');
 
     // Get the monitoring periods.
     $reporting_periods = $this->getReportingPeriods();
@@ -274,11 +274,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
       // And theme the tooltip.
       $tooltips[$reporting_period->id()] = ThemeHelper::render([
         '#theme' => 'hpc_sparkline_tooltip',
-        '#title' => [
-          '#theme' => 'hpc_reporting_period',
-          '#reporting_period' => $reporting_period,
-          '#format_string' => $tooltip_format,
-        ],
+        '#title' => Markup::create($reporting_period->format((string) $this->t('Monitoring period #@period_number<br />@date_range'))),
         '#items' => $tooltip_items,
       ], FALSE);
     }

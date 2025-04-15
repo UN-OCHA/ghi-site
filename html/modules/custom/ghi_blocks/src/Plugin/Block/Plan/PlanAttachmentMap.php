@@ -19,7 +19,6 @@ use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
-use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 
 /**
@@ -179,11 +178,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $decimal_format = $plan_base_object->getDecimalFormat();
     $reporting_periods = $this->getPlanReportingPeriods($plan_id);
     $reporting_periods_rendered = array_map(function ($reporting_period) {
-      return ThemeHelper::render([
-        '#theme' => 'hpc_reporting_period',
-        '#reporting_period' => $reporting_period,
-        '#format_string' => 'Monitoring period #@period_number: @date_range',
-      ]);
+      return $reporting_period->format('Monitoring period #@period_number: @date_range');
     }, $reporting_periods);
     $reporting_period_id = $this->getCurrentReportingPeriod();
     $configured_reporting_periods = $this->getConfiguredReportingPeriods();
@@ -436,11 +431,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     return [
       'location_data' => $location_data,
       'modal_contents' => $modal_contents,
-      'monitoring_period' => $reporting_period && $metric_item['is_measurement'] ? ThemeHelper::render([
-        '#theme' => 'hpc_reporting_period',
-        '#reporting_period' => $reporting_period,
-        '#format_string' => 'Monitoring period #@period_number<br>@date_range',
-      ], FALSE) : NULL,
+      'monitoring_period' => $reporting_period && $metric_item['is_measurement'] ? $reporting_period->format('Monitoring period #@period_number<br>@date_range') : NULL,
     ];
   }
 
@@ -782,6 +773,22 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         '#uri' => $this->getCurrentUri(),
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBlockConfig() {
+    $config = parent::getBlockConfig();
+    if (empty($config['map']['appearance']['circle']['monitoring_period'])) {
+      return $config;
+    }
+    // There is a very limited set of plans that has an object as the default
+    // value. We correct that here.
+    if (is_object($config['map']['appearance']['circle']['monitoring_period'])) {
+      $config['map']['appearance']['circle']['monitoring_period'] = $config['map']['appearance']['circle']['monitoring_period']->monitoring_period;
+    }
+    return $config;
   }
 
   /**
