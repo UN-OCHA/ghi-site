@@ -386,7 +386,7 @@ class PlanOverviewMap extends GHIBlockBase {
    *   The caseload object for the modal.
    * @param object $funding
    *   The funding object for the modal.
-   * @param object $reporting_period
+   * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod $reporting_period
    *   The reporting period object for the modal.
    * @param object $footnotes
    *   The footnotes to be used if any.
@@ -431,12 +431,8 @@ class PlanOverviewMap extends GHIBlockBase {
         'label' => $this->t('Reached (%)'),
         'value' => (!empty($reporting_period) ? ThemeHelper::render([
           '#theme' => 'hpc_tooltip',
-          '#tooltip' => ThemeHelper::render([
-            '#theme' => 'hpc_reporting_period',
-            '#reporting_period' => $reporting_period,
-            '#format_string' => 'Monitoring period #@period_number<br>@date_range',
-          ], FALSE),
-          '#class' => 'monitoring period',
+          '#tooltip' => $reporting_period->format('Monitoring period #@period_number<br>@date_range'),
+          '#class' => 'monitoring-period',
           '#tag_content' => [
             '#theme' => 'hpc_icon',
             '#icon' => 'calendar_today',
