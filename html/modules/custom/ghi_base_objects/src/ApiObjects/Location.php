@@ -165,6 +165,21 @@ class Location extends BaseObject {
   }
 
   /**
+   * Get the version to use for the geojson shapefiles.
+   *
+   * @return int|string
+   *   Returns the year component of the valid_on date for expired locations,
+   *   or the string 'current'.
+   */
+  private function getGeoJsonVersion() {
+    $version = 'current';
+    if ($this->valid_on && $this->status == 'expired') {
+      $version = date('Y', $this->valid_on);
+    }
+    return $version;
+  }
+
+  /**
    * Get the path to the geojson shape file for the location.
    *
    * @param string $version
@@ -176,10 +191,11 @@ class Location extends BaseObject {
    *   The path to the locally stored file inside our module directory. Or NULL
    *   if the file can't be found.
    */
-  public function getGeoJsonSourceFilePath($version = 'current', $minified = TRUE) {
+  public function getGeoJsonSourceFilePath($version = NULL, $minified = TRUE) {
     if (!$this->getIso3()) {
       return NULL;
     }
+    $version = $version ?? $this->getGeoJsonVersion();
     $directory = self::moduleHandler()->getModule('ghi_base_objects')->getPath() . '/assets/geojson/' . $this->getIso3();
     if ($version != 'current') {
       $directories = glob($directory . '/[0-9][0-9][0-9][0-9]', GLOB_ONLYDIR);
@@ -219,10 +235,11 @@ class Location extends BaseObject {
    *   A path relative to the this modules geojson asset file directory in
    *   [MODULE_PATH]/assets/geojson.
    */
-  private function buildGeoJsonSourceFilePath($version = 'current', $minified = TRUE) {
+  private function buildGeoJsonSourceFilePath($version = NULL, $minified = TRUE) {
     if (!$this->getIso3()) {
       return NULL;
     }
+    $version = $version ?? $this->getGeoJsonVersion();
     $path_parts = [
       $version,
     ];
@@ -253,11 +270,7 @@ class Location extends BaseObject {
    */
   public function getGeoJsonPublicFilePath() {
     $public_filepath = self::GEO_JSON_DIR . '/' . $this->getUuid() . '.geojson';
-    $version = 'current';
-    if ($this->valid_on && $this->status == 'expired') {
-      $version = date('Y', $this->valid_on);
-    }
-    if (!file_exists($public_filepath) && $filepath = $this->getGeoJsonSourceFilePath($version)) {
+    if (!file_exists($public_filepath) && $filepath = $this->getGeoJsonSourceFilePath()) {
       copy($filepath, $public_filepath);
     }
     return file_exists($public_filepath) ? $public_filepath : NULL;
