@@ -2,7 +2,11 @@
 
 namespace Drupal\ghi_content\Plugin\ConfigurationContainerItem;
 
+use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_form_elements\ConfigurationContainerItemCustomActionsInterface;
@@ -27,6 +31,7 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
 
   use SectionTrait;
   use ConfigurationContainerItemCustomActionTrait;
+  use DependencySerializationTrait;
 
   const MAX_FEATURE_COUNT = 2;
   const CARD_LIMIT = 15;
@@ -75,22 +80,56 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
    */
   public function articleSelectionForm($element, FormStateInterface $form_state) {
     $section = $this->getContextValue('section');
-    $section_tags = $section ? $this->articleManager->getTags($section) : [];
+    $section_tags = $section instanceof SectionNodeInterface ? $this->articleManager->getTags($section) : [];
     $section_tag_ids = array_keys($section_tags);
 
     // Get the defaults.
     $default_tags = $this->getSubmittedValue($element, $form_state, 'tags') ?? ($this->config['article_selection_form']['tags'] ?? []);
-    $default_tags['tag_ids'] = array_combine($section_tag_ids, $section_tag_ids) + ($default_tags['tag_ids'] ?? []);
-    $default_tags['tag_ids'] = array_map(function ($tag_id) {
-      return ['target_id' => $tag_id];
-    }, $default_tags['tag_ids']);
+    $default_tag_ids = array_filter(array_map(function ($item) {
+      return $item['target_id'] ?? NULL;
+    }, $default_tags['tag_ids'] ?: []));
 
+    $default_tags['tag_ids'] = array_values(array_map(function ($tag_id) {
+      return ['target_id' => $tag_id];
+    }, array_combine($section_tag_ids, $section_tag_ids) + array_combine($default_tag_ids, $default_tag_ids)));
+
+    $wrapper_id = self::getWrapperId($element);
+    $element['#prefix'] = '<div id="' . $wrapper_id . '">';
+    $element['#suffix'] = '</div>';
     $element['tags'] = [
       '#type' => 'tag_autocomplete',
       '#title' => $this->t('Tags'),
-      // '#tags' => $available_tags,
+      '#description' => $this->t('Select tags to control which articles should be included in this article collection.'),
       '#default_value' => $default_tags,
       '#disabled_tags' => $section_tag_ids,
+      '#ajax' => [
+        'event' => 'change',
+        'callback' => [$this, 'updateArticleCountPreview'],
+        'wrapper' => $wrapper_id,
+      ],
+    ];
+    if (!empty($section_tags)) {
+      $element['tags']['#description'] .= ' ' . $this->t('The greyed out tags <em>@tags</em> are derived from the current page context and cannot be removed.', [
+        '@tags' => implode(', ', $section_tags),
+      ]);
+    }
+    $element['preview_summary_wrapper'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['preview-summary-wrapper'],
+      ],
+      'summary' => [
+        '#type' => 'html_tag',
+        '#tag' => 'span',
+        '#attributes' => [
+          'class' => ['preview-summary'],
+        ],
+        '#value' => $this->getTagCombinationSummary(),
+      ],
+    ];
+
+    $element['#attached'] = [
+      'library' => ['ghi_content/admin.article_collection'],
     ];
     return $element;
   }
@@ -174,6 +213,41 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
       'library' => ['ghi_content/admin.article_collection'],
     ];
     return $element;
+  }
+
+  /**
+   * Update the article count preview based on the current tag selection.
+   *
+   * @param array $form
+   *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state interface.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   An ajax response with commands to update the relevant part of the form.
+   */
+  public function updateArticleCountPreview(array &$form, FormStateInterface $form_state) {
+    // Get the parents and array parents of the triggering element, which can
+    // only be one of the child elements of the tag_autocomplete form element.
+    $parents = $form_state->getTriggeringElement()['#parents'];
+    $array_parents = $form_state->getTriggeringElement()['#array_parents'];
+    array_pop($parents);
+    array_pop($array_parents);
+
+    // Get the values and update the config so that self::getArticleCount() has
+    // everything it needs to fetch the articles.
+    $values = $form_state->getValue($parents);
+    $values['tag_ids'] = array_map(function ($item) {
+      return ['target_id' => $item->entity_id];
+    }, json_decode($values['tag_ids']) ?? []);
+    $this->config['article_selection_form']['tags'] = $values;
+
+    // Get the selector so we know where the updated preview value must go.
+    $wrapper_id = NestedArray::getValue($form, array_merge($array_parents, ['#ajax', 'wrapper']));
+    $selector = '#' . $wrapper_id . ' .preview-summary-wrapper .preview-summary';
+    $response = new AjaxResponse();
+    $response->addCommand(new HtmlCommand($selector, $this->getTagCombinationSummary()));
+    return $response;
   }
 
   /**
@@ -375,6 +449,16 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
     return implode(', ', array_map(function (Term $term) {
       return $term->label();
     }, $tags));
+  }
+
+  /**
+   * Get a translated summary string for the tag combination.
+   *
+   * @return \Drupal\Core\StringTranslation\PluralTranslatableMarkup
+   *   The summary text.
+   */
+  private function getTagCombinationSummary() {
+    return $this->formatPlural($this->getArticleCount(), '@count article found for this combination of tags', '@count articles found for this combination of tags');
   }
 
   /**
