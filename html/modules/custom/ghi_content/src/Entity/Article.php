@@ -59,6 +59,28 @@ class Article extends ContentBase {
   }
 
   /**
+   * Get the documents that this article belongs to.
+   *
+   * @return \Drupal\ghi_content\Entity\Document[]
+   *   An array of document nodes that this article belongs to.
+   */
+  public function getDocuments() {
+    $content_manager = $this->getContentManager();
+    $remote_article = $content_manager->loadRemoteContentForNode($this);
+    if (!$remote_article instanceof RemoteArticleInterface) {
+      return FALSE;
+    }
+    $document_ids = $remote_article->getDocumentIds();
+    $remote_source = $remote_article->getSource()->getPluginId();
+    /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source_instance */
+    $remote_source_instance = \Drupal::service('plugin.manager.remote_source')->remoteSourceManager->createInstance($remote_source);
+    return array_filter(array_map(function ($document_id) use ($content_manager, $remote_source_instance) {
+      $remote_document = $remote_source_instance->getDocument($document_id);
+      return $content_manager->loadNodeForRemoteContent($remote_document);
+    }, $document_ids));
+  }
+
+  /**
    * Check if the given articles is a sub-article of the current one.
    *
    * @param \Drupal\ghi_content\Entity\Article $article
