@@ -231,6 +231,12 @@
           });
         }
       });
+
+      // Make sure that state changes trigger a dialog resize event so that
+      // dialog.position.js can do it's magic of repositioning the modal.
+      $(document).on('state:visible', (e) => {
+        $(window).trigger('resize.dialogResize');
+      });
     }
 
   };

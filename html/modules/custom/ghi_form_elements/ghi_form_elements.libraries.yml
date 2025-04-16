@@ -24,7 +24,6 @@ active_tags:
   css:
     component:
       css/active_tags.css: {}
-      css/tag_autocomplete.css: {}
   js:
     js/tag_autocomplete.js: {}
   dependencies:

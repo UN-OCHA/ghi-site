@@ -110,8 +110,6 @@ map.gl:
     - ghi_blocks/map.gl.control.disclaimer
     - ghi_blocks/map.gl.control.search
 
-
-
 map.gl.plan_overview:
   js:
     js/map.gl/map.plan_overview.js: {}
