@@ -53,6 +53,9 @@ function ghi_form_elements_form_views_exposed_form_alter(array &$form, FormState
 function ghi_form_elements_entity_autocomplete_active_tags_element_validate(array $element, FormStateInterface $form_state): void {
   $value = $form_state->getValue($element['#parents']);
   if ($value && ($items = json_decode($value, TRUE, 512, JSON_THROW_ON_ERROR))) {
+    if (!is_array($items)) {
+      $items = [];
+    }
     $formatted_items = array_map(function ($item) {
       return ['target_id' => $item['entity_id']];
     }, $items);

@@ -90,15 +90,11 @@ class TagAutocomplete extends FormElementBase {
     $element['tag_ids'] = [
       '#type' => 'entity_autocomplete_active_tags',
       '#title' => t('Tags'),
-      '#description' => t('Select the tags associated with this section. This controls the content that will be available.'),
+      '#description' => $element['#description'] ?? t('Select the tags.'),
       '#target_type' => 'taxonomy_term',
       '#selection_handler' => 'default',
       '#selection_settings' => [
         'target_bundles' => ['tags'],
-      ],
-      '#autocreate' => [
-        'bundle' => 'tags',
-        'uid' => \Drupal::currentUser()->id(),
       ],
       '#tags' => TRUE,
       '#default_value' => $default_tags,
@@ -107,8 +103,10 @@ class TagAutocomplete extends FormElementBase {
       ],
       '#element_validate' => ['ghi_form_elements_entity_autocomplete_active_tags_element_validate'],
       '#maxlength' => NULL,
+      '#ajax' => $element['#ajax'] ?: NULL,
     ];
     unset($element['#title']);
+    unset($element['#description']);
 
     if (!empty($element['#disabled_tags'])) {
       $element['#wrapper_attributes']['disabled-tags'] = implode('-', $element['#disabled_tags']);
@@ -116,10 +114,11 @@ class TagAutocomplete extends FormElementBase {
 
     $element['tag_op'] = [
       '#type' => 'checkbox',
-      '#title' => t('Require all selected tags'),
+      '#title' => !empty($element['#disabled_tags']) ? t('Require all selected additional tags') : t('Require all selected tags'),
       '#return_value' => 'AND',
       '#wrapper_attributes' => ['data-drupal-selector' => 'tag_op'],
       '#default_value' => $element['#default_value']['tag_op'] ?? FALSE,
+      '#ajax' => $element['#ajax'] ?: NULL,
     ];
 
     return $element;
