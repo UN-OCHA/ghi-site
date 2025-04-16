@@ -5,8 +5,10 @@ module:
   admin_denied: 0
   admin_toolbar: 0
   admin_toolbar_tools: 0
+  amazon_ses: 0
   auto_entitylabel: 0
   autologout: 0
+  aws: 0
   bert: 0
   big_pipe: 0
   big_pipe_sessionless: 0
@@ -91,6 +93,7 @@ module:
   layout_discovery: 0
   link: 0
   locale: 0
+  mailsystem: 0
   maintenance200: 0
   maxlength: 0
   media: 0
