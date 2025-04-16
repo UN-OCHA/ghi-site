@@ -4,6 +4,7 @@ namespace Drupal\ghi_content\ContextualLinks;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Plugin\Block\Paragraph;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
@@ -83,6 +84,11 @@ class BlockHandler implements ContainerInjectionInterface {
     $delta = $route_parameters['delta'];
 
     $entity = $this->entityTypeManager->getStorage($entity_type_id)->load($id);
+    if (!$entity instanceof ContentBase) {
+      // We only want to prevent removing a paragraph on article or document
+      // pages.
+      return;
+    }
     $section_storage = $this->getSectionStorageForEntity($entity, 'default');
     $section_storage = $this->layoutTempstoreRepository->get($section_storage);
 
