@@ -96,8 +96,16 @@ class Article extends ContentBase {
       }
       $document_ids = $remote_article->getDocumentIds();
       $remote_source = $remote_article->getSource()->getPluginId();
+
+      /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
+      $remote_source_manager = \Drupal::service('plugin.manager.remote_source');
+
+      if (!$remote_source || !$remote_source_manager->hasDefinition($remote_source)) {
+        return [];
+      }
+
       /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source_instance */
-      $remote_source_instance = \Drupal::service('plugin.manager.remote_source')->createInstance($remote_source);
+      $remote_source_instance = $remote_source_manager->createInstance($remote_source);
       $documents = array_filter(array_map(function ($document_id) use ($content_manager, $remote_source_instance) {
         $remote_document = $remote_source_instance->getDocument($document_id);
         return $remote_document ? $content_manager->loadNodeForRemoteContent($remote_document) : NULL;
