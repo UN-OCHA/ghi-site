@@ -861,6 +861,9 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
       return NULL;
     }
     $remote_source = $node->get($remote_field)->remote_source;
+    if (!$remote_source || !$this->remoteSourceManager->hasDefinition($remote_source)) {
+      return NULL;
+    }
     return $this->remoteSourceManager->createInstance($remote_source);
   }
 

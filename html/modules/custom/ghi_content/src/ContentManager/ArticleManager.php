@@ -70,11 +70,15 @@ class ArticleManager extends BaseContentManager {
   public function loadRemoteContentForNode(NodeInterface $node, $refresh = FALSE, $rendered = TRUE) {
     $remote_field = $this->getRemoteFieldName();
     if (!$node->hasField($remote_field)) {
-      return;
+      return NULL;
     }
 
     $remote_source = $node->get($remote_field)->remote_source;
     $article_id = $node->get($remote_field)->article_id;
+
+    if (!$remote_source || !$this->remoteSourceManager->hasDefinition($remote_source)) {
+      return NULL;
+    }
 
     /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source_instance */
     $remote_source_instance = $this->remoteSourceManager->createInstance($remote_source);
