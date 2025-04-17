@@ -56,17 +56,17 @@ content:
     weight: 121
     region: content
     settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
       autocomplete_route_name: active_tags.entity_autocomplete
+      match_operator: CONTAINS
       style: rectangle
+      size: 60
       selection_handler: default
+      match_limit: 10
       min_length: 1
       delimiter: ''
-      show_entity_id: 0
+      placeholder: ''
       show_avatar: 1
+      show_entity_id: 0
       convert_uppercase: 0
       string_override: 0
       show_info_label: 0
