@@ -115,6 +115,10 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       $rendered ? 'rendered' : NULL,
       'configuration',
     ]);
+    $fields['documents'] = [
+      'id',
+      'title',
+    ];
     $fields['image'] = [
       'credits',
       'imageUrl',

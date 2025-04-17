@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e2d9df1d7dc5c9c85ab136aad235cb6d",
+    "content-hash": "b7d7ad2aea0692f3752491e6652703aa",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -6891,6 +6891,71 @@
             "support": {
                 "source": "https://cgit.drupalcode.org/subpathauto",
                 "issues": "https://www.drupal.org/project/issues/subpathauto"
+            }
+        },
+        {
+            "name": "drupal/taxonomy_entity_index",
+            "version": "1.20.0",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/taxonomy_entity_index.git",
+                "reference": "8.x-1.20"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/taxonomy_entity_index-8.x-1.20.zip",
+                "reference": "8.x-1.20",
+                "shasum": "8bcc1d70430223c07dae0cf46dfb76055201b7e3"
+            },
+            "require": {
+                "drupal/core": "^10.3 || ^11"
+            },
+            "require-dev": {
+                "drupal/token": "^1",
+                "drush/drush": "^12 || ^13"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "8.x-1.20",
+                    "datestamp": "1737496027",
+                    "security-coverage": {
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
+                    }
+                },
+                "drush": {
+                    "services": {
+                        "drush.services.yml": "^9"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0+"
+            ],
+            "authors": [
+                {
+                    "name": "cameron prince",
+                    "homepage": "https://www.drupal.org/user/1765640"
+                },
+                {
+                    "name": "dave reid",
+                    "homepage": "https://www.drupal.org/user/53892"
+                },
+                {
+                    "name": "larowlan",
+                    "homepage": "https://www.drupal.org/user/395439"
+                },
+                {
+                    "name": "saltednut",
+                    "homepage": "https://www.drupal.org/user/252788"
+                }
+            ],
+            "description": "Taxonomy Entity Index",
+            "homepage": "https://www.drupal.org/project/taxonomy_entity_index",
+            "support": {
+                "source": "https://git.drupalcode.org/project/taxonomy_entity_index"
             }
         },
         {
