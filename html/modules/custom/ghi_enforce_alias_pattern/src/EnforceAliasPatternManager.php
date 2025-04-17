@@ -59,7 +59,7 @@ class EnforceAliasPatternManager {
       return;
     }
     $alias = $entity->path->alias ?? $this->pathautoGenerator->createEntityAlias($entity, 'return');
-    $parts = explode('/', trim($alias, '/'));
+    $parts = $alias ? explode('/', trim($alias, '/')) : [];
     if (count($parts) <= 1) {
       // Bail out if there are not enough parts in the alias pattern.
       return;

@@ -26,6 +26,7 @@ class BaseObjectReferenceControllerTest extends UnitTestCase {
    */
   public function testExtractBaseObjectComponentsFromSection() {
     $base_object = $this->prophesize(BaseObjectInterface::class);
+    $base_object->id()->willReturn(1);
     $base_object->getUniqueIdentifier()->willReturn('plan--1001');
 
     $block_1 = $this->prophesize(GHIBlockBase::class);
@@ -33,17 +34,21 @@ class BaseObjectReferenceControllerTest extends UnitTestCase {
     $block_1->getContextMapping()->willReturn([
       'plan' => 'plan--1001',
     ]);
+    $block_1->getSelectedDataObjectId()->willReturn(1);
 
     $block_2 = $this->prophesize(GHIBlockBase::class);
     $block_2->getPluginId()->willReturn('block_plugin_id');
     $block_2->getContextMapping()->willReturn([
       'plan' => 'plan',
     ]);
+    $block_2->getSelectedDataObjectId()->willReturn(NULL);
 
     $component_1 = $this->prophesize(SectionComponent::class);
     $component_1->getPlugin()->willReturn($block_1->reveal());
+    $component_1->getWeight()->willReturn(1);
     $component_2 = $this->prophesize(SectionComponent::class);
     $component_2->getPlugin()->willReturn($block_2->reveal());
+    $component_2->getWeight()->willReturn(2);
     $components = [$component_1->reveal(), $component_2->reveal()];
 
     $section = $this->prophesize(Section::class);

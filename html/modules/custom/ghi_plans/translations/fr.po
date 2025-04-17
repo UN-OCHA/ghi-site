@@ -47,6 +47,9 @@ msgstr "Voir le cadre logique"
 msgid "People reached"
 msgstr "Personnes atteintes"
 
+msgid "People reached (%)"
+msgstr "Personnes atteintes (%)"
+
 msgid "Measure"
 msgstr "Mesure"
 
@@ -73,3 +76,27 @@ msgstr "Données de population"
 
 msgid "Indicator"
 msgstr "Indicateur"
+
+msgid "Evolution of the humanitarian response"
+msgstr "Evolution de la réponse humanitaire"
+
+msgid "Year"
+msgstr "Année"
+
+msgid "People in need"
+msgstr "Personnes dans le besoin"
+
+msgid "People targeted"
+msgstr "Personnes ciblées"
+
+msgid "People targeted (%)"
+msgstr "Personnes ciblées (%)"
+
+msgid "Requirements ($)"
+msgstr "Besoins financiers ($)"
+
+msgid "Funding ($)"
+msgstr "Financement ($)"
+
+msgid "% Funded"
+msgstr "% Financé"

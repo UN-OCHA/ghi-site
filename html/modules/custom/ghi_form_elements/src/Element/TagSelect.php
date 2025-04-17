@@ -21,7 +21,6 @@ class TagSelect extends FormElementBase {
     $class = get_class($this);
     return [
       '#tags' => NULL,
-      '#preview_summary' => FALSE,
       '#default_value' => NULL,
       '#disabled_tags' => FALSE,
       '#preview_summary' => NULL,
@@ -91,6 +90,9 @@ class TagSelect extends FormElementBase {
       '#title' => $element['#title'],
       '#options' => $element['#tags'],
       '#default_value' => $element['#default_value']['tag_ids'] ?? [],
+      '#attached' => [
+        'library' => ['ghi_form_elements/tag_select.preview'],
+      ],
     ];
     unset($element['#title']);
 

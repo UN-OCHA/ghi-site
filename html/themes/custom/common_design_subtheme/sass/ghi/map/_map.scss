@@ -1,5 +1,12 @@
 .map-wrapper-outer {
 
+  .mapboxgl-ctrl-group:not(:empty),
+  .map-sidebar,
+  .map-legend {
+    border: 1px solid var(--ghi-default-border-color-background);
+    border-radius: 4px;
+  }
+
   .map-sidebar--wrapper {
     width: auto;
     font-size: var(--cd-font-size--base);
@@ -24,8 +31,14 @@
     }
 
     .map-sidebar {
+      position: absolute;
+      z-index: 3;
+      top: 0.5rem;
+      right: 0.5rem;
+      bottom: 0.5rem;
       overflow: hidden;
       padding: 0;
+      background-color: white;
 
       // Commmon for map card and map settings.
       .map-plan-card-container,
@@ -176,23 +189,34 @@
   }
 
   .map-tabs {
+    // overflow-x: auto;
     height: auto;
     background-color: var(--ghi-default-text-color);
 
     ul {
       display: flex;
+      width: fit-content;
       height: 100%;
       margin: 0;
       padding: 0;
-      gap: 2rem;
+      gap: 0;
       list-style-type: none;
 
       li {
         position: relative;
         height: auto;
+        margin: 0 1rem;
         padding: 0.5rem 0;
         color: var(--cd-white);
         font-size: var(--cd-font-size--small);
+        line-height: 1.2;
+
+        &:first-child {
+          margin-left: 0;
+        }
+        &:last-child {
+          margin-right: 0;
+        }
 
         a {
           cursor: pointer;

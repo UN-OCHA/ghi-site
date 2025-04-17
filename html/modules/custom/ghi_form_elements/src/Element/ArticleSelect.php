@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_form_elements\Element;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\EntityInterface;
@@ -200,13 +201,19 @@ class ArticleSelect extends FormElementBase {
       sort($tags);
 
       $delta = count(Element::children($element));
+      $label = $entity->label();
+      if ($entity->isProtected()) {
+        $label = new FormattableMarkup('<span class="protected">@label</span>', [
+          '@label' => $label,
+        ]);
+      }
       $element[$id] = [
         '#attributes' => [
           'data-entity-id' => $id,
           'class' => ['draggable'],
         ],
         '#weight' => $delta,
-        'title' => ['#markup' => $entity->label()],
+        'title' => ['#markup' => $label],
         'tags' => ['#markup' => Markup::create(implode(', ', $tags))],
         'status' => [
           '#type' => 'html_tag',

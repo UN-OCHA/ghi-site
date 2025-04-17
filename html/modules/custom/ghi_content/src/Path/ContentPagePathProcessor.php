@@ -114,7 +114,7 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
       return $path;
     }
 
-    if (!$document->access('view') || !$section->access('view')) {
+    if (!$document->access('view') || !$section?->access('view')) {
       return $path;
     }
 

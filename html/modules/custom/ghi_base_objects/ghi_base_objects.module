@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\ghi_base_objects\ApiObjects\Location;
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
@@ -39,6 +40,15 @@ function ghi_base_objects_help($route_name, RouteMatchInterface $route_match) {
 }
 
 /**
+ * Implements hook_cache_flush().
+ *
+ * Clean up import files.
+ */
+function ghi_base_objects_cache_flush() {
+  hpc_api_clear_directory(Location::GEO_JSON_DIR, '/.*\.geojson/');
+}
+
+/**
  * Implements hook_layout_builder_view_context_alter().
  */
 function ghi_base_objects_layout_builder_view_context_alter(array &$contexts, ?SectionStorageInterface $section_storage = NULL, $sample = FALSE) {
@@ -48,6 +58,11 @@ function ghi_base_objects_layout_builder_view_context_alter(array &$contexts, ?S
     return;
   }
   $entity = $entity_context->getContextValue();
+  // Reload the entity so that context extraction can work based on the entity
+  // as it is currently stored in the database. The entity_context is created
+  // when the layout editing session is created, and if data objects are added
+  // later to an entity, that change would otherwise not be reflected here.
+  $entity = $entity->id() ? \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId())->load($entity->id()) : $entity;
   $route_name = \Drupal::routeMatch()->getRouteName();
   if (!$entity->id() || !$route_name || strpos($route_name, 'entity.entity_view_display.') === 0) {
     // This is the manage display form or some other config form with a sample
@@ -206,6 +221,7 @@ function ghi_base_objects_migrate_plan_prepare_row(Row $row, MigrateSourceInterf
 
   $row->setSourceProperty('version_tag', $published_version ? $published_version['name'] : NULL);
   $row->setSourceProperty('released', !empty($plan_data->isReleased) ? $plan_data->isReleased : FALSE);
+  $row->setSourceProperty('is_part_of_gho', !empty($plan_data->planVersion->isPartOfGHO) ? $plan_data->planVersion->isPartOfGHO : FALSE);
   $row->setSourceProperty('name', !empty($plan_data->planVersion->name) ? $plan_data->planVersion->name : NULL);
   $row->setSourceProperty('short_name', !empty($plan_data->planVersion->shortName) ? $plan_data->planVersion->shortName : NULL);
   $row->setSourceProperty('subtitle', !empty($plan_data->planVersion->subtitle) ? $plan_data->planVersion->subtitle : NULL);

@@ -103,8 +103,8 @@ class PlanClusterNodeBundleTest extends KernelTestBase {
     // Create a plan object.
     $plan = $this->createBaseObject([
       'type' => 'plan',
+      'field_year' => 2025,
     ]);
-    $plan->save();
 
     // Create a GVE object associated to that plan.
     $governing_entity = $this->createBaseObject([
@@ -112,7 +112,6 @@ class PlanClusterNodeBundleTest extends KernelTestBase {
       'name' => 'Initial title',
       'field_plan' => $plan,
     ]);
-    $governing_entity->save();
 
     // Confirm that there is no cluster subpage created yet for that GVE object.
     $plan_cluster = $this->planClusterManager->loadClusterSubpageForBaseObject($governing_entity);
@@ -122,7 +121,6 @@ class PlanClusterNodeBundleTest extends KernelTestBase {
     $section = $this->createSection([
       'field_base_object' => $plan,
     ]);
-    $section->save();
 
     // Confirm the cluster subpage exists now.
     $plan_cluster = $this->planClusterManager->loadClusterSubpageForBaseObject($governing_entity);
@@ -160,8 +158,8 @@ class PlanClusterNodeBundleTest extends KernelTestBase {
     // Create a plan object.
     $plan = $this->createBaseObject([
       'type' => 'plan',
+      'field_year' => 2025,
     ]);
-    $plan->save();
 
     // Create a GVE object associated to that plan.
     $governing_entity = $this->createBaseObject([
@@ -169,13 +167,11 @@ class PlanClusterNodeBundleTest extends KernelTestBase {
       'name' => 'Initial title',
       'field_plan' => $plan,
     ]);
-    $governing_entity->save();
 
     // Create a section.
-    $section = $this->createSection([
+    $this->createSection([
       'field_base_object' => $plan,
     ]);
-    $section->save();
 
     $plan_cluster = $this->planClusterManager->loadClusterSubpageForBaseObject($governing_entity);
     $this->assertEquals($plan_cluster->label(), 'Initial title');

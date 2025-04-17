@@ -4,8 +4,8 @@ namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteChapterInterface;
@@ -30,22 +30,15 @@ use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
  *    "chapter" = {
  *      "title" = @Translation("Chapter"),
  *      "callback" = "chapterForm"
+ *    },
+ *    "display" = {
+ *      "title" = @Translation("Display"),
+ *      "callback" = "displayForm"
  *    }
  *  }
  * )
  */
-class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInterface, AutomaticTitleBlockInterface {
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getAutomaticBlockTitle() {
-    $chapter = $this->getChapter();
-    if ($chapter && $this->shouldDisplayChapterTitle()) {
-      return $chapter->getTitle();
-    }
-    return NULL;
-  }
+class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface {
 
   /**
    * {@inheritdoc}
@@ -68,6 +61,9 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
       return NULL;
     }
     $document_node = $this->documentManager->loadNodeForRemoteContent($this->getDocument());
+    if (!$document_node) {
+      return NULL;
+    }
     $cache_tags = [];
     $articles = [];
     foreach ($this->getChapterArticles() as $_article) {
@@ -125,18 +121,12 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
         '#tabs' => $tabs,
       ];
     }
+    if ($document_node->isProtected()) {
+      $build['#attributes'] = [
+        'class' => ['protected'],
+      ];
+    }
     return $build;
-  }
-
-  /**
-   * Check whether the chapter title should display.
-   *
-   * @return bool
-   *   TRUE if the chapter title should display, FALSE otherwise.
-   */
-  public function shouldDisplayChapterTitle() {
-    $conf = $this->getBlockConfig();
-    return $conf['chapter']['show_title'] ?? TRUE;
   }
 
   /**
@@ -155,9 +145,27 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
       ],
       'chapter' => [
         'chapter_id' => NULL,
-        'show_title' => NULL,
+      ],
+      'display' => [
+        'label' => NULL,
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function label() {
+    // Overriding this should not be necessary, but there seems to be an issue
+    // with GHIBlockBase's handling of OverrideDefaultTitleBlockInterface.
+    return $this->getBlockConfig()['display']['label'] ?: parent::label();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultTitle() {
+    return $this->getChapter()?->getTitle();
   }
 
   /**
@@ -168,6 +176,13 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
       return 'document_select';
     }
     return 'chapter';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTitleSubform() {
+    return 'display';
   }
 
   /**
@@ -208,7 +223,7 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
   }
 
   /**
-   * Paragraph config form.
+   * Chapter config form.
    */
   public function chapterForm(array $form, FormStateInterface $form_state) {
     $document = $this->getDocument();
@@ -240,13 +255,13 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
       '#cols' => 3,
       '#default_value' => $chapter ? $chapter->getId() : NULL,
     ];
+    return $form;
+  }
 
-    $form['show_title'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Show the chapter title'),
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'show_title') ?? TRUE,
-    ];
-
+  /**
+   * Display form.
+   */
+  public function displayForm(array $form, FormStateInterface $form_state) {
     return $form;
   }
 

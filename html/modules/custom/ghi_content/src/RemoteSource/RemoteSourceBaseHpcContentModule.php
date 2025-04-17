@@ -7,6 +7,7 @@ use Drupal\Core\Url;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteDocument;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteParagraph;
+use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteTag;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\ghi_content\RemoteResponse\RemoteResponse;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
@@ -141,6 +142,19 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     ]);
     $paragraph_data = $this->fetchData('paragraph', ['id' => $id], $fields);
     return new RemoteParagraph($paragraph_data, $this);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTag($name) {
+    $fields = array_filter([
+      'id',
+      'type',
+      'name',
+    ]);
+    $tag_data = $this->fetchData('tag', ['name' => '"' . $name . '"'], $fields);
+    return new RemoteTag($tag_data, $this);
   }
 
   /**
@@ -309,9 +323,9 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   }
 
   /**
-   * Get the base url of the remote source.
+   * {@inheritdoc}
    */
-  private function getRemoteBaseUrl() {
+  public function getRemoteBaseUrl() {
     $config = $this->getConfiguration();
     return rtrim($config['base_url'], '/');
   }

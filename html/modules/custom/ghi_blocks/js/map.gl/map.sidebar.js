@@ -24,16 +24,6 @@
       if ($container.find('.map-sidebar').length == 0) {
         let self = this;
         $container.append('<div class="map-sidebar--wrapper"><a class="close" tabindex="0">×</a><div class="map-sidebar"></div></div>');
-        let $sidebarContainer = $container.find('.map-sidebar');
-        $sidebarContainer.css('position', 'absolute');
-        $sidebarContainer.css('top', '0.5rem');
-        $sidebarContainer.css('bottom', '0.5rem');
-        $sidebarContainer.css('right', '0.5rem');
-        $sidebarContainer.css('border-radius', '4px');
-        $sidebarContainer.css('border', 'solid rgba(0, 0, 0, 0.2)');
-        $sidebarContainer.css('background-color', 'white');
-        $sidebarContainer.css('z-index', 3);
-
         $container.find('.map-sidebar--wrapper').css('display', 'none');
         $container.find('a.close').on('click', () => self.hide());
         $container.find('a.close').on('keyup', (e) => self.handleEnter(e, () => self.hide()));

@@ -55,6 +55,9 @@ class ThemeHelper {
     if ($twig_debug) {
       $twig_service->enableDebug();
     }
+    if ($render_value === NULL) {
+      return $render_value;
+    }
     return $xss_filter ? trim(Xss::filter($render_value)) : trim($render_value);
   }
 

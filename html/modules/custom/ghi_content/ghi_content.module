@@ -27,6 +27,7 @@ use Drupal\ghi_sections\SectionManager;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
+use Drupal\taxonomy\TermInterface;
 use Drupal\user\Entity\User;
 use Drupal\views\ViewExecutable;
 
@@ -209,6 +210,48 @@ function ghi_content_form_node_form_alter(array &$form, FormStateInterface $form
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Used to disable fields that are automatically populated.
+ */
+function ghi_content_form_taxonomy_term_form_alter(array &$form, FormStateInterface $form_state) {
+  /** @var \Drupal\node\NodeForm $form_object */
+  $form_object = $form_state->getFormObject();
+  /** @var \Drupal\taxonomy\TermInterface $term */
+  $term = $form_object->getEntity();
+  if (!$term instanceof TermInterface || $term->bundle() != 'tags' || !isset($form['field_type'])) {
+    return;
+  }
+  $form['field_type']['#disabled'] = TRUE;
+  $form['field_type']['widget'][0]['value']['#description'] = t('This field is automatically populated based on data from the content backend.');
+  return $form;
+}
+
+/**
+ * Implements hook_datalayer_alter().
+ */
+function ghi_content_datalayer_alter(&$data_layer) {
+  // Split tags into their CM specific categories.
+  if (!empty($data_layer['entityTaxonomy']) && !empty($data_layer['entityTaxonomy']['tags'])) {
+    $tags = &$data_layer['entityTaxonomy']['tags'];
+    $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadMultiple(array_keys($tags));
+    foreach ($terms as $tid => $term) {
+      if ($type = $term->get('field_type')?->value) {
+        $data_layer['entityTaxonomy'][$type] = $data_layer['entityTaxonomy'][$type] ?? [];
+        $data_layer['entityTaxonomy'][$type][] = $term->label();
+        unset($tags[$tid]);
+      }
+    }
+    $tags = array_values($tags);
+    if (empty($tags)) {
+      unset($data_layer['entityTaxonomy']['tags']);
+    }
+  }
+  // Don't expose the user id.
+  unset($data_layer['userUid']);
+}
+
+/**
  * Implements hook_entity_build_defaults_alter().
  *
  * This is used to add cache keys for context nodes to entity builds of content
@@ -360,17 +403,29 @@ function ghi_content_preprocess_page(&$variables) {
 }
 
 /**
+ * Implements hook_metatags_alter().
+ */
+function ghi_content_metatags_alter(&$metatags, $context) {
+  $entity = $context['entity'];
+  if ($entity instanceof ContentBase && $context_node = $entity->getContextNode()) {
+    $title = implode(' | ', [
+      $entity->label(),
+      $context_node->label(),
+    ]);
+    $metatags['title'] = str_replace('[node:title]', $title, $metatags['title']);
+  }
+}
+
+/**
  * Implements hook_preprocess_page_title().
  */
 function ghi_content_preprocess_page_title(&$variables) {
   $node = RequestHelper::getCurrentNodeObject();
   $is_admin_route = \Drupal::service('router.admin_context')->isAdminRoute();
-  if ($is_admin_route || !$node instanceof Article || !empty($variables['#protected'])) {
+  if ($is_admin_route || !$node instanceof ContentBase) {
     return;
   }
-  if ($node->getContextNode()) {
-    $variables['title'] = $node->getContextNode()->label();
-  }
+  $variables['title'] = $node->getContextNode()?->label() ?? $node->label();
 }
 
 /**
@@ -627,4 +682,23 @@ function ghi_content_node_grants(AccountInterface $account, $op) {
     $grants['ghi_content_access'][] = $content_space->id();
   }
   return $grants;
+}
+
+/**
+ * Implements hook_seckit_options_alter().
+ *
+ * Make some modifications to the CSP that are not supported by the seckit UI.
+ */
+function ghi_content_seckit_options_alter(array &$options) {
+  $directives = &$options['seckit_xss']['csp'];
+
+  /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
+  $remote_source_manager = \Drupal::service('plugin.manager.remote_source');
+  $definitions = $remote_source_manager->getDefinitions();
+  foreach (array_keys($definitions) as $plugin_id) {
+    /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $plugin */
+    $plugin = $remote_source_manager->createInstance($plugin_id);
+    $directives['img-src'] = $plugin->getRemoteBaseUrl() . ' ' . $directives['img-src'];
+  }
+
 }

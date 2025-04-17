@@ -20,6 +20,18 @@ entity_select:
     component:
       css/entity_select.css: {}
 
+active_tags:
+  css:
+    component:
+      css/active_tags.css: {}
+  js:
+    js/tag_autocomplete.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
+    - active_tags/assets.gin
+
 attachment_select:
   css:
     component:
@@ -32,16 +44,18 @@ entity_attachment_select:
   dependencies:
     - ghi_form_elements/entity_select
 
-tag_select.preview:
+tag_select:
   css:
     component:
       css/tag_select.css: {}
+tag_select.preview:
   js:
     js/tag_select.preview.js: {}
   dependencies:
     - core/jquery
     - core/once
     - common_design_subtheme/ghi-grid
+    - ghi_form_elements/tag_select
 
 entity_preview_select:
   css:

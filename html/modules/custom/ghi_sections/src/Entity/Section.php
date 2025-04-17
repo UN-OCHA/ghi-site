@@ -4,8 +4,10 @@ namespace Drupal\ghi_sections\Entity;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\node\Entity\Node;
 
 /**
@@ -40,9 +42,54 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
   /**
    * {@inheritdoc}
    */
+  public function getSectionSwitcherTitle() {
+    return $this->getSectionSwitcherOption()['label'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSectionSwitcherOption() {
+    $option = [
+      'label' => NULL,
+      'label_long' => NULL,
+      'label_full' => NULL,
+    ];
+    $base_object = $this->getBaseObject();
+    if ($base_object instanceof Plan) {
+      $option['label'] = $base_object->getYear();
+      $option['label_long'] = implode(' ', array_filter([
+        $option['label'],
+        $base_object->getPlanType()?->getAbbreviation(),
+      ]));
+      $option['label_full'] = implode(' ', array_filter([
+        $option['label'],
+        $base_object->getPlanType()?->getAbbreviation(),
+        $base_object->getShortName(),
+      ]));
+    }
+    elseif (!$base_object->type->needsYear && $base_object->hasField('field_year')) {
+      $option['label'] = $base_object->get('field_year')->value;
+    }
+    else {
+      $option['label'] = $this->getShortName($base_object, TRUE, TRUE) ?? $this->label();
+    }
+    return $option;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPageTitleMetaData() {
     $base_object = $this->getBaseObject();
     $meta_data = $base_object instanceof BaseObjectMetaDataInterface ? $base_object->getPageTitleMetaData() : NULL;
+    if ($meta_data && !$this->isDefaultRevision()) {
+      array_unshift($meta_data, [
+        '#markup' => new TranslatableMarkup('Rev #@id', [
+          '@id' => $this->getRevisionId(),
+        ]),
+      ]);
+    }
     return $meta_data;
   }
 
@@ -109,6 +156,13 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
   private static function isAutocompleteRoute() {
     $route_name = \Drupal::routeMatch()->getRouteName();
     return $route_name == 'system.entity_autocomplete';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isProtected() {
+    return $this->getEmbargoedAccessManager()?->isProtected($this) ?? FALSE;
   }
 
   /**
@@ -185,6 +239,17 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
       return [];
     }
     return $base_object->getApiCacheTagsToInvalidate();
+  }
+
+  /**
+   * Get the embargoed access manager service.
+   *
+   * @return \Drupal\ghi_embargoed_access\EmbargoedAccessManager|null
+   *   The embargoed access manager service or NULL.
+   */
+  protected static function getEmbargoedAccessManager() {
+    $service = 'ghi_embargoed_access.manager';
+    return \Drupal::hasService($service) ? \Drupal::service($service) : NULL;
   }
 
 }

@@ -1,6 +1,7 @@
 _core:
   default_config_hash: R4IF-ClDHXxblLcG0L7MgsLvfBIMAvi_skumNFQwkDc
 module:
+  active_tags: 0
   admin_denied: 0
   admin_toolbar: 0
   admin_toolbar_tools: 0
@@ -23,6 +24,7 @@ module:
   contextual: 0
   crop: 0
   ctools: 0
+  datalayer: 0
   datetime: 0
   datetime_range: 0
   dynamic_page_cache: 0

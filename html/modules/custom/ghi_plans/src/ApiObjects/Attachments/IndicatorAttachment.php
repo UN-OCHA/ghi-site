@@ -2,8 +2,6 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
-use Drupal\hpc_common\Helpers\ThemeHelper;
-
 /**
  * Abstraction for API data attachment objects.
  */
@@ -24,8 +22,10 @@ class IndicatorAttachment extends DataAttachment {
    * {@inheritdoc}
    */
   public function getSingleValue($index, ?array $reporting_periods = NULL, $data_point_conf = []) {
+    $monitoring_period = $data_point_conf['monitoring_period'] ?? 'latest';
+    $reporting_periods = $this->getReportingPeriods($reporting_periods, $monitoring_period);
     if (!$this->isApiCalculated($index, $data_point_conf)) {
-      $monitoring_period = !empty($reporting_periods) ? array_key_last($reporting_periods) : 'latest';
+      $monitoring_period = !empty($reporting_periods) ? array_key_last($reporting_periods) : $monitoring_period;
       return $this->getValueForDataPoint($index, $monitoring_period);
     }
     $value = NULL;
@@ -34,7 +34,7 @@ class IndicatorAttachment extends DataAttachment {
       return $value;
     }
     $calculation_method = $this->getCalculationMethod();
-    switch (strtolower($calculation_method)) {
+    switch ($calculation_method) {
       case self::CALCULATION_METHOD_SUM:
         $value = array_sum($values);
         break;
@@ -73,8 +73,10 @@ class IndicatorAttachment extends DataAttachment {
   protected function getTooltip($conf) {
     $tooltip = parent::getTooltip($conf);
 
-    // Get the last published monitoring period.
-    $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
+    // Get the last published monitoring period based on the selected periods
+    // if any.
+    $monitoring_period = $conf['data_points'][0]['monitoring_period'] ?? 'latest';
+    $reporting_periods = $this->getReportingPeriods(NULL, $monitoring_period);
     $last_reporting_period = end($reporting_periods);
     if (!$last_reporting_period) {
       return $tooltip;
@@ -114,14 +116,10 @@ class IndicatorAttachment extends DataAttachment {
   public function formatCalculationTooltip($monitoring_period) {
     $tooltip_icon = NULL;
     $tooltip_text = NULL;
-    $reporting_period_text = ThemeHelper::render([
-      '#theme' => 'hpc_reporting_period',
-      '#reporting_period' => $monitoring_period,
-      '#format_string' => ', as of date @end_date',
-    ], FALSE);
+    $reporting_period_text = $monitoring_period->format(', as of date @end_date');
     $calculation_method = $this->getCalculationMethod();
     $t_options = ['langcode' => $this->getPlanLanguage()];
-    switch (strtolower($calculation_method)) {
+    switch ($calculation_method) {
       case self::CALCULATION_METHOD_SUM:
         $tooltip_text = $this->t('This value is the sum of all monitoring periods values', [], $t_options);
         $tooltip_icon = 'functions';

@@ -134,13 +134,14 @@ class SectionWizard extends WizardBase {
       '#access' => $needs_year && $step >= array_flip($steps)['year'],
     ];
 
-    $tags = $this->getEntityReferenceFieldItemList(Section::BUNDLE, 'field_tags', $form_state->getValue('tags') ?? []);
+    $tag_ids = $this->getSubmittedTagIds($form_state);
+    $tags = $this->getEntityReferenceFieldItemList(Section::BUNDLE, 'field_tags', $tag_ids ?? []);
 
     // Add the team selector.
     $form['tags'] = [
-      '#type' => 'entity_autocomplete',
+      '#type' => 'entity_autocomplete_active_tags',
       '#title' => $this->t('Tags'),
-      '#description' => $this->t('Select the tags associated with this section. This controls the content that will be available. Enter multiple tags separated by comma.'),
+      '#description' => $this->t('Select the tags associated with this section. This controls the content that will be available.'),
       '#target_type' => 'taxonomy_term',
       '#selection_handler' => 'default',
       '#selection_settings' => [
@@ -155,6 +156,11 @@ class SectionWizard extends WizardBase {
       '#required' => TRUE,
       '#disabled' => $step > array_flip($steps)['tags'],
       '#access' => $step >= array_flip($steps)['tags'],
+      '#attached' => [
+        'library' => ['ghi_form_elements/active_tags'],
+      ],
+      '#element_validate' => ['ghi_form_elements_entity_autocomplete_active_tags_element_validate'],
+      '#maxlength' => 512,
     ];
 
     // Add the team selector.
@@ -276,6 +282,10 @@ class SectionWizard extends WizardBase {
 
     $base_object = $this->getSubmittedBaseObject($form_state);
 
+    // Since we are using the active tags module now, we need to transform the
+    // submitted value for the tags.
+    $values['tags'] = $this->getSubmittedTagIds($form_state);
+
     // Clear the error messages.
     $this->messenger()->deleteAll();
 
@@ -357,6 +367,25 @@ class SectionWizard extends WizardBase {
       $base_object = $this->entityTypeManager->getStorage('base_object')->load($form_state->getValue('base_object')[0]['target_id']);
     }
     return $base_object;
+  }
+
+  /**
+   * Get the submitted tag ids.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   *
+   * @return int[]
+   *   An array of tag ids.
+   */
+  private function getSubmittedTagIds(FormStateInterface $form_state) {
+    $submitted_tags = $form_state->getValue('tags');
+    if (is_array($submitted_tags)) {
+      return $submitted_tags;
+    }
+    return array_map(function ($item) {
+      return $item->value;
+    }, json_decode($form_state->getValue('tags') ?: '') ?? []);
   }
 
 }

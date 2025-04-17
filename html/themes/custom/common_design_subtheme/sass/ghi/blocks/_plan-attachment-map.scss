@@ -91,7 +91,13 @@
 
   .plan-attachment-map-wrapper {
     .map-tabs--inner {
-      padding-left: 1rem;
+      // overflow-x: auto;
+      max-width: calc(100vw - 2* var(--cd-container-padding));
+
+      ul {
+        width: fit-content;
+        margin: 0 1rem;
+      }
     }
   }
 

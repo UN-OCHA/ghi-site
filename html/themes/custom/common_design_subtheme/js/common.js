@@ -30,6 +30,12 @@
     if ($table.parent().find('.expand-table').length > 0) {
       return;
     }
+
+    let tableLength = $table.find('> tbody > tr').length;
+    let softLimit = $table.data('soft-limit');
+    if (tableLength < softLimit) {
+      return;
+    }
     // Add a button to expand the rest of the rows.
     let $button = $('<a href="#">')
     .addClass('expand-table')
@@ -224,6 +230,12 @@
             }
           });
         }
+      });
+
+      // Make sure that state changes trigger a dialog resize event so that
+      // dialog.position.js can do it's magic of repositioning the modal.
+      $(document).on('state:visible', (e) => {
+        $(window).trigger('resize.dialogResize');
       });
     }
 

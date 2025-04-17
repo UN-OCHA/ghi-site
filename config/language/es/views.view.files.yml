@@ -2,7 +2,7 @@ label: Archivos
 description: 'Buscar y administrar archivos.'
 display:
   default:
-    display_title: 'Por defecto'
+    display_title: Máster
     display_options:
       title: Archivos
       fields:

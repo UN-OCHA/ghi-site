@@ -102,6 +102,7 @@
           // Also redraw on zoom. This is mainly important for the offset
           // locations on the plan overview map.
           self.renderLocations();
+          this.updateActiveFeatures();
         });
       });
     }
@@ -139,6 +140,8 @@
         this.updateActiveFeature(active_feature);
       }
 
+      // Needed for changes to the admin level.
+      this.addAdminAreaOutlines();
     }
 
     /**
@@ -174,31 +177,6 @@
       let locations = this.state.getLocations();
       let features = locations.map(object => object.feature ?? this.buildFeatureForObject(object));
       return features;
-    }
-
-    /**
-     * Build the country features.
-     *
-     * @returns {Array}
-     *   An array of feature objects.
-     */
-    buildCountryFeatures = function () {
-      let state = this.state;
-      let data = state.getData();
-      let geojson = data.geojson ?? {};
-
-      let country_features = [];
-      for (let location_id in geojson) {
-        let country_feature = state.getMapController().getGeoJSON(geojson[location_id]);
-        if (!country_feature) {
-          continue;
-        }
-        country_feature.id = Number(location_id);
-        country_feature.properties.location_id = Number(location_id);
-        country_feature.properties.object_id = Number(location_id);
-        country_features.push(country_feature);
-      }
-      return country_features;
     }
 
     /**
@@ -423,10 +401,10 @@
 
       // Build the country features and add them to the source, but do it
       // non-blocking.
-      setTimeout(() => {
-        self.updateMapData(geojson_source_id, self.buildCountryFeatures());
-      }, 1000);
-
+      let locations = Object.values(state.getData().geojson ?? {});
+      state.getMapController().loadFeaturesAsync(locations, (features) => {
+        self.updateMapData(geojson_source_id, features);
+      });
     }
 
     /**
@@ -438,31 +416,56 @@
       let map = state.getMap();
 
       let geojson_source_id = this.sourceId + '-geojson';
-      if (map.getSource(geojson_source_id)) {
-        map.removeLayer(geojson_source_id + '-outline');
-        map.removeSource(geojson_source_id);
-      }
 
-      map.addSource(geojson_source_id, this.state.buildGeoJsonSource(null));
-      // Add an outline around the polygon.
-      map.addLayer({
-        'id': geojson_source_id + '-outline',
-        'type': 'line',
-        'source': geojson_source_id,
-        'layout': {},
-        'paint': {
-          'line-color': root_styles.getPropertyValue('--ghi-grey'),
-          'line-width': 1
-        }
-      });
+      if (!map.getSource(geojson_source_id)) {
+        map.addSource(geojson_source_id, this.state.buildGeoJsonSource(null));
+
+        // Fill the polygon.
+        map.addLayer({
+          'id': geojson_source_id + '-fill',
+          'type': 'fill',
+          'source': geojson_source_id,
+          'layout': {},
+          'paint': {
+            'fill-color': [
+              'case',
+              ['boolean', ['feature-state', 'hover'], false],
+              '#FFF6D7', // Color when hovered.
+              ['boolean', ['feature-state', 'focus'], false],
+              '#FFE691', // Color when focused.
+              '#FFF6D7', // Default color.
+            ],
+            'fill-opacity': [
+              'case',
+              ['boolean', ['feature-state', 'hover'], false],
+              1,  // 1 opacity when hovering.
+              ['boolean', ['feature-state', 'focus'], false],
+              1,  // 1 opacity when focused.
+              ['boolean', ['feature-state', 'hidden'], false],
+              0,  // 0 opacity when hidden.
+              0,
+            ],
+          }
+        });
+        // Add an outline around the polygon.
+        map.addLayer({
+          'id': geojson_source_id + '-outline',
+          'type': 'line',
+          'source': geojson_source_id,
+          'layout': {},
+          'paint': {
+            'line-color': root_styles.getPropertyValue('--ghi-grey'),
+            'line-width': 1,
+            'line-opacity': 0.5,
+          }
+        });
+      }
 
       // Build the admin area features and add them to the source, but do it
       // non-blocking.
-      setTimeout(() => {
-        // Add the admin area outlines.
-        let geojson_features = state.getLocations().map(item => state.getMapController().getGeoJSON(item)).filter(d => d);
-        self.updateMapData(geojson_source_id, geojson_features);
-      }, 1000);
+      state.getMapController().loadFeaturesAsync(state.getLocations(), (features) => {
+        self.updateMapData(geojson_source_id, features);
+      });
     }
 
     /**
@@ -556,6 +559,46 @@
       let features = [hover_feature, focus_feature].filter(d => d !== null);
       self.updateMapData(layer_id, features);
       map.setLayoutProperty(layer_id, 'visibility', features.length ? 'visible' : 'none');
+      if (focus_feature) {
+        // There was an issue when selecting a feature, then moving and zooming
+        // the map so that the selected feature wouldn't be visible anymore,
+        // then selecting another feature in the new viewport, which would then
+        // not unset the feature state of the previously active feature. So we
+        // need to make sure to unset the feature state of that older feature
+        // anytime it becomes visible.
+        let source_id = state.getMapId();
+        let geojson_source_id = source_id + '-geojson';
+        let existing = [];
+        if (state.shouldShowCountryOutlines()) {
+          let location = state.getLocationById(focus_feature.properties.object_id);
+          let highlight_countries = location?.highlight_countries;
+          let filter = highlight_countries ? ['in', ['get', 'location_id'], ['literal', location.highlight_countries]] : null;
+          let geojson_features_ids = state.querySourceFeatures(geojson_source_id, geojson_source_id, filter)
+            .map((d) => d.id);
+          existing = state.querySourceFeatures(geojson_source_id + '-fill', geojson_source_id)
+            .filter((d) => !geojson_features_ids.length || geojson_features_ids.indexOf(d.id) == -1)
+            .filter((d) => (map.getFeatureState({
+              source: geojson_source_id,
+              id: d.id
+            })['focus'] ?? false) === true);
+        }
+        else {
+          existing = state.querySourceFeatures(geojson_source_id + '-fill', geojson_source_id)
+            .filter((d) => !focus_feature || d.id != focus_feature.id)
+            .filter((d) => (map.getFeatureState({
+              source: geojson_source_id,
+              id: d.id
+            })['focus'] ?? false) === true);
+        }
+        if (existing.length) {
+          existing.forEach(item => {
+            map.setFeatureState(
+              { source: geojson_source_id, id: item.id },
+              { 'focus': false}
+            );
+          });
+        }
+      }
     }
 
     /**
@@ -604,6 +647,7 @@
         location_data: location_data,
         title: location_data.title,
         tag_line: location_data.tag_line,
+        pcodes_enabled: this.options.pcodes_enabled ?? false,
         monitoring_period: monitoring_period ? '<div class="monitoring-period">' + location_data.monitoring_period + '</div>' : '',
         content: this.buildSidebarContent(object),
         template: [

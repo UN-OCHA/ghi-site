@@ -13,7 +13,7 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  *   id = "locations_query",
  *   label = @Translation("Locations query"),
  *   endpoint = {
- *     "api_key" = "location/nested/{country_id}",
+ *     "api_key" = "location/nested/{location_id}",
  *     "version" = "v2",
  *     "query" = {
  *       "scopes" = "locations",
@@ -28,47 +28,98 @@ class LocationsQuery extends EndpointQueryBase {
   const MAX_LEVEL = 5;
 
   /**
-   * Get the country locations.
+   * Get a location.
    *
-   * @param int $country_id
-   *   A country object as returned by the API.
+   * @param int $location_id
+   *   A location id known to the API.
    * @param int $max_level
    *   A maximum level of nested locations to retrieve.
-   * @param bool $include_expired
-   *   Include expired locations.
    *
    * @return \Drupal\ghi_base_objects\ApiObjects\Location|null
-   *   A location.
+   *   A location object.
    */
-  public function getCountryLocationData($country_id, $max_level = NULL, $include_expired = TRUE) {
-    $this->setPlaceholder('country_id', $country_id);
+  public function getLocation($location_id, $max_level = 1) {
+    $this->setPlaceholder('location_id', $location_id);
     $this->endpointQuery->setEndpointArguments(array_filter([
       'maxLevel' => $max_level ?? self::MAX_LEVEL,
-      'includeExpired' => $include_expired ? 'true' : NULL,
+      'includeExpired' => 'true',
     ], function ($item) {
       return $item !== NULL;
     }));
     $data = $this->getData();
+    return $data ? new Location($data) : NULL;
+  }
+
+  /**
+   * Get a country.
+   *
+   * @param int $country_id
+   *   A country id known to the API.
+   * @param int $max_level
+   *   A maximum level of nested locations to retrieve.
+   *
+   * @return \Drupal\ghi_base_objects\ApiObjects\Location|null
+   *   A location object.
+   */
+  public function getCountry($country_id, $max_level = NULL) {
+    $this->setPlaceholder('location_id', $country_id);
+    $this->endpointQuery->setEndpointArguments(array_filter([
+      'maxLevel' => $max_level ?? self::MAX_LEVEL,
+      'includeExpired' => 'true',
+    ], function ($item) {
+      return $item !== NULL;
+    }));
+    $data = $this->getData();
+    return $data ? new Location($data) : NULL;
+  }
+
+  /**
+   * Get a location inside a country.
+   *
+   * @param int $country_id
+   *   A country id known to the API.
+   * @param int $location_id
+   *   A location id known to the API.
+   *
+   * @return \Drupal\ghi_base_objects\ApiObjects\Location|null
+   *   A location.
+   */
+  public function getCountryLocation($country_id, $location_id) {
+    // First get the location.
+    $this->setPlaceholder('location_id', $location_id);
+    $this->endpointQuery->setEndpointArguments([
+      'maxLevel' => 0,
+      'includeExpired' => 'true',
+    ], function ($item) {
+      return $item !== NULL;
+    });
+    $data = $this->getData();
     if (empty($data)) {
       return NULL;
     }
-    return $data ? new Location($data) : NULL;
+    $location = new Location($data);
+    // Then get the country and make a simple sanity check.
+    $country = $this->getCountry($country_id, 0);
+    if (!$country || $country->id() || $location->getParentCountry()->id()) {
+      return NULL;
+    }
+    return $location;
   }
 
   /**
    * Get the coordinations for all locations of the country.
    *
-   * @param object $country
-   *   An object that needs to have the id property set to the countries id.
+   * @param int $country_id
+   *   The country id.
    * @param int $max_level
    *   A maximum level of nested locations to retrieve.
    *
    * @return \Drupal\ghi_base_objects\ApiObjects\Location[]
    *   An array of location objects keyed by the location id.
    */
-  public function getCountryLocations($country, $max_level = self::MAX_LEVEL) {
+  public function getCountryLocations($country_id, $max_level = self::MAX_LEVEL) {
     $cache_key = $this->getCacheKey([
-      'country_id' => $country->id,
+      'country_id' => $country_id,
       'max_level' => $max_level,
     ]);
     $locations = $this->getCache($cache_key);
@@ -76,14 +127,15 @@ class LocationsQuery extends EndpointQueryBase {
       return $locations;
     }
 
-    $data = $this->getCountryLocationData($country->id, $max_level);
-    if (!$data || empty($data->children) || !is_array($data->children)) {
+    $country = $this->getCountry($country_id, $max_level);
+    $children = $country?->getChildren();
+    if (empty($children) || !is_array($children)) {
       $this->setCache($cache_key, []);
       return [];
     }
 
     // Make it a flat array.
-    $flat_locations = $this->flattenLocationArray($data->children);
+    $flat_locations = $this->flattenLocationArray($children);
     $locations = [];
     // Now look at each location and prepare the full set of location data.
     foreach ($flat_locations as $item) {
@@ -92,11 +144,13 @@ class LocationsQuery extends EndpointQueryBase {
         continue;
       }
       $locations[$item->id] = new Location($item);
+      $locations[$item->id]->setParentCountry($country);
+      $this->setCacheTags($locations[$item->id]->getCacheTags());
     }
 
     // We filter the locations for empty coordinates and for admin level 0.
-    $locations = array_filter($locations, function ($location) {
-      return !empty($location->latLng[0]) && !empty($location->latLng[1]) && $location->admin_level != 0;
+    $locations = array_filter($locations, function (Location $location) {
+      return !empty($location->latLng[0]) && !empty($location->latLng[1]) && !$location->isCountry();
     });
     $this->setCache($cache_key, $locations);
     return $locations;

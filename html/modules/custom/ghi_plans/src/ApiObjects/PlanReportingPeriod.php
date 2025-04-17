@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\ApiObjects;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 
@@ -134,13 +135,33 @@ class PlanReportingPeriod extends BaseObject {
    *   The cumulative date range as a formatted string.
    */
   public function formatCumulativeDateRange() {
-    $start = $this->getDateTimeObject($this->getPlanStartDate());
+    $start = $this->getDateTimeObject($this->getPlanStartDate() ?? $this->getStartDate());
     $start_date = $start->format($format ?? self::FORMAT_DATE);
     $end_date = $this->formatEndDate();
     if ($start->format('Y') == $this->formatEndDate('Y')) {
       $start_date = $start->format(self::FORMAT_DATE_SHORT);
     }
     return $start_date . ' - ' . $end_date;
+  }
+
+  /**
+   * Format a reporting period for output.
+   *
+   * @param string|\Drupal\Component\Render\MarkupInterface $format_string
+   *   A formatting string.
+   *
+   * @return string
+   *   A formatted string representing the reporting period.
+   */
+  public function format($format_string = NULL) {
+    $format_string = $format_string ?? '#@period_number: @date_range';
+    $args = [
+      '@period_number' => $this->getPeriodNumber(),
+      '@end_date' => $this->formatEndDate(),
+      '@date_range' => $this->formatDateRange(),
+      '@data_range_cumulative' => $this->formatCumulativeDateRange(),
+    ];
+    return (string) new FormattableMarkup($format_string, $args);
   }
 
   /**

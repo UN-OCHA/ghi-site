@@ -148,7 +148,23 @@ class RemoteArticle extends RemoteArticleBase {
    * {@inheritdoc}
    */
   public function getParagraphs() {
-    return $this->paragraphs;
+    return $this->paragraphs ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasSubarticle(RemoteArticle $remote_article) {
+    foreach ($this->getParagraphs() as $paragraph) {
+      if ($paragraph->getType() != 'sub_article') {
+        continue;
+      }
+      $article_id = $paragraph->getConfiguration()['article_id'] ?? NULL;
+      if ($article_id && $article_id == $remote_article->getId()) {
+        return TRUE;
+      }
+    }
+    return NULL;
   }
 
   /**

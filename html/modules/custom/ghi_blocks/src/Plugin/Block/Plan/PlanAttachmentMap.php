@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
@@ -18,7 +19,6 @@ use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
-use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 
 /**
@@ -32,11 +32,13 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
  *    "entities" = "plan_entities_query",
  *    "attachment" = "attachment_query",
  *    "attachment_search" = "attachment_search_query",
+ *    "locations" = "locations_query",
  *  },
  *  default_title = @Translation("Data by location"),
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
+ *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" }),
+ *    "plan_cluster" = @ContextDefinition("entity:base_object", label = @Translation("Cluster"), constraints = { "Bundle": "governing_entity" }, required =  FALSE)
  *  },
  *  config_forms = {
  *    "attachments" = {
@@ -78,6 +80,15 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $chart_id = Html::getUniqueId('plan-attachment-map--' . $style);
     $map = $this->buildCircleMap();
 
+    $outline_country = NULL;
+    $focus_country = $this->getCurrentPlanObject()->getFocusCountry();
+    if ($focus_country) {
+      /** @var \Drupal\ghi_base_objects\Plugin\EndpointQuery\LocationsQuery $locations_query */
+      $locations_query = $this->getQueryHandler('locations');
+      $country = $locations_query->getCountry($focus_country->getSourceId(), 0);
+      $outline_country = $country?->toArray();
+    }
+
     if (empty($map['data'])) {
       // Nothing to show.
       return NULL;
@@ -91,6 +102,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       'disclaimer' => $conf['map']['common']['disclaimer'] ?? self::DEFAULT_DISCLAIMER,
       'pcodes_enabled' => $conf['map']['common']['pcodes_enabled'] ?? TRUE,
       'style' => $style,
+      'outlineCountry' => $outline_country,
     ] + $map['settings'];
 
     $attachment_switcher = $this->getAttachmentSwitcher();
@@ -122,6 +134,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       $comment['#attributes']['class'][] = 'content-width';
       $build['comment'] = $comment;
     }
+    CacheableMetadata::createFromRenderArray($map)->applyTo($build);
     return $build;
   }
 
@@ -165,11 +178,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $decimal_format = $plan_base_object->getDecimalFormat();
     $reporting_periods = $this->getPlanReportingPeriods($plan_id);
     $reporting_periods_rendered = array_map(function ($reporting_period) {
-      return ThemeHelper::render([
-        '#theme' => 'hpc_reporting_period',
-        '#reporting_period' => $reporting_period,
-        '#format_string' => 'Monitoring period #@period_number: @date_range',
-      ]);
+      return $reporting_period->format('Monitoring period #@period_number: @date_range');
     }, $reporting_periods);
     $reporting_period_id = $this->getCurrentReportingPeriod();
     $configured_reporting_periods = $this->getConfiguredReportingPeriods();
@@ -191,6 +200,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         'modal_contents' => $metric_map_data['modal_contents'],
         'variants' => [],
       ];
+      CacheableMetadata::createFromObject($attachment)->applyTo($map);
     }
 
     if (empty($map['data'])) {
@@ -228,6 +238,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
               'locations' => $metric_map_data['location_data'],
               'modal_contents' => $metric_map_data['modal_contents'],
             ];
+            CacheableMetadata::createFromObject($attachment)->applyTo($map);
           }
         }
       }
@@ -420,11 +431,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     return [
       'location_data' => $location_data,
       'modal_contents' => $modal_contents,
-      'monitoring_period' => $reporting_period && $metric_item['is_measurement'] ? ThemeHelper::render([
-        '#theme' => 'hpc_reporting_period',
-        '#reporting_period' => $reporting_period,
-        '#format_string' => 'Monitoring period #@period_number<br>@date_range',
-      ], FALSE) : NULL,
+      'monitoring_period' => $reporting_period && $metric_item['is_measurement'] ? $reporting_period->format('Monitoring period #@period_number<br>@date_range') : NULL,
     ];
   }
 
@@ -766,6 +773,22 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         '#uri' => $this->getCurrentUri(),
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBlockConfig() {
+    $config = parent::getBlockConfig();
+    if (empty($config['map']['appearance']['circle']['monitoring_period'])) {
+      return $config;
+    }
+    // There is a very limited set of plans that has an object as the default
+    // value. We correct that here.
+    if (is_object($config['map']['appearance']['circle']['monitoring_period'])) {
+      $config['map']['appearance']['circle']['monitoring_period'] = $config['map']['appearance']['circle']['monitoring_period']->monitoring_period;
+    }
+    return $config;
   }
 
   /**

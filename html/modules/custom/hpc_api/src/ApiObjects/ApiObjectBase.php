@@ -3,16 +3,19 @@
 namespace Drupal\hpc_api\ApiObjects;
 
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableDependencyInterface;
+use Drupal\Core\Cache\CacheableDependencyTrait;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Base class for API objects.
  */
-abstract class ApiObjectBase implements ApiObjectInterface {
+abstract class ApiObjectBase implements ApiObjectInterface, CacheableDependencyInterface {
 
   use StringTranslationTrait;
   use DependencySerializationTrait;
+  use CacheableDependencyTrait;
 
   /**
    * The original data for an object from the HPC API.
@@ -29,13 +32,6 @@ abstract class ApiObjectBase implements ApiObjectInterface {
   private $map;
 
   /**
-   * The cache tags.
-   *
-   * @var string[]
-   */
-  protected $cacheTags = [];
-
-  /**
    * {@inheritdoc}
    */
   public function __construct($data) {
@@ -47,7 +43,7 @@ abstract class ApiObjectBase implements ApiObjectInterface {
    * {@inheritdoc}
    */
   public function id() {
-    return (int) $this->data->id;
+    return (int) ($this->map?->id ?? $this->data->id);
   }
 
   /**
@@ -125,17 +121,7 @@ abstract class ApiObjectBase implements ApiObjectInterface {
    *   The cache tags for this object.
    */
   public function setCacheTags($cache_tags) {
-    $this->cacheTags = Cache::mergeTags($cache_tags);
-  }
-
-  /**
-   * Get the cache tags for this object.
-   *
-   * @return array
-   *   The cache tags for this object.
-   */
-  public function getCacheTags() {
-    return $this->cacheTags;
+    $this->cacheTags = Cache::mergeTags($this->cacheTags, $cache_tags);
   }
 
   /**

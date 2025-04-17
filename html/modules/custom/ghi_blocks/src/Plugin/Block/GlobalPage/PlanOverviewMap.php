@@ -233,7 +233,7 @@ class PlanOverviewMap extends GHIBlockBase {
         'tooltip' => implode(' ', [
           $plan_entity->getShortName(),
           $plan_entity->getYear(),
-          $plan->getTypeShortName(TRUE),
+          $plan->getTypeShortName(),
         ]),
         'tooltip_values' => [
           'in_need' => [
@@ -380,13 +380,13 @@ class PlanOverviewMap extends GHIBlockBase {
   /**
    * Build the content of the map modals.
    *
-   * @param object $plan
+   * @param \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan
    *   The plan object for the modal.
    * @param object $caseload
    *   The caseload object for the modal.
    * @param object $funding
    *   The funding object for the modal.
-   * @param object $reporting_period
+   * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod $reporting_period
    *   The reporting period object for the modal.
    * @param object $footnotes
    *   The footnotes to be used if any.
@@ -431,12 +431,8 @@ class PlanOverviewMap extends GHIBlockBase {
         'label' => $this->t('Reached (%)'),
         'value' => (!empty($reporting_period) ? ThemeHelper::render([
           '#theme' => 'hpc_tooltip',
-          '#tooltip' => ThemeHelper::render([
-            '#theme' => 'hpc_reporting_period',
-            '#reporting_period' => $reporting_period,
-            '#format_string' => 'Monitoring period #@period_number<br>@date_range',
-          ], FALSE),
-          '#class' => 'monitoring period',
+          '#tooltip' => $reporting_period->format('Monitoring period #@period_number<br>@date_range'),
+          '#class' => 'monitoring-period',
           '#tag_content' => [
             '#theme' => 'hpc_icon',
             '#icon' => 'calendar_today',
@@ -476,7 +472,7 @@ class PlanOverviewMap extends GHIBlockBase {
               '#attributes' => [
                 'data-toggle' => 'tooltip',
                 'data-tippy-content' => $this->t('Download the @type document', [
-                  '@type' => strtolower($plan->getTypeShortName()) == 'other' ? $this->t('plan') : $plan->getTypeShortName(),
+                  '@type' => strtolower($plan->getTypeName()) == 'other' ? $this->t('plan') : $plan->getTypeShortName(),
                 ]),
               ],
               'content' => DownloadHelper::getDownloadIcon($document_uri),

@@ -15,4 +15,12 @@ interface BaseObjectChildInterface extends BaseObjectInterface {
    */
   public function getParentBaseObject();
 
+  /**
+   * Get the label including the label of the parent object.
+   *
+   * @return string|\Drupal\Core\StringTranslation\TranslatableMarkup
+   *   The label, including the label of the parent object.
+   */
+  public function labelWithParent();
+
 }

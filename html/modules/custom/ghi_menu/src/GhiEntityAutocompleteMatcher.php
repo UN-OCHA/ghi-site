@@ -2,27 +2,69 @@
 
 namespace Drupal\ghi_menu;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Tags;
-use Drupal\Core\Entity\EntityAutocompleteMatcher;
+use Drupal\Core\Entity\EntityAutocompleteMatcherInterface;
 use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_content\Entity\Article;
+use Drupal\ghi_content\Entity\ContentBase;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 
 /**
  * Matcher class to get autocompletion results for entity reference.
  */
-class GhiEntityAutocompleteMatcher extends EntityAutocompleteMatcher {
+class GhiEntityAutocompleteMatcher implements EntityAutocompleteMatcherInterface {
 
   use StringTranslationTrait;
+
+  /**
+   * Original entity autocomplete matcher.
+   *
+   * @var \Drupal\Core\Entity\EntityAutocompleteMatcherInterface
+   */
+  protected $entityAutocompleteMatcher;
+
+  /**
+   * The entity reference selection handler plugin manager.
+   *
+   * @var \Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginManagerInterface
+   */
+  protected $selectionManager;
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * Public constructor.
+   *
+   * @param \Drupal\Core\Entity\EntityAutocompleteMatcherInterface $entity_autocomplete_matcher
+   *   The original entity autocomplete matcher service.
+   * @param \Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginManagerInterface $selection_manager
+   *   The entity reference selection handler plugin manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   */
+  public function __construct(EntityAutocompleteMatcherInterface $entity_autocomplete_matcher, SelectionPluginManagerInterface $selection_manager, EntityTypeManagerInterface $entity_type_manager) {
+    $this->entityAutocompleteMatcher = $entity_autocomplete_matcher;
+    $this->selectionManager = $selection_manager;
+    $this->entityTypeManager = $entity_type_manager;
+  }
 
   /**
    * {@inheritdoc}
    */
   public function getMatches($target_id, $selection_handler, $selection_settings, $string = '') {
     if ($target_id !== 'node') {
-      return parent::getMatches($target_id, $selection_handler, $selection_settings, $string);
+      return $this->entityAutocompleteMatcher->getMatches($target_id, $selection_handler, $selection_settings, $string);
     }
     $matches = [];
     if (!isset($string)) {
@@ -39,8 +81,8 @@ class GhiEntityAutocompleteMatcher extends EntityAutocompleteMatcher {
 
     // Customize the labels used in autocomplete.
     foreach ($entity_labels as $bundle => $values) {
-      $node_type = \Drupal::entityTypeManager()->getStorage('node_type')->load($bundle);
-      $entities = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple(array_keys($values));
+      $node_type = $this->entityTypeManager->getStorage('node_type')->load($bundle);
+      $entities = $this->entityTypeManager->getStorage('node')->loadMultiple(array_keys($values));
       foreach ($values as $entity_id => $label) {
         $entity = $entities[$entity_id];
         if ($entity instanceof Article) {
@@ -57,6 +99,12 @@ class GhiEntityAutocompleteMatcher extends EntityAutocompleteMatcher {
 
         if ($entity instanceof EntityPublishedInterface && !$entity->isPublished()) {
           $custom_label = $custom_label . ' - Unpublished';
+        }
+
+        if (($entity instanceof SectionNodeInterface || $entity instanceof ContentBase) && $entity->isProtected()) {
+          $custom_label = new FormattableMarkup('<span class="protected">@label</span>', [
+            '@label' => $custom_label,
+          ]);
         }
 
         // Create a sanitized key.
@@ -84,7 +132,7 @@ class GhiEntityAutocompleteMatcher extends EntityAutocompleteMatcher {
    */
   protected function getArticleLabel($entity_id, $entity_type_id, $label) {
     /** @var \Drupal\ghi_content\Entity\Article $entity */
-    $entity = \Drupal::entityTypeManager()->getStorage($entity_type_id)->load($entity_id);
+    $entity = $this->entityTypeManager->getStorage($entity_type_id)->load($entity_id);
     $tags = $entity->getTags(TRUE);
     $tag_names = array_map(function ($term) {
       return $term->label();
@@ -110,7 +158,7 @@ class GhiEntityAutocompleteMatcher extends EntityAutocompleteMatcher {
    */
   protected function getSubpageLabel($entity_id, $entity_type_id, $label) {
     /** @var \Drupal\ghi_subpages\Entity\SubpageNodeInterface $entity */
-    $entity = \Drupal::entityTypeManager()->getStorage($entity_type_id)->load($entity_id);
+    $entity = $this->entityTypeManager->getStorage($entity_type_id)->load($entity_id);
     $parent = $entity->getParentBaseNode();
     if ($parent) {
       $label = $label . ' (' . $parent->label() . ')';

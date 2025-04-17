@@ -26,6 +26,11 @@ body[data-gin-accent] .dialog-off-canvas-main-canvas form .messages-list .messag
   border: 0;
 }
 
+.glb-form-element--type-select {
+  width: auto !important;
+  max-width: auto !important;
+}
+
 .glb-form-item__description,
 .glb-fieldset__description {
   line-height: 1.3rem !important;
