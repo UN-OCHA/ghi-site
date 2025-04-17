@@ -8,7 +8,6 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\Select;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
-use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
  * Provides a monitoring period form element.
@@ -52,6 +51,7 @@ class MonitoringPeriod extends Select {
       ],
       '#theme' => $info['#theme'],
       '#theme_wrappers' => $info['#theme_wrappers'],
+      '#add_wrapper' => TRUE,
     ];
   }
 
@@ -78,9 +78,11 @@ class MonitoringPeriod extends Select {
    * any arbitrary data inside the form_state object.
    */
   public static function processMonitoringPeriod(array &$element, FormStateInterface $form_state) {
-    $wrapper_id = self::getWrapperId($element);
-    $element['#prefix'] = '<div id="' . $wrapper_id . '">';
-    $element['#suffix'] = '</div>';
+    if (!empty($element['#add_wrapper'])) {
+      $wrapper_id = self::getWrapperId($element);
+      $element['#prefix'] = '<div id="' . $wrapper_id . '">';
+      $element['#suffix'] = '</div>';
+    }
 
     $monitoring_period_options = self::getReportingPeriodOptions($element['#plan_id']);
     if ($element['#include_latest']) {
@@ -130,10 +132,7 @@ class MonitoringPeriod extends Select {
   public static function getReportingPeriodOptions($plan_id) {
     $monitoring_periods = self::getPlanReportingPeriods($plan_id, TRUE);
     return array_map(function ($period) {
-      return ThemeHelper::render([
-        '#theme' => 'hpc_reporting_period',
-        '#reporting_period' => $period,
-      ], FALSE);
+      return $period->format('#@period_number: @date_range');
     }, $monitoring_periods);
   }
 

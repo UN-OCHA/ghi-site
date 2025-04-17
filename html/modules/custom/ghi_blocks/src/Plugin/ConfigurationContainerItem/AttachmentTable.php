@@ -99,7 +99,10 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
         continue;
       }
 
-      $rows[] = $row;
+      $rows[] = [
+        'data' => $row,
+        'data-attachment-id' => $attachment->id(),
+      ];
     }
     return [
       '#theme' => 'table',

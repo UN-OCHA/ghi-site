@@ -16,8 +16,11 @@ use Drupal\Core\Url;
 use Drupal\entity_access_password\Cache\Context\EntityIsProtectedCacheContext;
 use Drupal\entity_access_password\Service\PasswordAccessManagerInterface;
 use Drupal\entity_access_password\Service\RouteParserInterface;
+use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentBase;
+use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_content\Traits\ContentPathTrait;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeForm;
@@ -133,17 +136,32 @@ class EmbargoedAccessManager {
     if ($this->isProtected($entity) && !$this->passwordAccessManager?->hasUserAccessToEntity($entity)) {
       return FALSE;
     }
-    if ($entity instanceof SubpageNodeInterface && $parent = $entity->getParentBaseNode()) {
-      if ($this->isProtected($parent) && !$this->passwordAccessManager?->hasUserAccessToEntity($parent)) {
-        return FALSE;
-      }
-    }
-    if ($entity instanceof ContentBase && $section = $this->getCurrentSectionNode()) {
-      if ($this->isProtected($section) && !$this->passwordAccessManager?->hasUserAccessToEntity($section)) {
-        return FALSE;
-      }
+    if ($parent = $this->getProtectedParent($entity)) {
+      return $this->entityAccess($parent);
     }
     return TRUE;
+  }
+
+  /**
+   * Check if there is a protected parent for the given entity.
+   *
+   * @param \Drupal\node\NodeInterface $entity
+   *   The entity to check.
+   *
+   * @return \Drupal\node\NodeInterface|null
+   *   The parent node or NULL.
+   */
+  public function getProtectedParent(NodeInterface $entity) {
+    if ($entity instanceof ContentBase && $this->getCurrentSectionNode() && $this->isProtectedEntityInSection($entity)) {
+      return $this->getCurrentSectionNode();
+    }
+    elseif ($entity instanceof Article && $this->getCurrentDocumentNode() && $this->isProtectedEntityInDocument($entity)) {
+      return $this->getCurrentDocumentNode();
+    }
+    elseif ($entity instanceof SubpageNodeInterface && $parent = $entity->getParentBaseNode()) {
+      return $this->isProtected($parent) ? $parent : NULL;
+    }
+    return NULL;
   }
 
   /**
@@ -190,66 +208,107 @@ class EmbargoedAccessManager {
           }
         }
       }
+
+      if ($entity instanceof ContentBase && $document = $this->getCurrentDocumentNode()) {
+        if ($this->passwordAccessManager->isEntityViewModeProtected($view_mode, $document)) {
+          $entity->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $document->getEntityTypeId() . '||' . $document->id() . '||' . $view_mode]);
+
+          if (!$this->passwordAccessManager->hasUserAccessToEntity($document)) {
+            $view_mode = PasswordAccessManagerInterface::PROTECTED_VIEW_MODE;
+          }
+        }
+      }
     }
+  }
+
+  /**
+   * Alter theme suggestions for node views.
+   */
+  public function alterNodeThemeSuggestions(&$suggestions, $variables) {
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $variables['elements']['#node'];
+    $view_mode = $variables['elements']['#view_mode'];
+    if ($view_mode == 'password_protected') {
+      $suggestions[] = 'node__' . $node->bundle() . '__full';
+    }
+  }
+
+  /**
+   * Add cache contexts for the entity to the given theme variables.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity for which the cache contexts should be added.
+   * @param array $variables
+   *   The variables array to add the cache contexts to.
+   */
+  private function addCacheContextsToThemeVariables(EntityInterface $entity, &$variables) {
+    $cacheableMetadata = new CacheableMetadata();
+    $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);
+    $cacheableMetadata->applyTo($variables);
   }
 
   /**
    * Alter variables for the page.
    */
   public function alterHtml(&$variables) {
-    $entity = $this->routeParser?->getEntityFromCurrentRoute();
-    if (!$entity instanceof NodeInterface || $this->entityAccess($entity)) {
-      return NULL;
+    if ($this->embargoedAccessEnabled()) {
+      $variables['#attached']['library'][] = 'ghi_embargoed_access/protect_nodes';
     }
 
-    $variables['attributes']['class'][] = 'path-protected';
-
-    $cacheableMetadata = new CacheableMetadata();
-    $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);
-    $cacheableMetadata->applyTo($variables);
-  }
-
-  /**
-   * Alter variables for the page.
-   */
-  public function alterPage(&$variables) {
-    $entity = $this->routeParser?->getEntityFromCurrentRoute();
-    if (!$entity instanceof NodeInterface || $this->entityAccess($entity)) {
-      return NULL;
-    }
-
-    unset($variables['page']['page_title']['sectionswitcher']);
-    unset($variables['page']['page_image']);
-    unset($variables['page']['page_subtitle']);
-    unset($variables['page']['page_navigation']);
-    unset($variables['page']['content']['subpagetitle']);
-    unset($variables['page']['content']['articletitle']);
-
-    $cacheableMetadata = new CacheableMetadata();
-    $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);
-    $cacheableMetadata->applyTo($variables);
-  }
-
-  /**
-   * Alter variables for the page title.
-   */
-  public function alterPageTitle(&$variables) {
-    $entity = $this->routeParser?->getEntityFromCurrentRoute();
+    $entity = $this->getCurrentNode();
     if (!$entity instanceof NodeInterface) {
-      return NULL;
+      return;
+    }
+
+    if ($this->isProtectedEntityInSection($entity)) {
+      $variables['attributes']['class'][] = 'section-protected';
+    }
+
+    if ($this->isProtectedEntityInDocument($entity)) {
+      $variables['attributes']['class'][] = 'document-protected';
+    }
+
+    if ($this->isProtected($entity)) {
+      $variables['attributes']['class'][] = 'path-protected';
     }
 
     if ($this->entityAccess($entity)) {
-      $variables['title'] = $entity instanceof ContentBase ? $entity->getPageTitle() : $entity->label();
-      return NULL;
+      $variables['attributes']['class'][] = 'access-granted';
     }
 
-    $variables['title'] = $this->t('Embargoed content');
-    $variables['#protected'] = TRUE;
+    $this->addCacheContextsToThemeVariables($entity, $variables);
+  }
 
-    $cacheableMetadata = new CacheableMetadata();
-    $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);
-    $cacheableMetadata->applyTo($variables);
+  /**
+   * Alter variables for links to nodes.
+   */
+  public function alterLink(&$variables) {
+    /** @var \Drupal\Core\Url  $url */
+    $url = $variables['url'];
+
+    $node = NULL;
+    if ($url->isRouted() && $node_id = ($url->getRouteParameters()['node'] ?? NULL)) {
+      $node = $this->entityTypeManager->getStorage('node')->load($node_id);
+    }
+    if ($url->isRouted() && !$node) {
+      return;
+    }
+
+    $node = $node ?? $this->getContentNodeFromPath($url->toString());
+    if (!$node instanceof NodeInterface) {
+      return;
+    }
+
+    if ($this->isProtectedEntityInSection($node) || $this->isProtectedEntityInDocument($node)) {
+      $variables['options']['attributes']['class'][] = 'page-internal-protected';
+    }
+
+    if ($this->isProtected($node) || $this->isProtectedUrl($url)) {
+      // Node is directly protected.
+      $variables['options']['attributes']['class'][] = 'protected';
+    }
+
+    $this->addCacheContextsToThemeVariables($node, $variables);
   }
 
   /**
@@ -260,21 +319,30 @@ class EmbargoedAccessManager {
     if (!$entity instanceof NodeInterface || $this->entityAccess($entity)) {
       return NULL;
     }
-    unset($variables['label']);
-    unset($variables['metadata']);
-    unset($variables['content']['field_image']);
-    unset($variables['content']['field_summary']);
-    $variables['display_submitted'] = FALSE;
-
     if ($variables['view_mode'] == 'password_protected') {
-      $variables['attributes']['class'][] = 'content-width';
+      unset($variables['label']);
+    }
+    else {
+      $variables['label'] = $entity->label();
     }
 
+    // Protect nothing but the summaries.
+    unset($variables['content']['field_summary']);
+    unset($variables['document_summary']);
+    if ($variables['view_mode'] == 'password_protected') {
+      $variables['attributes']['class'][] = 'content-width';
+      $variables['attributes']['class'][] = 'node--view-mode-full';
+    }
+
+    if ($this->isProtectedEntityInSection($entity)) {
+      $variables['attributes']['class'][] = 'section-protected';
+    }
+    if ($this->isProtectedEntityInDocument($entity)) {
+      $variables['attributes']['class'][] = 'document-protected';
+    }
     $variables['attributes']['class'][] = 'protected';
 
-    $cacheableMetadata = new CacheableMetadata();
-    $cacheableMetadata->addCacheContexts([EntityIsProtectedCacheContext::CONTEXT_ID . ':' . $entity->getEntityTypeId() . '||' . $entity->id()]);
-    $cacheableMetadata->applyTo($variables);
+    $this->addCacheContextsToThemeVariables($entity, $variables);
   }
 
   /**
@@ -309,6 +377,40 @@ class EmbargoedAccessManager {
   }
 
   /**
+   * Preprocess a views table display.
+   *
+   * Marks all rows representing protected entities with a class 'protected'.
+   *
+   * @param array $variables
+   *   The variables passed in from hook_preprocess_views_view_table.
+   */
+  public function preprocessViewsTable(&$variables) {
+    if (!$this->embargoedAccessEnabled()) {
+      return;
+    }
+
+    /** @var \Drupal\views\ViewExecutable $view */
+    $view = $variables['view'];
+    if (empty($view->result)) {
+      return NULL;
+    }
+
+    foreach ($variables['rows'] as $row_key => &$row) {
+      $entity = $view->result[$row_key]->_entity;
+      if (!$entity instanceof NodeInterface || !$this->isProtected($entity)) {
+        continue;
+      }
+      $variables['rows'][$row_key]['attributes']->addClass('protected');
+    }
+
+    // Adding the library here is necessary in order to also support entity
+    // browser views that are embedded in an iframe. Unfortunately, these do
+    // not go through the typical rendering process and hook_preprocess_html
+    // does not get called.
+    $variables['#attached']['library'][] = 'ghi_embargoed_access/protect_nodes';
+  }
+
+  /**
    * Checks if the given node supports protection.
    *
    * @param \Drupal\node\NodeInterface $node
@@ -331,10 +433,82 @@ class EmbargoedAccessManager {
    *   TRUE if the node is currently protected, FALSE otherwise.
    */
   public function isProtected(NodeInterface $node) {
-    if (!$node->hasField(self::PROTECTED_FIELD)) {
+    if (!$this->embargoedAccessEnabled()) {
       return FALSE;
     }
-    return !empty($node->get(self::PROTECTED_FIELD)->is_protected);
+    $is_protected = FALSE;
+    if ($this->getProtectedParent($node)) {
+      $is_protected = TRUE;
+    }
+    if (!$is_protected && !$node->hasField(self::PROTECTED_FIELD)) {
+      return FALSE;
+    }
+    return $is_protected || !empty($node->get(self::PROTECTED_FIELD)->is_protected);
+  }
+
+  /**
+   * Check if the given URL is protected.
+   *
+   * @param \Drupal\Core\Url $url
+   *   The url to check.
+   *
+   * @return bool
+   *   TRUE if the url represents a protected page (directly or indirectly),
+   *   FALSE otherwise.
+   */
+  public function isProtectedUrl(Url $url) {
+    $node = $this->getNodeByUrlAlias($url->toString());
+    if ($node && $this->isProtected($node)) {
+      return TRUE;
+    }
+    $document = $this->getDocumentNodeFromPath($url->toString());
+    if ($document && $this->isProtected($document)) {
+      return TRUE;
+    }
+    $section = $this->getSectionNodeFromPath($url->toString());
+    if ($section && $this->isProtected($section)) {
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Check if the given node is protected as part of a section (indirectly).
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to check.
+   *
+   * @return bool
+   *   TRUE if the node is currently indirectly protected, FALSE otherwise.
+   */
+  private function isProtectedEntityInSection($node) {
+    $current_section = $this->getCurrentSectionNode();
+    if (!$current_section || !$this->isProtected($current_section)) {
+      return FALSE;
+    }
+    $is_same_section = $current_section && $node instanceof SectionNodeInterface && $node->id() == $current_section->id();
+    $is_subpage_of_current_section = $current_section && $node instanceof SubpageNodeInterface && $node->getParentBaseNode()->id() == $current_section->id();
+    $is_content_in_section = $current_section && $node instanceof ContentBase && $node->isPartOfSection($current_section);
+    return $is_same_section || $is_subpage_of_current_section || $is_content_in_section;
+  }
+
+  /**
+   * Check if the given node is protected as part of a document (indirectly).
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to check.
+   *
+   * @return bool
+   *   TRUE if the node is currently indirectly protected, FALSE otherwise.
+   */
+  private function isProtectedEntityInDocument($node) {
+    $current_document = $this->getCurrentDocumentNode();
+    if (!$current_document || !$this->isProtected($current_document)) {
+      return FALSE;
+    }
+    $is_same_document = $current_document && $node instanceof Document && $node->id() == $current_document->id();
+    $is_article_in_current_document = $current_document && $node instanceof Article && $current_document->hasArticle($node);
+    return $is_same_document || $is_article_in_current_document;
   }
 
   /**

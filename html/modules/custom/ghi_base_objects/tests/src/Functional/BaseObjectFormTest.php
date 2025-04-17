@@ -58,6 +58,7 @@ class BaseObjectFormTest extends BrowserTestBase {
   public function testBaseObjectEditForm() {
     $base_object = $this->createBaseObject([
       'type' => 'plan',
+      'field_year' => 2025,
     ]);
     $this->drupalGet($base_object->toUrl('edit-form')->toString());
     $assert_session = $this->assertSession();

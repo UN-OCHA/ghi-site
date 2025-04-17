@@ -132,11 +132,19 @@ class DataPoint extends FormElementBase {
       'widget' => !empty($values['widget']) ? $values['widget'] : 'none',
     ];
 
-    $element['processing'] = [
+    $element['processing_wrapper'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['data-point-wrapper'],
+      ],
+      '#tree' => FALSE,
+    ];
+    $element['processing_wrapper']['processing'] = [
       '#type' => 'select',
       '#title' => t('Type'),
       '#options' => DataAttachment::getProcessingOptions(),
       '#default_value' => $defaults['processing'],
+      '#parents' => array_merge($element['#parents'], ['processing']),
       '#ajax' => [
         'event' => 'change',
         'callback' => [static::class, 'updateAjax'],
@@ -145,11 +153,12 @@ class DataPoint extends FormElementBase {
     ];
 
     $processing_selector = FormElementHelper::getStateSelector($element, ['processing']);
-    $element['calculation'] = [
+    $element['processing_wrapper']['calculation'] = [
       '#type' => 'select',
       '#title' => t('Calculation'),
       '#options' => DataAttachment::getCalculationOptions(),
       '#default_value' => $defaults['calculation'],
+      '#parents' => array_merge($element['#parents'], ['calculation']),
       '#states' => [
         'visible' => [
           'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
@@ -183,7 +192,7 @@ class DataPoint extends FormElementBase {
     ];
     $element['data_points'][0]['index'] = [
       '#type' => 'select',
-      '#title' => t('Data point'),
+      '#title' => $defaults['processing'] == 'single' ? t('Data point') : t('Data point #1'),
       '#options' => $data_point_options,
       '#default_value' => $defaults['data_points'][0]['index'] ?? NULL,
       '#ajax' => [
@@ -199,6 +208,28 @@ class DataPoint extends FormElementBase {
       'index',
     ]);
     $measurement_fields = $attachment_prototype->getMeasurementMetricFields();
+    if (!empty($element['#select_monitoring_period'])) {
+      $element['data_points'][0]['monitoring_period'] = [
+        '#type' => 'monitoring_period',
+        '#title' => t('Monitoring period'),
+        '#default_value' => $defaults['data_points'][0]['monitoring_period'] ?? 'latest',
+        '#plan_id' => $plan_object->getSourceId(),
+        '#parents' => array_merge($element['#parents'], ['data_points', 0, 'monitoring_period']),
+        '#add_wrapper' => FALSE,
+        '#ajax' => [
+          'event' => 'change',
+          'callback' => [static::class, 'updateAjax'],
+          'wrapper' => $wrapper_id,
+        ],
+        '#states' => [
+          'visible' => [
+            'select[name="' . $data_point_selector . '"]' => array_map(function ($value) {
+              return ['value' => $value];
+            }, array_keys($measurement_fields)),
+          ],
+        ],
+      ];
+    }
     if ($attachment_prototype->isIndicator()) {
       $element['data_points'][0]['use_calculation_method'] = [
         '#type' => 'checkbox',
@@ -235,27 +266,9 @@ class DataPoint extends FormElementBase {
         $element['data_points'][0]['use_calculation_method']['#attributes']['checked'] = 'checked';
       }
     }
-    if (!empty($element['#select_monitoring_period'])) {
-      $element['data_points'][0]['monitoring_period'] = [
-        '#type' => 'monitoring_period',
-        '#title' => t('Monitoring period'),
-        '#default_value' => $defaults['data_points'][0]['monitoring_period'] ?? NULL,
-        '#plan_id' => $plan_object->getSourceId(),
-        '#ajax' => [
-          'event' => 'change',
-          'callback' => [static::class, 'updateAjax'],
-          'wrapper' => $wrapper_id,
-        ],
-        '#states' => [
-          'visible' => [
-            'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
-          ],
-        ],
-      ];
-    }
     $element['data_points'][1]['index'] = [
       '#type' => 'select',
-      '#title' => t('Data point (2)'),
+      '#title' => t('Data point #2'),
       '#options' => $data_point_options,
       '#default_value' => $defaults['data_points'][1]['index'] ?? NULL,
       '#ajax' => [
@@ -269,6 +282,29 @@ class DataPoint extends FormElementBase {
       1,
       'index',
     ]);
+    if (!empty($element['#select_monitoring_period'])) {
+      $element['data_points'][1]['monitoring_period'] = [
+        '#type' => 'monitoring_period',
+        '#title' => t('Monitoring period'),
+        '#default_value' => $defaults['data_points'][1]['monitoring_period'] ?? 'latest',
+        '#plan_id' => $plan_object->getSourceId(),
+        '#parents' => array_merge($element['#parents'], ['data_points', 1, 'monitoring_period']),
+        '#add_wrapper' => FALSE,
+        '#ajax' => [
+          'event' => 'change',
+          'callback' => [static::class, 'updateAjax'],
+          'wrapper' => $wrapper_id,
+        ],
+        '#states' => [
+          'visible' => [
+            'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
+            'select[name="' . $data_point_selector_1 . '"]' => array_map(function ($value) {
+              return ['value' => $value];
+            }, array_keys($measurement_fields)),
+          ],
+        ],
+      ];
+    }
     if ($attachment_prototype->isIndicator()) {
       $element['data_points'][1]['use_calculation_method'] = [
         '#type' => 'checkbox',
@@ -305,24 +341,6 @@ class DataPoint extends FormElementBase {
         // Might relate to https://www.drupal.org/project/drupal/issues/1100170.
         $element['data_points'][1]['use_calculation_method']['#attributes']['checked'] = 'checked';
       }
-    }
-    if (!empty($element['#select_monitoring_period'])) {
-      $element['data_points'][1]['monitoring_period'] = [
-        '#type' => 'monitoring_period',
-        '#title' => t('Monitoring period (2)'),
-        '#default_value' => $defaults['data_points'][1]['monitoring_period'] ?? NULL,
-        '#plan_id' => $plan_object->getSourceId(),
-        '#ajax' => [
-          'event' => 'change',
-          'callback' => [static::class, 'updateAjax'],
-          'wrapper' => $wrapper_id,
-        ],
-        '#states' => [
-          'visible' => [
-            'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
-          ],
-        ],
-      ];
     }
 
     $data_point_index = $defaults['data_points'][0]['index'] ?? NULL;
@@ -363,7 +381,7 @@ class DataPoint extends FormElementBase {
     ];
 
     // Add a preview if we have an attachment.
-    if (!empty($attachment)) {
+    if ($attachment instanceof DataAttachment) {
       $build = $attachment->formatValue($defaults);
       $element['value_preview'] = [
         '#type' => 'item',

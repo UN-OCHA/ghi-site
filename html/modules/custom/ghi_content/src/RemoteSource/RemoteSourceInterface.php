@@ -96,6 +96,17 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
   public function getParagraph($id, $rendered = TRUE);
 
   /**
+   * Get a tag by name.
+   *
+   * @param int $name
+   *   The name of the tag on the remote.
+   *
+   * @return \Drupal\ghi_content\RemoteContent\RemoteTagInterface
+   *   The result object.
+   */
+  public function getTag($name);
+
+  /**
    * Issue a query against a remote source.
    *
    * @param string $payload
@@ -146,10 +157,18 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
   public function saveConfiguration();
 
   /**
-   * Get the full url to the endpoint of the remote source.
+   * Get the base url of the remote source.
    *
    * @return string
    *   The remote url as a string.
+   */
+  public function getRemoteBaseUrl();
+
+  /**
+   * Get the full url to the endpoint of the remote source.
+   *
+   * @return string
+   *   The remote endpoint url as a string.
    */
   public function getRemoteEndpointUrl();
 

@@ -112,7 +112,7 @@ class SectionMenuItemForm extends FormBase {
     $menu_item = $this->getMenuItem($delta);
     return $this->t('Menu item for <em>@type</em>: @title', [
       '@type' => $menu_item->getPlugin()->getPluginLabel(),
-      '@title' => $menu_item->getLabel(),
+      '@title' => $menu_item->getPlugin()->getLabel(),
     ]);
   }
 

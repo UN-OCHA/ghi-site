@@ -6,6 +6,7 @@ use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectType;
 use Drupal\ghi_base_objects\Entity\BaseObjectTypeInterface;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 
 /**
  * Provides methods to create base objects in tests.
@@ -15,17 +16,21 @@ use Drupal\ghi_base_objects\Entity\BaseObjectTypeInterface;
 trait BaseObjectTestTrait {
 
   use FieldTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
    * Create a base object type.
    *
    * @param mixed[] $values
-   *   (optional) Additional values for the base object type entity:
+   *   (optional) Additional key-value pairs for the base object type entity:
    *   - id: The ID of the base object type. If none is provided, a random value
    *     will be used.
    *   - label: The human-readable label of the base object type. If none is
    *     provided, a random value will be used.
-   *   - hasYear: Whether the base object type handles years already.
+   *   - field_year: When not empty, this will create a year field with the
+   *     provided label.
+   *   - field_plan: When not empty, this will create a plan field with the
+   *     provided label.
    *
    * @return \Drupal\ghi_base_objects\Entity\BaseObjectTypeInterface
    *   A base object type.
@@ -37,14 +42,25 @@ trait BaseObjectTestTrait {
     $values += [
       'id' => $this->randomMachineName(),
       'label' => $this->randomString(),
-      'hasYear' => FALSE,
+      'hasYear' => !empty($values['field_year']),
+      'field_year' => NULL,
+      'field_plan' => NULL,
     ];
-    $base_object_type = BaseObjectType::create($values);
-    $this->assertSame(SAVED_NEW, $base_object_type->save());
-    $this->assertInstanceOf(BaseObjectTypeInterface::class, $base_object_type);
-    $this->createField('base_object', $base_object_type->id(), 'integer', 'field_original_id', 'Source id');
-    if (!empty($values['hasYear'])) {
-      $this->createField('base_object', $base_object_type->id(), 'integer', 'field_year', 'Year');
+    $base_object_type = BaseObjectType::load($values['id']) ?: BaseObjectType::create($values);
+    if ($base_object_type->isNew()) {
+      $this->assertSame(SAVED_NEW, $base_object_type->save());
+      $this->assertInstanceOf(BaseObjectTypeInterface::class, $base_object_type);
+      $this->createField('base_object', $base_object_type->id(), 'integer', 'field_original_id', 'Source id');
+      if (!empty($values['field_year'])) {
+        $this->createField('base_object', $base_object_type->id(), 'integer', 'field_year', $values['field_year']);
+      }
+      if (!empty($values['field_plan'])) {
+        $this->createEntityReferenceField('base_object', $base_object_type->id(), 'field_plan', $values['field_plan'], 'base_object', 'default', [
+          'target_bundles' => [
+            'plan' => 'plan',
+          ],
+        ]);
+      }
     }
     return $base_object_type;
   }

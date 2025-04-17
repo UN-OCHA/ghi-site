@@ -14,6 +14,7 @@ use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
 use Drupal\hpc_common\Helpers\ThemeHelper;
+use Drupal\hpc_common\Traits\RenderArrayTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -38,6 +39,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   use ConfigurationItemValuePreviewTrait;
   use FtsLinkTrait;
   use PlanFootnoteTrait;
+  use RenderArrayTrait;
 
   /**
    * The funding query.
@@ -237,7 +239,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
     $base_object = $this->getContextValue('base_object');
 
-    $rendered = ThemeHelper::getThemeOptions($theme_function, $this->getValue($data_type_key, $scale, $cluster_restrict), [
+    $rendered = $this->buildRenderArray($theme_function, $this->getValue($data_type_key, $scale, $cluster_restrict), [
       'scale' => $scale,
       'decimal_format' => $plan_object->getDecimalFormat(),
     ] + $theme_options);

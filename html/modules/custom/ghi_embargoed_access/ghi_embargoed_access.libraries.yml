@@ -3,3 +3,11 @@ protect_pages_login_form:
   css:
     component:
       css/protect_pages_login_form.css: {}
+  dependencies:
+    - ghi_embargoed_access/protect_nodes
+
+protect_nodes:
+  version: VERSION
+  css:
+    component:
+      css/protect_nodes.css: {}

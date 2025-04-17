@@ -12,6 +12,7 @@
   window.ghi.map = {
 
     states: {},
+    storage: {},
     config: {
       map: {
         padding: 50,
@@ -61,37 +62,79 @@
      *
      * @param {Object} location
      *   The location object.
+     * @param {Callable} featureCallback
+     *   An optional callback for the retrieved features.
+     * @param {Boolean} async
+     *   Whether to retrieve the feature data blocking or non-blocking.
      *
      * @returns {Object}
      *   The feature data.
      */
-    getGeoJSON: function(location, featureCallback = null) {
-      if (typeof this.storage == 'undefined') {
-        this.storage = []
+    getGeoJSON: function(location, featureCallback = null, async = true) {
+      let self = this;
+      if (!location.filepath) {
+        return null;
       }
-      if (location.filepath && typeof this.storage[location.filepath] == 'undefined') {
-        let feature = null;
+      if (typeof this.storage[location.filepath] == 'undefined') {
+        this.storage[location.filepath] = null;
         $.ajax({
           dataType: 'json',
           url: location.filepath,
           success: function (data) {
             let type = data.type ?? null;
-            feature = type == 'FeatureCollection' ? (data.features[0] ?? null) : data;
+            let feature = type == 'FeatureCollection' ? (data.features[0] ?? null) : data;
             if (!type || !feature) {
               return;
             }
-            feature.properties.object_id = location.location_id;
-            feature.properties.location_id = location.location_id;
-            feature.properties.location_name = location.location_name;
+            feature.id = Number(location.location_id);
+            feature.properties = {
+              object_id: location.location_id,
+              location_id: location.location_id,
+              location_name: location.location_name,
+            };
             if (featureCallback) {
               feature = featureCallback(feature, location);
             }
+            self.storage[location.filepath] = feature;
           },
-          async: false
+          complete: function () {
+            self.storage[location.filepath] = self.storage[location.filepath] ?? false;
+          },
+          async: async
         });
-        this.storage[location.filepath] = feature;
       }
       return this.storage[location.filepath];
+    },
+
+    /**
+     * Load features for the given locations asynchronously.
+     *
+     * @param {Array} locations
+     *   A locations array.
+     * @param {Callable} callback
+     *   A callback function.
+     */
+    loadFeaturesAsync: function (locations, callback) {
+      let self = this;
+      let filepaths = locations.map((d) => d.filepath).filter((d) => d !== null);
+      // Trigger loading of the geojson files.
+      locations.map(item => this.getGeoJSON(item)).filter(d => d);
+      // And wait until all are available before calling the callback.
+      let intervall = setInterval(() => {
+        // Filter storage down to the requested entries.
+        let storage = Object.keys(self.storage)
+          .filter(key => filepaths.includes(key))
+          .reduce((obj, key) => {
+            obj[key] = self.storage[key];
+            return obj;
+          }, {});
+        // Check if all files have finished loading (either a string or false,
+        // but not null).
+        if (Object.values(storage).filter((d) => d !== null).length == filepaths.length) {
+          clearInterval(intervall);
+          callback(Object.values(storage));
+        }
+      }, 500);
     },
 
     /**
@@ -128,13 +171,17 @@
 
       // Set the bounds.
       var bounds = new mapboxgl.LngLatBounds();
-      state.getLocations().forEach(function(d) {
-        // Note that mapbox expects lnglat when we use latlng internally. Also
-        // see https://github.com/Turfjs/turf/issues/182 for a discussion in an
-        // unrelated project that get's some details about latlng vs lnglat.
-        bounds.extend([d.latLng[1], d.latLng[0]]);
-      });
-      if (state.getLocations().length) {
+      let outline_country = typeof options.outlineCountry != 'undefined' ? this.getGeoJSON(options.outlineCountry, null, false) : null;
+      if (outline_country) {
+        map.fitBounds(turf.envelope(outline_country).bbox, { padding: 50 });
+      }
+      else if (state.getLocations().length) {
+        state.getLocations().forEach(function(d) {
+          // Note that mapbox expects lnglat when we use latlng internally. Also
+          // see https://github.com/Turfjs/turf/issues/182 for a discussion in an
+          // unrelated project that get's some details about latlng vs lnglat.
+          bounds.extend([d.latLng[1], d.latLng[0]]);
+        });
         map.fitBounds(bounds, { padding: 50 });
       }
       if (state.getLocations().length == 1) {

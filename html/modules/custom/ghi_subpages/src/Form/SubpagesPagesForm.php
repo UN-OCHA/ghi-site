@@ -283,6 +283,7 @@ class SubpagesPagesForm extends FormBase {
       }
 
       $header_links = $this->getHeaderLinks($node_type, $node);
+      $node_label = $node_type->label();
       $form['subpages_' . $node_type->id() . '_header'] = [
         '#type' => 'container',
         '#attributes' => [
@@ -292,7 +293,7 @@ class SubpagesPagesForm extends FormBase {
           '#type' => 'html_tag',
           '#tag' => 'h2',
           '#value' => $this->t('@label subpages', [
-            '@label' => $node_type->label(),
+            '@label' => str_ends_with($node_label, ' subpage') ? rtrim($node_label, ' subpage') : $node_label,
           ]),
         ],
       ] + $header_links;
@@ -316,7 +317,7 @@ class SubpagesPagesForm extends FormBase {
       ];
     }
 
-    $this->buildBulkForm($form, $form_state, !empty($rows) ? $this->getBulkFormActions() : []);
+    $this->buildBulkForm($form, $form_state, $this->getBulkFormActions());
 
     return $form;
   }

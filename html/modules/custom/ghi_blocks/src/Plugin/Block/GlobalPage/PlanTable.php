@@ -12,6 +12,7 @@ use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
+use Drupal\ghi_blocks\Traits\TableTrait;
 use Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
@@ -44,6 +45,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
   use GlobalPlanOverviewBlockTrait;
   use GlobalSettingsTrait;
   use PlanFootnoteTrait;
+  use TableTrait;
   use TableSoftLimitTrait;
   use BlockCommentTrait;
   use FtsLinkTrait;
@@ -142,62 +144,22 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     $header += [
       'name' => $this->t('Plans'),
       'type' => $this->t('Plan type'),
-      'inneed' => [
-        'data' => $this->t('People in need'),
-        'data-column-type' => 'amount',
-      ],
-      'targeted' => [
-        'data' => $this->t('People targeted'),
-        'data-column-type' => 'amount',
-      ],
-      'expected_reach' => [
-        'data' => $this->t('Estimated Reach'),
-        'data-column-type' => 'amount',
-      ],
-      'expected_reached' => [
-        'data' => $this->t('% Reached'),
-        'data-column-type' => 'amount',
-      ],
-      'latest_reach' => [
-        'data' => $this->t('People reached'),
-        'data-column-type' => 'percentage',
-      ],
-      'reached' => [
-        'data' => $this->t('% Reached'),
-        'data-column-type' => 'percentage',
-      ],
-      'requirements' => [
-        'data' => $this->t('Requirements'),
-        'data-column-type' => 'currency',
-      ],
-      'funding' => [
-        'data' => $this->t('Funding'),
-        'data-column-type' => 'currency',
-      ],
-      'coverage' => [
-        'data' => $this->t('% Funded'),
-        'data-column-type' => 'percentage',
-      ],
-      'status' => [
-        'data' => $this->t('Status'),
-        'data-column-type' => 'status',
-        'sortable' => FALSE,
-      ],
+      'inneed' => $this->buildHeaderColumn($this->t('People in need'), 'amount'),
+      'targeted' => $this->buildHeaderColumn($this->t('People targeted'), 'amount'),
+      'expected_reach' => $this->buildHeaderColumn($this->t('Estimated Reach'), 'amount'),
+      'expected_reached' => $this->buildHeaderColumn($this->t('% Reached'), 'percentage'),
+      'latest_reach' => $this->buildHeaderColumn($this->t('People reached'), 'percentage'),
+      'reached' => $this->buildHeaderColumn($this->t('% Reached'), 'percentage'),
+      'requirements' => $this->buildHeaderColumn($this->t('Requirements'), 'currency'),
+      'funding' => $this->buildHeaderColumn($this->t('Funding'), 'currency'),
+      'coverage' => $this->buildHeaderColumn($this->t('% Funded'), 'percentage'),
+      'status' => $this->buildHeaderColumn($this->t('Status'), 'status'),
     ];
     if ($export) {
       $header['in_gho'] = $this->t('In GHO');
-      $header['document'] = [
-        'data' => $this->t('Document'),
-        'data-column-type' => 'document',
-      ];
-      $header['link_ha'] = [
-        'data' => $this->t('Link to HA page'),
-        'data-column-type' => 'document',
-      ];
-      $header['link_fts'] = [
-        'data' => $this->t('Link to FTS page'),
-        'data-column-type' => 'document',
-      ];
+      $header['document'] = $this->buildHeaderColumn($this->t('Document'), 'document');
+      $header['link_ha'] = $this->buildHeaderColumn($this->t('Link to HA page'), 'document');
+      $header['link_fts'] = $this->buildHeaderColumn($this->t('Link to FTS page'), 'document');
     }
 
     $cache_tags = [];
@@ -241,19 +203,15 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       $document_uri = $plan->getPlanDocumentUri();
 
       // Setup the column values.
-      $value_in_need = $in_need ? [
+      $value_in_need = [
         '#theme' => 'hpc_amount',
-        '#amount' => $in_need,
+        '#amount' => $in_need ?: '-',
         '#decimals' => $decimals,
-      ] : [
-        '#markup' => '-',
       ];
-      $value_targeted = $target ? [
+      $value_targeted = [
         '#theme' => 'hpc_amount',
-        '#amount' => $target,
+        '#amount' => $target ?: '-',
         '#decimals' => $decimals,
-      ] : [
-        '#markup' => '-',
       ];
       $value_expected_reach = [
         '#theme' => 'hpc_amount',
@@ -264,12 +222,10 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         '#theme' => 'hpc_percent',
         '#ratio' => $expected_reached / 100,
       ];
-      $value_latest_reached = $latest_reached !== NULL ? [
+      $value_latest_reached = [
         '#theme' => 'hpc_amount',
-        '#amount' => $latest_reached,
+        '#amount' => $latest_reached ?? $this->t('Pending'),
         '#decimals' => $decimals,
-      ] : [
-        '#markup' => $this->t('Pending'),
       ];
       $value_reached = $reached_percent ? [
         '#theme' => 'hpc_percent',
@@ -309,10 +265,10 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         'type' => [
           'data' => [
             'name' => [
-              '#markup' => $plan->getTypeShortName(TRUE),
+              '#markup' => $plan->getTypeShortName(),
             ],
           ],
-          'data-value' => $plan->getTypeShortName(TRUE),
+          'data-value' => $plan->getTypeShortName(),
         ],
         'inneed' => [
           'data' => [

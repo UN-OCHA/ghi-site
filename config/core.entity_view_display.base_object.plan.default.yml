@@ -10,6 +10,7 @@ dependencies:
     - field.field.base_object.plan.field_focus_country
     - field.field.base_object.plan.field_focus_country_override
     - field.field.base_object.plan.field_footnotes
+    - field.field.base_object.plan.field_is_part_of_gho
     - field.field.base_object.plan.field_language
     - field.field.base_object.plan.field_link_to_fts
     - field.field.base_object.plan.field_max_admin_level
@@ -98,6 +99,16 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: 10
+    region: content
+  field_is_part_of_gho:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 27
     region: content
   field_language:
     type: list_default

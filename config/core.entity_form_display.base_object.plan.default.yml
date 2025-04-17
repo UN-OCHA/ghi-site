@@ -10,6 +10,7 @@ dependencies:
     - field.field.base_object.plan.field_focus_country
     - field.field.base_object.plan.field_focus_country_override
     - field.field.base_object.plan.field_footnotes
+    - field.field.base_object.plan.field_is_part_of_gho
     - field.field.base_object.plan.field_language
     - field.field.base_object.plan.field_link_to_fts
     - field.field.base_object.plan.field_max_admin_level
@@ -54,6 +55,7 @@ third_party_settings:
         - field_plan_date_range
         - field_released
         - field_restricted
+        - field_is_part_of_gho
         - field_document_published_on
         - field_language
         - field_plan_cluster_type
@@ -175,7 +177,7 @@ content:
     third_party_settings: {  }
   field_description:
     type: string_textarea
-    weight: 18
+    weight: 19
     region: content
     settings:
       rows: 5
@@ -183,7 +185,7 @@ content:
     third_party_settings: {  }
   field_document_published_on:
     type: datetime_default
-    weight: 15
+    weight: 16
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -246,9 +248,16 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
+  field_is_part_of_gho:
+    type: boolean_checkbox
+    weight: 15
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
   field_language:
     type: options_select
-    weight: 16
+    weight: 17
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -287,7 +296,7 @@ content:
     third_party_settings: {  }
   field_plan_cluster_type:
     type: options_select
-    weight: 17
+    weight: 18
     region: content
     settings: {  }
     third_party_settings: {  }

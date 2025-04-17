@@ -14,7 +14,7 @@ use Drupal\Core\Template\Attribute;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Helpers\GlobalMapHelper;
 use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\DocumentLink;
-use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 
 /**
  * Preprocess the document link box template.
@@ -225,44 +225,57 @@ function ghi_blocks_preprocess_ajax_switcher(&$variables) {
  * @see \Drupal\ghi_blocks\Plugin\Block\Menu\SectionSwitcher
  */
 function ghi_blocks_preprocess_section_switcher(&$variables) {
+  /** @var \Drupal\ghi_sections\Entity\SectionNodeInterface[] $sections */
   $sections = $variables['sections'];
+  /** @var \Drupal\ghi_sections\Entity\SectionNodeInterface $current_section */
   $current_section = $variables['current_section'];
-  /** @var \Drupal\ghi_sections\SectionManager $section_manager */
-  $section_manager = \Drupal::service('ghi_sections.manager');
-  $options = [];
-  $labels = [];
-  $label_additions = [];
 
+  $options = [];
+
+  // We have 3 levels of disambiguation. In order to do that, we first need to
+  // collect the normal short labels and the longer labels.
+  // @see \Drupal\ghi_sections\Entity\Section::getSectionSwitcherOption().
+  $labels = [];
+  $labels_long = [];
+
+  // Make sure we really only have section nodes here.
+  $sections = array_filter($sections, function ($section) {
+    return $section instanceof SectionNodeInterface;
+  });
+
+  // Assemble the labels and long labels so that we know in the next step
+  // whether we have to disambiguate or not.
   foreach ($sections as $key => $section) {
-    $label = $section->label();
-    $label_additions[$key] = NULL;
-    if ($section->hasField('field_base_object')) {
-      $base_object = $section->get('field_base_object')->entity;
-      if ($base_object instanceof Plan) {
-        $label = $base_object->getYear();
-        $label_additions[$key] = $base_object->getPlanTypeShortLabel(FALSE);
-      }
-      elseif (!$base_object->type->needsYear && $base_object->hasField('field_year')) {
-        $label = $base_object->get('field_year')->value;
-      }
-      else {
-        $label = $section_manager->getShortName($base_object, TRUE, TRUE) ?? $label;
-      }
-      $labels[$key] = $label;
-    }
+    $option = $section->getSectionSwitcherOption();
+    $labels[$key] = $option['label'];
+    $labels_long[$key] = $option['label_long'];
   }
+
+  // Now assemble the actual section switcher options.
   foreach ($sections as $key => $section) {
     if (empty($labels[$key])) {
       continue;
     }
-    $label = $labels[$key];
-    if (count(array_keys($labels, $label)) > 1 && !empty($label_additions[$key])) {
-      // We need to add an additional element to distinguish non-unique labels.
-      $label .= ' (' . $label_additions[$key] . ')';
+    $option = $section->getSectionSwitcherOption();
+    $label = $option['label'];
+
+    // Do the disambiguation if necessary.
+    if (count(array_keys($labels, $label)) > 1 && !empty($option['label_long'])) {
+      // We need to use the long label to distinguish non-unique labels.
+      $label = $option['label_long'];
     }
+    if (count(array_keys($labels_long, $label)) > 1 && !empty($option['label_full'])) {
+      // We need to use the full label to distinguish non-unique long labels.
+      $label = $option['label_full'];
+    }
+
+    // Create the actual select option as a list item value.
     if ($current_section->id() == $section->id()) {
-      $option_value = ['#markup' => $label];
-      $variables['title'] = $label;
+      $option_value = [
+        '#markup' => $label,
+        '#wrapper_attributes' => ['class' => ['active']],
+      ];
+      $variables['title'] = $section->getSectionSwitcherTitle();
     }
     else {
       $option_value = $section->toLink($label)->toRenderable();

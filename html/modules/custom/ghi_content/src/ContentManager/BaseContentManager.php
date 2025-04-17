@@ -20,6 +20,7 @@ use Drupal\ghi_content\Import\ImportManager;
 use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_sections\Entity\Tag;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\ghi_sections\SectionTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
@@ -168,7 +169,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
    * @return string
    *   The field name.
    */
-  abstract protected function getRemoteFieldName();
+  abstract public function getRemoteFieldName();
 
   /**
    * Get the machine name of the element to be used for source links.
@@ -428,6 +429,43 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
       $tags = $tags + $this->getTags($node);
     }
     return $tags;
+  }
+
+  /**
+   * Sort the given tags.
+   *
+   * @param string[] $tags
+   *   An array of tag labels, keyed by term id.
+   */
+  public function sortTags(&$tags) {
+    // Load the tags and make sure they are actually terms of type tags.
+    $entities = $this->entityTypeManager->getStorage('taxonomy_term')->loadMultiple(array_keys($tags));
+    $entities = array_filter($entities, function ($term) {
+      return $term instanceof Tag;
+    });
+
+    $grouped_tags = [];
+    /** @var \Drupal\ghi_sections\Entity\Tag[] $entities */
+    foreach ($entities as $entity) {
+      $type = $entity->getType() ?? 'undefined';
+      $grouped_tags[$type] = $grouped_tags[$type] ?? [];
+      $grouped_tags[$type][$entity->id()] = $tags[$entity->id()];
+    }
+    $type_order = [
+      'year',
+      'document_type',
+      'country',
+      'theme',
+      'undefined',
+    ];
+    $tags = [];
+    foreach ($type_order as $type) {
+      if (empty($grouped_tags[$type])) {
+        continue;
+      }
+      asort($grouped_tags[$type]);
+      $tags += $grouped_tags[$type];
+    }
   }
 
   /**

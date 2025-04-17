@@ -90,6 +90,7 @@ process:
   field_year: plan_year
   field_restricted: restricted
   field_released: released
+  field_is_part_of_gho: is_part_of_gho
   field_language: language
   field_plan_cluster_type: plan_cluster_type
   field_plan_date_range/value: plan_date_start
@@ -102,6 +103,7 @@ destination:
     - name
     - created
     - changed
+    - field_original_id
     - field_description
     - field_short_name
     - field_subtitle
@@ -113,6 +115,7 @@ destination:
     - field_focus_country
     - field_restricted
     - field_released
+    - field_is_part_of_gho
     - field_language
     - field_plan_cluster_type
     - field_plan_date_range

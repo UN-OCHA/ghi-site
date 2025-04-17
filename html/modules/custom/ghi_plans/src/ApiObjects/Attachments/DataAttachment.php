@@ -3,6 +3,8 @@
 namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
 use Drupal\Component\Serialization\Yaml;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
@@ -14,12 +16,11 @@ use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
-use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
  * Abstraction for API data attachment objects.
  */
-class DataAttachment extends AttachmentBase {
+class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
 
   use PlanReportingPeriodTrait;
   use SimpleCacheTrait;
@@ -69,6 +70,13 @@ class DataAttachment extends AttachmentBase {
     // Work around an issue with the API format for this.
     $calculated_fields = is_array($calculated_fields) ? $calculated_fields : [$calculated_fields];
 
+    // Put all fields together.
+    $all_fields = array_merge(
+      $metric_fields,
+      $measurement_fields,
+      $calculated_fields,
+    );
+
     $processed = (object) [
       'id' => $attachment->id,
       'type' => strtolower($attachment->type),
@@ -77,7 +85,7 @@ class DataAttachment extends AttachmentBase {
         'entity_id' => $attachment->objectId ?? NULL,
         'plan_id' => $attachment->planId ?? NULL,
       ],
-      'custom_id' => $attachment->attachmentVersion?->value?->customId ?? ($attachment->customReference ?? NULL),
+      'custom_id' => $attachment->attachmentVersion?->value?->customId ?? ($attachment->attachmentVersion?->customReference ?? NULL),
       'custom_id_prefixed_refcode' => end($references),
       'composed_reference' => $attachment->composedReference ?? NULL,
       'description' => $attachment->attachmentVersion?->value?->description ?? NULL,
@@ -95,11 +103,10 @@ class DataAttachment extends AttachmentBase {
       'monitoring_period' => $period ?? NULL,
       'fields' => $prototype->getFields(),
       'field_types' => $prototype->getFieldTypes(),
-      'original_fields' => array_merge(
-        $metric_fields,
-        $measurement_fields,
-        $calculated_fields,
-      ),
+      'original_fields' => $all_fields,
+      'original_field_types' => array_map(function ($item) {
+        return $item->type;
+      }, $all_fields ?? []),
       'measurement_fields' => $measurement_fields ? array_map(function ($field) {
         return $field->name->en;
       }, $measurement_fields) : [],
@@ -111,6 +118,7 @@ class DataAttachment extends AttachmentBase {
       'disaggregated' => $attachment->attachmentVersion?->value?->metrics?->values?->disaggregated ?? NULL,
       'calculation_method' => $attachment->attachmentVersion?->value?->metrics?->calculationMethod ?? NULL,
     ];
+    $processed->calculation_method = is_string($processed->calculation_method) ? strtolower($processed->calculation_method) : NULL;
 
     // Cleanup the values.
     $processed->values = array_map(function ($value) {
@@ -132,6 +140,13 @@ class DataAttachment extends AttachmentBase {
    */
   public function getDescription() {
     return $this->description;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCustomId() {
+    return $this->custom_id;
   }
 
   /**
@@ -172,13 +187,17 @@ class DataAttachment extends AttachmentBase {
   }
 
   /**
-   * Get the original fields.
-   *
-   * @return array
-   *   An array of field items.
+   * {@inheritdoc}
    */
   public function getOriginalFields() {
     return $this->original_fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOriginalFieldTypes() {
+    return $this->original_field_types;
   }
 
   /**
@@ -591,6 +610,8 @@ class DataAttachment extends AttachmentBase {
       return $cached_data;
     }
 
+    $cache_tags = [];
+
     // No, so we need to do it now. Extract the base metrics and base data.
     $base_metrics = $this->getBaseMetricTotals($reporting_period);
     $base_data = $this->getBaseData($reporting_period);
@@ -632,6 +653,8 @@ class DataAttachment extends AttachmentBase {
         if (empty($location->map_data)) {
           continue;
         }
+        $cache_tags = Cache::mergeTags($cache_tags, $location->cache_meta_data->getCacheTags());
+
         $disaggregated_data[$index]['locations'][$location_index] = (array) $location;
         $disaggregated_data[$index]['locations'][$location_index] += [
           'object_id' => $location->id,
@@ -712,7 +735,8 @@ class DataAttachment extends AttachmentBase {
       }
     }
 
-    return $this->cache($cache_key, $disaggregated_data);
+    $this->setCacheTags($cache_tags);
+    return $this->cache($cache_key, $disaggregated_data, FALSE, NULL, $cache_tags);
   }
 
   /**
@@ -875,21 +899,25 @@ class DataAttachment extends AttachmentBase {
 
     // Then we get the coordinates for all locations that the API knows for this
     // country. The coordinates are keyed by the location id.
-    /** @var \Drupal\ghi_base_objects\ApiObjects\Location[] $location_coordinates */
-    $location_coordinates = $country && $locations_query ? $locations_query->getCountryLocations($country, $max_level) : [];
+    /** @var \Drupal\ghi_base_objects\ApiObjects\Location[] $country_locations */
+    $country_locations = $country && $locations_query ? $locations_query->getCountryLocations($country->id, $max_level) : [];
 
     foreach ($locations as $location_key => $location) {
       $locations[$location_key]->country_id = $country->id;
       if (empty($location->id)) {
         continue;
       }
-      $coordinates = !empty($location_coordinates[$location->id]) ? $location_coordinates[$location->id] : NULL;
-      if (empty($coordinates)) {
+      $_location = !empty($country_locations[$location->id]) ? $country_locations[$location->id] : NULL;
+      if (empty($_location)) {
         continue;
       }
-      $locations[$location_key]->map_data = $coordinates->toArray();
+      $locations[$location_key]->map_data = $_location->toArray();
       $locations[$location_key]->map_data['object_id'] = $location->id;
       $locations[$location_key]->map_data['total'] = 0;
+      $locations[$location_key]->cache_meta_data = CacheableMetadata::createFromObject($_location);
+
+      // @see https://humanitarian.atlassian.net/browse/HPC-9838?focusedCommentId=201540
+      $locations[$location_key]->name = $locations[$location_key]->map_data['location_name'];
     }
     return $locations;
   }
@@ -962,10 +990,9 @@ class DataAttachment extends AttachmentBase {
     if (!$attachment || !is_object($attachment)) {
       return NULL;
     }
-    $measurements = property_exists($attachment, 'measurements') ? $attachment->measurements : [];
-    if (!property_exists($attachment, 'measurements') && $measurements_query = $this->getEndpointQueryManager()->createInstance('measurement_query')) {
+    $measurements = property_exists($attachment, 'measurements') ? $attachment->measurements : NULL;
+    if ($measurements === NULL && $measurements_query = $this->getEndpointQueryManager()->createInstance('measurement_query')) {
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\MeasurementQuery $measurements_query */
-      $measurements_query->setPlaceholder('attachment_id', $attachment->id);
       $measurements = $measurements_query->getUnprocessedMeasurements($this, TRUE);
       $attachment->measurements = $measurements;
       $this->setRawData($attachment);
@@ -999,9 +1026,9 @@ class DataAttachment extends AttachmentBase {
       return NULL;
     }
     $measurements = array_filter($measurements, function ($measurement) use ($latest_published_period_id) {
-      return $measurement->reporting_period <= $latest_published_period_id;
+      return $measurement->reporting_period == $latest_published_period_id;
     });
-    return !empty($measurements) ? end($measurements) : NULL;
+    return !empty($measurements) ? reset($measurements) : NULL;
   }
 
   /**
@@ -1095,12 +1122,37 @@ class DataAttachment extends AttachmentBase {
    * @param int $period_id
    *   The reporting period id.
    *
-   * @return object
-   *   A reporting period object.
+   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
+   *   A reporting period object or NULL.
    */
   public function getReportingPeriod($period_id) {
     $plan_id = $this->getPlanId();
     return $plan_id ? self::getPlanReportingPeriod($plan_id, $period_id) : NULL;
+  }
+
+  /**
+   * Get the reporting periods for the attachment.
+   *
+   * Can be optionally limited up to a specific monitoring period id.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[]|null $reporting_periods
+   *   The initial array of reporting periods or NULL.
+   * @param string $monitoring_period
+   *   A monitoring period identifier or 'latest'.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[]
+   *   An array of reporting period objects.
+   */
+  public function getReportingPeriods(?array $reporting_periods = NULL, $monitoring_period = 'latest') {
+    if ($reporting_periods === NULL) {
+      $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
+    }
+    if (is_array($reporting_periods) && $monitoring_period != 'latest') {
+      while (!empty($reporting_periods) && array_key_last($reporting_periods) != $monitoring_period) {
+        array_pop($reporting_periods);
+      }
+    }
+    return $reporting_periods;
   }
 
   /**
@@ -1168,6 +1220,7 @@ class DataAttachment extends AttachmentBase {
    * @throws \Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException
    */
   public function getValue(array $conf) {
+    $this->handleKnownConfigIssues($conf);
     switch ($conf['processing']) {
       case 'single':
         return $this->getSingleValue($conf['data_points'][0]['index'], NULL, $conf['data_points'][0]);
@@ -1185,7 +1238,7 @@ class DataAttachment extends AttachmentBase {
    *
    * @param int $index
    *   The data point index.
-   * @param object[] $reporting_periods
+   * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[] $reporting_periods
    *   An optional array of reporting period objects. If not provided, all
    *   reporting periods from the plan will be used.
    * @param array $data_point_conf
@@ -1197,7 +1250,7 @@ class DataAttachment extends AttachmentBase {
    *   given configuration.
    */
   public function getSingleValue($index, ?array $reporting_periods = NULL, $data_point_conf = []) {
-    return $this->getValueForDataPoint($index);
+    return $this->getValueForDataPoint($index, $data_point_conf['monitoring_period'] ?? NULL);
   }
 
   /**
@@ -1364,12 +1417,17 @@ class DataAttachment extends AttachmentBase {
       '#type' => 'container',
       '#reporting_period' => $this->getLatestPublishedReportingPeriod($this->getPlanId()) ?? 'latest',
     ];
+    $this->handleKnownConfigIssues($conf);
     // Create a render array for the actual value.
     if (empty($conf['widget']) || $conf['widget'] == 'none') {
       $build[] = $this->formatAsText($conf);
     }
     else {
       $build[] = $this->formatAsWidget($conf);
+    }
+
+    if (!empty($conf['data_points'][0]['monitoring_period'])) {
+      $build['#reporting_period'] = $conf['data_points'][0]['monitoring_period'];
     }
 
     $data_point_index = $conf['data_points'][0]['index'];
@@ -1648,11 +1706,7 @@ class DataAttachment extends AttachmentBase {
       case 'icon':
         $build = [
           '#theme' => 'hpc_tooltip',
-          '#tooltip' => ThemeHelper::render(array_filter([
-            '#theme' => 'hpc_reporting_period',
-            '#reporting_period' => $monitoring_period,
-            '#format_string' => $format_string,
-          ]), FALSE),
+          '#tooltip' => $monitoring_period->format($format_string),
           '#tag_content' => [
             '#theme' => 'hpc_icon',
             '#icon' => 'calendar_today',
@@ -1662,11 +1716,7 @@ class DataAttachment extends AttachmentBase {
         break;
 
       case 'text':
-        $build = array_filter([
-          '#theme' => 'hpc_reporting_period',
-          '#reporting_period' => $monitoring_period,
-          '#format_string' => $format_string,
-        ]);
+        $build = $monitoring_period->format($format_string);
         break;
     }
     return $build;
@@ -1688,6 +1738,22 @@ class DataAttachment extends AttachmentBase {
       '#tooltip' => $comment,
       '#tooltip_theme' => 'measurement-comment',
     ];
+  }
+
+  /**
+   * Fix some known issues with existing config.
+   *
+   * @param array $conf
+   *   A configuration object for a data point.
+   */
+  private function handleKnownConfigIssues(array &$conf) {
+    // Sanity check to cope with invalid configuration.
+    if (!empty($conf['data_points'][0]['monitoring_period']) && is_object($conf['data_points'][0]['monitoring_period'])) {
+      $conf['data_points'][0]['monitoring_period'] = $conf['data_points'][0]['monitoring_period']->monitoring_period ?? 'latest';
+    }
+    if (!empty($conf['data_points'][1]['monitoring_period']) && is_object($conf['data_points'][1]['monitoring_period'])) {
+      $conf['data_points'][1]['monitoring_period'] = $conf['data_points'][1]['monitoring_period']->monitoring_period ?? 'latest';
+    }
   }
 
   /**

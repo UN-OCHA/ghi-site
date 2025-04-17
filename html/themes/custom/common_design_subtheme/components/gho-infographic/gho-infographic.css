@@ -1,7 +1,7 @@
 /**
  * Base photo gallery.
  */
-.gho-infographic .gho-infographic__inner {
+.gho-infographic:not(.gho-infographic--full-width) .gho-infographic__inner {
   max-width: var(--reading-width);
 }
 

@@ -65,6 +65,9 @@ class SectionDropdown extends SectionMenuWidgetBase {
    */
   public function toRenderable() {
     $wrapper_attributes = ['class' => ['dropdown']];
+    if ($this->isProtected()) {
+      $wrapper_attributes['class'][] = 'protected';
+    }
     $cache_tags = [];
     $links = [];
     $current_node = $this->getCurrentNode();
@@ -118,7 +121,7 @@ class SectionDropdown extends SectionMenuWidgetBase {
         '#gin_lb_theme_suggestions' => FALSE,
       ],
       '#cache' => [
-        'tags' => $cache_tags,
+        'tags' => Cache::mergeTags($cache_tags, $this->getCacheTags()),
       ],
     ];
     return $links;

@@ -5,7 +5,9 @@
  * Contains hook implementations for the GHI Form Elements module.
  */
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
 
 /**
  * Implements hook_form_FORM_ID_alter().
@@ -20,4 +22,66 @@ function ghi_form_elements_form_entity_browser_form_alter(array &$form, FormStat
 function ghi_form_elements_preprocess_html__entity_browser__modal(&$variables) {
   $variables['attributes']['class'][] = 'entity-browser';
   $variables['attributes']['class'][] = 'entity-browser--articles';
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ghi_form_elements_form_views_exposed_form_alter(array &$form, FormStateInterface $form_state) {
+  foreach (Element::children($form) as $element_key) {
+    $element = &$form[$element_key];
+    if ($element['#type'] != 'entity_autocomplete') {
+      continue;
+    }
+    $element['#type'] = 'entity_autocomplete_active_tags';
+    $element['#attached']['library'][] = 'ghi_form_elements/active_tags';
+    $element['#element_validate'][] = 'ghi_form_elements_entity_autocomplete_active_tags_element_validate';
+    $element['#maxlength'] = 512;
+  }
+}
+
+/**
+ * Validate callback for autocomplete elements using active_tags.
+ *
+ * @param array $element
+ *   The form element.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state object.
+ *
+ * @throws \JsonException
+ */
+function ghi_form_elements_entity_autocomplete_active_tags_element_validate(array $element, FormStateInterface $form_state): void {
+  $value = $form_state->getValue($element['#parents']);
+  if ($value && ($items = json_decode($value, TRUE, 512, JSON_THROW_ON_ERROR))) {
+    if (!is_array($items)) {
+      $items = [];
+    }
+    $formatted_items = array_map(function ($item) {
+      return ['target_id' => $item['entity_id']];
+    }, $items);
+    if (!empty($formatted_items)) {
+      $form_state->setValue($element['#parents'], $formatted_items);
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_form_element().
+ *
+ * The active_tags module adds additional info to the description of it's
+ * elements and changes the display for the description to an item list.
+ * As this looks a bit noisy in the forms, let's simplify this.
+ */
+function ghi_form_elements_preprocess_form_element(&$variables) {
+  $type = $variables['type'] ?? NULL;
+  if (!$type || !str_ends_with($type, '_active_tags')) {
+    return;
+  }
+  $theme_key_parents = ['description', 'content', '#theme'];
+  $theme = NestedArray::getValue($variables, $theme_key_parents);
+  if ($theme == 'item_list') {
+    $variables['description']['content'] = [
+      '#markup' => (string) reset($variables['description']['content']['#items']),
+    ];
+  }
 }

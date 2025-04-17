@@ -86,11 +86,12 @@ class CarouselItem extends ConfigurationContainerItemPluginBase {
   /**
    * Get the image.
    *
-   * @return \Drupal\file\Entity\File
-   *   A file object for the image file.
+   * @return \Drupal\file\Entity\File|null
+   *   A file object for the image file or NULL.
    */
   public function getImage() {
-    return File::load(reset($this->config['value']['image']));
+    $image_ids = $this->config['value']['image'] ?? [];
+    return !empty($image_ids) ? File::load(reset($image_ids)) : NULL;
   }
 
   /**

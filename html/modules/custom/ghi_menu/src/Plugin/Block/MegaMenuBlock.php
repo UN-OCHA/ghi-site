@@ -204,6 +204,42 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    $cache_tags = parent::getCacheTags();
+    $cache_tags = Cache::mergeTags($cache_tags, $this->getCacheTagsForMenuTree());
+    return $cache_tags;
+  }
+
+  /**
+   * Get all relevant cache tags for the full menu tree.
+   *
+   * This works recursively.
+   *
+   * @param \Drupal\Core\Menu\MenuLinkTreeElement[] $menu_tree
+   *   The menu tree. If NULL, it will take the menu tree from getMenuItems().
+   *
+   * @return string[]
+   *   An array of cache tags.
+   */
+  private function getCacheTagsForMenuTree($menu_tree = NULL) {
+    /** @var \Drupal\Core\Menu\MenuLinkTreeElement[] $menu_tree */
+    $menu_tree = $menu_tree ?? $this->getMenuItems();
+    $cache_tags = [];
+    foreach ($menu_tree as $menu_item) {
+      $route_parameters = $menu_item->link->getRouteParameters();
+      if (!empty($route_parameters['node'])) {
+        $cache_tags = Cache::mergeTags($cache_tags, ['node:' . $route_parameters['node']]);
+      }
+      if ($menu_item->hasChildren) {
+        $cache_tags = Cache::mergeTags($cache_tags, $this->getCacheTagsForMenuTree($menu_item->subtree));
+      }
+    }
+    return $cache_tags;
+  }
+
+  /**
    * Get the id used for aria attributes.
    *
    * @return string

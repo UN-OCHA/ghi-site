@@ -1,0 +1,24 @@
+.form-type--entity-autocomplete-active-tags > div > tags {
+  flex-wrap: nowrap;
+  min-width: 25rem;
+  margin-inline-end: 0rem !important;
+}
+.form-type--entity-autocomplete-active-tags > div > tags > tag {
+  margin-block: auto;
+}
+.form-type--entity-autocomplete-active-tags > div > tags > tag .active-tags__tag__text {
+  white-space: nowrap;
+}
+.form-type--entity-autocomplete-active-tags > div > tags > * {
+  padding: 0;
+}
+[disabled-tags] tags.active-tags tag.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+[disabled-tags] tags.active-tags tag.disabled x {
+  display: none;
+}
+[disabled-tags] tags.active-tags tag.disabled .active-tags__tag__text {
+  margin-right: 0.5rem;
+}

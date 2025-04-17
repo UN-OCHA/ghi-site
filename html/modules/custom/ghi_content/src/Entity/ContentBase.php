@@ -65,6 +65,49 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   }
 
   /**
+   * Check if the (protected) entity can currently be accessed.
+   *
+   * @return bool
+   *   TRUE if the entity can currently be accessed, FALSE otherwise.
+   */
+  public function protectedAccess() {
+    return $this->getEmbargoedAccessManager()?->entityAccess($this) ?? TRUE;
+  }
+
+  /**
+   * Get a source identifier.
+   *
+   * @return string
+   *   A source identifier as a combination of the source type and source id.
+   */
+  public function getSourceIdentifier() {
+    return $this->getSourceType() . ':' . $this->getSourceId();
+  }
+
+  /**
+   * Get the source type of the remote.
+   *
+   * @return string|null
+   *   The type on the remote source or NULL.
+   */
+  protected function getSourceType() {
+    $field_name = $this->getContentManager()->getRemoteFieldName();
+    return $this->hasField($field_name) ? $this->get($field_name)->remote_source : NULL;
+  }
+
+  /**
+   * Get the source id from the remote.
+   *
+   * @return int|null
+   *   The id on the remote source or NULL.
+   */
+  protected function getSourceId() {
+    $field_name = $this->getContentManager()->getRemoteFieldName();
+    $bundle = $this->getContentManager()->getNodeBundle();
+    return $this->hasField($field_name) ? $this->get($field_name)->{$bundle . '_id'} : NULL;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
@@ -244,7 +287,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     $metadata = [];
     $metadata[] = [
       '#markup' => new TranslatableMarkup('Published on @date', [
-        '@date' => $this->getDateFormatter()->format($this->getCreatedTime(), 'custom', 'j F Y'),
+        '@date' => $this->getDateFormatter()->format($this->getCreatedTime(), 'custom', 'j F Y', 'UTC'),
       ]),
     ];
     $tags = $this->getDisplayTags();

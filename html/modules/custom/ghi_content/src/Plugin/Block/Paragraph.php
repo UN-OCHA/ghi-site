@@ -8,6 +8,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
+use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
@@ -128,9 +129,11 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     }
 
     if ($paragraph->getType() == 'sub_article') {
-      if ($this->config('ghi_content.article_settings')->get('subarticle_local_render')) {
-        $this->replaceRemoteContentWithLocalContent($paragraph, $dom);
+      $local_subarticle = $this->getLocalSubarticle($paragraph);
+      if ($local_subarticle?->isProtected()) {
+        $block_attributes['class'][] = 'protected';
       }
+      $this->processSubarticleParagraph($paragraph, $dom);
 
       // Remove the footer from sub articles.
       foreach (iterator_to_array($dom->getElementsByTagName('footer')) as $footer) {
@@ -518,15 +521,16 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
   /**
    * Get the article page associated to the configured source article.
    *
-   * @return \Drupal\node\NodeInterface|null
-   *   A node object.s
+   * @return \Drupal\ghi_content\Entity\Article|null
+   *   An article node object.
    */
   private function getArticlePage() {
     $article = $this->getArticle();
     if (!$article) {
       return NULL;
     }
-    return $this->articleManager->loadNodeForRemoteContent($article);
+    $article_node = $this->articleManager->loadNodeForRemoteContent($article);
+    return $article_node instanceof Article ? $article_node : NULL;
   }
 
   /**
@@ -595,42 +599,102 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
   }
 
   /**
-   * Replace the remote content with the local article.
+   * Get the local sub-article page node for the given sub-article paragraph.
+   *
+   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface $paragraph
+   *   The sub-article paragraph.
+   *
+   * @return \Drupal\ghi_content\Entity\Article|null
+   *   An article node or NULL.
+   */
+  private function getLocalSubarticle(RemoteParagraphInterface $paragraph) {
+    if ($paragraph->getType() != 'sub_article') {
+      return NULL;
+    }
+    $article_id = $paragraph->getConfiguration()['article_id'] ?? NULL;
+    $remote_sub_article = $article_id ? $paragraph->getSource()->getArticle($article_id) : NULL;
+    if (!$remote_sub_article) {
+      return NULL;
+    }
+    $article = $this->articleManager->loadNodeForRemoteContent($remote_sub_article);
+    return $article instanceof Article ? $article : NULL;
+  }
+
+  /**
+   * Process a sub-article paragraph.
+   *
+   * Check for protection state and access to the imported sub-article page.
+   * Checks if local rendering should be used, in which case the content coming
+   * from the remote system will be entirely replaced by the local rendering of
+   * the imported (and potentially modified) article page that corresponds to
+   * the sub-article.
    *
    * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface $paragraph
    *   The paragraph.
    * @param \DOMDocument $dom
    *   The dom object.
    */
-  private function replaceRemoteContentWithLocalContent($paragraph, $dom) {
-    $article_id = $paragraph->getConfiguration()['article_id'] ?? NULL;
-    $remote_sub_article = $article_id ? $paragraph->getSource()->getArticle($article_id) : NULL;
-    if (!$remote_sub_article) {
-      return;
-    }
-    $local_subarticle = $this->articleManager->loadNodeForRemoteContent($remote_sub_article);
+  private function processSubarticleParagraph(RemoteParagraphInterface $paragraph, $dom) {
+    $local_subarticle = $this->getLocalSubarticle($paragraph);
     if (!$local_subarticle) {
       return;
     }
 
-    /** @var \Drupal\Core\Entity\EntityViewBuilder $view_builder */
-    $view_builder = \Drupal::entityTypeManager()->getViewBuilder($local_subarticle->getEntityTypeId());
-    $build = $view_builder->view($local_subarticle);
-    $build['#skip_footnotes_processing'] = TRUE;
-    $build = $view_builder->build($build);
+    $content_node = NULL;
+    if ($local_subarticle->isProtected() && !$local_subarticle->protectedAccess()) {
+      // No access to a protected article yet.
+      $local_subarticle->setContextNode($this->getArticlePage()->getContextNode());
+      $build = [
+        '#type' => 'container',
+        0 => [
+          '#type' => 'html_tag',
+          '#tag' => 'article',
+          0 => [
+            '#type' => 'html_tag',
+            '#tag' => 'div',
+            '#attributes' => [
+              'class' => [
+                'content-width',
+                'not-collapsible',
+              ],
+            ],
+            0 => [
+              '#markup' => $this->t('This content is currently embargoed. Please <a href="@url">click here</a> to access it.', [
+                '@url' => $local_subarticle->toUrl()->toString(),
+              ]),
+            ],
+          ],
+        ],
+      ];
+      $html = ThemeHelper::render($build, FALSE);
+      $new_dom = Html::load($html);
+      $content_node = $new_dom->getElementsByTagName('article')->item(0);
+    }
+    elseif ($this->config('ghi_content.article_settings')->get('subarticle_local_render')) {
+      // Local rendering has been requested, so we completely replace the
+      // content from the remote with the rendered page content of the article
+      // in our system.
+      /** @var \Drupal\Core\Entity\EntityViewBuilder $view_builder */
+      $view_builder = \Drupal::entityTypeManager()->getViewBuilder($local_subarticle->getEntityTypeId());
+      $build = $view_builder->view($local_subarticle);
+      $build['#skip_footnotes_processing'] = TRUE;
+      $build = $view_builder->build($build);
 
-    $html = ThemeHelper::render($build, FALSE);
-    $html = preg_replace('/<!--(.*)-->/Uis', '', $html);
+      $html = ThemeHelper::render($build, FALSE);
+      $html = preg_replace('/<!--(.*)-->/Uis', '', $html);
 
-    // Create a new dom object with the local rendering result.
-    $new_dom = Html::load($html);
-    $content_node = $this->getElementByClass($new_dom->getElementsByTagName('article')->item(0), [
-      'layout--onecol',
-      'layout__region--content',
-    ]);
+      // Create a new dom object with the local rendering result.
+      $new_dom = Html::load($html);
+      $content_node = $this->getElementByClass($new_dom->getElementsByTagName('article')->item(0), [
+        'layout--onecol',
+        'layout__region--content',
+      ]);
+    }
+
     if (!$content_node) {
       return;
     }
+
     $fragment = $dom->createDocumentFragment();
     $fragment->appendXML($this->renderDomNode($content_node));
 

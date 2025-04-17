@@ -17,9 +17,9 @@
           $wrapper.append($(paragraph));
           collapsed = true;
         });
-        $(subArticle).find('.gho-sub-article__content').append($wrapper);
 
         if (collapsed) {
+          $(subArticle).find('.gho-sub-article__content').append($wrapper);
           // Add collapsible control.
           let $collapseControlOuter = $('<div>').addClass('collapsible-control--outer');
           let $collapseControl = $('<div>').addClass('collapsible-control').addClass('content-width');

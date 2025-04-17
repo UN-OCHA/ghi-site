@@ -41,7 +41,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  default_title = @Translation("Operations by admin area"),
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
+ *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" }),
+ *    "plan_cluster" = @ContextDefinition("entity:base_object", label = @Translation("Cluster"), constraints = { "Bundle": "governing_entity" }, required =  FALSE)
  *  },
  *  config_forms = {
  *    "organizations" = {
@@ -897,19 +898,15 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     if (empty($plan_locations[$plan_object->id()])) {
       // Prepare the locations.
       $country_id = $plan_object->field_country->entity->field_original_id->value ?? NULL;
-      // Mock a country object.
-      $country = (object) [
-        'id' => $country_id,
-      ];
       $max_admin_level = max($plan_object->getMaxAdminLevel(), 3);
 
       /** @var \Drupal\ghi_base_objects\Plugin\EndpointQuery\LocationsQuery $locations_query */
       $locations_query = $this->getQueryHandler('locations');
-      $locations = $locations_query->getCountryLocations($country, $max_admin_level);
+      $locations = $locations_query->getCountryLocations($country_id, $max_admin_level);
 
       // Filter out all locations which do not have a GEOJSON file.
       $locations = array_filter($locations, function ($location) {
-        return !empty($location->filepath);
+        return $location->hasGeoJsonFile();
       });
 
       // Done.

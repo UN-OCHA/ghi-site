@@ -27,6 +27,7 @@ use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\node\NodeInterface;
+use Drupal\taxonomy\TermInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -439,7 +440,9 @@ class ImportManager implements ContainerInjectionInterface {
           ],
           'chapter' => [
             'chapter_id' => $chapter->getId(),
-            'show_title' => $existing_component ? ($existing_configuration['chapter']['show_title'] ?? count($chapters) > 1) : count($chapters) > 1,
+          ],
+          'display' => [
+            'label' => $existing_configuration['display']['label'] ?? NULL,
           ],
         ],
         'lock_document' => TRUE,
@@ -543,7 +546,8 @@ class ImportManager implements ContainerInjectionInterface {
         'tags' => 'tags',
       ],
     ]);
-    $terms = array_filter(array_map(function ($tag) use ($handler) {
+    $remote_source = $content->getSource();
+    $terms = array_filter(array_map(function ($tag) use ($handler, $remote_source) {
       $matches = $handler->getReferenceableEntities($tag, '=', 1);
       $term = NULL;
       if (!empty($matches) && !empty($matches['tags']) && count($matches['tags']) == 1) {
@@ -553,6 +557,10 @@ class ImportManager implements ContainerInjectionInterface {
       if (!$term) {
         $term = $handler->createNewEntity('taxonomy_term', 'tags', $tag, $this->currentUser->id());
         $term->save();
+      }
+      // Make sure that the term has a type.
+      if ($term instanceof TermInterface && $term->get('field_type')->isEmpty() && $tag_entity = $remote_source->getTag($tag)) {
+        $term->set('field_type', $tag_entity->getType())->save();
       }
       return $term->id() ? $term : NULL;
     }, array_unique(array_merge($content_space_tags, $content_tags))));
