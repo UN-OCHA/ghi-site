@@ -98,14 +98,20 @@ class Document extends ContentBase {
    * {@inheritdoc}
    */
   public function getCacheTags() {
-    $cache_tags = parent::getCacheTags();
-    foreach ($this->getChapters() as $chapter) {
-      foreach ($chapter->getArticles() as $remote_article) {
-        $article = $this->getArticleManager()->loadNodeForRemoteContent($remote_article);
-        if (!$article) {
-          continue;
+    if (!$this->id()) {
+      return parent::getCacheTags();
+    }
+    $cache_tags = &drupal_static(__FUNCTION__ . '_' . $this->id(), NULL);
+    if ($cache_tags === NULL) {
+      $cache_tags = parent::getCacheTags();
+      foreach ($this->getChapters() as $chapter) {
+        foreach ($chapter->getArticles() as $remote_article) {
+          $article = $this->getArticleManager()->loadNodeForRemoteContent($remote_article);
+          if (!$article instanceof Article) {
+            continue;
+          }
+          $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTags());
         }
-        $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTags());
       }
     }
     return $cache_tags;

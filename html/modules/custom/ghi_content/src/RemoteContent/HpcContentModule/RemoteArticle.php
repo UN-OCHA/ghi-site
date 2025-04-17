@@ -174,7 +174,7 @@ class RemoteArticle extends RemoteArticleBase {
   public function getDocumentIds() {
     $document_ids = array_map(function ($item) {
       return $item->id;
-    }, $this->data->documents ?? []);
+    }, array_filter($this->data->documents ?? []));
     return $document_ids;
   }
 
