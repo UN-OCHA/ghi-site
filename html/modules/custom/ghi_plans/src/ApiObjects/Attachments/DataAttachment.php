@@ -915,6 +915,9 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       $locations[$location_key]->map_data['object_id'] = $location->id;
       $locations[$location_key]->map_data['total'] = 0;
       $locations[$location_key]->cache_meta_data = CacheableMetadata::createFromObject($_location);
+
+      // @see https://humanitarian.atlassian.net/browse/HPC-9838?focusedCommentId=201540
+      $locations[$location_key]->name = $locations[$location_key]->map_data['location_name'];
     }
     return $locations;
   }
