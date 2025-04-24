@@ -24,7 +24,7 @@
       "Issue #3121440: Add option for node local tasks in toolbar": "https://www.drupal.org/files/issues/2023-10-20/3121440-49.patch"
     },
     "drupal/google_tag": {
-      "Issue #3388487: GoogleTagUpgradeManager may fail upgrade for some configurations": "https://www.drupal.org/files/issues/2024-01-30/google_tag-db_update_unset_values-3388487-6.patch"
+      "Issue #3250315: Error during cache rebuild when assets are stored on NFS": "https://www.drupal.org/files/issues/2022-11-23/3250315-google-tag-nfs-locks-5.patch"
     },
     "drupal/image_widget_crop": {
       "Issue #3401986: The containers summary text should not be overwritten": "https://www.drupal.org/files/issues/2023-11-15/3401986-2.patch"
