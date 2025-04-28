@@ -561,7 +561,11 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   TRUE if the block needs a base object, FALSE if it already has one.
    */
   public function needsContextConfiguration() {
+    /** @var \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $instance */
     $instance = $this->formState->get('block') ?? $this;
+    if ($instance->canSelectBaseObject() && !$instance->getSelectedDataObjectId()) {
+      return TRUE;
+    }
     return !empty($instance->getContextMapping()) && empty($instance->getCurrentBaseObject());
   }
 
