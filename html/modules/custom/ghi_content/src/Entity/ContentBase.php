@@ -521,6 +521,16 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   }
 
   /**
+   * Get the content manager factory.
+   *
+   * @return \Drupal\ghi_content\ContentManager\ManagerFactory
+   *   The content manager factory.
+   */
+  protected static function getRemote() {
+    return \Drupal::service('ghi_content.manager.factory');
+  }
+
+  /**
    * Get the date formatter service.
    *
    * @return \Drupal\Core\Datetime\DateFormatterInterface

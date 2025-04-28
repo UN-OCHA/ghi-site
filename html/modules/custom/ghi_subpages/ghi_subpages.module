@@ -391,7 +391,7 @@ function ghi_subpages_datalayer_alter(&$data_layer, $skip = FALSE) {
  */
 function ghi_subpages_layout_builder_ipe_links_alter(array &$links, SectionStorageInterface $section_storage, EntityInterface $entity) {
   if (!$entity instanceof LogframeSubpage) {
-    // We only support this for content entities.
+    // We only support this for content entites.
     return;
   }
   /** @var \Drupal\ghi_subpages\LayoutBuilder\LogframeRebuildLinkBuilder $link_builder */
