@@ -1,0 +1,32 @@
+uuid: 2ef869a7-b6c5-4078-a8d5-4d797bc2c8d9
+langcode: en
+status: true
+dependencies: {  }
+id: GTM-PGBBBSK.680f32da250e32.91365530
+label: GTM-PGBBBSK
+weight: 0
+tag_container_ids:
+  - GTM-PGBBBSK
+advanced_settings:
+  consent_mode: false
+  gtm:
+    GTM-PGBBBSK:
+      data_layer: dataLayer
+      include_classes: false
+      allowlist_classes: ''
+      blocklist_classes: ''
+      include_environment: false
+      environment_id: ''
+      environment_token: ''
+dimensions_metrics: {  }
+conditions: {  }
+events:
+  generate_lead:
+    value: ''
+    currency: ''
+  search: {  }
+  custom: {  }
+  login:
+    method: CMS
+  sign_up:
+    method: CMS
