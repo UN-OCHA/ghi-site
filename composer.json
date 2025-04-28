@@ -92,6 +92,7 @@
         "drupal/gin_lb": "^1.0@beta",
         "drupal/gin_toolbar": "^1.0",
         "drupal/google_tag": "^2",
+        "drupal/gtm": "^1.9",
         "drupal/image_effects": "^3.6",
         "drupal/image_widget_crop": "^2.4",
         "drupal/imageapi_optimize": "^4.0",
