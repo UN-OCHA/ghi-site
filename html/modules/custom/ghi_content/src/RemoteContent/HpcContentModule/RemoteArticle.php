@@ -5,6 +5,7 @@ namespace Drupal\ghi_content\RemoteContent\HpcContentModule;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_content\RemoteContent\RemoteArticleBase;
+use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 
 /**
@@ -154,7 +155,7 @@ class RemoteArticle extends RemoteArticleBase {
   /**
    * {@inheritdoc}
    */
-  public function hasSubarticle(RemoteArticle $remote_article) {
+  public function hasSubarticle(RemoteArticleInterface $remote_article) {
     foreach ($this->getParagraphs() as $paragraph) {
       if ($paragraph->getType() != 'sub_article') {
         continue;
@@ -165,6 +166,16 @@ class RemoteArticle extends RemoteArticleBase {
       }
     }
     return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDocumentIds() {
+    $document_ids = array_map(function ($item) {
+      return $item->id;
+    }, array_filter($this->data->documents ?? []));
+    return $document_ids;
   }
 
   /**

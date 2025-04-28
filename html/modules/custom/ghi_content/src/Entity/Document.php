@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_content\Entity;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\ghi_content\RemoteContent\RemoteChapterInterface;
 use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
@@ -69,7 +70,7 @@ class Document extends ContentBase {
   public function getChapterArticles(RemoteChapterInterface $chapter) {
     $articles = array_filter(array_map(function (RemoteContentInterface $remote_article) {
       $_node = $this->getArticleManager()->loadNodeForRemoteContent($remote_article);
-      if (!$_node) {
+      if (!$_node || !$_node->isPublished()) {
         return NULL;
       }
       // Cloning is important here, to prevent wrong links when the same
@@ -91,6 +92,29 @@ class Document extends ContentBase {
    */
   public function getSummary() {
     return $this->get('field_summary')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    if (!$this->id()) {
+      return parent::getCacheTags();
+    }
+    $cache_tags = &drupal_static(__FUNCTION__ . '_' . $this->id(), NULL);
+    if ($cache_tags === NULL) {
+      $cache_tags = parent::getCacheTags();
+      foreach ($this->getChapters() as $chapter) {
+        foreach ($chapter->getArticles() as $remote_article) {
+          $article = $this->getArticleManager()->loadNodeForRemoteContent($remote_article);
+          if (!$article instanceof Article) {
+            continue;
+          }
+          $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTags());
+        }
+      }
+    }
+    return $cache_tags;
   }
 
   /**

@@ -2,8 +2,6 @@
 
 namespace Drupal\ghi_content\RemoteContent;
 
-use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
-
 /**
  * Interface class for remote articles.
  */
@@ -55,13 +53,21 @@ interface RemoteArticleInterface extends RemoteContentInterface {
   /**
    * Check if an article has the given article as a sub-article.
    *
-   * @param \Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle $remote_article
+   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $remote_article
    *   The remote article to check as being a sub-article.
    *
    * @return bool
    *   TRUE if the given remote article is a sub-article of the current remote
    *   article, FALSE otherwise.
    */
-  public function hasSubarticle(RemoteArticle $remote_article);
+  public function hasSubarticle(RemoteArticleInterface $remote_article);
+
+  /**
+   * Get the documents ids that the article belongs to.
+   *
+   * @return int[]
+   *   The document ids that the article belongs to.
+   */
+  public function getDocumentIds();
 
 }
