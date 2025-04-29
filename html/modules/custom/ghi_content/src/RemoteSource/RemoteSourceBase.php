@@ -177,7 +177,7 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
   /**
    * {@inheritdoc}
    */
-  abstract public function getImportIds($type, ?array $tags);
+  abstract public function getImportIds($type, ?array $tags = NULL);
 
   /**
    * {@inheritdoc}
