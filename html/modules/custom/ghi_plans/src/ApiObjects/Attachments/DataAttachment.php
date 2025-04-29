@@ -598,11 +598,13 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       'reporting_period' => $reporting_period,
       'filter_empty_locations' => intval($filter_empty_locations),
       'filter_empty_categories' => intval($filter_empty_categories),
+      'ignore_missing_location_ids' => intval($ignore_missing_location_ids),
+      'updated' => $attachment_data->attachmentVersion->updatedAt,
       // This hash is here to get a better chance of capturing differences of
       // data for the same attachment id, like when the attachment data is
       // retrieved by an anonymous user vs a logged-in user, where both might
       // see different data, depending on their access level.
-      'hash' => md5(Yaml::encode(ArrayHelper::mapObjectsToString([$attachment_data->attachmentVersion]))),
+      'hash' => md5(Yaml::encode(ArrayHelper::mapObjectsToString([$attachment_data->attachmentVersion?->value?->metrics?->values?->totals]))),
     ]);
 
     $cached_data = $this->cache($cache_key);
@@ -887,6 +889,9 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     $locations = array_filter($base_data->locations, function ($location) use ($country, $ignore_missing_location_ids) {
       return (!empty($location->id) || $ignore_missing_location_ids) && (($location->id ?? NULL) != $country->id);
     });
+    $location_ids = array_map(function ($location) {
+      return $location->id;
+    }, $locations);
 
     /** @var \Drupal\ghi_base_objects\Plugin\EndpointQuery\LocationsQuery $locations_query */
     $locations_query = $this->getEndpointQueryManager()->createInstance('locations_query');
@@ -900,7 +905,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     // Then we get the coordinates for all locations that the API knows for this
     // country. The coordinates are keyed by the location id.
     /** @var \Drupal\ghi_base_objects\ApiObjects\Location[] $country_locations */
-    $country_locations = $country && $locations_query ? $locations_query->getCountryLocations($country->id, $max_level) : [];
+    $country_locations = $country && $locations_query ? $locations_query->getCountryLocations($country->id, $max_level, $location_ids) : [];
 
     foreach ($locations as $location_key => $location) {
       $locations[$location_key]->country_id = $country->id;
