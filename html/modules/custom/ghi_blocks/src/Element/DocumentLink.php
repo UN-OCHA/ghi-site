@@ -10,6 +10,7 @@ use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Provides a document link element with meta data and multiple languages.
@@ -202,7 +203,7 @@ class DocumentLink extends FormElementBase {
     catch (\Exception $e) {
       // Just fail silently.
     }
-    if (!$response || $response->getStatusCode() !== 200) {
+    if (!$response || $response->getStatusCode() !== Response::HTTP_OK) {
       $form_state->setError($element, t('Failed to retrieve information for the entered <em>URL</em>.'));
       return;
     }

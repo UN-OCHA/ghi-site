@@ -2,6 +2,8 @@
 
 namespace Drupal\ghi_content\RemoteResponse;
 
+use Symfony\Component\HttpFoundation\Response;
+
 /**
  * Class that represents a response from a remote content source.
  */
@@ -80,14 +82,14 @@ class RemoteResponse implements RemoteResponseInterface {
    * {@inheritdoc}
    */
   public function getStatus() {
-    return $this->code == 200;
+    return $this->code == Response::HTTP_OK;
   }
 
   /**
    * {@inheritdoc}
    */
   public function isForbidden() {
-    return $this->code == 403;
+    return $this->code == Response::HTTP_FORBIDDEN;
   }
 
 }
