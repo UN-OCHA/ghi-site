@@ -113,11 +113,13 @@ class LocationsQuery extends EndpointQueryBase {
    *   The country id.
    * @param int $max_level
    *   A maximum level of nested locations to retrieve.
+   * @param int[] $limit_location_ids
+   *   Optional: An array of location ids to limit the result to.
    *
    * @return \Drupal\ghi_base_objects\ApiObjects\Location[]
    *   An array of location objects keyed by the location id.
    */
-  public function getCountryLocations($country_id, $max_level = self::MAX_LEVEL) {
+  public function getCountryLocations($country_id, $max_level = self::MAX_LEVEL, $limit_location_ids = NULL) {
     $cache_key = $this->getCacheKey([
       'country_id' => $country_id,
       'max_level' => $max_level,
@@ -136,6 +138,14 @@ class LocationsQuery extends EndpointQueryBase {
 
     // Make it a flat array.
     $flat_locations = $this->flattenLocationArray($children);
+
+    // Filter the locations if requested.
+    if ($limit_location_ids !== NULL) {
+      $flat_locations = array_filter($flat_locations, function ($location) use ($limit_location_ids) {
+        return in_array($location->id, $limit_location_ids);
+      });
+    }
+
     $locations = [];
     // Now look at each location and prepare the full set of location data.
     foreach ($flat_locations as $item) {
