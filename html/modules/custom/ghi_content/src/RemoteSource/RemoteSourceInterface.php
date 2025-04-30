@@ -232,7 +232,7 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    * @return int[]
    *   An array of ids from the remote source.
    */
-  public function getImportIds($type, ?array $tags);
+  public function getImportIds($type, ?array $tags = NULL);
 
   /**
    * Get the import meta data for the given type.

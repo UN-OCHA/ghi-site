@@ -27,10 +27,28 @@ function ghi_content_requirements($phase) {
       $requirements['ghi_content_remote_source_' . $key] = [
         'title' => $remote_source->getPluginLabel(),
         'severity' => $connection_status ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-        'value' => $connection_status ? t('Success') : t('Failed'),
-        'description' => $connection_status ? t('Connection to the remote source at <em>@url</em> successful.', $string_args) : t('Connection to the remote source at <em>@url</em> failed.', $string_args),
+        // 'value' => $connection_status ? t('Success') : t('Failed'),
+        'value' => $connection_status ? t('Connection to the remote source at <em>@url</em> successful.', $string_args) : t('Connection to the remote source at <em>@url</em> failed.', $string_args),
+      ];
+      $article_ids = $remote_source->getImportIds('article');
+      $article_id = array_shift($article_ids);
+      $article = $remote_source->getArticle($article_id, FALSE);
+      $requirements['ghi_content_remote_source_' . $key . '_article'] = [
+        'title' => $remote_source->getPluginLabel() . ': Articles',
+        'severity' => $article ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+        // 'value' => $article ? t('Success') : t('Failed'),
+        'value' => $article ? t('Article data can be retrieved.') : t('Article data cannot be retrieved.'),
       ];
 
+      $document_ids = $remote_source->getImportIds('document');
+      $document_id = array_shift($document_ids);
+      $document = $remote_source->getDocument($document_id, FALSE);
+      $requirements['ghi_content_remote_source_' . $key . '_document'] = [
+        'title' => $remote_source->getPluginLabel() . ': Documents',
+        'severity' => $document ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+        // 'value' => $document ? t('Success') : t('Failed'),
+        'value' => $document ? t('Document data can be retrieved.') : t('Document data cannot be retrieved.'),
+      ];
     }
   }
   return $requirements;
