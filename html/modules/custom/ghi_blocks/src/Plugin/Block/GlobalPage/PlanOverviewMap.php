@@ -342,7 +342,7 @@ class PlanOverviewMap extends GHIBlockBase {
       'style' => 'circle',
       'legend' => $this->buildLegendItems(),
       'search_enabled' => $conf['search_enabled'],
-      'map_disclaimer' => $conf['disclaimer'],
+      'disclaimer' => $conf['disclaimer'] ?: self::DEFAULT_DISCLAIMER,
     ];
 
     return $map;
@@ -522,7 +522,7 @@ class PlanOverviewMap extends GHIBlockBase {
     return [
       'style' => 'circle',
       'search_enabled' => FALSE,
-      'disclaimer' => self::DEFAULT_DISCLAIMER,
+      'disclaimer' => NULL,
       'plan_select' => [],
     ];
   }

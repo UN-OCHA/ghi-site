@@ -41,8 +41,8 @@
             empty_message: Drupal.t('Try with a different search term.'),
           };
         }
-        if (typeof map_config.map_disclaimer != 'undefined') {
-          options.disclaimer = map_config.map_disclaimer ?? null;
+        if (typeof map_config.disclaimer != 'undefined') {
+          options.disclaimer = map_config.disclaimer ?? null;
         }
         ghi.map.init(map_config.id, map_config.json, options);
       }
