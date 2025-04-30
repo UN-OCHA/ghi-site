@@ -16,6 +16,7 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\RequestOptions;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * HPC Content Module specific remote source base class.
@@ -256,13 +257,18 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       // Just fail silently.
     }
 
-    if (!$result || $result->getStatusCode() !== 200) {
-      $response->setCode($result ? $result->getStatusCode() : 500);
+    if (!$result || $result->getStatusCode() !== Response::HTTP_OK) {
+      $response->setCode($result ? $result->getStatusCode() : Response::HTTP_INTERNAL_SERVER_ERROR);
       return $response;
     }
     try {
       $body_data = json_decode((string) $result->getBody());
-      $response->setCode($result ? $result->getStatusCode() : 500);
+      if (property_exists($body_data, 'errors') && !empty($body_data->errors)) {
+        $response->setCode(Response::HTTP_BAD_REQUEST);
+        return $response;
+      }
+
+      $response->setCode($result ? $result->getStatusCode() : Response::HTTP_INTERNAL_SERVER_ERROR);
       $response->setData(is_object($body_data) && property_exists($body_data, 'data') ? $body_data->data : NULL);
     }
     catch (\Exception $e) {
@@ -522,7 +528,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
-  public function getImportIds($type, ?array $tags) {
+  public function getImportIds($type, ?array $tags = NULL) {
     $query_name = match ($type) {
       'article' => 'articleExport',
       'document' => 'documentExport',

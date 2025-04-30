@@ -30,3 +30,9 @@ ghi_blocks.config.table.settings:
   route_name: ghi_blocks.table_config
   description: 'Configure table settings'
   parent: system.admin_config_ghi
+
+ghi_blocks.reports.broken_revisions:
+  title: 'Broken revisions'
+  route_name: ghi_blocks.reports.broken_revisions
+  description: 'List pages with broken revisions'
+  parent: system.admin_reports
