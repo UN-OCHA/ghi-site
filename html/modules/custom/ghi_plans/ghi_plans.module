@@ -51,6 +51,7 @@ function ghi_plans_preprocess_page(array &$variables) {
   if ($base_object && $base_object instanceof Plan) {
     $variables['#attached']['drupalSettings']['plan_settings'] = [
       'decimal_format' => $base_object->getDecimalFormat(),
+      'langcode' => $base_object->getPlanLanguage(),
     ];
   }
 }
