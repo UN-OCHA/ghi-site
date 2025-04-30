@@ -62,8 +62,6 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
   use FtsLinkTrait;
   use GlobalMapTrait;
 
-  const DEFAULT_DISCLAIMER = 'The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations.';
-
   const DEFAULT_VIEWS = [
     'organization' => 'organization',
     'cluster' => 'cluster',
@@ -94,7 +92,6 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
    */
   public function buildContent() {
     $available_views = $this->getAvailableViews();
-    $selected_view = $this->getSelectedView();
     $map_data = $this->getMapData();
     if (empty($map_data) || empty($available_views)) {
       return;
@@ -108,7 +105,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     $map_settings = [
       'json' => $map_data,
       'id' => $chart_id,
-      'disclaimer' => $conf['display']['disclaimer'] ?: self::DEFAULT_DISCLAIMER,
+      'disclaimer' => $conf['display']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()->getPlanLanguage()),
       'pcodes_enabled' => $conf['display']['pcodes_enabled'] ?? TRUE,
     ];
 
