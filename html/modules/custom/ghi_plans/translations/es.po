@@ -100,3 +100,6 @@ msgstr "Financiación ($)"
 
 msgid "% Funded"
 msgstr "% Financiado"
+
+msgid "The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations."
+msgstr "Los límites y nombres mostrados, así como las designaciones utilizadas en este mapa, no implican la aprobación o aceptación oficial por parte de las Naciones Unidas."
