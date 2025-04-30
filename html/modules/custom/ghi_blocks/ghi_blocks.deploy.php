@@ -435,7 +435,7 @@ function ghi_blocks_deploy_9008_update_plan_overview_map(&$sandbox) {
 }
 
 /**
- * Update link configuration for various elements on page templates.
+ * Update link configuration for various elements on nodes.
  */
 function ghi_blocks_deploy_9009_update_funding_coverage_default_label_nodes(&$sandbox) {
   set_time_limit(30);
@@ -602,6 +602,202 @@ function ghi_blocks_deploy_9010_fix_broken_block_config(&$sandbox) {
   else {
     return t('Processed @count_processed / @count_total nodes', [
       '@count_processed' => $sandbox['total'] - count($sandbox['nodes']),
+      '@count_total' => $sandbox['total'],
+    ]);
+  }
+}
+
+/**
+ * Update map configurations for various elements on nodes.
+ */
+function ghi_blocks_deploy_9011_remove_overridden_disclaimer_nodes(&$sandbox) {
+  set_time_limit(30);
+  if (!isset($sandbox['nodes'])) {
+    $result = \Drupal::database()->select('node__layout_builder__layout')
+      ->fields('node__layout_builder__layout', ['entity_id'])
+      ->condition('layout_builder__layout_section', '%"disclaimer"%', 'LIKE')
+      ->orderBy('entity_id')
+      ->execute();
+    $sandbox['nodes'] = array_map(function ($row) {
+      return $row->entity_id;
+    }, $result->fetchAll());
+    $sandbox['total'] = count($sandbox['nodes']);
+    $sandbox['updated'] = 0;
+  }
+  for ($i = 0; $i < 25; $i++) {
+    if (empty($sandbox['nodes'])) {
+      continue;
+    }
+    $node_id = array_shift($sandbox['nodes']);
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($node_id);
+    if (!$node) {
+      continue;
+    }
+
+    $changed = FALSE;
+    if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
+      continue;
+    }
+    $sections = $node->get(OverridesSectionStorage::FIELD_NAME)->getValue();
+    if (empty($sections)) {
+      continue;
+    }
+    /** @var \Drupal\layout_builder\Section $section */
+    $section = &$sections[0]['section'];
+    $components = $section->getComponents();
+    if (empty($components)) {
+      continue;
+    }
+    foreach ($components as $component) {
+      switch ($component->getPluginId()) {
+        case 'global_plan_overview_map':
+          $configuration = $component->get('configuration');
+          if (!empty($configuration['hpc']['disclaimer'])) {
+            $configuration['hpc']['disclaimer'] = NULL;
+          }
+          // Also cleanup up remainders of previous config changes while we
+          // are here.
+          unset($configuration['hpc']['plans']);
+          unset($configuration['hpc']['map']);
+          $component->setConfiguration($configuration);
+          $changed = TRUE;
+          break;
+
+        case 'plan_attachment_map':
+          $configuration = $component->get('configuration');
+          if (!empty($configuration['hpc']['map']['common']['disclaimer'])) {
+            $configuration['hpc']['map']['common']['disclaimer'] = NULL;
+            $component->setConfiguration($configuration);
+            $changed = TRUE;
+          }
+          break;
+
+        case 'plan_operational_presence_map':
+          $configuration = $component->get('configuration');
+          if (!empty($configuration['hpc']['display']['disclaimer'])) {
+            $configuration['hpc']['display']['disclaimer'] = NULL;
+            $component->setConfiguration($configuration);
+            $changed = TRUE;
+          }
+          break;
+      }
+    }
+
+    if ($changed) {
+      $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+      $node->setNewRevision(FALSE);
+      $node->setSyncing(TRUE);
+      $node->save();
+      $sandbox['updated']++;
+    }
+  }
+
+  $sandbox['#finished'] = 1 / (count($sandbox['nodes']) + 1);
+  if ($sandbox['#finished'] === 1) {
+    return t('Updated map configurations in @count_changed / @count_total nodes', [
+      '@count_changed' => $sandbox['updated'],
+      '@count_total' => $sandbox['total'],
+    ]);
+  }
+  else {
+    return t('Processed @count_processed / @count_total nodes', [
+      '@count_processed' => $sandbox['total'] - count($sandbox['nodes']),
+      '@count_total' => $sandbox['total'],
+    ]);
+  }
+}
+
+/**
+ * Update map configurations for various elements on page templates.
+ */
+function ghi_blocks_deploy_9012_remove_overridden_disclaimer_page_templates(&$sandbox) {
+  set_time_limit(30);
+  if (!isset($sandbox['page_templates'])) {
+    $result = \Drupal::database()->select('page_template__layout_builder__layout')
+      ->fields('page_template__layout_builder__layout', ['entity_id'])
+      ->condition('layout_builder__layout_section', '%"disclaimer"%', 'LIKE')
+      ->orderBy('entity_id')
+      ->execute();
+    $sandbox['page_templates'] = array_map(function ($row) {
+      return $row->entity_id;
+    }, $result->fetchAll());
+    $sandbox['total'] = count($sandbox['page_templates']);
+    $sandbox['updated'] = 0;
+  }
+  for ($i = 0; $i < 25; $i++) {
+    if (empty($sandbox['page_templates'])) {
+      continue;
+    }
+    $page_template_id = array_shift($sandbox['page_templates']);
+    /** @var \Drupal\ghi_templates\Entity\PageTemplateInterface $page_template */
+    $page_template = \Drupal::entityTypeManager()->getStorage('page_template')->load($page_template_id);
+    if (!$page_template) {
+      continue;
+    }
+
+    $changed = FALSE;
+    if (!$page_template->hasField(OverridesSectionStorage::FIELD_NAME)) {
+      continue;
+    }
+    $sections = $page_template->get(OverridesSectionStorage::FIELD_NAME)->getValue();
+    if (empty($sections)) {
+      continue;
+    }
+    /** @var \Drupal\layout_builder\Section $section */
+    $section = &$sections[0]['section'];
+    $components = $section->getComponents();
+    if (empty($components)) {
+      continue;
+    }
+    foreach ($components as $component) {
+      switch ($component->getPluginId()) {
+        case 'global_plan_overview_map':
+          $configuration = $component->get('configuration');
+          if (!empty($configuration['hpc']['disclaimer'])) {
+            $configuration['hpc']['disclaimer'] = NULL;
+            $component->setConfiguration($configuration);
+            $changed = TRUE;
+          }
+          break;
+
+        case 'plan_attachment_map':
+          $configuration = $component->get('configuration');
+          if (!empty($configuration['hpc']['map']['common']['disclaimer'])) {
+            $configuration['hpc']['map']['common']['disclaimer'] = NULL;
+            $component->setConfiguration($configuration);
+            $changed = TRUE;
+          }
+          break;
+
+        case 'plan_operational_presence_map':
+          $configuration = $component->get('configuration');
+          if (!empty($configuration['hpc']['display']['disclaimer'])) {
+            $configuration['hpc']['display']['disclaimer'] = NULL;
+            $component->setConfiguration($configuration);
+            $changed = TRUE;
+          }
+          break;
+      }
+    }
+
+    if ($changed) {
+      $page_template->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+      $page_template->save();
+      $sandbox['updated']++;
+    }
+  }
+
+  $sandbox['#finished'] = 1 / (count($sandbox['page_templates']) + 1);
+  if ($sandbox['#finished'] === 1) {
+    return t('Updated map configurations in @count_changed / @count_total page templates', [
+      '@count_changed' => $sandbox['updated'],
+      '@count_total' => $sandbox['total'],
+    ]);
+  }
+  else {
+    return t('Processed @count_processed / @count_total page templates', [
+      '@count_processed' => $sandbox['total'] - count($sandbox['page_templates']),
       '@count_total' => $sandbox['total'],
     ]);
   }
