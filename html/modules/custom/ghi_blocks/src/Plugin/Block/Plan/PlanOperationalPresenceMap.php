@@ -108,7 +108,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     $map_settings = [
       'json' => $map_data,
       'id' => $chart_id,
-      'disclaimer' => $conf['display']['disclaimer'] ?? self::DEFAULT_DISCLAIMER,
+      'disclaimer' => $conf['display']['disclaimer'] ?: self::DEFAULT_DISCLAIMER,
       'pcodes_enabled' => $conf['display']['pcodes_enabled'] ?? TRUE,
     ];
 

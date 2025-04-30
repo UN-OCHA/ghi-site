@@ -99,7 +99,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       // given settings into the existing ones.
       'json' => !empty($map['data']) ? $map['data'] : NULL,
       'id' => $chart_id,
-      'disclaimer' => $conf['map']['common']['disclaimer'] ?? self::DEFAULT_DISCLAIMER,
+      'disclaimer' => $conf['map']['common']['disclaimer'] ?: self::DEFAULT_DISCLAIMER,
       'pcodes_enabled' => $conf['map']['common']['pcodes_enabled'] ?? TRUE,
       'style' => $style,
       'outlineCountry' => $outline_country,
