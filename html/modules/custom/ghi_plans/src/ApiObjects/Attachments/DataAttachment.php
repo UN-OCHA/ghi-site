@@ -536,9 +536,9 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @param array $reporting_period_ids
    *   The reporting periods to process.
    * @param bool $filter_empty_locations
-   *   Whether to exlcude empty locations.
+   *   Whether to exclude empty locations.
    * @param bool $filter_empty_categories
-   *   Whether to exlcude empty categories.
+   *   Whether to exclude empty categories.
    *
    * @return array
    *   An array of disaggregated data arrays per reporting period.
@@ -579,9 +579,9 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @param int|string $reporting_period
    *   Either the id of a period, or the string latest.
    * @param bool $filter_empty_locations
-   *   Whether to exlcude empty locations.
+   *   Whether to exclude empty locations.
    * @param bool $filter_empty_categories
-   *   Whether to exlcude empty categories.
+   *   Whether to exclude empty categories.
    * @param bool $ignore_missing_location_ids
    *   Whether to ignore locations with missing ids.
    *
@@ -839,8 +839,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     if (empty($country_candidates)) {
       return NULL;
     }
-    $country = reset($country_candidates);
-    return $country;
+    return reset($country_candidates);
   }
 
   /**

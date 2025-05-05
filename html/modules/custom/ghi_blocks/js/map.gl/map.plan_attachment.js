@@ -39,8 +39,8 @@
         if (typeof map_config.outlineCountry != 'undefined') {
           options.outlineCountry = map_config.outlineCountry;
         }
-        if (typeof map_config.map_disclaimer != 'undefined') {
-          options.disclaimer = map_config.map_disclaimer ?? null;
+        if (typeof map_config.disclaimer != 'undefined') {
+          options.disclaimer = map_config.disclaimer ?? null;
         }
         ghi.map.init(map_config.id, map_config.json, options);
       }
