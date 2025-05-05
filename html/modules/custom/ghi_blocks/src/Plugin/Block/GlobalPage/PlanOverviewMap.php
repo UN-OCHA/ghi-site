@@ -340,7 +340,7 @@ class PlanOverviewMap extends GHIBlockBase {
       'style' => 'circle',
       'legend' => $this->buildLegendItems(),
       'search_enabled' => $conf['search_enabled'],
-      'disclaimer' => $conf['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()->getPlanLanguage()),
+      'disclaimer' => $conf['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()?->getPlanLanguage()),
     ];
 
     return $map;
