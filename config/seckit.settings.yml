@@ -17,7 +17,7 @@ seckit_xss:
     frame-ancestors: "'none'"
     child-src: "'self'"
     font-src: "'self' fonts.gstatic.com data:"
-    connect-src: "'self' https://bam.nr-data.net https://api.mapbox.com https://events.mapbox.com"
+    connect-src: "'self' https://bam.nr-data.net https://api.mapbox.com https://events.mapbox.com https://*.clarity.ms"
     report-uri: /report-csp-violation
     upgrade-req: false
     policy-uri: ''
