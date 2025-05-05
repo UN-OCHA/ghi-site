@@ -63,8 +63,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
 
   const STYLE_CIRCLE = 'circle';
 
-  const DEFAULT_DISCLAIMER = 'The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations.';
-
   /**
    * {@inheritdoc}
    */
@@ -93,13 +91,14 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       // Nothing to show.
       return NULL;
     }
+
     $map_settings = [
       // If the map data is empty, it is important to set it to NULL, otherwise
       // the empty array is simply ignored due to the way that Drupal merges the
       // given settings into the existing ones.
       'json' => !empty($map['data']) ? $map['data'] : NULL,
       'id' => $chart_id,
-      'disclaimer' => $conf['map']['common']['disclaimer'] ?? self::DEFAULT_DISCLAIMER,
+      'disclaimer' => $conf['map']['common']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()->getPlanLanguage()),
       'pcodes_enabled' => $conf['map']['common']['pcodes_enabled'] ?? TRUE,
       'style' => $style,
       'outlineCountry' => $outline_country,
@@ -289,7 +288,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         ];
       }
       else {
-        // Otherwhise just display a tab link.
+        // Otherwise just display a tab link.
         $map['tabs']['#items'][] = [
           [
             '#type' => 'html_tag',

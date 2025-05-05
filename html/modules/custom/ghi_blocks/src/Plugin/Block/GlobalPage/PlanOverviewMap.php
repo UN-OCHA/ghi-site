@@ -44,8 +44,6 @@ class PlanOverviewMap extends GHIBlockBase {
   use GlobalSettingsTrait;
   use PlanFootnoteTrait;
 
-  const DEFAULT_DISCLAIMER = 'The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations.';
-
   /**
    * {@inheritdoc}
    */
@@ -342,7 +340,7 @@ class PlanOverviewMap extends GHIBlockBase {
       'style' => 'circle',
       'legend' => $this->buildLegendItems(),
       'search_enabled' => $conf['search_enabled'],
-      'map_disclaimer' => $conf['disclaimer'],
+      'disclaimer' => $conf['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()->getPlanLanguage()),
     ];
 
     return $map;
@@ -522,7 +520,7 @@ class PlanOverviewMap extends GHIBlockBase {
     return [
       'style' => 'circle',
       'search_enabled' => FALSE,
-      'disclaimer' => self::DEFAULT_DISCLAIMER,
+      'disclaimer' => NULL,
       'plan_select' => [],
     ];
   }
