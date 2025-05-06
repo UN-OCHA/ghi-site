@@ -5,10 +5,6 @@ migration_tags:
   - 'HPC API'
 source:
   process_entities: plan
-  filter:
-    -
-      type: 'min_year'
-      value: '2018'
   include_raw_data: true
   track_changes: true
   endpoints:

@@ -4,10 +4,6 @@ migration_group: hpc_api_data
 migration_tags:
   - 'HPC API'
 source:
-  filter:
-    -
-      type: 'min_year'
-      value: '2018'
   include_raw_data: true
   track_changes: true
   endpoints:

@@ -8,7 +8,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_blocks\Traits\TableTrait;
-use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_common\Traits\RenderArrayTrait;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
@@ -25,7 +25,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  default_title = @Translation("Evolution of the humanitarian response"),
  *  data_sources = {
  *    "attachment_search" = "attachment_search_query",
- *    "plan_funding" = "plan_funding_summary_query"
+ *    "plan_funding" = "flow_search_query",
  *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
@@ -43,6 +43,13 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
   const DEFAULT_MAX_YEARS = 10;
 
   /**
+   * The plan manager.
+   *
+   * @var \Drupal\ghi_plans\PlanManager
+   */
+  protected $planManager;
+
+  /**
    * The section manager.
    *
    * @var \Drupal\ghi_sections\SectionManager
@@ -55,6 +62,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     /** @var \Drupal\ghi_blocks\Plugin\Block\Plan\PlanClusterLogframeLinks $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->planManager = $container->get('ghi_plans.manager');
     $instance->sectionManager = $container->get('ghi_sections.manager');
     return $instance;
   }
@@ -78,20 +86,13 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     if (empty($table)) {
       return NULL;
     }
-
-    $source_data = $this->buildSourceData();
-    $years = array_map(function ($item) {
-      return $item['year'];
-    }, $source_data);
-    $soft_limit = $this->getBlockConfig()['soft_limit'];
-    $index = $soft_limit ? array_search((int) date('Y') - (int) $soft_limit, $years) : 0;
     return [
       '#theme' => 'table',
       '#header' => $table['header'],
       '#rows' => $table['rows'],
       '#progress_groups' => TRUE,
       '#sortable' => TRUE,
-      '#soft_limit' => $index,
+      '#soft_limit' => $this->getBlockConfig()['soft_limit'],
     ];
   }
 
@@ -260,36 +261,39 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
    *   An array with data or NULL.
    */
   private function buildSourceData() {
-    $related_sections = $this->getRelatedSections();
-    if (empty($related_sections)) {
+    $related_plans = $this->getRelatedPlans();
+    if (empty($related_plans)) {
       return NULL;
     }
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $attachments_query */
     $attachments_query = $this->getQueryHandler('attachment_search');
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery $funding_query */
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery $funding_query */
     $funding_query = $this->getQueryHandler('plan_funding');
 
-    // Filter out sections without a plan type.
-    $related_sections = array_filter($related_sections, function (SectionNodeInterface $section) {
-      /** @var \Drupal\ghi_plans\Entity\Plan $plan */
-      $plan = $section->getBaseObject();
+    // Filter out plans without a plan type.
+    $related_plans = array_filter($related_plans, function (Plan $plan) {
       return $plan->getPlanType() !== NULL;
     });
 
+    // Extract the plan ids and get the financial data per plan in one go using
+    // the flow search endpoint.
+    $plan_ids = array_map(function ($plan) {
+      return $plan->getSourceId();
+    }, $related_plans);
+    $plan_funding_data = $funding_query->getFinancialDataPerPlan($plan_ids);
+
+    // Collect the plan types per year to see if we need to add information to
+    // distinguish different plans in the same year.
     $plan_data = [];
     $plan_types = [];
-    foreach ($related_sections as $section) {
-      /** @var \Drupal\ghi_plans\Entity\Plan $plan */
-      $plan = $section->getBaseObject();
+    foreach ($related_plans as $plan) {
       $plan_year = $plan->getYear();
       $plan_type = $plan->getPlanType()->getAbbreviation();
       $plan_types[$plan_year][$plan_type] = !empty($plan_types[$plan_year][$plan_type]) ? $plan_types[$plan_year][$plan_type] + 1 : 1;
     }
 
-    foreach ($related_sections as $section) {
-      /** @var \Drupal\ghi_plans\Entity\Plan $plan */
-      $plan = $section->getBaseObject();
+    foreach ($related_plans as $plan) {
       $plan_year = $plan->getYear();
       $plan_type = $plan->getPlanType()->getAbbreviation();
 
@@ -297,7 +301,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $caseloads = $attachments_query->getAttachmentsByObject('plan', $plan->getSourceId(), ['type' => 'caseload']);
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $caseload */
       $caseload = count($caseloads) > 1 ? $plan->getPlanCaseload($caseloads) : (!empty($caseloads) ? reset($caseloads) : NULL);
-      $funding_data = $funding_query->getData(['plan_id' => $plan->getSourceId()]);
+      $funding_data = $plan_funding_data[$plan->getSourceId()];
 
       // Setup the plan type label to distinguish years with multiple plans of
       // the same type.
@@ -307,10 +311,13 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $target = $caseload?->getFieldByType('target')?->value;
       $reached = $caseload?->getCaseloadValue('latestReach');
 
+      // See if there is a section for this plan.
+      $section = $this->sectionManager->loadSectionForBaseObject($plan);
+
       $plan_data[] = [
         'year' => $plan_year,
         'plan_type' => $plan_type_label,
-        'plan_type_link' => $section->access('view') ? $section->toLink($plan_type_label)->toRenderable() : ['#markup' => $plan_type_label],
+        'plan_type_link' => $section && $section->access('view') ? $section->toLink($plan_type_label)->toRenderable() : ['#markup' => $plan_type_label],
         'plan_type_tooltip' => !$plan->isPartOfGho(),
         'in_need' => $in_need,
         'target' => $target,
@@ -358,17 +365,18 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
   }
 
   /**
-   * Get the related sections for this element.
+   * Get the related plans for this element.
    *
-   * @return \Drupal\ghi_sections\Entity\SectionNodeInterface[]
-   *   An array of section nodes associated to plan base objects.
+   * @return \Drupal\ghi_plans\Entity\Plan[]
+   *   An array of plan base objects.
    */
-  private function getRelatedSections() {
+  private function getRelatedPlans() {
     $section = $this->getCurrentSectionNode();
-    if (!$section && $plan_object = $this->getCurrentPlanObject()) {
-      $section = $this->sectionManager->loadSectionForBaseObject($plan_object);
+    $plan_object = $section?->getBaseObject();
+    if (!$plan_object instanceof Plan) {
+      $plan_object = $this->getCurrentPlanObject();
     }
-    return $section ? $this->sectionManager->getRelatedSections($section) : [];
+    return $plan_object ? $this->planManager->getRelatedPlans($plan_object) : [];
   }
 
   /**
@@ -386,7 +394,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
         'funding' => 'funding',
         'coverage' => 'coverage',
       ],
-      'soft_limit' => self::DEFAULT_MAX_YEARS,
+      'soft_limit' => NULL,
     ];
   }
 
@@ -411,7 +419,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'columns'),
     ];
     $form['soft_limit'] = $this->buildSoftLimitFormElement($this->getDefaultFormValueFromFormState($form_state, 'soft_limit') ?? self::DEFAULT_MAX_YEARS, 3, 10);
-    $form['soft_limit']['#description'] = $this->t('Choose how many years will be shown initially. If there is data for more years, the table can be expanded by the user.') . ' ' . $form['soft_limit']['#description'];
+    $form['soft_limit']['#description'] = $this->t('Choose how many lines will be shown initially. If there is more data, the table can be expanded by the user.') . ' ' . $form['soft_limit']['#description'];
     return $form;
   }
 
