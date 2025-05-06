@@ -33,7 +33,8 @@
 
     let tableLength = $table.find('> tbody > tr').length;
     let softLimit = $table.data('soft-limit');
-    if (tableLength < softLimit) {
+    let softLimitShowDisabled = $table.data('soft-limit-show-disabled');
+    if (tableLength < softLimit && !softLimitShowDisabled) {
       return;
     }
     // Add a button to expand the rest of the rows.
@@ -41,6 +42,9 @@
     .addClass('expand-table')
     .addClass('cd-button')
     .text(Drupal.t('Show all rows'));
+    if (softLimitShowDisabled) {
+      $button.addClass('btn--disabled');
+    }
     $button.on('click', function (e) {
       $table.find('tr:hidden').slideDown();
       $(this).hide();
@@ -134,7 +138,7 @@
         }
         else {
           once('sortable-table', 'table.sortable', context).forEach(element => {
-            if (context != document) {
+            if (context != document && !$(element).data('once').includes('sortable-table')) {
               sorttable.makeSortable(element);
             }
           });
@@ -198,7 +202,7 @@
         });
       });
 
-      once('soft-limit-table', $('table.soft-limit', context)).forEach(element => {
+      once('soft-limit-table', $('table.soft-limit')).forEach(element => {
         let $table = $(element);
         // Check if we have settings for this block element in the URL.
         let blockSoftLimit = Drupal.GhiBlockSettings.getBlockSettingForElement(element, 'soft_limit');
