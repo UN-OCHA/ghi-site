@@ -7,7 +7,7 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanCaseloadTrendsTable;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
 use Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery;
-use Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery;
+use Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
@@ -39,8 +39,9 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    */
   public function testBlockNoContext() {
     $plugin = $this->createBlockPlugin('plan_caseload_trends_table', []);
-    $this->assertIsArray($this->callPrivateMethod($plugin, 'getRelatedSections'));
-    $this->assertEmpty($this->callPrivateMethod($plugin, 'getRelatedSections'));
+    $this->assertIsArray($this->callPrivateMethod($plugin, 'getRelatedPlans'));
+    $this->assertEmpty($this->callPrivateMethod($plugin, 'getRelatedPlans'));
+    $this->assertNull($this->callPrivateMethod($plugin, 'buildTable'));
     $this->assertNull($this->callPrivateMethod($plugin, 'buildTableData'));
     $this->assertNull($this->callPrivateMethod($plugin, 'buildSourceData'));
     $this->assertNull($plugin->buildContent());
@@ -63,11 +64,11 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
   /**
    * Tests the retrieval of related sections.
    */
-  public function testGetRelatedSections() {
+  public function testGetRelatedPlans() {
     $plugin = $this->getBlockPlugin();
-    $related_sections = $this->callPrivateMethod($plugin, 'getRelatedSections');
-    $this->assertNotEmpty($related_sections);
-    $this->assertCount(1, $related_sections);
+    $related_plans = $this->callPrivateMethod($plugin, 'getRelatedPlans');
+    $this->assertNotEmpty($related_plans);
+    $this->assertCount(1, $related_plans);
   }
 
   /**
@@ -138,27 +139,33 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    */
   public function testBuildSourceDataMultipleRows() {
     $plugin = $this->getBlockPlugin();
-    $this->injectApiQueryStubs($plugin);
+    $plan_ids = [
+      $plugin->getContextValue('plan')->getSourceId(),
+    ];
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
     $plan = $plugin->getContextValue('plan');
     // Create a 2024 and a 2022 plan section besides the existing 2025 one.
     // This will create source data with one entry for 2023 and all other
     // values NULL.
-    $this->createSection([
+    $section = $this->createSection([
       'label' => 'Section node 2024',
       'field_base_object' => $this->createPlanBaseObject([
         'field_year' => 2024,
         'field_focus_country' => ['target_id' => $plan->getFocusCountry()->id()],
       ]),
     ]);
-    $this->createSection([
+    $plan_ids[] = $section->getBaseObject()->getSourceId();
+    $section = $this->createSection([
       'label' => 'Section node 2022',
       'field_base_object' => $this->createPlanBaseObject([
         'field_year' => 2022,
         'field_focus_country' => ['target_id' => $plan->getFocusCountry()->id()],
       ]),
     ]);
+    $plan_ids[] = $section->getBaseObject()->getSourceId();
+
+    $this->injectApiQueryStubs($plugin, $plan_ids);
 
     $source_data = $this->callPrivateMethod($plugin, 'buildSourceData');
     $this->assertCount(4, $source_data);
@@ -183,12 +190,14 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $plugin = $this->getBlockPlugin();
     $build = $plugin->buildContent();
     $this->assertNotEmpty($build);
-    $this->assertEquals($build['#theme'], 'table');
-    $this->assertEquals($build['#progress_groups'], TRUE);
-    $this->assertEquals($build['#sortable'], TRUE);
-    $this->assertEquals($build['#soft_limit'], 0);
-    $this->assertCount(7, $build['#header']);
-    $this->assertCount(1, $build['#rows']);
+    $this->assertIsArray($build['#lazy_builder']);
+    $this->assertIsArray($build['#lazy_builder_preview']);
+    $this->assertEquals($build['#lazy_builder_preview']['#theme'], 'table');
+    $this->assertEquals($build['#lazy_builder_preview']['#progress_groups'], TRUE);
+    $this->assertEquals($build['#lazy_builder_preview']['#sortable'], TRUE);
+    $this->assertEquals($build['#lazy_builder_preview']['#soft_limit'], 10);
+    $this->assertCount(7, $build['#lazy_builder_preview']['#header']);
+    $this->assertCount(1, $build['#lazy_builder_preview']['#rows']);
   }
 
   /**
@@ -220,14 +229,32 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    *
    * @param \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $plugin
    *   The plugin.
+   * @param array $additional_plan_ids
+   *   Optional plan ids for which to generate financial dummy data.
    */
-  private function injectApiQueryStubs($plugin) {
-    $plan_funding_query = $this->prophesize(PlanFundingSummaryQuery::class);
-    $plan_funding_query->getData(Argument::cetera())->willReturn([
-      'total_funding' => 1000,
-      'current_requirements' => 3000,
-      'funding_coverage' => 0.333,
-    ]);
+  private function injectApiQueryStubs($plugin, $additional_plan_ids = []) {
+    $plan = $plugin->getContextValue('plan');
+    $financial_data = [
+      $plan->getSourceId() => [
+        'total_funding' => 1000,
+        'current_requirements' => 3000,
+        'funding_coverage' => 0.333,
+      ],
+    ];
+    if (!empty($additional_plan_ids)) {
+      foreach ($additional_plan_ids as $plan_id) {
+        if (array_key_exists($plan_id, $financial_data)) {
+          continue;
+        }
+        $financial_data[$plan_id] = [
+          'total_funding' => 1000,
+          'current_requirements' => 3000,
+          'funding_coverage' => 0.333,
+        ];
+      }
+    }
+    $plan_funding_query = $this->prophesize(FlowSearchQuery::class);
+    $plan_funding_query->getFinancialDataPerPlan(Argument::cetera())->willReturn($financial_data);
     $plugin->setQueryHandler('plan_funding', $plan_funding_query->reveal());
 
     $caseload = $this->prophesize(CaseloadAttachment::class);
