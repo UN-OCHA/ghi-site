@@ -27,7 +27,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  default_title = @Translation("Evolution of the humanitarian response"),
  *  data_sources = {
  *    "attachment_search" = "attachment_search_query",
- *    "plan_funding" = "flow_search_query",
+ *    "plan_funding" = "plan_funding_summary_query",
  *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
@@ -359,15 +359,8 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $attachments_query */
     $attachments_query = $this->getQueryHandler('attachment_search');
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery $funding_query */
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery $funding_query */
     $funding_query = $this->getQueryHandler('plan_funding');
-
-    // Extract the plan ids and get the financial data per plan in one go using
-    // the flow search endpoint.
-    $plan_ids = array_map(function ($plan) {
-      return $plan->getSourceId();
-    }, $related_plans);
-    $plan_funding_data = $funding_query->getFinancialDataPerPlan($plan_ids);
 
     // Collect the plan types per year to see if we need to add information to
     // distinguish different plans in the same year.
@@ -387,7 +380,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $caseloads = $attachments_query->getAttachmentsByObject('plan', $plan->getSourceId(), ['type' => 'caseload']);
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $caseload */
       $caseload = count($caseloads) > 1 ? $plan->getPlanCaseload($caseloads) : (!empty($caseloads) ? reset($caseloads) : NULL);
-      $funding_data = $plan_funding_data[$plan->getSourceId()];
+      $funding_data = $funding_query->getData(['plan_id' => $plan->getSourceId()]);
 
       // Setup the plan type label to distinguish years with multiple plans of
       // the same type.
