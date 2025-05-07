@@ -14,6 +14,9 @@
   &.btn--centered {
     text-align: center;
   }
+  &.btn--disabled {
+    pointer-events: none;
+  }
 
   &:hover,
   &:focus {
@@ -50,7 +53,8 @@
     }
   }
 
-  &.no-public-access {
+  &.no-public-access,
+  &.btn--disabled {
     background-color: var(--ghi-grey);
 
     &:hover,

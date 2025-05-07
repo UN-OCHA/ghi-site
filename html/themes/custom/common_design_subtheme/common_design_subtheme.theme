@@ -54,6 +54,7 @@ function common_design_subtheme_theme_registry_alter(&$theme_registry) {
   $theme_registry['table']['variables']['progress_groups'] = FALSE;
   $theme_registry['table']['variables']['autosort'] = FALSE;
   $theme_registry['table']['variables']['soft_limit'] = FALSE;
+  $theme_registry['table']['variables']['soft_limit_show_disabled'] = FALSE;
   $theme_registry['table']['variables']['sticky_rows'] = FALSE;
 }
 
@@ -473,6 +474,9 @@ function common_design_subtheme_preprocess_table(&$vars) {
   if (!empty($vars['soft_limit'])) {
     $attributes['class'][] = Html::getClass('soft_limit');
     $attributes['data-soft-limit'][] = (int) $vars['soft_limit'];
+    if (!empty($vars['soft_limit_show_disabled'])) {
+      $attributes['data-soft-limit-show-disabled'][] = (int) $vars['soft_limit_show_disabled'];
+    }
   }
 
   // Progress indicators.

@@ -1022,8 +1022,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $form_state->setTemporaryValue($current_subform, $step_values);
       return;
     }
-    else {
-      // Set the current step values for preview.
+    elseif ($action == 'preview' && $triggering_element['#default_value'] === FALSE) {
+      // Set the current step values for preview, but only when entering into
+      // preview. When leaving preview, we do not want to update the stored
+      // values because there will be no configuration changes submitted.
       $form_state->setValue($current_subform, $step_values);
       $form_state->set(['storage', $current_subform], $step_values);
       $form_state->setTemporaryValue($current_subform, $step_values);
