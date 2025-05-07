@@ -14,10 +14,6 @@ migration_tags:
 migration_group: hpc_api_data
 label: 'Plans from the HPC API'
 source:
-  filter:
-    -
-      type: min_year
-      value: '2018'
   include_raw_data: true
   track_changes: true
   endpoints:

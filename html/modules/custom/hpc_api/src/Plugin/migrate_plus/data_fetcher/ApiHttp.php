@@ -218,49 +218,12 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
       }
     }
 
-    $this->filterSourceData($data);
-
     if (!empty($this->processEntities)) {
       $data = $this->processEntities($data, $this->processEntities);
     }
 
     // Write the data to the filesystem.
     file_put_contents($import_file, json_encode(['data' => $data]));
-  }
-
-  /**
-   * Filter the source data.
-   *
-   * @param array $data
-   *   The source data array that should be filtered.
-   */
-  private function filterSourceData(array &$data) {
-
-    if (empty($data) || empty($this->filter)) {
-      // Nothing to do.
-      return;
-    }
-
-    foreach ($data as $key => $row) {
-      // Then get the year and see if we want it. Only import plans for 2018 and
-      // above.
-      foreach ($this->filter as $filter) {
-        if ($filter['type'] == 'min_year') {
-          if (empty($row['years'])) {
-            unset($data[$key]);
-            continue;
-          }
-          // There should really be only one.
-          $years = array_map(function ($item) {
-            return (int) $item['year'];
-          }, $row['years']);
-
-          if (min($years) < $filter['value']) {
-            unset($data[$key]);
-          }
-        }
-      }
-    }
   }
 
   /**
@@ -291,6 +254,7 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
     ];
 
     ini_set('memory_limit', '512M');
+    set_time_limit(0);
     foreach ($data as $item) {
       $has_published_version = FALSE;
       if (!empty($item['planTags'])) {
