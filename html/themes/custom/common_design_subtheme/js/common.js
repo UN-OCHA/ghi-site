@@ -6,7 +6,7 @@
 
   Drupal.CommonDesignSubtheme.SoftLimit = {};
   Drupal.CommonDesignSubtheme.SoftLimit.applyLimit = function ($table) {
-    if ($table.hasClass('expanded')) {
+    if ($table.hasClass('expanded') || $table.hasClass('filtered')) {
       return;
     }
     let softLimit = $table.data('soft-limit');
@@ -15,40 +15,54 @@
       return;
     }
 
-    $rows.each(function () {
-      $(this).show();
+    // First show all rows.
+    $rows.show();
+
+    // Hide all rows beyond the first ones defined by the soft limit.
+    $rows.slice(softLimit).each(function () {
+      $(this).hide();
     });
-    if ($table.parent().find('a.expand-table:visible').length) {
-      // Hide all rows beyond the first ones defined by the soft limit.
-      $rows.slice(softLimit).each(function () {
-        $(this).hide();
-      });
-    }
   };
 
   Drupal.CommonDesignSubtheme.SoftLimit.addExpandButton = function ($table) {
-    if ($table.parent().find('.expand-table').length > 0) {
-      return;
-    }
-
     let tableLength = $table.find('> tbody > tr').length;
     let softLimit = $table.data('soft-limit');
     let softLimitShowDisabled = $table.data('soft-limit-show-disabled');
-    if (tableLength < softLimit && !softLimitShowDisabled) {
+    let needsButton = tableLength > softLimit;
+    let $button = $table.parent().find('.expand-table');
+
+    if (!needsButton) {
+      // We don't need a button, so let's get rid of it.
+      $table.parent().find('a.expand-table').remove();
       return;
     }
-    // Add a button to expand the rest of the rows.
-    let $button = $('<a href="#">')
-    .addClass('expand-table')
-    .addClass('cd-button')
-    .text(Drupal.t('Show all rows'));
-    if (softLimitShowDisabled) {
-      $button.addClass('btn--disabled');
+
+    if ($button.length > 0 && tableLength > softLimit && $button.hasClass('btn--disabled')) {
+      $button.removeClass('btn--disabled');
     }
+
+    if (!$button.length) {
+      // Add a button to expand the rest of the rows.
+      $button = $('<a href="#">')
+      .addClass('expand-table')
+      .addClass('cd-button')
+      .text(Drupal.t('Show all rows'));
+
+      if (softLimitShowDisabled) {
+        $button.addClass('btn--disabled');
+      }
+
+      if ($table.hasClass('expanded')) {
+        $button.hide();
+      }
+
+      $table.after($button);
+    }
+
     $button.on('click', function (e) {
       $table.find('tr:hidden').slideDown();
       $(this).hide();
-      $table.toggleClass('expanded');
+      $table.addClass('expanded');
 
       // See if this table is part of a block, in which case we want to trigger
       // an event that the frontend settings for the block have been changed.
@@ -60,10 +74,9 @@
           }
         });
       }
-
       e.preventDefault();
     });
-    $table.after($button);
+
   };
 
   // Add overflow logic to entity navigation menus.
@@ -162,7 +175,7 @@
           }
           // First apply settings according to what the url requests.
           let blockTableSort = Drupal.GhiBlockSettings.getBlockSettingForElement(this, 'sort');
-          if (blockTableSort) {
+          if (blockTableSort && !$(this).hasClass('sorted')) {
             let blockId = $(this).parents('.ghi-block').attr('id');
             let columnSelector = '#' + blockId + ' table.sortable th:nth-child(' + (blockTableSort.column + 1) + ')';
             let column = $(columnSelector).get(0);
@@ -202,12 +215,19 @@
         });
       });
 
-      once('soft-limit-table', $('table.soft-limit')).forEach(element => {
+      once('soft-limit-table-big-pipe', $('table.soft-limit')).forEach(element => {
         let $table = $(element);
         // Check if we have settings for this block element in the URL.
         let blockSoftLimit = Drupal.GhiBlockSettings.getBlockSettingForElement(element, 'soft_limit');
         if (blockSoftLimit != 'expanded') {
-
+          Drupal.CommonDesignSubtheme.SoftLimit.addExpandButton($table);
+        }
+      });
+      once('soft-limit-table', $('.block-content:not(:has(> span[data-big-pipe-placeholder-id])) table.soft-limit', context)).forEach(element => {
+        let $table = $(element);
+        // Check if we have settings for this block element in the URL.
+        let blockSoftLimit = Drupal.GhiBlockSettings.getBlockSettingForElement(element, 'soft_limit');
+        if (blockSoftLimit != 'expanded') {
           Drupal.CommonDesignSubtheme.SoftLimit.addExpandButton($table);
           Drupal.CommonDesignSubtheme.SoftLimit.applyLimit($table);
 
@@ -223,15 +243,7 @@
 
           // Update the list when search is used.
           $table.on('tableReset', function () {
-            if ($table.parent().find('a.expand-table').length) {
-              $table.parent().find('a.expand-table').show();
-            }
             Drupal.CommonDesignSubtheme.SoftLimit.applyLimit($table);
-          });
-          $table.on('tableFiltered', function () {
-            if ($table.parent().find('a.expand-table:visible').length) {
-              $table.parent().find('a.expand-table:visible').hide();
-            }
           });
         }
       });

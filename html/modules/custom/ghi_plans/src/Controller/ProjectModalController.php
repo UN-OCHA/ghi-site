@@ -242,7 +242,7 @@ class ProjectModalController extends ControllerBase {
             'target' => '_blank',
           ],
         ],
-        'sorttable_customkey' => $project->version_code,
+        'data-sort-value' => $project->version_code,
         'data-sort-type' => 'alfa',
         'data-column-type' => 'string',
       ];
@@ -251,7 +251,7 @@ class ProjectModalController extends ControllerBase {
         'data' => [
           '#markup' => Markup::create(implode(' | ', $this->getOrganizationLinks($organinizations))),
         ],
-        'sorttable_customkey' => implode(' | ', $this->getOrganizationNames($organinizations)),
+        'data-sort-value' => implode(' | ', $this->getOrganizationNames($organinizations)),
         'data-sort-type' => 'alfa',
         'data-column-type' => 'string',
       ];
@@ -262,7 +262,7 @@ class ProjectModalController extends ControllerBase {
           '#scale' => 'full',
           '#decimal_format' => $decimal_format,
         ],
-        'sorttable_customkey' => $project->target,
+        'data-sort-value' => $project->target,
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
       ];
@@ -273,7 +273,7 @@ class ProjectModalController extends ControllerBase {
           '#scale' => 'full',
           '#decimal_format' => $decimal_format,
         ],
-        'sorttable_customkey' => $project->requirements,
+        'data-sort-value' => $project->requirements,
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
       ];
@@ -371,7 +371,7 @@ class ProjectModalController extends ControllerBase {
           '#scale' => 'full',
           '#decimal_format' => $decimal_format,
         ],
-        'sorttable_customkey' => $project->requirements,
+        'data-sort-value' => $project->requirements,
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
       ];

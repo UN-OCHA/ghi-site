@@ -135,9 +135,9 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
   }
 
   /**
-   * Tests the source data for multiple rows.
+   * Tests the build functions for multiple rows including empty ones.
    */
-  public function testBuildSourceDataMultipleRows() {
+  public function testBuildWithEmptyRows() {
     $plugin = $this->getBlockPlugin();
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
@@ -163,7 +163,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->injectApiQueryStubs($plugin);
 
     $source_data = $this->callPrivateMethod($plugin, 'buildSourceData');
-    $this->assertCount(4, $source_data);
+    $this->assertCount(3, $source_data);
 
     $this->assertEquals('2025', $source_data[0]['year']);
     $this->assertNotNull($source_data[0]['plan_type']);
@@ -171,11 +171,27 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertEquals('2024', $source_data[1]['year']);
     $this->assertNotNull($source_data[1]['plan_type']);
 
-    $this->assertEquals('2023', $source_data[2]['year']);
-    $this->assertNull($source_data[2]['plan_type']);
+    $this->assertEquals('2022', $source_data[2]['year']);
+    $this->assertNotNull($source_data[2]['plan_type']);
 
-    $this->assertEquals('2022', $source_data[3]['year']);
-    $this->assertNotNull($source_data[3]['plan_type']);
+    $table_data = $this->callPrivateMethod($plugin, 'buildTableData');
+    $this->assertArrayHasKey('header', $table_data);
+    $this->assertArrayHasKey('rows', $table_data);
+
+    $rows = $table_data['rows'];
+    $this->assertCount(4, $rows);
+    $this->assertEquals('2025', $rows[0]['year']['data']);
+    $this->assertNotNull($rows[0]['plan_type']['data']);
+
+    $this->assertEquals('2024', $rows[1]['year']['data']);
+    $this->assertNotNull($rows[1]['plan_type']['data']);
+
+    $this->assertEquals('2023', $rows[2]['data']['year']['data']);
+    $this->assertNotNull($rows[2]['data']['plan_type']['data']);
+    $this->assertEquals('There was no plan in this year.', (string) $rows[2]['data']['plan_type']['data-raw-value']);
+
+    $this->assertEquals('2022', $rows[3]['year']['data']);
+    $this->assertNotNull($rows[3]['plan_type']['data']);
   }
 
   /**

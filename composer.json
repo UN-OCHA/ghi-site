@@ -68,7 +68,7 @@
         "drupal/aws": "dev-2.0.x",
         "drupal/bert": "^2.0",
         "drupal/better_permissions_page": "^1.0",
-        "drupal/big_pipe_sessionless": "^2.0",
+        "drupal/big_pipe_sessionless": "^2.2",
         "drupal/bigint": "^2.0",
         "drupal/cer": "^5.0.0",
         "drupal/coder": "^8.3",

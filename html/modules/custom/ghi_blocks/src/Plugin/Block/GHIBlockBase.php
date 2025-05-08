@@ -334,6 +334,17 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
+   * Get the block id.
+   *
+   * @return string
+   *   A unique ID for this block.
+   */
+  protected function getBlockId() {
+    $block_id = drupal_static(__FUNCTION__ . '_' . $this->getUuid(), Html::getId('block-' . $this->getUuid()));
+    return $block_id;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function build() {
@@ -393,7 +404,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
 
     // Add some classes for styling.
-    $build['#attributes']['id'] = Html::getId('block-' . $this->getUuid());
+    $build['#attributes']['id'] = $this->getBlockId();
     $build['#attributes']['class'][] = Html::getClass('ghi-block-' . $this->getPluginId());
     $build['#attributes']['class'][] = 'ghi-block';
     if ($this->getUuid()) {

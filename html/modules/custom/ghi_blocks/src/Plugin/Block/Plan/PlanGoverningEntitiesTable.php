@@ -88,6 +88,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       '#sortable' => TRUE,
       '#soft_limit' => $this->getBlockConfig()['display']['soft_limit'] ?? 0,
       '#progress_groups' => TRUE,
+      '#block_id' => $this->getBlockId(),
     ];
   }
 
