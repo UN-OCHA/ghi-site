@@ -55,9 +55,9 @@
 
     if (searchString.length == 0) {
       $table.find('tbody tr').show();
-      $table.trigger('tableReset');
       $table.parent().find('.table-search-input-wrapper').toggleClass('empty', true);
       $table.toggleClass('filtered', false);
+      $table.trigger('tableReset');
       return;
     }
     $table.find('tbody tr').hide();

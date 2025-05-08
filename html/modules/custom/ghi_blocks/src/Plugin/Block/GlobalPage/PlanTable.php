@@ -110,6 +110,15 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       ],
       '#progress_groups' => TRUE,
       '#soft_limit' => $this->getBlockConfig()['table']['soft_limit'] ?? 0,
+      '#cache' => [
+        'context' => [
+          'url.path',
+          'url.query_args',
+        ],
+        'tags' => $this->getCacheTags(),
+        'max' => $this->getCacheMaxAge(),
+      ],
+      '#block_id' => $this->getBlockId(),
     ];
 
     $comment = $this->buildBlockCommentRenderArray($conf['table']['comment'] ?? NULL);

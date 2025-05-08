@@ -14,9 +14,14 @@
       }
 
       &.soft-limit + a.expand-table {
-        display: block;
+        display: block !important;
         margin-right: auto;
         margin-left: auto;
+      }
+
+      &.soft-limit.filtered + a.expand-table,
+      &.soft-limit.expanded + a.expand-table {
+        display: none !important;
       }
 
       .ghi-block & {

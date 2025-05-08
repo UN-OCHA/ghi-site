@@ -47,7 +47,7 @@
 {{ attach_library('common_design/cd-table') }}
 {{ attach_library('common_design_subtheme/ghi-scrollable-table') }}
 
-<div class="table-wrapper scrollable-table">
+<div {{ wrapper_attributes }}>
   <table{{ attributes.addClass(classes) }}>
     {% if caption %}
       <caption>{{ caption }}</caption>
@@ -109,4 +109,9 @@
       </tfoot>
     {% endif %}
   </table>
+
+  {% if soft_limit and (soft_limit > rows|length or soft_limit_show_disabled) %}
+    <a href="#" class="expand-table cd-button {% if soft_limit_show_disabled and rows|length <= soft_limit %}btn--disabled{% endif %}">{{ 'Show all rows'|t }}</a>
+  {% endif %}
+
 </div>
