@@ -10,7 +10,7 @@ use Drupal\menu_item_extras\Entity\MenuItemExtrasMenuLinkContent;
  *
  * This is only used to set GhiMenuLinkContent as the class responsible for
  * menu item rendering. We need that to have the last word about how the
- * rendered url should be build.
+ * rendered url should be built.
  */
 class GhiMenuLinkContent extends MenuItemExtrasMenuLinkContent {
 
