@@ -66,6 +66,13 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->planManager = $container->get('ghi_plans.manager');
     $instance->sectionManager = $container->get('ghi_sections.manager');
+
+    // Write something to the session to make big pipe work also for anonymous
+    // users on the first request for this block which will not have any cached
+    // data.
+    $request = $container->get('request_stack')->getCurrentRequest();
+    $request->cookies->set($request->getSession()->getName(), 'big_pipe work around');
+
     return $instance;
   }
 
@@ -94,7 +101,6 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     if (empty($table)) {
       return NULL;
     }
-    $table['#soft_limit_show_disabled'] = count($this->getRelatedPlans()) > $this->getBlockConfig()['soft_limit'];
 
     // We return a lazy builder render array together with the actual
     // size-limited table to be used as a preview until the lazy-loader builds
@@ -113,7 +119,18 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       ],
       '#create_placeholder' => TRUE,
       '#cache' => [
-        'context' => ['url.path'],
+        // Cache this per url and query to also capture the block settings.
+        'context' => [
+          'url.query_args',
+          'url.path',
+        ],
+        'tags' => $this->getCacheTags(),
+        'max' => $this->getCacheMaxAge(),
+        // Adding these cache keys here will trigger autoplaceholdering.
+        'keys' => [
+          \Drupal::request()->getPathInfo(),
+          \Drupal::request()->query->get('bs'),
+        ],
       ],
       '#lazy_builder_preview' => $table,
     ];
@@ -173,6 +190,8 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       '#progress_groups' => TRUE,
       '#sortable' => TRUE,
       '#soft_limit' => $this->getBlockConfig()['soft_limit'],
+      '#soft_limit_show_disabled' => count($this->getRelatedPlans()) > $this->getBlockConfig()['soft_limit'],
+      '#block_id' => $this->getBlockId(),
     ];
   }
 
@@ -197,7 +216,10 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
 
     $header = [
       'year' => $this->buildHeaderColumn($this->t('Year', [], $t_options), 'number'),
-      'plan_type' => $this->t('Type'),
+      'plan_type' => [
+        'data' => $this->t('Type'),
+        'class' => 'sorttable-alpha',
+      ],
       'in_need' => $this->buildHeaderColumn($this->t('People in need', [], $t_options), 'amount'),
       'target' => $this->buildHeaderColumn($this->t('People targeted', [], $t_options), 'amount'),
       'target_percent' => $this->buildHeaderColumn($this->t('People targeted (%)', [], $t_options), 'amount'),
@@ -326,7 +348,12 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
         }
         unset($header[$key]);
         foreach ($rows as &$row) {
-          unset($row[$key]);
+          if (!isset($row['data'])) {
+            unset($row[$key]);
+          }
+          else {
+            unset($row['data'][$key]);
+          }
         }
       }
     }
@@ -460,6 +487,10 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     // Filter out plans without a plan type.
     $related_plans = array_filter($related_plans, function (Plan $plan) {
       return $plan->getPlanType() !== NULL;
+    });
+    // Initially sort by descending year.
+    uasort($related_plans, function ($a, $b) {
+      return strnatcasecmp($b->getYear(), $a->getYear());
     });
     return $related_plans;
   }
