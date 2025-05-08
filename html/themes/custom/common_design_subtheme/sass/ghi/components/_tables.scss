@@ -147,6 +147,10 @@
           &:last-child {
             border-bottom: 0;
           }
+
+          &.empty.no-plan {
+            opacity: 0.5;
+          }
         }
 
         td:first-child.subrow {

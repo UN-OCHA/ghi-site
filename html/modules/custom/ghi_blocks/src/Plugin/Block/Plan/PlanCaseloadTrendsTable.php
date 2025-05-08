@@ -358,6 +358,46 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       }
     }
 
+    // Now fill in missing years.
+    $years = array_unique(array_map(function ($item) {
+      return $item['year'];
+    }, $data));
+    $range = range(min($years), max($years));
+    $plan_rows = $rows;
+    $rows = [];
+    foreach (array_reverse($range) as $year) {
+      if (in_array($year, $years)) {
+        $rows = array_merge($rows, array_filter($plan_rows, function ($item) use ($year) {
+          return $item['year']['data'] == $year;
+        }));
+      }
+      else {
+        $rows[] = [
+          'data' => [
+            'year' => [
+              'data' => $year,
+              'data-raw-value' => $year,
+              'data-column-type' => 'string',
+            ],
+            'plan_type' => [
+              'data' => [
+                '#type' => 'html_tag',
+                '#tag' => 'em',
+                '#attributes' => [
+                  'class' => ['no-plan'],
+                ],
+                '#value' => $this->t('There was no plan in this year.'),
+              ],
+              'data-raw-value' => (string) $this->t('There was no plan in this year.'),
+              'data-sort-value' => -1,
+              'colspan' => count(array_filter($columns)) + 1,
+            ],
+          ],
+          'class' => 'empty no-plan',
+        ];
+      }
+    }
+
     return [
       'header' => $header,
       'rows' => $rows,
@@ -436,38 +476,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
         'footnotes' => $plan ? $this->getFootnotesForPlanBaseobject($plan) : NULL,
       ];
     }
-
-    // Now fill in missing years.
-    $years = array_unique(array_map(function ($item) {
-      return $item['year'];
-    }, $plan_data));
-    $range = range(min($years), max($years));
-    $data = [];
-    foreach (array_reverse($range) as $year) {
-      if (in_array($year, $years)) {
-        $data = array_merge($data, array_filter($plan_data, function ($item) use ($year) {
-          return $item['year'] == $year;
-        }));
-      }
-      else {
-        $data[] = [
-          'year' => $year,
-          'plan_type' => NULL,
-          'plan_type_link' => NULL,
-          'plan_type_tooltip' => NULL,
-          'in_need' => NULL,
-          'target' => NULL,
-          'target_percent' => NULL,
-          'reached' => NULL,
-          'reached_percent' => NULL,
-          'requirements' => NULL,
-          'funding' => NULL,
-          'coverage' => NULL,
-          'footnotes' => NULL,
-        ];
-      }
-    }
-    return $data;
+    return $plan_data;
   }
 
   /**
