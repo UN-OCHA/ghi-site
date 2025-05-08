@@ -123,7 +123,7 @@ class Excel {
 
     $build['footnotes'] = [];
     $build['rows'] = array_values(array_map(function ($cells) {
-      return array_values($cells);
+      return $cells;
     }, $build['rows']));
     foreach ($build['rows'] as $row_key => $cells) {
       if (!is_array($cells)) {
@@ -134,7 +134,7 @@ class Excel {
         $build['rows'][$row_key] = $cells;
       }
 
-      foreach ($cells as $cell_key => $cell) {
+      foreach (array_values($cells) as $cell_key => $cell) {
         // Cell data.
         if (is_array($cell) && array_key_exists('export_value', $cell)) {
           // This has been crafted before, so let's use it.

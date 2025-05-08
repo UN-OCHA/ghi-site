@@ -47,31 +47,59 @@ class TableSort {
 
     $sort_factor = $sort_factor * ($direction == strtolower(EndpointQuery::SORT_ASC) ? 1 : -1);
     usort($rows, function ($a, $b) use ($column, $sort_factor) {
-      $column_a = array_values($a['cells'])[$column];
-      $column_b = array_values($b['cells'])[$column];
-      $content_a = ($column_a['attributes'] ?? NULL) instanceof Attribute && $column_a['attributes']->hasAttribute('data-raw-value') ? $column_a['attributes']['data-raw-value'] : $column_a['content'];
-      $content_b = ($column_b['attributes'] ?? NULL) instanceof Attribute && $column_b['attributes']->hasAttribute('data-raw-value') ? $column_b['attributes']['data-raw-value'] : $column_b['content'];
-      $content_a = is_array($content_a) ? $content_a['value']['content'] : $content_a;
-      $content_b = is_array($content_b) ? $content_b['value']['content'] : $content_b;
-      $content_a = is_array($content_a) && array_key_exists(0, $content_a) ? $content_a[0] : $content_a;
-      $content_b = is_array($content_b) && array_key_exists(0, $content_b) ? $content_b[0] : $content_b;
+      $content_a = self::extractValue($a, $column);
+      $content_b = self::extractValue($b, $column);
 
-      $content_a = is_array($content_a) && array_key_exists('#title', $content_a) ? $content_a['#title'] : $content_a;
-      $content_b = is_array($content_b) && array_key_exists('#title', $content_b) ? $content_b['#title'] : $content_b;
-      $content_a = is_array($content_a) && array_key_exists('name', $content_a) ? $content_a['name'] : $content_a;
-      $content_b = is_array($content_b) && array_key_exists('name', $content_b) ? $content_b['name'] : $content_b;
-      $content_a = is_array($content_a) && array_key_exists('#markup', $content_a) ? $content_a['#markup'] : $content_a;
-      $content_b = is_array($content_b) && array_key_exists('#markup', $content_b) ? $content_b['#markup'] : $content_b;
-      $content_a = is_array($content_a) && empty($content_a) ? '' : $content_a;
-      $content_b = is_array($content_b) && empty($content_b) ? '' : $content_b;
-      if (is_array($content_a) || is_array($content_b)) {
-        // If we still have an array here, bail out.
+      if ($content_a === NULL || $content_b === NULL) {
+        // If we still have no value at this point, bail out.
         return NULL;
+      }
+      if (is_numeric($content_a) && is_numeric($content_b)) {
+        return $content_a <=> $content_b;
       }
       return $sort_factor * strnatcasecmp($content_a, $content_b);
     });
 
     return TRUE;
+  }
+
+  /**
+   * Extract a scalar value from a column row.
+   *
+   * @param array $row
+   *   The row array.
+   * @param int $column
+   *   The column index for which to extract the value.
+   *
+   * @return string|int|null
+   *   The scalar value for the column, or NULL if all else fails.
+   */
+  private static function extractValue($row, $column) {
+    $cell = array_values($row['cells'])[$column] ?? NULL;
+    if ($cell === NULL) {
+      return 0;
+    }
+    if (is_array($cell) && ($cell['attributes'] ?? NULL) instanceof Attribute) {
+      if ($cell['attributes']->hasAttribute('data-sort-value')) {
+        return $cell['attributes']['data-sort-value'];
+      }
+      elseif ($cell['attributes']->hasAttribute('data-raw-value')) {
+        return $cell['attributes']['data-raw-value'];
+      }
+    }
+
+    if (!array_key_exists('content', $cell)) {
+      return 0;
+    }
+    $cell_content = $cell['content'];
+    $cell_content = is_array($cell_content) ? $cell_content['value']['content'] : $cell_content;
+    $cell_content = is_array($cell_content) && array_key_exists(0, $cell_content) ? $cell_content[0] : $cell_content;
+    $cell_content = is_array($cell_content) && array_key_exists('#title', $cell_content) ? $cell_content['#title'] : $cell_content;
+    $cell_content = is_array($cell_content) && array_key_exists('name', $cell_content) ? $cell_content['name'] : $cell_content;
+    $cell_content = is_array($cell_content) && array_key_exists('#markup', $cell_content) ? $cell_content['#markup'] : $cell_content;
+    $cell_content = is_array($cell_content) && empty($cell_content) ? '' : $cell_content;
+
+    return is_array($cell_content) ? NULL : $cell_content;
   }
 
 }
