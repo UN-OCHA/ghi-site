@@ -1,0 +1,4 @@
+ghi_menu.settings:
+  title: 'Menu settings'
+  parent: system.admin_config_ghi
+  route_name: ghi_menu.settings
