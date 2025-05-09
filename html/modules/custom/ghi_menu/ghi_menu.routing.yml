@@ -1,0 +1,7 @@
+ghi_menu.settings:
+  path: '/admin/config/system/menu-links-with-sublinks-deletion'
+  defaults:
+    _form: '\Drupal\ghi_menu\Form\MenuLinkDeleteWithSublinksSettingsForm'
+    _title: 'Menu links with sublinks deletion settings'
+  requirements:
+    _permission: 'administer site configuration'
