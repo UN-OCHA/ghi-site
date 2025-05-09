@@ -1,6 +1,6 @@
+# General overview of the GHI Drupal site
 
-CONTENTS OF THIS FILE
----------------------
+## CONTENTS OF THIS FILE
 
  * Setup
  * Database setup
@@ -14,8 +14,8 @@ CONTENTS OF THIS FILE
  * References
  * Troubleshooting
 
-SETUP
------
+
+## SETUP
 
 Humanitarian Action (GHI) uses docksal which is a web-development environment
 based on docker.
@@ -41,8 +41,7 @@ For docksal to run, you will need to stop any other webserver or service on
 your system that might bind to port 80.
 
 
-DATABASE SETUP
---------------
+## DATABASE SETUP
 
 A database has been created automatically as part of the stack setup above.
 
@@ -50,8 +49,7 @@ Pull a database dump from [here](https://snapshots.aws.ahconu.org/ghi) to get a
 fresh copy and seed your local database.
 
 
-SEARCH USING SOLR
------------------
+## SEARCH USING SOLR
 
 The integrated search feature is based on solr. The local docksal stack comes
 with a solr instance that is already setup in Drupal. On the first setup of the
@@ -67,22 +65,19 @@ indexing content using this command:
     fin solr index
 
 
-COMPOSER
---------
+## COMPOSER
 
 Using docksal, you can run any composer command as **_fin composer {COMMAND}_**.
 
 
-DRUSH
------
+## DRUSH
 
 Drush commands can be run as **_fin drush {COMMAND}_**. Eg:
 
     fin drush cr
 
 
-CODE QUALITY
-------------
+## CODE QUALITY
 
 Use PHP Codesniffer to assure code quality.
 
@@ -95,8 +90,7 @@ Drupal best practices
     fin exec vendor/bin/phpcs --standard=DrupalPractice --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml ./html/modules/custom/
 
 
-THEME SETUP
------------
+## THEME SETUP
 
 We have created a sub-theme common_design_subtheme from the OCHA provided base
 theme named [common_design](https://github.com/UN-OCHA/common_design).
@@ -112,14 +106,12 @@ Once done with the changes, run the below commands:
 
 
 
-CONFIGURATION AND FEATURES
---------------------------
+## CONFIGURATION AND FEATURES
 
 Tbc.
 
 
-IMPORTING DATABASE SNAPSHOT
----------------------------
+## IMPORTING DATABASE SNAPSHOT
 
 Download database snapshots from https://snapshots.aws.ahconu.org/ghi/ and
 place them in **_.docksal_/backups**
@@ -135,16 +127,14 @@ Running this without the _-i_ argument, will just run the deployment actions on
 the current database without importing a snapshot.
 
 
-DATA MIGRATIONS
----------------
+## DATA MIGRATIONS
 
 The data migrations can be run locally with this command:
 
     fin update-data
 
 
-TESTING
--------
+## TESTING
 
 PHPUnit tests for the custom modules can be run via docksal like this:
 
@@ -158,11 +148,23 @@ The tests can be optionally filtered down very specifically, e.g.:
 
 Testing against chromium browser via selenium grid should be setup and ready to use out of the box.
 
+### noVNC
+
 Local VNC to observe the browser actions in real time:
+
+    fin vnc
+
+or
 
     http://ghi-site.docksal.site::7900
 
+### Selenium Grid
+
 Access to the Selenium Grid UI:
+
+    fin selenium-grid
+
+or
 
     http://ghi-site.docksal.site:4444/ui
 
