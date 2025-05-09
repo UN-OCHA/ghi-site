@@ -50,7 +50,7 @@ $config['search_api.server.solr_server']['backend_config']['connector_config']['
 
 $settings['social_auth.settings']['redirect_user_form'] = true;
 
-$config['stage_file_proxy.settings']['origin'] = 'https://humanitarianaction.info/';
+$config['stage_file_proxy.settings']['origin'] = 'https://humanitarianaction.info';
 $config['stage_file_proxy.settings']['hotlink'] = FALSE;
 
 $settings['config_sync_directory'] =  '/var/www/config';
