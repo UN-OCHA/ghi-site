@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+## Open the selenium grid web interface in the browser.
+##
+## Usage: fin selenium-grid [-h]
+##
+
+usage="$(basename "$0") [-h]
+
+where:
+    -h  show this help text"
+
+while [ "$1" != "" ]; do
+  case $1 in
+    -h | --help )         echo "$usage"
+                          exit
+                          ;;
+    * )                   echo "$usage"
+                          exit 1
+  esac
+  shift
+done
+
+fin utils/open-link "http://${VIRTUAL_HOST}:4444"
