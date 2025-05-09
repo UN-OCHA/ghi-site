@@ -217,7 +217,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     $header = [
       'year' => $this->buildHeaderColumn($this->t('Year', [], $t_options), 'number'),
       'plan_type' => [
-        'data' => $this->t('Type'),
+        'data' => $this->t('Type', [], $t_options),
         'class' => 'sorttable-alpha',
       ],
       'in_need' => $this->buildHeaderColumn($this->t('People in need', [], $t_options), 'amount'),
@@ -248,7 +248,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
             $item['plan_type_link'],
             $item['plan_type_tooltip'] ? [
               '#theme' => 'hpc_tooltip',
-              '#tooltip' => $this->t('This plan is not included in the GHO totals'),
+              '#tooltip' => $this->t('This plan is not included in the GHO totals', [], $t_options),
               '#class' => 'gho-included-tooltip',
               '#tag_content' => [
                 '#theme' => 'hpc_icon',
@@ -386,9 +386,9 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
                 '#attributes' => [
                   'class' => ['no-plan'],
                 ],
-                '#value' => $this->t('There was no plan in this year.'),
+                '#value' => $this->t('There was no plan in this year.', [], $t_options),
               ],
-              'data-raw-value' => (string) $this->t('There was no plan in this year.'),
+              'data-raw-value' => (string) $this->t('There was no plan in this year.', [], $t_options),
               'data-sort-value' => -1,
               'colspan' => count(array_filter($columns)) + 1,
             ],
