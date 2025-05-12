@@ -2,17 +2,23 @@
 
 namespace Drupal\Tests\ghi_content\Kernel;
 
+use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\ghi_content\Import\ImportManager;
+use Drupal\ghi_content\Plugin\Block\Paragraph;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
+use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Section;
+use Drupal\layout_builder\SectionComponent;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
+use Drupal\Tests\ghi_blocks\Traits\PrivateMethodTrait;
+use Prophecy\Argument;
 
 /**
  * Tests the import manager.
@@ -24,6 +30,7 @@ class ImportManagerTest extends KernelTestBase {
   use TaxonomyTestTrait;
   use FieldTestTrait;
   use EntityReferenceFieldCreationTrait;
+  use PrivateMethodTrait;
 
   /**
    * Modules to enable.
@@ -146,6 +153,166 @@ class ImportManagerTest extends KernelTestBase {
       $plugin = $component->toArray();
       $this->assertEquals($paragraphs[$key]->getUuid(), $plugin['configuration']['sync']['source_uuid']);
     }
+  }
+
+  /**
+   * Tests that new paragraphs are positioned correctly.
+   */
+  public function testPositionNewParagraph() {
+    /** @var \Drupal\ghi_content\Import\ImportManager $import_manager */
+    $import_manager = \Drupal::service('ghi_content.import');
+
+    // Prepare the arguments for ImportManager::positionNewParagraph().
+    $section = $this->prophesize(Section::class);
+    $remote_paragraphs[] = [];
+    $paragraph_uuids = [];
+    $component_uuids = [];
+    /** @var \Drupal\layout_builder\SectionComponent[] $section_components */
+    $section_components = array_map(function ($weight) use (&$remote_paragraphs, &$paragraph_uuids, &$component_uuids) {
+      $uuid = $this->randomString();
+      $component = $this->prophesize(SectionComponent::class);
+      $component->getWeight()->willReturn($weight);
+      $component->getUuid()->willReturn($uuid);
+      $component_uuids[$weight] = $uuid;
+
+      // The first and the last components should be non-paragraph blocks for
+      // the purpose of this test. The component with weight 10 represents the
+      // newly added component.
+      if ($weight != 0 && $weight != 9) {
+        // Paragraph element.
+        $paragraph_id = $weight;
+        $remote_paragraph = $this->prophesize(RemoteParagraphInterface::class);
+        $remote_paragraph->getId()->willReturn($paragraph_id);
+        $remote_paragraphs[$paragraph_id] = $remote_paragraph->reveal();
+        $paragraph_uuids[$paragraph_id] = $uuid;
+
+        $paragraph = $this->prophesize(Paragraph::class);
+        $paragraph->getParagraph()->willReturn($remote_paragraph->reveal());
+
+        $component->getPlugin()->willReturn($paragraph->reveal());
+      }
+      else {
+        // Non-paragraph element.
+        $other_plugin = $this->prophesize(BlockPluginInterface::class);
+        $component->getPlugin()->willReturn($other_plugin->reveal());
+      }
+      $component->setWeight(Argument::any())->shouldBeCalled();
+      return $component->reveal();
+    }, range(0, 10));
+
+    // Finalize mocking of the section object.
+    $section->getComponents()->willReturn($section_components);
+    foreach ($section_components as $section_component) {
+      $section->getComponent($section_component->getUuid())->willReturn($section_component);
+    }
+
+    // This is the new component and its associated remote paragraph object.
+    $component = end($section_components);
+    $remote_paragraph = $component->getPlugin()->getParagraph();
+
+    // Test adding a new paragraph in the first position, which should place it
+    // as the second component, preceeding the first paragraph and following
+    // the actual first component which is not a paragraph.
+    $paragraphs = [
+      $remote_paragraph->getId() => $remote_paragraph,
+      $remote_paragraphs[1]->getId() => $remote_paragraphs[1],
+      $remote_paragraphs[2]->getId() => $remote_paragraphs[2],
+      $remote_paragraphs[3]->getId() => $remote_paragraphs[3],
+      $remote_paragraphs[4]->getId() => $remote_paragraphs[4],
+      $remote_paragraphs[5]->getId() => $remote_paragraphs[5],
+      $remote_paragraphs[6]->getId() => $remote_paragraphs[6],
+      $remote_paragraphs[7]->getId() => $remote_paragraphs[7],
+      $remote_paragraphs[8]->getId() => $remote_paragraphs[8],
+    ];
+    $new_order = $this->callPrivateMethod($import_manager, 'positionNewParagraph', [
+      $section->reveal(),
+      $component,
+      $remote_paragraph,
+      $paragraphs,
+    ]);
+    $expected = [
+      0 => $component_uuids[0],
+      1 => $paragraph_uuids[$remote_paragraph->getId()],
+      2 => $paragraph_uuids[$remote_paragraphs[1]->getId()],
+      3 => $paragraph_uuids[$remote_paragraphs[2]->getId()],
+      4 => $paragraph_uuids[$remote_paragraphs[3]->getId()],
+      5 => $paragraph_uuids[$remote_paragraphs[4]->getId()],
+      6 => $paragraph_uuids[$remote_paragraphs[5]->getId()],
+      7 => $paragraph_uuids[$remote_paragraphs[6]->getId()],
+      8 => $paragraph_uuids[$remote_paragraphs[7]->getId()],
+      9 => $paragraph_uuids[$remote_paragraphs[8]->getId()],
+      10 => $component_uuids[9],
+    ];
+    $this->assertEquals($expected, $new_order);
+
+    // Test adding a new paragraph in the last position, which should place it
+    // as the second last component, following the last paragraph and
+    // preceeding the actual last component which is not a paragraph.
+    $paragraphs = [
+      $remote_paragraphs[1]->getId() => $remote_paragraphs[1],
+      $remote_paragraphs[2]->getId() => $remote_paragraphs[2],
+      $remote_paragraphs[3]->getId() => $remote_paragraphs[3],
+      $remote_paragraphs[4]->getId() => $remote_paragraphs[4],
+      $remote_paragraphs[5]->getId() => $remote_paragraphs[5],
+      $remote_paragraphs[6]->getId() => $remote_paragraphs[6],
+      $remote_paragraphs[7]->getId() => $remote_paragraphs[7],
+      $remote_paragraphs[8]->getId() => $remote_paragraphs[8],
+      $remote_paragraph->getId() => $remote_paragraph,
+    ];
+    $new_order = $this->callPrivateMethod($import_manager, 'positionNewParagraph', [
+      $section->reveal(),
+      $component,
+      $remote_paragraph,
+      $paragraphs,
+    ]);
+    $expected = [
+      0 => $component_uuids[0],
+      1 => $paragraph_uuids[$remote_paragraphs[1]->getId()],
+      2 => $paragraph_uuids[$remote_paragraphs[2]->getId()],
+      3 => $paragraph_uuids[$remote_paragraphs[3]->getId()],
+      4 => $paragraph_uuids[$remote_paragraphs[4]->getId()],
+      5 => $paragraph_uuids[$remote_paragraphs[5]->getId()],
+      6 => $paragraph_uuids[$remote_paragraphs[6]->getId()],
+      7 => $paragraph_uuids[$remote_paragraphs[7]->getId()],
+      8 => $paragraph_uuids[$remote_paragraphs[8]->getId()],
+      9 => $paragraph_uuids[$remote_paragraph->getId()],
+      10 => $component_uuids[9],
+    ];
+    $this->assertEquals($expected, $new_order);
+
+    // Test adding a new paragraph in a middle position, which should place it
+    // as the between the preceeding and the following paragraph.
+    $paragraphs = [
+      $remote_paragraphs[1]->getId() => $remote_paragraphs[1],
+      $remote_paragraphs[2]->getId() => $remote_paragraphs[2],
+      $remote_paragraphs[3]->getId() => $remote_paragraphs[3],
+      $remote_paragraphs[4]->getId() => $remote_paragraphs[4],
+      $remote_paragraph->getId() => $remote_paragraph,
+      $remote_paragraphs[5]->getId() => $remote_paragraphs[5],
+      $remote_paragraphs[6]->getId() => $remote_paragraphs[6],
+      $remote_paragraphs[7]->getId() => $remote_paragraphs[7],
+      $remote_paragraphs[8]->getId() => $remote_paragraphs[8],
+    ];
+    $new_order = $this->callPrivateMethod($import_manager, 'positionNewParagraph', [
+      $section->reveal(),
+      $component,
+      $remote_paragraph,
+      $paragraphs,
+    ]);
+    $expected = [
+      0 => $component_uuids[0],
+      1 => $paragraph_uuids[$remote_paragraphs[1]->getId()],
+      2 => $paragraph_uuids[$remote_paragraphs[2]->getId()],
+      3 => $paragraph_uuids[$remote_paragraphs[3]->getId()],
+      4 => $paragraph_uuids[$remote_paragraphs[4]->getId()],
+      5 => $paragraph_uuids[$remote_paragraph->getId()],
+      6 => $paragraph_uuids[$remote_paragraphs[5]->getId()],
+      7 => $paragraph_uuids[$remote_paragraphs[6]->getId()],
+      8 => $paragraph_uuids[$remote_paragraphs[7]->getId()],
+      9 => $paragraph_uuids[$remote_paragraphs[8]->getId()],
+      10 => $component_uuids[9],
+    ];
+    $this->assertEquals($expected, $new_order);
   }
 
   /**

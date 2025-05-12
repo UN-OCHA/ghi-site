@@ -17,14 +17,17 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\file\FileRepositoryInterface;
 use Drupal\ghi_content\ContentManager\ArticleManager;
+use Drupal\ghi_content\Plugin\Block\Paragraph;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteContentImageInterface;
 use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
 use Drupal\ghi_content\RemoteContent\RemoteContentItemBaseInterface;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
+use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\TermInterface;
@@ -281,7 +284,7 @@ class ImportManager implements ContainerInjectionInterface {
 
     $paragraph_uuids = [];
     foreach ($article->getParagraphs() as $paragraph) {
-      if (!empty($paragraph_ids) && !in_array($paragraph->id, $paragraph_ids)) {
+      if (!empty($paragraph_ids) && !in_array($paragraph->getId(), $paragraph_ids)) {
         continue;
       }
 
@@ -343,6 +346,8 @@ class ImportManager implements ContainerInjectionInterface {
         $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
         $sections[$delta]->appendComponent($component);
         $paragraph_uuids[] = $component->getUuid();
+
+        $this->positionNewParagraph($sections[$delta], $component, $paragraph, $article->getParagraphs());
       }
 
     }
@@ -625,6 +630,72 @@ class ImportManager implements ContainerInjectionInterface {
     }
 
     return TRUE;
+  }
+
+  /**
+   * Position the given component in the section.
+   *
+   * @param \Drupal\layout_builder\Section $section
+   *   The section of the new component.
+   * @param \Drupal\layout_builder\SectionComponent $component
+   *   The newly added component.
+   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface $paragraph
+   *   The remote paragraph represented by the newly added component.
+   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface[] $paragraphs
+   *   An array of rmeote paragraphs of the remote article in the order
+   *   defined on the remote.
+   *
+   * @return array|false
+   *   An array of uuids of section components in the new order.
+   */
+  private function positionNewParagraph(Section $section, SectionComponent $component, RemoteParagraphInterface $paragraph, array $paragraphs) {
+    // Find the surrounding paragraphs in the original array of paragraphs.
+    $paragraph_ids = array_keys($paragraphs);
+    $position = array_search($paragraph->getId(), $paragraph_ids);
+    $previous_paragraph_position = $position > 0 ? $paragraph_ids[$position - 1] : NULL;
+    $following_paragraph_position = $position < count($paragraph_ids) - 1 ? $paragraph_ids[$position + 1] : NULL;
+
+    // Get an array of section component weights keyed by the section
+    // component uuids.
+    $component_weights = [];
+    $paragraphs_by_uuids = [];
+    foreach ($section->getComponents() as $_component) {
+      $component_weights[$_component->getUuid()] = $_component->getWeight();
+      $plugin = $_component->getPlugin();
+      $paragraphs_by_uuids[$_component->getUuid()] = $plugin instanceof Paragraph ? $plugin->getParagraph()?->getId() : NULL;
+    }
+    asort($component_weights);
+
+    // Find the position where to add the new component.
+    $component_order = array_values(array_flip($component_weights));
+    $split_index = NULL;
+    if ($previous_paragraph_position && $previous_uuid = array_search($previous_paragraph_position, $paragraphs_by_uuids)) {
+      $split_index = array_search($previous_uuid, $component_order) + 1;
+    }
+    elseif ($following_paragraph_position && $following_uuid = array_search($following_paragraph_position, $paragraphs_by_uuids)) {
+      $split_index = array_search($following_uuid, $component_order);
+    }
+
+    // And setup the new order according to the previous results and update
+    // the section component weights.
+    $new_order = FALSE;
+    if ($split_index !== NULL) {
+      $new_order = [];
+      // Remote the new component from the ordered list of component weights.
+      unset($component_weights[$component->getUuid()]);
+      // Set the new order by inserting the uuid of the new component in the
+      // right place.
+      $new_order = array_merge(
+        array_slice(array_flip($component_weights), 0, $split_index),
+        [$component->getUuid()],
+        array_slice(array_flip($component_weights), $split_index),
+      );
+      // And also update the section component weights with the new order.
+      foreach ($new_order as $weight => $uuid) {
+        $section->getComponent($uuid)->setWeight($weight);
+      }
+    }
+    return $new_order;
   }
 
   /**
