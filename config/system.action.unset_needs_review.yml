@@ -1,0 +1,11 @@
+uuid: 417665b2-4714-42f7-8ca5-babf52bf24b6
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: unset_needs_review
+label: 'Unset needs review / Confirm changes'
+type: node
+plugin: unset_needs_review
+configuration: {  }

@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: set_needs_review
+label: "Set needs review"
+type: node
+plugin: set_needs_review
+configuration: {  }

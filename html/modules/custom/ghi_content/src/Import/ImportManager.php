@@ -17,6 +17,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\file\FileRepositoryInterface;
 use Drupal\ghi_content\ContentManager\ArticleManager;
+use Drupal\ghi_content\Entity\ContentReviewInterface;
 use Drupal\ghi_content\Plugin\Block\Paragraph;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteContentImageInterface;
@@ -276,6 +277,10 @@ class ImportManager implements ContainerInjectionInterface {
     $sections = $this->getNodeSections($node);
     $delta = 0;
 
+    $existing_paragraphs_count = count(array_filter(array_map(function ($component) {
+      return $component->getPlugin() instanceof Paragraph;
+    }, $sections[$delta]->getComponents())));
+
     if ($cleanup && $sections[$delta]->getComponents()) {
       foreach ($sections[$delta]->getComponents() as $component) {
         $sections[$delta]->removeComponent($component->getUuid());
@@ -348,6 +353,11 @@ class ImportManager implements ContainerInjectionInterface {
         $paragraph_uuids[] = $component->getUuid();
 
         $this->positionNewParagraph($sections[$delta], $component, $paragraph, $article->getParagraphs());
+        if ($existing_paragraphs_count && $node instanceof ContentReviewInterface) {
+          // Articles where paragraphs have been added to existing articles
+          // need to be reviewed.
+          $node->needsReview(TRUE);
+        }
       }
 
     }
