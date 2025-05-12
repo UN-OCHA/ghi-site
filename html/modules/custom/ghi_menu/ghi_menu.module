@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ghi_menu\Entity\GhiMenuLinkContent;
+use Drupal\ghi_menu\Form\MenuLinkDeleteWithSublinksForm;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\VocabularyInterface;
 
@@ -27,7 +28,9 @@ function ghi_menu_menu_local_actions_alter(&$local_actions) {
 function ghi_menu_entity_type_alter(array &$entity_types) {
   /** @var \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type */
   $entity_type = $entity_types['menu_link_content'];
-  $entity_type->setClass(GhiMenuLinkContent::class);
+  $entity_type
+    ->setClass(GhiMenuLinkContent::class)
+    ->setFormClass('delete', MenuLinkDeleteWithSublinksForm::class);
 }
 
 /**

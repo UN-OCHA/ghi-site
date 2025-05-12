@@ -1,0 +1,7 @@
+ghi_menu.settings:
+  path: '/admin/config/ghi/menu'
+  defaults:
+    _form: '\Drupal\ghi_menu\Form\MenuSettingsForm'
+    _title: 'Menu settings'
+  requirements:
+    _permission: 'administer site configuration'
