@@ -16,6 +16,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\ghi_content\Entity\ContentBase;
+use Drupal\ghi_content\Entity\ContentReviewInterface;
 use Drupal\ghi_content\Import\ImportManager;
 use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
@@ -729,7 +730,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
       '#title' => $this->t('Remote @label', [
         '@label' => strtolower($bundle_label),
       ]),
-      '#open' => TRUE,
+      '#open' => !$content_in_sync,
       '#group' => 'advanced',
     ];
 
@@ -796,6 +797,28 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
         '#weight' => 2,
         '#limit_validation_errors' => [],
       ];
+
+      if ($node instanceof ContentReviewInterface) {
+        $form['needs_review'] = [
+          '#type' => 'details',
+          '#title' => $this->t('Review status'),
+          '#open' => $node->needsReview(),
+          '#group' => 'advanced',
+        ];
+        $form['needs_review']['status'] = [
+          '#type' => 'item',
+          '#title' => $node->needsReview() ? $this->t('Needs review') : $this->t('No issues'),
+          '#markup' => '<p>' . ($node->needsReview() ? $this->t('This @label has been flagged as needing a review.', $t_args) : $this->t('This @label has not been flagged as needing a review yet.', $t_args)) . '</p>',
+          '#weight' => 1,
+        ];
+        $form['needs_review']['confirm'] = [
+          '#type' => 'submit',
+          '#value' => $node->needsReview() ? $this->t('Mark as reviewed') : $this->t('Mark as needing a reviewed'),
+          '#submit' => [[$this, 'formNeedsReviewSubmit']],
+          '#weight' => 2,
+          '#limit_validation_errors' => [],
+        ];
+      }
     }
     $form['#attached']['library'][] = 'ghi_content/admin.remote_content_edit';
   }
@@ -818,10 +841,20 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
 
     $form_state->setRebuild(FALSE);
 
-    $this->messenger->addStatus($this->t('The changes from @remote_source have been applied to <em>@label</em>.', [
+    $t_args = [
       '@label' => $node->label(),
-      '@remote_source' => $this->getRemoteSource($node)?->getPluginLabel(),
-    ]));
+      '@remote_source' => $this->getRemoteSource($node)?->getPluginLabel() ?? $this->t('Content Management backend'),
+      '@type' => strtolower($node->type->entity->label()),
+      '@review_queue_url' => Url::fromUserInput('/admin/content/review-queue')->toString(),
+    ];
+    $messages = [
+      $this->t('The changes from @remote_source have been applied to <em>@label</em>.', $t_args),
+    ];
+    if ($node instanceof ContentReviewInterface && $node->needsReview()) {
+      $messages[] = $this->t('The @type needs to be reviewed to confirm the positioning of newly added elements.', $t_args);
+      $messages[] = $this->t('Go to the <a href="@review_queue_url">review queue</a> to review the changes.', $t_args);
+    }
+    $this->messenger->addStatus(implode('<br />', $messages));
   }
 
   /**
@@ -844,6 +877,38 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
       '@label' => $node->label(),
       '@remote_source' => $this->getRemoteSource($node)?->getPluginLabel(),
     ]));
+  }
+
+  /**
+   * Form submit handler for the review status buttons on remote content forms.
+   */
+  public function formNeedsReviewSubmit($form, FormStateInterface $form_state) {
+    /** @var \Drupal\node\NodeForm $form_object */
+    $form_object = $form_state->getFormObject();
+    $node = $form_object->getEntity();
+
+    // Save the content node, making sure that common logic is applied.
+    if (!$node instanceof ContentReviewInterface) {
+      return;
+    }
+
+    if ($node->needsReview()) {
+      $node->needsReview(FALSE);
+      $this->messenger->addStatus($this->t('The review status for <em>@label</em> has been saved.', [
+        '@label' => $node->label(),
+        '@remote_source' => $this->getRemoteSource($node)?->getPluginLabel(),
+      ]));
+    }
+    else {
+      $node->needsReview(TRUE);
+      $this->messenger->addStatus($this->t('The review status for <em>@label</em> has been saved.', [
+        '@label' => $node->label(),
+        '@remote_source' => $this->getRemoteSource($node)?->getPluginLabel(),
+      ]));
+    }
+
+    $this->saveContentNode($node);
+    $form_state->setRebuild(FALSE);
   }
 
   /**
