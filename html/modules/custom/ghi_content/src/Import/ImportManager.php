@@ -142,7 +142,7 @@ class ImportManager implements ContainerInjectionInterface {
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node for which elements should be imported/synced.
-   * @param \Drupal\ghi_content\RemoteContent\RemoteContentImageInterface $content
+   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $content
    *   The content object as retrieved from the remote source.
    * @param string $label
    *   The label of the field.
@@ -155,7 +155,7 @@ class ImportManager implements ContainerInjectionInterface {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    */
-  public function importTextfield(NodeInterface $node, RemoteContentImageInterface $content, $label, $method, $field_name, $format = 'plain_text', ?MessengerInterface $messenger = NULL) {
+  public function importTextfield(NodeInterface $node, RemoteArticleInterface $content, $label, $method, $field_name, $format = 'plain_text', ?MessengerInterface $messenger = NULL) {
     if (!$node->hasField($field_name)) {
       return FALSE;
     }
@@ -352,11 +352,15 @@ class ImportManager implements ContainerInjectionInterface {
         $sections[$delta]->appendComponent($component);
         $paragraph_uuids[] = $component->getUuid();
 
-        $this->positionNewParagraph($sections[$delta], $component, $paragraph, $article->getParagraphs());
-        if ($existing_paragraphs_count && $node instanceof ContentReviewInterface) {
-          // Articles where paragraphs have been added to existing articles
-          // need to be reviewed.
-          $node->needsReview(TRUE);
+        if ($existing_paragraphs_count) {
+          // If paragraphs already existed before, try to position the new
+          // paragraph according to some rules.
+          $this->positionNewParagraph($sections[$delta], $component, $paragraph, $article->getParagraphs());
+          if ($node instanceof ContentReviewInterface) {
+            // Articles where paragraphs have been added to existing articles
+            // need to be reviewed.
+            $node->needsReview(TRUE);
+          }
         }
       }
 
@@ -645,6 +649,16 @@ class ImportManager implements ContainerInjectionInterface {
   /**
    * Position the given component in the section.
    *
+   * The logic is this:
+   *  - Get the previous and following paragraphs as currently defined in the
+   *    remote source.
+   *  - If there is a preceding paragraph, place the newly added paragraph
+   *    after the preceding one in the HA article page.
+   *  - Else if there is a following paragraph, place the newly added paragraph
+   *    before the following one in the HA article page.
+   *  - Otherwise, keep the current behaviour which places the newly added
+   *    paragraph as the last element on the HA article page.
+   *
    * @param \Drupal\layout_builder\Section $section
    *   The section of the new component.
    * @param \Drupal\layout_builder\SectionComponent $component
@@ -691,7 +705,7 @@ class ImportManager implements ContainerInjectionInterface {
     $new_order = FALSE;
     if ($split_index !== NULL) {
       $new_order = [];
-      // Remote the new component from the ordered list of component weights.
+      // Remove the new component from the ordered list of component weights.
       unset($component_weights[$component->getUuid()]);
       // Set the new order by inserting the uuid of the new component in the
       // right place.

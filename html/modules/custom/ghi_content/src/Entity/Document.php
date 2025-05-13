@@ -19,7 +19,7 @@ class Document extends ContentBase {
   public function toLink($text = NULL, $rel = 'canonical', array $options = []) {
     if (!isset($text)) {
       // Use the short title as default.
-      $text = $this->get('field_short_title')->value ?? NULL;
+      $text = $this->getShortTitle();
     }
     return parent::toLink($text, $rel, $options);
   }
