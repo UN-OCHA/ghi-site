@@ -144,7 +144,7 @@ class Article extends ContentBase implements ContentReviewInterface {
       return NULL;
     }
     if ($state === NULL) {
-      return $this->get(ContentReviewInterface::NEEDS_REVIEW_FIELD)->value;
+      return (bool) $this->get(ContentReviewInterface::NEEDS_REVIEW_FIELD)->value;
     }
     $this->get(ContentReviewInterface::NEEDS_REVIEW_FIELD)->setValue($state);
   }
