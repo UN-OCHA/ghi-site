@@ -70,6 +70,7 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
       '#sortable' => TRUE,
       '#progress_groups' => TRUE,
       '#soft_limit' => $this->getBlockConfig()['display']['soft_limit'] ?? 0,
+      '#block_id' => $this->getBlockId(),
     ];
   }
 

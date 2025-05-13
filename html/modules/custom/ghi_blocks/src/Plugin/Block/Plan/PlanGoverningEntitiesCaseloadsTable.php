@@ -85,6 +85,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       '#header' => $table_data['header'],
       '#rows' => $table_data['rows'],
       '#progress_groups' => TRUE,
+      '#block_id' => $this->getBlockId(),
     ];
   }
 
