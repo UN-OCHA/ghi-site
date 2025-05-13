@@ -700,12 +700,14 @@ function common_design_subtheme_preprocess_table(&$vars) {
     if (!empty($vars['soft_limit_show_disabled'])) {
       $attributes['data-soft-limit-show-disabled'][] = (int) $vars['soft_limit_show_disabled'];
     }
-    $block_settings_soft_limit = BlockSettings::getBlockSettings($vars['block_id'], 'soft_limit');
-    if ($block_settings_soft_limit != 'expanded') {
-      SoftLimit::apply($vars);
-    }
-    else {
-      $attributes['class'][] = 'expanded';
+    if (!empty($vars['block_id'])) {
+      $block_settings_soft_limit = BlockSettings::getBlockSettings($vars['block_id'], 'soft_limit');
+      if ($block_settings_soft_limit != 'expanded') {
+        SoftLimit::apply($vars);
+      }
+      else {
+        $attributes['class'][] = 'expanded';
+      }
     }
   }
 
