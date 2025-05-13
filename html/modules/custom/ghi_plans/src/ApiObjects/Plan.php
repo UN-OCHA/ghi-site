@@ -63,6 +63,9 @@ class Plan extends BaseObject implements PlanEntityInterface {
    * {@inheritdoc}
    */
   public function getCustomName($type) {
+    if ($plan_type = $this->getEntity()?->getPlanType()) {
+      return $plan_type->getAbbreviation();
+    }
     return $this->plan_type ? StringHelper::getAbbreviation($this->plan_type) : NULL;
   }
 

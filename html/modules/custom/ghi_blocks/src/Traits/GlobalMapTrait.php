@@ -76,4 +76,21 @@ trait GlobalMapTrait {
     return \Drupal::config('ghi_blocks.map_settings')->get();
   }
 
+  /**
+   * Get the default Map disclaimer.
+   *
+   * @param string|null $langcode
+   *   The language code of the plan.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   Return the translated disclaimer.
+   */
+  public function getDefaultMapDisclaimer(?string $langcode = NULL): string {
+    return $this->t(
+      'The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations.',
+      [],
+      ['langcode' => $langcode ?? 'en']
+    );
+  }
+
 }

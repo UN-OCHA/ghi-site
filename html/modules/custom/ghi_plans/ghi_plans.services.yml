@@ -1,4 +1,7 @@
 services:
+  ghi_plans.manager:
+    class: Drupal\ghi_plans\PlanManager
+    arguments: ['@entity_type.manager', '@entity_field.manager', '@module_handler', '@current_user']
   attachment_converter:
     class: Drupal\ghi_plans\ParamConverter\AttachmentConverter
     arguments: ['@plugin.manager.endpoint_query_manager']

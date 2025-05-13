@@ -5,6 +5,9 @@
  * Template overrides, preprocess, and hooks for the GHI subtheme.
  */
 
+use Drupal\common_design_subtheme\BlockSettings;
+use Drupal\common_design_subtheme\SoftLimit;
+use Drupal\common_design_subtheme\TableSort;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResultForbidden;
@@ -48,12 +51,14 @@ function common_design_subtheme_theme_registry_alter(&$theme_registry) {
   $theme_registry['hpc_currency']['variables']['use_abbreviation'] = FALSE;
   $theme_registry['hpc_amount']['variables']['use_abbreviation'] = FALSE;
   // Defaults for tables and to make those settings available.
+  $theme_registry['table']['variables']['block_id'] = NULL;
   $theme_registry['table']['variables']['cell_wrapping'] = TRUE;
   $theme_registry['table']['variables']['sortable'] = FALSE;
   $theme_registry['table']['variables']['searchable'] = FALSE;
   $theme_registry['table']['variables']['progress_groups'] = FALSE;
   $theme_registry['table']['variables']['autosort'] = FALSE;
   $theme_registry['table']['variables']['soft_limit'] = FALSE;
+  $theme_registry['table']['variables']['soft_limit_show_disabled'] = FALSE;
   $theme_registry['table']['variables']['sticky_rows'] = FALSE;
 }
 
@@ -439,6 +444,12 @@ function common_design_subtheme_show_hidden_blocks_from_page(array &$variables, 
  * Do this by leveraging as much of the common design as possible.
  */
 function common_design_subtheme_preprocess_table(&$vars) {
+  $wrapper_attributes = [
+    'class' => [
+      'table-wrapper',
+      'scrollable-table',
+    ],
+  ];
   $attributes = [
     'class' => [
       'ghi-table',
@@ -467,12 +478,6 @@ function common_design_subtheme_preprocess_table(&$vars) {
   if ($searchable) {
     $attributes['class'][] = Html::getClass('searchable');
     $attached['library'][] = 'common_design_subtheme/ghi-table-search';
-  }
-
-  // Soft limits.
-  if (!empty($vars['soft_limit'])) {
-    $attributes['class'][] = Html::getClass('soft_limit');
-    $attributes['data-soft-limit'][] = (int) $vars['soft_limit'];
   }
 
   // Progress indicators.
@@ -680,6 +685,31 @@ function common_design_subtheme_preprocess_table(&$vars) {
     }
   }
 
+  if (!empty($vars['block_id']) && $block_settings_sort = BlockSettings::getBlockSettings($vars['block_id'], 'sort')) {
+    $sorted = TableSort::sort($vars['header'], $vars['rows'], $block_settings_sort->column ?: 0, $block_settings_sort->dir ?: 'asc');
+    if ($sorted) {
+      $vars['attributes']['class'][] = 'sorted';
+    }
+  }
+
+  // Soft limits.
+  if (!empty($vars['soft_limit'])) {
+    $attributes = &$vars['attributes'];
+    $attributes['class'][] = Html::getClass('soft_limit');
+    $attributes['data-soft-limit'][] = (int) $vars['soft_limit'];
+    if (!empty($vars['soft_limit_show_disabled'])) {
+      $attributes['data-soft-limit-show-disabled'][] = (int) $vars['soft_limit_show_disabled'];
+    }
+    $block_settings_soft_limit = BlockSettings::getBlockSettings($vars['block_id'], 'soft_limit');
+    if ($block_settings_soft_limit != 'expanded') {
+      SoftLimit::apply($vars);
+    }
+    else {
+      $attributes['class'][] = 'expanded';
+    }
+  }
+
+  $vars['wrapper_attributes'] = new Attribute($wrapper_attributes);
   $vars['#attached'] = array_key_exists('#attached', $vars) ? NestedArray::mergeDeep($vars['#attached'], $attached) : $attached;
 }
 

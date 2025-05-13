@@ -94,7 +94,6 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
           '#responsive_image_style' => $responsive_image_style,
           '#url' => $file->getFileUri(),
           '#caption' => $item_type->getImageCaption() ?? NULL,
-          '#credit' => $item_type->getImageCredit() ?? NULL,
         ],
         'button' => $link->toRenderable(),
       ];

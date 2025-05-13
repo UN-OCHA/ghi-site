@@ -31,6 +31,7 @@ fi
 COVERAGE=false
 CLEAR_LOGS=false
 PARALLEL=true
+OPEN_VNC=false
 args=""
 while [ "$1" != "" ]; do
   case $1 in
@@ -40,11 +41,15 @@ while [ "$1" != "" ]; do
     --open-coverage)
       COVERAGE=true
       ;;
+    -v|---open-vnc)
+      OPEN_VNC=true
+      ;;
     -s | --force-sequential)
       PARALLEL=false
       ;;
-    *)                  args="$args $1"
-                        ;;
+    *)
+      args="$args $1"
+      ;;
   esac
   shift
 done
@@ -67,6 +72,10 @@ if [ "${#args}" -eq 0 ] || $CLEAR_LOGS; then
   fin exec "rm -r $path/$DOCROOT/sites/simpletest/browser-output/Drupal_* 2> /dev/null"
   fin exec "rm -r $path/$DOCROOT/sites/simpletest/coverage/* 2> /dev/null"
   fin exec "rm -r $path/$DOCROOT/sites/simpletest/coverage-html/* 2> /dev/null"
+fi
+
+if $OPEN_VNC; then
+  fin utils/open-link -i "http://${VIRTUAL_HOST}:7900?autoconnect=1"
 fi
 
 # Always create a dedicated coverage file for each test run. They get later

@@ -100,3 +100,9 @@ msgstr "Financement ($)"
 
 msgid "% Funded"
 msgstr "% Financé"
+
+msgid "The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations."
+msgstr "Les frontières et les noms indiqués ainsi que les désignations utilisées sur cette carte n'impliquent pas une approbation officielle ou une reconnaissance par les Nations Unies."
+
+msgid "There was no plan in this year."
+msgstr "Il n'y a pas eu de plan cette année."
