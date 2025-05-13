@@ -129,7 +129,7 @@ class DisaggregationModalController extends ControllerBase {
 
     // Retrieve disaggregated data form the attachment. The results is a
     // multi-dimensional array keyed by the metric in the first level. Each
-    // metric contains the relevant location and catagory data.
+    // metric contains the relevant location and category data.
     $disaggregated_data = $attachment->getDisaggregatedData($reporting_period, TRUE, TRUE, TRUE);
     if (empty($disaggregated_data[$metric])) {
       return [
@@ -211,7 +211,7 @@ class DisaggregationModalController extends ControllerBase {
               '#unit_defaults' => $unit_defaults,
               '#decimal_format' => $decimal_format,
             ],
-            'sorttable_customkey' => $category['data'],
+            'data-sort-value' => $category['data'],
             'data-sort-type' => 'numeric',
             'data-column-type' => $unit_type,
             'data-formatting' => 'numeric-full',
@@ -230,7 +230,7 @@ class DisaggregationModalController extends ControllerBase {
             '#unit_defaults' => $unit_defaults,
             '#decimal_format' => $decimal_format,
           ],
-          'sorttable_customkey' => $location['total'],
+          'data-sort-value' => $location['total'],
           'data-sort-type' => 'numeric',
           'data-column-type' => $unit_type,
           'data-formatting' => 'numeric-full',

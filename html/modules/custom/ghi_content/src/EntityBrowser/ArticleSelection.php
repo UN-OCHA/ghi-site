@@ -3,12 +3,12 @@
 namespace Drupal\ghi_content\EntityBrowser;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Entity\Element\EntityAutocomplete;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\node\NodeInterface;
+use Drupal\taxonomy\TermInterface;
 use Drupal\views\ViewExecutable;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 /**
  * Service class for article select entity browsers.
  *
- * This class contains some logic to imrove the UI and UX of the entity browser
+ * This class contains some logic to improve the UI and UX of the entity browser
  * used to select articles.
  */
 class ArticleSelection implements ContainerInjectionInterface {
@@ -90,7 +90,17 @@ class ArticleSelection implements ContainerInjectionInterface {
 
     // Populate the exposed tag filter with these found tags.
     $exposed_input = $view->getExposedInput();
-    $exposed_input[self::TAG_FILTER] = EntityAutocomplete::getEntityLabels($tags);
+
+    // Create a json-encoded array of values in the form that the active tags
+    // module expects it.
+    // @see \Drupal\active_tags\ActiveTagsEntityAutocompleteMatcher::buildActiveTagsItem().
+    $exposed_input[self::TAG_FILTER] = json_encode(array_map(function (TermInterface $tag) {
+      return [
+        'entity_id' => $tag->id(),
+        'value' => $tag->id(),
+        'label' => $tag->label(),
+      ];
+    }, $tags));
     $view->setExposedInput($exposed_input);
   }
 

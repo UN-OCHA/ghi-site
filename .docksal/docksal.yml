@@ -35,6 +35,7 @@ services:
       - 'JAVA_OPTS=-Dwebdriver.chrome.logfile=/var/log/chromedriver/chromedriver.log'
       - 'SE_NODE_MAX_SESSIONS=2'
       - 'SE_NODE_STEREOTYPE={"browserName": "chrome"}'
+      - 'SE_VNC_NO_PASSWORD=1'
     # shm_size: '2gb'
     ports:
       - 5900:5900

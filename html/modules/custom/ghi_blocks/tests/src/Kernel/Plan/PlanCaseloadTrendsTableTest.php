@@ -39,8 +39,9 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    */
   public function testBlockNoContext() {
     $plugin = $this->createBlockPlugin('plan_caseload_trends_table', []);
-    $this->assertIsArray($this->callPrivateMethod($plugin, 'getRelatedSections'));
-    $this->assertEmpty($this->callPrivateMethod($plugin, 'getRelatedSections'));
+    $this->assertIsArray($this->callPrivateMethod($plugin, 'getRelatedPlans'));
+    $this->assertEmpty($this->callPrivateMethod($plugin, 'getRelatedPlans'));
+    $this->assertNull($this->callPrivateMethod($plugin, 'buildTable'));
     $this->assertNull($this->callPrivateMethod($plugin, 'buildTableData'));
     $this->assertNull($this->callPrivateMethod($plugin, 'buildSourceData'));
     $this->assertNull($plugin->buildContent());
@@ -63,11 +64,11 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
   /**
    * Tests the retrieval of related sections.
    */
-  public function testGetRelatedSections() {
+  public function testGetRelatedPlans() {
     $plugin = $this->getBlockPlugin();
-    $related_sections = $this->callPrivateMethod($plugin, 'getRelatedSections');
-    $this->assertNotEmpty($related_sections);
-    $this->assertCount(1, $related_sections);
+    $related_plans = $this->callPrivateMethod($plugin, 'getRelatedPlans');
+    $this->assertNotEmpty($related_plans);
+    $this->assertCount(1, $related_plans);
   }
 
   /**
@@ -134,11 +135,10 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
   }
 
   /**
-   * Tests the source data for multiple rows.
+   * Tests the build functions for multiple rows including empty ones.
    */
-  public function testBuildSourceDataMultipleRows() {
+  public function testBuildWithEmptyRows() {
     $plugin = $this->getBlockPlugin();
-    $this->injectApiQueryStubs($plugin);
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
     $plan = $plugin->getContextValue('plan');
@@ -160,8 +160,10 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
       ]),
     ]);
 
+    $this->injectApiQueryStubs($plugin);
+
     $source_data = $this->callPrivateMethod($plugin, 'buildSourceData');
-    $this->assertCount(4, $source_data);
+    $this->assertCount(3, $source_data);
 
     $this->assertEquals('2025', $source_data[0]['year']);
     $this->assertNotNull($source_data[0]['plan_type']);
@@ -169,11 +171,27 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertEquals('2024', $source_data[1]['year']);
     $this->assertNotNull($source_data[1]['plan_type']);
 
-    $this->assertEquals('2023', $source_data[2]['year']);
-    $this->assertNull($source_data[2]['plan_type']);
+    $this->assertEquals('2022', $source_data[2]['year']);
+    $this->assertNotNull($source_data[2]['plan_type']);
 
-    $this->assertEquals('2022', $source_data[3]['year']);
-    $this->assertNotNull($source_data[3]['plan_type']);
+    $table_data = $this->callPrivateMethod($plugin, 'buildTableData');
+    $this->assertArrayHasKey('header', $table_data);
+    $this->assertArrayHasKey('rows', $table_data);
+
+    $rows = $table_data['rows'];
+    $this->assertCount(4, $rows);
+    $this->assertEquals('2025', $rows[0]['year']['data']);
+    $this->assertNotNull($rows[0]['plan_type']['data']);
+
+    $this->assertEquals('2024', $rows[1]['year']['data']);
+    $this->assertNotNull($rows[1]['plan_type']['data']);
+
+    $this->assertEquals('2023', $rows[2]['data']['year']['data']);
+    $this->assertNotNull($rows[2]['data']['plan_type']['data']);
+    $this->assertEquals('There was no plan in this year.', (string) $rows[2]['data']['plan_type']['data-raw-value']);
+
+    $this->assertEquals('2022', $rows[3]['year']['data']);
+    $this->assertNotNull($rows[3]['plan_type']['data']);
   }
 
   /**
@@ -183,12 +201,14 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $plugin = $this->getBlockPlugin();
     $build = $plugin->buildContent();
     $this->assertNotEmpty($build);
-    $this->assertEquals($build['#theme'], 'table');
-    $this->assertEquals($build['#progress_groups'], TRUE);
-    $this->assertEquals($build['#sortable'], TRUE);
-    $this->assertEquals($build['#soft_limit'], 0);
-    $this->assertCount(7, $build['#header']);
-    $this->assertCount(1, $build['#rows']);
+    $this->assertIsArray($build['#lazy_builder']);
+    $this->assertIsArray($build['#lazy_builder_preview']);
+    $this->assertEquals($build['#lazy_builder_preview']['#theme'], 'table');
+    $this->assertEquals($build['#lazy_builder_preview']['#progress_groups'], TRUE);
+    $this->assertEquals($build['#lazy_builder_preview']['#sortable'], TRUE);
+    $this->assertEquals($build['#lazy_builder_preview']['#soft_limit'], 10);
+    $this->assertCount(7, $build['#lazy_builder_preview']['#header']);
+    $this->assertCount(1, $build['#lazy_builder_preview']['#rows']);
   }
 
   /**

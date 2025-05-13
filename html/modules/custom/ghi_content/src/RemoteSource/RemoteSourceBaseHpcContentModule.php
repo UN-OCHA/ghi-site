@@ -263,13 +263,18 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     }
     try {
       $body_data = json_decode((string) $result->getBody());
-      if (property_exists($body_data, 'errors') && !empty($body_data->errors)) {
+      $response_data = is_object($body_data) && property_exists($body_data, 'data') ? $body_data->data : NULL;
+      $response_errors = is_object($body_data) && property_exists($body_data, 'errors') ? $body_data->errors : NULL;
+      if (empty($response_data) && !empty($response_errors)) {
+        // This is an error that resulted in the response data to be completely
+        // empty. There are also errors that still serve data. We handle these
+        // differently to limit impact for the frontend.
         $response->setCode(Response::HTTP_BAD_REQUEST);
         return $response;
       }
 
       $response->setCode($result ? $result->getStatusCode() : Response::HTTP_INTERNAL_SERVER_ERROR);
-      $response->setData(is_object($body_data) && property_exists($body_data, 'data') ? $body_data->data : NULL);
+      $response->setData($response_data);
     }
     catch (\Exception $e) {
       // Just catch it for the moment.

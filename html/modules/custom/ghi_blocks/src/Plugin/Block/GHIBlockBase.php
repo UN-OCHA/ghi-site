@@ -334,6 +334,17 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
+   * Get the block id.
+   *
+   * @return string
+   *   A unique ID for this block.
+   */
+  protected function getBlockId() {
+    $block_id = drupal_static(__FUNCTION__ . '_' . $this->getUuid(), Html::getId('block-' . $this->getUuid()));
+    return $block_id;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function build() {
@@ -393,7 +404,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     }
 
     // Add some classes for styling.
-    $build['#attributes']['id'] = Html::getId('block-' . $this->getUuid());
+    $build['#attributes']['id'] = $this->getBlockId();
     $build['#attributes']['class'][] = Html::getClass('ghi-block-' . $this->getPluginId());
     $build['#attributes']['class'][] = 'ghi-block';
     if ($this->getUuid()) {
@@ -1022,8 +1033,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $form_state->setTemporaryValue($current_subform, $step_values);
       return;
     }
-    else {
-      // Set the current step values for preview.
+    elseif ($action == 'preview' && $triggering_element['#default_value'] === FALSE) {
+      // Set the current step values for preview, but only when entering into
+      // preview. When leaving preview, we do not want to update the stored
+      // values because there will be no configuration changes submitted.
       $form_state->setValue($current_subform, $step_values);
       $form_state->set(['storage', $current_subform], $step_values);
       $form_state->setTemporaryValue($current_subform, $step_values);
