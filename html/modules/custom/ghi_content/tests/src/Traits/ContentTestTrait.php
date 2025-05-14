@@ -10,6 +10,7 @@ use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_content\Plugin\RemoteSource\HpcContentModule;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
+use Drupal\node\Entity\NodeType;
 
 /**
  * Provides methods to create content in tests.
@@ -21,19 +22,34 @@ trait ContentTestTrait {
   use PathautoTestHelperTrait;
 
   /**
-   * Setup content types and content for these tests.
+   * Setup an article content type.
    */
   private function createArticleContentType() {
-    $this->drupalCreateContentType([
-      'type' => ArticleManager::ARTICLE_BUNDLE,
+    $bundle = ArticleManager::ARTICLE_BUNDLE;
+    NodeType::create([
+      'type' => $bundle,
       'name' => 'Article page',
-    ]);
-    $this->createField('node', ArticleManager::ARTICLE_BUNDLE, 'ghi_remote_article', ArticleManager::REMOTE_ARTICLE_FIELD, 'Remote Article');
-
-    $this->createEntityReferenceField('node', ArticleManager::ARTICLE_BUNDLE, 'field_tags', 'Tags', 'taxonomy_term');
-
+    ])->save();
+    $this->createField('node', $bundle, 'ghi_remote_article', ArticleManager::REMOTE_ARTICLE_FIELD, 'Remote Article');
+    $this->createEntityReferenceField('node', $bundle, 'field_tags', 'Tags', 'taxonomy_term');
     $pattern = $this->createPattern('node', '/article/[node:title]');
-    $this->addBundleCondition($pattern, 'node', ArticleManager::ARTICLE_BUNDLE);
+    $this->addBundleCondition($pattern, 'node', $bundle);
+    $pattern->save();
+  }
+
+  /**
+   * Setup a document content type.
+   */
+  private function createDocumentContentType() {
+    $bundle = DocumentManager::DOCUMENT_BUNDLE;
+    NodeType::create([
+      'type' => $bundle,
+      'name' => 'Document page',
+    ])->save();
+    $this->createField('node', $bundle, 'ghi_remote_document', DocumentManager::REMOTE_DOCUMENT_FIELD, 'Remote Document');
+    $this->createEntityReferenceField('node', $bundle, 'field_tags', 'Tags', 'taxonomy_term');
+    $pattern = $this->createPattern('node', '/document/[node:title]');
+    $this->addBundleCondition($pattern, 'node', $bundle);
     $pattern->save();
   }
 
