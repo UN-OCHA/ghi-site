@@ -813,7 +813,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
         ];
         $form['needs_review']['confirm'] = [
           '#type' => 'submit',
-          '#value' => $node->needsReview() ? $this->t('Mark as reviewed') : $this->t('Mark as needing a reviewed'),
+          '#value' => $node->needsReview() ? $this->t('Mark as reviewed') : $this->t('Flag for review'),
           '#submit' => [[$this, 'formNeedsReviewSubmit']],
           '#weight' => 2,
           '#limit_validation_errors' => [],

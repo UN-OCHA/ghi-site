@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: needs_review_unflag
+label: "Mark as reviewed"
+type: node
+plugin: needs_review_unflag
+configuration: {  }

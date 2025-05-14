@@ -1417,8 +1417,8 @@ display:
             - node_publish_action
             - node_unpublish_action
             - protect_content
-            - set_needs_review
             - unprotect_content
+            - needs_review_flag
         title:
           id: title
           table: node_field_data
@@ -5410,7 +5410,7 @@ display:
           action_title: Action
           include_exclude: include
           selected_actions:
-            - unset_needs_review
+            - needs_review_unflag
         title:
           id: title
           table: node_field_data
@@ -5828,7 +5828,18 @@ display:
         header: false
       relationships: {  }
       display_description: ''
-      header: {  }
+      header:
+        area_text_custom:
+          id: area_text_custom
+          table: views
+          field: area_text_custom
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: text_custom
+          empty: true
+          content: 'The content shown on this page has either been manually flagged for review, or it has been flagged by the system following an automatic update to the content, e.g. when a new paragraph is imported and auto-positioned on an existing article page.'
+          tokenize: false
       display_extenders: {  }
       path: admin/content/review-queue
       menu:

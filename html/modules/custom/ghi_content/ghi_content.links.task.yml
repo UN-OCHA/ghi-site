@@ -23,3 +23,16 @@ views.orphaned_content.document:
   route_parameters:
     node_type: document
   base_route: ghi_content.orphan_content
+
+# Second level tabs for the article list
+views.articles.list:
+  title: List
+  route_name: view.content.page_articles
+  base_route: view.content.page_articles
+  parent_id: views_view:view.content.page_articles
+
+views.articles.review_queue:
+  title: Review queue
+  route_name: view.content.page_review_queue
+  base_route: view.content.page_articles
+  parent_id: views_view:view.content.page_articles

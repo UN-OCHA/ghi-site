@@ -5,7 +5,10 @@
  * Contains hook implementations for the GHI Sections module.
  */
 
+use Drupal\Core\Breadcrumb\Breadcrumb;
+use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
@@ -126,4 +129,35 @@ function ghi_sections_preprocess_block__sections_by_term(&$variables) {
  */
 function ghi_sections_gin_ignore_sticky_form_actions_alter(&$form_ids) {
   $form_ids[] = 'ghi_sections_wizard';
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ *
+ * Rename the local task for /admin/content to "Sections".
+ */
+function ghi_sections_menu_local_tasks_alter(&$data, $route_name, RefinableCacheableDependencyInterface &$cacheability) {
+  if (!array_key_exists('tabs', $data) || !array_key_exists(0, $data['tabs'])) {
+    return;
+  }
+  foreach ($data['tabs'][0] as $_route_name => &$element) {
+    if ($_route_name == 'system.admin_content') {
+      $element['#link']['title'] = t('Sections');
+      break;
+    }
+  }
+}
+
+/**
+ * Implements hook_system_breadcrumb_alter().
+ */
+function ghi_sections_system_breadcrumb_alter(Breadcrumb $breadcrumb, RouteMatchInterface $route_match, array $context) {
+  foreach ($breadcrumb->getLinks() as &$link) {
+    // Rename the breadcrumb for the main backend content listing to "Content"
+    // in the breadcrumbs, even though it shows sections. This is to prevent
+    // breadcrumbs like "Administration / Sections / Article pages".
+    if ($link->getUrl()->getRouteName() == 'system.admin_content') {
+      $link->setText(t('Content'));
+    }
+  }
 }
