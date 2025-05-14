@@ -14,12 +14,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Custom action to set the needs review flag on a node.
  *
  * @Action(
- *   id = "set_needs_review",
+ *   id = "needs_review_flag",
  *   label = @Translation("Mark as 'needs review'"),
  *   type = "node"
  * )
  */
-class SetNeedsReview extends ActionBase implements ContainerFactoryPluginInterface {
+class NeedsReviewFlag extends ActionBase implements ContainerFactoryPluginInterface {
 
   /**
    * {@inheritdoc}

@@ -4,8 +4,8 @@ status: true
 dependencies:
   module:
     - node
-id: unset_needs_review
-label: 'Unset needs review / Confirm changes'
+id: needs_review_unflag
+label: 'Mark as reviewed'
 type: node
-plugin: unset_needs_review
+plugin: needs_review_unflag
 configuration: {  }

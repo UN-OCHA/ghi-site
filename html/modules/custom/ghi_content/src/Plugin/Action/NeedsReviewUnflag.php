@@ -11,15 +11,15 @@ use Drupal\ghi_content\Entity\ContentReviewInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Custom action to set the needs review flag on a node.
+ * Custom action to unset the needs review flag on a node.
  *
  * @Action(
- *   id = "unset_needs_review",
+ *   id = "needs_review_unflag",
  *   label = @Translation("Mark as 'reviewed'"),
  *   type = "node"
  * )
  */
-class UnsetNeedsReview extends ActionBase implements ContainerFactoryPluginInterface {
+class NeedsReviewUnflag extends ActionBase implements ContainerFactoryPluginInterface {
 
   /**
    * {@inheritdoc}

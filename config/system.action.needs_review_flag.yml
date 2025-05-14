@@ -4,8 +4,8 @@ status: true
 dependencies:
   module:
     - node
-id: set_needs_review
-label: 'Set needs review'
+id: needs_review_flag
+label: 'Flag for review'
 type: node
-plugin: set_needs_review
+plugin: needs_review_flag
 configuration: {  }
