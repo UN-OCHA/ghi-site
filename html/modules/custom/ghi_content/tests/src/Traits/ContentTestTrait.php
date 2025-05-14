@@ -4,8 +4,10 @@ namespace Drupal\Tests\ghi_content\Traits;
 
 use Drupal\Tests\pathauto\Functional\PathautoTestHelperTrait;
 use Drupal\ghi_content\ContentManager\ArticleManager;
+use Drupal\ghi_content\ContentManager\DocumentManager;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentBase;
+use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_content\Plugin\RemoteSource\HpcContentModule;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
 
@@ -47,6 +49,20 @@ trait ContentTestTrait {
     $this->assertSame(SAVED_NEW, $article->save());
     $this->assertInstanceOf(ContentBase::class, $article);
     return $article;
+  }
+
+  /**
+   * Create a document.
+   */
+  private function createDocument(array $values = []) {
+    $values += [
+      'type' => DocumentManager::DOCUMENT_BUNDLE,
+      'title' => $this->randomString(),
+    ];
+    $document = Document::create($values);
+    $this->assertSame(SAVED_NEW, $document->save());
+    $this->assertInstanceOf(ContentBase::class, $document);
+    return $document;
   }
 
   /**

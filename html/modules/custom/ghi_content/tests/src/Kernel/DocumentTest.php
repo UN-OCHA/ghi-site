@@ -7,22 +7,22 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
-use Drupal\ghi_sections\Entity\Section;
 use Drupal\node\Entity\NodeType;
-use Drupal\taxonomy\TermInterface;
+use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_content\Traits\ContentTestTrait;
 
 /**
- * Tests the document manager.
+ * Tests the document entity.
  *
  * @group ghi_content
  */
-class DocumentManagerTest extends KernelTestBase {
+class DocumentTest extends KernelTestBase {
 
   use TaxonomyTestTrait;
   use UserCreationTrait;
   use EntityReferenceFieldCreationTrait;
   use ContentTestTrait;
+  use FieldTestTrait;
 
   /**
    * Modules to enable.
@@ -82,7 +82,6 @@ class DocumentManagerTest extends KernelTestBase {
 
     $this->documentManager = \Drupal::service('ghi_content.manager.document');
 
-    NodeType::create(['type' => self::SECTION_BUNDLE])->save();
     NodeType::create(['type' => self::DOCUMENT_BUNDLE])->save();
 
     $this->vocabulary = $this->createVocabulary();
@@ -93,70 +92,28 @@ class DocumentManagerTest extends KernelTestBase {
         $this->vocabulary->id() => $this->vocabulary->id(),
       ],
     ];
-    $this->createEntityReferenceField('node', self::SECTION_BUNDLE, 'field_tags', 'Tags', 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
     $this->createEntityReferenceField('node', self::DOCUMENT_BUNDLE, 'field_tags', 'Tags', 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
     $this->setUpCurrentUser(['uid' => 1]);
   }
 
   /**
-   * Tests that tags can be imported.
+   * Tests Document::getSummary().
    */
-  public function testLoadNodesForSection() {
-
-    $document_terms = [
-      $this->createTerm($this->vocabulary),
-      $this->createTerm($this->vocabulary),
-    ];
-
-    $section_terms = [
-      $this->createTerm($this->vocabulary),
-      $this->createTerm($this->vocabulary),
-      $this->createTerm($this->vocabulary),
-    ];
-
-    // Create documents.
-    $document_1 = $this->createDocument([
-      'title' => 'Document 1',
-      'field_tags' => $this->mapTermsToFieldValue(array_merge($section_terms, $document_terms)),
+  public function testGetSummary() {
+    $this->createField('node', self::DOCUMENT_BUNDLE, 'text', 'field_summary', 'Summary');
+    $document = $this->createDocument([
+      'field_summary' => 'Summary',
     ]);
-    $document_2 = $this->createDocument([
-      'title' => 'Document 2',
-      'field_tags' => $this->mapTermsToFieldValue(array_merge($section_terms, $document_terms)),
-    ]);
-    $this->createDocument();
-
-    // Create a section with 2 documents.
-    $section = Section::create([
-      'type' => self::SECTION_BUNDLE,
-      'title' => 'A section node',
-      'uid' => 0,
-      'field_tags' => array_map(function (TermInterface $term) {
-        return $term->id();
-      }, $section_terms),
-    ]);
-    $section->save();
-
-    $loaded_documents = array_values($this->documentManager->loadNodesForSection($section));
-    $this->assertCount(2, $loaded_documents);
-    $this->assertEquals($document_1->id(), $loaded_documents[0]->id());
-    $this->assertEquals($document_2->id(), $loaded_documents[1]->id());
-
+    $this->assertEquals('Summary', $document->getSummary());
   }
 
   /**
-   * Map an array of terms to an array of ids suitable for field values.
-   *
-   * @param \Drupal\taxonomy\TermInterface[] $terms
-   *   An array of term objects.
-   *
-   * @return int[]
-   *   An array of term ids.
+   * Tests Document::getCacheTags().
    */
-  private function mapTermsToFieldValue(array $terms) {
-    return array_map(function (TermInterface $term) {
-      return $term->id();
-    }, $terms);
+  public function testGetCacheTags() {
+    $document = $this->createDocument();
+    $this->assertEquals(['node:' . $document->id()], $document->getCacheTags());
   }
 
 }
