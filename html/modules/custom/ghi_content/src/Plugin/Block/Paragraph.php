@@ -493,7 +493,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
    * @return \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface|null
    *   A paragraph object as retrieved from the article.
    */
-  private function getParagraph() {
+  public function getParagraph() {
     $article = $this->getArticle();
     $conf = $this->getBlockConfig();
     if (!$article || empty($conf['paragraph']['paragraph_id'])) {
