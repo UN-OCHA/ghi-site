@@ -1,0 +1,23 @@
+uuid: 81fb28c8-ea98-4cea-8c44-3ca2363f5970
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_needs_review
+    - node.type.article
+id: node.article.field_needs_review
+field_name: field_needs_review
+entity_type: node
+bundle: article
+label: 'Needs review'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

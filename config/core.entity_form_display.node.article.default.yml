@@ -8,6 +8,7 @@ dependencies:
     - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
     - field.field.node.article.field_inherit_section_image
+    - field.field.node.article.field_needs_review
     - field.field.node.article.field_orphaned
     - field.field.node.article.field_protected
     - field.field.node.article.field_remote_article
@@ -147,6 +148,13 @@ content:
   field_inherit_section_image:
     type: boolean_checkbox
     weight: 31
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_needs_review:
+    type: boolean_checkbox
+    weight: 13
     region: content
     settings:
       display_label: true

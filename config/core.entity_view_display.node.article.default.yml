@@ -8,6 +8,7 @@ dependencies:
     - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
     - field.field.node.article.field_inherit_section_image
+    - field.field.node.article.field_needs_review
     - field.field.node.article.field_orphaned
     - field.field.node.article.field_protected
     - field.field.node.article.field_remote_article
@@ -150,6 +151,16 @@ content:
       format_custom_true: ''
     third_party_settings: {  }
     weight: 8
+    region: content
+  field_needs_review:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 112
     region: content
   field_orphaned:
     type: boolean

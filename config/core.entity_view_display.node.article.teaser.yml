@@ -9,6 +9,7 @@ dependencies:
     - field.field.node.article.field_display_hero_image
     - field.field.node.article.field_image
     - field.field.node.article.field_inherit_section_image
+    - field.field.node.article.field_needs_review
     - field.field.node.article.field_orphaned
     - field.field.node.article.field_protected
     - field.field.node.article.field_remote_article
@@ -50,6 +51,7 @@ hidden:
   field_content_space: true
   field_display_hero_image: true
   field_inherit_section_image: true
+  field_needs_review: true
   field_orphaned: true
   field_protected: true
   field_remote_article: true

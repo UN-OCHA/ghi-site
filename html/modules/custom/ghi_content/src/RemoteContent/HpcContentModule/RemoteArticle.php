@@ -26,8 +26,8 @@ class RemoteArticle extends RemoteArticleBase {
   public function __construct($data, RemoteSourceInterface $source) {
     parent::__construct($data, $source);
     $this->paragraphs = [];
-    if (!empty($this->data->content)) {
-      foreach ($this->data->content as $paragraph) {
+    if (!empty($data->content)) {
+      foreach ($data->content as $paragraph) {
         $this->paragraphs[$paragraph->id] = new RemoteParagraph($paragraph, $source);
       }
     }

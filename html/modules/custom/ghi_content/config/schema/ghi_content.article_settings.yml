@@ -5,3 +5,11 @@ ghi_content.article_settings:
     subarticle_local_render:
       type: boolean
       label: 'Render sub articles locally'
+
+action.configuration.needs_review_flag:
+  type: action_configuration_default
+  label: 'Set the needs review flag'
+
+action.configuration.needs_review_unflag:
+  type: action_configuration_default
+  label: 'Unset the needs review flag'

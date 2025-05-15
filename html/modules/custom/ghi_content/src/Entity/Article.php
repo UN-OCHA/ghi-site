@@ -8,7 +8,7 @@ use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 /**
  * Bundle class for section nodes.
  */
-class Article extends ContentBase {
+class Article extends ContentBase implements ContentReviewInterface {
 
   /**
    * Get the current context node.
@@ -134,6 +134,19 @@ class Article extends ContentBase {
       return FALSE;
     }
     return $remote_current->hasSubarticle($remote_article);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function needsReview(?bool $state = NULL) {
+    if (!$this->hasField(ContentReviewInterface::NEEDS_REVIEW_FIELD)) {
+      return NULL;
+    }
+    if ($state === NULL) {
+      return (bool) $this->get(ContentReviewInterface::NEEDS_REVIEW_FIELD)->value;
+    }
+    $this->get(ContentReviewInterface::NEEDS_REVIEW_FIELD)->setValue($state);
   }
 
 }
