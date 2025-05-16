@@ -48,7 +48,7 @@ class Article extends ContentBase implements ContentReviewInterface {
       $cache_tags = parent::getCacheTags();
       $documents = $this->getDocuments();
       foreach ($documents as $document) {
-        $cache_tags = Cache::mergeTags($cache_tags, $document->getCacheTagsToInvalidate());
+        $cache_tags = Cache::mergeTags($cache_tags, $document->getCacheTags());
       }
     }
     return $cache_tags;
@@ -89,8 +89,8 @@ class Article extends ContentBase implements ContentReviewInterface {
     }
     $documents = &drupal_static(__FUNCTION__ . $this->id(), NULL);
     if ($documents === NULL) {
-      $content_manager = $this->getContentManager();
-      $remote_article = $content_manager->loadRemoteContentForNode($this);
+      $article_manager = $this->getContentManager();
+      $remote_article = $article_manager->loadRemoteContentForNode($this);
       if (!$remote_article instanceof RemoteArticleInterface) {
         return [];
       }
@@ -106,9 +106,10 @@ class Article extends ContentBase implements ContentReviewInterface {
 
       /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source_instance */
       $remote_source_instance = $remote_source_manager->createInstance($remote_source);
-      $documents = array_filter(array_map(function ($document_id) use ($content_manager, $remote_source_instance) {
+      $document_manager = self::getDocumentManager();
+      $documents = array_filter(array_map(function ($document_id) use ($document_manager, $remote_source_instance) {
         $remote_document = $remote_source_instance->getDocument($document_id);
-        return $remote_document ? $content_manager->loadNodeForRemoteContent($remote_document) : NULL;
+        return $remote_document ? $document_manager->loadNodeForRemoteContent($remote_document) : NULL;
       }, $document_ids));
     }
     return $documents;
@@ -147,6 +148,16 @@ class Article extends ContentBase implements ContentReviewInterface {
       return (bool) $this->get(ContentReviewInterface::NEEDS_REVIEW_FIELD)->value;
     }
     $this->get(ContentReviewInterface::NEEDS_REVIEW_FIELD)->setValue($state);
+  }
+
+  /**
+   * Get the document manager.
+   *
+   * @return \Drupal\ghi_content\ContentManager\DocumentManager
+   *   The document manager service.
+   */
+  public static function getDocumentManager() {
+    return \Drupal::service('ghi_content.manager.document');
   }
 
 }
