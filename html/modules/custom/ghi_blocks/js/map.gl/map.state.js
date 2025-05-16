@@ -81,7 +81,6 @@
         mapDisclaimer.textContent = options.disclaimer;
         this.getContainer().append(mapDisclaimer);
       }
-      // map.addControl(new ghi.disclaimerControl(this, options.disclaimer));
 
       this.setIsReady();
     }
@@ -1238,6 +1237,31 @@
      */
     getContainerClass = function () {
       return '.map-wrapper-' + this.getMapId();
+    }
+
+    /**
+     * Get the background layer that holds the country labels.
+     *
+     * @returns {Layer}
+     *   A mapbox layer object.
+     */
+    getBackgroundLayer = function () {
+      let map = this.getMap();
+      let zoom = map.getZoom();
+      let layers = map.getStyle().layers;
+      for (let layer of layers) {
+        if (!layer.id) {
+          continue;
+        }
+        let Layer = map.getLayer(layer.id)
+        if (Layer["source-layer"] != "wrl_polbndp_int_ocha_fr_en_ar") {
+          continue;
+        }
+        if (Layer.minzoom > zoom || Layer.maxzoom < zoom) {
+          continue;
+        }
+        return Layer;
+      }
     }
 
     /**

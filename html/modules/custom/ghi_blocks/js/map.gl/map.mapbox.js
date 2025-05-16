@@ -9,10 +9,7 @@
   window.ghi.mapbox = class {
 
     /**
-     * Constructor for the map state object.
-     *
-     * @param {ghi.mapState} state
-     *   The map state object.
+     * Constructor for the mapbox object.
      */
     constructor () {
       this.style = drupalSettings.mapbox.style_url ?? null;

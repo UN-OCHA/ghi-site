@@ -28,6 +28,7 @@
       this.sourceId = state.getMapId();
       this.featureLayerId = this.sourceId + '-circle';
       this.activeFeatureLayerId = this.sourceId + '-circle-active';
+      this.labelLayerId = this.sourceId + '-label-active';
       this.config = {
         // Scales used to determine color.
         colors: [
@@ -86,6 +87,10 @@
           this.addCountryOutlines();
         }
 
+        // Add a layer for the labels, so that we can keep showing them on top
+        // of colored admin area or country outlines.
+        map.addLayer(this.buildLabelLayer());
+
         // Initial drawing of the circles.
         map.addSource(self.sourceId, this.buildSource());
         map.addLayer(this.buildCircleLayer());
@@ -93,7 +98,7 @@
 
         // Build a layer that can hold active features, so that they pop up
         // from behind and appearingly come to the foreground.
-        map.addLayer(this.buildActiveLayer());
+        map.addLayer(this.buildActiveFeatureLayer());
 
         // Add event handling.
         this.addEventListeners(self.sourceId);
@@ -102,6 +107,7 @@
           // Also redraw on zoom. This is mainly important for the offset
           // locations on the plan overview map.
           self.renderLocations();
+          this.updateLabelLayer();
           this.updateActiveFeatures();
         });
       });
@@ -308,12 +314,12 @@
     }
 
     /**
-     * Build the active layer.
+     * Build the active feature layer.
      *
      * @returns {Object}
      *   A layer object.
      */
-    buildActiveLayer = function () {
+    buildActiveFeatureLayer = function () {
       let layer_id = this.activeFeatureLayerId;
       return {
         'id': layer_id,
@@ -329,6 +335,36 @@
           'circle-stroke-width': 1,
           'circle-stroke-color': root_styles.getPropertyValue('--cd-white'),
           'circle-stroke-opacity': 1,
+        },
+      }
+    }
+
+    /**
+     * Build the label layer.
+     *
+     * @returns {Object}
+     *   A layer object.
+     */
+    buildLabelLayer = function () {
+      let state = this.state;
+      let map = state.getMap();
+      let layer_id = this.labelLayerId;
+      let source_id = layer_id + '-source';
+      map.addSource(source_id, state.buildGeoJsonSource(null));
+      return {
+        'id': layer_id,
+        'type': 'symbol',
+        'source': source_id,
+        'layout': {
+          'text-field': ['get', 'en_short'],
+          'text-font': [
+            'Roboto Regular',
+            'Arial Unicode MS Regular'
+          ],
+          'text-transform': 'uppercase',
+        },
+        'paint': {
+          'text-halo-width': 0
         },
       }
     }
@@ -557,8 +593,10 @@
       let hover_feature = state.getHoverFeature();
       let focus_feature = state.getFocusFeature();
       let features = [hover_feature, focus_feature].filter(d => d !== null);
+
       self.updateMapData(layer_id, features);
       map.setLayoutProperty(layer_id, 'visibility', features.length ? 'visible' : 'none');
+
       if (focus_feature) {
         // There was an issue when selecting a feature, then moving and zooming
         // the map so that the selected feature wouldn't be visible anymore,
@@ -617,6 +655,36 @@
         return d;
       });
       self.updateMapData(layer_id, existing_features);
+    }
+
+    /**
+     * Update the label layer.
+     */
+    updateLabelLayer = function () {
+      let state = this.state;
+      let map = state.getMap();
+      let label_layer_id = this.labelLayerId;
+
+      let backgroundFeatures = [];
+      let backgroundLayer = state.getBackgroundLayer(map);
+      if (backgroundLayer) {
+        backgroundFeatures = map.querySourceFeatures(backgroundLayer.source, {
+          sourceLayer: backgroundLayer['source-layer'],
+        });
+
+        map.setFilter(label_layer_id, map.getFilter(backgroundLayer.id));
+
+        map.setLayoutProperty(label_layer_id, 'text-field', backgroundLayer.layout['text-field']);
+        map.setLayoutProperty(label_layer_id, 'text-font', backgroundLayer.layout['text-font']);
+        map.setLayoutProperty(label_layer_id, 'text-letter-spacing', backgroundLayer.layout['text-letter-spacing']);
+        map.setLayoutProperty(label_layer_id, 'text-size', backgroundLayer.layout['text-size']);
+        map.setLayoutProperty(label_layer_id, 'text-transform', backgroundLayer.layout['text-transform']);
+
+        map.setPaintProperty(label_layer_id, 'text-color', backgroundLayer.paint['text-color']);
+        map.setPaintProperty(label_layer_id, 'text-halo-color', backgroundLayer.paint['text-halo-color']);
+        map.setPaintProperty(label_layer_id, 'text-halo-width', backgroundLayer.paint['text-halo-width']);
+      }
+      this.updateMapData(label_layer_id + '-source', backgroundFeatures);
     }
 
     /**
