@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\ghi_content\Kernel;
+namespace Drupal\Tests\ghi_content\Kernel\Entity;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\ghi_content\ContentManager\ArticleManager;
@@ -51,23 +51,6 @@ class DocumentTest extends KernelTestBase {
     'ghi_content_test',
   ];
 
-  const SECTION_BUNDLE = 'section';
-  const DOCUMENT_BUNDLE = 'document';
-
-  /**
-   * A vocabulary for tags.
-   *
-   * @var \Drupal\taxonomy\VocabularyInterface
-   */
-  protected $vocabulary;
-
-  /**
-   * The document manager to test.
-   *
-   * @var \Drupal\ghi_content\DocumentManager
-   */
-  protected $documentManager;
-
   /**
    * {@inheritdoc}
    */
@@ -88,17 +71,15 @@ class DocumentTest extends KernelTestBase {
     $container->set('hpc_common.hid_user_data', $hid_user_data);
     \Drupal::setContainer($container);
 
-    $this->documentManager = \Drupal::service('ghi_content.manager.document');
-
     $this->createArticleContentType();
     $this->createDocumentContentType();
 
-    $this->vocabulary = $this->createVocabulary();
+    $vocabulary = $this->createVocabulary();
 
     // Setup the tags field on our node types.
     $handler_settings = [
       'target_bundles' => [
-        $this->vocabulary->id() => $this->vocabulary->id(),
+        $vocabulary->id() => $vocabulary->id(),
       ],
     ];
     $this->createEntityReferenceField('node', DocumentManager::DOCUMENT_BUNDLE, 'field_tags', 'Tags', 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
