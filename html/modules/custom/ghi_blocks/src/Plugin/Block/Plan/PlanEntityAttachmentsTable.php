@@ -95,6 +95,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
         '#rows' => $table_data['rows'],
         '#sortable' => $is_grouped,
         '#progress_groups' => TRUE,
+        '#block_id' => $this->getBlockId(),
       ],
     ];
   }
