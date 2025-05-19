@@ -90,7 +90,7 @@ class QueryHelper {
    *   The processing time for the given endpoint URL.
    */
   public static function endpointCallTimeStorage($endpoint_url = NULL, $processing_time = NULL) {
-    $call_times = &drupal_static(__FUNCTION__);
+    static $call_times = [];
     if ($endpoint_url === NULL) {
       return $call_times;
     }
