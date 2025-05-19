@@ -1265,6 +1265,70 @@
     }
 
     /**
+     * Build the label layer.
+     *
+     * @returns {Object}
+     *   A layer object.
+     */
+    buildLabelLayer = function (layer_id) {
+      let map = this.getMap();
+      let source_id = layer_id + '-source';
+      map.addSource(source_id, this.buildGeoJsonSource(null));
+
+      map.on('styledata', () => {
+        this.updateLabelLayer(layer_id);
+      });
+      map.on('zoom', () => {
+        this.updateLabelLayer(layer_id);
+      });
+
+      return {
+        'id': layer_id,
+        'type': 'symbol',
+        'source': source_id,
+        'layout': {
+          'text-field': ['get', 'en_short'],
+          'text-font': [
+            'Roboto Regular',
+            'Arial Unicode MS Regular'
+          ],
+          'text-transform': 'uppercase',
+        },
+        'paint': {
+          'text-halo-width': 0
+        },
+      }
+    }
+
+    /**
+     * Update the label layer.
+     */
+    updateLabelLayer = function (label_layer_id) {
+      let map = this.getMap();
+
+      let backgroundFeatures = [];
+      let backgroundLayer = this.getBackgroundLayer(map);
+      if (backgroundLayer) {
+        backgroundFeatures = map.querySourceFeatures(backgroundLayer.source, {
+          sourceLayer: backgroundLayer['source-layer'],
+        });
+
+        map.setFilter(label_layer_id, map.getFilter(backgroundLayer.id));
+
+        map.setLayoutProperty(label_layer_id, 'text-field', backgroundLayer.layout['text-field']);
+        map.setLayoutProperty(label_layer_id, 'text-font', backgroundLayer.layout['text-font']);
+        map.setLayoutProperty(label_layer_id, 'text-letter-spacing', backgroundLayer.layout['text-letter-spacing']);
+        map.setLayoutProperty(label_layer_id, 'text-size', backgroundLayer.layout['text-size']);
+        map.setLayoutProperty(label_layer_id, 'text-transform', backgroundLayer.layout['text-transform']);
+
+        map.setPaintProperty(label_layer_id, 'text-color', backgroundLayer.paint['text-color']);
+        map.setPaintProperty(label_layer_id, 'text-halo-color', backgroundLayer.paint['text-halo-color']);
+        map.setPaintProperty(label_layer_id, 'text-halo-width', backgroundLayer.paint['text-halo-width']);
+      }
+      this.updateMapData(label_layer_id + '-source', backgroundFeatures);
+    }
+
+    /**
      * Update the map.
      *
      * @param {Number} duration
