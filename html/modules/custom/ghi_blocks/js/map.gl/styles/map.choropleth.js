@@ -9,7 +9,7 @@
   }
 
   /**
-   * Constructor for the chloropleth style object.
+   * Constructor for the choropleth style object.
    *
    * @param {String} id
    *   The ID of the map container.
@@ -18,7 +18,7 @@
    * @param {Object} options
    *   The options for the map style.
    */
-  window.ghi.chloroplethMap = class {
+  window.ghi.choroplethMap = class {
 
     constructor (map, state, options) {
       this.map = map;
@@ -213,7 +213,7 @@
      *
      * @param {Event} e
      *   The event.
-     * @param {ghi.chloroplethMap} self
+     * @param {ghi.choroplethMap} self
      *   The current style instance.
      */
     clickHandler = function (e, self) {

@@ -111,8 +111,8 @@
         if (options.style === 'circle') {
           this.style = new ghi.circleMap(this.getMapController(), this, options, config);
         }
-        if (options.style === 'chloropleth') {
-          this.style = new ghi.chloroplethMap(this.getMapController(), this, options, config);
+        if (options.style === 'choropleth') {
+          this.style = new ghi.choroplethMap(this.getMapController(), this, options, config);
         }
       }
       if ((typeof this.style['renderLocations']) != "function") {
