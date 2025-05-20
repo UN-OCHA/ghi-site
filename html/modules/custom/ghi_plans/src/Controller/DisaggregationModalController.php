@@ -50,8 +50,7 @@ class DisaggregationModalController extends ControllerBase {
     }
     $title .= $entity->getName() . ' | ' . $metrics[$metric];
 
-    if ($attachment->isMeasurementField($metrics[$metric])) {
-      $reporting_period = $attachment->getReportingPeriod($reporting_period_id);
+    if ($attachment->isMeasurementField($metrics[$metric]) && $reporting_period = $attachment->getReportingPeriod($reporting_period_id)) {
       $title .= $reporting_period->format('<span class="title-additional-info">Monitoring period @period_number: @date_range</span>');
     }
     return Markup::create($title);
