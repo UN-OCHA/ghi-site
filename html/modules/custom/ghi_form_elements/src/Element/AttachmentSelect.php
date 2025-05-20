@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_form_elements\Element;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
@@ -367,6 +368,8 @@ class AttachmentSelect extends FormElementBase {
       '#weight' => 9,
     ];
 
+    // Filter the selected attachments to the ones actually available in the
+    // current option set.
     $attachments_selected = (array) ($defaults['attachment_id'] ?? []);
     $default_attachments = array_intersect($attachments_selected, array_keys($attachment_options));
     if (!empty($default_attachments) && empty($element['#multiple'])) {
@@ -375,6 +378,14 @@ class AttachmentSelect extends FormElementBase {
     if (empty($default_attachments) && empty($element['#multiple'])) {
       $default_attachments = array_key_first($attachment_options);
     }
+
+    // Also update the user input to prevent validation errors when switching
+    // any of the filters so that a currently selected option is not available
+    // anymore.
+    $user_input = $form_state->getUserInput();
+    NestedArray::setValue($user_input, array_merge($element['#parents'], ['attachment_id']), $default_attachments);
+    $form_state->setUserInput($user_input);
+
     $element['attachment_id'] = [
       '#type' => 'tableselect',
       '#tree' => TRUE,
