@@ -8,6 +8,7 @@ use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 
 /**
  * Provides an attachment select element.
@@ -116,6 +117,12 @@ class EntityAttachmentSelect extends FormElementBase {
     $defaults['entities']['entity_ids'] = array_filter($defaults['entities']['entity_ids'] ?? [], function ($_entity_id) use ($valid_entity_ids) {
       return in_array($_entity_id, $valid_entity_ids);
     });
+
+    // Make sure that the current plan entity is always part of the default
+    // entities.
+    if ($plan_id && $context['base_object'] instanceof GoverningEntity && empty($defaults['entities']['entity_ids'][$plan_id])) {
+      $defaults['entities']['entity_ids'][$plan_id] = $plan_id;
+    }
 
     $form_state->set('entities', $defaults['entities']);
     $triggering_element = $form_state->getTriggeringElement();
